@@ -55,7 +55,7 @@ const studentSchema = new Schema({
         default: false 
     },
     feeIds: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
+        type: Schema.Types.ObjectId, 
         ref: 'Fee' 
     }],
     examIds:[{
