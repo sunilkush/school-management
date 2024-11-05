@@ -44,7 +44,7 @@ const studentSchema = new Schema({
     },
     hostelId: {
         type: Schema.Types.ObjectId,
-        ref: "hostel"
+        ref: "Hostel"
     },
     transportId: {
         type: Schema.Types.OjectId,

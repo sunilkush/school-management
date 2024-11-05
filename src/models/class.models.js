@@ -1,8 +1,16 @@
 import mongoose, { Schema } from "mongoose";
-const subjectSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', required: true },
-  },{timestamps:SVGComponentTransferFunctionElement});
+const subjectSchema = new Schema({
+    name: { 
+        type: String, 
+        required: true 
+    },
+    teacherId: { 
+        type:Schema.Types.ObjectId, 
+        ref: 'Staff', 
+        required: true 
+    },
+}, { timestamps:true });
+
 const classSchema = new Schema({
     className: {
         type: String,
