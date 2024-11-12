@@ -1,3 +1,1 @@
-const db_name = "school"
-
-export {db_name}
+export const DB_NAME = "school";
