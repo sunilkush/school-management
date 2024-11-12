@@ -1,3 +1,3 @@
-const db_name = "school Management"
+const db_name = "school"
 
 export {db_name}

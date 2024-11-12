@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv"
-import { ApiError } from "./ApiError";
+import { ApiError } from "./ApiError.js";
 import fs from "fs"
 
 dotenv.config();
@@ -25,6 +25,23 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
+const deleteOnCloudinary = async (localFilePath) => {
+    try {
+       if(!localFilePath){
+        return ApiError(400,"!File Not Found")
+       }
+       const response = await cloudinary.uploader.destroy(localFilePath)
+       return response
+
+    } catch (error) {
+        return ApiError(401,"Unauthorized ")
+    }
+
+}
+
+
+
 export {
-    uploadOnCloudinary
+    uploadOnCloudinary,
+    deleteOnCloudinary
 }

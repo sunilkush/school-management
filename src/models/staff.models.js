@@ -12,11 +12,16 @@ const staffSchema = new Schema({
         unique: true,
         lowercase: true
     },
+    dateOfBirth:{
+       type: Date,
+        required: true,
+    },
     gender: {
         type: String,
         enum: ["male", "female", "other"],
         required: true
-    }, phoneNo: {
+    }, 
+    phoneNo: {
         type: Number,
         required: true,
 
@@ -27,7 +32,7 @@ const staffSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ["Teacher", "admin", "other"],
+        enum: ["Teacher", "Admin", "Other"],
         required: true
     },
     employmentDetails: {
@@ -46,7 +51,8 @@ const staffSchema = new Schema({
         salary: {
             type: Number,
             required: true
-        }, contractType: {
+        }, 
+        contractType: {
             type: String,
             enum: ["permanent", "Contract", "Temporary"],
             required: true

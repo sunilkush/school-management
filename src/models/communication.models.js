@@ -19,5 +19,5 @@ const communicationSchema = new Schema({
     },
 }, { timestamps: true })
 
-export Communication = mongoose.model("Communication", communicationSchema)
+export const Communication = mongoose.model("Communication", communicationSchema)
 

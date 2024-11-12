@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-const userScheme = new Schema({
+const userSchema = new Schema({
     email: {
         type: String,
         required: true,
@@ -9,18 +9,27 @@ const userScheme = new Schema({
     password: {
         type: String,
         required: true
-    }, role: {
+    },
+     role: {
         type: String,
         enum: ['student', 'teacher', 'admin'],
-        required: true
-    }, profileId: {
+        required: true,
+    }, 
+    profileId: {
         type: Schema.Types.ObjectId,
-        refPath: "role",
-       
+        refPath: "role"
+    },
+    fullName: {
+        type: String,
+        required: true
+    },
+    contact: {
+        type: Number,
+        required: true
     }
 }, { timestamps: true })
 
-export const User = mongoose.model("User", userScheme)
+
 
 // create password 
 userSchema.pre('save', async function (next) {
@@ -65,5 +74,8 @@ userSchema.methods.generateRequestToken = function () {
         }
     )
 }
+
+export const User = mongoose.model("Users", userSchema)
+
 
 
