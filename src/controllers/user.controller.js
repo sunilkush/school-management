@@ -5,19 +5,19 @@ import {User} from "../models/user.models.js";
 import mongoose from "mongoose"
 
 const registerUser = asyncHandler(async (req, res) => {
-    
+   
         const { email, password, role, fullName } = req.body
 
         if ([fullName, role, password, email].some((filed) => filed?.trim() === "")) {
             throw new ApiError(400, 'All filed are Required !')
         }
-
+          
         const existedUser = await User.findOne({ email });
 
         if (existedUser) {
             throw new ApiError(409, "User Already exists")
         }
-
+           
 
         // Create profile for student/teacher/admin based on role
             let profile;
