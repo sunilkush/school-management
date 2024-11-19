@@ -1,17 +1,17 @@
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import {User} from "../models/user.models.js";
-import mongoose from "mongoose"
+import { User } from "../models/user.models.js";
+
 
 const registerUser = asyncHandler(async (req, res) => {
    
         const { email, password, role, fullName } = req.body
-
-        if ([fullName, role, password, email].some((filed) => filed?.trim() === "")) {
+         console.log(req.body)
+      
+        if ([fullName, email, password, username].some((filed) => filed?.trim() === "")) {
             throw new ApiError(400, 'All filed are Required !')
-        }
-          
+          }
         const existedUser = await User.findOne({ email });
 
         if (existedUser) {
@@ -30,7 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
             }       
 
             await profile.save(); // Save profile to database
-
+          
         const user = await User.create({
             fullName,
             password,

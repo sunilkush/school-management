@@ -12,3 +12,4 @@ const dbConnection = async()=>{
 }
 
 export default dbConnection
+//mongodb+srv://Sunil_Kush:OebG8R7RVVcCrZGn@cluster0.xxwzkn3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
