@@ -25,7 +25,7 @@ const studentSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Class'
     },
-    phone: {
+    phoneNo: {
         type: Number,
         required: true,
     },
