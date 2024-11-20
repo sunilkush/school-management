@@ -6,7 +6,7 @@ import { User } from "../models/user.models.js";
 
 const registerUser = asyncHandler(async (req, res) => {
    
-        const { email, password, role, fullName,dateOfBirth } = req.body
+        const { email, password, role, fullName,dateOfBirth,phoneNo  } = req.body
          console.log(req.body)
       
         if ([email, password, role, fullName,dateOfBirth].some((filed) => filed?.trim() === "")) {
