@@ -25,4 +25,4 @@ const transportSchema = new Schema({
    ]
 },{ timestamps: true })
 
-export const Transport = mongoose.model("Transport",transportSchema)
+export const Transport = mongoose.model("Transports",transportSchema)
