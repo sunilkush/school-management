@@ -2,7 +2,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.models.js";
-
+import { Student } from "../models/student.models.js"
+import { Staff } from "../models/staff.models.js"
 
 const registerUser = asyncHandler(async (req, res) => {
    
