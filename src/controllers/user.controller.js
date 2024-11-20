@@ -6,10 +6,10 @@ import { User } from "../models/user.models.js";
 
 const registerUser = asyncHandler(async (req, res) => {
    
-        const { email, password, role, fullName } = req.body
+        const { email, password, role, fullName,dateOfBirth } = req.body
          console.log(req.body)
       
-        if ([fullName, email, password, username].some((filed) => filed?.trim() === "")) {
+        if ([email, password, role, fullName,dateOfBirth].some((filed) => filed?.trim() === "")) {
             throw new ApiError(400, 'All filed are Required !')
           }
         const existedUser = await User.findOne({ email });
@@ -22,7 +22,7 @@ const registerUser = asyncHandler(async (req, res) => {
         // Create profile for student/teacher/admin based on role
             let profile;
             if (role === 'student') {
-            profile = new Student({ firstName, dateOfBirth, phone });
+            profile = new Student({ fullName, dateOfBirth, phoneNo });
             } else if (role === 'teacher') {
             profile = new Staff({ fullName, dateOfBirth, phoneNo });
             } else if (role === 'admin') {
@@ -31,13 +31,13 @@ const registerUser = asyncHandler(async (req, res) => {
 
             await profile.save(); // Save profile to database
           
-        const user = await User.create({
-            fullName,
-            password,
-            email,
-            role,
-            profileId: profile._id
-        })
+           const user = await User.create({
+               fullName,
+               password,
+               email,
+               role,
+               profileId: profile._id
+           })
         
          
         const createdUser = await User.findById(user._id).select(
