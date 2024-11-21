@@ -1,53 +1,52 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
+import dotenv from "dotenv";
+dotenv.config()
 const userSchema = new Schema({
+    username: {
+        type: String,
+        trim: true,
+        required: true,
+        unique: true,
+        lowercase: true,
+        index: true
+    },
     email: {
         type: String,
-        required: true,
-        unique: true
+        trim: true,
+        lowercase: true,
+        unique: true,
+        required: true
     },
     password: {
         type: String,
-        required: true
+        trim: true,
+        required: [true, "password is required"]
     },
-     role: {
-        type: String,
-        enum: ['student', 'teacher', 'admin'],
-        required: true,
-    }, 
-    profileId: {
-        type: Schema.Types.ObjectId,
-        refPath: "role"
-    },
-    fullName: {
-        type: String,
-        required: true
-    },
-    contact: {
+    mobileNo: {
         type: Number,
         required: true
+    },
+    role: {
+        type: String,
+        enum: ["addmin", "student", "teacher"]
+    }, 
+    refreshToken: {
+        type: String
     }
 }, { timestamps: true })
 
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    this.password = await bcrypt.hash(this.password, 10)
+    next()
+})
 
-
-// create password 
-userSchema.pre('save', async function (next) {
-    // step 2
-    if (!this.isModified('password')) return next();
-    // step 1
-
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
-});
-
-// password compare to login time method
 userSchema.methods.isPasswordCorrect = async function (password) {
-    // password compare
     return await bcrypt.compare(password, this.password)
 }
 
-// Generate Access Token
 
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign({
@@ -55,18 +54,22 @@ userSchema.methods.generateAccessToken = function () {
         email: this.email,
         username: this.username,
         fullName: this.fullName
+
     },
         process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-        })
+        }
+    )
 }
-
-// Generate Request Token
 
 userSchema.methods.generateRequestToken = function () {
     return jwt.sign({
-        _id: this._id
+        _id: this._id,
+        email: this.email,
+        username: this.username,
+        fullName: this.fullName
+
     },
         process.env.REQUEST_TOKEN_SECRET,
         {
@@ -75,7 +78,5 @@ userSchema.methods.generateRequestToken = function () {
     )
 }
 
+
 export const User = mongoose.model("Users", userSchema)
-
-
-
