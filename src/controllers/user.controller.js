@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {User} from "../models/user.model.js";
 
 const registerUser = asyncHandler(async (req, res) => {
+  try{
   const { username, email, password, role,mobileNo } = req.body;
 
   /* if ([username, email, password, role,mobileNo].some((filed) => filed?.trim() === "")) {
@@ -31,7 +32,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
   return res.status(201).json(
     new ApiResponse(201, createdUser, "User registered successfully")
-  );
+  );}
+  catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export { registerUser };
