@@ -6,10 +6,10 @@ import {User} from "../models/user.model.js";
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password, role,mobileNo } = req.body;
 
-  if ([username, email, password, role,mobileNo].some((filed) => filed?.trim() === "")) {
+  /* if ([username, email, password, role,mobileNo].some((filed) => filed?.trim() === "")) {
     throw new ApiError(400, 'All filed are Required !')
-  }
-  console.log("hello")
+  } */
+  
   const existUser = await User.findOne({ email });
 
   if (existUser) {
