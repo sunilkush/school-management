@@ -5,25 +5,26 @@ import {User} from "../models/user.model.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   try{
-  const { username, email, password, role,mobileNo } = req.body;
+  const { username, email, password, role} = req.body;
 
-  /* if ([username, email, password, role,mobileNo].some((filed) => filed?.trim() === "")) {
+  // validation check all filed
+  if ([username, email, password, role ].some((filed) => filed?.trim() === "")) {
     throw new ApiError(400, 'All filed are Required !')
-  } */
-  
+  }
+ 
   const existUser = await User.findOne({ email });
 
   if (existUser) {
     throw new ApiError(409, "User already registered");
   }
 
-  const user = await User.create({
+  const user = new User({
     username,
     email,
     password,
-    role,
-    mobileNo
+    role
   });
+   await user.save()
 
   const createdUser = await User.findById(user._id).select("-password");
   if (!createdUser) {
@@ -32,7 +33,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
   return res.status(201).json(
     new ApiResponse(201, createdUser, "User registered successfully")
-  );}
+  )
+}
   catch (error) {
     res.status(500).json({ message: error.message });
   }
