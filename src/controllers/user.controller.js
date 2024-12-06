@@ -7,9 +7,9 @@ const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId)
     const accessToken = user.generateAccessToken()
-    const requestToken = user.generateRequestToken()
+    const refreshToken = user.generateRefreshToken()
 
-    user.refreshToken = requestToken
+    user.refreshToken = refreshToken
     await user.save({ validateBeforeSave: false })
     return { accessToken, refreshToken }
   } catch (error) {
@@ -61,9 +61,9 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   try {
     // get data by frontend
-    const { email, password, role } = req.body
+    const { email, password} = req.body
     // validation
-    if ([email, password, role].some((filed) => filed?.trim() === "")) {
+    if ([email, password].some((filed) => filed?.trim() === "")) {
 
       throw new ApiError(401, "all filed required !")
     }
@@ -101,7 +101,34 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 })
 
+
+const logoutUser = asyncHandler(async (req, res) => {
+  try {
+    // get user by auth
+    await User.findByIdAndUpdate(req.user._id, {
+      $unset: {
+        refreshToken: 1
+      }
+    }, { new: true })
+  
+    const options = {
+      secure:true,
+      httpOnly:true
+    }
+  // response send
+    return res.status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
+    .json(new ApiResponse(201,{},"User Logged out"))
+  } catch (error) {
+     throw new ApiError(500,error.message || "User Not Found !")
+  }
+ 
+})
+
+
 export {
   registerUser,
-  loginUser
+  loginUser,
+  logoutUser
 };
