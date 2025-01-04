@@ -10,9 +10,12 @@ const userSchema = new Schema({
         type: String,
         trim: true,
         required: true,
-        unique: true,
         lowercase: true,
-        index: true
+        unique: true,
+    },
+    fullName:{
+        type:String,
+        required:true
     },
     email: {
         type: String,
@@ -28,13 +31,12 @@ const userSchema = new Schema({
     },
     mobileNo: {
         type: Number,
-        
     },
     role: {
         type: String,
-        enum: ["admin", "student", "teacher"],
-        default:"student"
-    }, 
+        enum: ["admin", "teacher", "student", "parent"],
+        required: true
+    },
     refreshToken: {
         type: String
     }
@@ -56,7 +58,7 @@ userSchema.methods.generateAccessToken = function () {
         _id: this._id,
         email: this.email,
         username: this.username,
-        fullName: this.fullName
+        role: this.role,
 
     },
         process.env.ACCESS_TOKEN_SECRET,
@@ -76,6 +78,5 @@ userSchema.methods.generateRefreshToken = function () {
         }
     )
 }
-
 
 export const User = mongoose.model("Users", userSchema)
