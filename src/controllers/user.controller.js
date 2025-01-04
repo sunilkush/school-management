@@ -22,10 +22,10 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   try {
-    const { username, email, password, role, mobileNo } = req.body;
+    const { username, email, password, role, phone } = req.body;
 
     // validation check all filed
-    if ([username, email, password, role, mobileNo].some((filed) => filed?.trim() === "")) {
+    if ([username, email, password, role, phone].some((filed) => filed?.trim() === "")) {
       throw new ApiError(400, 'All filed are Required !')
     }
 
@@ -40,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
       email,
       password,
       role,
-      mobileNo
+      phone
     });
     await user.save()
 
@@ -125,10 +125,21 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
  
 })
-
+// update user
+const updateUser = asyncHandler(()=>{});
+// delete User
+const deleteUser = asyncHandler(()=>{});
+// view User
+const viewUsers = asyncHandler(()=>{});
+// Reset Password
+const resetPassword = asyncHandler(()=>{});
 
 export {
   registerUser,
   loginUser,
-  logoutUser
+  logoutUser,
+  updateUser,
+  deleteUser,
+  viewUsers,
+  resetPassword
 };

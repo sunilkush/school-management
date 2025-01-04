@@ -29,7 +29,7 @@ const userSchema = new Schema({
         trim: true,
         required: [true, "password is required"]
     },
-    mobileNo: {
+    phone: {
         type: Number,
     },
     role: {
