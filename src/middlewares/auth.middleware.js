@@ -12,7 +12,7 @@ const auth = asyncHandler(async(req,res,next)=>{
         throw new ApiError(401,"Unauthorized Token !")
     }
     
-    const decodeToken= jwt.verify(token,process.env.REQUEST_TOKEN_SECRET )
+    const decodeToken= jwt.verify(token,process.env.REFRESH_TOKEN_SECRET )
    
     const user = await User.findById(decodeToken?._id).select("-password -refreshToken")
    if(!user){
@@ -27,6 +27,14 @@ const auth = asyncHandler(async(req,res,next)=>{
 
 })
 
-const roles = asyncHandler(()=>{})
+const isAdmin = asyncHandler(async(req,res,next)=>{
+    try {
+        if(req.user || req.user.role === "admin"){
+            next()
+        }
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Access Only Admin !")
+    }
+})
 
-export {auth,roles}
+export {auth,isAdmin}

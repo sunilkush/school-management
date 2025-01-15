@@ -13,9 +13,9 @@ const userSchema = new Schema({
         lowercase: true,
         unique: true,
     },
-    fullName:{
-        type:String,
-        required:true
+    fullName: {
+        type: String,
+        required: true
     },
     email: {
         type: String,
@@ -39,6 +39,11 @@ const userSchema = new Schema({
     },
     refreshToken: {
         type: String
+    },
+    isActive: {
+        type: String,
+        default: true,
+        enum: ["true", "false"]
     }
 }, { timestamps: true })
 
@@ -72,9 +77,9 @@ userSchema.methods.generateRefreshToken = function () {
     return jwt.sign({
         _id: this._id,
     },
-        process.env.REQUEST_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.REQUEST_TOKEN_EXPIRY
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     )
 }
