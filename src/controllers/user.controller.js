@@ -125,14 +125,36 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
  
 })
+// refreshAccessToken
+const refreshAccessToken = asyncHandler(async(req,res)=>{
+  // find refresh token 
+   const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+   if(!incomingRefreshToken){
+      throw new ApiError(401,"unauthorized request")
+   }
+
+   const decodedToken = jwt.verify(incomingRefreshToken,process.env.REQUEST_TOKEN_SECRET)
+
+   const user = await User.findById(decodedToken?._id);
+
+
+});
 // update user
-const updateUser = asyncHandler(()=>{});
+const updateUser = asyncHandler(async(req,res)=>{
+
+});
 // delete User
-const deleteUser = asyncHandler(()=>{});
+const deleteUser = asyncHandler(async(req,res)=>{
+
+});
 // view User
-const viewUsers = asyncHandler(()=>{});
+const viewUsers = asyncHandler(async(req,res)=>{
+
+});
 // Reset Password
-const resetPassword = asyncHandler(()=>{});
+const resetPassword = asyncHandler(async(req,res)=>{
+
+});
 
 export {
   registerUser,
