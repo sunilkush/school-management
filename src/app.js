@@ -16,7 +16,7 @@ app.use(cookieParser())
 
 
 import userRegister from "./routes/user.routes.js"
-app.use("/app/v1/users", userRegister)
+app.use("/app/v1/user", userRegister)
 
 
 export {app}

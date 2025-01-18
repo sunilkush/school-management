@@ -6,42 +6,37 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const userSchema = new Schema({
-    username: {
-        type: String,
-        trim: true,
-        required: true,
-        lowercase: true,
-        unique: true,
+    name: { 
+        type: String, 
+        required: true 
     },
-    fullName: {
-        type: String,
-        required: true
+    email: { 
+        type: String, 
+        unique: true, 
+        required: true 
     },
-    email: {
-        type: String,
-        trim: true,
-        lowercase: true,
-        unique: true,
-        required: true
+    password: { 
+        type: String, 
+        required: true 
     },
-    password: {
-        type: String,
-        trim: true,
-        required: [true, "password is required"]
+    role: { 
+        type: String, 
+        enum: ["admin", "teacher", "student", "parent"], 
+        required: true 
     },
-    phone: {
-        type: Number,
+    profile: {
+        type: Schema.Types.ObjectId,
+        refPath: "role", // Dynamically references either "Teacher", "Student", etc.
     },
-    role: {
-        type: String,
-        enum: ["admin", "teacher", "student", "parent"],
-        required: true
+    phone:{
+        type:String,
+        required:true
     },
     refreshToken: {
         type: String
     },
     isActive: {
-        type: String,
+        type: Boolean,
         default: true,
         enum: ["true", "false"]
     }

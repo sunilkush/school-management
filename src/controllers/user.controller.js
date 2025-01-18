@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -19,10 +20,10 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   try {
-    const { username, email, password, role, phone } = req.body;
+    const { name,username, email, password, role, phone } = req.body;
 
     // validation check all filed
-    if ([username, email, password, role, phone].some((filed) => filed?.trim() === "")) {
+    if ([name,username, email, password, role, phone].some((filed) => filed?.trim() === "")) {
       throw new ApiError(400, 'All filed are Required !')
     }
 
@@ -33,6 +34,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const user = new User({
+      name,
       username,
       email,
       password,
@@ -140,6 +142,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(401, " Invalid refresh Token")
     }
+   
     // incoming token check 
     if (!incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh Token is expired and used")
@@ -197,13 +200,9 @@ const updateUser = asyncHandler(async (req, res) => {
 // delete User
 const deleteUser = asyncHandler(async (req, res) => {
     try { 
-      const user = await User.findById(req.user?._id,{
-        $set:{
-          isActive:false
-        }},{
-          new:true
-        }
-      ).select("-password")
+      const user = await User.findById(req.user?._id).select("-password")
+      user.isActive = false
+      await user.save({validateBeforeSave:false})
       
     return  res.status(200)
     .json(
@@ -256,4 +255,4 @@ export {
   getCurrentUser,
   resetPassword,
   refreshAccessToken
-};
+}
