@@ -60,7 +60,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   try {
     // get data by frontend
-    const { email, password } = req.body
+    const { email, password} = req.body
     // validation
     if ([email, password].some((filed) => filed?.trim() === "")) {
 

@@ -27,14 +27,20 @@ const auth = asyncHandler(async(req,res,next)=>{
 
 })
 
-const isAdmin = asyncHandler(async(req,__,next)=>{
-    try {
-        if(req.user || req.user.role === "admin"){
-            next()
+const roleMiddleware = (allowedRoles) => {
+    return (req, res, next) => { 
+      try {
+        const userRole = req.user.role; // Assuming req.user is populated after authentication
+       
+        if (!allowedRoles.includes(userRole)) {
+          return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
         }
-    } catch (error) {
-        throw new ApiError(401, error?.message || "Access Only Admin !")
-    }
-})
+        next();
+      } catch (error) {
+        res.status(500).json({ message: "An error occurred during role validation.", error: error.message });
+      }
+    };
+  };
+  
 
-export {auth,isAdmin}
+export {auth,roleMiddleware}
