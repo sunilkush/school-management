@@ -19,4 +19,4 @@ const classSchema = new Schema({
     }, // Assigned class teacher
 }, { timestamps: true });
 
-export const Class = mongoose.model("Class", classSchema)
+export const classes = mongoose.model("Class", classSchema)

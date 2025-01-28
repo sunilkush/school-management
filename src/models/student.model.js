@@ -10,9 +10,9 @@ const studentSchema = new Schema({
         type: String,
         required: true
     },
-    class: {
-        type: Schema.Types.ObjectId,
-        ref: "Class",
+    classes: {
+        type:String,
+       
         required: true
     },
     section: {
@@ -20,9 +20,9 @@ const studentSchema = new Schema({
         required: true
     },
     parent: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-    }, // Parent's User reference
+        type:String,
+        required:true
+    },
     address: { 
         type: String 
     },

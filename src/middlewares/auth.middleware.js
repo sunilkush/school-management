@@ -28,11 +28,11 @@ const auth = asyncHandler(async(req,res,next)=>{
 })
 
 const roleMiddleware = (allowedRoles) => {
-    return (req, res, next) => { 
+    return async(__, res, next) => { 
+
       try {
-        const userRole = req.user.role; // Assuming req.user is populated after authentication
-       
-        if (!allowedRoles.includes(userRole)) {
+        const userRole = await User.find() // Assuming req.user is populated after authentication
+        if (!allowedRoles.includes(userRole.role)) {
           return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
         }
         next();

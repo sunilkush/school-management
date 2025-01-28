@@ -17,7 +17,7 @@ const router = Router()
 
 router.route("/register").post(registerUser)
 
-router.route("/login").post(roleMiddleware(["amdin","superadmin"]),loginUser)
+router.route("/login").post(loginUser)
 // secure route
 router.route("/logout").post(auth, logoutUser)
 

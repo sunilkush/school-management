@@ -21,9 +21,20 @@ const getAllStudents = asyncHandler(async (req, res) => {
 
 const addStudent = asyncHandler(async (req, res) => {
 
-    const {  } = req.body;
+    const {
+        name,
+        email,
+        password,
+        role,
+        phone,
+        rollNumber,
+        classes,
+        parentEmail,
+        dateOfBirth,
+        address,
+        section } = req.body;
 
-    if ([].some((filed) => filed?.trim() === "")) {
+    if ([name,email,password,role,phone,rollNumber,parentEmail,dateOfBirth,address,section].some((filed) => filed?.trim() === "")) {
         throw new ApiError(400, 'All filed are Required !')
     }
     const existUser = await User.findOne({ email });
@@ -32,20 +43,30 @@ const addStudent = asyncHandler(async (req, res) => {
       throw new ApiError(409, "User already registered");
     }
     try {
-        
+        const user = new User({
+            name,
+            email,
+            password,
+            role,
+            phone
+        })
+
+        await user.save()
        //reate student record
        const student = new Student({
         user: user?._id,
-        class: classId,
+        classes,
         section,
         rollNumber,
-        parent: parentEmail 
+        parent: parentEmail ,
+        address,
+        dateOfBirth
        })
 
        await student.save()
         
        return res.status(200).json(
-        new ApiResponse(201,student, "Student added successfully" )
+        new ApiResponse(201,{student,user}, "Student added successfully" )
        )
 
     } catch (error) {
