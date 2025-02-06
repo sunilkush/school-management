@@ -1,38 +1,28 @@
 import mongoose, { Schema } from "mongoose";
 
-const FeesSchema = new Schema(
+const PayrollSchema = new Schema(
     {
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',
             required: true,
         },
-        studentId: {
+        employeeId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
             required: true,
         },
-        amount: {
+        salaryAmount: {
             type: Number,
             required: true,
         },
-        paymentMethod: {
-            type: String,
-            enum: ['Razorpay', 'Stripe', 'PayPal'],
+        paymentDate: {
+            type: Date,
             required: true,
-        },
-        transactionId: {
-            type: String,
-            required: true,
-            unique: true,
         },
         status: {
             type: String,
             enum: ['paid', 'pending'],
-            required: true,
-        },
-        dueDate: {
-            type: Date,
             required: true,
         },
     },
@@ -41,4 +31,4 @@ const FeesSchema = new Schema(
     }
 );
 
-export const Fees = mongoose.model("Fees", FeesSchema)
+export const Payroll = mongoose.model("Payroll", PayrollSchema)
