@@ -4,21 +4,21 @@ const HostelSchema = new Schema(
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',
-            required: true
+            required: true,
         },
         studentId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+            required: true,
         },
         roomNumber: {
             type: String,
-            required: true
+            required: true,
         },
         status: {
             type: String,
             enum: ['occupied', 'vacant'],
-            required: true
+            required: true,
         },
     },
     { timestamps: { createdAt: true, updatedAt: false } }

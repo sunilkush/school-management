@@ -4,26 +4,26 @@ const CommunicationSchema = new Schema(
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',
-            required: true
+            required: true,
         },
         userId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+            required: true,
         },
         type: {
             type: String,
             enum: ['Email', 'SMS', 'WhatsApp', 'Push Notification'],
-            required: true
+            required: true,
         },
         message: {
             type: String,
-            required: true
+            required: true,
         },
         status: {
             type: String,
             enum: ['sent', 'pending'],
-            required: true
+            required: true,
         },
     },
     { timestamps: true }

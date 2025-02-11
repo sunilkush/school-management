@@ -7,11 +7,11 @@ const classSchema = new Schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
     },
     section: {
         type: String,
-        required: true
+        required: true,
     },
     teacherId: {
         type: Schema.Types.ObjectId,

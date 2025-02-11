@@ -2,20 +2,20 @@ import mongoose, { Schema } from "mongoose";
 const userSchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: true,
     },
     email: {
         type: String,
-        required: true
+        required: true,
     },
     password: {
         type: String,
-        required: true
+        required: true,
     },
     role: {
         type: String,
         enum: ["admin", "teacher", "student", "parent"],
-        required: true
+        required: true,
     },
     schoolId: {
         type: Schema.Types.ObjectId,
@@ -23,7 +23,7 @@ const userSchema = new Schema({
     },
     classId: {
         type: Schema.Types.ObjectId,
-        ref: "Class"
+        ref: "Classes"
     },  // For students & teachers
     parentId: {
         type: Schema.Types.ObjectId,
@@ -50,8 +50,7 @@ userSchema.methods.generateAccessToken = function () {
     return jwt.sign({
         _id: this._id,
         email: this.email,
-        username: this.username,
-        fullName: this.fullName,
+        name: this.name,
         role: this.role,
 
     },

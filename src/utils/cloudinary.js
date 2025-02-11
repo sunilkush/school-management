@@ -16,7 +16,9 @@ const uploadOnCloudinary = async (localFilePath) => {
         if (!localFilePath) {
             return ApiError(401, "Something went wrong")
         }
-        const response = await cloudinary.uploader.upload(localFilePath)
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto"
+        })
         fs.unlinkSync(localFilePath)
         return response
     } catch (error) {
@@ -27,14 +29,14 @@ const uploadOnCloudinary = async (localFilePath) => {
 
 const deleteOnCloudinary = async (localFilePath) => {
     try {
-       if(!localFilePath){
-        return ApiError(400,"!File Not Found")
-       }
-       const response = await cloudinary.uploader.destroy(localFilePath)
-       return response
+        if (!localFilePath) {
+            return ApiError(400, "!File Not Found")
+        }
+        const response = await cloudinary.uploader.destroy(localFilePath)
+        return response
 
     } catch (error) {
-        return ApiError(401,"Unauthorized ")
+        return ApiError(401, "Unauthorized ")
     }
 
 }

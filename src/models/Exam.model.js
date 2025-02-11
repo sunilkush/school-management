@@ -6,30 +6,30 @@ const ExamSchema = new Schema(
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',
-            required: true
+            required: true,
         },
         classId: {
             type: Schema.Types.ObjectId,
             ref: 'Classes',
-            required: true
+            required: true,
         },
         subjectId: {
             type: Schema.Types.ObjectId,
             ref: 'Subject',
-            required: true
+            required: true,
         },
         examType: {
             type: String,
             enum: ['Midterm', 'Final', 'Quiz'],
-            required: true
+            required: true,
         },
         date: {
             type: Date,
-            required: true
+            required: true,
         },
         totalMarks: {
             type: Number,
-            required: true
+            required: true,
         },
     },
     { timestamps: true }

@@ -5,21 +5,21 @@ const IssuedBookSchema = new Schema(
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',
-            required: true
+            required: true,
         },
         bookId: {
             type: Schema.Types.ObjectId,
             ref: 'Book',
-            required: true
+            required: true,
         },
         studentId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+            required: true,
         },
         issueDate: {
             type: Date,
-            required: true
+            required: true,
         },
         returnDate: {
             type: Date
@@ -27,7 +27,7 @@ const IssuedBookSchema = new Schema(
         status: {
             type: String,
             enum: ['issued', 'returned'],
-            required: true
+            required: true,
         },
     },
     { timestamps: true }

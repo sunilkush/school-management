@@ -3,25 +3,26 @@ const GradeSchema = new Schema(
     {
         studentId: {
             type: Schema.Types.ObjectId,
-            ref: 'User', required: true
+            ref: 'User',
+            required: true,
         },
         examId: {
             type: Schema.Types.ObjectId,
             ref: 'Exam',
-            required: true
+            required: true,
         },
         marksObtained: {
             type: Number,
-            required: true
+            required: true,
         },
         grade: {
             type: String,
-            required: true
+            required: true,
         },
         teacherId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+            required: true,
         },
     },
     { timestamps: true }

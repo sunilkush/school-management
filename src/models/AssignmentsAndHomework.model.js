@@ -4,34 +4,34 @@ const AssignmentSchema = new Schema(
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',
-            required: true
+            required: true,
         },
         teacherId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+            required: true,
         },
         classId: {
             type: Schema.Types.ObjectId,
             ref: 'Classes',
-            required: true
+            required: true,
         },
         subjectId: {
             type: Schema.Types.ObjectId,
             ref: 'Subject',
-            required: true
+            required: true,
         },
         title: {
             type: String,
-            required: true
+            required: true,
         },
         description: {
             type: String,
-            required: true
+            required: true,
         },
         dueDate: {
             type: Date,
-            required: true
+            required: true,
         },
         attachments: [
             { type: String }

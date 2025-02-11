@@ -2,8 +2,9 @@ import mongoose, { Schema } from "mongoose";
 
 const schoolSchema = new Schema({
     name: {
-        tpye: String,
-        required: true
+        type: String,
+        required: true,
+
     },
     address: {
         type: String,
@@ -11,7 +12,7 @@ const schoolSchema = new Schema({
     },
     email: {
         type: String,
-        required: true
+        required: true,
     },
     phone: {
         type: Number,
@@ -23,7 +24,12 @@ const schoolSchema = new Schema({
     },
     logo: {
         type: String,
+    },
+    isActive: {
+        type: Boolean,
+        enum: ['true', 'false'],
+
     }
 }, { timestamps: true })
 
-export const School = mongoose.model("Schools", schoolSchema)
+export const School = mongoose.model("School", schoolSchema)

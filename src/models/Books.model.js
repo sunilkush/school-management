@@ -5,23 +5,23 @@ const BookSchema = new Schema(
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',
-            required: true
+            required: true,
         },
         title: {
             type: String,
-            required: true
+            required: true,
         },
         author: {
             type: String,
-            required: true
+            required: true,
         },
         ISBN: {
             type: String,
-            required: true
+            required: true,
         },
         availableCopies: {
             type: Number,
-            required: true
+            required: true,
         },
     },
     { timestamps: true }
