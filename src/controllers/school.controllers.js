@@ -9,13 +9,11 @@ const schoolRegister = asyncHandler(async (req, res) => {
 
 
     try {
-        const { name, address, email, phone, website, isActive, logo } = req.body;
-        console.log(req)
+        const { name, address, email, phone, website, logo, isActive } = req.body;
+
         // Check if required fields are present
         if (!name || !email) {
-
             throw new ApiError(400, "Name and Email are required");
-
         }
 
         // Check if the school already exists
@@ -26,11 +24,6 @@ const schoolRegister = asyncHandler(async (req, res) => {
 
         }
 
-
-
-        const logoUrl = await uploadOnCloudinary(logo)
-
-
         // Create new school
         const newSchool = new School({
             name,
@@ -38,7 +31,7 @@ const schoolRegister = asyncHandler(async (req, res) => {
             email,
             phone,
             website,
-            logo: logoUrl?.url || "",
+            logo,
             isActive: isActive === "true", // Convert string to boolean
         });
 
