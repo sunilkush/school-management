@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser"
+import cookieParser from "cookie-parser";
+
 
 const app = express()
 
@@ -9,10 +10,11 @@ app.use(cors({
     origin: process.env.ORIGIN_URI
 }))
 
-app.use(express.urlencoded({ limit: "16kb", extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"))
 app.use(express.json({ limit: "16kb" }))
 app.use(cookieParser())
+
 
 import schoolRoutes from "./routes/school.routes.js";
 //import userRoutes from "./routes/user.routes.js";

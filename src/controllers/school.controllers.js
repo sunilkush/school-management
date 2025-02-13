@@ -7,9 +7,10 @@ import { School } from "../models/School.model.js";
 
 const schoolRegister = asyncHandler(async (req, res) => {
 
-    try {
-        const { name, address, email, phone, website, logo, isActive } = req.body;
 
+    try {
+        const { name, address, email, phone, website, isActive, logo } = req.body;
+        console.log(req)
         // Check if required fields are present
         if (!name || !email) {
 
@@ -25,6 +26,11 @@ const schoolRegister = asyncHandler(async (req, res) => {
 
         }
 
+
+
+        const logoUrl = await uploadOnCloudinary(logo)
+
+
         // Create new school
         const newSchool = new School({
             name,
@@ -32,7 +38,7 @@ const schoolRegister = asyncHandler(async (req, res) => {
             email,
             phone,
             website,
-            logo,
+            logo: logoUrl?.url || "",
             isActive: isActive === "true", // Convert string to boolean
         });
 

@@ -60,4 +60,4 @@ const TimetableSchema = new mongoose.Schema(
   { timestamps: true } // Automatically adds createdAt and updatedAt fields
 );
 
-exports const TimeTable = mongoose.model("Timetable", TimetableSchema);
+export const TimeTable = mongoose.model("Timetable", TimetableSchema);

@@ -11,21 +11,19 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
-const uploadOnCloudinary = async (localFilePath) => {
+const uploadOnCloudinary = async (filePath) => {
     try {
-        if (!localFilePath) {
-            return ApiError(401, "Something went wrong")
+        if (!filePath) {
+            throw new ApiError(400, "localpath Required !")
         }
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
-        fs.unlinkSync(localFilePath)
-        return response
+        const result = await cloudinary.uploader.upload(filePath);
+        fs.unlinkSync(filePath)
+        return result;
     } catch (error) {
-        fs.unlinkSync(localFilePath)
-        return error
+        console.error("Cloudinary Upload Error:", error);
+        return null;
     }
-}
+};
 
 const deleteOnCloudinary = async (localFilePath) => {
     try {
