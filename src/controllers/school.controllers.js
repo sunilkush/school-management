@@ -8,13 +8,11 @@ import { School } from "../models/School.model.js";
 const schoolRegister = asyncHandler(async (req, res) => {
 
     try {
-        const { name, address, email, phone, website, logo, isActive } = req.body;
+        const { name, address, email, phone, website, isActive } = req.body;
 
         // Check if required fields are present
         if (!name || !email) {
-
             throw new ApiError(400, "Name and Email are required");
-
         }
 
         // Check if the school already exists
@@ -24,7 +22,13 @@ const schoolRegister = asyncHandler(async (req, res) => {
             throw new ApiError(400, "School already registered with this email")
 
         }
-
+        const logoLocalPath = req.files?.logo[0]?.path;
+        console.log(logoLocalPath)
+        if (!logoLocalPath) {
+            throw new ApiError(400, "logoLocalPath not found !")
+        }
+        const uploadLogo = await uploadOnCloudinary(logoLocalPath)
+        console.log(uploadLogo)
         // Create new school
         const newSchool = new School({
             name,
@@ -32,7 +36,7 @@ const schoolRegister = asyncHandler(async (req, res) => {
             email,
             phone,
             website,
-            logo,
+            logo: uploadLogo?.url || "",
             isActive: isActive === "true", // Convert string to boolean
         });
 
