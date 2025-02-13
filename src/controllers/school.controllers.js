@@ -9,7 +9,7 @@ const schoolRegister = asyncHandler(async (req, res) => {
 
 
     try {
-        const { name, address, email, phone, website, logo, isActive } = req.body;
+        const { name, address, email, phone, website, isActive } = req.body;
 
         // Check if required fields are present
         if (!name || !email) {
