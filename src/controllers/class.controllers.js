@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Classes } from '../models/classes.model.js';
 
-const rgisterClass = asyncHandler(async (req, res) => {
+const registerClass = asyncHandler(async (req, res) => {
 
     try {
         const { name, section, schoolId, teacherId, students, subjects } = req.body
@@ -69,7 +69,7 @@ const updateClass = asyncHandler(async (req, res) => {
     }
     return res.status(200).json(new ApiResponse(200, updatedClass, "Class updated successfully"));
 })
-// 📌 Delete Class
+
 const deleteClass = asyncHandler(async (req, res) => {
     try {
         const { classId } = req.params;
@@ -87,7 +87,7 @@ const deleteClass = asyncHandler(async (req, res) => {
 });
 
 export {
-    rgisterClass,
+    registerClass,
     updateClass,
     deleteClass
 }
