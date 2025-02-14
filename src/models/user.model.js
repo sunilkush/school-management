@@ -14,21 +14,33 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ["admin", "teacher", "student", "parent"],
+        enm: ['Admin', 'Teacher', 'Student', 'Super Admin'],
         required: true,
+    },
+    avtar: {
+        type: String,
     },
     schoolId: {
         type: Schema.Types.ObjectId,
-        ref: "School"
+        ref: "School",
+
     },
     classId: {
         type: Schema.Types.ObjectId,
-        ref: "Classes"
+        ref: "Classes",
+
     },  // For students & teachers
     parentId: {
         type: Schema.Types.ObjectId,
         ref: "User"
     },  // If the user is a student, link their parent
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    refreshToken: {
+        type: String
+    }
 
 }, { timestamps: true });
 
