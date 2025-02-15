@@ -28,6 +28,7 @@ const schoolSchema = new Schema({
     isActive: {
         type: Boolean,
         enum: ['true', 'false'],
+        default: true
 
     }
 }, { timestamps: true })
