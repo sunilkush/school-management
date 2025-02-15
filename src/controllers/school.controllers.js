@@ -24,6 +24,14 @@ const schoolRegister = asyncHandler(async (req, res) => {
 
         }
 
+        const localLogoPath = req.files?.logo[0]?.path
+
+        if (!localLogoPath) {
+            throw new ApiError(400, "logo local path required !")
+        }
+
+        const uploadLogo = await uploadOnCloudinary(localLogoPath)
+
         // Create new school
         const newSchool = new School({
             name,
