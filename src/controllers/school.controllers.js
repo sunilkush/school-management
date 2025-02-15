@@ -28,9 +28,6 @@ const schoolRegister = asyncHandler(async (req, res) => {
             throw new ApiError(400, "logoLocalPath not found !")
         }
         const uploadLogo = await uploadOnCloudinary(logoLocalPath)
-
-
-
         // Create new school
         const newSchool = new School({
             name,
