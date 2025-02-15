@@ -39,7 +39,7 @@ const schoolRegister = asyncHandler(async (req, res) => {
             email,
             phone,
             website,
-            logo,
+            logo: uploadLogo?.url || "",
             isActive: isActive === "true", // Convert string to boolean
         });
 
