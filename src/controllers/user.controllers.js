@@ -4,6 +4,21 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
+const generateAccessAndRefreshToken = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
+        return { accessToken, refreshToken }
+
+    } catch (error) {
+        throw new ApiError(404, "something went wrong while access & refresh token")
+    }
+
+}
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, role, schoolId, classId, parentId, isActive } = req.body
 
@@ -39,7 +54,7 @@ const registerUser = asyncHandler(async (req, res) => {
         isActive: true
     })
 
-    const createdUser = await User.findById(user._id).select(
+    const createdUser = await User.findById(newUser._id).select(
         "-password -refreshToken"
     )
 
@@ -54,6 +69,45 @@ const registerUser = asyncHandler(async (req, res) => {
     )
 
 });
+
+const loginUser = asyncHandler(async (req, res) => {
+    const { email, password } = req.body
+
+    if ([email, password].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All Fiedls are Required ?")
+    }
+
+
+
+    const user = await User.findOne({ $or: [{ email }] })
+
+    if (!user) {
+        throw new ApiError(404, "user does not exist")
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password)
+
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid credentials")
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = {
+        secure: true,
+        httpOnly: true
+    }
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(200, {
+                user: loggedInUser, refreshToken, accessToken,
+            }, "user logged in successfully")
+        )
+})
 
 const updateUser = asyncHandler(async (req, res) => {
     try {
@@ -75,7 +129,7 @@ const updateUser = asyncHandler(async (req, res) => {
         if (parentId) user.parentId = parentId;
 
         // Step 3: Save updated user
-        const updatedUser = await user.save();
+        const updatedUser = await user.save({ validateBeforeSave: false });
 
         const userUpdate = await updatedUser.findById(userId).select("-password,refreshToken")
 
@@ -88,9 +142,28 @@ const updateUser = asyncHandler(async (req, res) => {
 });
 
 
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body
 
+    if ([oldPassword, newPassword].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All Fields are Required !")
+    }
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Old Password invalid")
+    }
+
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+
+    return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"))
+})
 
 export {
     registerUser,
-    updateUser
+    loginUser,
+    updateUser,
+    changeCurrentPassword
 }
