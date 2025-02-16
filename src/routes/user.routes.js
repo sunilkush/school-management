@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { auth, } from "../middlewares/auth.middleware.js";
 import {
     registerUser,
     updateUser
