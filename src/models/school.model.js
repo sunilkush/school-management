@@ -33,4 +33,4 @@ const schoolSchema = new Schema({
     }
 }, { timestamps: true })
 
-export const School = mongoose.model("School", schoolSchema)
+export const School = mongoose.model("Schools", schoolSchema)
