@@ -17,12 +17,12 @@ app.use(cookieParser());
 
 
 import schoolRoutes from "./routes/school.routes.js";
-//import userRoutes from "./routes/user.routes.js";
-//import studentRoutes from "./routes/student.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import classRoutes from "./routes/class.routes.js";
 
 app.use("/app/v1/school", schoolRoutes)
-//app.use("/app/v1/user", userRoutes)
-//app.use("/app/v1/student", studentRoutes)
+app.use("/app/v1/user", userRoutes)
+app.use("/app/v1/class", classRoutes)
 
 
 export { app }
