@@ -20,11 +20,12 @@ import schoolRoutes from "./routes/school.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import classRoutes from "./routes/class.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
-
+import subjectRoutes from "./routes/attendance.routes.js";
 app.use("/app/v1/school", schoolRoutes)
 app.use("/app/v1/user", userRoutes)
 app.use("/app/v1/class", classRoutes)
 app.use("/app/v1/attendance", attendanceRoutes)
+app.use("/app/v1/subject", subjectRoutes)
 
 
 export { app }
