@@ -11,7 +11,7 @@ const router = Router()
 
 router.route('/register').post(
     auth,
-    roleMiddleware(['Admin', 'Super Admin']),
+    roleMiddleware('Admin', 'Super Admin'),
     upload.fields([
         {
             name: 'logo',
@@ -23,7 +23,7 @@ router.route('/register').post(
 
 router.route('/update/:id').post(
     auth,
-    roleMiddleware(['Admin']),
+    roleMiddleware('Admin'),
     upload.fields([
         {
             name: 'logo',
@@ -35,6 +35,6 @@ router.route('/update/:id').post(
 
 router
     .route('/deactivate/id')
-    .post(auth, roleMiddleware(['Admin', 'Super Admin']), deactivateSchool)
+    .post(auth, roleMiddleware('Admin', 'Super Admin'), deactivateSchool)
 
 export default router

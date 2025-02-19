@@ -11,29 +11,29 @@ const router = Router()
 
 router
     .route('/')
-    .post(auth, roleMiddleware(['teacher', 'admin']), markAttendance)
+    .post(auth, markAttendance)
 router
     .route('/Student/:id')
-    .get(auth, roleMiddleware(['student', 'admin']), getAttendanceByStudent)
+    .get(auth, getAttendanceByStudent)
 router
     .route('/Class/:id')
     .get(
         auth,
-        roleMiddleware(['teacher', 'admin', 'super admin']),
+        roleMiddleware(['Teacher', 'Admin', 'Super Admin']),
         getAttendanceByClass
     )
 router
     .route('/Update/:id')
     .put(
         auth,
-        roleMiddleware(['teacher', 'admin', 'super admin']),
+        roleMiddleware(['Teacher', 'Admin', 'Super Admin']),
         updateAttendanceRecord
     )
 router
     .route('/Deleate/:id')
     .put(
         auth,
-        roleMiddleware(['teacher', 'admin', 'super admin']),
+        roleMiddleware(['Teacher', 'Admin', 'Super Admin']),
         deleteAttendanceRecord
     )
 

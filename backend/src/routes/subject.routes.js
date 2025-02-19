@@ -13,17 +13,17 @@ const router = Router();
 
 router
     .route('/addSubject')
-    .post(auth, roleMiddleware(['Teacher', 'Admin']), createSubject)
+    .post(auth, roleMiddleware('Teacher', 'Admin'), createSubject)
 router
     .route('/subjectAll')
-    .get(auth, roleMiddleware(['Teacher', 'Admin']), getAllSubjects)
+    .get(auth, roleMiddleware('Teacher', 'Admin'), getAllSubjects)
 router
     .route('/subject/:id')
-    .get(auth, roleMiddleware(['Teacher', 'Admin']), getSubject)
+    .get(auth, roleMiddleware('Teacher', 'Admin'), getSubject)
 router
     .route('/update/:id')
-    .put(auth, roleMiddleware(['Teacher', 'Admin']), updateSubject)
+    .put(auth, roleMiddleware('Teacher', 'Admin'), updateSubject)
 router
     .route('/delete/:id')
-    .delete(auth, roleMiddleware(['Teacher', 'Admin']), deleteSubject)
+    .delete(auth, roleMiddleware('Teacher', 'Admin'), deleteSubject)
 export default router
