@@ -1,18 +1,23 @@
-import { Router } from "express"
-import { auth, } from "../middlewares/auth.middleware.js";
+import { Router } from 'express'
+import { auth } from '../middlewares/auth.middleware.js'
 import {
     registerUser,
     loginUser,
     updateUser,
-    changeCurrentPassword
-} from "../controllers/user.controllers.js"
-import { upload } from "../middlewares/multer.middleware.js"
+    changeCurrentPassword,
+} from '../controllers/user.controllers.js'
+import { upload } from '../middlewares/multer.middleware.js'
 const router = Router()
 
-router.route('/register').post(upload.fields([{
-    name: "",
-    maxCount: 1
-}]), registerUser)
+router.route('/register').post(
+    upload.fields([
+        {
+            name: '',
+            maxCount: 1,
+        },
+    ]),
+    registerUser
+)
 
 router.route('/login').post(loginUser)
 

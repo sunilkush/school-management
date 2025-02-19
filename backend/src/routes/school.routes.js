@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router } from 'express'
 import {
     schoolRegister,
     schoolUpdate,
     deactivateSchool,
-} from '../controllers/school.controllers.js';
-import { upload } from '../middlewares/multer.middleware.js';
-import { auth, roleMiddleware } from '../middlewares/auth.middleware.js';
+} from '../controllers/school.controllers.js'
+import { upload } from '../middlewares/multer.middleware.js'
+import { auth, roleMiddleware } from '../middlewares/auth.middleware.js'
 
 const router = Router()
 
