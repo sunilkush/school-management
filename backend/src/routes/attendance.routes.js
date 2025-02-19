@@ -19,21 +19,21 @@ router
     .route('/Class/:id')
     .get(
         auth,
-        roleMiddleware(['Teacher', 'Admin', 'Super Admin']),
+        roleMiddleware('Teacher', 'Admin', 'Super Admin'),
         getAttendanceByClass
     )
 router
     .route('/Update/:id')
     .put(
         auth,
-        roleMiddleware(['Teacher', 'Admin', 'Super Admin']),
+        roleMiddleware('Teacher', 'Admin', 'Super Admin'),
         updateAttendanceRecord
     )
 router
     .route('/Deleate/:id')
     .put(
         auth,
-        roleMiddleware(['Teacher', 'Admin', 'Super Admin']),
+        roleMiddleware('Teacher', 'Admin', 'Super Admin'),
         deleteAttendanceRecord
     )
 
