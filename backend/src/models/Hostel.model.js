@@ -21,7 +21,7 @@ const HostelSchema = new Schema(
             required: true,
         },
     },
-    { timestamps: { createdAt: true, updatedAt: false } }
+    { timestamps: true }
 );
 
 export const Hostel = mongoose.model("Hostel", HostelSchema)
