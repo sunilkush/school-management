@@ -72,7 +72,7 @@ const getAttendanceByStudent = asyncHandler(async (req, res) => {
         }
         return res
             .status(200)
-            .json(
+            .json( 
                 new ApiResponse(
                     200,
                     attendance,
@@ -146,7 +146,13 @@ const updateAttendanceRecord = asyncHandler(async (req, res) => {
 const deleteAttendanceRecord = asyncHandler(async(req,res)=>{
       try {
         const { id } = req.params;
-        const deletedAttendance = await Attendance.findByIdAndDelete(id);
+        const deletedAttendance = await Attendance.findByIdAndUpdate(id,{
+            $set:{
+                isVisble:false
+            }
+        },{
+            new:true
+        });
         if (!deletedAttendance) {
             throw new ApiError(400,"data not found")
         };

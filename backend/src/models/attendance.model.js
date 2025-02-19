@@ -36,6 +36,10 @@ const AttendanceSchema = new Schema(
             ref: 'User',
             required: true,
         },
+        isVisble:{
+            type:Boolean,
+            default:true
+        }
     },
     {
         timestamps: true // Only stores createdAt

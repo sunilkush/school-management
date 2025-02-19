@@ -11,9 +11,9 @@ const router = Router()
 
 
 router.route('/').post(auth,roleMiddleware(['teacher','admin']),markAttendance)
-router.route('/Student/:id').post(auth,roleMiddleware(['student',]),getAttendanceByStudent)
-router.route('/Class/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),getAttendanceByClass)
-router.route('/Update/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),updateAttendanceRecord)
-router.route('/Deleate/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),deleteAttendanceRecord)
+router.route('/Student/:id').get(auth,roleMiddleware(['student','admin']),getAttendanceByStudent)
+router.route('/Class/:id').get(auth,roleMiddleware(['teacher','admin','super admin']),getAttendanceByClass)
+router.route('/Update/:id').put(auth,roleMiddleware(['teacher','admin','super admin']),updateAttendanceRecord)
+router.route('/Deleate/:id').put(auth,roleMiddleware(['teacher','admin','super admin']),deleteAttendanceRecord)
 
 export default router
