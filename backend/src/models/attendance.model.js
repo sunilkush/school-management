@@ -32,7 +32,7 @@ const AttendanceSchema = new Schema(
             required: true,
         },
         recordedBy: {
-            type: Schema.Types.ObjectId,
+            type: Schema.Types.ObjectId,  // user id 
             ref: 'User',
             required: true,
         },
