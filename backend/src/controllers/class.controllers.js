@@ -44,6 +44,7 @@ const registerClass = asyncHandler(async (req, res) => {
 
 });
 
+
 const updateClass = asyncHandler(async (req, res) => {
     const { classId } = req.params;
     const { name, section, teacherId, students, subjects } = req.body;
