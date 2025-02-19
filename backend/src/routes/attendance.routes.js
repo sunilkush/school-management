@@ -10,10 +10,10 @@ import {auth,roleMiddleware} from '../middlewares/auth.middleware.js'
 const router = Router()
 
 
-router.route('/attendance').post(auth,roleMiddleware(['teacher']),markAttendance)
-router.route('/attendanceStudent/:id').post(auth,roleMiddleware(['student',]),getAttendanceByStudent)
-router.route('/attendanceClass/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),getAttendanceByClass)
-router.route('/attendanceUpdate/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),updateAttendanceRecord)
-router.route('/attendanceDeleate/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),deleteAttendanceRecord)
+router.route('/').post(auth,roleMiddleware(['teacher','admin']),markAttendance)
+router.route('/Student/:id').post(auth,roleMiddleware(['student',]),getAttendanceByStudent)
+router.route('/Class/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),getAttendanceByClass)
+router.route('/Update/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),updateAttendanceRecord)
+router.route('/Deleate/:id').post(auth,roleMiddleware(['teacher','admin','super admin']),deleteAttendanceRecord)
 
 export default router
