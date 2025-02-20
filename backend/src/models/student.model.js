@@ -6,24 +6,7 @@ const StudentSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: 'User',
             required: true },
-        schoolId: {
-            type: Schema.Types.ObjectId,
-            ref: 'School',
-            required: true,
-        },
-
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true,
-        },
+       
         phoneNumber: {
             type: String,
             required: true,
@@ -55,7 +38,7 @@ const StudentSchema = new Schema(
             unique: true,
             required: true,
         },
-        classId: { type: Schema.Types.ObjectId, ref: "Classes", required: true },
+      
         section: {
             type: String,
             required: true,

@@ -93,7 +93,15 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-
+    if(loggedInUser.role ==="admin"){
+          
+    }
+    if(loggedInUser.role ==="student"){
+        
+    }
+    if(loggedInUser.role ==="teacher"){
+        
+    }
     const options = {
         secure: true,
         httpOnly: true
@@ -161,9 +169,16 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"))
 })
 
+const getUser = asyncHandler(async(req,res)=>{
+  return res.status(200).json(
+    ApiResponse(200,req.user,"User fetched successfully")
+  )
+})
+
 export {
     registerUser,
     loginUser,
     updateUser,
-    changeCurrentPassword
+    changeCurrentPassword,
+    getUser
 }
