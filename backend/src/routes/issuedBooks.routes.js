@@ -5,7 +5,7 @@ import {
     getIssuedBooksForStudent,
     returnBook,
     deleteIssuedBook,
-} from "../controllers/issuedBook.controller.js";
+} from "../controllers/issuedBook.controllers.js";
 import { auth, roleMiddleware } from '../middlewares/auth.middleware.js'
 
 const router = Router();
