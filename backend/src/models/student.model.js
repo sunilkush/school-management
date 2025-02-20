@@ -2,11 +2,11 @@ import mongoose, { Schema } from 'mongoose'
 
 const StudentSchema = new Schema(
     {
-        userId: { 
+        userId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-            required: true },
-       
+            required: true
+        },
         phoneNumber: {
             type: String,
             required: true,
@@ -38,11 +38,7 @@ const StudentSchema = new Schema(
             unique: true,
             required: true,
         },
-      
-        section: {
-            type: String,
-            required: true,
-        },
+
         admissionDate: {
             type: Date,
             default: Date.now,
