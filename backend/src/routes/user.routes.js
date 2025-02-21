@@ -12,11 +12,10 @@ import { upload } from '../middlewares/multer.middleware.js';
 const router = Router()
 
 router.route('/adminRegister').post(
-    upload.fields([
-        {
-            name: '',
-            maxCount: 1,
-        },
+    upload.fields([{
+        name: "avatar",
+        maxCount: 1
+    }
     ]),
     registerUser
 )

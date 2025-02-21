@@ -1,4 +1,7 @@
 import mongoose, { Schema } from "mongoose";
+import bcrypt from "bcrypt";
+
+import jwt from "jsonwebtoken";
 const userSchema = new Schema({
     name: {
         type: String,
@@ -17,13 +20,12 @@ const userSchema = new Schema({
         enm: ['Admin', 'Teacher', 'Student', 'Super Admin'],
         required: true,
     },
-    avtar: {
+    avatar: {
         type: String,
     },
     schoolId: {
         type: Schema.Types.ObjectId,
         ref: "School",
-
     },
     classId: {
         type: Schema.Types.ObjectId,
@@ -40,22 +42,25 @@ const userSchema = new Schema({
     },
     refreshToken: {
         type: String
-    },
-    
+    }
 
-}, { timestamps: true });
+
+}, { timestamps: true }
+);
 
 // password bcrypt
+
 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
 
     this.password = await bcrypt.hash(this.password, 10)
     next()
-});
+})
 // password compare to login time method
 userSchema.methods.isPasswordCorrect = async function (password) {
     // password compare
+
     return await bcrypt.compare(password, this.password)
 }
 // create access token method

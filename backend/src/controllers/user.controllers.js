@@ -30,15 +30,15 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User already registered with this email");
     }
 
-    const avtarlocalPath = req.files?.avtar[0]?.path
+    const avtarlocalPath = req.files?.avatar[0]?.path
 
     if (!avtarlocalPath) {
         throw new ApiError(400, "avtar local Path not found !")
     }
 
-    const avtar = await uploadOnCloudinary(avtarlocalPath)
+    const avatar = await uploadOnCloudinary(avtarlocalPath)
 
-    if (!avtar) {
+    if (!avatar) {
         throw new ApiError(400, "avtar didn't upload !")
     }
 
@@ -47,7 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password,
         role,
-        avtar: avtar.url || "",
+        avatar: avatar.url || "",
         schoolId,
         classId,
         parentId,
@@ -71,37 +71,36 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body
+    // get value on frontend
+    // user validation
+    // find the user
+    // password check
+    // access & refresh token
+    // send cookie
 
-    if ([email, password].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "All Fiedls are Required ?")
+    const { email, password } = req.body;
+
+    // 1️⃣ Validate request data
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required." });
     }
 
-
-
-    const user = await User.findOne({ $or: [{ email }] })
-
+    // 2️⃣ Find user by email
+    const user = await User.findOne({ email });
     if (!user) {
-        throw new ApiError(404, "user does not exist")
+        return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    const isPasswordValid = await user.isPasswordCorrect(password)
-
+    // 3️⃣ Compare passwords
+    const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
-        throw new ApiError(401, "Invalid credentials")
+        return res.status(401).json({ message: "Invalid email or password." });
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-    if (loggedInUser.role === "admin") {
 
-    }
-    if (loggedInUser.role === "student") {
-
-    }
-    if (loggedInUser.role === "teacher") {
-
-    }
     const options = {
         secure: true,
         httpOnly: true
@@ -116,6 +115,7 @@ const loginUser = asyncHandler(async (req, res) => {
             }, "user logged in successfully")
         )
 })
+
 
 const updateUser = asyncHandler(async (req, res) => {
     try {
