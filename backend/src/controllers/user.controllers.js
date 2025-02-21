@@ -119,30 +119,24 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
     try {
-        const { userId } = req.params;
-        const { name, email, role, schoolId, classId, parentId } = req.body;
 
-        // Step 1: Check if the user exists
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new ApiError(404, "User not found");
+        const { name, email } = req.body
+        if (!email || !name) {
+            throw new ApiError(400, "All fields are required please set")
         }
 
-        // Step 2: Update user fields (only if provided)
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (role) user.role = role;
-        if (schoolId) user.schoolId = schoolId;
-        if (classId) user.classId = classId;
-        if (parentId) user.parentId = parentId;
-
-        // Step 3: Save updated user
-        const updatedUser = await user.save({ validateBeforeSave: false });
-
-        const userUpdate = await updatedUser.findById(userId).select("-password,refreshToken")
+        // Step 1: Check if the user exists
+        const user = await User.findByIdAndUpdate(req.user?._id, {
+            $set: {
+                name: name,
+                email: email
+            }
+        }, {
+            new: true
+        }).select("-password")
 
         res.status(200).json(
-            new ApiResponse(200, userUpdate, "User updated successfully")
+            new ApiResponse(200, user, "User updated successfully")
         );
     } catch (error) {
         throw new ApiError(500, error.message || "User update failed");
@@ -169,16 +163,42 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"))
 })
 
-const getUser = asyncHandler(async (req, res) => {
-    return res.status(200).json(
-        ApiResponse(200, req.user, "User fetched successfully")
-    )
-})
 
+
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, req.user, "User fetched successfully")
+        )
+});
+const logoutUser = asyncHandler(async (req, res) => {
+    // user find
+    // user refresh token delete  
+    // return response
+    await User.findByIdAndUpdate(req.user._id, {
+        $unset: {
+            refreshToken: 1
+        }
+    }, {
+        new: true
+    })
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+    res.status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged Out"))
+})
 export {
     registerUser,
     loginUser,
     updateUser,
     changeCurrentPassword,
-    getUser
+    getCurrentUser,
+    logoutUser
 }

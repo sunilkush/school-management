@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { auth, roleMiddleware } from '../middlewares/auth.middleware.js';
+import { auth } from '../middlewares/auth.middleware.js';
 import {
     registerUser,
     loginUser,
     updateUser,
-    changeCurrentPassword, getUser
+    changeCurrentPassword, getCurrentUser, logoutUser
 } from '../controllers/user.controllers.js';
 
 import { upload } from '../middlewares/multer.middleware.js';
@@ -23,9 +23,10 @@ router.route('/adminRegister').post(
 router.route('/login').post(loginUser)
 
 // secure route
-router.route('/update/:id').post(auth, updateUser)
-router.route('/changePassword').post(auth, changeCurrentPassword);
-router.route("/getuser").get(auth, getUser);
+router.route('/update').patch(auth, updateUser)
+router.route('/changePassword').patch(auth, changeCurrentPassword);
+router.route("/getCurrentUser").get(auth, getCurrentUser);
+router.route("/logoutUser").get(auth, logoutUser);
 
 
 

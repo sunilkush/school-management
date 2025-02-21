@@ -5,42 +5,43 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 dotenv.config()
 
-const auth = asyncHandler(async(req,res,next)=>{
-    try {
-        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
-    if(!token){
-        throw new ApiError(401,"Unauthorized Token !")
+const auth = asyncHandler(async (req, res, next) => {
+  try {
+    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+    if (!token) {
+      throw new ApiError(401, "Unauthorized Token !")
     }
-    
-    const decodeToken= jwt.verify(token,process.env.ACCESS_TOKEN_SECRET )
-   
-    const user = await User.findById(decodeToken?._id).select("-password -refreshToken")
-   if(!user){
-    throw new ApiError(401, "Invalid Access Request")
-   }
-   req.user = user
-   next()
 
-    } catch (error) {
-        throw new ApiError(401, error?.message || "Invalid access token")
+    const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+
+    const user = await User.findById(decodeToken?._id).select("-password -refreshToken")
+    if (!user) {
+      throw new ApiError(401, "Invalid Access Request")
     }
+    req.user = user
+    next()
+
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid access token")
+  }
 
 })
 
 const roleMiddleware = (allowedRoles) => {
-    return async(__, res, next) => { 
+  return async (req, res, next) => {
 
-      try {
-        const userRole = await User.find() // Assuming req.user is populated after authentication
-        if (!allowedRoles.includes(userRole.role)) {
-          return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
-        }
-        next();
-      } catch (error) {
-        res.status(500).json({ message: "An error occurred during role validation.", error: error.message });
+    try {
+      const userRole = await User.findOne(req.user?._id) // Assuming req.user is populated after authentication
+
+      if (!allowedRoles.includes(userRole.role)) {
+        return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
       }
-    };
+      next();
+    } catch (error) {
+      res.status(500).json({ message: "An error occurred during role validation.", error: error.message });
+    }
   };
-  
+};
 
-export {auth,roleMiddleware}
+
+export { auth, roleMiddleware }

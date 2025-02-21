@@ -20,9 +20,10 @@ import schoolRoutes from "./routes/school.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import classRoutes from "./routes/class.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
-import subjectRoutes from "./routes/attendance.routes.js";
+import subjectRoutes from "./routes/subject.routes.js";
 import booksRoutes from "./routes/book.routes.js";
 import issuedBookRoutes from "./routes/issuedBooks.routes.js";
+import studentRoutes from "./routes/student.routes.js";
 
 // route
 app.use("/app/v1/school", schoolRoutes)
@@ -32,5 +33,6 @@ app.use("/app/v1/attendance", attendanceRoutes)
 app.use("/app/v1/subject", subjectRoutes)
 app.use("/app/v1/books", booksRoutes)
 app.use("/api/v1/issuedBooks", issuedBookRoutes);
+app.use("/api/v1/student", studentRoutes);
 
 export { app }
