@@ -20,26 +20,27 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 }
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password, role, schoolId, classId, parentId, isActive } = req.body
+    const { name, email, password, role, schoolId, classId, parentId, isActive } = req.body;
 
     if ([name, email, password, role, isActive].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "All fields Requied !")
+        throw new ApiError(400, "All fields required!");
     }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
         throw new ApiError(400, "User already registered with this email");
     }
 
-    const avtarlocalPath = req.files?.avatar[0]?.path
-
-    if (!avtarlocalPath) {
-        throw new ApiError(400, "avtar local Path not found !")
+    // Check for file upload
+    if (!req.files || !req.files.avatar || !Array.isArray(req.files.avatar) || req.files.avatar.length === 0) {
+        throw new ApiError(400, "Avatar file is required!");
     }
 
-    const avatar = await uploadOnCloudinary(avtarlocalPath)
+    const avtarlocalPath = req.files.avatar[0].path;
 
+    const avatar = await uploadOnCloudinary(avtarlocalPath);
     if (!avatar) {
-        throw new ApiError(400, "avtar didn't upload !")
+        throw new ApiError(400, "Avatar didn't upload!");
     }
 
     const newUser = await User.create({
@@ -52,23 +53,17 @@ const registerUser = asyncHandler(async (req, res) => {
         classId,
         parentId,
         isActive: true
-    })
+    });
 
-    const createdUser = await User.findById(newUser._id).select(
-        "-password -refreshToken"
-    )
+    const createdUser = await User.findById(newUser._id).select("-password -refreshToken");
 
-    // check for user create
     if (!createdUser) {
-        throw new ApiError(500, "Something went wrong while registering the user")
+        throw new ApiError(500, "Something went wrong while registering the user");
     }
 
-    //  return response
-    return res.status(201).json(
-        new ApiResponse(200, createdUser, "user registered successfully")
-    )
-
+    return res.status(201).json(new ApiResponse(200, createdUser, "User registered successfully"));
 });
+
 
 const loginUser = asyncHandler(async (req, res) => {
     // get value on frontend

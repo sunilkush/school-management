@@ -4,7 +4,9 @@ import {
     registerUser,
     loginUser,
     updateUser,
-    changeCurrentPassword, getCurrentUser, logoutUser
+    changeCurrentPassword,
+    getCurrentUser,
+    logoutUser
 } from '../controllers/user.controllers.js';
 
 import { upload } from '../middlewares/multer.middleware.js';

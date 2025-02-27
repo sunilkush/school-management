@@ -1,21 +1,19 @@
 import { Router } from "express";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
-import { upload } from "../middlewares/multer.middleware.js";
-import { registerUser } from "../controllers/user.controllers.js";
+
+import { registerStudent, getStudents } from "../controllers/student.controllers.js";
 const router = Router();
 
 router.route('/register').post(
     auth,
-    roleMiddleware("Super Admin"),
-    upload.fields([
-        {
-            name: 'avatar',
-            maxCount: 1,
-        },
-    ]),
-    registerUser
+    roleMiddleware("Super Admin", "Admin"),
+    registerStudent
+)
+router.route('/getStudents').get(
+    auth,
+    roleMiddleware("Super Admin", "Admin", "student"),
+    getStudents
 )
 
-router.route('/update/:id').patch()
 
 export default router
