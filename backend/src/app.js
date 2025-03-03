@@ -24,6 +24,7 @@ import subjectRoutes from "./routes/subject.routes.js";
 import booksRoutes from "./routes/book.routes.js";
 import issuedBookRoutes from "./routes/issuedBooks.routes.js";
 import studentRoutes from "./routes/student.routes.js";
+import RoleRoutes from "./routes/role.routes.js";
 
 // route
 app.use("/app/v1/school", schoolRoutes)
@@ -34,5 +35,6 @@ app.use("/app/v1/subject", subjectRoutes)
 app.use("/app/v1/books", booksRoutes)
 app.use("/api/v1/issuedBooks", issuedBookRoutes);
 app.use("/api/v1/student", studentRoutes);
+app.use("/api/v1/role", RoleRoutes);
 
 export { app }

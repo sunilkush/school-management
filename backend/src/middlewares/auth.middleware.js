@@ -14,7 +14,7 @@ const auth = asyncHandler(async (req, res, next) => {
 
     const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
 
-    const user = await User.findById(decodeToken?._id).select("-password -refreshToken")
+    const user = await User.findById(decodeToken?._id).select("-password -refreshToken").populate("role");
     if (!user) {
       throw new ApiError(401, "Invalid Access Request")
     }
@@ -31,9 +31,9 @@ const roleMiddleware = (allowedRoles) => {
   return async (req, res, next) => {
 
     try {
-      const userRole = await User.findOne(req.user?._id) // Assuming req.user is populated after authentication
+      const userRole = await Role.findById(req.user?.role) // Assuming req.user is populated after authentication
 
-      if (!allowedRoles.includes(userRole.role)) {
+      if (!userRole || !allowedRoles.includes(userRole.name)) {
         return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
       }
       next();

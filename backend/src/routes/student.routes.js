@@ -6,12 +6,12 @@ const router = Router();
 
 router.route('/register').post(
     auth,
-    roleMiddleware("Super Admin", "Admin"),
+    roleMiddleware(["Super Admin", "Admin"]),
     registerStudent
 )
 router.route('/getStudents').get(
     auth,
-    roleMiddleware("Super Admin", "Admin", "student"),
+    roleMiddleware(["Super Admin", "Admin", "Student"]),
     getStudents
 )
 

@@ -16,8 +16,8 @@ const userSchema = new Schema({
         required: true,
     },
     role: {
-        type: String,
-        enm: ['Admin', 'Teacher', 'Student', 'Super Admin'],
+        type: Schema.Types.ObjectId,
+        ref: "Role",
         required: true,
     },
     avatar: {
@@ -26,6 +26,7 @@ const userSchema = new Schema({
     schoolId: {
         type: Schema.Types.ObjectId,
         ref: "School",
+        required: true
     },
     classId: {
         type: Schema.Types.ObjectId,

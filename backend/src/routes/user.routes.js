@@ -23,14 +23,10 @@ router.route('/adminRegister').post(
 )
 
 router.route('/login').post(loginUser)
-
 // secure route
 router.route('/update').patch(auth, updateUser)
 router.route('/changePassword').patch(auth, changeCurrentPassword);
 router.route("/getCurrentUser").get(auth, getCurrentUser);
 router.route("/logoutUser").get(auth, logoutUser);
-
-
-
 
 export default router

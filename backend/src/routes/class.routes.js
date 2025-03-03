@@ -12,14 +12,14 @@ const router = Router()
 
 router
     .route('/registerClass')
-    .post(auth, roleMiddleware('Admin', 'Teacher'), registerClass)
+    .post(auth, roleMiddleware(["Super Admin", "Admin", "Teacher"]), registerClass)
 
 router
     .route('/updateClass/:id')
-    .post(auth, roleMiddleware('Admin'), updateClass)
+    .post(auth, roleMiddleware(["Super Admin", "Admin"]), updateClass)
 
 router
     .route('/deleteClass/:id')
-    .post(auth, roleMiddleware('Admin'), deleteClass)
+    .post(auth, roleMiddleware(["Super Admin", "Admin"]), deleteClass)
 
 export default router
