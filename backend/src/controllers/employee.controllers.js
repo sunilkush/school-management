@@ -75,7 +75,7 @@ const getEmployees = asyncHandler(async (req, res) => {
 });
 
 // ✅ Get Single Employee
-export const getEmployeeById = async (req, res) => {
+const getEmployeeById = asyncHandler(async (req, res) => {
     try {
         const employee = await Employee.findById(req.params.id).populate("userId").populate("assignedClasses.classId");
         if (!employee) return res.status(404).json({ success: false, message: "Employee not found" });
@@ -84,22 +84,24 @@ export const getEmployeeById = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
-};
+});
 
 // ✅ Update Employee
-export const updateEmployee = async (req, res) => {
-    try {
-        const updatedEmployee = await Employee.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedEmployee) return res.status(404).json({ success: false, message: "Employee not found" });
+const updateEmployee = asyncHandler(
+    async (req, res) => {
+        try {
+            const updatedEmployee = await Employee.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            if (!updatedEmployee) return res.status(404).json({ success: false, message: "Employee not found" });
 
-        res.json({ success: true, data: updatedEmployee });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+            res.json({ success: true, data: updatedEmployee });
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
     }
-};
+);
 
 // ✅ Delete Employee
-export const deleteEmployee = async (req, res) => {
+const deleteEmployee = asyncHandler(async (req, res) => {
     try {
         const deletedEmployee = await Employee.findByIdAndDelete(req.params.id);
         if (!deletedEmployee) return res.status(404).json({ success: false, message: "Employee not found" });
@@ -108,9 +110,12 @@ export const deleteEmployee = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
-};
+});
 
 export {
     createEmployee,
-    getEmployees
+    getEmployees,
+    getEmployeeById,
+    updateEmployee,
+    deleteEmployee
 }
