@@ -1,5 +1,5 @@
 import express from "express";
-import { createHostel, getHostels, getHostelById, updateHostel, deleteHostel } from "../controllers/hostel.controller.js";
+import { createHostel, getHostels, getHostelById, updateHostel, deleteHostel } from "../controllers/hostel.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.js";
 
 const router = express.Router();

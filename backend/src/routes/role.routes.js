@@ -5,8 +5,8 @@ import {
     getRoleById,
     updateRole,
     deleteRole,
-} from "../controllers/roles.controller.js";
-import { auth, roleMiddleware } from "../middlewares/auth.js";
+} from "../controllers/role.controllers.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 

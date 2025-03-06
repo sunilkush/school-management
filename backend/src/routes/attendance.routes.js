@@ -1,9 +1,12 @@
 import { Router } from "express";
-import { 
-    markAttendance, 
-    getAttendanceByDate, 
-    getStudentAttendance 
-} from "../controllers/attendance.controller.js";
+import {
+
+    markAttendance,
+    getAttendanceByStudent,
+    getAttendanceByClass,
+    updateAttendanceRecord,
+    deleteAttendanceRecord
+} from "../controllers/attendance.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -14,7 +17,7 @@ const STUDENT_PARENT = ["Student", "Parent"];
 
 // ✅ Attendance Routes (Protected)
 router.post("/", auth, roleMiddleware(ADMIN_TEACHER), markAttendance);
-router.get("/date/:date", auth, roleMiddleware(ADMIN_TEACHER), getAttendanceByDate);
-router.get("/student/:studentId", auth, roleMiddleware([...ADMIN_TEACHER, ...STUDENT_PARENT]), getStudentAttendance);
+
+router.get("/student/:studentId", auth, roleMiddleware([...ADMIN_TEACHER, ...STUDENT_PARENT]), getAttendanceByStudent);
 
 export default router;

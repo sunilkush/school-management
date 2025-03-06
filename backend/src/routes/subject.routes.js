@@ -5,7 +5,7 @@ import {
     getSubject,
     updateSubject,
     deleteSubject
-} from "../controllers/subject.controller.js";
+} from "../controllers/subject.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();

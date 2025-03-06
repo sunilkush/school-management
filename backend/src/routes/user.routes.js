@@ -6,7 +6,7 @@ import {
     changeCurrentPassword,
     getCurrentUser,
     logoutUser
-} from "../controllers/user.controller.js";
+} from "../controllers/user.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();

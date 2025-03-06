@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Classes } from '../models/classes.model.js';
 
-const registerClass = asyncHandler(async (req, res) => {
+const createClass = asyncHandler(async (req, res) => {
     try {
         const { name, section, schoolId, teacherId, students, subjects } = req.body;
 
@@ -89,9 +89,33 @@ const deleteClass = asyncHandler(async (req, res) => {
         throw new ApiError(500, error.message || "Class deletion failed");
     }
 });
+const getAllClasses = asyncHandler(async (req, res) => {
+    try {
+        const classes = await Classes.find().populate("schoolId teacherId students subjects");
+        res.status(200).json({ success: true, data: classes });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+})
+
+const getClassById = asyncHandler(async (req, res) => {
+    try {
+        const classData = await Classes.findById(req.params.id).populate("schoolId teacherId students subjects");
+        if (!classData) return res.status(404).json({ success: false, message: "Class not found" });
+        res.status(200).json({ success: true, data: classData });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+})
+
 
 export {
-    registerClass,
+
+
+    createClass,
+    getAllClasses,
+    getClassById,
     updateClass,
-    deleteClass
+    deleteClass,
+
 };

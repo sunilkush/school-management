@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { 
-    createClass, 
-    getAllClasses, 
-    getClassById, 
-    updateClass, 
-    deleteClass 
-} from "../controllers/class.controller.js";
+import {
+    createClass,
+    getAllClasses,
+    getClassById,
+    updateClass,
+    deleteClass
+} from "../controllers/class.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();

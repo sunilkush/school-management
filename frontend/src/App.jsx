@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import LoginPage from './pages/login'
+import { Outlet } from 'react-router-dom'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -8,7 +8,7 @@ function App() {
   return (
     <>
 
-      <LoginPage />
+      <Outlet />
     </>
   )
 }

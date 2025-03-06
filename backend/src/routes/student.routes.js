@@ -5,7 +5,7 @@ import {
     getStudentById,
     updateStudent,
     deleteStudent
-} from "../controllers/student.controller.js";
+} from "../controllers/student.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();

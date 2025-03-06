@@ -1,12 +1,12 @@
 import { Router } from "express";
 import {
-    schoolRegister,
+    registerSchool,
     getAllSchools,
     getSchoolById,
-    schoolUpdate,
+    updateSchool,
     activateSchool,
     deactivateSchool,
-    deleteSchool,
+    deleteSchool
 } from "../controllers/school.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
@@ -23,7 +23,7 @@ router.post(
     auth,
     roleMiddleware(ADMIN_ROLE),
     upload.fields([{ name: "logo", maxCount: 1 }]),
-    schoolRegister
+    registerSchool
 );
 
 // ✅ Update School Details (Super Admin & Admin)
@@ -32,7 +32,7 @@ router.post(
     auth,
     roleMiddleware(ADMIN_ROLE),
     upload.fields([{ name: "logo", maxCount: 1 }]),
-    schoolUpdate
+    updateSchool
 );
 
 // ✅ Get All Schools (Super Admin, Admin, Teacher)

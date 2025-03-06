@@ -4,11 +4,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { School } from "../models/school.model.js";
 
-/**
- * @desc Register a new school (Admin only)
- * @route POST /api/schools
- */
-export const registerSchool = asyncHandler(async (req, res) => {
+
+const registerSchool = asyncHandler(async (req, res) => {
     const { name, address, email, phone, website, isActive } = req.body;
 
     // Validate required fields
@@ -30,11 +27,8 @@ export const registerSchool = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, newSchool, "School registered successfully"));
 });
 
-/**
- * @desc Get all schools (Admin & Teacher only)
- * @route GET /api/schools
- */
-export const getAllSchools = asyncHandler(async (req, res) => {
+
+const getAllSchools = asyncHandler(async (req, res) => {
     const { search, page = 1, limit = 10, sort = "name", order = "asc" } = req.query;
     const query = search ? { name: { $regex: search, $options: "i" } } : {};
 
@@ -47,22 +41,16 @@ export const getAllSchools = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, { schools, total: totalSchools }, "Schools retrieved successfully"));
 });
 
-/**
- * @desc Get school by ID (Admin, Teacher & Student)
- * @route GET /api/schools/:schoolId
- */
-export const getSchoolById = asyncHandler(async (req, res) => {
+
+const getSchoolById = asyncHandler(async (req, res) => {
     const school = await School.findById(req.params.schoolId);
     if (!school) throw new ApiError(404, "School not found");
-    
+
     res.status(200).json(new ApiResponse(200, school, "School retrieved successfully"));
 });
 
-/**
- * @desc Update school details (Admin only)
- * @route PUT /api/schools/:schoolId
- */
-export const updateSchool = asyncHandler(async (req, res) => {
+
+const updateSchool = asyncHandler(async (req, res) => {
     const { schoolId } = req.params;
     const { name, address, email, phone, website, isActive } = req.body;
 
@@ -87,35 +75,35 @@ export const updateSchool = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, school, "School updated successfully"));
 });
 
-/**
- * @desc Activate school (Admin only)
- * @route PUT /api/schools/activate/:schoolId
- */
-export const activateSchool = asyncHandler(async (req, res) => {
+const activateSchool = asyncHandler(async (req, res) => {
     const school = await School.findByIdAndUpdate(req.params.schoolId, { isActive: true }, { new: true });
     if (!school) throw new ApiError(404, "School not found");
 
     res.status(200).json(new ApiResponse(200, school, "School activated successfully"));
 });
 
-/**
- * @desc Deactivate school (Admin only)
- * @route PUT /api/schools/deactivate/:schoolId
- */
-export const deactivateSchool = asyncHandler(async (req, res) => {
+
+const deactivateSchool = asyncHandler(async (req, res) => {
     const school = await School.findByIdAndUpdate(req.params.schoolId, { isActive: false }, { new: true });
     if (!school) throw new ApiError(404, "School not found");
 
     res.status(200).json(new ApiResponse(200, school, "School deactivated successfully"));
 });
 
-/**
- * @desc Delete school (Admin only)
- * @route DELETE /api/schools/:schoolId
- */
-export const deleteSchool = asyncHandler(async (req, res) => {
+const deleteSchool = asyncHandler(async (req, res) => {
     const school = await School.findByIdAndDelete(req.params.schoolId);
     if (!school) throw new ApiError(404, "School not found");
 
     res.status(200).json(new ApiResponse(200, null, "School deleted successfully"));
 });
+
+export {
+    registerSchool,
+    getAllSchools,
+    getSchoolById,
+    updateSchool,
+    activateSchool,
+    deactivateSchool,
+    deleteSchool
+
+}
