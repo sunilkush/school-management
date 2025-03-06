@@ -16,7 +16,6 @@ const Dashboard = () => {
             <div className="p-10 bg-white shadow-lg rounded-lg">
                 <h1 className="text-3xl font-bold">Welcome to Dashboard</h1>
                 <p className="text-gray-600 mt-3">You are logged in!</p>
-
                 <button
                     className="mt-5 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                     onClick={() => {
