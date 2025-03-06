@@ -1,20 +1,22 @@
-import { Router } from 'express';
-import { auth, roleMiddleware } from '../middlewares/auth.middleware.js';
-import {
-    createBook,
-    getAllBooks,
-    getBookById,
-    updateBook,
-    deleteBook
-} from '../controllers/book.controllers.js';
+import { Router } from "express";
+import { 
+    issueBook, 
+    returnBook, 
+    getIssuedBooks, 
+    getIssuedBookById 
+} from "../controllers/issuedBook.controller.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
-const router = Router()
+const router = Router();
 
-router.post("/createBook", auth, roleMiddleware(["Super Admin", "Admin"]), createBook); // Admin & Teacher can create books
-router.get("/allBooks", auth, getAllBooks); // All users can view books
-router.get("/:id", auth, getBookById); // All users can view a book
-router.put("/update/:id", auth, roleMiddleware(["Super Admin", "Admin"]), updateBook); // Admin & Teacher can update books
-router.delete("/delete/:id", auth, roleMiddleware(["Super Admin", "Admin"]), deleteBook); // Only Admin can delete books
+// Define roles
+const ADMIN_LIBRARIAN = ["Super Admin", "Admin", "Librarian"];
+const STUDENT_PARENT = ["Student", "Parent"];
 
+// ✅ Issued Book Routes (Protected)
+router.post("/", auth, roleMiddleware(ADMIN_LIBRARIAN), issueBook);
+router.put("/return/:id", auth, roleMiddleware(ADMIN_LIBRARIAN), returnBook);
+router.get("/", auth, roleMiddleware([...ADMIN_LIBRARIAN, ...STUDENT_PARENT]), getIssuedBooks);
+router.get("/:id", auth, roleMiddleware([...ADMIN_LIBRARIAN, ...STUDENT_PARENT]), getIssuedBookById);
 
-export default router 
+export default router;

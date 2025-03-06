@@ -1,22 +1,27 @@
-import { Router } from 'express'
+import express from "express";
+import { createHostel, getHostels, getHostelById, updateHostel, deleteHostel } from "../controllers/hostel.controller.js";
+import { auth, roleMiddleware } from "../middlewares/auth.js";
 
-import { auth, roleMiddleware } from '../middlewares/auth.middleware.js';
+const router = express.Router();
 
-const router = Router()
+// Define allowed roles
+const ADMIN_ROLES = ["admin", "superadmin"];
+const STUDENT_ROLE = ["student"];
+const ALL_ROLES = ["admin", "superadmin", "student"];
 
+// Assign Student to Hostel (Only Admins Can Assign)
+router.post("/createHostals", auth, roleMiddleware(ADMIN_ROLES), createHostel);
 
-router.route('/asignRoom').post(auth, roleMiddleware(["Super Admin", "Admin"]), assignRoom) // Admin can assign rooms
-router
-    .route('/getAllHostel')
-    .get(auth, roleMiddleware(["Super Admin", "Admin"]), getAllHostelRecords) // Admin can view all hostel records
-router
-    .route('/my-room')
-    .get(auth, roleMiddleware(['Student']), getHostelRoomForStudent) // Students can view their room
-router
-    .route('/asignRoomUpdated/:id')
-    .put(auth, roleMiddleware(["Super Admin", "Admin"]), updateHostelRecord) // Admin can update room details
-router
-    .route('/asignRoomDelete/:id')
-    .delete(auth, roleMiddleware(["Super Admin", "Admin"]), removeStudentFromHostel) // Admin can remove students from hostel
+// Get All Hostel Entries (Admins & Students Can View)
+router.get("/getHostals", auth, roleMiddleware(ALL_ROLES), getHostels);
 
-export default router
+// Get Single Hostel Entry by ID (Admins & Students Can View)
+router.get("/hostelSingle/:id", auth, roleMiddleware(ALL_ROLES), getHostelById);
+
+// Update Hostel Entry (Only Admins Can Update)
+router.put("/hostelUpdate/:id", auth, roleMiddleware(ADMIN_ROLES), updateHostel);
+
+// Delete Hostel Entry (Only Admins Can Delete)
+router.delete("/hostelDelete/:id", auth, roleMiddleware(ADMIN_ROLES), deleteHostel);
+
+export default router;

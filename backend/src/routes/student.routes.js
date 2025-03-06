@@ -1,19 +1,32 @@
 import { Router } from "express";
+import {
+    registerStudent,
+    getStudents,
+    getStudentById,
+    updateStudent,
+    deleteStudent
+} from "../controllers/student.controller.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
-import { registerStudent, getStudents } from "../controllers/student.controllers.js";
 const router = Router();
 
-router.route('/register').post(
-    auth,
-    roleMiddleware(["Super Admin", "Admin"]),
-    registerStudent
-)
-router.route('/getStudents').get(
-    auth,
-    roleMiddleware(["Super Admin", "Admin", "Student"]),
-    getStudents
-)
+const ADMIN_ROLE = ["Super Admin", "Admin"];
+const TEACHER_ROLE = ["Super Admin", "Admin", "Teacher"];
+const STUDENT_ROLE = ["Super Admin", "Admin", "Teacher", "Student"];
 
+// ✅ Register Student (Super Admin & Admin)
+router.post("/register", auth, roleMiddleware(ADMIN_ROLE), registerStudent);
 
-export default router
+// ✅ Get All Students (Super Admin, Admin, Teacher)
+router.get("/", auth, roleMiddleware(TEACHER_ROLE), getStudents);
+
+// ✅ Get Student by ID (Super Admin, Admin, Teacher, Student)
+router.get("/:id", auth, roleMiddleware(STUDENT_ROLE), getStudentById);
+
+// ✅ Update Student (Super Admin, Admin)
+router.put("/:id", auth, roleMiddleware(ADMIN_ROLE), updateStudent);
+
+// ✅ Delete Student (Super Admin & Admin)
+router.delete("/:id", auth, roleMiddleware(ADMIN_ROLE), deleteStudent);
+
+export default router;

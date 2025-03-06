@@ -1,19 +1,32 @@
-import { Router } from "express";
+import express from "express";
 import {
     issueBook,
     getAllIssuedBooks,
     getIssuedBooksForStudent,
     returnBook,
     deleteIssuedBook,
-} from "../controllers/issuedBook.controllers.js";
-import { auth, roleMiddleware } from '../middlewares/auth.middleware.js'
+} from "../controllers/issuedBooks.controller.js";
+import { auth, roleMiddleware } from "../middlewares/auth.js";
 
-const router = Router();
+const router = express.Router();
 
-router.route('/').post(auth, roleMiddleware(["Admin", "Teacher"]), issueBook); // Admin & Teacher can issue books
-router.route('/getAllBooks').get(auth, roleMiddleware(["Admin", "Teacher"]), getAllIssuedBooks); // Admin & Teacher can view all issued books
-router.route("/my-books").get(auth, roleMiddleware(["Student"]), getIssuedBooksForStudent); // Students can view their issued books
-router.route("/return/:id").put(auth, roleMiddleware(["Student"]), returnBook); // Students can return books
-router.route("/delete/:id").delete(auth, roleMiddleware(["Admin"]), deleteIssuedBook); // Admin can delete issued book records
+// Define allowed roles
+const ADMIN_TEACHER = ["admin", "teacher"];
+const STUDENT_ROLE = ["student"];
+
+// ✅ Issue a book (Only Admin & Teacher)
+router.post("/issueBook", auth, roleMiddleware(ADMIN_TEACHER), issueBook);
+
+// ✅ Get all issued books (Only Admin & Teacher)
+router.get("/getAllIssuedBooks", auth, roleMiddleware(ADMIN_TEACHER), getAllIssuedBooks);
+
+// ✅ Get issued books for a student (Only Student)
+router.get("/my-books", auth, roleMiddleware(STUDENT_ROLE), getIssuedBooksForStudent);
+
+// ✅ Return a book (Only Student)
+router.put("/returnBook/:id", auth, roleMiddleware(STUDENT_ROLE), returnBook);
+
+// ✅ Delete an issued book record (Only Admin)
+router.delete("/deleteBooks/:id", auth, roleMiddleware(["admin"]), deleteIssuedBook);
 
 export default router;

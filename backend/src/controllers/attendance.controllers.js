@@ -1,169 +1,110 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
-import {Attendance} from '../models/attendance.model.js';
-
+import { Attendance } from '../models/attendance.model.js';
 
 // 1. Mark Attendance (Create)
 const markAttendance = asyncHandler(async (req, res) => {
     try {
-        const {
-            schoolId,
-            studentId,
-            classId,
-            subjectId,
-            date,
-            status,
-            recordedBy,
-        } = req.body
+        const { schoolId, studentId, classId, subjectId, date, status, recordedBy } = req.body;
 
-        if (
-            [
-                schoolId,
-                studentId,
-                classId,
-                subjectId,
-                date,
-                status,
-                recordedBy,
-            ].some((fields) => fields?.trim() === '')
-        ) {
-            throw new ApiError(400, 'All fileds Required !')
+        if ([schoolId, studentId, classId, subjectId, date, status, recordedBy].some(field => !field)) {
+            throw new ApiError(400, 'All fields are required!');
         }
 
-        const attendance = new Attendance({
-            schoolId,
-            studentId,
-            classId,
-            subjectId,
-            date,
-            status,
-            recordedBy,
-        })
+        const attendance = new Attendance({ schoolId, studentId, classId, subjectId, date, status, recordedBy });
+        const saveAttendance = await attendance.save();
 
-        const saveAttendance = await attendance.save()
-
-        return res.status(201).json(
-            new ApiResponse(
-                200,
-                saveAttendance,
-
-                'Attendance recorded successfully'
-            )
-        )
+        return res.status(201).json(new ApiResponse(200, saveAttendance, 'Attendance recorded successfully'));
     } catch (error) {
-        throw new ApiError(500, error.message || 'recorded not found !')
+        throw new ApiError(500, error.message || 'Record not found!');
     }
-})
+});
 
 // 2. Get Attendance by Student ID
 const getAttendanceByStudent = asyncHandler(async (req, res) => {
     try {
-        const { studentId } = req.params
-        if (studentId === '') {
-            throw new ApiError(400, 'student id missing')
+        const { studentId } = req.params;
+        if (!studentId) {
+            throw new ApiError(400, 'Student ID is missing');
         }
-        const attendance = await Attendance.findById({ studentId }).populate(
-            'classId subjectId recordedBy'
-        )
 
+        const attendance = await Attendance.find({ studentId }).populate('classId subjectId recordedBy');
         if (!attendance) {
-            throw new ApiError(400, "something went wrong's")
+            throw new ApiError(400, 'No attendance record found');
         }
-        return res
-            .status(200)
-            .json( 
-                new ApiResponse(
-                    200,
-                    attendance,
-                    'Attendance recorded find successfully'
-                )
-            )
+
+        return res.status(200).json(new ApiResponse(200, attendance, 'Attendance records retrieved successfully'));
     } catch (error) {
-        throw new ApiError(500, error.message || 'recorded not found !')
+        throw new ApiError(500, error.message || 'Record not found!');
     }
-})
+});
+
 // 3. Get Attendance by Class ID
 const getAttendanceByClass = asyncHandler(async (req, res) => {
     try {
-        const { classId } = req.params
-        const attendance = await Attendance.find({ classId }).populate(
-            'studentId subjectId recordedBy'
-        )
-        if (!attendance) {
-            throw new ApiError(400, "something went wrong's")
+        const { classId } = req.params;
+        if (!classId) {
+            throw new ApiError(400, 'Class ID is missing');
         }
-        return res
-            .status(200)
-            .json(
-                new ApiResponse(
-                    200,
-                    attendance,
-                    'Attendance recorded find successfully'
-                )
-            )
-    } catch (error) {
-        throw new ApiError(500, error.message || 'recorded not found !')
-    }
-})
-// 4. Update Attendance Record
 
+        const attendance = await Attendance.find({ classId }).populate('studentId subjectId recordedBy');
+        if (!attendance) {
+            throw new ApiError(400, 'No attendance record found');
+        }
+
+        return res.status(200).json(new ApiResponse(200, attendance, 'Attendance records retrieved successfully'));
+    } catch (error) {
+        throw new ApiError(500, error.message || 'Record not found!');
+    }
+});
+
+// 4. Update Attendance Record
 const updateAttendanceRecord = asyncHandler(async (req, res) => {
     try {
-        const { id } = req.params
-        const {} = req.body
+        const { id } = req.params;
+        const updates = req.body;
+
+        if (Object.keys(updates).length === 0) {
+            throw new ApiError(400, 'No updates provided');
+        }
 
         const updateAttendance = await Attendance.findByIdAndUpdate(
             id,
-            {
-                $set: {},
-            },
-            {
-                new: true,
-            }
-        )
+            { $set: updates },
+            { new: true }
+        );
 
         if (!updateAttendance) {
-            throw new ApiError(400, 'Attendance not found')
+            throw new ApiError(400, 'Attendance not found');
         }
 
-        return res
-            .status(202)
-            .json(
-                new ApiResponse(
-                    200,
-                    updateAttendance,
-                    'Attendance record updated successfully'
-                )
-            )
+        return res.status(202).json(new ApiResponse(200, updateAttendance, 'Attendance record updated successfully'));
     } catch (error) {
-        throw new ApiError(500, error.message || 'recorded not found !')
+        throw new ApiError(500, error.message || 'Record not found!');
     }
-})
+});
 
 // 5. Delete Attendance Record
-
-const deleteAttendanceRecord = asyncHandler(async(req,res)=>{
-      try {
+const deleteAttendanceRecord = asyncHandler(async (req, res) => {
+    try {
         const { id } = req.params;
-        const deletedAttendance = await Attendance.findByIdAndUpdate(id,{
-            $set:{
-                isVisble:false
-            }
-        },{
-            new:true
-        });
-        if (!deletedAttendance) {
-            throw new ApiError(400,"data not found")
-        };
 
-        return res.status(200).json(
-            new ApiResponse(200,"Attendance record deleted successfully")
-        )
-      } catch (error) {
-        throw new ApiError(500, error.message || 'recorded not found !')
-      }
-})
+        const deletedAttendance = await Attendance.findByIdAndUpdate(
+            id,
+            { $set: { isVisible: false } },
+            { new: true }
+        );
+
+        if (!deletedAttendance) {
+            throw new ApiError(400, 'Attendance record not found');
+        }
+
+        return res.status(200).json(new ApiResponse(200, deletedAttendance, 'Attendance record deleted successfully'));
+    } catch (error) {
+        throw new ApiError(500, error.message || 'Record not found!');
+    }
+});
 
 export {
     markAttendance,
@@ -171,4 +112,4 @@ export {
     getAttendanceByClass,
     updateAttendanceRecord,
     deleteAttendanceRecord
-}
+};

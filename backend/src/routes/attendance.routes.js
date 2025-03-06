@@ -1,40 +1,20 @@
-import { Router } from 'express'
-import {
-    markAttendance,
-    getAttendanceByStudent,
-    getAttendanceByClass,
-    updateAttendanceRecord,
-    deleteAttendanceRecord,
-} from '../controllers/attendance.controllers.js'
-import { auth, roleMiddleware } from '../middlewares/auth.middleware.js'
-const router = Router()
+import { Router } from "express";
+import { 
+    markAttendance, 
+    getAttendanceByDate, 
+    getStudentAttendance 
+} from "../controllers/attendance.controller.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
-router
-    .route('/')
-    .post(auth, markAttendance)
-router
-    .route('/Student/:id')
-    .get(auth, getAttendanceByStudent)
-router
-    .route('/Class/:id')
-    .get(
-        auth,
-        roleMiddleware(["Super Admin", "Admin", "Teacher"]),
-        getAttendanceByClass
-    )
-router
-    .route('/Update/:id')
-    .put(
-        auth,
-        roleMiddleware(["Super Admin", "Admin", "Teacher"]),
-        updateAttendanceRecord
-    )
-router
-    .route('/Deleate/:id')
-    .put(
-        auth,
-        roleMiddleware(["Super Admin", "Admin", "Teacher"]),
-        deleteAttendanceRecord
-    )
+const router = Router();
 
-export default router
+// Define roles
+const ADMIN_TEACHER = ["Super Admin", "Admin", "Teacher"];
+const STUDENT_PARENT = ["Student", "Parent"];
+
+// ✅ Attendance Routes (Protected)
+router.post("/", auth, roleMiddleware(ADMIN_TEACHER), markAttendance);
+router.get("/date/:date", auth, roleMiddleware(ADMIN_TEACHER), getAttendanceByDate);
+router.get("/student/:studentId", auth, roleMiddleware([...ADMIN_TEACHER, ...STUDENT_PARENT]), getStudentAttendance);
+
+export default router;

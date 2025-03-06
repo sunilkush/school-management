@@ -1,5 +1,4 @@
-import { Router } from 'express';
-import { auth } from '../middlewares/auth.middleware.js';
+import { Router } from "express";
 import {
     registerUser,
     loginUser,
@@ -7,26 +6,24 @@ import {
     changeCurrentPassword,
     getCurrentUser,
     logoutUser
-} from '../controllers/user.controllers.js';
+} from "../controllers/user.controller.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
-import { upload } from '../middlewares/multer.middleware.js';
+const router = Router();
 
-const router = Router()
+// Role-Based Access Control
+const ADMIN_ROLE = ["Super Admin", "Admin"];
+const TEACHER_ROLE = ["Super Admin", "Admin", "Teacher"];
+const ALL_USERS = ["Super Admin", "Admin", "Teacher", "Student", "Parent"];
 
-router.route('/adminRegister').post(
-    upload.fields([{
-        name: "avatar",
-        maxCount: 1
-    }
-    ]),
-    registerUser
-)
+// ✅ Public Routes
+router.post("/register", registerUser);
+router.post("/login", loginUser);
 
-router.route('/login').post(loginUser)
-// secure route
-router.route('/update').patch(auth, updateUser)
-router.route('/changePassword').patch(auth, changeCurrentPassword);
-router.route("/getCurrentUser").get(auth, getCurrentUser);
-router.route("/logoutUser").get(auth, logoutUser);
+// ✅ Protected Routes
+router.get("/me", auth, roleMiddleware(ALL_USERS), getCurrentUser);
+router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
+router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
+router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);
 
-export default router
+export default router;

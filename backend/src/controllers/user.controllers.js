@@ -4,26 +4,32 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
+// ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
     try {
-        const user = await User.findById(userId)
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
 
-        user.refreshToken = refreshToken
-        await user.save({ validateBeforeSave: false })
-        return { accessToken, refreshToken }
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
 
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        return { accessToken, refreshToken };
     } catch (error) {
-        throw new ApiError(404, "something went wrong while access & refresh token")
+        throw new ApiError(500, "Error generating tokens");
     }
+};
 
-}
+// ✅ Register User (POST)
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password, role, schoolId, classId, parentId, isActive } = req.body;
+    const { name, email, password, role, schoolId, classId, parentId } = req.body;
 
-    if ([name, email, password, role, isActive].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "All fields required!");
+    if ([name, email, password, role].some(field => !field?.trim())) {
+        throw new ApiError(400, "All fields are required");
     }
 
     const existingUser = await User.findOne({ email });
@@ -31,16 +37,11 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User already registered with this email");
     }
 
-    // Check for file upload
-    if (!req.files || !req.files.avatar || !Array.isArray(req.files.avatar) || req.files.avatar.length === 0) {
-        throw new ApiError(400, "Avatar file is required!");
-    }
-
-    const avtarlocalPath = req.files.avatar[0].path;
-
-    const avatar = await uploadOnCloudinary(avtarlocalPath);
-    if (!avatar) {
-        throw new ApiError(400, "Avatar didn't upload!");
+    let avatarUrl = "";
+    if (req.files?.avatar && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
+        const avatarPath = req.files.avatar[0].path;
+        const avatar = await uploadOnCloudinary(avatarPath);
+        avatarUrl = avatar?.url || "";
     }
 
     const newUser = await User.create({
@@ -48,7 +49,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password,
         role,
-        avatar: avatar.url || "",
+        avatar: avatarUrl,
         schoolId,
         classId,
         parentId,
@@ -57,138 +58,87 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const createdUser = await User.findById(newUser._id).select("-password -refreshToken");
 
-    if (!createdUser) {
-        throw new ApiError(500, "Something went wrong while registering the user");
-    }
-
-    return res.status(201).json(new ApiResponse(200, createdUser, "User registered successfully"));
+    return res.status(201).json(
+        new ApiResponse(201, createdUser, "User registered successfully")
+    );
 });
 
-
+// ✅ Login User (POST)
 const loginUser = asyncHandler(async (req, res) => {
-    // get value on frontend
-    // user validation
-    // find the user
-    // password check
-    // access & refresh token
-    // send cookie
-
     const { email, password } = req.body;
 
-    // 1️⃣ Validate request data
     if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required." });
+        throw new ApiError(400, "Email and password are required");
     }
 
-    // 2️⃣ Find user by email
     const user = await User.findOne({ email });
-    if (!user) {
-        return res.status(401).json({ message: "Invalid email or password." });
+    if (!user || !(await user.isPasswordCorrect(password))) {
+        throw new ApiError(401, "Invalid email or password");
     }
 
-    // 3️⃣ Compare passwords
-    const isPasswordValid = await user.isPasswordCorrect(password);
-    if (!isPasswordValid) {
-        return res.status(401).json({ message: "Invalid email or password." });
-    }
-
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
-
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-
-    const options = {
-        secure: true,
-        httpOnly: true
-    }
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
     return res.status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .json(
-            new ApiResponse(200, {
-                user: loggedInUser, refreshToken, accessToken,
-            }, "user logged in successfully")
-        )
-})
+        .cookie("accessToken", accessToken, { secure: true, httpOnly: true })
+        .cookie("refreshToken", refreshToken, { secure: true, httpOnly: true })
+        .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in successfully"));
+});
 
-
+// ✅ Update User Profile (PUT)
 const updateUser = asyncHandler(async (req, res) => {
-    try {
+    const { name, email } = req.body;
 
-        const { name, email } = req.body
-        if (!email || !name) {
-            throw new ApiError(400, "All fields are required please set")
-        }
-
-        // Step 1: Check if the user exists
-        const user = await User.findByIdAndUpdate(req.user?._id, {
-            $set: {
-                name: name,
-                email: email
-            }
-        }, {
-            new: true
-        }).select("-password")
-
-        res.status(200).json(
-            new ApiResponse(200, user, "User updated successfully")
-        );
-    } catch (error) {
-        throw new ApiError(500, error.message || "User update failed");
+    if (!name || !email) {
+        throw new ApiError(400, "All fields are required");
     }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    user.name = name;
+    user.email = email;
+    await user.save();
+
+    return res.status(200).json(new ApiResponse(200, user, "User updated successfully"));
 });
 
-
+// ✅ Change Password (PUT)
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword } = req.body
+    const { oldPassword, newPassword } = req.body;
 
-    if ([oldPassword, newPassword].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "All Fields are Required !")
+    if (!oldPassword || !newPassword) {
+        throw new ApiError(400, "All fields are required");
     }
 
-    const user = await User.findById(req.user?._id)
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
-    if (!isPasswordCorrect) {
-        throw new ApiError(400, "Old Password invalid")
+    const user = await User.findById(req.user?._id);
+    if (!user || !(await user.isPasswordCorrect(oldPassword))) {
+        throw new ApiError(400, "Invalid old password");
     }
 
-    user.password = newPassword
-    await user.save({ validateBeforeSave: false })
+    user.password = newPassword;
+    await user.save();
 
-    return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"))
-})
-
-
-
-
-const getCurrentUser = asyncHandler(async (req, res) => {
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(200, req.user, "User fetched successfully")
-        )
+    return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
 });
-const logoutUser = asyncHandler(async (req, res) => {
-    // user find
-    // user refresh token delete  
-    // return response
-    await User.findByIdAndUpdate(req.user._id, {
-        $unset: {
-            refreshToken: 1
-        }
-    }, {
-        new: true
-    })
 
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-    res.status(200)
-        .clearCookie("accessToken", options)
-        .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "User logged Out"))
-})
+// ✅ Get Current User (GET)
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res.status(200).json(new ApiResponse(200, req.user, "User fetched successfully"));
+});
+
+// ✅ Logout User (POST)
+const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } });
+
+    return res.status(200)
+        .clearCookie("accessToken", { httpOnly: true, secure: true })
+        .clearCookie("refreshToken", { httpOnly: true, secure: true })
+        .json(new ApiResponse(200, {}, "User logged out successfully"));
+});
+
 export {
     registerUser,
     loginUser,
@@ -196,4 +146,4 @@ export {
     changeCurrentPassword,
     getCurrentUser,
     logoutUser
-}
+};

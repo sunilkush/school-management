@@ -4,139 +4,82 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { IssuedBook } from "../models/IssuedBooks.model.js";
 import { Book } from "../models/Books.model.js";
 
-// @desc    Issue a book to a student (Admin & Teacher only)
-// @route   POST /api/issued-books
+// ✅ Issue a book (Only Admin & Teacher)
 export const issueBook = asyncHandler(async (req, res) => {
-    try {
-        const { schoolId, bookId, studentId, issueDate } = req.body;
+    const { schoolId, bookId, studentId, issueDate } = req.body;
 
-        // Check if the book exists and is available
-        const book = await Book.findById(bookId);
-        if (!book) {
-            throw new ApiError(404, "Book not found")
+    // Check if the book exists and is available
+    const book = await Book.findById(bookId);
+    if (!book) throw new ApiError(404, "Book not found");
+    if (book.availableCopies <= 0) throw new ApiError(400, "No available copies of the book.");
 
-        }
-        if (book.availableCopies <= 0) {
-            throw new ApiError(400, "No available copies of the book.")
+    // Issue the book
+    const issuedBook = await IssuedBook.create({
+        schoolId,
+        bookId,
+        studentId,
+        issueDate,
+        status: "issued",
+    });
 
-        }
+    // Reduce available copies
+    book.availableCopies -= 1;
+    await book.save();
 
-        // Issue the book
-        const issuedBook = new IssuedBook({
-            schoolId,
-            bookId,
-            studentId,
-            issueDate,
-            status: "issued",
-        });
-
-        await issuedBook.save();
-
-        // Reduce the available copies of the book
-        book.availableCopies -= 1;
-        await book.save();
-        return res.status(200).json(
-            new ApiResponse(200, issuedBook, "Book issued successfully")
-        )
-
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error")
-
-    }
+    res.status(201).json(new ApiResponse(201, issuedBook, "Book issued successfully"));
 });
 
-// @desc    Get all issued books (Admin & Teacher)
-// @route   GET /api/issued-books
+// ✅ Get all issued books (Only Admin & Teacher)
 export const getAllIssuedBooks = asyncHandler(async (req, res) => {
-    try {
-        const issuedBooks = await IssuedBook.find()
-            .populate("bookId", "title author")
-            .populate("studentId", "name email")
-            .populate("schoolId", "name");
+    const issuedBooks = await IssuedBook.find()
+        .populate("bookId", "title author")
+        .populate("studentId", "name email")
+        .populate("schoolId", "name");
 
-        return res.status(200).json(
-            new ApiResponse(200, issuedBooks, "issued Book Successfully !")
-        );
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
-    }
+    res.status(200).json(new ApiResponse(200, issuedBooks, "Issued books retrieved successfully"));
 });
 
-// @desc    Get issued books for a student (Student only)
-// @route   GET /api/issued-books/my-books
+// ✅ Get issued books for a student (Only Student)
 export const getIssuedBooksForStudent = asyncHandler(async (req, res) => {
-    try {
-        const issuedBooks = await IssuedBook.find({ studentId: req.user._id })
-            .populate("bookId", "title author")
-            .populate("schoolId", "name");
+    const issuedBooks = await IssuedBook.find({ studentId: req.user._id })
+        .populate("bookId", "title author")
+        .populate("schoolId", "name");
 
-        return res.status(200).json(
-            new ApiResponse(200, issuedBooks, "Successfully issued Books")
-        )
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
-    }
+    res.status(200).json(new ApiResponse(200, issuedBooks, "Issued books retrieved successfully"));
 });
 
-// @desc    Return a book (Student only)
-// @route   PUT /api/issued-books/return/:id
+// ✅ Return a book (Only Student)
 export const returnBook = asyncHandler(async (req, res) => {
-    try {
-        const { studentId } = req.params
-        const issuedBook = await IssuedBook.findById(studentId);
+    const { id } = req.params;
+    const issuedBook = await IssuedBook.findById(id);
 
-        if (!issuedBook) {
+    if (!issuedBook) throw new ApiError(404, "Issued book record not found");
+    if (issuedBook.status === "returned") throw new ApiError(400, "Book is already returned");
+    if (issuedBook.studentId.toString() !== req.user._id.toString())
+        throw new ApiError(403, "You are not authorized to return this book");
 
-            throw new ApiError(404, "Issued book record not found")
+    // Update book status
+    issuedBook.status = "returned";
+    issuedBook.returnDate = new Date();
+    await issuedBook.save();
 
-        }
-
-        if (issuedBook.status === "returned") {
-            throw new ApiError(400, "Book is already returned")
-
-        }
-
-        if (issuedBook.studentId.toString() !== req.user._id.toString()) {
-
-            throw new ApiError(403, "You are not authorized to return this book")
-        }
-
-        // Update book status
-        issuedBook.status = "returned";
-        issuedBook.returnDate = new Date();
-        await issuedBook.save();
-
-        // Increase the available copies of the book
-        const book = await Book.findById(issuedBook.bookId);
-        if (book) {
-            book.availableCopies += 1;
-            await book.save();
-        }
-        return res.status(200).json(
-            new ApiResponse(200, issuedBook, "Book returned successfully")
-        )
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
+    // Increase available copies
+    const book = await Book.findById(issuedBook.bookId);
+    if (book) {
+        book.availableCopies += 1;
+        await book.save();
     }
+
+    res.status(200).json(new ApiResponse(200, issuedBook, "Book returned successfully"));
 });
 
-// @desc    Delete an issued book record (Admin only)
-// @route   DELETE /api/issued-books/:id
+// ✅ Delete issued book record (Only Admin)
 export const deleteIssuedBook = asyncHandler(async (req, res) => {
-    try {
-        const { bookId } = req.params
-        const issuedBook = await IssuedBook.findById(bookId);
+    const { id } = req.params;
+    const issuedBook = await IssuedBook.findById(id);
 
-        if (!issuedBook) {
-            throw new ApiError(404, "Issued book record not found");
-        }
+    if (!issuedBook) throw new ApiError(404, "Issued book record not found");
 
-        await issuedBook.deleteOne();
-        return res.status(200).json(
-
-            new ApiResponse(200, "Issued book record deleted successfully")
-        );
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
-    }
+    await issuedBook.deleteOne();
+    res.status(200).json(new ApiResponse(200, null, "Issued book record deleted successfully"));
 });
