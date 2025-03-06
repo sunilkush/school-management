@@ -1,7 +1,7 @@
 import React from "react";
 import google from "../assets/google.svg";
 import facebook from "../assets/facebook.svg";
-import react from "../assets/react.svg";
+
 
 
 const LoginPage = () => {
@@ -9,7 +9,7 @@ const LoginPage = () => {
         <>
             <div className="w-full h-screen bg-gray-900 md:px-40 sm:px-2.5">
                 <div className="flex justify-center items-center h-screen">
-                    <div className="p-10 bg-white lg:w-1/2 md:w-3xl rounded-lg sm:w-full">
+                    <div className="p-10 bg-white 2xl:w-1/3 lg:1/2 md:w-3xl rounded-lg sm:w-full">
                         <h4 className="text-3xl font-bold mb-3">Login in to your Account</h4>
                         <p className="text-gray-600">welcome back! Select method to log in : </p>
 
