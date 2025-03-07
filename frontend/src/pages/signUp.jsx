@@ -41,43 +41,41 @@ function SignUp() {
                         </div>
 
                         {error && <p className="text-red-500 text-sm">{error}</p>}
-
-                        <form onSubmit={handleSubmit}>
-                            <div className="relative mb-6">
+                        <div class="grid md:grid-cols-2 gap-4 sm:grid-cols-1 ">
+                        
+                            <div className="relative ">
                                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
                                     placeholder="Name" required />
                             </div>
-                            <div className="relative mb-6">
+                            <div className="relative ">
                                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
                                     placeholder="Email" required />
                             </div>
 
-                            <div className="relative mb-6">
+                            <div className="relative ">
                                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
                                     placeholder="Password" required />
                             </div>
-                            <div className="relative mb-6">
+                            <div className="relative ">
                                 <input type="password" value={role} onChange={(e) => setRole(e.target.value)}
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
                                     placeholder="role" required />
                             </div>
-                            <div className="relative mb-6">
+                                                       
+                       
+                        </div>
+                        <div className="relative mb-6 w-full mt-4">
                                 <input type="password" value={school} onChange={(e) => setSchool(e.target.value)}
                                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
                                     placeholder="School" required />
                             </div>
-
-
-
-                            <button type="submit" disabled={loading}
+                        <button type="submit" disabled={loading}
                                 className="w-full rounded-lg bg-blue-800 text-white py-3 cursor-pointer hover:bg-blue-950">
                                 {loading ? "Logging in..." : "Login"}
                             </button>
-                        </form>
-
                         <p className="text-center mt-5">I have an account? <span className="text-blue-800 cursor-pointer">Login account</span></p>
                     </div>
                 </div>
