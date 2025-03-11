@@ -25,6 +25,10 @@ const schoolSchema = new Schema({
     logo: {
         type: String,
     },
+    adminId: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'User', required: true
+     },
     isActive: {
         type: Boolean,
         enum: ['true', 'false'],

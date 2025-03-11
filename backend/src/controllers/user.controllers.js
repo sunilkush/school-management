@@ -24,11 +24,17 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 };
 
-// ✅ Register User (POST)
+
+/**
+ * @desc Register a new user
+ * @route POST /api/auth/register
+ * @access Private (Only Super Admin & School Admin)
+ */
+// Register User (POST)
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, role, schoolId, classId, parentId } = req.body;
 
-    if ([name, email, password, role].some(field => !field?.trim())) {
+    if ([name, email, password, role].some(field => !field?.trim()==="")) {
         throw new ApiError(400, "All fields are required");
     }
 
@@ -50,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
         password,
         role,
         avatar: avatarUrl,
-        schoolId,
+        schoolId : role === "Super Admin" ? null : schoolId,
         classId,
         parentId,
         isActive: true
@@ -140,6 +146,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 export {
+    
     registerUser,
     loginUser,
     updateUser,

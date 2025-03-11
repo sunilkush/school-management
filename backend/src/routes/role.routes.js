@@ -14,7 +14,7 @@ const router = express.Router();
 const ADMIN_ROLE = ["admin"];
 
 // ✅ Create a Role (Only Admin)
-router.post("/createRole", auth, roleMiddleware(ADMIN_ROLE), createRole);
+router.post("/createRole",  createRole);
 
 // ✅ Get All Roles (Only Admin)
 router.get("/getAllRoles", auth, roleMiddleware(ADMIN_ROLE), getAllRoles);
