@@ -11,13 +11,14 @@ import LoginPage from "./pages/login.jsx";
 import Dashboard from "./pages/dashboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // ✅ Import ProtectedRoute
 import SignUp from "./pages/signUp.jsx";
+import HomePage from "./pages/home.jsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      { path: "/", element: <LoginPage /> },
+      { path: "/", element: <HomePage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/signUp", element: <SignUp /> },
       {
