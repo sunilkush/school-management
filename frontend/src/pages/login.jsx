@@ -10,11 +10,6 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-
-
-
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -89,15 +84,13 @@ const LoginPage = () => {
                                 placeholder="Password" required />
                         </div>
 
-                        <p className="text-blue-600 text-right cursor-pointer">Forgot Password?</p>
+                        <p className="text-blue-600 text-right cursor-pointer mb-3">Forgot Password?</p>
 
                         <button type="submit" disabled={loading}
                             className="w-full rounded-lg bg-blue-800 text-white py-3 cursor-pointer hover:bg-blue-950">
                             {loading ? "Logging in..." : "Login"}
                         </button>
                     </form>
-
-                    <p className="text-center mt-5">Don't have an account? <span className="text-blue-800 cursor-pointer">Create an account</span></p>
                 </div>
             </div>
         </div>

@@ -20,8 +20,7 @@ const STUDENT_ROLE = ["Super Admin", "Admin", "Teacher", "Student"];
 // ✅ Register a School (Super Admin & Admin)
 router.post(
     "/register",
-    auth,
-    roleMiddleware(ADMIN_ROLE),
+  
     upload.fields([{ name: "logo", maxCount: 1 }]),
     registerSchool
 );
