@@ -19,7 +19,7 @@ const ALL_USERS = ["Super Admin", "Admin", "Teacher", "Student", "Parent"];
 //
 
 // ✅ Public Routes
-router.post("/register", upload.fields([{ name: "logo", maxCount: 1 }]), registerUser);
+router.post("/register", roleMiddleware(ADMIN_ROLE), upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
 router.post("/login", loginUser);
 
 // ✅ Protected Routes

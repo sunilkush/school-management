@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { Role } from "../models/Roles.model.js";
 
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
@@ -32,9 +33,9 @@ const generateAccessAndRefreshToken = async (userId) => {
  */
 // Register User (POST)
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password, role, schoolId, classId, parentId } = req.body;
+    const { name, email, password, roleId, schoolId, classId, parentId } = req.body;
 
-    if ([name, email, password, role].some(field => !field?.trim()==="")) {
+    if ([name, email, password, roleId, schoolId].some(field => !field?.trim() === "")) {
         throw new ApiError(400, "All fields are required");
     }
 
@@ -54,9 +55,9 @@ const registerUser = asyncHandler(async (req, res) => {
         name,
         email,
         password,
-        role,
+        roleId,
         avatar: avatarUrl,
-        schoolId : role === "Super Admin" ? null : schoolId,
+        schoolId,
         classId,
         parentId,
         isActive: true
@@ -146,7 +147,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 export {
-    
+
     registerUser,
     loginUser,
     updateUser,
