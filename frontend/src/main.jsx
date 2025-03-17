@@ -1,47 +1,40 @@
-import { createRoot } from "react-dom/client";
-import { Provider } from "react-redux";
-import store from "./store/store.js";
-import "./index.css";
-import App from "./App.jsx";
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import LoginPage from "./pages/login.jsx";
-import Dashboard from "./pages/dashboard.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx"; // ✅ Import ProtectedRoute
-import SignUp from "./pages/signUp.jsx";
-import HomePage from "./pages/home.jsx";
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { Provider } from 'react-redux'
+import './index.css'
+import App from './App.jsx'
+import store from './store/store.js'
+import { RouterProvider,createBrowserRouter } from 'react-router-dom'
+import AuthLayout from './components/AuthLayout.jsx'
+import Home from './pages/Home.jsx'
+import LoginPage from './pages/Login.jsx'
+const router = createBrowserRouter([{
+  path:"/",
+  element:<App/>,
+  children:[
+    {
+      path:'/',
+      element:(
+      <AuthLayout authentication={false}>
+      <Home/>
+      </AuthLayout>
+      )
+    },
+    {
+      path:'/login',
+      element:(
+      <AuthLayout authentication={false}>
+      <LoginPage/>
+      </AuthLayout>
+      )
+    },
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-    children: [
-      { path: "/", element: <HomePage /> },
-      { path: "/login", element: <LoginPage /> },
-      {
-        path: "/signUp",
-        element: (
-          <ProtectedRoute>
-            <SignUp />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "/dashboard",
-        element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
-      },
-    ],
-  },
-]);
+  ]
 
-createRoot(document.getElementById("root")).render(
+}])
+
+createRoot(document.getElementById('root')).render(
   <Provider store={store}>
-    <RouterProvider router={router} />
+       <RouterProvider router={router} ></RouterProvider>
   </Provider>
-);
+)
