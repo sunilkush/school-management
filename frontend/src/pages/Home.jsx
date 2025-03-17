@@ -1,8 +1,14 @@
+import { Footer } from "../components/Footer"
+import Header from "../components/Header"
+import MainSection from "../components/MainSection"
+
 const Home = ()=>{
     return(
         <>
-        <h1>Home
-            </h1></>
+        <Header/>
+        <MainSection/>
+        <Footer/>
+        </>
     )
 }
 
