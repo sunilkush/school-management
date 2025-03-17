@@ -15,7 +15,7 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
-    roleId: {
+    role: {
         type: Schema.Types.ObjectId,
         ref: "Role",
         required: true,
@@ -26,7 +26,7 @@ const userSchema = new Schema({
     schoolId: {
         type: Schema.Types.ObjectId,
         ref: "School",
-        required: true
+        
     },
     classId: {
         type: Schema.Types.ObjectId,

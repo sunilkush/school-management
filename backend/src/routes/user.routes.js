@@ -13,13 +13,13 @@ import { upload } from "../middlewares/multer.middleware.js"
 const router = Router();
 
 // Role-Based Access Control
-const ADMIN_ROLE = ["Super Admin", "Admin"];
-const TEACHER_ROLE = ["Super Admin", "Admin", "Teacher"];
-const ALL_USERS = ["Super Admin", "Admin", "Teacher", "Student", "Parent"];
+const ADMIN_ROLE = ["Super Admin", "School Admin"];
+const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
+const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"];
 //
 
 // ✅ Public Routes
-router.post("/register", roleMiddleware(ADMIN_ROLE), upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
+router.post("/register", auth,roleMiddleware(ADMIN_ROLE), upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
 router.post("/login", loginUser);
 
 // ✅ Protected Routes

@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import {Role} from "../models/Roles.model.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 dotenv.config()
@@ -29,19 +30,25 @@ const auth = asyncHandler(async (req, res, next) => {
 
 const roleMiddleware = (allowedRoles) => {
   return async (req, res, next) => {
-
     try {
-      const userRole = await Role.findById(req.user?.role) // Assuming req.user is populated after authentication
+      
+      if (!req.user?.role?.name) {
+        return res.status(401).json({ message: "Unauthorized. No role assigned." });
+      }
 
-      if (!userRole || !allowedRoles.includes(userRole.name)) {
+      // Fetch role details
+      const userRole = await Role.findById(req.user.role?._id); // ✅ Ensure correct field reference
+      
+      if (!userRole || !allowedRoles.includes(userRole?.name)) {
         return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
       }
+
       next();
     } catch (error) {
       res.status(500).json({ message: "An error occurred during role validation.", error: error.message });
     }
   };
-};
+}; 
 
 
 export { auth, roleMiddleware }

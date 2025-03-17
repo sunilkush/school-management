@@ -36,6 +36,7 @@ router.post(
 
 // ✅ Get All Schools (Super Admin, Admin, Teacher)
 router.get("/", auth, roleMiddleware(TEACHER_ROLE), getAllSchools);
+router.get("/getAllSchool", auth, roleMiddleware(ADMIN_ROLE), getAllSchools);
 
 // ✅ Get School by ID (Super Admin, Admin, Teacher, Student)
 router.get("/:id", auth, roleMiddleware(STUDENT_ROLE), getSchoolById);
