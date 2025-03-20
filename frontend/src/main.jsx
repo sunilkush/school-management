@@ -1,50 +1,42 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import './index.css'
 import App from './App.jsx'
 import store from './store/store.js'
-import { RouterProvider,createBrowserRouter } from 'react-router-dom'
-import AuthLayout from './components/AuthLayout.jsx'
-import Home from './pages/Home.jsx'
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import LoginPage from './pages/Login.jsx'
 import SignUpPage from './pages/SignUp.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import Teachers from './pages/Teachers.jsx'
+
 const router = createBrowserRouter([{
-  path:"/",
-  element:<App/>,
-  children:[
+  path: "/",
+  element: <App />,
+  children: [
     {
-      path:'/',
-      element:(
-      <AuthLayout authentication={false}>
-      <Home/>
-      </AuthLayout>
+      path: '/',
+      element: (
+        <LoginPage />
       )
     },
     {
-      path:'/login',
-      element:(
-      <AuthLayout authentication={false}>
-      <LoginPage/>
-      </AuthLayout>
+      path: '/login',
+      element: (
+        <LoginPage />
       )
     },
     {
-      path:'/signup',
-      element:(
-      <AuthLayout authentication={false}>
-      <SignUpPage/>
-      </AuthLayout>
+      path: '/signup',
+      element: (
+        <SignUpPage />
       )
     },
     {
-      path:'/Dashboard',
-      element:(
-      <AuthLayout authentication={false}>
-      <Dashboard/>
-      </AuthLayout>
-      )
+      path: '/Dashboard',
+      element: (<Dashboard />),
+      children: [
+        { path: "teachers", element: (<Teachers />) },
+      ]
     },
 
 
@@ -54,6 +46,6 @@ const router = createBrowserRouter([{
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
-       <RouterProvider router={router} ></RouterProvider>
+    <RouterProvider router={router} ></RouterProvider>
   </Provider>
 )

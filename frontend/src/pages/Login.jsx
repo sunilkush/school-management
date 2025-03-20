@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 // @components
 import {
@@ -11,9 +11,17 @@ import {
 } from "@material-tailwind/react";
 
 // @icons
-import { CpuChipIcon } from "@heroicons/react/24/solid";
+
+import { Link } from "react-router-dom";
 
 function LoginPage() {
+
+    const []= useState([])
+
+
+
+
+
   return (
     <section className="px-8">
       <div className="container mx-auto h-screen grid place-items-center">
@@ -27,16 +35,16 @@ function LoginPage() {
               color="blue-gray"
               className="mb-4 !text-3xl lg:text-4xl"
             >
-              Web3 Login Simplified
+             Smart School 
             </Typography>
             <Typography className="!text-gray-600 text-[18px] font-normal md:max-w-sm">
-              Enjoy quick and secure access to your accounts on various Web3
+              Enjoy quick and secure access to your accounts on various  Smart School 
               platforms.
             </Typography>
           </CardHeader>
           <CardBody>
             <form
-              action="#"
+             
               className="flex flex-col gap-4 md:mt-12"
             >
               <div>
@@ -62,6 +70,29 @@ function LoginPage() {
                   }}
                 />
               </div>
+              <div>
+                <label htmlFor="email">
+                  <Typography
+                    variant="small"
+                    color="blue-gray"
+                    className="block font-medium mb-2"
+                  >
+                    Your Password
+                  </Typography>
+                </label>
+                <Input
+                  id="email"
+                  color="gray"
+                  size="lg"
+                  type="text"
+                  name="password"
+                  placeholder="*********"
+                  className="w-full placeholder:opacity-100 focus:border-t-primary border-t-blue-gray-200"
+                  labelProps={{
+                    className: "hidden",
+                  }}
+                />
+              </div>
               <Button size="lg" color="gray" fullWidth>
                 continue
               </Button>
@@ -78,27 +109,19 @@ function LoginPage() {
                 />{" "}
                 sign in with google
               </Button>
-              <Button
-                variant="outlined"
-                size="lg"
-                className="flex h-12 border-blue-gray-200 items-center justify-center gap-2"
-                fullWidth
-              >
-                <CpuChipIcon className="h-6 w-6" />
-                Wallet Authentication
-              </Button>
+            
               <Typography
                 variant="small"
                 className="text-center mx-auto max-w-[19rem] !font-medium !text-gray-600"
               >
                 Upon signing in, you consent to abide by our{" "}
-                <a href="#" className="text-gray-900">
+                <Link to={""} className="text-gray-900">
                   Terms of Service
-                </a>{" "}
+                </Link>{" "}
                 &{" "}
-                <a href="#" className="text-gray-900">
+                <Link to={""} className="text-gray-900">
                   Privacy Policy.
-                </a>
+                </Link>
               </Typography>
             </form>
           </CardBody>
