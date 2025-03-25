@@ -1,12 +1,21 @@
 
-import { Outlet } from "react-router-dom";
+
+import { Outlet, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import DashboardFooter from "../components/DashboardFooter";
 
 
 const Dashboard = () => {
+   const navigate = useNavigate();
 
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // Get the token
+    if (!token) {
+      navigate("/login"); // Redirect to login if token is missing
+    }
+  }, [navigate]);
   return (
     <>
   

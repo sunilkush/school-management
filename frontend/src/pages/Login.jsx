@@ -18,7 +18,7 @@ import { loginUser } from "../store/authSlice";
 function LoginPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate()
-
+    const auth = useSelector((state) => state.auth);
     const {loading, error} = useSelector((state)=>state.auth);
 
     const [formData, setFormData] = useState({

@@ -8,6 +8,9 @@ import LoginPage from './pages/Login.jsx'
 import SignUpPage from './pages/SignUp.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Teachers from './pages/Teachers.jsx'
+import Page404 from './pages/Page404.jsx'
+import ProtectedRoutes from './components/ProtectedRoutes.jsx'
+
 
 const router = createBrowserRouter([{
   path: "/",
@@ -23,6 +26,12 @@ const router = createBrowserRouter([{
       path: '/login',
       element: (
         <LoginPage />
+      )
+    },
+    {
+      path: '/Page404',
+      element: (
+        <Page404 />
       )
     },
     {
