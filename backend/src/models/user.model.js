@@ -1,7 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
+import dotenv from "dotenv"
+dotenv.config();
 const userSchema = new Schema({
     name: {
         type: String,
@@ -15,7 +16,7 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
-    role: {
+    roleId: {
         type: Schema.Types.ObjectId,
         ref: "Role",
         required: true,
