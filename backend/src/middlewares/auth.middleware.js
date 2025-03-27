@@ -15,7 +15,8 @@ const auth = asyncHandler(async (req, res, next) => {
 
     const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
 
-    const user = await User.findById(decodeToken?._id).select("-password -refreshToken").populate("role");
+    const user = await User.findById(decodeToken?._id).select("-password -refreshToken");
+
     if (!user) {
       throw new ApiError(401, "Invalid Access Request")
     }
@@ -30,25 +31,35 @@ const auth = asyncHandler(async (req, res, next) => {
 
 const roleMiddleware = (allowedRoles) => {
   return async (req, res, next) => {
+    let roleId = req?.user?.roleId?._id; // ✅ Extract _id
+    console.log("Role ID:", roleId); // Debugging log
+
     try {
-      
-      if (!req.user?.role?.name) {
+      if (!roleId) {
         return res.status(401).json({ message: "Unauthorized. No role assigned." });
       }
 
-      // Fetch role details
-      const userRole = await Role.findById(req.user.role?._id); // ✅ Ensure correct field reference
-      
-      if (!userRole || !allowedRoles.includes(userRole?.name)) {
+      // Fetch role details using only _id
+      const userRole = await Role.findById(roleId).lean(); // ✅ Use lean() for performance
+      console.log("User Role:", userRole);
+
+      if (!userRole) {
+        return res.status(403).json({ message: "Access denied. Role not found." });
+      }
+
+      if (!allowedRoles.includes(userRole.name)) {
         return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
       }
 
       next();
     } catch (error) {
-      res.status(500).json({ message: "An error occurred during role validation.", error: error.message });
+      return res.status(500).json({ 
+        message: "An error occurred during role validation.", 
+        error: error.message 
+      });
     }
   };
-}; 
+};
 
 
 export { auth, roleMiddleware }
