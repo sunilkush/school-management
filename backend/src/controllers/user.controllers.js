@@ -70,7 +70,7 @@ const registerUser = asyncHandler(async (req, res) => {
     );
 });
 
-// ✅ Login User (POST)
+// Login User (POST)
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
@@ -92,7 +92,7 @@ const loginUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in successfully"));
 });
 
-// ✅ Update User Profile (PUT)
+// Update User Profile (PUT)
 const updateUser = asyncHandler(async (req, res) => {
     const { name, email } = req.body;
 
@@ -112,7 +112,7 @@ const updateUser = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, user, "User updated successfully"));
 });
 
-// ✅ Change Password (PUT)
+// Change Password (PUT)
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
@@ -131,12 +131,12 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
-// ✅ Get Current User (GET)
+// Get Current User (GET)
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, req.user, "User fetched successfully"));
 });
 
-// ✅ Logout User (POST)
+// Logout User (POST)
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } });
 

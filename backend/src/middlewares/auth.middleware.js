@@ -60,6 +60,32 @@ const roleMiddleware = (allowedRoles) => {
     }
   };
 };
+const authorize = (moduleName, action) => {
+  return async (req, res, next) => {
+    try {
+      const roleId = req?.user?.roleId?._id || req?.user?.role;
 
+      if (!roleId) {
+        return res.status(403).json({ message: "No role assigned" });
+      }
 
-export { auth, roleMiddleware }
+      const roleData = await Role.findById(roleId).lean();
+      if (!roleData) return res.status(403).json({ message: "Role not found" });
+
+      const hasPermission = roleData.permissions.some(
+        (perm) => perm.module === moduleName && perm.actions.includes(action)
+      );
+
+      if (!hasPermission) {
+        return res.status(403).json({ message: `Permission denied for ${action} on ${moduleName}` });
+      }
+
+      next();
+    } catch (error) {
+      console.error("Authorization error:", error);
+      res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+  };
+};
+
+export { auth, roleMiddleware,authorize }
