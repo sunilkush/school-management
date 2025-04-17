@@ -1,91 +1,65 @@
-import {
-    Card,
-    Input,
-    Checkbox,
-    Button,
-    Typography,
-  } from "@material-tailwind/react";
-   
-function SignUpPage() {
-    return (
-     <div className="mx-auto max-w-screen-sm ">
-        <div className="flex items-center justify-center h-screen">
-          <Card color="transparent" shadow={false}>
-        <Typography variant="h4" color="blue-gray">
-          Sign Up
-        </Typography>
-        <Typography color="gray" className="mt-1 font-normal">
-          Nice to meet you! Enter your details to register.
-        </Typography>
-        <form className="mt-8 mb-2 w-80 max-w-screen-lg sm:w-96">
-          <div className="mb-1 flex flex-col gap-6">
-            <Typography variant="h6" color="blue-gray" className="-mb-3">
-              Your Name
-            </Typography>
-            <Input
-              size="lg"
-              placeholder="name@mail.com"
-              className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-            />
-            <Typography variant="h6" color="blue-gray" className="-mb-3">
-              Your Email
-            </Typography>
-            <Input
-              size="lg"
-              placeholder="name@mail.com"
-              className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-            />
-            <Typography variant="h6" color="blue-gray" className="-mb-3">
-              Password
-            </Typography>
-            <Input
-              type="password"
-              size="lg"
-              placeholder="********"
-              className=" !border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-            />
-          </div>
-          <Checkbox
-            label={
-              <Typography
-                variant="small"
-                color="gray"
-                className="flex items-center font-normal"
-              >
-                I agree the
-                <a
-                  href="#"
-                  className="font-medium transition-colors hover:text-gray-900"
-                >
-                  &nbsp;Terms and Conditions
-                </a>
-              </Typography>
-            }
-            containerProps={{ className: "-ml-2.5" }}
-          />
-          <Button className="mt-6" fullWidth>
-            sign up
-          </Button>
-          <Typography color="gray" className="mt-4 text-center font-normal">
-            Already have an account?{" "}
-            <a href="#" className="font-medium text-gray-900">
-              Sign In
-            </a>
-          </Typography>
-        </form>
-      </Card>
-      </div>
-     </div>
-    );
-  }
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchRoles } from "../store/roleSlice.js";
+import { fetchSchools } from "../store/schoolSlice.js";
+import { registerUser } from "../store/registerSlice.js";
 
-  export default SignUpPage
+const SignUpPage = () => {
+  const dispatch = useDispatch();
+  const { roles } = useSelector((state) => state.roles);
+  const { schools } = useSelector((state) => state.schools);
+  const { status, error } = useSelector((state) => state.register);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    avatar: "",
+    isActive: true,
+    role: "",
+    school: "",
+  });
+
+  useEffect(() => {
+    dispatch(fetchRoles());
+    dispatch(fetchSchools());
+  }, [dispatch]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    dispatch(registerUser(formData));
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" type="text" placeholder="Name" onChange={handleChange} />
+      <input name="email" type="email" placeholder="Email" onChange={handleChange} />
+      <input name="password" type="password" placeholder="Password" onChange={handleChange} />
+      
+      <select name="role" onChange={handleChange}>
+        <option value="">Select Role</option>
+        {roles.map((role) => (
+          <option key={role._id} value={role._id}>{role.name}</option>
+        ))}
+      </select>
+
+      <select name="school" onChange={handleChange}>
+        <option value="">Select School</option>
+        {schools.map((school) => (
+          <option key={school._id} value={school._id}>{school.name}</option>
+        ))}
+      </select>
+
+      <button type="submit" disabled={status === "loading"}>
+        {status === "loading" ? "Registering..." : "Register"}
+      </button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </form>
+  );
+};
+
+export default SignUpPage;
