@@ -10,7 +10,8 @@ export const fetchSchools = createAsyncThunk(
       const response = await axios.get("http://localhost:9000/app/v1/school/getAllSchool",{
         headers: { Authorization: `Bearer ${token}` }
       });
-      return response.data;
+      
+      return response.data.data.schools;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch schools"
