@@ -3,8 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchRoles } from "../store/roleSlice.js";
 import { fetchSchools } from "../store/schoolSlice.js";
 import { registerUser } from "../store/registerSlice.js";
-
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 const SignUpPage = () => {
+  const navigate = useNavigate()
   const dispatch = useDispatch();
   const { roles } = useSelector((state) => state.roles || {});
   const { schools } = useSelector((state) => state.schools || {});
@@ -16,14 +18,25 @@ const SignUpPage = () => {
     password: "",
     avatar: "",
     isActive: true,
-    role: "",   // ✅ Corrected
-    school: "", // ✅ Corrected
+    roleId: "",   
+    schoolId: "", 
   });
   console.log(formData)
   useEffect(() => {
     dispatch(fetchRoles());
     dispatch(fetchSchools());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (status === "succeeded") {
+      toast.success("User registered successfully!");
+      
+
+    }
+    if (status === "failed") {
+      toast.error(error || "Registration failed.");
+    }
+  }, [status, error]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -43,12 +56,11 @@ const SignUpPage = () => {
     data.append("email", formData.email);
     data.append("password", formData.password);
     data.append("isActive", formData.isActive);
-    data.append("role", formData.role);
-    data.append("school", formData.school);
+    data.append("roleId", formData.roleId);
+    data.append("schoolId", formData.schoolId);
     if (formData.avatar) {
       data.append("avatar", formData.avatar);
     }
-    
     dispatch(registerUser(data));
   };
 
@@ -61,7 +73,7 @@ const SignUpPage = () => {
             <input name="email" type="email" placeholder="Email" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5" />
             <input name="password" type="password" placeholder="Password" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5" />
 
-            <select name="role" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5">
+            <select name="roleId" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5">
               <option value="">Select Role</option>
               
               {roles?.length > 0 &&
@@ -72,7 +84,7 @@ const SignUpPage = () => {
                 ))}
             </select>
 
-            <select name="school" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5">
+            <select name="schoolId" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5">
               <option value="">Select School</option>
               {schools?.length > 0 &&
                 schools.map((school) => (

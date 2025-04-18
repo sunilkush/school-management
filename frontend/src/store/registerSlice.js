@@ -6,10 +6,12 @@ export const registerUser = createAsyncThunk(
   "user/register",
   async (userData, { rejectWithValue }) => {
     try {
-      console.log(userData)
-      const response = await axios.post("http://localhost:9000/app/v1/user/register", userData,{
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post("http://localhost:9000/app/v1/user/register", userData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       });
       return response.data;
