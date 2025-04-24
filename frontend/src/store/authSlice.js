@@ -7,7 +7,7 @@ export const loginUser = createAsyncThunk(
    async (credentials, { rejectWithValue }) => {
       try {
          const response = await axios.post(
-            "http://localhost:9000/app/v1/user/login",
+            "https://legendary-goldfish-54v4wvqgwxr364q-6000.app.github.dev/app/v1/user/login",
             credentials
          );
 
