@@ -14,7 +14,9 @@ export const registerUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+     
       return response.data;
+      
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Registration failed. Please try again."
@@ -43,7 +45,7 @@ const registerSlice = createSlice({
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload;
+        state.error = action.payload?.message || "Registration failed.";
       });
   },
 });

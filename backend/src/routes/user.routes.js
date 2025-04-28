@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-
     registerUser,
     loginUser,
     updateUser,
@@ -19,7 +18,7 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 //
 
 // ✅ Public Routes
-router.post("/register", auth,roleMiddleware(ADMIN_ROLE), upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
+router.post("/register", auth , roleMiddleware(ADMIN_ROLE), upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
 router.post("/login", loginUser);
 
 // ✅ Protected Routes

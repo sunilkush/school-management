@@ -21,7 +21,7 @@ const SignUpPage = () => {
     roleId: "",   
     schoolId: "", 
   });
-  console.log(formData)
+  
   useEffect(() => {
     dispatch(fetchRoles());
     dispatch(fetchSchools());
@@ -69,11 +69,11 @@ const SignUpPage = () => {
       <div className="pt-6 px-4">
         <div className="bg-white md:flex md:items-center md:justify-between shadow rounded-lg p-4 md:p-6 xl:p-8 my-6 mx-4">
           <form onSubmit={handleSubmit}>
-            <input name="name" type="text" placeholder="Name" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5" />
-            <input name="email" type="email" placeholder="Email" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5" />
-            <input name="password" type="password" placeholder="Password" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5" />
+            <input name="name" type="text" placeholder="Name" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full  p-2.5" />
+            <input name="email" type="email" placeholder="Email" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full  p-2.5" />
+            <input name="password" type="password" placeholder="Password" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full  p-2.5" />
 
-            <select name="roleId" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5">
+            <select name="roleId" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full  p-2.5">
               <option value="">Select Role</option>
               
               {roles?.length > 0 &&
@@ -84,7 +84,7 @@ const SignUpPage = () => {
                 ))}
             </select>
 
-            <select name="schoolId" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5">
+            <select name="schoolId" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full  p-2.5">
               <option value="">Select School</option>
               {schools?.length > 0 &&
                 schools.map((school) => (
@@ -93,7 +93,7 @@ const SignUpPage = () => {
                   </option>
                 ))}
             </select>
-            <input type="file" name="avatar" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full pl-10 p-2.5"/>
+            <input type="file" name="avatar" onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full  p-2.5"/>
             <button
               type="submit"
               className="hidden sm:inline-flex ml-5 text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center items-center mr-3"
