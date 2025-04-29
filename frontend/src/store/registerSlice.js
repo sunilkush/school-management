@@ -14,13 +14,22 @@ export const registerUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-     
+
       return response.data;
-      
+
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Registration failed. Please try again."
-      );
+
+      if (error.response && error.response.data?.message) {
+
+        return rejectWithValue(
+          error.response?.data?.message
+        );
+      } else {
+        return rejectWithValue(
+          "Registration failed. Please try again."
+        )
+      }
+
     }
   }
 );

@@ -9,7 +9,6 @@ import {
   CardHeader,
   Typography,
 } from "@material-tailwind/react";
-
 // @icons
 
 import { Link, useNavigate } from "react-router-dom";
