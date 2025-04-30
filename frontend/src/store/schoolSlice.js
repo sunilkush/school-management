@@ -7,10 +7,10 @@ export const fetchSchools = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:9000/app/v1/school/getAllSchool",{
+      const response = await axios.get("https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/school/getAllSchool",{
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+      console.log(response)
       return response.data.data.schools;
     } catch (error) {
       return rejectWithValue(

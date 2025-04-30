@@ -22,7 +22,7 @@ router.post("/register", auth , roleMiddleware(ADMIN_ROLE), upload.fields([{ nam
 router.post("/login", loginUser);
 
 // ✅ Protected Routes
-router.get("/me", auth, roleMiddleware(ALL_USERS), getCurrentUser);
+router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
 router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
 router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);

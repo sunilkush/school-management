@@ -41,7 +41,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        throw new ApiError(400, "User already registered with this email");
+        return res.status(400).json({message:"User already registered with this email"})
+        // throw new ApiError(400,"User already registered with this email" );
     }
 
     let avatarUrl = "";

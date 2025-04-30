@@ -6,7 +6,7 @@ export const fetchRoles = createAsyncThunk("roles/fetchRoles", async (_, { rejec
   try {
     const token = localStorage.getItem("token"); // Get access token
 
-    const response = await axios.get("http://localhost:9000/api/v1/role/getAllRoles", {
+    const response = await axios.get("https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/api/v1/role/getAllRoles", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
