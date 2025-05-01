@@ -2,12 +2,13 @@ import axios from "axios";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 // Async Thunk for Login
+
 export const loginUser = createAsyncThunk(
    "auth/login",
    async (credentials, { rejectWithValue }) => {
       try {
          const response = await axios.post(
-            "https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/user/login",
+            "http://localhost:9000/app/v1/user/login",
             credentials
          );
 

@@ -19,7 +19,7 @@ function LoginPage() {
     const navigate = useNavigate()
     const auth = useSelector((state) => state.auth);
     const {loading, error} = useSelector((state)=>state.auth);
-    console.log(auth)
+    
     const [formData, setFormData] = useState({
       email: "",
       password: "",
