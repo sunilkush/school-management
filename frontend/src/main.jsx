@@ -9,8 +9,10 @@ import SignUpPage from './pages/SignUp.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Teachers from './pages/Teachers.jsx'
 import Page404 from './pages/Page404.jsx'
+import SchoolRegister from './pages/SchoolRegister.jsx'
 import ProtectedRoutes from './components/ProtectedRoutes.jsx'
 import NotFound from './pages/NotFound.jsx'
+
 
 const router = createBrowserRouter([{
   path: "/",
@@ -41,9 +43,12 @@ const router = createBrowserRouter([{
       children: [
         { path: "teachers", element: (<Teachers />) },
         { path: "signUp", element: (<SignUpPage />) },
+        { path: "school-register",  element:(<SchoolRegister/>)  },
       ]
     },
-    { path: "*", element: <NotFound /> },
+    
+
+    { path: '*', element:( <NotFound />) },
 
 
   ]
