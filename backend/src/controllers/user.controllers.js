@@ -36,7 +36,8 @@ const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, roleId, schoolId, classId, parentId } = req.body;
 
     if ([name, email, password, roleId, schoolId].some(field => !field?.trim() === "")) {
-        throw new ApiError(400, "All fields are required");
+       // throw new ApiError(400, "All fields are required");
+        return res.status(400).json({message:"All fields are required"})
     }
 
     const existingUser = await User.findOne({ email });
@@ -76,12 +77,14 @@ const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        throw new ApiError(400, "Email and password are required");
+       // throw new ApiError(400, "Email and password are required");
+        return res.status(400).json({message:"Email and password are required"})
     }
 
     const user = await User.findOne({ email });
     if (!user || !(await user.isPasswordCorrect(password))) {
-        throw new ApiError(401, "Invalid email or password");
+        //throw new ApiError(401, "Invalid email or password");
+        return res.status(401).json({message:"Invalid email or password"})
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
