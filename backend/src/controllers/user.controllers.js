@@ -82,6 +82,11 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+    if(!user.isActive == true ){
+        return res.status(403).json({
+            message:"User status: inactive. Please contact the administrator."
+        })
+    } 
     if (!user || !(await user.isPasswordCorrect(password))) {
         //throw new ApiError(401, "Invalid email or password");
         return res.status(401).json({message:"Invalid email or password"})
@@ -94,6 +99,7 @@ const loginUser = asyncHandler(async (req, res) => {
         .cookie("accessToken", accessToken, { secure: true, httpOnly: true })
         .cookie("refreshToken", refreshToken, { secure: true, httpOnly: true })
         .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in successfully"));
+    
 });
 
 // Update User Profile (PUT)
