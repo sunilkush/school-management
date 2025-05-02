@@ -1,115 +1,120 @@
 import React, { useState } from "react";
-import {useDispatch,useSelector} from "react-redux";
-// @components
-import {
-  Card,
-  Input,
-  Button,
-  CardBody,
-  CardHeader,
-  Typography,
-} from "@material-tailwind/react";
-// @icons
-
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../store/authSlice";
 
 function LoginPage() {
-    const dispatch = useDispatch();
-    const navigate = useNavigate()
-    const auth = useSelector((state) => state.auth);
-    const {loading, error} = useSelector((state)=>state.auth);
-    
-    const [formData, setFormData] = useState({
-      email: "",
-      password: "",
-    });
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading, error } = useSelector((state) => state.auth);
 
-    const handleChange =(e)=>{
-        setFormData({...formData,[e.target.name]:e.target.value});
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const result = await dispatch(loginUser(formData));
+    if (result.meta.requestStatus === "fulfilled") {
+      navigate("/dashboard");
     }
+  };
 
-    const handleSubmit = async(e)=>{
-      e.preventDefault();
-      const result = await dispatch(loginUser(formData));
-      if(result.meta.requestStatus === "fulfilled"){
-        navigate("/dashboard")
-      }
-    }
+  return (
+    <div className="min-h-screen flex">
+      {/* Left - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white px-8 py-12">
+        <div className="max-w-md w-full">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-gray-900">Sign In</h2>
+            <p className="mt-2 text-gray-600">Welcome back! Please enter your details.</p>
+          </div>
 
-    return (
-      <section className="px-8 bg-blue-gray-800">
-        <div className="container mx-auto h-screen grid place-items-center ">
-          <Card shadow={false} className="md:px-24 md:py-14 py-8 border border-gray-300">
-            <CardHeader shadow={false} floated={false} className="text-center">
-              <Typography variant="h1" color="blue-gray" className="mb-4 !text-3xl lg:text-4xl">
-                Smart School
-              </Typography>
-              <Typography className="!text-gray-600 text-[18px] font-normal md:max-w-sm">
-                Enjoy quick and secure access to your accounts on various Smart School platforms.
-              </Typography>
-            </CardHeader>
-            <CardBody>
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:mt-12">
-                <div>
-                  <label htmlFor="email">
-                    <Typography variant="small" color="blue-gray" className="block font-medium mb-2">
-                      Your Email
-                    </Typography>
-                  </label>
-                  <Input
-                    id="email"
-                    color="gray"
-                    size="lg"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="name@mail.com"
-                    className="w-full placeholder:opacity-100 focus:border-t-primary border-t-blue-gray-200"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="password">
-                    <Typography variant="small" color="blue-gray" className="block font-medium mb-2">
-                      Your Password
-                    </Typography>
-                  </label>
-                  <Input
-                    id="password"
-                    color="gray"
-                    size="lg"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="*********"
-                    className="w-full placeholder:opacity-100 focus:border-t-primary border-t-blue-gray-200"
-                    required
-                  />
-                </div>
-                {error && <p className="text-red-500 text-sm">{error}</p>}
-                <Button type="submit" size="lg" color="gray" fullWidth disabled={loading}>
-                  {loading ? "Logging in..." : "Continue"}
-                </Button>
-               
-                <Typography variant="small" className="text-center mx-auto max-w-[19rem] !font-medium !text-gray-600">
-                  Upon signing in, you consent to abide by our{" "}
-                  <Link to="/terms" className="text-gray-900">
-                    Terms of Service
-                  </Link>{" "}
-                  &{" "}
-                  <Link to="/privacy" className="text-gray-900">
-                    Privacy Policy.
-                  </Link>
-                </Typography>
-              </form>
-            </CardBody>
-          </Card>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                type="email"
+                name="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                name="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="********"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Error */}
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition"
+            >
+              {loading ? "Logging in..." : "Sign In"}
+            </button>
+
+            {/* Terms */}
+            <p className="text-center text-sm text-gray-500 mt-4">
+              By signing in, you agree to our{" "}
+              <Link to="/terms" className="text-blue-600 hover:underline">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="text-blue-600 hover:underline">
+                Privacy Policy
+              </Link>.
+            </p>
+
+            {/* Switch to Signup */}
+            <p className="text-center text-sm text-gray-600 mt-4">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-blue-600 hover:underline">
+                Sign Up
+              </Link>
+            </p>
+          </form>
         </div>
-      </section>
-    );
-  }
+      </div>
+
+      {/* Right - Branding */}
+      <div className="hidden lg:flex w-1/2 bg-blue-900 text-white items-center justify-center p-8 relative">
+        <div className="text-center">
+          <h2 className="text-4xl font-bold mb-2">Smart School</h2>
+          <p className="text-lg opacity-80">Manage all your schools in one place.</p>
+        </div>
+        {/* Optional: Light/Dark Toggle Button */}
+        <div className="absolute bottom-6 right-6">
+          <button className="text-white opacity-50 hover:opacity-100">
+            🌙
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default LoginPage;

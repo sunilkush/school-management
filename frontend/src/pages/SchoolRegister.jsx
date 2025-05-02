@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { registerSchool } from "../store/schoolRegisterSlice";
 
-// @components
+// Material Tailwind components
 import {
   Card,
   Input,
@@ -8,77 +11,125 @@ import {
   CardBody,
   CardHeader,
   Typography,
+  Checkbox,
 } from "@material-tailwind/react";
-// @icons
 
+const SchoolRegister = () => {
+  
+  const dispatch = useDispatch();
+  const { status, error } = useSelector((state) => state.schoolRegister || {});
 
-import {  } from "../store/authSlice";
-const SchoolRegister = () =>{
- 
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    email: "",
+    phone: "",
+    website: "",
+    isActive: true,
+  });
+
+  
+
+  useEffect(() => {
+    if (status === "succeeded") {
+      toast.success("School registered successfully!");
+      setFormData({
+        name: "",
+        address: "",
+        email: "",
+        phone: "",
+        website: "",
+        isActive: true,
+      });
+    }
+    if (status === "failed") {
+      toast.error(error || "Registration failed.");
+    }
+  }, [status, error]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const data = new FormData();
+    data.append("name", formData.name);
+    data.append("address", formData.address);
+    data.append("email", formData.email);
+    data.append("phone", formData.phone);
+    data.append("website", formData.website);
+    data.append("isActive", formData.isActive);
     
-    return (
-        <section className="px-8 bg-blue-gray-800">
-          <div className="container mx-auto h-screen grid place-items-center ">
-            <Card shadow={false} className="md:px-24 md:py-14 py-8 border border-gray-300">
-              <CardHeader shadow={false} floated={false} className="text-center">
-                <Typography variant="h1" color="blue-gray" className="mb-4 !text-3xl lg:text-4xl">
-                  Register School
-                </Typography>
-                <Typography className="!text-gray-600 text-[18px] font-normal md:max-w-sm">
-                  Enjoy quick and secure access to your accounts on various Register School platforms.
-                </Typography>
-              </CardHeader>
-              <CardBody>
-              <form  className="flex flex-col gap-4 md:mt-12">
-                <div>
-                  <label htmlFor="email">
-                    <Typography variant="small" color="blue-gray" className="block font-medium mb-2">
-                      Your Email
-                    </Typography>
-                  </label>
-                  <Input
-                    id="email"
-                    color="gray"
-                    size="lg"
-                    type="email"
-                    name="email"
-                    
-                    placeholder="name@mail.com"
-                    className="w-full placeholder:opacity-100 focus:border-t-primary border-t-blue-gray-200"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="password">
-                    <Typography variant="small" color="blue-gray" className="block font-medium mb-2">
-                      Your Password
-                    </Typography>
-                  </label>
-                  <Input
-                    id="password"
-                    color="gray"
-                    size="lg"
-                    type="password"
-                    name="password"
-                   
-                    placeholder="*********"
-                    className="w-full placeholder:opacity-100 focus:border-t-primary border-t-blue-gray-200"
-                    required
-                  />
-                </div>
-               
-                <Button type="submit" size="lg" color="gray" fullWidth >
-                  
-                </Button>
-               
-                
-              </form>
-              </CardBody>
-            </Card>
-          </div>
-        </section>
-      );
-}
 
+    dispatch(registerSchool(data));
+  };
+
+  return (
+    <section className="px-8 bg-blue-gray-800 min-h-screen">
+      <div className="container mx-auto grid place-items-center py-10">
+        <Card shadow={false} className="md:px-24 md:py-14 py-8 border border-gray-300 w-full max-w-3xl">
+          <CardHeader shadow={false} floated={false} className="text-center">
+            <Typography variant="h2" color="blue-gray" className="mb-2">
+              Register School
+            </Typography>
+            <Typography className="!text-gray-600 text-[18px] font-normal">
+              Quickly add a new school to your platform.
+            </Typography>
+          </CardHeader>
+          <CardBody>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">School Name</label>
+                <Input name="name" value={formData.name} onChange={handleChange} type="text" placeholder="Enter name" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <Input name="address" value={formData.address} onChange={handleChange} type="text" placeholder="Enter address" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <Input name="email" value={formData.email} onChange={handleChange} type="email" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <Input name="phone" value={formData.phone} onChange={handleChange} type="text" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Website</label>
+                <Input name="website" value={formData.website} onChange={handleChange} type="text" />
+              </div>
+
+              <div>
+                <Checkbox
+                  label="Is Active"
+                  name="isActive"
+                  checked={formData.isActive}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+                disabled={status === "loading"}
+              >
+                {status === "loading" ? "Registering..." : "Register School"}
+              </Button>
+            </form>
+          </CardBody>
+        </Card>
+      </div>
+    </section>
+  );
+};
 
 export default SchoolRegister;

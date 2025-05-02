@@ -1,11 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+// Async thunk to register school
 export const registerSchool = createAsyncThunk(
   "schools/register",
   async (schoolData, { rejectWithValue }) => {
     try {
+    
       const token = localStorage.getItem("token");
+    
       const response = await axios.post(
         "https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/school/register",
         schoolData,
@@ -16,19 +19,18 @@ export const registerSchool = createAsyncThunk(
           },
         }
       );
-      return response;
+      
+      return response.data;
     } catch (error) {
-      if (error.response && error.response.data?.message) {
-        return rejectWithValue(error.response?.data?.message);
-      } else {
-        return rejectWithValue("Registration failed. Please try again.");
-      }
+      const message =
+        error.response?.data?.message || "School registration failed.";
+      return rejectWithValue(message);
     }
   }
 );
 
 const schoolRegisterSlice = createSlice({
-  name: "SchoolRegister",
+  name: "schoolRegister",
   initialState: {
     schoolRegister: null,
     status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
@@ -43,11 +45,11 @@ const schoolRegisterSlice = createSlice({
       })
       .addCase(registerSchool.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.user = action.payload;
+        state.schoolRegister = action.payload;
       })
       .addCase(registerSchool.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload; // Fixed: payload is already a string
+        state.error = action.payload;
       });
   },
 });

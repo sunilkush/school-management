@@ -12,6 +12,7 @@ import Page404 from './pages/Page404.jsx'
 import SchoolRegister from './pages/SchoolRegister.jsx'
 import ProtectedRoutes from './components/ProtectedRoutes.jsx'
 import NotFound from './pages/NotFound.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
 
 
 const router = createBrowserRouter([{
@@ -28,6 +29,12 @@ const router = createBrowserRouter([{
       path: '/login',
       element: (
         <LoginPage />
+      )
+    },
+    {
+      path: '/adminDashboard',
+      element: (
+        <AdminDashboard />
       )
     },
     {
