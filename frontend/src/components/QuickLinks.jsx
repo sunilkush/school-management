@@ -6,8 +6,8 @@ const quickLinks = [
   { name: "Exam Result", icon: <FaClipboardCheck />, bg: "bg-blue-100", iconBg: "bg-blue-500" },
   { name: "Attendance", icon: <FaClipboardList />, bg: "bg-yellow-100", iconBg: "bg-yellow-500" },
   { name: "Fees", icon: <FaMoneyCheckAlt />, bg: "bg-cyan-100", iconBg: "bg-cyan-500" },
-  { name: "Home Works", icon: <FaBook />, bg: "bg-rose-100", iconBg: "bg-rose-500" },
-  { name: "Reports", icon: <FaFileAlt />, bg: "bg-sky-100", iconBg: "bg-sky-500" },
+  { name: "Home Works", icon: <FaBook />, bg: "bg-red-100", iconBg: "bg-red-500" },
+  { name: "Reports", icon: <FaFileAlt />, bg: "bg-pink-100", iconBg: "bg-pink-500" },
 ];
 
 const QuickLinks = () => {

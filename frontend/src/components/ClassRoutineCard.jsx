@@ -23,7 +23,7 @@ const classRoutines = [
 
 const ClassRoutineCard = () => {
   return (
-    <div className="bg-white rounded-md p-4 shadow w-full max-w-md">
+    <div className="bg-white rounded-md p-4 shadow w-full ">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-semibold text-lg text-gray-800">Class Routine</h2>
         <button className="text-blue-500 text-sm hover:underline">

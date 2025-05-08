@@ -44,22 +44,22 @@ const AttendanceChart = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-4 text-center mb-6">
-        <div>
+        <div className='bg-gray-100 p-2 rounded-md'>
           <p className="text-xl font-semibold">28</p>
           <p className="text-xs text-gray-500">Emergency</p>
         </div>
-        <div>
+        <div className='bg-gray-100  p-2 rounded-md' >
           <p className="text-xl font-semibold">01</p>
           <p className="text-xs text-gray-500">Absent</p>
         </div>
-        <div>
+        <div className='bg-gray-100  p-2 rounded-md'>
           <p className="text-xl font-semibold">01</p>
           <p className="text-xs text-gray-500">Late</p>
         </div>
       </div>
 
       <div className="flex justify-center">
-        <PieChart width={160} height={160}>
+        <PieChart width={300} height={300}>
           <Pie
             data={data}
             cx="50%"
