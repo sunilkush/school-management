@@ -69,7 +69,7 @@ const SchoolRegister = () => {
   };
 
   return (
-    <section className="px-8 bg-blue-gray-800 min-h-screen">
+    <section className="px-8 bg-blue-gray-50 min-h-screen">
       <div className="container mx-auto grid place-items-center py-10">
         <Card shadow={false} className="md:px-24 md:py-14 py-8 border border-gray-300 w-full max-w-3xl">
           <CardHeader shadow={false} floated={false} className="text-center">

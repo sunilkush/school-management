@@ -35,10 +35,10 @@ app.use("/app/v1/class", classRoutes)
 app.use("/app/v1/attendance", attendanceRoutes)
 app.use("/app/v1/subject", subjectRoutes)
 app.use("/app/v1/books", booksRoutes)
-app.use("/api/v1/issuedBooks", issuedBookRoutes);
-app.use("/api/v1/student", studentRoutes);
-app.use("/api/v1/role", RoleRoutes);
-app.use("/api/v1/employee", EmployeeRoutes);
-app.use("/api/v1/academicYear", AcademicYear);
+app.use("/app/v1/issuedBooks", issuedBookRoutes);
+app.use("/app/v1/student", studentRoutes);
+app.use("/app/v1/role", RoleRoutes);
+app.use("/app/v1/employee", EmployeeRoutes);
+app.use("/app/v1/academicYear", AcademicYear);
 
 export { app }

@@ -4,8 +4,10 @@ import { fetchRoles } from "../store/roleSlice.js";
 import { fetchSchools } from "../store/schoolSlice.js";
 import { registerUser } from "../store/registerSlice.js";
 import { toast } from "react-toastify";
-import { Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 const CreateUser = () => {
+  const navigate = useNavigate()
   const dispatch = useDispatch();
   const { roles } = useSelector((state) => state.roles || {});
   const { schools } = useSelector((state) => state.schools || {});
@@ -79,7 +81,7 @@ const CreateUser = () => {
     <>
 
       <div className="min-h-screen flex items-center justify-center bg-blue-gray-50 py-10 px-4">
-        <div className="bg-white shadow-lg rounded-xl w-full max-w-4xl p-8 md:grid md:grid-cols-2 gap-6">
+        <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 md:px-24 md:py-14 py-8 border border-gray-300 w-full max-w-3xl">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Register Admin</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -118,8 +120,9 @@ const CreateUser = () => {
                 />
               </div>
 
-
-              <label className="block text-sm font-medium text-gray-700">Role</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                <label className="block text-sm font-medium text-gray-700">Role</label>
               <select
                 name="roleId"
                 onChange={handleChange}
@@ -135,9 +138,9 @@ const CreateUser = () => {
                     </option>
                   ))}
               </select>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">School</label>
+                </div>
+                <div>
+                <label className="block text-sm font-medium text-gray-700">School</label> 
                 <select
                   name="schoolId"
                   value={formData.school}
@@ -151,9 +154,16 @@ const CreateUser = () => {
                     </option>
                   ))}
                 </select>
-
+               
+              <div className="text-sm text-gray-600 mt-1">
+                Can't find the school?{" "}
+                <Link to="/dashboard/school-register" className="text-cyan-600 hover:underline">
+                  Register a new school
+                </Link>
               </div>
-
+              </div>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700">Avatar</label>
                 <input

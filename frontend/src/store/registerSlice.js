@@ -8,7 +8,7 @@ export const registerUser = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
 
-      const response = await axios.post("https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/user/register", userData, {
+      const response = await axios.post("http://localhost:9000/app/v1/user/register", userData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
