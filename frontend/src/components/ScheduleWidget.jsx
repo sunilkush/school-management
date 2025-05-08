@@ -25,7 +25,7 @@ const events = [
 
 const ScheduleWidget = () => {
   return (
-    <div className="bg-white rounded-md shadow-md p-4 w-full max-w-md">
+    <div className="bg-white rounded-md shadow-md p-4 w-full ">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-semibold text-lg">Schedules</h2>
         <button className="flex items-center text-sm text-blue-600">

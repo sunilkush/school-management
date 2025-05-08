@@ -4,8 +4,8 @@ import { fetchRoles } from "../store/roleSlice.js";
 import { fetchSchools } from "../store/schoolSlice.js";
 import { registerUser } from "../store/registerSlice.js";
 import { toast } from "react-toastify";
-
-const SignUpPage = () => {
+import { Link } from 'react-router-dom'
+const CreateUser = () => {
   const dispatch = useDispatch();
   const { roles } = useSelector((state) => state.roles || {});
   const { schools } = useSelector((state) => state.schools || {});
@@ -29,6 +29,15 @@ const SignUpPage = () => {
   useEffect(() => {
     if (status === "succeeded") {
       toast.success("User registered successfully!");
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        avatar: "",
+        isActive: true,
+        roleId: "",
+        schoolId: "",
+      });
     }
     if (status === "failed") {
       toast.error(error || "Registration failed.");
@@ -57,8 +66,12 @@ const SignUpPage = () => {
     if (formData.avatar) {
       data.append("avatar", formData.avatar);
     }
-
+    
     dispatch(registerUser(data));
+
+    
+
+
   };
 
   return (
@@ -74,6 +87,7 @@ const SignUpPage = () => {
                 type="text"
                 placeholder="John Doe"
                 onChange={handleChange}
+                value={formData.name}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
               />
             </div>
@@ -84,6 +98,7 @@ const SignUpPage = () => {
                 name="email"
                 type="email"
                 placeholder="john@example.com"
+                value={formData.email}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
               />
@@ -94,6 +109,7 @@ const SignUpPage = () => {
               <input
                 name="password"
                 type="password"
+                value={formData.password}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
               />
@@ -104,6 +120,7 @@ const SignUpPage = () => {
               <select
                 name="roleId"
                 onChange={handleChange}
+                value={formData.role}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
               >
                 <option value="">Select Role</option>
@@ -122,6 +139,7 @@ const SignUpPage = () => {
               <label className="block text-sm font-medium text-gray-700">School</label>
               <select
                 name="schoolId"
+                value={formData.school}
                 onChange={handleChange}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
               >
@@ -132,6 +150,7 @@ const SignUpPage = () => {
                   </option>
                 ))}
               </select>
+             
             </div>
 
             <div>
@@ -165,4 +184,4 @@ const SignUpPage = () => {
   );
 };
 
-export default SignUpPage;
+export default CreateUser;

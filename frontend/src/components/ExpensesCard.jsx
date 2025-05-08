@@ -14,7 +14,7 @@ const data = [
 
 const ExpensesCard = () => {
   return (
-    <div className="bg-white rounded-md p-4 shadow w-full max-w-md">
+    <div className="bg-white rounded-md p-4 shadow w-full ">
       <div className="flex justify-between items-start">
         <div>
           <p className="text-sm text-gray-500 font-medium">Total Expenses</p>

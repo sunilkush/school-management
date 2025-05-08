@@ -14,10 +14,9 @@ const COLORS = ['#3B82F6', '#FACC15', '#EF4444']; // Blue, Yellow, Red
 
 const PerformanceChart = () => {
   return (
-    <div className="bg-white p-4 rounded-lg shadow flex justify-between items-start">
+    <div className="bg-white p-4 rounded-lg shadow  ">
       {/* Left Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 w-100">
           <h2 className="text-lg font-semibold text-gray-800">Performance</h2>
           <div className="flex items-center text-sm text-gray-500 space-x-1 ml-4">
             <School size={16} />
@@ -25,23 +24,26 @@ const PerformanceChart = () => {
             <ChevronDown size={16} />
           </div>
         </div>
+        <div className='flex justify-between items-start'>
+      <div className='flex justify-between items-center mb-4 flex-1'>
+        
 
-        <div className="space-y-3">
+        <div className="space-y-3 ">
           <div className="flex items-center justify-between border border-dashed rounded px-3 py-2">
-            <span className="flex items-center gap-2 text-blue-600">
-              ▾ Top
+            <span className="flex items-center gap-2 text-gray-600">
+              <b className='text-green-500'>▾</b> Top
             </span>
             <span className="font-semibold text-gray-700">45</span>
           </div>
           <div className="flex items-center justify-between border border-dashed rounded px-3 py-2">
-            <span className="flex items-center gap-2 text-yellow-500">
-              ▾ Average
+            <span className="flex items-center gap-2 text-gray-500">
+            <b className='text-red-500'>▾</b> Average
             </span>
             <span className="font-semibold text-gray-700">11</span>
           </div>
           <div className="flex items-center justify-between border border-dashed rounded px-3 py-2">
-            <span className="flex items-center gap-2 text-red-500">
-              ▾ Below Avg
+            <span className="flex items-center gap-2 text-gray-500">
+            <b className='text-yellow-500'>▾</b> Below Avg
             </span>
             <span className="font-semibold text-gray-700">02</span>
           </div>
@@ -49,7 +51,7 @@ const PerformanceChart = () => {
       </div>
 
       {/* Right Section - Donut Chart */}
-      <div className="pt-4">
+      <div className="pt-4 flex-1">
         <PieChart width={130} height={130}>
           <Pie
             data={data}
@@ -70,7 +72,7 @@ const PerformanceChart = () => {
           </Pie>
         </PieChart>
       </div>
-    </div>
+    </div></div>
   );
 };
 

@@ -12,6 +12,7 @@ const registerSchool = asyncHandler(async (req, res) => {
 
     // Check if school already exists
     const existingSchool = await School.findOne({ email })
+    console.log(existingSchool)
     if (existingSchool) throw new ApiError(400, 'School already registered')
 
     // Handle logo upload
