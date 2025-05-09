@@ -4,10 +4,10 @@ import { fetchRoles } from "../store/roleSlice.js";
 import { fetchSchools } from "../store/schoolSlice.js";
 import { registerUser } from "../store/registerSlice.js";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+
 import { Link } from "react-router-dom";
 const CreateUser = () => {
-  const navigate = useNavigate()
+  
   const dispatch = useDispatch();
   const { roles } = useSelector((state) => state.roles || {});
   const { schools } = useSelector((state) => state.schools || {});
