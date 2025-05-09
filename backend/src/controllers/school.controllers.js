@@ -8,7 +8,8 @@ const registerSchool = asyncHandler(async (req, res) => {
     const { name, address, email, phone, website, isActive } = req.body
 
     // Validate required fields
-    if (!name || !email) throw new ApiError(400, 'Name and Email are required')
+    if (!name || !email) return res.status(400).json({massege: 'Name and Email are required'})
+       
 
     // Check if school already exists
     const existingSchool = await School.findOne({ email })
