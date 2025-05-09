@@ -21,13 +21,19 @@ const auth = asyncHandler(async (req, res, next) => {
     const user = await User.findById(decodeToken?._id).select("-password -refreshToken");
 
     if (!user) {
-      throw new ApiError(401, "Invalid Access Request")
+       return res.status(401).json(
+       new ApiError(401, "Invalid Access Request")
+      )
+      
     }
     req.user = user
     next()
 
   } catch (error) {
-    throw new ApiError(401, error?.message || "Invalid access token")
+     return res.status(401).json(
+      new ApiError(401, error?.message || "Invalid access token")
+      )
+    
   }
 
 })
@@ -39,19 +45,27 @@ const roleMiddleware = (allowedRoles) => {
 
     try {
       if (!roleId) {
-        return res.status(401).json({ message: "Unauthorized. No role assigned." });
+         return res.status(401).json(
+       new ApiError(401, "Unauthorized. No role assigned.")
+      )
+        
       }
 
       // Fetch role details using only _id
       const userRole = await Role.findById(roleId).lean(); // ✅ Use lean() for performance
-      console.log("User Role:", userRole);
+      
 
       if (!userRole) {
-        return res.status(403).json({ message: "Access denied. Role not found." });
+       
+          return res.status(403).json(
+       new ApiError(401, "Access denied. Role not found."));
       }
 
       if (!allowedRoles.includes(userRole.name)) {
-        return res.status(403).json({ message: "Access denied. You do not have the necessary permissions." });
+
+      
+        return res.status(403).json(
+          new ApiError(401, "Access denied. You do not have the necessary permissions."));
       }
 
       next();
