@@ -80,8 +80,8 @@ const CreateUser = () => {
   return (
     <>
 
-      <div className="min-h-screen flex items-center justify-center bg-blue-gray-50 py-10 px-4">
-        <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 md:px-24 md:py-14 py-8 border border-gray-300 w-full max-w-3xl">
+      <div className="min-h-screen flex md:items-center justify-center bg-blue-gray-50 py-10 px-4">
+        <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 md:px-24 md:py-14 py-8 border border-gray-300 w-full max-w-3xl p-5">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Register Admin</h2>
             <form onSubmit={handleSubmit} className="space-y-4">

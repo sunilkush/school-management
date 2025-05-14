@@ -17,9 +17,12 @@ import QuickLinks from "../components/QuickLinks.jsx";
 export default function AdminDashboard() {
   return (
     <div className="flex">
-      <SidebarMenu />
+      
+      <SidebarMenu /> 
       <main className="flex-1 p-6 space-y-6 bg-gray-200">
-        <Navbar />
+       
+          <Navbar />
+       
         <StatsCards />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 ">
           <ScheduleWidget />
@@ -29,7 +32,6 @@ export default function AdminDashboard() {
           <ClassRoutineCard/>
           <QuickLinks/>
           <EarningsCard />
-          
           <ExpensesCard />
           <NoticeBoard />
           <LeaveRequests/>

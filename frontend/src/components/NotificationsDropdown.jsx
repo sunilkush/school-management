@@ -4,7 +4,7 @@ import { FaBell, FaEye } from 'react-icons/fa';
 const notifications = [
   {
     id: 1,
-    avatar: '/avatar1.jpg',
+    avatar: 'https://demo.themesberg.com/windster-pro/images/users/neil-sims.png',
     name: 'Bonnie Green',
     message: 'New message from',
     time: 'a few moments ago',
@@ -13,7 +13,7 @@ const notifications = [
   },
   {
     id: 2,
-    avatar: '/avatar2.jpg',
+    avatar: 'https://demo.themesberg.com/windster-pro/images/users/neil-sims.png',
     name: 'Jese leos',
     message: 'started following you.',
     time: '10 minutes ago',
@@ -22,7 +22,7 @@ const notifications = [
   },
   {
     id: 3,
-    avatar: '/avatar3.jpg',
+    avatar: 'https://demo.themesberg.com/windster-pro/images/users/neil-sims.png',
     name: 'Joseph Mcfall',
     message: 'love your story. See it and view more stories.',
     time: '44 minutes ago',
@@ -31,7 +31,7 @@ const notifications = [
   },
   {
     id: 4,
-    avatar: '/avatar4.jpg',
+    avatar: 'https://demo.themesberg.com/windster-pro/images/users/neil-sims.png',
     name: 'Leslie Livingston',
     message: 'mentioned you in a comment:',
     time: '1 hour ago',
@@ -40,7 +40,7 @@ const notifications = [
   },
   {
     id: 5,
-    avatar: '/avatar5.jpg',
+    avatar: 'https://demo.themesberg.com/windster-pro/images/users/neil-sims.png',
     name: 'Robert Brown',
     message: 'posted a new video: Glassmorphism - learn how to implement the new design trend.',
     time: '3 hours ago',
