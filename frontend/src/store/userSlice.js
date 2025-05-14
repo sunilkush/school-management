@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Async thunk to fetch user details
 export const fetchUser = createAsyncThunk('user/fetchUser', async () => {
-  const response = await axios.get('http://localhost:9000/app/v1/user/profile');
+  const response = await axios.get('https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/user/profile');
   return response.data; // assumes data has { name, email, role, ... }
 });
 

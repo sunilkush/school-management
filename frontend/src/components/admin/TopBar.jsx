@@ -40,10 +40,9 @@ const TopBar = () => {
                   </svg>
                </button>
                <div className="hidden lg:flex items-center">
-                  <span className="text-base font-normal text-gray-500 mr-5">Open source ❤️</span>
-                  <div className="-mb-1">
-                     <a className="github-button" href="#" data-color-scheme="no-preference: dark; light: light; dark: light;" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star themesberg/windster-tailwind-css-dashboard on GitHub">Star</a>
-                  </div>
+                  <div><button></button></div>
+                  <div><button></button></div>
+                 <div><button className='w-20 h-20 rounded-full'><img src="https://demo.themesberg.com/windster-pro/images/users/neil-sims.png"/></button></div>
                </div>
               <LogoutButton/>
             </div>
