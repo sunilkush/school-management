@@ -11,7 +11,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Teachers from './pages/Teachers.jsx';
 import Page404 from './pages/Page404.jsx';
 import SchoolRegister from './pages/SchoolRegister.jsx';
-import ProtectedRoutes from './components/ProtectedRoutes.jsx'; // If needed
+// If needed
 import NotFound from './pages/NotFound.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 

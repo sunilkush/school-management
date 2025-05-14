@@ -1,5 +1,7 @@
 import React from 'react'
 import { LogoutButton } from './LogoutButton'
+import UserDropdown from './UserDropdown'
+import NotificationsDropdown from './NotificationsDropdown'
 
 const TopBar = () => {
   return (
@@ -41,10 +43,13 @@ const TopBar = () => {
                </button>
                <div className="hidden lg:flex items-center">
                   <div><button></button></div>
-                  <div><button></button></div>
-                 <div><button className='w-20 h-20 rounded-full'><img src="https://demo.themesberg.com/windster-pro/images/users/neil-sims.png"/></button></div>
+                  <div className='mx-5'><NotificationsDropdown/></div>
+                 <div>
+                  <UserDropdown/>
+
+                 </div>
                </div>
-              <LogoutButton/>
+             
             </div>
          </div>
       </div>
