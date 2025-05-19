@@ -72,9 +72,6 @@ const CreateUser = () => {
 
     dispatch(registerUser(data));
 
-
-
-
   };
 
   return (

@@ -1,4 +1,4 @@
-import SidebarMenu from "../components/SidebarMenu.jsx";
+import SidebarMenu from "../components/Sidebar_Admin.jsx";
 import Navbar from "../components/Navbar.jsx";
 import StatsCards from "../components/StatsCards.jsx";
 import ScheduleWidget from "../components/ScheduleWidget.jsx";
@@ -18,7 +18,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex">
       
-      <SidebarMenu /> 
+         <SidebarMenu /> 
       <main className="flex-1 p-6 space-y-6 bg-gray-200">
        
           <Navbar />
