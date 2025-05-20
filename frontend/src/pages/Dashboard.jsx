@@ -15,28 +15,41 @@ const Dashboard = () => {
 
   const user = useSelector((state) => state.auth.user);
   const [role, setRole] = useState(null);
-  console.log(role)
+  const [isLoading, setIsLoading] = useState(true); // control loading state
+ 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       navigate("/login");
     }
+  }, [navigate]);
 
+  useEffect(() => {
     const fetchUserRole = async () => {
-      if (user?.roleId) {
-        const resultAction = await dispatch(fetchRoles(user.roleId));
-        if (fetchRoles.fulfilled.match(resultAction)) {
-          setRole(resultAction.payload.name); // assuming role object has "name"
+     const userNew = JSON.parse(user)
+      if (userNew && userNew.roleId) {
+        try {
+          const resultAction = await dispatch(fetchRoles(userNew.roleId));
+          if (fetchRoles.fulfilled.match(resultAction)) {
+            setRole(resultAction.payload.name); // e.g., "Super Admin"
+          } else {
+            console.error("Failed to fetch role:", resultAction);
+          }
+        } catch (err) {
+          console.error("Error fetching role:", err);
+        } finally {
+          setIsLoading(false);
         }
+      } else {
+        setIsLoading(false);
       }
     };
-
     fetchUserRole();
-  }, [dispatch, user, navigate]);
-
-  if (!role) {
-    return <div className="text-center mt-20">Loading...</div>;
+  }, [dispatch, user,navigate]);
+  console.log(role)
+  // Show loading screen until user and role are available
+  if (isLoading || !user || !role) {
+    return <div className="text-center mt-20">Loading dashboard...</div>;
   }
 
   return (

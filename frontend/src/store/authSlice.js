@@ -11,7 +11,6 @@ export const loginUser = createAsyncThunk(
             "https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/user/login",
             credentials
          );
-
          console.log(response.data); // Debugging output
 
          return {
@@ -57,8 +56,10 @@ const authSlice = createSlice({
             state.token = action.payload.accessToken;
 
             // Save token to local storage
+           
             localStorage.setItem("token", action.payload.accessToken);
             localStorage.setItem("refreshToken", action.payload.refreshToken);
+            localStorage.setItem("user", JSON.stringify(action.payload.user));
          })
          .addCase(loginUser.rejected, (state, action) => {
             state.loading = false;
