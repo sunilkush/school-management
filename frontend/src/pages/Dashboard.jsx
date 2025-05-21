@@ -9,7 +9,6 @@ import TopBar from "../components/TopBar";
 import DashboardFooter from "../components/DashboardFooter";
 
 const Dashboard = () => {
-  
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -26,10 +25,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchUserRole = async () => {
-     const userNew = JSON.parse(user)
-      if (userNew && userNew.roleId) {
+     
+      if (user && user.roleId) {
         try {
-          const resultAction = await dispatch(fetchRoles(userNew.roleId));
+          const resultAction = await dispatch(fetchRoles(user.roleId));
           if (fetchRoles.fulfilled.match(resultAction)) {
             setRole(resultAction.payload.name); // e.g., "Super Admin"
           } else {

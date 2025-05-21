@@ -60,6 +60,7 @@ const authSlice = createSlice({
             localStorage.setItem("token", action.payload.accessToken);
             localStorage.setItem("refreshToken", action.payload.refreshToken);
             localStorage.setItem("user", JSON.stringify(action.payload.user));
+           
          })
          .addCase(loginUser.rejected, (state, action) => {
             state.loading = false;
