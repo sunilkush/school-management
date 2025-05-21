@@ -25,26 +25,36 @@ const Dashboard = () => {
   }, [navigate]);
 
   // Fetch role on user change
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (user && user.roleId) {
-        try {
-          const resultAction = await dispatch(fetchRoles(user.roleId));
-          if (fetchRoles.fulfilled.match(resultAction)) {
-            setRole(resultAction.payload.name); // e.g., "Super Admin"
+useEffect(() => {
+  const fetchUserRole = async () => {
+    if (user && user.roleId) {
+      try {
+        const resultAction = await dispatch(fetchRoles(user.roleId));
+        if (fetchRoles.fulfilled.match(resultAction)) {
+          const roleName = resultAction.payload?.name;
+          if (roleName) {
+            setRole(roleName);
           } else {
-            console.error("Failed to fetch role:", resultAction);
+            console.warn("Role name missing in payload");
+            setRole("Unknown");
           }
-        } catch (err) {
-          console.error("Error fetching role:", err);
+        } else {
+          console.error("Failed to fetch role:", resultAction);
+          setRole("Unknown");
         }
+      } catch (err) {
+        console.error("Error fetching role:", err);
+        setRole("Unknown");
       }
-      setIsLoading(false);
-    };
+    } else {
+      console.warn("User or roleId not present");
+      setRole("Unknown");
+    }
+    setIsLoading(false);
+  };
 
-    fetchUserRole();
-  }, [dispatch, user]);
-
+  fetchUserRole();
+}, [dispatch, user]);
   // Show loading screen
   if (isLoading || !user || !role) {
     return <div className="text-center mt-20">Loading dashboard...</div>;
