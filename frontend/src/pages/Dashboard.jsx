@@ -14,8 +14,9 @@ const Dashboard = () => {
 
   const user = useSelector((state) => state.auth.user);
   const [role, setRole] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // control loading state
- 
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Redirect if no token
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -23,9 +24,9 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
+  // Fetch role on user change
   useEffect(() => {
     const fetchUserRole = async () => {
-     
       if (user && user.roleId) {
         try {
           const resultAction = await dispatch(fetchRoles(user.roleId));
@@ -36,17 +37,15 @@ const Dashboard = () => {
           }
         } catch (err) {
           console.error("Error fetching role:", err);
-        } finally {
-          setIsLoading(false);
         }
-      } else {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
+
     fetchUserRole();
-  }, [dispatch, user,navigate]);
-  console.log(role)
-  // Show loading screen until user and role are available
+  }, [dispatch, user]);
+
+  // Show loading screen
   if (isLoading || !user || !role) {
     return <div className="text-center mt-20">Loading dashboard...</div>;
   }
@@ -54,15 +53,14 @@ const Dashboard = () => {
   return (
     <div>
       <TopBar />
-
       <div className="flex overflow-hidden bg-white pt-16">
         {role === "Super Admin" ? <SidebarMenu /> : <Sidebar />}
-
+       
+        
         <div
           className="bg-gray-900 opacity-50 hidden fixed inset-0 z-10"
           id="sidebarBackdrop"
         ></div>
-
         <div
           id="main-content"
           className="h-full w-full bg-gray-50 relative overflow-y-auto lg:ml-64"

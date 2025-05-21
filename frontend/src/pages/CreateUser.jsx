@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchRoles } from "../store/roleSlice.js";
+import { getRole } from "../store/getRoleSlice.js";
 import { fetchSchools } from "../store/schoolSlice.js";
 import { registerUser } from "../store/registerSlice.js";
 import { toast } from "react-toastify";
@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 const CreateUser = () => {
   
   const dispatch = useDispatch();
-  const { roles } = useSelector((state) => state.roles || {});
+  const { roles } = useSelector((state) => state.getRole || {});
   const { schools } = useSelector((state) => state.schools || {});
   const { status, error } = useSelector((state) => state.register || {});
   console.log(schools)
@@ -24,7 +24,7 @@ const CreateUser = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchRoles());
+    dispatch(getRole());
     dispatch(fetchSchools());
   }, [dispatch]);
 
@@ -123,7 +123,7 @@ const CreateUser = () => {
               <select
                 name="roleId"
                 onChange={handleChange}
-                value={formData.role}
+                value={formData.roleId}
                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
               >
                 <option value="">Select Role</option>
@@ -140,7 +140,7 @@ const CreateUser = () => {
                 <label className="block text-sm font-medium text-gray-700">School</label> 
                 <select
                   name="schoolId"
-                  value={formData.school}
+                  value={formData.schoolId}
                   onChange={handleChange}
                   className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
                 >

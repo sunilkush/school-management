@@ -2,7 +2,6 @@ import axios from "axios";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 // Async Thunk for Login
-
 export const loginUser = createAsyncThunk(
    "auth/login",
    async (credentials, { rejectWithValue }) => {
@@ -27,21 +26,20 @@ export const loginUser = createAsyncThunk(
 const authSlice = createSlice({
    name: "auth",
    initialState: {
-      user: localStorage.getItem("user"),
+      user: localStorage.getItem("user")
+         ? JSON.parse(localStorage.getItem("user"))
+         : null,
       token: localStorage.getItem("token") || null,
       loading: false,
       error: null,
    },
    reducers: {
-      login: (state, action) => {
-         state.status = true;
-         state.userData = action.payload.userData;
-      },
       logout: (state) => {
          state.user = null;
          state.token = null;
          localStorage.removeItem("token");
          localStorage.removeItem("refreshToken");
+         localStorage.removeItem("user");
       },
    },
    extraReducers: (builder) => {
@@ -55,12 +53,9 @@ const authSlice = createSlice({
             state.user = action.payload.user;
             state.token = action.payload.accessToken;
 
-            // Save token to local storage
-           
             localStorage.setItem("token", action.payload.accessToken);
             localStorage.setItem("refreshToken", action.payload.refreshToken);
             localStorage.setItem("user", JSON.stringify(action.payload.user));
-           
          })
          .addCase(loginUser.rejected, (state, action) => {
             state.loading = false;
@@ -70,5 +65,5 @@ const authSlice = createSlice({
 });
 
 // Export actions & reducer
-export const { login, logout } = authSlice.actions;
+export const { logout } = authSlice.actions;
 export default authSlice.reducer;
