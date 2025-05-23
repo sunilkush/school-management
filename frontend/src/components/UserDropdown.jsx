@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FaSignOutAlt, FaUserCircle, FaCog } from 'react-icons/fa';
 import { LogoutButton } from './LogoutButton';
 
-export default function UserDropdown() {
+export default function UserDropdown({user}) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -20,17 +20,17 @@ export default function UserDropdown() {
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
       <img
-        src="https://demo.themesberg.com/windster-pro/images/users/neil-sims.png" // Replace with actual avatar path
+        src={user.avatar || "https://demo.themesberg.com/windster-pro/images/users/neil-sims.png" } // Replace with actual avatar path
         alt="User Avatar"
-        className="w-8 h-8 rounded-full cursor-pointer"
+        className="w-8 h-8 rounded-full cursor-pointer object-cover"
         onClick={() => setIsOpen(!isOpen)}
       />
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
           <div className="px-4 py-2 text-sm text-gray-700 border-b">
-            <div className="font-semibold">John Doe</div>
-            <div className="text-xs text-gray-500">johndoe@example.com</div>
+            <div className="font-semibold">{user.name}</div>
+            <div className="text-xs text-gray-500 overflow-hidden text-ellipsis">{user.email}</div>
           </div>
           <ul className="text-sm">
             <li>

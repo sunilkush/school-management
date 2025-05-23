@@ -62,11 +62,9 @@ useEffect(() => {
 
   return (
     <div>
-      <TopBar />
+      <TopBar user={user} />
       <div className="flex overflow-hidden bg-white pt-16">
-        {role === "Super Admin" ? <SidebarMenu /> : <Sidebar />}
-       
-        
+       {["Super Admin", "School Admin"].includes(role) ? <SidebarMenu /> : <Sidebar />}
         <div
           className="bg-gray-900 opacity-50 hidden fixed inset-0 z-10"
           id="sidebarBackdrop"

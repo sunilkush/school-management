@@ -3,7 +3,7 @@ import { LogoutButton } from './LogoutButton'
 import UserDropdown from './UserDropdown'
 import NotificationsDropdown from './NotificationsDropdown'
 
-const TopBar = () => {
+const TopBar = ({user}) => {
   return (
     <>
     <nav className="bg-white border-b border-gray-200 fixed z-30 w-full">
@@ -45,7 +45,7 @@ const TopBar = () => {
                   <div><button></button></div>
                   <div className='mx-5'><NotificationsDropdown/></div>
                  <div>
-                  <UserDropdown/>
+                  <UserDropdown user={user} />
 
                  </div>
                </div>

@@ -6,7 +6,7 @@ const roleSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      enum: ["Super Admin","School Admin", "Teacher", "Student", "Parent","Accountant"],
+      enum: ["Super Admin","School Admin", "Teacher", "Student", "Parent","Accountant","Staff"],
     },
     permissions: [
       {

@@ -23,18 +23,13 @@ const SidebarMenu = () => {
                                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                  className="flex items-center w-full p-2 text-base font-normal text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
                               >
-                                 <svg
-                                    className="flex-shrink-0 w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                 >
-                                    <path
-                                       fillRule="evenodd"
-                                       d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"
-                                       clipRule="evenodd"
-                                    />
-                                 </svg>
-                                 <span className="flex-1 ml-3 text-left whitespace-nowrap">admin Dashboard</span>
+                                 <svg 
+                                 className="flex-shrink-0 w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="rgba(173,184,194,1)">
+                                    <path d="M4 22C4 17.5817 7.58172 14 12 14C16.4183 14 20 17.5817 20 22H4ZM12 13C8.685 13 6 10.315 6 7C6 3.685 8.685 1 12 1C15.315 1 18 3.685 18 7C18 10.315 15.315 13 12 13Z"></path></svg>
+                                
+                                
+                                 <span className="flex-1 ml-3 text-left whitespace-nowrap">Super Dashboard</span>
                                  <svg
                                     className={`w-6 h-6 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""
                                        }`}
@@ -86,7 +81,7 @@ const SidebarMenu = () => {
                            </li>
 
                            <li>
-                              <Link to={'teachers'} className="text-base text-gray-900 font-normal rounded-lg flex items-center p-2 hover:bg-gray-100 group">
+                              <Link to={'school-list'} className="text-base text-gray-900 font-normal rounded-lg flex items-center p-2 hover:bg-gray-100 group">
                                  <svg className="w-6 h-6 text-gray-500 group-hover:text-gray-900 transition duration-75" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
                                     <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>

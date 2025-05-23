@@ -8,7 +8,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import LoginPage from './pages/Login.jsx';
 import CreateUser from './pages/CreateUser.jsx';
 import Dashboard from './pages/Dashboard.jsx';
-import Teachers from './pages/Teachers.jsx';
+import SchoolList from './pages/SchoolList.jsx';
 import Page404 from './pages/Page404.jsx';
 import SchoolRegister from './pages/SchoolRegister.jsx';
 // If needed
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
         path: "dashboard",
         element: <Dashboard />,
         children: [
-          { path: "teachers", element: <Teachers /> },
+          { path: "school-list", element: <SchoolList /> },
           { path: "create-user", element: <CreateUser /> },
           { path: "school-register", element: <SchoolRegister /> },
         ],
