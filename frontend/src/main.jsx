@@ -2,40 +2,51 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import './index.css';
 import App from './App.jsx';
-import store from './store/store.js';
+import { store } from './store/store.js';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import LoginPage from './pages/LoginPage.jsx';
+import SuperAdmin from './pages/SuperAdminDashboard.jsx';
+import SchoolAdmin from './pages/SchoolAdminDashboard.jsx';
+import TeacherAdmin from './pages/TeacherDashboard.jsx';
+import StudentAdmin from './pages/StudentDashboard.jsx';
+import ParentAdmin from './pages/ParentDashboard.jsx';
+import ManageSchools from './pages/ManageSchools.jsx';
+import Dashboard from './components/Dashboard.jsx';
+import AddEditDeleteSchools from './components/AddEditDeleteSchools.jsx';
 
-import LoginPage from './pages/Login.jsx';
-import CreateUser from './pages/CreateUser.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import SchoolList from './pages/SchoolList.jsx';
-import Page404 from './pages/Page404.jsx';
-import SchoolRegister from './pages/SchoolRegister.jsx';
-// If needed
-import NotFound from './pages/NotFound.jsx';
-import AdminDashboard from './pages/AdminDashboard.jsx';
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      { path: "", element: <LoginPage /> },
-      { path: "login", element: <LoginPage /> },
-      { path: "adminDashboard", element: <AdminDashboard /> },
+      { path: "/", element: <LoginPage /> },
+      { path: "login-page", element: <LoginPage /> },
 
       {
-        path: "dashboard",
-        element: <Dashboard />,
+        path: "super-admin",
+        element: <SuperAdmin />,
         children: [
-          { path: "school-list", element: <SchoolList /> },
-          { path: "create-user", element: <CreateUser /> },
-          { path: "school-register", element: <SchoolRegister /> },
+          {
+            index: true, // 👈 This will render by default at /super-admin
+           element: <Dashboard />,
+          },
+          {
+            path: "manage-schools", // ✅ RELATIVE path
+            element: <ManageSchools />,
+          },
+           {
+            path: "dashboard", // ✅ RELATIVE path
+            element: <Dashboard />,
+          },
+          { path: "add-edit-schools", element: <AddEditDeleteSchools /> },
         ],
       },
 
-      { path: "page404", element: <Page404 /> },
-      { path: "*", element: <NotFound /> },
+      { path: "school-admin", element: <SchoolAdmin /> },
+      { path: "teacher", element: <TeacherAdmin /> },
+      { path: "student", element: <StudentAdmin /> },
+      { path: "parent", element: <ParentAdmin /> },
     ],
   },
 ]);
