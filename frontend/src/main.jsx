@@ -16,6 +16,12 @@ import Message from './pages/Message.jsx';
 import Settings from './pages/Settings.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Unauthorized from './pages/Unauthorized.jsx';
+import TeacherDashboard from './pages/TeacherDashboard.jsx';
+import AccountantDashboard from './pages/AccountantDashboard.jsx';
+import StaffDashboard from './pages/StaffDashboard.jsx';
+import Documents from './pages/Documents.jsx';
+import Schedule from './pages/Schedule.jsx';
+import UserRegister from './pages/UserRegister.jsx';
 
 // Get user from localStorage or store
 const user = JSON.parse(localStorage.getItem("user"));
@@ -56,7 +62,41 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
+          {
+            path: "teacher",
+            element: (
+              <ProtectedRoute allowedRoles={["teacher"]} user={user}>
+                <TeacherDashboard />
+              </ProtectedRoute>
+            ),
+          },
+           {
+            path: "accountant",
+            element: (
+              <ProtectedRoute allowedRoles={["accountant"]} user={user}>
+                <AccountantDashboard />
+              </ProtectedRoute>
+            ),
+          },
+           {
+            path: "staff",
+            element: (
+              <ProtectedRoute allowedRoles={["staff"]} user={user}>
+                <StaffDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "user-create",
+            element: (
+              <ProtectedRoute allowedRoles={["super admin" , "school admin"]} user={user}>
+                <UserRegister />
+              </ProtectedRoute>
+            ),
+          },
           { path: "reports", element: <Reports /> },
+          { path: "documents", element: <Documents /> },
+          { path: "schedule", element: <Schedule /> },
           { path: "profile", element: <Profile /> },
           { path: "notifications", element: <Notification /> },
           { path: "messages", element: <Message /> },

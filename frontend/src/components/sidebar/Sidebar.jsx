@@ -27,6 +27,12 @@ const menuItems = [
     path: 'teacher',
     roles: ['Teacher']
   },
+  {
+    name: 'User Register',
+    icon: Home,
+    path: 'user-create',
+    roles: ['Super Admin','School Admin']
+  },
     {
     name: 'Dashboard',
     icon: Home,
@@ -38,6 +44,18 @@ const menuItems = [
     icon: Home,
     path: 'school-admin',
     roles: ['School Admin']
+  },
+  {
+    name: 'Dashboard',
+    icon: Home,
+    path: 'accountant',
+    roles: ['Accountant']
+  },
+  {
+    name: 'Dashboard',
+    icon: Home,
+    path: 'staff',
+    roles: ['Staff']
   },
   {
     name: 'Schedule',

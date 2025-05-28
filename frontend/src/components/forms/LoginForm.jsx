@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from '../../features/auth/authSlice';
 import { Link, useNavigate } from 'react-router-dom';
-
+import logo from '../../assets/logo.png';
 const LoginForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -14,7 +14,10 @@ const LoginForm = () => {
     { role: "super admin", path: "/dashboard/super-admin" },
     { role: "school admin", path: "/dashboard/school-admin" },
     { role: "student", path: "/dashboard/student" },
-    { role: "parent", path: "/dashboard/parent" }
+    { role: "parent", path: "/dashboard/parent" },
+    { role: "teacher", path: "/dashboard/teacher" },
+    { role: "accountant", path: "/dashboard/accountant" },
+    { role: "staff", path: "/dashboard/staff" },
   ];
 
   useEffect(() => {
@@ -36,11 +39,11 @@ const LoginForm = () => {
   return (
     <div className="flex h-screen w-full font-sans">
       {/* Left Panel */}
-      <div className="w-full md:w-1/2 flex items-center justify-center px-6 bg-white">
+      <div className="w-full md:w-1/2 flex items-center justify-center px-6 bg-gray-900">
         <div className="max-w-md w-full">
           <div className="mb-8 text-center">
-            <img src="/logo.svg" alt="Logo" className="mx-auto h-10 mb-4" />
-            <h1 className="text-2xl font-semibold text-gray-800">Welcome back</h1>
+            <img src={logo} alt="Logo" className="mx-auto h-20 mb-4" />
+            <h1 className="text-2xl font-semibold text-gray-500">Welcome back</h1>
             <p className="text-sm text-gray-500 mt-1">
               Glad to see you again. Select method to log in
             </p>
@@ -83,31 +86,6 @@ const LoginForm = () => {
 
             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
-            <div className="flex items-center my-4">
-              <div className="flex-grow border-t border-gray-300" />
-              <span className="mx-2 text-sm text-gray-500">or continue using</span>
-              <div className="flex-grow border-t border-gray-300" />
-            </div>
-
-            <div className="flex space-x-3 justify-center">
-              <button className="flex items-center border px-4 py-2 rounded-md shadow-sm hover:shadow-md">
-                <img
-                  src="https://www.svgrepo.com/show/475656/google-color.svg"
-                  alt="Google"
-                  className="w-5 h-5 mr-2"
-                />
-                <span className="text-sm text-gray-700">Google</span>
-              </button>
-              <button className="flex items-center border px-4 py-2 rounded-md shadow-sm hover:shadow-md">
-                <img
-                  src="https://www.svgrepo.com/show/303128/apple-logo.svg"
-                  alt="Apple"
-                  className="w-5 h-5 mr-2"
-                />
-                <span className="text-sm text-gray-700">Apple</span>
-              </button>
-            </div>
-
             <p className="text-sm text-gray-600 text-center mt-6">
               Don’t have an account?{" "}
               <Link to="/register" className="text-blue-600 font-medium hover:underline">
@@ -121,20 +99,16 @@ const LoginForm = () => {
       {/* Right Panel */}
       <div className="hidden md:flex w-1/2 bg-gradient-to-br from-indigo-600 to-purple-700 items-center justify-center text-white relative">
         <div className="text-center px-8">
-          <img
+          {/* <img
             src="/dashboard-preview.svg"
             alt="Dashboard Illustration"
             className="w-[90%] mx-auto mb-6"
-          />
+          /> */}
           <h2 className="text-xl font-semibold mb-2">Connect with every application</h2>
           <p className="text-sm text-gray-100">
             Everything you need in an easily customizable dashboard
           </p>
-          <div className="absolute bottom-6 flex justify-center w-full space-x-2">
-            <span className="w-2 h-2 bg-white rounded-full"></span>
-            <span className="w-2 h-2 bg-white/50 rounded-full"></span>
-            <span className="w-2 h-2 bg-white/50 rounded-full"></span>
-          </div>
+         
         </div>
       </div>
     </div>
