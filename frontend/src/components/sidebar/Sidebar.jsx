@@ -17,34 +17,34 @@ const menuItems = [
   {
     name: 'Dashboard',
     icon: Home,
-    path: '/dashboard',
-    roles: ['super-admin', 'admin', 'teacher', 'student']
+    path: 'super-admin',
+    roles: ['Super Admin', 'School Admin', 'Teacher', 'Student']
   },
   {
     name: 'Schedule',
     icon: Calendar,
-    path: '/schedule',
-    roles: ['teacher', 'admin']
+    path: 'schedule',
+    roles: ['School Admin', 'Teacher']
   },
   {
     name: 'Reports',
     icon: FileText,
-    path: '/reports',
-    roles: ['super-admin', 'admin']
+    path: 'reports',
+    roles: ['Super Admin', 'School Admin']
   },
   {
     name: 'Documents',
     icon: FilePenLine,
-    path: '/documents',
-    roles: ['teacher']
+    path: 'documents',
+    roles: ['Teacher']
   },
   {
     name: 'Message',
     icon: MessageSquare,
-    path: '/messages',
+    path: 'messages',
     badge: 12,
     dot: true,
-    roles: ['teacher', 'student']
+    roles: ['Teacher', 'Student']
   }
 ]
 
@@ -55,23 +55,10 @@ export default function Sidebar() {
 
  const token = localStorage.getItem('accessToken');
 const { user } = useSelector((state) => state.auth);
-const roleId = user?.roleId;
-const role = localStorage.getItem('roleName')
+const role = user?.role;
 
-
-  // Fetch role if user is logged in
-useEffect(() => {
-  if (roleId && token) {
-    dispatch(fetchRoleById(roleId));
-  }
-}, [dispatch, roleId, token]);
-
-  
-
-  
   const handleLogout = () => {
     dispatch(logout())
-    
     navigate('/')
   }
 
@@ -99,7 +86,8 @@ useEffect(() => {
         <nav className="mt-4 space-y-1">
           {menuItems
            .filter((item) => role && item.roles.includes(role.name)) 
-            .map(({ name, icon: Icon, path, badge, dot }) => (
+            // eslint-disable-next-line no-unused-vars
+            .map(({ name, icon : Icon, path, badge, dot }) => (
               <NavLink
                 key={name}
                 to={path}

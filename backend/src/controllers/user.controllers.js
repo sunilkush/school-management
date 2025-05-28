@@ -74,31 +74,58 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // Login User (POST)
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-       // throw new ApiError(400, "Email and password are required");
-        return res.status(400).json({message:"Email and password are required"})
-    }
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
 
-    const user = await User.findOne({ email });
-    if(!user.isActive == true ){
-        return res.status(403).json({
-            message:"User status: inactive. Please contact the administrator."
-        })
-    } 
-    if (!user || !(await user.isPasswordCorrect(password))) {
-        //throw new ApiError(401, "Invalid email or password");
-        return res.status(401).json({message:"Invalid email or password"})
-    }
+  const user = await User.findOne({ email });
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+  if (!user || !(await user.isPasswordCorrect(password))) {
+    return res.status(401).json({ message: "Invalid email or password" });
+  }
 
-    return res.status(200)
-        .cookie("accessToken", accessToken, { secure: true, httpOnly: true })
-        .cookie("refreshToken", refreshToken, { secure: true, httpOnly: true })
-        .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in successfully"));
+  if (!user.isActive) {
+    return res.status(403).json({
+      message: "User status: inactive. Please contact the administrator.",
+    });
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+  // Use aggregation to join role collection
+  const userWithRole = await User.aggregate([
+    { $match: { _id: user._id } },
+    {
+      $lookup: {
+        from: "roles", // Make sure your collection is named 'roles'
+        localField: "roleId",
+        foreignField: "_id",
+        as: "role",
+      },
+    },
+    { $unwind: "$role" },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        email: 1,
+        role: {
+          _id: "$role._id",
+          name: "$role.name",
+        },
+      },
+    },
+  ]);
+
+  const finalUser = userWithRole[0];
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, { httpOnly: true, secure: true })
+    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true })
+.json(new ApiResponse(200, { user: finalUser,accessToken, refreshToken }, "User logged in successfully"));
     
 });
 

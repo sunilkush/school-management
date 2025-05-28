@@ -16,8 +16,8 @@ export const fetchRoleById = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(res.data.data);
-      return res.data.data;
+     
+      return res.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to fetch role"
@@ -29,8 +29,8 @@ export const fetchRoleById = createAsyncThunk(
 const roleSlice = createSlice({
   name: "role",
   initialState: {
-    role: {},
-    permissions: null,
+    role:null,
+    
     loading: false,
     error: null,
   },
@@ -44,11 +44,13 @@ const roleSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchRoleById.fulfilled, (state, action) => {
-        const { data, permissions } = action.payload;
+        const { data } = action.payload;
         state.role = data; 
-        state.permissions = permissions;
+        
         state.loading = false;
-        localStorage.setItem('data')
+        localStorage.setItem("role", JSON.stringify(data));
+       
+      
       })
       .addCase(fetchRoleById.rejected, (state, action) => {
         state.loading = false;

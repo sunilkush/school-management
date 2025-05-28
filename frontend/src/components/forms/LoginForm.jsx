@@ -30,7 +30,7 @@ const LoginForm = () => {
   return (
     <div className="flex h-screen bg-[#f4f2fc]">
       {/* Left Side */}
-      <div className="w-1/2 bg-white p-10 flex flex-col justify-center">
+      <div className="w-100 sm:w-1/2 md:w-1/2 bg-white p-10 flex flex-col justify-center">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Log in</h1>
         </div>
@@ -86,7 +86,7 @@ const LoginForm = () => {
       </div>
 
       {/* Right Side (Illustration) */}
-      <div className="w-1/2 flex items-center justify-center">
+      <div className="w-100 sm:w-1/2 md:w-1/2 flex items-center justify-center">
         <img
           src="/login-illustration.svg"
           alt="Login Illustration"
