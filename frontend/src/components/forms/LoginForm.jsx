@@ -10,14 +10,23 @@ const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const { loading, error, user } = useSelector(state => state.auth);
+  const role = user?.role?.name.toLowerCase();
+   const roleRoutes = [
+    { role: "super admin", path: "/dashboard/super-admin" },
+    { role: "school admin", path: "/dashboard/school-admin" },
+    { role: "student", path: "/dashboard/student" },
+    { role: "parent", path: "/dashboard/parent" }
+  ];
 
-  // ✅ Redirect after successful login
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
+    if (role) {
+      const match = roleRoutes.find((r) => r.role === role);
+      if (match) {
+        navigate(match.path);
+      }
     }
-  }, [user, navigate]);
-
+  }, [role, navigate]);
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
