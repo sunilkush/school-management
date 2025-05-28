@@ -111,6 +111,8 @@ const loginUser = asyncHandler(async (req, res) => {
         _id: 1,
         name: 1,
         email: 1,
+        avatar:1,
+        isActive:1,
         role: {
           _id: "$role._id",
           name: "$role.name",

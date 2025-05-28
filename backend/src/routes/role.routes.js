@@ -14,7 +14,7 @@ const router = express.Router();
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 
 //  Create a Role (Only Admin)
-router.post("/createRole",  createRole);
+router.post("/createRole",auth, roleMiddleware(ADMIN_ROLE),  createRole);
 
 //  Get All Roles (Only Admin)
 router.get("/getAllRoles", auth, roleMiddleware(ADMIN_ROLE), getAllRoles);

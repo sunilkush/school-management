@@ -5,7 +5,7 @@ const Dashboard = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar  />
 
       {/* Main Content Area */}
       <div className="flex flex-col flex-1 overflow-hidden">

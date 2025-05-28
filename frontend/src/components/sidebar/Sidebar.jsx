@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect } from 'react'
+
+
 import {
   Home,
   Calendar,
@@ -10,7 +11,7 @@ import {
   LogOut
 } from 'lucide-react'
 import { logout } from '../../features/auth/authSlice'
-import { fetchRoleById } from '../../features/roles/roleSlice'
+
 
 // Menu config with role-based access
 const menuItems = [
@@ -18,7 +19,25 @@ const menuItems = [
     name: 'Dashboard',
     icon: Home,
     path: 'super-admin',
-    roles: ['Super Admin', 'School Admin', 'Teacher', 'Student']
+    roles: ['Super Admin', ]
+  },
+    {
+    name: 'Dashboard',
+    icon: Home,
+    path: 'teacher',
+    roles: ['Teacher']
+  },
+    {
+    name: 'Dashboard',
+    icon: Home,
+    path: 'student',
+    roles: [ 'Student']
+  },
+   {
+    name: 'Dashboard',
+    icon: Home,
+    path: 'school-admin',
+    roles: ['School Admin']
   },
   {
     name: 'Schedule',
@@ -47,7 +66,6 @@ const menuItems = [
     roles: ['Teacher', 'Student']
   }
 ]
-
 export default function Sidebar() {
  
   const dispatch = useDispatch()
@@ -71,7 +89,7 @@ const role = user?.role;
   }
 
   return (
-    <aside className="w-64 h-screen bg-white flex flex-col justify-between border-r shadow-sm rounded-r-xl">
+    <aside className="w-64 h-screen bg-white flex flex-col justify-between border-r shadow-sm ">
       <div>
         {/* Logo */}
         <div className="p-6 text-purple-600 font-bold text-xl flex items-center gap-2">
