@@ -26,7 +26,6 @@ export const getAllRoles = asyncHandler(async (req, res) => {
 export const getRoleById = asyncHandler(async (req, res) => {
     const role = await Role.findById(req.params.id);
     if (!role) throw new ApiError(404, "Role not found");
-
     res.status(200).json(new ApiResponse(200, role, "Role found successfully"));
 });
 

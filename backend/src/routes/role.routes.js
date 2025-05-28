@@ -13,19 +13,19 @@ const router = express.Router();
 // Define allowed roles
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 
-// ✅ Create a Role (Only Admin)
+//  Create a Role (Only Admin)
 router.post("/createRole",  createRole);
 
-// ✅ Get All Roles (Only Admin)
+//  Get All Roles (Only Admin)
 router.get("/getAllRoles", auth, roleMiddleware(ADMIN_ROLE), getAllRoles);
 
-// ✅ Get Role by ID (Only Admin)
-router.get("/getRole/:id", auth, roleMiddleware(ADMIN_ROLE), getRoleById);
+//  Get Role by ID (Only Admin)
+router.get("/getRole/:id",auth, getRoleById);
 
-// ✅ Update Role (Only Admin)
+//  Update Role (Only Admin)
 router.put("/updateRole/:id", auth, roleMiddleware(ADMIN_ROLE), updateRole);
 
-// ✅ Delete Role (Only Admin)
+//  Delete Role (Only Admin)
 router.delete("/deleteRole/:id", auth, roleMiddleware(ADMIN_ROLE), deleteRole);
 
 export default router;
