@@ -9,7 +9,7 @@ const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const { loading, error, user } = useSelector(state => state.auth);
-  const role = user?.role?.name.toLowerCase();
+ 
   const roleRoutes = [
     { role: "super admin", path: "/dashboard/super-admin" },
     { role: "school admin", path: "/dashboard/school-admin" },
@@ -20,12 +20,19 @@ const LoginForm = () => {
     { role: "staff", path: "/dashboard/staff" },
   ];
 
-  useEffect(() => {
-    if (role) {
-      const match = roleRoutes.find((r) => r.role === role);
-      if (match) navigate(match.path);
+const [navigated, setNavigated] = useState(false);
+
+useEffect(() => {
+  const roleName = user?.role?.name?.toLowerCase();
+
+  if (roleName && !navigated) {
+    const match = roleRoutes.find((r) => r.role === roleName);
+    if (match) {
+      setNavigated(true);
+      navigate(match.path);
     }
-  }, [role, navigate]);
+  }
+}, [user?.role?.name, navigate, navigated]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

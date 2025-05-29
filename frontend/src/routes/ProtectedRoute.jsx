@@ -2,11 +2,13 @@ import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute = ({ allowedRoles = [] }) => {
-  const { user, token } = useSelector((state) => state.auth);
-  const role = useSelector((state) => state.role.data); // fetched from roleSlice
-
-  if (!token || !user) {
-    return <Navigate to="/login" />;
+  
+  
+  const { user, accessToken } = useSelector((state) => state.auth);
+ const role = user?.role?.name.toLowerCase(); // fetched from roleSlice
+  console.log(role)
+  if (!accessToken || !user) {
+    return <Navigate to="/" />;
   }
 
   // If no specific role is required, allow access
@@ -14,7 +16,7 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     return <Outlet />;
   }
 
-  const userRoleName = role?.name || user?.role?.name;
+  const userRoleName =  user?.role?.name.toLowerCase();
 
   if (!allowedRoles.includes(userRoleName)) {
     return <Navigate to="/unauthorized" />;

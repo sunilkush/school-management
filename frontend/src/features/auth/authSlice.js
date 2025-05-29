@@ -6,12 +6,12 @@ const user = storedUser ? JSON.parse(storedUser) : null;
 
 const accessToken = localStorage.getItem('accessToken');
 //  Correct API path
-//const API = `https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/user`;
-const API = `http://localhost:9000/app/v1/user`;
+const API = `https://legendary-goldfish-54v4wvqgwxr364q-9000.app.github.dev/app/v1/user`;
+//const API = `http://localhost:9000/app/v1/user`;
 
 //  Login Thunk
 export const login = createAsyncThunk("auth/user", async (credentials, thunkAPI) => {
-   debugger;
+  
   try {
     const res = await axios.post(`${API}/login`, credentials);
     console.log(res.data.data)
