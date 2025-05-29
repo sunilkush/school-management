@@ -14,7 +14,7 @@ import Profile from './pages/Profile.jsx';
 import Notification from './pages/Notification.jsx';
 import Message from './pages/Message.jsx';
 import Settings from './pages/Settings.jsx';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
+import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import Unauthorized from './pages/Unauthorized.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
 import AccountantDashboard from './pages/AccountantDashboard.jsx';
@@ -89,12 +89,13 @@ const router = createBrowserRouter([
           {
             path: "user-create",
             element: (
-              <ProtectedRoute allowedRoles={["super admin" , "school admin"]} user={user}>
+             
                 <UserRegister />
-              </ProtectedRoute>
+             
             ),
           },
           { path: "reports", element: <Reports /> },
+           
           { path: "documents", element: <Documents /> },
           { path: "schedule", element: <Schedule /> },
           { path: "profile", element: <Profile /> },
