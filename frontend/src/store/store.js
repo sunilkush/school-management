@@ -1,11 +1,20 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from '../features/auth/authSlice'
-import roleReducer from '../features/roles/roleSlice'
-import schoolReducer from '../features/schools/schoolSlice'
-export  const store = configureStore({
+import roleReducer from "../features/roles/roleSlice";
+import schoolReducer from "../features/schools/schoolSlice";
+import authReducer from "../features/auth/authSlice";
+
+const store = configureStore({
   reducer: {
-    auth: authReducer,
-    school: schoolReducer,
     role: roleReducer,
+    school: schoolReducer,
+    auth: authReducer,
   },
+  // Optional: Add middleware for debugging or logging
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // helps with non-serializable values like Dates
+    }),
+  devTools: process.env.NODE_ENV !== "production", // enable Redux DevTools in dev
 });
+
+export default store;

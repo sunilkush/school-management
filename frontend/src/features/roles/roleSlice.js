@@ -9,16 +9,20 @@ export const fetchRoles = createAsyncThunk(
   "role/fetchRoles",
   async (_, { rejectWithValue }) => {
     try {
-      debugger;
       const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+
       const res = await axios.get(`${api}/getAllRoles`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
+       
       });
-       console.log(res.data.data)
+
       return res.data.data;
     } catch (error) {
+     
       return rejectWithValue(
         error.response?.data?.message || "Role list not accessible!"
       );
@@ -32,13 +36,18 @@ export const fetchRoleById = createAsyncThunk(
   async (roleId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+
       const res = await axios.get(`${api}/getRole/${roleId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
-      return res.data;
+
+      return res.data.data;
     } catch (error) {
+      console.error("Fetch Role by ID Error:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch role"
       );
@@ -67,7 +76,7 @@ const roleSlice = createSlice({
       })
       .addCase(fetchRoles.fulfilled, (state, action) => {
         state.loading = false;
-        state.roles = action.payload?.data || [];
+        state.roles = action.payload || [];
       })
       .addCase(fetchRoles.rejected, (state, action) => {
         state.loading = false;
@@ -82,8 +91,8 @@ const roleSlice = createSlice({
       })
       .addCase(fetchRoleById.fulfilled, (state, action) => {
         state.loading = false;
-        state.role = action.payload?.data || null;
-        localStorage.setItem("role", JSON.stringify(action.payload?.data));
+        state.role = action.payload || null;
+        localStorage.setItem("role", JSON.stringify(action.payload));
       })
       .addCase(fetchRoleById.rejected, (state, action) => {
         state.loading = false;

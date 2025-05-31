@@ -5,12 +5,12 @@ import { fetchRoles } from "../../features/roles/roleSlice";
 import { registerUser } from "../../features/auth/authSlice";
 
 const RegisterFrom = () => {
-    debugger
+    
     const {roles} = useSelector((state)=>state.role)
     const {schools} = useSelector((state)=>state.school)
     const {isLoading ,error} = useSelector((state)=>state.auth)
     
-    
+   
     const dispatch = useDispatch()
     const [formData,setFormData] = useState({
         name: "",
@@ -22,9 +22,8 @@ const RegisterFrom = () => {
         /* acceptTerms: false, */
     });
     useEffect(()=>{
-        
-         dispatch(fetchSchools)
-         dispatch(fetchRoles)
+         dispatch(fetchSchools())
+         dispatch(fetchRoles())
     },[dispatch])
     // handal change 
     const handleChange = (e) => {

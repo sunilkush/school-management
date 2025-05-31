@@ -1,21 +1,24 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Async thunk to fetch schools
+// Async thunk to fetch all schools
 export const fetchSchools = createAsyncThunk(
   "school/fetchSchools",
   async (_, { rejectWithValue }) => {
-    
     try {
-        debugger;
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get("http://localhost:9000/app/v1/school", {
+
+      if (!token) {
+        return rejectWithValue("No access token found. Please login again.");
+      }
+
+      const res = await axios.get("http://localhost:9000/app/v1/school/getAllSchool", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(res.data)
-      return res.data.data;
+
+      return res.data.data.schools;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "School list not found!"
@@ -24,13 +27,15 @@ export const fetchSchools = createAsyncThunk(
   }
 );
 
+// Initial state
 const initialState = {
-  school: [],
+  schools: [],         // changed from 'school' to 'schools' (plural for clarity)
   loading: false,
   error: null,
 };
 
-const SchoolSlice = createSlice({
+// Slice
+const schoolSlice = createSlice({
   name: "school",
   initialState,
   reducers: {},
@@ -42,8 +47,7 @@ const SchoolSlice = createSlice({
       })
       .addCase(fetchSchools.fulfilled, (state, action) => {
         state.loading = false;
-        state.school = action.payload;
-        state.error = null;
+        state.schools = action.payload;
       })
       .addCase(fetchSchools.rejected, (state, action) => {
         state.loading = false;
@@ -52,4 +56,4 @@ const SchoolSlice = createSlice({
   },
 });
 
-export default SchoolSlice.reducer;
+export default schoolSlice.reducer;

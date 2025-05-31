@@ -5,7 +5,7 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
   
   
   const { user, accessToken } = useSelector((state) => state.auth);
- const role = user?.role?.name.toLowerCase(); // fetched from roleSlice
+ const role = user?.role?.name // fetched from roleSlice
   console.log(role)
   if (!accessToken || !user) {
     return <Navigate to="/" />;
@@ -16,7 +16,7 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     return <Outlet />;
   }
 
-  const userRoleName =  user?.role?.name.toLowerCase();
+  const userRoleName =  user?.role?.name;
 
   if (!allowedRoles.includes(userRoleName)) {
     return <Navigate to="/unauthorized" />;

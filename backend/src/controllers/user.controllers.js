@@ -231,6 +231,63 @@ const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, 'User logged out successfully'))
 })
 
+const getAllUsers = asyncHandler(async (req, res) => {
+  try {
+    const users = await User.aggregate([
+      {
+            $lookup: {
+                from: 'roles', // Make sure your collection is named 'roles'
+                localField: 'roleId',
+                foreignField: '_id',
+                as: 'role',
+            },
+        },
+        { $unwind: '$role' },
+        {
+            $lookup: {
+                from: 'schools', // Make sure your collection is named 'roles'
+                localField: 'schoolId',
+                foreignField: '_id',
+                as: 'school',
+            },
+        },
+        {
+      $unwind: {
+        path: "$school",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+        {
+            $project: {
+                _id: 1,
+                name: 1,
+                email: 1,
+                avatar: 1,
+                isActive: 1,
+                role: {
+                    _id: '$role._id',
+                    name: '$role.name',
+                },
+                school: {
+                    _id: '$school._id',
+                    name: '$school.name',
+                },
+            },
+        },
+    ]);
+
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get users',
+      error: error.message
+    });
+  }
+});
+
+
+
 export {
     registerUser,
     loginUser,
@@ -238,4 +295,5 @@ export {
     changeCurrentPassword,
     getCurrentUser,
     logoutUser,
+    getAllUsers 
 }

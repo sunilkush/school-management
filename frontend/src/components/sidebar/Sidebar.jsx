@@ -11,10 +11,11 @@ import {
   LogOut
 } from 'lucide-react'
 import { logout } from '../../features/auth/authSlice'
+import SidebarMenu from './SidebarMenu'
 
 
 // Menu config with role-based access
-const menuItems = [
+/* const menuItems = [
   {
     name: 'Dashboard',
     icon: Home,
@@ -83,7 +84,7 @@ const menuItems = [
     dot: true,
     roles: ['Teacher', 'Student']
   }
-]
+] */
 export default function Sidebar() {
  
   const dispatch = useDispatch()
@@ -91,8 +92,7 @@ export default function Sidebar() {
 
  const token = localStorage.getItem('accessToken');
 const { user } = useSelector((state) => state.auth);
-const role = user?.role;
-
+const role = user?.role?.name.toLowerCase();
   const handleLogout = () => {
     dispatch(logout())
     navigate('/')
@@ -107,7 +107,7 @@ const role = user?.role;
   }
 
   return (
-    <aside className="w-64 h-screen bg-white flex flex-col justify-between border-r shadow-sm ">
+    <aside className="w-64  bg-white flex flex-col justify-between border-r shadow-sm overflow-hidden ">
       <div>
         {/* Logo */}
         <div className="p-6 text-purple-600 font-bold text-xl flex items-center gap-2">
@@ -119,7 +119,8 @@ const role = user?.role;
         <hr className="border-gray-100" />
 
         {/* Navigation */}
-        <nav className="mt-4 space-y-1">
+        <SidebarMenu role={role}/>
+        {/* <nav className="mt-4 space-y-1">
           {menuItems
            .filter((item) => role && item.roles.includes(role.name)) 
             // eslint-disable-next-line no-unused-vars
@@ -151,12 +152,12 @@ const role = user?.role;
                 )}
               </NavLink>
             ))}
-        </nav>
+        </nav> */}
       </div>
 
       {/* Logout */}
       <div
-        className="px-6 py-4 border-t text-gray-400 hover:text-red-500 cursor-pointer flex items-center gap-3"
+        className="w-64 px-6 py-4 border-t text-gray-400 hover:text-red-500 cursor-pointer flex items-center gap-3 fixed bottom-0 left-0"
         onClick={handleLogout}
       >
         <LogOut size={18} />

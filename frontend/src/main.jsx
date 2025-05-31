@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import './index.css';
 import App from './App.jsx';
-import { store } from './store/store.js';
+import  store  from './store/store.js';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.jsx';
 import Dashboard from './components/layout/Dashboard.jsx';
@@ -41,7 +41,7 @@ const router = createBrowserRouter([
           {
             path: "super-admin",
             element: (
-              <ProtectedRoute allowedRoles={["super admin"]} user={user}>
+              <ProtectedRoute allowedRoles={["Super Admin"]} user={user}>
                 <SuperAdminDashboard />
               </ProtectedRoute>
             ),
@@ -49,7 +49,7 @@ const router = createBrowserRouter([
           {
             path: "school-admin",
             element: (
-              <ProtectedRoute allowedRoles={["school admin"]} user={user}>
+              <ProtectedRoute allowedRoles={["School Admin"]} user={user}>
                 <SchoolAdminDashboard />
               </ProtectedRoute>
             ),
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
           {
             path: "student",
             element: (
-              <ProtectedRoute allowedRoles={["student"]} user={user}>
+              <ProtectedRoute allowedRoles={["Student"]} user={user}>
                 <StudentDashboard />
               </ProtectedRoute>
             ),
@@ -65,7 +65,7 @@ const router = createBrowserRouter([
           {
             path: "teacher",
             element: (
-              <ProtectedRoute allowedRoles={["teacher"]} user={user}>
+              <ProtectedRoute allowedRoles={["Teacher"]} user={user}>
                 <TeacherDashboard />
               </ProtectedRoute>
             ),
@@ -73,7 +73,7 @@ const router = createBrowserRouter([
            {
             path: "accountant",
             element: (
-              <ProtectedRoute allowedRoles={["accountant"]} user={user}>
+              <ProtectedRoute allowedRoles={["Accountant"]} user={user}>
                 <AccountantDashboard />
               </ProtectedRoute>
             ),
@@ -81,27 +81,13 @@ const router = createBrowserRouter([
            {
             path: "staff",
             element: (
-              <ProtectedRoute allowedRoles={["staff"]} user={user}>
+              <ProtectedRoute allowedRoles={["Staff"]} user={user}>
                 <StaffDashboard />
               </ProtectedRoute>
             ),
           },
-          {
-            path: "user-create",
-            element: (
-             
-                <UserRegister />
-             
-            ),
-          },
-          { path: "reports", element: <Reports /> },
-           
-          { path: "documents", element: <Documents /> },
-          { path: "schedule", element: <Schedule /> },
-          { path: "profile", element: <Profile /> },
-          { path: "notifications", element: <Notification /> },
-          { path: "messages", element: <Message /> },
-          { path: "settings", element: <Settings /> },
+          
+        
           
         ],
       },

@@ -48,13 +48,12 @@ const roleMiddleware = (allowedRoles) => {
          return res.status(401).json(
        new ApiError(401, "Unauthorized. No role assigned.")
       )
-        
       }
 
       // Fetch role details using only _id
       const userRole = await Role.findById(roleId).lean(); // ✅ Use lean() for performance
       
-
+       console.log( userRole.name)
       if (!userRole) {
        
           return res.status(403).json(

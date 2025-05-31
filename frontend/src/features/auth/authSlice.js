@@ -45,6 +45,22 @@ export const login = createAsyncThunk(
   }
 );
 
+// Get All User
+export const fetchAllUser = createAsyncThunk('auth/fatchAllUser',async(_,{rejectWithValue})=>{
+    try {
+       const token = localStorage.getItem('accessToken');
+      const res = await axios.get(`${API}/get_all_user`,{
+         headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      return res.data.data;
+
+    } catch (error) {
+       return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
+    }
+});
+
 // Slice
 const authSlice = createSlice({
   name: 'auth',
@@ -53,6 +69,7 @@ const authSlice = createSlice({
     accessToken: accessToken || null,
     loading: false,
     error: null,
+    users:[]||null
   },
   reducers: {
     logout: (state) => {
@@ -80,9 +97,10 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         localStorage.clear();
-      })
+      });
 
       // Register
+      builder
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -94,6 +112,21 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       });
+
+      // Fetch All User
+      builder
+      .addCase(fetchAllUser.pending,(state)=>{
+        state.loading=true;
+        state.error = null;
+      })
+      .addCase(fetchAllUser.fulfilled,(state,action)=>{
+        state.loading=false;
+        state.users = action.payload || []
+      })
+      .addCase(fetchAllUser.rejected,(state,action)=>{
+          state.loading = true;
+          state.error = action.payload
+      })
   },
 });
 
