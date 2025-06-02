@@ -107,7 +107,7 @@ const role = user?.role?.name.toLowerCase();
   }
 
   return (
-    <aside className="w-64  bg-white flex flex-col justify-between border-r shadow-sm overflow-hidden ">
+    <aside className="w-72  bg-white flex flex-col justify-between border-r shadow-sm overflow-hidden ">
       <div>
         {/* Logo */}
         <div className="p-6 text-purple-600 font-bold text-xl flex items-center gap-2">
@@ -156,13 +156,13 @@ const role = user?.role?.name.toLowerCase();
       </div>
 
       {/* Logout */}
-      <div
-        className="w-64 px-6 py-4 border-t text-gray-400 hover:text-red-500 cursor-pointer flex items-center gap-3 fixed bottom-0 left-0"
+      {/* <div
+        className=" hidden w-64 px-6 py-4 border-t text-gray-400 hover:text-red-500 cursor-pointer  items-center gap-3 fixed bottom-0 left-0 z-[1024]"
         onClick={handleLogout}
       >
         <LogOut size={18} />
         Log Out
-      </div>
+      </div> */}
     </aside>
   )
 }

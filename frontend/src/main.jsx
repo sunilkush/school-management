@@ -1,28 +1,60 @@
-import { createRoot } from 'react-dom/client';
-import { Provider } from 'react-redux';
-import './index.css';
-import App from './App.jsx';
-import  store  from './store/store.js';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import LoginPage from './pages/LoginPage.jsx';
-import Dashboard from './components/layout/Dashboard.jsx';
-import Reports from './pages/Reports.jsx';
-import SuperAdminDashboard from './pages/SuperAdminDashboard.jsx';
-import SchoolAdminDashboard from './pages/SchoolAdminDashboard.jsx';
-import StudentDashboard from './pages/StudentDashboard.jsx';
-import Profile from './pages/Profile.jsx';
-import Notification from './pages/Notification.jsx';
-import Message from './pages/Message.jsx';
-import Settings from './pages/Settings.jsx';
-import ProtectedRoute from './routes/ProtectedRoute.jsx';
-import Unauthorized from './pages/Unauthorized.jsx';
-import TeacherDashboard from './pages/TeacherDashboard.jsx';
-import AccountantDashboard from './pages/AccountantDashboard.jsx';
-import StaffDashboard from './pages/StaffDashboard.jsx';
-import Documents from './pages/Documents.jsx';
-import Schedule from './pages/Schedule.jsx';
-import UserRegister from './pages/UserRegister.jsx';
+import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
+import "./index.css";
+import App from "./App.jsx";
+import store from "./store/store.js";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import LoginPage from "./pages/LoginPage.jsx";
+import Dashboard from "./components/layout/Dashboard.jsx";
+import Reports from "./pages/Reports.jsx";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard.jsx";
+import SchoolAdminDashboard from "./pages/SchoolAdminDashboard.jsx";
+import StudentDashboard from "./pages/StudentDashboard.jsx";
+import Profile from "./pages/Profile.jsx";
+import Notification from "./pages/Notification.jsx";
+import Message from "./pages/Message.jsx";
+import Settings from "./pages/Settings.jsx";
+import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import Unauthorized from "./pages/Unauthorized.jsx";
+import TeacherDashboard from "./pages/TeacherDashboard.jsx";
+import AccountantDashboard from "./pages/AccountantDashboard.jsx";
+import StaffDashboard from "./pages/StaffDashboard.jsx";
+import Documents from "./pages/Documents.jsx";
+import Schedule from "./pages/Schedule.jsx";
+import UserRegister from "./pages/UserRegister.jsx";
+import Schools from "./pages/Schools.jsx"; // Example for /superadmin/schools
+import AddSchool from "./pages/AddSchool.jsx";
+import Admins from "./pages/Admins.jsx";
+import Roles from "./pages/Roles.jsx";
+import Permissions from "./pages/Permissions.jsx";
+import AcademicYears from "./pages/AcademicYears.jsx";
+import Modules from "./pages/Modules.jsx";
+import SettingsPage from "./pages/Settings.jsx"; // you have this as Settings already
 
+import UsersPage from "./pages/UsersPage.jsx";
+import AddStudent from "./pages/AddStudent.jsx";
+import AddTeacher from "./pages/AddTeacher.jsx";
+import AddParent from "./pages/AddParent.jsx";
+import Classes from "./pages/Classes.jsx";
+import Subjects from "./pages/Subjects.jsx";
+import ScheduleExams from "./pages/ScheduleExams.jsx";
+import EnterGrades from "./pages/EnterGrades.jsx";
+import StudentAttendance from "./pages/StudentAttendance.jsx";
+import StaffAttendance from "./pages/StaffAttendance.jsx";
+import Books from "./pages/Books.jsx";
+import IssueBook from "./pages/IssueBook.jsx";
+import ClassTimetable from "./pages/ClassTimetable.jsx";
+import TeacherTimetable from "./pages/TeacherTimetable.jsx";
+import FeeCategories from "./pages/FeeCategories.jsx";
+import CollectFees from "./pages/CollectFees.jsx";
+import HostelManagement from "./pages/HostelManagement.jsx";
+import RoomAllocation from "./pages/RoomAllocation.jsx";
+import RoutesPage from "./pages/RoutesPage.jsx";
+import Vehicles from "./pages/Vehicles.jsx";
+import EmployeeSalaries from "./pages/EmployeeSalaries.jsx";
+import GeneratePayslip from "./pages/GeneratePayslip.jsx";
+import SendNotification from "./pages/SendNotification.jsx";
+import SmsEmailHistory from "./pages/SmsEmailHistory.jsx";
 // Get user from localStorage or store
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -39,28 +71,85 @@ const router = createBrowserRouter([
         element: <Dashboard />,
         children: [
           {
-            path: "super-admin",
+            path: "superadmin",
             element: (
               <ProtectedRoute allowedRoles={["Super Admin"]} user={user}>
                 <SuperAdminDashboard />
               </ProtectedRoute>
             ),
+            children: [
+              { path: "superadmin", element: <SuperAdminDashboard /> }, // optional
+              { path: "schools", element: <Schools /> },
+              { path: "schools/add", element: <AddSchool /> },
+              { path: "admins", element: <Admins /> },
+              { path: "user-create", element: <UserRegister /> },
+              { path: "roles", element: <Roles /> },
+              { path: "permissions", element: <Permissions /> },
+              { path: "modules", element: <Modules /> },
+              { path: "modules/academicyears", element: <AcademicYears /> },
+              { path: "reports", element: <Reports /> },
+              { path: "settings", element: <SettingsPage /> },
+            ],
           },
           {
-            path: "school-admin",
+            path: "schooladmin",
             element: (
               <ProtectedRoute allowedRoles={["School Admin"]} user={user}>
                 <SchoolAdminDashboard />
               </ProtectedRoute>
             ),
-          },
-          {
-            path: "student",
-            element: (
-              <ProtectedRoute allowedRoles={["Student"]} user={user}>
-                <StudentDashboard />
-              </ProtectedRoute>
-            ),
+            children: [
+              { path: "schooladmin", element: <SchoolAdminDashboard /> }, // optional
+              // Users
+              { path: "users/student/add", element: <AddStudent /> },
+              { path: "users/teacher/add", element: <AddTeacher /> },
+              { path: "users/parent/add", element: <AddParent /> },
+              { path: "users", element: <UsersPage /> },
+
+              // Classes & Subjects
+              { path: "classes", element: <Classes /> },
+              { path: "subjects", element: <Subjects /> },
+
+              // Exams & Grades
+              { path: "exams/schedule", element: <ScheduleExams /> },
+              { path: "exams/grades", element: <EnterGrades /> },
+
+              // Attendance
+              { path: "attendance/students", element: <StudentAttendance /> },
+              { path: "attendance/staff", element: <StaffAttendance /> },
+
+              // Library
+              { path: "library/books", element: <Books /> },
+              { path: "library/issue", element: <IssueBook /> },
+
+              // Timetables
+              { path: "timetable/class", element: <ClassTimetable /> },
+              { path: "timetable/teacher", element: <TeacherTimetable /> },
+
+              // Fees Management
+              { path: "fees/categories", element: <FeeCategories /> },
+              { path: "fees/collect", element: <CollectFees /> },
+
+              // Hostel
+              { path: "hostel", element: <HostelManagement /> },
+              { path: "hostel/allocation", element: <RoomAllocation /> },
+
+              // Transport
+              { path: "transport/routes", element: <RoutesPage /> },
+              { path: "transport/vehicles", element: <Vehicles /> },
+
+              // Payroll
+              { path: "payroll", element: <EmployeeSalaries /> },
+              { path: "payroll/payslip", element: <GeneratePayslip /> },
+
+              // Communication
+              { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
+
+              // Other
+              { path: "reports", element: <Reports /> },
+              { path: "settings", element: <SettingsPage /> },
+            ],
           },
           {
             path: "teacher",
@@ -69,33 +158,91 @@ const router = createBrowserRouter([
                 <TeacherDashboard />
               </ProtectedRoute>
             ),
+            children: [
+              { path: "dashboard", element: <TeacherDashboard /> },
+              { path: "classes", element: <Classes /> },
+              { path: "students", element: <UsersPage /> }, // or a dedicated Students page
+              { path: "assignments", element: <Schedule /> }, // example
+              { path: "attendance", element: <StudentAttendance /> },
+              { path: "exams", element: <ScheduleExams /> },
+              { path: "timetable", element: <ClassTimetable /> },
+              { path: "communication", element: <Message /> },
+            ],
           },
-           {
+          {
+            path: "student",
+            element: (
+              <ProtectedRoute allowedRoles={["Student"]} user={user}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            ),
+            children: [
+              { path: "dashboard", element: <StudentDashboard /> },
+              { path: "profile", element: <Profile /> },
+              { path: "homework", element: <Schedule /> }, // or Homework page
+              { path: "attendance", element: <StudentAttendance /> },
+              { path: "grades", element: <EnterGrades /> },
+              { path: "timetable", element: <ClassTimetable /> },
+              { path: "library", element: <Books /> },
+              { path: "hostel", element: <HostelManagement /> },
+              { path: "transport", element: <RoutesPage /> },
+              { path: "fees", element: <FeeCategories /> },
+              { path: "communication", element: <Message /> },
+            ],
+          },
+          {
+            path: "parent",
+            element: (
+              <ProtectedRoute allowedRoles={["Parent"]} user={user}>
+                <Profile /> {/* Replace with ParentDashboard if you have it */}
+              </ProtectedRoute>
+            ),
+            children: [
+              { path: "dashboard", element: <Profile /> },
+              { path: "children", element: <UsersPage /> }, // or ChildrenPage
+              { path: "attendance", element: <StudentAttendance /> },
+              { path: "grades", element: <EnterGrades /> },
+              { path: "homework", element: <Schedule /> },
+              { path: "fees", element: <FeeCategories /> },
+              { path: "messages", element: <Message /> },
+            ],
+          },
+          {
             path: "accountant",
             element: (
               <ProtectedRoute allowedRoles={["Accountant"]} user={user}>
                 <AccountantDashboard />
               </ProtectedRoute>
             ),
+            children: [
+              { path: "dashboard", element: <AccountantDashboard /> },
+              { path: "fees/categories", element: <FeeCategories /> },
+              { path: "fees/collect", element: <CollectFees /> },
+              { path: "salary", element: <EmployeeSalaries /> },
+              { path: "reports", element: <Reports /> },
+            ],
           },
-           {
+          {
             path: "staff",
             element: (
               <ProtectedRoute allowedRoles={["Staff"]} user={user}>
                 <StaffDashboard />
               </ProtectedRoute>
             ),
+            children: [
+              { path: "dashboard", element: <StaffDashboard /> },
+              { path: "tasks", element: <Schedule /> }, // or TasksPage
+              { path: "attendance", element: <StudentAttendance /> },
+              { path: "messages", element: <Message /> },
+            ],
           },
-          
-        
-          
         ],
       },
     ],
   },
 ]);
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <RouterProvider router={router} />
   </Provider>

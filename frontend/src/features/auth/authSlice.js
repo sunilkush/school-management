@@ -14,6 +14,7 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
+      console.log(userData)
       const token = localStorage.getItem('accessToken');
       const res = await axios.post(`${API}/register`, userData, {
         headers: {
@@ -69,13 +70,18 @@ const authSlice = createSlice({
     accessToken: accessToken || null,
     loading: false,
     error: null,
-    users:[]||null
+    users:[]||null,
+    success: false,
   },
   reducers: {
     logout: (state) => {
       state.user = null;
       state.accessToken = null;
       localStorage.clear();
+    },
+    resetAuthState: (state) => {
+      state.success = false;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -102,15 +108,19 @@ const authSlice = createSlice({
       // Register
       builder
       .addCase(registerUser.pending, (state) => {
-        state.loading = true;
+        state.isLoading = true;
+        state.success = false;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state) => {
-        state.loading = false;
+        state.isLoading = false;
+        state.success = true; // ✅ VERY IMPORTANT
+        state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
+         state.isLoading = false;
+        state.success = false;
+        state.error = action.payload || "Something went wrong";
       });
 
       // Fetch All User
@@ -130,5 +140,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout ,resetAuthState} = authSlice.actions;
 export default authSlice.reducer;

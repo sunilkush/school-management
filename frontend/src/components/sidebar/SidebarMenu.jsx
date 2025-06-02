@@ -16,7 +16,7 @@ function SidebarMenu({ role }) {
 
   return (
     
-    <aside className="w-64 h-screen bg-white border-r p-4 shadow-sm">
+    <aside className="w-64 h-screen bg-white border-r p-4 pb-10 shadow-sm overflow-auto">
       <nav className="space-y-2">
         {menuItems.map((item, index) => (
            
@@ -26,7 +26,7 @@ function SidebarMenu({ role }) {
                 to={item.path}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 ${
-                    isActive ? "bg-gray-100 font-semibold" : "text-gray-700"
+                    isActive ? "bg-purple-100 font-semibold" : "text-gray-700"
                   }`
                 }
               >
@@ -57,7 +57,7 @@ function SidebarMenu({ role }) {
                           to={sub.path}
                           className={({ isActive }) =>
                             `flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 ${
-                              isActive ? "font-medium text-blue-600" : "text-gray-700"
+                              isActive ? "font-medium text-purple-600" : "text-gray-700"
                             }`
                           }
                         >

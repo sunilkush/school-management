@@ -11,8 +11,8 @@ const LoginForm = () => {
   const { loading, error, user } = useSelector(state => state.auth);
  
   const roleRoutes = [
-    { role: "super admin", path: "/dashboard/super-admin" },
-    { role: "school admin", path: "/dashboard/school-admin" },
+    { role: "super admin", path: "/dashboard/superadmin" },
+    { role: "school admin", path: "/dashboard/schooladmin" },
     { role: "student", path: "/dashboard/student" },
     { role: "parent", path: "/dashboard/parent" },
     { role: "teacher", path: "/dashboard/teacher" },

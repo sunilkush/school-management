@@ -42,15 +42,23 @@ const UserDropdown = () => {
             {showDropdown && (
                 <div className="absolute right-0 mt-3 w-60 bg-white rounded-xl shadow-lg border p-4 z-50">
                     {/* Header */}
-                    <div className="flex items-center gap-3 border-b pb-3 mb-3 flex-col">
-                        <img
+                    <div className="flex items-start gap-3 border-b pb-3 mb-3 flex-col">
+                        <div className='flex gap-2'>
+                           <div>
+                             <img
                             src={user.avatar}
                             alt="User Avatar"
                             className="w-10 h-10 rounded-full"
                         />
-                        <div className="text-center">
-                            <p className="text-sm font-semibold text-gray-800">{user.name}</p>
+                           </div>
+                           <div>
+                             <p className="text-sm font-semibold text-gray-800">{user.name}</p>
                             <p className="text-xs text-gray-500">{user?.role?.name}</p>
+                           </div>
+                        </div>
+                       
+                        <div className="text-center">
+                           
                             <p className="text-xs text-gray-500 text-ellipsis overflow-hidden">{user?.email}</p>
                         </div>
                     </div>
