@@ -5,12 +5,12 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 // ✅ Create a Role (Only Admin)
 export const createRole = asyncHandler(async (req, res) => {
-    const { name, permissions } = req.body;
+    const { name, schoolId, permissions } = req.body;
 
     const existingRole = await Role.findOne({ name });
     if (existingRole) throw new ApiError(400, "Role already exists");
 
-    const role = await Role.create({ name, permissions });
+    const role = await Role.create({ name, schoolId, permissions });
 
     res.status(201).json(new ApiResponse(201, role, "Role created successfully"));
 });
