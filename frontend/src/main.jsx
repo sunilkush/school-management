@@ -105,6 +105,7 @@ const router = createBrowserRouter([
               { path: "users/teacher/add", element: <AddTeacher /> },
               { path: "users/parent/add", element: <AddParent /> },
               { path: "users", element: <UsersPage /> },
+              { path: "user-create", element: <UserRegister /> },
 
               // Classes & Subjects
               { path: "classes", element: <Classes /> },

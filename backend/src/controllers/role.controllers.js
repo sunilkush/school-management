@@ -5,14 +5,20 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 // ✅ Create a Role (Only Admin)
 export const createRole = asyncHandler(async (req, res) => {
-    const { name, permissions } = req.body;
+    const { name, schoolId, permissions } = req.body;
 
-    const existingRole = await Role.findOne({ name });
-    if (existingRole) throw new ApiError(400, "Role already exists");
+    // Check if role already exists for this school
+    const existingRole = await Role.findOne({ name, schoolId });
+    if (existingRole) {
+        throw new ApiError(400, "Role already exists for this school");
+    }
 
-    const role = await Role.create({ name, permissions });
+    // Create role
+    const role = await Role.create({ name, schoolId, permissions });
 
-    res.status(201).json(new ApiResponse(201, role, "Role created successfully"));
+    res
+        .status(201)
+        .json(new ApiResponse(201, role, "Role created successfully"));
 });
 
 // ✅ Get All Roles (Only Admin)
@@ -50,3 +56,21 @@ export const deleteRole = asyncHandler(async (req, res) => {
     await role.deleteOne();
     res.status(200).json(new ApiResponse(200, null, "Role deleted successfully"));
 });
+
+
+export const getRoleBySchool = asyncHandler(async (req, res) => {
+    const { schoolId } = req.query
+
+    if (!schoolId) {
+        return res.status(400).json({
+            success: false,
+            message: "schoolId is required in query parameters",
+        })
+    }
+
+    const roles = await Role.find({ schoolId: schoolId });
+
+    return res.status(200).json(
+        new ApiResponse(200, roles, "Roles fetched successfully")
+    )
+})

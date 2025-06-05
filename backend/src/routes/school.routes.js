@@ -14,13 +14,15 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
+
 const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
 const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];
 
-// ✅ Register a School (Super Admin & Admin)
+// ✅ Register a School (Super Admin)
 router.post(
     "/register",
-  
+    auth,
+     roleMiddleware("Super Admin"),
     upload.fields([{ name: "logo", maxCount: 1 }]),
     registerSchool
 );
@@ -35,11 +37,11 @@ router.post(
 );
 
 // ✅ Get All Schools (Super Admin, Admin, Teacher)
-router.get("/", auth, roleMiddleware(TEACHER_ROLE), getAllSchools);
 router.get("/getAllSchool", auth, roleMiddleware(ADMIN_ROLE), getAllSchools);
 
 // ✅ Get School by ID (Super Admin, Admin, Teacher, Student)
 router.get("/:id", auth, roleMiddleware(STUDENT_ROLE), getSchoolById);
+router.get("/getRoleBySchool:id", auth,roleMiddleware("Super Admin"), getSchoolById);
 
 // ✅ Activate School (Super Admin & Admin)
 router.put("/activate/:id", auth, roleMiddleware(ADMIN_ROLE), activateSchool);

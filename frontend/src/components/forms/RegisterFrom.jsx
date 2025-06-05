@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchools } from "../../features/schools/schoolSlice";
 import { fetchRoles } from "../../features/roles/roleSlice";
-import { registerUser, resetAuthState ,fetchAllUser} from "../../features/auth/authSlice";
+import {
+  registerUser,
+  resetAuthState,
+  fetchAllUser,
+} from "../../features/auth/authSlice";
 
 const RegisterForm = () => {
   const [message, setMessage] = useState("");
@@ -10,14 +14,17 @@ const RegisterForm = () => {
 
   const { roles } = useSelector((state) => state.role);
   const { schools } = useSelector((state) => state.school);
-  const { isLoading, error,user, success } = useSelector((state) => state.auth);
+  const { isLoading, error, user, success } = useSelector((state) => state.auth);
+
+  const currentUserRole = user?.role?.name?.toLowerCase();
+  const currentSchoolId = user?.school?._id;
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     roleId: "",
-    schoolId: "",
+    schoolId: currentUserRole !== "super admin" ? currentSchoolId : "",
     isActive: false,
     avatar: null,
   });
@@ -35,78 +42,86 @@ const RegisterForm = () => {
         email: "",
         password: "",
         roleId: "",
-        schoolId: "",
+        schoolId: currentUserRole !== "super admin" ? currentSchoolId : "",
         isActive: false,
         avatar: null,
       });
-      dispatch(fetchAllUser())
+      dispatch(fetchAllUser());
       setTimeout(() => {
         setMessage("");
         dispatch(resetAuthState());
       }, 2000);
     }
-  }, [success, dispatch]);
+  }, [success, dispatch, currentUserRole, currentSchoolId]);
 
-const handleChange = (e) => {
-  const { name, value, type, checked, files } = e.target;
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
 
-  if (name === "avatar") {
-    const file = files[0];
-    if (file) {
-      const maxSize = 50 * 1024; // 50KB in bytes
+    if (name === "avatar") {
+      const file = files[0];
+      if (file) {
+        const maxSize = 50 * 1024; // 50KB
 
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const img = new Image();
-        img.onload = function () {
-          // Create canvas and resize
-          const canvas = document.createElement("canvas");
-          canvas.width = 50;
-          canvas.height = 50;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, 50, 50);
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.createElement("canvas");
+            canvas.width = 50;
+            canvas.height = 50;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, 50, 50);
 
-          canvas.toBlob((blob) => {
-            if (blob.size > maxSize) {
-              alert("Image size exceeds 50KB even after resizing.");
-              return;
-            }
+            canvas.toBlob((blob) => {
+              if (blob.size > maxSize) {
+                alert("Image size exceeds 50KB after resizing.");
+                return;
+              }
 
-            const resizedFile = new File([blob], file.name, {
-              type: file.type,
-            });
-
-            setFormData((prev) => ({ ...prev, avatar: resizedFile }));
-          }, file.type);
+              const resizedFile = new File([blob], file.name, { type: file.type });
+              setFormData((prev) => ({ ...prev, avatar: resizedFile }));
+            }, file.type);
+          };
+          img.src = event.target.result;
         };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      }
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === "checkbox" ? checked : value,
+      });
     }
-  } else {
-    setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
-  }
-};
-
+  };
 
   const handleSubmit = (e) => {
-  e.preventDefault();
-  const formPayload = new FormData();
-  Object.entries(formData).forEach(([key, value]) => {
-    formPayload.append(key, value);
-  });
+    e.preventDefault();
+    const formPayload = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      formPayload.append(key, value);
+    });
+    dispatch(registerUser(formPayload));
+  };
 
-  dispatch(registerUser(formPayload));
-};
-
+  // 🔍 Role filtering based on current user
+  const availableRoles =
+    currentUserRole === "super admin"
+      ? roles.filter((role) => role.name.toLowerCase() === "school admin")
+      : currentUserRole === "school admin"
+      ? roles.filter(
+          (role) =>
+            role.name.toLowerCase() !== "super admin" &&
+            role.name.toLowerCase() !== "school admin"
+        )
+      : [];
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-gray-900 text-center">
+      <h2 className="text-2xl font-semibold text-center text-gray-900">
         Register
       </h2>
       <p className="text-center text-sm text-gray-600 mb-6">
-        Create your account. It’s free and only takes a minute
+        Create your account. It’s free and only takes a minute.
       </p>
 
       {message && <p className="text-green-600 text-center">{message}</p>}
@@ -119,25 +134,28 @@ const handleChange = (e) => {
           value={formData.name}
           type="text"
           placeholder="Name"
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          required
+          className="w-full p-2 border rounded-md"
         />
 
         <input
-          type="email"
           name="email"
-          value={formData.email}
           onChange={handleChange}
+          value={formData.email}
+          type="email"
           placeholder="Email"
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          required
+          className="w-full p-2 border rounded-md"
         />
 
         <input
-          type="password"
           name="password"
-          value={formData.password}
           onChange={handleChange}
+          value={formData.password}
+          type="password"
           placeholder="Password"
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          required
+          className="w-full p-2 border rounded-md"
         />
 
         <input
@@ -145,43 +163,41 @@ const handleChange = (e) => {
           name="avatar"
           accept="image/*"
           onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full p-2 border rounded-md"
         />
+        {currentUserRole === "super admin" && (
+          <select
+            name="schoolId"
+            value={formData.schoolId}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="">Select School</option>
+            {schools.map((school) => (
+              <option key={school._id} value={school._id}>
+                {school.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         <select
           name="roleId"
           value={formData.roleId}
           onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          required
+          className="w-full p-2 border rounded-md"
         >
-          <option value="" disabled>
-            Select Role
-          </option>
-          {roles
-            ?.filter((role) => role.name.toLowerCase() === "school admin")
-            .map((role) => (
-              <option key={role._id} value={role._id}>
-                {role.name}
-              </option>
-            ))}
-        </select>
-
-        <select
-          name="schoolId"
-          value={formData.schoolId}
-          onChange={handleChange}
-          className="w-full p-2 border border-gray-300 rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
-        >
-          <option value="" disabled>
-            Select School
-          </option>
-          {schools?.map((school) => (
-            <option key={school._id} value={school._id}>
-              {school.name}
+          <option value="">Select Role</option>
+          {availableRoles.map((role) => (
+            <option key={role._id} value={role._id}>
+              {role.name}
             </option>
           ))}
         </select>
 
+        
         <div className="flex items-center">
           <input
             id="isActive"
@@ -189,7 +205,7 @@ const handleChange = (e) => {
             name="isActive"
             checked={formData.isActive}
             onChange={handleChange}
-            className="mr-2 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            className="mr-2"
           />
           <label htmlFor="isActive" className="text-sm text-gray-600">
             Is Active
@@ -199,7 +215,7 @@ const handleChange = (e) => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-purple-500 text-white py-2 rounded-md hover:bg-purple-600 transition duration-200"
+          className="w-full bg-purple-500 text-white py-2 rounded-md hover:bg-purple-600"
         >
           {isLoading ? "Registering..." : "Register Now"}
         </button>

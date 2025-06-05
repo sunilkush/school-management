@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import RegisterFrom from '../components/forms/RegisterFrom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchAllUser } from '../features/auth/authSlice'
@@ -6,13 +6,12 @@ import DataTable from 'react-data-table-component'
 
 const UserRegister = () => {
   const dispatch = useDispatch()
-  const { users, loading, error } = useSelector((state) => state.auth)
+  const { users, loading, error, user: currentUser } = useSelector((state) => state.auth)
 
   useEffect(() => {
     dispatch(fetchAllUser())
   }, [dispatch])
 
-  // Define table columns
   const columns = [
     {
       name: 'Avatar',
@@ -46,20 +45,31 @@ const UserRegister = () => {
     },
   ]
 
+  let filteredUsers = []
+
+  if (currentUser?.role?.name?.toLowerCase() === 'super admin') {
+    filteredUsers = users?.filter(
+      user => user.role?.name?.toLowerCase() === 'school admin'
+    )
+  } else if (currentUser?.role?.name?.toLowerCase() === 'school admin') {
+    filteredUsers = users?.filter(
+      user =>
+        user.role?.name?.toLowerCase() !== 'super admin' &&
+        user.role?.name?.toLowerCase() !== 'school admin'
+    )
+  }
+
   return (
     <div>
       <div className='w-full flex gap-4'>
-        {/* Form Section */}
         <div className='w-full md:w-1/3 bg-white p-5'>
           <RegisterFrom />
         </div>
-
-        {/* DataTable Section */}
         <div className='w-full md:w-2/3 bg-white p-5 overflow-x-auto'>
           <h2 className="text-xl font-bold mb-3">Registered Users</h2>
           <DataTable
             columns={columns}
-            data={users}
+            data={filteredUsers}
             progressPending={loading}
             pagination
             highlightOnHover

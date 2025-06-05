@@ -70,10 +70,11 @@ export const sidebarMenu = {
     {
       title: "Users", icon: Users,
       subMenu: [
-        { title: "Add Student", path: "schooladmin/users/student/add", icon: User },
+      /*   { title: "Add Student", path: "schooladmin/users/student/user-create", icon: User },
         { title: "Add Teacher", path: "schooladmin/users/teacher/add", icon: User },
-        { title: "Add Parent", path: "schooladmin/users/parent/add", icon: User },
+        { title: "Add Parent", path: "schooladmin/users/parent/add", icon: User }, */
         { title: "All Users", path: "schooladmin/users", icon: Users },
+        { title: "Add User", path: "schooladmin/user-create", icon: Users },
       ],
     },
     {
