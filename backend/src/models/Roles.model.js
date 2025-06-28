@@ -11,7 +11,7 @@ const roleSchema = new Schema(
     schoolId:{
       type:Schema.Types.ObjectId,
       ref:"Schools",
-      required:true
+      required: true,
     },
     permissions: [
       {
