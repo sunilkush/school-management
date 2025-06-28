@@ -7,20 +7,33 @@ const api = "http://localhost:9000/app/v1/role";
 // Fetch all roles
 export const fetchRoles = createAsyncThunk(
   "role/fetchRoles",
-  async (_, { rejectWithValue }) => {
+  async (schoolId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
+        
+     if(schoolId){
 
-      const res = await axios.get(`${api}/getAllRoles`, {
+      const res = await axios.get(`${api}/by-school?schoolId=${schoolId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
        
       });
+       return res.data.data;
+     } else{
+       const res = await axios.get(`${api}/getAllRoles`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+       
+      });
+       return res.data.data;
+     }
 
-      return res.data.data;
+     
     } catch (error) {
      
       return rejectWithValue(
@@ -54,6 +67,17 @@ export const fetchRoleById = createAsyncThunk(
     }
   }
 );
+// create role 
+
+const createRole = createAsyncThunk("role/createRole", async (roleData, { rejectWithValue }) => {
+  try {
+    const response = await axios("", roleData)
+    return response.data
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || "Role register failed !")
+  }
+})
+
 
 // Initial state
 const initialState = {
@@ -66,7 +90,13 @@ const initialState = {
 const roleSlice = createSlice({
   name: "role",
   initialState,
-  reducers: {},
+  reducers: {
+    resetRoleState:()=>{
+      state.loading = false;
+      state.error = null;
+      state.success = false;
+    }
+  },
   extraReducers: (builder) => {
     builder
       // Fetch all roles
@@ -98,6 +128,20 @@ const roleSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       });
+
+      builder.addCase(createRole.pending,(state )=>{
+         state.loading = true;
+         state.error = null;
+         state.success = false;
+
+      }).addCase(createRole.fulfilled,(state,action)=>{
+        state.loading = false;
+        state.success = true;
+        state.role.push(action.payload.role);
+        state.message = action.payload.message
+      }).addCase(createRole.rejected,(state,action)=>{
+
+      })
   },
 });
 

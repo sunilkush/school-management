@@ -59,18 +59,18 @@ export const deleteRole = asyncHandler(async (req, res) => {
 
 
 export const getRoleBySchool = asyncHandler(async (req, res) => {
-    const { schoolId } = req.query
+    const { schoolId } = req.query;
 
     if (!schoolId) {
         return res.status(400).json({
             success: false,
             message: "schoolId is required in query parameters",
-        })
+        });
     }
 
-    const roles = await Role.find({ schoolId: schoolId });
+    const roles = await Role.find({ schoolId });
 
     return res.status(200).json(
         new ApiResponse(200, roles, "Roles fetched successfully")
-    )
-})
+    );
+});

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchools } from "../../features/schools/schoolSlice";
 import { fetchRoles } from "../../features/roles/roleSlice";
@@ -29,6 +29,8 @@ const RegisterForm = () => {
     avatar: null,
   });
 
+  const [filteredRoles, setFilteredRoles] = useState([]);
+
   useEffect(() => {
     dispatch(fetchSchools());
     dispatch(fetchRoles());
@@ -54,6 +56,27 @@ const RegisterForm = () => {
     }
   }, [success, dispatch, currentUserRole, currentSchoolId]);
 
+  // 🔍 Dynamic role filtering
+  useEffect(() => {
+    let updatedRoles = [];
+
+    if (currentUserRole === "super admin") {
+      updatedRoles = roles.filter(
+        (role) =>
+          role.name.toLowerCase() === "school admin" &&
+          role.schoolId === formData.schoolId
+      );
+    } else if (currentUserRole === "school admin") {
+      updatedRoles = roles.filter(
+        (role) =>
+          role.schoolId === currentSchoolId &&
+          role.name.toLowerCase() !== "super admin"
+      );
+    }
+
+    setFilteredRoles(updatedRoles);
+  }, [roles, currentUserRole, formData.schoolId, currentSchoolId]);
+
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
@@ -61,7 +84,6 @@ const RegisterForm = () => {
       const file = files[0];
       if (file) {
         const maxSize = 50 * 1024; // 50KB
-
         const reader = new FileReader();
         reader.onload = function (event) {
           const img = new Image();
@@ -102,18 +124,6 @@ const RegisterForm = () => {
     });
     dispatch(registerUser(formPayload));
   };
-
-  // 🔍 Role filtering based on current user
-  const availableRoles =
-    currentUserRole === "super admin"
-      ? roles.filter((role) => role.name.toLowerCase() === "school admin")
-      : currentUserRole === "school admin"
-      ? roles.filter(
-          (role) =>
-            role.name.toLowerCase() !== "super admin" &&
-            role.name.toLowerCase() !== "school admin"
-        )
-      : [];
 
   return (
     <div>
@@ -165,6 +175,7 @@ const RegisterForm = () => {
           onChange={handleChange}
           className="w-full p-2 border rounded-md"
         />
+
         {currentUserRole === "super admin" && (
           <select
             name="schoolId"
@@ -190,14 +201,13 @@ const RegisterForm = () => {
           className="w-full p-2 border rounded-md"
         >
           <option value="">Select Role</option>
-          {availableRoles.map((role) => (
+          {filteredRoles.map((role) => (
             <option key={role._id} value={role._id}>
               {role.name}
             </option>
           ))}
         </select>
 
-        
         <div className="flex items-center">
           <input
             id="isActive"
