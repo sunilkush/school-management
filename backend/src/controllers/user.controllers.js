@@ -4,7 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { User } from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { Role } from '../models/Roles.model.js'
-
+import mongoose from 'mongoose';
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -62,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
         const avatar = await uploadOnCloudinary(avatarPath)
         avatarUrl = avatar?.url || ''
     }
-    
+
     const newUser = await User.create({
         name,
         email,
@@ -95,7 +95,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findOne({ email })
-
+    console.log(user)
     if (!user || !(await user.isPasswordCorrect(password))) {
         return res.status(401).json({ message: 'Invalid email or password' })
     }
@@ -112,7 +112,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Use aggregation to join role collection
     const userWithRole = await User.aggregate([
-        { $match: { _id: user._id } },
+        { $match: { _id: new mongoose.Types.ObjectId(user._id) } },
         {
             $lookup: {
                 from: 'roles', // Make sure your collection is named 'roles'
@@ -131,11 +131,11 @@ const loginUser = asyncHandler(async (req, res) => {
             },
         },
         {
-      $unwind: {
-        path: "$school",
-        preserveNullAndEmptyArrays: true
-      }
-    },
+            $unwind: {
+                path: "$school",
+                preserveNullAndEmptyArrays: true
+            }
+        },
         {
             $project: {
                 _id: 1,
@@ -154,7 +154,10 @@ const loginUser = asyncHandler(async (req, res) => {
             },
         },
     ])
-
+    console.log(userWithRole)
+    if (!userWithRole || userWithRole.length === 0) {
+        return res.status(500).json({ message: 'User role aggregation failed' });
+    }
     const finalUser = userWithRole[0]
 
     return res
@@ -232,58 +235,58 @@ const logoutUser = asyncHandler(async (req, res) => {
 })
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  try {
-    const users = await User.aggregate([
-      {
-            $lookup: {
-                from: 'roles', // Make sure your collection is named 'roles'
-                localField: 'roleId',
-                foreignField: '_id',
-                as: 'role',
-            },
-        },
-        { $unwind: '$role' },
-        {
-            $lookup: {
-                from: 'schools', // Make sure your collection is named 'roles'
-                localField: 'schoolId',
-                foreignField: '_id',
-                as: 'school',
-            },
-        },
-        {
-      $unwind: {
-        path: "$school",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-        {
-            $project: {
-                _id: 1,
-                name: 1,
-                email: 1,
-                avatar: 1,
-                isActive: 1,
-                role: {
-                    _id: '$role._id',
-                    name: '$role.name',
-                },
-                school: {
-                    _id: '$school._id',
-                    name: '$school.name',
+    try {
+        const users = await User.aggregate([
+            {
+                $lookup: {
+                    from: 'roles', // Make sure your collection is named 'roles'
+                    localField: 'roleId',
+                    foreignField: '_id',
+                    as: 'role',
                 },
             },
-        },
-    ]);
+            { $unwind: '$role' },
+            {
+                $lookup: {
+                    from: 'schools', // Make sure your collection is named 'roles'
+                    localField: 'schoolId',
+                    foreignField: '_id',
+                    as: 'school',
+                },
+            },
+            {
+                $unwind: {
+                    path: "$school",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    email: 1,
+                    avatar: 1,
+                    isActive: 1,
+                    role: {
+                        _id: '$role._id',
+                        name: '$role.name',
+                    },
+                    school: {
+                        _id: '$school._id',
+                        name: '$school.name',
+                    },
+                },
+            },
+        ]);
 
-    res.status(200).json({ success: true, data: users });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get users',
-      error: error.message
-    });
-  }
+        res.status(200).json({ success: true, data: users });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get users',
+            error: error.message
+        });
+    }
 });
 
 
@@ -295,5 +298,5 @@ export {
     changeCurrentPassword,
     getCurrentUser,
     logoutUser,
-    getAllUsers 
+    getAllUsers
 }

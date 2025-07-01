@@ -64,7 +64,9 @@ const initialState = {
   error: null,
   message: null,
   success: false, // ✅ added
+  status: 'idle',
 };
+
 
 // Slice
 const schoolSlice = createSlice({
@@ -84,14 +86,17 @@ const schoolSlice = createSlice({
       .addCase(fetchSchools.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.status = "loading";
       })
       .addCase(fetchSchools.fulfilled, (state, action) => {
         state.loading = false;
         state.schools = action.payload;
+        state.status = "succeeded";
       })
       .addCase(fetchSchools.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.status = "failed";
       })
 
       // addSchool

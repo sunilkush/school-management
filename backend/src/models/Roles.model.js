@@ -6,11 +6,11 @@ const roleSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      enum: ["Super Admin","School Admin", "Teacher", "Student", "Parent","Accountant","Staff","Librarian","Hostel Warden","Transport Manager","Exam Coordinator"],
+      enum: ["Super Admin", "School Admin", "Teacher", "Student", "Parent", "Accountant", "Staff", "Librarian", "Hostel Warden", "Transport Manager", "Exam Coordinator", "Receptionist","IT Support","Counselor","Subject Coordinator"],
     },
-    schoolId:{
-      type:Schema.Types.ObjectId,
-      ref:"Schools",
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "Schools",
       required: true,
     },
     permissions: [
@@ -44,7 +44,6 @@ const roleSchema = new Schema(
             "Rooms",
             "Routes",
             "Vehicles"
-            
           ],
         },
         actions: [

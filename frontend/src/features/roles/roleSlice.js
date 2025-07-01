@@ -11,31 +11,25 @@ export const fetchRoles = createAsyncThunk(
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
-        
-     if(schoolId){
 
-      const res = await axios.get(`${api}/by-school?schoolId=${schoolId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-       
-      });
-       return res.data.data;
-     } else{
-       const res = await axios.get(`${api}/getAllRoles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-       
-      });
-       return res.data.data;
-     }
-
-     
+      if (schoolId) {
+        const res = await axios.get(`${api}/by-school?schoolId=${schoolId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        return res.data.data;
+      } else {
+        const res = await axios.get(`${api}/getAllRoles`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        return res.data.data;
+      }
     } catch (error) {
-     
       return rejectWithValue(
         error.response?.data?.message || "Role list not accessible!"
       );
@@ -67,18 +61,31 @@ export const fetchRoleById = createAsyncThunk(
     }
   }
 );
-// create role 
+// create role
 
-const createRole = createAsyncThunk("role/createRole", async (roleData, { rejectWithValue }) => {
-  try {
-    const response = await axios("", roleData)
-    return response.data
-  } catch (error) {
-    return rejectWithValue(error.response?.data?.message || "Role register failed !")
+export const createRole = createAsyncThunk(
+  "role/createRole",
+  async (roleData, { rejectWithValue }) => {
+    
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+      const response = await axios.post(`${api}/createRole`, roleData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        }
+      });
+      console.log(response.data)
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Role register failed !"
+      );
+    }
   }
-})
-
-
+);
 // Initial state
 const initialState = {
   roles: [],
@@ -91,11 +98,11 @@ const roleSlice = createSlice({
   name: "role",
   initialState,
   reducers: {
-    resetRoleState:()=>{
+    resetRoleState: () => {
       state.loading = false;
       state.error = null;
       state.success = false;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -129,19 +136,19 @@ const roleSlice = createSlice({
         state.error = action.payload;
       });
 
-      builder.addCase(createRole.pending,(state )=>{
-         state.loading = true;
-         state.error = null;
-         state.success = false;
-
-      }).addCase(createRole.fulfilled,(state,action)=>{
+    builder
+      .addCase(createRole.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(createRole.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
-        state.role.push(action.payload.role);
-        state.message = action.payload.message
-      }).addCase(createRole.rejected,(state,action)=>{
-
+        state.roles.push(action.payload);
+        state.message = action.payload.message;
       })
+      .addCase(createRole.rejected, (state, action) => { });
   },
 });
 
