@@ -5,7 +5,6 @@ const roleSchema = new Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       enum: ["Super Admin", "School Admin", "Teacher", "Student", "Parent", "Accountant", "Staff", "Librarian", "Hostel Warden", "Transport Manager", "Exam Coordinator", "Receptionist","IT Support","Counselor","Subject Coordinator"],
     },
     schoolId: {
