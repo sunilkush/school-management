@@ -50,8 +50,8 @@ useEffect(() => {
         <div className="max-w-md w-full">
           <div className="mb-8 text-center">
             <img src={logo} alt="Logo" className="mx-auto h-20 mb-4" />
-            <h1 className="text-2xl font-semibold text-gray-500">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl font-semibold text-gray-500 font-jost">Welcome back</h1>
+            <p className="text-sm text-gray-500 mt-1 font-jost">
               Glad to see you again. Select method to log in
             </p>
           </div>
@@ -78,7 +78,7 @@ useEffect(() => {
                 <input type="checkbox" className="mr-2" />
                 Remember me
               </label>
-              <Link to="/forgot-password" className="text-blue-600 hover:underline">
+              <Link to="/forgot-password" className="text-blue-600 hover:underline font-jost">
                 Forgot password?
               </Link>
             </div>
@@ -91,11 +91,11 @@ useEffect(() => {
               {loading ? 'Logging in...' : 'Log in'}
             </button>
 
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {error && <p className="text-red-500 text-sm mt-2 font-jost">{error}</p>}
 
-            <p className="text-sm text-gray-600 text-center mt-6">
+            <p className="text-sm text-gray-600 text-center mt-6 font-jost">
               Don’t have an account?{" "}
-              <Link to="/register" className="text-blue-600 font-medium hover:underline">
+              <Link to="/register" className="text-blue-600 font-medium hover:underline font-jost">
                 Create an account
               </Link>
             </p>
@@ -111,8 +111,8 @@ useEffect(() => {
             alt="Dashboard Illustration"
             className="w-[90%] mx-auto mb-6"
           /> */}
-          <h2 className="text-xl font-semibold mb-2">Connect with every application</h2>
-          <p className="text-sm text-gray-100">
+          <h2 className="text-xl font-semibold mb-2 font-jost">Connect with every application</h2>
+          <p className="text-sm text-gray-100 font-jost">
             Everything you need in an easily customizable dashboard
           </p>
          

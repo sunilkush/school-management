@@ -70,7 +70,8 @@ const RegisterForm = () => {
       updatedRoles = roles.filter(
         (role) =>
           role.schoolId === currentSchoolId &&
-          role.name.toLowerCase() !== "super admin"
+          role.name.toLowerCase() !== "super admin" &&
+          role.name.toLowerCase() !== "school admin"
       );
     }
 
@@ -145,7 +146,7 @@ const RegisterForm = () => {
           type="text"
           placeholder="Name"
           required
-          className="w-full p-2 border rounded-md"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
 
         <input
@@ -155,7 +156,7 @@ const RegisterForm = () => {
           type="email"
           placeholder="Email"
           required
-          className="w-full p-2 border rounded-md"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
 
         <input
@@ -165,7 +166,7 @@ const RegisterForm = () => {
           type="password"
           placeholder="Password"
           required
-          className="w-full p-2 border rounded-md"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
 
         <input
@@ -173,7 +174,7 @@ const RegisterForm = () => {
           name="avatar"
           accept="image/*"
           onChange={handleChange}
-          className="w-full p-2 border rounded-md"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
 
         {currentUserRole === "super admin" && (
@@ -182,7 +183,7 @@ const RegisterForm = () => {
             value={formData.schoolId}
             onChange={handleChange}
             required
-            className="w-full p-2 border rounded-md"
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value="">Select School</option>
             {schools.map((school) => (
@@ -198,7 +199,7 @@ const RegisterForm = () => {
           value={formData.roleId}
           onChange={handleChange}
           required
-          className="w-full p-2 border rounded-md"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <option value="">Select Role</option>
           {filteredRoles.map((role) => (
@@ -215,7 +216,7 @@ const RegisterForm = () => {
             name="isActive"
             checked={formData.isActive}
             onChange={handleChange}
-            className="mr-2"
+            className="mr-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
           <label htmlFor="isActive" className="text-sm text-gray-600">
             Is Active

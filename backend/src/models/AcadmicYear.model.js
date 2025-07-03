@@ -4,8 +4,12 @@ const acadmicYear = new Schema({
     name: {
         type: String,
         required: [true, 'Academic Year name is required'],
-        unique: true,
         trim: true,
+    },
+    schoolId: {
+        type: Schema.Types.ObjectId,
+        ref: 'School',
+        required: [true, 'School ID is required'],
     },
     startDate: {
         type: Date,

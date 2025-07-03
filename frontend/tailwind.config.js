@@ -9,7 +9,11 @@ export default withMT({
     ".flowbite-react/class-list.json"
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        jost: ['"Jost"', 'sans-serif'],
+      },
+    },
   },
   plugins: [flowbiteReact],
 });

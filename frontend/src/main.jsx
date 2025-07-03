@@ -3,7 +3,7 @@ import { Provider } from "react-redux";
 import "./index.css";
 import App from "./App.jsx";
 import store from "./store/store.js";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.jsx";
 import Dashboard from "./components/layout/Dashboard.jsx";
 import Reports from "./pages/Reports.jsx";
@@ -22,15 +22,14 @@ import StaffDashboard from "./pages/StaffDashboard.jsx";
 import Documents from "./pages/Documents.jsx";
 import Schedule from "./pages/Schedule.jsx";
 import UserRegister from "./pages/UserRegister.jsx";
-import Schools from "./pages/Schools.jsx"; // Example for /superadmin/schools
+import Schools from "./pages/Schools.jsx";
 import AddSchool from "./pages/AddSchool.jsx";
 import Admins from "./pages/Admins.jsx";
 import Roles from "./pages/Roles.jsx";
 import Permissions from "./pages/Permissions.jsx";
 import AcademicYears from "./pages/AcademicYears.jsx";
 import Modules from "./pages/Modules.jsx";
-import SettingsPage from "./pages/Settings.jsx"; // you have this as Settings already
-
+import SettingsPage from "./pages/Settings.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 import AddStudent from "./pages/AddStudent.jsx";
 import AddTeacher from "./pages/AddTeacher.jsx";
@@ -55,8 +54,7 @@ import EmployeeSalaries from "./pages/EmployeeSalaries.jsx";
 import GeneratePayslip from "./pages/GeneratePayslip.jsx";
 import SendNotification from "./pages/SendNotification.jsx";
 import SmsEmailHistory from "./pages/SmsEmailHistory.jsx";
-// Get user from localStorage or store
-const user = JSON.parse(localStorage.getItem("user"));
+import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 
 const router = createBrowserRouter([
   {
@@ -70,15 +68,16 @@ const router = createBrowserRouter([
         path: "dashboard",
         element: <Dashboard />,
         children: [
+          { index: true, element: <RoleBasedRedirect /> },
           {
             path: "superadmin",
             element: (
-              <ProtectedRoute allowedRoles={["Super Admin"]} user={user}>
+              <ProtectedRoute allowedRoles={["Super Admin"]}>
                 <SuperAdminDashboard />
               </ProtectedRoute>
             ),
             children: [
-              { path: "superadmin", element: <SuperAdminDashboard /> }, // optional
+              { index: true, element: <SuperAdminDashboard /> },
               { path: "schools", element: <Schools /> },
               { path: "schools/add", element: <AddSchool /> },
               { path: "admins", element: <Admins /> },
@@ -94,60 +93,37 @@ const router = createBrowserRouter([
           {
             path: "schooladmin",
             element: (
-              <ProtectedRoute allowedRoles={["School Admin"]} user={user}>
+              <ProtectedRoute allowedRoles={["School Admin"]}>
                 <SchoolAdminDashboard />
               </ProtectedRoute>
             ),
             children: [
-              { path: "schooladmin", element: <SchoolAdminDashboard /> }, // optional
-              // Users
+              { index: true, element: <SchoolAdminDashboard /> },
               { path: "users/student/add", element: <AddStudent /> },
               { path: "users/teacher/add", element: <AddTeacher /> },
               { path: "users/parent/add", element: <AddParent /> },
               { path: "users", element: <UsersPage /> },
               { path: "user-create", element: <UserRegister /> },
-
-              // Classes & Subjects
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
-
-              // Exams & Grades
               { path: "exams/schedule", element: <ScheduleExams /> },
               { path: "exams/grades", element: <EnterGrades /> },
-
-              // Attendance
               { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance/staff", element: <StaffAttendance /> },
-
-              // Library
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
-
-              // Timetables
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
-
-              // Fees Management
               { path: "fees/categories", element: <FeeCategories /> },
               { path: "fees/collect", element: <CollectFees /> },
-
-              // Hostel
               { path: "hostel", element: <HostelManagement /> },
               { path: "hostel/allocation", element: <RoomAllocation /> },
-
-              // Transport
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
-
-              // Payroll
               { path: "payroll", element: <EmployeeSalaries /> },
               { path: "payroll/payslip", element: <GeneratePayslip /> },
-
-              // Communication
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
-
-              // Other
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
             ],
@@ -155,15 +131,15 @@ const router = createBrowserRouter([
           {
             path: "teacher",
             element: (
-              <ProtectedRoute allowedRoles={["Teacher"]} user={user}>
+              <ProtectedRoute allowedRoles={["Teacher"]}>
                 <TeacherDashboard />
               </ProtectedRoute>
             ),
             children: [
-              { path: "dashboard", element: <TeacherDashboard /> },
+              { index: true, element: <TeacherDashboard /> },
               { path: "classes", element: <Classes /> },
-              { path: "students", element: <UsersPage /> }, // or a dedicated Students page
-              { path: "assignments", element: <Schedule /> }, // example
+              { path: "students", element: <UsersPage /> },
+              { path: "assignments", element: <Schedule /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "exams", element: <ScheduleExams /> },
               { path: "timetable", element: <ClassTimetable /> },
@@ -173,14 +149,14 @@ const router = createBrowserRouter([
           {
             path: "student",
             element: (
-              <ProtectedRoute allowedRoles={["Student"]} user={user}>
+              <ProtectedRoute allowedRoles={["Student"]}>
                 <StudentDashboard />
               </ProtectedRoute>
             ),
             children: [
-              { path: "dashboard", element: <StudentDashboard /> },
+              { index: true, element: <StudentDashboard /> },
               { path: "profile", element: <Profile /> },
-              { path: "homework", element: <Schedule /> }, // or Homework page
+              { path: "homework", element: <Schedule /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "grades", element: <EnterGrades /> },
               { path: "timetable", element: <ClassTimetable /> },
@@ -194,13 +170,13 @@ const router = createBrowserRouter([
           {
             path: "parent",
             element: (
-              <ProtectedRoute allowedRoles={["Parent"]} user={user}>
-                <Profile /> {/* Replace with ParentDashboard if you have it */}
+              <ProtectedRoute allowedRoles={["Parent"]}>
+                <Profile />
               </ProtectedRoute>
             ),
             children: [
-              { path: "dashboard", element: <Profile /> },
-              { path: "children", element: <UsersPage /> }, // or ChildrenPage
+              { index: true, element: <Profile /> },
+              { path: "children", element: <UsersPage /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "grades", element: <EnterGrades /> },
               { path: "homework", element: <Schedule /> },
@@ -211,12 +187,12 @@ const router = createBrowserRouter([
           {
             path: "accountant",
             element: (
-              <ProtectedRoute allowedRoles={["Accountant"]} user={user}>
+              <ProtectedRoute allowedRoles={["Accountant"]}>
                 <AccountantDashboard />
               </ProtectedRoute>
             ),
             children: [
-              { path: "dashboard", element: <AccountantDashboard /> },
+              { index: true, element: <AccountantDashboard /> },
               { path: "fees/categories", element: <FeeCategories /> },
               { path: "fees/collect", element: <CollectFees /> },
               { path: "salary", element: <EmployeeSalaries /> },
@@ -226,13 +202,13 @@ const router = createBrowserRouter([
           {
             path: "staff",
             element: (
-              <ProtectedRoute allowedRoles={["Staff"]} user={user}>
+              <ProtectedRoute allowedRoles={["Staff"]}>
                 <StaffDashboard />
               </ProtectedRoute>
             ),
             children: [
-              { path: "dashboard", element: <StaffDashboard /> },
-              { path: "tasks", element: <Schedule /> }, // or TasksPage
+              { index: true, element: <StaffDashboard /> },
+              { path: "tasks", element: <Schedule /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "messages", element: <Message /> },
             ],

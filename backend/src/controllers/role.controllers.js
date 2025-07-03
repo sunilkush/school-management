@@ -6,52 +6,67 @@ import mongoose from 'mongoose';
 // ✅ Create a Role (Only Admin)
 export const createRole = asyncHandler(async (req, res) => {
   let { name, schoolId, permissions } = req.body;
-  console.log("Create Role Request:", req.body);
-  // Normalize and validate name
+
+  // Validate role name
   if (!name || typeof name !== "string") {
     throw new ApiError(400, "Role name is required and must be a string");
   }
 
+  // Normalize and format role name
   name = name.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
-  // Validate schoolId
-  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-    throw new ApiError(400, "Invalid school ID");
-  }
+  // If not Super Admin, validate schoolId
+  const isSuperAdmin = name === "Super Admin";
+  let schoolObjectId = null;
 
-  const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+  if (!isSuperAdmin) {
+    if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
+      throw new ApiError(400, "Valid school ID is required for this role");
+    }
+    schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+  }
 
   // Validate permissions
   if (
     !Array.isArray(permissions) ||
-    permissions.some((p) => !p.module || !Array.isArray(p.actions))
+    permissions.some(
+      (p) =>
+        typeof p !== "object" ||
+        !p.module ||
+        typeof p.module !== "string" ||
+        !Array.isArray(p.actions) ||
+        p.actions.length === 0
+    )
   ) {
     throw new ApiError(400, "Invalid permissions format");
   }
 
-  // ✅ Check if role already exists for the same school (case-insensitive)
-  const existingRole = await Role.findOne({
+  // Check for duplicate role (with or without schoolId)
+  const query = {
     name: { $regex: `^${name}$`, $options: "i" },
-    schoolId: schoolObjectId,
-  });
+    ...(schoolObjectId ? { schoolId: schoolObjectId } : {}),
+  };
+
+  const existingRole = await Role.findOne(query);
 
   if (existingRole) {
-    throw new ApiError(400, "Role already exists for this school");
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Role already exists"));
   }
 
-  // Create the new role
+  // Create role
   const role = await Role.create({
     name,
-    schoolId: schoolObjectId,
+    ...(schoolObjectId && { schoolId: schoolObjectId }), // only include if available
     permissions,
   });
-
-  console.log(role);
 
   return res
     .status(201)
     .json(new ApiResponse(201, role, "Role created successfully"));
 });
+
 
 // ✅ Get All Roles (Only Admin)
 export const getAllRoles = asyncHandler(async (req, res) => {

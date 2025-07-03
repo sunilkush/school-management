@@ -3,8 +3,7 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { User } from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
-import { Role } from '../models/Roles.model.js'
-import mongoose from 'mongoose';
+
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -112,7 +111,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     // Use aggregation to join role collection
     const userWithRole = await User.aggregate([
-        { $match: { _id: new mongoose.Types.ObjectId(user._id) } },
+        { $match: { _id: user._id } },
         {
             $lookup: {
                 from: 'roles', // Make sure your collection is named 'roles'
@@ -121,7 +120,12 @@ const loginUser = asyncHandler(async (req, res) => {
                 as: 'role',
             },
         },
-        { $unwind: '$role' },
+        {
+            $unwind: {
+                path: "$role",
+                preserveNullAndEmptyArrays: true
+            }
+        },
         {
             $lookup: {
                 from: 'schools', // Make sure your collection is named 'roles'
@@ -146,6 +150,7 @@ const loginUser = asyncHandler(async (req, res) => {
                 role: {
                     _id: '$role._id',
                     name: '$role.name',
+                    permissions: '$role.permissions', // ✅ Include permissions here
                 },
                 school: {
                     _id: '$school._id',
@@ -233,7 +238,8 @@ const logoutUser = asyncHandler(async (req, res) => {
         .clearCookie('refreshToken', { httpOnly: true, secure: true })
         .json(new ApiResponse(200, {}, 'User logged out successfully'))
 })
-
+// Get All Users (GET)
+// This function retrieves all users, including their roles and schools, using aggregation.
 const getAllUsers = asyncHandler(async (req, res) => {
     try {
         const users = await User.aggregate([
@@ -270,6 +276,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
                     role: {
                         _id: '$role._id',
                         name: '$role.name',
+                        permissions: '$role.permissions',
                     },
                     school: {
                         _id: '$school._id',
@@ -289,8 +296,29 @@ const getAllUsers = asyncHandler(async (req, res) => {
     }
 });
 
+// deleteUser
 
+ const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params
+   
+  if (!id) {
+    return res.status(400).json({ message: 'User ID is required' })
+  }
+    // Find the user by ID and update their isActive status to false
+  const user = await User.findByIdAndUpdate(
+    id,
+    { isActive: false },
+    { new: true }
+  )
+  
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' })
+  }
 
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, 'User deactivated successfully'))
+})
 export {
     registerUser,
     loginUser,
@@ -298,5 +326,6 @@ export {
     changeCurrentPassword,
     getCurrentUser,
     logoutUser,
-    getAllUsers
+    getAllUsers,
+    deleteUser
 }

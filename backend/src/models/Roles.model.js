@@ -10,7 +10,9 @@ const roleSchema = new Schema(
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "Schools",
-      required: true,
+      required: function () {
+        return this.name !== "Super Admin"; // Only require schoolId if not Super Admin
+      },
     },
     permissions: [
       {
@@ -49,7 +51,16 @@ const roleSchema = new Schema(
           {
             type: String,
             required: true,
-            enum: ["create", "read", "update", "delete"],
+            enum: [
+             "create",
+            "read",
+            "update",
+            "delete",
+            "export",   
+            "collect",  
+            "return",   
+            "assign",  
+            ],
           },
         ],
       },

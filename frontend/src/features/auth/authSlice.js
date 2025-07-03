@@ -14,7 +14,6 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      console.log(userData)
       const token = localStorage.getItem('accessToken');
       const res = await axios.post(`${API}/register`, userData, {
         headers: {
@@ -46,21 +45,45 @@ export const login = createAsyncThunk(
   }
 );
 
-// Get All User
-export const fetchAllUser = createAsyncThunk('auth/fatchAllUser',async(_,{rejectWithValue})=>{
+// Get All Users
+export const fetchAllUser = createAsyncThunk(
+  'auth/fetchAllUser',
+  async (_, { rejectWithValue }) => {
     try {
-       const token = localStorage.getItem('accessToken');
-      const res = await axios.get(`${API}/get_all_user`,{
-         headers: {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.get(`${API}/get_all_user`, {
+        headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
       return res.data.data;
-
     } catch (error) {
-       return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch users'
+      );
     }
-});
+  }
+);
+
+// Delete (Deactivate) User
+export const deleteUser = createAsyncThunk(
+  'auth/deleteUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.patch(`${API}/delete/${userId}`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to delete user'
+      );
+    }
+  }
+);
 
 // Slice
 const authSlice = createSlice({
@@ -70,7 +93,7 @@ const authSlice = createSlice({
     accessToken: accessToken || null,
     loading: false,
     error: null,
-    users:[]||null,
+    users: [],
     success: false,
   },
   reducers: {
@@ -86,7 +109,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // 🔐 Login
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -103,42 +126,56 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         localStorage.clear();
-      });
+      })
 
-      // Register
-      builder
+      // 📝 Register
       .addCase(registerUser.pending, (state) => {
-        state.isLoading = true;
+        state.loading = true;
         state.success = false;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state) => {
-        state.isLoading = false;
-        state.success = true; // ✅ VERY IMPORTANT
+        state.loading = false;
+        state.success = true;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
-         state.isLoading = false;
+        state.loading = false;
         state.success = false;
-        state.error = action.payload || "Something went wrong";
-      });
+        state.error = action.payload || 'Something went wrong';
+      })
 
-      // Fetch All User
-      builder
-      .addCase(fetchAllUser.pending,(state)=>{
-        state.loading=true;
+      // 📥 Fetch Users
+      .addCase(fetchAllUser.pending, (state) => {
+        state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAllUser.fulfilled,(state,action)=>{
-        state.loading=false;
-        state.users = action.payload || []
+      .addCase(fetchAllUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users = action.payload || [];
       })
-      .addCase(fetchAllUser.rejected,(state,action)=>{
-          state.loading = true;
-          state.error = action.payload
+      .addCase(fetchAllUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
+
+      // ❌ Delete User
+      .addCase(deleteUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteUser.fulfilled, (state, action) => {
+        state.loading = false;
+        // Optionally remove from local state:
+        state.users = state.users.map(user =>
+          user._id === action.payload._id ? { ...user, isActive: false } : user
+        );
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
-export const { logout ,resetAuthState} = authSlice.actions;
+export const { logout, resetAuthState } = authSlice.actions;
 export default authSlice.reducer;
