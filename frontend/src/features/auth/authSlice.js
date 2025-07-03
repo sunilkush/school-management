@@ -64,6 +64,21 @@ export const fetchAllUser = createAsyncThunk(
     }
   }
 );
+// Update User Profile
+export const updateProfile = createAsyncThunk("auth/updateProfile",async(userId,{rejectWithValue})=>{
+  try {
+     const token = localStorage.getItem('accessToken');
+     const res = await axios.patch(`${API}/update/${userId}`, {
+      headers:{
+        Authorization: `Bearer ${token}`,
+      }
+     },)
+     return res.data.data;
+  } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to update profile' )
+  }
+})
 
 // Delete (Deactivate) User
 export const deleteUser = createAsyncThunk(
@@ -174,6 +189,18 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       });
+      // Update Profile
+      builder.addCase(updateProfile.pending, (state)=>{
+        state.loading = true;
+        state.error = null;
+      }).addCase(updateProfile.fulfilled,(state,action)=>{
+        state.loading = false;
+        state.user = action.payload;
+        localStorage.setItem('user', JSON.stringify(action.payload));   
+      }).addCase(updateProfile.rejected,(state,action)=>{
+        state.loading = false;
+        state.error = action.payload || 'Failed to update profile';
+      })
   },
 });
 
