@@ -134,6 +134,7 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element:<Profile /> },
               { path: "notification", element:<Notification /> },
+              { path: "admission", element:<AddStudent /> },
               
             ],
           },

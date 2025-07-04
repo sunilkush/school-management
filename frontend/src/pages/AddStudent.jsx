@@ -1,8 +1,12 @@
 import React from 'react'
 
+import AdmissionForm from '../components/forms/AdmissionForm'
+
 const AddStudent = () => {
   return (
-    <div>AddStudent</div>
+    <div>
+      <AdmissionForm/>
+    </div>
   )
 }
 

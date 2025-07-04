@@ -4,7 +4,8 @@ import {
     getStudents,
     getStudentById,
     updateStudent,
-    deleteStudent
+    deleteStudent,
+    getLastRegisteredStudent
 } from "../controllers/student.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -28,5 +29,6 @@ router.put("/:id", auth, roleMiddleware(ADMIN_ROLE), updateStudent);
 
 // ✅ Delete Student (Super Admin & Admin)
 router.delete("/:id", auth, roleMiddleware(ADMIN_ROLE), deleteStudent);
+router.get("/register/last",auth, getLastRegisteredStudent);
 
 export default router;

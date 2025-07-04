@@ -2,12 +2,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import roleReducer from "../features/roles/roleSlice";
 import schoolReducer from "../features/schools/schoolSlice";
 import authReducer from "../features/auth/authSlice";
-
+import studentReducer from "../features/students/studentSlice";
 const store = configureStore({
   reducer: {
     role: roleReducer,
     school: schoolReducer,
     auth: authReducer,
+    students: studentReducer,
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

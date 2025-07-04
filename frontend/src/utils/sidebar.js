@@ -76,6 +76,7 @@ export const sidebarMenu = {
         { title: "Add Parent", path: "schooladmin/users/parent/add", icon: User }, */
         { title: "All Users", path: "schooladmin/users", icon: Users },
         { title: "Add User", path: "schooladmin/user-create", icon: Users },
+        { title: "Student Admission", path: "schooladmin/admission", icon: Users },
       ],
     },
     {
