@@ -11,7 +11,8 @@ const AddSchool = () => {
           <AddSchoolForm />
         </div>
         <div className='w-full md:w-2/3 bg-white p-4 space-y-4  border rounded-md shadow-md'>
-        </div>
+          <h1 className='text-2xl font-bold'>Add School</h1>
+          <p className='text-gray-600'>Fill in the details below to add a new school.</p></div>
       </div>
     </div>
   )

@@ -74,7 +74,7 @@ const AddRoleForm = () => {
   };
 
   return (
-    <div className="p-4 w-full max-w-2xl mx-auto">
+    <div className="p-4 w-full max-w-2xl mx-auto bg-white shadow-md rounded-lg">
       <h2 className="text-xl font-bold mb-4">Create Role</h2>
 
       {successMessage && (
@@ -153,7 +153,7 @@ const AddRoleForm = () => {
               </select>
               <div className="flex gap-4 flex-wrap">
                 {actionOptions.map((action) => (
-                  <label key={action} className="flex items-center gap-1">
+                  <label key={action} className="flex items-center gap-1 capitalize">
                     <input
                     className="focus:outline-none focus:ring-2 focus:ring-purple-500"
                       type="checkbox"
@@ -172,7 +172,7 @@ const AddRoleForm = () => {
             <button
               type="button"
               onClick={addPermission}
-              className="bg-green-600 text-white px-3 py-1 rounded mt-2"
+              className="bg-green-600 text-white px-3 py-1 rounded mt-2 float-end"
             >
               Add Module
             </button>

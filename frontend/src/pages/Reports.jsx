@@ -36,8 +36,9 @@ const Report = () => {
   const exportCSV = () => {
     const headers = ["Name", "Status", "Created At"];
     const rows = filteredData.map((item) => [
+      console.log(item),
       item.name,
-      item.status || "N/A",
+      item.isActive ? "Active" : "Inactive",
       new Date(item.createdAt).toLocaleDateString(),
     ]);
 
@@ -104,7 +105,7 @@ const Report = () => {
                 <tr key={idx} className="border-t hover:bg-gray-50">
                   <td className="px-4 py-2">{item.name}</td>
                   <td className="px-4 py-2">
-                    {item.status || "N/A"}
+                    {item.isActive ? "Active" : "Inactive"}
                   </td>
                   <td className="px-4 py-2">
                     {new Date(item.createdAt).toLocaleDateString()}

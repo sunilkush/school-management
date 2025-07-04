@@ -14,7 +14,7 @@ const Admins = () => {
       dispatch(fetchAllUser());
     }, [dispatch]);
   
-    const handleDelete = (userId) => {
+    const handleEdit = (userId) => {
       if (userId === currentUser?._id) {
         alert('You cannot delete yourself.');
         return;
@@ -68,10 +68,10 @@ const Admins = () => {
         name: 'Actions',
         cell: (row) => (
           <button
-            onClick={() => handleDelete(row._id)}
+            onClick={() => handleEdit(row._id)}
             className="text-red-600 hover:text-red-800 font-semibold"
           >
-            Delete
+            Edit
           </button>
         ),
         ignoreRowClick: true,
@@ -97,6 +97,7 @@ const Admins = () => {
   return (
     <div> <h2 className="text-xl font-bold mb-3">Registered Users</h2>
           <DataTable
+            className={'min-w-full divide-y divide-gray-200 text-sm'}
             columns={columns}
             data={filteredUsers}
             progressPending={loading}

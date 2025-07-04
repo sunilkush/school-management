@@ -1,20 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link,  useNavigate } from 'react-router-dom'
 import {
     User, Mail, Bell, Settings, LogOut, ChevronDown
 } from 'lucide-react';
 import { logout } from '../../features/auth/authSlice'
 import { useDispatch, useSelector } from 'react-redux'
+
 const UserDropdown = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef();
     const { user } = useSelector((state) => state.auth)
+    const rolePath = user?.role?.name.toLowerCase().replace(' ', '');
     const handleLogout = () => {
         dispatch(logout())
         navigate('/')
     }
+    
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -65,16 +68,16 @@ const UserDropdown = () => {
 
                     {/* Menu Items */}
                     <div className="flex flex-col gap-2 text-sm">
-                        <Link to={'profile'} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
+                        <Link to={`/dashboard/${rolePath}/profile`} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
                             <User size={16} /> Profile
                         </Link>
-                        <Link to={'messages'} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
+                        <Link to={`/dashboard/${rolePath}/message`} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
                             <Mail size={16} /> Message
                         </Link>
-                        <Link to={'notifications'} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
+                        <Link to={`/dashboard/${rolePath}/notification`} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
                             <Bell size={16} /> Notification
                         </Link>
-                        <Link to={'settings'} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
+                        <Link to={`/dashboard/${rolePath}/settings`} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100 text-gray-700">
                             <Settings size={16} /> Settings
                         </Link>
                     </div>

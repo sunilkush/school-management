@@ -67,6 +67,7 @@ export const sidebarMenu = {
 
   'school admin': [
     { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
+   
     {
       title: "Users", icon: Users,
       subMenu: [
@@ -159,6 +160,7 @@ export const sidebarMenu = {
     { title: "Attendance", path: "teacher/attendance", icon: UserCheck },
     { title: "Exams", path: "teacher/exams", icon: GraduationCap },
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
+    { title: "Communication", path: "teacher/communication", icon: MessageCircle },
     { title: "Communication", path: "teacher/communication", icon: MessageCircle },
   ],
 

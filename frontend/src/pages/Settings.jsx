@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useState, useEffect } from "react";
+import {  useDispatch, useSelector } from "react-redux";
 import { updateProfile } from "../features/auth/authSlice";
 import { fetchRoles } from "../features/roles/roleSlice";
 import { fetchSchools } from "../features/schools/schoolSlice";
 
 const Settings = () => {
+  useSelector
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { roles } = useSelector((state) => state.roles);
-  const { schools } = useSelector((state) => state.schools);
+  const { roles } = useSelector((state) => state.role);
+  const { schools } = useSelector((state) => state.school);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -65,7 +66,7 @@ const Settings = () => {
 
   return (
     <div className="p-6 space-y-10 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold text-blue-700">Super Admin Settings</h1>
+      <h1 className="text-3xl font-bold text-blue-700">{user?.role?.name} Settings</h1>
 
       {/* Profile Settings */}
       <div className="space-y-4 border p-5 rounded shadow-sm">
