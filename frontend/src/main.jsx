@@ -55,6 +55,7 @@ import GeneratePayslip from "./pages/GeneratePayslip.jsx";
 import SendNotification from "./pages/SendNotification.jsx";
 import SmsEmailHistory from "./pages/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
+import SchoolAdminReport from "./pages/schoolAdminReport.jsx";
 
 const router = createBrowserRouter([
   {
@@ -124,7 +125,7 @@ const router = createBrowserRouter([
               { path: "payroll/payslip", element: <GeneratePayslip /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
-              { path: "reports", element: <Reports /> },
+              { path: "reports", element: <SchoolAdminReport /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element:<Profile /> },
