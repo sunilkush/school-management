@@ -2,14 +2,16 @@ import {AcademicYear} from '../models/AcadmicYear.model.js';
 
 const createAcademicYear = async (req, res) => {
     try {
-      const { name, startDate, endDate, isActive } = req.body;
-  
+      const { name, startDate, endDate, isActive,schoolId } = req.body;
+      if (!name || !schoolId || !startDate || !endDate) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
       // Validate dates
       if (new Date(startDate) >= new Date(endDate)) {
         return res.status(400).json({ message: "Start date must be before end date" });
       }
   
-      const existing = await AcademicYear.findOne({ name });
+      const existing = await AcademicYear.findOne({ name, schoolId });
       if (existing) {
         return res.status(400).json({ message: "Academic Year already exists" });
       }
@@ -19,6 +21,7 @@ const createAcademicYear = async (req, res) => {
         startDate,
         endDate,
         isActive,
+        schoolId
       });
   
       res.status(201).json({ message: 'Academic Year created successfully', data: academicYear });
