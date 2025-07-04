@@ -29,7 +29,9 @@ const Permissions = () => {
   );
 
   // Prepare rows
-  const rows = allModules.map((module) => {
+  const rows = allModules
+  .sort((a, b) => a.localeCompare(b)) // <-- SORT HERE
+  .map((module) => {
     const row = { module };
     roles.forEach((role) => {
       const hasPerm = role.permissions?.some(
@@ -62,8 +64,10 @@ const Permissions = () => {
   ];
 
   return (
-    <div className="p-4">
-      <div className="mb-4 max-w-md">
+    <div className="p-4 space-y-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl">Check Parmissions</h2>
+      <div className="mt-4 max-w-md">
+        
         <label className="block mb-1 font-semibold">Select School:</label>
         <select
           value={selectedSchoolId}
@@ -79,18 +83,22 @@ const Permissions = () => {
         </select>
       </div>
 
-      <DataTable
-        title="Role-wise Permissions Matrix"
-        columns={columns}
-        data={rows}
-        striped
-        highlightOnHover
-        progressPending={loading}
-        pagination
-        dense
-        responsive
-        noDataComponent="No permissions found for selected school."
-      />
+      {/* Conditional rendering: show only if a school is selected */}
+      {selectedSchoolId && (
+        <DataTable
+          className="border border-gray-200"
+          title="Role-wise Permissions Matrix"
+          columns={columns}
+          data={rows}
+          striped
+          highlightOnHover
+          progressPending={loading}
+          pagination
+          dense
+          responsive
+          noDataComponent="No permissions found for selected school."
+        />
+      )}
     </div>
   );
 };
