@@ -29,7 +29,7 @@ const role = user?.role?.name.toLowerCase();
   }
 
   return (
-    <aside className="w-72  bg-white flex flex-col justify-between border-r shadow-sm overflow-hidden ">
+    <aside className="w-72  bg-white flex flex-col justify-between border-r shadow-sm overflow-hidden">
       <div>
         {/* Logo */}
         <div className="p-6 text-purple-600 font-bold text-xl flex items-center gap-2">

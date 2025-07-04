@@ -16,7 +16,7 @@ function SidebarMenu({ role }) {
 
   return (
     
-    <aside className="w-72 h-screen bg-white border-r p-4 pb-10 shadow-sm overflow-auto">
+    <aside className="w-72 h-screen bg-white border-r p-4 pb-28 shadow-sm overflow-auto">
       <nav className="space-y-2">
         {menuItems.map((item, index) => (
            

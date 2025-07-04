@@ -10,6 +10,7 @@ const Report = () => {
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState("All");
    const { schools } = useSelector((state) => state.school);
+   const { user } = useSelector((state)=>state.auth)
   const  dispatch = useDispatch();
   // Fetch all schools on mount 
     useEffect(()=>{
@@ -56,7 +57,7 @@ const Report = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Super Admin Report - Schools</h1>
+      <h1 className="text-2xl font-bold">{user?.role?.name} Report - Schools</h1>
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
