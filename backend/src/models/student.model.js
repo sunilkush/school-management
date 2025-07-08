@@ -1,144 +1,101 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 
-const studentSchema = new Schema(
-    {
-        userId: {
-            type: Schema.Types.ObjectId,
-            ref: "Users",
-            required: true,
-        },
-        registrationNumber: {
-            type: String,
-            unique: true,
-        },
-        class: {
-            type: Schema.Types.ObjectId,
-            ref: "Classes",
-            required: true,
-        },
-       
-        admissionDate: {
-            type: Date,
-            default: Date.now,
-        },
-        feeDiscount: {
-            type: Number, // percent discount
-        },
-        smsMobile: {
-            type: String,
-        },
-        otherInfo: {
-            dateOfBirth: {
-                type: Date,
-            },
-            birthFormId: {
-                type: String,
-            },
-            orphan: {
-                type: String,
-                enum: ["Yes", "No"],
-            },
-            gender: {
-                type: String,
-                enum: ["Male", "Female", "Other"],
-            },
-            cast: {
-                type: String,
-            },
-            osc: {
-                type: String,
-            },
-            identificationMark: {
-                type: String,
-            },
-            previousSchool: {
-                type: String,
-            },
-            religion: {
-                type: String,
-            },
-            bloodGroup: {
-                type: String,
-            },
-            previousId: {
-                type: String,
-            },
-            family: {
-                type: String,
-            },
-            disease: {
-                type: String,
-            },
-            notes: {
-                type: String,
-            },
-            siblings: {
-                type: Number,
-            },
-            address: {
-                type: String,
-            },
-        },
-        fatherInfo: {
-            name: {
-                type: String,
-            },
-            nationalId: {
-                type: String,
-            },
-            occupation: {
-                type: String,
-            },
-            education: {
-                type: String,
-            },
-            mobile: {
-                type: String,
-            },
-            profession: {
-                type: String,
-            },
-            income: {
-                type: String,
-            },
-        },
-        motherInfo: {
-            name: {
-                type: String,
-            },
-            nationalId: {
-                type: String,
-            },
-            occupation: {
-                type: String,
-            },
-            education: {
-                type: String,
-            },
-            mobile: {
-                type: String,
-            },
-            profession: {
-                type: String,
-            },
-            income: {
-                type: String,
-            },
-        },
-        status: {
-            type: String,
-            enum: ["Active", "Inactive"],
-            default: "Active",
-        },
-        schoolId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Schools", // or your actual school model name
-            required: true,
-        },
+const studentSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+      unique: true,
     },
-    {
-        timestamps: true,
-    }
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Schools",
+      required: true,
+    },
+    registrationNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    class: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Classes",
+      required: true,
+    },
+    section: {
+      type: String,
+    },
+    picture: {
+      type: String, // URL or file path
+    },
+    admissionDate: {
+      type: Date,
+      default: Date.now,
+    },
+    feeDiscount: {
+      type: Number,
+      default: 0,
+    },
+    smsMobile: {
+      type: String,
+    },
+
+    // 🟣 Other Info Section
+    dateOfBirth: Date,
+    birthFormId: String,
+    orphan: {
+      type: String,
+      enum: ["Yes", "No"],
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female"],
+    },
+    cast: String,
+    osc: String,
+    identificationMark: String,
+    previousSchool: String,
+    religion: String,
+    bloodGroup: String,
+    previousId: String,
+    family: String,
+    disease: String,
+    notes: String,
+    siblings: String,
+    address: String,
+
+    // 🟢 Father Info
+    fatherInfo: {
+      name: String,
+      NID: String,
+      occupation: String,
+      education: String,
+      mobile: String,
+      profession: String,
+      income: String,
+    },
+
+    // 🔵 Mother Info
+    motherInfo: {
+      name: String,
+      NID: String,
+      occupation: String,
+      education: String,
+      mobile: String,
+      profession: String,
+      income: String,
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "inactive", "alumni"],
+      default: "active",
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
-export const Student = mongoose.model("Student", studentSchema);
+export const Student = mongoose.model("Students", studentSchema);

@@ -15,10 +15,7 @@ export default function Sidebar() {
  const token = localStorage.getItem('accessToken');
 const { user } = useSelector((state) => state.auth);
 const role = user?.role?.name.toLowerCase();
-  const handleLogout = () => {
-    dispatch(logout())
-    navigate('/')
-  }
+  
 
   if (!token ) {
     return (
@@ -36,7 +33,7 @@ const role = user?.role?.name.toLowerCase();
           <div className="bg-purple-100 p-2 rounded-full">
             <Home size={20} />
           </div>
-          <span>Logo</span>
+          <span>{user?.school?.name}</span>
         </div>
         <hr className="border-gray-100" />
 

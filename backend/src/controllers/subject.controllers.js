@@ -4,24 +4,30 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subject } from "../models/subject.model.js";
 
 // ✅ Create a Subject (POST)
-const createSubject = asyncHandler(async (req, res) => {
-    const { schoolId, name, teacherId, classes } = req.body;
+ const createSubject = asyncHandler(async (req, res) => {
+    const { schoolId, name, teacherId } = req.body;
 
-    if ([schoolId, name, teacherId, classes].some(field => !field)) {
-        throw new ApiError(400, "All required fields must be provided.");
+    // Validate required fields
+    if (!schoolId || !name || !teacherId) {
+        throw new ApiError(400, "All fields (schoolId, name, teacherId) are required.");
     }
-
+    const exists = await Subject.findOne({ schoolId, name });
+    if (exists) {
+        throw new ApiError(409, "Subject with this name already exists for the school.");
+    }
+    // Create new subject
     const subject = new Subject({
         schoolId,
         name,
         teacherId,
-        classes
     });
 
+    // Save to DB
     const savedSubject = await subject.save();
 
     if (!savedSubject) {
-        throw new ApiError(500, "Subject not created!");
+        return res.status(500)
+        throw new ApiError(500, "Failed to create subject. Please try again.");
     }
 
     return res.status(201).json(
@@ -34,7 +40,7 @@ const getAllSubjects = asyncHandler(async (req, res) => {
     const subjects = await Subject.find()
         .populate("schoolId", "name")
         .populate("teacherId", "name email")
-        .populate("classes", "name");
+
 
     if (!subjects.length) {
         throw new ApiError(404, "No subjects found!");

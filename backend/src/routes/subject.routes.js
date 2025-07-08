@@ -11,12 +11,12 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 // ✅ Define Role-Based Access
-const ADMIN_ROLE = ["Super Admin", "Admin"];
-const TEACHER_ROLE = ["Super Admin", "Admin", "Teacher"];
-const ALL_ROLES = ["Super Admin", "Admin", "Teacher", "Student"];
+const ADMIN_ROLE = ["Super Admin", "School Admin"];
+const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
+const ALL_ROLES = ["Super Admin", "School Admin", "Teacher", "Student"];
 
 // ✅ Create Subject (Super Admin & Admin)
-router.post("/", auth, roleMiddleware(ADMIN_ROLE), createSubject);
+router.post("/create", auth, roleMiddleware(ADMIN_ROLE), createSubject);
 
 // ✅ Get All Subjects (Admin & Teacher)
 router.get("/", auth, roleMiddleware(TEACHER_ROLE), getAllSubjects);

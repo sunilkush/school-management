@@ -7,3 +7,5 @@ export  const generateNextRegNumber = (lastReg = "") => {
     }
     return "REG2025-101";
   };
+
+  

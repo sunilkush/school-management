@@ -1,8 +1,11 @@
 import React from 'react'
+import SubjectForm from '../components/forms/SubjectFrom'
 
 const Subjects = () => {
   return (
-    <div>Subjects</div>
+    <>
+     <SubjectForm/>
+    </>
   )
 }
 

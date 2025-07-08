@@ -12,6 +12,7 @@ const classSchema = new Schema({
     section: {
         type: String,
         required: true,
+        enum: ["A", "B", "C", "D"], 
     },
     teacherId: {
         type: Schema.Types.ObjectId,

@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastStudent } from "../../features/students/studentSlice";
 import { generateNextRegNumber } from "../../utils/genreateRegisterNo";
@@ -20,23 +20,28 @@ const Tab = ({ label, isActive, onClick }) => (
 const AdmissionForm = () => {
   const [activeTab, setActiveTab] = useState("Student Info");
   const { lastStudent, loading } = useSelector((state) => state.students);
-    const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     studentName: "",
-    registrationNumber: "",
-    class: "",
+    email: "",
+    password: "",
+    role: "student",
+    schoolId: user?.school?._id || "",
+    classId: "",
     section: "",
-    picture: null,
+    registrationNumber: "",
     admissionDate: new Date().toISOString().split("T")[0],
-    feeDiscount: "",
-    smsMobile: "",
+    feeDiscount: 0,
+    mobileNumber: "",
+    picture: null,
+
     dateOfBirth: "",
     birthFormId: "",
     orphan: "",
     gender: "",
-    cast: "",
-    osc: "",
+    caste: "",
+    isOSC: "",
     identificationMark: "",
     previousSchool: "",
     religion: "",
@@ -45,25 +50,26 @@ const AdmissionForm = () => {
     family: "",
     disease: "",
     notes: "",
-    siblings: "",
+    siblings: 0,
     address: "",
+
     fatherName: "",
-    fatherNID: "",
+    fatherNationalId: "",
     fatherOccupation: "",
     fatherEducation: "",
     fatherMobile: "",
     fatherProfession: "",
-    fatherIncome: "",
+    fatherIncome: 0,
+
     motherName: "",
-    motherNID: "",
+    motherNationalId: "",
     motherOccupation: "",
     motherEducation: "",
     motherMobile: "",
     motherProfession: "",
-    motherIncome: "",
-    schoolId:user?.school?._id
+    motherIncome: 0,
   });
-  console.log("Form Data:", formData);
+
   useEffect(() => {
     dispatch(fetchLastStudent());
   }, [dispatch]);
@@ -73,11 +79,13 @@ const AdmissionForm = () => {
       setFormData((prev) => ({
         ...prev,
         registrationNumber: nextReg,
+        role: lastStudent.role || "student", // ✅ Set role
       }));
     } else if (!loading) {
       setFormData((prev) => ({
         ...prev,
         registrationNumber: "REG2025-101", // default for first student
+        role: "student",
       }));
     }
   }, [lastStudent, loading]);
@@ -92,8 +100,12 @@ const AdmissionForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData);
-    alert("Form submitted successfully!");
+    const data = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      data.append(key, value);
+    });
+    // Dispatch or API call here
+    console.log("FormData ready:", data);
   };
 
   const inputClass =
@@ -120,47 +132,65 @@ const AdmissionForm = () => {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {activeTab === "Student Info" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Student Name</label>
               <input
                 name="studentName"
-                placeholder="Student Name"
                 value={formData.studentName}
                 onChange={handleChange}
                 className={inputClass}
                 required
               />
             </div>
-
             <div>
-              <label className={labelClass}>Last Registration</label>
+              <label className={labelClass}>Email</label>
               <input
-                name="registrationNumber"
-                placeholder="Last Registration"
-                value={formData.registrationNumber}
-                disabled
-                className={`${inputClass} bg-gray-100`}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Select Class</label>
-              <input
-                name="class"
-                placeholder="Select Class"
-                value={formData.class}
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleChange}
                 className={inputClass}
                 required
               />
             </div>
             <div>
-              <label className={labelClass}>Photo</label>
+              <label className={labelClass}>Password</label>
               <input
-                name="picture"
-                type="file"
+                name="password"
+                type="password"
+                value={formData.password}
                 onChange={handleChange}
                 className={inputClass}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Class</label>
+              <input
+                name="classId"
+                value={formData.classId}
+                onChange={handleChange}
+                className={inputClass}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Section</label>
+              <input
+                name="section"
+                value={formData.section}
+                onChange={handleChange}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Registration No.</label>
+              <input
+                name="registrationNumber"
+                value={formData.registrationNumber}
+                disabled
+                className={`${inputClass} bg-gray-100`}
               />
             </div>
             <div>
@@ -175,22 +205,29 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Fee Discount(%)</label>
+              <label className={labelClass}>Fee Discount (%)</label>
               <input
                 name="feeDiscount"
-                placeholder="Discount In Fee (%)"
+                type="number"
                 value={formData.feeDiscount}
                 onChange={handleChange}
                 className={inputClass}
               />
             </div>
-
             <div>
-              <label className={labelClass}> Mobile</label>
+              <label className={labelClass}>Mobile Number</label>
               <input
-                name="smsMobile"
-                placeholder="Mobile No. for SMS/WhatsApp"
-                value={formData.smsMobile}
+                name="mobileNumber"
+                value={formData.mobileNumber}
+                onChange={handleChange}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Photo</label>
+              <input
+                name="picture"
+                type="file"
                 onChange={handleChange}
                 className={inputClass}
               />

@@ -202,7 +202,10 @@ const RegisterForm = () => {
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <option value="">Select Role</option>
-          {filteredRoles.map((role) => (
+          {filteredRoles
+         .filter((role) => role.name.toLowerCase() !== "student")
+         .filter((role) => role.name.toLowerCase() !== "parent")
+          .map((role) => (
             <option key={role._id} value={role._id}>
               {role.name}
             </option>

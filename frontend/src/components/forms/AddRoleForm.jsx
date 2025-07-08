@@ -10,9 +10,9 @@ const AddRoleForm = () => {
   const [permissions, setPermissions] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
+  
   const { schools } = useSelector((state) => state.school);
-
+  console.log(name,schoolId,permissions)
   const roleOptions = [
     "School Admin",
     "Teacher",

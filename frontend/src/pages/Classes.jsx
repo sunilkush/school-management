@@ -1,8 +1,11 @@
 import React from 'react'
+import ClassForm from '../components/forms/ClassForm'
 
 function Classes() {
   return (
-    <div>Classes</div>
+    <>
+    <ClassForm/>
+    </>
   )
 }
 
