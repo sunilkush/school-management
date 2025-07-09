@@ -31,8 +31,7 @@ const generateAccessAndRefreshToken = async (userId) => {
  */
 // Register User (POST)
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password, roleId, schoolId, classId, parentId } =
-        req.body
+    const { name, email, password, roleId, schoolId, classId, parentId } = req.body
 
     if (
         [name, email, password, roleId, schoolId].some(
