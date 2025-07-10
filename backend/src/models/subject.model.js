@@ -4,7 +4,7 @@ const SubjectSchema = new Schema(
     {
         schoolId: {
             type: Schema.Types.ObjectId,
-            ref: 'School',
+            ref: 'Schools',
             required: true,
         },
         name: {
@@ -13,7 +13,7 @@ const SubjectSchema = new Schema(
         },
         teacherId: {
             type: Schema.Types.ObjectId,
-            ref: 'User',
+            ref: 'Users',
             required: true,
         },
         classes: [

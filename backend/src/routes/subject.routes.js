@@ -19,7 +19,7 @@ const ALL_ROLES = ["Super Admin", "School Admin", "Teacher", "Student"];
 router.post("/create", auth, roleMiddleware(ADMIN_ROLE), createSubject);
 
 // ✅ Get All Subjects (Admin & Teacher)
-router.get("/", auth, roleMiddleware(TEACHER_ROLE), getAllSubjects);
+router.get("/all", auth, roleMiddleware(TEACHER_ROLE), getAllSubjects);
 
 // ✅ Get Subject by ID (All Users)
 router.get("/:id", auth, roleMiddleware(ALL_ROLES), getSubject);

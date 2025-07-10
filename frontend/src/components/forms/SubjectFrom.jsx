@@ -6,7 +6,8 @@ import { createSubject } from "../../features/subject/subjectSlice";
 const SubjectForm = () => {
   const [message, setMessage] = useState("");
   const dispatch = useDispatch();
-
+  const { success, error } = useSelector((state) => state.subject);
+  
   // 🔁 Fetch all users on mount
   useEffect(() => {
     dispatch(fetchAllUser());
@@ -15,7 +16,7 @@ const SubjectForm = () => {
   // ✅ Get users from Redux
   const { users } = useSelector((state) => state.auth);
   const teachers = Array.isArray(users)
-    ? users.filter((user) => user?.role?.name === "Teacher")
+    ? users.filter((user) => user?.role?.name === "Teacher" && user?.school?._id === JSON.parse(localStorage.getItem("user"))?.school?._id)
     : [];
 
   // ✅ Get school ID from logged-in user in localStorage
@@ -32,7 +33,7 @@ const SubjectForm = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "name" ? value.toLowerCase() : value,
     }));
   };
 
@@ -52,9 +53,8 @@ const SubjectForm = () => {
         teacherId: "",
         schoolId, // preserve schoolId
       });
-
       // Clear message after 3 seconds
-      setTimeout(() => setMessage(""), 3000);
+      setTimeout(() => setMessage(success), 3000);
     }
   };
 
@@ -65,9 +65,15 @@ const SubjectForm = () => {
     >
       <h2 className="text-xl font-semibold">Create Subject</h2>
 
-      {message && (
+          {success && (
         <div className="bg-green-100 text-green-800 border border-green-300 rounded p-3">
-          {message}
+         {message || "Subject created successfully!"} 
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 text-red-800 border border-red-300 rounded p-3">
+          {error}
         </div>
       )}
 
@@ -77,7 +83,7 @@ const SubjectForm = () => {
         <input
           type="text"
           name="name"
-          value={formData.name}
+          value={formData.name.toLowerCase()}
           onChange={handleChange}
           placeholder="e.g. Science"
           required

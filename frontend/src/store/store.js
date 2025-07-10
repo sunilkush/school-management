@@ -10,7 +10,7 @@ const store = configureStore({
     school: schoolReducer,
     auth: authReducer,
     students: studentReducer,
-    subject:subjectReducer
+     subject: subjectReducer
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

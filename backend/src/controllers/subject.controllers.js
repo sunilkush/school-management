@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subject } from "../models/subject.model.js";
 
 // ✅ Create a Subject (POST)
- const createSubject = asyncHandler(async (req, res) => {
+const createSubject = asyncHandler(async (req, res) => {
     const { schoolId, name, teacherId } = req.body;
 
     // Validate required fields
@@ -13,7 +13,9 @@ import { Subject } from "../models/subject.model.js";
     }
     const exists = await Subject.findOne({ schoolId, name });
     if (exists) {
-        throw new ApiError(409, "Subject with this name already exists for the school.");
+        return res.status(400).json({
+            message: "Subject already exists!"
+        });
     }
     // Create new subject
     const subject = new Subject({

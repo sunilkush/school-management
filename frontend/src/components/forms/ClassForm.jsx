@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchAllUser } from '../../features/auth/authSlice';
+import { fetchAllSubjects } from '../../features/subject/subjectSlice';
 
-const ClassForm = ({ subjectList = [], teacherList = [], onSubmit }) => {
+const ClassForm = ({ teacherList = [], onSubmit }) => {
+  const dispatch = useDispatch();
+  const { users = [] } = useSelector((state) => state.auth);
+ const { subjectList = [] } = useSelector((state) => state.subject || {});
+ 
   const [formData, setFormData] = useState({
     name: '',
     section: '',
     teacherId: '',
     subjects: [],
+    schoolId: JSON.parse(localStorage.getItem('user'))?.school?._id || '',
   });
 
   const classList = [
@@ -13,27 +21,41 @@ const ClassForm = ({ subjectList = [], teacherList = [], onSubmit }) => {
     '7th', '8th', '9th', '10th', '11th', '12th',
   ];
 
+  useEffect(() => {
+    dispatch(fetchAllUser());
+    dispatch(fetchAllSubjects());
+  }, [dispatch]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubjectChange = (e) => {
-    const selected = Array.from(e.target.selectedOptions, option => option.value);
+    const selected = Array.from(e.target.selectedOptions, (option) => option.value);
     setFormData((prev) => ({ ...prev, subjects: selected }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (onSubmit) onSubmit(formData);
+
+    if (!formData.name || !formData.section || !formData.teacherId || formData.subjects.length === 0) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    if (onSubmit) {
+      onSubmit(formData);
+    }
   };
 
+  const teachersToShow = teacherList.length ? teacherList : users;
+
   return (
-    <form onSubmit={handleSubmit} className='w-full min-w-full space-y-6 bg-white rounded-lg shadow-lg p-6'>
-      <h2 className='text-2xl font-bold'>Add Class</h2>
+    <form onSubmit={handleSubmit} className="w-full space-y-6 bg-white rounded-lg shadow-lg p-6">
+      <h2 className="text-2xl font-bold">Add Class</h2>
 
-      <div className='grid grid-cols-4 gap-4'>
-
+      <div className="grid grid-cols-4 gap-4">
         {/* Class Name */}
         <div>
           <label className="block mb-1">Class Name</label>
@@ -41,7 +63,7 @@ const ClassForm = ({ subjectList = [], teacherList = [], onSubmit }) => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className='border px-2 py-2 w-full rounded-lg'
+            className="border px-2 py-2 w-full rounded-lg"
             required
           >
             <option value="">Select Class</option>
@@ -58,14 +80,13 @@ const ClassForm = ({ subjectList = [], teacherList = [], onSubmit }) => {
             name="section"
             value={formData.section}
             onChange={handleChange}
-            className='border px-2 py-2 w-full rounded-lg'
+            className="border px-2 py-2 w-full rounded-lg"
             required
           >
             <option value="">Select Section</option>
-            <option>A</option>
-            <option>B</option>
-            <option>C</option>
-            <option>D</option>
+            {['A', 'B', 'C', 'D'].map((section) => (
+              <option key={section} value={section}>{section}</option>
+            ))}
           </select>
         </div>
 
@@ -74,18 +95,17 @@ const ClassForm = ({ subjectList = [], teacherList = [], onSubmit }) => {
           <label className="block mb-1">Select Subjects</label>
           <select
             multiple
-            className='border px-2 py-2 w-full rounded-lg h-32'
             value={formData.subjects}
             onChange={handleSubjectChange}
+            className="border px-2 py-2 w-full rounded-lg h-32"
+            required
           >
-            {subjectList.length === 0 ? (
-              <option disabled>No subjects available. Please create subjects first.</option>
-            ) : (
-              subjectList.map((subj) => (
-                <option key={subj._id} value={subj._id}>
-                  {subj.name}
-                </option>
+            {Array.isArray(subjectList) ? (
+              subjectList.map((subject) => (
+                <div key={subject._id}>{subject.name}</div>
               ))
+            ) : (
+              <p>No subjects found</p>
             )}
           </select>
         </div>
@@ -97,14 +117,25 @@ const ClassForm = ({ subjectList = [], teacherList = [], onSubmit }) => {
             name="teacherId"
             value={formData.teacherId}
             onChange={handleChange}
-            className='border px-2 py-2 w-full rounded-lg'
+            className="border px-2 py-2 w-full rounded-lg"
+            required
           >
             <option value="">Select Teacher</option>
-            {teacherList.map((teacher) => (
-              <option key={teacher._id} value={teacher._id}>
-                {teacher.name}
-              </option>
-            ))}
+            {teachersToShow.length === 0 ? (
+              <option disabled>No teachers available</option>
+            ) : (
+              teachersToShow
+                .filter(
+                  (t) =>
+                    t.role?.name === "Teacher" &&
+                    t.school?._id === formData.schoolId
+                )
+                .map((teacher) => (
+                  <option key={teacher._id} value={teacher._id}>
+                    {teacher.name}
+                  </option>
+                ))
+            )}
           </select>
         </div>
       </div>
