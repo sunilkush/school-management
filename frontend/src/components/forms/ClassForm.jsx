@@ -6,8 +6,10 @@ import { fetchAllSubjects } from '../../features/subject/subjectSlice';
 const ClassForm = ({ teacherList = [], onSubmit }) => {
   const dispatch = useDispatch();
   const { users = [] } = useSelector((state) => state.auth);
- const { subjectList = [] } = useSelector((state) => state.subject || {});
- 
+  const { subjectList = [] } = useSelector((state) => state.subject || {});
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  
   const [formData, setFormData] = useState({
     name: '',
     section: '',
@@ -15,7 +17,7 @@ const ClassForm = ({ teacherList = [], onSubmit }) => {
     subjects: [],
     schoolId: JSON.parse(localStorage.getItem('user'))?.school?._id || '',
   });
-
+  console.log(formData);
   const classList = [
     '1st', '2nd', '3rd', '4th', '5th', '6th',
     '7th', '8th', '9th', '10th', '11th', '12th',
@@ -37,24 +39,56 @@ const ClassForm = ({ teacherList = [], onSubmit }) => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    debugger;
+  e.preventDefault();
 
-    if (!formData.name || !formData.section || !formData.teacherId || formData.subjects.length === 0) {
-      alert('Please fill in all required fields.');
-      return;
-    }
+  if (!formData.name || !formData.section || !formData.teacherId || formData.subjects.length === 0) {
+    setError("Please fill in all required fields.");
+    setMessage("");
+    return;
+  }
 
-    if (onSubmit) {
-      onSubmit(formData);
+  if (onSubmit) {
+    try {
+      onSubmit(formData); // assumes parent handles actual dispatch
+      setMessage("Class created successfully!");
+      setError("");
+      // Reset form
+      setFormData({
+        name: '',
+        section: '',
+        teacherId: '',
+        subjects: [],
+        schoolId: users?.school?._id
+      });
+
+      // Clear message after 3 seconds
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      setError("Something went wrong while creating class.");
+      setMessage("");
     }
-  };
+  }
+};
+
 
   const teachersToShow = teacherList.length ? teacherList : users;
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-6 bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-2xl font-bold">Add Class</h2>
+      <p className="text-gray-600">Please fill in the details below to create a new class.</p>
+      {message && (
+        <div className="bg-green-100 text-green-800 border border-green-300 rounded p-3 mb-4">
+          {message}
+        </div>
+      )}
 
+      {error && (
+        <div className="bg-red-100 text-red-800 border border-red-300 rounded p-3 mb-4">
+          {error}
+        </div>
+      )}
       <div className="grid grid-cols-4 gap-4">
         {/* Class Name */}
         <div>
@@ -94,18 +128,22 @@ const ClassForm = ({ teacherList = [], onSubmit }) => {
         <div>
           <label className="block mb-1">Select Subjects</label>
           <select
+            name="subjects"
             multiple
             value={formData.subjects}
             onChange={handleSubjectChange}
             className="border px-2 py-2 w-full rounded-lg h-32"
             required
           >
-            {Array.isArray(subjectList) ? (
+            <option disabled value="">Select subjects</option>
+            {Array.isArray(subjectList) && subjectList.length > 0 ? (
               subjectList.map((subject) => (
-                <div key={subject._id}>{subject.name}</div>
+                <option key={subject._id} value={subject._id}>
+                  {subject.name}
+                </option>
               ))
             ) : (
-              <p>No subjects found</p>
+              <option disabled>No subjects found</option>
             )}
           </select>
         </div>
