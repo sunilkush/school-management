@@ -125,27 +125,30 @@ const ClassForm = ({ teacherList = [], onSubmit }) => {
         </div>
 
         {/* Subjects */}
-        <div>
-          <label className="block mb-1">Select Subjects</label>
+        <div className="">
+          <label htmlFor="subjects" className="block text-sm font-medium text-gray-700 mb-1">
+            Select Subjects
+          </label>
           <select
+            id="subjects"
             name="subjects"
             multiple
             value={formData.subjects}
             onChange={handleSubjectChange}
-            className="border px-2 py-2 w-full rounded-lg h-32"
+            className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
             required
           >
-            <option disabled value="">Select subjects</option>
             {Array.isArray(subjectList) && subjectList.length > 0 ? (
               subjectList.map((subject) => (
-                <option key={subject._id} value={subject._id}>
+                <option key={subject._id} value={subject._id} className="text-gray-700">
                   {subject.name}
                 </option>
               ))
             ) : (
-              <option disabled>No subjects found</option>
+              <option disabled className="text-gray-400">No subjects found</option>
             )}
           </select>
+          <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</p>
         </div>
 
         {/* Teacher */}
