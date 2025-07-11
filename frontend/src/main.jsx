@@ -1,3 +1,6 @@
+import { PrimeReactProvider } from 'primereact/api';
+import Tailwind from 'primereact/passthrough/tailwind';
+import { twMerge } from 'tailwind-merge';
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import "./index.css";
@@ -89,10 +92,10 @@ const router = createBrowserRouter([
               { path: "modules/academicyears", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
-               { path: "settings", element: <SettingsPage /> },
+              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
             ],
           },
           {
@@ -132,10 +135,10 @@ const router = createBrowserRouter([
               { path: "reports", element: <SchoolAdminReport /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
-              { path: "admission", element:<AddStudent /> },
-              
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
+              { path: "admission", element: <AddStudent /> },
+
             ],
           },
           {
@@ -154,13 +157,13 @@ const router = createBrowserRouter([
               { path: "exams", element: <ScheduleExams /> },
               { path: "timetable", element: <ClassTimetable /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
-               { path: "settings", element: <SettingsPage /> },
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
+              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
-             
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
+
             ],
           },
           {
@@ -181,11 +184,11 @@ const router = createBrowserRouter([
               { path: "hostel", element: <HostelManagement /> },
               { path: "transport", element: <RoutesPage /> },
               { path: "fees", element: <FeeCategories /> },
-              
-               { path: "settings", element: <SettingsPage /> },
+
+              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
             ],
           },
           {
@@ -204,8 +207,8 @@ const router = createBrowserRouter([
               { path: "fees", element: <FeeCategories /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
             ],
           },
           {
@@ -223,8 +226,8 @@ const router = createBrowserRouter([
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
             ],
           },
           {
@@ -238,10 +241,10 @@ const router = createBrowserRouter([
               { index: true, element: <StaffDashboard /> },
               { path: "tasks", element: <Schedule /> },
               { path: "attendance", element: <StudentAttendance /> },
-               { path: "settings", element: <SettingsPage /> },
+              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element:<Profile /> },
-              { path: "notification", element:<Notification /> },
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
             ],
           },
         ],
@@ -250,8 +253,21 @@ const router = createBrowserRouter([
   },
 ]);
 
+  
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <RouterProvider router={router} />
+    <PrimeReactProvider
+      value={{
+        unstyled: true, // ✅ Must be true to apply Tailwind styles
+        pt: Tailwind,    // ✅ Add Tailwind preset
+        ptOptions: {
+          mergeSections: true,
+          mergeProps: true,
+          classNameMergeFunction: twMerge,
+        },
+      }}
+    >
+      <RouterProvider router={router} />
+    </PrimeReactProvider>
   </Provider>
 );

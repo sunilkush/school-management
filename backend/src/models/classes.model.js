@@ -3,7 +3,8 @@ import mongoose, { Schema } from "mongoose";
 const classSchema = new Schema({
     schoolId: {
         type: Schema.Types.ObjectId,
-        ref: "School"
+        ref: "Schools",
+        required: true,
     },
     name: {
         type: String,
@@ -16,18 +17,18 @@ const classSchema = new Schema({
     },
     teacherId: {
         type: Schema.Types.ObjectId,
-        ref: "User"
+        ref: "Users"
     },
     students: [
         {
             type: Schema.Types.ObjectId,
-            ref: "User"
+            ref: "Users"
         }
     ],
     subjects: [
         {
             type: Schema.Types.ObjectId,
-            ref: "Subject"
+            ref: "Subjects"
         }
     ]
 },

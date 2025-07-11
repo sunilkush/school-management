@@ -7,7 +7,7 @@ export const fetchAllClasses = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await axios.get(`${api}/all`, {
+            const res = await axios.get(`${api}/allClasses`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -31,6 +31,7 @@ export const createClass = createAsyncThunk(
                     Authorization: `Bearer ${token}`,
                 },
             });
+            console.log("Class created successfully:", res.data);
             return res.data;
         } catch (error) {
             return rejectWithValue(

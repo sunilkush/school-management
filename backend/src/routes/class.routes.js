@@ -11,12 +11,12 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 // Define roles
-const ADMIN_TEACHER = ["Super Admin", "Admin", "Teacher"];
-const ADMIN_ONLY = ["Super Admin", "Admin"];
+const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
+const ADMIN_ONLY = ["Super Admin", "School Admin"];
 
 // ✅ Class Routes (Protected)
-router.post("/", auth, roleMiddleware(ADMIN_ONLY), createClass);
-router.get("/", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
+router.post("/create", auth, roleMiddleware(ADMIN_ONLY), createClass);
+router.get("/allClasses", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
 router.get("/:id", auth, roleMiddleware(ADMIN_TEACHER), getClassById);
 router.put("/:id", auth, roleMiddleware(ADMIN_ONLY), updateClass);
 router.delete("/:id", auth, roleMiddleware(ADMIN_ONLY), deleteClass);

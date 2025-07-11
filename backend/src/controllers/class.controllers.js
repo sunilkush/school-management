@@ -5,15 +5,24 @@ import { Classes } from '../models/classes.model.js';
 
 const createClass = asyncHandler(async (req, res) => {
     try {
+        
         const { name, section, schoolId, teacherId, students, subjects } = req.body;
 
         if ([name, section].some((field) => typeof field === "string" && field.trim() === "") || !schoolId) {
-            throw new ApiError(400, "School ID, Class Name, and Section are required");
+            return res.status(404).json({
+                success: false,
+                message: "Name, section, and school ID are required fields"
+            })
+           
         }
 
         const existingClass = await Classes.findOne({ schoolId, name, section });
         if (existingClass) {
-            throw new ApiError(400, "Class with the same name and section already exists in this school");
+            return res.status(404).json({
+                success: false,
+                message: "Class with the same name and section already exists in this school"
+            });
+            
         }
 
         const newClass = new Classes({
@@ -28,14 +37,22 @@ const createClass = asyncHandler(async (req, res) => {
         const savedClass = await newClass.save();
 
         if (!savedClass) {
-            throw new ApiError(400, "Class was not created");
+            res.status(400).json({
+                success: false,
+                message: "Class was not created"
+            });
+            
         }
 
         return res.status(201).json(
             new ApiResponse(201, savedClass, "Class created successfully")
         );
     } catch (error) {
-        throw new ApiError(500, error.message || "Class creation failed");
+        return res.status(500).json({
+            success: false, 
+            message: error.message || "Class creation failed"
+        });
+       
     }
 });
 

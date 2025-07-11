@@ -87,5 +87,6 @@ const subjectSlice = createSlice({
 });
 
 
+// eslint-disable-next-line no-empty-pattern
 export const { } = subjectSlice.actions;
 export default subjectSlice.reducer

@@ -3,13 +3,20 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllUser } from '../../features/auth/authSlice';
 import { fetchAllSubjects } from '../../features/subject/subjectSlice';
 import { createClass } from '../../features/classes/classSlice';
+import { MultiSelect } from 'primereact/multiselect';
+import "primereact/resources/themes/lara-light-cyan/theme.css";
 const ClassForm = ({ teacherList = [] }) => {
   const dispatch = useDispatch();
+
   const { users = [] } = useSelector((state) => state.auth);
   const { subjectList = [] } = useSelector((state) => state.subject || {});
+  const classState = useSelector((state) => state.class || {});
+  const { loading, success, error: createError } = classState;
+
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     section: '',
@@ -17,7 +24,7 @@ const ClassForm = ({ teacherList = [] }) => {
     subjects: [],
     schoolId: JSON.parse(localStorage.getItem('user'))?.school?._id || '',
   });
-  console.log(formData);
+
   const classList = [
     '1st', '2nd', '3rd', '4th', '5th', '6th',
     '7th', '8th', '9th', '10th', '11th', '12th',
@@ -28,47 +35,59 @@ const ClassForm = ({ teacherList = [] }) => {
     dispatch(fetchAllSubjects());
   }, [dispatch]);
 
+  // ✅ Show message based on Redux state
+  useEffect(() => {
+    if (success) {
+      setMessage("Class created successfully!");
+      setError("");
+      setSelectedSubjects([]);
+      setFormData((prev) => ({
+        ...prev,
+        name: '',
+        section: '',
+        teacherId: '',
+        subjects: [],
+      }));
+      setTimeout(() => setMessage(""), 3000);
+    }
+    if (createError) {
+      setError(createError);
+      setMessage("");
+    }
+  }, [success, createError]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubjectChange = (e) => {
-    const selected = Array.from(e.target.selectedOptions, (option) => option.value);
-    setFormData((prev) => ({ ...prev, subjects: selected }));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const selectedSubjectIds = selectedSubjects.map((sub) => sub._id);
+
+    if (
+      !formData.name ||
+      !formData.section ||
+      !formData.teacherId ||
+      selectedSubjectIds.length === 0
+    ) {
+      setError("Please fill in all required fields.");
+      setMessage("");
+      return;
+    }
+
+    try {
+      const dataToSubmit = {
+        ...formData,
+        subjects: selectedSubjectIds,
+      };
+
+      await dispatch(createClass(dataToSubmit));
+    } catch (err) {
+      console.error("Dispatch error:", err);
+    }
   };
-
-  const handleSubmit =  (e) => {
-  e.preventDefault();
-
-  if (!formData.name || !formData.section || !formData.teacherId || formData.subjects.length === 0) {
-    setError("Please fill in all required fields.");
-    setMessage("");
-    return;
-  }
-
-  try {
-     dispatch(createClass(formData)); // fix: dispatch the action!
-
-    setMessage("Class created successfully!");
-    setError("");
-    setFormData({
-      name: '',
-      section: '',
-      teacherId: '',
-      subjects: [],
-      schoolId: JSON.parse(localStorage.getItem('user'))?.school?._id || ''
-    });
-
-    setTimeout(() => setMessage(""), 3000);
-  } catch (err) {
-    console.error(err);
-    setError("Something went wrong while creating class.");
-    setMessage("");
-  }
-};
-
-
 
   const teachersToShow = teacherList.length ? teacherList : users;
 
@@ -76,6 +95,7 @@ const ClassForm = ({ teacherList = [] }) => {
     <form onSubmit={handleSubmit} className="w-full space-y-6 bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-2xl font-bold">Add Class</h2>
       <p className="text-gray-600">Please fill in the details below to create a new class.</p>
+
       {message && (
         <div className="bg-green-100 text-green-800 border border-green-300 rounded p-3 mb-4">
           {message}
@@ -87,6 +107,7 @@ const ClassForm = ({ teacherList = [] }) => {
           {error}
         </div>
       )}
+
       <div className="grid grid-cols-4 gap-4">
         {/* Class Name */}
         <div>
@@ -95,7 +116,7 @@ const ClassForm = ({ teacherList = [] }) => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg"
+            className="border px-2 py-2 w-full rounded-lg border-gray-400"
             required
           >
             <option value="">Select Class</option>
@@ -112,7 +133,7 @@ const ClassForm = ({ teacherList = [] }) => {
             name="section"
             value={formData.section}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg"
+            className="border px-2 py-2 w-full rounded-lg border-gray-400"
             required
           >
             <option value="">Select Section</option>
@@ -123,30 +144,22 @@ const ClassForm = ({ teacherList = [] }) => {
         </div>
 
         {/* Subjects */}
-        <div className="">
-          <label htmlFor="subjects" className="block text-sm font-medium text-gray-700 mb-1">
+        <div>
+          <label className="block text-md font-medium text-gray-700 mb-1">
             Select Subjects
           </label>
-          <select
-            id="subjects"
-            name="subjects"
-            multiple
-            value={formData.subjects}
-            onChange={handleSubjectChange}
-            className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-            required
-          >
-            {Array.isArray(subjectList) && subjectList.length > 0 ? (
-              subjectList.map((subject) => (
-                <option key={subject._id} value={subject._id} className="text-gray-700">
-                  {subject.name}
-                </option>
-              ))
-            ) : (
-              <option disabled className="text-gray-400">No subjects found</option>
-            )}
-          </select>
-          <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</p>
+          <MultiSelect
+            value={selectedSubjects}
+            onChange={(e) => setSelectedSubjects(e.value)}
+            options={subjectList}
+            optionLabel="name"
+            placeholder="Select Subjects"
+            className="border px-2 pt-1 w-full  rounded-lg border-gray-400"
+            display="chip"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Hold Ctrl (Windows) or Cmd (Mac) to select multiple
+          </p>
         </div>
 
         {/* Teacher */}
@@ -156,25 +169,21 @@ const ClassForm = ({ teacherList = [] }) => {
             name="teacherId"
             value={formData.teacherId}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg"
+            className="border px-2 py-2 w-full rounded-lg border-gray-400"
             required
           >
             <option value="">Select Teacher</option>
-            {teachersToShow.length === 0 ? (
-              <option disabled>No teachers available</option>
-            ) : (
-              teachersToShow
-                .filter(
-                  (t) =>
-                    t.role?.name === "Teacher" &&
-                    t.school?._id === formData.schoolId
-                )
-                .map((teacher) => (
-                  <option key={teacher._id} value={teacher._id}>
-                    {teacher.name}
-                  </option>
-                ))
-            )}
+            {teachersToShow
+              .filter(
+                (t) =>
+                  t.role?.name === "Teacher" &&
+                  t.school?._id === formData.schoolId
+              )
+              .map((teacher) => (
+                <option key={teacher._id} value={teacher._id}>
+                  {teacher.name}
+                </option>
+              ))}
           </select>
         </div>
       </div>
@@ -184,8 +193,9 @@ const ClassForm = ({ teacherList = [] }) => {
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
         >
-          Create Class
+          {loading ? "Creating..." : "Create Class"}
         </button>
       </div>
     </form>

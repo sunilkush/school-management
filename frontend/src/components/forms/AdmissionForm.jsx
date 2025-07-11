@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastStudent } from "../../features/students/studentSlice";
 import { generateNextRegNumber } from "../../utils/genreateRegisterNo";
+import { fetchAllClasses } from "../../features/classes/classSlice";
 import { School } from "lucide-react";
 
 const Tab = ({ label, isActive, onClick }) => (
@@ -21,6 +22,8 @@ const AdmissionForm = () => {
   const [activeTab, setActiveTab] = useState("Student Info");
   const { lastStudent, loading } = useSelector((state) => state.students);
   const { user } = useSelector((state) => state.auth);
+  const { classes } = useSelector((state) => state.class);
+  console.log("Class:", classes);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     studentName: "",
@@ -72,6 +75,7 @@ const AdmissionForm = () => {
 
   useEffect(() => {
     dispatch(fetchLastStudent());
+    dispatch(fetchAllClasses());
   }, [dispatch]);
   useEffect(() => {
     if (lastStudent) {
