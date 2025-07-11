@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllUser } from '../../features/auth/authSlice';
 import { fetchAllSubjects } from '../../features/subject/subjectSlice';
-
-const ClassForm = ({ teacherList = [], onSubmit }) => {
+import { createClass } from '../../features/classes/classSlice';
+const ClassForm = ({ teacherList = [] }) => {
   const dispatch = useDispatch();
   const { users = [] } = useSelector((state) => state.auth);
   const { subjectList = [] } = useSelector((state) => state.subject || {});
@@ -38,8 +38,7 @@ const ClassForm = ({ teacherList = [], onSubmit }) => {
     setFormData((prev) => ({ ...prev, subjects: selected }));
   };
 
-  const handleSubmit = (e) => {
-    debugger;
+  const handleSubmit =  (e) => {
   e.preventDefault();
 
   if (!formData.name || !formData.section || !formData.teacherId || formData.subjects.length === 0) {
@@ -48,28 +47,27 @@ const ClassForm = ({ teacherList = [], onSubmit }) => {
     return;
   }
 
-  if (onSubmit) {
-    try {
-      onSubmit(formData); // assumes parent handles actual dispatch
-      setMessage("Class created successfully!");
-      setError("");
-      // Reset form
-      setFormData({
-        name: '',
-        section: '',
-        teacherId: '',
-        subjects: [],
-        schoolId: users?.school?._id
-      });
+  try {
+     dispatch(createClass(formData)); // fix: dispatch the action!
 
-      // Clear message after 3 seconds
-      setTimeout(() => setMessage(""), 3000);
-    } catch (err) {
-      setError("Something went wrong while creating class.");
-      setMessage("");
-    }
+    setMessage("Class created successfully!");
+    setError("");
+    setFormData({
+      name: '',
+      section: '',
+      teacherId: '',
+      subjects: [],
+      schoolId: JSON.parse(localStorage.getItem('user'))?.school?._id || ''
+    });
+
+    setTimeout(() => setMessage(""), 3000);
+  } catch (err) {
+    console.error(err);
+    setError("Something went wrong while creating class.");
+    setMessage("");
   }
 };
+
 
 
   const teachersToShow = teacherList.length ? teacherList : users;

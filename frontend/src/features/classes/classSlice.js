@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk,createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 const api = "http://localhost:9000/app/v1/class";
 // Create a new class
@@ -83,5 +83,6 @@ const classSlice = createSlice({
             });
     }
 })
-export const {  } = classSlice.actions;
+// eslint-disable-next-line no-empty-pattern
+export const {} = classSlice.actions;
 export default classSlice.reducer;
