@@ -2,7 +2,11 @@ import mongoose, { Schema } from "mongoose";
 
 
 const ExamSchema = new Schema(
-    {
+    {   academicYearId:{
+            type: Schema.Types.ObjectId,
+            ref: "AcademicYears",
+            required: true
+        },
         schoolId: {
             type: Schema.Types.ObjectId,
             ref: 'School',

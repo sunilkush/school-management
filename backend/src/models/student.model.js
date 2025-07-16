@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
+      academicYearId:{
+            type:Schema.Types.ObjectId,
+            ref: "AcademicYears",
+            required: true
+        },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",

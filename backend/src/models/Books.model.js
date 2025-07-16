@@ -1,31 +1,31 @@
 import mongoose, { Schema } from "mongoose";
 
-const BookSchema = new Schema(
-    {
-        schoolId: {
-            type: Schema.Types.ObjectId,
-            ref: 'School',
-            required: true,
-        },
-        title: {
-            type: String,
-            required: true,
-        },
-        author: {
-            type: String,
-            required: true,
-        },
-        ISBN: {
-            type: String,
-            required: true,
-        },
-        availableCopies: {
-            type: Number,
-            required: true,
-        },
+const bookSchema = new Schema({
+    title: { 
+        type: String, 
+        required: true, 
+        trim: true },
+    author: String,
+    publisher: String,
+    isbn: { 
+        type: String, 
+        unique: true, 
+        sparse: true },
+    category: String,
+    totalCopies: { type: Number, 
+        default: 1 },
+    availableCopies: { type: Number, 
+        default: 1 },
+    shelfLocation: String,
+    schoolId: {
+        type: Schema.Types.ObjectId,
+        ref: "Schools",
+        required: true,
     },
-    { timestamps: true }
-);
+    academicYearId: {
+        type: Schema.Types.ObjectId,
+        ref: "AcademicYears",
+    },
+}, { timestamps: true });
 
-
-export const Book = mongoose.model("Books", BookSchema)
+export const Book = mongoose.model("Books", bookSchema);
