@@ -1,3 +1,4 @@
+import mongoose, { Schema } from "mongoose";
 const issuedBookSchema = new Schema({
   bookId: {
     type: Schema.Types.ObjectId,

@@ -5,6 +5,7 @@ import authReducer from "../features/auth/authSlice";
 import studentReducer from "../features/students/studentSlice";
 import subjectReducer from "../features/subject/subjectSlice"
 import classReducer from "../features/classes/classSlice";
+import acadmicYearReducer from "../features/academicYear/acadmicYearSclice";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -12,7 +13,8 @@ const store = configureStore({
     auth: authReducer,
     students: studentReducer,
      subject: subjectReducer,
-     class: classReducer
+     class: classReducer,
+     acadmicYear : acadmicYearReducer
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

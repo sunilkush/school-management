@@ -16,7 +16,7 @@ export const fetchSchools = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-       console.log(res.data.data.schools)
+       
       return res.data.data.schools;
     } catch (error) {
       return rejectWithValue(

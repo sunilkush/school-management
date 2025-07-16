@@ -17,10 +17,10 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 //
 
 // Create
-router.post('/', auth, roleMiddleware(ALL_USERS), createAcademicYear);
+router.post('/create', auth, roleMiddleware(ALL_USERS), createAcademicYear);
 
 // Get all
-router.get('/', auth, roleMiddleware(ALL_USERS), getAllAcademicYears);
+router.get('/allYear', auth, roleMiddleware(ALL_USERS), getAllAcademicYears);
 
 // Get one by ID
 router.get('/:id', auth, roleMiddleware(ALL_USERS), getAcademicYearById);
