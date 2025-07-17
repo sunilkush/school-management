@@ -20,7 +20,8 @@
     "axios": "^1.9.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
-    "flowbite-react": "^0.11.7",
+    "flowbite": "^3.1.2",
+    "flowbite-react": "^0.11.9",
     "lucide-react": "^0.506.0",
     "primereact": "^10.9.6",
     "react": "^19.0.0",
@@ -44,7 +45,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "vite": "^6.2.0"
   }
