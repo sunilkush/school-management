@@ -2,15 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUser } from "../../features/auth/authSlice";
 import { createSubject } from "../../features/subject/subjectSlice";
+import { fetchAllAcadmicYears } from "../../features/academicYear/acadmicYearSclice";
 
 const SubjectForm = () => {
   const [message, setMessage] = useState("");
   const dispatch = useDispatch();
   const { success, error } = useSelector((state) => state.subject);
-  
+  const { acadmicYears } = useSelector((state) => state.acadmicYear);
+
   // 🔁 Fetch all users on mount
   useEffect(() => {
     dispatch(fetchAllUser());
+    dispatch(fetchAllAcadmicYears());
   }, [dispatch]);
 
   // ✅ Get users from Redux
@@ -27,6 +30,7 @@ const SubjectForm = () => {
     name: "",
     teacherId: "",
     schoolId: schoolId || "", // initial value set
+    academicYearId: "", // initial value set
   });
 
   const handleChange = (e) => {
@@ -36,7 +40,16 @@ const SubjectForm = () => {
       [name]: name === "name" ? value.toLowerCase() : value,
     }));
   };
-
+useEffect(() => {
+  if (success || error) {
+    const timer = setTimeout(() => {
+      setMessage("");
+      // Optional: Reset the Redux success/error here if you have an action like `resetSubjectState`
+      // dispatch(resetSubjectState());
+    }, 3000);
+    return () => clearTimeout(timer); // Cleanup
+  }
+}, [success, error]);
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -47,14 +60,14 @@ const SubjectForm = () => {
 
     if (formData.name && formData.teacherId) {
       dispatch(createSubject(formData));
-      
+      setMessage(success || "Subject created successfully!");
+
       setFormData({
         name: "",
         teacherId: "",
-        schoolId, // preserve schoolId
+        schoolId,
+        academicYearId: "",
       });
-      // Clear message after 3 seconds
-      setTimeout(() => setMessage(success), 3000);
     }
   };
 
@@ -65,9 +78,9 @@ const SubjectForm = () => {
     >
       <h2 className="text-xl font-semibold">Create Subject</h2>
 
-          {success && (
+      {success && (
         <div className="bg-green-100 text-green-800 border border-green-300 rounded p-3">
-         {message || "Subject created successfully!"} 
+          {message || "Subject created successfully!"}
         </div>
       )}
 
@@ -76,7 +89,28 @@ const SubjectForm = () => {
           {error}
         </div>
       )}
-
+      {/* Academic Year */}
+      <div>
+        <label className="block mb-1 font-medium">Academic Year</label>
+        <select
+          name="academicYearId"
+          value={formData.academicYearId}
+          onChange={handleChange}
+          required
+          className="w-full border rounded px-3 py-2">
+          <option value="">Select Academic Year</option>
+          {/* Map through academic years */}
+          {acadmicYears.length > 0 ? (
+            acadmicYears.map((t) => (
+              <option key={t._id} value={t._id}>
+                {t.name}
+              </option>
+            ))
+          ) : (
+            <option disabled>No acadmicYears available</option>
+          )}
+        </select>
+      </div>
       {/* Subject Name */}
       <div>
         <label className="block mb-1 font-medium">Subject Name</label>

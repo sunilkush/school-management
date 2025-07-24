@@ -22,6 +22,23 @@ export const createAcadmicYear = createAsyncThunk("acadmicYear/create",
         }
     });
 
+    export const fetchAllAcadmicYears = createAsyncThunk("acadmicYear/fetchAllAcadmicYears", async(_,{rejectWithValue})=>{
+        try {
+         
+            const token = localStorage.getItem("accessToken");
+            const response = await axios.get(`${API_URL}/allYear`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+            return response.data.data
+        }
+        catch (error) {
+            return rejectWithValue(
+                error?.response?.data?.message || "Failed to fetch academic years!")
+        }
+    })
 
     const acadmicYearSlice = createSlice({
         name:"acadmicYear",
@@ -45,7 +62,20 @@ export const createAcadmicYear = createAsyncThunk("acadmicYear/create",
                      state.loading = false;
                      state.error = action.payload || "failed to create academic year";
                      state.message = null;
-               })
+               });
+               builder.addCase(fetchAllAcadmicYears.pending,(state)=>{
+                     state.loading = true;
+                     state.error = null;
+                     state.message = null;
+               }).addCase(fetchAllAcadmicYears.fulfilled,(state,action)=>{
+                        state.loading = false;
+                        state.acadmicYears = action.payload;
+                        state.message = "Academic Years fetched successfully";
+               }).addCase(fetchAllAcadmicYears.rejected,(state,action)=>{
+                     state.loading = false;
+                     state.error = action.payload || "Failed to fetch academic years";
+                     state.message = null;
+               });
         } 
     })
 
