@@ -6,6 +6,7 @@ const api = "http://localhost:9000/app/v1/subject";
 // Create a new subject
 // This function will be called when the user submits the form to create a new subject
 export const createSubject = createAsyncThunk("subject/createSubject", async (SubjectDate, { rejectWithValue }) => {
+  debugger;
     try {
         const token = localStorage.getItem("accessToken")
         const res = await axios.post(`${api}/create`, SubjectDate, {

@@ -47,7 +47,7 @@ const SubjectForm = () => {
 
     if (formData.name && formData.teacherId) {
       dispatch(createSubject(formData));
-      setMessage();
+      
       setFormData({
         name: "",
         teacherId: "",

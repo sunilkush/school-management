@@ -1,34 +1,27 @@
-import { useNavigate } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
+import { Home } from 'lucide-react';
+import SidebarMenu from './SidebarMenu';
+import { useSelector } from 'react-redux';
 
+export default function Sidebar({ isOpen }) {
+  const token = localStorage.getItem('accessToken');
+  const { user } = useSelector((state) => state.auth);
+  const role = user?.role?.name?.toLowerCase();
 
-import { Home} from 'lucide-react'
-import { logout } from '../../features/auth/authSlice'
-import SidebarMenu from './SidebarMenu'
-
-
-export default function Sidebar() {
- 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-
- const token = localStorage.getItem('accessToken');
-const { user } = useSelector((state) => state.auth);
-const role = user?.role?.name.toLowerCase();
-  
-
-  if (!token ) {
+  if (!token) {
     return (
       <aside className="w-64 h-screen bg-white flex items-center justify-center">
         <span className="text-gray-400">Authenticating...</span>
       </aside>
-    )
+    );
   }
 
   return (
-    <aside className="w-72  bg-white flex flex-col justify-between border-r shadow-sm overflow-hidden">
+    <aside
+      className={`fixed top-0 left-0 h-full w-72 bg-white border-r shadow-md transition-transform duration-300 z-40
+      ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
+      md:translate-x-0 md:relative md:block`}
+    >
       <div>
-        {/* Logo */}
         <div className="p-6 text-purple-600 font-bold text-xl flex items-center gap-2">
           <div className="bg-purple-100 p-2 rounded-full">
             <Home size={20} />
@@ -36,13 +29,8 @@ const role = user?.role?.name.toLowerCase();
           <span>{user?.school?.name}</span>
         </div>
         <hr className="border-gray-100" />
-
-        {/* Navigation */}
-        <SidebarMenu role={role}/>
-        
+        <SidebarMenu role={role} />
       </div>
-
-     
     </aside>
-  )
+  );
 }
