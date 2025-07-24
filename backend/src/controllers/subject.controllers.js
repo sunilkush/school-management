@@ -5,7 +5,7 @@ import { Subject } from "../models/subject.model.js";
 
 // ✅ Create a Subject (POST)
 const createSubject = asyncHandler(async (req, res) => {
-    const { schoolId, name, teacherId } = req.body;
+    const { schoolId, name, teacherId,academicYearId } = req.body;
 
     // Validate required fields
     if (!schoolId || !name || !teacherId) {
@@ -19,6 +19,7 @@ const createSubject = asyncHandler(async (req, res) => {
     }
     // Create new subject
     const subject = new Subject({
+        academicYearId,
         schoolId,
         name,
         teacherId,

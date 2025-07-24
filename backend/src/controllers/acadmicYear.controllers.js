@@ -67,7 +67,6 @@ const createAcademicYear = async (req, res) => {
       if (!academicYear) {
         return res.status(404).json({ message: 'Academic Year not found' });
       }
-  
       academicYear.name = name || academicYear.name;
       academicYear.startDate = startDate || academicYear.startDate;
       academicYear.endDate = endDate || academicYear.endDate;

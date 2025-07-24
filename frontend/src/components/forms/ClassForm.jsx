@@ -72,8 +72,10 @@ const ClassForm = ({ teacherList = [] }) => {
       !formData.teacherId ||
       selectedSubjectIds.length === 0
     ) {
-      setError("Please fill in all required fields.");
+     setTimeout(()=>{
+       setError("Please fill in all required fields.");
       setMessage("");
+     },3000)
       return;
     }
 
