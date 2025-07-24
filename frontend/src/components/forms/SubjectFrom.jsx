@@ -2,18 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUser } from "../../features/auth/authSlice";
 import { createSubject } from "../../features/subject/subjectSlice";
-import { fetchAllAcadmicYears } from "../../features/academicYear/acadmicYearSclice";
+
 
 const SubjectForm = () => {
   const [message, setMessage] = useState("");
   const dispatch = useDispatch();
   const { success, error } = useSelector((state) => state.subject);
-  const { acadmicYears } = useSelector((state) => state.acadmicYear);
+
 
   // 🔁 Fetch all users on mount
   useEffect(() => {
     dispatch(fetchAllUser());
-    dispatch(fetchAllAcadmicYears());
+   
   }, [dispatch]);
 
   // ✅ Get users from Redux
@@ -30,7 +30,7 @@ const SubjectForm = () => {
     name: "",
     teacherId: "",
     schoolId: schoolId || "", // initial value set
-    academicYearId: "", // initial value set
+   
   });
 
   const handleChange = (e) => {
@@ -89,28 +89,7 @@ useEffect(() => {
           {error}
         </div>
       )}
-      {/* Academic Year */}
-      <div>
-        <label className="block mb-1 font-medium">Academic Year</label>
-        <select
-          name="academicYearId"
-          value={formData.academicYearId}
-          onChange={handleChange}
-          required
-          className="w-full border rounded px-3 py-2">
-          <option value="">Select Academic Year</option>
-          {/* Map through academic years */}
-          {acadmicYears.length > 0 ? (
-            acadmicYears.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.name}
-              </option>
-            ))
-          ) : (
-            <option disabled>No acadmicYears available</option>
-          )}
-        </select>
-      </div>
+     
       {/* Subject Name */}
       <div>
         <label className="block mb-1 font-medium">Subject Name</label>
