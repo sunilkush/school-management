@@ -28,8 +28,10 @@ const createSubject = asyncHandler(async (req, res) => {
     const savedSubject = await subject.save();
 
     if (!savedSubject) {
-        return res.status(500)
-        throw new ApiError(500, "Failed to create subject. Please try again.");
+        return res.status(500).json({
+             message:"Failed to create subject. Please try again."
+        })
+        throw new ApiError(500,);
     }
 
     return res.status(201).json(
