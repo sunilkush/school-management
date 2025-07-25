@@ -20,6 +20,7 @@
     "axios": "^1.9.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
+    "flowbite-react": "^0.12.3",
     "lucide-react": "^0.506.0",
     "primereact": "^10.9.6",
     "react": "^19.0.0",
