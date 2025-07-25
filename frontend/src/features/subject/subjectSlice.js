@@ -1,8 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const api = "http://localhost:9000/app/v1/subject";
 
+const Api_Base_Url  = import.meta.env.API_BASE_URL
 // Create a new subject
 // This function will be called when the user submits the form to create a new subject
 export const createSubject = createAsyncThunk("subject/createSubject", async (SubjectDate, { rejectWithValue }) => {
@@ -10,7 +10,7 @@ export const createSubject = createAsyncThunk("subject/createSubject", async (Su
     try {
       
         const token = localStorage.getItem("accessToken")
-        const res = await axios.post(`${api}/create`, SubjectDate, {
+        const res = await axios.post(`${Api_Base_Url}/subject/create`, SubjectDate, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -27,7 +27,7 @@ export const createSubject = createAsyncThunk("subject/createSubject", async (Su
 export const fetchAllSubjects = createAsyncThunk("subject/fetchAllSubjects", async (_, { rejectWithValue }) => {
     try {
         const token = localStorage.getItem("accessToken")
-        const res = await axios.get(`${api}/all`, {
+        const res = await axios.get(`${Api_Base_Url}/subject/all`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

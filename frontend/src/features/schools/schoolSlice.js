@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const Api_Base_Url = import.meta.env.API_BASE_URL
 // Async thunk to fetch all schools
 export const fetchSchools = createAsyncThunk(
   "school/fetchSchools",
@@ -11,7 +12,7 @@ export const fetchSchools = createAsyncThunk(
         return rejectWithValue("No access token found. Please login again.");
       }
 
-      const res = await axios.get("http://localhost:9000/app/v1/school/getAllSchool", {
+      const res = await axios.get(`${Api_Base_Url}/school/getAllSchool`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -38,7 +39,7 @@ export const addSchool = createAsyncThunk(
       }
 
       const res = await axios.post(
-        "http://localhost:9000/app/v1/school/register",
+        `${Api_Base_Url}/school/register`,
         schoolData,
         {
           headers: {

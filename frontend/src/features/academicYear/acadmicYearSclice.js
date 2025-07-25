@@ -1,14 +1,14 @@
 import { createAsyncThunk ,createSlice} from "@reduxjs/toolkit";
 import axios from "axios";
+const Api_Base_Url = import.meta.env.API_BASE_URL
 
-const API_URL = "http://localhost:9000/app/v1/academicYear"; // Adjust the URL as needed
 export const createAcadmicYear = createAsyncThunk("acadmicYear/create",
     
     async ( formData, { rejectWithValue }) => {
         
         try {
             const token = localStorage.getItem("accessToken");
-            const response = await axios.post(`${API_URL}/create`,formData , {
+            const response = await axios.post(`${Api_Base_Url}/academicYear/create`,formData , {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     
@@ -26,7 +26,7 @@ export const createAcadmicYear = createAsyncThunk("acadmicYear/create",
         try {
          
             const token = localStorage.getItem("accessToken");
-            const response = await axios.get(`${API_URL}/allYear`,
+            const response = await axios.get(`${Api_Base_Url}/academicYear/allYear`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`

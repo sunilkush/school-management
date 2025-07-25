@@ -1,13 +1,14 @@
 import { createAsyncThunk,createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-const api = "http://localhost:9000/app/v1/class";
+
+const Api_Base_Url = import.meta.env.API_BASE_URL
 // Create a new class
 export const fetchAllClasses = createAsyncThunk(
     "class/fetchAllClasses",
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await axios.get(`${api}/allClasses`, {
+            const res = await axios.get(`${Api_Base_Url}/class/allClasses`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -26,7 +27,7 @@ export const createClass = createAsyncThunk(
     async (classData, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("accessToken");
-            const res = await axios.post(`${api}/create`, classData, {
+            const res = await axios.post(`${Api_Base_Url}/class/create`, classData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

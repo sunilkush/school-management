@@ -2,8 +2,8 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 // API base URL
-const API = "http://localhost:9000/app/v1/role";
 
+const Api_Base_Url = import.meta.env.API_BASE_URL
 // Thunks
 
 // 1. Fetch all roles
@@ -15,8 +15,8 @@ export const fetchRoles = createAsyncThunk(
       if (!token) throw new Error("No access token found");
 
       const endpoint = schoolId
-        ? `${API}/by-school?schoolId=${schoolId}`
-        : `${API}/getAllRoles`;
+        ? `${Api_Base_Url}/role/by-school?schoolId=${schoolId}`
+        : `${Api_Base_Url}/role/getAllRoles`;
 
       const res = await axios.get(endpoint, {
         headers: {
@@ -42,7 +42,7 @@ export const fetchRoleById = createAsyncThunk(
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${API}/getRole/${roleId}`, {
+      const res = await axios.get(`${Api_Base_Url}/role/getRole/${roleId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export const createRole = createAsyncThunk(
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.post(`${API}/createRole`, roleData, {
+      const res = await axios.post(`${Api_Base_Url}/role/createRole`, roleData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -87,7 +87,7 @@ export const fetchRoleBySchool = createAsyncThunk("role/fetchRoleBySchool",async
     const token = localStorage.getItem("accessToken");
     if (!token) throw new Error("No access token found");
 
-    const res = await axios.get(`${API}/by-school?schoolId=${schoolId}`, {
+    const res = await axios.get(`${Api_Base_Url}/role/by-school?schoolId=${schoolId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

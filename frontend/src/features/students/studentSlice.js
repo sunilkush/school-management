@@ -1,6 +1,9 @@
 import { createAsyncThunk,createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
+// Api Url
+const Api_Base_Url  = import.meta.env.API_BASE_URL
+
 export const fetchLastStudent = createAsyncThunk(
     "student/fetchLastStudent",
     async (_, { rejectWithValue }) => {
@@ -8,7 +11,7 @@ export const fetchLastStudent = createAsyncThunk(
             const token = localStorage.getItem("accessToken");
             if (!token) throw new Error("No access token found");
 
-            const res = await axios.get("http://localhost:9000/app/v1/student/register/last", {
+            const res = await axios.get(`${Api_Base_Url}/student/register/last`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",

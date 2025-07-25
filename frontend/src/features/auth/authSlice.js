@@ -7,7 +7,7 @@ const user = storedUser ? JSON.parse(storedUser) : null;
 const accessToken = localStorage.getItem('accessToken');
 
 // API endpoint
-const API = `http://localhost:9000/app/v1/user`;
+const Api_Base_Url = import.meta.env.API_BASE_URL
 
 // Register Thunk
 export const registerUser = createAsyncThunk(
@@ -15,7 +15,7 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await axios.post(`${API}/register`, userData, {
+      const res = await axios.post(`${Api_Base_Url}/user/register`, userData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -34,7 +34,7 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API}/login`, credentials);
+      const res = await axios.post(`${Api_Base_Url}/user/login`, credentials);
       const { user, accessToken } = res.data.data;
       return { user, accessToken };
     } catch (error) {
@@ -51,7 +51,7 @@ export const fetchAllUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await axios.get(`${API}/get_all_user`, {
+      const res = await axios.get(`${Api_Base_Url}/user/get_all_user`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -68,7 +68,7 @@ export const fetchAllUser = createAsyncThunk(
 export const updateProfile = createAsyncThunk("auth/updateProfile",async(userId,{rejectWithValue})=>{
   try {
      const token = localStorage.getItem('accessToken');
-     const res = await axios.patch(`${API}/update/${userId}`, {
+     const res = await axios.patch(`${Api_Base_Url}/user/update/${userId}`, {
       headers:{
         Authorization: `Bearer ${token}`,
       }
@@ -86,7 +86,7 @@ export const deleteUser = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await axios.patch(`${API}/delete/${userId}`, {}, {
+      const res = await axios.patch(`${Api_Base_Url}/user/delete/${userId}`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
