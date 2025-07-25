@@ -1,0 +1,6 @@
+[build]
+  functions = "netlify/functions"
+  publish = "src/views" # or your frontend build folder
+
+[dev]
+  functions = "netlify/functions"
