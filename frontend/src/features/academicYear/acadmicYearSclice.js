@@ -1,6 +1,8 @@
 import { createAsyncThunk ,createSlice} from "@reduxjs/toolkit";
 import axios from "axios";
-const Api_Base_Url = import.meta.env.API_BASE_URL
+const Api_Base_Url = import.meta.env.VITE_API_URL
+
+console.log(Api_Base_Url)
 
 export const createAcadmicYear = createAsyncThunk("acadmicYear/create",
     

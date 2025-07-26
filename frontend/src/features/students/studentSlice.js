@@ -2,7 +2,7 @@ import { createAsyncThunk,createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
 // Api Url
-const Api_Base_Url  = import.meta.env.API_BASE_URL
+const Api_Base_Url  = import.meta.env.VITE_API_URL
 
 export const fetchLastStudent = createAsyncThunk(
     "student/fetchLastStudent",

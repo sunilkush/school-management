@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const Api_Base_Url = import.meta.env.API_BASE_URL
+const Api_Base_Url = import.meta.env.VITE_API_URL
 // Async thunk to fetch all schools
 export const fetchSchools = createAsyncThunk(
   "school/fetchSchools",

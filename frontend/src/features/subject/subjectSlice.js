@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 
-const Api_Base_Url  = import.meta.env.API_BASE_URL
+const Api_Base_Url  = import.meta.env.VITE_API_URL
 // Create a new subject
 // This function will be called when the user submits the form to create a new subject
 export const createSubject = createAsyncThunk("subject/createSubject", async (SubjectDate, { rejectWithValue }) => {

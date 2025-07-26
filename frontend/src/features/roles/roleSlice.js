@@ -3,7 +3,7 @@ import axios from "axios";
 
 // API base URL
 
-const Api_Base_Url = import.meta.env.API_BASE_URL
+const Api_Base_Url = import.meta.env.VITE_API_URL
 // Thunks
 
 // 1. Fetch all roles

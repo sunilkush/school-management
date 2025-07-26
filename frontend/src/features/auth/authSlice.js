@@ -7,7 +7,7 @@ const user = storedUser ? JSON.parse(storedUser) : null;
 const accessToken = localStorage.getItem('accessToken');
 
 // API endpoint
-const Api_Base_Url = import.meta.env.API_BASE_URL
+const Api_Base_Url = import.meta.env.VITE_API_URL
 
 // Register Thunk
 export const registerUser = createAsyncThunk(
