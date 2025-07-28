@@ -156,7 +156,7 @@ const ClassForm = ({ teacherList = [] }) => {
             options={subjectList}
             optionLabel="name"
             placeholder="Select Subjects"
-            className="border px-2 pt-1 w-full  rounded-lg border-gray-400"
+            className="border px-2 pt-1 w-full md:w-full rounded-lg border-gray-400"
             display="chip"
           />
           <p className="text-xs text-gray-500 mt-1">

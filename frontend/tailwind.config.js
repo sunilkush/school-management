@@ -16,6 +16,7 @@ export default withMT({
         
       ],
   theme: {
+    
     extend: {
       fontFamily: {
         jost: ['"Jost"', 'sans-serif'],
