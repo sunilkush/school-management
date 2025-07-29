@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+
 import RegisterForm from '../components/forms/RegisterFrom';
 
 

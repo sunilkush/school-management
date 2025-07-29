@@ -16,7 +16,7 @@ function SidebarMenu({ role }) {
 
   return (
     
-    <aside className="w-72 h-screen bg-white border-r p-4 pb-28 shadow-sm overflow-auto">
+    <aside className="w-72 h-screen bg-white border-r p-4 pb-28 overflow-auto">
       <nav className="space-y-2">
         {menuItems.map((item, index) => (
            
@@ -26,7 +26,7 @@ function SidebarMenu({ role }) {
                 to={item.path}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 ${
-                    isActive ? "bg-purple-100 font-semibold" : "text-gray-700"
+                    isActive ? "bg-blue-100 font-semibold" : "text-gray-700"
                   }`
                 }
               >

@@ -8,9 +8,11 @@ dotenv.config()
 
 const auth = asyncHandler(async (req, res, next) => {
   try {
+    
+    debugger;
     const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
     if (!token) {
-     
+   
       return res.status(401).json(
        new ApiError(401, "Unauthorized Token !")
       )
@@ -21,6 +23,7 @@ const auth = asyncHandler(async (req, res, next) => {
     const user = await User.findById(decodeToken?._id).select("-password -refreshToken");
 
     if (!user) {
+      
        return res.status(401).json(
        new ApiError(401, "Invalid Access Request")
       )
@@ -30,6 +33,7 @@ const auth = asyncHandler(async (req, res, next) => {
     next()
 
   } catch (error) {
+     console.log("Auth Middleware Triggered");
      return res.status(401).json(
       new ApiError(401, error?.message || "Invalid access token")
       )
@@ -40,6 +44,7 @@ const auth = asyncHandler(async (req, res, next) => {
 
 const roleMiddleware = (allowedRoles) => {
   return async (req, res, next) => {
+
     let roleId = req?.user?.roleId?._id; // ✅ Extract _id
     console.log("Role ID:", roleId); // Debugging log
 

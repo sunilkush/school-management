@@ -4,7 +4,7 @@ import NotificationDropdown from './NotificationDropdown';
 
 const Topbar = ({ toggleSidebar, isOpen }) => {
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-white shadow-sm border-b transition-all duration-300">
+    <header className="flex items-center justify-between px-4 py-3 bg-white border-b transition-all duration-300">
       {/* Mobile Sidebar Toggle Button */}
       <button
         className="p-2 text-purple-600 block md:hidden"
