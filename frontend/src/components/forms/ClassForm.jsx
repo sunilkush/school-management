@@ -4,10 +4,10 @@ import { fetchAllUser } from '../../features/auth/authSlice';
 import { fetchAllSubjects } from '../../features/subject/subjectSlice';
 import { createClass } from '../../features/classes/classSlice';
 import { MultiSelect } from 'primereact/multiselect';
-//import "primereact/resources/themes/lara-light-cyan/theme.css";
+import "primereact/resources/themes/lara-light-cyan/theme.css";
 const ClassForm = ({ teacherList = [] }) => {
   const dispatch = useDispatch();
-
+  const [isOpen, setIsOpen] = useState(false);
   const { users = [] } = useSelector((state) => state.auth);
   const { subjectList = [] } = useSelector((state) => state.subject || {});
   const classState = useSelector((state) => state.class || {});
@@ -94,7 +94,9 @@ const ClassForm = ({ teacherList = [] }) => {
   const teachersToShow = teacherList.length ? teacherList : users;
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6 bg-white rounded-lg shadow-lg p-6">
+   <>
+   {isOpen && (
+     <form onSubmit={handleSubmit} className="w-full  bg-white rounded-lg border p-4 mb-4">
       <h2 className="text-2xl font-bold">Add Class</h2>
       <p className="text-gray-600">Please fill in the details below to create a new class.</p>
 
@@ -156,8 +158,10 @@ const ClassForm = ({ teacherList = [] }) => {
             options={subjectList}
             optionLabel="name"
             placeholder="Select Subjects"
-            className="border px-2 pt-0 w-full rounded-lg border-gray-400"
+            style={{ width: '100%', height: '45px' }}
+            panelClassName="z-50"
             display="chip"
+            className="border px-1 py-0 rounded-lg border-gray-400"
           />
           <p className="text-xs text-gray-500 mt-1">
             Hold Ctrl (Windows) or Cmd (Mac) to select multiple
@@ -201,6 +205,20 @@ const ClassForm = ({ teacherList = [] }) => {
         </button>
       </div>
     </form>
+   )}
+    
+    <div className='w-full bg-white p-4 border rounded-lg '>
+         <div className='grid grid-cols-2 gap-4 w-full items-center justify-between'>
+          <div><h4 className='text-xl font-bold'>Class List</h4></div>
+          <div>
+          <button 
+          onClick={()=>{setIsOpen(true)}} 
+          className="px-3 py-2 bg-light-blue-600 rounded-lg text-white hover:text-white hover:bg-blue-700 float-end"
+          >Add New Class</button>
+          </div>
+         </div>
+    </div>
+   </>
   );
 };
 

@@ -20,6 +20,7 @@ export default withMT({
     extend: {
       fontFamily: {
         jost: ['"Jost"', 'sans-serif'],
+        noto: ['"Noto Sans"', 'sans-serif'],
       },
     },
   },

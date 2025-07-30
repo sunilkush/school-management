@@ -19,6 +19,7 @@ const Tab = ({ label, isActive, onClick }) => (
 );
 
 const AdmissionForm = () => {
+
   const [activeTab, setActiveTab] = useState("Student Info");
   const { lastStudent, loading } = useSelector((state) => state.students);
   const { user } = useSelector((state) => state.auth);
@@ -114,9 +115,35 @@ const AdmissionForm = () => {
 
   const inputClass =
     "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500";
-  const tabList = ["Student Info", "Other Info", "Father Info", "Mother Info"];
+ 
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const tabList = ["Student Info", "Other Info", "Father Info", "Mother Info"];
+const tabFields = {
+  "Student Info": ["studentName", "email", "password", "classId", "admissionDate"],
+  "Other Info": ["dateOfBirth", "birthFormId", "gender", "religion"],
+  "Father Info": ["fatherName", "fatherOccupation", "fatherMobile"],
+  "Mother Info": ["motherName", "motherOccupation", "motherMobile"],
+};
+const isTabValid = () => {
+  const requiredFields = tabFields[activeTab] || [];
+  return requiredFields.every((field) => {
+    const value = formData[field];
+    return value !== undefined && value !== null && value.toString().trim() !== "";
+  });
+};
+const handleNext = () => {
+  const currentIndex = tabList.indexOf(activeTab);
+  if (currentIndex < tabList.length - 1) {
+    setActiveTab(tabList[currentIndex + 1]);
+  }
+};
 
+const handlePrevious = () => {
+  const currentIndex = tabList.indexOf(activeTab);
+  if (currentIndex > 0) {
+    setActiveTab(tabList[currentIndex - 1]);
+  }
+};
   return (
     <div className="max-w-5xl mx-auto bg-white shadow-md rounded-lg p-6">
       <h1 className="text-2xl font-bold mb-6">Student Admission Form</h1>
@@ -240,7 +267,7 @@ const AdmissionForm = () => {
         )}
 
         {activeTab === "Other Info" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Date Of Birth</label>
               <input
@@ -413,7 +440,7 @@ const AdmissionForm = () => {
         )}
 
         {activeTab === "Father Info" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Name</label>
               <input
@@ -488,7 +515,7 @@ const AdmissionForm = () => {
         )}
 
         {activeTab === "Mother Info" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Name</label>
               <input
@@ -562,14 +589,41 @@ const AdmissionForm = () => {
           </div>
         )}
 
-        <div className="text-right pt-6">
-          <button
-            type="submit"
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded"
-          >
-            Submit Admission
-          </button>
-        </div>
+        <div className="flex justify-between pt-6">
+  {tabList.indexOf(activeTab) > 0 && (
+    <button
+      type="button"
+      onClick={handlePrevious}
+      className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded"
+    >
+      Previous
+    </button>
+  )}
+
+  {tabList.indexOf(activeTab) < tabList.length - 1 ? (
+    <button
+      type="button"
+      onClick={handleNext}
+      disabled={!isTabValid()}
+      className={`${
+        isTabValid() ? "bg-purple-600 hover:bg-purple-700" : "bg-gray-300 cursor-not-allowed"
+      } text-white px-6 py-2 rounded`}
+    >
+      Next
+    </button>
+  ) : (
+    <button
+      type="submit"
+      disabled={!isTabValid()}
+      className={`${
+        isTabValid() ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 cursor-not-allowed"
+      } text-white px-6 py-2 rounded`}
+    >
+      Submit Admission
+    </button>
+  )}
+</div>
+
       </form>
     </div>
   );
