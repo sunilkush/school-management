@@ -69,7 +69,7 @@ const Settings = () => {
       <h1 className="text-3xl font-bold text-blue-700">{user?.role?.name} Settings</h1>
 
       {/* Profile Settings */}
-      <div className="space-y-4 border p-5 rounded shadow-sm">
+      <div className="space-y-4 border p-5 rounded bg-white">
         <h2 className="text-xl font-semibold">👤 Profile Settings</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input type="text" name="fullName" placeholder="Full Name" value={form.fullName} onChange={handleChange} className="border p-2 rounded" />
@@ -80,7 +80,7 @@ const Settings = () => {
       </div>
 
       {/* Preferences */}
-      <div className="space-y-4 border p-5 rounded shadow-sm">
+      <div className="space-y-4 border p-5 rounded bg-white">
         <h2 className="text-xl font-semibold">⚙️ Preferences</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <select name="theme" value={form.theme} onChange={handleChange} className="border p-2 rounded">
@@ -103,7 +103,7 @@ const Settings = () => {
       </div>
 
       {/* School Management */}
-      <div className="space-y-4 border p-5 rounded shadow-sm">
+      <div className="space-y-4 border p-5 rounded bg-white">
         <h2 className="text-xl font-semibold">🏫 School Management</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <select name="defaultRole" value={form.defaultRole} onChange={handleChange} className="border p-2 rounded">
@@ -125,7 +125,7 @@ const Settings = () => {
       </div>
 
       {/* Security */}
-      <div className="space-y-4 border p-5 rounded shadow-sm">
+      <div className="space-y-4 border p-5 rounded bg-white">
         <h2 className="text-xl font-semibold">🔐 Security</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input type="password" name="currentPassword" value={form.currentPassword} onChange={handleChange} placeholder="Current Password" className="border p-2 rounded" />
@@ -139,7 +139,7 @@ const Settings = () => {
       </div>
 
       {/* Communication */}
-      <div className="space-y-4 border p-5 rounded shadow-sm">
+      <div className="space-y-4 border p-5 rounded bg-white">
         <h2 className="text-xl font-semibold">📢 Communication</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="flex items-center gap-2">
@@ -156,7 +156,7 @@ const Settings = () => {
       </div>
 
       {/* Backup & Data */}
-      <div className="space-y-4 border p-5 rounded shadow-sm">
+      <div className="space-y-4 border p-5 rounded bg-white">
         <h2 className="text-xl font-semibold">💾 Backup & Data</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="flex items-center gap-2">
@@ -174,7 +174,7 @@ const Settings = () => {
       </div>
 
       {/* System Settings */}
-      <div className="space-y-4 border p-5 rounded shadow-sm">
+      <div className="space-y-4 border p-5 rounded bg-white">
         <h2 className="text-xl font-semibold">🛠️ System Settings</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input type="text" name="appName" value={form.appName} onChange={handleChange} className="border p-2 rounded" placeholder="App Name" />
