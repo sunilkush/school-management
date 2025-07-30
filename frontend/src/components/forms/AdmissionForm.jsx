@@ -136,7 +136,7 @@ const AdmissionForm = () => {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {activeTab === "Student Info" && (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Student Name</label>
               <input
