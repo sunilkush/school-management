@@ -158,7 +158,7 @@ const loginUser = asyncHandler(async (req, res) => {
             },
         },
     ])
-    console.log(userWithRole)
+   
     if (!userWithRole || userWithRole.length === 0) {
         return res.status(500).json({ message: 'User role aggregation failed' });
     }

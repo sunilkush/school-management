@@ -30,8 +30,8 @@ const UsersPage = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="">
+      <div className="bg-white p-6 rounded-lg border">
         <h1 className="text-2xl font-bold mb-4">Users Management</h1>
 
         <div className="mb-4">

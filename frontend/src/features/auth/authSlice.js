@@ -7,7 +7,7 @@ const user = storedUser ? JSON.parse(storedUser) : null;
 const accessToken = localStorage.getItem('accessToken');
 
 // API endpoint
-const Api_Base_Url = import.meta.env.VITE_API_URL
+const Api_Base_Url = import.meta.env.VITE_API_URL;
 
 // Register Thunk
 export const registerUser = createAsyncThunk(
@@ -22,9 +22,7 @@ export const registerUser = createAsyncThunk(
       });
       return res.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'User registration failed!'
-      );
+      return rejectWithValue(error.response?.data?.message || 'User registration failed!');
     }
   }
 );
@@ -38,14 +36,12 @@ export const login = createAsyncThunk(
       const { user, accessToken } = res.data.data;
       return { user, accessToken };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Login Failed'
-      );
+      return rejectWithValue(error.response?.data?.message || 'Login Failed');
     }
   }
 );
 
-// Get All Users
+// Fetch All Users
 export const fetchAllUser = createAsyncThunk(
   'auth/fetchAllUser',
   async (_, { rejectWithValue }) => {
@@ -58,29 +54,30 @@ export const fetchAllUser = createAsyncThunk(
       });
       return res.data.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to fetch users'
-      );
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
     }
   }
 );
-// Update User Profile
-export const updateProfile = createAsyncThunk("auth/updateProfile",async(userId,{rejectWithValue})=>{
-  try {
-     const token = localStorage.getItem('accessToken');
-     const res = await axios.patch(`${Api_Base_Url}/user/update/${userId}`, {
-      headers:{
-        Authorization: `Bearer ${token}`,
-      }
-     },)
-     return res.data.data;
-  } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to update profile' )
-  }
-})
 
-// Delete (Deactivate) User
+// Update Profile
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async ({ userId, userData }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.patch(`${Api_Base_Url}/user/update/${userId}`, userData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+    }
+  }
+);
+
+// Delete User
 export const deleteUser = createAsyncThunk(
   'auth/deleteUser',
   async (userId, { rejectWithValue }) => {
@@ -93,9 +90,26 @@ export const deleteUser = createAsyncThunk(
       });
       return res.data.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to delete user'
-      );
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete user');
+    }
+  }
+);
+
+// Get Current User Profile
+export const currentUser = createAsyncThunk(
+  'auth/currentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.get(`${Api_Base_Url}/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data;
+    } catch (error) {
+      console.log('currentUser error:', error.response?.data);
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
     }
   }
 );
@@ -110,11 +124,13 @@ const authSlice = createSlice({
     error: null,
     users: [],
     success: false,
+    profile: null,
   },
   reducers: {
     logout: (state) => {
       state.user = null;
       state.accessToken = null;
+      state.profile = null;
       localStorage.clear();
     },
     resetAuthState: (state) => {
@@ -124,7 +140,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // 🔐 Login
+      // Login
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -143,7 +159,7 @@ const authSlice = createSlice({
         localStorage.clear();
       })
 
-      // 📝 Register
+      // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.success = false;
@@ -152,35 +168,33 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state) => {
         state.loading = false;
         state.success = true;
-        state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.success = false;
-        state.error = action.payload || 'Something went wrong';
+        state.error = action.payload;
       })
 
-      // 📥 Fetch Users
+      // Fetch All Users
       .addCase(fetchAllUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchAllUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload || [];
+        state.users = action.payload;
       })
       .addCase(fetchAllUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
-      // ❌ Delete User
+      // Delete User
       .addCase(deleteUser.pending, (state) => {
         state.loading = true;
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Optionally remove from local state:
         state.users = state.users.map(user =>
           user._id === action.payload._id ? { ...user, isActive: false } : user
         );
@@ -188,19 +202,40 @@ const authSlice = createSlice({
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+
       // Update Profile
-      builder.addCase(updateProfile.pending, (state)=>{
+      .addCase(updateProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
-      }).addCase(updateProfile.fulfilled,(state,action)=>{
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
-        localStorage.setItem('user', JSON.stringify(action.payload));   
-      }).addCase(updateProfile.rejected,(state,action)=>{
-        state.loading = false;
-        state.error = action.payload || 'Failed to update profile';
+        localStorage.setItem('user', JSON.stringify(action.payload));
       })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Get Current User
+      .addCase(currentUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(currentUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+      })
+      .addCase(currentUser.rejected, (state, action) => {
+        state.loading = false;
+        state.profile = null;
+        state.user = null;
+        state.accessToken = null;
+        localStorage.clear();
+        state.error = action.payload;
+      });
   },
 });
 

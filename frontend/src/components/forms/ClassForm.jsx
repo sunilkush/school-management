@@ -4,7 +4,7 @@ import { fetchAllUser } from '../../features/auth/authSlice';
 import { fetchAllSubjects } from '../../features/subject/subjectSlice';
 import { createClass } from '../../features/classes/classSlice';
 import { MultiSelect } from 'primereact/multiselect';
-import "primereact/resources/themes/lara-light-cyan/theme.css";
+//import "primereact/resources/themes/lara-light-cyan/theme.css";
 const ClassForm = ({ teacherList = [] }) => {
   const dispatch = useDispatch();
 
@@ -156,7 +156,7 @@ const ClassForm = ({ teacherList = [] }) => {
             options={subjectList}
             optionLabel="name"
             placeholder="Select Subjects"
-            className="border px-2 pt-1 w-full md:w-full rounded-lg border-gray-400"
+            className="border px-2 pt-0 w-full rounded-lg border-gray-400"
             display="chip"
           />
           <p className="text-xs text-gray-500 mt-1">

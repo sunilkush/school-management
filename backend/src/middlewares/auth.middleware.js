@@ -8,18 +8,17 @@ dotenv.config()
 
 const auth = asyncHandler(async (req, res, next) => {
   try {
-    
-    debugger;
     const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
-    if (!token) {
    
+    if (!token) {
+     
       return res.status(401).json(
        new ApiError(401, "Unauthorized Token !")
       )
     }
 
     const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-
+    console.log(decodeToken)
     const user = await User.findById(decodeToken?._id).select("-password -refreshToken");
 
     if (!user) {
@@ -33,11 +32,10 @@ const auth = asyncHandler(async (req, res, next) => {
     next()
 
   } catch (error) {
-     console.log("Auth Middleware Triggered");
+     
      return res.status(401).json(
       new ApiError(401, error?.message || "Invalid access token")
       )
-    
   }
 
 })
