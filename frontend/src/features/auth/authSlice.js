@@ -77,6 +77,8 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+
+
 // Delete User
 export const deleteUser = createAsyncThunk(
   'auth/deleteUser',
