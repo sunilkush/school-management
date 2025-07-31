@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSelector,useDispatch } from 'react-redux';
 import { fetchSchools } from '../features/schools/schoolSlice';
 import { fetchAllUser } from '../features/auth/authSlice';
-import { createAcadmicYear } from '../features/academicYear/acadmicYearSclice';
+import { createAcademicYear } from '../features/academicYear/acadmicYearSclice';
 import { useEffect } from 'react';
 const AcademicYears = () => {
   const dispatch = useDispatch();
@@ -39,7 +39,7 @@ const AcademicYears = () => {
     e.preventDefault();
     // Handle form submission logic here
     try {
-    await dispatch(createAcadmicYear(formData)).unwrap();
+    await dispatch(createAcademicYear(formData)).unwrap();
     alert("Academic year created successfully!");
     setFromData({
       name: "",
