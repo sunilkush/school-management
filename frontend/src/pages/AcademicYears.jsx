@@ -1,130 +1,125 @@
-import { useState } from 'react';
-import { useSelector,useDispatch } from 'react-redux';
-import { fetchSchools } from '../features/schools/schoolSlice';
-import { fetchAllUser } from '../features/auth/authSlice';
-import { createAcademicYear } from '../features/academicYear/acadmicYearSclice';
-import { useEffect } from 'react';
-const AcademicYears = () => {
-  const dispatch = useDispatch();
-  const {user} = useSelector((state) => state.auth);
-  const {schools} = useSelector((state) => state.school);
-  const {loading, error, message} = useSelector((state) => state.acadmicYear);
-  
-  useEffect(()=>{
-    dispatch(fetchAllUser());
-    dispatch(fetchSchools());
-  },[dispatch])
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { createAcademicYear } from "../features/academicYear/academicYearSlice.js";
+import { fetchSchools } from "../features/schools/schoolSlice.js"; // Import your school fetching action
 
- useEffect(() => {
-  if (user?.role?.name === "School Admin") {
-    setFromData((prev) => ({ ...prev, schoolId: user?.school?._Id }));
-  }
-}, [user]);
-  const [formData, setFromData] = useState({
+const CreateAcademicYear = () => {
+  const dispatch = useDispatch();
+
+  const { loading, error, successMessage } = useSelector((state) => state.academicYear);
+  const { schools = [] } = useSelector((state) => state.school || {}); // assuming schoolSlice is connected
+
+  const [formData, setFormData] = useState({
     name: "",
     startDate: "",
     endDate: "",
-    schoolId: "",
-    isActive: false
-  })
+    isActive: false,
+    schoolId: "", // <-- new field
+  });
+
+  useEffect(() => {
+    dispatch(fetchSchools());
+  }, [dispatch]);
 
   const handleChange = (e) => {
-    const { name, value,type,checked } = e.target;
-     setFromData((prev)=>({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value
-     }))
-  }
-  const handleSubmit = async(e) => {
-    e.preventDefault();
-    // Handle form submission logic here
-    try {
-    await dispatch(createAcademicYear(formData)).unwrap();
-    alert("Academic year created successfully!");
-    setFromData({
-      name: "",
-      startDate: "",
-      endDate: "",
-      schoolId: user?.role?.name === "School Admin" ? user.schoolId : "",
-      isActive: false
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
     });
-  } catch (error) {
-    alert("Failed to create academic year: " + error);
-  }
-  }
-  return (
-    <div>{loading && <p>Loading...</p>}
-      <div className='w-full'>
-        <div className='w-full md:w-1/4 bg-white p-4 space-y-4 border rounded-md shadow-md'>
-          <h1 className='text-2xl font-bold'>Academic Years</h1>
-          <p className='text-gray-600'>Manage academic years for your institution.</p>
-          {error && <p className='text-red-500'>{error}</p>}
-          {message && <p className='text-green-500'>{message}</p>}
-          <form className='space-y-4' onSubmit={handleSubmit}>
-            <div>
-              <label>Academic Year Name</label>
-              <input type="text"
-              name ='name'
-                className='w-full border p-2 rounded'
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder='Enter Academic Year Name' />
-            </div>
-            <div className=''>
-              <label>Start Date</label>
-              <input type="date"
-                name='startDate'
-                placeholder='Enter Start Date'
-                value={formData.startDate}
-                onChange={handleChange}
-                required
-                className='w-full border p-2 rounded' />
-            </div>
-            <div className=''>
-              <label>End Date</label>
-              <input type="date"
-                name='endDate'
-                placeholder='Enter End Date'
-                value={formData.endDate}
-                onChange={handleChange}
-                required
-                className='w-full border p-2 rounded' />
-            </div>
-            <div>
-              <label>School</label>
-              <select
-                name='schoolId'
-                placeholder='Select School'
-              
-                required
-                value={formData.schoolId}
-                onChange={handleChange}
-                className={`w-full border p-2 rounded ${user?.role?.name === "School Admin" ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                disabled={user?.role?.name === "School Admin"}
-              >
-                <option value="">Select School</option>
-                {schools?.map((school) => (
-                  <option key={school._id} value={school._id}> {school.name}</option>) )}
-              </select>
-            </div>
-            <div>
-              <label className='flex items-center' htmlFor="isActive">
-                <input type="checkbox"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleChange}
-                  className='mr-2' />  <span>Is Active</span>
-              </label>
-            </div>
-            <div>
-              <button type='submit' className='bg-blue-500 text-white p-2 rounded'>Add Academic Year</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
+  };
 
-export default AcademicYears
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.schoolId) return alert("Please select a school");
+
+    dispatch(createAcademicYear(formData));
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mt-10">
+      <h2 className="text-xl font-semibold mb-4">Create Academic Year</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+
+        <div>
+          <label className="block font-medium">Select School</label>
+          <select
+            name="schoolId"
+            value={formData.schoolId}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            required
+          >
+            <option value="">-- Select School --</option>
+            {schools.map((school) => (
+              <option key={school._id} value={school._id}>
+                {school.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block font-medium">Academic Year Name</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            placeholder="2025-26"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Start Date</label>
+          <input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">End Date</label>
+          <input
+            type="date"
+            name="endDate"
+            value={formData.endDate}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            name="isActive"
+            checked={formData.isActive}
+            onChange={handleChange}
+            className="mr-2"
+          />
+          <label className="text-sm">Set as Active Academic Year</label>
+        </div>
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
+        >
+          {loading ? "Creating..." : "Create"}
+        </button>
+
+        {error && <p className="text-red-500 mt-2">{error}</p>}
+        {successMessage && <p className="text-green-600 mt-2">{successMessage}</p>}
+      </form>
+    </div>
+  );
+};
+
+export default CreateAcademicYear;

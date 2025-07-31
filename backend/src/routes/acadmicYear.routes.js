@@ -1,38 +1,36 @@
 import { Router } from "express";
 import {
-   deleteAcademicYear,
-    updateAcademicYear,
-    getAcademicYearById,
-    getAllAcademicYears,
-    createAcademicYear,
-    getActiveAcademicYear
-} from "../controllers/acadmicYear.controllers.js";
+  createAcademicYear,
+  getAllAcademicYears,
+  getActiveAcademicYear,
+  updateAcademicYear,
+  deleteAcademicYear
+} from '../controllers/acadmicYear.controllers.js';
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Role-Based Access Control
+// ✅ Role Groups
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
 const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"];
-//
 
-// Create
-router.post('/create', auth, roleMiddleware(ADMIN_ROLE), createAcademicYear);
+// ✅ Routes
 
-// Get all
-router.get('/allYear', auth, roleMiddleware(ADMIN_ROLE), getAllAcademicYears);
+// Create academic year
+router.post('/create', auth, roleMiddleware(ALL_USERS), createAcademicYear);
 
-// Get one by ID
-router.get('/:id', auth, roleMiddleware(ADMIN_ROLE), getAcademicYearById);
+// ⚠️ Move this above '/:schoolId' to prevent conflict
+// Get active academic year for a school
+router.get('/active/:schoolId', auth, roleMiddleware(ALL_USERS), getActiveAcademicYear);
 
-// Update
-router.put('/:id', auth, roleMiddleware(ADMIN_ROLE), updateAcademicYear);
+// Get all academic years for a school
+router.get('/:schoolId', auth, roleMiddleware(ALL_USERS), getAllAcademicYears);
 
-// Delete
-router.delete('/:id', auth, roleMiddleware(ADMIN_ROLE), deleteAcademicYear);
+// Update academic year
+router.put('/:id', auth, roleMiddleware(ALL_USERS), updateAcademicYear);
 
-// Get Active Academic Year
-router.get('/active', auth, roleMiddleware(ALL_USERS), getActiveAcademicYear);
+// Delete academic year
+router.delete('/:id', auth, roleMiddleware(ALL_USERS), deleteAcademicYear);
 
 export default router;
