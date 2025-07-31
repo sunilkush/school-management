@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-    deleteAcademicYear,
+   deleteAcademicYear,
     updateAcademicYear,
     getAcademicYearById,
     getAllAcademicYears,
@@ -18,19 +18,19 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 //
 
 // Create
-router.post('/create', auth, roleMiddleware(ALL_USERS), createAcademicYear);
+router.post('/create', auth, roleMiddleware(ADMIN_ROLE), createAcademicYear);
 
 // Get all
-router.get('/allYear', auth, roleMiddleware(ALL_USERS), getAllAcademicYears);
+router.get('/allYear', auth, roleMiddleware(ADMIN_ROLE), getAllAcademicYears);
 
 // Get one by ID
-router.get('/:id', auth, roleMiddleware(ALL_USERS), getAcademicYearById);
+router.get('/:id', auth, roleMiddleware(ADMIN_ROLE), getAcademicYearById);
 
 // Update
-router.put('/:id', auth, roleMiddleware(ALL_USERS), updateAcademicYear);
+router.put('/:id', auth, roleMiddleware(ADMIN_ROLE), updateAcademicYear);
 
 // Delete
-router.delete('/:id', auth, roleMiddleware(ALL_USERS), deleteAcademicYear);
+router.delete('/:id', auth, roleMiddleware(ADMIN_ROLE), deleteAcademicYear);
 
 // Get Active Academic Year
 router.get('/active', auth, roleMiddleware(ALL_USERS), getActiveAcademicYear);

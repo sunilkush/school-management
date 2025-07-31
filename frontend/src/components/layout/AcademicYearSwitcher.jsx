@@ -11,13 +11,15 @@ const AcademicYearSwitcher = ({ onChange }) => {
   // Safe selector with fallback
   const academicYearState = useSelector((state) => state.academicYear || {});
   const {
-    activeYear = null,
-    academicYears = [],
+    academicYears= [],
+    activeYear= null,
     loading = false,
   } = academicYearState;
-
+  console.log()
+  const {user} = useSelector((state)=>state.auth);
+  const schoolId = user?.school?._id
   useEffect(() => {
-    dispatch(fetchActiveAcademicYear());
+    dispatch(fetchActiveAcademicYear(schoolId));
     dispatch(fetchAllAcademicYears());
   }, [dispatch]);
 

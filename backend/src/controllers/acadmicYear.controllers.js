@@ -31,14 +31,29 @@ const createAcademicYear = async (req, res) => {
     }
   };
   // Get Active Academic Year
-  const getActiveAcademicYear = async (req, res) => {
+  // ✅ Get Active Academic Year
+const getActiveAcademicYear = async (req, res) => {
   try {
-    const activeYear = await AcademicYear.findOne({ isActive: true });
+    const { schoolId } = req.query;
+
+    if (!schoolId) {
+      return res.status(400).json({ error: "schoolId is required" });
+    }
+
+    const activeYear = await AcademicYear.findOne({
+      schoolId,
+      isActive: true
+    });
+
+    if (!activeYear) {
+      return res.status(404).json({ message: "No active academic year found" });
+    }
+
     res.json(activeYear);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-  };
+};
   // Get All Academic Years
   const getAllAcademicYears = async (req, res) => {
     try {

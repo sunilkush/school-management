@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { School } from "../../../../backend/src/models/school.model";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -38,10 +39,10 @@ export const fetchAllAcademicYears = createAsyncThunk(
 // ✅ Fetch Active Academic Year
 export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
-  async (_, { rejectWithValue }) => {
+  async (schoolId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${Api_Base_Url}/academicYear/Active`, {
+      const res = await axios.get(`${Api_Base_Url}/academicYear/active/${schoolId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return res.data;
