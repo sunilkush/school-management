@@ -7,6 +7,11 @@ const TransportSchema = new Schema(
             ref: 'School',
             required: true,
         },
+        academicYearId:{
+                    type: Schema.Types.ObjectId,
+                    ref: "AcademicYears",
+                    required: true
+                },
         busNumber: {
             type: String,
             required: true,

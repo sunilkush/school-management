@@ -4,7 +4,8 @@ import {
     updateAcademicYear,
     getAcademicYearById,
     getAllAcademicYears,
-    createAcademicYear
+    createAcademicYear,
+    getActiveAcademicYear
 } from "../controllers/acadmicYear.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -30,5 +31,8 @@ router.put('/:id', auth, roleMiddleware(ALL_USERS), updateAcademicYear);
 
 // Delete
 router.delete('/:id', auth, roleMiddleware(ALL_USERS), deleteAcademicYear);
+
+// Get Active Academic Year
+router.get('/active', auth, roleMiddleware(ALL_USERS), getActiveAcademicYear);
 
 export default router;

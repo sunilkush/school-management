@@ -1,5 +1,5 @@
-import {AcademicYear} from '../models/AcadmicYear.model.js';
-
+import {AcademicYear} from '../models/AcademicYear.model.js';
+// Create Academic Year
 const createAcademicYear = async (req, res) => {
     try {
       const { name, startDate, endDate, isActive,schoolId } = req.body;
@@ -30,7 +30,15 @@ const createAcademicYear = async (req, res) => {
       res.status(500).json({ message: 'Server Error', error: error.message });
     }
   };
-  
+  // Get Active Academic Year
+  const getActiveAcademicYear = async (req, res) => {
+  try {
+    const activeYear = await AcademicYear.findOne({ isActive: true });
+    res.json(activeYear);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+  };
   // Get All Academic Years
   const getAllAcademicYears = async (req, res) => {
     try {
@@ -98,10 +106,13 @@ const createAcademicYear = async (req, res) => {
     }
   };
 
+
+  
   export {
     deleteAcademicYear,
     updateAcademicYear,
     getAcademicYearById,
     getAllAcademicYears,
-    createAcademicYear
+    createAcademicYear,
+    getActiveAcademicYear
   }

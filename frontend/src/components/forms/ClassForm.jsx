@@ -5,9 +5,9 @@ import { fetchAllSubjects } from '../../features/subject/subjectSlice';
 import { createClass } from '../../features/classes/classSlice';
 import { MultiSelect } from 'primereact/multiselect';
 import "primereact/resources/themes/lara-light-cyan/theme.css";
-const ClassForm = ({ teacherList = [] }) => {
+const ClassForm = ({ teacherList = [] ,isOpen}) => {
   const dispatch = useDispatch();
-  const [isOpen, setIsOpen] = useState(false);
+
   const { users = [] } = useSelector((state) => state.auth);
   const { subjectList = [] } = useSelector((state) => state.subject || {});
   const classState = useSelector((state) => state.class || {});
@@ -207,17 +207,7 @@ const ClassForm = ({ teacherList = [] }) => {
     </form>
    )}
     
-    <div className='w-full bg-white p-4 border rounded-lg '>
-         <div className='grid grid-cols-2 gap-4 w-full items-center justify-between'>
-          <div><h4 className='text-xl font-bold'>Class List</h4></div>
-          <div>
-          <button 
-          onClick={()=>{setIsOpen(true)}} 
-          className="px-3 py-2 bg-light-blue-600 rounded-lg text-white hover:text-white hover:bg-blue-700 float-end"
-          >Add New Class</button>
-          </div>
-         </div>
-    </div>
+   
    </>
   );
 };

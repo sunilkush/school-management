@@ -6,6 +6,11 @@ const HostelSchema = new Schema(
             ref: 'School',
             required: true,
         },
+        academicYearId:{
+                    type: Schema.Types.ObjectId,
+                    ref: "AcademicYears",
+                    required: true
+                },
         studentId: {
             type: Schema.Types.ObjectId,
             ref: 'User',

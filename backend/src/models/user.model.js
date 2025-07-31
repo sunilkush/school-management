@@ -44,7 +44,12 @@ const userSchema = new Schema({
     },
     refreshToken: {
         type: String
-    }
+    },
+    academicYearId:{
+                type: Schema.Types.ObjectId,
+                ref: "AcademicYears",
+                required: true
+            },
 
 
 }, { timestamps: true }

@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 
 const reportSchema = new Schema({
+  academicYearId:{
+              type: Schema.Types.ObjectId,
+              ref: "AcademicYears",
+              required: true
+          },
   title: {
     type: String,
     required: true,

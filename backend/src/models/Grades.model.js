@@ -24,6 +24,11 @@ const GradeSchema = new Schema(
             ref: 'User',
             required: true,
         },
+        academicYearId:{
+            type: Schema.Types.ObjectId,
+            ref: "AcademicYears",
+            required: true
+        },
     },
     { timestamps: true }
 );

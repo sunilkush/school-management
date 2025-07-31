@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const acadmicYear = new Schema({
+const AcademicYearSchema = new Schema({
     name: {
         type: String,
         required: [true, 'Academic Year name is required'],
@@ -28,4 +28,4 @@ const acadmicYear = new Schema({
     
 })
 
-export const AcademicYear = mongoose.model('AcademicYears', acadmicYear)
+export const AcademicYear = mongoose.model('AcademicYears', AcademicYearSchema)
