@@ -1,23 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link,  useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom';
 import {
     User, Mail, Bell, Settings, LogOut, ChevronDown
 } from 'lucide-react';
-import { logout } from '../../features/auth/authSlice'
-import { useDispatch, useSelector } from 'react-redux'
+import { logout } from '../../features/auth/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 const UserDropdown = () => {
-    const dispatch = useDispatch()
-    const navigate = useNavigate()
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef();
-    const { user } = useSelector((state) => state.auth)
-    const rolePath = user?.role?.name.toLowerCase().replace(' ', '');
+    const { user } = useSelector((state) => state.auth);
+    const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, '') || 'user';
+
     const handleLogout = () => {
-        dispatch(logout())
-        navigate('/')
-    }
-    
+        dispatch(logout());
+        navigate('/');
+    };
+
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -34,11 +35,15 @@ const UserDropdown = () => {
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="flex items-center space-x-2 hover:text-primary"
             >
-                <img
-                    src={user.avatar}
-                    alt="avatar"
-                    className="w-8 h-8 rounded-full"
-                />
+                {user?.avatar ? (
+                    <img
+                        src={user.avatar}
+                        alt="avatar"
+                        className="w-8 h-8 rounded-full"
+                    />
+                ) : (
+                    <User className="w-8 h-8 rounded-full text-gray-500 bg-gray-200 p-1" />
+                )}
                 <ChevronDown className="w-4 h-4 text-gray-600" />
             </button>
 
@@ -46,23 +51,26 @@ const UserDropdown = () => {
                 <div className="absolute right-0 mt-3 w-60 bg-white rounded-xl shadow-lg border p-4 z-50">
                     {/* Header */}
                     <div className="flex items-start gap-3 border-b pb-3 mb-3 flex-col">
-                        <div className='flex gap-2'>
-                           <div>
-                             <img
-                            src={user.avatar}
-                            alt="User Avatar"
-                            className="w-10 h-10 rounded-full"
-                        />
-                           </div>
-                           <div>
-                             <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-                            <p className="text-xs text-gray-500">{user?.role?.name}</p>
-                           </div>
+                        <div className="flex gap-2">
+                            <div>
+                                {user?.avatar ? (
+                                    <img
+                                        src={user.avatar}
+                                        alt="User Avatar"
+                                        className="w-10 h-10 rounded-full"
+                                    />
+                                ) : (
+                                    <User className="w-10 h-10 rounded-full text-gray-500 bg-gray-200 p-2" />
+                                )}
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-gray-800">{user?.name || 'User'}</p>
+                                <p className="text-xs text-gray-500">{user?.role?.name || 'Role'}</p>
+                            </div>
                         </div>
-                       
+
                         <div className="text-center">
-                           
-                            <p className="text-xs text-gray-500 text-ellipsis overflow-hidden">{user?.email}</p>
+                            <p className="text-xs text-gray-500 text-ellipsis overflow-hidden">{user?.email || 'example@email.com'}</p>
                         </div>
                     </div>
 
