@@ -13,7 +13,7 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Role-Based Access Control
+// ✅ Role Groups
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
 const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"];
