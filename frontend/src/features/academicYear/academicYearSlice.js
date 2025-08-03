@@ -8,7 +8,7 @@ export const createAcademicYear = createAsyncThunk(
   "academicYear/create",
   async (data, { rejectWithValue }) => {
     try {
-   
+      debugger;
       const token = localStorage.getItem("accessToken");
       const response = await axios.post(`${Api_Base_Url}/academicYear/create`, data,{
         headers: { Authorization: `Bearer ${token}` },
@@ -24,6 +24,7 @@ export const createAcademicYear = createAsyncThunk(
 export const fetchAllAcademicYears = createAsyncThunk(
   "academicYear/fetchAll",
   async (schoolId, { rejectWithValue }) => {
+    
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(`${Api_Base_Url}/academicYear/${schoolId}`, {
@@ -40,16 +41,29 @@ export const fetchAllAcademicYears = createAsyncThunk(
 export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
   async (schoolId, { rejectWithValue }) => {
+    debugger;
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(`${Api_Base_Url}/academicYear/active/${schoolId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(response.data)
-      return response.data.data; 
+    
+      return response.data; 
 
     } catch (error) {
       return rejectWithValue(error?.response?.data?.message || "Failed to fetch active academic year");
+    }
+  }
+);
+
+export const setActiveAcademicYear = createAsyncThunk(
+  "academicYear/setActive",
+  async (academicYearId, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.patch(`/api/v1/academic-year/activate/${academicYearId}`);
+      return data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to set active academic year");
     }
   }
 );
@@ -110,8 +124,7 @@ const academicYearSlice = createSlice({
   .addCase(fetchActiveAcademicYear.rejected, (state, action) => {
     state.loading = false;
     state.error = action.payload || "Failed to load active year";
-  });
-  },
+  });}
 });
 
 export default academicYearSlice.reducer;

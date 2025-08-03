@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchActiveAcademicYear,
   fetchAllAcademicYears,
+  fetchActiveAcademicYear,
+  setActiveAcademicYear,
 } from "../../features/academicYear/academicYearSlice";
 
 const AcademicYearSwitcher = ({ onChange }) => {
@@ -15,7 +16,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
     activeYear = null,
     loading = false,
     error = null,
-  } = useSelector((state) => state.academicYear || {});
+  } = useSelector((state) => state.academicYear);
 
   useEffect(() => {
     if (schoolId) {
@@ -27,16 +28,22 @@ const AcademicYearSwitcher = ({ onChange }) => {
   const handleChange = (e) => {
     const selectedId = e.target.value;
     const selectedYear = academicYears.find((y) => y._id === selectedId);
-    if (onChange && selectedYear) {
-      onChange(selectedYear);
-    }
+    if (!selectedYear) return;
+
+    dispatch(setActiveAcademicYear(selectedId))
+      .unwrap()
+      .then(() => {
+        if (onChange) onChange(selectedYear);
+      })
+      .catch((err) => {
+        console.error("Failed to set active academic year:", err);
+        alert(err); // Or use toast
+      });
   };
 
   return (
     <div>
-      {loading && (
-        <p className="text-sm text-gray-500">Loading academic years...</p>
-      )}
+      {loading && <p className="text-sm text-gray-500">Loading academic years...</p>}
 
       {!loading && academicYears.length > 0 && (
         <select
@@ -48,7 +55,6 @@ const AcademicYearSwitcher = ({ onChange }) => {
             Select Academic Year
           </option>
           {academicYears.map((year) => {
-            // 🛡️ Defensive check to prevent errors
             if (!year || !year.startDate || !year.endDate) return null;
 
             const formattedStart = new Date(year.startDate).toLocaleDateString("en-IN", {

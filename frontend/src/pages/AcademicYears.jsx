@@ -33,7 +33,6 @@ const CreateAcademicYear = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.schoolId) return alert("Please select a school");
-
     dispatch(createAcademicYear(formData));
   };
 
@@ -72,7 +71,18 @@ const CreateAcademicYear = () => {
             required
           />
         </div>
-
+        <div>
+          <label className="block font-medium">Code</label>
+            <input
+            type="text"
+            name="code"
+            value={formData.code}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            placeholder="AY2025"
+            required
+          />
+        </div>
         <div>
           <label className="block font-medium">Start Date</label>
           <input

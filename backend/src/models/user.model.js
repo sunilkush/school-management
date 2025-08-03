@@ -27,7 +27,7 @@ const userSchema = new Schema({
     schoolId: {
         type: Schema.Types.ObjectId,
         ref: "School",
-        
+
     },
     classId: {
         type: Schema.Types.ObjectId,
@@ -45,13 +45,11 @@ const userSchema = new Schema({
     refreshToken: {
         type: String
     },
-    academicYearId:{
-                type: Schema.Types.ObjectId,
-                ref: "AcademicYears",
-                required: true
-            },
-
-
+    academicYearId: {
+        type: Schema.Types.ObjectId,
+        ref: "AcademicYears",
+       
+    },
 }, { timestamps: true }
 );
 
@@ -76,8 +74,8 @@ userSchema.methods.generateAccessToken = function () {
         _id: this._id,
         email: this.email,
         name: this.name,
-        roleId:this.roleId
-      
+        roleId: this.roleId
+
 
     },
         process.env.ACCESS_TOKEN_SECRET,

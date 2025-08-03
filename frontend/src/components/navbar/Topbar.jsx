@@ -2,7 +2,9 @@ import { Bell, MessageSquare, Search, Menu, X } from 'lucide-react';
 import UserDropdown from './UserDropdown';
 import NotificationDropdown from './NotificationDropdown';
 import AcademicYearSwitcher from '../layout/AcademicYearSwitcher';
+import { useSelector } from 'react-redux';
 const Topbar = ({ toggleSidebar, isOpen }) => {
+  const {user} = useSelector((state)=>state.auth)
   return (
     <header className="flex items-center justify-between px-4 py-3 bg-white border-b transition-all duration-300">
       {/* Mobile Sidebar Toggle Button */}
@@ -29,7 +31,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
 
       {/* Icons and Profile */}
       <div className="flex items-center gap-4 ml-auto">
-        <AcademicYearSwitcher onChange={(year) => console.log("Switched to:", year)} />
+       {user?.role?.name === "Super Admin" ? "" : <AcademicYearSwitcher onChange={(year) => console.log("Switched to:", year)} /> } 
 
         {/* Chat Icon */}
         <button className="relative text-gray-600 hover:text-black">

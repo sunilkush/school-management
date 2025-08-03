@@ -37,7 +37,7 @@ import issuedBookRoutes from "./routes/issuedBooks.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import RoleRoutes from "./routes/role.routes.js";
 import EmployeeRoutes from "./routes/employee.routes.js";
-import AcademicYear from "./routes/acadmicYear.routes.js";
+import AcademicYear from "./routes/academicYear.routes.js";
 
 // route
 app.use('/', indexRouter);

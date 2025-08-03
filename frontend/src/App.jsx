@@ -9,7 +9,7 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { profile } = useSelector(state => state.auth);
-  console.log(profile)
+  
   useEffect(() => {
     dispatch(currentUser());
   }, [dispatch]);

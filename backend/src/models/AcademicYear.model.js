@@ -20,36 +20,18 @@ const academicYearSchema = new mongoose.Schema(
     endDate: {
       type: Date,
       required: [true, "End date is required"],
-      validate: {
-        validator: function (value) {
-          return value > this.startDate;
-        },
-        message: "End date must be after start date",
-      },
     },
     isActive: {
       type: Boolean,
       default: false,
     },
-    description: {
-      type: String,
-      trim: true,
-      maxlength: 500,
-    },
-    school: {
+   
+    schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",
       required: true,
     },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
+    
     status: {
       type: String,
       enum: ["active", "inactive", "archived"],
@@ -61,7 +43,6 @@ const academicYearSchema = new mongoose.Schema(
   }
 );
 
-// Unique index on name + school for duplicate protection
-academicYearSchema.index({ name: 1, school: 1 }, { unique: true });
+
 
 export const AcademicYear = mongoose.model("AcademicYear", academicYearSchema);

@@ -150,7 +150,7 @@ const AddRoleForm = () => {
             ))}
           </select>
         </div>
-
+        
         {/* School */}
         <div>
           <label className="block mb-1">School <span className="text-red-700 text-xs">*</span></label>

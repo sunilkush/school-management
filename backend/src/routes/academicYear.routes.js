@@ -8,7 +8,7 @@ import {
  setActiveAcademicYear,
  getActiveAcademicYearBySchool
 
-} from "../controllers/acadmicYear.controllers.js";
+} from "../controllers/academicYear.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
