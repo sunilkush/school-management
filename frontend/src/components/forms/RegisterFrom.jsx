@@ -128,7 +128,7 @@ const RegisterForm = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-center text-gray-900">
+      <h2 className="text-2xl font-semibold text-center text-gray-900 mb-2">
         Register
       </h2>
       <p className="text-center text-sm text-gray-600 mb-6">
@@ -138,7 +138,8 @@ const RegisterForm = () => {
       {message && <p className="text-green-600 text-center">{message}</p>}
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="" onSubmit={handleSubmit}>
+        <label className="text-xs ">Name</label>
         <input
           name="name"
           onChange={handleChange}
@@ -148,7 +149,7 @@ const RegisterForm = () => {
           required
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-
+        <label className="text-xs ">Email</label>
         <input
           name="email"
           onChange={handleChange}
@@ -158,7 +159,7 @@ const RegisterForm = () => {
           required
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-
+       <label className="text-xs ">Password</label>
         <input
           name="password"
           onChange={handleChange}
@@ -168,7 +169,7 @@ const RegisterForm = () => {
           required
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-
+       <label className="text-xs ">Avatar</label>
         <input
           type="file"
           name="avatar"
@@ -176,8 +177,10 @@ const RegisterForm = () => {
           onChange={handleChange}
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-
+            
         {currentUserRole === "super admin" && (
+          <div>
+           <label className="text-xs">School Name</label>
           <select
             name="schoolId"
             value={formData.schoolId}
@@ -191,15 +194,15 @@ const RegisterForm = () => {
                 {school.name}
               </option>
             ))}
-          </select>
+          </select></div>
         )}
-
+        <label className="text-xs">Role </label>
         <select
           name="roleId"
           value={formData.roleId}
           onChange={handleChange}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-2"
         >
           <option value="">Select Role</option>
           {filteredRoles
@@ -212,7 +215,7 @@ const RegisterForm = () => {
           ))}
         </select>
 
-        <div className="flex items-center">
+        <div className="flex items-center mb-2">
           <input
             id="isActive"
             type="checkbox"

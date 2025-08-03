@@ -2,30 +2,50 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+
 // CREATE academic year
 export const createAcademicYear = asyncHandler(async (req, res) => {
-  const { name, code, startDate, endDate,  schoolId, isActive } = req.body;
-   console.log(req.body)
+  const { name, code, startDate, endDate, schoolId, isActive } = req.body;
+
   if (!name || !code || !startDate || !endDate || !schoolId) {
     throw new ApiError(400, "All required fields must be provided.");
   }
+
+  // Check if the same name OR same schoolId exists
+  const existingYear = await AcademicYear.findOne({
+    $or: [
+      { name: name.trim() },
+      { schoolId: schoolId.trim() }
+    ]
+  });
+
+  if (existingYear) {
+    return res.status(409).json({
+      success: false,
+      message: "Academic Year already exists with this name or school"
+    });
+  }
+
+  // Parse date from dd/mm/yyyy to Date object
   function parseDateString(dateStr) {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(`${year}-${month}-${day}`);
-}
-  const startDateF = parseDateString(req.body.startDate);
-  const endDateF = parseDateString(req.body.endDate);  
-  // Optional: Only one active year per school
+    const [day, month, year] = dateStr.split("/");
+    return new Date(`${year}-${month}-${day}`);
+  }
+
+  const startDateF = parseDateString(startDate);
+  const endDateF = parseDateString(endDate);
+
+  // Only one active year per school
   if (isActive) {
     await AcademicYear.updateMany({ schoolId }, { $set: { isActive: false } });
   }
 
   const academicYear = await AcademicYear.create({
-    name,
-    code,
-    startDate:startDateF,
-    endDate:endDateF,
-    schoolId,
+    name: name.trim(),
+    code: code.trim(),
+    startDate: startDateF,
+    endDate: endDateF,
+    schoolId: schoolId.trim(),
     isActive: !!isActive,
   });
 

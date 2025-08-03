@@ -64,7 +64,7 @@ const Permissions = () => {
   ];
 
   return (
-    <div className="p-4 space-y-6 bg-white rounded-lg shadow-md">
+    <div className="p-4 space-y-4 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl">Check Parmissions</h2>
       <div className="mt-4 max-w-md">
         
@@ -86,7 +86,7 @@ const Permissions = () => {
       {/* Conditional rendering: show only if a school is selected */}
       {selectedSchoolId && (
         <DataTable
-          className="border border-gray-200"
+          className="border border-gray-200 p-3"
           title="Role-wise Permissions Matrix"
           columns={columns}
           data={rows}

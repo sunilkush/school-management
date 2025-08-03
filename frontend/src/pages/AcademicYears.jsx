@@ -15,7 +15,7 @@ const CreateAcademicYear = () => {
     startDate: "",
     endDate: "",
     isActive: false,
-    schoolId: "", // <-- new field
+    schoolId: "", 
   });
 
   useEffect(() => {
@@ -33,16 +33,30 @@ const CreateAcademicYear = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.schoolId) return alert("Please select a school");
-    dispatch(createAcademicYear(formData));
+    dispatch(createAcademicYear(formData)).then((res) => {
+  if (!res.error) {
+    setFormData({
+      name: "",
+      code: "",
+      startDate: "",
+      endDate: "",
+      isActive: false,
+      schoolId: "",
+    });
+  }});
+    
+
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto mt-10">
+    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto ">
       <h2 className="text-xl font-semibold mb-4">Create Academic Year</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-
+        
+        {error && <p className="text-red-500 mt-2">{error}</p>}
+        {successMessage && <p className="text-green-600 mt-2">{successMessage}</p>}
         <div>
-          <label className="block font-medium">Select School</label>
+          <label className="block text-xs mb-1">Select School</label>
           <select
             name="schoolId"
             value={formData.schoolId}
@@ -60,7 +74,7 @@ const CreateAcademicYear = () => {
         </div>
 
         <div>
-          <label className="block font-medium">Academic Year Name</label>
+          <label className="block text-xs mb-1">Academic Year Name</label>
           <input
             type="text"
             name="name"
@@ -72,7 +86,7 @@ const CreateAcademicYear = () => {
           />
         </div>
         <div>
-          <label className="block font-medium">Code</label>
+          <label className="block text-xs mb-1">Code</label>
             <input
             type="text"
             name="code"
@@ -84,7 +98,7 @@ const CreateAcademicYear = () => {
           />
         </div>
         <div>
-          <label className="block font-medium">Start Date</label>
+          <label className="block text-xs mb-1">Start Date</label>
           <input
             type="date"
             name="startDate"
@@ -96,7 +110,7 @@ const CreateAcademicYear = () => {
         </div>
 
         <div>
-          <label className="block font-medium">End Date</label>
+          <label className="block text-xs mb-1">End Date</label>
           <input
             type="date"
             name="endDate"
@@ -126,8 +140,6 @@ const CreateAcademicYear = () => {
           {loading ? "Creating..." : "Create"}
         </button>
 
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-        {successMessage && <p className="text-green-600 mt-2">{successMessage}</p>}
       </form>
     </div>
   );
