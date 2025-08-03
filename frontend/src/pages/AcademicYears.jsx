@@ -33,8 +33,7 @@ const CreateAcademicYear = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.schoolId) return alert("Please select a school");
-    dispatch(createAcademicYear(formData)).then((res) => {
-  if (!res.error) {
+    dispatch(createAcademicYear(formData))
     setFormData({
       name: "",
       code: "",
@@ -43,9 +42,6 @@ const CreateAcademicYear = () => {
       isActive: false,
       schoolId: "",
     });
-  }});
-    
-
   };
 
   return (
