@@ -8,9 +8,9 @@ export const createAcademicYear = createAsyncThunk(
   "academicYear/create",
   async (data, { rejectWithValue }) => {
     try {
-      debugger;
+
       const token = localStorage.getItem("accessToken");
-      const response = await axios.post(`${Api_Base_Url}/academicYear/create`, data,{
+      const response = await axios.post(`${Api_Base_Url}/academicYear/create`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.academicYear;
@@ -24,7 +24,7 @@ export const createAcademicYear = createAsyncThunk(
 export const fetchAllAcademicYears = createAsyncThunk(
   "academicYear/fetchAll",
   async (schoolId, { rejectWithValue }) => {
-    
+
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(`${Api_Base_Url}/academicYear/${schoolId}`, {
@@ -41,14 +41,15 @@ export const fetchAllAcademicYears = createAsyncThunk(
 export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
   async (schoolId, { rejectWithValue }) => {
-    debugger;
+
     try {
+
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`${Api_Base_Url}/academicYear/active/${schoolId}`, {
+      const response = await axios.get(`${Api_Base_Url}/academicYear/active/school/${schoolId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-    
-      return response.data; 
+
+      return response.data;
 
     } catch (error) {
       return rejectWithValue(error?.response?.data?.message || "Failed to fetch active academic year");
@@ -60,7 +61,14 @@ export const setActiveAcademicYear = createAsyncThunk(
   "academicYear/setActive",
   async (academicYearId, { rejectWithValue }) => {
     try {
-      const { data } = await axios.patch(`/api/v1/academic-year/activate/${academicYearId}`);
+      const token = localStorage.getItem("accessToken");
+      const { data } = await axios.patch(
+        `${Api_Base_Url}/academicYear/active/${academicYearId}`,
+        {}, // empty body
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to set active academic year");
@@ -68,7 +76,6 @@ export const setActiveAcademicYear = createAsyncThunk(
   }
 );
 
-// ✅ Slice
 const academicYearSlice = createSlice({
   name: "academicYear",
   initialState: {
@@ -78,7 +85,12 @@ const academicYearSlice = createSlice({
     error: null,
     message: null,
   },
-  reducers: {},
+  reducers: {
+    clearAcademicYearMessages: (state) => {
+      state.message = null;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
 
@@ -96,12 +108,13 @@ const academicYearSlice = createSlice({
       .addCase(createAcademicYear.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
 
       // ▶️ Fetch All Academic Years
-      builder.addCase(fetchAllAcademicYears.pending, (state) => {
+      .addCase(fetchAllAcademicYears.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.message = null;
       })
       .addCase(fetchAllAcademicYears.fulfilled, (state, action) => {
         state.loading = false;
@@ -110,21 +123,41 @@ const academicYearSlice = createSlice({
       .addCase(fetchAllAcademicYears.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
 
       // ▶️ Fetch Active Academic Year
-      builder
-  .addCase(fetchActiveAcademicYear.pending, (state) => {
-    state.loading = true;
-  })
-  .addCase(fetchActiveAcademicYear.fulfilled, (state, action) => {
-    state.loading = false;
-    state.activeYear = action.payload; // payload is an object
-  })
-  .addCase(fetchActiveAcademicYear.rejected, (state, action) => {
-    state.loading = false;
-    state.error = action.payload || "Failed to load active year";
-  });}
+      .addCase(fetchActiveAcademicYear.pending, (state) => {
+        state.loading = true;
+        state.message = null;
+        state.error = null;
+      })
+      .addCase(fetchActiveAcademicYear.fulfilled, (state, action) => {
+        state.loading = false;
+        state.activeYear = action.payload;
+        state.message = "Active academic year loaded.";
+      })
+      .addCase(fetchActiveAcademicYear.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to load active academic year.";
+      })
+
+      // ▶️ Set Active Academic Year
+      .addCase(setActiveAcademicYear.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(setActiveAcademicYear.fulfilled, (state, action) => {
+        state.loading = false;
+        state.activeYear = action.payload;
+        state.message = "Active academic year updated successfully.";
+      })
+      .addCase(setActiveAcademicYear.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to update active academic year.";
+      });
+  }
 });
 
+export const { clearAcademicYearMessages } = academicYearSlice.actions;
 export default academicYearSlice.reducer;

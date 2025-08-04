@@ -134,6 +134,7 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.profile = null;
       localStorage.clear();
+
     },
     resetAuthState: (state) => {
       state.success = false;

@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllAcademicYears,
   fetchActiveAcademicYear,
   setActiveAcademicYear,
+  clearAcademicYearMessages,
 } from "../../features/academicYear/academicYearSlice";
 
 const AcademicYearSwitcher = ({ onChange }) => {
@@ -16,6 +17,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
     activeYear = null,
     loading = false,
     error = null,
+    message = null,
   } = useSelector((state) => state.academicYear);
 
   useEffect(() => {
@@ -24,6 +26,15 @@ const AcademicYearSwitcher = ({ onChange }) => {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
   }, [dispatch, schoolId]);
+
+  useEffect(() => {
+    if (message || error) {
+      const timer = setTimeout(() => {
+        dispatch(clearAcademicYearMessages());
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, error, dispatch]);
 
   const handleChange = (e) => {
     const selectedId = e.target.value;
@@ -37,8 +48,8 @@ const AcademicYearSwitcher = ({ onChange }) => {
       })
       .catch((err) => {
         console.error("Failed to set active academic year:", err);
-        alert(err); // Or use toast
       });
+
   };
 
   return (
@@ -82,7 +93,8 @@ const AcademicYearSwitcher = ({ onChange }) => {
         <p className="text-sm text-gray-500">No academic years available.</p>
       )}
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {message && <p className="text-green-600 text-sm mt-2">{message}</p>}
+      {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
     </div>
   );
 };

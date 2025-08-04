@@ -17,17 +17,17 @@ const SchoolAdminDashboard = () => {
         <SalaryStatistics />
         </div>
       <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-         <div className="grid grid-flow-row-dense grid-cols-3 gap-6">
+         <div className="grid grid-flow-row-dense md:grid-cols-3 grid-cols-1 md:gap-6">
         <div className="col-span-2"><TotalSalaryByUnit /></div>
         <div className=""><IncomeAnalysis /></div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-         <div className="grid grid-flow-row-dense grid-cols-3 gap-6">
+         <div className="grid grid-flow-row-dense md:grid-cols-3 grid-cols-1 gap-6">
           
           <div className=""><EmployeeStructure /></div>
-          <div className="col-span-2"> <EmployeePerformance /></div>
+          <div className="col-span-2 "> <EmployeePerformance /></div>
          </div>
         
        

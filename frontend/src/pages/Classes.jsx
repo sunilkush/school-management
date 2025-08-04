@@ -3,11 +3,13 @@ import ClassForm from '../components/forms/ClassForm';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllClasses } from '../features/classes/classSlice';
 
+
+
 function Classes() {
   const dispatch = useDispatch();
   const classList = useSelector((state) => state.class?.classList || []);
   const [isOpen, setIsOpen] = useState(false);
-
+  console.log(classList)
   useEffect(() => {
     dispatch(fetchAllClasses());
   }, [dispatch]);
@@ -32,6 +34,8 @@ function Classes() {
             <tr className="bg-gray-200">
               <th className="p-2 border">Class Name</th>
               <th className="p-2 border">Section</th>
+              <th className="p-2 border">Teacher Name</th>
+              <th className='p-2 border'>Subjects</th>
             </tr>
           </thead>
           <tbody>
@@ -39,6 +43,14 @@ function Classes() {
               <tr key={index}>
                 <td className="border p-4">{cls.name}</td>
                 <td className="border p-4">{cls.section}</td>
+                <td className="border p-4 capitalize">{cls.teacherId.name}</td>
+                <td className='border p-4'>
+                  <ul>
+                  {cls.subjects.map(
+                  (item)=><span className="capitalize inline-flex" key={item._id}>{item.name}, </span>
+                )}
+                </ul>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -123,11 +123,12 @@ export const deleteAcademicYear = asyncHandler(async (req, res) => {
 
 export const setActiveAcademicYear = asyncHandler(async (req, res) => {
   const { id } = req.params;
-
+  console.log(id)
  
 
   // ✅ Find the academic year by ID
   const academicYear = await AcademicYear.findById(id);
+  console.log(academicYear)
   if (!academicYear) {
     throw new ApiError(404, "Academic year not found");
   }
@@ -154,8 +155,10 @@ export const getActiveAcademicYearBySchool = asyncHandler(async (req, res) => {
   const { schoolId } = req.params;
 
   const academicYear = await AcademicYear.findOne({
-    school: schoolId,
-    isActive: true,
+    $or: [
+      { isActive: true },
+      { schoolId: schoolId.trim() }
+    ]
   });
 
   if (!academicYear) {

@@ -2,7 +2,19 @@ import mongoose, { Schema } from "mongoose";
 
 
 const ExamSchema = new Schema(
-    {   academicYearId:{
+    {   name:{
+         type:String,
+         required:true,
+    },
+    startTime:{
+        type:Date,
+        required:true
+    },
+    endTime:{
+        type:Date,
+        required:true
+    },
+        academicYearId:{
             type: Schema.Types.ObjectId,
             ref: "AcademicYears",
             required: true
@@ -35,6 +47,10 @@ const ExamSchema = new Schema(
             type: Number,
             required: true,
         },
+        passingMarks:{
+            type:Number,
+            required:true
+        }
     },
     { timestamps: true }
 );
