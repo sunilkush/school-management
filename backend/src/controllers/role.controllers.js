@@ -3,19 +3,97 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from 'mongoose';
+
+
+// ✅ Default permissions map
+const defaultPermissions = {
+  "Super Admin": [
+    { module: "Schools", actions: ["create", "read", "update", "delete"] },
+    { module: "Users", actions: ["create", "read", "update", "delete"] },
+    { module: "Settings", actions: ["read", "update"] }
+  ],
+  "School Admin": [
+    { module: "Users", actions: ["create", "read", "update", "delete"] },
+    { module: "Students", actions: ["create", "read", "update", "delete"] },
+    { module: "Teachers", actions: ["create", "read", "update", "delete"] },
+    { module: "Parents", actions: ["create", "read", "update", "delete"] },
+    { module: "Classes", actions: ["create", "read", "update", "delete"] },
+    { module: "Subjects", actions: ["create", "read", "update", "delete"] },
+    { module: "Timetable", actions: ["create", "read", "update"] },
+    { module: "Settings", actions: ["read", "update"] },
+    { module: "Reports", actions: ["read", "export"] }
+  ],
+  "Teacher": [
+    { module: "Students", actions: ["read"] },
+    { module: "Assignments", actions: ["create", "read", "update", "delete"] },
+    { module: "Timetable", actions: ["read"] },
+    { module: "Attendance", actions: ["create", "read"] }
+  ],
+  "Student": [
+    { module: "Assignments", actions: ["read"] },
+    { module: "Timetable", actions: ["read"] },
+    { module: "Reports", actions: ["read"] }
+  ],
+  "Parent": [
+    { module: "Students", actions: ["read"] },
+    { module: "Reports", actions: ["read"] },
+    { module: "Fees", actions: ["read"] },
+    { module: "Notifications", actions: ["read"] }
+  ],
+  "Accountant": [
+    { module: "Fees", actions: ["create", "read", "update", "delete", "collect"] },
+    { module: "Finance", actions: ["create", "read", "update", "delete", "export"] },
+    { module: "Expenses", actions: ["create", "read", "update", "delete"] }
+  ],
+  "Staff": [
+    { module: "Attendance", actions: ["create", "read"] },
+    { module: "Notifications", actions: ["read"] }
+  ],
+  "Librarian": [
+    { module: "Books", actions: ["create", "read", "update", "delete"] },
+    { module: "IssuedBooks", actions: ["create", "read", "return"] },
+    { module: "Library", actions: ["read"] }
+  ],
+  "Hostel Warden": [
+    { module: "Hostel", actions: ["read", "update"] },
+    { module: "Rooms", actions: ["read", "update"] }
+  ],
+  "Transport Manager": [
+    { module: "Transport", actions: ["read", "update"] },
+    { module: "Routes", actions: ["read", "update"] },
+    { module: "Vehicles", actions: ["read", "update"] }
+  ],
+  "Exam Coordinator": [
+    { module: "Exams", actions: ["create", "read", "update", "delete"] },
+    { module: "Reports", actions: ["read", "export"] }
+  ],
+  "Receptionist": [
+    { module: "Users", actions: ["read", "create"] },
+    { module: "Students", actions: ["read"] }
+  ],
+  "IT Support": [
+    { module: "Settings", actions: ["read", "update"] },
+    { module: "Users", actions: ["read", "update"] }
+  ],
+  "Counselor": [
+    { module: "Students", actions: ["read", "update"] },
+    { module: "Parents", actions: ["read"] }
+  ],
+  "Subject Coordinator": [
+    { module: "Subjects", actions: ["create", "read", "update"] },
+    { module: "Teachers", actions: ["read"] }
+  ]
+};
+const allActions = ["create", "read", "update", "delete", "export", "collect", "return", "assign"];
 // ✅ Create a Role (Only Admin)
 export const createRole = asyncHandler(async (req, res) => {
   let { name, schoolId, permissions } = req.body;
 
-  // Validate role name
   if (!name || typeof name !== "string") {
     throw new ApiError(400, "Role name is required and must be a string");
   }
 
-  // Normalize and format role name
   name = name.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-
-  // If not Super Admin, validate schoolId
   const isSuperAdmin = name === "Super Admin";
   let schoolObjectId = null;
 
@@ -26,39 +104,28 @@ export const createRole = asyncHandler(async (req, res) => {
     schoolObjectId = new mongoose.Types.ObjectId(schoolId);
   }
 
-  // Validate permissions
-  if (
-    !Array.isArray(permissions) ||
-    permissions.some(
-      (p) =>
-        typeof p !== "object" ||
-        !p.module ||
-        typeof p.module !== "string" ||
-        !Array.isArray(p.actions) ||
-        p.actions.length === 0
-    )
-  ) {
-    throw new ApiError(400, "Invalid permissions format");
+  if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
+    permissions = defaultPermissions[name];
+    if (!permissions) {
+      throw new ApiError(400, `No default permissions defined for role: ${name}`);
+    }
   }
 
-  // Check for duplicate role (with or without schoolId)
   const query = {
     name: { $regex: `^${name}$`, $options: "i" },
     ...(schoolObjectId ? { schoolId: schoolObjectId } : {}),
   };
 
   const existingRole = await Role.findOne(query);
-
   if (existingRole) {
     return res
       .status(400)
       .json(new ApiResponse(400, null, "Role already exists"));
   }
 
-  // Create role
   const role = await Role.create({
     name,
-    ...(schoolObjectId && { schoolId: schoolObjectId }), // only include if available
+    ...(schoolObjectId && { schoolId: schoolObjectId }),
     permissions,
   });
 
@@ -66,6 +133,7 @@ export const createRole = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(201, role, "Role created successfully"));
 });
+
 
 
 // ✅ Get All Roles (Only Admin)
