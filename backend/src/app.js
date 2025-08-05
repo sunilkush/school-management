@@ -37,7 +37,8 @@ import issuedBookRoutes from "./routes/issuedBooks.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import RoleRoutes from "./routes/role.routes.js";
 import EmployeeRoutes from "./routes/employee.routes.js";
-import AcademicYear from "./routes/academicYear.routes.js";
+import AcademicYearRoutes from "./routes/academicYear.routes.js";
+import SectionRoutes from "./routes/section.routes.js";
 
 // route
 app.use('/', indexRouter);
@@ -51,6 +52,6 @@ app.use("/app/v1/issuedBooks", issuedBookRoutes);
 app.use("/app/v1/student", studentRoutes);
 app.use("/app/v1/role", RoleRoutes);
 app.use("/app/v1/employee", EmployeeRoutes);
-app.use("/app/v1/academicYear", AcademicYear);
-
+app.use("/app/v1/academicYear", AcademicYearRoutes);
+app.use("/app/v1/section", SectionRoutes);
 export { app }
