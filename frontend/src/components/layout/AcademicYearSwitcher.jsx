@@ -44,12 +44,15 @@ const AcademicYearSwitcher = ({ onChange }) => {
     dispatch(setActiveAcademicYear(selectedId))
       .unwrap()
       .then(() => {
+        // ✅ Save to localStorage
+        localStorage.setItem("academicYearId", selectedId);
+
+        // ✅ Callback to parent (optional)
         if (onChange) onChange(selectedYear);
       })
       .catch((err) => {
         console.error("Failed to set active academic year:", err);
       });
-
   };
 
   return (
@@ -58,11 +61,11 @@ const AcademicYearSwitcher = ({ onChange }) => {
 
       {!loading && academicYears.length > 0 && (
         <select
-          className="border px-3 py-1 rounded-md"
+          className="border px-3 py-1 rounded-md text-xs"
           onChange={handleChange}
           value={activeYear?._id || ""}
         >
-          <option value="" disabled>
+          <option value="" disabled className="text-xs">
             Select Academic Year
           </option>
           {academicYears.map((year) => {
@@ -81,7 +84,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
             });
 
             return (
-              <option key={year._id} value={year._id}>
+              <option className="text-xs" key={year._id} value={year._id}>
                 {year.name} ({formattedStart} - {formattedEnd})
               </option>
             );

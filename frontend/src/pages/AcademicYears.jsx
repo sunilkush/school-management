@@ -1,144 +1,205 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createAcademicYear } from "../features/academicYear/academicYearSlice.js";
-import { fetchSchools } from "../features/schools/schoolSlice.js"; // Import your school fetching action
-
-const CreateAcademicYear = () => {
+import {
+  fetchAllAcademicYears,
+  fetchActiveAcademicYear,
+  setActiveAcademicYear,
+  clearAcademicYearMessages,
+  createAcademicYear,
+  archiveAcademicYear,
+} from "../features/academicYear/academicYearSlice";
+import { fetchSchools } from '../features/schools/schoolSlice';
+const AcademicYearPage = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+   const { schools } = useSelector((state) => state.school);
+  const [selectedSchoolId, setSelectedSchoolId] = useState(user?.role?.name === "Super Admin" ? "" : user?.school?._id);
+   
+  const {
+    academicYears = [],
+    activeYear = null,
+    loading = false,
+    error = null,
+    message = null,
+  } = useSelector((state) => state.academicYear);
 
-  const { loading, error, successMessage } = useSelector((state) => state.academicYear);
-  const { schools = [] } = useSelector((state) => state.school || {}); // assuming schoolSlice is connected
-
-  const [formData, setFormData] = useState({
-    name: "",
-    code: "",
-    startDate: "",
-    endDate: "",
-    isActive: false,
-    schoolId: "", 
-  });
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  useEffect(() => {
+    if (user?.role?.name === "Super Admin") {
+      dispatch(fetchSchools()); // Fetch school list for Super Admin
+    }
+  }, [dispatch, user]);
 
   useEffect(() => {
-    dispatch(fetchSchools());
-  }, [dispatch]);
+    if (selectedSchoolId) {
+      dispatch(fetchAllAcademicYears(selectedSchoolId));
+      dispatch(fetchActiveAcademicYear(selectedSchoolId));
+    }
+  }, [dispatch, selectedSchoolId]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+  useEffect(() => {
+    if (message || error) {
+      const timer = setTimeout(() => {
+        dispatch(clearAcademicYearMessages());
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, error, dispatch]);
+
+  const generateYearName = (start, end) => {
+    const startYear = new Date(start).getFullYear();
+    const endYear = new Date(end).getFullYear();
+    return `${startYear}-${endYear}`;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.schoolId) return alert("Please select a school");
-    dispatch(createAcademicYear(formData))
-    setFormData({
-      name: "",
-      code: "",
-      startDate: "",
-      endDate: "",
-      isActive: false,
-      schoolId: "",
-    });
+  const validateDates = () => {
+    const s = new Date(startDate);
+    const e = new Date(endDate);
+    if (s >= e) return "Start date must be before end date.";
+    for (const y of academicYears) {
+      const yStart = new Date(y.startDate);
+      const yEnd = new Date(y.endDate);
+      if (s <= yEnd && e >= yStart) return "Date range overlaps with an existing academic year.";
+    }
+    return null;
+  };
+
+  const handleCreate = () => {
+    const validationError = validateDates();
+    if (validationError) {
+      alert(validationError);
+      return;
+    }
+    const name = generateYearName(startDate, endDate);
+    dispatch(createAcademicYear({ schoolId: selectedSchoolId, name, startDate, endDate }));
+  };
+
+  const handleSwitchActive = (id) => {
+    dispatch(setActiveAcademicYear(id));
+  };
+
+  const handleArchive = (id) => {
+    dispatch(archiveAcademicYear(id));
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto ">
-      <h2 className="text-xl font-semibold mb-4">Create Academic Year</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Academic Years</h1>
+
+      {loading && <p>Loading...</p>}
+
+      <table className="w-full border text-sm mb-4">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2">Name</th>
+            <th className="border p-2">Start Date</th>
+            <th className="border p-2">End Date</th>
+            <th className="border p-2">Status</th>
+            <th className="border p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
         
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-        {successMessage && <p className="text-green-600 mt-2">{successMessage}</p>}
-        <div>
-          <label className="block text-xs mb-1">Select School</label>
-          <select
-            name="schoolId"
-            value={formData.schoolId}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          >
-            <option value="">-- Select School --</option>
-            {schools.map((school) => (
-              <option key={school._id} value={school._id}>
-                {school.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          {academicYears.map((year) => (
+            <tr key={year._id} className="text-center">
+              <td className="border p-2">{year.name}</td>
+              <td className="border p-2">{ new Date(year.startDate).toLocaleDateString()}</td>
+              <td className="border p-2">{new Date(year.endDate).toLocaleDateString()}</td>
+              <td className="border p-2">
+                {activeYear?._id === year._id ? "Active" : year.archived ? "Archived" : "Inactive"}
+              </td>
+              <td className="border p-2 space-x-2">
+                {year.archived ? (
+                  <span className="text-gray-400">(Archived)</span>
+                ) : (
+                  <>
+                    {activeYear?._id !== year._id && (
+                      <button
+                        onClick={() => handleSwitchActive(year._id)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Switch Active
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleArchive(year._id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Archive
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-        <div>
-          <label className="block text-xs mb-1">Academic Year Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            placeholder="2025-26"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-xs mb-1">Code</label>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold mb-2">Create New Academic Year</h2>
+        <div className="flex gap-2 items-start flex-col">
+          <div className="flex gap-2 flex-col">
+            {user?.role?.name === "Super Admin" ? (
+              <div className="flex gap-2 flex-col">
+                <label className="text-sm">Select School</label>
+                <select
+                  className="border px-2 py-1 rounded"
+                  value={selectedSchoolId}
+                  onChange={(e) => setSelectedSchoolId(e.target.value)}
+                >
+                  <option value="">Select School</option>
+                  {schools.map((school) => (
+                    <option key={school._id} value={school._id}>
+                      {school.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="flex gap-2 flex-col">
+                <label className="text-sm">School</label>
+                <input
+                  type="text"
+                  className="border px-2 py-1 rounded bg-gray-100"
+                  value={user?.school?.name || ""}
+                  readOnly
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 flex-col">
+            <label className="text-sm">Start Date</label>
             <input
-            type="text"
-            name="code"
-            value={formData.code}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            placeholder="AY2025"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-xs mb-1">Start Date</label>
-          <input
-            type="date"
-            name="startDate"
-            value={formData.startDate}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        </div>
+              type="date"
+              className="border px-2 py-1 rounded"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 flex-col">
+            <label className="text-sm">End Date</label>
+            <input
+              type="date"
+              className="border px-2 py-1 rounded"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
 
-        <div>
-          <label className="block text-xs mb-1">End Date</label>
-          <input
-            type="date"
-            name="endDate"
-            value={formData.endDate}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 text-white px-4 py-1 rounded"
+          >
+            Create
+          </button>
         </div>
+      </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            name="isActive"
-            checked={formData.isActive}
-            onChange={handleChange}
-            className="mr-2"
-          />
-          <label className="text-sm">Set as Active Academic Year</label>
-        </div>
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          disabled={loading}
-        >
-          {loading ? "Creating..." : "Create"}
-        </button>
-
-      </form>
+      {message && <p className="text-green-600 text-sm mt-2">{message}</p>}
+      {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
     </div>
   );
 };
 
-export default CreateAcademicYear;
+export default AcademicYearPage;

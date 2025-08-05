@@ -8,7 +8,7 @@ import {
     getLastRegisteredStudent
 } from "../controllers/student.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
-
+import { checkActiveAcademicYear } from "../middlewares/checActiveYear.middleware.js";
 const router = Router();
 
 const ADMIN_ROLE = ["Super Admin", "Admin"];
@@ -19,7 +19,7 @@ const STUDENT_ROLE = ["Super Admin", "Admin", "Teacher", "Student"];
 router.post("/register", auth, roleMiddleware(ADMIN_ROLE), registerStudent);
 
 // ✅ Get All Students (Super Admin, Admin, Teacher)
-router.get("/", auth, roleMiddleware(TEACHER_ROLE), getStudents);
+router.get("/",checkActiveAcademicYear, auth, roleMiddleware(TEACHER_ROLE), getStudents);
 
 // ✅ Get Student by ID (Super Admin, Admin, Teacher, Student)
 router.get("/:id", auth, roleMiddleware(STUDENT_ROLE), getStudentById);
@@ -29,6 +29,7 @@ router.put("/:id", auth, roleMiddleware(ADMIN_ROLE), updateStudent);
 
 // ✅ Delete Student (Super Admin & Admin)
 router.delete("/:id", auth, roleMiddleware(ADMIN_ROLE), deleteStudent);
+
 router.get("/register/last",auth, getLastRegisteredStudent);
 
 export default router;

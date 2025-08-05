@@ -1,13 +1,13 @@
 import { Router } from "express";
 import {
- createAcademicYear,
- getAcademicYearsBySchool,
- getSingleAcademicYear,
- updateAcademicYear,
- deleteAcademicYear,
- setActiveAcademicYear,
- getActiveAcademicYearBySchool
-
+    createAcademicYear,
+    getAcademicYearsBySchool,
+    getSingleAcademicYear,
+    updateAcademicYear,
+    deleteAcademicYear,
+    setActiveAcademicYear,
+    archiveAcademicYear,
+    getActiveAcademicYearBySchool,
 } from "../controllers/academicYear.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -19,12 +19,30 @@ const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
 const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"];
 
 // 💡 Routes
+
+
+// ✅ Create Academic Year
 router.post("/create", auth, roleMiddleware(ADMIN_ROLE), createAcademicYear);
-router.get("/:schoolId", auth, roleMiddleware(ALL_USERS), getAcademicYearsBySchool);
-router.get("/single/:id", auth, roleMiddleware(ALL_USERS), getSingleAcademicYear);
-router.patch("/:id", auth, roleMiddleware(ADMIN_ROLE), updateAcademicYear);
+
+// ✅ Get All Academic Years for a School
+router.get("/school/:schoolId", auth, roleMiddleware(ADMIN_ROLE), getAcademicYearsBySchool);
+
+// ✅ Get Active Academic Year by School
+router.get("/active/:schoolId", auth, roleMiddleware(ADMIN_ROLE), getActiveAcademicYearBySchool);
+
+// ✅ Get Single Academic Year by ID
+router.get("/:id", auth, roleMiddleware(ADMIN_ROLE), getSingleAcademicYear);
+
+// ✅ Update Academic Year by ID
+router.put("/:id", auth, roleMiddleware(ADMIN_ROLE), updateAcademicYear);
+
+// ✅ Delete Academic Year by ID
 router.delete("/:id", auth, roleMiddleware(ADMIN_ROLE), deleteAcademicYear);
-router.patch("/active/:id", auth, roleMiddleware(ADMIN_ROLE), setActiveAcademicYear);
-router.get("/active/school/:schoolId", auth, roleMiddleware(ALL_USERS), getActiveAcademicYearBySchool);
+
+// ✅ Set Academic Year as Active
+router.post("/activate/:id", auth, roleMiddleware(ADMIN_ROLE), setActiveAcademicYear);
+
+// ✅ Archive Academic Year
+router.post("/archive/:id", auth, roleMiddleware(ADMIN_ROLE), archiveAcademicYear);
 
 export default router;

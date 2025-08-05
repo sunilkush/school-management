@@ -14,7 +14,7 @@ const store = configureStore({
     students: studentReducer,
     subject: subjectReducer,
     class: classReducer,
-    academicYear: academicYearReducer
+    academicYear: academicYearReducer,
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

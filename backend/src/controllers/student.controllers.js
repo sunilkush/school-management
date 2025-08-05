@@ -134,7 +134,16 @@ const registerStudent = asyncHandler(async (req, res) => {
 
 // ✅ Get All Students
 const getStudents = asyncHandler(async (req, res) => {
+  const schoolId = req.user?.schoolId;
+  const academicYearId = req.academicYearId;
+
   const students = await Student.aggregate([
+    {
+      $match: {
+        schoolId,
+        academicYearId,
+      },
+    },
     {
       $lookup: {
         from: "users",
@@ -154,6 +163,7 @@ const getStudents = asyncHandler(async (req, res) => {
         status: 1,
         schoolId: 1,
         class: 1,
+        academicYearId: 1,
         createdAt: 1,
         updatedAt: 1,
         otherInfo: 1,
@@ -173,7 +183,9 @@ const getStudents = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No students found!");
   }
 
-  return res.status(200).json(new ApiResponse(200, students, "Students retrieved successfully!"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, students, "Students retrieved successfully!"));
 });
 
 // ✅ Get Student by ID
