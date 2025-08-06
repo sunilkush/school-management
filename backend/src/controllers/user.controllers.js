@@ -317,7 +317,33 @@ const getAllUsers = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, user, 'User deactivated successfully'))
-})
+});
+
+// Active User
+const activeUser = asyncHandler(async (req, res) => {
+    const { id } = req.params
+    
+    if (!id) {
+        return res.status(400).json({ message: 'User ID is required' })
+    }
+    
+    // Find the user by ID and update their isActive status to true
+    const user = await User.findByIdAndUpdate(
+        id,
+        { isActive: true },
+        { new: true }
+    )
+    
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' })
+    }
+    
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, 'User activated successfully'))
+    }   
+);
+
 export {
     registerUser,
     loginUser,
@@ -326,5 +352,6 @@ export {
     getCurrentUser,
     logoutUser,
     getAllUsers,
-    deleteUser
+    deleteUser,
+    activeUser
 }

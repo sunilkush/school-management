@@ -9,8 +9,8 @@ const Tab = ({ label, isActive, onClick }) => (
   <button
     className={`px-4 py-2 rounded-t-md border-b-2 font-medium text-sm focus:outline-none transition-all duration-150 ${
       isActive
-        ? "bg-white border-purple-600 text-purple-600"
-        : "bg-gray-100 border-transparent text-gray-500 hover:text-purple-600"
+        ? "bg-white border-purple-600 text-deep-purple-600"
+        : "bg-gray-100 border-transparent text-gray-500 hover:text-deep-purple-600"
     }`}
     onClick={onClick}
   >

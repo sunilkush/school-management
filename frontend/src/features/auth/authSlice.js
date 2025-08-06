@@ -54,7 +54,7 @@ export const fetchAllUser = createAsyncThunk(
       });
       return res.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
+      return rejectWithValue(error.response?.data?.message );
     }
   }
 );
@@ -82,10 +82,10 @@ export const updateProfile = createAsyncThunk(
 // Delete User
 export const deleteUser = createAsyncThunk(
   'auth/deleteUser',
-  async (userId, { rejectWithValue }) => {
+  async ({ id, isActive }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await axios.patch(`${Api_Base_Url}/user/delete/${userId}`, {}, {
+      const res = await axios.patch(`${Api_Base_Url}/user/delete/${id}`, { isActive }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -96,7 +96,23 @@ export const deleteUser = createAsyncThunk(
     }
   }
 );
-
+// Active User
+export const activeUser = createAsyncThunk(
+  'auth/ActiveUser',
+  async ({ id, isActive }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.patch(`${Api_Base_Url}/user/Active/${id}`, { isActive }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete user');
+    }
+  }
+);
 // Get Current User Profile
 export const currentUser = createAsyncThunk(
   'auth/currentUser',
@@ -111,7 +127,7 @@ export const currentUser = createAsyncThunk(
       return res.data;
     } catch (error) {
       console.log('currentUser error:', error.response?.data);
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
+      return rejectWithValue(error.response?.data?.message);
     }
   }
 );
@@ -139,7 +155,9 @@ const authSlice = createSlice({
     resetAuthState: (state) => {
       state.success = false;
       state.error = null;
+
     },
+   
   },
   extraReducers: (builder) => {
     builder
@@ -238,7 +256,22 @@ const authSlice = createSlice({
         state.accessToken = null;
         localStorage.clear();
         state.error = action.payload;
-      });
+      })
+
+       // Activ User
+      .addCase(activeUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(activeUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users = state.users.map(user =>
+          user._id === action.payload._id ? { ...user, isActive: true } : user
+        );
+      })
+      .addCase(activeUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   },
 });
 

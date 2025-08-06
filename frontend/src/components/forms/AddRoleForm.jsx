@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createRole } from "../../features/roles/roleSlice";
+import { createRole  } from "../../features/roles/roleSlice";
 import { fetchSchools } from "../../features/schools/schoolSlice";
 
 const moduleOptions = [
@@ -26,7 +26,7 @@ const AddRoleForm = () => {
   const [name, setName] = useState("");
   const [schoolId, setSchoolId] = useState("");
   const [permissions, setPermissions] = useState([]);
-  const [message, setMessage] = useState({ type: "", text: "" });
+  const { error,loading,message } = useSelector((state) => state.role);
 
   useEffect(() => {
     dispatch(fetchSchools());
@@ -77,35 +77,20 @@ const AddRoleForm = () => {
     if (name !== "Super Admin") payload.schoolId = schoolId;
     if (permissions.length > 0) payload.permissions = permissions;
 
-    try {
-      await dispatch(createRole(payload)).unwrap();
+     await dispatch(createRole(payload)).unwrap();
       setName("");
       setSchoolId("");
       setPermissions([]);
-      setMessage({ type: "success", text: "✅ Role created successfully!" });
-    } catch (error) {
-      setMessage({ type: "error", text: error?.message || "❌ Failed to create role." });
-    }
 
-    setTimeout(() => {
-      setMessage({ type: "", text: "" });
-    }, 4000);
+   
   };
 
   return (
     <form onSubmit={handleSubmit} className="p-6 space-y-6 bg-white rounded shadow">
       <h2 className="text-xl font-semibold">Create Role</h2>
-
-      {message.text && (
-        <div
-          className={`p-3 rounded text-sm ${
-            message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-
+      {loading && <p className="text-blue-500">Creating role...</p>}  
+      {error && <p className="text-red-500">{error}</p>}
+      {message && <p className="text-green-500">{message}</p>}
       <div>
         <label className="block text-sm font-medium">Role Name</label>
         <select

@@ -149,7 +149,7 @@ const AddSchoolForm = () => {
           className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
             file:rounded-full file:border-0
             file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-purple-700
+            file:bg-blue-50 file:text-deep-purple-700
             hover:file:bg-blue-100 border rounded-full"
         />
         {logoError && <div className="text-red-500 text-sm mt-1">{logoError}</div>}

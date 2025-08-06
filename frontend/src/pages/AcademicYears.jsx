@@ -88,8 +88,22 @@ const AcademicYearPage = () => {
       <h1 className="text-xl font-bold mb-4">Academic Years</h1>
 
       {loading && <p>Loading...</p>}
-
-      <table className="w-full border text-sm mb-4">
+        
+      {message && (
+        <p className="text-green-600 text-sm mt-2">
+          {typeof message === "string"
+            ? message
+            : message?.msg || JSON.stringify(message)}
+        </p>
+      )}
+      {error && (
+        <p className="text-red-600 text-sm mt-2">
+          {typeof error === "string"
+            ? error
+            : error?.errors || JSON.stringify(error)}
+        </p>
+      )}
+      <table className="w-full border text-sm mb-4 border-collapse bg-white">
         <thead>
           <tr className="bg-gray-100">
             <th className="border p-2">Name</th>
@@ -136,10 +150,11 @@ const AcademicYearPage = () => {
         </tbody>
       </table>
 
-      <div className="mb-4">
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded shadow">
         <h2 className="text-lg font-semibold mb-2">Create New Academic Year</h2>
         <div className="flex gap-2 items-start flex-col">
-          <div className="flex gap-2 flex-col">
+          <div className="flex gap-2 flex-col w-full">
             {user?.role?.name === "Super Admin" ? (
               <div className="flex gap-2 flex-col">
                 <label className="text-sm">Select School</label>
@@ -157,7 +172,7 @@ const AcademicYearPage = () => {
                 </select>
               </div>
             ) : (
-              <div className="flex gap-2 flex-col">
+              <div className="flex gap-2 flex-col w-full">
                 <label className="text-sm">School</label>
                 <input
                   type="text"
@@ -168,7 +183,7 @@ const AcademicYearPage = () => {
               </div>
             )}
           </div>
-          <div className="flex gap-2 flex-col">
+          <div className="flex gap-2 flex-col w-full">
             <label className="text-sm">Start Date</label>
             <input
               type="date"
@@ -177,7 +192,7 @@ const AcademicYearPage = () => {
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
-          <div className="flex gap-2 flex-col">
+          <div className="flex gap-2 flex-col w-full">
             <label className="text-sm">End Date</label>
             <input
               type="date"
@@ -194,10 +209,9 @@ const AcademicYearPage = () => {
             Create
           </button>
         </div>
+        </div>
       </div>
 
-      {message && <p className="text-green-600 text-sm mt-2">{message}</p>}
-      {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
     </div>
   );
 };

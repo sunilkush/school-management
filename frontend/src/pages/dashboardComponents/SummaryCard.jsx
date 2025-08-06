@@ -2,7 +2,7 @@ import React from 'react';
 
 const SummaryCard = ({ title, value, percentage, trend, color, label }) => {
   const ringColor = {
-    purple: 'text-purple-500',
+    purple: 'text-deep-purple-500',
     blue: 'text-blue-500',
     green: 'text-green-500',
     orange: 'text-orange-500',

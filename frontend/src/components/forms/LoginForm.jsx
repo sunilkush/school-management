@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from '../../features/auth/authSlice';
+import { login,resetAuthState } from '../../features/auth/authSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 const LoginForm = () => {
@@ -21,9 +21,9 @@ const LoginForm = () => {
   ];
 
 const [navigated, setNavigated] = useState(false);
-
+const roleName = user?.role?.name?.toLowerCase();
 useEffect(() => {
-  const roleName = user?.role?.name?.toLowerCase();
+  
 
   if (roleName && !navigated) {
     const match = roleRoutes.find((r) => r.role === roleName);
@@ -32,10 +32,13 @@ useEffect(() => {
       navigate(match.path);
     }
   }
-}, [user?.role?.name, navigate, navigated]);
+}, [roleName, navigate, navigated]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if(error) {
+      dispatch(resetAuthState());
+    }
   };
 
   const handleSubmit = (e) => {

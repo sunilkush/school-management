@@ -63,7 +63,7 @@ const NotificationDropdown = () => {
                 {note.avatar ? (
                   <img src={note.avatar} alt="Avatar" className="w-10 h-10 rounded-full" />
                 ) : (
-                  <div className="w-10 h-10 bg-purple-100 text-purple-700 font-semibold text-sm flex items-center justify-center rounded-full">
+                  <div className="w-10 h-10 bg-purple-100 text-deep-purple-700 font-semibold text-sm flex items-center justify-center rounded-full">
                     {note.iconText}
                   </div>
                 )}
@@ -75,7 +75,7 @@ const NotificationDropdown = () => {
             ))}
           </div>
 
-          <div className="p-3 text-center text-sm text-purple-600 hover:underline cursor-pointer">
+          <div className="p-3 text-center text-sm text-deep-purple-600 hover:underline cursor-pointer">
             See all notifications
           </div>
         </div>

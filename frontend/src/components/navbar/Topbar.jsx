@@ -9,7 +9,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
     <header className="flex items-center justify-between px-4 py-3 bg-white border-b transition-all duration-300">
       {/* Mobile Sidebar Toggle Button */}
       <button
-        className="p-2 text-purple-600 block md:hidden"
+        className="p-2 text-deep-purple-600 block md:hidden"
         onClick={toggleSidebar}
         type="button"
       >

@@ -64,6 +64,7 @@ export const createRole = createAsyncThunk(
   async (roleData, { rejectWithValue }) => {
    
     try {
+     
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
@@ -74,7 +75,7 @@ export const createRole = createAsyncThunk(
         },
       });
 
-      return res.data; // includes role + message
+      return res.data.data; // includes role + message
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Role creation failed!"
@@ -172,7 +173,7 @@ const roleSlice = createSlice({
       .addCase(createRole.rejected, (state, action) => {
         state.loading = false;
         state.success = false;
-        state.error = action.payload || "Failed to create role";
+        state.error = action.payload ;
       });
 
       // fetchRoleBySchool

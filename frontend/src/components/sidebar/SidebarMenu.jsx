@@ -57,7 +57,7 @@ function SidebarMenu({ role }) {
                           to={sub.path}
                           className={({ isActive }) =>
                             `flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 ${
-                              isActive ? "font-medium text-purple-600" : "text-gray-700"
+                              isActive ? "font-medium text-deep-purple-600" : "text-gray-700"
                             }`
                           }
                         >

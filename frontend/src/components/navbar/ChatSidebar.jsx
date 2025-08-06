@@ -110,7 +110,7 @@ const ChatSidebar = () => {
         <div className="flex space-x-6">
           <span className="text-sm font-medium text-gray-500">NOTES</span>
           <span className="text-sm font-medium text-gray-500">ALERTS</span>
-          <span className="text-sm font-semibold text-purple-700 border-b-2 border-purple-600 pb-1">CHAT</span>
+          <span className="text-sm font-semibold text-deep-purple-700 border-b-2 border-purple-600 pb-1">CHAT</span>
         </div>
         <MoreHorizontal className="w-5 h-5 text-gray-500" />
       </div>
