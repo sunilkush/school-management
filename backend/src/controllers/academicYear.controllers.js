@@ -16,7 +16,7 @@ function generateAcademicYearName(startDate, endDate) {
 // ✅ CREATE academic year
 export const createAcademicYear = asyncHandler(async (req, res) => {
   const { code, startDate, endDate, schoolId, isActive } = req.body;
-
+ 
   if (!startDate || !endDate || !schoolId) {
     throw new ApiError(400, "Start Date, End Date, and School ID are required.");
   }

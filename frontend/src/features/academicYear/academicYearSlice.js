@@ -9,6 +9,7 @@ export const createAcademicYear = createAsyncThunk(
   "academicYear/create",
   async (data, { rejectWithValue }) => {
     try {
+      console.log(data)
       const response = await axios.post(`${Api_Base_Url}/academicYear/create`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });

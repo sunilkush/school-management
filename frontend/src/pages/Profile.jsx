@@ -54,36 +54,42 @@ const Profile = () => {
         <div className='flex border-b border-gray flex-wrap md:flex-row lg:flex-row'>
           <div>
             <button onClick={()=>setActiveTab('Profile')}  
+             type='button'
             className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
             ${activeTab === 'Profile' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-500 hover:text-purple-600'}`}
             ><User className='w-4 mr-1'/> Profile</button>
           </div>
           <div>
             <button onClick={()=>setActiveTab('Attendance')} 
+             type='button'
             className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
              ${activeTab === 'Attendance' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-500 hover:text-purple-600'}`}
             ><CalendarCheck className='w-4 mr-1' /> Attendance</button>
           </div>
           <div>
             <button onClick={()=>setActiveTab('Tasks')} 
+             type='button'
            className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
             ${activeTab === 'Tasks' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-500 hover:text-purple-600'}`}
             ><ClipboardList className='w-4 mr-1' /> Tasks</button>
           </div>
           <div>
             <button  onClick={()=>setActiveTab('Messages')} 
+            type='button'
             className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
              ${activeTab === 'Messages' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-500 hover:text-purple-600'}`}
             ><MessageCircleMore className='w-4 mr-1' /> Messages</button>
           </div>
           <div>
             <button onClick={()=>setActiveTab('Files')} 
+             type='button'
             className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
             ${activeTab === 'Files' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-500 hover:text-purple-600'}`}
             ><FolderClosed className='w-4 mr-1' /> Files</button>
           </div>
           <div>
             <button onClick={()=>setActiveTab('Settings')} 
+             type='button'
             className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
             ${activeTab === 'Settings' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-500 hover:text-purple-600'}`}
             ><Settings className='w-4 mr-1' />Settings</button>
@@ -93,9 +99,10 @@ const Profile = () => {
         {activeTab === 'Profile' && (
           
         <div  >
-        <div className='grid grid-flow-col grid-cols-3 gap-3 mt-3'>
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-3 mt-3'>
           
-          <div className='col-span-2  gap-3 flex flex-col'>
+          <div className='col-span-2 '>
+            <div className='flex flex-col gap-3'>
              {/*Contact Information start*/}
             <div className='bg-white p-4 rounded-lg border'>
               <div className='flex items-center justify-between mb-3'>
@@ -170,8 +177,9 @@ const Profile = () => {
               </div>
              </div>
              {/* Address Information end */}
+             </div>
           </div>
-          <div className='col-span-1 gap-3 flex flex-col'>
+          <div className='col-span-1 gap-3 flex flex-col mt-3 md:mt-0'>
             {/*Contact Information start */}
              <div className='bg-white p-4 rounded-lg border w-full'>
                <div className='flex items-center justify-between mb-3'>
@@ -179,12 +187,12 @@ const Profile = () => {
               <a href='#' className='flex items-center border px-2 py-1 rounded-lg text-sm'> <PencilLine className='w-4'/> Edit</a>
               </div>
               <h4 className='text-sm font-medium my-2'>Personal Contact </h4>
-               <div className='grid grid-cols-2 gap-5 mt-3'>
-                <div>
+               <div className=' grid grid-cols-2   gap-5 mt-3'>
+                <div className='col-span-2 md:col-span-1'>
                   <p className='text-xs text-gray-500'>Phone</p>
                   <p className='text-sm text-blue-800 bg-gray-100 rounded-full inline-block px-3 py-1'>+91-7845123265</p>
                 </div>
-                <div>
+                <div className='col-span-2 md:col-span-1'>
                   <p className='text-xs text-gray-500'>Email</p>
                   <p className='text-sm text-blue-800 bg-gray-100 rounded-full inline-block px-3 py-1'>example@gmail.com</p>
                 </div>
