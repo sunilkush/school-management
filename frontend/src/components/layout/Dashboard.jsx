@@ -11,7 +11,7 @@ const Dashboard = () => {
 
   const { user } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
-  console.log("Active Academic Year:", activeYear);
+  
   const role = user?.role?.name;
   // ✅ BLOCK IF NO ACTIVE YEAR AND NOT SUPER ADMIN
   useEffect(() => {

@@ -65,7 +65,7 @@ const Admins = () => {
     {
       name: 'Status',
       selector: (row) => (
-        <span className={` ${row.isActive ? 'bg-green-300 px-5 py-1 rounded-xl block text-white w-full' :'bg-red-300 px-5 py-1 rounded-xl block text-white w-full' }`}>
+        <span className={` ${row.isActive ? 'bg-green-300 px-5 py-1 rounded-xl block w-full' :'bg-red-300 px-5 py-1 rounded-xl block w-full' }`}>
           {row.isActive ? 'Active' : 'Deactivated'}
           </span>),
       sortable: true,

@@ -22,7 +22,7 @@ export default function Sidebar({ isOpen }) {
       md:translate-x-0 md:relative md:block`}
     >
       <div>
-        <div className="p-6 text-deep-purple-600 font-bold text-xl flex items-center gap-2">
+        <div className="p-2 text-deep-purple-600 font-bold text-lg flex items-center gap-2">
           <div className="bg-purple-100 p-2 rounded-full">
             <Home size={20} />
           </div>

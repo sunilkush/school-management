@@ -7,7 +7,7 @@ const UserRegister = () => {
   return (
     <div>
       <div className="w-full flex gap-4">
-        <div className="w-full md:w-1/3 bg-white p-5 mx-auto">
+        <div className="w-full md:w-1/3 bg-white p-5 mx-auto border rounded-lg">
           <RegisterForm />
         </div>
         

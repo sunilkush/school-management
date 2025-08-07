@@ -25,7 +25,7 @@ function SidebarMenu({ role }) {
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                  `flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm ${
                     isActive ? "bg-blue-100 font-semibold" : "text-gray-700"
                   }`
                 }
@@ -39,7 +39,7 @@ function SidebarMenu({ role }) {
                   onClick={() => toggleMenu(item.title)}
                   className="flex items-center justify-between w-full px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 text-sm">
                     {item.icon && <item.icon size={18} />}
                     <span>{item.title}</span>
                   </div>

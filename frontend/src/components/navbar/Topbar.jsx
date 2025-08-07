@@ -6,7 +6,8 @@ import { useSelector } from 'react-redux';
 const Topbar = ({ toggleSidebar, isOpen }) => {
   const {user} = useSelector((state)=>state.auth)
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-white border-b transition-all duration-300">
+    <>
+     <header className="flex items-center justify-between gap-2 bg-white border-b transition-all duration-300 px-2 py-2 w-full">
       {/* Mobile Sidebar Toggle Button */}
       <button
         className="p-2 text-deep-purple-600 block md:hidden"
@@ -45,6 +46,8 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
         <UserDropdown />
       </div>
     </header>
+    </>
+   
   );
 };
 
