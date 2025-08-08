@@ -52,7 +52,7 @@ const AttendanceCalendar = () => {
   };
 
   return (
-    <div className="w-full p-4">
+    <div className="w-full">
       <h2 className="text-lg font-bold mb-4">Teacher Attendance Marking</h2>
 
       <FullCalendar

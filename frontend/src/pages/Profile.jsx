@@ -100,7 +100,7 @@ const Profile = () => {
         {activeTab === 'Profile' && (
           
         <div  >
-        <div className='grid grid-flow-col grid-cols-3 gap-3 mt-3'>
+        <div className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 gap-3 mt-3'>
           
           <div className='col-span-2 '>
             <div className='flex flex-col gap-3'>
@@ -244,13 +244,13 @@ const Profile = () => {
         )}
         {activeTab === 'Attendance' && (
           <div  id='Attendence-details'>
-        <div className='grid grid-flow-col grid-cols-3 gap-3 mt-3'>
+        <div className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 gap-3 mt-3'>
           
           <div className='col-span-3  gap-3 flex flex-col'>
              {/*Contact Information start*/}
             <div className='bg-white p-4 rounded-lg border'>
              
-             <div className='grid grid-cols-1 gap-5 mt-3'>
+             <div className='grid grid-cols-1 gap-5'>
                 <AttendanceCalendar/>
              </div>
             </div>
@@ -262,7 +262,7 @@ const Profile = () => {
         )}
         {activeTab === 'Tasks' && (
            <div  id='Tasks-details'>
-        <div className='grid grid-flow-col grid-cols-3 gap-3 mt-3'>
+        <div className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 gap-3 mt-3'>
           
           <div className='col-span-2  gap-3 flex flex-col'>
              {/*Contact Information start*/}
