@@ -16,7 +16,7 @@ const ADMIN_TEACHER = ["Super Admin", "Admin", "Teacher"];
 const STUDENT_PARENT = ["Student", "Parent"];
 
 // ✅ Attendance Routes (Protected)
-router.post("/", auth, roleMiddleware(ADMIN_TEACHER), markAttendance);
+router.post("/mark", auth, roleMiddleware(ADMIN_TEACHER), markAttendance);
 
 router.get("/student/:studentId", auth, roleMiddleware([...ADMIN_TEACHER, ...STUDENT_PARENT]), getAttendanceByStudent);
 

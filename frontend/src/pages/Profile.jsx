@@ -2,6 +2,7 @@
 import { EllipsisVertical,MailPlus,User,CalendarCheck,ClipboardList,MessageCircleMore,Settings,FolderClosed, ChevronRight, PencilLine } from 'lucide-react';
 import { useState } from 'react';
 import userProfile from '../assets/userProfile.png';
+import AttendanceCalendar from './AttendanceCalendar';
 const Profile = () => { 
 
   const [activeTab, setActiveTab] = useState('Profile');
@@ -92,7 +93,7 @@ const Profile = () => {
         </div>
         {activeTab === 'Profile' && (
           
-        <div  >
+        <div>
         <div className='grid grid-flow-col grid-cols-3 gap-3 mt-3'>
           
           <div className='col-span-2  gap-3 flex flex-col'>
@@ -237,129 +238,17 @@ const Profile = () => {
           <div  id='Attendence-details'>
         <div className='grid grid-flow-col grid-cols-3 gap-3 mt-3'>
           
-          <div className='col-span-2  gap-3 flex flex-col'>
+          <div className='col-span-3  gap-3 flex flex-col'>
              {/*Contact Information start*/}
             <div className='bg-white p-4 rounded-lg border'>
-              <h3 className='text-lg font-medium'>Attendance Information</h3>
-             <div className='grid grid-cols-2 gap-5 mt-3'>
-               <div>
-                <p className='text-xs text-gray-500'>Full Name</p>
-                <p className='text-sm text-gray-800'>Sumit Kumar</p>
-               </div>
-              <div>
-                <p className='text-xs text-gray-500'>Gender</p>
-                <p className='text-sm text-gray-800'>Male </p>
-              </div>
-               <div>
-                <p className='text-xs text-gray-500'>Marital Status</p>
-                <p className='text-sm text-gray-800'>Single </p>
-              </div>
-               <div>
-                <p className='text-xs text-gray-500'>Religion</p>
-                <p className='text-sm text-gray-800'>Muslim </p>
-              </div>
-               <div>
-                <p className='text-xs text-gray-500'>Place of Birth</p>
-                <p className='text-sm text-gray-800'>Kanpur </p>
-              </div>
-              <div>
-                <p className='text-xs text-gray-500'>Birth Date</p>
-                <p className='text-sm text-gray-800'>10/06/2000 </p>
-              </div>
-               <div>
-                <p className='text-xs text-gray-500'>Blood Type</p>
-                <p className='text-sm text-gray-800'>O+ </p>
-              </div>
-               <div>
-                <p className='text-xs text-gray-500'>Age</p>
-                <p className='text-sm text-gray-800'>26</p>
-              </div>
+             
+             <div className='grid grid-cols-1 gap-5 mt-3'>
+                <AttendanceCalendar/>
              </div>
             </div>
-             {/*Contact Information end*/}
-             {/* Address Information start */}
-             <div className='bg-white p-4 rounded-lg border'>
-              <h3 className='text-lg font-medium'>Address Information</h3>
-              <div className='grid grid-cols-2 gap-5 mt-3'>
-                <div>
-                  <p className='text-xs text-gray-500'>Residential Address</p>
-                  <p className='text-sm text-gray-800 mb-3'>4517 Washington Ave. Manchester, Kentucky 110033</p>
-                  <p className='text-xs text-gray-500'>Note</p>
-                  <p className='text-sm text-blue-400'>Add Note</p>
-                </div>
-                <div className='flex items-center justify-end'>
-                  <p className='text-sm text-blue-400 flex items-center'>View On Map <ChevronRight className="w-4" /></p>
-                 
-                </div>
-                <hr className='col-span-2' />
-              <div>
-                  <p className='text-xs text-gray-500'>Citizen ID Address</p>
-                  <p className='text-sm text-gray-800 mb-3'>2715 Ash Dr. San Jose, South Dakota 83475</p>
-                  <p className='text-xs text-gray-500'>Note</p>
-                  <p className='text-sm text-blue-400'>Main entrance likely from Ash Drive. Check for a driveway or garage access. </p>
-                </div>
-                <div className='flex items-center justify-end'>
-                  <p className='text-sm text-blue-400 flex items-center'>View On Map <ChevronRight className="w-4" /></p>
-                 
-                </div>
-                
-              </div>
-             </div>
-             {/* Address Information end */}
+             
           </div>
-          <div className='col-span-1 gap-3 flex flex-col'>
-            {/*Contact Information start */}
-             <div className='bg-white p-4 rounded-lg border w-full'>
-              <h3 className='text-md font-medium'>Contact Information</h3>
-              <h4 className='text-sm font-medium my-2'>Personal Contact </h4>
-               <div className='grid grid-cols-2 gap-5 mt-3'>
-                <div>
-                  <p className='text-xs text-gray-500'>Phone</p>
-                  <p className='text-sm text-blue-800 bg-gray-100 rounded-full inline-block px-3 py-1'>+91-7845123265</p>
-                </div>
-                <div>
-                  <p className='text-xs text-gray-500'>Email</p>
-                  <p className='text-sm text-blue-800 bg-gray-100 rounded-full inline-block px-3 py-1'>example@gmail.com</p>
-                </div>
-                <hr className='col-span-2'/>
-                <div className='col-span-2'>
-                  <h4 className='text-sm font-medium'>Personal Contact </h4>
-                  <p className='text-xs my-2 text-gray-400'>Not Provided</p>
-                </div>
-                
-               </div>
-            </div>
-             {/*Contact Information end */}
-            {/* Student Overview start */}  
-              <div className='bg-white p-4 rounded-lg border w-full'>
-              <h3 className='text-md font-medium'>Student Overview</h3>
-              
-               <div className='grid grid-cols-2 gap-5 mt-3'>
-                <div>
-                  <p className='text-xs text-gray-500'>Start Date</p>
-                  <p className='text-sm text-gray-800'>2025-current (4 Years)</p>
-                </div>
-                <div>
-                  <p className='text-xs text-gray-500'>Role</p>
-                  <p className='text-sm text-gray-800'>Student</p>
-                </div>
-                <hr className='col-span-2'/>
-                <div>
-                  <p className='text-xs text-gray-500'>Job Level</p>
-                  <p className='text-sm text-gray-800'>Manager Level</p>
-                </div>
-                <div>
-                  <p className='text-xs text-gray-500'>Employee Status</p>
-                  <p className='text-sm text-gray-800'>Fulltime</p>
-                </div>
-                 <div className='col-span-2'>
-                  <p className='text-sm flex items-center text-blue-500'>View Contract <ChevronRight className="w-4" /></p>
-                 </div>
-               </div>
-            </div>             
-            {/* Student Overview end */}             
-
-          </div>
+         
         </div>
         </div>
         )}

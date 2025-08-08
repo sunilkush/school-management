@@ -16,9 +16,10 @@ const Dashboard = () => {
   // ✅ BLOCK IF NO ACTIVE YEAR AND NOT SUPER ADMIN
   useEffect(() => {
     if (role !== 'Super Admin' && !activeYear?._id) {
-      alert('Please select or create an academic year to continue.');
-     // navigate('/');
-    }
+      // Redirect to no active year page if the user is not a Super Admin and there is no active academic year
+      if (role !== 'Super Admin') 
+      navigate('/no-active-year', { replace: true });
+    } 
   }, [role, activeYear, navigate]);
 
   const closeSidebar = () => setIsSidebarOpen(false);

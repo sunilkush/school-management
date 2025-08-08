@@ -150,7 +150,7 @@ const AcademicYearPage = () => {
         </tbody>
       </table>
 
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3  gap-4">
         <div className="bg-white p-4 rounded shadow">
         <h2 className="text-lg font-semibold mb-2">Create New Academic Year</h2>
         <div className="flex gap-2 items-start flex-col">

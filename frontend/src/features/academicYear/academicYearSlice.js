@@ -28,7 +28,7 @@ export const fetchAllAcademicYears = createAsyncThunk(
       });
       return response.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(err.response?.data?.message );
     }
   }
 );

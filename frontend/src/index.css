@@ -5,3 +5,7 @@
 body {
   font-family: "Noto Sans", sans-serif;
 }
+.fc-direction-ltr .fc-daygrid-event.fc-event-end{
+    margin-right: 2px;
+    text-align: center!important;
+}

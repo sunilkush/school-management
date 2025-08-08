@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@fontsource/jost": "^5.2.6",
+    "@fullcalendar/daygrid": "^6.1.18",
+    "@fullcalendar/interaction": "^6.1.18",
+    "@fullcalendar/react": "^6.1.18",
     "@heroicons/react": "^2.2.0",
     "@material-tailwind/react": "^2.1.10",
     "@reduxjs/toolkit": "^2.6.1",
@@ -20,7 +23,6 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "env": "^0.0.2",
-    
     "lucide-react": "^0.506.0",
     "primereact": "^10.9.6",
     "react": "^19.0.0",

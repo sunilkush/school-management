@@ -59,13 +59,14 @@ import SendNotification from "./pages/SendNotification.jsx";
 import SmsEmailHistory from "./pages/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import SchoolAdminReport from "./pages/schoolAdminReport.jsx";
-
+import NoActiveYear from "./pages/no-active-year.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
       { path: "/", element: <LoginPage /> },
+      { path: "/no-active-year", element: <NoActiveYear /> },
       { path: "unauthorized", element: <Unauthorized /> },
       { path: "*", element: <Unauthorized /> },
       {
