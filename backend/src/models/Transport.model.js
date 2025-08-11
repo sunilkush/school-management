@@ -23,6 +23,7 @@ const TransportSchema = new Schema(
         driverName: {
             type: String,
             required: true,
+            lowercase: true
         },
         driverContact: {
             type: String,
