@@ -11,7 +11,7 @@ const createSubject = asyncHandler(async (req, res) => {
     if (!schoolId || !name || !teacherId) {
         throw new ApiError(400, "All fields (schoolId, name, teacherId) are required.");
     }
-    const exists = await Subject.findOne({ schoolId, name });
+    const exists = await Subject.findOne({teacherId,name,schoolId});
     if (exists) {
         return res.status(400).json({
             message: "Subject already exists!"
@@ -32,7 +32,7 @@ const createSubject = asyncHandler(async (req, res) => {
         return res.status(500).json({
              message:"Failed to create subject. Please try again."
         })
-        throw new ApiError(500,);
+       
     }
 
     return res.status(201).json(
@@ -42,10 +42,37 @@ const createSubject = asyncHandler(async (req, res) => {
 
 // ✅ Get All Subjects (GET)
 const getAllSubjects = asyncHandler(async (req, res) => {
-    const subjects = await Subject.find()
-        .populate("schoolId", "name")
-        .populate("teacherId", "name email")
-
+    const subjects = await Subject.aggregate([
+        {
+            $lookup: {
+                from: "schools", // collection name in MongoDB
+                localField: "schoolId",
+                foreignField: "_id",
+                as: "school"
+            }
+        },
+        { $unwind: "$school" }, // flatten the school array
+        {
+            $lookup: {
+                from: "users", // teachers are stored in users collection
+                localField: "teacherId",
+                foreignField: "_id",
+                as: "teacher"
+            }
+        },
+        { $unwind: { path: "$teacher", preserveNullAndEmptyArrays: true } }, // preserveNull so subjects without teacher still appear
+        {
+            $project: {
+                _id: 1,
+                name: 1,
+                schoolId: 1,
+                teacherId: 1,
+                "school.name": 1,
+                "teacher.name": 1,
+                "teacher.email": 1
+            }
+        }
+    ]);
 
     if (!subjects.length) {
         throw new ApiError(404, "No subjects found!");
@@ -55,6 +82,7 @@ const getAllSubjects = asyncHandler(async (req, res) => {
         new ApiResponse(200, subjects, "Subjects retrieved successfully!")
     );
 });
+
 
 // ✅ Get Subject by ID (GET)
 const getSubject = asyncHandler(async (req, res) => {
@@ -77,11 +105,11 @@ const getSubject = asyncHandler(async (req, res) => {
 // ✅ Update Subject (PUT)
 const updateSubject = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { name, teacherId, classes } = req.body;
+    const { name, teacherId } = req.body;
 
     const updatedSubject = await Subject.findByIdAndUpdate(
         id,
-        { name, teacherId, classes },
+        { name, teacherId},
         { new: true } // Return updated document
     );
 

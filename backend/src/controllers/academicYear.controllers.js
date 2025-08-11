@@ -173,15 +173,12 @@ export const getActiveAcademicYearBySchool = asyncHandler(async (req, res) => {
   });
 
   if (!academicYear) {
-    return res.status(404).json(
-      new ApiError(404, "No active academic year found for this school")
-    )
-    
+    throw new ApiError(404, "No active academic year found for this school");
   }
 
-  res.status(200).json(
-     new ApiError(200, "Active academic year found", 
-      {data: academicYear, message: "Active academic year retrieved successfully"}))
-   
- 
+  res.status(200).json({
+    success: true,
+    message: "Active academic year retrieved successfully",
+    data: academicYear,
+  });
 });

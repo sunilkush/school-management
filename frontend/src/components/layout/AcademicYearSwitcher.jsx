@@ -99,8 +99,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
         <p className="text-sm text-gray-500">No academic years available.</p>
       )}
 
-      {message && <p className="text-green-600 text-xs mt-2">{message}</p>}
-      {error && <p className="text-red-600 text-xs mt-2">{error}</p>}
+      
     </div>
   );
 };
