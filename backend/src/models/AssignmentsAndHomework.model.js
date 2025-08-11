@@ -29,10 +29,12 @@ const AssignmentSchema = new Schema(
         title: {
             type: String,
             required: true,
+            lowercase: true,
         },
         description: {
             type: String,
             required: true,
+            lowercase: true
         },
         dueDate: {
             type: Date,

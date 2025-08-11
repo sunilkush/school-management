@@ -30,8 +30,8 @@ const SubjectSchema = new Schema(
                 'Textile Design', 'Jewelry Design', 'Graphic Arts', 'Photography', 'Film Studies', 'Animation',
                 'Visual Effects', 'Sound Engineering', 'Music Production', 'Theater Arts', 'Dance Performance',
                 'Choreography', 'Creative Writing', 'Journalism', 'Broadcasting', 'Public Speaking', 'Debate',
-                'Forensic Science', 'Criminology', 'Social Work'],
-        },
+                'Forensic Science', 'Criminology', 'Social Work']
+            },
         teacherId: {
             type: Schema.Types.ObjectId,
             ref: 'Users',

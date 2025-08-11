@@ -10,6 +10,7 @@ const classSchema = new Schema({
     name: {
         type: String,
         required: true,
+        lowercase: true
     },
     section: {
         type: String,
@@ -29,7 +30,8 @@ const classSchema = new Schema({
     subjects: [
         {
             type: Schema.Types.ObjectId,
-            ref: "Subjects"
+            ref: "Subjects",
+            lowercase: true
         }
     ]
 },

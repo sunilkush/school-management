@@ -24,6 +24,7 @@ const CommunicationSchema = new Schema(
         message: {
             type: String,
             required: true,
+            lowercase: true
         },
         status: {
             type: String,

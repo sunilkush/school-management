@@ -6,10 +6,12 @@ const academicYearSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",
       required: true,
+      lowercase: true
     },
     name: {
       type: String,
       trim: true,
+      lowercase: true
     },
     code: {
       type: String,
@@ -31,6 +33,7 @@ const academicYearSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive", "archived"],
       default: "inactive",
+      lowercase: true
     },
     auditLog: [
       {

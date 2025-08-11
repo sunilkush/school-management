@@ -4,15 +4,18 @@ const bookSchema = new Schema({
     title: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        lowercase: true
     },
     author: {
         type: String,
         required: true,
+        lowercase: true,
     },
     publisher: {
         type: String,
         required: true,
+        lowercase: true
     },
     isbn: {
         type: String,
@@ -22,6 +25,7 @@ const bookSchema = new Schema({
     category: {
         type: String,
         required: true,
+        lowercase: true
     },
     totalCopies: {
         type: Number,

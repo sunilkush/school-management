@@ -4,15 +4,16 @@ const schoolSchema = new Schema({
     name: {
         type: String,
         required: true,
-
+        lowercase: true
     },
     address: {
         type: String,
-
+        lowercase: true
     },
     email: {
         type: String,
         required: true,
+        lowercase: true
     },
     phone: {
         type: Number,

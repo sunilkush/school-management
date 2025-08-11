@@ -32,11 +32,13 @@ const employeeSchema = new Schema({
     // Job Details
     department: {
         type: String,
-        required: true
+        required: true,
+        lowercase: true
     },
     designation: {
         type: String,
-        required: true
+        required: true,
+        lowercase: true
     },
     joinDate: {
         type: Date,
