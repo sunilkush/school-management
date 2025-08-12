@@ -25,7 +25,7 @@ function SidebarMenu({ role }) {
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm ${
+                  `flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 hover:text-blue-800 text-sm text-blue-800 ${
                     isActive ? "bg-blue-100 font-semibold" : "text-gray-700"
                   }`
                 }
@@ -37,7 +37,7 @@ function SidebarMenu({ role }) {
               <>
                 <button
                   onClick={() => toggleMenu(item.title)}
-                  className="flex items-center justify-between w-full px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+                  className="flex items-center justify-between w-full px-3 py-2 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-600"
                 >
                   <div className="flex items-center gap-3 text-sm">
                     {item.icon && <item.icon size={18} />}
@@ -56,8 +56,8 @@ function SidebarMenu({ role }) {
                         <NavLink
                           to={sub.path}
                           className={({ isActive }) =>
-                            `flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 ${
-                              isActive ? "font-medium text-deep-purple-600" : "text-gray-700"
+                            `flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-100 hover:text-blue-600 ${
+                              isActive ? "font-medium text-blue-600" : "text-gray-700"
                             }`
                           }
                         >

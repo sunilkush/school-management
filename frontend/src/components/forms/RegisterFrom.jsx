@@ -138,8 +138,9 @@ const RegisterForm = () => {
       {message && <p className="text-green-600 text-center">{message}</p>}
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      <form className="" onSubmit={handleSubmit}>
-        <label className="text-xs ">Name</label>
+      <form className="grid grid-cols-2 gap-4" onSubmit={handleSubmit}>
+        <div>
+          <label className="text-xs ">Name</label>
         <input
           name="name"
           onChange={handleChange}
@@ -149,7 +150,10 @@ const RegisterForm = () => {
           required
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-        <label className="text-xs ">Email</label>
+        </div>
+        
+        <div>
+          <label className="text-xs ">Email</label>
         <input
           name="email"
           onChange={handleChange}
@@ -159,7 +163,9 @@ const RegisterForm = () => {
           required
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-       <label className="text-xs ">Password</label>
+          </div>
+       <div>
+        <label className="text-xs ">Password</label>
         <input
           name="password"
           onChange={handleChange}
@@ -169,7 +175,9 @@ const RegisterForm = () => {
           required
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
-       <label className="text-xs ">Avatar</label>
+       </div>
+       <div>
+        <label className="text-xs ">Avatar</label>
         <input
           type="file"
           name="avatar"
@@ -177,8 +185,9 @@ const RegisterForm = () => {
           onChange={handleChange}
           className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
+       </div>
             
-        {currentUserRole === "super admin" && (
+       <div> {currentUserRole === "super admin" && (
           <div>
            <label className="text-xs">School Name</label>
           <select
@@ -195,8 +204,9 @@ const RegisterForm = () => {
               </option>
             ))}
           </select></div>
-        )}
-        <label className="text-xs">Role </label>
+        )}</div>
+        <div>
+          <label className="text-xs">Role </label>
         <select
           name="roleId"
           value={formData.roleId}
@@ -214,8 +224,9 @@ const RegisterForm = () => {
             </option>
           ))}
         </select>
+        </div>
 
-        <div className="flex items-center mb-2">
+        <div className="flex items-center mb-2 col-span-2">
           <input
             id="isActive"
             type="checkbox"
@@ -228,14 +239,16 @@ const RegisterForm = () => {
             Is Active
           </label>
         </div>
-
-        <button
+        <div className="col-span-2  justify-center flex items-center">
+           <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-purple-500 text-white py-2 rounded-md hover:bg-purple-600"
+          className=" px-3 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-800"
         >
           {isLoading ? "Registering..." : "Register Now"}
         </button>
+        </div>
+       
       </form>
     </div>
   );

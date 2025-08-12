@@ -32,7 +32,7 @@ const NoActiveYear = () => {
                 </p>
                 <button
                     onClick={handleGoToSettings}
-                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-200"
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-200"
                 >
                     Go to Settings
                 </button>

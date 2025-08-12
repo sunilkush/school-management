@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import dbConnection from "./db/index.js"
 import {app} from "./app.js"
-
+import { School, AcademicYear, Report} from "./models/index.model.js";
 dotenv.config()
 
 dbConnection()

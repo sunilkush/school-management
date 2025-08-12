@@ -92,7 +92,7 @@ const UserDropdown = () => {
 
                     {/* Logout */}
                     <button
-                        className="w-full mt-3 flex items-center justify-center gap-2 text-sm font-medium text-deep-purple-700 bg-purple-50 hover:bg-purple-100 py-2 rounded-md"
+                        className="w-full mt-3 flex items-center justify-center gap-2 text-sm font-medium text-deep-purple-700 bg-purple-50 hover:bg-blue-100 py-2 rounded-md"
                         onClick={handleLogout}
                     >
                         <LogOut size={16} /> Logout

@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv"
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 dotenv.config();
 
 const app = express()
@@ -39,6 +40,9 @@ import RoleRoutes from "./routes/role.routes.js";
 import EmployeeRoutes from "./routes/employee.routes.js";
 import AcademicYearRoutes from "./routes/academicYear.routes.js";
 import SectionRoutes from "./routes/section.routes.js";
+import ReportsRoutes from "./routes/report.routes.js";
+
+
 
 // route
 app.use('/', indexRouter);
@@ -54,4 +58,6 @@ app.use("/app/v1/role", RoleRoutes);
 app.use("/app/v1/employee", EmployeeRoutes);
 app.use("/app/v1/academicYear", AcademicYearRoutes);
 app.use("/app/v1/section", SectionRoutes);
+app.use("/app/v1/report", ReportsRoutes);
 export { app }
+

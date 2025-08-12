@@ -1,112 +1,50 @@
-// models/ReportFilters.js
+import mongoose from "mongoose";
 
-const mongoose = require('mongoose');
-
-const ReportFiltersSchema = new mongoose.Schema({
-  academicYearId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'AcademicYear',
-    required: true,
-  },
-
-  // Supports multi-school comparisons
-  schoolIds: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'School',
-    },
-  ],
-
-  // Support filtering by user role
-  userRoles: [
-    {
+const reportSchema = new mongoose.Schema(
+  {
+    title: {
       type: String,
-      enum: ['Super Admin', 'School Admin', 'Teacher', 'Student', 'Parent', 'Accountant', 'Staff'],
+      required: [true, "Report title is required"],
+      trim: true,
     },
-  ],
-
-  // Filter by student demographics or staff assignment
-  gender: {
-    type: String,
-    enum: ['Male', 'Female', 'Other'],
-  },
-
-  category: {
-    type: String,
-    enum: ['General', 'OBC', 'SC', 'ST', 'EWS'],
-  },
-
-  religion: {
-    type: String,
-  },
-
-  bloodGroup: {
-    type: String,
-    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
-  },
-
-  disability: {
-    type: Boolean,
-  },
-
-  // Academic filters
-  classIds: [
-    {
+    school: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Classes',
+      ref: "School", // must match the model name you used in school.model.js
+      required: true,
     },
-  ],
-
-  sectionIds: [
-    {
+    session: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Section',
+      ref: "AcademicYear",
+      required: true,
     },
-  ],
-
-  subjects: [
-    {
+    type: {
+      type: String,
+      enum: ["fees", "students", "attendance", "performance", "custom"],
+      required: [true, "Report type is required"],
+    },
+    filtersApplied: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    data: {
+      type: mongoose.Schema.Types.Mixed, // flexible JSON or any data
+      required: [true, "Report data is required"],
+    },
+    generatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Subject',
+      ref: "User",
+      required: true,
     },
-  ],
-
-  // Time range filter for date-based reports (e.g., attendance, admissions, fee payments)
-  fromDate: {
-    type: Date,
+    status: {
+      type: String,
+      enum: ["draft", "finalized"],
+      default: "finalized",
+    },
   },
+  { timestamps: true }
+);
 
-  toDate: {
-    type: Date,
-  },
+export const Report = mongoose.model("Report", reportSchema);
 
-  // Status filter (active/inactive/terminated)
-  status: {
-    type: String,
-    enum: ['Active', 'Inactive', 'Terminated'],
-  },
 
-  // Fee-specific filters (if financial reporting is included)
-  feeType: {
-    type: String,
-    enum: ['Admission', 'Tuition', 'Transport', 'Hostel', 'Other'],
-  },
-
-  paymentStatus: {
-    type: String,
-    enum: ['Paid', 'Unpaid', 'Partial'],
-  },
-
-  // Export options
-  exportFormat: {
-    type: String,
-    enum: ['PDF', 'Excel', 'CSV'],
-  },
-
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-}, { timestamps: true });
-
-export const ReportFilters = mongoose.model('ReportFilters', ReportFiltersSchema);

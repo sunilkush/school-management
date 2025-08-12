@@ -37,14 +37,14 @@ export const sidebarMenu = {
       title: "Schools", icon: School,
       subMenu: [
         { title: "All Schools", path: "superadmin/schools", icon: School },
-        { title: "Add School", path: "superadmin/schools/add", icon: School },
+        /* { title: "Add School", path: "superadmin/schools/add", icon: School }, */
       ],
     },
     {
       title: "Admins", icon: UserCog,
       subMenu: [
         { title: "All Admins", path: "superadmin/admins", icon: Users },
-        { title: "Register Admin", path: "superadmin/user-create", icon: UserCog },
+      /*   { title: "Register Admin", path: "superadmin/user-create", icon: UserCog }, */
       ],
     },
     {

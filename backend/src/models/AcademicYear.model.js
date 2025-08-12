@@ -6,12 +6,11 @@ const academicYearSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",
       required: true,
-      lowercase: true
     },
     name: {
       type: String,
       trim: true,
-      lowercase: true
+      lowercase: true,
     },
     code: {
       type: String,
@@ -33,7 +32,7 @@ const academicYearSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive", "archived"],
       default: "inactive",
-      lowercase: true
+      lowercase: true,
     },
     auditLog: [
       {
@@ -49,10 +48,10 @@ const academicYearSchema = new mongoose.Schema(
   }
 );
 
-// Auto-generate name & code from dates
+// Auto-generate 'name' & 'code' from startDate and endDate before saving
 academicYearSchema.pre("save", function (next) {
-  const startYear = new Date(this.startDate).getFullYear();
-  const endYear = new Date(this.endDate).getFullYear();
+  const startYear = this.startDate.getFullYear();
+  const endYear = this.endDate.getFullYear();
 
   this.name = `${startYear}-${endYear}`;
   this.code = `AY${startYear}${endYear}`;
@@ -60,10 +59,10 @@ academicYearSchema.pre("save", function (next) {
   next();
 });
 
-// Prevent editing archived years
+// Prevent updates on archived academic years
 academicYearSchema.pre("findOneAndUpdate", async function (next) {
   const docToUpdate = await this.model.findOne(this.getQuery());
-  if (docToUpdate.status === "archived") {
+  if (docToUpdate?.status === "archived") {
     const err = new Error("Archived academic years cannot be modified.");
     err.statusCode = 403;
     return next(err);
@@ -72,3 +71,5 @@ academicYearSchema.pre("findOneAndUpdate", async function (next) {
 });
 
 export const AcademicYear = mongoose.model("AcademicYear", academicYearSchema);
+
+

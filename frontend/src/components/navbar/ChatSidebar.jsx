@@ -106,7 +106,7 @@ const ChatSidebar = () => {
   return (
     <div className="w-80 bg-white border-r shadow-sm h-screen flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center px-4 py-3 border-b bg-purple-100">
+      <div className="flex justify-between items-center px-4 py-3 border-b bg-blue-100">
         <div className="flex space-x-6">
           <span className="text-sm font-medium text-gray-500">NOTES</span>
           <span className="text-sm font-medium text-gray-500">ALERTS</span>
