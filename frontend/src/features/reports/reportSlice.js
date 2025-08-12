@@ -24,7 +24,7 @@ export const fetchReports = createAsyncThunk(
     }
   }
 );
-
+// createReport accepts the report data
 export const createReport = createAsyncThunk(
   'reports/createReport',
   async (payload, { rejectWithValue }) => {
@@ -38,7 +38,7 @@ export const createReport = createAsyncThunk(
     }
   }
 );
-
+// deleteReport accepts the report ID to delete
 export const deleteReport = createAsyncThunk(
   'reports/deleteReport',
   async (id, { rejectWithValue }) => {
@@ -53,6 +53,20 @@ export const deleteReport = createAsyncThunk(
   }
 );
 
+export const reportView = createAsyncThunk('reports/reportView', async(id, { rejectWithValue }) => {
+  try {
+    
+    const res = await axios.get(`${App_Base_Url}/report/view/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data || { message: err.message });
+  }
+})
+
+
+// Report slice to manage reports state
 const reportSlice = createSlice({
   name: 'reports',
   initialState: {
@@ -100,8 +114,26 @@ const reportSlice = createSlice({
       .addCase(deleteReport.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to delete report';
-      });
-  },
+      })
+
+      .addCase(reportView.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(reportView.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.items.findIndex((r) => r._id === action.payload._id);
+        if (index !== -1) {
+          state.items[index] = action.payload; // update existing report
+        } else {
+          state.items.push(action.payload); // or add new report
+        }
+      })
+      .addCase(reportView.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to view report';
+      })
+  }
 });
 
 export default reportSlice.reducer;

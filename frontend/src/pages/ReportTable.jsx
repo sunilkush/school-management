@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { deleteReport } from '../features/reports/reportSlice';
+import { deleteReport, reportView } from '../features/reports/reportSlice';
 import dayjs from 'dayjs';
 
 const ReportsTable = () => {
@@ -11,7 +11,10 @@ const ReportsTable = () => {
     if (!window.confirm('Delete this report?')) return;
     dispatch(deleteReport(id));
   };
-
+    const handleView = (id) => {
+    // Dispatch the action to view the report
+    dispatch(reportView(id));
+  };
   return (
     <div>
       {loading && <div className="py-4">Loading...</div>}
@@ -41,8 +44,10 @@ const ReportsTable = () => {
                 <td className="p-2 align-top">{r.school?.name || r.school || '-'}</td>
                 <td className="p-2 align-top">{r.generatedBy?.name || '-'}</td>
                 <td className="p-2 align-top">{dayjs(r.createdAt).format('YYYY-MM-DD')}</td>
-                <td className="p-2 align-top">
-                  <button className="btn btn-sm btn-error" onClick={() => handleDelete(r._id)}>Delete</button>
+                <td className="p-2 align-top grid grid-cols-2 gap-2">
+                   <button className="px-3 py-2 bg-blue-500 rounded-lg text-white" onClick={() => handleView(r._id)}>View</button>
+                  <button className="px-3 py-2 bg-red-500 rounded-lg text-white" onClick={() => handleDelete(r._id)}>Delete</button>
+                 
                 </td>
               </tr>
             ))}

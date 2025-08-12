@@ -58,3 +58,22 @@ export const deleteReport = async (req, res) => {
     res.status(500).json({ status: "error", message: err.message });
   }
 };
+
+export const viewReport = async (req, res) => {
+  try {
+    const report = await Report.findById(req.params.id)
+      .populate("school", "name")
+      .populate("generatedBy", "name");
+
+    if (!report) {
+      return res.status(404).json({ status: "error", message: "Report not found" });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: report,
+    });
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
+}

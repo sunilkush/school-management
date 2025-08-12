@@ -31,6 +31,6 @@ const schoolSchema = new Schema({
 }, { timestamps: true });
 
 // Use singular model name "School"
-const School = mongoose.model("School", schoolSchema);
+export const School = mongoose.model("School", schoolSchema);
 
-export default School;
+
