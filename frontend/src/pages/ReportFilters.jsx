@@ -1,110 +1,86 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { fetchReports } from "../features/reports/reportSlice";
+import React, { useEffect} from "react";
 
-const ReportFilters = () => {
+import { useDispatch, useSelector } from "react-redux";
+import { fetchSchools } from "../features/schools/schoolSlice";
+
+const ReportFilters = ({ filters, setFilters }) => {
   const dispatch = useDispatch();
-  const [filters, setFilters] = useState({
-    school: "",
-    type: "",
-    session: "",
-    dateFrom: "",
-    dateTo: "",
-  });
+  const { schools } = useSelector((state) => state.school);
 
-  const apply = (e) => {
-    e.preventDefault();
-    dispatch(fetchReports(filters));
-  };
-
-  const reset = () => {
-    const empty = { school: "", type: "", session: "", dateFrom: "", dateTo: "" };
-    setFilters(empty);
-    dispatch(fetchReports(empty));
-  };
-
-  const inputClass =
-    "mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50";
-
-  const labelClass = "block text-sm font-medium text-gray-700";
+  useEffect(() => {
+    dispatch(fetchSchools());
+  }, [dispatch]);
 
   return (
-    <form
-      onSubmit={apply}
-      className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-6 items-end"
-    >
-      {/* School */}
-      <div>
-        <label className={labelClass}>School</label>
-        <input
-          value={filters.school}
-          onChange={(e) => setFilters({ ...filters, school: e.target.value })}
-          className={inputClass}
-          placeholder="School ID or name"
-        />
-      </div>
+    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      {/* School Dropdown */}
+      <select
+        className="border rounded p-2"
+        value={filters.school}
+        onChange={(e) => setFilters({ ...filters, school: e.target.value })}
+      >
+        <option value="">All Schools</option>
+        {schools.map((school) => (
+          <option key={school._id} value={school._id}>
+            {school.name}
+          </option>
+        ))}
+      </select>
 
-      {/* Type */}
-      <div>
-        <label className={labelClass}>Type</label>
-        <input
-          value={filters.type}
-          onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-          className={inputClass}
-          placeholder="students, fees..."
-        />
-      </div>
+      {/* Academic Year */}
+      <select
+        className="border rounded p-2"
+        value={filters.academicYear}
+        onChange={(e) =>
+          setFilters({ ...filters, academicYear: e.target.value })
+        }
+      >
+        <option value="">All Years</option>
+        <option value="2025-2026">2025-2026</option>
+        <option value="2024-2025">2024-2025</option>
+      </select>
 
-      {/* Session */}
-      <div>
-        <label className={labelClass}>Session</label>
-        <input
-          value={filters.session}
-          onChange={(e) => setFilters({ ...filters, session: e.target.value })}
-          className={inputClass}
-          placeholder="2025-2026"
-        />
-      </div>
+      {/* Report Type */}
+      <select
+        className="border rounded p-2"
+        value={filters.reportType}
+        onChange={(e) =>
+          setFilters({ ...filters, reportType: e.target.value })
+        }
+      >
+        <option value="">All Types</option>
+        <option value="students">Students</option>
+        <option value="fees">Fees</option>
+        <option value="attendance">Attendance</option>
+      </select>
 
-      {/* From Date */}
-      <div>
-        <label className={labelClass}>From</label>
-        <input
-          type="date"
-          value={filters.dateFrom}
-          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-          className={inputClass}
-        />
-      </div>
+      {/* Date Range From */}
+      <input
+        type="date"
+        className="border rounded p-2"
+        value={filters.dateFrom}
+        onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+      />
 
-      {/* To Date */}
-      <div>
-        <label className={labelClass}>To</label>
-        <input
-          type="date"
-          value={filters.dateTo}
-          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-          className={inputClass}
-        />
-      </div>
+      {/* Date Range To */}
+      <input
+        type="date"
+        className="border rounded p-2"
+        value={filters.dateTo}
+        onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+      />
 
-      {/* Buttons */}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1"
-        >
-          Apply
-        </button>
-        <button
-          type="button"
-          onClick={reset}
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-1"
-        >
-          Reset
-        </button>
-      </div>
-    </form>
+      {/* Status */}
+      <select
+        className="border rounded p-2"
+        value={filters.status}
+        onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+      >
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="archived">Archived</option>
+      </select>
+    </div>
   );
 };
 

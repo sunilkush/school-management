@@ -69,10 +69,12 @@ export const reportView = createAsyncThunk('reports/reportView', async(id, { rej
 // Report slice to manage reports state
 const reportSlice = createSlice({
   name: 'reports',
+  
   initialState: {
     items: [],
     loading: false,
     error: null,
+   
   },
   reducers: {},
   extraReducers: (builder) => {
