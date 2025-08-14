@@ -4,7 +4,7 @@ const classSchema = new Schema({
    
     schoolId: {
         type: Schema.Types.ObjectId,
-        ref: "Schools",
+        ref: "School",
         required: true,
     },
     name: {
@@ -19,18 +19,18 @@ const classSchema = new Schema({
     },
     teacherId: {
         type: Schema.Types.ObjectId,
-        ref: "Users"
+        ref: "User"
     },
     students: [
         {
             type: Schema.Types.ObjectId,
-            ref: "Users"
+            ref: "User"
         }
     ],
     subjects: [
         {
             type: Schema.Types.ObjectId,
-            ref: "Subjects",
+            ref: "Subject",
             lowercase: true
         }
     ]

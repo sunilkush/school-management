@@ -7,6 +7,7 @@ import subjectReducer from "../features/subject/subjectSlice"
 import classReducer from "../features/classes/classSlice";
 import academicYearReducer from "../features/academicYear/academicYearSlice";
 import reportReducer from "../features/reports/reportSlice";
+import dashboardReducer from "../features/Dashboard/dashboardSlice";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -16,7 +17,8 @@ const store = configureStore({
     subject: subjectReducer,
     class: classReducer,
     academicYear: academicYearReducer,
-    reports: reportReducer
+    reports: reportReducer,
+    dashboard: dashboardReducer,
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

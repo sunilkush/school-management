@@ -41,7 +41,7 @@ import EmployeeRoutes from "./routes/employee.routes.js";
 import AcademicYearRoutes from "./routes/academicYear.routes.js";
 import SectionRoutes from "./routes/section.routes.js";
 import ReportsRoutes from "./routes/report.routes.js";
-
+import DashboardRoutes from "./routes/dashboard.routes.js";
 
 
 // route
@@ -59,5 +59,6 @@ app.use("/app/v1/employee", EmployeeRoutes);
 app.use("/app/v1/academicYear", AcademicYearRoutes);
 app.use("/app/v1/section", SectionRoutes);
 app.use("/app/v1/report", ReportsRoutes);
+app.use("/app/v1/dashboard", DashboardRoutes);
 export { app }
 

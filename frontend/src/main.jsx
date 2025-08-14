@@ -164,6 +164,9 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "reports", element: <SchoolAdminReport /> },
+               { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
 
             ],
           },

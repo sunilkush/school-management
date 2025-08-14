@@ -161,8 +161,14 @@ export const sidebarMenu = {
     { title: "Attendance", path: "teacher/attendance", icon: UserCheck },
     { title: "Exams", path: "teacher/exams", icon: GraduationCap },
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
-    { title: "Communication", path: "teacher/communication", icon: MessageCircle },
-    { title: "Communication", path: "teacher/communication", icon: MessageCircle },
+   {
+      title: "Communication", icon: Bell,
+      subMenu: [
+        { title: "Send Notification", path: "teacher/communication/send", icon: MessageSquare },
+        { title: "SMS/Email History", path: "teacher/communication/history", icon: FileText },
+      ],
+    },
+    { title: "Reports", path: "teacher/reports", icon: FileBarChart2 },
   ],
 
   'student': [

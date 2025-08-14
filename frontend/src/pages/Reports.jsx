@@ -1,6 +1,5 @@
-// src/pages/ReportsPage.jsx
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchReports } from "../features/reports/reportSlice";
 import ReportFilters from "./ReportFilters";
 import ReportsTable from "./ReportTable";
@@ -8,9 +7,12 @@ import SummaryCards from "./SummaryCards";
 import ReportsChart from "./ReportsChart";
 import ExportButtons from "./ExportButtons";
 import CreateReportForm from "./CreateReportForm";
+import { fetchDashboardSummary } from "../features/Dashboard/dashboardSlice";
 
-const ReportsPage = () => {
+const Reports = () => {
   const dispatch = useDispatch();
+  const { summary } = useSelector((state) => state.dashboard);
+  
   const [filters, setFilters] = useState({
     school: "",
     academicYear: "",
@@ -20,39 +22,51 @@ const ReportsPage = () => {
     status: "",
   });
 
+  // ✅ Correctly parse role from localStorage
+  const storedUser = localStorage.getItem("user");
+  let parsedRole;
+  
+  if (storedUser) {
+    try {
+      const userObj = JSON.parse(storedUser);
+      parsedRole = userObj?.role?.name;
+      
+    } catch (e) {
+      console.error("Invalid user object in localStorage", e);
+    }
+  }
+  
+  
+
+  useEffect(() => {
+  if (parsedRole) {
+    dispatch(fetchDashboardSummary({
+      role: parsedRole, 
+     
+    }));
+  }
+}, [dispatch, parsedRole]);
+
   useEffect(() => {
     dispatch(fetchReports(filters));
   }, [dispatch, filters]);
 
   return (
     <div className="p-6 space-y-6">
-      {/* Page Title */}
-      <h1 className="text-2xl font-bold">Super Admin Reports</h1>
+      <h1 className="text-2xl font-bold">{parsedRole} Reports</h1>
 
-      {/* Create Report Form */}
       <CreateReportForm />
 
-      {/* Filters Panel */}
       <div className="bg-white p-4 rounded-lg shadow-md">
         <ReportFilters filters={filters} setFilters={setFilters} />
       </div>
 
-      {/* Summary Cards */}
-      <SummaryCards
-        totalStudents={200}
-        feesCollected={150000}
-        presentPercent={92}
-      />
+      <SummaryCards data={summary} />
 
-      {/* Charts Section */}
-      <div >
-        <ReportsChart />
-      </div>
+      <ReportsChart />
 
-      {/* Export Buttons */}
       <ExportButtons />
 
-      {/* Report Table */}
       <div className="bg-white p-4 rounded-lg shadow-md">
         <ReportsTable filters={filters} />
       </div>
@@ -60,4 +74,4 @@ const ReportsPage = () => {
   );
 };
 
-export default ReportsPage;
+export default Reports;
