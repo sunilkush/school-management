@@ -88,7 +88,7 @@ export const searchRoles = createAsyncThunk(
   async (query, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${Api_Base_Url}/role/search?${query}`, {
+      const res = await axios.get(`${Api_Base_Url}/role/search/${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return res.data.data;
