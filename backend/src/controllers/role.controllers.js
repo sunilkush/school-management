@@ -85,105 +85,183 @@ const defaultPermissions = {
   ]
 };
 const allActions = ["create", "read", "update", "delete", "export", "collect", "return", "assign"];
-// ✅ Create a Role (Only Admin)
+/**
+ * ✅ Create Role
+ */
 export const createRole = asyncHandler(async (req, res) => {
-  let { name, schoolId, permissions } = req.body;
+  let { name, code, type, level, description, schoolId, permissions } = req.body;
 
   if (!name || typeof name !== "string") {
     throw new ApiError(400, "Role name is required and must be a string");
   }
 
   name = name.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  const isSuperAdmin = name === "Super Admin";
-  let schoolObjectId = null;
+  code = code || name.replace(/\s+/g, "_").toUpperCase(); // e.g. "School Admin" → "SCHOOL_ADMIN"
+  type = type || (["Super Admin", "School Admin", "Teacher", "Student"].includes(name) ? "system" : "custom");
+  level = level || (name === "Super Admin" ? 1 : name === "School Admin" ? 2 : name === "Teacher" ? 3 : 4);
 
-  if (!isSuperAdmin) {
+  let schoolObjectId = null;
+  if (type !== "system") {
     if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
-      throw new ApiError(400, "Valid school ID is required for this role");
+      throw new ApiError(400, "Valid school ID is required for custom roles");
     }
     schoolObjectId = new mongoose.Types.ObjectId(schoolId);
   }
 
-  if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
+  if (!permissions || permissions.length === 0) {
     permissions = defaultPermissions[name];
     if (!permissions) {
       throw new ApiError(400, `No default permissions defined for role: ${name}`);
     }
   }
 
-  const query = {
-    name: { $regex: `^${name}$`, $options: "i" },
-    ...(schoolObjectId ? { schoolId: schoolObjectId } : {}),
-  };
+  // ✅ Validate actions
+  permissions.forEach((perm) => {
+    if (!Array.isArray(perm.actions) || perm.actions.some(a => !allActions.includes(a))) {
+      throw new ApiError(400, `Invalid actions in permissions for module ${perm.module}`);
+    }
+  });
 
-  const existingRole = await Role.findOne(query);
-  if (existingRole) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, null, "Role already exists"));
-  }
+  // ✅ Prevent duplicate
+  const existingRole = await Role.findOne({
+    name: { $regex: `^${name}$`, $options: "i" },
+    ...(schoolObjectId ? { schoolId: schoolObjectId } : { schoolId: null })
+  });
+  if (existingRole) throw new ApiError(400, "Role already exists");
 
   const role = await Role.create({
     name,
-    ...(schoolObjectId && { schoolId: schoolObjectId }),
+    code,
+    type,
+    level,
+    description: description || "",
     permissions,
+    ...(schoolObjectId && { schoolId: schoolObjectId })
   });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, role, "Role created successfully"));
+  return res.status(201).json(new ApiResponse(201, role, "Role created successfully"));
 });
 
-
-
-// ✅ Get All Roles (Only Admin)
+/**
+ * ✅ Get All Roles
+ */
 export const getAllRoles = asyncHandler(async (req, res) => {
-    const roles = await Role.find();
-
-    res.status(200).json(new ApiResponse(200, roles, "Roles retrieved successfully"));
+  const roles = await Role.find().sort({ level: 1 });
+  res.status(200).json(new ApiResponse(200, roles, "Roles retrieved successfully"));
 });
 
-// ✅ Get Role by ID (Only Admin)
+/**
+ * ✅ Get Role By ID
+ */
 export const getRoleById = asyncHandler(async (req, res) => {
-    const role = await Role.findById(req.params.id);
-    if (!role) throw new ApiError(404, "Role not found");
-    res.status(200).json(new ApiResponse(200, role, "Role found successfully"));
+  const role = await Role.findById(req.params.id);
+  if (!role) throw new ApiError(404, "Role not found");
+  res.status(200).json(new ApiResponse(200, role, "Role found successfully"));
 });
 
-// ✅ Update Role (Only Admin)
+/**
+ * ✅ Update Role
+ */
 export const updateRole = asyncHandler(async (req, res) => {
-    const { name, permissions } = req.body;
+  const { name, permissions, description } = req.body;
+  const role = await Role.findById(req.params.id);
 
-    const updatedRole = await Role.findByIdAndUpdate(
-        req.params.id, { name, permissions }, { new: true }
-    );
+  if (!role) throw new ApiError(404, "Role not found");
+  if (role.type === "system" && name && name !== role.name) {
+    throw new ApiError(403, "Cannot rename a system role");
+  }
 
-    if (!updatedRole) throw new ApiError(404, "Role not found");
+  // Validate permissions if provided
+  if (permissions) {
+    permissions.forEach((perm) => {
+      if (!Array.isArray(perm.actions) || perm.actions.some(a => !allActions.includes(a))) {
+        throw new ApiError(400, `Invalid actions in permissions for module ${perm.module}`);
+      }
+    });
+  }
 
-    res.status(200).json(new ApiResponse(200, updatedRole, "Role updated successfully"));
+  role.name = name || role.name;
+  role.description = description || role.description;
+  role.permissions = permissions || role.permissions;
+  await role.save();
+
+  res.status(200).json(new ApiResponse(200, role, "Role updated successfully"));
 });
 
-// ✅ Delete Role (Only Admin)
+/**
+ * ✅ Delete Role
+ */
 export const deleteRole = asyncHandler(async (req, res) => {
-    const role = await Role.findById(req.params.id);
-    if (!role) throw new ApiError(404, "Role not found");
+  const role = await Role.findById(req.params.id);
+  if (!role) throw new ApiError(404, "Role not found");
+  if (role.type === "system") throw new ApiError(403, "Cannot delete a system role");
 
-    await role.deleteOne();
-    res.status(200).json(new ApiResponse(200, null, "Role deleted successfully"));
+  await role.deleteOne();
+  res.status(200).json(new ApiResponse(200, null, "Role deleted successfully"));
 });
 
-
+/**
+ * ✅ Get Roles By School
+ */
 export const getRoleBySchool = asyncHandler(async (req, res) => {
-    const { schoolId } = req.query;
+  const { schoolId } = req.query;
+  if (!schoolId) throw new ApiError(400, "schoolId is required in query parameters");
 
-    if (!schoolId) {
-        return res.status(400).json({
-            success: false,
-            message: "schoolId is required in query parameters",
-        });
-    }
-    const roles = await Role.find({ schoolId });
-    return res.status(200).json(
-        new ApiResponse(200, roles, "Roles fetched successfully")
-    );
+  const roles = await Role.find({ schoolId: new mongoose.Types.ObjectId(schoolId) });
+  res.status(200).json(new ApiResponse(200, roles, "Roles fetched successfully"));
 });
+
+
+// Search Roles Controller
+export const searchRoles = async (req, res) => {
+  try {
+    const {
+      name,            // optional - role name search
+      schoolId,        // optional - filter by school
+      page = 1,        // default page
+      limit = 10,      // default limit
+      sortBy = "createdAt", // default sorting
+      sortOrder = "desc"    // default order
+    } = req.query;
+
+    const query = {};
+
+    // 🔍 Search by Role Name (case-insensitive, partial match)
+    if (name) {
+      query.name = { $regex: name, $options: "i" };
+    }
+
+    // 🎓 Filter by School ID
+    if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
+      query.schoolId = schoolId;
+    }
+
+    // 📦 Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // 📊 Fetch roles with pagination & sorting
+    const roles = await Role.find(query)
+      .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // 📌 Count total records
+    const totalRoles = await Role.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      total: totalRoles,
+      page: parseInt(page),
+      totalPages: Math.ceil(totalRoles / parseInt(limit)),
+      data: roles
+    });
+
+  } catch (error) {
+    console.error("Error searching roles:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while searching roles",
+      error: error.message
+    });
+  }
+};

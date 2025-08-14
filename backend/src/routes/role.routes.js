@@ -5,7 +5,8 @@ import {
     getRoleById,
     updateRole,
     deleteRole,
-    getRoleBySchool
+    getRoleBySchool,
+    searchRoles
 } from "../controllers/role.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -14,20 +15,46 @@ const router = express.Router();
 // Define allowed roles
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 
-//  Create a Role (Only Admin)
+/**
+ * Create a Role
+ * Access: Super Admin / School Admin
+ */
 router.post("/createRole", auth, roleMiddleware(ADMIN_ROLE), createRole);
 
-//  Get All Roles (Only Admin)
+/**
+ * Get All Roles (with optional filters: ?schoolId= &?name=)
+ * Access: Super Admin / School Admin
+ */
 router.get("/getAllRoles", auth, roleMiddleware(ADMIN_ROLE), getAllRoles);
 
-//  Get Role by ID (Only Admin)
-router.get("/getRole/:id", auth, getRoleById);
+/**
+ * Search Roles (advanced search by name, level, permissions, etc.)
+ * Access: Super Admin / School Admin
+ */
+router.get("/search", auth, roleMiddleware(ADMIN_ROLE), searchRoles);
 
-//  Update Role (Only Admin)
+/**
+ * Get Role by ID
+ * Access: Super Admin / School Admin
+ */
+router.get("/getRole/:id", auth, roleMiddleware(ADMIN_ROLE), getRoleById);
+
+/**
+ * Update Role by ID
+ * Access: Super Admin / School Admin
+ */
 router.put("/updateRole/:id", auth, roleMiddleware(ADMIN_ROLE), updateRole);
 
-//  Delete Role (Only Admin)
+/**
+ * Delete Role by ID
+ * Access: Super Admin / School Admin
+ */
 router.delete("/deleteRole/:id", auth, roleMiddleware(ADMIN_ROLE), deleteRole);
-router.get("/by-school", auth, roleMiddleware(ADMIN_ROLE), getRoleBySchool)
+
+/**
+ * Get Roles by School ID
+ * Access: Super Admin / School Admin
+ */
+router.get("/by-school/:schoolId", auth, roleMiddleware(ADMIN_ROLE), getRoleBySchool);
 
 export default router;

@@ -1,89 +1,66 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 
-const roleSchema = new Schema(
+const permissionSchema = new mongoose.Schema(
+  {
+    module: {
+      type: String,
+      required: true,
+      trim: true, // e.g., "Student Management", "Attendance", "Reports"
+    },
+    actions: [
+      {
+        type: String,
+        enum: ["create", "read", "update", "delete", "export", "approve"], // extendable
+      },
+    ],
+  },
+  { _id: false }
+);
+
+const roleSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
-      enum: [
-        "Super Admin",
-        "School Admin",
-        "Teacher",
-        "Student",
-        "Parent",
-        "Accountant",
-        "Staff",
-        "Librarian",
-        "Hostel Warden",
-        "Transport Manager",
-        "Exam Coordinator",
-        "Receptionist",
-        "IT Support",
-        "Counselor",
-        "Subject Coordinator"
-      ],
+      unique: true,
+      trim: true, // e.g., "Super Admin", "School Admin", "Teacher"
     },
+    code: {
+      type: String,
+      trim: true,
+      unique: true, // short form for internal use e.g., "SA", "ADMIN", "TEACH"
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    type: {
+      type: String,
+      enum: ["system", "custom"], // system roles are pre-defined and cannot be deleted
+      default: "custom",
+    },
+    level: {
+      type: Number,
+      default: 1, // for hierarchy (Super Admin > Admin > Teacher > Student)
+    },
+    permissions: [permissionSchema], // array of module-permission mapping
     schoolId: {
-      type: Schema.Types.ObjectId,
-      ref: "Schools",
-      required: function () {
-        return this.name !== "Super Admin"; // Only require schoolId if not Super Admin
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      default: null, // null means it's a global/system role
     },
-    permissions: [
-      {
-        module: {
-          type: String,
-          required: true,
-          enum: [
-            "Schools",
-            "Users",
-            "Teachers",
-            "Students",
-            "Parents",
-            "Classes",
-            "Subjects",
-            "Exams",
-            "Attendance",
-            "Finance",
-            "Settings",
-            "Fees",
-            "Reports",
-            "Hostel",
-            "Transport",
-            "Assignments",
-            "Timetable",
-            "Notifications",
-            "Expenses",
-            "Library",
-            "Books",
-            "IssuedBooks",
-            "Rooms",
-            "Routes",
-            "Vehicles"
-          ],
-        },
-        actions: [
-          {
-            type: String,
-            required: true,
-            enum: [
-              "create",
-              "read",
-              "update",
-              "delete",
-              "export",
-              "collect",
-              "return",
-              "assign",
-            ],
-          },
-        ],
-      },
-    ],
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true }
 );
-
 
 export const Role = mongoose.model("Role", roleSchema);

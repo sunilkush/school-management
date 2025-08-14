@@ -6,11 +6,11 @@ import { User } from "../models/user.model.js";
 import { Fees } from "../models/fees.model.js";
 import { Classes } from "../models/classes.model.js";
 import { Attendance } from "../models/attendance.model.js";
+import { Role } from "../models/Roles.model.js";
 
 const getDashboardSummary = asyncHandler(async (req, res) => {
     try {
-        // Get role and schoolId from query params (or token)
-        const role = req.query.role; // ✅ fixed
+        const role = req.query.role;
         const userSchoolId = req.query.schoolId;
 
         if (!role) {
@@ -19,30 +19,57 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
 
         let response = {};
 
+        // ✅ Get Role IDs for Teacher, Student, Admin
+        
+        if (!teacherRole || !studentRole || !adminRole) {
+            return res.status(404).json(new ApiResponse(404, null, "Required roles not found"));
+        }
+
+        const teacherRoleId = new mongoose.Types.ObjectId("686611d4a9aa3ea4abfb25d7");
+        const studentRoleId = new mongoose.Types.ObjectId("686611d4a9aa3ea4abfb25d7");
+        const adminRoleId = new mongoose.Types.ObjectId("6866111fa9aa3ea4abfb2458");
+
         if (role === "Super Admin") {
-            const [totalSchools, totalStudents, totalTeachers, feesCollected] = await Promise.all([
+            const [totalSchools, totalTeachers, totalAdmins, feesCollected] = await Promise.all([
                 School.countDocuments(),
-                Student.countDocuments(),
-                User.countDocuments({ role: "Teacher" }), // ✅ only teachers
+                User.countDocuments({
+                    $or: [{ role: teacherRoleId }, { "role._id": teacherRoleId }]
+                }),
+                User.countDocuments({
+                    $or: [{ role: adminRoleId }, { "role._id": adminRoleId }]
+                }),
                 Fees.aggregate([{ $group: { _id: null, total: { $sum: "$amount" } } }])
             ]);
 
             response = {
-                students: totalStudents,
+                schools: totalSchools,
                 teachers: totalTeachers,
-                feesCollected: feesCollected[0]?.total || 0,
-                schools: totalSchools
+                admins: totalAdmins,
+                feesCollected: feesCollected[0]?.total || 0
             };
-        } 
+        }
+
         else if (role === "School Admin") {
             if (!userSchoolId) {
                 return res.status(400).json(new ApiResponse(400, null, "School ID is missing for School Admin"));
             }
 
-            const [totalClasses,totalStudents, totalTeachers, feesCollected,] = await Promise.all([
-                Classes.countDocuments({ schoolId: userSchoolId }),
-                Student.countDocuments({ schoolId: userSchoolId }),
-                User.countDocuments({ schoolId: userSchoolId, role: "Teacher" }),
+            const [totalClasses, totalTeachers, totalStudents, feesCollected] = await Promise.all([
+                Classes.countDocuments({
+                    $or: [{ school: userSchoolId }, { "school._id": userSchoolId }]
+                }),
+                User.countDocuments({
+                    $and: [
+                        { $or: [{ school: userSchoolId }, { "school._id": userSchoolId }] },
+                        { $or: [{ role: teacherRoleId }, { "role._id": teacherRoleId }] }
+                    ]
+                }),
+                User.countDocuments({
+                    $and: [
+                        { $or: [{ school: userSchoolId }, { "school._id": userSchoolId }] },
+                        { $or: [{ role: studentRoleId }, { "role._id": studentRoleId }] }
+                    ]
+                }),
                 Fees.aggregate([
                     { $match: { schoolId: userSchoolId } },
                     { $group: { _id: null, total: { $sum: "$amount" } } }
@@ -51,15 +78,15 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
 
             response = {
                 classes: totalClasses,
-                students: totalStudents,
                 teachers: totalTeachers,
+                students: totalStudents,
                 feesCollected: feesCollected[0]?.total || 0
             };
-        } 
+        }
+
         else if (role === "Teacher") {
-            const teacherId = req.user?._id || req.query.teacherId; // ✅ fallback to query param
-            const today = new Date();
-            const todayDate = today.toISOString().split("T")[0];
+            const teacherId = req.user?._id || req.query.teacherId;
+            const todayDate = new Date().toISOString().split("T")[0];
 
             const [totalClasses, studentsInClass, presentCount, totalCount] = await Promise.all([
                 Classes.countDocuments({ teacherId }),
@@ -68,7 +95,9 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
                 Attendance.countDocuments({ teacherId, date: todayDate })
             ]);
 
-            const attendancePercent = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+            const attendancePercent = totalCount > 0
+                ? Math.round((presentCount / totalCount) * 100)
+                : 0;
 
             response = {
                 classes: totalClasses,
