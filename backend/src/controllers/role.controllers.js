@@ -204,7 +204,8 @@ export const deleteRole = asyncHandler(async (req, res) => {
  * ✅ Get Roles By School
  */
 export const getRoleBySchool = asyncHandler(async (req, res) => {
-  const { schoolId } = req.query;
+    const { schoolId } = req.query;
+
   if (!schoolId) throw new ApiError(400, "schoolId is required in query parameters");
 
   const roles = await Role.find({ schoolId: new mongoose.Types.ObjectId(schoolId) });

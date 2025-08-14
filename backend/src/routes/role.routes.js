@@ -55,6 +55,6 @@ router.delete("/deleteRole/:id", auth, roleMiddleware(ADMIN_ROLE), deleteRole);
  * Get Roles by School ID
  * Access: Super Admin / School Admin
  */
-router.get("/by-school/:schoolId", auth, roleMiddleware(ADMIN_ROLE), getRoleBySchool);
+router.get("/by-school", auth, roleMiddleware(ADMIN_ROLE), getRoleBySchool);
 
 export default router;

@@ -16,7 +16,9 @@ const Permissions = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    
     if (selectedSchoolId) {
+      debugger;
       dispatch(fetchRoleBySchool(selectedSchoolId));
     }
   }, [dispatch, selectedSchoolId]);

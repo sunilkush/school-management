@@ -69,10 +69,14 @@ export const fetchRoleBySchool = createAsyncThunk(
   "role/fetchRoleBySchool",
   async (schoolId, { rejectWithValue }) => {
     try {
+      debugger
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${Api_Base_Url}/role/by-school/${schoolId}`, {
+      const res = await axios.get(`${Api_Base_Url}/role/by-school`,
+       
+         {
+          params: { schoolId },
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -91,7 +95,7 @@ export const searchRoles = createAsyncThunk(
       const res = await axios.get(`${Api_Base_Url}/role/search/${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return res.data.data;
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Role search failed");
     }
