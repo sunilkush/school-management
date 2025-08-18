@@ -96,7 +96,7 @@ export const createRole = asyncHandler(async (req, res) => {
   }
 
   name = name.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  code = code || name.replace(/\s+/g, "_").toUpperCase(); // e.g. "School Admin" → "SCHOOL_ADMIN"
+  code = code || name.replace(/\s+/g, "_").toUpperCase(); 
   type = type || (["Super Admin", "School Admin", "Teacher", "Student"].includes(name) ? "system" : "custom");
   level = level || (name === "Super Admin" ? 1 : name === "School Admin" ? 2 : name === "Teacher" ? 3 : 4);
 
@@ -127,7 +127,12 @@ export const createRole = asyncHandler(async (req, res) => {
     name: { $regex: `^${name}$`, $options: "i" },
     ...(schoolObjectId ? { schoolId: schoolObjectId } : { schoolId: null })
   });
-  if (existingRole) throw new ApiError(400, "Role already exists");
+
+  if (existingRole) {
+    return res.status(200).json(
+      new ApiResponse(400, null, `Role "${name}" already exists`)
+    );
+  }
 
   const role = await Role.create({
     name,

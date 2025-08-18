@@ -19,7 +19,7 @@ const ADMIN_ROLE = ["Super Admin", "School Admin"];
  * Create a Role
  * Access: Super Admin / School Admin
  */
-router.post("/createRole", auth, roleMiddleware(ADMIN_ROLE), createRole);
+router.post("/createRole", auth, roleMiddleware(ADMIN_ROLE),createRole);
 
 /**
  * Get All Roles (with optional filters: ?schoolId= &?name=)

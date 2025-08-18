@@ -7,7 +7,7 @@ export const fetchDashboardSummary = createAsyncThunk(
   "dashboard/fetchDashboardSummary",
   async ({ role, schoolId }, { rejectWithValue }) => {
     try {
-        
+
       const token = localStorage.getItem("accessToken");
 
       // Build query params conditionally
@@ -17,10 +17,8 @@ export const fetchDashboardSummary = createAsyncThunk(
       }
 
       const response = await axios.get(`${App_Base_Url}/dashboard/summary`, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        params, // role + schoolId go here
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       // ✅ Extract inner data so reducer doesn't have to deal with wrapping object
