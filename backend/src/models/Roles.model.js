@@ -22,7 +22,6 @@ const roleSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true, // e.g., "Super Admin", "School Admin", "Teacher"
     },
     code: {
@@ -62,5 +61,8 @@ const roleSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// ✅ Ensure unique role name per school
+roleSchema.index({ name: 1, schoolId: 1 }, );
 
 export const Role = mongoose.model("Role", roleSchema);
