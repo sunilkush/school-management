@@ -69,7 +69,7 @@ export const fetchRoleBySchool = createAsyncThunk(
   "role/fetchRoleBySchool",
   async (schoolId, { rejectWithValue }) => {
     try {
-      debugger
+      
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
