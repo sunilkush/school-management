@@ -63,6 +63,6 @@ const roleSchema = new mongoose.Schema(
 );
 
 // ✅ Ensure unique role name per school
-roleSchema.index({ name: 1, schoolId: 1 }, );
+roleSchema.index({ name: 1, schoolId: 1 }, { unique: true });
 
 export const Role = mongoose.model("Role", roleSchema);
