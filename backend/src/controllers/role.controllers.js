@@ -2,15 +2,27 @@ import { Role } from "../models/Roles.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
+// ✅ Allowed Actions
+const allActions = [
+  "create",
+  "read",
+  "update",
+  "delete",
+  "export",
+  "approve",
+  "collect",
+  "return",
+  "assign",
+];
 
 // ✅ Default permissions map
 const defaultPermissions = {
   "Super Admin": [
     { module: "Schools", actions: ["create", "read", "update", "delete"] },
     { module: "Users", actions: ["create", "read", "update", "delete"] },
-    { module: "Settings", actions: ["read", "update"] }
+    { module: "Settings", actions: ["read", "update"] },
   ],
   "School Admin": [
     { module: "Users", actions: ["create", "read", "update", "delete"] },
@@ -21,70 +33,87 @@ const defaultPermissions = {
     { module: "Subjects", actions: ["create", "read", "update", "delete"] },
     { module: "Timetable", actions: ["create", "read", "update"] },
     { module: "Settings", actions: ["read", "update"] },
-    { module: "Reports", actions: ["read", "export"] }
+    { module: "Reports", actions: ["read", "export"] },
   ],
-  "Teacher": [
+  Teacher: [
     { module: "Students", actions: ["read"] },
     { module: "Assignments", actions: ["create", "read", "update", "delete"] },
     { module: "Timetable", actions: ["read"] },
-    { module: "Attendance", actions: ["create", "read"] }
+    { module: "Attendance", actions: ["create", "read"] },
   ],
-  "Student": [
+  Student: [
     { module: "Assignments", actions: ["read"] },
     { module: "Timetable", actions: ["read"] },
-    { module: "Reports", actions: ["read"] }
+    { module: "Reports", actions: ["read"] },
   ],
-  "Parent": [
+  Parent: [
     { module: "Students", actions: ["read"] },
     { module: "Reports", actions: ["read"] },
     { module: "Fees", actions: ["read"] },
-    { module: "Notifications", actions: ["read"] }
+    { module: "Notifications", actions: ["read"] },
   ],
-  "Accountant": [
+  Accountant: [
     { module: "Fees", actions: ["create", "read", "update", "delete", "collect"] },
     { module: "Finance", actions: ["create", "read", "update", "delete", "export"] },
-    { module: "Expenses", actions: ["create", "read", "update", "delete"] }
+    { module: "Expenses", actions: ["create", "read", "update", "delete"] },
   ],
-  "Staff": [
+  Staff: [
     { module: "Attendance", actions: ["create", "read"] },
-    { module: "Notifications", actions: ["read"] }
+    { module: "Notifications", actions: ["read"] },
   ],
-  "Librarian": [
+  Librarian: [
     { module: "Books", actions: ["create", "read", "update", "delete"] },
     { module: "IssuedBooks", actions: ["create", "read", "return"] },
-    { module: "Library", actions: ["read"] }
+    { module: "Library", actions: ["read"] },
   ],
   "Hostel Warden": [
     { module: "Hostel", actions: ["read", "update"] },
-    { module: "Rooms", actions: ["read", "update"] }
+    { module: "Rooms", actions: ["read", "update"] },
   ],
   "Transport Manager": [
     { module: "Transport", actions: ["read", "update"] },
     { module: "Routes", actions: ["read", "update"] },
-    { module: "Vehicles", actions: ["read", "update"] }
+    { module: "Vehicles", actions: ["read", "update"] },
   ],
   "Exam Coordinator": [
     { module: "Exams", actions: ["create", "read", "update", "delete"] },
-    { module: "Reports", actions: ["read", "export"] }
+    { module: "Reports", actions: ["read", "export"] },
   ],
-  "Receptionist": [
+  Receptionist: [
     { module: "Users", actions: ["read", "create"] },
-    { module: "Students", actions: ["read"] }
+    { module: "Students", actions: ["read"] },
   ],
   "IT Support": [
     { module: "Settings", actions: ["read", "update"] },
-    { module: "Users", actions: ["read", "update"] }
+    { module: "Users", actions: ["read", "update"] },
   ],
-  "Counselor": [
+  Counselor: [
     { module: "Students", actions: ["read", "update"] },
-    { module: "Parents", actions: ["read"] }
+    { module: "Parents", actions: ["read"] },
   ],
   "Subject Coordinator": [
     { module: "Subjects", actions: ["create", "read", "update"] },
-    { module: "Teachers", actions: ["read"] }
-  ]
+    { module: "Teachers", actions: ["read"] },
+  ],
 };
-const allActions = ["create", "read", "update", "delete", "export", "collect", "return", "assign"];
+
+// ✅ Helper to validate permissions
+const validatePermissions = (permissions) => {
+  if (!Array.isArray(permissions)) {
+    throw new ApiError(400, "Permissions must be an array");
+  }
+  permissions.forEach((perm) => {
+    if (!perm.module || !Array.isArray(perm.actions)) {
+      throw new ApiError(400, "Each permission must include module and actions[]");
+    }
+    perm.actions.forEach((action) => {
+      if (!allActions.includes(action)) {
+        throw new ApiError(400, `Invalid action: ${action} in module ${perm.module}`);
+      }
+    });
+  });
+};
+
 /**
  * ✅ Create Role
  */
@@ -95,11 +124,15 @@ export const createRole = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Role name is required and must be a string");
   }
 
+  // Format name + code
   name = name.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  code = code || name.replace(/\s+/g, "_").toUpperCase(); 
+  code = code || name.replace(/\s+/g, "_").toUpperCase();
+
+  // Assign type & hierarchy level
   type = type || (["Super Admin", "School Admin", "Teacher", "Student"].includes(name) ? "system" : "custom");
   level = level || (name === "Super Admin" ? 1 : name === "School Admin" ? 2 : name === "Teacher" ? 3 : 4);
 
+  // Validate schoolId for custom roles
   let schoolObjectId = null;
   if (type !== "system") {
     if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
@@ -108,6 +141,7 @@ export const createRole = asyncHandler(async (req, res) => {
     schoolObjectId = new mongoose.Types.ObjectId(schoolId);
   }
 
+  // Default permissions if not provided
   if (!permissions || permissions.length === 0) {
     permissions = defaultPermissions[name];
     if (!permissions) {
@@ -115,25 +149,20 @@ export const createRole = asyncHandler(async (req, res) => {
     }
   }
 
-  // ✅ Validate actions
-  permissions.forEach((perm) => {
-    if (!Array.isArray(perm.actions) || perm.actions.some(a => !allActions.includes(a))) {
-      throw new ApiError(400, `Invalid actions in permissions for module ${perm.module}`);
-    }
-  });
+  // Validate permissions
+  validatePermissions(permissions);
 
-  // ✅ Prevent duplicate
+  // Prevent duplicate role (unique per school)
   const existingRole = await Role.findOne({
     name: { $regex: `^${name}$`, $options: "i" },
-    ...(schoolObjectId ? { schoolId: schoolObjectId } : { schoolId: null })
+    ...(schoolObjectId ? { schoolId: schoolObjectId } : { schoolId: null }),
   });
 
   if (existingRole) {
-    return res.status(200).json(
-      new ApiResponse(400, null, `Role "${name}" already exists`)
-    );
+    throw new ApiError(400, `Role "${name}" already exists`);
   }
 
+  // Save role
   const role = await Role.create({
     name,
     code,
@@ -141,7 +170,7 @@ export const createRole = asyncHandler(async (req, res) => {
     level,
     description: description || "",
     permissions,
-    ...(schoolObjectId && { schoolId: schoolObjectId })
+    ...(schoolObjectId && { schoolId: schoolObjectId }),
   });
 
   return res.status(201).json(new ApiResponse(201, role, "Role created successfully"));
@@ -172,22 +201,17 @@ export const updateRole = asyncHandler(async (req, res) => {
   const role = await Role.findById(req.params.id);
 
   if (!role) throw new ApiError(404, "Role not found");
+
   if (role.type === "system" && name && name !== role.name) {
     throw new ApiError(403, "Cannot rename a system role");
   }
 
-  // Validate permissions if provided
-  if (permissions) {
-    permissions.forEach((perm) => {
-      if (!Array.isArray(perm.actions) || perm.actions.some(a => !allActions.includes(a))) {
-        throw new ApiError(400, `Invalid actions in permissions for module ${perm.module}`);
-      }
-    });
-  }
+  if (permissions) validatePermissions(permissions);
 
   role.name = name || role.name;
   role.description = description || role.description;
   role.permissions = permissions || role.permissions;
+
   await role.save();
 
   res.status(200).json(new ApiResponse(200, role, "Role updated successfully"));
@@ -209,65 +233,48 @@ export const deleteRole = asyncHandler(async (req, res) => {
  * ✅ Get Roles By School
  */
 export const getRoleBySchool = asyncHandler(async (req, res) => {
-    const { schoolId } = req.query;
+  const { schoolId } = req.query;
 
-  if (!schoolId) throw new ApiError(400, "schoolId is required in query parameters");
+  if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
+    throw new ApiError(400, "Valid schoolId is required in query parameters");
+  }
 
   const roles = await Role.find({ schoolId: new mongoose.Types.ObjectId(schoolId) });
   res.status(200).json(new ApiResponse(200, roles, "Roles fetched successfully"));
 });
 
+/**
+ * ✅ Search Roles (with pagination)
+ */
+export const searchRoles = asyncHandler(async (req, res) => {
+  const {
+    name,
+    schoolId,
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+  } = req.query;
 
-// Search Roles Controller
-export const searchRoles = async (req, res) => {
-  try {
-    const {
-      name,            // optional - role name search
-      schoolId,        // optional - filter by school
-      page = 1,        // default page
-      limit = 10,      // default limit
-      sortBy = "createdAt", // default sorting
-      sortOrder = "desc"    // default order
-    } = req.query;
+  const query = {};
 
-    const query = {};
+  if (name) query.name = { $regex: name, $options: "i" };
+  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) query.schoolId = schoolId;
 
-    // 🔍 Search by Role Name (case-insensitive, partial match)
-    if (name) {
-      query.name = { $regex: name, $options: "i" };
-    }
+  const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // 🎓 Filter by School ID
-    if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
-      query.schoolId = schoolId;
-    }
+  const roles = await Role.find(query)
+    .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
 
-    // 📦 Pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+  const totalRoles = await Role.countDocuments(query);
 
-    // 📊 Fetch roles with pagination & sorting
-    const roles = await Role.find(query)
-      .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    // 📌 Count total records
-    const totalRoles = await Role.countDocuments(query);
-
-    res.status(200).json({
-      success: true,
-      total: totalRoles,
-      page: parseInt(page),
-      totalPages: Math.ceil(totalRoles / parseInt(limit)),
-      data: roles
-    });
-
-  } catch (error) {
-    console.error("Error searching roles:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while searching roles",
-      error: error.message
-    });
-  }
-};
+  res.status(200).json({
+    success: true,
+    total: totalRoles,
+    page: parseInt(page),
+    totalPages: Math.ceil(totalRoles / parseInt(limit)),
+    data: roles,
+  });
+});

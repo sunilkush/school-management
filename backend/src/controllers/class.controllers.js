@@ -87,25 +87,24 @@ const updateClass = asyncHandler(async (req, res) => {
         throw new ApiError(500, error.message || "Class update failed");
     }
 });
-
 const deleteClass = asyncHandler(async (req, res) => {
-    try {
-        const { classId } = req.params;
+    const { classId } = req.params;
 
-        if (!classId) {
-            throw new ApiError(400, "Class ID is required");
-        }
-
-        const deletedClass = await Classes.findByIdAndDelete(classId);
-        if (!deletedClass) {
-            throw new ApiError(404, "Class not found");
-        }
-
-        return res.status(200).json(new ApiResponse(200, deletedClass, "Class deleted successfully"));
-    } catch (error) {
-        throw new ApiError(500, error.message || "Class deletion failed");
+    if (!classId) {
+        throw new ApiError(400, "Class ID is required");
     }
+
+    const deletedClass = await Classes.findByIdAndDelete(classId);
+
+    if (!deletedClass) {
+        throw new ApiError(404, "Class not found");
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, deletedClass, "Class deleted successfully"));
 });
+
 const getAllClasses = asyncHandler(async (req, res) => {
     try {
         const classes = await Classes.find().populate("schoolId teacherId students subjects");

@@ -57,7 +57,7 @@ const dashboardSlice = createSlice({
           state.summary = [
             { title: "Total Schools", value: data.schools },
             { title: "Total Admin", value: data.admins },
-            { title: "Total Teachers", value: data.teachers },
+            { title: "Total Users", value: data.users },
             { title: "Fees Collected", value: data.feesCollected, format: "currency" },
           ];
         } else if (role === "School Admin") {

@@ -10,7 +10,17 @@ const permissionSchema = new mongoose.Schema(
     actions: [
       {
         type: String,
-        enum: ["create", "read", "update", "delete", "export", "approve"], // extendable
+        enum: [
+          "create",
+          "read",
+          "update",
+          "delete",
+          "export",
+          "approve",
+          "collect", // added
+          "return",  // added
+          "assign",  // added
+        ],
       },
     ],
   },
@@ -27,7 +37,7 @@ const roleSchema = new mongoose.Schema(
     code: {
       type: String,
       trim: true,
-      unique: true, // short form for internal use e.g., "SA", "ADMIN", "TEACH"
+      unique: false, // ❌ can't be globally unique if school-specific
     },
     description: {
       type: String,
@@ -41,14 +51,17 @@ const roleSchema = new mongoose.Schema(
     },
     level: {
       type: Number,
-      default: 1, // for hierarchy (Super Admin > Admin > Teacher > Student)
+      default: 1, // hierarchy level (Super Admin > Admin > Teacher > Student)
     },
     permissions: [permissionSchema], // array of module-permission mapping
+
+    // 🔗 Role belongs to a school (null = global/system role)
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "School",
-      default: null, // null means it's a global/system role
+      default: null,
     },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -62,7 +75,10 @@ const roleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Ensure unique role name per school
+// ✅ Ensure unique role name + school
 roleSchema.index({ name: 1, schoolId: 1 }, { unique: true });
+
+// ✅ Ensure unique role code + school
+roleSchema.index({ code: 1, schoolId: 1 }, { unique: true });
 
 export const Role = mongoose.model("Role", roleSchema);

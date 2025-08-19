@@ -12,7 +12,7 @@ const moduleOptions = [
 const actionOptions = ["create","read","update","delete","export","collect","return","assign"];
 
 // Predefined Roles
-const roles = [
+const roleOptions = [
   "Super Admin","School Admin","Teacher","Student","Parent","Accountant","Staff",
   "Librarian","Hostel Warden","Transport Manager","Exam Coordinator","Receptionist",
   "IT Support","Counselor","Subject Coordinator"
@@ -24,8 +24,13 @@ const AddRoleForm = () => {
   const { error, loading, message } = useSelector((state) => state.role);
 
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [description, setDescription] = useState("");
+  const [type, setType] = useState("custom");
+  const [level, setLevel] = useState(1);
   const [schoolId, setSchoolId] = useState("");
   const [permissions, setPermissions] = useState([]);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     dispatch(fetchSchools());
@@ -36,7 +41,7 @@ const AddRoleForm = () => {
     setName(value);
     setPermissions([]);
 
-    // Auto-fill default permissions for certain roles
+    // Auto-fill full permissions for School Admin
     if (value === "School Admin") {
       const fullPermissions = moduleOptions.map((m) => ({
         module: m,
@@ -46,14 +51,14 @@ const AddRoleForm = () => {
     }
   };
 
-  // Handle module selection in custom permissions
+  // Module selection
   const handleModuleChange = (index, module) => {
     const updated = [...permissions];
     updated[index].module = module;
     setPermissions(updated);
   };
 
-  // Handle action checkbox
+  // Action checkbox
   const handleActionChange = (index, action) => {
     const updated = [...permissions];
     const exists = updated[index].actions.includes(action);
@@ -63,36 +68,35 @@ const AddRoleForm = () => {
     setPermissions(updated);
   };
 
-  // Add new permission block
-  const addPermission = () => {
-    setPermissions([...permissions, { module: "", actions: [] }]);
-  };
+  // Add/Remove permissions
+  const addPermission = () => setPermissions([...permissions, { module: "", actions: [] }]);
+  const removePermission = (index) => setPermissions(permissions.filter((_, i) => i !== index));
 
-  // Remove permission block
-  const removePermission = (index) => {
-    const updated = [...permissions];
-    updated.splice(index, 1);
-    setPermissions(updated);
-  };
-
-  // Submit form
+  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name) return alert("Please select a role");
     if (name !== "Super Admin" && !schoolId) return alert("Please select a school");
 
-    const payload = { name };
-    if (name !== "Super Admin") payload.schoolId = schoolId;
-    if (permissions.length > 0) payload.permissions = permissions;
+    const payload = {
+      name,
+      code: code || name.toUpperCase().replace(/\s+/g, "_"), // fallback
+      description,
+      type,
+      level,
+      schoolId: name !== "Super Admin" ? schoolId : null,
+      permissions: permissions.length > 0 ? permissions : undefined,
+      isActive,
+    };
 
     try {
       await dispatch(createRole(payload)).unwrap();
-      setName("");
-      setSchoolId("");
-      setPermissions([]);
+      setName(""); setCode(""); setDescription("");
+      setType("custom"); setLevel(1);
+      setSchoolId(""); setPermissions([]); setIsActive(true);
     } catch (err) {
-      console.error(err);
+      console.error("Role creation failed", err);
     }
   };
 
@@ -104,7 +108,7 @@ const AddRoleForm = () => {
       {error && <p className="text-red-500">{error}</p>}
       {message && <p className="text-green-500">{message}</p>}
 
-      {/* Role Selection */}
+      {/* Role Name */}
       <div>
         <label className="block text-sm font-medium">Role Name</label>
         <select
@@ -114,8 +118,58 @@ const AddRoleForm = () => {
           required
         >
           <option value="">Select Role</option>
-          {roles.map((r) => <option key={r} value={r}>{r}</option>)}
+          {roleOptions.map((role) => (
+            <option key={role} value={role}>{role}</option>
+          ))}
         </select>
+      </div>
+
+      {/* Code */}
+      <div>
+        <label className="block text-sm font-medium">Code</label>
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="e.g. SA, TEACH, ADMIN"
+          className="mt-1 block w-full border p-2 rounded"
+        />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium">Description</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Enter role description"
+          className="mt-1 block w-full border p-2 rounded"
+        />
+      </div>
+
+      {/* Type */}
+      <div>
+        <label className="block text-sm font-medium">Type</label>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="mt-1 block w-full border p-2 rounded"
+        >
+          <option value="system">System</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+
+      {/* Level */}
+      <div>
+        <label className="block text-sm font-medium">Level (Hierarchy)</label>
+        <input
+          type="number"
+          value={level}
+          min="1"
+          onChange={(e) => setLevel(Number(e.target.value))}
+          className="mt-1 block w-full border p-2 rounded"
+        />
       </div>
 
       {/* School Selection */}
@@ -136,14 +190,17 @@ const AddRoleForm = () => {
         </div>
       )}
 
-      {/* Default Permission Note */}
-      {name && name !== "School Admin" && permissions.length === 0 && (
-        <div className="text-xs text-gray-500">
-          Default permissions will be applied automatically if left empty.
-        </div>
-      )}
+      {/* Active Status */}
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          checked={isActive}
+          onChange={(e) => setIsActive(e.target.checked)}
+        />
+        <label className="text-sm">Is Active</label>
+      </div>
 
-      {/* Custom Permissions */}
+      {/* Permissions */}
       {permissions.map((perm, index) => (
         <div key={index} className="border p-4 rounded mb-2">
           <div className="flex justify-between items-center mb-2">
@@ -165,7 +222,6 @@ const AddRoleForm = () => {
             <option value="">Select Module</option>
             {moduleOptions.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
-
           <div className="flex flex-wrap gap-2">
             {actionOptions.map((action) => (
               <label key={action} className="flex items-center space-x-2">
@@ -181,11 +237,17 @@ const AddRoleForm = () => {
         </div>
       ))}
 
-      {/* Add Permission & Submit */}
+      {/* Add & Submit */}
       <div className="flex justify-between items-center gap-4">
-        <button type="button" onClick={addPermission} className="text-blue-500 text-sm">
-          + Add Permission
-        </button>
+        {name !== "School Admin" && (
+          <button
+            type="button"
+            onClick={addPermission}
+            className="text-blue-500 text-sm"
+          >
+            + Add Permission
+          </button>
+        )}
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
           Create Role
         </button>

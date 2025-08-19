@@ -8,9 +8,11 @@ import { Attendance } from "../models/attendance.model.js";
 import { School } from "../models/school.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+const ObjectId = mongoose.Types.ObjectId;
+
 export const getDashboardSummary = async (req, res) => {
   try {
-    const { role, schoolId } = req.query; // ✅ frontend sends query params
+    const { role, schoolId } = req.query;
     let response = {};
 
     // 🔹 Ensure schoolId for School Admin
@@ -23,44 +25,56 @@ export const getDashboardSummary = async (req, res) => {
     // 🔹 Fetch roles safely (case insensitive)
     const teacherRole = await Role.findOne({ name: { $regex: /^teacher$/i } });
     const studentRole = await Role.findOne({ name: { $regex: /^student$/i } });
+    const schoolAdminRole = await Role.findOne({ name: { $regex: /^school admin$/i } });
 
-    const teacherRoleId = teacherRole?.id;
-    const studentRoleId = studentRole?.id;
+    const teacherRoleId = teacherRole?._id;
+    const studentRoleId = studentRole?._id;
+    const schoolAdminRoleId = schoolAdminRole?._id;
 
-    if (!teacherRoleId || !studentRoleId) {
+    if (!teacherRoleId || !studentRoleId || !schoolAdminRoleId) {
       return res
         .status(400)
-        .json(new ApiResponse(400, null, "Roles not configured properly (Teacher/Student)"));
+        .json(
+          new ApiResponse(
+            400,
+            null,
+            "Roles not configured properly (Teacher/Student/School Admin)"
+          )
+        );
     }
 
     // ========= SUPER ADMIN DASHBOARD =========
     if (role === "Super Admin") {
-      const [totalSchools, totalTeachers, totalStudents, totalFees] = await Promise.all([
-        School.countDocuments(),
-        User.countDocuments({ roleId: teacherRoleId }), // 👈 or role: teacherRoleId (check schema)
-        Student.countDocuments(),
-        Fees.aggregate([{ $group: { _id: null, total: { $sum: "$amount" } } }]),
-      ]);
+      const [totalSchools, totalAdmin, totalUsers, totalFees] =
+        await Promise.all([
+          School.countDocuments(),
+          User.countDocuments({ roleId: schoolAdminRoleId }),
+          User.countDocuments(),
+          Fees.aggregate([{ $group: { _id: null, total: { $sum: "$amount" } } }]),
+        ]);
 
       response = {
         schools: totalSchools,
-        teachers: totalTeachers,
-        students: totalStudents,
+        admins: totalAdmin,
+        users: totalUsers,
         feesCollected: totalFees[0]?.total || 0,
       };
     }
 
     // ========= SCHOOL ADMIN DASHBOARD =========
     else if (role === "School Admin") {
-      const [totalClasses, totalTeachers, totalStudents, feesCollected] = await Promise.all([
-        Classes.countDocuments({ schoolId: schoolId }),
-        User.countDocuments({ schoolId: schoolId, roleId: teacherRoleId }),
-        Student.countDocuments({ schoolId: schoolId }),
-        Fees.aggregate([
-          { $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } },
-          { $group: { _id: null, total: { $sum: "$amount" } } },
-        ]),
-      ]);
+      const schoolObjectId = new ObjectId(schoolId);
+
+      const [totalClasses, totalTeachers, totalStudents, feesCollected] =
+        await Promise.all([
+          Classes.countDocuments({ schoolId: schoolObjectId }),
+          User.countDocuments({ schoolId: schoolObjectId, roleId: teacherRoleId }),
+          Student.countDocuments({ schoolId: schoolObjectId }),
+          Fees.aggregate([
+            { $match: { schoolId: schoolObjectId } },
+            { $group: { _id: null, total: { $sum: "$amount" } } },
+          ]),
+        ]);
 
       response = {
         classes: totalClasses,
@@ -72,14 +86,16 @@ export const getDashboardSummary = async (req, res) => {
 
     // ========= TEACHER DASHBOARD =========
     else if (role === "Teacher") {
-      const teacherId = req.user._id;
+      const teacherId = new ObjectId(req.user._id);
 
       const teacherClasses = await Classes.find({ teacher: teacherId }).select("_id");
 
       const [studentsCount, attendance] = await Promise.all([
-        Student.countDocuments({ classId: { $in: teacherClasses.map(c => c._id) } }),
+        Student.countDocuments({
+          classId: { $in: teacherClasses.map((c) => c._id) },
+        }),
         Attendance.aggregate([
-          { $match: { teacherId: new mongoose.Types.ObjectId(teacherId) } },
+          { $match: { teacherId: teacherId } },
           { $group: { _id: null, totalMarked: { $sum: 1 } } },
         ]),
       ]);
@@ -95,7 +111,9 @@ export const getDashboardSummary = async (req, res) => {
       response = { message: "Dashboard not available for this role" };
     }
 
-    return res.status(200).json(new ApiResponse(200, response, "Dashboard summary fetched successfully"));
+    return res.status(200).json(
+      new ApiResponse(200, response, `${role} dashboard summary fetched successfully`)
+    );
   } catch (error) {
     console.error("Dashboard Summary Error:", error);
     return res.status(500).json(new ApiResponse(500, null, error.message));

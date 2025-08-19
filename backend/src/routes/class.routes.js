@@ -18,7 +18,7 @@ const ADMIN_ONLY = ["Super Admin", "School Admin"];
 router.post("/create", auth, roleMiddleware(ADMIN_ONLY), createClass);
 router.get("/allClasses", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
 router.get("/:id", auth, roleMiddleware(ADMIN_TEACHER), getClassById);
-router.put("/:id", auth, roleMiddleware(ADMIN_ONLY), updateClass);
-router.delete("/:id", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
+router.put("/:classId", auth, roleMiddleware(ADMIN_ONLY), updateClass);
+router.delete("/:classId", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
 
 export default router;

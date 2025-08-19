@@ -1,60 +1,53 @@
-import { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchAllUser } from '../../features/auth/authSlice';
-import { fetchAllSubjects } from '../../features/subject/subjectSlice';
-import { createClass } from '../../features/classes/classSlice';
-import { MultiSelect } from 'primereact/multiselect';
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchAllUser } from "../../features/auth/authSlice";
+import { fetchAllSubjects } from "../../features/subject/subjectSlice";
+import { createClass, updateClass } from "../../features/classes/classSlice";
+import { MultiSelect } from "primereact/multiselect";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
-const ClassForm = ({ teacherList = [] ,isOpen}) => {
+import { Link } from "react-router-dom";
+
+const ClassForm = ({ teacherList = [], onClose, initialData }) => {
+  
   const dispatch = useDispatch();
 
   const { users = [] } = useSelector((state) => state.auth);
   const { subjectList = [] } = useSelector((state) => state.subject || {});
-  const classState = useSelector((state) => state.class || {});
-  const { loading, success, error: createError } = classState;
+  const { loading,  error,success } =
+    useSelector((state) => state.class || {});
 
   const [selectedSubjects, setSelectedSubjects] = useState([]);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+ 
 
   const [formData, setFormData] = useState({
-    name: '',
-    section: '',
-    teacherId: '',
+    name: "",
+    section: "",
+    teacherId: "",
     subjects: [],
-    schoolId: JSON.parse(localStorage.getItem('user'))?.school?._id || '',
+    schoolId: JSON.parse(localStorage.getItem("user"))?.school?._id || "",
   });
 
-  const classList = [
-    '1st', '2nd', '3rd', '4th', '5th', '6th',
-    '7th', '8th', '9th', '10th', '11th', '12th',
-  ];
+  // ✅ Prefill form if editing
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        section: initialData.section || "",
+        teacherId: initialData.teacherId?._id || "",
+        subjects: initialData.subjects?.map((s) => s._id) || [],
+        schoolId: initialData.schoolId || JSON.parse(localStorage.getItem("user"))?.school?._id || "",
+      });
+      setSelectedSubjects(initialData.subjects || []);
+    }
+  }, [initialData]);
 
+  // Load teachers + subjects
   useEffect(() => {
     dispatch(fetchAllUser());
     dispatch(fetchAllSubjects());
   }, [dispatch]);
 
-  // ✅ Show message based on Redux state
-  useEffect(() => {
-    if (success) {
-      setMessage("Class created successfully!");
-      setError("");
-      setSelectedSubjects([]);
-      setFormData((prev) => ({
-        ...prev,
-        name: '',
-        section: '',
-        teacherId: '',
-        subjects: [],
-      }));
-      setTimeout(() => setMessage(""), 3000);
-    }
-    if (createError) {
-      setError(createError);
-      setMessage("");
-    }
-  }, [success, createError]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,18 +59,7 @@ const ClassForm = ({ teacherList = [] ,isOpen}) => {
 
     const selectedSubjectIds = selectedSubjects.map((sub) => sub._id);
 
-    if (
-      !formData.name ||
-      !formData.section ||
-      !formData.teacherId ||
-      selectedSubjectIds.length === 0
-    ) {
-     setTimeout(()=>{
-       setError("Please fill in all required fields.");
-      setMessage("");
-     },3000)
-      return;
-    }
+   
 
     try {
       const dataToSubmit = {
@@ -85,7 +67,13 @@ const ClassForm = ({ teacherList = [] ,isOpen}) => {
         subjects: selectedSubjectIds,
       };
 
-      await dispatch(createClass(dataToSubmit));
+      if (initialData?._id) {
+        await dispatch(updateClass({ id: initialData._id, classData: dataToSubmit }));
+      } else {
+        await dispatch(createClass(dataToSubmit));
+      }
+
+      onClose();
     } catch (err) {
       console.error("Dispatch error:", err);
     }
@@ -94,37 +82,27 @@ const ClassForm = ({ teacherList = [] ,isOpen}) => {
   const teachersToShow = teacherList.length ? teacherList : users;
 
   return (
-   <>
-   {isOpen && (
-     <form onSubmit={handleSubmit} className="w-full  bg-white rounded-lg border p-4 mb-4">
-      <h2 className="text-2xl font-bold">Add Class</h2>
-      <p className="text-gray-600">Please fill in the details below to create a new class.</p>
+    <form onSubmit={handleSubmit} className="w-full">
+      <h2 className="text-2xl font-bold mb-2">
+        {initialData ? "Edit Class" : "Add Class"}
+      </h2>
 
-      {message && (
-        <div className="bg-green-100 text-green-800 border border-green-300 rounded p-3 mb-4">
-          {message}
-        </div>
-      )}
+      {success && <div className="bg-green-100 text-green-800 p-3 mb-4">{success}</div>}
+      {error && <div className="bg-red-100 text-red-800 p-3 mb-4">{error}</div>}
 
-      {error && (
-        <div className="bg-red-100 text-red-800 border border-red-300 rounded p-3 mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Class Name */}
         <div>
-          <label className="block mb-1">Class Name</label>
+          <label className="block mb-1 text-xs">Class Name</label>
           <select
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg border-gray-400"
+            className="border px-2 py-2 w-full rounded-lg"
             required
           >
             <option value="">Select Class</option>
-            {classList.map((cls) => (
+            {["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"].map((cls) => (
               <option key={cls} value={cls}>{cls}</option>
             ))}
           </select>
@@ -132,59 +110,51 @@ const ClassForm = ({ teacherList = [] ,isOpen}) => {
 
         {/* Section */}
         <div>
-          <label className="block mb-1">Class Section</label>
+          <label className="block mb-1 text-xs">Section</label>
           <select
             name="section"
             value={formData.section}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg border-gray-400"
+            className="border px-2 py-2 w-full rounded-lg"
             required
           >
             <option value="">Select Section</option>
-            {['A', 'B', 'C', 'D'].map((section) => (
-              <option key={section} value={section}>{section}</option>
+            {["A","B","C","D","E","F"].map((sec) => (
+              <option key={sec} value={sec}>{sec}</option>
             ))}
           </select>
         </div>
 
         {/* Subjects */}
         <div>
-          <label className="block text-md font-medium text-gray-700 mb-1">
-            Select Subjects
-          </label>
+          <label className="block mb-1 text-xs">Subjects</label>
           <MultiSelect
             value={selectedSubjects}
             onChange={(e) => setSelectedSubjects(e.value)}
             options={subjectList}
             optionLabel="name"
             placeholder="Select Subjects"
-            style={{ width: '100%', height: '45px' }}
-            panelClassName="z-50"
             display="chip"
-            className="border px-1 py-0 rounded-lg border-gray-400"
+            className="w-full border rounded-lg"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Hold Ctrl (Windows) or Cmd (Mac) to select multiple
-          </p>
+          <Link className="text-xs text-red-500" to="/dashboard/schooladmin/subjects">
+            Create new subject
+          </Link>
         </div>
 
         {/* Teacher */}
         <div>
-          <label className="block mb-1">Select Teacher</label>
+          <label className="block mb-1 text-xs">Teacher</label>
           <select
             name="teacherId"
             value={formData.teacherId}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg border-gray-400"
+            className="border px-2 py-2 w-full rounded-lg"
             required
           >
             <option value="">Select Teacher</option>
             {teachersToShow
-              .filter(
-                (t) =>
-                  t.role?.name === "Teacher" &&
-                  t.school?._id === formData.schoolId
-              )
+              .filter((t) => t.role?.name === "Teacher")
               .map((teacher) => (
                 <option key={teacher._id} value={teacher._id}>
                   {teacher.name}
@@ -194,21 +164,19 @@ const ClassForm = ({ teacherList = [] ,isOpen}) => {
         </div>
       </div>
 
-      {/* Submit */}
-      <div className="pt-4">
+      <div className="flex justify-end gap-3 pt-6">
+        <button type="button" className="px-4 py-2 bg-gray-300 rounded-lg" onClick={onClose}>
+          Cancel
+        </button>
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
           disabled={loading}
         >
-          {loading ? "Creating..." : "Create Class"}
+          {loading ? "Saving..." : initialData ? "Update Class" : "Create Class"}
         </button>
       </div>
     </form>
-   )}
-    
-   
-   </>
   );
 };
 
