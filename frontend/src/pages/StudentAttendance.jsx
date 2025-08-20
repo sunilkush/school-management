@@ -18,12 +18,12 @@ const StudentAttendance = () => {
   useEffect(() => {
     dispatch(activeUser())
     dispatch(fetchAllUser())
-  }, []);
+  }, [dispatch]);
   const user = localStorage.getItem('user');
   const userData = user ? JSON.parse(user) : null;
   const schoolId = userData?.school?._id;
   
-  const students = users.filter(user => user.role.name === 'Student' &&  user.school._id === schoolId && user.isActive);
+  const students = users.filter(user => user.role.name === 'Student' &&  user.school._id === schoolId );
   // Handle attendance status change
   const handleChange = (studentId, status) => {
     setAttendance((prev) => ({

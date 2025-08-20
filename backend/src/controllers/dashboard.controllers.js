@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Classes } from "../models/classes.model.js";
+import { Class } from "../models/classes.model.js";
 import { User } from "../models/user.model.js";
 import { Student } from "../models/student.model.js";
 import { Fees } from "../models/fees.model.js";
@@ -67,7 +67,7 @@ export const getDashboardSummary = async (req, res) => {
 
       const [totalClasses, totalTeachers, totalStudents, feesCollected] =
         await Promise.all([
-          Classes.countDocuments({ schoolId: schoolObjectId }),
+          Class.countDocuments({ schoolId: schoolObjectId }),
           User.countDocuments({ schoolId: schoolObjectId, roleId: teacherRoleId }),
           Student.countDocuments({ schoolId: schoolObjectId }),
           Fees.aggregate([
@@ -88,7 +88,7 @@ export const getDashboardSummary = async (req, res) => {
     else if (role === "Teacher") {
       const teacherId = new ObjectId(req.user._id);
 
-      const teacherClasses = await Classes.find({ teacher: teacherId }).select("_id");
+      const teacherClasses = await Class.find({ teacher: teacherId }).select("_id");
 
       const [studentsCount, attendance] = await Promise.all([
         Student.countDocuments({

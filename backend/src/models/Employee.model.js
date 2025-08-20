@@ -74,7 +74,7 @@ const employeeSchema = new Schema({
         {
             classId: {
                 type: Schema.Types.ObjectId,
-                ref: "Classes"
+                ref: "Class"
             },
             subject: {
                 type: String,

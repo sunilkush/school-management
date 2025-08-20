@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
-import { Classes } from '../models/classes.model.js';
+import { Class } from '../models/classes.model.js';
 
 const createClass = asyncHandler(async (req, res) => {
     try {
@@ -16,7 +16,7 @@ const createClass = asyncHandler(async (req, res) => {
            
         }
 
-        const existingClass = await Classes.findOne({ schoolId, name, section });
+        const existingClass = await Class.findOne({ schoolId, name, section });
         if (existingClass) {
             return res.status(404).json({
                 success: false,
@@ -25,7 +25,7 @@ const createClass = asyncHandler(async (req, res) => {
             
         }
 
-        const newClass = new Classes({
+        const newClass = new Class({
             schoolId,
             name,
             section,
@@ -65,7 +65,7 @@ const updateClass = asyncHandler(async (req, res) => {
             throw new ApiError(400, "Class ID is required");
         }
 
-        const classToUpdate = await Classes.findById(classId);
+        const classToUpdate = await Class.findById(classId);
         if (!classToUpdate) {
             throw new ApiError(404, "Class not found");
         }
@@ -94,7 +94,7 @@ const deleteClass = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Class ID is required");
     }
 
-    const deletedClass = await Classes.findByIdAndDelete(classId);
+    const deletedClass = await Class.findByIdAndDelete(classId);
 
     if (!deletedClass) {
         throw new ApiError(404, "Class not found");
@@ -107,7 +107,7 @@ const deleteClass = asyncHandler(async (req, res) => {
 
 const getAllClasses = asyncHandler(async (req, res) => {
     try {
-        const classes = await Classes.find().populate("schoolId teacherId students subjects");
+        const classes = await Class.find().populate("schoolId teacherId students subjects");
         res.status(200).json({ success: true, data: classes });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -116,7 +116,7 @@ const getAllClasses = asyncHandler(async (req, res) => {
 
 const getClassById = asyncHandler(async (req, res) => {
     try {
-        const classData = await Classes.findById(req.params.id).populate("schoolId teacherId students subjects");
+        const classData = await Class.findById(req.params.id).populate("schoolId teacherId students subjects");
         if (!classData) return res.status(404).json({ success: false, message: "Class not found" });
         res.status(200).json({ success: true, data: classData });
     } catch (error) {

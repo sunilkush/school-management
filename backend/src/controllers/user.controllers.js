@@ -27,30 +27,39 @@ const generateAccessAndRefreshToken = async (userId) => {
  * @route POST /api/auth/register
  * @access Private (Only Super Admin & School Admin)
  */
+// ✅ Register User Controller
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, roleId, schoolId, classId, parentId } = req.body
+  const { name, email, password, roleId, schoolId, classId, parentId } = req.body;
 
   if (!name || !email || !password || !roleId || !schoolId) {
-    throw new ApiError(400, 'All required fields must be provided')
+    throw new ApiError(400, "All required fields must be provided");
   }
 
-  const existingUser = await User.findOne({ email })
+  // ✅ Check if email already exists
+  const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new ApiError(400, 'User already registered with this email')
+    throw new ApiError(400, "User already registered with this email");
   }
 
   // ✅ Handle avatar upload if provided
-  let avatarUrl = ''
+  let avatarUrl = "";
   if (
     req.files?.avatar &&
     Array.isArray(req.files.avatar) &&
     req.files.avatar.length > 0
   ) {
-    const avatarPath = req.files.avatar[0].path
-    const avatar = await uploadOnCloudinary(avatarPath)
-    avatarUrl = avatar?.url || ''
+    const avatarPath = req.files.avatar[0].path;
+    const avatar = await uploadOnCloudinary(avatarPath);
+    avatarUrl = avatar?.url || "";
   }
 
+  // ✅ Generate Registration Number if role = student
+  let regNumber = null;
+  if (roleId === "studentRoleId") {   // 🔹 Replace "studentRoleId" with actual ObjectId or const reference
+    regNumber = await generateNextRegNumber(schoolId);
+  }
+
+  // ✅ Create new User
   const newUser = await User.create({
     name,
     email,
@@ -60,66 +69,84 @@ const registerUser = asyncHandler(async (req, res) => {
     schoolId,
     classId,
     parentId,
+    regNumber, // ✅ only for students
     isActive: true,
-  })
+  });
 
   const createdUser = await User.findById(newUser._id).select(
-    '-password -refreshToken'
-  )
+    "-password -refreshToken"
+  );
 
   return res
     .status(201)
-    .json(new ApiResponse(201, createdUser, 'User registered successfully'))
-})
-
+    .json(new ApiResponse(201, createdUser, "User registered successfully"));
+});
 /**
  * @desc Login user
  * @route POST /api/auth/login
  * @access Public
  */
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body
+  const { email, password } = req.body;
+
   if (!email || !password) {
-    throw new ApiError(400, 'Email and password are required')
+    throw new ApiError(400, "Email and password are required");
   }
 
-  const user = await User.findOne({ email })
+  const user = await User.findOne({ email });
   if (!user || !(await user.isPasswordCorrect(password))) {
-    throw new ApiError(401, 'Invalid email or password')
+    throw new ApiError(401, "Invalid email or password");
   }
 
   if (!user.isActive) {
     throw new ApiError(
       403,
-      'User is inactive. Please contact the administrator.'
-    )
+      "User is inactive. Please contact the administrator."
+    );
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
-  )
+  );
 
-  // ✅ Populate role & school with aggregation
-  const userWithRole = await User.aggregate([
+  // ✅ Populate role, school, class in one pipeline
+  const userWithDetails = await User.aggregate([
     { $match: { _id: user._id } },
+
+    // Join with Role
     {
       $lookup: {
-        from: 'roles',
-        localField: 'roleId',
-        foreignField: '_id',
-        as: 'role',
+        from: "roles",
+        localField: "roleId",
+        foreignField: "_id",
+        as: "role",
       },
     },
-    { $unwind: { path: '$role', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+
+    // Join with School
     {
       $lookup: {
-        from: 'schools',
-        localField: 'schoolId',
-        foreignField: '_id',
-        as: 'school',
+        from: "schools",
+        localField: "schoolId",
+        foreignField: "_id",
+        as: "school",
       },
     },
-    { $unwind: { path: '$school', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+
+    // Join with Classes
+    {
+      $lookup: {
+        from: "classes",
+        localField: "classId", // must exist in User schema
+        foreignField: "_id",
+        as: "class",
+      },
+    },
+    { $unwind: { path: "$class", preserveNullAndEmptyArrays: true } },
+
+    // Final projection
     {
       $project: {
         _id: 1,
@@ -128,36 +155,41 @@ const loginUser = asyncHandler(async (req, res) => {
         avatar: 1,
         isActive: 1,
         role: {
-          _id: '$role._id',
-          name: '$role.name',
-          permissions: '$role.permissions',
+          _id: "$role._id",
+          name: "$role.name",
+          permissions: "$role.permissions",
         },
         school: {
-          _id: '$school._id',
-          name: '$school.name',
+          _id: "$school._id",
+          name: "$school.name",
+        },
+        class: {
+          _id: "$class._id",
+          name: "$class.name",
         },
       },
     },
-  ])
+  ]);
 
-  if (!userWithRole || userWithRole.length === 0) {
-    throw new ApiError(500, 'User role aggregation failed')
+  if (!userWithDetails || userWithDetails.length === 0) {
+    throw new ApiError(500, "User aggregation failed");
   }
 
-  const finalUser = userWithRole[0]
+  const finalUser = userWithDetails[0];
 
   return res
     .status(200)
-    .cookie('accessToken', accessToken, { httpOnly: true, secure: true })
-    .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true })
+    .cookie("accessToken", accessToken, { httpOnly: true, secure: true })
+    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true })
     .json(
       new ApiResponse(
         200,
         { user: finalUser, accessToken, refreshToken },
-        'User logged in successfully'
+        "User logged in successfully"
       )
-    )
-})
+    );
+});
+
 
 /**
  * @desc Update user profile
@@ -240,6 +272,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
       },
     },
     { $unwind: '$role' },
+
     {
       $lookup: {
         from: 'schools',
@@ -249,6 +282,17 @@ const getAllUsers = asyncHandler(async (req, res) => {
       },
     },
     { $unwind: { path: '$school', preserveNullAndEmptyArrays: true } },
+
+    {
+      $lookup: {
+        from: 'classes',
+        localField: 'classId',
+        foreignField: '_id',
+        as: 'class',
+      },
+    },
+    { $unwind: { path: '$class', preserveNullAndEmptyArrays: true } },
+
     {
       $project: {
         _id: 1,
@@ -256,6 +300,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
         email: 1,
         avatar: 1,
         isActive: 1,
+        regNumber: 1, // ✅ include student regNumber
         role: {
           _id: '$role._id',
           name: '$role.name',
@@ -265,6 +310,11 @@ const getAllUsers = asyncHandler(async (req, res) => {
           _id: '$school._id',
           name: '$school.name',
         },
+        class: {
+              _id: "$class._id",
+      // 👇 Merge class name + section
+              name: "$class.name",
+             },
       },
     },
   ])
@@ -273,6 +323,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, users, 'Users fetched successfully'))
 })
+
 
 /**
  * @desc Deactivate user

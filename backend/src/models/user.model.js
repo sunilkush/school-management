@@ -33,7 +33,7 @@ const userSchema = new Schema({
     },
     classId: {
         type: Schema.Types.ObjectId,
-        ref: "Classes",
+        ref: "Class",
 
     },  // For students & teachers
     parentId: {

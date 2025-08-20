@@ -18,7 +18,7 @@ const AssignmentSchema = new Schema(
         },
         classId: {
             type: Schema.Types.ObjectId,
-            ref: 'Classes',
+            ref: 'Class',
             required: true,
         },
         subjectId: {

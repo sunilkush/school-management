@@ -9,13 +9,13 @@ const studentSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
       required: true,
       unique: true,
     },
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Schools",
+      ref: "School",
       required: true,
     },
     registrationNumber: {
@@ -23,13 +23,10 @@ const studentSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    class: {
+    classId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Classes",
+      ref: "Class",
       required: true,
-    },
-    section: {
-      type: String,
     },
     picture: {
       type: String, // URL or file path
@@ -103,4 +100,4 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-export const Student = mongoose.model("Students", studentSchema);
+export const Student = mongoose.model("Student", studentSchema);

@@ -11,9 +11,9 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { checkActiveAcademicYear } from "../middlewares/checActiveYear.middleware.js";
 const router = Router();
 
-const ADMIN_ROLE = ["Super Admin", "Admin"];
-const TEACHER_ROLE = ["Super Admin", "Admin", "Teacher"];
-const STUDENT_ROLE = ["Super Admin", "Admin", "Teacher", "Student"];
+const ADMIN_ROLE = ["Super Admin", "School Admin"];
+const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
+const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];
 
 // ✅ Register Student (Super Admin & Admin)
 router.post("/register", auth, roleMiddleware(ADMIN_ROLE), registerStudent);

@@ -65,25 +65,25 @@ export const deleteClass = createAsyncThunk(
 
 // update class
 export const updateClass = createAsyncThunk(
-  "class/updateClass",
-  async ({ id, classData }, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/class/${id}`, classData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    "class/updateClass",
+    async ({ id, classData }, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            const res = await axios.put(`${Api_Base_Url}/class/${id}`, classData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-      console.log("Class updated successfully:", res.data);
-      // return the updated class object from API
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.message || "Class update failed!"
-      );
+            console.log("Class updated successfully:", res.data);
+            // return the updated class object from API
+            return res.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error?.response?.data?.message || "Class update failed!"
+            );
+        }
     }
-  }
 );
 
 const initialState = {
@@ -151,15 +151,15 @@ const classSlice = createSlice({
                 state.error = null;
             })
             .addCase(updateClass.fulfilled, (state, action) => {
-  state.loading = false;
-  const updatedClass = action.payload;
+                state.loading = false;
+                const updatedClass = action.payload;
 
-  state.classList = state.classList.map((cls) =>
-    cls._id === updatedClass._id ? updatedClass : cls
-  );
+                state.classList = state.classList.map((cls) =>
+                    cls._id === updatedClass._id ? updatedClass : cls
+                );
 
-  state.success = true;
-})
+                state.success = true;
+            })
             .addCase(updateClass.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;

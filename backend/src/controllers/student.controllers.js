@@ -4,91 +4,53 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
-
+import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 // ✅ Register and admit student
-const registerStudent = asyncHandler(async (req, res) => {
+ const registerStudent = asyncHandler(async (req, res) => {
   const {
-    studentName,
-    email,
-    password,
-    role, // "student"
-    schoolId,
-    class: classId,
-    section,
-    registrationNumber,
-    admissionDate,
-    feeDiscount,
-    smsMobile,
-
-    dateOfBirth,
-    birthFormId,
-    orphan,
-    gender,
-    cast,
-    osc,
-    identificationMark,
-    previousSchool,
-    religion,
-    bloodGroup,
-    previousId,
-    family,
-    disease,
-    notes,
-    siblings,
-    address,
-
-    fatherName,
-    fatherNID,
-    fatherOccupation,
-    fatherEducation,
-    fatherMobile,
-    fatherProfession,
-    fatherIncome,
-
-    motherName,
-    motherNID,
-    motherOccupation,
-    motherEducation,
-    motherMobile,
-    motherProfession,
-    motherIncome,
+    studentName, email, password, schoolId, classId, registrationNumber,
+    admissionDate, feeDiscount, smsMobile, dateOfBirth, birthFormId, orphan,
+    gender, cast, osc, identificationMark, previousSchool, religion, bloodGroup,
+    previousId, family, disease, notes, siblings, address, fatherName, fatherNID,
+    fatherOccupation, fatherEducation, fatherMobile, fatherProfession, fatherIncome,
+    motherName, motherNID, motherOccupation, motherEducation, motherMobile,
+    motherProfession, motherIncome, academicYearId
   } = req.body;
 
-  if (!studentName || !email || !password || !registrationNumber || !classId || !schoolId || !role) {
+  if (!studentName || !email || !password || !registrationNumber || !classId || !schoolId || !academicYearId) {
     throw new ApiError(400, "Missing required fields");
   }
 
+  // Fetch student role
   const roleDoc = await Role.findOne({ name: { $regex: /^student$/i } });
-  if (!roleDoc || roleDoc._id.toString() !== role) {
-    throw new ApiError(400, "Invalid student role provided");
-  }
+  if (!roleDoc) throw new ApiError(400, "Student role not found");
 
+  // Create user if not exists
   let user = await User.findOne({ email });
   if (!user) {
     user = await User.create({
       name: studentName,
       email,
       password,
-      role: roleDoc._id,
+      roleId: roleDoc._id,
       schoolId,
     });
   }
 
+  // Check for existing student registration number
   const existingStudent = await Student.findOne({ registrationNumber });
-  if (existingStudent) {
-    throw new ApiError(409, "Student with this registration number already exists");
-  }
+  if (existingStudent) throw new ApiError(409, "Student with this registration number already exists");
 
+  // Create student
   const student = await Student.create({
     userId: user._id,
     schoolId,
+    academicYearId,
     registrationNumber,
-    class: classId,
-    section,
+    classId,
     admissionDate,
     feeDiscount,
     smsMobile,
-
     dateOfBirth,
     birthFormId,
     orphan,
@@ -105,32 +67,15 @@ const registerStudent = asyncHandler(async (req, res) => {
     notes,
     siblings,
     address,
-
-    fatherInfo: {
-      name: fatherName,
-      NID: fatherNID,
-      occupation: fatherOccupation,
-      education: fatherEducation,
-      mobile: fatherMobile,
-      profession: fatherProfession,
-      income: fatherIncome,
-    },
-
-    motherInfo: {
-      name: motherName,
-      NID: motherNID,
-      occupation: motherOccupation,
-      education: motherEducation,
-      mobile: motherMobile,
-      profession: motherProfession,
-      income: motherIncome,
-    },
+    fatherInfo: { name: fatherName, NID: fatherNID, occupation: fatherOccupation, education: fatherEducation, mobile: fatherMobile, profession: fatherProfession, income: fatherIncome },
+    motherInfo: { name: motherName, NID: motherNID, occupation: motherOccupation, education: motherEducation, mobile: motherMobile, profession: motherProfession, income: motherIncome },
   });
 
   const populatedStudent = await Student.findById(student._id).populate("userId", "-password");
 
   return res.status(201).json(new ApiResponse(201, { student: populatedStudent }, "Student registered and admitted successfully"));
 });
+
 
 // ✅ Get All Students
 const getStudents = asyncHandler(async (req, res) => {
@@ -294,17 +239,22 @@ const deleteStudent = asyncHandler(async (req, res) => {
   }
 });
 
-const getLastRegisteredStudent = asyncHandler(async (req, res) => {
-  const lastStudent = await Student.findOne().sort({ createdAt: -1 });
-  if (!lastStudent) {
-    return res.status(200).json({
-      registrationNumber: "",
-      studentName: "",
-    });
+ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
+  const lastStudent = await Student.findOne()
+  .sort({ createdAt: -1 })
+  .populate("userId", "name");
+
+  let nextRegNumber = "REG2025-101"; // default
+  let lastStudentName = "";
+
+  if (lastStudent) {
+    nextRegNumber = generateNextRegNumber(lastStudent.registrationNumber);
+    lastStudentName = lastStudent.userId?.name || ""; // if populated
   }
+
   res.status(200).json({
-    registrationNumber: lastStudent.registrationNumber,
-    studentName: lastStudent.studentName,
+    registrationNumber: nextRegNumber,
+    studentName: lastStudentName,
   });
 });
 

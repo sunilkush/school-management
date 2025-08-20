@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchLastStudent } from "../../features/students/studentSlice";
+import { fetchLastStudent, createStudent } from "../../features/students/studentSlice";
 import { generateNextRegNumber } from "../../utils/genreateRegisterNo";
 import { fetchAllClasses } from "../../features/classes/classSlice";
-import { School } from "lucide-react";
+
 
 const Tab = ({ label, isActive, onClick }) => (
   <button
-    className={`px-4 py-2 rounded-t-md border-b-2 font-medium text-sm focus:outline-none transition-all duration-150 ${
-      isActive
-        ? "bg-white border-purple-600 text-blue-600"
-        : "bg-gray-100 border-transparent text-gray-500 hover:text-blue-600"
-    }`}
+    className={`px-4 py-2 rounded-t-md border-b-2 font-medium text-sm focus:outline-none transition-all duration-150 ${isActive
+      ? "bg-white border-purple-600 text-blue-600"
+      : "bg-gray-100 border-transparent text-gray-500 hover:text-blue-600"
+      }`}
     onClick={onClick}
   >
     {label}
@@ -22,9 +21,13 @@ const AdmissionForm = () => {
 
   const [activeTab, setActiveTab] = useState("Student Info");
   const { lastStudent, loading } = useSelector((state) => state.students);
+  console.log(lastStudent)
   const { user } = useSelector((state) => state.auth);
-  const { classes } = useSelector((state) => state.class);
-  console.log("Class:", classes);
+  
+  const classes = useSelector((state) => state.class?.classList || []);
+  const selectAcademicYear = localStorage.getItem("selectedAcademicYear");
+  const academicYearObj = selectAcademicYear ? JSON.parse(selectAcademicYear) : null;
+  const academicYearId = academicYearObj?._id || "";
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     studentName: "",
@@ -39,7 +42,7 @@ const AdmissionForm = () => {
     feeDiscount: 0,
     mobileNumber: "",
     picture: null,
-
+    academicYearId,
     dateOfBirth: "",
     birthFormId: "",
     orphan: "",
@@ -79,17 +82,21 @@ const AdmissionForm = () => {
     dispatch(fetchAllClasses());
   }, [dispatch]);
   useEffect(() => {
+    
     if (lastStudent) {
-      const nextReg = generateNextRegNumber(lastStudent.registrationNumber);
+      
+      const nextReg = generateNextRegNumber(lastStudent.registrationNumber); // your util
+     
       setFormData((prev) => ({
         ...prev,
         registrationNumber: nextReg,
-        role: lastStudent.role || "student", // ✅ Set role
+        role: "student",
       }));
     } else if (!loading) {
+      // first student
       setFormData((prev) => ({
         ...prev,
-        registrationNumber: "REG2025-101", // default for first student
+        registrationNumber: "REG2025-101",
         role: "student",
       }));
     }
@@ -106,44 +113,47 @@ const AdmissionForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const data = new FormData();
+
     Object.entries(formData).forEach(([key, value]) => {
       data.append(key, value);
     });
-    // Dispatch or API call here
-    console.log("FormData ready:", data);
+
+    const studentData = Object.fromEntries(data); // only on submit
+    console.log(studentData)
+    dispatch(createStudent(studentData))
   };
 
   const inputClass =
     "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500";
- 
+
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
   const tabList = ["Student Info", "Other Info", "Father Info", "Mother Info"];
-const tabFields = {
-  "Student Info": ["studentName", "email", "password", "classId", "admissionDate"],
-  "Other Info": ["dateOfBirth", "birthFormId", "gender", "religion"],
-  "Father Info": ["fatherName", "fatherOccupation", "fatherMobile"],
-  "Mother Info": ["motherName", "motherOccupation", "motherMobile"],
-};
-const isTabValid = () => {
-  const requiredFields = tabFields[activeTab] || [];
-  return requiredFields.every((field) => {
-    const value = formData[field];
-    return value !== undefined && value !== null && value.toString().trim() !== "";
-  });
-};
-const handleNext = () => {
-  const currentIndex = tabList.indexOf(activeTab);
-  if (currentIndex < tabList.length - 1) {
-    setActiveTab(tabList[currentIndex + 1]);
-  }
-};
+  const tabFields = {
+    "Student Info": ["studentName", "email", "password", "classId", "admissionDate"],
+    "Other Info": ["dateOfBirth", "birthFormId", "gender", "religion"],
+    "Father Info": ["fatherName", "fatherOccupation", "fatherMobile"],
+    "Mother Info": ["motherName", "motherOccupation", "motherMobile"],
+  };
+  const isTabValid = () => {
+    const requiredFields = tabFields[activeTab] || [];
+    return requiredFields.every((field) => {
+      const value = formData[field];
+      return value !== undefined && value !== null && value.toString().trim() !== "";
+    });
+  };
+  const handleNext = () => {
+    const currentIndex = tabList.indexOf(activeTab);
+    if (currentIndex < tabList.length - 1) {
+      setActiveTab(tabList[currentIndex + 1]);
+    }
+  };
 
-const handlePrevious = () => {
-  const currentIndex = tabList.indexOf(activeTab);
-  if (currentIndex > 0) {
-    setActiveTab(tabList[currentIndex - 1]);
-  }
-};
+  const handlePrevious = () => {
+    const currentIndex = tabList.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabList[currentIndex - 1]);
+    }
+  };
   return (
     <div className="max-w-full mx-auto bg-white shadow-md rounded-lg p-6">
       <h1 className="text-2xl font-bold mb-6">Student Admission Form</h1>
@@ -198,22 +208,24 @@ const handlePrevious = () => {
             </div>
             <div>
               <label className={labelClass}>Class</label>
-              <input
+              <select
                 name="classId"
                 value={formData.classId}
                 onChange={handleChange}
                 className={inputClass}
                 required
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Section</label>
-              <input
-                name="section"
-                value={formData.section}
-                onChange={handleChange}
-                className={inputClass}
-              />
+              >
+                <option value="">Select Class</option>
+                {classes && classes.length > 0 ? (
+                  classes.map((cls) => (
+                    <option key={cls._id} value={cls._id}>
+                      {cls.name} - {cls.section}   {/* ✅ shows "1st - A" */}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>No Classes Available</option>
+                )}
+              </select>
             </div>
             <div>
               <label className={labelClass}>Registration No.</label>
@@ -590,39 +602,37 @@ const handlePrevious = () => {
         )}
 
         <div className="flex justify-between pt-6">
-  {tabList.indexOf(activeTab) > 0 && (
-    <button
-      type="button"
-      onClick={handlePrevious}
-      className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded"
-    >
-      Previous
-    </button>
-  )}
+          {tabList.indexOf(activeTab) > 0 && (
+            <button
+              type="button"
+              onClick={handlePrevious}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded"
+            >
+              Previous
+            </button>
+          )}
 
-  {tabList.indexOf(activeTab) < tabList.length - 1 ? (
-    <button
-      type="button"
-      onClick={handleNext}
-      disabled={!isTabValid()}
-      className={`${
-        isTabValid() ? "bg-blue-600 hover:bg-purple-700" : "bg-gray-300 cursor-not-allowed"
-      } text-white px-6 py-2 rounded`}
-    >
-      Next
-    </button>
-  ) : (
-    <button
-      type="submit"
-      disabled={!isTabValid()}
-      className={`${
-        isTabValid() ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 cursor-not-allowed"
-      } text-white px-6 py-2 rounded`}
-    >
-      Submit Admission
-    </button>
-  )}
-</div>
+          {tabList.indexOf(activeTab) < tabList.length - 1 ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!isTabValid()}
+              className={`${isTabValid() ? "bg-blue-600 hover:bg-purple-700" : "bg-gray-300 cursor-not-allowed"
+                } text-white px-6 py-2 rounded`}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!isTabValid()}
+              className={`${isTabValid() ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 cursor-not-allowed"
+                } text-white px-6 py-2 rounded`}
+            >
+              Submit Admission
+            </button>
+          )}
+        </div>
 
       </form>
     </div>
