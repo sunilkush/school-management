@@ -59,6 +59,7 @@ import SendNotification from "./pages/SendNotification.jsx";
 import SmsEmailHistory from "./pages/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import SchoolAdminReport from "./pages/schoolAdminReport.jsx";
+import StudentList from "./pages/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
 const router = createBrowserRouter([
   {
@@ -139,6 +140,7 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "admission", element: <AddStudent /> },
+              { path: "studentList", element: <StudentList /> },
 
             ],
           },

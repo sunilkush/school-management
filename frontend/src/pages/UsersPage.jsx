@@ -12,14 +12,16 @@ const UsersPage = () => {
   useEffect(() => {
     dispatch(fetchAllUser());
   }, [dispatch]);
-  console.log(users)
-  const filteredUsers = users
-    ?.filter((u) => u.school?._id === loggedInUser?.school?._id)
-    ?.filter((u) =>
-      selectedRole === 'all' || selectedRole === 'all roles'
+  const filteredUsers = users?.filter((u) => {
+    const sameSchool = u.school?._id === loggedInUser?.school?._id;
+    const roleMatch =
+      selectedRole === "all" || selectedRole === "all roles"
         ? true
-        : u.role?.name?.toLowerCase() === selectedRole
-    );
+        : u.role?.name?.toLowerCase() === selectedRole;
+    const notStudent = u.role?.name?.toLowerCase() !== "student";
+
+    return sameSchool && roleMatch && notStudent;
+  });
 
   const columns = [
     { name: '#', selector: (row, index) => index + 1, width: '60px' },
@@ -33,19 +35,16 @@ const UsersPage = () => {
   return (
     <div className="">
       <div className="bg-white p-6 rounded-lg border">
-        <h1 className="text-2xl font-bold mb-4">Users Management</h1>
+        <h1 className="text-2xl font-bold mb-4">Teachers & Staff List</h1>
         <div className='grid grid-cols-2'>
           <div className="mb-4">
-            <label htmlFor="role" className="mr-2 font-medium text-sm text-gray-700">
-              Filter by Role:
-            </label>
+           
             <select
               id="role"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
               className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
               <option value="all roles">All Roles</option>
-              <option value="student">Students</option>
               <option value="teacher">Teachers</option>
               <option value="school admin">School Admins</option>
             </select>

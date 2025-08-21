@@ -40,7 +40,7 @@ export const createStudent = createAsyncThunk(
 
       const response = await axios.post(
         `${Api_Base_Url}/student/register`,
-        studentData, // ✅ send plain object
+        studentData, // plain object
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -56,15 +56,38 @@ export const createStudent = createAsyncThunk(
   }
 );
 
+// fetch all students
+export const fetchAllStudent = createAsyncThunk(
+  "student/fetchAllStudent",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+
+      const res = await axios.get(`${Api_Base_Url}/student/all`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return res.data.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message);
+    }
+  }
+);
+
 const initialState = {
   lastStudent: null,
+  student: null,   // single student
+  students: [],    // list of students
   loading: false,
   error: null,
-  student: null,
   success: false,
 };
 
-const schoolSlice = createSlice({
+const studentSlice = createSlice({
   name: "students",
   initialState,
   reducers: {
@@ -107,9 +130,26 @@ const schoolSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         toast.error(state.error || "Failed to create student");
+      })
+
+      // fetch all students
+      .addCase(fetchAllStudent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(fetchAllStudent.fulfilled, (state, action) => {
+        state.loading = false;
+         state.students = action.payload; 
+        state.success = true;
+      })
+      .addCase(fetchAllStudent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
       });
   },
 });
 
-export const { resetStudentState } = schoolSlice.actions;
-export default schoolSlice.reducer;
+export const { resetStudentState } = studentSlice.actions;
+export default studentSlice.reducer;

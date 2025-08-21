@@ -19,16 +19,16 @@ const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];
 router.post("/register", auth, roleMiddleware(ADMIN_ROLE), registerStudent);
 
 // ✅ Get All Students (Super Admin, Admin, Teacher)
-router.get("/",checkActiveAcademicYear, auth, roleMiddleware(TEACHER_ROLE), getStudents);
+router.get("/all", auth, roleMiddleware(TEACHER_ROLE),checkActiveAcademicYear, getStudents);
 
 // ✅ Get Student by ID (Super Admin, Admin, Teacher, Student)
-router.get("/:id", auth, roleMiddleware(STUDENT_ROLE), getStudentById);
+router.get("/getStudent/:id", auth, roleMiddleware(STUDENT_ROLE), getStudentById);
 
 // ✅ Update Student (Super Admin, Admin)
-router.put("/:id", auth, roleMiddleware(ADMIN_ROLE), updateStudent);
+router.put("/update/:id", auth, roleMiddleware(ADMIN_ROLE), updateStudent);
 
 // ✅ Delete Student (Super Admin & Admin)
-router.delete("/:id", auth, roleMiddleware(ADMIN_ROLE), deleteStudent);
+router.delete("/delete/:id", auth, roleMiddleware(ADMIN_ROLE), deleteStudent);
 
 router.get("/register/last",auth, getLastRegisteredStudent);
 

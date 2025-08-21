@@ -98,6 +98,18 @@ const getStudents = asyncHandler(async (req, res) => {
       },
     },
     { $unwind: "$userDetails" },
+
+    // 👇 Add class lookup
+    {
+      $lookup: {
+        from: "classes", // collection name
+        localField: "classId", // field in Student schema
+        foreignField: "_id", // field in Classes schema
+        as: "classDetails",
+      },
+    },
+    { $unwind: "$classDetails" },
+
     {
       $project: {
         _id: 1,
@@ -107,19 +119,23 @@ const getStudents = asyncHandler(async (req, res) => {
         smsMobile: 1,
         status: 1,
         schoolId: 1,
-        class: 1,
         academicYearId: 1,
         createdAt: 1,
         updatedAt: 1,
         otherInfo: 1,
         fatherInfo: 1,
         motherInfo: 1,
+        // user info
         "userDetails._id": 1,
         "userDetails.name": 1,
         "userDetails.email": 1,
         "userDetails.role": 1,
         "userDetails.isActive": 1,
         "userDetails.schoolId": 1,
+        // class info
+        "classDetails._id": 1,
+        "classDetails.name": 1,
+        "classDetails.section": 1,
       },
     },
   ]);
@@ -132,6 +148,7 @@ const getStudents = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, students, "Students retrieved successfully!"));
 });
+
 
 // ✅ Get Student by ID
 const getStudentById = asyncHandler(async (req, res) => {

@@ -124,9 +124,9 @@ const AdmissionForm = () => {
   };
 
   const inputClass =
-    "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500";
+    "w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs";
 
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const labelClass = "block text-xs font-medium text-gray-700 mb-1";
   const tabList = ["Student Info", "Other Info", "Father Info", "Mother Info"];
   const tabFields = {
     "Student Info": ["studentName", "email", "password", "classId", "admissionDate"],
