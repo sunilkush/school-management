@@ -61,6 +61,11 @@ import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import SchoolAdminReport from "./pages/schoolAdminReport.jsx";
 import StudentList from "./pages/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
+import ExamReports from './pages/ExamReport.jsx';
+import QuestionBank from './pages/QuestionBank.jsx';
+import CreateExam from './pages/CreateExam.jsx';
+import ExamLive from './pages/ExamLive.jsx';
+import AttemptReview from './pages/AttemptReview.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -141,6 +146,9 @@ const router = createBrowserRouter([
               { path: "notification", element: <Notification /> },
               { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
+              { path: "exams/reports", element: <ExamReports /> },
+              { path: "exams/question-bank", element: <QuestionBank /> },
+              { path: "exams/create-exam", element: <CreateExam /> }
 
             ],
           },
@@ -154,10 +162,13 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <TeacherDashboard /> },
               { path: "classes", element: <Classes /> },
-              { path: "students", element: <UsersPage /> },
+              { path: "students", element: <StudentList /> },
               { path: "assignments", element: <Schedule /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "exams", element: <ScheduleExams /> },
+              { path: "exams/reports", element: <ExamReports /> },
+              { path: "exams/question-bank", element: <QuestionBank /> },
+              { path: "exams/create-exam", element: <CreateExam /> },
               { path: "timetable", element: <ClassTimetable /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
@@ -167,7 +178,7 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "reports", element: <SchoolAdminReport /> },
-               { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
 
             ],
@@ -190,11 +201,14 @@ const router = createBrowserRouter([
               { path: "hostel", element: <HostelManagement /> },
               { path: "transport", element: <RoutesPage /> },
               { path: "fees", element: <FeeCategories /> },
-
+              { path: "exams/attempt-review", element: <AttemptReview /> },
+              { path: "exams/exam-live", element: <ExamLive /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element: <Profile /> },
+              { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "notification", element: <Notification /> },
+
             ],
           },
           {
@@ -215,6 +229,7 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "exams/reports", element: <ExamReports /> },
             ],
           },
           {
@@ -259,7 +274,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-  
+
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PrimeReactProvider

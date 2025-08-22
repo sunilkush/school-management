@@ -8,6 +8,9 @@ import classReducer from "../features/classes/classSlice";
 import academicYearReducer from "../features/academicYear/academicYearSlice";
 import reportReducer from "../features/reports/reportSlice";
 import dashboardReducer from "../features/Dashboard/dashboardSlice";
+import examReducer from "../features/exams/examSlice";
+import questionReducer from "../features/questions/questionSlice";
+import attemptReducer from "../features/attempts/attemptSlice";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -19,6 +22,9 @@ const store = configureStore({
     academicYear: academicYearReducer,
     reports: reportReducer,
     dashboard: dashboardReducer,
+    exams: examReducer,
+    questions: questionReducer,
+    attempts: attemptReducer
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

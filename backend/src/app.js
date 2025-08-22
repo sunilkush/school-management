@@ -42,7 +42,9 @@ import AcademicYearRoutes from "./routes/academicYear.routes.js";
 import SectionRoutes from "./routes/section.routes.js";
 import ReportsRoutes from "./routes/report.routes.js";
 import DashboardRoutes from "./routes/dashboard.routes.js";
-
+import QuestionRoutes from "./routes/question.routes.js";
+import ExamRoutes from "./routes/exam.routes.js";
+import AttemptRoutes from "./routes/attempt.routes.js"
 
 // route
 app.use('/', indexRouter);
@@ -60,5 +62,8 @@ app.use("/app/v1/academicYear", AcademicYearRoutes);
 app.use("/app/v1/section", SectionRoutes);
 app.use("/app/v1/report", ReportsRoutes);
 app.use("/app/v1/dashboard", DashboardRoutes);
+app.use("/app/v1/question",QuestionRoutes);
+app.use("/app/v1/exam",ExamRoutes);
+app.use("/app/v1/attempt",AttemptRoutes);
 export { app }
 

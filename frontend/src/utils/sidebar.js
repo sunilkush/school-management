@@ -63,6 +63,7 @@ export const sidebarMenu = {
     },
     { title: "Reports", path: "superadmin/reports", icon: FileText },
     { title: "Settings", path: "superadmin/settings", icon: Settings },
+    
   ],
 
   'school admin': [
@@ -92,6 +93,9 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Schedule Exams", path: "schooladmin/exams/schedule", icon: ClipboardSignature },
         { title: "Enter Grades", path: "schooladmin/exams/grades", icon: ClipboardList },
+        { title: "Question Bank", path: "schooladmin/exams/question-bank" ,icon:ClipboardList},
+        { title: "Create Exam", path: "schooladmin/exams/create-exam",icon: ClipboardList},
+        { title: "Reports", path: "schooladmin/exams/reports",icon: ClipboardList},
       ],
     },
     {
@@ -160,7 +164,13 @@ export const sidebarMenu = {
     { title: "Students", path: "teacher/students", icon: Users },
     { title: "Assignments", path: "teacher/assignments", icon: ClipboardList },
     { title: "Attendance", path: "teacher/attendance", icon: UserCheck },
-    { title: "Exams", path: "teacher/exams", icon: GraduationCap },
+    { title: "Exams", path: "teacher/exams", icon: GraduationCap,
+      subMenu:[
+        { title: "Question Bank", path: "teacher/exams/question-bank",icon:FileText },
+        { title: "Create Exam", path: "teacher/exams/create-exam",icon:FileText },
+        { title: "Reports", path: "teacher/exams/reports",icon:FileText },
+      ]
+     },
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
    {
       title: "Communication", icon: Bell,
@@ -175,6 +185,12 @@ export const sidebarMenu = {
   'student': [
     { title: "Dashboard", path: "student/dashboard", icon: LayoutDashboard },
     { title: "My Profile", path: "student/profile", icon: User },
+    { title: "Exams", path: "student/exams", icon: MessageCircle ,
+      subMenu:[
+        { title: "Exam Live", path: "student/exams/exam-live",icon: FileText },
+        { title: "Attempt Review", path: "student/exams/attempt-review",icon: FileText },
+      ]
+    },
     { title: "Homework", path: "student/homework", icon: ClipboardList },
     { title: "Attendance", path: "student/attendance", icon: UserCheck },
     { title: "Grades", path: "student/grades", icon: Clipboard },
@@ -183,7 +199,14 @@ export const sidebarMenu = {
     { title: "Hostel Info", path: "student/hostel", icon: Briefcase },
     { title: "Transport Info", path: "student/transport", icon: Bus },
     { title: "Fees", path: "student/fees", icon: CreditCard },
-    { title: "Communication", path: "student/communication", icon: MessageCircle },
+    {
+      title: "Communication", icon: Bell,
+      subMenu: [
+        { title: "Send Notification", path: "student/communication/send", icon: MessageSquare },
+        { title: "SMS/Email History", path: "student/communication/history", icon: FileText },
+      ],
+    },
+    
   ],
 
   'parent': [
@@ -194,6 +217,7 @@ export const sidebarMenu = {
     { title: "Homework", path: "parent/homework", icon: ClipboardList },
     { title: "Fees", path: "parent/fees", icon: CreditCard },
     { title: "Messages", path: "parent/messages", icon: MessageCircle },
+    { name: "Reports", path: "parent/reports",icon: ClipboardList },
   ],
 
   'accountant': [

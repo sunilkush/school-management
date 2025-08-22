@@ -1,0 +1,471 @@
+# Exam Module Blueprint — Multi-School Management System (Objective-by-Question)
+
+> **Purpose:** Complete PDF-ready blueprint for the **Exam Module** specialized for **objective-style (question-by-question) exams** across multiple schools. Includes UI wireframes, MongoDB schema, Mongoose models, REST API design (with example request/response), frontend components (React + Tailwind), Postman/Swagger guidance, export/reporting, and deployment/test checklist.
+
+---
+
+## Table of Contents
+
+1. Executive Summary
+2. Actors & Role Permissions
+3. High-level Features
+4. Data Model & ER Overview
+5. MongoDB Collections & Example Mongoose Schemas
+6. API Design (REST) — Endpoints, DTOs, Examples
+7. Frontend Architecture & UI Pages (React + Tailwind)
+8. Redux Slices / State Management Patterns
+9. Exam Workflows (Create → Conduct → Evaluate → Report)
+10. Security & Anti-cheat Considerations
+11. Reporting & Exports (PDF / Excel)
+12. Postman Collection & Swagger/OpenAPI Snippets
+13. Folder Structure (Backend & Frontend)
+14. Sample Test Cases
+15. Non-functional Requirements & Scaling
+16. Deployment Recommendations
+17. Appendix: Sample UI Wireframes (text descriptions) & Queries
+
+---
+
+# 1. Executive Summary
+
+The Exam Module supports multi-school operations with a centralized question bank, configurable objective exams (MCQ/TF/Match/Fill), randomized/weighted paper generation, automated grading, analytics, and result export. It supports role-based access (Super Admin, School Admin, Teacher, Student, Parent).
+
+Goals:
+
+* Fast authoring of objective exams from question bank
+* Fair distribution via randomization and difficulty-weighted selection
+* Scalable auto-grading for thousands of concurrent students
+* Rich analytics and export capabilities
+
+# 2. Actors & Role Permissions
+
+**Roles and their capabilities:**
+
+* **Super Admin** (multi-school): configure global settings, manage schools, view cross-school analytics
+* **School Admin**: create/manage exams for their school, manage users, view school-level reports
+* **Teacher**: create question bank entries, create exams, schedule exams, view class-level reports
+* **Student**: attempt exams, review own results
+* **Parent**: view child's results and analytics (read-only)
+* **Exam Invigilator / Proctor** (optional): monitor live exams and flag incidents
+
+Permission matrix (high level):
+
+* QuestionBank: Create/Edit (Teacher, SchoolAdmin, SuperAdmin), Read (all staff), ReadRestricted (Student only on review mode)
+* Exam: Create/Edit (Teacher, SchoolAdmin), Publish (SchoolAdmin), Attempt (Student)
+* Results: View (Teacher for their class, SchoolAdmin, Student (own), Parent (own child))
+
+# 3. High-level Features
+
+* Centralized Question Bank with tagging (subject, chapter, topic, difficulty)
+* Question types: MCQ (single/multi), True/False, Fill-in-the-blank, Match Pair
+* Exam templates & random generation rules
+* Per-student option shuffling & question randomization
+* Time-limited exams with autosave & auto-submit
+* Immediate auto-grading for objective types
+* Manual grading for flagged partials (if supporting short answers)
+* Detailed analytics and question performance reports
+* Export results to CSV/Excel/PDF
+* Audit logs for exam events (start, submit, resume, admin edits)
+
+# 4. Data Model & ER Overview
+
+Key entities:
+
+* School
+* User (with role and schoolId)
+* AcademicYear
+* Class / Section
+* Subject
+* QuestionBankItem
+* ExamTemplate / Exam
+* ExamAttempt
+* ExamAnswer
+* Result / Report
+* AuditLog
+
+Relationships (brief):
+
+* School 1..\* Classes
+* Class 1..\* Students
+* Subject 1..\* QuestionBankItem
+* Teacher -> QuestionBankItem (creator)
+* Exam has many questions (via references to QuestionBankItem or embedded snapshot)
+* ExamAttempt references Exam + Student + Answers
+
+# 5. MongoDB Collections & Example Mongoose Schemas
+
+> Implementation note: Use MongoDB with Mongoose for flexibility. For heavy relational queries, consider hybrid approach with denormalized snapshots for exam questions to keep grading consistent after edits.
+
+## 5.1 QuestionBank Collection (`questions`)
+
+```js
+const QuestionSchema = new mongoose.Schema({
+  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: 'School', required: true },
+  subjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true },
+  chapter: String,
+  topic: String,
+  questionType: { type: String, enum: ['mcq_single','mcq_multi','true_false','fill_blank','match'] },
+  statement: { type: String, required: true },
+  options: [{ key: String, text: String }], // for MCQ
+  correctAnswers: [String], // keys of correct options or text answers
+  difficulty: { type: String, enum: ['easy','medium','hard'], default: 'medium' },
+  marks: { type: Number, default: 1 },
+  negativeMarks: { type: Number, default: 0 },
+  tags: [String],
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  isActive: { type: Boolean, default: true },
+  createdAt: Date,
+  updatedAt: Date,
+});
+```
+
+## 5.2 ExamTemplate / Exam Collection (`exams`)
+
+Store a snapshot of questions when exam is published to prevent later edits affecting attempts.
+
+```js
+const ExamSchema = new mongoose.Schema({
+  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: 'School', required: true },
+  title: String,
+  classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class' },
+  sectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section' },
+  subjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject' },
+  examType: { type: String, enum: ['objective','subjective','mixed'], default: 'objective' },
+  startTime: Date,
+  endTime: Date,
+  durationMinutes: Number,
+  totalMarks: Number,
+  passingMarks: Number,
+  questionOrder: { type: String, enum: ['fixed','random'], default: 'random' },
+  shuffleOptions: { type: Boolean, default: true },
+  questions: [
+    {
+      questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
+      snapshot: mongoose.Schema.Types.Mixed, // embedded question snapshot
+      marks: Number,
+    }
+  ],
+  settings: mongoose.Schema.Types.Mixed, // e.g., negative marking, partial scoring
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  status: { type: String, enum: ['draft','published','completed'], default: 'draft' },
+  createdAt: Date,
+  updatedAt: Date,
+});
+```
+
+## 5.3 ExamAttempt Collection (`exam_attempts`)
+
+```js
+const AttemptSchema = new mongoose.Schema({
+  examId: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  startedAt: Date,
+  submittedAt: Date,
+  durationSeconds: Number,
+  status: { type: String, enum: ['in_progress','submitted','evaluated','abandoned'] },
+  answers: [
+    {
+      questionRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
+      snapshot: mongoose.Schema.Types.Mixed, // snapshot of the question
+      answer: mongoose.Schema.Types.Mixed, // for mcq -> ['A'] or ['A','B']
+      marksObtained: Number,
+      isCorrect: Boolean,
+      flagged: Boolean,
+    }
+  ],
+  totalMarksObtained: Number,
+  grade: String,
+  reviewComments: String,
+  createdAt: Date,
+});
+```
+
+## 5.4 AuditLog
+
+Simple event logging for compliance.
+
+# 6. API Design (REST) — Endpoints, DTOs, Examples
+
+> Use token-based auth (JWT). Each API validates `schoolId` and `role` for multi-tenant separation.
+
+## Auth & Common
+
+* `POST /api/auth/login` — returns JWT + user info
+* `GET /api/users/me` — profile + role
+
+## Question Bank
+
+* `POST /api/questions` — Create question
+* `PUT /api/questions/:id` — Update question
+* `GET /api/questions` — Search/filter by schoolId, subjectId, difficulty, tags
+* `GET /api/questions/:id` — Get question
+* `DELETE /api/questions/:id` — Soft delete
+
+### Example: Create Question (request body)
+
+```json
+{
+  "schoolId":"64...",
+  "subjectId":"64...",
+  "questionType":"mcq_single",
+  "statement":"Which planet is known as the Red Planet?",
+  "options":[{"key":"A","text":"Earth"},{"key":"B","text":"Mars"},{"key":"C","text":"Jupiter"},{"key":"D","text":"Venus"}],
+  "correctAnswers":["B"],
+  "difficulty":"easy",
+  "marks":1
+}
+```
+
+## Exams
+
+* `POST /api/exams` — create exam (save draft)
+* `POST /api/exams/publish/:id` — snapshot questions and publish (set status published)
+* `GET /api/exams` — list exams with filters
+* `GET /api/exams/:id` — get exam details (published snapshot)
+* `DELETE /api/exams/:id` — soft delete
+
+### Example: Create & Publish Flow
+
+1. Create exam with a `questionSelection` array (either explicit questionIds or rule object)
+2. On `publish`, server resolves selection -> builds `questions.snapshot` array -> calculates totalMarks -> sets `status: 'published'` and `startTime`/`endTime`.
+
+## Conduct (Student-facing)
+
+* `POST /api/exams/:id/start` — server verifies student eligibility, creates `ExamAttempt` with `in_progress` and returns `attemptId` + shuffled question set
+* `POST /api/exams/attempts/:attemptId/answer` — autosave with payload `{ questionRef, answer }`
+* `POST /api/exams/attempts/:attemptId/submit` — submit for auto-grading
+* `GET /api/exams/attempts/:attemptId` — fetch attempt & result
+
+### Auto-grade logic (server-side)
+
+* For each saved answer, compare normalized student answer vs stored `snapshot.correctAnswers`
+* For MCQ multi-answer: apply full/partial grading strategy depending on `settings.partialCredit`.
+* Apply negative scoring per wrong answer if `settings.negativeMarking` enabled.
+
+## Teacher Actions
+
+* `GET /api/exams/:examId/attempts` — list attempts for review
+* `PUT /api/exams/attempts/:attemptId/grade` — adjust marks for partials or comments
+
+## Reports
+
+* `GET /api/reports/exam/:examId/summary` — aggregated stats (avg, median, pass rate)
+* `GET /api/reports/exam/:examId/question-analysis` — per-question correct% and distribution
+* `GET /api/reports/student/:studentId` — student transcript
+
+# 7. Frontend Architecture & UI Pages (React + Tailwind)
+
+Tech stack suggestions:
+
+* React (Vite) + TypeScript
+* Tailwind CSS for styling
+* Redux Toolkit for state
+* React Query for server cache (optional)
+* React Router for route management
+* JWT stored in httpOnly cookie (preferred) or localStorage with precautions
+
+Pages & Components:
+
+* **Dashboard**: Exams upcoming, recent results, quick actions
+* **Question Bank**: List, create/edit modal, filters (subject, difficulty, tag)
+* **Create Exam Wizard**: Steps — Basic Info → Question Selection (search & pick / rule-based) → Settings (shuffle, negative marking) → Preview → Publish
+* **Exam Live**: Student test UI with timer, question navigation, bookmark, autosave indicator
+* **Attempt Review**: For students — show question, student's answer, correct answer, marks
+* **Teacher Review Panel**: list attempts, regrade, add comments
+* **Reports**: charts (bar/line), export buttons
+
+Key UI components:
+
+* `QuestionCard` — displays statement, options, marks
+* `ExamTimer` — sticky timer with progress
+* `AutosaveIndicator` — shows last autosave
+* `ShuffleToggle`, `RandomizeButton`
+
+# 8. Redux Slices / State Management Patterns
+
+Slices to implement:
+
+* `authSlice` — token, user, roles
+* `questionBankSlice` — cache of fetched questions + filters
+* `examSlice` — current exam creation flow
+* `attemptSlice` — attempt state (answers, status, lastSavedAt)
+* `reportSlice` — analytics data
+
+Pattern:
+
+* Keep attempt progress local (Redux) with periodic background save to `POST /answer`.
+* On reload or reconnect, fetch `GET attempts/:id` to restore state.
+
+# 9. Exam Workflows
+
+## 9.1 Create Exam (teacher)
+
+1. Teacher clicks Create Exam → fills basic info
+2. Select method: Manual pick OR Rule-based (e.g., 10 Qs: 4 Easy, 4 Medium, 2 Hard)
+3. Preview exam; system computes total marks
+4. Publish → snapshot questions and set schedule
+
+## 9.2 Student Attempt
+
+1. Eligible student clicks Start during `startTime` and `endTime`
+2. Server creates `ExamAttempt` and returns shuffled questions
+3. Student answers; autosave every X seconds or on option change
+4. Student submits manually or timer expires → server auto-grades immediately
+5. Student sees result summary (if allowed) or after teacher reviews
+
+## 9.3 Grading & Regrade
+
+* For objective questions: auto-graded
+* For flagged items / partials: teacher can override marks
+* Regrade triggers recalculation of student total and an audit entry
+
+# 10. Security & Anti-cheat Considerations
+
+Low-effort measures:
+
+* Randomize question order & options per student
+* Limit one active attempt per student per exam
+* Disable copy/paste in exam iframe
+* Full-screen required; detect window blur and log counts
+
+Stronger measures (optional):
+
+* Webcam proctoring integration (3rd-party)
+* IP / device fingerprinting
+* Browser lockdown (e.g., Safe Exam Browser)
+
+Audit logs:
+
+* `windowBlurCount`, `copyPasteCount`, `startTime`, `submitTime`, `ipAddress`
+
+# 11. Reporting & Exports (PDF / Excel)
+
+Exports supported:
+
+* Student attempt CSV/Excel (answers, marks, timestamps)
+* Exam summary (avg, pass rate) in PDF
+* Question analysis CSV with difficulty and correct% per question
+
+Implementation tips:
+
+* Use server-side libraries: `exceljs` for XLSX, `pdfkit` or `puppeteer` for PDF from HTML templates
+* Ensure reports fetch aggregated data via batch aggregation pipelines (MongoDB `aggregate`)
+
+# 12. Postman Collection & Swagger/OpenAPI Snippets
+
+Provide a ready Postman collection with these groupings:
+
+* Auth
+* QuestionBank
+* Exams
+* Attempt & Autosave
+* Reports
+
+Swagger basics (OpenAPI 3.0): Define schemas for `Question`, `Exam`, `Attempt`, `Answer`, and set securityScheme `bearerAuth`.
+
+# 13. Folder Structure (Backend & Frontend)
+
+## Backend (Node.js + Express + Mongoose)
+
+```
+/backend
+  /src
+    /controllers
+      question.controller.js
+      exam.controller.js
+      attempt.controller.js
+      report.controller.js
+    /models
+      question.model.js
+      exam.model.js
+      attempt.model.js
+      user.model.js
+    /routes
+      question.routes.js
+      exam.routes.js
+      attempt.routes.js
+      auth.routes.js
+    /services
+      grading.service.js
+      export.service.js
+    /utils
+    /config
+    /middleware
+      auth.js
+      roleCheck.js
+    server.js
+```
+
+## Frontend (React + Vite + Tailwind)
+
+```
+/frontend
+  /src
+    /api  // axios wrappers
+    /components
+      QuestionCard.jsx
+      ExamTimer.jsx
+      AutosaveIndicator.jsx
+    /pages
+      QuestionBank
+      CreateExam
+      ExamLive
+      AttemptReview
+      Reports
+    /store // redux slices
+    /utils
+    /routes
+    main.jsx
+```
+
+# 14. Sample Test Cases
+
+1. Create MCQ and publish exam → Student starts → auto-grade correctness
+2. Rule-based generation: request 3 easy, 2 hard → verify counts
+3. Time expiry: student does not submit → auto-submit and grade
+4. Concurrent students: simulate 1000 concurrent starts and autosave
+5. Regrading: teacher changes marks → verify student total recalculates
+6. Export: download CSV for exam attempts → validate columns
+
+# 15. Non-functional Requirements & Scaling
+
+* Support thousands of concurrent students: use stateless servers and horizontally scale. Store attempt snapshots in DB; consider Redis for short-term autosave buffering.
+* Use paginated queries for lists and server-side filters
+* CDN for static assets
+
+# 16. Deployment Recommendations
+
+* Containerize backend (Docker) + deploy on Kubernetes or managed container platforms
+* Use managed MongoDB (Atlas) with multi-region replicas
+* Serve front-end via CDN (Vercel / Netlify) or S3 + CloudFront
+* Use HTTPS and enforce secure cookies for JWT or use refresh-token flow
+
+# 17. Appendix: Sample UI Wireframes (text descriptions)
+
+### Create Exam Wizard — Step breakdown (compact)
+
+1. **Basic Info:** Title, Class, Subject, Academic Year, Duration, Start/End
+2. **Selection:** Choose between Manual pick / Rule-based. Show searchable question list with checkboxes.
+3. **Settings:** Shuffle options, negative marking, partial scoring, randomize per student
+4. **Preview & Publish:** Preview question order + total marks + confirm publish
+
+### Exam Live (Student UI)
+
+* Left: Question navigation panel with markers (answered, flagged)
+* Center: Question card with statement and options; next/prev buttons
+* Top-right corner: Timer and Submit button
+* Autosave status at bottom-right
+
+---
+
+## Deliverables I will include if you want the full PDF:
+
+* Single PDF containing: this blueprint, Mongoose schemas, full API reference, frontend component list with minimal code skeletons, sample Postman JSON, and wireframe images (SVG/PNG) ready-for-print.
+
+If you'd like, I can now:
+
+1. Generate the **full PDF** (includes schemas, APIs, wireframe images) — ready to download, or
+2. Start by producing the **backend code skeleton** (models, controllers, routes) for the Exam Module, or
+3. Produce the **React front-end skeleton** (CreateExam wizard + ExamLive page).
+
+Pick one option or tell me if you want the full PDF now.
