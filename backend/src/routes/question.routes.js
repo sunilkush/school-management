@@ -1,22 +1,23 @@
 import express from "express";
 import {
   createQuestion,
-  bulkCreateQuestions,
+  bulkCreateQuestionsFromExcel,
   getQuestions,
   getQuestionById,
   updateQuestion,
   deleteQuestion,
   toggleQuestionStatus
 } from "../controllers/question.controllers.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = express.Router();
 
 // Create
-router.post("/", createQuestion);
-router.post("/bulk", bulkCreateQuestions);
+router.post("/create", createQuestion);
+router.post("/bulk",upload.single("file"), bulkCreateQuestionsFromExcel );
 
 // Read
-router.get("/", getQuestions);
+router.get("/getQuestions", getQuestions);
 router.get("/:id", getQuestionById);
 
 // Update

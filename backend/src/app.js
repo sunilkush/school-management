@@ -62,7 +62,7 @@ app.use("/app/v1/academicYear", AcademicYearRoutes);
 app.use("/app/v1/section", SectionRoutes);
 app.use("/app/v1/report", ReportsRoutes);
 app.use("/app/v1/dashboard", DashboardRoutes);
-app.use("/app/v1/question",QuestionRoutes);
+app.use("/app/v1/questions",QuestionRoutes);
 app.use("/app/v1/exam",ExamRoutes);
 app.use("/app/v1/attempt",AttemptRoutes);
 export { app }

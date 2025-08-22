@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Question } from "../models/Questions.model.js";
+import * as XLSX from "xlsx";
 import mongoose from "mongoose";
 
 // =============================
@@ -20,19 +21,43 @@ export const createQuestion = asyncHandler(async (req, res) => {
 // =============================
 // Bulk Create (Excel/JSON Import)
 // =============================
-export const bulkCreateQuestions = asyncHandler(async (req, res) => {
+export const bulkCreateQuestionsFromExcel = asyncHandler(async (req, res) => {
   try {
-    const { questions } = req.body;
-    if (!Array.isArray(questions) || questions.length === 0) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, null, "Questions array required"));
+    if (!req.file) {
+      return res.status(400).json(new ApiResponse(400, null, "Excel file required"));
     }
 
+    // Read Excel file
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    if (!sheetData.length) {
+      return res.status(400).json(new ApiResponse(400, null, "Excel sheet is empty"));
+    }
+
+    // Transform Excel rows into Question schema
+    const questions = sheetData.map((row) => ({
+      schoolId: row.schoolId,
+      subjectId: row.subjectId,
+      chapter: row.chapter,
+      topic: row.topic,
+      questionType: row.questionType || "mcq_single",
+      statement: row.statement,
+      options: row.options ? JSON.parse(row.options) : [], // Excel cell must have JSON string for options
+      correctAnswers: row.correctAnswers ? row.correctAnswers.split(",") : [],
+      difficulty: row.difficulty || "medium",
+      marks: Number(row.marks) || 1,
+      negativeMarks: Number(row.negativeMarks) || 0,
+      tags: row.tags ? row.tags.split(",") : [],
+    }));
+
+    // Bulk insert
     const created = await Question.insertMany(questions, { ordered: false });
+
     return res
       .status(201)
-      .json(new ApiResponse(201, created, "Bulk questions created successfully"));
+      .json(new ApiResponse(201, created, "Bulk questions created successfully from Excel"));
   } catch (error) {
     return res.status(500).json(new ApiResponse(500, null, error.message));
   }
