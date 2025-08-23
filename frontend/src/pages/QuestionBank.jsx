@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getQuestions } from "../features/questions/questionSlice";
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
-
+import {Plus} from "lucide-react"
 const QuestionBank = () => {
   const dispatch = useDispatch();
   const { questions, loading } = useSelector((s) => s.questions);
@@ -17,19 +17,19 @@ const QuestionBank = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">📚 Question Bank</h2>
+        <h2 className="text-2xl font-bold">Question Bank</h2>
         <div className="flex gap-2">
           <button
             onClick={() => setModalType("single")}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
           >
-            ➕ Add Question
+            <Plus className="inline-block" /> Add Question
           </button>
           <button
             onClick={() => setModalType("bulk")}
             className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
           >
-            ➕ Bulk Questions
+            <Plus className="inline-block" /> Bulk Questions
           </button>
         </div>
       </div>
