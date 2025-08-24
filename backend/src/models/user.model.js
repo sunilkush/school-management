@@ -29,6 +29,7 @@ const userSchema = new Schema({
     schoolId: {
         type: Schema.Types.ObjectId,
         ref: "School",
+          required: true,
 
     },
     classId: {
@@ -47,9 +48,13 @@ const userSchema = new Schema({
     refreshToken: {
         type: String
     },
+     accessToken: {
+        type: String
+    },
     academicYearId: {
         type: Schema.Types.ObjectId,
-        ref: "AcademicYears",
+        ref: "AcademicYear",
+        required:true
        
     },
 }, { timestamps: true }

@@ -43,18 +43,27 @@ export const login = createAsyncThunk(
 
 // Fetch All Users
 export const fetchAllUser = createAsyncThunk(
-  'auth/fetchAllUser',
-  async (_, { rejectWithValue }) => {
+  "users/fetchUsers",
+  async (schoolId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const res = await axios.get(`${Api_Base_Url}/user/get_all_user`, {
+      debugger;
+       const token = localStorage.getItem('accessToken');
+      // agar schoolId diya ho to query me bhejo
+      const url = schoolId
+        ? `${Api_Base_Url}/user/all?schoolId=${schoolId}`
+        : `${Api_Base_Url}/user/all`;
+
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return res.data.data;
+
+      return response.data.data; // ✅ ApiResponse ke andar data hota hai
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message );
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch users"
+      );
     }
   }
 );

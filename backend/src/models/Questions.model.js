@@ -2,29 +2,34 @@ import mongoose from "mongoose";
 
 const QuestionSchema = new mongoose.Schema(
   {
-    schoolId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "School", 
-      required: true 
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true
     },
-    subjectId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Subject", 
-      required: true 
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+      required: true
+    },
+    subjectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subject",
+      required: true
     },
     chapter: { type: String, trim: true },
     topic: { type: String, trim: true },
 
-    questionType: { 
-      type: String, 
-      enum: ["mcq_single", "mcq_multi", "true_false", "fill_blank", "match"], 
-      required: true 
+    questionType: {
+      type: String,
+      enum: ["mcq_single", "mcq_multi", "true_false", "fill_blank", "match"],
+      required: true
     },
 
-    statement: { 
-      type: String, 
-      required: true, 
-      trim: true 
+    statement: {
+      type: String,
+      required: true,
+      trim: true
     },
 
     options: [
@@ -36,10 +41,10 @@ const QuestionSchema = new mongoose.Schema(
 
     correctAnswers: [{ type: String, trim: true }],
 
-    difficulty: { 
-      type: String, 
-      enum: ["easy", "medium", "hard"], 
-      default: "medium" 
+    difficulty: {
+      type: String,
+      enum: ["easy", "medium", "hard"],
+      default: "medium"
     },
 
     marks: { type: Number, default: 1, min: 0 },
@@ -47,9 +52,9 @@ const QuestionSchema = new mongoose.Schema(
 
     tags: [{ type: String, trim: true, lowercase: true }],
 
-    createdBy: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "User" 
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
     },
 
     isActive: { type: Boolean, default: true }

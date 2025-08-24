@@ -30,7 +30,7 @@ router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
 router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
 router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);
-router.get("/get_all_user", auth, roleMiddleware(ADMIN_ROLE), getAllUsers);
+router.get("/all", auth, roleMiddleware(ADMIN_ROLE), getAllUsers);
 router.patch("/delete/:id", auth, roleMiddleware(ADMIN_ROLE), deleteUser);
 router.patch("/active/:id",auth,roleMiddleware(ADMIN_ROLE),activeUser)
 

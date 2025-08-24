@@ -61,7 +61,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
       </option>
       {academicYears.map((year) => (
         <option key={year._id} value={year._id}>
-          {year.name} ({formatDate(year.startDate)} - {formatDate(year.endDate)})
+         {formatDate(year.startDate)} - {formatDate(year.endDate)}
         </option>
       ))}
     </select>

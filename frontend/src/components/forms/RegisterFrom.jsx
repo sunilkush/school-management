@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchools } from "../../features/schools/schoolSlice";
 import { fetchRoles } from "../../features/roles/roleSlice";
-import {fetchAllClasses} from "../../features/classes/classSlice"
+
 import {
   registerUser,
   resetAuthState,
   fetchAllUser,
 } from "../../features/auth/authSlice";
+
 
 const RegisterForm = () => {
   const [message, setMessage] = useState("");
@@ -18,7 +19,7 @@ const RegisterForm = () => {
   const { roles } = useSelector((state) => state.role);
   const { schools } = useSelector((state) => state.school);
   const { isLoading, error, user, success } = useSelector((state) => state.auth);
-  const {classList} = useSelector((state)=>state.class)
+  
 
   const currentUserRole = user?.role?.name?.toLowerCase();
   const currentSchoolId = user?.school?._id;
@@ -33,7 +34,8 @@ const RegisterForm = () => {
     schoolId: currentUserRole !== "super admin" ? currentSchoolId : "",
     isActive: false,
     avatar: null,
-     classId: "", 
+    AcademicYearId:""
+    
   };
 
   const [formData, setFormData] = useState(initialForm);
@@ -43,11 +45,9 @@ const RegisterForm = () => {
   useEffect(() => {
     dispatch(fetchSchools());
     dispatch(fetchRoles());
-    dispatch(fetchAllClasses())
+    
   }, [dispatch]);
-  // selected techer
-  const selectedRole = roles.find((r) => r._id === formData.roleId);
-  const isTeacher = selectedRole?.name?.toLowerCase() === "teacher";
+  
   // Handle success reset
   useEffect(() => {
     if (success) {
@@ -63,18 +63,17 @@ const RegisterForm = () => {
   }, [success, dispatch]);
 
   // 🔍 Dynamic role filtering
-  useEffect(() => {
+  // Role filtering
+useEffect(() => {
   let updatedRoles = [];
 
   if (currentUserRole === "super admin") {
-    // Super Admin can only create School Admins (but allow global roles too)
     updatedRoles = roles.filter(
       (role) =>
         role.name.toLowerCase() === "school admin" &&
-        (role.schoolId === formData.schoolId || role.schoolId === null) // ✅ include global roles
+        (role.schoolId === formData.schoolId || role.schoolId === null)
     );
   } else if (currentUserRole === "school admin") {
-    // School Admin can create roles within their school + global roles
     updatedRoles = roles.filter(
       (role) =>
         (role.schoolId === currentSchoolId || role.schoolId === null) &&
@@ -280,27 +279,7 @@ const RegisterForm = () => {
               ))}
           </select>
         </div>
-        {/* Class Dropdown (only if role = Teacher) */}
-            {isTeacher && (
-              <div>
-                <label className="text-xs">Class</label>
-                <select
-                  name="classId"
-                  value={formData.classId}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="">Select Class</option>
-                  {classList.map((cls) => (
-                    <option key={cls._id} value={cls._id}>
-                      {cls.name} - {cls.section}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-        {/* Active Checkbox */}
+       
         <div className="flex items-center col-span-2">
           <input
             id="isActive"

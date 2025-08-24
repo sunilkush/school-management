@@ -3,7 +3,8 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { User } from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
-
+import { AcademicYear } from '../models/AcademicYear.model.js'
+import mongoose from 'mongoose'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -30,11 +31,21 @@ const generateAccessAndRefreshToken = async (userId) => {
 // ✅ Register User Controller
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, roleId, schoolId, classId, parentId } = req.body;
-
+  
   if (!name || !email || !password || !roleId || !schoolId) {
     throw new ApiError(400, "All required fields must be provided");
   }
+   let academicYearId = null;
+   if (roleId && schoolId) {
+    const activeAcademicYear = await AcademicYear.findOne({
+      schoolId,
+      status: "active",
+    });
 
+    if (activeAcademicYear) {
+      academicYearId = activeAcademicYear._id;
+    }
+  }
   // ✅ Check if email already exists
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -71,6 +82,7 @@ const registerUser = asyncHandler(async (req, res) => {
     parentId,
     regNumber, // ✅ only for students
     isActive: true,
+    academicYearId
   });
 
   const createdUser = await User.findById(newUser._id).select(
@@ -105,15 +117,13 @@ const loginUser = asyncHandler(async (req, res) => {
     );
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-    user._id
-  );
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-  // ✅ Populate role, school, class in one pipeline
+  // ✅ Populate role, school, academic year
   const userWithDetails = await User.aggregate([
     { $match: { _id: user._id } },
 
-    // Join with Role
+    // Role
     {
       $lookup: {
         from: "roles",
@@ -124,7 +134,7 @@ const loginUser = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
 
-    // Join with School
+    // School
     {
       $lookup: {
         from: "schools",
@@ -135,16 +145,16 @@ const loginUser = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
 
-    // Join with Classes
+    // Academic Year
     {
       $lookup: {
-        from: "classes",
-        localField: "classId", // must exist in User schema
+        from: "academicyears", // ✅ lowercase collection name
+        localField: "AcademicYearId",
         foreignField: "_id",
-        as: "class",
+        as: "AcademicYear",
       },
     },
-    { $unwind: { path: "$class", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$AcademicYear", preserveNullAndEmptyArrays: true } },
 
     // Final projection
     {
@@ -163,9 +173,9 @@ const loginUser = asyncHandler(async (req, res) => {
           _id: "$school._id",
           name: "$school.name",
         },
-        class: {
-          _id: "$class._id",
-          name: "$class.name",
+        AcademicYear: {
+          _id: "$AcademicYear._id",
+          name: "$AcademicYear.name",
         },
       },
     },
@@ -189,6 +199,7 @@ const loginUser = asyncHandler(async (req, res) => {
       )
     );
 });
+
 
 
 /**
@@ -262,37 +273,39 @@ const logoutUser = asyncHandler(async (req, res) => {
  * @route GET /api/users
  */
 const getAllUsers = asyncHandler(async (req, res) => {
+  let schoolId;
+
+  // If Super Admin → use query param, else use user's own schoolId
+  if (req.user?.role?.name && req.user.role.name === "Super Admin") {
+    schoolId = req.query.schoolId;
+  } else {
+    schoolId = req.user?.schoolId;
+  }
+
+  const matchStage = schoolId
+    ? { schoolId: new mongoose.Types.ObjectId(schoolId) }
+    : {};
+
   const users = await User.aggregate([
+    { $match: matchStage },
     {
       $lookup: {
-        from: 'roles',
-        localField: 'roleId',
-        foreignField: '_id',
-        as: 'role',
+        from: "roles",
+        localField: "roleId",
+        foreignField: "_id",
+        as: "role",
       },
     },
-    { $unwind: '$role' },
-
+    { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
-        from: 'schools',
-        localField: 'schoolId',
-        foreignField: '_id',
-        as: 'school',
+        from: "schools",
+        localField: "schoolId",
+        foreignField: "_id",
+        as: "school",
       },
     },
-    { $unwind: { path: '$school', preserveNullAndEmptyArrays: true } },
-
-    {
-      $lookup: {
-        from: 'classes',
-        localField: 'classId',
-        foreignField: '_id',
-        as: 'class',
-      },
-    },
-    { $unwind: { path: '$class', preserveNullAndEmptyArrays: true } },
-
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
     {
       $project: {
         _id: 1,
@@ -300,35 +313,31 @@ const getAllUsers = asyncHandler(async (req, res) => {
         email: 1,
         avatar: 1,
         isActive: 1,
-        regNumber: 1, // ✅ include student regNumber
+        regNumber: 1,
         role: {
-          _id: '$role._id',
-          name: '$role.name',
-          permissions: '$role.permissions',
+          _id: "$role._id",
+          name: "$role.name",
+          permissions: "$role.permissions",
         },
         school: {
-          _id: '$school._id',
-          name: '$school.name',
+          _id: "$school._id",
+          name: "$school.name",
         },
-        class: {
-              _id: "$class._id",
-      // 👇 Merge class name + section
-              name: "$class.name",
-             },
       },
     },
-  ])
+  ]);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, users, 'Users fetched successfully'))
-})
+    .json(new ApiResponse(200, users, "Users fetched successfully"));
+});
 
 
 /**
  * @desc Deactivate user
  * @route DELETE /api/users/:id
  */
+
 const deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params
   if (!id) throw new ApiError(400, 'User ID is required')

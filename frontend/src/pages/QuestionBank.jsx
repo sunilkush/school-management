@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { getQuestions } from "../features/questions/questionSlice";
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
-import {Plus} from "lucide-react"
+import { Plus } from "lucide-react";
+
 const QuestionBank = () => {
   const dispatch = useDispatch();
   const { questions, loading } = useSelector((s) => s.questions);
@@ -36,6 +37,13 @@ const QuestionBank = () => {
 
       {loading && <p>Loading...</p>}
 
+      {/* ✅ Show message if no questions */}
+      {!loading && questions?.length === 0 && (
+        <p className="text-gray-500 text-center py-4">
+          No questions found. Start by adding a new one!
+        </p>
+      )}
+
       <ul className="space-y-2">
         {questions?.map((q) => (
           <li
@@ -65,14 +73,18 @@ const QuestionBank = () => {
             {/* Render correct form */}
             {modalType === "single" && (
               <>
-                <h3 className="text-xl font-semibold mb-4">Create New Question</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                  Create New Question
+                </h3>
                 <CreateQuestion onClose={() => setModalType(null)} />
               </>
             )}
 
             {modalType === "bulk" && (
               <>
-                <h3 className="text-xl font-semibold mb-4">Bulk Create Questions</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                  Bulk Create Questions
+                </h3>
                 <BulkUploadQuestions onClose={() => setModalType(null)} />
               </>
             )}

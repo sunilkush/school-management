@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchAllUser, deleteUser, activeUser } from '../features/auth/authSlice';
-import DataTable from 'react-data-table-component';
-import RegisterFrom from '../components/forms/RegisterFrom';
-import { FaUserCircle } from 'react-icons/fa';
+import React, { useEffect, useState, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchAllUser,
+  deleteUser,
+  activeUser,
+} from "../features/auth/authSlice";
+import DataTable from "react-data-table-component";
+import RegisterFrom from "../components/forms/RegisterFrom";
+import { FaUserCircle } from "react-icons/fa";
 
 const Admins = () => {
   const dispatch = useDispatch();
@@ -17,102 +21,112 @@ const Admins = () => {
     dispatch(fetchAllUser());
   }, [dispatch]);
 
+  // ✅ Toggle status (with self-protection)
   const handleToggleStatus = (user) => {
     if (user._id === currentUser?._id) {
-      alert('You cannot change your own status.');
+      alert("You cannot change your own status.");
       return;
     }
 
-    const action = user.isActive ? 'deactivate' : 'activate';
+    const action = user.isActive ? "deactivate" : "activate";
     if (window.confirm(`Are you sure you want to ${action} this user?`)) {
       dispatch(
-        action === 'deactivate'
+        user.isActive
           ? deleteUser({ id: user._id, isActive: false })
           : activeUser({ id: user._id, isActive: true })
       ).then(() => dispatch(fetchAllUser()));
     }
   };
 
-  const columns = [
-    {
-      name: 'Avatar',
-      selector: (row) =>
-        row.avatar ? (
-          <img
-            src={row.avatar}
-            alt="avatar"
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        ) : (
-          <FaUserCircle className="text-gray-400 text-2xl" />
-        ),
-    },
-    { name: 'Name', selector: (row) => row.name, sortable: true },
-    { name: 'Email', selector: (row) => row.email, sortable: true },
-    { name: 'Role', selector: (row) => row.role?.name || '-', sortable: true },
-    { name: 'School', selector: (row) => row.school?.name || '-', sortable: true },
-    {
-      name: 'Status',
-      selector: (row) => (
-        <span
-          className={`${
-            row.isActive
-              ? 'bg-green-300 px-5 py-1 rounded-xl block w-full'
-              : 'bg-red-300 px-5 py-1 rounded-xl block w-full'
-          }`}
-        >
-          {row.isActive ? 'Active' : 'Deactivated'}
-        </span>
+  // ✅ Columns config
+const columns = [
+  {
+    name: "Avatar",
+    selector: (row) =>
+      row.avatar ? (
+        <img
+          src={row.avatar}
+          alt="avatar"
+          className="w-10 h-10 rounded-full object-cover"
+        />
+      ) : (
+        <FaUserCircle className="text-gray-400 text-2xl" />
       ),
-      sortable: true,
-    },
-    {
-      name: 'Actions',
-      cell: (row) => (
-        <button
-          onClick={() => handleToggleStatus(row)}
-          className={`font-semibold ${
-            row.isActive
-              ? 'bg-red-600 hover:bg-red-800 px-3 py-1 text-white rounded-full w-full'
-              : 'bg-green-600 hover:bg-green-800 px-3 py-1 rounded-full text-white w-full'
-          }`}
-        >
-          {row.isActive ? 'Deactivate' : 'Activate'}
-        </button>
-      ),
-    },
-  ];
+    width: "80px",
+  },
+  { name: "Name", selector: (row) => row.name, sortable: true },
+  { name: "Email", selector: (row) => row.email, sortable: true },
+  { name: "Role", selector: (row) => row.role?.name || "-", sortable: true },
+  { name: "School", selector: (row) => row.school?.name || "-", sortable: true },
+  {
+    name: "Status",
+    selector: (row) => (
+      <span
+        className={`${
+          row.isActive
+            ? "bg-green-300 text-green-800"
+            : "bg-red-300 text-red-800"
+        } px-5 py-1 rounded-xl block text-center`}
+      >
+        {row.isActive ? "Active" : "Deactivated"}
+      </span>
+    ),
+    sortable: true,
+  },
+  {
+    name: "Actions",
+    cell: (row) => (
+      <button
+        onClick={() => handleToggleStatus(row)}
+        className={`font-semibold ${
+          row.isActive
+            ? "bg-red-600 hover:bg-red-800"
+            : "bg-green-600 hover:bg-green-800"
+        } px-3 py-1 text-white rounded-full w-full`}
+      >
+        {row.isActive ? "Deactivate" : "Activate"}
+      </button>
+    ),
+    width: "150px",
+  },
+];
 
-  let filteredUsers = [];
-  if (currentUser?.role?.name?.toLowerCase() === 'super admin') {
-    filteredUsers = users.filter(
-      (user) => user.role?.name?.toLowerCase() === 'school admin'
-    );
-  } else if (currentUser?.role?.name?.toLowerCase() === 'school admin') {
-    filteredUsers = users.filter(
-      (user) =>
-        user.role?.name?.toLowerCase() !== 'super admin' &&
-        user.role?.name?.toLowerCase() !== 'school admin'
-    );
-  }
+
+  // ✅ Filtered users based on role
+  const filteredUsers = useMemo(() => {
+    if (currentUser?.role?.name?.toLowerCase() === "super admin") {
+      return users.filter(
+        (u) => u.role?.name?.toLowerCase() === "school admin"
+      );
+    }
+    if (currentUser?.role?.name?.toLowerCase() === "school admin") {
+      return users.filter(
+        (u) =>
+          u.role?.name?.toLowerCase() !== "super admin" &&
+          u.role?.name?.toLowerCase() !== "school admin"
+      );
+    }
+    return [];
+  }, [users, currentUser]);
 
   return (
-    <div>
-      {error && <p className="text-red-500">{error}</p>}
-      <div className='grid grid-cols-2'>
-        <h1 className="text-2xl font-bold mb-4 text-blue-800">Admins</h1>
+    <div className="p-4">
+      {error && <p className="text-red-500 mb-2">{error}</p>}
+
+      {/* Header */}
+      <div className="grid grid-cols-2 items-center">
+        <h1 className="text-2xl font-bold text-blue-800">Admins</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg self-start justify-self-end hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg justify-self-end hover:bg-blue-700 transition"
         >
           Add Admin
         </button>
       </div>
-     
 
       {/* Data Table */}
       <DataTable
-        className={'min-w-full divide-y divide-gray-200 text-sm mt-4'}
+        className="mt-4"
         columns={columns}
         data={filteredUsers}
         progressPending={loading}
@@ -120,6 +134,7 @@ const Admins = () => {
         highlightOnHover
         striped
         responsive
+        noDataComponent="No admins found"
       />
 
       {/* Modal */}
@@ -133,7 +148,7 @@ const Admins = () => {
             >
               ✖
             </button>
-           
+
             <RegisterFrom onClose={() => setIsModalOpen(false)} />
           </div>
         </div>

@@ -2,44 +2,39 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subject } from "../models/subject.model.js";
-
+import { Class } from "../models/classes.model.js";
 // ✅ Create a Subject (POST)
-const createSubject = asyncHandler(async (req, res) => {
-    const { schoolId, name, teacherId,academicYearId } = req.body;
+// Create subject
+ const createSubject = asyncHandler(async (req, res) => {
+  const { academicYearId, schoolId, name, teacher, classes } = req.body;
 
-    // Validate required fields
-    if (!schoolId || !name || !teacherId) {
-        throw new ApiError(400, "All fields (schoolId, name, teacherId) are required.");
-    }
-    const exists = await Subject.findOne({teacherId,name,schoolId});
-    if (exists) {
-        return res.status(400).json({
-            message: "Subject already exists!"
-        });
-    }
-    // Create new subject
-    const subject = new Subject({
-        academicYearId,
-        schoolId,
-        name,
-        teacherId,
-    });
+  if (!academicYearId || !schoolId || !name || !teacher) {
+    throw new ApiError(400, "All required fields must be provided");
+  }
 
-    // Save to DB
-    const savedSubject = await subject.save();
+  // Validate teacher role
+  const teacherUser = await User.findById(teacher).populate("roleId");
+  if (!teacherUser) {
+    throw new ApiError(404, "Teacher not found");
+  }
+  if (teacherUser.roleId.name !== "Teacher") {
+    throw new ApiError(400, "Selected user is not a Teacher");
+  }
 
-    if (!savedSubject) {
-        return res.status(500).json({
-             message:"Failed to create subject. Please try again."
-        })
-       
-    }
+  const subject = await Subject.create({
+    academicYearId,
+    schoolId,
+    name,
+    teacher,
+    classes,
+  });
 
-    return res.status(201).json(
-        new ApiResponse(201, savedSubject, "Subject created successfully!")
-    );
+  res.status(201).json({
+    success: true,
+    message: "Subject created successfully",
+    data: subject,
+  });
 });
-
 // ✅ Get All Subjects (GET)
 const getAllSubjects = asyncHandler(async (req, res) => {
     const subjects = await Subject.aggregate([

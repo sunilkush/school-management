@@ -3,28 +3,25 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchAllUser } from "../../features/auth/authSlice";
 import { fetchAllSubjects } from "../../features/subject/subjectSlice";
 import { createClass, updateClass } from "../../features/classes/classSlice";
-import { MultiSelect } from "primereact/multiselect";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
-import { Link } from "react-router-dom";
 
-const ClassForm = ({ teacherList = [], onClose, initialData }) => {
-  
+const ClassForm = ({ onClose, initialData }) => {
   const dispatch = useDispatch();
 
   const { users = [] } = useSelector((state) => state.auth);
   const { subjectList = [] } = useSelector((state) => state.subject || {});
-  const { loading,  error,success } =
-    useSelector((state) => state.class || {});
-
-  const [selectedSubjects, setSelectedSubjects] = useState([]);
- 
+  const { loading, error, success } = useSelector((state) => state.class || {});
+  const { user } = useSelector((state) => state.auth);
+  console.log(users);
+  debugger;
 
   const [formData, setFormData] = useState({
     name: "",
     section: "",
     teacherId: "",
-    subjects: [],
-    schoolId: JSON.parse(localStorage.getItem("user"))?.school?._id || "",
+    subjects: [], // { subjectId, teacherId }
+    schoolId: user?.school?._id || "",
+    academicYearId: user?.academicYearId || "",
   });
 
   // ✅ Prefill form if editing
@@ -34,52 +31,69 @@ const ClassForm = ({ teacherList = [], onClose, initialData }) => {
         name: initialData.name || "",
         section: initialData.section || "",
         teacherId: initialData.teacherId?._id || "",
-        subjects: initialData.subjects?.map((s) => s._id) || [],
-        schoolId: initialData.schoolId || JSON.parse(localStorage.getItem("user"))?.school?._id || "",
+        subjects:
+          initialData.subjects?.map((s) => ({
+            subjectId: s.subjectId?._id || s._id,
+            teacherId: s.teacherId?._id || "",
+          })) || [],
+        schoolId: initialData.schoolId || user?.school?._id || "",
+        academicYearId:
+          initialData.academicYearId || user?.academicYearId || "",
       });
-      setSelectedSubjects(initialData.subjects || []);
     }
-  }, [initialData]);
+  }, [initialData, user]);
 
   // Load teachers + subjects
   useEffect(() => {
-    dispatch(fetchAllUser());
-    dispatch(fetchAllSubjects());
-  }, [dispatch]);
-
-
-
+   debugger
+    if (user?.school?._id && user?.academicYearId) {
+      dispatch(fetchAllUser(user.school._id));
+      dispatch(
+        fetchAllSubjects({
+          schoolId: user.school._id,
+          academicYearId: user.academicYearId,
+        })
+      );
+    }
+  }, [dispatch, user]);
+  // 👇 Teachers filter
+  const teachersToShow = users.filter(
+    (t) =>
+      t.role?.name?.toLowerCase() === "teacher" &&
+      String(t.school?._id) === String(user?.school?._id)
+  );
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Subject teacher mapping
+  const handleSubjectChange = (subjectId, teacherId) => {
+    setFormData((prev) => {
+      const updatedSubjects = prev.subjects.filter(
+        (s) => s.subjectId !== subjectId
+      );
+      updatedSubjects.push({ subjectId, teacherId });
+      return { ...prev, subjects: updatedSubjects };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const selectedSubjectIds = selectedSubjects.map((sub) => sub._id);
-
-   
-
     try {
-      const dataToSubmit = {
-        ...formData,
-        subjects: selectedSubjectIds,
-      };
-
       if (initialData?._id) {
-        await dispatch(updateClass({ id: initialData._id, classData: dataToSubmit }));
+        await dispatch(
+          updateClass({ id: initialData._id, classData: formData })
+        );
       } else {
-        await dispatch(createClass(dataToSubmit));
+        await dispatch(createClass(formData));
       }
-
       onClose();
     } catch (err) {
       console.error("Dispatch error:", err);
     }
   };
-
-  const teachersToShow = teacherList.length ? teacherList : users;
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
@@ -87,7 +101,9 @@ const ClassForm = ({ teacherList = [], onClose, initialData }) => {
         {initialData ? "Edit Class" : "Add Class"}
       </h2>
 
-      {success && <div className="bg-green-100 text-green-800 p-3 mb-4">{success}</div>}
+      {success && (
+        <div className="bg-green-100 text-green-800 p-3 mb-4">{success}</div>
+      )}
       {error && <div className="bg-red-100 text-red-800 p-3 mb-4">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -102,8 +118,23 @@ const ClassForm = ({ teacherList = [], onClose, initialData }) => {
             required
           >
             <option value="">Select Class</option>
-            {["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"].map((cls) => (
-              <option key={cls} value={cls}>{cls}</option>
+            {[
+              "1st",
+              "2nd",
+              "3rd",
+              "4th",
+              "5th",
+              "6th",
+              "7th",
+              "8th",
+              "9th",
+              "10th",
+              "11th",
+              "12th",
+            ].map((cls) => (
+              <option key={cls} value={cls}>
+                {cls}
+              </option>
             ))}
           </select>
         </div>
@@ -119,32 +150,17 @@ const ClassForm = ({ teacherList = [], onClose, initialData }) => {
             required
           >
             <option value="">Select Section</option>
-            {["A","B","C","D","E","F"].map((sec) => (
-              <option key={sec} value={sec}>{sec}</option>
+            {["A", "B", "C", "D", "E", "F"].map((sec) => (
+              <option key={sec} value={sec}>
+                {sec}
+              </option>
             ))}
           </select>
         </div>
 
-        {/* Subjects */}
+        {/* Class Teacher */}
         <div>
-          <label className="block mb-1 text-xs">Subjects</label>
-          <MultiSelect
-            value={selectedSubjects}
-            onChange={(e) => setSelectedSubjects(e.value)}
-            options={subjectList}
-            optionLabel="name"
-            placeholder="Select Subjects"
-            display="chip"
-            className="w-full border rounded-lg"
-          />
-          <Link className="text-xs text-red-500" to="/dashboard/schooladmin/subjects">
-            Create new subject
-          </Link>
-        </div>
-
-        {/* Teacher */}
-        <div>
-          <label className="block mb-1 text-xs">Teacher</label>
+          <label className="block mb-1 text-xs">Class Teacher</label>
           <select
             name="teacherId"
             value={formData.teacherId}
@@ -153,19 +169,51 @@ const ClassForm = ({ teacherList = [], onClose, initialData }) => {
             required
           >
             <option value="">Select Teacher</option>
-            {teachersToShow
-              .filter((t) => t.role?.name === "Teacher")
-              .map((teacher) => (
-                <option key={teacher._id} value={teacher._id}>
-                  {teacher.name}
-                </option>
-              ))}
+            {teachersToShow.map((teacher) => (
+              <option key={teacher._id} value={teacher._id}>
+                {teacher.name}
+              </option>
+            ))}
           </select>
+        </div>
+
+        {/* Subjects + Teacher Mapping */}
+        <div className="col-span-2">
+          <label className="block mb-2 text-xs">Subjects & Teachers</label>
+          {subjectList.map((sub) => {
+            const selected = formData.subjects.find(
+              (s) => s.subjectId === sub._id
+            );
+            return (
+              <div
+                key={sub._id}
+                className="flex items-center gap-4 mb-2 border p-2 rounded"
+              >
+                <span className="w-1/3">{sub.name}</span>
+                <select
+                  value={selected?.teacherId || ""}
+                  onChange={(e) => handleSubjectChange(sub._id, e.target.value)}
+                  className="border px-2 py-1 w-2/3 rounded-lg"
+                >
+                  <option value="">Assign Teacher</option>
+                  {teachersToShow.map((teacher) => (
+                    <option key={teacher._id} value={teacher._id}>
+                      {teacher.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-6">
-        <button type="button" className="px-4 py-2 bg-gray-300 rounded-lg" onClick={onClose}>
+        <button
+          type="button"
+          className="px-4 py-2 bg-gray-300 rounded-lg"
+          onClick={onClose}
+        >
           Cancel
         </button>
         <button
@@ -173,7 +221,11 @@ const ClassForm = ({ teacherList = [], onClose, initialData }) => {
           className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
           disabled={loading}
         >
-          {loading ? "Saving..." : initialData ? "Update Class" : "Create Class"}
+          {loading
+            ? "Saving..."
+            : initialData
+            ? "Update Class"
+            : "Create Class"}
         </button>
       </div>
     </form>
