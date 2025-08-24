@@ -117,9 +117,10 @@ const loginUser = asyncHandler(async (req, res) => {
     );
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+  const { accessToken, refreshToken } =
+    await generateAccessAndRefreshToken(user._id);
 
-  // ✅ Populate role, school, academic year
+  // ✅ Populate role, school, academicYear
   const userWithDetails = await User.aggregate([
     { $match: { _id: user._id } },
 
@@ -148,13 +149,13 @@ const loginUser = asyncHandler(async (req, res) => {
     // Academic Year
     {
       $lookup: {
-        from: "academicyears", // ✅ lowercase collection name
-        localField: "AcademicYearId",
+        from: "academicyears",
+        localField: "academicYearId", // ✅ lowercase, matches User schema
         foreignField: "_id",
-        as: "AcademicYear",
+        as: "academicYear",
       },
     },
-    { $unwind: { path: "$AcademicYear", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
 
     // Final projection
     {
@@ -173,9 +174,12 @@ const loginUser = asyncHandler(async (req, res) => {
           _id: "$school._id",
           name: "$school.name",
         },
-        AcademicYear: {
-          _id: "$AcademicYear._id",
-          name: "$AcademicYear.name",
+        academicYear: {
+          _id: "$academicYear._id",
+          name: "$academicYear.name",
+          startDate: "$academicYear.startDate",
+          endDate: "$academicYear.endDate",
+          isActive: "$academicYear.isActive",
         },
       },
     },
@@ -199,6 +203,7 @@ const loginUser = asyncHandler(async (req, res) => {
       )
     );
 });
+
 
 
 
@@ -288,6 +293,8 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
   const users = await User.aggregate([
     { $match: matchStage },
+
+    // Join Role
     {
       $lookup: {
         from: "roles",
@@ -297,6 +304,8 @@ const getAllUsers = asyncHandler(async (req, res) => {
       },
     },
     { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+
+    // Join School
     {
       $lookup: {
         from: "schools",
@@ -306,6 +315,19 @@ const getAllUsers = asyncHandler(async (req, res) => {
       },
     },
     { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+
+    // ✅ Join Academic Year
+    {
+      $lookup: {
+        from: "academicyears",
+        localField: "academicYearId", // assuming your User schema has academicYearId
+        foreignField: "_id",
+        as: "academicYear",
+      },
+    },
+    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
+
+    // Final projection
     {
       $project: {
         _id: 1,
@@ -323,6 +345,13 @@ const getAllUsers = asyncHandler(async (req, res) => {
           _id: "$school._id",
           name: "$school.name",
         },
+        academicYear: {
+          _id: "$academicYear._id",
+          name: "$academicYear.name",
+          startDate: "$academicYear.startDate",
+          endDate: "$academicYear.endDate",
+          isActive: "$academicYear.isActive",
+        },
       },
     },
   ]);
@@ -331,6 +360,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, users, "Users fetched successfully"));
 });
+
 
 
 /**
