@@ -13,7 +13,7 @@ const ClassForm = ({ onClose, initialData }) => {
   const { loading, error, success } = useSelector((state) => state.class || {});
   const { user } = useSelector((state) => state.auth);
   console.log(users);
-  debugger;
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,13 +45,13 @@ const ClassForm = ({ onClose, initialData }) => {
 
   // Load teachers + subjects
   useEffect(() => {
-   debugger
-    if (user?.school?._id && user?.academicYearId) {
+  
+    if (user?.school?._id && user?.academicYear?._id) {
       dispatch(fetchAllUser(user.school._id));
       dispatch(
         fetchAllSubjects({
           schoolId: user.school._id,
-          academicYearId: user.academicYearId,
+          academicYearId: user.academicYear._id,
         })
       );
     }
@@ -80,7 +80,7 @@ const ClassForm = ({ onClose, initialData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    console.log(formData)
     try {
       if (initialData?._id) {
         await dispatch(

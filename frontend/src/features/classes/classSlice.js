@@ -14,9 +14,11 @@ export const createClass = createAsyncThunk(
       });
 
       console.log("✅ Class created:", res.data);
-      return res.data.data; // API response me agar `data` hai to wahi return karna
+      return res.data?.data || res.data; // safe return
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message || "Class creation failed!");
+      return rejectWithValue(
+        error?.response?.data?.message || "Class creation failed!"
+      );
     }
   }
 );
@@ -32,9 +34,11 @@ export const fetchAllClasses = createAsyncThunk(
       });
 
       console.log("✅ Classes fetched:", res.data);
-      return res.data.data; // yaha bhi `data` return hoga
+      return res.data?.data || []; // safe return
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message || "Failed to fetch classes!");
+      return rejectWithValue(
+        error?.response?.data?.message || "Failed to fetch classes!"
+      );
     }
   }
 );
@@ -52,7 +56,9 @@ export const deleteClass = createAsyncThunk(
       console.log("🗑️ Class deleted:", classId);
       return classId;
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message || "Class deletion failed!");
+      return rejectWithValue(
+        error?.response?.data?.message || "Class deletion failed!"
+      );
     }
   }
 );
@@ -68,9 +74,11 @@ export const updateClass = createAsyncThunk(
       });
 
       console.log("✏️ Class updated:", res.data);
-      return res.data.data;
+      return res.data?.data || res.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message || "Class update failed!");
+      return rejectWithValue(
+        error?.response?.data?.message || "Class update failed!"
+      );
     }
   }
 );
@@ -85,7 +93,12 @@ const initialState = {
 const classSlice = createSlice({
   name: "class",
   initialState,
-  reducers: {},
+  reducers: {
+    resetClassState: (state) => {
+      state.success = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // FETCH
@@ -108,7 +121,9 @@ const classSlice = createSlice({
       })
       .addCase(createClass.fulfilled, (state, action) => {
         state.loading = false;
-        state.classList.push(action.payload); // new class add
+        if (action.payload) {
+          state.classList.push(action.payload);
+        }
         state.success = true;
       })
       .addCase(createClass.rejected, (state, action) => {
@@ -122,7 +137,9 @@ const classSlice = createSlice({
       })
       .addCase(deleteClass.fulfilled, (state, action) => {
         state.loading = false;
-        state.classList = state.classList.filter((cls) => cls._id !== action.payload);
+        state.classList = state.classList.filter(
+          (cls) => cls._id !== action.payload
+        );
         state.success = true;
       })
       .addCase(deleteClass.rejected, (state, action) => {
@@ -149,4 +166,5 @@ const classSlice = createSlice({
   },
 });
 
+export const { resetClassState } = classSlice.actions;
 export default classSlice.reducer;
