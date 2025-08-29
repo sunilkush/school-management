@@ -46,7 +46,7 @@ export const fetchAllUser = createAsyncThunk(
   "users/fetchUsers",
   async (schoolId, { rejectWithValue }) => {
     try {
-      debugger;
+      
        const token = localStorage.getItem('accessToken');
       // agar schoolId diya ho to query me bhejo
       const url = schoolId
