@@ -101,7 +101,7 @@ const AddRoleForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 space-y-6 bg-white rounded shadow">
+    <form onSubmit={handleSubmit} className="p-4 space-y-2 bg-white rounded shadow">
       <h2 className="text-xl font-semibold">Create Role</h2>
 
       {loading && <p className="text-blue-500">Creating role...</p>}
@@ -114,7 +114,7 @@ const AddRoleForm = () => {
         <select
           value={name}
           onChange={(e) => handleRoleChange(e.target.value)}
-          className="mt-1 block w-full border p-2 rounded"
+          className="mt-1 block w-full border px-2 py-1 rounded"
           required
         >
           <option value="">Select Role</option>
@@ -132,7 +132,7 @@ const AddRoleForm = () => {
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="e.g. SA, TEACH, ADMIN"
-          className="mt-1 block w-full border p-2 rounded"
+          className="mt-1 block w-full border px-2 py-1 rounded"
         />
       </div>
 
@@ -143,7 +143,7 @@ const AddRoleForm = () => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter role description"
-          className="mt-1 block w-full border p-2 rounded"
+          className="mt-1 block w-full border px-2 py-1 rounded"
         />
       </div>
 
@@ -153,7 +153,7 @@ const AddRoleForm = () => {
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="mt-1 block w-full border p-2 rounded"
+          className="mt-1 block w-full border px-2 py-1 rounded"
         >
           <option value="system">System</option>
           <option value="custom">Custom</option>
@@ -168,7 +168,7 @@ const AddRoleForm = () => {
           value={level}
           min="1"
           onChange={(e) => setLevel(Number(e.target.value))}
-          className="mt-1 block w-full border p-2 rounded"
+          className="mt-1 block w-full border px-2 py-1 rounded"
         />
       </div>
 
@@ -179,7 +179,7 @@ const AddRoleForm = () => {
           <select
             value={schoolId}
             onChange={(e) => setSchoolId(e.target.value)}
-            className="mt-1 block w-full border p-2 rounded"
+            className="mt-1 block w-full border px-2 py-1 rounded"
             required
           >
             <option value="">Select School</option>
@@ -248,7 +248,7 @@ const AddRoleForm = () => {
             + Add Permission
           </button>
         )}
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded text-sm">
           Create Role
         </button>
       </div>

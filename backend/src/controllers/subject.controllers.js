@@ -3,30 +3,22 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subject } from "../models/subject.model.js";
 import { Class } from "../models/classes.model.js";
+import{Role} from "../models/Roles.model.js";
 // ✅ Create a Subject (POST)
 // Create subject
  const createSubject = asyncHandler(async (req, res) => {
-  const { academicYearId, schoolId, name, teacher, classes } = req.body;
-
-  if (!academicYearId || !schoolId || !name || !teacher) {
+  const { academicYearId, schoolId, name, teacherId, classId } = req.body;
+  console.log(req.body)
+  if (!academicYearId || !schoolId || !name || !teacherId || !classId ) {
     throw new ApiError(400, "All required fields must be provided");
   }
-
-  // Validate teacher role
-  const teacherUser = await User.findById(teacher).populate("roleId");
-  if (!teacherUser) {
-    throw new ApiError(404, "Teacher not found");
-  }
-  if (teacherUser.roleId.name !== "Teacher") {
-    throw new ApiError(400, "Selected user is not a Teacher");
-  }
-
+  
   const subject = await Subject.create({
     academicYearId,
     schoolId,
     name,
-    teacher,
-    classes,
+    teacherId,
+    classId,
   });
 
   res.status(201).json({

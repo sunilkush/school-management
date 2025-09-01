@@ -159,14 +159,14 @@ useEffect(() => {
       <h2 className="text-2xl font-semibold text-center text-gray-900 mb-2">
         Register
       </h2>
-      <p className="text-center text-sm text-gray-600 mb-6">
+      <p className="text-center text-xs text-gray-600 mb-6">
         Create your account. It’s free and only takes a minute.
       </p>
 
       {message && <p className="text-green-600 text-center">{message}</p>}
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      <form className="grid grid-cols-2 gap-4" onSubmit={handleSubmit}>
+      <form className="grid grid-cols-2 gap-2" onSubmit={handleSubmit}>
         {/* Name */}
         <div>
           <label className="text-xs">Name</label>
@@ -177,7 +177,7 @@ useEffect(() => {
             type="text"
             placeholder="Name"
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 "
           />
         </div>
 
@@ -191,7 +191,7 @@ useEffect(() => {
             type="email"
             placeholder="Email"
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
@@ -205,7 +205,7 @@ useEffect(() => {
             type="password"
             placeholder="Password"
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
@@ -219,7 +219,7 @@ useEffect(() => {
             type="password"
             placeholder="Confirm Password"
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
@@ -231,7 +231,7 @@ useEffect(() => {
             name="avatar"
             accept="image/*"
             onChange={handleChange}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-1 text-sm  border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
@@ -244,7 +244,7 @@ useEffect(() => {
               value={formData.schoolId}
               onChange={handleChange}
               required
-              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="">Select School</option>
               {schools.map((school) => (
@@ -264,7 +264,7 @@ useEffect(() => {
             value={formData.roleId}
             onChange={handleChange}
             required
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value="">Select Role</option>
             {filteredRoles
@@ -299,7 +299,7 @@ useEffect(() => {
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-800"
+            className="px-2 bg-blue-600 text-white py-1 text-sm rounded-md hover:bg-blue-800"
           >
             {isLoading ? "Registering..." : "Register Now"}
           </button>

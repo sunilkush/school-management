@@ -39,17 +39,17 @@ const SubjectSchema = new Schema(
         "Forensic Science", "Criminology", "Social Work"
       ],
     },
-    teacher: {
+    teacherId: {
       type: Schema.Types.ObjectId,
       ref: "User", // Only Users with role = Teacher
       required: true,
     },
-    classes: [
+    classId: 
       {
         type: Schema.Types.ObjectId,
         ref: "Class",
       },
-    ],
+    
   },
   {
     timestamps: true,

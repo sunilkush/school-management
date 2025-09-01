@@ -8,20 +8,18 @@ import "primereact/resources/themes/lara-light-cyan/theme.css";
 const ClassForm = ({ onClose, initialData }) => {
   const dispatch = useDispatch();
 
-  const { users = [] } = useSelector((state) => state.auth);
   const { subjectList = [] } = useSelector((state) => state.subject || {});
   const { loading, error, success } = useSelector((state) => state.class || {});
-  const { user } = useSelector((state) => state.auth);
-  console.log(users);
-
-
+  const { user, users = [] } = useSelector((state) => state.auth || {});
+  const storedAcademicYear = localStorage.getItem("academicYear");
+  const academicYear = storedAcademicYear ? JSON.parse(storedAcademicYear) : null;
   const [formData, setFormData] = useState({
     name: "",
     section: "",
     teacherId: "",
     subjects: [], // { subjectId, teacherId }
     schoolId: user?.school?._id || "",
-    academicYearId: user?.academicYearId || "",
+    academicYearId: academicYear?._id || "",
   });
 
   // ✅ Prefill form if editing
@@ -33,35 +31,37 @@ const ClassForm = ({ onClose, initialData }) => {
         teacherId: initialData.teacherId?._id || "",
         subjects:
           initialData.subjects?.map((s) => ({
-            subjectId: s.subjectId?._id || s._id,
+            subjectId: s.subjectId?._id || s.subjectId || "",
             teacherId: s.teacherId?._id || "",
           })) || [],
-        schoolId: initialData.schoolId || user?.school?._id || "",
+        schoolId: initialData.schoolId?._id || user?.school?._id || "",
         academicYearId:
-          initialData.academicYearId || user?.academicYearId || "",
+          initialData.academicYearId?._id ||
+          user?.academicYear?._id ||
+          "",
       });
     }
   }, [initialData, user]);
 
   // Load teachers + subjects
   useEffect(() => {
-  
-    if (user?.school?._id && user?.academicYear?._id) {
+    if (user?.school?._id ) {
       dispatch(fetchAllUser(user.school._id));
       dispatch(
         fetchAllSubjects({
-          schoolId: user.school._id,
-          academicYearId: user.academicYear._id,
+          schoolId: user.school._id
         })
       );
     }
   }, [dispatch, user]);
+
   // 👇 Teachers filter
   const teachersToShow = users.filter(
     (t) =>
-      t.role?.name?.toLowerCase() === "teacher" &&
+      t.role?.name === "Teacher" &&
       String(t.school?._id) === String(user?.school?._id)
   );
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -71,16 +71,17 @@ const ClassForm = ({ onClose, initialData }) => {
   const handleSubjectChange = (subjectId, teacherId) => {
     setFormData((prev) => {
       const updatedSubjects = prev.subjects.filter(
-        (s) => s.subjectId !== subjectId
+        (s) => String(s.subjectId) !== String(subjectId)
       );
-      updatedSubjects.push({ subjectId, teacherId });
+      if (teacherId) {
+        updatedSubjects.push({ subjectId, teacherId });
+      }
       return { ...prev, subjects: updatedSubjects };
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData)
     try {
       if (initialData?._id) {
         await dispatch(
@@ -114,7 +115,7 @@ const ClassForm = ({ onClose, initialData }) => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg"
+            className="border px-2 py-1 w-full rounded-lg text-sm"
             required
           >
             <option value="">Select Class</option>
@@ -146,7 +147,7 @@ const ClassForm = ({ onClose, initialData }) => {
             name="section"
             value={formData.section}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg"
+            className="border px-2 py-1 w-full rounded-lg text-sm"
             required
           >
             <option value="">Select Section</option>
@@ -165,7 +166,7 @@ const ClassForm = ({ onClose, initialData }) => {
             name="teacherId"
             value={formData.teacherId}
             onChange={handleChange}
-            className="border px-2 py-2 w-full rounded-lg"
+            className="border px-2 py-1 w-full rounded-lg text-sm"
             required
           >
             <option value="">Select Teacher</option>
@@ -182,7 +183,7 @@ const ClassForm = ({ onClose, initialData }) => {
           <label className="block mb-2 text-xs">Subjects & Teachers</label>
           {subjectList.map((sub) => {
             const selected = formData.subjects.find(
-              (s) => s.subjectId === sub._id
+              (s) => String(s.subjectId) === String(sub._id)
             );
             return (
               <div
@@ -192,7 +193,9 @@ const ClassForm = ({ onClose, initialData }) => {
                 <span className="w-1/3">{sub.name}</span>
                 <select
                   value={selected?.teacherId || ""}
-                  onChange={(e) => handleSubjectChange(sub._id, e.target.value)}
+                  onChange={(e) =>
+                    handleSubjectChange(sub._id, e.target.value)
+                  }
                   className="border px-2 py-1 w-2/3 rounded-lg"
                 >
                   <option value="">Assign Teacher</option>
@@ -211,14 +214,14 @@ const ClassForm = ({ onClose, initialData }) => {
       <div className="flex justify-end gap-3 pt-6">
         <button
           type="button"
-          className="px-4 py-2 bg-gray-300 rounded-lg"
+          className="px-2 py-1 bg-gray-300 rounded-md text-sm"
           onClick={onClose}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+          className="bg-blue-600 text-white px-2 py-1 text-sm rounded-md hover:bg-blue-700"
           disabled={loading}
         >
           {loading

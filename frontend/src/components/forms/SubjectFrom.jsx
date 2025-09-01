@@ -2,29 +2,55 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createSubject } from "../../features/subject/subjectSlice";
 import { fetchAllClasses } from "../../features/classes/classSlice";
-import { fetchAllUser } from "../../features/auth/authSlice"; // ✅ Correct import
+import { fetchAllUser } from "../../features/auth/authSlice"; 
 import { Button } from "@/components/ui/button";
 
 const SubjectForm = () => {
   const dispatch = useDispatch();
 
-  const { classes } = useSelector((state) => state.class);
-  const { users } = useSelector((state) => state.auth); // ✅ use users from authSlice
+  const { classList = [] } = useSelector((state) => state.class);
+  const { users = [], user } = useSelector((state) => state.auth); 
   const { loading, successMessage, error } = useSelector((state) => state.subject);
 
+  // ✅ Parse academicYear from localStorage
+  const storedAcademicYear = localStorage.getItem("academicYear");
+  const academicYear = storedAcademicYear ? JSON.parse(storedAcademicYear) : null;
+  const SubjectList = ["English", "Science", "History", "Geography", "Art", "Physical Education",
+        "Computer Science", "Music", "Economics", "Psychology", "Sociology",
+        "Political Science", "Philosophy", "Biology", "Chemistry", "Physics",
+        "Literature", "Business Studies", "Accounting", "Statistics",
+        "Environmental Science", "Health Education", "Foreign Language", "Drama",
+        "Dance", "Media Studies", "Religious Studies", "Ethics", "Law",
+        "Engineering", "Architecture", "Astronomy", "Geology", "Anthropology",
+        "Linguistics", "Mathematics", "Information Technology", "Robotics",
+        "Artificial Intelligence", "Cybersecurity", "Data Science",
+        "Machine Learning", "Web Development", "Graphic Design", "Game Development",
+        "Network Administration", "Cloud Computing", "Mobile App Development",
+        "Digital Marketing", "Project Management", "Supply Chain Management",
+        "Human Resource Management", "Finance", "Investment", "Marketing",
+        "Public Relations", "Event Management", "Tourism Management",
+        "Hospitality Management", "Culinary Arts", "Fashion Design",
+        "Interior Design", "Product Design", "Industrial Design", "Textile Design",
+        "Jewelry Design", "Graphic Arts", "Photography", "Film Studies",
+        "Animation", "Visual Effects", "Sound Engineering", "Music Production",
+        "Theater Arts", "Dance Performance", "Choreography", "Creative Writing",
+        "Journalism", "Broadcasting", "Public Speaking", "Debate",
+        "Forensic Science", "Criminology", "Social Work"]
   const [formData, setFormData] = useState({
     name: "",
     classId: "",
     teacherId: "",
+    schoolId: user?.school?._id || "",
+    academicYearId: academicYear?._id || "",
   });
 
   useEffect(() => {
     dispatch(fetchAllClasses());
-    dispatch(fetchAllUser()); // ✅ must be called
+    dispatch(fetchAllUser()); 
   }, [dispatch]);
 
-  // ✅ Filter only teachers from users
-  const teachers = users?.filter((u) => u.role === "teacher");
+  // ✅ Filter only teachers
+  const teachers = users?.filter((u) => u.role?.name?.toLowerCase() === "teacher");
 
   const handleChange = (e) => {
     setFormData({
@@ -49,14 +75,16 @@ const SubjectForm = () => {
         {/* Subject Name */}
         <div>
           <label className="block text-sm font-medium mb-1">Subject Name</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Enter subject name"
+         <select  name="name"
             value={formData.name}
             onChange={handleChange}
             className="w-full border rounded-lg p-2"
-          />
+            required>
+           <option>Select Subject</option>
+           {SubjectList.map((item)=>
+           <option key={item}>{item}</option>
+          )}
+         </select>
         </div>
 
         {/* Select Class */}
@@ -67,13 +95,15 @@ const SubjectForm = () => {
             value={formData.classId}
             onChange={handleChange}
             className="w-full border rounded-lg p-2"
+            required
           >
             <option value="">Select Class</option>
-            {classes?.map((cls) => (
-              <option key={cls._id} value={cls._id}>
-                {cls.name} - {cls.section}
-              </option>
-            ))}
+            {Array.isArray(classList) &&
+              classList.map((cls) => (
+                <option key={cls._id} value={cls._id}>
+                  {cls.name} - {cls.section}
+                </option>
+              ))}
           </select>
         </div>
 
@@ -85,6 +115,7 @@ const SubjectForm = () => {
             value={formData.teacherId}
             onChange={handleChange}
             className="w-full border rounded-lg p-2"
+            required
           >
             <option value="">Select Teacher</option>
             {teachers?.map((t) => (

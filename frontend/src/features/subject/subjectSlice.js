@@ -5,17 +5,14 @@ import axios from "axios";
 const Api_Base_Url = import.meta.env.VITE_API_URL
 // Create a new subject
 // This function will be called when the user submits the form to create a new subject
-export const createSubject = createAsyncThunk("subject/createSubject", async (SubjectDate, { rejectWithValue }) => {
-
+export const createSubject = createAsyncThunk("subject/createSubject", async ( SubjectDate, { rejectWithValue }) => {
   try {
-
     const token = localStorage.getItem("accessToken")
     const res = await axios.post(`${Api_Base_Url}/subject/create`, SubjectDate, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
-
     return res.data
   } catch (error) {
     return rejectWithValue(

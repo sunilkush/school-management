@@ -46,7 +46,7 @@ export const fetchAllUser = createAsyncThunk(
   "users/fetchUsers",
   async (schoolId, { rejectWithValue }) => {
     try {
-      
+   
        const token = localStorage.getItem('accessToken');
       // agar schoolId diya ho to query me bhejo
       const url = schoolId
@@ -58,7 +58,7 @@ export const fetchAllUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-
+      
       return response.data.data; // ✅ ApiResponse ke andar data hota hai
     } catch (error) {
       return rejectWithValue(
@@ -105,6 +105,7 @@ export const deleteUser = createAsyncThunk(
     }
   }
 );
+
 // Active User
 export const activeUser = createAsyncThunk(
   'auth/ActiveUser',

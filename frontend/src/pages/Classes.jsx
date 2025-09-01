@@ -1,32 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import ClassForm from '../components/forms/ClassForm';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchAllClasses, deleteClass } from '../features/classes/classSlice';
-import DataTable from 'react-data-table-component';
-import { Edit, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import ClassForm from "../components/forms/ClassForm";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchAllClasses, deleteClass } from "../features/classes/classSlice";
+import DataTable from "react-data-table-component";
+import { Edit, Trash2 } from "lucide-react";
 
 function Classes() {
   const dispatch = useDispatch();
 
-  // ✅ Extract the actual array from API response
-  const classList = useSelector((state) => state.class?.classList?.data || []);
-
+  const { classList, loading } = useSelector((state) => state.class || {});
+  
   const [isOpen, setIsOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
-  const [filterText, setFilterText] = useState('');
+  const [filterText, setFilterText] = useState("");
 
+  // Fetch all classes on mount
   useEffect(() => {
     dispatch(fetchAllClasses());
-  }, [dispatch, isOpen]);
+  }, [dispatch]);
 
   const handleEdit = (cls) => {
     setEditingClass(cls);
     setIsOpen(true);
   };
 
-  const handleDelete = async(id) => {
-    await dispatch(deleteClass(id));
-    dispatch(fetchAllClasses());
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this class?")) {
+      await dispatch(deleteClass(id));
+    }
   };
 
   const handleAddNew = () => {
@@ -36,48 +37,57 @@ function Classes() {
 
   // Columns for DataTable
   const columns = [
-    { name: 'Class Name', selector: row => row.name, sortable: true },
-    { name: 'Section', selector: row => row.section, sortable: true },
+    { name: "Class Name", selector: (row) => row.name, sortable: true },
+    { name: "Section", selector: (row) => row.section, sortable: true },
     {
-      name: 'Subjects',
-      cell: row => (
+      name: "Subjects",
+      cell: (row) => (
         <div className="flex flex-wrap gap-1 py-1">
           {row.subjects?.map((sub, idx) => (
-            <span key={sub._id || idx} className="px-2 py-1 text-xs bg-gray-200 rounded-md">
-              {sub.subjectId?.name || '—'} ({sub.teacherId?.name || '—'})
+            <span
+              key={sub._id || idx}
+              className="px-2 py-1 text-xs bg-gray-200 rounded-md"
+            >
+              {sub.subjectId?.name || "—"} ({sub.teacherId?.name || "—"})
             </span>
           ))}
         </div>
       ),
     },
     {
-      name: 'Class Teacher',
-      selector: row => row.teacherId?.name || '—',
+      name: "Class Teacher",
+      selector: (row) => row.teacherId?.name || "—",
       sortable: true,
-      cell: row => (
+      cell: (row) => (
         <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
-          {row.teacherId?.name || '—'}
+          {row.teacherId?.name || "—"}
         </span>
       ),
     },
     {
-      name: 'School',
-      selector: row => row.schoolId?.name || '—',
+      name: "School",
+      selector: (row) => row.schoolId?.name || "—",
       sortable: true,
-      cell: row => (
+      cell: (row) => (
         <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-md">
-          {row.schoolId?.name || '—'}
+          {row.schoolId?.name || "—"}
         </span>
       ),
     },
     {
-      name: 'Actions',
-      cell: row => (
+      name: "Actions",
+      cell: (row) => (
         <div className="flex gap-2">
-          <button onClick={() => handleEdit(row)} className="text-blue-600 hover:text-blue-800">
+          <button
+            onClick={() => handleEdit(row)}
+            className="text-blue-600 hover:text-blue-800"
+          >
             <Edit size={18} />
           </button>
-          <button onClick={() => handleDelete(row._id)} className="text-red-600 hover:text-red-800">
+          <button
+            onClick={() => handleDelete(row._id)}
+            className="text-red-600 hover:text-red-800"
+          >
             <Trash2 size={18} />
           </button>
         </div>
@@ -87,7 +97,7 @@ function Classes() {
 
   // Filtered Data
   const filteredItems = classList.filter(
-    item =>
+    (item) =>
       item.name?.toLowerCase().includes(filterText.toLowerCase()) ||
       item.section?.toLowerCase().includes(filterText.toLowerCase())
   );
@@ -104,7 +114,10 @@ function Classes() {
             >
               ✕
             </button>
-            <ClassForm onClose={() => setIsOpen(false)} initialData={editingClass} />
+            <ClassForm
+              onClose={() => setIsOpen(false)}
+              initialData={editingClass}
+            />
           </div>
         </div>
       )}
@@ -126,7 +139,7 @@ function Classes() {
             type="text"
             placeholder="Search by Class or Section..."
             value={filterText}
-            onChange={e => setFilterText(e.target.value)}
+            onChange={(e) => setFilterText(e.target.value)}
             className="w-full md:w-1/3 px-3 py-2 border rounded-lg text-xs"
           />
         </div>
@@ -134,6 +147,7 @@ function Classes() {
         <DataTable
           columns={columns}
           data={filteredItems}
+          progressPending={loading}
           pagination
           highlightOnHover
           pointerOnHover

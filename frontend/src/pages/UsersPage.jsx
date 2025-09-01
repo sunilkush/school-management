@@ -43,11 +43,12 @@ const UsersPage = () => {
 
   const columns = [
     { name: "#", selector: (row, index) => index + 1, width: "60px" },
-    { name: "User ID", selector: (row) => row._id, sortable: true },
+    
     { name: "Name", selector: (row) => row.name, sortable: true },
     { name: "Email", selector: (row) => row.email, sortable: true },
     { name: "Role", selector: (row) => row.role?.name, sortable: true },
     { name: "School", selector: (row) => row.school?.name, sortable: true },
+    { name: "Academic Year", selector: (row) => row.academicYear?.name, sortable: true },
   ];
 
   return (

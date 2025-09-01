@@ -90,7 +90,7 @@ const columns = [
     width: "150px",
   },
 ];
-
+ 
 
   // ✅ Filtered users based on role
   const filteredUsers = useMemo(() => {
@@ -118,7 +118,7 @@ const columns = [
         <h1 className="text-2xl font-bold text-blue-800">Admins</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg justify-self-end hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white px-2 py-1 text-sm rounded-sm justify-self-end hover:bg-blue-700 transition"
         >
           Add Admin
         </button>
@@ -140,7 +140,7 @@ const columns = [
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-4 relative">
             {/* Close Button */}
             <button
               onClick={() => setIsModalOpen(false)}

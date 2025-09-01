@@ -108,7 +108,7 @@ const classSlice = createSlice({
       })
       .addCase(fetchAllClasses.fulfilled, (state, action) => {
         state.loading = false;
-        state.classList = action.payload || [];
+         state.classList = action.payload?.data || [];
       })
       .addCase(fetchAllClasses.rejected, (state, action) => {
         state.loading = false;
@@ -154,6 +154,7 @@ const classSlice = createSlice({
       .addCase(updateClass.fulfilled, (state, action) => {
         state.loading = false;
         const updated = action.payload;
+        console.log(updated)
         state.classList = state.classList.map((cls) =>
           cls._id === updated._id ? updated : cls
         );
