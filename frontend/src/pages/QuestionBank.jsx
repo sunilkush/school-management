@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getQuestions } from "../features/questions/questionSlice";
+import { getQuestions,deleteQuestion } from "../features/questions/questionSlice";
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
-import { Plus } from "lucide-react";
+import { Plus,Trash2 } from "lucide-react";
 
 const QuestionBank = () => {
   const dispatch = useDispatch();
@@ -13,6 +13,7 @@ const QuestionBank = () => {
 
   useEffect(() => {
     dispatch(getQuestions());
+   
   }, [dispatch]);
 
   return (
@@ -44,19 +45,29 @@ const QuestionBank = () => {
         </p>
       )}
 
-      <ul className="space-y-2">
-        {questions?.map((q) => (
-          <li
-            key={q._id}
-            className="p-4 border rounded shadow-sm bg-white hover:shadow-md"
-          >
-            <p className="font-medium">{q.statement}</p>
-            <span className="text-sm text-gray-500">
-              {q.questionType} • {q.difficulty}
-            </span>
-          </li>
-        ))}
-      </ul>
+     <ul className="space-y-2">
+  {questions?.map((q) => (
+    <li
+      key={q._id}
+      className="p-4 border rounded shadow-sm bg-white hover:shadow-md flex justify-between items-center"
+    >
+      <div>
+        <p className="font-medium">{q.statement}</p>
+        <span className="text-sm text-gray-500">
+          {q.questionType} • {q.difficulty}
+        </span>
+      </div>
+
+      {/* ✅ Delete button */}
+      <button
+        onClick={() => dispatch(deleteQuestion(q._id))}
+        className="text-red-600 hover:text-red-800"
+      >
+        <Trash2 size={18} />
+      </button>
+    </li>
+  ))}
+</ul>
 
       {/* Modal Popup */}
       {modalType && (
