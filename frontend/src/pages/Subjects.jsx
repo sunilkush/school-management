@@ -1,24 +1,26 @@
-import SubjectForm from '../components/forms/SubjectFrom';
+import SubjectForm from '../components/forms/SubjectFrom.jsx'; // ✅ fixed file name
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import DataTable from 'react-data-table-component';
 import { fetchAllSubjects, deleteSubject } from '../features/subject/subjectSlice';
 
 const Subjects = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
 
   const dispatch = useDispatch();
   const { subjectList, loading } = useSelector((state) => state.subject);
 
-  // Instant read from localStorage to avoid flash
+  // ✅ Instant read from localStorage to avoid flash
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
 
-  // Filter subjects for this school
-  const filteredSubjects = subjectList.filter((subj) => subj.schoolId === schoolId);
+  // ✅ Filter subjects for this school
+  const filteredSubjects = subjectList.filter(
+  (subj) => String(subj.schoolId) === String(schoolId)
+);
 
-  // Fetch subjects only once
+  // ✅ Fetch subjects only once
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchAllSubjects());
@@ -27,7 +29,7 @@ const Subjects = () => {
 
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
-    setIsOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleDelete = (id) => {
@@ -63,6 +65,16 @@ const Subjects = () => {
 
   return (
     <>
+      {/* ✅ Modal */}
+      <SubjectForm
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedSubject(null);
+        }}
+        editData={selectedSubject} // pass data if editing
+      />
+
       {/* Header */}
       <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -73,8 +85,8 @@ const Subjects = () => {
           <button
             type="button"
             onClick={() => {
-              setSelectedSubject(null);
-              setIsOpen(true);
+              setSelectedSubject(null); // clear previous selection
+              setIsModalOpen(true); // open modal for Add
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
@@ -95,14 +107,6 @@ const Subjects = () => {
           responsive
         />
       </div>
-
-      {/* Modal */}
-      {isOpen && (
-        <SubjectForm
-          editData={selectedSubject}
-          onClose={() => setIsOpen(false)}
-        />
-      )}
     </>
   );
 };

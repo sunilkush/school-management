@@ -21,22 +21,27 @@ export const createSubject = createAsyncThunk("subject/createSubject", async ( S
   }
 })
 
-export const fetchAllSubjects = createAsyncThunk("subject/fetchAllSubjects", async (_, { rejectWithValue }) => {
-  try {
-    const token = localStorage.getItem("accessToken")
-    const res = await axios.get(`${Api_Base_Url}/subject/all`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+export const fetchAllSubjects = createAsyncThunk(
+  "subject/fetchAllSubjects",
+  async ({ schoolId, teacherId, section, search } = {}, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
 
-    return res.data
-  } catch (error) {
-    return rejectWithValue(
-      error?.response?.data?.message || "Failed to fetch subjects!"
-    )
+      const res = await axios.get(`${Api_Base_Url}/subject/all`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: { schoolId, teacherId, section, search }, // ✅ pass query params
+      });
+      console.log(res.data)
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || "Failed to fetch subjects!"
+      );
+    }
   }
-})
+);
 // delete subject
 // This function will be called when the user clicks the delete button on a subject
 export const deleteSubject = createAsyncThunk("subject/deleteSubject", async (subjectId, { rejectWithValue }) => {
@@ -114,7 +119,7 @@ const subjectSlice = createSlice({
       })
       .addCase(fetchAllSubjects.fulfilled, (state, action) => {
         state.loading = false;
-        state.subjectList = action.payload.data; // Ensure array is in `data`
+        state.subjectList = action.payload.data?.subjects || []; // Ensure array is in `data`
         state.success = true;
       })
       .addCase(fetchAllSubjects.rejected, (state, action) => {

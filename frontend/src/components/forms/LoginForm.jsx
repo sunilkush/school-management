@@ -9,7 +9,7 @@ const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const { loading, error, user } = useSelector(state => state.auth);
- 
+  
   const roleRoutes = [
     { role: "super admin", path: "/dashboard/superadmin" },
     { role: "school admin", path: "/dashboard/schooladmin" },

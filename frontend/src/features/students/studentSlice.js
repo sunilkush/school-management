@@ -59,7 +59,7 @@ export const createStudent = createAsyncThunk(
 // fetch all students
 export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
-  async (_, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId,classId } = {}, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
@@ -69,9 +69,9 @@ export const fetchAllStudent = createAsyncThunk(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        params:{schoolId, academicYearId,classId }
       });
-
-      return res.data.data
+      return res.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message);
     }
@@ -81,7 +81,7 @@ export const fetchAllStudent = createAsyncThunk(
 const initialState = {
   lastStudent: null,
   student: null,   // single student
-  students: [],    // list of students
+  studentList: [],    // list of students
   loading: false,
   error: null,
   success: false,
@@ -140,7 +140,7 @@ const studentSlice = createSlice({
       })
       .addCase(fetchAllStudent.fulfilled, (state, action) => {
         state.loading = false;
-         state.students = action.payload; 
+         state.studentList = action.payload.data?.students || []
         state.success = true;
       })
       .addCase(fetchAllStudent.rejected, (state, action) => {

@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
+import mongoose from "mongoose";
 // ✅ Register and admit student
  const registerStudent = asyncHandler(async (req, res) => {
   const {
@@ -34,6 +35,7 @@ import { generateNextRegNumber } from "../utils/generateRegNumber.js";
       password,
       roleId: roleDoc._id,
       schoolId,
+      academicYearId
     });
   }
 
@@ -77,18 +79,36 @@ import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 });
 
 
-// ✅ Get All Students
+// ✅ Get Students (with pagination, class + school + academicYear filters, teacher details)
 const getStudents = asyncHandler(async (req, res) => {
-  const schoolId = req.user?.schoolId;
-  const academicYearId = req.academicYearId;
+  const schoolId = req.user?.schoolId; // from auth
+  const academicYearId = req.academicYearId; // from middleware
+  const { classId, page = 1, limit = 10 } = req.query; // pagination
 
-  const students = await Student.aggregate([
+  if (!schoolId || !academicYearId) {
+    throw new ApiError(400, "schoolId and academicYearId are required!");
+  }
+
+  const pageNumber = parseInt(page, 10) || 1;
+  const pageSize = parseInt(limit, 10) || 10;
+  const skip = (pageNumber - 1) * pageSize;
+
+  // ✅ Build match conditions dynamically
+  const matchConditions = {
+    schoolId: new mongoose.Types.ObjectId(schoolId),
+    academicYearId: new mongoose.Types.ObjectId(academicYearId),
+  };
+
+  if (classId) {
+    matchConditions.classId = new mongoose.Types.ObjectId(classId);
+  }
+
+  const result = await Student.aggregate([
     {
-      $match: {
-        schoolId,
-        academicYearId,
-      },
+      $match: matchConditions,
     },
+
+    // 🔹 Lookup student -> user
     {
       $lookup: {
         from: "users",
@@ -99,17 +119,46 @@ const getStudents = asyncHandler(async (req, res) => {
     },
     { $unwind: "$userDetails" },
 
-    // 👇 Add class lookup
+    // 🔹 Lookup student -> class
     {
       $lookup: {
-        from: "classes", // collection name
-        localField: "classId", // field in Student schema
-        foreignField: "_id", // field in Classes schema
+        from: "classes",
+        localField: "classId",
+        foreignField: "_id",
         as: "classDetails",
       },
     },
     { $unwind: "$classDetails" },
 
+    // 🔹 Lookup class -> teacher
+    {
+      $lookup: {
+        from: "users",
+        localField: "classDetails.teacherId",
+        foreignField: "_id",
+        as: "teacherDetails",
+      },
+    },
+    {
+      $unwind: {
+        path: "$teacherDetails",
+        preserveNullAndEmptyArrays: true, // teacher may not exist
+      },
+    },
+     // 🔹 Lookup School 
+    // Join School
+    {
+      $lookup: {
+        from: "schools",
+        localField: "schoolId",
+        foreignField: "_id",
+        as: "school",
+      },
+    },
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+
+    
+    // 🔹 Projection
     {
       $project: {
         _id: 1,
@@ -118,36 +167,71 @@ const getStudents = asyncHandler(async (req, res) => {
         feeDiscount: 1,
         smsMobile: 1,
         status: 1,
-        schoolId: 1,
+       
         academicYearId: 1,
         createdAt: 1,
         updatedAt: 1,
         otherInfo: 1,
         fatherInfo: 1,
         motherInfo: 1,
-        // user info
+        school: {
+          _id: "$school._id",
+          name: "$school.name",
+        },
+        // student user info
         "userDetails._id": 1,
         "userDetails.name": 1,
         "userDetails.email": 1,
         "userDetails.role": 1,
         "userDetails.isActive": 1,
-        "userDetails.schoolId": 1,
+
         // class info
         "classDetails._id": 1,
         "classDetails.name": 1,
         "classDetails.section": 1,
+
+        // teacher info
+        "teacherDetails._id": 1,
+        "teacherDetails.name": 1,
+        "teacherDetails.email": 1,
+      },
+    },
+
+    // 🔹 Pagination using $facet
+    {
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [{ $skip: skip }, { $limit: pageSize }],
+      },
+    },
+    {
+      $addFields: {
+        total: { $ifNull: [{ $arrayElemAt: ["$metadata.total", 0] }, 0] },
       },
     },
   ]);
 
-  if (!students || students.length === 0) {
-    throw new ApiError(404, "No students found!");
-  }
+  const students = result[0]?.data || [];
+  const total = result[0]?.total || 0;
+  const totalPages = Math.ceil(total / pageSize);
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, students, "Students retrieved successfully!"));
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        students,
+        pagination: {
+          total,
+          page: pageNumber,
+          limit: pageSize,
+          totalPages,
+        },
+      },
+      "Students retrieved successfully!"
+    )
+  );
 });
+
 
 
 // ✅ Get Student by ID

@@ -33,8 +33,8 @@ export const fetchAllClasses = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("✅ Classes fetched:", res.data);
-      return res.data?.data || []; // safe return
+      console.log("✅ Classes fetched:", res.data.data.data);
+      return res.data.data || []; // safe return
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Failed to fetch classes!"
@@ -53,7 +53,7 @@ export const deleteClass = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("🗑️ Class deleted:", classId);
+    
       return classId;
     } catch (error) {
       return rejectWithValue(
@@ -73,8 +73,8 @@ export const updateClass = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("✏️ Class updated:", res.data);
-      return res.data?.data || res.data;
+     
+      return res.data?.data;
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Class update failed!"

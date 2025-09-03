@@ -6,13 +6,13 @@ import { Attendance } from '../models/attendance.model.js';
 // 1. Mark Attendance (Create)
 const markAttendance = asyncHandler(async (req, res) => {
     try {
-        const { schoolId, studentId, classId, subjectId, date, status, recordedBy } = req.body;
+        const { schoolId, studentId, classId,  date, status, recordedBy } = req.body;
 
-        if ([schoolId, studentId, classId, subjectId, date, status, recordedBy].some(field => !field)) {
+        if ([schoolId, studentId, classId,  date, status, recordedBy].some(field => !field)) {
             throw new ApiError(400, 'All fields are required!');
         }
 
-        const attendance = new Attendance({ schoolId, studentId, classId, subjectId, date, status, recordedBy });
+        const attendance = new Attendance({ schoolId, studentId, classId, date, status, recordedBy });
         const saveAttendance = await attendance.save();
 
         return res.status(201).json(new ApiResponse(200, saveAttendance, 'Attendance recorded successfully'));

@@ -5,6 +5,7 @@ const Api_Base_Url = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("accessToken");
 export const markAttendance = createAsyncThunk("attendance/mark", async (attendanceData, { rejectWithValue }) => {
    try {
+   
       const response = await axios.post(`${Api_Base_Url}/attendance/mark`,attendanceData,{
             headers: { Authorization: `Bearer ${token}` },
       })

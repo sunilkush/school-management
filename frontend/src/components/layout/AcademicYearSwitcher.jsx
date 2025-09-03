@@ -54,7 +54,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
     <select
       onChange={handleChange}
       value={activeYear?._id || ""}
-      className="border rounded px-2 py-1 text-sm"
+      className="border rounded px-2 py-1 text-xs"
     >
       <option value="" disabled>
         Select Academic Year

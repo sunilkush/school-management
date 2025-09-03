@@ -1,98 +1,170 @@
-import React, { useEffect, useState } from 'react';
-
-import { useSelector,useDispatch } from 'react-redux';
-import { activeUser,fetchAllUser } from '../features/auth/authSlice'; // Adjust the import path as necessary
-const statusColors = {
-  present: 'bg-green-100 text-green-800',
-  absent: 'bg-red-100 text-red-800',
-  leave: 'bg-yellow-100 text-yellow-800',
-};
-
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import DataTable from "react-data-table-component";
+import { fetchAllStudent } from "../features/students/studentSlice";
+import { activeUser } from "../features/auth/authSlice";
+import {markAttendance} from "../features/attendance/attendanceSlice";
 const StudentAttendance = () => {
-  //const [students, setStudents] = useState([]);
-  const [attendance, setAttendance] = useState({});
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substr(0, 10));
   const dispatch = useDispatch();
-  const {users} = useSelector((state) => state.auth);
-  // Fetch students from backend
+  const { studentList = [], loading } = useSelector((state) => state.students);
+  const { user: currentUser } = useSelector((state) => state.auth);
+
+  const schoolId = currentUser?.school?._id;
+
+  // 🔹 Filters
+
+  const [filterClass, setFilterClass] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  // 🔹 Local state to track marked attendance
+  const [attendance, setAttendance] = useState({});
+
   useEffect(() => {
-    dispatch(activeUser())
-    dispatch(fetchAllUser())
-  }, [dispatch]);
-  const user = localStorage.getItem('user');
-  const userData = user ? JSON.parse(user) : null;
-  const schoolId = userData?.school?._id;
-  
-  const students = users.filter(user => user.role.name === 'Student' &&  user.school._id === schoolId );
-  // Handle attendance status change
-  const handleChange = (studentId, status) => {
+    if (schoolId) {
+      dispatch(fetchAllStudent({ schoolId }));
+    }
+    dispatch(activeUser());
+  }, [dispatch, schoolId]);
+
+  // 🔹 Update attendance state
+  const handleAttendanceChange = (studentId, status) => {
     setAttendance((prev) => ({
       ...prev,
       [studentId]: status,
     }));
+   
   };
 
-  // Submit attendance
-  const handleSubmit = async () => {
+  // 🔹 Columns
+  const columns = [
+    {
+      name: "Student Name",
+      selector: (row) => row.userDetails?.name || "N/A",
+      sortable: true,
+    },
+    {
+      name: "Class",
+      selector: (row) => row.classDetails?.name || "N/A",
+      sortable: true,
+    },
+    {
+      name: "School",
+      selector: (row) => row.school?.name || "N/A",
+      sortable: true,
+    },
+    {
+      name: "Date",
+      selector: () => new Date().toLocaleDateString(), // today's date
+      sortable: true,
+    },
+    {
+      name: "Mark Attendance",
+      cell: (row) => (
+        <select
+          value={attendance[row._id] || ""}
+          onChange={(e) => handleAttendanceChange(row._id, e.target.value)}
+          className="border p-1 rounded"
+        >
+          <option value="">Select</option>
+          <option value="Present">Present</option>
+          <option value="Absent">Absent</option>
+        </select>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+
+  // 🔹 Filtering logic
+  const filteredRecords = studentList.filter((item) => {
+    return (
     
-  };
+      (filterClass ? item.classDetails?.name === filterClass : true) &&
+      (filterStatus
+        ? (attendance[item._id] || item.status) === filterStatus
+        : true)
+    );
+  });
+
+  // 🔹 Submit Attendance (can send to backend)
+  const handleSubmit = () => {
+  const today = new Date();
+
+  // Convert attendance object into proper array
+  const attendanceData = studentList
+    .filter((student) => attendance[student._id]) // only selected students
+    .map((student) => ({
+      schoolId: schoolId,
+      studentId: student._id,
+      classId: student.classDetails?._id,
+      date: today.toISOString(), // today's date in ISO format
+      status: attendance[student._id],
+      recordedBy: currentUser?._id, // jo login user hai
+    }));
+
+  console.log("Attendance Payload:", attendanceData);
+
+  // Dispatch Redux action (or directly call API)
+  dispatch(markAttendance(attendanceData));
+};
 
   return (
     <div className="p-6 bg-white shadow rounded">
-      <h2 className="text-2xl font-semibold mb-4">Mark Attendance</h2>
+      <h2 className="text-xl font-semibold mb-4">Mark Attendance</h2>
 
-      <div className="mb-4">
-        <label className="mr-2 font-medium">Select Date:</label>
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="border p-1 rounded"
-        />
+      {/* 🔹 Filters */}
+      <div className="flex gap-4 mb-4 justify-between">
+        <div className="grid gap-3 grid-cols-2">
+
+        <select
+          value={filterClass}
+          onChange={(e) => setFilterClass(e.target.value)}
+          className="border p-2 rounded text-xs"
+        >
+          <option value="">All Classes</option>
+          {[...new Set(studentList.map((r) => r.classDetails?.name))].map(
+            (cls) =>
+              cls && (
+                <option key={cls} value={cls}>
+                  {cls}
+                </option>
+              )
+          )}
+        </select>
+
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="border p-2 rounded text-xs"
+        >
+          <option value="">All Status</option>
+          <option value="Present">Present</option>
+          <option value="Absent">Absent</option>
+        </select>
+        </div>
+         {/* 🔹 Save Button */}
+      <div className="">
+        <button
+          onClick={handleSubmit}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-xs"
+        >
+          Save Attendance
+        </button>
+      </div>
       </div>
 
-      <table className="min-w-full border mt-4">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="py-2 px-4 border">#</th>
-            <th className="py-2 px-4 border text-left">Student Name</th>
-            <th className="py-2 px-4 border text-left">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((student, idx) => (
-            <tr key={student._id || student.id}>
-              <td className="border px-4 py-2">{idx + 1}</td>
-              <td className="border px-4 py-2">{student.name.toUpperCase()}</td>
-            
-              <td className="border px-4 py-2">
-                <div className="flex gap-2">
-                  {['present', 'absent', 'leave'].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => handleChange(student._id || student.id, status)}
-                      className={`px-3 py-1 text-sm rounded border ${
-                        attendance[student._id || student.id] === status
-                          ? statusColors[status]
-                          : 'bg-white text-gray-600'
-                      }`}
-                    >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* 🔹 DataTable */}
+      <DataTable
+        columns={columns}
+        data={filteredRecords}
+        progressPending={loading}
+        pagination
+        highlightOnHover
+        striped
+      />
 
-      <button
-        onClick={handleSubmit}
-        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-      >
-        Submit Attendance
-      </button>
+     
     </div>
   );
 };

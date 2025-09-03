@@ -5,7 +5,7 @@ import { fetchAllSubjects } from "../../features/subject/subjectSlice";
 import { createClass, updateClass } from "../../features/classes/classSlice";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
-const ClassForm = ({ onClose, initialData }) => {
+const ClassForm = ({ onClose, onSuccess, initialData }) => {
   const dispatch = useDispatch();
 
   const { subjectList = [] } = useSelector((state) => state.subject || {});
@@ -13,6 +13,7 @@ const ClassForm = ({ onClose, initialData }) => {
   const { user, users = [] } = useSelector((state) => state.auth || {});
   const storedAcademicYear = localStorage.getItem("academicYear");
   const academicYear = storedAcademicYear ? JSON.parse(storedAcademicYear) : null;
+  console.log(subjectList)
   const [formData, setFormData] = useState({
     name: "",
     section: "",
@@ -44,16 +45,13 @@ const ClassForm = ({ onClose, initialData }) => {
   }, [initialData, user]);
 
   // Load teachers + subjects
+  const schoolId = user?.school?._id
   useEffect(() => {
-    if (user?.school?._id ) {
-      dispatch(fetchAllUser(user.school._id));
-      dispatch(
-        fetchAllSubjects({
-          schoolId: user.school._id
-        })
-      );
+    if (schoolId) {
+      dispatch(fetchAllUser(schoolId));
+      dispatch(fetchAllSubjects({ schoolId }));
     }
-  }, [dispatch, user]);
+  }, [dispatch, schoolId]);
 
   // 👇 Teachers filter
   const teachersToShow = users.filter(
@@ -84,13 +82,17 @@ const ClassForm = ({ onClose, initialData }) => {
     e.preventDefault();
     try {
       if (initialData?._id) {
-        await dispatch(
-          updateClass({ id: initialData._id, classData: formData })
-        );
+        await dispatch(updateClass({ id: initialData._id, classData: formData })).unwrap();
       } else {
-        await dispatch(createClass(formData));
+        await dispatch(createClass(formData)).unwrap();
       }
-      onClose();
+
+      // ✅ refresh + close modal
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     } catch (err) {
       console.error("Dispatch error:", err);
     }
@@ -119,23 +121,8 @@ const ClassForm = ({ onClose, initialData }) => {
             required
           >
             <option value="">Select Class</option>
-            {[
-              "1st",
-              "2nd",
-              "3rd",
-              "4th",
-              "5th",
-              "6th",
-              "7th",
-              "8th",
-              "9th",
-              "10th",
-              "11th",
-              "12th",
-            ].map((cls) => (
-              <option key={cls} value={cls}>
-                {cls}
-              </option>
+            {["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"].map((cls) => (
+              <option key={cls} value={cls}>{cls}</option>
             ))}
           </select>
         </div>
@@ -152,9 +139,7 @@ const ClassForm = ({ onClose, initialData }) => {
           >
             <option value="">Select Section</option>
             {["A", "B", "C", "D", "E", "F"].map((sec) => (
-              <option key={sec} value={sec}>
-                {sec}
-              </option>
+              <option key={sec} value={sec}>{sec}</option>
             ))}
           </select>
         </div>
@@ -193,9 +178,7 @@ const ClassForm = ({ onClose, initialData }) => {
                 <span className="w-1/3">{sub.name}</span>
                 <select
                   value={selected?.teacherId || ""}
-                  onChange={(e) =>
-                    handleSubjectChange(sub._id, e.target.value)
-                  }
+                  onChange={(e) => handleSubjectChange(sub._id, e.target.value)}
                   className="border px-2 py-1 w-2/3 rounded-lg"
                 >
                   <option value="">Assign Teacher</option>

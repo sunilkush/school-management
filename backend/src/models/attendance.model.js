@@ -22,11 +22,7 @@ const AttendanceSchema = new Schema(
             ref: 'Class',
             required: true,
         },
-        subjectId: {
-            type: Schema.Types.ObjectId,
-            ref: 'Subject',
-            required: true,
-        },
+       
         date: {
             type: Date,
             required: true,

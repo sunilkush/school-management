@@ -1,23 +1,30 @@
 import React, { useEffect, useState } from "react";
 import ClassForm from "../components/forms/ClassForm";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchAllClasses, deleteClass } from "../features/classes/classSlice";
+import {
+  fetchAllClasses,
+  deleteClass,
+} from "../features/classes/classSlice";
 import DataTable from "react-data-table-component";
 import { Edit, Trash2 } from "lucide-react";
 
 function Classes() {
   const dispatch = useDispatch();
 
-  const { classList, loading } = useSelector((state) => state.class || {});
-  
+  // ensure classList is always an array
+  const { classList = [], loading } = useSelector((state) => state.class || {});
+  const { user } = useSelector((state) => state.auth || {});
+
   const [isOpen, setIsOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [filterText, setFilterText] = useState("");
 
-  // Fetch all classes on mount
+  // Fetch only classes from the user's school
   useEffect(() => {
-    dispatch(fetchAllClasses());
-  }, [dispatch]);
+    if (user?.school?._id) {
+      dispatch(fetchAllClasses({ schoolId: user.school._id }));
+    }
+  }, [dispatch, user]);
 
   const handleEdit = (cls) => {
     setEditingClass(cls);
@@ -27,6 +34,9 @@ function Classes() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this class?")) {
       await dispatch(deleteClass(id));
+      if (user?.school?._id) {
+        dispatch(fetchAllClasses({ schoolId: user.school._id })); // refresh after delete
+      }
     }
   };
 
@@ -95,8 +105,13 @@ function Classes() {
     },
   ];
 
-  // Filtered Data
-  const filteredItems = classList.filter(
+  // Show only classes for this school
+  const schoolClasses = classList.filter(
+    (cls) => String(cls.schoolId?._id) === String(user?.school?._id)
+  );
+  console.log(schoolClasses)
+  // Apply search filter
+  const filteredItems = schoolClasses.filter(
     (item) =>
       item.name?.toLowerCase().includes(filterText.toLowerCase()) ||
       item.section?.toLowerCase().includes(filterText.toLowerCase())
@@ -117,6 +132,12 @@ function Classes() {
             <ClassForm
               onClose={() => setIsOpen(false)}
               initialData={editingClass}
+              onSuccess={() => {
+                if (user?.school?._id) {
+                  dispatch(fetchAllClasses({ schoolId: user.school._id }));
+                }
+                setIsOpen(false);
+              }}
             />
           </div>
         </div>
