@@ -5,21 +5,32 @@ import { Attendance } from '../models/attendance.model.js';
 
 // 1. Mark Attendance (Create)
 const markAttendance = asyncHandler(async (req, res) => {
-    try {
-        const { schoolId, studentId, classId,  date, status, recordedBy } = req.body;
-
-        if ([schoolId, studentId, classId,  date, status, recordedBy].some(field => !field)) {
-            throw new ApiError(400, 'All fields are required!');
-        }
-
-        const attendance = new Attendance({ schoolId, studentId, classId, date, status, recordedBy });
-        const saveAttendance = await attendance.save();
-
-        return res.status(201).json(new ApiResponse(200, saveAttendance, 'Attendance recorded successfully'));
-    } catch (error) {
-        throw new ApiError(500, error.message || 'Record not found!');
+  try {
+    const { attendanceData } = req.body; // Array of attendance objects
+    console.log(attendanceData)
+    if (!attendanceData || !Array.isArray(attendanceData) || attendanceData.length === 0) {
+      throw new ApiError(400, "Attendance data is required and must be an array!");
     }
+
+    // Validate each record
+    for (const record of attendanceData) {
+      const { schoolId, studentId, classId, date, status, recordedBy } = record;
+      if ([schoolId, studentId, classId, date, status, recordedBy].some((field) => !field)) {
+        throw new ApiError(400, "All fields are required in each attendance record!");
+      }
+    }
+
+    // Bulk insert attendance records
+    const savedAttendance = await Attendance.insertMany(attendanceData);
+
+    return res
+      .status(201)
+      .json(new ApiResponse(200, savedAttendance, "Bulk attendance recorded successfully"));
+  } catch (error) {
+    throw new ApiError(500, error.message || "Failed to record bulk attendance!");
+  }
 });
+
 
 // 2. Get Attendance by Student ID
 const getAttendanceByStudent = asyncHandler(async (req, res) => {

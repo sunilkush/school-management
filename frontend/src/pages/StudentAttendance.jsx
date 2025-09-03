@@ -66,8 +66,8 @@ const StudentAttendance = () => {
           className="border p-1 rounded"
         >
           <option value="">Select</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
         </select>
       ),
       ignoreRowClick: true,
@@ -91,22 +91,20 @@ const StudentAttendance = () => {
   const handleSubmit = () => {
   const today = new Date();
 
-  // Convert attendance object into proper array
   const attendanceData = studentList
-    .filter((student) => attendance[student._id]) // only selected students
+    .filter((student) => attendance[student._id]) // sirf selected students
     .map((student) => ({
       schoolId: schoolId,
       studentId: student._id,
       classId: student.classDetails?._id,
-      date: today.toISOString(), // today's date in ISO format
-      status: attendance[student._id],
-      recordedBy: currentUser?._id, // jo login user hai
+      date: today.toISOString(),
+      status: attendance[student._id] || "Present", // default present
+      recordedBy: currentUser?._id,
     }));
 
   console.log("Attendance Payload:", attendanceData);
-
-  // Dispatch Redux action (or directly call API)
-  dispatch(markAttendance(attendanceData));
+  // Bulk API call
+  dispatch(markAttendance({ attendanceData }));
 };
 
   return (
@@ -139,8 +137,8 @@ const StudentAttendance = () => {
           className="border p-2 rounded text-xs"
         >
           <option value="">All Status</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
         </select>
         </div>
          {/* 🔹 Save Button */}
