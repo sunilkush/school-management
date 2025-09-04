@@ -13,9 +13,9 @@ const actionOptions = ["create","read","update","delete","export","collect","ret
 
 // Predefined Roles
 const roleOptions = [
-  "Super Admin","School Admin","Teacher","Student","Parent","Accountant","Staff",
+  "School Admin","Principal","Vice Principal","Teacher","Student","Parent","Accountant","Staff",
   "Librarian","Hostel Warden","Transport Manager","Exam Coordinator","Receptionist",
-  "IT Support","Counselor","Subject Coordinator"
+  "IT Support","Counselor","Subject Coordinator",""
 ];
 
 const AddRoleForm = () => {

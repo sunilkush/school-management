@@ -2,17 +2,17 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subject } from "../models/subject.model.js";
-
+import {Class} from "../models/classes.model.js"
 import mongoose from "mongoose";
-// ✅ Create a Subject (POST)
 // Create subject
- const createSubject = asyncHandler(async (req, res) => {
+const createSubject = asyncHandler(async (req, res) => {
   const { academicYearId, schoolId, name, teacherId, classId } = req.body;
-  console.log(req.body)
-  if (!academicYearId || !schoolId || !name || !teacherId || !classId ) {
+
+  if (!academicYearId || !schoolId || !name || !teacherId || !classId) {
     throw new ApiError(400, "All required fields must be provided");
   }
-  
+
+  // ✅ Create subject
   const subject = await Subject.create({
     academicYearId,
     schoolId,
@@ -21,12 +21,32 @@ import mongoose from "mongoose";
     classId,
   });
 
+  // ✅ Add subject to the Class model subjects array
+  await Class.findByIdAndUpdate(
+    classId,
+    {
+      $addToSet: {
+        subjects: {
+          subjectId: subject._id,
+          teacherId: teacherId,
+        },
+      },
+    },
+    { new: true }
+  );
+
+  // ✅ Populate teacher info in response (optional)
+  const populatedSubject = await Subject.findById(subject._id)
+    .populate("teacherId", "name email")
+    .populate("classId", "name section");
+
   res.status(201).json({
     success: true,
-    message: "Subject created successfully",
-    data: subject,
+    message: "Subject created and added to class successfully",
+    data: populatedSubject,
   });
 });
+
 // ✅ Get All Subjects (Admin & Teacher)
 const getAllSubjects = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, schoolId, teacherId, section, search } = req.query;

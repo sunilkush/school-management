@@ -7,7 +7,7 @@ import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import mongoose from "mongoose";
 // ✅ Register and admit student
- const registerStudent = asyncHandler(async (req, res) => {
+const registerStudent = asyncHandler(async (req, res) => {
   const {
     studentName, email, password, schoolId, classId, registrationNumber,
     admissionDate, feeDiscount, smsMobile, dateOfBirth, birthFormId, orphan,
@@ -15,7 +15,7 @@ import mongoose from "mongoose";
     previousId, family, disease, notes, siblings, address, fatherName, fatherNID,
     fatherOccupation, fatherEducation, fatherMobile, fatherProfession, fatherIncome,
     motherName, motherNID, motherOccupation, motherEducation, motherMobile,
-    motherProfession, motherIncome, academicYearId,mobileNumber
+    motherProfession, motherIncome, academicYearId, mobileNumber
   } = req.body;
 
   if (!studentName || !email || !password || !registrationNumber || !classId || !schoolId || !academicYearId) {
@@ -70,14 +70,42 @@ import mongoose from "mongoose";
     siblings,
     address,
     mobileNumber,
-    fatherInfo: { name: fatherName, NID: fatherNID, occupation: fatherOccupation, education: fatherEducation, mobile: fatherMobile, profession: fatherProfession, income: fatherIncome },
-    motherInfo: { name: motherName, NID: motherNID, occupation: motherOccupation, education: motherEducation, mobile: motherMobile, profession: motherProfession, income: motherIncome },
+    fatherInfo: {
+      name: fatherName,
+      NID: fatherNID,
+      occupation: fatherOccupation,
+      education: fatherEducation,
+      mobile: fatherMobile,
+      profession: fatherProfession,
+      income: fatherIncome,
+    },
+    motherInfo: {
+      name: motherName,
+      NID: motherNID,
+      occupation: motherOccupation,
+      education: motherEducation,
+      mobile: motherMobile,
+      profession: motherProfession,
+      income: motherIncome,
+    },
   });
 
-  const populatedStudent = await Student.findById(student._id).populate("userId", "-password");
+  // ✅ Add student to the class.students array
+  await Class.findByIdAndUpdate(
+    classId,
+    { $addToSet: { students: user._id } }, // prevents duplicates
+    { new: true }
+  );
 
-  return res.status(201).json(new ApiResponse(201, { student: populatedStudent }, "Student registered and admitted successfully"));
+  const populatedStudent = await Student.findById(student._id)
+    .populate("userId", "-password")
+    .populate("classId", "name section");
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, { student: populatedStudent }, "Student registered and admitted successfully"));
 });
+
 
 
 // ✅ Get Students (with pagination, class + school + academicYear filters, teacher details)

@@ -22,7 +22,7 @@ const StudentList = () => {
     dispatch(fetchAllStudent());
     dispatch(fetchAllClasses({ schoolId }));
     dispatch(activeUser());
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId,isOpen]);
 
   // ✅ format data
   const formattedStudents = Array.isArray(studentList)

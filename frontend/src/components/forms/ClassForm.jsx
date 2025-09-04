@@ -100,7 +100,7 @@ const ClassForm = ({ onClose, onSuccess, initialData }) => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <h2 className="text-2xl font-bold mb-2">
+      <h2 className="text-xl font-bold mb-2">
         {initialData ? "Edit Class" : "Add Class"}
       </h2>
 
@@ -117,7 +117,7 @@ const ClassForm = ({ onClose, onSuccess, initialData }) => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="border px-2 py-1 w-full rounded-lg text-sm"
+            className="border px-2 py-1 w-full rounded-lg text-xs"
             required
           >
             <option value="">Select Class</option>
@@ -134,7 +134,7 @@ const ClassForm = ({ onClose, onSuccess, initialData }) => {
             name="section"
             value={formData.section}
             onChange={handleChange}
-            className="border px-2 py-1 w-full rounded-lg text-sm"
+            className="border px-2 py-1 w-full rounded-lg text-xs"
             required
           >
             <option value="">Select Section</option>
@@ -151,7 +151,7 @@ const ClassForm = ({ onClose, onSuccess, initialData }) => {
             name="teacherId"
             value={formData.teacherId}
             onChange={handleChange}
-            className="border px-2 py-1 w-full rounded-lg text-sm"
+            className="border px-2 py-1 w-full rounded-lg text-xs"
             required
           >
             <option value="">Select Teacher</option>
@@ -175,11 +175,11 @@ const ClassForm = ({ onClose, onSuccess, initialData }) => {
                 key={sub._id}
                 className="flex items-center gap-4 mb-2 border p-2 rounded"
               >
-                <span className="w-1/3">{sub.name}</span>
+                <span className="w-1/3 text-xs">{sub.name}</span>
                 <select
                   value={selected?.teacherId || ""}
                   onChange={(e) => handleSubjectChange(sub._id, e.target.value)}
-                  className="border px-2 py-1 w-2/3 rounded-lg"
+                  className="border px-2 py-1 w-2/3 rounded-lg text-xs"
                 >
                   <option value="">Assign Teacher</option>
                   {teachersToShow.map((teacher) => (

@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen }) {
           <div className="bg-blue-100 p-2 rounded-full">
             <Home size={20} />
           </div>
-          <span>{user?.school?.name}</span>
+          <span className='text-sms'>{user?.school?.name}</span>
         </div>
         <hr className="border-gray-100" />
         <SidebarMenu role={role} />

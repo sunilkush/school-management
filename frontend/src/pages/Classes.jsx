@@ -124,7 +124,7 @@ function Classes() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-lg rounded-lg shadow-lg p-6 relative">
             <button
-              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
+              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xs"
               onClick={() => setIsOpen(false)}
             >
               ✕
@@ -149,7 +149,7 @@ function Classes() {
           <h4 className="text-xl font-bold">Class List</h4>
           <button
             onClick={handleAddNew}
-            className="px-3 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700"
+            className="px-3 py-2 text-xs bg-blue-600 rounded-lg text-white hover:bg-blue-700"
           >
             Add New Class
           </button>
