@@ -6,30 +6,44 @@ import { Attendance } from '../models/attendance.model.js';
 // 1. Mark Attendance (Create)
 const markAttendance = asyncHandler(async (req, res) => {
   try {
-    const { attendanceData } = req.body; // Array of attendance objects
-    console.log(attendanceData)
-    if (!attendanceData || !Array.isArray(attendanceData) || attendanceData.length === 0) {
-      throw new ApiError(400, "Attendance data is required and must be an array!");
+    const { attendanceData } = req.body;
+
+    if (!attendanceData || !Array.isArray(attendanceData)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, null, "Invalid attendance data"));
     }
 
-    // Validate each record
+    const insertedRecords = [];
+
     for (const record of attendanceData) {
-      const { schoolId, studentId, classId, date, status, recordedBy } = record;
-      if ([schoolId, studentId, classId, date, status, recordedBy].some((field) => !field)) {
-        throw new ApiError(400, "All fields are required in each attendance record!");
+      // Normalize date to ignore time
+      const dateStart = new Date(record.date);
+      dateStart.setHours(0, 0, 0, 0);
+      const dateEnd = new Date(record.date);
+      dateEnd.setHours(23, 59, 59, 999);
+
+      const existing = await Attendance.findOne({
+        studentId: record.studentId,
+        date: { $gte: dateStart, $lte: dateEnd },
+      });
+
+      if (!existing) {
+        const newRecord = await Attendance.create(record);
+        insertedRecords.push(newRecord);
       }
     }
 
-    // Bulk insert attendance records
-    const savedAttendance = await Attendance.insertMany(attendanceData);
-
     return res
       .status(201)
-      .json(new ApiResponse(200, savedAttendance, "Bulk attendance recorded successfully"));
+      .json(new ApiResponse(201, insertedRecords, "Attendance marked successfully"));
   } catch (error) {
-    throw new ApiError(500, error.message || "Failed to record bulk attendance!");
+    return res
+      .status(500)
+      .json(new ApiResponse(500, null, error.message));
   }
 });
+
 
 
 // 2. Get Attendance by Student ID

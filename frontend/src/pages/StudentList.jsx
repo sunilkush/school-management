@@ -4,31 +4,55 @@ import DataTable from "react-data-table-component";
 import { fetchAllStudent } from "../features/students/studentSlice";
 import { User, Download, SquarePen, Trash, X } from "lucide-react";
 import AdmissionForm from "../components/forms/AdmissionForm";
+import {fetchAllClasses} from "../features/classes/classSlice";
+import { activeUser } from "../features/auth/authSlice";
 
 const StudentList = () => {
   const dispatch = useDispatch();
   const { studentList } = useSelector((state) => state.students);
+  const { classList } = useSelector((state) => state.class);
+  const { user } = useSelector((state) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(""); // 🔹 track selected class
+  const [searchText, setSearchText] = useState(""); // 🔹 track search text
+  const [selectedSection, setSelectedSection] = useState("");
+  const schoolId = user?.school?._id;
 
   useEffect(() => {
     dispatch(fetchAllStudent());
-  }, [dispatch]);
+    dispatch(fetchAllClasses({ schoolId }));
+    dispatch(activeUser());
+  }, [dispatch, schoolId]);
 
   // ✅ format data
   const formattedStudents = Array.isArray(studentList)
     ? studentList.map((stu) => ({
         id: stu._id,
-        name: stu.userDetails?.name || "N/A",
-        class: stu.classDetails?.name || "N/A",
-        section: stu.classDetails?.section || "N/A",
-        dob: stu.dob?.split("T")[0] || "N/A",
-        phone: stu.userDetails?.phone || "N/A",
-        admissionDate: stu.admissionDate?.split("T")[0] || "N/A",
-        bloodGroup: stu.bloodGroup || "N/A",
-        attendance: stu.attendance || "N/A",
+        name: stu.userDetails?.name ?? "N/A",
+        class: stu.classDetails?.name ?? "N/A",
+        section: stu.classDetails?.section ?? "N/A",
+        dateOfBirth: stu.dateOfBirth
+          ? new Date(stu.dateOfBirth).toISOString().split("T")[0]
+          : "N/A",
+        mobileNumber: stu.mobileNumber ?? "N/A",
+        admissionDate: stu.admissionDate
+          ? new Date(stu.admissionDate).toISOString().split("T")[0]
+          : "N/A",
+        bloodGroup: stu.bloodGroup ?? "N/A",
+        attendance: stu.attendance ?? "Not Marked",
       }))
     : [];
 
+  // 🔹 Filter students by selected class and search text
+  const filteredStudents = formattedStudents.filter((stu) => {
+  const matchesClass = selectedClass ? stu.class === selectedClass : true;
+  const matchesSection = selectedSection ? stu.section === selectedSection : true;
+  const matchesSearch = searchText
+    ? stu.name.toLowerCase().includes(searchText.toLowerCase())
+    : true;
+    
+  return matchesClass && matchesSection && matchesSearch;
+});
   // ✅ columns
   const columns = [
     {
@@ -48,19 +72,11 @@ const StudentList = () => {
     },
     { name: "Class", selector: (row) => row.class },
     { name: "Section", selector: (row) => row.section },
-    { name: "Date of Birth", selector: (row) => row.dob },
+    { name: "Date of Birth", selector: (row) => row.dateOfBirth },
     { name: "Attendance", selector: (row) => row.attendance },
-    { name: "Phone Number", selector: (row) => row.phone },
+    { name: "Phone Number", selector: (row) => row.mobileNumber },
     { name: "Date of Joined", selector: (row) => row.admissionDate },
     { name: "Blood Group", selector: (row) => row.bloodGroup },
-    {
-      name: "Action",
-      cell: (row) => (
-        <button className="px-3 py-1 bg-blue-100 text-blue-600 rounded-md text-sm">
-          See More Details
-        </button>
-      ),
-    },
   ];
 
   return (
@@ -86,26 +102,54 @@ const StudentList = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <h2 className="font-bold text-xl">Students Details</h2>
           <div className="flex gap-2">
-            <select className="border px-3 py-2 rounded-md text-sm">
-              <option>Select Class</option>
-              <option>4th Std</option>
-              <option>5th Std</option>
-              <option>7th Std</option>
-              <option>8th Std</option>
-              <option>9th Std</option>
-              <option>10th Std</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Search your Student"
-              className="border px-3 py-2 rounded-md text-sm"
-            />
-            <button className="px-3 py-2 bg-gray-200 rounded-md text-sm text-black flex items-center gap-1">
+{/* 🔹 Class filter */}
+<select
+  className="border px-2 py-1 rounded-md text-xs"
+  value={selectedClass}
+  onChange={(e) => setSelectedClass(e.target.value)}
+>
+  <option value="">Select Class</option>
+  {[...new Set(classList.map((item) => item.name))].map((cls) => (
+    <option key={cls} value={cls}>
+      {cls}
+    </option>
+  ))}
+</select>
+
+
+{/* 🔹 Section filter */}
+<select
+  className="border px-2 py-1 rounded-md text-xs"
+  value={selectedSection}
+  onChange={(e) => setSelectedSection(e.target.value)}
+>
+  <option value="">Select Section</option>
+  {[...new Set(
+    classList
+      .filter((cls) => !selectedClass || cls.name === selectedClass)
+      .map((item) => item.section)
+  )].map((section) => (
+    <option key={section} value={section}>
+      {section}
+    </option>
+  ))}
+</select>
+
+{/* 🔹 Search filter */}
+<input
+  type="text"
+  placeholder="Search your Student"
+  className="border px-2 py-1 rounded-md text-xs"
+  value={searchText}
+  onChange={(e) => setSearchText(e.target.value)}
+/>
+
+            <button className="px-2 py-1 bg-gray-200 rounded-md text-xs text-black flex items-center gap-1">
               <Download className="w-4" /> Export
             </button>
             <button
               onClick={() => setIsOpen(true)}
-              className="px-3 py-2 bg-blue-600 rounded-md text-sm text-white flex items-center gap-1"
+              className="px-2 py-1 bg-blue-600 rounded-md text-xs text-white flex items-center gap-1"
             >
               <User className="w-4" /> Add Student
             </button>
@@ -116,7 +160,7 @@ const StudentList = () => {
         <div className="mt-4">
           <DataTable
             columns={columns}
-            data={formattedStudents}
+            data={filteredStudents} // 🔹 use filtered data
             pagination
             highlightOnHover
             striped

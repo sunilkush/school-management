@@ -42,7 +42,9 @@ const studentSchema = new mongoose.Schema(
     smsMobile: {
       type: String,
     },
-
+    mobileNumber:{
+       type: String,
+    },
     // 🟣 Other Info Section
     dateOfBirth: Date,
     birthFormId: String,

@@ -11,6 +11,7 @@ const StudentAttendance = () => {
 
   const schoolId = currentUser?.school?._id;
 
+  const academicYearId = currentUser?.academicYear?._id
   // 🔹 Filters
 
   const [filterClass, setFilterClass] = useState("");
@@ -88,24 +89,27 @@ const StudentAttendance = () => {
   });
 
   // 🔹 Submit Attendance (can send to backend)
-  const handleSubmit = () => {
+const handleSubmit = () => {
   const today = new Date();
 
   const attendanceData = studentList
-    .filter((student) => attendance[student._id]) // sirf selected students
+    .filter((student) => attendance[student._id])
     .map((student) => ({
       schoolId: schoolId,
       studentId: student._id,
       classId: student.classDetails?._id,
       date: today.toISOString(),
-      status: attendance[student._id] || "Present", // default present
+      status: attendance[student._id] || "present",
       recordedBy: currentUser?._id,
+      academicYearId:academicYearId  // 🔹 don’t forget this if required in schema
     }));
 
   console.log("Attendance Payload:", attendanceData);
-  // Bulk API call
+
+  // ✅ Correct way to call thunk
   dispatch(markAttendance({ attendanceData }));
 };
+
 
   return (
     <div className="p-6 bg-white shadow rounded">

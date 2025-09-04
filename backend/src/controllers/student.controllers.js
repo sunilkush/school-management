@@ -15,7 +15,7 @@ import mongoose from "mongoose";
     previousId, family, disease, notes, siblings, address, fatherName, fatherNID,
     fatherOccupation, fatherEducation, fatherMobile, fatherProfession, fatherIncome,
     motherName, motherNID, motherOccupation, motherEducation, motherMobile,
-    motherProfession, motherIncome, academicYearId
+    motherProfession, motherIncome, academicYearId,mobileNumber
   } = req.body;
 
   if (!studentName || !email || !password || !registrationNumber || !classId || !schoolId || !academicYearId) {
@@ -69,6 +69,7 @@ import mongoose from "mongoose";
     notes,
     siblings,
     address,
+    mobileNumber,
     fatherInfo: { name: fatherName, NID: fatherNID, occupation: fatherOccupation, education: fatherEducation, mobile: fatherMobile, profession: fatherProfession, income: fatherIncome },
     motherInfo: { name: motherName, NID: motherNID, occupation: motherOccupation, education: motherEducation, mobile: motherMobile, profession: motherProfession, income: motherIncome },
   });
@@ -167,8 +168,10 @@ const getStudents = asyncHandler(async (req, res) => {
         feeDiscount: 1,
         smsMobile: 1,
         status: 1,
-       
+        bloodGroup:1,
         academicYearId: 1,
+        dateOfBirth:1,
+        mobileNumber:1,
         createdAt: 1,
         updatedAt: 1,
         otherInfo: 1,
