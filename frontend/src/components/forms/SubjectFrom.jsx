@@ -87,15 +87,15 @@ const SubjectForm = ({ isOpen, onClose }) => {
         {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
         {successMessage && <p className="text-green-500 text-sm mb-2">{successMessage}</p>}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className=" grid grid-cols-2 gap-3">
           {/* Subject Name */}
           <div>
-            <label className="block text-sm font-medium mb-1">Subject Name</label>
+            <label className="block text-xs font-medium mb-1">Subject Name</label>
             <select
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              className="w-full border rounded-lg px-2 py-1 text-xs"
               required
             >
               <option value="">Select Subject</option>
@@ -107,34 +107,17 @@ const SubjectForm = ({ isOpen, onClose }) => {
             </select>
           </div>
 
-          {/* Select Class */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Class</label>
-            <select
-              name="classId"
-              value={formData.classId}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2"
-              required
-            >
-              <option value="">Select Class</option>
-              {Array.isArray(classList) &&
-                classList.map((cls) => (
-                  <option key={cls._id} value={cls._id}>
-                    {cls.name} - {cls.section}
-                  </option>
-                ))}
-            </select>
-          </div>
+       
+         
 
           {/* Select Teacher */}
           <div>
-            <label className="block text-sm font-medium mb-1">Teacher</label>
+            <label className="block text-xs font-medium mb-1">Teacher</label>
             <select
               name="teacherId"
               value={formData.teacherId}
               onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              className="w-full border rounded-lg px-2 py-1 text-xs"
               required
             >
               <option value="">Select Teacher</option>
@@ -147,11 +130,11 @@ const SubjectForm = ({ isOpen, onClose }) => {
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex justify-end gap-3 col-span-2">
+            <Button type="button" className="text-xs" variant="outline" onClick={onClose}>
               Close
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" className="text-xs" disabled={loading}>
               {loading ? "Creating..." : "Create Subject"}
             </Button>
           </div>
