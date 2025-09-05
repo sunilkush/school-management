@@ -2,22 +2,21 @@ import mongoose, { Schema } from "mongoose";
 
 const SubjectSchema = new Schema(
   {
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      required: true,
+    academicYearId: { 
+      type: Schema.Types.ObjectId, 
+      ref: 'AcademicYear', 
+      required: true 
     },
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
       required: true,
     },
-    teacherId:{
+    teacherId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    // Subject details
     name: {
       type: String,
       required: true,
@@ -27,15 +26,13 @@ const SubjectSchema = new Schema(
       type: String,
       trim: true,
       uppercase: true,
-      unique: true, // Example: MATH101
+      unique: true,
     },
     shortName: {
       type: String,
       trim: true,
       uppercase: true,
     },
-
-    // Classification
     category: {
       type: String,
       enum: ["Core", "Elective", "Language", "Practical", "Optional"],
@@ -46,8 +43,6 @@ const SubjectSchema = new Schema(
       enum: ["Theory", "Practical", "Both"],
       default: "Theory",
     },
-
-    // Marks & grading
     maxMarks: {
       type: Number,
       default: 100,
@@ -58,16 +53,12 @@ const SubjectSchema = new Schema(
     },
     gradingSchemeId: {
       type: Schema.Types.ObjectId,
-      ref: "Grade", // Optional grading system reference
+      ref: "Grade",
     },
-
-    // Status
     isActive: {
       type: Boolean,
       default: true,
     },
-
-    // Audit info
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -79,5 +70,26 @@ const SubjectSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// 🔹 Pre-save hook to generate `code` and `shortName`
+SubjectSchema.pre("save", function (next) {
+  if (!this.shortName && this.name) {
+    // Take first 3 letters of name + year (optional)
+    this.shortName = this.name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  if (!this.code && this.name) {
+    // Example: MATH101 => first 4 letters of name + random 3 digit number
+    const prefix = this.name.replace(/\s+/g, "").substring(0, 4).toUpperCase();
+    const randomNum = Math.floor(100 + Math.random() * 900); // 100-999
+    this.code = `${prefix}${randomNum}`;
+  }
+
+  next();
+});
 
 export const Subject = mongoose.model("Subject", SubjectSchema);

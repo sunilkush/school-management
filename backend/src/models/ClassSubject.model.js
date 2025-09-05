@@ -33,6 +33,11 @@ const classSubjectSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+      academicYearId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'AcademicYear', 
+        required: true 
+    }
   },
   { timestamps: true }
 );
