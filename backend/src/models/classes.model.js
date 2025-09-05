@@ -7,15 +7,16 @@ const classSchema = new Schema(
       ref: "School",
       required: true,
     },
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      required: true,
+    },
     name: {
       type: String,
       required: true,
+      trim: true, // e.g. "Class 6"
       lowercase: true,
-    },
-    section: {
-      type: String,
-      required: true,
-      enum: ["A", "B", "C", "D","E","F"], 
     },
     teacherId: {
       type: Schema.Types.ObjectId,
@@ -32,19 +33,18 @@ const classSchema = new Schema(
         subjectId: {
           type: Schema.Types.ObjectId,
           ref: "Subject", // subject reference
-          required: true,
         },
         teacherId: {
           type: Schema.Types.ObjectId,
-          ref: "User", // teacher who teaches this subject in this class
-          required: true,
+          ref: "User", // teacher for this subject in this class
         },
       },
     ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
+
+// Prevent duplicate class names per school + academic year
+classSchema.index({ name: 1, schoolId: 1, academicYearId: 1 }, { unique: true });
 
 export const Class = mongoose.model("Class", classSchema);

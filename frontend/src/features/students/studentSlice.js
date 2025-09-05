@@ -7,12 +7,13 @@ const Api_Base_Url = import.meta.env.VITE_API_URL;
 // fetch last student
 export const fetchLastStudent = createAsyncThunk(
   "student/fetchLastStudent",
-  async (_, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
       const res = await axios.get(`${Api_Base_Url}/student/register/last`, {
+        params: { schoolId, academicYearId },
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -79,7 +80,7 @@ export const fetchAllStudent = createAsyncThunk(
 );
 
 const initialState = {
-  lastStudent: null,
+  lastStudent: null, // last stide
   student: null,   // single student
   studentList: [],    // list of students
   loading: false,
@@ -147,7 +148,8 @@ const studentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.success = false;
-      });
+      })
+      
   },
 });
 

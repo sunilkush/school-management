@@ -23,7 +23,7 @@ const Subjects = () => {
   // ✅ Fetch subjects only once
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchAllSubjects());
+      dispatch(fetchAllSubjects({}));
     }
   }, [dispatch, schoolId,isModalOpen]);
 

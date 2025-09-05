@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import ClassForm from "../components/forms/ClassForm";
 import { useSelector, useDispatch } from "react-redux";
 import {
   fetchAllClasses,
@@ -7,6 +6,7 @@ import {
 } from "../features/classes/classSlice";
 import DataTable from "react-data-table-component";
 import { Edit, Trash2 } from "lucide-react";
+import ManageClassSection from "../components/forms/ManageClassSection";
 
 function Classes() {
   const dispatch = useDispatch();
@@ -109,7 +109,7 @@ function Classes() {
   const schoolClasses = classList.filter(
     (cls) => String(cls.schoolId?._id) === String(user?.school?._id)
   );
-  console.log(schoolClasses)
+  
   // Apply search filter
   const filteredItems = schoolClasses.filter(
     (item) =>
@@ -129,7 +129,7 @@ function Classes() {
             >
               ✕
             </button>
-            <ClassForm
+            <ManageClassSection
               onClose={() => setIsOpen(false)}
               initialData={editingClass}
               onSuccess={() => {
@@ -142,7 +142,7 @@ function Classes() {
           </div>
         </div>
       )}
-
+      
       {/* Main Table */}
       <div className="w-full bg-white p-4 border rounded-lg">
         <div className="flex justify-between items-center mb-4">

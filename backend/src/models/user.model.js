@@ -30,13 +30,7 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "School",
           required: true,
-
     },
-    classId: {
-        type: Schema.Types.ObjectId,
-        ref: "Class",
-
-    },  // For students & teachers
     parentId: {
         type: Schema.Types.ObjectId,
         ref: "User"
@@ -51,12 +45,44 @@ const userSchema = new Schema({
      accessToken: {
         type: String
     },
-    academicYearId: {
-        type: Schema.Types.ObjectId,
-        ref: "AcademicYear",
-        required:true
-       
+    mobileNo:{
+        type:String,
+        required: true,
     },
+    monthlySalary:{
+        type:String,
+        required: true,
+    },
+    fatherName:{
+         type:String,
+    },
+    gender:{
+        type:String,
+        enum:["Male","Female","Other"]
+    },
+    exprience:{
+       type:String,
+    },
+    nationalId:{
+         type:String,
+    },
+    religion:{
+        type:String,
+    },
+    education:{
+         type:String,
+    },
+    bloodGroup:{
+        type:String,
+    },
+    dateOfBirth:{
+        type:String,
+    },
+    address:{
+         type:String,
+    }
+
+    
 }, { timestamps: true }
 );
 

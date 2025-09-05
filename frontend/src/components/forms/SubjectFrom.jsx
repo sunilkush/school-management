@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createSubject } from "../../features/subject/subjectSlice";
-import { fetchAllClasses } from "../../features/classes/classSlice";
 import { fetchAllUser } from "../../features/auth/authSlice"; 
 import { Button } from "@/components/ui/button";
 
 const SubjectForm = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
 
-  const { classList = [] } = useSelector((state) => state.class);
   const { users = [], user } = useSelector((state) => state.auth); 
   const { loading, successMessage, error } = useSelector((state) => state.subject);
-
-  // ✅ Parse academicYear from localStorage
-  const storedAcademicYear = localStorage.getItem("academicYear");
-  const academicYear = storedAcademicYear ? JSON.parse(storedAcademicYear) : null;
+  const schoolId = user?.school?._id;
+  const {activeYear} = useSelector((state)=>state.academicYear)
+ 
 
   const SubjectList = [
     "English", "Science", "History", "Geography", "Art", "Physical Education",
@@ -42,25 +39,23 @@ const SubjectForm = ({ isOpen, onClose }) => {
 
   const [formData, setFormData] = useState({
     name: "",
-    classId: "",
+    category: "",
+    type: "",
     teacherId: "",
-    schoolId: user?.school?._id || "",
-    academicYearId: academicYear?._id || "",
+    schoolId: schoolId || "",
+    academicYearId: activeYear?._id || "",
   });
 
   useEffect(() => {
-    dispatch(fetchAllClasses());
-    dispatch(fetchAllUser()); 
-  }, [dispatch]);
+    
+    dispatch(fetchAllUser({schoolId})); 
+  }, [dispatch,schoolId]);
 
-  // ✅ Filter only teachers
+  // Filter only teachers
   const teachers = users?.filter((u) => u.role?.name?.toLowerCase() === "teacher");
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
@@ -68,13 +63,12 @@ const SubjectForm = ({ isOpen, onClose }) => {
     dispatch(createSubject(formData));
   };
 
-  if (!isOpen) return null; // 🔑 only render when open
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="max-w-lg w-full mx-2 bg-white shadow p-6 rounded-2xl relative">
-        
-        {/* Close button (top-right) */}
+        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
@@ -100,9 +94,7 @@ const SubjectForm = ({ isOpen, onClose }) => {
             >
               <option value="">Select Subject</option>
               {SubjectList.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
+                <option key={item} value={item}>{item}</option>
               ))}
             </select>
           </div>
@@ -122,21 +114,49 @@ const SubjectForm = ({ isOpen, onClose }) => {
             >
               <option value="">Select Teacher</option>
               {teachers?.map((t) => (
-                <option key={t._id} value={t._id}>
-                  {t.name}
-                </option>
+                <option key={t._id} value={t._id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Category</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+              required
+            >
+              <option value="">Select Category</option>
+              {["Core", "Elective", "Language", "Practical", "Optional"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Type</label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+              required
+            >
+              <option value="">Select Type</option>
+              {["Theory", "Practical", "Both"].map((t) => (
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 col-span-2">
-            <Button type="button" className="text-xs" variant="outline" onClick={onClose}>
-              Close
-            </Button>
-            <Button type="submit" className="text-xs" disabled={loading}>
-              {loading ? "Creating..." : "Create Subject"}
-            </Button>
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={onClose}>Close</Button>
+            <Button type="submit" disabled={loading}>{loading ? "Creating..." : "Create Subject"}</Button>
           </div>
         </form>
       </div>
