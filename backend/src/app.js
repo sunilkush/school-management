@@ -45,6 +45,7 @@ import DashboardRoutes from "./routes/dashboard.routes.js";
 import QuestionRoutes from "./routes/question.routes.js";
 import ExamRoutes from "./routes/exam.routes.js";
 import AttemptRoutes from "./routes/attempt.routes.js"
+import ClassSectionRoutes from "./routes/classSection.routes.js"
 
 // route
 app.use('/', indexRouter);
@@ -65,5 +66,6 @@ app.use("/app/v1/dashboard", DashboardRoutes);
 app.use("/app/v1/questions",QuestionRoutes);
 app.use("/app/v1/exam",ExamRoutes);
 app.use("/app/v1/attempt",AttemptRoutes);
+app.use("/app/v1/classSection", ClassSectionRoutes)
 export { app }
 

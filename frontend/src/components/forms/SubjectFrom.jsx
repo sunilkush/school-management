@@ -11,7 +11,7 @@ const SubjectForm = ({ isOpen, onClose }) => {
   const { classList = [] } = useSelector((state) => state.class);
   const { users = [], user } = useSelector((state) => state.auth); 
   const { loading, successMessage, error } = useSelector((state) => state.subject);
-
+  const schoolId= user.school._id
   // ✅ Parse academicYear from localStorage
   const storedAcademicYear = localStorage.getItem("academicYear");
   const academicYear = storedAcademicYear ? JSON.parse(storedAcademicYear) : null;
@@ -49,9 +49,9 @@ const SubjectForm = ({ isOpen, onClose }) => {
   });
 
   useEffect(() => {
-    dispatch(fetchAllClasses());
-    dispatch(fetchAllUser()); 
-  }, [dispatch]);
+    dispatch(fetchAllClasses({schoolId}));
+    dispatch(fetchAllUser({schoolId})); 
+  }, [dispatch,schoolId]);
 
   // ✅ Filter only teachers
   const teachers = users?.filter((u) => u.role?.name?.toLowerCase() === "teacher");

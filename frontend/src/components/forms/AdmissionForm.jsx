@@ -21,7 +21,7 @@ const AdmissionForm = () => {
 
   const [activeTab, setActiveTab] = useState("Student Info");
   const { lastStudent, loading } = useSelector((state) => state.students);
-  console.log(lastStudent)
+  
   const { user } = useSelector((state) => state.auth);
    const schoolId = user?.school?._id
   const classes = useSelector((state) => state.class?.classList || []);
@@ -78,9 +78,9 @@ const AdmissionForm = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchLastStudent(schoolId));
+    dispatch(fetchLastStudent({schoolId,academicYearId}));
     dispatch(fetchAllClasses({schoolId}));
-  }, [dispatch,schoolId]);
+  }, [dispatch,schoolId,academicYearId]);
   useEffect(() => {
     
     if (lastStudent) {

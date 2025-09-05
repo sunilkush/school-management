@@ -25,7 +25,7 @@ const registerStudent = asyncHandler(async (req, res) => {
   // Fetch student role
   const roleDoc = await Role.findOne({ name: { $regex: /^student$/i } });
   if (!roleDoc) throw new ApiError(400, "Student role not found");
-
+  
   // Create user if not exists
   let user = await User.findOne({ email });
   if (!user) {
@@ -371,22 +371,24 @@ const deleteStudent = asyncHandler(async (req, res) => {
   }
 });
 
- const getLastRegisteredStudent = asyncHandler(async (req, res) => {
-  const lastStudent = await Student.findOne()
-  .sort({ createdAt: -1 })
-  .populate("userId", "name");
+const getLastRegisteredStudent = asyncHandler(async (req, res) => {
+  const { schoolId, academicYearId } = req.query; // ⬅️ must come from frontend or middleware
 
-  let nextRegNumber = "REG2025-101"; // default
-  let lastStudentName = "";
-
-  if (lastStudent) {
-    nextRegNumber = generateNextRegNumber(lastStudent.registrationNumber);
-    lastStudentName = lastStudent.userId?.name || ""; // if populated
+  if (!schoolId || !academicYearId) {
+    throw new ApiError(400, "schoolId and academicYearId are required");
   }
+
+  // Get next reg number
+  const nextRegNumber = await generateNextRegNumber(schoolId, academicYearId, Student);
+
+  // Get last student name for info
+  const lastStudent = await Student.findOne({ schoolId, academicYearId })
+    .sort({ createdAt: -1 })
+    .populate("userId", "name");
 
   res.status(200).json({
     registrationNumber: nextRegNumber,
-    studentName: lastStudentName,
+    studentName: lastStudent?.userId?.name || "",
   });
 });
 

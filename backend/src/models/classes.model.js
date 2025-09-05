@@ -10,13 +10,10 @@ const classSchema = new Schema(
     name: {
       type: String,
       required: true,
+      trim: true, // e.g. "Class 6"
       lowercase: true,
     },
-    section: {
-      type: String,
-      required: true,
-      enum: ["A", "B", "C", "D","E","F"], 
-    },
+    
     teacherId: {
       type: Schema.Types.ObjectId,
       ref: "User", // class teacher
@@ -32,19 +29,16 @@ const classSchema = new Schema(
         subjectId: {
           type: Schema.Types.ObjectId,
           ref: "Subject", // subject reference
-          required: true,
+          
         },
         teacherId: {
           type: Schema.Types.ObjectId,
-          ref: "User", // teacher who teaches this subject in this class
-          required: true,
+          ref: "User", // teacher for this subject in this class
         },
       },
     ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export const Class = mongoose.model("Class", classSchema);

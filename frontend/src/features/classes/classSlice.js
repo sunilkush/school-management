@@ -35,8 +35,6 @@ export const fetchAllClasses = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
         params: { schoolId, teacherId, section }, // ✅ include query params here
       });
-
-      console.log("✅ Classes fetched:", res.data.data.data);
       return res.data.data || []; // safe return
     } catch (error) {
       return rejectWithValue(

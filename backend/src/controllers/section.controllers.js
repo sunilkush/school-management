@@ -1,14 +1,24 @@
 import {Section} from '../models/Section.model.js';
-
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { ApiError } from '../utils/ApiError.js';
 // Create Section
-export const createSection = async (req, res) => {
-  try {
-    const section = await Section.create(req.body);
-    res.status(201).json(section);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+export const createSection = asyncHandler(async (req, res) => {
+  const { name, academicYearId, schoolId } = req.body;
+
+  if (!name || !academicYearId || !schoolId) {
+    throw new ApiError(400, "All fields are required");
   }
-};
+
+  const section = await Section.create({
+    name,
+    academicYearId,
+    schoolId,
+    createdBy: req.user._id
+  });
+
+  res.status(201).json(new ApiResponse(201, section, "Section created successfully"));
+});
 
 // Get All Sections for a School + Class + Year
 export const getSections = async (req, res) => {

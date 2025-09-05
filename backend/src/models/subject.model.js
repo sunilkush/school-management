@@ -4,7 +4,7 @@ const SubjectSchema = new Schema(
   {
     academicYearId: {
       type: Schema.Types.ObjectId,
-      ref: "AcademicYears",
+      ref: "AcademicYear",
       required: true,
     },
     schoolId: {
@@ -12,48 +12,72 @@ const SubjectSchema = new Schema(
       ref: "School",
       required: true,
     },
+    teacherId:{
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    // Subject details
     name: {
       type: String,
       required: true,
-      enum: [
-        "English", "Science", "History", "Geography", "Art", "Physical Education",
-        "Computer Science", "Music", "Economics", "Psychology", "Sociology",
-        "Political Science", "Philosophy", "Biology", "Chemistry", "Physics",
-        "Literature", "Business Studies", "Accounting", "Statistics",
-        "Environmental Science", "Health Education", "Foreign Language", "Drama",
-        "Dance", "Media Studies", "Religious Studies", "Ethics", "Law",
-        "Engineering", "Architecture", "Astronomy", "Geology", "Anthropology",
-        "Linguistics", "Mathematics", "Information Technology", "Robotics",
-        "Artificial Intelligence", "Cybersecurity", "Data Science",
-        "Machine Learning", "Web Development", "Graphic Design", "Game Development",
-        "Network Administration", "Cloud Computing", "Mobile App Development",
-        "Digital Marketing", "Project Management", "Supply Chain Management",
-        "Human Resource Management", "Finance", "Investment", "Marketing",
-        "Public Relations", "Event Management", "Tourism Management",
-        "Hospitality Management", "Culinary Arts", "Fashion Design",
-        "Interior Design", "Product Design", "Industrial Design", "Textile Design",
-        "Jewelry Design", "Graphic Arts", "Photography", "Film Studies",
-        "Animation", "Visual Effects", "Sound Engineering", "Music Production",
-        "Theater Arts", "Dance Performance", "Choreography", "Creative Writing",
-        "Journalism", "Broadcasting", "Public Speaking", "Debate",
-        "Forensic Science", "Criminology", "Social Work"
-      ],
+      trim: true,
     },
-    teacherId: {
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      unique: true, // Example: MATH101
+    },
+    shortName: {
+      type: String,
+      trim: true,
+      uppercase: true,
+    },
+
+    // Classification
+    category: {
+      type: String,
+      enum: ["Core", "Elective", "Language", "Practical", "Optional"],
+      default: "Core",
+    },
+    type: {
+      type: String,
+      enum: ["Theory", "Practical", "Both"],
+      default: "Theory",
+    },
+
+    // Marks & grading
+    maxMarks: {
+      type: Number,
+      default: 100,
+    },
+    passMarks: {
+      type: Number,
+      default: 35,
+    },
+    gradingSchemeId: {
       type: Schema.Types.ObjectId,
-      ref: "User", // Only Users with role = Teacher
-      required: true,
+      ref: "Grade", // Optional grading system reference
     },
-    classId: 
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Class",
-      },
-    
+
+    // Status
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Audit info
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export const Subject = mongoose.model("Subject", SubjectSchema);
