@@ -2,58 +2,94 @@ import mongoose, { Schema } from "mongoose";
 
 const SubjectSchema = new Schema(
   {
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYears",
-      required: true,
+    academicYearId: { 
+      type: Schema.Types.ObjectId, 
+      ref: 'AcademicYear', 
+      required: true 
     },
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
       required: true,
     },
+    teacherId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     name: {
       type: String,
       required: true,
-      enum: [
-        "English", "Science", "History", "Geography", "Art", "Physical Education",
-        "Computer Science", "Music", "Economics", "Psychology", "Sociology",
-        "Political Science", "Philosophy", "Biology", "Chemistry", "Physics",
-        "Literature", "Business Studies", "Accounting", "Statistics",
-        "Environmental Science", "Health Education", "Foreign Language", "Drama",
-        "Dance", "Media Studies", "Religious Studies", "Ethics", "Law",
-        "Engineering", "Architecture", "Astronomy", "Geology", "Anthropology",
-        "Linguistics", "Mathematics", "Information Technology", "Robotics",
-        "Artificial Intelligence", "Cybersecurity", "Data Science",
-        "Machine Learning", "Web Development", "Graphic Design", "Game Development",
-        "Network Administration", "Cloud Computing", "Mobile App Development",
-        "Digital Marketing", "Project Management", "Supply Chain Management",
-        "Human Resource Management", "Finance", "Investment", "Marketing",
-        "Public Relations", "Event Management", "Tourism Management",
-        "Hospitality Management", "Culinary Arts", "Fashion Design",
-        "Interior Design", "Product Design", "Industrial Design", "Textile Design",
-        "Jewelry Design", "Graphic Arts", "Photography", "Film Studies",
-        "Animation", "Visual Effects", "Sound Engineering", "Music Production",
-        "Theater Arts", "Dance Performance", "Choreography", "Creative Writing",
-        "Journalism", "Broadcasting", "Public Speaking", "Debate",
-        "Forensic Science", "Criminology", "Social Work"
-      ],
+      trim: true,
     },
-    teacherId: {
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      unique: true,
+    },
+    shortName: {
+      type: String,
+      trim: true,
+      uppercase: true,
+    },
+    category: {
+      type: String,
+      enum: ["Core", "Elective", "Language", "Practical", "Optional"],
+      default: "Core",
+    },
+    type: {
+      type: String,
+      enum: ["Theory", "Practical", "Both"],
+      default: "Theory",
+    },
+    maxMarks: {
+      type: Number,
+      default: 100,
+    },
+    passMarks: {
+      type: Number,
+      default: 33,
+    },
+    gradingSchemeId: {
       type: Schema.Types.ObjectId,
-      ref: "User", // Only Users with role = Teacher
-      required: true,
+      ref: "Grade",
     },
-    classId: 
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Class",
-      },
-    
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
+
+// 🔹 Pre-save hook to generate `code` and `shortName`
+SubjectSchema.pre("save", function (next) {
+  if (!this.shortName && this.name) {
+    // Take first 3 letters of name + year (optional)
+    this.shortName = this.name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  if (!this.code && this.name) {
+    // Example: MATH101 => first 4 letters of name + random 3 digit number
+    const prefix = this.name.replace(/\s+/g, "").substring(0, 4).toUpperCase();
+    const randomNum = Math.floor(100 + Math.random() * 900); // 100-999
+    this.code = `${prefix}${randomNum}`;
+  }
+
+  next();
+});
 
 export const Subject = mongoose.model("Subject", SubjectSchema);

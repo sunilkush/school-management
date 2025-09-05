@@ -11,6 +11,7 @@ const StudentAttendance = () => {
 
   const schoolId = currentUser?.school?._id;
 
+  const academicYearId = currentUser?.academicYear?._id
   // 🔹 Filters
 
   const [filterClass, setFilterClass] = useState("");
@@ -66,8 +67,8 @@ const StudentAttendance = () => {
           className="border p-1 rounded"
         >
           <option value="">Select</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
         </select>
       ),
       ignoreRowClick: true,
@@ -88,26 +89,27 @@ const StudentAttendance = () => {
   });
 
   // 🔹 Submit Attendance (can send to backend)
-  const handleSubmit = () => {
+const handleSubmit = () => {
   const today = new Date();
 
-  // Convert attendance object into proper array
   const attendanceData = studentList
-    .filter((student) => attendance[student._id]) // only selected students
+    .filter((student) => attendance[student._id])
     .map((student) => ({
       schoolId: schoolId,
       studentId: student._id,
       classId: student.classDetails?._id,
-      date: today.toISOString(), // today's date in ISO format
-      status: attendance[student._id],
-      recordedBy: currentUser?._id, // jo login user hai
+      date: today.toISOString(),
+      status: attendance[student._id] || "present",
+      recordedBy: currentUser?._id,
+      academicYearId:academicYearId  // 🔹 don’t forget this if required in schema
     }));
 
   console.log("Attendance Payload:", attendanceData);
 
-  // Dispatch Redux action (or directly call API)
-  dispatch(markAttendance(attendanceData));
+  // ✅ Correct way to call thunk
+  dispatch(markAttendance({ attendanceData }));
 };
+
 
   return (
     <div className="p-6 bg-white shadow rounded">
@@ -139,8 +141,8 @@ const StudentAttendance = () => {
           className="border p-2 rounded text-xs"
         >
           <option value="">All Status</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
         </select>
         </div>
          {/* 🔹 Save Button */}

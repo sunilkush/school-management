@@ -26,14 +26,15 @@ export const createClass = createAsyncThunk(
 // FETCH all classes
 export const fetchAllClasses = createAsyncThunk(
   "class/fetchAllClasses",
-  async (_, { rejectWithValue }) => {
+  async ({ schoolId, teacherId, section } = {}, { rejectWithValue }) => {
     try {
+      
       const token = localStorage.getItem("accessToken");
+
       const res = await axios.get(`${Api_Base_Url}/class/all`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { schoolId, teacherId, section }, // ✅ include query params here
       });
-
-      console.log("✅ Classes fetched:", res.data.data.data);
       return res.data.data || []; // safe return
     } catch (error) {
       return rejectWithValue(
@@ -42,6 +43,7 @@ export const fetchAllClasses = createAsyncThunk(
     }
   }
 );
+
 
 // DELETE class
 export const deleteClass = createAsyncThunk(

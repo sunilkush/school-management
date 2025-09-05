@@ -21,9 +21,9 @@ const AdmissionForm = () => {
 
   const [activeTab, setActiveTab] = useState("Student Info");
   const { lastStudent, loading } = useSelector((state) => state.students);
-  console.log(lastStudent)
-  const { user } = useSelector((state) => state.auth);
   
+  const { user } = useSelector((state) => state.auth);
+   const schoolId = user?.school?._id
   const classes = useSelector((state) => state.class?.classList || []);
   const selectAcademicYear = localStorage.getItem("selectedAcademicYear");
   const academicYearObj = selectAcademicYear ? JSON.parse(selectAcademicYear) : null;
@@ -34,7 +34,7 @@ const AdmissionForm = () => {
     email: "",
     password: "",
     role: "student",
-    schoolId: user?.school?._id || "",
+    schoolId: schoolId || "",
     classId: "",
     section: "",
     registrationNumber: "",
@@ -78,9 +78,9 @@ const AdmissionForm = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchLastStudent());
-    dispatch(fetchAllClasses());
-  }, [dispatch]);
+    dispatch(fetchLastStudent({schoolId,academicYearId}));
+    dispatch(fetchAllClasses({schoolId}));
+  }, [dispatch,schoolId,academicYearId]);
   useEffect(() => {
     
     if (lastStudent) {

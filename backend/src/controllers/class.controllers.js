@@ -5,33 +5,37 @@ import { Class } from '../models/classes.model.js';
 
 // ✅ Create Class
 const createClass = asyncHandler(async (req, res) => {
-    const { name, section, schoolId, teacherId, students, subjects } = req.body;
+  const { name, schoolId, teacherId, students = [], subjects = [] } = req.body;
 
-    if ([name, section].some((field) => typeof field === "string" && field.trim() === "") || !schoolId) {
-        throw new ApiError(400, "Name, Section and School ID are required");
-    }
+  if (!name || !schoolId) {
+    throw new ApiError(400, "Name and School ID are required");
+  }
 
-    // Duplicate class check (per schoolId + name + section)
-    const existingClass = await Class.findOne({ schoolId, name, section });
-    if (existingClass) {
-        throw new ApiError(400, "Class with same name & section already exists in this school");
-    }
+  // Duplicate check (unique per school + name)
+  const existingClass = await Class.findOne({
+    schoolId,
+    name: name.toLowerCase(),
+  });
 
-    const newClass = new Class({
-        schoolId,
-        name,
-        section,
-        teacherId,
-        students,
-        subjects,
-    });
+  if (existingClass) {
+    throw new ApiError(400, "Class with same name already exists in this school");
+  }
 
-    const savedClass = await newClass.save();
+  const newClass = new Class({
+    schoolId,
+    name: name.toLowerCase(),
+    teacherId,
+    students,
+    subjects,
+  });
 
-    return res.status(201).json(
-        new ApiResponse(201, savedClass, "Class created successfully")
-    );
+  const savedClass = await newClass.save();
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, savedClass, "Class created successfully"));
 });
+
 
 // ✅ Update Class
 const updateClass = asyncHandler(async (req, res) => {
@@ -67,44 +71,46 @@ const deleteClass = asyncHandler(async (req, res) => {
 
 // ✅ Get All Classes
 // ✅ Get All Classes with Pagination + Filtering + Search
+// ✅ Fetch all classes with populated sections
 const getAllClasses = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, schoolId, teacherId, section, search } = req.query;
+  const { page = 1, limit = 10, schoolId } = req.query;
+  const query = {};
 
-    const query = {};
+  if (schoolId) query.schoolId = schoolId;
 
-    // 🔍 Filtering
-    if (schoolId) query.schoolId = schoolId;
-    if (teacherId) query.teacherId = teacherId;
-    if (section) query.section = section;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // 🔍 Search by name (case insensitive)
-    if (search) {
-        query.name = { $regex: search, $options: "i" };
-    }
+  const totalClasses = await Class.countDocuments(query);
+  const classes = await Class.find(query)
+    .populate("schoolId teacherId students")
+    .populate("subjects.subjectId")
+    .populate("subjects.teacherId")
+    .skip(skip)
+    .limit(parseInt(limit));
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+  // ✅ Populate mapped sections for each class
+  const classIds = classes.map(c => c._id);
+  const classSectionMappings = await ClassSection.find({ classId: { $in: classIds } })
+    .populate("sectionId");
 
-    // ✅ Get total count for pagination
-    const totalClasses = await Class.countDocuments(query);
+  const classesWithSections = classes.map(c => {
+    const sections = classSectionMappings
+      .filter(m => String(m.classId) === String(c._id))
+      .map(m => m.sectionId);
+    return { ...c.toObject(), sections };
+  });
 
-    // ✅ Fetch with pagination + populate
-    const classes = await Class.find(query)
-        .populate("schoolId teacherId students")
-        .populate("subjects.subjectId")
-        .populate("subjects.teacherId")
-        .skip(skip)
-        .limit(parseInt(limit));
-
-    return res.status(200).json(
-        new ApiResponse(200, {
-            data: classes,
-            total: totalClasses,
-            page: parseInt(page),
-            limit: parseInt(limit),
-            totalPages: Math.ceil(totalClasses / limit),
-        }, "Classes fetched successfully")
-    );
+  return res.status(200).json(
+    new ApiResponse(200, {
+      data: classesWithSections,
+      total: totalClasses,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(totalClasses / limit),
+    }, "Classes fetched successfully")
+  );
 });
+
 
 
 // ✅ Get Class By Id

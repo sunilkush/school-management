@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import ClassForm from "../components/forms/ClassForm";
 import { useSelector, useDispatch } from "react-redux";
 import {
   fetchAllClasses,
@@ -7,6 +6,7 @@ import {
 } from "../features/classes/classSlice";
 import DataTable from "react-data-table-component";
 import { Edit, Trash2 } from "lucide-react";
+import ManageClassSection from "../components/forms/ManageClassSection";
 
 function Classes() {
   const dispatch = useDispatch();
@@ -109,7 +109,7 @@ function Classes() {
   const schoolClasses = classList.filter(
     (cls) => String(cls.schoolId?._id) === String(user?.school?._id)
   );
-  console.log(schoolClasses)
+  
   // Apply search filter
   const filteredItems = schoolClasses.filter(
     (item) =>
@@ -124,12 +124,12 @@ function Classes() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-lg rounded-lg shadow-lg p-6 relative">
             <button
-              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
+              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xs"
               onClick={() => setIsOpen(false)}
             >
               ✕
             </button>
-            <ClassForm
+            <ManageClassSection
               onClose={() => setIsOpen(false)}
               initialData={editingClass}
               onSuccess={() => {
@@ -142,14 +142,14 @@ function Classes() {
           </div>
         </div>
       )}
-
+      
       {/* Main Table */}
       <div className="w-full bg-white p-4 border rounded-lg">
         <div className="flex justify-between items-center mb-4">
           <h4 className="text-xl font-bold">Class List</h4>
           <button
             onClick={handleAddNew}
-            className="px-3 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700"
+            className="px-3 py-2 text-xs bg-blue-600 rounded-lg text-white hover:bg-blue-700"
           >
             Add New Class
           </button>

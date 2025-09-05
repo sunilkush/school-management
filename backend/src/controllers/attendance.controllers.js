@@ -5,21 +5,46 @@ import { Attendance } from '../models/attendance.model.js';
 
 // 1. Mark Attendance (Create)
 const markAttendance = asyncHandler(async (req, res) => {
-    try {
-        const { schoolId, studentId, classId,  date, status, recordedBy } = req.body;
+  try {
+    const { attendanceData } = req.body;
 
-        if ([schoolId, studentId, classId,  date, status, recordedBy].some(field => !field)) {
-            throw new ApiError(400, 'All fields are required!');
-        }
-
-        const attendance = new Attendance({ schoolId, studentId, classId, date, status, recordedBy });
-        const saveAttendance = await attendance.save();
-
-        return res.status(201).json(new ApiResponse(200, saveAttendance, 'Attendance recorded successfully'));
-    } catch (error) {
-        throw new ApiError(500, error.message || 'Record not found!');
+    if (!attendanceData || !Array.isArray(attendanceData)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, null, "Invalid attendance data"));
     }
+
+    const insertedRecords = [];
+
+    for (const record of attendanceData) {
+      // Normalize date to ignore time
+      const dateStart = new Date(record.date);
+      dateStart.setHours(0, 0, 0, 0);
+      const dateEnd = new Date(record.date);
+      dateEnd.setHours(23, 59, 59, 999);
+
+      const existing = await Attendance.findOne({
+        studentId: record.studentId,
+        date: { $gte: dateStart, $lte: dateEnd },
+      });
+
+      if (!existing) {
+        const newRecord = await Attendance.create(record);
+        insertedRecords.push(newRecord);
+      }
+    }
+
+    return res
+      .status(201)
+      .json(new ApiResponse(201, insertedRecords, "Attendance marked successfully"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiResponse(500, null, error.message));
+  }
 });
+
+
 
 // 2. Get Attendance by Student ID
 const getAttendanceByStudent = asyncHandler(async (req, res) => {

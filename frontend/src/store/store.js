@@ -11,6 +11,8 @@ import dashboardReducer from "../features/Dashboard/dashboardSlice";
 import examReducer from "../features/exams/examSlice";
 import questionReducer from "../features/questions/questionSlice";
 import attemptReducer from "../features/attempts/attemptSlice";
+import sectionReducer from "../features/sections/sectionSlice";
+import classSectionReducer from "../features/classes/classSectionSlice";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -24,7 +26,9 @@ const store = configureStore({
     dashboard: dashboardReducer,
     exams: examReducer,
     questions: questionReducer,
-    attempts: attemptReducer
+    attempts: attemptReducer,
+    section: sectionReducer,
+    classSection:classSectionReducer
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

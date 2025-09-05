@@ -12,7 +12,7 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 // Define roles
-const ADMIN_TEACHER = ["Super Admin", "Admin", "Teacher"];
+const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
 const STUDENT_PARENT = ["Student", "Parent"];
 
 // ✅ Attendance Routes (Protected)

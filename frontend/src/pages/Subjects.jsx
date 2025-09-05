@@ -23,9 +23,9 @@ const Subjects = () => {
   // ✅ Fetch subjects only once
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchAllSubjects());
+      dispatch(fetchAllSubjects({}));
     }
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId,isModalOpen]);
 
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
@@ -88,9 +88,9 @@ const Subjects = () => {
               setSelectedSubject(null); // clear previous selection
               setIsModalOpen(true); // open modal for Add
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-blue-600 text-white px-3 py-2 text-xs rounded hover:bg-blue-700"
           >
-            Add Subject
+            Add New Subject
           </button>
         </div>
       </div>

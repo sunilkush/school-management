@@ -7,7 +7,7 @@ import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import mongoose from "mongoose";
 // ✅ Register and admit student
- const registerStudent = asyncHandler(async (req, res) => {
+const registerStudent = asyncHandler(async (req, res) => {
   const {
     studentName, email, password, schoolId, classId, registrationNumber,
     admissionDate, feeDiscount, smsMobile, dateOfBirth, birthFormId, orphan,
@@ -15,7 +15,7 @@ import mongoose from "mongoose";
     previousId, family, disease, notes, siblings, address, fatherName, fatherNID,
     fatherOccupation, fatherEducation, fatherMobile, fatherProfession, fatherIncome,
     motherName, motherNID, motherOccupation, motherEducation, motherMobile,
-    motherProfession, motherIncome, academicYearId
+    motherProfession, motherIncome, academicYearId, mobileNumber
   } = req.body;
 
   if (!studentName || !email || !password || !registrationNumber || !classId || !schoolId || !academicYearId) {
@@ -25,7 +25,7 @@ import mongoose from "mongoose";
   // Fetch student role
   const roleDoc = await Role.findOne({ name: { $regex: /^student$/i } });
   if (!roleDoc) throw new ApiError(400, "Student role not found");
-
+  
   // Create user if not exists
   let user = await User.findOne({ email });
   if (!user) {
@@ -69,14 +69,43 @@ import mongoose from "mongoose";
     notes,
     siblings,
     address,
-    fatherInfo: { name: fatherName, NID: fatherNID, occupation: fatherOccupation, education: fatherEducation, mobile: fatherMobile, profession: fatherProfession, income: fatherIncome },
-    motherInfo: { name: motherName, NID: motherNID, occupation: motherOccupation, education: motherEducation, mobile: motherMobile, profession: motherProfession, income: motherIncome },
+    mobileNumber,
+    fatherInfo: {
+      name: fatherName,
+      NID: fatherNID,
+      occupation: fatherOccupation,
+      education: fatherEducation,
+      mobile: fatherMobile,
+      profession: fatherProfession,
+      income: fatherIncome,
+    },
+    motherInfo: {
+      name: motherName,
+      NID: motherNID,
+      occupation: motherOccupation,
+      education: motherEducation,
+      mobile: motherMobile,
+      profession: motherProfession,
+      income: motherIncome,
+    },
   });
 
-  const populatedStudent = await Student.findById(student._id).populate("userId", "-password");
+  // ✅ Add student to the class.students array
+  await Class.findByIdAndUpdate(
+    classId,
+    { $addToSet: { students: user._id } }, // prevents duplicates
+    { new: true }
+  );
 
-  return res.status(201).json(new ApiResponse(201, { student: populatedStudent }, "Student registered and admitted successfully"));
+  const populatedStudent = await Student.findById(student._id)
+    .populate("userId", "-password")
+    .populate("classId", "name section");
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, { student: populatedStudent }, "Student registered and admitted successfully"));
 });
+
 
 
 // ✅ Get Students (with pagination, class + school + academicYear filters, teacher details)
@@ -167,8 +196,10 @@ const getStudents = asyncHandler(async (req, res) => {
         feeDiscount: 1,
         smsMobile: 1,
         status: 1,
-       
+        bloodGroup:1,
         academicYearId: 1,
+        dateOfBirth:1,
+        mobileNumber:1,
         createdAt: 1,
         updatedAt: 1,
         otherInfo: 1,
@@ -340,22 +371,24 @@ const deleteStudent = asyncHandler(async (req, res) => {
   }
 });
 
- const getLastRegisteredStudent = asyncHandler(async (req, res) => {
-  const lastStudent = await Student.findOne()
-  .sort({ createdAt: -1 })
-  .populate("userId", "name");
+const getLastRegisteredStudent = asyncHandler(async (req, res) => {
+  const { schoolId, academicYearId } = req.query; // ⬅️ must come from frontend or middleware
 
-  let nextRegNumber = "REG2025-101"; // default
-  let lastStudentName = "";
-
-  if (lastStudent) {
-    nextRegNumber = generateNextRegNumber(lastStudent.registrationNumber);
-    lastStudentName = lastStudent.userId?.name || ""; // if populated
+  if (!schoolId || !academicYearId) {
+    throw new ApiError(400, "schoolId and academicYearId are required");
   }
+
+  // Get next reg number
+  const nextRegNumber = await generateNextRegNumber(schoolId, academicYearId, Student);
+
+  // Get last student name for info
+  const lastStudent = await Student.findOne({ schoolId, academicYearId })
+    .sort({ createdAt: -1 })
+    .populate("userId", "name");
 
   res.status(200).json({
     registrationNumber: nextRegNumber,
-    studentName: lastStudentName,
+    studentName: lastStudent?.userId?.name || "",
   });
 });
 

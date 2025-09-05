@@ -42,7 +42,9 @@ const studentSchema = new mongoose.Schema(
     smsMobile: {
       type: String,
     },
-
+    mobileNumber:{
+       type: String,
+    },
     // 🟣 Other Info Section
     dateOfBirth: Date,
     birthFormId: String,
@@ -91,7 +93,9 @@ const studentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["active", "inactive", "alumni"],
+    
+      enum: ["Active", "Promoted", "Transferred", "Alumni", "Inactive"],
+
       default: "active",
     },
   },

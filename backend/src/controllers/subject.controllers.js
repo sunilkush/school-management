@@ -2,31 +2,50 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subject } from "../models/subject.model.js";
-
+import {ClassSubject} from "../models/ClassSubject.model.js";
 import mongoose from "mongoose";
-// ✅ Create a Subject (POST)
 // Create subject
- const createSubject = asyncHandler(async (req, res) => {
-  const { academicYearId, schoolId, name, teacherId, classId } = req.body;
-  console.log(req.body)
-  if (!academicYearId || !schoolId || !name || !teacherId || !classId ) {
+const createSubject = asyncHandler(async (req, res) => {
+  const { name,
+    category,
+    type,
+    teacherId,
+    schoolId,
+    academicYearId } = req.body;
+
+  if (!academicYearId || !schoolId || !name || !teacherId ) {
     throw new ApiError(400, "All required fields must be provided");
   }
-  
+
+  // 🔎 Prevent duplicate subject in same class
+  const existing = await Subject.findOne({ schoolId, name });
+  if (existing) {
+    throw new ApiError(400, "This subject already exists for the class");
+  }
+
+  // ✅ Create subject
   const subject = await Subject.create({
     academicYearId,
     schoolId,
     name,
     teacherId,
-    classId,
+    category,
+    type
   });
 
-  res.status(201).json({
+  
+  // ✅ Populate for response
+  const populatedSubject = await Subject.findById(subject._id)
+    .populate("teacherId", "name email")
+   
+
+  return res.status(201).json({
     success: true,
-    message: "Subject created successfully",
-    data: subject,
+    message: "Subject created and added to class successfully",
+    data: populatedSubject,
   });
 });
+
 // ✅ Get All Subjects (Admin & Teacher)
 const getAllSubjects = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, schoolId, teacherId, section, search } = req.query;
