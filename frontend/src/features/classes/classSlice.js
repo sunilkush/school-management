@@ -38,7 +38,7 @@ export const fetchAllClasses = createAsyncThunk(
       return res.data.data || []; // safe return
     } catch (error) {
       return rejectWithValue(
-        error?.response?.data?.message || "Failed to fetch classes!"
+        error?.response?.data?.message 
       );
     }
   }

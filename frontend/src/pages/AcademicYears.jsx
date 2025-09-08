@@ -8,13 +8,17 @@ import {
   createAcademicYear,
   archiveAcademicYear,
 } from "../features/academicYear/academicYearSlice";
-import { fetchSchools } from '../features/schools/schoolSlice';
+import { fetchSchools } from "../features/schools/schoolSlice";
+
 const AcademicYearPage = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-   const { schools } = useSelector((state) => state.school);
-  const [selectedSchoolId, setSelectedSchoolId] = useState(user?.role?.name === "Super Admin" ? "" : user?.school?._id);
-   
+  const { schools } = useSelector((state) => state.school);
+
+  const [selectedSchoolId, setSelectedSchoolId] = useState(
+    user?.role?.name === "Super Admin" ? "" : user?.school?._id
+  );
+
   const {
     academicYears = [],
     activeYear = null,
@@ -25,12 +29,15 @@ const AcademicYearPage = () => {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  // Fetch schools if Super Admin
   useEffect(() => {
     if (user?.role?.name === "Super Admin") {
-      dispatch(fetchSchools()); // Fetch school list for Super Admin
+      dispatch(fetchSchools());
     }
   }, [dispatch, user]);
 
+  // Fetch academic years for selected school
   useEffect(() => {
     if (selectedSchoolId) {
       dispatch(fetchAllAcademicYears(selectedSchoolId));
@@ -38,6 +45,7 @@ const AcademicYearPage = () => {
     }
   }, [dispatch, selectedSchoolId]);
 
+  // Clear messages after 4s
   useEffect(() => {
     if (message || error) {
       const timer = setTimeout(() => {
@@ -60,7 +68,8 @@ const AcademicYearPage = () => {
     for (const y of academicYears) {
       const yStart = new Date(y.startDate);
       const yEnd = new Date(y.endDate);
-      if (s <= yEnd && e >= yStart) return "Date range overlaps with an existing academic year.";
+      if (s <= yEnd && e >= yStart)
+        return "Date range overlaps with an existing academic year.";
     }
     return null;
   };
@@ -72,7 +81,9 @@ const AcademicYearPage = () => {
       return;
     }
     const name = generateYearName(startDate, endDate);
-    dispatch(createAcademicYear({ schoolId: selectedSchoolId, name, startDate, endDate }));
+    dispatch(
+      createAcademicYear({ schoolId: selectedSchoolId, name, startDate, endDate })
+    );
   };
 
   const handleSwitchActive = (id) => {
@@ -84,119 +95,139 @@ const AcademicYearPage = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Academic Years</h1>
+    <div className="p-4 space-y-6">
+      <h1 className="text-xl font-bold">Academic Years</h1>
 
-      {loading && <p>Loading...</p>}
-        
+      {/* Alerts */}
       {message && (
-        <p className="text-green-600 text-sm mt-2">
+        <div className="bg-green-100 text-green-700 p-2 rounded text-sm">
           {typeof message === "string"
             ? message
             : message?.msg || JSON.stringify(message)}
-        </p>
+        </div>
       )}
       {error && (
-        <p className="text-red-600 text-sm mt-2">
+        <div className="bg-red-100 text-red-700 p-2 rounded text-sm">
           {typeof error === "string"
             ? error
             : error?.errors || JSON.stringify(error)}
-        </p>
+        </div>
       )}
-      <table className="w-full border text-sm mb-4 border-collapse bg-white">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">Name</th>
-            <th className="border p-2">Start Date</th>
-            <th className="border p-2">End Date</th>
-            <th className="border p-2">Status</th>
-            <th className="border p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-        
-          {academicYears.map((year) => (
-            <tr key={year._id} className="text-center">
-              <td className="border p-2">{year.name}</td>
-              <td className="border p-2">{ new Date(year.startDate).toLocaleDateString()}</td>
-              <td className="border p-2">{new Date(year.endDate).toLocaleDateString()}</td>
-              <td className="border p-2">
-                {activeYear?._id === year._id ? "Active" : year.archived ? "Archived" : "Inactive"}
-              </td>
-              <td className="border p-2 space-x-2">
-                {year.archived ? (
-                  <span className="text-gray-400">(Archived)</span>
-                ) : (
-                  <>
-                    {activeYear?._id !== year._id && (
-                      <button
-                        onClick={() => handleSwitchActive(year._id)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Switch Active
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleArchive(year._id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Archive
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
 
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3  gap-4">
-        <div className="bg-white p-4 rounded shadow">
-        <h2 className="text-lg font-semibold mb-2">Create New Academic Year</h2>
-        <div className="flex gap-2 items-start flex-col">
-          <div className="flex gap-2 flex-col w-full">
-            {user?.role?.name === "Super Admin" ? (
-              <div className="flex gap-2 flex-col">
-                <label className="text-sm">Select School</label>
-                <select
-                  className="border px-2 py-1 rounded"
-                  value={selectedSchoolId}
-                  onChange={(e) => setSelectedSchoolId(e.target.value)}
-                >
-                  <option value="">Select School</option>
-                  {schools.map((school) => (
-                    <option key={school._id} value={school._id}>
-                      {school.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="flex gap-2 flex-col w-full">
-                <label className="text-sm">School</label>
-                <input
-                  type="text"
-                  className="border px-2 py-1 rounded bg-gray-100"
-                  value={user?.school?.name || ""}
-                  readOnly
-                />
-              </div>
+      {loading && <p className="text-gray-500">Loading...</p>}
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border text-sm mb-4 border-collapse bg-white">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2">Name</th>
+              <th className="border p-2">Start Date</th>
+              <th className="border p-2">End Date</th>
+              <th className="border p-2">Status</th>
+              <th className="border p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {academicYears.map((year) => (
+              <tr key={year._id} className="text-center">
+                <td className="border p-2">{year.name}</td>
+                <td className="border p-2">
+                  {new Date(year.startDate).toLocaleDateString()}
+                </td>
+                <td className="border p-2">
+                  {new Date(year.endDate).toLocaleDateString()}
+                </td>
+                <td className="border p-2">
+                  {activeYear?._id === year._id
+                    ? "Active"
+                    : year.archived
+                    ? "Archived"
+                    : "Inactive"}
+                </td>
+                <td className="border p-2 space-x-3">
+                  {year.archived ? (
+                    <span className="text-gray-400">(Archived)</span>
+                  ) : (
+                    <>
+                      {activeYear?._id !== year._id && (
+                        <button
+                          onClick={() => handleSwitchActive(year._id)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Switch Active
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleArchive(year._id)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Archive
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {academicYears.length === 0 && !loading && (
+              <tr>
+                <td colSpan="5" className="p-4 text-gray-500 text-center">
+                  No academic years found.
+                </td>
+              </tr>
             )}
-          </div>
-          <div className="flex gap-2 flex-col w-full">
-            <label className="text-sm">Start Date</label>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Form */}
+      <div className="bg-white p-4 rounded shadow max-w-xl">
+        <h2 className="text-lg font-semibold mb-4">Create New Academic Year</h2>
+
+        <div className="space-y-3">
+          {user?.role?.name === "Super Admin" ? (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Select School</label>
+              <select
+                className="border px-2 py-2 rounded"
+                value={selectedSchoolId}
+                onChange={(e) => setSelectedSchoolId(e.target.value)}
+              >
+                <option value="">Select School</option>
+                {schools.map((school) => (
+                  <option key={school._id} value={school._id}>
+                    {school.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">School</label>
+              <input
+                type="text"
+                className="border px-2 py-2 rounded bg-gray-100"
+                value={user?.school?.name || ""}
+                readOnly
+              />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">Start Date</label>
             <input
               type="date"
-              className="border px-2 py-1 rounded"
+              className="border px-2 py-2 rounded"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
-          <div className="flex gap-2 flex-col w-full">
-            <label className="text-sm">End Date</label>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">End Date</label>
             <input
               type="date"
-              className="border px-2 py-1 rounded"
+              className="border px-2 py-2 rounded"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -204,14 +235,12 @@ const AcademicYearPage = () => {
 
           <button
             onClick={handleCreate}
-            className="bg-blue-600 text-white px-4 py-1 rounded"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
           >
             Create
           </button>
         </div>
-        </div>
       </div>
-
     </div>
   );
 };

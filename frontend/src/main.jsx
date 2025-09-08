@@ -4,6 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import "./index.css";
+import "antd/dist/reset.css";
 import App from "./App.jsx";
 import store from "./store/store.js";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
@@ -66,6 +67,9 @@ import QuestionBank from './pages/QuestionBank.jsx';
 import CreateExam from './pages/CreateExam.jsx';
 import ExamLive from './pages/ExamLive.jsx';
 import AttemptReview from './pages/AttemptReview.jsx';
+import ClassSectionFrom from './pages/classSectionFrom.jsx';
+import ClassSectionList from './pages/classSectionList.jsx';
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -98,11 +102,13 @@ const router = createBrowserRouter([
               { path: "modules", element: <Modules /> },
               { path: "modules/academicyears", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
-              { path: "settings", element: <SettingsPage /> },
-              { path: "settings", element: <SettingsPage /> },
+              { path: "settings", element: <Settings /> },
+              
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "clases&section/from", element: <ClassSectionFrom /> },
+              { path: "clases&section/list", element: <ClassSectionList /> },
             ],
           },
           {

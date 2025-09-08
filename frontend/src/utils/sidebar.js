@@ -61,6 +61,13 @@ export const sidebarMenu = {
         { title: "All Modules", path: "superadmin/modules", icon: Puzzle },
       ],
     },
+    {
+      title:"classes & section",icon:Puzzle,
+      subMenu:[
+        { title:"Class & Section From", path:"superadmin/clases&section/from", icon: CalendarClock},
+        { title:"Class & Section List", path:"superadmin/clases&section/list", icon: FileText}
+      ]
+    },
     { title: "Reports", path: "superadmin/reports", icon: FileText },
     { title: "Settings", path: "superadmin/settings", icon: Settings },
     

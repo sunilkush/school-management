@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createSubject } from "../../features/subject/subjectSlice";
 import { fetchAllUser } from "../../features/auth/authSlice"; 
 import { Button } from "@/components/ui/button";
+import { fetchActiveAcademicYear } from "../../features/academicYear/academicYearSlice";
 
 const SubjectForm = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -47,7 +48,7 @@ const SubjectForm = ({ isOpen, onClose }) => {
   });
 
   useEffect(() => {
-    
+    dispatch(fetchActiveAcademicYear(schoolId))
     dispatch(fetchAllUser({schoolId})); 
   }, [dispatch,schoolId]);
 
@@ -89,7 +90,7 @@ const SubjectForm = ({ isOpen, onClose }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border rounded-lg px-2 py-1 text-xs"
+              className="w-full border rounded-lg px-2 py-2 text-xs"
               required
             >
               <option value="">Select Subject</option>
@@ -109,7 +110,7 @@ const SubjectForm = ({ isOpen, onClose }) => {
               name="teacherId"
               value={formData.teacherId}
               onChange={handleChange}
-              className="w-full border rounded-lg px-2 py-1 text-xs"
+              className="w-full border rounded-lg px-2 py-2 text-xs"
               required
             >
               <option value="">Select Teacher</option>
@@ -121,12 +122,12 @@ const SubjectForm = ({ isOpen, onClose }) => {
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
+            <label className="block text-xs font-medium mb-1">Category</label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              className="w-full border rounded-lg p-2 text-xs"
               required
             >
               <option value="">Select Category</option>
@@ -138,12 +139,12 @@ const SubjectForm = ({ isOpen, onClose }) => {
 
           {/* Type */}
           <div>
-            <label className="block text-sm font-medium mb-1">Type</label>
+            <label className="block text-xs font-medium mb-1">Type</label>
             <select
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full border rounded-lg p-2"
+              className="w-full border rounded-lg p-2 text-xs"
               required
             >
               <option value="">Select Type</option>
@@ -154,9 +155,9 @@ const SubjectForm = ({ isOpen, onClose }) => {
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>Close</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Creating..." : "Create Subject"}</Button>
+          <div className="flex justify-end gap-3 col-span-2">
+            <Button type="button" variant="outline" onClick={onClose} className="text-xs">Close</Button>
+            <Button type="submit" disabled={loading} className="text-xs">{loading ? "Creating..." : "Create Subject" }</Button>
           </div>
         </form>
       </div>
