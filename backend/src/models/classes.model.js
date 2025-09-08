@@ -2,96 +2,42 @@ import mongoose, { Schema } from "mongoose";
 
 const classSchema = new Schema(
   {
-    schoolId: {
-      type: Schema.Types.ObjectId,
-      ref: "School",
-      required: true,
-      index: true, // faster queries by school
-    },
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      required: true,
-      index: true,
-    },
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      uppercase: true, // Example: "CLASS 6"
-    },
+    name: { type: String, required: true, trim: true, uppercase: true },
+    schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
+    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear", required: true, index: true },
 
-    // Sections linked with this class (10-A, 10-B, etc.)
+    // Sections linked with this class
     sections: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Section",
+        sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
+        inChargeId: { type: Schema.Types.ObjectId, ref: "User" }, // section teacher
       },
     ],
 
     // Main Class Teacher (Homeroom teacher)
-    classTeacherId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+    teacherId: { type: Schema.Types.ObjectId, ref: "User" },
 
-    // Enrolled Students
-    students: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    // Students enrolled in this class
+    students: [{ type: Schema.Types.ObjectId, ref: "User" }],
 
-    // Subjects taught in this class
+    // Optional subjects cached in the class document (can sync with ClassSubject collection)
     subjects: [
       {
-        subjectId: {
-          type: Schema.Types.ObjectId,
-          ref: "Subject",
-          required: true,
-        },
-        teacherId: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        periodPerWeek: {
-          type: Number,
-          default: 0, // timetable planning
-        },
-        isCompulsory: {
-          type: Boolean,
-          default: true,
-        },
+        subjectId: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
+        teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        periodPerWeek: { type: Number, default: 0 },
+        isCompulsory: { type: Boolean, default: true },
       },
     ],
 
-    // Metadata
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    updatedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
-    },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
   { timestamps: true }
 );
 
-// 🔑 Prevent duplicate class name within a school + academic year
-classSchema.index(
-  { name: 1, schoolId: 1, academicYearId: 1 },
-  { unique: true }
-);
-
-// 🔎 For faster lookups
+classSchema.index({ name: 1, schoolId: 1, academicYearId: 1 }, { unique: true });
 classSchema.index({ schoolId: 1, academicYearId: 1 });
 
 export const Class = mongoose.model("Class", classSchema);

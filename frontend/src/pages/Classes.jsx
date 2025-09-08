@@ -1,30 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  fetchAllClasses,
-  deleteClass,
-} from "../features/classes/classSlice";
+  fetchClassSections,
+  deleteClassSection,
+} from "../features/classes/classSectionSlice";
 import DataTable from "react-data-table-component";
 import { Edit, Trash2 } from "lucide-react";
-import ManageClassSection from "../components/forms/ManageClassSection";
+
+import ClassSectionFormSA from "../components/forms/ClassSectionFormSA";
 
 function Classes() {
   const dispatch = useDispatch();
 
   // ensure classList is always an array
-  const { classList = [], loading } = useSelector((state) => state.class || {});
+  const { mappings = [], loading } = useSelector((state) => state.classSection || {});
   const { user } = useSelector((state) => state.auth || {});
 
   const [isOpen, setIsOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [filterText, setFilterText] = useState("");
-
+  const schoolId = user?.school?._id || null;
   // Fetch only classes from the user's school
   useEffect(() => {
-    if (user?.school?._id) {
-      dispatch(fetchAllClasses({ schoolId: user.school._id }));
+    if (schoolId) {
+      dispatch(fetchClassSections({ schoolId })); // ✅ pass as object
     }
-  }, [dispatch, user]);
+  }, [dispatch, schoolId]);
 
   const handleEdit = (cls) => {
     setEditingClass(cls);
@@ -33,9 +34,9 @@ function Classes() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this class?")) {
-      await dispatch(deleteClass(id));
-      if (user?.school?._id) {
-        dispatch(fetchAllClasses({ schoolId: user.school._id })); // refresh after delete
+      await dispatch(deleteClassSection(id));
+      if (schoolId) {
+        dispatch(fetchClassSections({ schoolId })); // ✅ pass as object
       }
     }
   };
@@ -47,15 +48,33 @@ function Classes() {
 
   // Columns for DataTable
   const columns = [
-    { name: "Class Name", selector: (row) => row.name, sortable: true },
-    { name: "Section", selector: (row) => row.section, sortable: true },
+    {
+      name: "Class Name",
+      selector: (row) => row.class?.name || "—",
+      sortable: true,
+      cell: (row) => (
+        <span className="px-2 py-1 text-xs bg-gray-100 rounded-md">
+          {row.class?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      name: "Section",
+      selector: (row) => row.section?.name || "—",
+      sortable: true,
+      cell: (row) => (
+        <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-md">
+          {row.section?.name || "—"}
+        </span>
+      ),
+    },
     {
       name: "Subjects",
       cell: (row) => (
         <div className="flex flex-wrap gap-1 py-1">
           {row.subjects?.map((sub, idx) => (
             <span
-              key={sub._id || idx}
+              key={sub.subjectId?._id || idx}
               className="px-2 py-1 text-xs bg-gray-200 rounded-md"
             >
               {sub.subjectId?.name || "—"} ({sub.teacherId?.name || "—"})
@@ -76,11 +95,21 @@ function Classes() {
     },
     {
       name: "School",
-      selector: (row) => row.schoolId?.name || "—",
+      selector: (row) => row.school?.name || "—",
       sortable: true,
       cell: (row) => (
         <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-md">
-          {row.schoolId?.name || "—"}
+          {row.school?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      name: "Academic Year",
+      selector: (row) => row.academicYear?.name || "—",
+      sortable: true,
+      cell: (row) => (
+        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-md">
+          {row.academicYear?.name || "—"}
         </span>
       ),
     },
@@ -105,17 +134,18 @@ function Classes() {
     },
   ];
 
+
   // Show only classes for this school
-  const schoolClasses = classList.filter(
-    (cls) => String(cls.schoolId?._id) === String(user?.school?._id)
-  );
-  
+  const schoolClasses = mappings.filter(
+   (cls) => String(cls.school?._id) === String(user?.school?._id)
+ );
+
   // Apply search filter
   const filteredItems = schoolClasses.filter(
-    (item) =>
-      item.name?.toLowerCase().includes(filterText.toLowerCase()) ||
-      item.section?.toLowerCase().includes(filterText.toLowerCase())
-  );
+   (item) =>
+    item.class?.name?.toLowerCase().includes(filterText.toLowerCase()) ||
+     item.section?.name?.toLowerCase().includes(filterText.toLowerCase())
+);
 
   return (
     <>
@@ -129,20 +159,18 @@ function Classes() {
             >
               ✕
             </button>
-            <ManageClassSection
+            <ClassSectionFormSA
               onClose={() => setIsOpen(false)}
               initialData={editingClass}
               onSuccess={() => {
-                if (user?.school?._id) {
-                  dispatch(fetchAllClasses({ schoolId: user.school._id }));
-                }
+                if (schoolId) dispatch(fetchClassSections({ schoolId })); // refresh table
                 setIsOpen(false);
               }}
             />
           </div>
         </div>
       )}
-      
+
       {/* Main Table */}
       <div className="w-full bg-white p-4 border rounded-lg">
         <div className="flex justify-between items-center mb-4">

@@ -28,10 +28,18 @@ const classSectionSchema = new Schema(
     },
 
     // Optional: assign a section in-charge or class teacher
-    classTeacherId: {
+    teacherId: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+
+    // Subjects mapped to this class-section with assigned teachers
+    subjects: [
+      {
+        subjectId: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
+        teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      },
+    ],
 
     // Students mapped specifically to this Class-Section
     students: [

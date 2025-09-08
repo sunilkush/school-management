@@ -2,27 +2,29 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Class } from '../models/classes.model.js';
-
+import { ClassSection } from '../models/classSection.model.js';
 // ✅ Create Class
 const createClass = asyncHandler(async (req, res) => {
-  const { name, schoolId, teacherId, students = [], subjects = [] } = req.body;
+  const { name, schoolId, academicYearId, teacherId, students = [], subjects = [] } = req.body;
 
-  if (!name || !schoolId) {
-    throw new ApiError(400, "Name and School ID are required");
+  if (!name || !schoolId || !academicYearId) {
+    throw new ApiError(400, "Name, School ID and Academic Year are required");
   }
 
-  // Duplicate check (unique per school + name)
+  // Duplicate check (unique per school + academic year + name)
   const existingClass = await Class.findOne({
     schoolId,
+    academicYearId,
     name: name.toLowerCase(),
   });
 
   if (existingClass) {
-    throw new ApiError(400, "Class with same name already exists in this school");
+    throw new ApiError(400, "Class with same name already exists in this school for this academic year");
   }
 
   const newClass = new Class({
     schoolId,
+    academicYearId, // ✅ now included
     name: name.toLowerCase(),
     teacherId,
     students,
@@ -81,35 +83,66 @@ const getAllClasses = asyncHandler(async (req, res) => {
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const totalClasses = await Class.countDocuments(query);
+
+  // Agar classes hi 0 hain, to seedha empty response bhej do
+  if (totalClasses === 0) {
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          data: [],
+          total: 0,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: 0,
+        },
+        "No classes found"
+      )
+    );
+  }
+
   const classes = await Class.find(query)
-    .populate("schoolId teacherId students")
-    .populate("subjects.subjectId")
-    .populate("subjects.teacherId")
-    .skip(skip)
-    .limit(parseInt(limit));
+  .populate("schoolId students")
+  .populate({
+    path: "teacherId",
+    match: { "role.name": "Teacher" }, // only teachers
+  })
+  .populate("subjects.subjectId")
+  .populate({
+    path: "subjects.teacherId",
+    match: { "role.name": "Teacher" },
+  })
+  .skip(skip)
+  .limit(parseInt(limit));
 
   // ✅ Populate mapped sections for each class
-  const classIds = classes.map(c => c._id);
-  const classSectionMappings = await ClassSection.find({ classId: { $in: classIds } })
-    .populate("sectionId");
+  const classIds = classes.map((c) => c._id);
+  const classSectionMappings = await ClassSection.find({
+    classId: { $in: classIds },
+  }).populate("sectionId");
 
-  const classesWithSections = classes.map(c => {
+  const classesWithSections = classes.map((c) => {
     const sections = classSectionMappings
-      .filter(m => String(m.classId) === String(c._id))
-      .map(m => m.sectionId);
+      .filter((m) => String(m.classId) === String(c._id))
+      .map((m) => m.sectionId);
     return { ...c.toObject(), sections };
   });
 
   return res.status(200).json(
-    new ApiResponse(200, {
-      data: classesWithSections,
-      total: totalClasses,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(totalClasses / limit),
-    }, "Classes fetched successfully")
+    new ApiResponse(
+      200,
+      {
+        data: classesWithSections,
+        total: totalClasses,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(totalClasses / limit),
+      },
+      "Classes fetched successfully"
+    )
   );
 });
+
 
 
 

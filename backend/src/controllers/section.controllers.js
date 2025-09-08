@@ -14,11 +14,12 @@ export const createSection = asyncHandler(async (req, res) => {
     name,
     academicYearId,
     schoolId,
-    createdBy: req.user._id
+    createdBy: req.user?._id || null, // ✅ safe check
   });
 
   res.status(201).json(new ApiResponse(201, section, "Section created successfully"));
 });
+
 
 // Get All Sections for a School + Class + Year
 export const getSections = async (req, res) => {

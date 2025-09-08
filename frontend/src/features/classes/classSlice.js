@@ -8,6 +8,8 @@ export const createClass = createAsyncThunk(
   "class/createClass",
   async (classData, { rejectWithValue }) => {
     try {
+     
+      console.log("Creating class with data:", classData);
       const token = localStorage.getItem("accessToken");
       const res = await axios.post(`${Api_Base_Url}/class/create`, classData, {
         headers: { Authorization: `Bearer ${token}` },
@@ -23,23 +25,20 @@ export const createClass = createAsyncThunk(
   }
 );
 
-// FETCH all classes
 export const fetchAllClasses = createAsyncThunk(
   "class/fetchAllClasses",
-  async ({ schoolId, teacherId, section } = {}, { rejectWithValue }) => {
+  async (schoolId, { rejectWithValue }) => {
     try {
-      
       const token = localStorage.getItem("accessToken");
 
       const res = await axios.get(`${Api_Base_Url}/class/all`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { schoolId, teacherId, section }, // ✅ include query params here
+        params: { schoolId }, // ✅ correct: schoolId as string
       });
-      return res.data.data || []; // safe return
+
+      return res.data; 
     } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.message 
-      );
+      return rejectWithValue(error?.response?.data?.message);
     }
   }
 );
@@ -54,8 +53,6 @@ export const deleteClass = createAsyncThunk(
       await axios.delete(`${Api_Base_Url}/class/${classId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-    
       return classId;
     } catch (error) {
       return rejectWithValue(
@@ -85,16 +82,18 @@ export const updateClass = createAsyncThunk(
   }
 );
 
-const initialState = {
-  loading: false,
-  error: null,
-  classList: [],
-  success: false,
-};
-
 const classSlice = createSlice({
   name: "class",
-  initialState,
+  initialState: {
+    loading: false,
+    error: null,
+    classList: [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+    success: false,
+  },
   reducers: {
     resetClassState: (state) => {
       state.success = false;
@@ -103,14 +102,19 @@ const classSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // FETCH
       .addCase(fetchAllClasses.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchAllClasses.fulfilled, (state, action) => {
         state.loading = false;
-         state.classList = action.payload?.data || [];
+
+        // backend se pura object aata hai
+        state.classList = action.payload?.data?.data || [];
+        state.total = action.payload?.data?.total || 0;
+        state.page = action.payload?.data?.page || 1;
+        state.limit = action.payload?.data?.limit || 10;
+        state.totalPages = action.payload?.data?.totalPages || 0;
       })
       .addCase(fetchAllClasses.rejected, (state, action) => {
         state.loading = false;

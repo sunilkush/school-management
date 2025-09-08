@@ -34,7 +34,7 @@ export const createSection = createAsyncThunk(
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.post(`${Api_Base_Url}/section/`, sectionData, {
+      const res = await axios.post(`${Api_Base_Url}/section`, sectionData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

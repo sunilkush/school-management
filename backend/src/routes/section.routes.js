@@ -5,19 +5,23 @@ import {
   updateSection,
   deleteSection
 } from '../controllers/section.controllers.js';
+import { auth, roleMiddleware } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// POST /sections
-router.post('/', createSection);
+// 🔑 Role Groups
+const ADMIN_ONLY = ["Super Admin", "School Admin"];
 
-// GET /sections?schoolId=...&classId=...&academicYearId=...
-router.get('/', getSections);
+// ➕ Create Section
+router.post('/', auth, roleMiddleware(ADMIN_ONLY), createSection);
 
-// PUT /sections/:id
-router.put('/:id', updateSection);
+// 📋 Get Sections
+router.get('/', auth, getSections);
 
-// DELETE /sections/:id
-router.delete('/:id', deleteSection);
+// ✏️ Update Section
+router.put('/:id', auth, roleMiddleware(ADMIN_ONLY), updateSection);
+
+// 🗑️ Delete Section
+router.delete('/:id', auth, roleMiddleware(ADMIN_ONLY), deleteSection);
 
 export default router;

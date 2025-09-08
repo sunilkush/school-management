@@ -2,24 +2,6 @@ import mongoose, { Schema } from "mongoose";
 
 const subjectSchema = new Schema(
   {
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      required: true,
-      index: true,
-    },
-    schoolId: {
-      type: Schema.Types.ObjectId,
-      ref: "School",
-      required: true,
-      index: true,
-    },
-    teacherId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true, // subject in-charge / HOD / main teacher
-    },
-
     name: {
       type: String,
       required: true,
@@ -37,7 +19,6 @@ const subjectSchema = new Schema(
       trim: true,
       uppercase: true,
     },
-
     category: {
       type: String,
       enum: ["Core", "Elective", "Language", "Practical", "Optional"],
@@ -48,7 +29,6 @@ const subjectSchema = new Schema(
       enum: ["Theory", "Practical", "Both"],
       default: "Theory",
     },
-
     maxMarks: {
       type: Number,
       default: 100,
@@ -65,49 +45,50 @@ const subjectSchema = new Schema(
         message: "Pass marks cannot exceed maximum marks",
       },
     },
-
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      required: true,
+      index: true,
+    },
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true,
+    },
+    teacherId: {
+      type: Schema.Types.ObjectId,
+      ref: "User", // subject in-charge / HOD / main teacher
+      required: true,
+    },
     gradingSchemeId: {
       type: Schema.Types.ObjectId,
       ref: "Grade",
     },
-
     isActive: {
       type: Boolean,
       default: true,
     },
-
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    updatedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
-// 🔑 Prevent duplicate subject name in the same school + academic year
 subjectSchema.index(
   { name: 1, schoolId: 1, academicYearId: 1 },
   { unique: true }
 );
 
-// 🔹 Pre-save hook to auto-generate shortName & code if missing
+// Auto-generate shortName & code if missing
 subjectSchema.pre("save", function (next) {
-  if (!this.shortName && this.name) {
-    // Example: "Mathematics" => "MATH"
-    this.shortName = this.name.substring(0, 4).toUpperCase();
-  }
-
+  if (!this.shortName && this.name) this.shortName = this.name.substring(0, 4).toUpperCase();
   if (!this.code && this.name) {
-    // Example: "MATH101" => first 4 letters + random 3-digit number
     const prefix = this.name.replace(/\s+/g, "").substring(0, 4).toUpperCase();
-    const randomNum = Math.floor(100 + Math.random() * 900); // 100-999
+    const randomNum = Math.floor(100 + Math.random() * 900);
     this.code = `${prefix}${randomNum}`;
   }
-
   next();
 });
 
