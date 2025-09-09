@@ -114,6 +114,17 @@ export const getClassSections = asyncHandler(async (req, res) => {
     },
     { $unwind: "$academicYear" },
 
+    // ✅ Lookup Class Teacher
+    {
+      $lookup: {
+        from: "users",
+        localField: "teacherId",
+        foreignField: "_id",
+        as: "classTeacher",
+      },
+    },
+    { $unwind: { path: "$classTeacher", preserveNullAndEmptyArrays: true } },
+
     // ✅ Expand subjects array
     { $unwind: { path: "$subjects", preserveNullAndEmptyArrays: true } },
 
@@ -128,7 +139,7 @@ export const getClassSections = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$subjectObj", preserveNullAndEmptyArrays: true } },
 
-    // ✅ Lookup teacher details
+    // ✅ Lookup subject teacher details
     {
       $lookup: {
         from: "users",
@@ -159,7 +170,7 @@ export const getClassSections = asyncHandler(async (req, res) => {
         section: { $first: "$section" },
         school: { $first: "$school" },
         academicYear: { $first: "$academicYear" },
-        teacherId: { $first: "$teacherId" },
+        classTeacher: { $first: "$classTeacher" }, // ✅ keep teacher details
         subjects: { $push: "$subjectMerged" },
         createdAt: { $first: "$createdAt" },
         updatedAt: { $first: "$updatedAt" },
@@ -174,7 +185,7 @@ export const getClassSections = asyncHandler(async (req, res) => {
         section: { _id: 1, name: 1 },
         school: { _id: 1, name: 1 },
         academicYear: { _id: 1, name: 1, startDate: 1, endDate: 1 },
-        teacherId: 1,
+        classTeacher: { _id: 1, name: 1, email: 1 }, // ✅ only expose what you need
         subjects: 1,
         createdAt: 1,
         updatedAt: 1,
@@ -186,7 +197,6 @@ export const getClassSections = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, mappings, "Class-Section mappings fetched successfully!"));
 });
-
 
 /**
  * Get single mapping by ID

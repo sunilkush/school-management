@@ -85,11 +85,11 @@ function Classes() {
     },
     {
       name: "Class Teacher",
-      selector: (row) => row.teacherId?.name || "—",
+      selector: (row) => row.classTeacher?.name || "—",
       sortable: true,
       cell: (row) => (
         <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
-          {row.teacherId?.name || "—"}
+          {row.classTeacher?.name || "—"}
         </span>
       ),
     },
