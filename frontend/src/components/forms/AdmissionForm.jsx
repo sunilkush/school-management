@@ -209,6 +209,7 @@ useEffect(() => {
                 onChange={handleChange}
                 className={inputClass}
                 required
+                maxLength={6}
               />
             </div>
              <div>
@@ -289,6 +290,7 @@ useEffect(() => {
                 value={formData.mobileNumber}
                 onChange={handleChange}
                 className={inputClass}
+                maxLength={10}
               />
             </div>
             <div>
@@ -526,6 +528,7 @@ useEffect(() => {
                 value={formData.fatherMobile}
                 onChange={handleChange}
                 className={inputClass}
+                maxLength={10}
               />
             </div>
             <div>
@@ -601,6 +604,7 @@ useEffect(() => {
                 value={formData.motherMobile}
                 onChange={handleChange}
                 className={inputClass}
+                maxLength={10}
               />
             </div>
             <div>

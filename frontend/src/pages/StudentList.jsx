@@ -33,14 +33,14 @@ const StudentList = () => {
       name: stu.userDetails?.name ?? "N/A",
       class: stu.classDetails?.name ?? "N/A",
       section: stu.sectionDetails?.name ?? "N/A",
-      dateOfBirth: stu.dateOfBirth
-        ? new Date(stu.dateOfBirth).toISOString().split("T")[0]
+      dateOfBirth: stu.studentInfo?.dateOfBirth
+        ? new Date(stu.studentInfo?.dateOfBirth).toISOString().split("T")[0]
         : "N/A",
       mobileNumber: stu.mobileNumber ?? "N/A",
       admissionDate: stu.admissionDate
         ? new Date(stu.admissionDate).toISOString().split("T")[0]
         : "N/A",
-      bloodGroup: stu.bloodGroup ?? "N/A",
+      bloodGroup: stu.studentInfo?.bloodGroup ?? "N/A",
       attendance: stu.attendance ?? "Not Marked",
     }))
     : [];
