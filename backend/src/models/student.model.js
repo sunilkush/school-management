@@ -2,72 +2,25 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
-    academicYearId: 
-    { type: mongoose.Schema.Types.ObjectId, 
-      ref: "AcademicYear",
-      required: true,
-     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
-    },
-    schoolId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "School",
-      required: true,
-    },
-    registrationNumber: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    classId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Class",
-      required: true,
+      unique: true, // Ek hi user ek hi student hoga
     },
     picture: {
-      type: String, // URL or file path
+      type: String, // URL ya file path
     },
-    admissionDate: {
-      type: Date,
-      default: Date.now,
-    },
-    feeDiscount: {
-      type: Number,
-      default: 0,
-    },
-    smsMobile: {
-      type: String,
-    },
-    mobileNumber:{
-       type: String,
-    },
-    // 🟣 Other Info Section
     dateOfBirth: Date,
-    birthFormId: String,
-    orphan: {
-      type: String,
-      enum: ["Yes", "No"],
-    },
     gender: {
       type: String,
-      enum: ["Male", "Female"],
+      enum: ["Male", "Female", "Other"],
     },
-    cast: String,
-    osc: String,
-    identificationMark: String,
-    previousSchool: String,
     religion: String,
+    cast: String,
     bloodGroup: String,
-    previousId: String,
-    family: String,
-    disease: String,
-    notes: String,
-    siblings: String,
     address: String,
+    identificationMark: String,
 
     // 🟢 Father Info
     fatherInfo: {
@@ -91,17 +44,18 @@ const studentSchema = new mongoose.Schema(
       income: String,
     },
 
-    status: {
+    // 🟣 Other Info
+    orphan: {
       type: String,
-    
-      enum: ["Active", "Promoted", "Transferred", "Alumni", "Inactive"],
-
-      default: "Active",
+      enum: ["Yes", "No"],
     },
+    family: String,
+    disease: String,
+    notes: String,
+    siblings: String,
+    previousSchool: String,
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export const Student = mongoose.model("Student", studentSchema);

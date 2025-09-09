@@ -1,6 +1,6 @@
 import { ClassSection } from "../models/classSection.model.js";
 import { Class } from "../models/classes.model.js";
-import { Section } from "../models/Section.model.js";
+import { Section } from "../models/section.model.js";
 import { ClassSubject } from "../models/ClassSubject.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -63,9 +63,12 @@ export const getClassSections = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, classId } = req.query;
 
   const matchStage = {};
-  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) matchStage.schoolId = new mongoose.Types.ObjectId(schoolId);
-  if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
-  if (classId && mongoose.Types.ObjectId.isValid(classId)) matchStage.classId = new mongoose.Types.ObjectId(classId);
+  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId))
+    matchStage.schoolId = new mongoose.Types.ObjectId(schoolId);
+  if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId))
+    matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
+  if (classId && mongoose.Types.ObjectId.isValid(classId))
+    matchStage.classId = new mongoose.Types.ObjectId(classId);
 
   const mappings = await ClassSection.aggregate([
     { $match: matchStage },
@@ -154,10 +157,16 @@ export const getClassSections = asyncHandler(async (req, res) => {
     {
       $addFields: {
         subjectMerged: {
-          subjectId: "$subjectObj",
-          teacherId: "$teacherObj",
-          periodPerWeek: "$subjects.periodPerWeek",
-          isCompulsory: "$subjects.isCompulsory",
+          $cond: [
+            { $gt: ["$subjects", {}] }, // avoid empty pushes
+            {
+              subjectId: "$subjectObj",
+              teacherId: "$teacherObj",
+              periodPerWeek: "$subjects.periodPerWeek",
+              isCompulsory: "$subjects.isCompulsory",
+            },
+            "$$REMOVE",
+          ],
         },
       },
     },
@@ -170,22 +179,42 @@ export const getClassSections = asyncHandler(async (req, res) => {
         section: { $first: "$section" },
         school: { $first: "$school" },
         academicYear: { $first: "$academicYear" },
-        classTeacher: { $first: "$classTeacher" }, // ✅ keep teacher details
+        classTeacher: { $first: "$classTeacher" },
         subjects: { $push: "$subjectMerged" },
         createdAt: { $first: "$createdAt" },
         updatedAt: { $first: "$updatedAt" },
       },
     },
 
-    // ✅ Clean up projection
+    // ✅ Remove null subjectMerged
+    {
+      $addFields: {
+        subjects: {
+          $filter: {
+            input: "$subjects",
+            as: "s",
+            cond: { $ne: ["$$s", null] },
+          },
+        },
+      },
+    },
+
+    // ✅ Final Projection (with className & sectionName)
     {
       $project: {
         _id: 1,
         class: { _id: 1, name: 1 },
+        className: "$class.name", // ✅ direct field
         section: { _id: 1, name: 1 },
+        sectionName: "$section.name", // ✅ direct field
         school: { _id: 1, name: 1 },
-        academicYear: { _id: 1, name: 1, startDate: 1, endDate: 1 },
-        classTeacher: { _id: 1, name: 1, email: 1 }, // ✅ only expose what you need
+        academicYear: {
+          _id: 1,
+          name: 1,
+          startDate: 1,
+          endDate: 1,
+        },
+        classTeacher: { _id: 1, name: 1, email: 1 },
         subjects: 1,
         createdAt: 1,
         updatedAt: 1,
@@ -195,8 +224,12 @@ export const getClassSections = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, mappings, "Class-Section mappings fetched successfully!"));
+    .json(
+      new ApiResponse(200, mappings, "Class-Section mappings fetched successfully!")
+    );
 });
+
+
 
 /**
  * Get single mapping by ID

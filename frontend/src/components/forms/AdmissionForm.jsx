@@ -36,7 +36,7 @@ const AdmissionForm = () => {
     role: "student",
     schoolId: schoolId || "",
     classId: "",
-    section: "",
+    sectionId: "",
     registrationNumber: "",
     admissionDate: new Date().toISOString().split("T")[0],
     feeDiscount: 0,
@@ -86,30 +86,33 @@ const AdmissionForm = () => {
     }
   }, [dispatch, schoolId, academicYearId]);
 
-  useEffect(() => {
-    if (lastStudent?.registrationNumber) {
-      setFormData((prev) => ({
-        ...prev,
-        registrationNumber: lastStudent.registrationNumber,
-        role: "student",
-      }));
-    }
-  }, [lastStudent]);
+useEffect(() => {
+  if (lastStudent?.registrationNumber) {
+    setFormData((prev) => ({
+      ...prev,
+      registrationNumber: lastStudent.registrationNumber,
+      role: "student",
+    }));
+  }
+}, [lastStudent]);
 
   const handleChange = (e) => {
-    
-    const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value,
-    });
+    const { name, value } = e.target;
+
+    // ✅ If class+section select changes
     if (name === "classId") {
-  const [classId, sectionId] = value.split("|");
-  setFormData((prev) => ({ ...prev, classId, section: sectionId }));
-}else {
-      setFormData((prev) => ({ ...prev, [name]: files ? files[0] : value }));
+      const [classId, sectionId] = value.split("|"); // split both IDs
+      setFormData((prev) => ({
+        ...prev,
+        classId,
+        sectionId,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
-    
   };
 
   const handleSubmit = (e) => {
@@ -208,28 +211,37 @@ const AdmissionForm = () => {
                 required
               />
             </div>
-            <div>
-              <label className={labelClass}>Class</label>
-              <select
-                name="classId"
-                value={formData.classId}
-                onChange={handleChange}
-                className={inputClass}
-                required
-              >
-                <option value="">Select Class</option>
-                {console.log(mappings)}
-                {mappings && mappings.length > 0 ? (
-                  mappings.map((cls) => (
-                    <option key={cls._id} value={`${cls.class._id}|${cls.section._id}`}>
-                    {cls.class.name} - {cls.section.name}
-                  </option>
-                  ))
-                ) : (
-                  <option disabled>No Classes Available</option>
-                )}
-              </select>
-            </div>
+             <div>
+      {/* 🔹 Class + Section Dropdown */}
+      <label className={labelClass}>Class</label>
+      <select
+        name="classId"
+        value={
+          formData.classId && formData.sectionId
+            ? `${formData.classId}|${formData.sectionId}`
+            : ""
+        }
+        onChange={handleChange}
+        className={inputClass}
+        required
+      >
+        <option value="">Select Class</option>
+        {mappings && mappings.length > 0 ? (
+          mappings.map((cls) => (
+            <option
+              key={cls._id}
+              value={`${cls.class._id}|${cls.section._id}`} // ✅ Combine IDs
+            >
+              {cls.class.name} - {cls.section.name}
+            </option>
+          ))
+        ) : (
+          <option disabled>No Classes Available</option>
+        )}
+      </select>
+
+    
+    </div>
             <div>
               <label className={labelClass}>Registration No.</label>
 
@@ -242,7 +254,7 @@ const AdmissionForm = () => {
 
 
               {lastStudent && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mb-0 mt-1">
                     Last Student:({lastStudent?.lastStudent?.registrationNumber})
                    
                   </p>
@@ -479,7 +491,7 @@ const AdmissionForm = () => {
             <div>
               <label className={labelClass}>National ID</label>
               <input
-                name="fatherNationalId"
+                name="fatherNID"
                 placeholder="Father National ID"
                 value={formData.fatherNationalId}
                 onChange={handleChange}

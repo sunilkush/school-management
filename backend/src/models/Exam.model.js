@@ -5,6 +5,11 @@ import mongoose from "mongoose";
 //
 const ExamSchema = new mongoose.Schema(
   {
+    academicYearId: 
+        { type: mongoose.Schema.Types.ObjectId, 
+          ref: "AcademicYear",
+          required: true,
+         },
     schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
     title: { type: String, required: true, trim: true },
 

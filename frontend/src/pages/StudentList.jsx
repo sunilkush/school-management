@@ -10,7 +10,7 @@ import { activeUser } from "../features/auth/authSlice";
 const StudentList = () => {
   const dispatch = useDispatch();
   const { studentList } = useSelector((state) => state.students);
-  
+
   const { user } = useSelector((state) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -25,14 +25,14 @@ const StudentList = () => {
     }
     dispatch(activeUser());
   }, [dispatch, schoolId, isOpen]);
-
+  console.log("studentList", studentList);
   // ✅ format data
   const formattedStudents = Array.isArray(studentList)
     ? studentList.map((stu) => ({
       id: stu._id,
       name: stu.userDetails?.name ?? "N/A",
       class: stu.classDetails?.name ?? "N/A",
-      section: stu.classDetails?.section ?? "N/A",
+      section: stu.sectionDetails?.name ?? "N/A",
       dateOfBirth: stu.dateOfBirth
         ? new Date(stu.dateOfBirth).toISOString().split("T")[0]
         : "N/A",
@@ -47,12 +47,12 @@ const StudentList = () => {
 
   // 🔹 Filter students by selected class and search text
   const filteredStudents = formattedStudents.filter((stu) => {
-   
+
     const matchesSearch = searchText
       ? stu.name.toLowerCase().includes(searchText.toLowerCase())
       : true;
 
-    return  matchesSearch;
+    return matchesSearch;
   });
   // ✅ columns
   const columns = [
@@ -103,10 +103,6 @@ const StudentList = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <h2 className="font-bold text-xl">Students Details</h2>
           <div className="flex gap-2">
-            
-
-
-
             {/* 🔹 Search filter */}
             <input
               type="text"
