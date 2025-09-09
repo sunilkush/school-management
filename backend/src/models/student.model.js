@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
-    academicYearId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "AcademicYears",
-      required: true
-    },
+    academicYearId: 
+    { type: mongoose.Schema.Types.ObjectId, 
+      ref: "AcademicYear",
+      required: true,
+     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -96,7 +96,7 @@ const studentSchema = new mongoose.Schema(
     
       enum: ["Active", "Promoted", "Transferred", "Alumni", "Inactive"],
 
-      default: "active",
+      default: "Active",
     },
   },
   {

@@ -4,55 +4,56 @@ import DataTable from "react-data-table-component";
 import { fetchAllStudent } from "../features/students/studentSlice";
 import { User, Download, SquarePen, Trash, X } from "lucide-react";
 import AdmissionForm from "../components/forms/AdmissionForm";
-import {fetchAllClasses} from "../features/classes/classSlice";
+import { fetchClassSections } from "../features/classes/classSectionSlice";
 import { activeUser } from "../features/auth/authSlice";
 
 const StudentList = () => {
   const dispatch = useDispatch();
   const { studentList } = useSelector((state) => state.students);
-  const { classList } = useSelector((state) => state.class);
+  
   const { user } = useSelector((state) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState(""); // 🔹 track selected class
+
   const [searchText, setSearchText] = useState(""); // 🔹 track search text
-  const [selectedSection, setSelectedSection] = useState("");
+
   const schoolId = user?.school?._id;
 
   useEffect(() => {
     dispatch(fetchAllStudent());
-    dispatch(fetchAllClasses({ schoolId }));
+    if (schoolId) {
+      dispatch(fetchClassSections({ schoolId })); // ✅ pass as object
+    }
     dispatch(activeUser());
-  }, [dispatch, schoolId,isOpen]);
+  }, [dispatch, schoolId, isOpen]);
 
   // ✅ format data
   const formattedStudents = Array.isArray(studentList)
     ? studentList.map((stu) => ({
-        id: stu._id,
-        name: stu.userDetails?.name ?? "N/A",
-        class: stu.classDetails?.name ?? "N/A",
-        section: stu.classDetails?.section ?? "N/A",
-        dateOfBirth: stu.dateOfBirth
-          ? new Date(stu.dateOfBirth).toISOString().split("T")[0]
-          : "N/A",
-        mobileNumber: stu.mobileNumber ?? "N/A",
-        admissionDate: stu.admissionDate
-          ? new Date(stu.admissionDate).toISOString().split("T")[0]
-          : "N/A",
-        bloodGroup: stu.bloodGroup ?? "N/A",
-        attendance: stu.attendance ?? "Not Marked",
-      }))
+      id: stu._id,
+      name: stu.userDetails?.name ?? "N/A",
+      class: stu.classDetails?.name ?? "N/A",
+      section: stu.classDetails?.section ?? "N/A",
+      dateOfBirth: stu.dateOfBirth
+        ? new Date(stu.dateOfBirth).toISOString().split("T")[0]
+        : "N/A",
+      mobileNumber: stu.mobileNumber ?? "N/A",
+      admissionDate: stu.admissionDate
+        ? new Date(stu.admissionDate).toISOString().split("T")[0]
+        : "N/A",
+      bloodGroup: stu.bloodGroup ?? "N/A",
+      attendance: stu.attendance ?? "Not Marked",
+    }))
     : [];
 
   // 🔹 Filter students by selected class and search text
   const filteredStudents = formattedStudents.filter((stu) => {
-  const matchesClass = selectedClass ? stu.class === selectedClass : true;
-  const matchesSection = selectedSection ? stu.section === selectedSection : true;
-  const matchesSearch = searchText
-    ? stu.name.toLowerCase().includes(searchText.toLowerCase())
-    : true;
-    
-  return matchesClass && matchesSection && matchesSearch;
-});
+   
+    const matchesSearch = searchText
+      ? stu.name.toLowerCase().includes(searchText.toLowerCase())
+      : true;
+
+    return  matchesSearch;
+  });
   // ✅ columns
   const columns = [
     {
@@ -102,47 +103,18 @@ const StudentList = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <h2 className="font-bold text-xl">Students Details</h2>
           <div className="flex gap-2">
-{/* 🔹 Class filter */}
-<select
-  className="border px-2 py-1 rounded-md text-xs"
-  value={selectedClass}
-  onChange={(e) => setSelectedClass(e.target.value)}
->
-  <option value="">Select Class</option>
-  {[...new Set(classList.map((item) => item.name))].map((cls) => (
-    <option key={cls} value={cls}>
-      {cls}
-    </option>
-  ))}
-</select>
+            
 
 
-{/* 🔹 Section filter */}
-<select
-  className="border px-2 py-1 rounded-md text-xs"
-  value={selectedSection}
-  onChange={(e) => setSelectedSection(e.target.value)}
->
-  <option value="">Select Section</option>
-  {[...new Set(
-    classList
-      .filter((cls) => !selectedClass || cls.name === selectedClass)
-      .map((item) => item.section)
-  )].map((section) => (
-    <option key={section} value={section}>
-      {section}
-    </option>
-  ))}
-</select>
 
-{/* 🔹 Search filter */}
-<input
-  type="text"
-  placeholder="Search your Student"
-  className="border px-2 py-1 rounded-md text-xs"
-  value={searchText}
-  onChange={(e) => setSearchText(e.target.value)}
-/>
+            {/* 🔹 Search filter */}
+            <input
+              type="text"
+              placeholder="Search your Student"
+              className="border px-2 py-1 rounded-md text-xs"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
 
             <button className="px-2 py-1 bg-gray-200 rounded-md text-xs text-black flex items-center gap-1">
               <Download className="w-4" /> Export

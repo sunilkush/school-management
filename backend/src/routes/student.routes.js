@@ -30,6 +30,6 @@ router.put("/update/:id", auth, roleMiddleware(ADMIN_ROLE), updateStudent);
 // ✅ Delete Student (Super Admin & Admin)
 router.delete("/delete/:id", auth, roleMiddleware(ADMIN_ROLE), deleteStudent);
 
-router.get("/register/last",auth, getLastRegisteredStudent);
+router.get("/last",auth, getLastRegisteredStudent);
 
 export default router;

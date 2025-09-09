@@ -5,7 +5,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
+import { Class } from "../models/classes.model.js";
+import {Section} from '../models/section.model.js';
 import mongoose from "mongoose";
+
 // ✅ Register and admit student
 const registerStudent = asyncHandler(async (req, res) => {
   const {
@@ -96,7 +99,11 @@ const registerStudent = asyncHandler(async (req, res) => {
     { $addToSet: { students: user._id } }, // prevents duplicates
     { new: true }
   );
-
+    await Section.findByIdAndUpdate(
+    classId,
+    { $addToSet: { students: user._id } }, // prevents duplicates
+    { new: true }
+  );
   const populatedStudent = await Student.findById(student._id)
     .populate("userId", "-password")
     .populate("classId", "name section");
@@ -370,27 +377,51 @@ const deleteStudent = asyncHandler(async (req, res) => {
     throw new ApiError(500, error.message || "Something went wrong!");
   }
 });
-
-const getLastRegisteredStudent = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId } = req.query; // ⬅️ must come from frontend or middleware
-
-  if (!schoolId || !academicYearId) {
-    throw new ApiError(400, "schoolId and academicYearId are required");
+/* function generateNextRegNumber(lastNumber, academicYear) {
+  if (!lastNumber) {
+    return `REG${academicYear}-0001`;
   }
 
-  // Get next reg number
-  const nextRegNumber = await generateNextRegNumber(schoolId, academicYearId, Student);
+  const [prefix, num] = lastNumber.split("-");
+  const nextNum = String(parseInt(num, 10) + 1).padStart(4, "0");
+  return `${prefix}-${nextNum}`;
+} */
 
-  // Get last student name for info
-  const lastStudent = await Student.findOne({ schoolId, academicYearId })
-    .sort({ createdAt: -1 })
-    .populate("userId", "name");
+// ✅ Get last student & generate next reg no
+const getLastRegisteredStudent = async (req, res, next) => {
+  try {
+    const { schoolId, academicYearId } = req.query;
 
-  res.status(200).json({
-    registrationNumber: nextRegNumber,
-    studentName: lastStudent?.userId?.name || "",
-  });
-});
+    if (!schoolId || !academicYearId) {
+      throw new ApiError(400, "schoolId and academicYearId are required");
+    }
+
+    // 🔹 Get last student (optional)
+    const lastStudent = await Student.findOne({
+      schoolId: new mongoose.Types.ObjectId(schoolId),
+      academicYearId: new mongoose.Types.ObjectId(academicYearId),
+    })
+      .sort({ createdAt: -1 })
+      .select("registrationNumber studentName");
+
+    // 🔹 Generate next registration number
+    const nextRegNo = await generateNextRegNumber(schoolId, academicYearId);
+
+    return res.json(
+      new ApiResponse(200, {
+        registrationNumber: nextRegNo,
+        lastStudent: lastStudent
+          ? {
+              name: lastStudent.studentName,
+              registrationNumber: lastStudent.registrationNumber,
+            }
+          : null,
+      })
+    );
+  } catch (err) {
+    next(err);
+  }
+};
 
 export {
   registerStudent,

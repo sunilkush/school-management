@@ -6,6 +6,7 @@ import { createClassSection } from "../../features/classes/classSectionSlice";
 import { fetchAllUser } from "../../features/auth/authSlice";
 import { fetchAllSubjects } from "../../features/subject/subjectSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYear/academicYearSlice";
+import { Trash, Trash2 } from "lucide-react";
 
 const ClassSectionForm = ({ onSuccess, initialData }) => {
   const dispatch = useDispatch();
@@ -92,13 +93,14 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <h3>Create Class</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Class */}
         <div>
-          <label className="block text-xs font-semibold">Class</label>
+          <label className="block text-xs  text-gray-500">Class</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded px-2 py-1 text-sm"
             value={classId}
             onChange={(e) => setClassId(e.target.value)}
             required
@@ -112,9 +114,9 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
 
         {/* Section */}
         <div>
-          <label className="block text-xs font-semibold">Section</label>
+          <label className="block text-xs  text-gray-500">Section</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded px-2 py-1 text-sm"
             value={sectionId}
             onChange={(e) => setSectionId(e.target.value)}
             required
@@ -128,9 +130,9 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
 
         {/* Academic Year */}
         <div>
-          <label className="block text-xs font-semibold">Academic Year</label>
+          <label className="block text-xs  text-gray-500">Academic Year</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded px-2 py-1 text-sm"
             value={academicYearId}
             onChange={(e) => setAcademicYearId(e.target.value)}
             required
@@ -144,9 +146,9 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
 
         {/* Class Teacher */}
         <div>
-          <label className="block text-xs font-semibold">Class Teacher</label>
+          <label className="block text-xs  text-gray-500">Class Teacher</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded px-2 py-1 text-sm"
             value={classTeacherId}
             onChange={(e) => setClassTeacherId(e.target.value)}
             required
@@ -162,13 +164,13 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
       </div>
 
       {/* Subject-Teacher mappings */}
-      <div className="space-y-2 mt-4">
+      <div className="my-4">
         {subjectMappings.map((mapping, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end space-y-2 mb-2">
             <div>
-              <label className="block text-xs font-semibold">Subject</label>
+              <label className="block text-xs  text-gray-500">Subject</label>
               <select
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 text-sm"
                 value={mapping.subjectId}
                 onChange={(e) => handleMappingChange(index, "subjectId", e.target.value)}
                 required
@@ -181,9 +183,9 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold">Teacher</label>
+              <label className="block text-xs  text-gray-500" >Teacher</label>
               <select
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 text-sm"
                 value={mapping.teacherId}
                 onChange={(e) => handleMappingChange(index, "teacherId", e.target.value)}
                 required
@@ -197,15 +199,14 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
               </select>
             </div>
 
-            <div>
+            <div className="w-50">
               {index > 0 && (
                 <button
                   type="button"
-                  className="bg-red-500 text-white px-2 py-1 rounded"
+                
                   onClick={() => handleRemoveMapping(index)}
                 >
-                  Remove
-                </button>
+                  <Trash2 className="text-red-500"/>               </button>
               )}
             </div>
           </div>
@@ -213,19 +214,20 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
 
         <button
           type="button"
-          className="bg-green-600 text-white px-3 py-1 rounded mt-2"
+          className=" text-blue-600 text-xs"
           onClick={handleAddMapping}
         >
-          Add Subject
+          + Add Subject
         </button>
+       
       </div>
-
-      <button
+        <button
         type="submit"
-        className="bg-purple-600 text-white px-3 py-1 rounded mt-4"
+        className="bg-blue-600 text-white px-3 py-2 rounded  text-sm float-end"
       >
         Map Class & Section
       </button>
+     
     </form>
   );
 };

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastStudent, createStudent } from "../../features/students/studentSlice";
-import { generateNextRegNumber } from "../../utils/genreateRegisterNo";
-import { fetchAllClasses } from "../../features/classes/classSlice";
+
+import { fetchClassSections } from "../../features/classes/classSectionSlice";
 
 
 const Tab = ({ label, isActive, onClick }) => (
@@ -20,11 +20,11 @@ const Tab = ({ label, isActive, onClick }) => (
 const AdmissionForm = () => {
 
   const [activeTab, setActiveTab] = useState("Student Info");
-  const { lastStudent, loading } = useSelector((state) => state.students);
-  
+  const { lastStudent } = useSelector((state) => state.students);
+
   const { user } = useSelector((state) => state.auth);
-   const schoolId = user?.school?._id
-  const classes = useSelector((state) => state.class?.classList || []);
+  const schoolId = user?.school?._id
+  const { mappings = [], } = useSelector((state) => state.classSection || {});
   const selectAcademicYear = localStorage.getItem("selectedAcademicYear");
   const academicYearObj = selectAcademicYear ? JSON.parse(selectAcademicYear) : null;
   const academicYearId = academicYearObj?._id || "";
@@ -61,7 +61,7 @@ const AdmissionForm = () => {
     address: "",
 
     fatherName: "",
-    fatherNationalId: "",
+    fatherNID: "",
     fatherOccupation: "",
     fatherEducation: "",
     fatherMobile: "",
@@ -69,7 +69,7 @@ const AdmissionForm = () => {
     fatherIncome: 0,
 
     motherName: "",
-    motherNationalId: "",
+    motherNID: "",
     motherOccupation: "",
     motherEducation: "",
     motherMobile: "",
@@ -78,36 +78,38 @@ const AdmissionForm = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchLastStudent({schoolId,academicYearId}));
-    dispatch(fetchAllClasses({schoolId}));
-  }, [dispatch,schoolId,academicYearId]);
+    if (schoolId && academicYearId) {
+      dispatch(fetchLastStudent({ schoolId, academicYearId }));
+    }
+    if (schoolId) {
+      dispatch(fetchClassSections({ schoolId }));
+    }
+  }, [dispatch, schoolId, academicYearId]);
+
   useEffect(() => {
-    
-    if (lastStudent) {
-      
-      const nextReg = generateNextRegNumber(lastStudent.registrationNumber); // your util
-     
+    if (lastStudent?.registrationNumber) {
       setFormData((prev) => ({
         ...prev,
-        registrationNumber: nextReg,
-        role: "student",
-      }));
-    } else if (!loading) {
-      // first student
-      setFormData((prev) => ({
-        ...prev,
-        registrationNumber: "REG2025-101",
+        registrationNumber: lastStudent.registrationNumber,
         role: "student",
       }));
     }
-  }, [lastStudent, loading]);
+  }, [lastStudent]);
 
   const handleChange = (e) => {
+    
     const { name, value, files } = e.target;
     setFormData({
       ...formData,
       [name]: files ? files[0] : value,
     });
+    if (name === "classId") {
+  const [classId, sectionId] = value.split("|");
+  setFormData((prev) => ({ ...prev, classId, section: sectionId }));
+}else {
+      setFormData((prev) => ({ ...prev, [name]: files ? files[0] : value }));
+    }
+    
   };
 
   const handleSubmit = (e) => {
@@ -118,9 +120,9 @@ const AdmissionForm = () => {
       data.append(key, value);
     });
 
-    const studentData = Object.fromEntries(data); // only on submit
-    console.log(studentData)
-    dispatch(createStudent(studentData))
+    const studentData = Object.fromEntries(data);
+    dispatch(createStudent(studentData));
+    dispatch(fetchLastStudent({ schoolId, academicYearId })); // get next reg no
   };
 
   const inputClass =
@@ -216,11 +218,12 @@ const AdmissionForm = () => {
                 required
               >
                 <option value="">Select Class</option>
-                {classes && classes.length > 0 ? (
-                  classes.map((cls) => (
-                    <option key={cls._id} value={cls._id}>
-                      {cls.name} - {cls.section}   {/* ✅ shows "1st - A" */}
-                    </option>
+                {console.log(mappings)}
+                {mappings && mappings.length > 0 ? (
+                  mappings.map((cls) => (
+                    <option key={cls._id} value={`${cls.class._id}|${cls.section._id}`}>
+                    {cls.class.name} - {cls.section.name}
+                  </option>
                   ))
                 ) : (
                   <option disabled>No Classes Available</option>
@@ -229,13 +232,23 @@ const AdmissionForm = () => {
             </div>
             <div>
               <label className={labelClass}>Registration No.</label>
+
               <input
                 name="registrationNumber"
-                value={formData.registrationNumber}
+                value={formData.registrationNumber || ""}
                 disabled
                 className={`${inputClass} bg-gray-100`}
               />
+
+
+              {lastStudent && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Last Student:({lastStudent?.lastStudent?.registrationNumber})
+                   
+                  </p>
+                )}
             </div>
+
             <div>
               <label className={labelClass}>Admission Date</label>
               <input
@@ -466,9 +479,9 @@ const AdmissionForm = () => {
             <div>
               <label className={labelClass}>National ID</label>
               <input
-                name="fatherNID"
+                name="fatherNationalId"
                 placeholder="Father National ID"
-                value={formData.fatherNID}
+                value={formData.fatherNationalId}
                 onChange={handleChange}
                 className={inputClass}
               />
@@ -541,9 +554,9 @@ const AdmissionForm = () => {
             <div>
               <label className={labelClass}>National ID</label>
               <input
-                name="motherNID"
+                name="motherNationalId"
                 placeholder="Mother National ID"
-                value={formData.motherNID}
+                value={formData.motherNationalId}
                 onChange={handleChange}
                 className={inputClass}
               />

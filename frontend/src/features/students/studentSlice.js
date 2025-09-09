@@ -5,28 +5,20 @@ import { toast } from "react-toastify";
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
 // fetch last student
+// ✅ Fetch last student (backend auto-generates next reg number)
 export const fetchLastStudent = createAsyncThunk(
-  "student/fetchLastStudent",
+  "students/fetchLastStudent",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
-      if (!token) throw new Error("No access token found");
-
-      const res = await axios.get(`${Api_Base_Url}/student/register/last`, {
-        params: { schoolId, academicYearId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      return res.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch last registered student"
+      const res = await axios.get(
+        `${Api_Base_Url}/student/last?schoolId=${schoolId}&academicYearId=${academicYearId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      // ✅ Only return actual student data
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
@@ -106,13 +98,12 @@ const studentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchLastStudent.fulfilled, (state, action) => {
-        state.loading = false;
-        state.lastStudent = action.payload;
-      })
+  state.loading = false;
+  state.lastStudent = action.payload || null;  // ✅ no .data here
+})
       .addCase(fetchLastStudent.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch last student";
-        toast.error(state.error);
+        state.error = action.payload;
       })
 
       // create student

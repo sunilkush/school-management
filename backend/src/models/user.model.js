@@ -45,42 +45,7 @@ const userSchema = new Schema({
      accessToken: {
         type: String
     },
-    mobileNo:{
-        type:String,
-        required: true,
-    },
-    monthlySalary:{
-        type:String,
-        required: true,
-    },
-    fatherName:{
-         type:String,
-    },
-    gender:{
-        type:String,
-        enum:["Male","Female","Other"]
-    },
-    exprience:{
-       type:String,
-    },
-    nationalId:{
-         type:String,
-    },
-    religion:{
-        type:String,
-    },
-    education:{
-         type:String,
-    },
-    bloodGroup:{
-        type:String,
-    },
-    dateOfBirth:{
-        type:String,
-    },
-    address:{
-         type:String,
-    }
+    
 
     
 }, { timestamps: true }

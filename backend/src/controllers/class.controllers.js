@@ -10,26 +10,28 @@ const createClass = asyncHandler(async (req, res) => {
   if (!name || !schoolId || !academicYearId) {
     throw new ApiError(400, "Name, School ID and Academic Year are required");
   }
-
+ // ✅ Fix schoolId if nested
+const fixedSchoolId = schoolId?.schoolId || schoolId;
+const fixedAcademicYearId = academicYearId?.academicYearId || academicYearId;
   // Duplicate check (unique per school + academic year + name)
-  const existingClass = await Class.findOne({
-    schoolId,
-    academicYearId,
-    name: name.toLowerCase(),
-  });
+ const existingClass = await Class.findOne({
+  schoolId: fixedSchoolId,
+  academicYearId: fixedAcademicYearId,
+  name: name.toLowerCase(),
+});
 
   if (existingClass) {
     throw new ApiError(400, "Class with same name already exists in this school for this academic year");
   }
 
-  const newClass = new Class({
-    schoolId,
-    academicYearId, // ✅ now included
-    name: name.toLowerCase(),
-    teacherId,
-    students,
-    subjects,
-  });
+const newClass = new Class({
+  schoolId: fixedSchoolId,
+  academicYearId: fixedAcademicYearId,
+  name: name.toLowerCase(),
+  teacherId,
+  students,
+  subjects,
+});
 
   const savedClass = await newClass.save();
 
