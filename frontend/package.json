@@ -40,6 +40,7 @@
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.4",
     "redux-persist": "^6.0.0",
+    "reshaped": "^3.7.4",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

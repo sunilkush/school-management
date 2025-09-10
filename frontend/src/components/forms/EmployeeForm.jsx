@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { createEmployee, fetchEmployees } from "../../features/employee/employeeSlice";
-import { fetchClasses } from "../../features/classes/classSlice";
-
+import { useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 const EmployeeForm = () => {
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const { classes } = useSelector((state) => state.classes);
-
-  const schoolId = user?.school?._id;
+  const [searchParams] = useSearchParams();
+  const employeeId = searchParams.get("id"); // ✅ capture ?id from URL
+  console.log("Employee ID from URL:", employeeId);
+  const { user: loggedInUser } = useSelector((state) => state.auth);
+  const schoolId = loggedInUser?.school?._id;
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -31,14 +29,24 @@ const EmployeeForm = () => {
     basicPay: 0,
     allowances: 0,
     deductions: 0,
-    assignedClasses: [], // [{ classId, subjects: [], schedule: [] }]
+    assignedClasses: [],
     notes: "",
   });
 
+  // Placeholder for class list (replace with Redux/API call later)
+  const classes = [
+    { _id: "class1", name: "Class 1" },
+    { _id: "class2", name: "Class 2" },
+  ];
+
+  // ✅ If editing existing employee, fetch details
   useEffect(() => {
-    if (schoolId) dispatch(fetchClasses({ schoolId }));
-    dispatch(fetchEmployees({ schoolId }));
-  }, [dispatch, schoolId]);
+    if (employeeId) {
+      console.log("Fetch employee details for:", employeeId);
+      // dispatch(fetchEmployeeById(employeeId)) or axios.get(`/api/employees/${employeeId}`)
+      // then setFormData(response.data)
+    }
+  }, [employeeId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,13 +70,15 @@ const EmployeeForm = () => {
   const addClassAssign = () => {
     setFormData((prev) => ({
       ...prev,
-      assignedClasses: [...prev.assignedClasses, { classId: "", subjects: [], schedule: [] }],
+      assignedClasses: [
+        ...prev.assignedClasses,
+        { classId: "", subjects: [], schedule: [] },
+      ],
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // prepare payload
     const payload = {
       ...formData,
       schoolId,
@@ -78,8 +88,16 @@ const EmployeeForm = () => {
         deductions: formData.deductions,
       },
     };
-    dispatch(createEmployee(payload));
-    // reset form
+    console.log("Submit payload:", payload);
+
+    // API call: if employeeId → update, else → create new
+    if (employeeId) {
+      console.log("Update existing employee:", employeeId);
+    } else {
+      console.log("Create new employee");
+    }
+
+    // reset form after save (optional)
     setFormData({
       fullName: "",
       phoneNo: "",
@@ -102,8 +120,8 @@ const EmployeeForm = () => {
 
   const inputClass =
     "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm";
-
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+
 
   return (
     <div className="max-w-5xl mx-auto bg-white shadow-md rounded-lg p-6 mt-6">

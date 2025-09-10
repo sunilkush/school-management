@@ -69,6 +69,7 @@ import ExamLive from './pages/ExamLive.jsx';
 import AttemptReview from './pages/AttemptReview.jsx';
 import ClassSectionFrom from './pages/classSectionFrom.jsx';
 import ClassSectionList from './pages/classSectionList.jsx';
+import EmployeeForm from './components/forms/EmployeeForm.jsx';
 
 const router = createBrowserRouter([
   {
@@ -154,7 +155,8 @@ const router = createBrowserRouter([
               { path: "studentList", element: <StudentList /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
-              { path: "exams/create-exam", element: <CreateExam /> }
+              { path: "exams/create-exam", element: <CreateExam /> },
+              { path: "users/employee-from", element: <EmployeeForm /> },
 
             ],
           },

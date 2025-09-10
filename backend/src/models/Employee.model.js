@@ -1,140 +1,120 @@
 import mongoose, { Schema } from "mongoose";
 
-const employeeSchema = new Schema({
-  // Link to user account
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
+const employeeSchema = new Schema(
+  {
+    // Link to User account
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
-  // Multi-school support
-  schoolId: {
-    type: Schema.Types.ObjectId,
-    ref: "School",
-    required: true
-  },
+    // Multi-school support
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+    },
 
-  // Basic Info
-  fullName: {
-    type: String,
-    required: true
-  },
-  phoneNo: {
-    type: String,
-    required: true
-  },
-  gender: {
-    type: String,
-    enum: ["Male", "Female", "Other"],
-    required: true
-  },
-  dateOfBirth: {
-    type: Date,
-    required: true
-  },
-  education: {
-    type: String
-  },
-  experience: {
-    type: String
-  },
-  // Address
-  address: {
-    street: {
-      type: String
+    // Contact Info
+    phoneNo: {
+      type: String,
+      required: true,
     },
-    city: {
-      type: String
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other"],
+      required: true,
     },
-    state: {
-      type: String
+    dateOfBirth: {
+      type: Date,
+      required: true,
     },
-    zipCode: {
-      type: String
-    },
-    country: {
-      type: String
-    },
-  },
 
-  // Job Details
-  department: {
-    type: String,
-    required: true,
-    lowercase: true
-  },
-  designation: {
-    type: String,
-    required: true,
-    lowercase: true
-  },
-  employmentType: {
-    type: String,
-    enum: ["Full-Time", "Part-Time", "Contract"],
-    required: true
-  },
-  joinDate: {
-    type: Date,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ["Active", "Inactive"],
-    default: "Active"
-  },
+    // Qualification & Experience
+    education: {
+      type: String,
+    },
+    experience: {
+      type: String,
+    },
 
-  // Salary
-  salary: {
-    basicPay: {
-      type: Number,
-      required: true
+    // Address
+    address: {
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      country: { type: String },
     },
-    allowances: {
-      type: Number,
-      default: 0
-    },
-    deductions: {
-      type: Number,
-      default: 0
-    },
-    netSalary: {
-      type: Number,
-      default: 0
-    }, // will be calculated in pre-save hook
-  },
 
-  // Teacher-specific fields
-  assignedClasses: [
-    {
-      classId: {
-        type: Schema.Types.ObjectId,
-        ref: "Class"
-      },
-      subjects: [
-        { type: String }
-      ], // multiple subjects if needed
-      schedule: [
-        {
-          day: {
-            type: String,
-            enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-          },
-          startTime: {
-            type: String
-          },
-          endTime: {
-            type: String
-          },
+    // Job Details
+    department: {
+      type: String,
+      required: true,
+      lowercase: true,
+    },
+    designation: {
+      type: String,
+      required: true,
+      lowercase: true,
+    },
+    employmentType: {
+      type: String,
+      enum: ["Full-Time", "Part-Time", "Contract"],
+      required: true,
+    },
+    joinDate: {
+      type: Date,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
+
+    // Salary
+    salary: {
+      basicPay: { type: Number, required: true },
+      allowances: { type: Number, default: 0 },
+      deductions: { type: Number, default: 0 },
+      netSalary: { type: Number, default: 0 }, // auto-calculated
+    },
+
+    // Teacher-specific fields
+    assignedClasses: [
+      {
+        classId: {
+          type: Schema.Types.ObjectId,
+          ref: "Class",
         },
-      ],
-    },
-  ],
+        subjects: [{ type: String }],
+        schedule: [
+          {
+            day: {
+              type: String,
+              enum: [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+              ],
+            },
+            startTime: { type: String },
+            endTime: { type: String },
+          },
+        ],
+      },
+    ],
 
-  // Optional notes / extra info
-  notes: { type: String },
-
-}, { timestamps: true });
+    // Extra info
+    notes: { type: String },
+  },
+  { timestamps: true }
+);
 
 /**
  * Pre-save hook to calculate net salary
