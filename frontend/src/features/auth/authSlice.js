@@ -46,8 +46,8 @@ export const fetchAllUser = createAsyncThunk(
   "users/fetchUsers",
   async (schoolId, { rejectWithValue }) => {
     try {
-   
-       const token = localStorage.getItem('accessToken');
+
+      const token = localStorage.getItem('accessToken');
       // agar schoolId diya ho to query me bhejo
       const url = schoolId
         ? `${Api_Base_Url}/user/all?schoolId=${schoolId}`
@@ -58,7 +58,7 @@ export const fetchAllUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       return response.data.data; // ✅ ApiResponse ke andar data hota hai
     } catch (error) {
       return rejectWithValue(
@@ -142,6 +142,28 @@ export const currentUser = createAsyncThunk(
   }
 );
 
+export const getUserById = createAsyncThunk(
+  "auth/getUser",
+  async (id, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      // ✅ using query param instead of path param
+      const res = await axios.get(`${Api_Base_Url}/user/single/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+
+      return res.data.data; // returning only the user object
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch user"
+      );
+    }
+  }
+);
+
 // Slice
 const authSlice = createSlice({
   name: 'auth',
@@ -153,6 +175,7 @@ const authSlice = createSlice({
     users: [],
     success: false,
     profile: null,
+
   },
   reducers: {
     logout: (state) => {
@@ -165,9 +188,7 @@ const authSlice = createSlice({
     resetAuthState: (state) => {
       state.success = false;
       state.error = null;
-
     },
-   
   },
   extraReducers: (builder) => {
     builder
@@ -268,7 +289,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-       // Activ User
+      // Activ User
       .addCase(activeUser.pending, (state) => {
         state.loading = true;
       })
@@ -282,6 +303,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // ✅ Get User By ID
+      .addCase(getUserById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getUserById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload; // storing user in profile (you can also use state.user)
+      })
+      .addCase(getUserById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 

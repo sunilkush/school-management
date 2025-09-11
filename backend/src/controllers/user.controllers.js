@@ -23,6 +23,20 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 }
 
+// 🔹 Generate next regId school-wise
+export const generateNextRegId = async (schoolId) => {
+  const lastUser = await User.findOne({ schoolId })
+    .sort({ createdAt: -1 })
+    .select("regId");
+
+  let newId = "#000001"; // default for first user
+  if (lastUser && lastUser.regId) {
+    const lastNum = parseInt(lastUser.regId.replace("#", "")) || 0;
+    newId = "#" + String(lastNum + 1).padStart(6, "0");
+  }
+
+  return newId;
+};
 /**
  * @desc Register a new user
  * @route POST /api/auth/register
@@ -31,28 +45,28 @@ const generateAccessAndRefreshToken = async (userId) => {
 // ✅ Register User Controller
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, roleId, schoolId, classId, parentId } = req.body;
-  
+
   if (!name || !email || !password || !roleId || !schoolId) {
     throw new ApiError(400, "All required fields must be provided");
   }
-   let academicYearId = null;
-   if (roleId && schoolId) {
-    const activeAcademicYear = await AcademicYear.findOne({
-      schoolId,
-      status: "active",
-    });
 
-    if (activeAcademicYear) {
-      academicYearId = activeAcademicYear._id;
-    }
+  // ✅ Check Academic Year
+  let academicYearId = null;
+  const activeAcademicYear = await AcademicYear.findOne({
+    schoolId,
+    status: "active",
+  });
+  if (activeAcademicYear) {
+    academicYearId = activeAcademicYear._id;
   }
-  // ✅ Check if email already exists
+
+  // ✅ Email exists check
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new ApiError(400, "User already registered with this email");
   }
 
-  // ✅ Handle avatar upload if provided
+  // ✅ Handle avatar
   let avatarUrl = "";
   if (
     req.files?.avatar &&
@@ -64,11 +78,8 @@ const registerUser = asyncHandler(async (req, res) => {
     avatarUrl = avatar?.url || "";
   }
 
-  // ✅ Generate Registration Number if role = student
-  let regNumber = null;
-  if (roleId === "studentRoleId") {   // 🔹 Replace "studentRoleId" with actual ObjectId or const reference
-    regNumber = await generateNextRegNumber(schoolId);
-  }
+  // ✅ Generate Registration ID (for every user, not just students)
+  const regId = await generateNextRegId(schoolId);
 
   // ✅ Create new User
   const newUser = await User.create({
@@ -80,9 +91,9 @@ const registerUser = asyncHandler(async (req, res) => {
     schoolId,
     classId,
     parentId,
-    regNumber, // ✅ only for students
+    regId,          // 🔹 auto-generated
     isActive: true,
-    academicYearId
+    academicYearId,
   });
 
   const createdUser = await User.findById(newUser._id).select(
@@ -406,6 +417,89 @@ const activeUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, 'User activated successfully'))
 })
 
+const getUserById = asyncHandler(async (req, res) => {
+    const { id } = req.params // using query ?id=
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Valid User ID is required");
+  }
+
+  const user = await User.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+
+    // Join Role
+    {
+      $lookup: {
+        from: "roles",
+        localField: "roleId",
+        foreignField: "_id",
+        as: "role",
+      },
+    },
+    { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+
+    // Join School
+    {
+      $lookup: {
+        from: "schools",
+        localField: "schoolId",
+        foreignField: "_id",
+        as: "school",
+      },
+    },
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+
+    // Join Academic Year
+    {
+      $lookup: {
+        from: "academicyears",
+        localField: "academicYearId",
+        foreignField: "_id",
+        as: "academicYear",
+      },
+    },
+    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
+
+    // Projection
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        email: 1,
+        avatar: 1,
+        isActive: 1,
+        regId: 1,
+
+        role: {
+          _id: "$role._id",
+          name: "$role.name",
+          permissions: "$role.permissions",
+        },
+        school: {
+          _id: "$school._id",
+          name: "$school.name",
+        },
+        academicYear: {
+          _id: "$academicYear._id",
+          name: "$academicYear.name",
+          startDate: "$academicYear.startDate",
+          endDate: "$academicYear.endDate",
+          isActive: "$academicYear.isActive",
+        },
+      },
+    },
+  ]);
+
+  if (!user || user.length === 0) {
+    throw new ApiError(404, "User not found!");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user[0], "User fetched successfully!"));
+});
+
+
 export {
   registerUser,
   loginUser,
@@ -416,4 +510,5 @@ export {
   getAllUsers,
   deleteUser,
   activeUser,
+  getUserById
 }

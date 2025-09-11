@@ -1,15 +1,24 @@
-import { EllipsisVertical,MailPlus,User,CalendarCheck,ClipboardList,MessageCircleMore,Settings,FolderClosed, ChevronRight, PencilLine } from 'lucide-react';
-import { useState } from 'react';
+import { EllipsisVertical, MailPlus, User, CalendarCheck, ClipboardList, MessageCircleMore, Settings, FolderClosed, ChevronRight, PencilLine } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import userProfile from '../../assets/userProfile.png';
 import AttendanceCalendar from '../../pages/AttendanceCalendar';
 import { useSearchParams } from "react-router-dom";
-
+import { useDispatch, useSelector } from "react-redux";
+import { getUserById } from '../../features/auth/authSlice';
 const EmployeeForm = () => {
+
+   const dispatch = useDispatch();
+  const { profile, loading } = useSelector((state) => state.auth); // ✅ add loading if reducer supports it
   const [searchParams] = useSearchParams();
   const employeeId = searchParams.get("id"); // ✅ capture ?id from URL
-  console.log("Employee ID from URL:", employeeId);
 
-   const [activeTab, setActiveTab] = useState('Profile');
+  const [activeTab, setActiveTab] = useState("Profile");
+
+  useEffect(() => {
+    if (employeeId) {
+      dispatch(getUserById(employeeId));
+    }
+  }, [dispatch, employeeId]);
   return (
     <>
      
@@ -20,14 +29,14 @@ const EmployeeForm = () => {
             <div className='flex items-center space-x-4  flex-col md:flex-row lg:flex-row mb-4 md:mb-0 lg:mb-0'>
               <div>
                 <img
-                  src={userProfile}
+                   src={profile?.avatar || userProfile}
                   alt="User Profile"
                   className="w-16 h-16 rounded-full object-cover" />
               </div>
 
               <div>
-                <h3 className='text-lg  font-medium'>Sumit Kumar</h3>
-                <p className='text-xs text-white text-center bg-green-600 rounded-full  px-2 inline-block'>Active</p>
+                <h3 className='text-lg  font-medium capitalize'>{profile?.name || "N/A"}</h3>
+                <p className='text-xs text-center bg-green-100 text-green-900 rounded-full  px-3 py-1 inline-block'>{profile?.isActive ? "Active" : "Inactive"}</p>
               </div>
             </div>
             <div className='ml-auto flex items-center space-x-5 border-l px-3'>
@@ -41,7 +50,7 @@ const EmployeeForm = () => {
               </div>
               <div>
                 <p className='text-xs text-gray-500'>Employee ID</p>
-                <p className='text-sm text-gray-800'>#123456</p>
+                <p className='text-sm text-gray-800'>{profile?.regId || "NA"}</p>
 
               </div>
             </div>
@@ -114,7 +123,7 @@ const EmployeeForm = () => {
               <h3 className='text-lg font-medium'>Personal Information</h3>
               <a href='#' className='flex items-center border px-2 py-1 rounded-lg text-sm'> <PencilLine className='w-4'/> Edit</a>
               </div>
-             <div className='grid grid-cols-2 gap-5 mt-3'>
+             <div className='grid grid-cols-2 md:grid-cols-3 gap-5 mt-3'>
               
               <div>
                 <p className='text-xs text-gray-500'>Gender</p>
@@ -195,11 +204,11 @@ const EmployeeForm = () => {
               </div>
               <h4 className='text-sm font-medium my-2'>Personal Contact </h4>
                <div className=' grid grid-cols-2   gap-5 mt-3'>
-                <div className='col-span-2 md:col-span-1'>
+                <div className='col-span-2 '>
                   <p className='text-xs text-gray-500'>Phone</p>
                   <p className='text-sm text-blue-800 bg-gray-100 rounded-full inline-block px-3 py-1'>+91-7845123265</p>
                 </div>
-                <div className='col-span-2 md:col-span-1'>
+                <div className='col-span-2 '>
                   <p className='text-xs text-gray-500'>Email</p>
                   <p className='text-sm text-blue-800 bg-gray-100 rounded-full inline-block px-3 py-1'>example@gmail.com</p>
                 </div>

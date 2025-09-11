@@ -8,7 +8,8 @@ import {
             logoutUser, 
             getAllUsers,
             deleteUser,
-            activeUser
+            activeUser,
+            getUserById
 } from "../controllers/user.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
@@ -32,7 +33,8 @@ router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPas
 router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);
 router.get("/all", auth, roleMiddleware(ADMIN_ROLE), getAllUsers);
 router.patch("/delete/:id", auth, roleMiddleware(ADMIN_ROLE), deleteUser);
-router.patch("/active/:id",auth,roleMiddleware(ADMIN_ROLE),activeUser)
+router.patch("/active/:id",auth,roleMiddleware(ADMIN_ROLE),activeUser);
+router.get("/single/:id", auth, roleMiddleware(ALL_USERS),getUserById)
 
 
 export default router;
