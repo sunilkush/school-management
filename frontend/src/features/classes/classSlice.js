@@ -27,18 +27,20 @@ export const createClass = createAsyncThunk(
 
 export const fetchAllClasses = createAsyncThunk(
   "class/fetchAllClasses",
-  async (schoolId, { rejectWithValue }) => {
+  async (payload, { rejectWithValue, signal }) => {
     try {
+      const { schoolId, academicYearId } = payload || {}; // ✅ safe destructuring
       const token = localStorage.getItem("accessToken");
 
       const res = await axios.get(`${Api_Base_Url}/class/all`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { schoolId }, // ✅ correct: schoolId as string
+        params: { schoolId, academicYearId },
+        signal, // ✅ axios v1+ supports signal (for cancellation)
       });
 
-      return res.data; 
+      return res.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message);
+      return rejectWithValue(error?.response?.data?.message || "Failed to fetch classes");
     }
   }
 );

@@ -1,137 +1,102 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { User } from "../models/user.model.js";
 import { Employee } from "../models/Employee.model.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
-// ✅ Create Employee
-const createEmployee = asyncHandler(async (req, res) => {
-    const { name, email, password, role, schoolId, phoneNo, gender, dateOfBirth, address, department, designation, joinDate,
-        employmentType, salary, assignedClasses, status } = req.body;
+// Create Employee
+export const createEmployee = asyncHandler(async (req, res) => {
+  const data = req.body;
 
-    if ([name, email, password, role, schoolId, phoneNo, gender, dateOfBirth, address, department, designation, joinDate,
-        employmentType, salary, assignedClasses, status].some((field) => typeof field === "string" && field.trim() === "" || field == null)) {
-        throw new ApiError(400, "All fields are required!");
-    }
+  if (!data.userId || !data.schoolId || !data.academicYearId) {
+    throw new ApiError(400, "userId, schoolId, academicYearId are required");
+  }
 
-    const existingUser = await User.findOne({ email });
+  const employee = await Employee.create(data);
 
-    if (existingUser) {
-        throw new ApiError(400, "User already registered!");
-    }
-
-    const newUser = await User.create({
-        name, email, password, role, schoolId
-    });
-
-    if (!newUser) {
-        throw new ApiError(400, "User creation failed!");
-    }
-
-    const createdUser = await User.findById(newUser._id).select("-password -refreshToken");
-
-    const employee = await Employee.create({
-        userId: createdUser._id,
-        phoneNo, gender, dateOfBirth, address, department, designation, joinDate,
-        employmentType, salary, assignedClasses, status
-    });
-
-    if (!employee) {
-        throw new ApiError(404, "Employee creation failed!");
-    }
-
-    return res.status(201).json(
-        new ApiResponse(201, { createdUser, employee }, "Employee created successfully!")
-    );
+  return res
+    .status(201)
+    .json(new ApiResponse(201, employee, "Employee created successfully"));
 });
 
-// ✅ Get All Employees with Pagination, Filtering, and Sorting
-const getEmployees = asyncHandler(async (req, res) => {
-    try {
-        const { page = 1, limit = 10, search, sortBy = "createdAt", order = "desc", department, status } = req.query;
+// Get All Employees with filter & pagination
+export const getAllEmployees = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    schoolId,
+    academicYearId,
+    employeeType,
+    isActive,
+  } = req.query;
 
-        const query = {};
-        if (search) {
-            query.$or = [
-                { phoneNo: { $regex: search, $options: "i" } },
-                { department: { $regex: search, $options: "i" } },
-                { designation: { $regex: search, $options: "i" } }
-            ];
-        }
-        if (department) query.department = department;
-        if (status) query.status = status;
+  const query = {};
+  if (schoolId) query.schoolId = schoolId;
+  if (academicYearId) query.academicYearId = academicYearId;
+  if (employeeType) query.employeeType = employeeType;
+  if (isActive !== undefined) query.isActive = isActive;
 
-        const employees = await Employee.find(query)
-            .sort({ [sortBy]: order === "desc" ? -1 : 1 })
-            .skip((page - 1) * limit)
-            .limit(parseInt(limit))
-            .populate("userId", "name email role");
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const total = await Employee.countDocuments(query);
 
-        const total = await Employee.countDocuments(query);
+  const employees = await Employee.find(query)
+    .populate("userId", "email name role")
+    .populate("schoolId", "name")
+    .populate("subjects")
+    .skip(skip)
+    .limit(parseInt(limit))
+    .sort({ createdAt: -1 });
 
-        res.json(new ApiResponse(200, { total, page, employees }, "Employees retrieved successfully"));
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  return res.status(200).json(
+    new ApiResponse(200, {
+      data: employees,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit),
+    })
+  );
 });
 
-// ✅ Get Single Employee by ID
-const getEmployeeById = asyncHandler(async (req, res) => {
-    try {
-        const employee = await Employee.findById(req.params.id)
-            .populate("userId", "name email role")
-            .populate("assignedClasses.classId");
+// Get Single Employee
+export const getEmployeeById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-        if (!employee) {
-            throw new ApiError(404, "Employee not found");
-        }
+  const employee = await Employee.findById(id)
+    .populate("userId", "email name role")
+    .populate("schoolId", "name")
+    .populate("subjects");
 
-        res.json(new ApiResponse(200, employee, "Employee details retrieved successfully"));
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  if (!employee) throw new ApiError(404, "Employee not found");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, employee, "Employee fetched successfully"));
 });
 
-// ✅ Update Employee
-const updateEmployee = asyncHandler(async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updatedEmployee = await Employee.findByIdAndUpdate(id, req.body, { new: true }).populate("userId");
+// Update Employee
+export const updateEmployee = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
 
-        if (!updatedEmployee) {
-            throw new ApiError(404, "Employee not found");
-        }
+  const employee = await Employee.findByIdAndUpdate(id, updateData, {
+    new: true,
+  });
 
-        res.json(new ApiResponse(200, updatedEmployee, "Employee updated successfully"));
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
-    }
+  if (!employee) throw new ApiError(404, "Employee not found");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, employee, "Employee updated successfully"));
 });
 
-// ✅ Delete Employee
-const deleteEmployee = asyncHandler(async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        // Delete Employee
-        const deletedEmployee = await Employee.findByIdAndDelete(id);
-        if (!deletedEmployee) {
-            throw new ApiError(404, "Employee not found");
-        }
+// Delete Employee
+export const deleteEmployee = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const employee = await Employee.findByIdAndDelete(id);
 
-        // Delete Corresponding User
-        await User.findByIdAndDelete(deletedEmployee.userId);
+  if (!employee) throw new ApiError(404, "Employee not found");
 
-        res.json(new ApiResponse(200, null, "Employee deleted successfully"));
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Employee deleted successfully"));
 });
-
-export {
-    createEmployee,
-    getEmployees,
-    getEmployeeById,
-    updateEmployee,
-    deleteEmployee
-};

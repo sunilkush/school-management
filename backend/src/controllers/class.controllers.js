@@ -77,16 +77,19 @@ const deleteClass = asyncHandler(async (req, res) => {
 // ✅ Get All Classes with Pagination + Filtering + Search
 // ✅ Fetch all classes with populated sections
 const getAllClasses = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, schoolId } = req.query;
+  let { page = 1, limit = 10, schoolId, academicYearId } = req.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
   const query = {};
-
   if (schoolId) query.schoolId = schoolId;
+  if (academicYearId) query.academicYearId = academicYearId;
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (page - 1) * limit;
 
   const totalClasses = await Class.countDocuments(query);
 
-  // Agar classes hi 0 hain, to seedha empty response bhej do
   if (totalClasses === 0) {
     return res.status(200).json(
       new ApiResponse(
@@ -94,8 +97,8 @@ const getAllClasses = asyncHandler(async (req, res) => {
         {
           data: [],
           total: 0,
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page,
+          limit,
           totalPages: 0,
         },
         "No classes found"
@@ -104,18 +107,25 @@ const getAllClasses = asyncHandler(async (req, res) => {
   }
 
   const classes = await Class.find(query)
-  .populate("schoolId students")
-  .populate({
-    path: "teacherId",
-    match: { "role.name": "Teacher" }, // only teachers
-  })
-  .populate("subjects.subjectId")
-  .populate({
-    path: "subjects.teacherId",
-    match: { "role.name": "Teacher" },
-  })
-  .skip(skip)
-  .limit(parseInt(limit));
+    .populate("schoolId") // ✅ separate populate
+    .populate("students") // ✅ if students are ObjectIds
+    .populate({
+      path: "teacherId",
+      populate: {
+        path: "role", // ✅ populate role if it's ref
+        match: { name: "Teacher" }, 
+      },
+    })
+    .populate("subjects.subjectId")
+    .populate({
+      path: "subjects.teacherId",
+      populate: {
+        path: "role",
+        match: { name: "Teacher" },
+      },
+    })
+    .skip(skip)
+    .limit(limit);
 
   // ✅ Populate mapped sections for each class
   const classIds = classes.map((c) => c._id);
@@ -127,6 +137,7 @@ const getAllClasses = asyncHandler(async (req, res) => {
     const sections = classSectionMappings
       .filter((m) => String(m.classId) === String(c._id))
       .map((m) => m.sectionId);
+
     return { ...c.toObject(), sections };
   });
 
@@ -136,8 +147,8 @@ const getAllClasses = asyncHandler(async (req, res) => {
       {
         data: classesWithSections,
         total: totalClasses,
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page,
+        limit,
         totalPages: Math.ceil(totalClasses / limit),
       },
       "Classes fetched successfully"

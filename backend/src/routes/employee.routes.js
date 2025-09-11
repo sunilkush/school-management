@@ -1,5 +1,5 @@
 import express from "express";
-import { createEmployee, getEmployees, getEmployeeById, updateEmployee, deleteEmployee } from "../controllers/employee.controllers.js";
+import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee } from "../controllers/employee.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -12,7 +12,7 @@ const EMPLOYEE_ROLES = ["admin", "superadmin", "employee"];
 router.post("/", auth, roleMiddleware(ADMIN_ROLES), createEmployee);
 
 // ✅ Get All Employees (Admins & Employees Can View)
-router.get("/allEmployee", auth, roleMiddleware(EMPLOYEE_ROLES), getEmployees);
+router.get("/allEmployee", auth, roleMiddleware(EMPLOYEE_ROLES), getAllEmployees);
 
 // ✅ Get Employee by ID (Admins & Employees Can View)
 router.get("/getEmployee/:id", auth, roleMiddleware(EMPLOYEE_ROLES), getEmployeeById);
