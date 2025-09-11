@@ -11,7 +11,6 @@ const EmployeeForm = () => {
   const schoolId = loggedInUser?.school?._id;
 
   const [formData, setFormData] = useState({
-    fullName: "",
     phoneNo: "",
     gender: "",
     dateOfBirth: "",
@@ -95,70 +94,11 @@ const EmployeeForm = () => {
 
   return (
     <div className="max-full mx-auto bg-white shadow-md rounded-lg p-6 mt-1">
-      <h1 className="text-xl md:text-2xl font-bold mb-6">
-        Employee Details
-      </h1>
+      <h1 className="text-xl md:text-2xl font-bold mb-6">Employee Details</h1>
 
       {/* Split Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar */}
-        <div>
-          <h2 className="text-lg font-semibold mb-2">Personal Information</h2>
-          <p>Fill in the employee's basic details below.</p>
-           <form className="grid grid-cols-1 md:grid-cols-1 gap-4">
-        {/* Full Name */}
-        <div>
-          <label className={labelClass}>
-            Full Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Enter full name"
-            className={inputClass}
-          />
-        </div>
-
-        
-
-        
-
-        {/* Role */}
-        <div>
-         <label className={labelClass}>
-            Role <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="tel"
-            placeholder="Enter Role"
-             className={inputClass}
-          />
-        </div>
-
-        {/* Email */}
-        <div>
-           <label className={labelClass}>
-            Email <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            placeholder="Enter email address"
-            className={inputClass}
-          />
-        </div>
-
-        {/* Address */}
-        <div >
-          <label className={labelClass}>
-            Avatar <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            rows="3"
-            placeholder="Enter full address"
-           className={inputClass}
-          ></textarea>
-        </div>
-      </form>
-        </div>
 
         {/* Form Section */}
         <div className="lg:col-span-3">
@@ -170,6 +110,42 @@ const EmployeeForm = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className={labelClass}>
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter full name"
+                  className={inputClass}
+                  
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <label className={labelClass}>
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Enter Role"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className={labelClass}>
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="Enter email address"
+                  className={inputClass}
+                />
+              </div>
+
               <div>
                 <label className={labelClass}>Phone No</label>
                 <input
