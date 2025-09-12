@@ -10,15 +10,20 @@ const employeeSchema = new Schema(
     academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear" },
 
     // Basic Info
-   
+
     phoneNo: {
       type: String,
       required: true,
       match: [/^\+?[0-9]{10,13}$/, "Invalid phone number"],
     },
+    maritalStatus: { type: String, enum: ["Single", "Married", "Divorced", "Widowed"] },
     gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
     dateOfBirth: { type: Date },
-
+    bloodType: { type: String, enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] },
+    religion: {
+      type: String,
+      enum: ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"]
+    },
     // Address
     address: {
       street: String,
@@ -33,12 +38,14 @@ const employeeSchema = new Schema(
       type: { type: String, enum: ["Aadhar", "PAN", "Passport", "Other"] },
       number: String,
     },
-
+    citizenAddress: {
+      type: String
+    },
     // Employment
-    employeeType: { type: String, enum: ["Teacher", "Staff"], required: true },
+
     department: { type: String }, // or ObjectId ref if you want separate Department collection
     designation: { type: String }, // or ObjectId ref
-    employmentType: {
+    employeeStatus: {
       type: String,
       enum: ["Full-Time", "Part-Time", "Contract"],
     },
@@ -46,24 +53,26 @@ const employeeSchema = new Schema(
 
     // Salary
     salary: {
-      basicPay: { type: Number, default: 0 },
-      allowances: { type: Number, default: 0 },
-      deductions: { type: Number, default: 0 },
+     type: Schema.Types.ObjectId, ref: "User" ,
+     ref : "Salary",
     },
 
     // Teacher-specific fields
     qualification: String,
     experience: String,
     subjects: [{ type: Schema.Types.ObjectId, ref: "Subject" }],
-    assignedClasses: [
-      {
-        classId: { type: Schema.Types.ObjectId, ref: "Class" },
-        sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
-        subjects: [{ type: Schema.Types.ObjectId, ref: "Subject" }],
-        schedule: [{ day: String, time: String }],
-      },
-    ],
 
+    // Banking Details (Salary Credit ke liye)
+    bankDetails: {
+      accountHolder: String,
+      accountNumber: String,
+      ifscCode: String,
+      bankName: String,
+      branch: String,
+      panNumber: String,
+      pfNumber: String,
+      esiNumber: String,
+    },
     // Common
     notes: String,
     isActive: { type: Boolean, default: true },

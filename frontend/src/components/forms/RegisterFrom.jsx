@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchools } from "../../features/schools/schoolSlice";
 import { fetchRoles } from "../../features/roles/roleSlice";
-
 import {
   registerUser,
   resetAuthState,
   fetchAllUser,
 } from "../../features/auth/authSlice";
-
 
 const RegisterForm = () => {
   const [message, setMessage] = useState("");
@@ -18,73 +16,71 @@ const RegisterForm = () => {
 
   const { roles } = useSelector((state) => state.role);
   const { schools } = useSelector((state) => state.school);
-  const { isLoading, error, user, success } = useSelector((state) => state.auth);
-  
+  const { isLoading, error, user, success } = useSelector(
+    (state) => state.auth
+  );
 
   const currentUserRole = user?.role?.name?.toLowerCase();
   const currentSchoolId = user?.school?._id;
-
-  
 
   const initialForm = {
     name: "",
     email: "",
     password: "",
     roleId: "",
-    schoolId: currentUserRole !== "super admin" ? currentSchoolId : "",
+    schoolId: currentUserRole !== "super admin" ? currentSchoolId || "" : "",
     isActive: false,
     avatar: null,
-    AcademicYearId:""
-    
+    academicYearId: "", // ✅ Capitalized field fixed
   };
 
   const [formData, setFormData] = useState(initialForm);
   const [filteredRoles, setFilteredRoles] = useState([]);
 
-  // Fetch roles & schools
+  // 🔹 Fetch roles & schools on mount
   useEffect(() => {
     dispatch(fetchSchools());
     dispatch(fetchRoles());
-    
   }, [dispatch]);
-  
-  // Handle success reset
+
+  // 🔹 Handle success reset
   useEffect(() => {
     if (success) {
       setMessage("🎉 Registration successful!");
       setFormData(initialForm);
       setConfirmPassword("");
       dispatch(fetchAllUser());
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setMessage("");
         dispatch(resetAuthState());
       }, 2000);
+
+      return () => clearTimeout(timer); // ✅ cleanup
     }
   }, [success, dispatch]);
 
-  // 🔍 Dynamic role filtering
-  // Role filtering
-useEffect(() => {
-  let updatedRoles = [];
+  // 🔹 Dynamic role filtering
+  useEffect(() => {
+    let updatedRoles = [];
 
-  if (currentUserRole === "super admin") {
-    updatedRoles = roles.filter(
-      (role) =>
-        role.name.toLowerCase() === "school admin" &&
-        (role.schoolId === formData.schoolId || role.schoolId === null)
-    );
-  } else if (currentUserRole === "school admin") {
-    updatedRoles = roles.filter(
-      (role) =>
-        (role.schoolId === currentSchoolId || role.schoolId === null) &&
-        !["super admin", "school admin"].includes(role.name.toLowerCase())
-    );
-  }
+    if (currentUserRole === "super admin") {
+      updatedRoles = roles.filter(
+        (role) =>
+          role.name.toLowerCase() === "school admin" &&
+          (role.schoolId === formData.schoolId || role.schoolId === null)
+      );
+    } else if (currentUserRole === "school admin") {
+      updatedRoles = roles.filter(
+        (role) =>
+          (role.schoolId === currentSchoolId || role.schoolId === null) &&
+          !["super admin", "school admin"].includes(role.name.toLowerCase())
+      );
+    }
 
-  setFilteredRoles(updatedRoles);
-}, [roles, currentUserRole, formData.schoolId, currentSchoolId]);
+    setFilteredRoles(updatedRoles);
+  }, [roles, currentUserRole, formData.schoolId, currentSchoolId]);
 
-  // Handle input changes
+  // 🔹 Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
@@ -92,7 +88,6 @@ useEffect(() => {
       const file = files[0];
       if (file) {
         if (file.size > 1024 * 1024) {
-          // 1MB raw max (before resize)
           alert("Please upload an image under 1MB.");
           return;
         }
@@ -139,7 +134,7 @@ useEffect(() => {
     }
   };
 
-  // Handle submit
+  // 🔹 Handle submit
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.password !== confirmPassword) {
@@ -151,6 +146,7 @@ useEffect(() => {
     Object.entries(formData).forEach(([key, value]) => {
       formPayload.append(key, value);
     });
+
     dispatch(registerUser(formPayload));
   };
 

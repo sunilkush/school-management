@@ -1,15 +1,15 @@
 import express from "express";
-import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee } from "../controllers/employee.controllers.js";
+import { registerEmployee, getAllEmployees, getEmployeeById, updateEmployee, deleteEmployee } from "../controllers/employee.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 // Define allowed roles
-const ADMIN_ROLES = ["admin", "superadmin"];
-const EMPLOYEE_ROLES = ["admin", "superadmin", "employee"];
+const ADMIN_ROLES = ["School Admin", "Super Admin"];
+const EMPLOYEE_ROLES = ["School Admin", "Super Admin", "Teacher"];
 
 // ✅ Create Employee (Only Admins & Superadmins)
-router.post("/", auth, roleMiddleware(ADMIN_ROLES), createEmployee);
+router.post("/", auth, roleMiddleware(ADMIN_ROLES), registerEmployee);
 
 // ✅ Get All Employees (Admins & Employees Can View)
 router.get("/allEmployee", auth, roleMiddleware(EMPLOYEE_ROLES), getAllEmployees);
