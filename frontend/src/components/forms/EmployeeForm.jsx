@@ -83,6 +83,9 @@ const EmployeeForm = () => {
   ];
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-","RH"];
   const martialStatuses = ["Single", "Married", "Divorced", "Widowed", "Separated", "Registered Partnership"];
+  const religions = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
+  const city = ["Delhi", "Mumbai", "Bangalore", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat", "Pune", "Jaipur"];
+  const states = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -196,7 +199,7 @@ const EmployeeForm = () => {
                   <div className='bg-white p-4 rounded-lg border'>
                     <div className='flex items-center justify-between mb-3'>
                       <h3 className='text-lg font-medium'>Personal Information</h3>
-                      <a href='#' className='flex items-center border px-2 py-1 rounded-lg text-sm'> <PencilLine className='w-4' /> Edit</a>
+                      
                     </div>
                     <div className='grid grid-cols-2 md:grid-cols-3 gap-5 mt-3'>
 
@@ -240,14 +243,9 @@ const EmployeeForm = () => {
                           value={formData.religion || undefined}
                           onChange={(val) => handleChange("religion", val)}
                         >
-                          <Option value >Select</Option>
-                          <Option value={'Hindu'}>Hindu</Option>
-                          <Option value={'Muslim'}>Muslim</Option>
-                          <Option value={'Christian'}>Christian</Option>
-                          <Option value={'Sikh'}>Sikh</Option>
-                          <Option value={'Buddhist'}>Buddhist</Option>
-                          <Option value={'Jain'}>Jain</Option>
-                          <Option value={'Other'}>Other</Option>
+                          {religions.map((religion) => (
+                            <Option key={religion} value={religion}>{religion}</Option>
+                          ))}
                         </Select>
                       </div>
 
@@ -325,20 +323,20 @@ const EmployeeForm = () => {
                   <div className='bg-white p-4 rounded-lg border'>
                     <div className='flex items-center justify-between mb-3'>
                       <h3 className='text-lg font-medium'>Bank Information</h3>
-                      <a href='#' className='flex items-center border px-2 py-1 rounded-lg text-sm'> <PencilLine className='w-4' /> Edit</a>
+                      
                     </div>
                     <div className='grid grid-cols-3 gap-4'>
                       <div>
                         <p className='text-xs text-gray-800'>Account Holder</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full'  placeholder='Bank Name' />
+                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full'  placeholder='Account Holder' />
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>Account Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Bank Name' />
+                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Account Number' />
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>IFSC Code</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Bank Name' />
+                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='IFSC Code' />
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>Bank Name</p>
@@ -346,19 +344,19 @@ const EmployeeForm = () => {
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>Branch</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Bank Name' />
+                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Branch' />
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>Pan Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Bank Name' />
+                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Pan Number' />
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>PF Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Bank Name' />
+                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='PF Number' />
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>ESI Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Bank Name' />
+                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='ESI Number' />
                       </div>
 
 
@@ -369,7 +367,7 @@ const EmployeeForm = () => {
                   <div className='bg-white p-4 rounded-lg border'>
                     <div className='flex items-center justify-between mb-3'>
                       <h3 className='text-lg font-medium'>Address Information</h3>
-                      <a href='#' className='flex items-center border px-2 py-1 rounded-lg text-sm'> <PencilLine className='w-4' /> Edit</a>
+                      
                     </div>
                     <div className='grid grid-cols-2 gap-5'>
                       <div><p className='text-sm'>Parsent Address</p></div>
@@ -387,12 +385,33 @@ const EmployeeForm = () => {
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>City</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full ' placeholder='' />
+                        <Select
+                          allowClear
+                          style={{ width: "100%" }}
+                          placeholder="Select City"
+                          value={formData.city || undefined}
+                          onChange={(val) => handleChange("city", val)}
+                        >
+                        
+                          {city.map((c) => (
+                            <Option key={c} value={c}>{c}</Option>
+                          ))}
+                        </Select>
 
                       </div>
                       <div>
                         <p className='text-xs text-gray-800'>State</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='' />
+                        <Select
+                          allowClear
+                          style={{ width: "100%" }}
+                          placeholder="Select State"
+                          value={formData.state || undefined}
+                          onChange={(val) => handleChange("state", val)}
+                        > 
+                          {states.map((s) => (
+                            <Option key={s} value={s}>{s}</Option>
+                          ))}
+                        </Select> 
 
                       </div>
                       <div>
@@ -425,7 +444,7 @@ const EmployeeForm = () => {
                 <div className='bg-white p-4 rounded-lg border w-full'>
                   <div className='flex items-center justify-between mb-3'>
                     <h3 className='text-lg font-medium'>Contact Information</h3>
-                    <a href='#' className='flex items-center border px-2 py-1 rounded-lg text-sm'> <PencilLine className='w-4' /> Edit</a>
+                    
                   </div>
                   <h4 className='text-sm font-medium my-2'>Personal Contact </h4>
                   <div className=' grid grid-cols-2   gap-5 mt-3'>
@@ -446,7 +465,7 @@ const EmployeeForm = () => {
                 <div className='bg-white p-4 rounded-lg border w-full'>
                   <div className='flex items-center justify-between mb-3'>
                     <h3 className='text-lg font-medium'>Student Overview</h3>
-                    <a href='#' className='flex items-center border px-2 py-1 rounded-lg text-sm'> <PencilLine className='w-4' /> Edit</a>
+                    
                   </div>
 
                   <div className='grid grid-cols-2 gap-5 mt-3'>
