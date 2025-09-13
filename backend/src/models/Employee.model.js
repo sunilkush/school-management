@@ -7,7 +7,7 @@ const employeeSchema = new Schema(
 
     // Multi-school support
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true },
-    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear" },
+    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear", },
 
     // Basic Info
 
@@ -52,15 +52,24 @@ const employeeSchema = new Schema(
     joinDate: { type: Date },
 
     // Salary
-    salary: {
-     type: Schema.Types.ObjectId, ref: "User" ,
-     ref : "Salary",
+    salaryId: {
+      type: Schema.Types.ObjectId, ref: "User",
+      ref: "Salary",
     },
 
     // Teacher-specific fields
-    qualification: String,
+
     experience: String,
-    subjects: [{ type: Schema.Types.ObjectId, ref: "Subject" }],
+    qualification: {
+      type: [String], // array of strings
+      required: true,
+    },
+    subjects: [
+      {
+        type: Schema.Types.ObjectId, // array of ObjectId
+        ref: "Subject",
+      },
+    ],
 
     // Banking Details (Salary Credit ke liye)
     bankDetails: {

@@ -1,54 +1,66 @@
-import { EllipsisVertical, MailPlus, User, CalendarCheck, ClipboardList, MessageCircleMore, Settings, FolderClosed, ChevronRight, PencilLine } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import userProfile from '../../assets/userProfile.png';
-import AttendanceCalendar from '../../pages/AttendanceCalendar';
+import {
+  EllipsisVertical,
+  MailPlus,
+  User,
+  CalendarCheck,
+  ClipboardList,
+  MessageCircleMore,
+  Settings,
+  FolderClosed,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import userProfile from "../../assets/userProfile.png";
+import AttendanceCalendar from "../../pages/AttendanceCalendar";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getUserById } from '../../features/auth/authSlice';
-import { Select, DatePicker, Input,Button } from "antd";
+import { getUserById } from "../../features/auth/authSlice";
+import { Select, DatePicker, Input, Button, message } from "antd";
+import dayjs from "dayjs";
+import { createEmployee } from "../../features/employee/employeeSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYear/academicYearSlice";
+import { fetchAllSubjects } from "../../features/subject/subjectSlice";
+
 const { Option } = Select;
 
 const EmployeeForm = () => {
-
   const dispatch = useDispatch();
-  const { profile } = useSelector((state) => state.auth); // ✅ add loading if reducer supports it
+  const { profile } = useSelector((state) => state.auth);
+  const { activeYear } = useSelector((state) => state.academicYear);
+  const { subjectList } = useSelector((state) => state.subject);
+ const { loading, error, success, response } =
+  useSelector((state) => state.employee) || {};
+
+  const schoolId = profile?.school?._id;
+  const academicYearId = activeYear?._id;
   const [searchParams] = useSearchParams();
-  const employeeId = searchParams.get("id"); // ✅ capture ?id from URL
+  const employeeId = searchParams.get("id");
   const [activeTab, setActiveTab] = useState("Profile");
-  const [date, setDate] = useState(null);
+
   const [formData, setFormData] = useState({
-    userId: "",
-    // Multi-school support
-    schoolId: "",
-    academicYearId: "",
-    // Basic Info
+    userId: employeeId,
+    schoolId: schoolId,
+    academicYearId: academicYearId,
     phoneNo: "",
-    maritalStatus:"",
+    maritalStatus: "",
     gender: "",
     dateOfBirth: "",
     bloodType: "",
     religion: "",
-    // Address
     street: "",
     city: "",
     state: "",
     zipCode: "",
     country: "",
-    // ID Proof
     idProof: "",
-    citizenAddress: "",
-    // Employment
-    department: "", // or ObjectId ref if you want separate Department collection
-    designation: "", // or ObjectId ref
+    CitizenAddress: "",
+    department: "",
+    designation: "",
     employeeStatus: "",
     joinDate: "",
-    // Salary
     salaryId: "",
-    // Teacher-specific fields
     qualification: [],
     experience: "",
     subjects: [],
-    // Banking Details (Salary Credit ke liye)
     accountHolder: "",
     accountNumber: "",
     ifscCode: "",
@@ -57,506 +69,567 @@ const EmployeeForm = () => {
     panNumber: "",
     pfNumber: "",
     esiNumber: "",
-    // Common
     notes: "",
-    isActive: "",
   });
-
-  const subjects = [
-    { id: 1, name: "Mathematics" },
-    { id: 2, name: "Science" },
-    { id: 3, name: "English" },
-    { id: 4, name: "History" },
-    { id: 5, name: "Computer" },
-  ];
 
   const qualifications = [
     { id: 1, name: "High School / 10th" },
     { id: 2, name: "Intermediate / 12th" },
     { id: 3, name: "Diploma" },
-    { id: 4, name: "Bachelor's Degree (B.A., B.Sc., B.Com, B.Tech, BBA, BCA)" },
-    { id: 5, name: "Master's Degree (M.A., M.Sc., M.Com, M.Tech, MBA, MCA)" },
+    { id: 4, name: "Bachelor's Degree" },
+    { id: 5, name: "Master's Degree" },
     { id: 6, name: "PhD / Doctorate" },
     { id: 7, name: "ITI / Trade Course" },
-    { id: 8, name: "Professional Certification (CA, CS, CMA, PMP, etc.)" },
-    { id: 9, name: "Other" }
+    { id: 8, name: "Professional Certification" },
+    { id: 9, name: "Other" },
   ];
-  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-","RH"];
-  const martialStatuses = ["Single", "Married", "Divorced", "Widowed", "Separated", "Registered Partnership"];
-  const religions = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
-  const city = ["Delhi", "Mumbai", "Bangalore", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat", "Pune", "Jaipur"];
-  const states = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
+
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "RH"];
+  const martialStatuses = [
+    "Single",
+    "Married",
+    "Divorced",
+    "Widowed",
+    "Separated",
+    "Registered Partnership",
+  ];
+  const religions = [
+    "Hindu",
+    "Muslim",
+    "Christian",
+    "Sikh",
+    "Buddhist",
+    "Jain",
+    "Other",
+  ];
+  const cities = [
+    "Delhi",
+    "Mumbai",
+    "Bangalore",
+    "Hyderabad",
+    "Ahmedabad",
+    "Chennai",
+    "Kolkata",
+    "Surat",
+    "Pune",
+    "Jaipur",
+  ];
+  const states = [
+    "Andhra Pradesh",
+    "Bihar",
+    "Maharashtra",
+    "Uttar Pradesh",
+    "Tamil Nadu",
+    "Karnataka",
+    "Rajasthan",
+    "West Bengal",
+  ];
+
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  const handleSubmit = () => {
-    console.log("Collected Employee Data:", formData);
-    // yaha API call ya Redux dispatch kar sakte ho
+
+  const handleSubmit = async () => {
+    const res = await dispatch(createEmployee(formData));
+    if (res?.payload?.success) {
+      message.success(res.payload.message || "Employee created successfully!");
+    } else {
+      message.error(
+        res?.payload?.errors || "Something went wrong while creating employee"
+      );
+    }
   };
+
   useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      schoolId: schoolId || prev.schoolId,
+      academicYearId: academicYearId || prev.academicYearId,
+    }));
+  }, [schoolId, academicYearId]);
+
+  useEffect(() => {
+    if (schoolId) {
+      dispatch(fetchAllSubjects({ schoolId, academicYearId }));
+      dispatch(fetchActiveAcademicYear(schoolId));
+    }
     if (employeeId) {
       dispatch(getUserById(employeeId));
     }
-  }, [dispatch, employeeId]);
+  }, [dispatch, employeeId, schoolId, academicYearId]);
+
   return (
-    <>
-      <div className=" bg-gray-50 min-h-screen ">
-        {/* Profile Details Section */}
-        <div className='flex justify-between flex-col md:flex-row lg:flex-row  sm:p-1 md:p-5 lg:p-5'>
-          <div className="flex items-center  sm:space-x-0 md:space-x-4 lg:space-x-4  mb-6 flex-col md:flex-row lg:flex-row">
-            <div className='flex items-center space-x-4  flex-col md:flex-row lg:flex-row mb-4 md:mb-0 lg:mb-0'>
-              <div>
-                <img
-                  src={profile?.avatar || userProfile}
-                  alt="User Profile"
-                  className="w-16 h-16 rounded-full object-cover" />
-              </div>
+    <div className=" min-h-screen">
+       {/* ✅ success/error feedback */}
+      {loading && <p className="text-blue-500">Saving employee...</p>}
+      {error && (
+        <p className="text-red-500">
+          {typeof error === "string"
+            ? error
+            : JSON.stringify(error, null, 2)}
+        </p>
+      )}
+      {success && response?.message && (
+        <p className="text-green-600">{response.message}</p>
+      )}
 
-              <div>
-                <h3 className='text-lg  font-medium capitalize'>{profile?.name || "N/A"}</h3>
-                <p className='text-xs text-center bg-green-100 text-green-900 rounded-full  px-3 py-1 inline-block'>{profile?.isActive ? "Active" : "Inactive"}</p>
-              </div>
-            </div>
-            <div className='ml-auto flex items-center space-x-5 border-l px-3'>
-              <div>
-                <p className='text-xs text-gray-800'>Last Clocked In</p>
-                <p className='text-sm text-gray-800'>A few seconds ago</p>
-              </div>
-              <div>
-                <p className='text-xs text-gray-800'>Last Messaged</p>
-                <p className='text-sm text-gray-800'>2 days ago</p>
-              </div>
-              <div>
-                <p className='text-xs text-gray-800'>Employee ID</p>
-                <p className='text-sm text-gray-800'>{profile?.regId || "NA"}</p>
-
-              </div>
-            </div>
+      {/* Header Section */}
+      <div className="flex justify-between flex-col md:flex-row ">
+        <div className="flex items-center space-x-4 mb-6 flex-col md:flex-row">
+          <img
+            src={profile?.avatar || userProfile}
+            alt="User Profile"
+            className="w-16 h-16 rounded-full object-cover"
+          />
+          <div className="">
+            <h3 className="text-lg font-medium capitalize">
+              {profile?.name || "N/A"}
+            </h3>
+            <p className="text-xs bg-green-100 text-green-900 rounded-full px-3 py-1 inline-block">
+              {profile?.isActive ? "Active" : "Inactive"}
+            </p>
           </div>
-          <div className='flex items-center space-x-4 mb-6  sm:justify-center md:justify-end lg:justify-end'>
+          <div className="p-3 border-l-2 flex gap-6">
             <div>
-              <button className='px-1 py-1 border bg-white rounded-md'><EllipsisVertical /></button>
+              <p className="text-sm font-semibold">Role</p>
+              <span className="text-xs ">{profile?.role?.name}</span>
             </div>
-            <div className='flex items-center'>
-              <button className='px-3 py-1 text-sm flex items-center gap-2 bg-deep-purple-800 rounded-md text-white'> <MailPlus className='w-5' /> Send Email</button>
+            <div>
+              <p className="text-sm font-semibold">Email</p>
+              <span className="text-xs ">{profile?.email}</span>
             </div>
           </div>
         </div>
-        {/* Profile tab Section */}
-        <div className='flex border-b border-gray flex-wrap md:flex-row lg:flex-row'>
-          <div>
-            <button onClick={() => setActiveTab('Profile')}
-              type='button'
-              className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
-            ${activeTab === 'Profile' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-800 hover:text-purple-600'}`}
-            ><User className='w-4 mr-1' /> Profile</button>
-          </div>
-          <div>
-            <button onClick={() => setActiveTab('Attendance')}
-              type='button'
-              className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
-             ${activeTab === 'Attendance' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-800 hover:text-purple-600'}`}
-            ><CalendarCheck className='w-4 mr-1' /> Attendance</button>
-          </div>
-          <div>
-            <button onClick={() => setActiveTab('Tasks')}
-              type='button'
-              className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
-            ${activeTab === 'Tasks' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-800 hover:text-purple-600'}`}
-            ><ClipboardList className='w-4 mr-1' /> Tasks</button>
-          </div>
-          <div>
-            <button onClick={() => setActiveTab('Messages')}
-              type='button'
-              className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
-             ${activeTab === 'Messages' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-800 hover:text-purple-600'}`}
-            ><MessageCircleMore className='w-4 mr-1' /> Messages</button>
-          </div>
-          <div>
-            <button onClick={() => setActiveTab('Files')}
-              type='button'
-              className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
-            ${activeTab === 'Files' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-800 hover:text-purple-600'}`}
-            ><FolderClosed className='w-4 mr-1' /> Files</button>
-          </div>
-          <div>
-            <button onClick={() => setActiveTab('Settings')}
-              type='button'
-              className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
-            ${activeTab === 'Settings' ? 'border-purple-600 text-purple-600 font-semibold' : 'border-transparent text-gray-800 hover:text-purple-600'}`}
-            ><Settings className='w-4 mr-1' />Settings</button>
-          </div>
-
+        <div className="flex items-center space-x-4">
+          <button className="px-1 py-1 border bg-white rounded-md">
+            <EllipsisVertical />
+          </button>
+          <button className="px-3 py-1 text-sm flex items-center gap-2 bg-purple-800 rounded-md text-white">
+            <MailPlus className="w-5" /> Send Email
+          </button>
         </div>
-        {activeTab === 'Profile' && (
-
-          <div  >
-            <div className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 gap-3 mt-3'>
-
-              <div className='col-span-2 '>
-                <div className='flex flex-col gap-3'>
-                  {/*Contact Information start*/}
-                  <div className='bg-white p-4 rounded-lg border'>
-                    <div className='flex items-center justify-between mb-3'>
-                      <h3 className='text-lg font-medium'>Personal Information</h3>
-                      
-                    </div>
-                    <div className='grid grid-cols-2 md:grid-cols-3 gap-5 mt-3'>
-
-                      <div>
-                        <p className='text-xs text-gray-800'>Gender</p>
-                        <Select mode="single"
-                          value={formData.gender || undefined}
-                          onChange={(val) => handleChange("gender", val)}
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select subjects">
-                          <Option value >Select</Option>
-                          <Option value={'Male'}>Male</Option>
-                          <Option value={'Female'}>Female</Option>
-                        </Select>
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Marital Status</p>
-                       <Select
-                       
-                        allowClear
-                        style={{ width: "100%" }}
-                        placeholder="Select Marital Status"
-                        value={formData.maritalStatus || undefined}
-                        onChange={(val) => handleChange("maritalStatus", val)}
-                      >
-                        {martialStatuses.map((status) => (
-                          <Option key={status} value={status}>
-                            {status}
-                          </Option>
-                        ))}
-                      </Select>
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Religion</p>
-
-                        <Select mode="single"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select subjects"
-                          value={formData.religion || undefined}
-                          onChange={(val) => handleChange("religion", val)}
-                        >
-                          {religions.map((religion) => (
-                            <Option key={religion} value={religion}>{religion}</Option>
-                          ))}
-                        </Select>
-                      </div>
-
-                      <div>
-                        <p className='text-xs text-gray-800'>Birth Date</p>
-                        <DatePicker
-                          className="w-full"
-                          value={date}
-                          onChange={(date, dateString) => setDate(dateString)}
-                          format="YYYY-MM-DD"
-                          placeholder="Select date"
-                        />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Blood Type</p>
-                        <Select mode="single"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select Blood Type">
-
-                          {bloodGroups.map((bg) => (
-                            <Option key={bg} value={bg}>
-                              {bg}
-                            </Option> ))}
-                        </Select>
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Id Proof</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Addhar Number' />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-800">Qualification</p>
-                         <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select Qualification"
-                          value={formData.qualification}
-                            onChange={(vals) => handleChange("qualification", vals)}
-                        >
-                          {qualifications.map((q) => (
-                              <Option key={q.id} value={q.name}>
-                                {q.name}
-                              </Option>
-                            ))}
-                        </Select>
-                          
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Experience</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Addhar Number' />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-800">Subjects</p>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select subjects"
-                          value={formData.subjects}
-                          onChange={(vals) => handleChange("subjects", vals)}
-                        >
-                          {subjects.map((subject) => (
-                            <Option key={subject.id} value={subject.name}>
-                              {subject.name}
-                            </Option>
-                          ))}
-                        </Select>
-                      </div>
-
-                    </div>
-
-                  </div>
-                  {/*Contact Information end*/}
-                  <div className='bg-white p-4 rounded-lg border'>
-                    <div className='flex items-center justify-between mb-3'>
-                      <h3 className='text-lg font-medium'>Bank Information</h3>
-                      
-                    </div>
-                    <div className='grid grid-cols-3 gap-4'>
-                      <div>
-                        <p className='text-xs text-gray-800'>Account Holder</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full'  placeholder='Account Holder' />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Account Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Account Number' />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>IFSC Code</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='IFSC Code' />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Bank Name</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Bank Name' />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Branch</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Branch' />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>Pan Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Pan Number' />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>PF Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='PF Number' />
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>ESI Number</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='ESI Number' />
-                      </div>
-
-
-
-                    </div>
-                  </div>
-                  {/* Address Information start */}
-                  <div className='bg-white p-4 rounded-lg border'>
-                    <div className='flex items-center justify-between mb-3'>
-                      <h3 className='text-lg font-medium'>Address Information</h3>
-                      
-                    </div>
-                    <div className='grid grid-cols-2 gap-5'>
-                      <div><p className='text-sm'>Parsent Address</p></div>
-                      <div> <div className='flex items-center justify-end'>
-                        <p className='text-xs text-blue-400 flex items-center'>View On Map <ChevronRight className="w-4" /></p>
-
-                      </div></div>
-                    </div>
-                    <div className='grid grid-cols-4 gap-5 mt-3'>
-                      <div>
-
-                        <p className='text-xs text-gray-800'>street</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full ' placeholder='' />
-
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>City</p>
-                        <Select
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select City"
-                          value={formData.city || undefined}
-                          onChange={(val) => handleChange("city", val)}
-                        >
-                        
-                          {city.map((c) => (
-                            <Option key={c} value={c}>{c}</Option>
-                          ))}
-                        </Select>
-
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>State</p>
-                        <Select
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select State"
-                          value={formData.state || undefined}
-                          onChange={(val) => handleChange("state", val)}
-                        > 
-                          {states.map((s) => (
-                            <Option key={s} value={s}>{s}</Option>
-                          ))}
-                        </Select> 
-
-                      </div>
-                      <div>
-                        <p className='text-xs text-gray-800'>zipCode</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='' />
-
-                      </div>
-
-
-                      <hr className='col-span-4' />
-                      <div className='col-span-3'>
-                        <p className='text-xs text-gray-800'>Citizen ID Address</p>
-                        <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='' />
-                      </div>
-                      <div className='col-span-1 flex items-center justify-end'>
-
-                        <p className='text-xs text-blue-400 flex items-center'>View On Map <ChevronRight className="w-4" /></p>
-
-
-                      </div>
-
-
-                    </div>
-                  </div>
-                  {/* Address Information end */}
-                </div>
-              </div>
-              <div className='col-span-1 gap-3 flex flex-col mt-3 md:mt-0'>
-                {/*Contact Information start */}
-                <div className='bg-white p-4 rounded-lg border w-full'>
-                  <div className='flex items-center justify-between mb-3'>
-                    <h3 className='text-lg font-medium'>Contact Information</h3>
-                    
-                  </div>
-                  <h4 className='text-sm font-medium my-2'>Personal Contact </h4>
-                  <div className=' grid grid-cols-2   gap-5 mt-3'>
-                    <div className='col-span-1 '>
-                      <p className='text-xs text-gray-800'>Phone</p>
-                      <Input type='email' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' />
-                    </div>
-                    <div className='col-span-1 '>
-                      <p className='text-xs text-gray-800'>Email</p>
-                      <Input type='email' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' />
-                    </div>
-
-
-                  </div>
-                </div>
-                {/*Contact Information end */}
-                {/* Student Overview start */}
-                <div className='bg-white p-4 rounded-lg border w-full'>
-                  <div className='flex items-center justify-between mb-3'>
-                    <h3 className='text-lg font-medium'>Student Overview</h3>
-                    
-                  </div>
-
-                  <div className='grid grid-cols-2 gap-5 mt-3'>
-                    <div>
-                      <p className='text-xs text-gray-800'>Joining Date</p>
-                      <DatePicker
-                        className="w-full"
-                        value={date}
-                        onChange={(date, dateString) => setDate(dateString)}
-                        format="YYYY-MM-DD"
-                        placeholder="Select date"
-                      />
-                    </div>
-                    <div>
-                      <p className='text-xs text-gray-800'>Department</p>
-                      <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Department' />
-                    </div>
-                    <hr className='col-span-2' />
-                    <div>
-                      <p className='text-xs text-gray-800'>Designation</p>
-                      <Input type='text' className='text-sm text-gray-800 border rounded-md px-3 py-1 w-full' placeholder='Designation' />
-                    </div>
-                    <div>
-                      <p className='text-xs text-gray-800'>Employee Status</p>
-                      <Select mode="single"
-                        allowClear
-                        style={{ width: "100%" }}
-                        placeholder="Select Blood Type">
-
-                        <Option value >Select</Option>
-                        <Option value={'Full-Time'}>Full-Time</Option>
-                        <Option value={'Part-Time'}>Part-Time</Option>
-                        <Option value={'Contract'}>Contract</Option>
-
-                      </Select>
-                    </div>
-                   
-                  </div>
-                </div>
-                {/* Student Overview end */}
-                 <Button type="primary" className="mt-5" onClick={handleSubmit}>
-        Save Employee
-      </Button>
-              </div>
-            </div>
-          </div>
-        )}
-        {activeTab === 'Attendance' && (
-          <div id='Attendence-details'>
-            <div className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 gap-3 mt-3'>
-
-              <div className='col-span-3  gap-3 flex flex-col'>
-                {/*Contact Information start*/}
-                <div className='bg-white p-4 rounded-lg border'>
-
-                  <div className='grid grid-cols-1 gap-5'>
-                    <AttendanceCalendar />
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-          </div>
-        )}
-        {activeTab === 'Tasks' && (
-          <div className="bg-white p-4 rounded-lg border mt-3">
-            <p className="text-gray-800 text-sm">Tasks Options coming soon...</p>
-          </div>
-        )}
-        {activeTab === 'Messages' && (
-          <div className="bg-white p-4 rounded-lg border mt-3">
-            <p className="text-gray-800 text-sm">Messages Options coming soon...</p>
-          </div>
-        )}
-        {activeTab === 'Files' && (
-          <div className="bg-white p-4 rounded-lg border mt-3">
-            <p className="text-gray-800 text-sm">Files Options coming soon...</p>
-          </div>
-        )}
-        {activeTab === 'Settings' && (
-          <div className="bg-white p-4 rounded-lg border mt-3">
-            <p className="text-gray-800 text-sm">Settings Options coming soon...</p>
-          </div>
-        )}
-
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b">
+        {[
+          "Profile",
+          "Attendance",
+          "Tasks",
+          "Messages",
+          "Files",
+          "Settings",
+        ].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-sm flex items-center border-b transition-all duration-300
+            ${
+              activeTab === tab
+                ? "border-purple-600 text-purple-600 font-semibold"
+                : "border-transparent text-gray-800 hover:text-purple-600"
+            }`}
+          >
+            {tab === "Profile" && <User className="w-4 mr-1" />}
+            {tab === "Attendance" && <CalendarCheck className="w-4 mr-1" />}
+            {tab === "Tasks" && <ClipboardList className="w-4 mr-1" />}
+            {tab === "Messages" && <MessageCircleMore className="w-4 mr-1" />}
+            {tab === "Files" && <FolderClosed className="w-4 mr-1" />}
+            {tab === "Settings" && <Settings className="w-4 mr-1" />}
+            {tab}
+          </button>
+        ))}
+      </div>
 
-    </>
-  )
+      {/* Profile Tab */}
+      {activeTab === "Profile" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-3">
+          {/* Left (Main Info) */}
+          <div className="col-span-2 flex flex-col gap-3">
+            {/* Personal Information */}
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-medium mb-3">Personal Information</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                <div>
+                  <p className="text-xs text-gray-800">Gender</p>
+                  <Select
+                    value={formData.gender || undefined}
+                    onChange={(val) => handleChange("gender", val)}
+                    allowClear
+                    style={{ width: "100%" }}
+                    placeholder="Select Gender"
+                  >
+                    <Option value="Male">Male</Option>
+                    <Option value="Female">Female</Option>
+                  </Select>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Marital Status</p>
+                  <Select
+                    allowClear
+                    style={{ width: "100%" }}
+                    value={formData.maritalStatus || undefined}
+                    onChange={(val) => handleChange("maritalStatus", val)}
+                    placeholder="Select Marital Status"
+                  >
+                    {martialStatuses.map((status) => (
+                      <Option key={status} value={status}>
+                        {status}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Religion</p>
+                  <Select
+                    allowClear
+                    style={{ width: "100%" }}
+                    value={formData.religion || undefined}
+                    onChange={(val) => handleChange("religion", val)}
+                    placeholder="Select Religion"
+                  >
+                    {religions.map((r) => (
+                      <Option key={r} value={r}>
+                        {r}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Birth Date</p>
+                  <DatePicker
+                    className="w-full"
+                    value={
+                      formData.dateOfBirth ? dayjs(formData.dateOfBirth) : null
+                    }
+                    onChange={(_, dateStr) =>
+                      handleChange("dateOfBirth", dateStr)
+                    }
+                    format="YYYY-MM-DD"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Blood Type</p>
+                  <Select
+                    allowClear
+                    style={{ width: "100%" }}
+                    value={formData.bloodType || undefined}
+                    onChange={(val) => handleChange("bloodType", val)}
+                    placeholder="Select Blood Type"
+                  >
+                    {bloodGroups.map((bg) => (
+                      <Option key={bg} value={bg}>
+                        {bg}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Aadhar No</p>
+                  <Input
+                    value={formData.idProof}
+                    onChange={(e) => handleChange("idProof", e.target.value)}
+                    placeholder="Enter Aadher no"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Qualification</p>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    style={{ width: "100%" }}
+                    value={formData.qualification}
+                    onChange={(vals) => handleChange("qualification", vals)}
+                    placeholder="Select qualification"
+                  >
+                    {qualifications.map((q) => (
+                      <Option key={q.id} value={q.id}>
+                        {q.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Experience</p>
+                  <Input
+                    value={formData.experience}
+                    onChange={(e) => handleChange("experience", e.target.value)}
+                    placeholder="Enter Experience"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Subjects</p>
+                 <Select
+  mode="multiple"
+  allowClear
+  style={{ width: "100%" }}
+  value={formData.subjects}
+  onChange={(vals) => handleChange("subjects", vals)}
+  placeholder="Select Subjects"
+>
+  {subjectList.map((s) => (
+    <Option key={s._id} value={s._id}>
+      {s.name}
+    </Option>
+  ))}
+</Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Bank Info */}
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-medium mb-3">Bank Information</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-gray-800">Account Holder</p>
+                  <Input
+                    placeholder="Account Holder"
+                    value={formData.accountHolder}
+                    onChange={(e) =>
+                      handleChange("accountHolder", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-800">Account Number</p>
+                  <Input
+                    placeholder="Account Number"
+                    value={formData.accountNumber}
+                    onChange={(e) =>
+                      handleChange("accountNumber", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">IFSC Code</p>
+                  <Input
+                    placeholder="IFSC Code"
+                    className="uppercase"
+                    value={formData.ifscCode}
+                    onChange={(e) => handleChange("ifscCode", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">Bank Name</p>
+                  <Input
+                    placeholder="Bank Name"
+                    value={formData.bankName}
+                    onChange={(e) => handleChange("bankName", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">Branch</p>
+                  <Input
+                    placeholder="Branch"
+                    value={formData.branch}
+                    onChange={(e) => handleChange("branch", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">PAN Number</p>
+                  <Input
+                    placeholder="PAN Number"
+                    className="uppercase"
+                    value={formData.panNumber}
+                    onChange={(e) => handleChange("panNumber", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">PF Number</p>
+                  <Input
+                    placeholder="PF Number"
+                    value={formData.pfNumber}
+                    onChange={(e) => handleChange("pfNumber", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">ESI Number</p>
+                  <Input
+                    placeholder="ESI Number"
+                    value={formData.esiNumber}
+                    onChange={(e) => handleChange("esiNumber", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Address Info */}
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-medium mb-3">Address Information</h3>
+              <div className="grid grid-cols-4 gap-5">
+                <div>
+                  <p className="text-xs text-gray-800">Street</p>
+                  <Input
+                    placeholder="Street"
+                    value={formData.street}
+                    onChange={(e) => handleChange("street", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">City</p>
+                  <Select
+                    value={formData.city || undefined}
+                    onChange={(val) => handleChange("city", val)}
+                    allowClear
+                    style={{ width: "100%" }}
+                    placeholder="Selcet Street"
+                  >
+                    {cities.map((c) => (
+                      <Option key={c} value={c}>
+                        {c}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">State</p>
+                  <Select
+                    value={formData.state || undefined}
+                    onChange={(val) => handleChange("state", val)}
+                    allowClear
+                    style={{ width: "100%" }}
+                  >
+                    {states.map((s) => (
+                      <Option key={s} value={s}>
+                        {s}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800">Zip Code</p>
+                  <Input
+                    placeholder="Zip Code"
+                    value={formData.zipCode}
+                    onChange={(e) => handleChange("zipCode", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="text-xs text-gray-800 ">Citizen Address</p>
+                <Input
+                  placeholder="Citizen Address"
+                  value={formData.CitizenAddress} // ✅ match backend
+                  onChange={(e) =>
+                    handleChange("CitizenAddress", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side (Overview + Contact) */}
+          <div className="flex flex-col gap-3">
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-medium mb-3">Contact Information</h3>
+              <p className="text-xs text-gray-800 ">Mobile No</p>
+              <Input
+                placeholder="Phone Number"
+                maxLength={10}
+                value={formData.phoneNo}
+                onChange={(e) => handleChange("phoneNo", e.target.value)}
+              />
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-medium mb-3">Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-gray-800 ">Joining Date</p>
+                  <DatePicker
+                    className="w-full mb-3"
+                    value={formData.joinDate ? dayjs(formData.joinDate) : null}
+                    onChange={(_, dateStr) => handleChange("joinDate", dateStr)}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800 ">Department</p>
+                  <Input
+                    placeholder="Department"
+                    value={formData.department}
+                    onChange={(e) => handleChange("department", e.target.value)}
+                    className="mb-3"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800 ">Designation</p>
+                  <Input
+                    placeholder="Designation"
+                    value={formData.designation}
+                    onChange={(e) =>
+                      handleChange("designation", e.target.value)
+                    }
+                    className="mb-3"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-800 ">Employee Status</p>
+                  <Select
+                    value={formData.employeeStatus || undefined}
+                    onChange={(val) => handleChange("employeeStatus", val)}
+                    allowClear
+                    style={{ width: "100%" }}
+                  >
+                    <Option value="Full-Time">Full-Time</Option>
+                    <Option value="Part-Time">Part-Time</Option>
+                    <Option value="Contract">Contract</Option>
+                  </Select>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-800 ">Notes</p>
+                  <textarea
+                    className="w-full border  rounded-lg px-2 py-1 text-xs"
+                    placeholder="Notes"
+                    value={formData.notes}
+                    onChange={(e) => handleChange("notes", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <Button type="primary" onClick={handleSubmit}>
+              Save Employee
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "Attendance" && (
+        <div className="bg-white p-4 rounded-lg border mt-3">
+          <AttendanceCalendar />
+        </div>
+      )}
+      {activeTab === "Tasks" && (
+        <div className="bg-white p-4 rounded-lg border mt-3">
+          Tasks Options coming soon...
+        </div>
+      )}
+      {activeTab === "Messages" && (
+        <div className="bg-white p-4 rounded-lg border mt-3">
+          Messages Options coming soon...
+        </div>
+      )}
+      {activeTab === "Files" && (
+        <div className="bg-white p-4 rounded-lg border mt-3">
+          Files Options coming soon...
+        </div>
+      )}
+      {activeTab === "Settings" && (
+        <div className="bg-white p-4 rounded-lg border mt-3">
+          Settings Options coming soon...
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default EmployeeForm;

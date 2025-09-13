@@ -32,7 +32,7 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen  overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} />
       {isSidebarOpen && (
         <div
@@ -48,7 +48,7 @@ const Dashboard = () => {
           isSidebarOpen={isSidebarOpen}
           toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         />
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto p-4 bg-slate-200">
           <Outlet />
         </main>
       </div>

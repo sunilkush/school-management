@@ -1,19 +1,22 @@
-import { createAsyncThunk,createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
+const Api_Base_Url = import.meta.env.VITE_API_URL
 export const createEmployee = createAsyncThunk(
-    "employee/createEmployee", async (employeeData, { rejectWithValue }) => {
+    "employee/createEmployee",
+    async (formData, { rejectWithValue }) => {
         try {
-            const res = await axios.post(`${API_BASE_URL}/employee`, employeeData, {
+            const token = localStorage.getItem("accessToken")
+            const res = await axios.post(
+                `${Api_Base_Url}/employee`,
+                formData, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+                    Authorization: `Bearer ${token}`
                 }
-            });
+            }
+            );
             return res.data;
-        }
-        catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (err) {
+            return rejectWithValue(err.response?.data || { message: err.message });
         }
     }
 );
@@ -21,39 +24,39 @@ export const createEmployee = createAsyncThunk(
 const employeeSlice = createSlice({
     name: "employee",
     initialState: {
-        employees: [],
         loading: false,
         error: null,
-        success: null,
-        employee: null
+        success: false,
+        response: null,
     },
     reducers: {
-        clearState: (state) => {
+        resetEmployeeState: (state) => {
             state.loading = false;
             state.error = null;
-            state.success = null;
-            state.employee = null;
-        }
+            state.success = false;
+            state.response = null;
+        },
     },
     extraReducers: (builder) => {
         builder
-            // Create Employee
             .addCase(createEmployee.pending, (state) => {
                 state.loading = true;
                 state.error = null;
-                state.success = null;
+                state.success = false;
+                state.response = null;
             })
             .addCase(createEmployee.fulfilled, (state, action) => {
                 state.loading = false;
-                state.success = "Employee created successfully";
-                state.employees.push(action.payload);
+                state.success = true;
+                state.response = action.payload;
             })
             .addCase(createEmployee.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload?.message || "Failed to create employee";
+                state.success = false;
+                state.error = action.payload;
             });
-        }
-})
+    },
+});
 
-export const { clearState } = employeeSlice.actions;
+export const { resetEmployeeState } = employeeSlice.actions;
 export default employeeSlice.reducer;

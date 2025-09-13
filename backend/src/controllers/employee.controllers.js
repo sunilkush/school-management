@@ -4,97 +4,112 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 // Create Employee
-export const registerEmployee = asyncHandler(async (req, res) => {
-  const {
-    name,
-    email,
-    password,
-    roleId,
-    schoolId,
-    academicYearId,
-    phoneNo,
-    gender,
-    dateOfBirth,
-    street,
-    city,
-    state,
-    zipCode,
-    idProof,
-    CitizenAddress,
-    employeeType,
-    department,
-    designation,
-    employmentType,
-    joinDate,
-    qualification,
-    experience,
-    classId,
-    sectionId,
-    subjects,
-    schedule,
-    basicPay,
-    allowances,
-    deductions,
-    notes,
-  } = req.body;
-
-  if (!name || !email || !password || !roleId || !schoolId || !phoneNo || !employeeType) {
-    throw new ApiError(400, "Name, Email, Password, Role, School, Phone, EmployeeType are required");
-  }
-
-  // 1️⃣ User Create
-  const user = await User.create({
-    name,
-    email,
-    password,
-    roleId,
-    schoolId,
-  });
-
-  // 2️⃣ Employee Create (linked with userId)
-  const employee = await Employee.create({
-    userId: user._id,
-    schoolId,
-    academicYearId,
-    phoneNo,
-    gender,
-    dateOfBirth,
-    address: {
+export const registerEmployee = async (req, res) => {
+  try {
+    const {
+      userId,
+      name,
+      email,
+      password,
+      roleId,
+      schoolId,
+      academicYearId,
+      phoneNo,
+      gender,
+      dateOfBirth,
       street,
       city,
       state,
       zipCode,
-      country: "india",
-    },
-    idProof,
-    CitizenAddress,
-    employeeType,
-    department,
-    designation,
-    employmentType,
-    joinDate,
-    salary: {
-      basicPay,
-      allowances,
-      deductions,
-    },
-    qualification,
-    experience,
-    subjects,
-    assignedClasses: {
-      classId,
-      sectionId,
+      idProof,
+      CitizenAddress,
+      employeeType,
+      department,
+      designation,
+      employmentType,
+      joinDate,
+      qualification,
+      experience,
       subjects,
-      schedule
-    },
-    notes,
-    isActive: true,
-  });
+      notes,
+    } = req.body;
 
-  return res.status(201).json(
-    new ApiResponse(201, { user, employee }, "Employee registered successfully")
-  );
-});
+    let finalUserId = userId;
+    let createdUser = null;
+
+    // 👉 Case 1: अगर userId नहीं है → नया User create करो
+    if (!finalUserId) {
+      if (!name || !email || !password || !roleId || !schoolId) {
+        return res
+          .status(400)
+          .json(new ApiError(400, "Name, Email, Password, RoleId, SchoolId are required to create user"));
+      }
+
+      // check duplicate email
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res
+          .status(400)
+          .json(new ApiError(400, "User with this email already exists"));
+      }
+
+      const newUser = await User.create({
+        name,
+        email,
+        password,
+        roleId,
+        schoolId,
+        isActive: true,
+      });
+
+      finalUserId = newUser._id;
+      createdUser = newUser;
+    } else {
+      // 👉 Case 2: अगर userId दिया गया है तो check कर लो valid है या नहीं
+      const existingUser = await User.findById(finalUserId);
+      if (!existingUser) {
+        return res.status(404).json(new ApiError(404, "User not found with given userId"));
+      }
+    }
+
+    // 👉 अब Employee create होगा
+    const employee = await Employee.create({
+      userId: finalUserId,
+      schoolId,
+      academicYearId,
+      phoneNo,
+      gender,
+      dateOfBirth,
+      address: {
+        street,
+        city,
+        state,
+        zipCode,
+        country: "India",
+      },
+      idProof,
+      CitizenAddress,
+      employeeType,
+      department,
+      designation,
+      employmentType,
+      joinDate,
+      qualification: Array.isArray(qualification) ? qualification : [],
+      experience,
+      subjects: Array.isArray(subjects) ? subjects : [],
+      notes,
+      isActive: true,
+    });
+
+    return res
+      .status(201)
+      .json(new ApiResponse(201, { user: createdUser, employee }, "Employee registered successfully"));
+  } catch (error) {
+    console.error("❌ Error in registerEmployee:", error.message);
+    return res.status(500).json(new ApiError(500, error.message || "Internal Server Error"));
+  }
+};
+
 
 
 /**

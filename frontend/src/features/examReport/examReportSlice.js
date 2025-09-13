@@ -11,6 +11,7 @@ export const fetchExamReport = createAsyncThunk(
   "reports/fetchExamReport",
   async (examId, { rejectWithValue }) => {
     try {
+      
       const res = await axios.get(`${API_BASE_URL}/reports/exam/${examId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });

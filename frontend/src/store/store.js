@@ -13,6 +13,7 @@ import questionReducer from "../features/questions/questionSlice";
 import attemptReducer from "../features/attempts/attemptSlice";
 import sectionReducer from "../features/sections/sectionSlice";
 import classSectionReducer from "../features/classes/classSectionSlice";
+import employeeReducer from "../features/employee/employeeSlice";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -28,7 +29,8 @@ const store = configureStore({
     questions: questionReducer,
     attempts: attemptReducer,
     section: sectionReducer,
-    classSection:classSectionReducer
+    classSection:classSectionReducer,
+    employee: employeeReducer,
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>
