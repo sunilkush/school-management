@@ -171,7 +171,6 @@ export const registerEmployee = async (req, res) => {
  */
 export const getAllEmployees = asyncHandler(async (req, res) => {
   const { schoolId, employeeType, isActive } = req.query;
-
   const filter = {};
   if (schoolId) filter.schoolId = schoolId;
   if (employeeType) filter.employeeType = employeeType;
