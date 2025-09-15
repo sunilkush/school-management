@@ -166,7 +166,6 @@ export const registerEmployee = async (req, res) => {
 };
 
 
-
 /**
  * Get All Employees (with optional filters)
  */
