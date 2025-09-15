@@ -1,23 +1,23 @@
 import { Router } from "express";
-import {
-
-    markAttendance,
-    getAttendanceByStudent,
-    getAttendanceByClass,
-    updateAttendanceRecord,
-    deleteAttendanceRecord
-} from "../controllers/attendance.controllers.js";
-import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { createAttendance, getAttendances, updateAttendance, deleteAttendance, getDailyReport, 
+  getMonthlyReport, 
+  getClassMonthlyReport,
+  exportAttendanceExcel,
+  exportAttendancePDF } from "../controllers/attendance.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Define roles
-const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
-const STUDENT_PARENT = ["Student", "Parent"];
+// ✅ Protected Routes
+router.post("/", verifyJWT, createAttendance);      // Mark attendance
+router.get("/", verifyJWT, getAttendances);         // Get list (filterable)
+router.put("/:id", verifyJWT, updateAttendance);    // Update attendance
+router.delete("/:id", verifyJWT, deleteAttendance); // Delete attendance
 
-// ✅ Attendance Routes (Protected)
-router.post("/mark", auth, roleMiddleware(ADMIN_TEACHER), markAttendance);
+router.get("/daily", verifyJWT, getDailyReport);
+router.get("/monthly", verifyJWT, getMonthlyReport);
+router.get("/class-monthly", verifyJWT, getClassMonthlyReport);
 
-router.get("/student/:studentId", auth, roleMiddleware([...ADMIN_TEACHER, ...STUDENT_PARENT]), getAttendanceByStudent);
-
+router.get("/export/excel", verifyJWT, exportAttendanceExcel);
+router.get("/export/pdf", verifyJWT, exportAttendancePDF);
 export default router;
