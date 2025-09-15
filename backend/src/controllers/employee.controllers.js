@@ -17,12 +17,24 @@ export const registerEmployee = async (req, res) => {
       phoneNo,
       gender,
       dateOfBirth,
+      bloodType,
+      religion,
+      employeeStatus,
+      salaryId,
+      accountHolder,
+      accountNumber,
+      ifscCode,
+      bankName,
+      branch,
+      panNumber,
+      pfNumber,
+      esiNumber,
       street,
       city,
       state,
       zipCode,
       idProof,
-      CitizenAddress,
+      citizenAddress,
       employeeType,
       department,
       designation,
@@ -31,6 +43,7 @@ export const registerEmployee = async (req, res) => {
       qualification,
       experience,
       subjects,
+      maritalStatus,
       notes,
     } = req.body;
 
@@ -40,9 +53,12 @@ export const registerEmployee = async (req, res) => {
     // 👉 Case 1: अगर userId नहीं है → नया User create करो
     if (!finalUserId) {
       if (!name || !email || !password || !roleId || !schoolId) {
-        return res
-          .status(400)
-          .json(new ApiError(400, "Name, Email, Password, RoleId, SchoolId are required to create user"));
+        return res.status(400).json(
+          new ApiError(
+            400,
+            "Name, Email, Password, RoleId, SchoolId are required to create user"
+          )
+        );
       }
 
       // check duplicate email
@@ -68,15 +84,31 @@ export const registerEmployee = async (req, res) => {
       // 👉 Case 2: अगर userId दिया गया है तो check कर लो valid है या नहीं
       const existingUser = await User.findById(finalUserId);
       if (!existingUser) {
-        return res.status(404).json(new ApiError(404, "User not found with given userId"));
+        return res
+          .status(404)
+          .json(new ApiError(404, "User not found with given userId"));
       }
     }
+
+    // 🔧 Clean data before saving (fix Cast to ObjectId errors)
+    const cleanedSalaryId =
+      salaryId && salaryId !== "" ? salaryId : null;
+
+    const cleanedSubjects =
+      Array.isArray(subjects) && subjects.length > 0
+        ? subjects.filter((s) => s && s !== "")
+        : [];
+
+    const cleanedQualification =
+      Array.isArray(qualification) && qualification.length > 0
+        ? qualification
+        : [];
 
     // 👉 अब Employee create होगा
     const employee = await Employee.create({
       userId: finalUserId,
       schoolId,
-      academicYearId,
+      academicYearId: academicYearId || null,
       phoneNo,
       gender,
       dateOfBirth,
@@ -88,25 +120,48 @@ export const registerEmployee = async (req, res) => {
         country: "India",
       },
       idProof,
-      CitizenAddress,
+      bloodType,
+      religion,
+      employeeStatus,
+      citizenAddress,
       employeeType,
+      maritalStatus,
       department,
       designation,
       employmentType,
       joinDate,
-      qualification: Array.isArray(qualification) ? qualification : [],
+      qualification: cleanedQualification,
       experience,
-      subjects: Array.isArray(subjects) ? subjects : [],
+      subjects: cleanedSubjects,
       notes,
+      salaryId: cleanedSalaryId,
+      bankDetails: {
+        accountHolder,
+        accountNumber,
+        ifscCode,
+        bankName,
+        branch,
+        panNumber,
+        pfNumber,
+        esiNumber,
+      },
       isActive: true,
     });
 
     return res
       .status(201)
-      .json(new ApiResponse(201, { user: createdUser, employee }, "Employee registered successfully"));
+      .json(
+        new ApiResponse(
+          201,
+          { user: createdUser, employee },
+          "Employee registered successfully"
+        )
+      );
   } catch (error) {
     console.error("❌ Error in registerEmployee:", error.message);
-    return res.status(500).json(new ApiError(500, error.message || "Internal Server Error"));
+    return res
+      .status(500)
+      .json(new ApiError(500, error.message || "Internal Server Error"));
   }
 };
 
