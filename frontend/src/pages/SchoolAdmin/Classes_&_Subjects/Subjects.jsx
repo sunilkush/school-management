@@ -1,0 +1,114 @@
+import SubjectForm from '../../../components/forms/SubjectFrom.jsx'; // ✅ fixed file name
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import DataTable from 'react-data-table-component';
+import { fetchAllSubjects, deleteSubject } from '../../../features/subjectSlice.js';
+
+const Subjects = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+
+  const dispatch = useDispatch();
+  const { subjectList, loading } = useSelector((state) => state.subject);
+
+  // ✅ Instant read from localStorage to avoid flash
+  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const schoolId = storedUser?.school?._id || "";
+
+  // ✅ Filter subjects for this school
+  const filteredSubjects = subjectList.filter(
+  (subj) => String(subj.schoolId) === String(schoolId)
+);
+
+  // ✅ Fetch subjects only once
+  useEffect(() => {
+    if (schoolId) {
+      dispatch(fetchAllSubjects({}));
+    }
+  }, [dispatch, schoolId,isModalOpen]);
+
+  const handleEdit = (subject) => {
+    setSelectedSubject(subject);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id) => {
+    dispatch(deleteSubject(id)).then(() => {
+      dispatch(fetchAllSubjects());
+    });
+  };
+
+  const columns = [
+    { name: 'Subject Name', selector: (row) => row.name, sortable: true },
+    { name: 'School', selector: (row) => row.school?.name || 'N/A', sortable: true },
+    { name: 'Teacher', selector: (row) => row.teacher?.name || 'N/A', sortable: true },
+    {
+      name: 'Actions',
+      cell: (row) => (
+        <>
+          <button
+            className="text-blue-600 hover:underline"
+            onClick={() => handleEdit(row)}
+          >
+            Edit
+          </button>
+          <button
+            className="text-red-600 hover:underline ml-2"
+            onClick={() => handleDelete(row._id)}
+          >
+            Delete
+          </button>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      {/* ✅ Modal */}
+      <SubjectForm
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedSubject(null);
+        }}
+        editData={selectedSubject} // pass data if editing
+      />
+
+      {/* Header */}
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">Subjects List</h2>
+          <p className="text-sm text-gray-500">Manage all subjects here.</p>
+        </div>
+        <div className="text-right">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedSubject(null); // clear previous selection
+              setIsModalOpen(true); // open modal for Add
+            }}
+            className="bg-blue-600 text-white px-3 py-2 text-xs rounded hover:bg-blue-700"
+          >
+            Add New Subject
+          </button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white p-4 rounded shadow">
+        <DataTable
+          columns={columns}
+          data={filteredSubjects}
+          progressPending={loading}
+          pagination
+          highlightOnHover
+          striped
+          responsive
+        />
+      </div>
+    </>
+  );
+};
+
+export default Subjects;

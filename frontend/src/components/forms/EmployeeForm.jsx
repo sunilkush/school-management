@@ -13,12 +13,12 @@ import userProfile from "../../assets/userProfile.png";
 import AttendanceCalendar from "../../pages/AttendanceCalendar";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getUserById } from "../../features/auth/authSlice";
+import { getUserById } from "../../features/authSlice";
 import { Select, DatePicker, Input, Button, message } from "antd";
 import dayjs from "dayjs";
-import { createEmployee } from "../../features/employee/employeeSlice";
-import { fetchActiveAcademicYear } from "../../features/academicYear/academicYearSlice";
-import { fetchAllSubjects } from "../../features/subject/subjectSlice";
+import { createEmployee } from "../../features/employeeSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
+import { fetchAllSubjects } from "../../features/subjectSlice";
 
 const { Option } = Select;
 

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
     User, Mail, Bell, Settings, LogOut, ChevronDown
 } from 'lucide-react';
-import { logout } from '../../features/auth/authSlice';
+import { logout } from '../../features/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 const UserDropdown = () => {

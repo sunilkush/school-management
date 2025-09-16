@@ -3,21 +3,25 @@ import { createAttendance, getAttendances, updateAttendance, deleteAttendance, g
   getMonthlyReport, 
   getClassMonthlyReport,
   exportAttendanceExcel,
-  exportAttendancePDF } from "../controllers/attendance.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+  exportAttendancePDF } from "../controllers/attendance.controllers.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+// 🔑 Role Groups
+const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
+const ADMIN_ONLY = ["Super Admin", "School Admin"];
+
 // ✅ Protected Routes
-router.post("/", verifyJWT, createAttendance);      // Mark attendance
-router.get("/", verifyJWT, getAttendances);         // Get list (filterable)
-router.put("/:id", verifyJWT, updateAttendance);    // Update attendance
-router.delete("/:id", verifyJWT, deleteAttendance); // Delete attendance
+router.post("/",auth, roleMiddleware(ADMIN_TEACHER), createAttendance);      // Mark attendance
+router.get("/",auth, roleMiddleware(ADMIN_TEACHER), getAttendances);         // Get list (filterable)
+router.put("/:id",auth, roleMiddleware(ADMIN_TEACHER), updateAttendance);    // Update attendance
+router.delete("/:id",auth, roleMiddleware(ADMIN_TEACHER), deleteAttendance); // Delete attendance
 
-router.get("/daily", verifyJWT, getDailyReport);
-router.get("/monthly", verifyJWT, getMonthlyReport);
-router.get("/class-monthly", verifyJWT, getClassMonthlyReport);
+router.get("/daily",auth, roleMiddleware(ADMIN_ONLY), getDailyReport);
+router.get("/monthly",auth, roleMiddleware(ADMIN_ONLY), getMonthlyReport);
+router.get("/class-monthly",auth, roleMiddleware(ADMIN_ONLY), getClassMonthlyReport);
 
-router.get("/export/excel", verifyJWT, exportAttendanceExcel);
-router.get("/export/pdf", verifyJWT, exportAttendancePDF);
+router.get("/export/excel",auth, roleMiddleware(ADMIN_ONLY), exportAttendanceExcel);
+router.get("/export/pdf",auth, roleMiddleware(ADMIN_ONLY), exportAttendancePDF);
 export default router;

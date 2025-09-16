@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import {  useDispatch, useSelector } from "react-redux";
-import { updateProfile } from "../features/auth/authSlice";
-import { fetchRoles } from "../features/roles/roleSlice";
-import { fetchSchools } from "../features/schools/schoolSlice";
+import { updateProfile } from "../features/authSlice";
+import { fetchRoles } from "../features/roleSlice";
+import { fetchSchools } from "../features/schoolSlice";
 
 const Settings = () => {
   useSelector

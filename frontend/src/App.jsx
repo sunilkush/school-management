@@ -3,8 +3,8 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux';
-import { currentUser } from './features/auth/authSlice';
-import { setSelectedAcademicYear } from './features/academicYear/academicYearSlice';
+import { currentUser } from './features/authSlice';
+import { setSelectedAcademicYear } from './features/academicYearSlice';
 
 function App() {
   const dispatch = useDispatch();

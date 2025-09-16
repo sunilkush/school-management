@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import { useDispatch } from "react-redux";
-import { bulkCreateQuestions } from "../features/questions/questionSlice";
+import { bulkCreateQuestions } from "../features/questionSlice";
 
 const BulkUploadQuestions = () => {
   // Removed unused 'file' state

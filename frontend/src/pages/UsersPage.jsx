@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchAllUser } from "../features/auth/authSlice";
+import { fetchAllUser } from "../features/authSlice";
 import DataTable from "react-data-table-component";
 import RegisterForm from "../components/forms/RegisterFrom"; // ✅ check file name
 import { useNavigate } from "react-router-dom";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addSchool, resetSchoolState } from "../../features/schools/schoolSlice";
+import { addSchool, resetSchoolState } from "../../features/schoolSlice";
 
 const AddSchoolForm = () => {
   const dispatch = useDispatch();

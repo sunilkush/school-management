@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchActiveAcademicYear,
   fetchAllAcademicYears,
-} from "../../features/academicYear/academicYearSlice";
+} from "../../features/academicYearSlice";
 
 const AcademicYearSwitcher = ({ onChange }) => {
   const dispatch = useDispatch();

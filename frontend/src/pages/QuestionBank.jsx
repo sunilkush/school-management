@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getQuestions,deleteQuestion } from "../features/questions/questionSlice";
+import { getQuestions,deleteQuestion } from "../features/questionSlice";
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
 import { Plus,Trash2 } from "lucide-react";

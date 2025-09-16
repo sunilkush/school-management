@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createSubject } from "../../features/subject/subjectSlice";
-import { fetchAllUser } from "../../features/auth/authSlice"; 
+import { createSubject } from "../../features/subjectSlice";
+import { fetchAllUser } from "../../features/authSlice"; 
 import { Button } from "@/components/ui/button";
-import { fetchActiveAcademicYear } from "../../features/academicYear/academicYearSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 
 const SubjectForm = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();

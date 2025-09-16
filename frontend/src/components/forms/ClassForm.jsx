@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {  useDispatch, useSelector } from "react-redux";
-import { createClass, updateClass} from "../../features/classes/classSlice";
+import { createClass, updateClass} from "../../features/classSlice";
 
 const ClassForm = ({ onClose, onSuccess, initialData }) => {
   const dispatch = useDispatch();

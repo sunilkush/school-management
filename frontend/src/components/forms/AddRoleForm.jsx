@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createRole } from "../../features/roles/roleSlice";
-import { fetchSchools } from "../../features/schools/schoolSlice";
+import { createRole } from "../../features/roleSlice";
+import { fetchSchools } from "../../features/schoolSlice";
 
 // Modules & Actions
 const moduleOptions = [

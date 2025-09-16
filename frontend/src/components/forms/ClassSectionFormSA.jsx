@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllClasses } from "../../features/classes/classSlice";
-import { fetchSection } from "../../features/sections/sectionSlice";
-import { createClassSection } from "../../features/classes/classSectionSlice";
-import { fetchAllUser } from "../../features/auth/authSlice";
-import { fetchAllSubjects } from "../../features/subject/subjectSlice";
-import { fetchActiveAcademicYear } from "../../features/academicYear/academicYearSlice";
+import { fetchAllClasses } from "../../features/classSlice";
+import { fetchSection } from "../../features/sectionSlice";
+import { createClassSection } from "../../features/classSectionSlice";
+import { fetchAllUser } from "../../features/authSlice";
+import { fetchAllSubjects } from "../../features/subjectSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import { Trash, Trash2 } from "lucide-react";
 
 const ClassSectionForm = ({ onSuccess, initialData }) => {

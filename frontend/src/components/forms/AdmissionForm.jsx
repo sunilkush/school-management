@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchLastStudent, createStudent } from "../../features/students/studentSlice";
+import { fetchLastStudent, createStudent } from "../../features/studentSlice";
 
-import { fetchClassSections } from "../../features/classes/classSectionSlice";
+import { fetchClassSections } from "../../features/classSectionSlice";
 
 
 const Tab = ({ label, isActive, onClick }) => (

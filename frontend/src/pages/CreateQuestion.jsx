@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllSubjects } from "../features/subject/subjectSlice";
-import { createQuestion } from "../features/questions/questionSlice"
-import { fetchAllClasses } from "../features/classes/classSlice";
+import { fetchAllSubjects } from "../features/subjectSlice";
+import { createQuestion } from "../features/questionSlice"
+import { fetchAllClasses } from "../features/classSlice";
 const CreateQuestion = () => {
   const dispatch = useDispatch();
   const { subjectList } = useSelector((state) => state.subject)

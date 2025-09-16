@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSchools } from "../../features/schools/schoolSlice";
-import { fetchRoles } from "../../features/roles/roleSlice";
+import { fetchSchools } from "../../features/schoolSlice";
+import { fetchRoles } from "../../features/roleSlice";
 import {
   registerUser,
   resetAuthState,
   fetchAllUser,
-} from "../../features/auth/authSlice";
+} from "../../features/authSlice";
 
 const RegisterForm = () => {
   const [message, setMessage] = useState("");
