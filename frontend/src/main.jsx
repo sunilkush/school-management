@@ -71,7 +71,10 @@ import ClassSectionFrom from './pages/SuperAdmin/Classes_&_Section/ClassSectionF
 import ClassSectionList from './pages/SuperAdmin/Classes_&_Section/ClassSectionList.jsx';
 import EmployeeForm from './components/forms/EmployeeForm.jsx';
 import FeeStudent from './pages/Student/Fees/FeeStudent.jsx';
-
+import Calendar from './pages/SchoolAdmin/Events_&_Calendar/calendar.jsx';
+import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
+import Events from './pages/SchoolAdmin/Events_&_Calendar/events.jsx';
+import Assets from './pages/SchoolAdmin/Inventory/assets.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -159,10 +162,10 @@ const router = createBrowserRouter([
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/create-exam", element: <CreateExam /> },
               { path: "users/employee-from", element: <EmployeeForm /> },
-              { path: "calendar", element: <EmployeeForm /> },
-              { path: "events", element: <EmployeeForm /> },
-              { path: "inventory/supplies", element: <EmployeeForm /> },
-              { path: "inventory/assets", element: <EmployeeForm /> },
+              { path: "calendar", element: <Calendar /> },
+              { path: "events", element: <Events /> },
+              { path: "inventory/supplies", element: <Supplies /> },
+              { path: "inventory/assets", element: <Assets /> },
 
             ],
           },
