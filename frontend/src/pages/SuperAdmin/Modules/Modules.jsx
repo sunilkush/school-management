@@ -3,8 +3,9 @@ import { useSelector } from "react-redux";
 import { sidebarMenu } from "../../../utils/sidebar";
 import { LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Icon } from "lucide-react";
-const ModuleCard = ({ title, parent,  hasAccess, path }) => {
+
+// ✅ ModuleCard now accepts `Icon` as a prop (actual Lucide component)
+const ModuleCard = ({ title, parent, hasAccess, path, Icon }) => {
   const content = (
     <div
       className={`border rounded-lg p-4 shadow-sm transition ${
@@ -16,7 +17,7 @@ const ModuleCard = ({ title, parent,  hasAccess, path }) => {
           hasAccess ? "text-blue-600" : "text-gray-400"
         }`}
       >
-        <Icon className="w-6 h-6" />
+        {Icon && <Icon className="w-6 h-6" />} {/* ✅ render icon safely */}
         <h2 className="font-semibold text-base">{title}</h2>
       </div>
       {parent && (
@@ -40,16 +41,23 @@ const ModuleCard = ({ title, parent,  hasAccess, path }) => {
 const AllModules = () => {
   const user = useSelector((state) => state.auth?.user);
 
+  // ✅ normalize role
   const role =
-    (typeof user?.role === "string" && user?.role?.name || "school admin").toLowerCase();
+    (typeof user?.role === "string" && user?.role?.name) ||
+    "school admin";
+  const normalizedRole = role.toLowerCase();
 
+  // ✅ permissions fallback
   const permissions = Array.isArray(user?.role?.permissions)
     ? user.role.permissions
     : [];
 
-  const menu = Array.isArray(sidebarMenu[role]) ? sidebarMenu[role] : [];
+  // ✅ menu fallback
+  const menu = Array.isArray(sidebarMenu[normalizedRole])
+    ? sidebarMenu[normalizedRole]
+    : [];
 
-  // ✅ Flatten menu (with fallback icons)
+  // ✅ flatten menu with fallback icons
   const flattenMenu = (items) =>
     items.flatMap((item) =>
       item.subMenu && Array.isArray(item.subMenu)
@@ -73,7 +81,7 @@ const AllModules = () => {
 
   // ✅ Safe permission check
   const hasPermission = (moduleTitle) => {
-    if (role === "super admin") return true; // full access
+    if (normalizedRole === "super admin") return true; // full access
     return permissions?.some(
       (perm) =>
         typeof perm?.module === "string" &&
@@ -84,7 +92,7 @@ const AllModules = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-6">
-        All Modules - <span className="capitalize">{role}</span>
+        All Modules - <span className="capitalize">{normalizedRole}</span>
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -93,7 +101,7 @@ const AllModules = () => {
             key={idx}
             title={mod.title}
             parent={mod.parent}
-            Icon={mod.icon}
+            Icon={mod.icon}   // ✅ pass actual icon
             path={mod.path}
             hasAccess={hasPermission(mod.title)}
           />

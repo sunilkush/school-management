@@ -16,35 +16,31 @@ import {
   UserCheck,
   ClipboardList,
   GraduationCap,
-  File,
+  FileCheck,
   MessageCircle,
   Clipboard,
   ClipboardSignature,
-  DollarSign,
   FileBarChart2,
   Book,
   Briefcase,
   MessageSquare,
   User,
-  FileCheck,
   IndianRupee
 } from "lucide-react";
 
 export const sidebarMenu = {
-  'super admin': [
+  "super admin": [
     { title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
     {
       title: "Schools", icon: School,
       subMenu: [
         { title: "All Schools", path: "superadmin/schools", icon: School },
-        /* { title: "Add School", path: "superadmin/schools/add", icon: School }, */
       ],
     },
     {
       title: "Admins", icon: UserCog,
       subMenu: [
         { title: "All Admins", path: "superadmin/admins", icon: Users },
-      /*   { title: "Register Admin", path: "superadmin/user-create", icon: UserCog }, */
       ],
     },
     {
@@ -62,30 +58,23 @@ export const sidebarMenu = {
       ],
     },
     {
-      title:"classes & section",icon:Puzzle,
-      subMenu:[
-        { title:"Class & Section From", path:"superadmin/clases&section/from", icon: CalendarClock},
-        { title:"Class & Section List", path:"superadmin/clases&section/list", icon: FileText}
-      ]
+      title: "Classes & Sections", icon: Puzzle,
+      subMenu: [
+        { title: "Class & Section Form", path: "superadmin/classes-sections/form", icon: CalendarClock },
+        { title: "Class & Section List", path: "superadmin/classes-sections/list", icon: FileText },
+      ],
     },
     { title: "Reports", path: "superadmin/reports", icon: FileText },
     { title: "Settings", path: "superadmin/settings", icon: Settings },
-    
   ],
 
-  'school admin': [
+  "school admin": [
     { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
-   
     {
       title: "Teachers & Students", icon: Users,
       subMenu: [
-      /*   { title: "Add Student", path: "schooladmin/users/student/user-create", icon: User },
-        { title: "Add Teacher", path: "schooladmin/users/teacher/add", icon: User },
-        { title: "Add Parent", path: "schooladmin/users/parent/add", icon: User }, */
         { title: "Teachers & Staff", path: "schooladmin/users", icon: Users },
-       /*  { title: "Add User", path: "schooladmin/user-create", icon: Users }, */
         { title: "Students", path: "schooladmin/studentList", icon: Users },
-       
       ],
     },
     {
@@ -100,9 +89,9 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Schedule Exams", path: "schooladmin/exams/schedule", icon: ClipboardSignature },
         { title: "Enter Grades", path: "schooladmin/exams/grades", icon: ClipboardList },
-        { title: "Question Bank", path: "schooladmin/exams/question-bank" ,icon:ClipboardList},
-        { title: "Create Exam", path: "schooladmin/exams/create-exam",icon: ClipboardList},
-        { title: "Reports", path: "schooladmin/exams/reports",icon: ClipboardList},
+        { title: "Question Bank", path: "schooladmin/exams/question-bank", icon: ClipboardList },
+        { title: "Create Exam", path: "schooladmin/exams/create-exam", icon: ClipboardList },
+        { title: "Reports", path: "schooladmin/exams/reports", icon: ClipboardList },
       ],
     },
     {
@@ -155,19 +144,19 @@ export const sidebarMenu = {
       ],
     },
     {
-  title: "Events & Calendar", icon: CalendarClock,
-  subMenu: [
-    { title: "School Calendar", path: "schooladmin/calendar", icon: CalendarClock },
-    { title: "Events", path: "schooladmin/events", icon: ClipboardList },
-  ],
-},
-{
-  title: "Inventory", icon: Briefcase,
-  subMenu: [
-    { title: "Supplies", path: "schooladmin/inventory/supplies", icon: FileText },
-    { title: "Assets", path: "schooladmin/inventory/assets", icon: FileCheck },
-  ],
-},
+      title: "Events & Calendar", icon: CalendarClock,
+      subMenu: [
+        { title: "School Calendar", path: "schooladmin/calendar", icon: CalendarClock },
+        { title: "Events", path: "schooladmin/events", icon: ClipboardList },
+      ],
+    },
+    {
+      title: "Inventory", icon: Briefcase,
+      subMenu: [
+        { title: "Supplies", path: "schooladmin/inventory/supplies", icon: FileText },
+        { title: "Assets", path: "schooladmin/inventory/assets", icon: FileCheck },
+      ],
+    },
     {
       title: "Communication", icon: Bell,
       subMenu: [
@@ -179,21 +168,22 @@ export const sidebarMenu = {
     { title: "Settings", path: "schooladmin/settings", icon: Settings },
   ],
 
-  'teacher': [
+  teacher: [
     { title: "Dashboard", path: "teacher", icon: LayoutDashboard },
     { title: "My Classes", path: "teacher/classes", icon: Book },
     { title: "Students", path: "teacher/students", icon: Users },
     { title: "Assignments", path: "teacher/assignments", icon: ClipboardList },
     { title: "Attendance", path: "teacher/attendance", icon: UserCheck },
-    { title: "Exams", path: "teacher/exams", icon: GraduationCap,
-      subMenu:[
-        { title: "Question Bank", path: "teacher/exams/question-bank",icon:FileText },
-        { title: "Create Exam", path: "teacher/exams/create-exam",icon:FileText },
-        { title: "Reports", path: "teacher/exams/reports",icon:FileText },
-      ]
-     },
+    {
+      title: "Exams", path: "teacher/exams", icon: GraduationCap,
+      subMenu: [
+        { title: "Question Bank", path: "teacher/exams/question-bank", icon: FileText },
+        { title: "Create Exam", path: "teacher/exams/create-exam", icon: FileText },
+        { title: "Reports", path: "teacher/exams/reports", icon: FileText },
+      ],
+    },
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
-   {
+    {
       title: "Communication", icon: Bell,
       subMenu: [
         { title: "Send Notification", path: "teacher/communication/send", icon: MessageSquare },
@@ -203,14 +193,15 @@ export const sidebarMenu = {
     { title: "Reports", path: "teacher/reports", icon: FileBarChart2 },
   ],
 
-  'student': [
+  student: [
     { title: "Dashboard", path: "student", icon: LayoutDashboard },
     { title: "My Profile", path: "student/profile", icon: User },
-    { title: "Exams", path: "student/exams", icon: MessageCircle ,
-      subMenu:[
-        { title: "Exam Live", path: "student/exams/exam-live",icon: FileText },
-        { title: "Attempt Review", path: "student/exams/attempt-review",icon: FileText },
-      ]
+    {
+      title: "Exams", path: "student/exams", icon: MessageCircle,
+      subMenu: [
+        { title: "Exam Live", path: "student/exams/exam-live", icon: FileText },
+        { title: "Attempt Review", path: "student/exams/attempt-review", icon: FileText },
+      ],
     },
     { title: "Homework", path: "student/homework", icon: ClipboardList },
     { title: "Attendance", path: "student/attendance", icon: UserCheck },
@@ -227,10 +218,9 @@ export const sidebarMenu = {
         { title: "SMS/Email History", path: "student/communication/history", icon: FileText },
       ],
     },
-    
   ],
 
-  'parent': [
+  parent: [
     { title: "Dashboard", path: "parent", icon: LayoutDashboard },
     { title: "My Children", path: "parent/children", icon: Users },
     { title: "Attendance", path: "parent/attendance", icon: UserCheck },
@@ -238,7 +228,7 @@ export const sidebarMenu = {
     { title: "Homework", path: "parent/homework", icon: ClipboardList },
     { title: "Fees", path: "parent/fees", icon: CreditCard },
     { title: "Messages", path: "parent/messages", icon: MessageCircle },
-    { name: "Reports", path: "parent/reports",icon: ClipboardList },
+    { title: "Reports", path: "parent/reports", icon: ClipboardList },
     {
       title: "Communication", icon: Bell,
       subMenu: [
@@ -248,7 +238,7 @@ export const sidebarMenu = {
     },
   ],
 
-  'accountant': [
+  accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
     { title: "Fee Categories", path: "accountant/fees/categories", icon: CreditCard },
     { title: "Collect Fees", path: "accountant/fees/collect", icon: IndianRupee },
@@ -263,7 +253,7 @@ export const sidebarMenu = {
     },
   ],
 
-  'staff': [
+  staff: [
     { title: "Dashboard", path: "staff", icon: LayoutDashboard },
     { title: "My Tasks", path: "staff/tasks", icon: ClipboardList },
     { title: "Attendance", path: "staff/attendance", icon: UserCheck },
