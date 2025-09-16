@@ -155,6 +155,20 @@ export const sidebarMenu = {
       ],
     },
     {
+  title: "Events & Calendar", icon: CalendarClock,
+  subMenu: [
+    { title: "School Calendar", path: "schooladmin/calendar", icon: CalendarClock },
+    { title: "Events", path: "schooladmin/events", icon: ClipboardList },
+  ],
+},
+{
+  title: "Inventory", icon: Briefcase,
+  subMenu: [
+    { title: "Supplies", path: "schooladmin/inventory/supplies", icon: FileText },
+    { title: "Assets", path: "schooladmin/inventory/assets", icon: FileCheck },
+  ],
+},
+    {
       title: "Communication", icon: Bell,
       subMenu: [
         { title: "Send Notification", path: "schooladmin/communication/send", icon: MessageSquare },
@@ -190,7 +204,7 @@ export const sidebarMenu = {
   ],
 
   'student': [
-    { title: "Dashboard", path: "student/dashboard", icon: LayoutDashboard },
+    { title: "Dashboard", path: "student", icon: LayoutDashboard },
     { title: "My Profile", path: "student/profile", icon: User },
     { title: "Exams", path: "student/exams", icon: MessageCircle ,
       subMenu:[
@@ -225,20 +239,41 @@ export const sidebarMenu = {
     { title: "Fees", path: "parent/fees", icon: CreditCard },
     { title: "Messages", path: "parent/messages", icon: MessageCircle },
     { name: "Reports", path: "parent/reports",icon: ClipboardList },
+    {
+      title: "Communication", icon: Bell,
+      subMenu: [
+        { title: "Send Notification", path: "parent/communication/send", icon: MessageSquare },
+        { title: "SMS/Email History", path: "parent/communication/history", icon: FileText },
+      ],
+    },
   ],
 
   'accountant': [
-    { title: "Dashboard", path: "accountant/dashboard", icon: LayoutDashboard },
+    { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
     { title: "Fee Categories", path: "accountant/fees/categories", icon: CreditCard },
     { title: "Collect Fees", path: "accountant/fees/collect", icon: IndianRupee },
     { title: "Salary Management", path: "accountant/salary", icon: IndianRupee },
     { title: "Expense Reports", path: "accountant/reports", icon: FileBarChart2 },
+    {
+      title: "Communication", icon: Bell,
+      subMenu: [
+        { title: "Send Notification", path: "accountant/communication/send", icon: MessageSquare },
+        { title: "SMS/Email History", path: "accountant/communication/history", icon: FileText },
+      ],
+    },
   ],
 
   'staff': [
-    { title: "Dashboard", path: "staff/dashboard", icon: LayoutDashboard },
+    { title: "Dashboard", path: "staff", icon: LayoutDashboard },
     { title: "My Tasks", path: "staff/tasks", icon: ClipboardList },
     { title: "Attendance", path: "staff/attendance", icon: UserCheck },
     { title: "Messages", path: "staff/messages", icon: MessageCircle },
+    {
+      title: "Communication", icon: Bell,
+      subMenu: [
+        { title: "Send Notification", path: "staff/communication/send", icon: MessageSquare },
+        { title: "SMS/Email History", path: "staff/communication/history", icon: FileText },
+      ],
+    },
   ],
 };

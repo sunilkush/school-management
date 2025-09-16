@@ -9,67 +9,68 @@ import App from "./App.jsx";
 import store from "./store/store.js";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "./pages/Auth/LoginPage.jsx";
-import Dashboard from "./components/layout/Dashboard.jsx";
+import Dashboard from "./components/layout/MainDashboard.jsx";
 import Reports from "./pages/SuperAdmin/Reports/Reports.jsx";
 import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard/SuperAdminDashboard.jsx";
 import SchoolAdminDashboard from "./pages/SchoolAdmin/Dashboard/SchoolAdminDashboard.jsx";
-import StudentDashboard from "./pages/StudentDashboard.jsx";
+import StudentDashboard from "./pages/Student/Dashboard/StudentDashboard.jsx";
 import Profile from "./pages/Profile.jsx";
 import Notification from "./pages/Notification.jsx";
 import Message from "./pages/Message.jsx";
 import Settings from "./pages/Settings.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
-import TeacherDashboard from "./pages/TeacherDashboard.jsx";
-import AccountantDashboard from "./pages/AccountantDashboard.jsx";
-import StaffDashboard from "./pages/StaffDashboard.jsx";
+import TeacherDashboard from "./pages/Teacher/Dashboard/TeacherDashboard.jsx";
+import AccountantDashboard from "./pages/Accountant/Dashboard/AccountantDashboard.jsx";
+import StaffDashboard from "./pages/Staff/Dashboard/StaffDashboard.jsx";
 import Documents from "./pages/Documents.jsx";
 import Schedule from "./pages/Schedule.jsx";
 import UserRegister from "./pages/UserRegister.jsx";
 import Schools from "./pages/SuperAdmin/Schools/Schools.jsx";
-import AddSchool from "./pages/AddSchool.jsx";
+import AddSchool from "./pages/SuperAdmin/Schools/AddSchool.jsx";
 import Admins from "./pages/SuperAdmin/Admins/Admins.jsx";
 import Roles from "./pages/SuperAdmin/Roles_&_Permissions/Roles.jsx";
 import Permissions from "./pages/SuperAdmin/Roles_&_Permissions/Permissions.jsx";
 import AcademicYears from "./pages/SuperAdmin/Modules/AcademicYears.jsx";
 import Modules from "./pages/SuperAdmin/Modules/Modules.jsx";
 import SettingsPage from "./pages/Settings.jsx";
-import UsersPage from "./pages/UsersPage.jsx";
-import AddStudent from "./pages/AddStudent.jsx";
-import AddTeacher from "./pages/AddTeacher.jsx";
-import AddParent from "./pages/AddParent.jsx";
+import UsersPage from "./pages/SchoolAdmin/Teachers_&_Students/UsersPage.jsx";
+import AddStudent from "./pages/SchoolAdmin/Teachers_&_Students/AddStudent.jsx";
+import AddTeacher from "./pages/SchoolAdmin/Teachers_&_Students/AddTeacher.jsx";
+import AddParent from "./pages/SchoolAdmin/Teachers_&_Students/AddParent.jsx";
 import Classes from "./pages/SchoolAdmin/Classes_&_Subjects/Classes.jsx";
 import Subjects from "./pages/SchoolAdmin/Classes_&_Subjects/Subjects.jsx";
-import ScheduleExams from "./pages/ScheduleExams.jsx";
-import EnterGrades from "./pages/EnterGrades.jsx";
-import StudentAttendance from "./pages/StudentAttendance.jsx";
-import StaffAttendance from "./pages/StaffAttendance.jsx";
-import Books from "./pages/Books.jsx";
-import IssueBook from "./pages/IssueBook.jsx";
-import ClassTimetable from "./pages/ClassTimetable.jsx";
-import TeacherTimetable from "./pages/TeacherTimetable.jsx";
-import FeeCategories from "./pages/FeeCategories.jsx";
-import CollectFees from "./pages/CollectFees.jsx";
-import HostelManagement from "./pages/HostelManagement.jsx";
-import RoomAllocation from "./pages/RoomAllocation.jsx";
-import RoutesPage from "./pages/RoutesPage.jsx";
-import Vehicles from "./pages/Vehicles.jsx";
-import EmployeeSalaries from "./pages/EmployeeSalaries.jsx";
-import GeneratePayslip from "./pages/GeneratePayslip.jsx";
-import SendNotification from "./pages/SendNotification.jsx";
-import SmsEmailHistory from "./pages/SmsEmailHistory.jsx";
+import ScheduleExams from "./pages/SchoolAdmin/Exams_&_Grades/ScheduleExams.jsx";
+import EnterGrades from "./pages/SchoolAdmin/Exams_&_Grades/EnterGrades.jsx";
+import StudentAttendance from "./pages/SchoolAdmin/Attendance/StudentAttendance.jsx";
+import StaffAttendance from "./pages/SchoolAdmin/Attendance/StaffAttendance.jsx";
+import Books from "./pages/SchoolAdmin/Library/Books.jsx";
+import IssueBook from "./pages/SchoolAdmin/Library/IssueBook.jsx";
+import ClassTimetable from "./pages/SchoolAdmin/Timetables/ClassTimetable.jsx";
+import TeacherTimetable from "./pages/SchoolAdmin/Timetables/TeacherTimetable.jsx";
+import FeeCategories from "./pages/SchoolAdmin/Fees_Management/FeeCategories.jsx";
+import CollectFees from "./pages/SchoolAdmin/Fees_Management/CollectFees.jsx";
+import HostelManagement from "./pages/SchoolAdmin/Hostel/HostelManagement.jsx";
+import RoomAllocation from "./pages/SchoolAdmin/Hostel/RoomAllocation.jsx";
+import RoutesPage from "./pages/SchoolAdmin/Transport/RoutesPage.jsx";
+import Vehicles from "./pages/SchoolAdmin/Transport/Vehicles.jsx";
+import EmployeeSalaries from "./pages/SchoolAdmin/Payroll/EmployeeSalaries.jsx";
+import GeneratePayslip from "./pages/SchoolAdmin/Payroll/GeneratePayslip.jsx";
+import SendNotification from "./pages/SchoolAdmin/Communication/SendNotification.jsx";
+import SmsEmailHistory from "./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
-import SchoolAdminReport from "./pages/SuperAdmin/Reports/schoolAdminReport.jsx";
+import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx";
 import StudentList from "./pages/SchoolAdmin/Teachers_&_Students/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
-import ExamReports from './pages/ExamReport.jsx';
-import QuestionBank from './pages/QuestionBank.jsx';
-import CreateExam from './pages/CreateExam.jsx';
-import ExamLive from './pages/ExamLive.jsx';
-import AttemptReview from './pages/AttemptReview.jsx';
+import ExamReports from './pages/SchoolAdmin/Exams_&_Grades/ExamReport.jsx';
+import QuestionBank from './pages/SchoolAdmin/Exams_&_Grades/QuestionBank.jsx';
+import CreateExam from './pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx';
+import ExamLive from './pages/Student/Exams/ExamLive.jsx';
+import AttemptReview from './pages/Student/Exams/AttemptReview.jsx';
 import ClassSectionFrom from './pages/SuperAdmin/Classes_&_Section/ClassSectionFrom.jsx';
 import ClassSectionList from './pages/SuperAdmin/Classes_&_Section/ClassSectionList.jsx';
 import EmployeeForm from './components/forms/EmployeeForm.jsx';
+import FeeStudent from './pages/Student/Fees/FeeStudent.jsx';
 
 const router = createBrowserRouter([
   {
@@ -104,12 +105,13 @@ const router = createBrowserRouter([
               { path: "modules/academicyears", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <Settings /> },
-              
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "clases&section/from", element: <ClassSectionFrom /> },
               { path: "clases&section/list", element: <ClassSectionList /> },
+              { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
             ],
           },
           {
@@ -157,6 +159,10 @@ const router = createBrowserRouter([
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/create-exam", element: <CreateExam /> },
               { path: "users/employee-from", element: <EmployeeForm /> },
+              { path: "calendar", element: <EmployeeForm /> },
+              { path: "events", element: <EmployeeForm /> },
+              { path: "inventory/supplies", element: <EmployeeForm /> },
+              { path: "inventory/assets", element: <EmployeeForm /> },
 
             ],
           },
@@ -208,7 +214,7 @@ const router = createBrowserRouter([
               { path: "library", element: <Books /> },
               { path: "hostel", element: <HostelManagement /> },
               { path: "transport", element: <RoutesPage /> },
-              { path: "fees", element: <FeeCategories /> },
+              { path: "fees", element: <FeeStudent /> },
               { path: "exams/attempt-review", element: <AttemptReview /> },
               { path: "exams/exam-live", element: <ExamLive /> },
               { path: "settings", element: <SettingsPage /> },
@@ -238,6 +244,8 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "exams/reports", element: <ExamReports /> },
+              { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
             ],
           },
           {
@@ -257,6 +265,8 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
             ],
           },
           {
@@ -274,6 +284,8 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
             ],
           },
         ],

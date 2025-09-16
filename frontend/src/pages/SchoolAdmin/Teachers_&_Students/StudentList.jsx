@@ -41,7 +41,7 @@ const StudentList = () => {
         ? new Date(stu.admissionDate).toISOString().split("T")[0]
         : "N/A",
       bloodGroup: stu.studentInfo?.bloodGroup ?? "N/A",
-      attendance: stu.attendance ?? "Not Marked",
+      email: stu.userDetails?.email ?? "Not Marked",
     }))
     : [];
 
@@ -74,7 +74,7 @@ const StudentList = () => {
     { name: "Class", selector: (row) => row.class },
     { name: "Section", selector: (row) => row.section },
     { name: "Date of Birth", selector: (row) => row.dateOfBirth },
-    { name: "Attendance", selector: (row) => row.attendance },
+    { name: "Email", selector: (row) => row.email },
     { name: "Phone Number", selector: (row) => row.mobileNumber },
     { name: "Date of Joined", selector: (row) => row.admissionDate },
     { name: "Blood Group", selector: (row) => row.bloodGroup },

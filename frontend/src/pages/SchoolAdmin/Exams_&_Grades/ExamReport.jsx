@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchReports, exportReportPDF } from "../features/examReportSlice";
+import { fetchReports, exportReportPDF } from "../../../features/examReportSlice";
 
 const ExamReports = () => {
   const dispatch = useDispatch();

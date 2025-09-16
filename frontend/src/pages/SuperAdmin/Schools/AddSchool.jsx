@@ -1,5 +1,5 @@
 
-import AddSchoolForm from '../components/forms/AddSchoolForm'
+import AddSchoolForm from '../../../components/forms/AddSchoolForm'
 
 const AddSchool = () => {
   

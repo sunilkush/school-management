@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
-import { fetchAllStudent } from "../features/studentSlice";
-import { activeUser } from "../features/authSlice";
-import {markAttendance} from "../features/attendanceSlice";
+import { fetchAllStudent } from "../../../features/studentSlice";
+import { activeUser } from "../../../features/authSlice";
+import {markAttendance} from "../../../features/attendanceSlice";
 const StudentAttendance = () => {
   const dispatch = useDispatch();
   const { studentList = [], loading } = useSelector((state) => state.students);

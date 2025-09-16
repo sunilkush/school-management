@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import SummaryCards from './components/SummaryCards';
+import SummaryCards from '../../SuperAdmin/Reports/components/SummaryCards';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchDashboardSummary } from '../../../features/dashboardSlice';
 

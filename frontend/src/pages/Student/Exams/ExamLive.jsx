@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import QuestionCard from "../components/QuestionCard";
-import ExamTimer from "../components/ExamTimer";
-import AutosaveIndicator from "../components/AutosaveIndicator";
+import QuestionCard from "./components/QuestionCard";
+import ExamTimer from "./components/ExamTimer";
+import AutosaveIndicator from "./components/AutosaveIndicator";
 
 const ExamLive = ({ questions, duration }) => {
   const [answers, setAnswers] = useState({});
