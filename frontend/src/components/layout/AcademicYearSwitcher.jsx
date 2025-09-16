@@ -25,7 +25,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
     if (!activeYear) {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId,academicYears,activeYear]);
 
   const handleChange = (e) => {
     const selectedYear = academicYears.find((y) => y._id === e.target.value);

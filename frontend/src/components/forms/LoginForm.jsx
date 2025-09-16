@@ -10,29 +10,28 @@ const LoginForm = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
 
   const { loading, error, user } = useSelector((state) => state.auth);
-
-  const roleRoutes = [
-    { role: "super admin", path: "/dashboard/superadmin" },
-    { role: "school admin", path: "/dashboard/schooladmin" },
-    { role: "student", path: "/dashboard/student" },
-    { role: "parent", path: "/dashboard/parent" },
-    { role: "teacher", path: "/dashboard/teacher" },
-    { role: "accountant", path: "/dashboard/accountant" },
-    { role: "staff", path: "/dashboard/staff" },
-  ];
-
   const [navigated, setNavigated] = useState(false);
   const roleName = user?.role?.name?.toLowerCase();
+  
+ useEffect(() => {
+  if (roleName && !navigated) {
+    const roleRoutes = [
+      { role: "super admin", path: "/dashboard/superadmin" },
+      { role: "school admin", path: "/dashboard/schooladmin" },
+      { role: "student", path: "/dashboard/student" },
+      { role: "parent", path: "/dashboard/parent" },
+      { role: "teacher", path: "/dashboard/teacher" },
+      { role: "accountant", path: "/dashboard/accountant" },
+      { role: "staff", path: "/dashboard/staff" },
+    ];
 
-  useEffect(() => {
-    if (roleName && !navigated) {
-      const match = roleRoutes.find((r) => r.role === roleName);
-      if (match) {
-        setNavigated(true);
-        navigate(match.path);
-      }
+    const match = roleRoutes.find((r) => r.role === roleName);
+    if (match) {
+      setNavigated(true);
+      navigate(match.path);
     }
-  }, [roleName, navigate, navigated]);
+  }
+}, [roleName, navigate, navigated]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

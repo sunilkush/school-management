@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
@@ -23,16 +23,20 @@ const RegisterForm = () => {
   const currentUserRole = user?.role?.name?.toLowerCase();
   const currentSchoolId = user?.school?._id;
 
-  const initialForm = {
-    name: "",
-    email: "",
-    password: "",
-    roleId: "",
-    schoolId: currentUserRole !== "super admin" ? currentSchoolId || "" : "",
-    isActive: false,
-    avatar: null,
-    academicYearId: "", // ✅ Capitalized field fixed
-  };
+  // ✅ Wrap initialForm inside useMemo
+  const initialForm = useMemo(
+    () => ({
+      name: "",
+      email: "",
+      password: "",
+      roleId: "",
+      schoolId: currentUserRole !== "super admin" ? currentSchoolId || "" : "",
+      isActive: false,
+      avatar: null,
+      academicYearId: "",
+    }),
+    [currentUserRole, currentSchoolId] // re-create only when these change
+  );
 
   const [formData, setFormData] = useState(initialForm);
   const [filteredRoles, setFilteredRoles] = useState([]);
@@ -50,14 +54,15 @@ const RegisterForm = () => {
       setFormData(initialForm);
       setConfirmPassword("");
       dispatch(fetchAllUser());
+
       const timer = setTimeout(() => {
         setMessage("");
         dispatch(resetAuthState());
       }, 2000);
 
-      return () => clearTimeout(timer); // ✅ cleanup
+      return () => clearTimeout(timer);
     }
-  }, [success, dispatch]);
+  }, [success, dispatch, initialForm]);
 
   // 🔹 Dynamic role filtering
   useEffect(() => {
