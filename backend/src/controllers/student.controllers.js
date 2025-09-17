@@ -47,6 +47,7 @@ const registerStudent = asyncHandler(async (req, res) => {
   const student = await Student.create({
     userId: user._id,
     dateOfBirth,
+
     gender,
     religion,
     cast,
@@ -337,17 +338,9 @@ const deleteStudent = asyncHandler(async (req, res) => {
     throw new ApiError(500, error.message || "Something went wrong!");
   }
 });
-/* function generateNextRegNumber(lastNumber, academicYear) {
-  if (!lastNumber) {
-    return `REG${academicYear}-0001`;
-  }
-
-  const [prefix, num] = lastNumber.split("-");
-  const nextNum = String(parseInt(num, 10) + 1).padStart(4, "0");
-  return `${prefix}-${nextNum}`;
-} */
 
 // ✅ Get last student & generate next reg no
+// controller (assuming you import generateNextRegNumber earlier)
 const getLastRegisteredStudent = async (req, res, next) => {
   try {
     const { schoolId, academicYearId } = req.query;
@@ -356,23 +349,29 @@ const getLastRegisteredStudent = async (req, res, next) => {
       throw new ApiError(400, "schoolId and academicYearId are required");
     }
 
-    // 🔹 Get last student (optional)
-    const lastStudent = await Student.findOne({
+    // ✅ Get last enrolled student for this school & academic year
+    const lastStudent = await StudentEnrollment.findOne({
       schoolId: new mongoose.Types.ObjectId(schoolId),
       academicYearId: new mongoose.Types.ObjectId(academicYearId),
     })
       .sort({ createdAt: -1 })
-      .select("registrationNumber studentName");
+      .select("registrationNumber studentId")
+      .populate("studentId", "studentName") // 👈 populate student name from Student collection
+      .lean();
 
-    // 🔹 Generate next registration number
-    const nextRegNo = await generateNextRegNumber(schoolId, academicYearId);
+    console.log("lastStudent:", lastStudent);
+
+    const lastRegNumber = lastStudent?.registrationNumber ?? null;
+    console.log(lastRegNumber)
+    // ✅ Generate next registration number
+    const nextRegNo = generateNextRegNumber(lastRegNumber);
 
     return res.json(
       new ApiResponse(200, {
         registrationNumber: nextRegNo,
         lastStudent: lastStudent
           ? {
-              name: lastStudent.studentName,
+              name: lastStudent.studentId?.studentName ?? null,
               registrationNumber: lastStudent.registrationNumber,
             }
           : null,
@@ -382,6 +381,7 @@ const getLastRegisteredStudent = async (req, res, next) => {
     next(err);
   }
 };
+
 
 export {
   registerStudent,

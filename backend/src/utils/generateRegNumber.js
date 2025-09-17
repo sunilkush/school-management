@@ -1,39 +1,30 @@
-import mongoose from "mongoose";
-import { Student } from "../models/student.model.js";
+// utils/registration.js (ES module)
+export function generateNextRegNumber(lastRegNumber, options = {}) {
+  const {
+    prefix = "REG",
+    year = new Date().getFullYear(),
+    digits = 4,
+  } = options;
 
-/**
- * Generate next registration number
- * Format: REG{YEAR}-{SEQUENCE}
- * Example: REG2025-0001
- */
-export const generateNextRegNumber = async (schoolId, academicYearId) => {
-  // Ensure IDs are ObjectId
-  const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
-  const academicYearObjectId = new mongoose.Types.ObjectId(academicYearId);
+  const yearStr = String(year);
+  const escapedPrefix = String(prefix).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  // 🔹 Find last student for this school + academic year
-  const lastStudent = await Student.findOne({
-    schoolId: schoolObjectId,
-    academicYearId: academicYearObjectId,
-  })
-    .sort({ createdAt: -1 })
-    .select("registrationNumber");
+  let nextNumber = 1;
 
-  // 🔹 Determine next sequence number
-  let nextSequence = 1;
-  if (lastStudent?.registrationNumber) {
-    const parts = lastStudent.registrationNumber.split("-");
-    if (parts.length === 2) {
-      const num = parseInt(parts[1], 10) || 0;
-      nextSequence = num + 1;
+  if (lastRegNumber && typeof lastRegNumber === "string") {
+    // try exact match for prefix + year + number (safe because prefix is escaped)
+    const regex = new RegExp(`^${escapedPrefix}${yearStr}(\\d+)$`);
+    const match = lastRegNumber.match(regex);
+    console.log(match)
+    if (match) {
+      nextNumber = parseInt(match[1], 10) + 1;
+    } else {
+      // If lastRegNumber exists but doesn't match this year's pattern,
+      // we intentionally start from 1 for the new year/format (safer).
+      nextNumber = 1;
     }
   }
 
-  // 🔹 Use current year as prefix
-  const yearPrefix = new Date().getFullYear();
-
-  // 🔹 Format sequence with leading zeros
-  const sequenceStr = String(nextSequence).padStart(4, "0"); // 0001, 0002, ...
-
-  return `REG${yearPrefix}-${sequenceStr}`;
-};
+  const padded = String(nextNumber).padStart(digits, "0");
+  return `${prefix}${yearStr}${padded}`;
+}
