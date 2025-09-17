@@ -8,7 +8,7 @@ import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import { Class } from "../models/classes.model.js";
 import { ClassSection } from "../models/classSection.model.js";
-import { Section } from "../models/section.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 import mongoose from "mongoose";
 
 // ✅ Register and admit student
@@ -362,10 +362,19 @@ const getLastRegisteredStudent = async (req, res, next) => {
     console.log("lastStudent:", lastStudent);
 
     const lastRegNumber = lastStudent?.registrationNumber ?? null;
-    console.log(lastRegNumber)
-    // ✅ Generate next registration number
-    const nextRegNo = generateNextRegNumber(lastRegNumber);
+    
 
+      // ✅ Reset numbering for each academic year
+    const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
+    const yearLabel = academicYearDoc?.code || new Date().getFullYear(); 
+    // e.g. academicYearDoc.name = "2025" or "2025-26"
+    // ✅ Generate next registration number
+    const nextRegNo = generateNextRegNumber(lastRegNumber, {
+      prefix: "REG",
+      year: yearLabel,
+      digits: 4,
+    });
+     
     return res.json(
       new ApiResponse(200, {
         registrationNumber: nextRegNo,

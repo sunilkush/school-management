@@ -255,10 +255,9 @@ useEffect(() => {
 
 
               {lastStudent && (
-                  <p className="text-xs text-gray-500 mb-0 mt-1">
-                    Last Student:({lastStudent?.lastStudent?.registrationNumber})
-                   
-                  </p>
+                  <span className="text-xs text-red-500 mb-0 mt-1">
+                    Last Student : ( {lastStudent?.lastStudent?.registrationNumber} )
+                  </span>
                 )}
             </div>
 
