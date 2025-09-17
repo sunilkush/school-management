@@ -83,9 +83,9 @@ const UsersPage = () => {
             <div>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-blue-400 rounded-md text-white float-end px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-primary rounded-sm text-white float-end px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                Create Teacher / Staff
+                Add Teacher & Staff
               </button>
             </div>
           </div>
@@ -106,7 +106,7 @@ const UsersPage = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+          <div className="max-w-lg mx-auto bg-white shadow-lg rounded-2xl p-8 border border-gray-200 relative">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"

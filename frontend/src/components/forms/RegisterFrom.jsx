@@ -13,7 +13,6 @@ const RegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const dispatch = useDispatch();
-
   const { roles } = useSelector((state) => state.role);
   const { schools } = useSelector((state) => state.school);
   const { isLoading, error, user, success } = useSelector(
@@ -23,7 +22,7 @@ const RegisterForm = () => {
   const currentUserRole = user?.role?.name?.toLowerCase();
   const currentSchoolId = user?.school?._id;
 
-  // ✅ Wrap initialForm inside useMemo
+  // ✅ Memoized initial form
   const initialForm = useMemo(
     () => ({
       name: "",
@@ -35,19 +34,19 @@ const RegisterForm = () => {
       avatar: null,
       academicYearId: "",
     }),
-    [currentUserRole, currentSchoolId] // re-create only when these change
+    [currentUserRole, currentSchoolId]
   );
 
   const [formData, setFormData] = useState(initialForm);
   const [filteredRoles, setFilteredRoles] = useState([]);
 
-  // 🔹 Fetch roles & schools on mount
+  // 🔹 Fetch roles & schools
   useEffect(() => {
     dispatch(fetchSchools());
     dispatch(fetchRoles());
   }, [dispatch]);
 
-  // 🔹 Handle success reset
+  // 🔹 Handle success
   useEffect(() => {
     if (success) {
       setMessage("🎉 Registration successful!");
@@ -64,10 +63,9 @@ const RegisterForm = () => {
     }
   }, [success, dispatch, initialForm]);
 
-  // 🔹 Dynamic role filtering
+  // 🔹 Role filtering
   useEffect(() => {
     let updatedRoles = [];
-
     if (currentUserRole === "super admin") {
       updatedRoles = roles.filter(
         (role) =>
@@ -81,14 +79,12 @@ const RegisterForm = () => {
           !["super admin", "school admin"].includes(role.name.toLowerCase())
       );
     }
-
     setFilteredRoles(updatedRoles);
   }, [roles, currentUserRole, formData.schoolId, currentSchoolId]);
 
-  // 🔹 Handle input changes
+  // 🔹 Input change handler
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-
     if (name === "avatar") {
       const file = files[0];
       if (file) {
@@ -96,7 +92,6 @@ const RegisterForm = () => {
           alert("Please upload an image under 1MB.");
           return;
         }
-
         const reader = new FileReader();
         reader.onload = function (event) {
           const img = new Image();
@@ -117,7 +112,6 @@ const RegisterForm = () => {
                   alert("Image size exceeds 50KB after resizing.");
                   return;
                 }
-
                 const resizedFile = new File([blob], file.name, {
                   type: file.type,
                 });
@@ -139,66 +133,66 @@ const RegisterForm = () => {
     }
   };
 
-  // 🔹 Handle submit
+  // 🔹 Submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-
     const formPayload = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       formPayload.append(key, value);
     });
-
     dispatch(registerUser(formPayload));
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold text-center text-gray-900 mb-2">
+    <div className="">
+      <h2 className="text-xl font-bold text-center text-primary mb-2">
         Register
       </h2>
-      <p className="text-center text-xs text-gray-600 mb-6">
+      <p className="text-center text-sm text-gray-500 mb-3">
         Create your account. It’s free and only takes a minute.
       </p>
 
-      {message && <p className="text-green-600 text-center">{message}</p>}
-      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+      {message && (
+        <p className="text-emerald-600 text-sm text-center mb-3">{message}</p>
+      )}
+      {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
 
-      <form className="grid grid-cols-2 gap-2" onSubmit={handleSubmit}>
+      <form className="grid grid-cols-1 gap-4" onSubmit={handleSubmit}>
         {/* Name */}
         <div>
-          <label className="text-xs">Name</label>
+          <label className="text-xs text-gray-600">Name</label>
           <input
             name="name"
             onChange={handleChange}
             value={formData.name}
             type="text"
-            placeholder="Name"
+            placeholder="Full Name"
             required
-            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 "
+            className="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs"
           />
         </div>
 
         {/* Email */}
         <div>
-          <label className="text-xs">Email</label>
+          <label className="text-xs text-gray-600">Email</label>
           <input
             name="email"
             onChange={handleChange}
             value={formData.email}
             type="email"
-            placeholder="Email"
+            placeholder="Email Address"
             required
-            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs"
           />
         </div>
 
         {/* Password */}
         <div>
-          <label className="text-xs">Password</label>
+          <label className="text-xs text-gray-600">Password</label>
           <input
             name="password"
             onChange={handleChange}
@@ -206,13 +200,13 @@ const RegisterForm = () => {
             type="password"
             placeholder="Password"
             required
-            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs"
           />
         </div>
 
         {/* Confirm Password */}
         <div>
-          <label className="text-xs">Confirm Password</label>
+          <label className="text-xs text-gray-600">Confirm Password</label>
           <input
             name="confirmPassword"
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -220,32 +214,32 @@ const RegisterForm = () => {
             type="password"
             placeholder="Confirm Password"
             required
-            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs"
           />
         </div>
 
         {/* Avatar */}
         <div>
-          <label className="text-xs">Avatar</label>
+          <label className="text-xs text-gray-600">Upload Avatar</label>
           <input
             type="file"
             name="avatar"
             accept="image/*"
             onChange={handleChange}
-            className="w-full px-2 py-1 text-sm  border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs"
           />
         </div>
 
         {/* School Dropdown (only for super admin) */}
         {currentUserRole === "super admin" && (
           <div>
-            <label className="text-xs">School Name</label>
+            <label className="text-xs text-gray-600">School</label>
             <select
               name="schoolId"
               value={formData.schoolId}
               onChange={handleChange}
               required
-              className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs"
             >
               <option value="">Select School</option>
               {schools.map((school) => (
@@ -259,13 +253,13 @@ const RegisterForm = () => {
 
         {/* Role Dropdown */}
         <div>
-          <label className="text-xs">Role</label>
+          <label className="text-xs text-gray-600">Role</label>
           <select
             name="roleId"
             value={formData.roleId}
             onChange={handleChange}
             required
-            className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs"
           >
             <option value="">Select Role</option>
             {filteredRoles
@@ -280,27 +274,28 @@ const RegisterForm = () => {
               ))}
           </select>
         </div>
-       
-        <div className="flex items-center col-span-2">
+
+        {/* Active Checkbox */}
+        <div className="flex items-center">
           <input
             id="isActive"
             type="checkbox"
             name="isActive"
             checked={formData.isActive}
             onChange={handleChange}
-            className="mr-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="mr-2 text-primary focus:ring-primary"
           />
           <label htmlFor="isActive" className="text-sm text-gray-600">
-            Is Active
+            Active User
           </label>
         </div>
 
         {/* Submit */}
-        <div className="col-span-2 flex justify-center">
+        <div className="flex justify-center">
           <button
             type="submit"
             disabled={isLoading}
-            className="px-2 bg-blue-600 text-white py-1 text-sm rounded-md hover:bg-blue-800"
+            className="px-6 py-2 bg-primary text-white text-sm rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
           >
             {isLoading ? "Registering..." : "Register Now"}
           </button>
