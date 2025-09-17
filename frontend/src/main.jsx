@@ -34,7 +34,7 @@ import Permissions from "./pages/SuperAdmin/Roles_&_Permissions/Permissions.jsx"
 import AcademicYears from "./pages/SuperAdmin/Modules/AcademicYears.jsx";
 import Modules from "./pages/SuperAdmin/Modules/Modules.jsx";
 import SettingsPage from "./pages/Settings.jsx";
-import UsersPage from "./pages/SchoolAdmin/Teachers_&_Students/UsersPage.jsx";
+import UsersPage from "./pages/SchoolAdmin/Teachers_&_Students/UsersList.jsx";
 import AddStudent from "./pages/SchoolAdmin/Teachers_&_Students/AddStudent.jsx";
 import AddTeacher from "./pages/SchoolAdmin/Teachers_&_Students/AddTeacher.jsx";
 import AddParent from "./pages/SchoolAdmin/Teachers_&_Students/AddParent.jsx";
@@ -70,6 +70,7 @@ import AttemptReview from './pages/Student/Exams/AttemptReview.jsx';
 import ClassSectionFrom from './pages/SuperAdmin/Classes_&_Section/ClassSectionFrom.jsx';
 import ClassSectionList from './pages/SuperAdmin/Classes_&_Section/ClassSectionList.jsx';
 import EmployeeForm from './components/forms/EmployeeForm.jsx';
+import EmployeeDetailes from './pages/Teacher/Profile/EmployeeDetailes.jsx';
 import FeeStudent from './pages/Student/Fees/FeeStudent.jsx';
 import Calendar from './pages/SchoolAdmin/Events_&_Calendar/calendar.jsx';
 import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
@@ -162,6 +163,7 @@ const router = createBrowserRouter([
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/create-exam", element: <CreateExam /> },
               { path: "users/employee-from", element: <EmployeeForm /> },
+              { path: "users/employee-detailes", element: <EmployeeDetailes /> },
               { path: "calendar", element: <Calendar /> },
               { path: "events", element: <Events /> },
               { path: "inventory/supplies", element: <Supplies /> },

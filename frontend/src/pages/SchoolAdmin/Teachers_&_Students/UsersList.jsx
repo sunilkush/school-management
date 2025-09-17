@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchAllUser } from "../../../features/authSlice";
+import { fetchAllUser, deleteUser } from "../../../features/authSlice";
 import DataTable from "react-data-table-component";
 import RegisterForm from "../../../components/forms/RegisterFrom"; // ✅ check file name
 import { useNavigate } from "react-router-dom";
-
+import { PencilLine, Eye, Trash2 } from "lucide-react"
 const UsersPage = () => {
   const { users, user: loggedInUser } = useSelector((state) => state.auth);
   const [selectedRole, setSelectedRole] = useState("all roles");
@@ -22,23 +22,27 @@ const UsersPage = () => {
   }, [dispatch]);
 
   // ✅ Role-based filtering
-  const filteredUsers = users?.filter((u) => {
-    const sameSchool = u.school?._id === loggedInUser?.school?._id;
+const filteredUsers = users?.filter((u) => {
+  const sameSchool = u.school?._id === loggedInUser?.school?._id;
+  const isActive = u.isActive !== false; // ✅ skip soft-deleted users
 
-    if (role?.toLowerCase() === "teacher") {
-      return sameSchool && u.role?.name?.toLowerCase() === "student";
-    }
+  if (!isActive) return false;
 
-    if (role?.toLowerCase() === "school admin") {
-      const roleMatch =
-        selectedRole === "all" || selectedRole === "all roles"
-          ? ["teacher", "school admin"].includes(u.role?.name?.toLowerCase())
-          : u.role?.name?.toLowerCase() === selectedRole;
-      return sameSchool && roleMatch;
-    }
+  if (role?.toLowerCase() === "teacher") {
+    return sameSchool && u.role?.name?.toLowerCase() === "student";
+  }
 
-    return false;
-  });
+  if (role?.toLowerCase() === "school admin") {
+    const roleMatch =
+      selectedRole === "all" || selectedRole === "all roles"
+        ? ["teacher", "school admin"].includes(u.role?.name?.toLowerCase())
+        : u.role?.name?.toLowerCase() === selectedRole;
+    return sameSchool && roleMatch;
+  }
+
+  return false;
+});
+
 
   const columns = [
     { name: "#", selector: (row, index) => index + 1, width: "60px" },
@@ -46,15 +50,37 @@ const UsersPage = () => {
     { name: "Email", selector: (row) => row.email, sortable: true },
     { name: "Role", selector: (row) => row.role?.name, sortable: true },
     { name: "School", selector: (row) => row.school?.name, sortable: true },
-    { name: "Action", selector: (row) => <>
-    {console.log(row)} 
-    <button 
-      className="bg-green-500 text-white px-2 py-1 rounded mr-2" 
-      onClick={() => navigate(`/dashboard/schooladmin/users/employee-from?id=${row._id}`)}
-    >
-      Edit
-    </button>
-    </>, sortable: true },
+    {
+      name: "Action", cell: (row) => (
+        <>
+          <button
+            className=" text-primary px-2 py-1 rounded mr-2 "
+            onClick={() => navigate(`/dashboard/schooladmin/users/employee-from?id=${row._id}`)}
+          >
+            <PencilLine className="text-xs" />
+          </button>
+          <button
+            className=" text-blue-500 px-2 py-1 rounded mr-2 "
+            onClick={() => navigate(`/dashboard/schooladmin/users/employee-detailes?id=${row._id}`)}
+          >
+            <Eye className="text-xs" />
+          </button>
+          <button
+            className="text-red-500 px-2 py-1 rounded mr-2"
+            onClick={() => {
+              if (window.confirm("Are you sure you want to delete this user?")) {
+                dispatch(deleteUser({ id: row._id, isActive: false }))
+                  .unwrap()
+                  .then(() => dispatch(fetchAllUser()));
+              }
+            }}
+          >
+            <Trash2 className="text-xs" />
+          </button>
+        </>
+      )
+    },
+
   ];
 
   return (

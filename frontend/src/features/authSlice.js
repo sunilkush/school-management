@@ -93,6 +93,7 @@ export const deleteUser = createAsyncThunk(
   'auth/deleteUser',
   async ({ id, isActive }, { rejectWithValue }) => {
     try {
+     
       const token = localStorage.getItem('accessToken');
       const res = await axios.patch(`${Api_Base_Url}/user/delete/${id}`, { isActive }, {
         headers: {
