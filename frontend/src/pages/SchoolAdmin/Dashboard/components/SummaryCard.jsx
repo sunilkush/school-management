@@ -11,7 +11,7 @@ const SummaryCard = ({ title, value, percentage, trend, color, label }) => {
   const textColor = trend.includes('Decrease') ? 'text-red-500' : 'text-green-500';
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-sm flex flex-col justify-between">
+    <div className="bg-white rounded-xl p-5 shadow-sm border flex flex-col justify-between">
       <div className="flex justify-between items-start">
         <div>
           <p className="text-gray-500 text-sm">{title}</p>

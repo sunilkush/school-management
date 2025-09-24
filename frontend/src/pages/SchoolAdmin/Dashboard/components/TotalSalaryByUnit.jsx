@@ -21,7 +21,7 @@ const TotalSalaryByUnit = () => {
   const [selected, setSelected] = useState('Sales');
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm">
+    <div className="bg-white p-6 rounded-xl shadow-sm border">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Total Salary by Unit</h3>
         <div className="flex items-center space-x-4 text-sm">

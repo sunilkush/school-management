@@ -13,7 +13,7 @@ const Schools = () => {
   }, [dispatch]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6">
       {/* Header */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
         <h1 className="text-2xl font-bold mb-4 text-blue-800">Schools</h1>
@@ -25,7 +25,7 @@ const Schools = () => {
         </button>
       </div>
 
-      <hr className="my-4" />
+      <hr className="mb-3" />
 
       {/* School List */}
       {loading ? (

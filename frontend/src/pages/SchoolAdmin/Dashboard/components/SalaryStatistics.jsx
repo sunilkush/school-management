@@ -1,5 +1,7 @@
 import React from 'react';
+import { Select } from "antd";
 
+const { Option } = Select;
 const stats = [
   { title: 'Developer', value: '6k USD', height: 'h-32', color: 'bg-indigo-400' },
   { title: 'Marketing', value: '3k USD', height: 'h-24', color: 'bg-indigo-300' },
@@ -8,13 +10,20 @@ const stats = [
 
 const SalaryStatistics = () => {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm flex justify-between flex-col">
+    <div className="bg-white p-6 rounded-xl shadow-sm border flex justify-between flex-col">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-semibold">Salary Statistics</h3>
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <select className="border px-2 py-1 rounded text-sm text-gray-600">
-              <option>Last month</option>
-            </select>
+         <Select
+            defaultValue="lastMonth"
+            size="small"
+            style={{ width: 120 }}
+            className="text-gray-600"
+          >
+          <Option value="lastMonth">Last month</Option>
+          <Option value="thisMonth">This month</Option>
+          <Option value="lastWeek">Last week</Option>
+        </Select>
         </div>
       </div>
 

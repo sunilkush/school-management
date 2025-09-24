@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent } from "../../../../components/UI/Card.jsx";
 import { Button } from '../../../../components/UI/Button.jsx';
+import { Select } from "antd";
 
+const { Option } = Select;
 const employees = [
   {
     name: 'Henry, Arthur',
@@ -39,9 +41,16 @@ const EmployeePerformance = () => {
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">Teacher Performance</h2>
-            <select className="border px-2 py-1 rounded text-sm text-gray-600">
-              <option>Last month</option>
-            </select>
+            <Select
+            defaultValue="lastMonth"
+            size="small"
+            style={{ width: 120 }}
+            className="text-gray-600"
+          >
+          <Option value="lastMonth">Last month</Option>
+          <Option value="thisMonth">This month</Option>
+          <Option value="lastWeek">Last week</Option>
+        </Select>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
