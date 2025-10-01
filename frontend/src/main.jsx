@@ -40,7 +40,7 @@ import AddTeacher from "./pages/SchoolAdmin/Teachers_&_Students/AddTeacher.jsx";
 import AddParent from "./pages/SchoolAdmin/Teachers_&_Students/AddParent.jsx";
 import Classes from "./pages/SchoolAdmin/Classes_&_Subjects/Classes.jsx";
 import Subjects from "./pages/SchoolAdmin/Classes_&_Subjects/Subjects.jsx";
-import ScheduleExams from "./pages/SchoolAdmin/Exams_&_Grades/ScheduleExams.jsx";
+import ScheduleExams from "./pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx";
 import EnterGrades from "./pages/SchoolAdmin/Exams_&_Grades/EnterGrades.jsx";
 import StudentAttendance from "./pages/SchoolAdmin/Attendance/StudentAttendance.jsx";
 import StaffAttendance from "./pages/SchoolAdmin/Attendance/StaffAttendance.jsx";
@@ -76,6 +76,7 @@ import Calendar from './pages/SchoolAdmin/Events_&_Calendar/calendar.jsx';
 import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
 import Events from './pages/SchoolAdmin/Events_&_Calendar/events.jsx';
 import Assets from './pages/SchoolAdmin/Inventory/assets.jsx';
+import ExamSchedule from './pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -134,7 +135,7 @@ const router = createBrowserRouter([
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
-              { path: "exams/schedule", element: <ScheduleExams /> },
+              { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
               { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance/staff", element: <StaffAttendance /> },

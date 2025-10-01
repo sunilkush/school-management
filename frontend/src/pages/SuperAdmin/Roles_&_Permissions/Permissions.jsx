@@ -1,8 +1,11 @@
-import DataTable from "react-data-table-component";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { Select } from "antd";
+import DataTable from "react-data-table-component";
 import { fetchSchools } from "../../../features/schoolSlice";
-import { fetchRoles, fetchRoleBySchool } from "../../../features/roleSlice"; // ✅ add fetchRoles
+import { fetchRoles, fetchRoleBySchool } from "../../../features/roleSlice";
+
+const { Option } = Select;
 
 const Permissions = () => {
   const dispatch = useDispatch();
@@ -21,7 +24,7 @@ const Permissions = () => {
     if (selectedSchoolId) {
       dispatch(fetchRoleBySchool(selectedSchoolId));
     } else {
-      dispatch(fetchRoles()); // ✅ load global roles
+      dispatch(fetchRoles()); // load global roles
     }
   }, [dispatch, selectedSchoolId]);
 
@@ -72,22 +75,25 @@ const Permissions = () => {
       <h2 className="text-2xl font-bold">Check Permissions</h2>
 
       <div className="mt-4 max-w-md">
-        <label className="block mb-1 font-semibold">Select School (optional):</label>
+        <label className="block mb-1 font-semibold">
+          Select School (optional):
+        </label>
         {!schools.length ? (
           <p className="text-gray-500">Loading schools...</p>
         ) : (
-          <select
-            value={selectedSchoolId}
-            onChange={(e) => setSelectedSchoolId(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
+          <Select
+            value={selectedSchoolId || undefined}
+            onChange={(value) => setSelectedSchoolId(value)}
+            allowClear
+            placeholder="-- Global Roles --"
+            className="w-full"
           >
-            <option value="">-- Global Roles --</option>
             {schools.map((school) => (
-              <option key={school._id} value={school._id}>
+              <Option key={school._id} value={school._id}>
                 {school.name}
-              </option>
+              </Option>
             ))}
-          </select>
+          </Select>
         )}
       </div>
 

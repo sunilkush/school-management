@@ -9,6 +9,7 @@ export const createAcademicYear = createAsyncThunk(
   "academicYear/create",
   async (data, { rejectWithValue }) => {
     try {
+     
       const res = await axios.post(`${Api_Base_Url}/academicYear/create`, data, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
@@ -40,7 +41,7 @@ export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
   async (schoolId, { rejectWithValue }) => {
     try {
-      
+     
       const res = await axios.get(
         `${Api_Base_Url}/academicYear/active/${schoolId}`,
         { headers: { Authorization: `Bearer ${getToken()}` } }

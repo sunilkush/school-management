@@ -9,6 +9,10 @@ import {
   archiveAcademicYear,
 } from "../../../features/academicYearSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
+import { Select, DatePicker, Button, message as AntMessage } from "antd";
+import dayjs from "dayjs";
+
+const { Option } = Select;
 
 const AcademicYearPage = () => {
   const dispatch = useDispatch();
@@ -27,8 +31,8 @@ const AcademicYearPage = () => {
     message = null,
   } = useSelector((state) => state.academicYear);
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   // Fetch schools if Super Admin
   useEffect(() => {
@@ -62,6 +66,7 @@ const AcademicYearPage = () => {
   };
 
   const validateDates = () => {
+    if (!startDate || !endDate) return "Start and End dates are required.";
     const s = new Date(startDate);
     const e = new Date(endDate);
     if (s >= e) return "Start date must be before end date.";
@@ -75,14 +80,20 @@ const AcademicYearPage = () => {
   };
 
   const handleCreate = () => {
+   
     const validationError = validateDates();
     if (validationError) {
-      alert(validationError);
+      AntMessage.error(validationError);
       return;
     }
     const name = generateYearName(startDate, endDate);
     dispatch(
-      createAcademicYear({ schoolId: selectedSchoolId, name, startDate, endDate })
+      createAcademicYear({
+        schoolId: selectedSchoolId,
+        name,
+        startDate,
+        endDate,
+      })
     );
   };
 
@@ -95,30 +106,30 @@ const AcademicYearPage = () => {
   };
 
   return (
-    <div className="p-4 space-y-6">
-      <h1 className="text-xl font-bold">Academic Years</h1>
+    <div className="space-y-6">
+      <h1 className="text-lg font-bold">Academic Years</h1>
 
       {/* Alerts */}
       {message && (
-        <div className="bg-green-100 text-green-700 p-2 rounded text-sm">
+        <div className="bg-green-100 text-green-700 p-2 rounded text-xs">
           {typeof message === "string"
             ? message
             : message?.msg || JSON.stringify(message)}
         </div>
       )}
       {error && (
-        <div className="bg-red-100 text-red-700 p-2 rounded text-sm">
+        <div className="bg-red-100 text-red-700 p-2 rounded text-xs">
           {typeof error === "string"
             ? error
             : error?.errors || JSON.stringify(error)}
         </div>
       )}
 
-      {loading && <p className="text-gray-500">Loading...</p>}
+      {loading && <p className="text-gray-500 text-xs">Loading...</p>}
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full border text-sm mb-4 border-collapse bg-white">
+        <table className="w-full border text-xs mb-4 border-collapse bg-white">
           <thead>
             <tr className="bg-gray-100">
               <th className="border p-2">Name</th>
@@ -181,32 +192,32 @@ const AcademicYearPage = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-white p-4 rounded shadow max-w-xl">
-        <h2 className="text-lg font-semibold mb-4">Create New Academic Year</h2>
+      <div className="bg-white p-4 rounded shadow max-w-lg">
+        <h2 className="text-sm font-semibold mb-4">Create New Academic Year</h2>
 
         <div className="space-y-3">
           {user?.role?.name === "Super Admin" ? (
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium">Select School</label>
-              <select
-                className="border px-2 py-2 rounded"
-                value={selectedSchoolId}
-                onChange={(e) => setSelectedSchoolId(e.target.value)}
+              <label className="text-xs font-medium">Select School</label>
+              <Select
+                value={selectedSchoolId || undefined}
+                onChange={(value) => setSelectedSchoolId(value)}
+                placeholder="Select School"
+                className="w-full"
               >
-                <option value="">Select School</option>
                 {schools.map((school) => (
-                  <option key={school._id} value={school._id}>
+                  <Option key={school._id} value={school._id}>
                     {school.name}
-                  </option>
+                  </Option>
                 ))}
-              </select>
+              </Select>
             </div>
           ) : (
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium">School</label>
+              <label className="text-xs font-medium">School</label>
               <input
                 type="text"
-                className="border px-2 py-2 rounded bg-gray-100"
+                className="border px-2 py-2 rounded bg-gray-100 text-xs"
                 value={user?.school?.name || ""}
                 readOnly
               />
@@ -214,31 +225,33 @@ const AcademicYearPage = () => {
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Start Date</label>
-            <input
-              type="date"
-              className="border px-2 py-2 rounded"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+            <label className="text-xs font-medium">Start Date</label>
+            <DatePicker
+              value={startDate ? dayjs(startDate) : null}
+              onChange={(date, dateString) => setStartDate(dateString)}
+              className="w-full"
+              format="YYYY-MM-DD"
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">End Date</label>
-            <input
-              type="date"
-              className="border px-2 py-2 rounded"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+            <label className="text-xs font-medium">End Date</label>
+            <DatePicker
+              value={endDate ? dayjs(endDate) : null}
+              onChange={(date, dateString) => setEndDate(dateString)}
+              className="w-full"
+              format="YYYY-MM-DD"
             />
           </div>
 
-          <button
+          <Button
+            type="primary"
             onClick={handleCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            className="w-full"
+            loading={loading}
           >
             Create
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@ const Roles = () => {
     <div>
       <div className='w-full flex gap-4'>
        <AddRoleForm />
-        
       </div>
     </div>
   )

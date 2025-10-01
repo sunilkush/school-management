@@ -2,8 +2,6 @@
 import AddSchoolForm from '../../../components/forms/AddSchoolForm'
 
 const AddSchool = () => {
-  
-  
   return (
     <div>
       <div className='w-full flex gap-4'>
@@ -11,9 +9,7 @@ const AddSchool = () => {
           <AddSchoolForm />
         </div>
        </div>
-       
     </div>
   )
 }
-
 export default AddSchool

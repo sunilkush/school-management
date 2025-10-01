@@ -1,59 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addSchool, resetSchoolState } from "../../features/schoolSlice";
+import { Form, Input, Checkbox, Button, Upload, message as antdMessage } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 
 const AddSchoolForm = () => {
   const dispatch = useDispatch();
-  const { loading, error, message, success } = useSelector((state) => state.school);
+  const { loading, error, message: successMessage, success } = useSelector((state) => state.school);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    address: '',
-    phone: '',
-    website: '',
-    isActive: false,
-    logo: null,
-  });
-
+  const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
-  const [logoError, setLogoError] = useState('');
-
-  const handleChange = (e) => {
-    const { name, type, value, checked, files } = e.target;
-
-    if (type === 'file') {
-      const file = files[0];
-      if (file) {
-        // Check file size (max 50KB)
-        if (file.size > 50 * 1024) {
-          setLogoError('Logo size must be less than or equal to 50KB');
-          setFormData((prev) => ({ ...prev, logo: null }));
-          setLogoPreview(null);
-          return;
-        } else {
-          setLogoError('');
-          setLogoPreview(URL.createObjectURL(file));
-        }
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        logo: file || null,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value,
-      }));
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (logoError) return; // Prevent submit if logo is invalid
-    dispatch(addSchool(formData));
-  };
 
   useEffect(() => {
     if (success || error) {
@@ -64,118 +20,105 @@ const AddSchoolForm = () => {
     }
   }, [success, error, dispatch]);
 
+  const handleLogoChange = ({ file }) => {
+    if (file) {
+      if (file.size > 50 * 1024) {
+        antdMessage.error("Logo size must be less than or equal to 50KB");
+        setLogoFile(null);
+        setLogoPreview(null);
+      } else {
+        setLogoFile(file);
+        setLogoPreview(URL.createObjectURL(file));
+      }
+    }
+  };
+
+  const onFinish = (values) => {
+    if (logoFile) {
+      values.logo = logoFile;
+    }
+    dispatch(addSchool(values));
+  };
+
   return (
-    <>
-       <div className="p-4 overflow-y-auto">
-              <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="overflow-y-auto ">
+      
+      <Form
+        layout="vertical"
+        onFinish={onFinish}
+        initialValues={{ isActive: false }}
+      >
+        {error && <div className="text-red-500 mb-2">{error}</div>}
+        {success && <div className="text-green-600 mb-2">{successMessage || 'School added successfully!'}</div>}
 
-                {error && <div className="text-red-500">{error}</div>}
-                {success && <div className="text-green-600">{message || 'School added successfully!'}</div>}
+        <Form.Item
+          label="School Name"
+          name="name"
+          rules={[{ required: true, message: 'Please enter school name' }]}
+        >
+          <Input placeholder="Enter school name" />
+        </Form.Item>
 
-                <div>
-                  <label className="block font-medium mb-1 text-xs">School Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+        <Form.Item
+          label="Contact Email"
+          name="email"
+          rules={[
+            { required: true, message: 'Please enter contact email' },
+            { type: 'email', message: 'Please enter a valid email' }
+          ]}
+        >
+          <Input placeholder="Enter email" />
+        </Form.Item>
 
-                <div>
-                  <label className="block font-medium mb-1 text-xs">Contact Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+        <Form.Item label="Address" name="address">
+          <Input placeholder="Enter address" />
+        </Form.Item>
 
-                <div>
-                  <label className="block font-medium mb-1 text-xs">Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+        <Form.Item label="Phone Number" name="phone">
+          <Input placeholder="Enter phone number" />
+        </Form.Item>
 
-                <div>
-                  <label className="block font-medium mb-1 text-xs">Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+        <Form.Item label="Website" name="website">
+          <Input placeholder="Enter website URL" />
+        </Form.Item>
 
-                <div>
-                  <label className="block font-medium mb-1 text-xs">Website</label>
-                  <input
-                    type="url"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+        <Form.Item name="isActive" valuePropName="checked">
+          <Checkbox>Is Active</Checkbox>
+        </Form.Item>
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={formData.isActive}
-                    onChange={handleChange}
-                    className="mr-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                  <label className="font-medium">Is Active</label>
-                </div>
+        <Form.Item label="Logo (Max 50 KB)">
+          <Upload
+            accept="image/*"
+            showUploadList={false}
+            beforeUpload={() => false} // prevent auto upload
+            onChange={handleLogoChange}
+          >
+            <Button icon={<UploadOutlined />}>Select Logo</Button>
+          </Upload>
+          {logoPreview && (
+            <img
+              src={logoPreview}
+              alt="Logo Preview"
+              width={50}
+              height={50}
+              className="mt-2 rounded border"
+            />
+          )}
+        </Form.Item>
 
-                <div>
-                  <label className="block font-medium mb-1">Logo <span className='text-xs text-deep-orange-400'>( Max 50 KB )</span></label>
-                  <input
-                    type="file"
-                    name="logo"
-                    accept="image/*"
-                    onChange={handleChange}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-blue-50 file:text-deep-purple-700
-            hover:file:bg-blue-100 border rounded-full"
-                  />
-                  {logoError && <div className="text-red-500 text-sm mt-1">{logoError}</div>}
-                  {logoPreview && (
-                    <img
-                      src={logoPreview}
-                      alt="Logo Preview"
-                      width={50}
-                      height={50}
-                      className="mt-2 rounded border"
-                    />
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || !!logoError}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-purple-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Submitting...' : 'Add School'}
-                </button>
-              </form>
-            </div>
-
-    </>
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            disabled={!!logoFile && logoFile.size > 50 * 1024}
+            className="w-full"
+          >
+            {loading ? 'Submitting...' : 'Add School'}
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 };
 

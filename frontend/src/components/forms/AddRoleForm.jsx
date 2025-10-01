@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createRole } from "../../features/roleSlice";
 import { fetchSchools } from "../../features/schoolSlice";
+import { Select, Checkbox, Button, Input } from "antd";
+
+const { Option } = Select;
 
 // Modules & Actions
 const moduleOptions = [
@@ -102,7 +105,7 @@ const AddRoleForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-2 bg-white rounded shadow">
-      <h2 className="text-xl font-semibold">Create Role</h2>
+      <h2 className="text-lg font-semibold">Create Role</h2>
 
       {loading && <p className="text-blue-500">Creating role...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -110,128 +113,117 @@ const AddRoleForm = () => {
 
       {/* Role Name */}
       <div>
-        <label className="block text-sm font-medium">Role Name</label>
-        <select
-          value={name}
-          onChange={(e) => handleRoleChange(e.target.value)}
-          className="mt-1 block w-full border px-2 py-1 rounded"
-          required
+        <label className="block text-xs font-medium">Role Name</label>
+        <Select
+          value={name || undefined}
+          onChange={handleRoleChange}
+          placeholder="Select Role"
+          className="w-full"
         >
-          <option value="">Select Role</option>
           {roleOptions.map((role) => (
-            <option key={role} value={role}>{role}</option>
+            <Option key={role} value={role}>{role}</Option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {/* Code */}
       <div>
-        <label className="block text-sm font-medium">Code</label>
-        <input
-          type="text"
+        <label className="block text-xs font-medium">Code</label>
+        <Input
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="e.g. SA, TEACH, ADMIN"
-          className="mt-1 block w-full border px-2 py-1 rounded"
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium">Description</label>
-        <textarea
+        <label className="block text-xs font-medium">Description</label>
+        <Input.TextArea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter role description"
-          className="mt-1 block w-full border px-2 py-1 rounded"
+          rows={3}
         />
       </div>
 
       {/* Type */}
       <div>
-        <label className="block text-sm font-medium">Type</label>
-        <select
+        <label className="block text-xs font-medium">Type</label>
+        <Select
           value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="mt-1 block w-full border px-2 py-1 rounded"
+          onChange={(value) => setType(value)}
+          className="w-full"
         >
-          <option value="system">System</option>
-          <option value="custom">Custom</option>
-        </select>
+          <Option value="system">System</Option>
+          <Option value="custom">Custom</Option>
+        </Select>
       </div>
 
       {/* Level */}
       <div>
-        <label className="block text-sm font-medium">Level (Hierarchy)</label>
-        <input
+        <label className="block text-xs font-medium">Level (Hierarchy)</label>
+        <Input
           type="number"
           value={level}
-          min="1"
+          min={1}
           onChange={(e) => setLevel(Number(e.target.value))}
-          className="mt-1 block w-full border px-2 py-1 rounded"
         />
       </div>
 
       {/* School Selection */}
       {name && name !== "Super Admin" && (
         <div>
-          <label className="block text-sm font-medium">School</label>
-          <select
-            value={schoolId}
-            onChange={(e) => setSchoolId(e.target.value)}
-            className="mt-1 block w-full border px-2 py-1 rounded"
-            required
+          <label className="block text-xs font-medium">School</label>
+          <Select
+            value={schoolId || undefined}
+            onChange={(value) => setSchoolId(value)}
+            placeholder="Select School"
+            className="w-full"
           >
-            <option value="">Select School</option>
             {schools.map((s) => (
-              <option key={s._id} value={s._id}>{s.name}</option>
+              <Option key={s._id} value={s._id}>{s.name}</Option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
 
       {/* Active Status */}
       <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
-        />
-        <label className="text-sm">Is Active</label>
+        >
+          Is Active
+        </Checkbox>
       </div>
 
       {/* Permissions */}
       {permissions.map((perm, index) => (
         <div key={index} className="border p-4 rounded mb-2">
           <div className="flex justify-between items-center mb-2">
-            <label className="block font-medium">Module</label>
-            <button
-              type="button"
-              className="text-red-500 text-sm"
-              onClick={() => removePermission(index)}
-            >
+            <label className="block font-medium text-xs">Module</label>
+            <Button type="link" danger size="small" onClick={() => removePermission(index)}>
               Remove
-            </button>
+            </Button>
           </div>
-          <select
-            value={perm.module}
-            onChange={(e) => handleModuleChange(index, e.target.value)}
-            className="block w-full border p-2 rounded mb-2"
-            required
+          <Select
+            value={perm.module || undefined}
+            onChange={(value) => handleModuleChange(index, value)}
+            placeholder="Select Module"
+            className="w-full mb-2"
           >
-            <option value="">Select Module</option>
-            {moduleOptions.map((m) => <option key={m} value={m}>{m}</option>)}
-          </select>
+            {moduleOptions.map((m) => <Option key={m} value={m}>{m}</Option>)}
+          </Select>
           <div className="flex flex-wrap gap-2">
             {actionOptions.map((action) => (
-              <label key={action} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={perm.actions.includes(action)}
-                  onChange={() => handleActionChange(index, action)}
-                />
-                <span>{action}</span>
-              </label>
+              <Checkbox
+                key={action}
+                checked={perm.actions.includes(action)}
+                onChange={() => handleActionChange(index, action)}
+              >
+                {action}
+              </Checkbox>
             ))}
           </div>
         </div>
@@ -240,17 +232,13 @@ const AddRoleForm = () => {
       {/* Add & Submit */}
       <div className="flex justify-between items-center gap-4">
         {name !== "School Admin" && (
-          <button
-            type="button"
-            onClick={addPermission}
-            className="text-blue-500 text-sm"
-          >
+          <Button type="dashed" onClick={addPermission}>
             + Add Permission
-          </button>
+          </Button>
         )}
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded text-sm">
+        <Button type="primary" htmlType="submit" loading={loading}>
           Create Role
-        </button>
+        </Button>
       </div>
     </form>
   );

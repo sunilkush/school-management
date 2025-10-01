@@ -1,7 +1,7 @@
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import {ApiResponse} from "../utils/ApiResponse.js"
 // ✅ Helper to parse dd/mm/yyyy to Date
 function parseDateString(dateStr) {
   const [day, month, year] = dateStr.split("/");
@@ -173,7 +173,9 @@ export const getActiveAcademicYearBySchool = asyncHandler(async (req, res) => {
   });
 
   if (!academicYear) {
-    throw new ApiError(404, "No active academic year found for this school");
+    return res
+    .status(201)
+    .json(new ApiResponse(404,"No active academic year found for this school"));
   }
 
   res.status(200).json({
