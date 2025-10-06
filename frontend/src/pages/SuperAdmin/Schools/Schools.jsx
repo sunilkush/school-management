@@ -15,9 +15,9 @@ const Schools = () => {
   }, [dispatch]);
 
   return (
-    <div className="p-4">
+    <div className="">
       {/* Header */}
-      <Row justify="space-between" align="middle" className="mb-4">
+      <Row justify="space-between" align="middle" className="mb-4" gutter={[8, 8]}>
         <h1 className="text-2xl font-bold text-blue-800">Schools</h1>
         <Button type="primary" onClick={() => setIsModalOpen(true)}>
           Add School
@@ -36,10 +36,17 @@ const Schools = () => {
       ) : (
         <Row gutter={[16, 16]}>
           {schools.map((school) => (
-            <Col key={school._id} xs={24} sm={12} md={8} lg={6} xl={4}>
+            <Col
+              key={school._id}
+              xs={24}
+              sm={12}
+              md={8}
+              lg={6}
+              xl={6}
+            >
               <Card
                 hoverable
-                className="relative"
+                className="relative h-full"
                 bodyStyle={{ padding: '12px' }}
               >
                 <h2 className="text-sm font-semibold text-blue-800 uppercase">{school.name}</h2>
@@ -57,10 +64,11 @@ const Schools = () => {
                 <img
                   src={schoolImg}
                   alt="School"
-                  className="absolute bottom-3 right-3 w-9 opacity-100"
+                  className="absolute bottom-3 right-3 w-9 max-w-full"
                 />
               </Card>
             </Col>
+
           ))}
         </Row>
       )}
