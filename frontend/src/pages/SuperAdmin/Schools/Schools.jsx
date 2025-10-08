@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchSchools } from '../../../features/schoolSlice';
 import AddSchoolForm from '../../../components/forms/AddSchoolForm';
-import { Button, Modal, Spin, Row, Col, Card, Tag } from 'antd';
+import { Button, Modal, Spin, Row, Col, Card, Tag, Empty } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import schoolImg from '../../../assets/school.png';
 
 const Schools = () => {
@@ -15,50 +16,77 @@ const Schools = () => {
   }, [dispatch]);
 
   return (
-    <div className="p-4">
-      {/* Header */}
-      <Row justify="space-between" align="middle" className="mb-4">
-        <h1 className="text-2xl font-bold text-blue-800">Schools</h1>
-        <Button type="primary" onClick={() => setIsModalOpen(true)}>
+    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-800">Schools</h1>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setIsModalOpen(true)}
+          className="w-full sm:w-auto"
+        >
           Add School
         </Button>
-      </Row>
+      </div>
 
-      <hr className="mb-3" />
+      <hr className="mb-4 border-gray-300" />
 
-      {/* School List */}
+      {/* School Cards Section */}
       {loading ? (
-        <div className="flex justify-center items-center py-10">
+        <div className="flex justify-center items-center py-20">
           <Spin size="large" />
         </div>
       ) : error ? (
-        <p className="text-red-500">Error: {error}</p>
+        <p className="text-center text-red-500 font-medium">{error}</p>
+      ) : schools.length === 0 ? (
+        <Empty
+          description="No schools found"
+          className="my-10"
+        />
       ) : (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[16, 16]} justify="start">
           {schools.map((school) => (
-            <Col key={school._id} xs={24} sm={12} md={8} lg={6} xl={4}>
+            <Col
+              key={school._id}
+              xs={24}
+              sm={12}
+              md={8}
+              lg={6}
+              xl={4}
+              className="flex"
+            >
               <Card
                 hoverable
-                className="relative"
-                bodyStyle={{ padding: '12px' }}
+                className="w-full rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-lg relative"
+                bodyStyle={{ padding: '16px' }}
               >
-                <h2 className="text-sm font-semibold text-blue-800 uppercase">{school.name}</h2>
-                <p className="text-xs text-gray-600 mb-1">{school.description}</p>
-                <p className="text-xs mb-1">
-                  <span className="font-medium">Status:</span>{' '}
-                  <Tag color={school.isActive ? 'green' : 'red'}>
-                    {school.isActive ? 'Active' : 'Inactive'}
-                  </Tag>
-                </p>
-                <p className="text-xs text-gray-500 mb-0">
-                  <span className="text-black font-medium">Created:</span>{' '}
-                  {new Date(school.createdAt).toLocaleDateString()}
-                </p>
-                <img
-                  src={schoolImg}
-                  alt="School"
-                  className="absolute bottom-3 right-3 w-9 opacity-100"
-                />
+                <div className="flex flex-col h-full">
+                  <div className="flex-1">
+                    <h2 className="text-base font-semibold text-blue-800 uppercase mb-1 truncate">
+                      {school.name}
+                    </h2>
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                      {school.description || 'No description'}
+                    </p>
+                    <div className="text-xs mb-1">
+                      <span className="font-medium">Status:</span>{' '}
+                      <Tag color={school.isActive ? 'green' : 'red'}>
+                        {school.isActive ? 'Active' : 'Inactive'}
+                      </Tag>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-0">
+                      <span className="text-black font-medium">Created:</span>{' '}
+                      {new Date(school.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <img
+                    src={schoolImg}
+                    alt="School"
+                    className="absolute bottom-3 right-3 w-10 opacity-80"
+                  />
+                </div>
               </Card>
             </Col>
           ))}
@@ -67,11 +95,13 @@ const Schools = () => {
 
       {/* Add School Modal */}
       <Modal
-        title="Add School"
+        title={<span className="text-xl font-semibold text-blue-700">Add School</span>}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={600}
+        centered
+        width="90%"
+        style={{ maxWidth: 600 }}
       >
         <AddSchoolForm onClose={() => setIsModalOpen(false)} />
       </Modal>
