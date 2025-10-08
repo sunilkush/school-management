@@ -13,7 +13,7 @@ const loginLogSchema = new mongoose.Schema({
   },
   userRole: {
     type: String,
-    enum: ['SuperAdmin', 'Admin', 'Teacher', 'Student', 'Parent', 'Accountant', 'Staff'],
+    enum: ['Super Admin', 'School Admin', 'Teacher', 'Student', 'Parent', 'Accountant', 'Staff'],
     required: true
   },
   ipAddress: {
