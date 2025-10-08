@@ -6,18 +6,27 @@ const Api_Base_Url = import.meta.env.VITE_API_URL;
 // 🔹 Thunk: fetch sections
 export const fetchSection = createAsyncThunk(
   "section/fetchSection",
-  async (_, { rejectWithValue }) => {
+  async ({ schoolId, classId, academicYearId }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${Api_Base_Url}/section/`, {
+      // Build query params dynamically
+      const params = new URLSearchParams();
+      if (schoolId) params.append("schoolId", schoolId);
+      if (classId) params.append("classId", classId);
+      if (academicYearId) params.append("academicYearId", academicYearId);
+
+      const res = await axios.get(`${Api_Base_Url}/section?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      return res.data; // backend check: res.data ya res.data.data
+      // ✅ Check your backend response structure
+      // return res.data if backend returns array directly
+      // return res.data.data if using ApiResponse wrapper
+      return res.data.data || res.data; 
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || error.message || "Failed to fetch sections"
@@ -25,6 +34,7 @@ export const fetchSection = createAsyncThunk(
     }
   }
 );
+
 
 // 🔹 Thunk: create section
 export const createSection = createAsyncThunk(

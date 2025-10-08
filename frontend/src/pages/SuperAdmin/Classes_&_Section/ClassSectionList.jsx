@@ -1,106 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchSection } from '../../../features/sectionSlice';
-import { fetchAllClasses } from '../../../features/classSlice';
-import { fetchSchools } from '../../../features/schoolSlice';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchSchools } from "../../../features/schoolSlice";
+import { fetchAllClasses } from "../../../features/classSlice";
+import { fetchSection } from "../../../features/sectionSlice";
+import { Select, Spin, Table } from "antd";
 
-function ClassSectionList() {
+const SchoolClassSectionFilter = () => {
   const dispatch = useDispatch();
-  const [selectedSchool, setSelectedSchool] = useState('');
 
-  const { classList = [] } = useSelector((state) => state.class);
-  const { sectionList = [], loading, error } = useSelector((state) => state.section);
-  const { schools = [] } = useSelector((state) => state.school);
+  const { schools, loading: schoolLoading } = useSelector((state) => state.school);
+  const { classList, loading: classLoading } = useSelector((state) => state.class);
+  const { sectionList, loading: sectionLoading } = useSelector((state) => state.section);
 
+  const [selectedSchool, setSelectedSchool] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
+
+  // ✅ Load all schools on mount
   useEffect(() => {
     dispatch(fetchSchools());
   }, [dispatch]);
 
-  // Fetch classes and sections whenever a school is selected
+  // ✅ When school changes, fetch related classes & sections
   useEffect(() => {
     if (selectedSchool) {
-      dispatch(fetchAllClasses(selectedSchool));
-      dispatch(fetchSection(selectedSchool));
+      dispatch(fetchAllClasses({ schoolId: selectedSchool }));
+      dispatch(fetchSection({ schoolId: selectedSchool }));
+      setSelectedClass(null); // reset selected class
     }
-  }, [dispatch, selectedSchool]);
+  }, [selectedSchool, dispatch]);
+
+  // Filter sections based on selected class
+  const filteredSections = selectedClass
+    ? sectionList.filter((sec) => String(sec.classId?._id) === String(selectedClass))
+    : sectionList;
+
+  // Table Columns
+  const columns = [
+    {
+      title: "Class",
+      dataIndex: "className",
+      key: "className",
+    },
+    {
+      title: "Section",
+      dataIndex: "sectionName",
+      key: "sectionName",
+    },
+  ];
+
+  // Table Data
+  const tableData = filteredSections.map((sec) => ({
+    key: sec._id,
+    className: sec.classId?.name || "N/A",
+    sectionName: sec.name,
+  }));
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {/* School Dropdown */}
-      <div className="col-span-2">
-        <select
-          className="border p-2 rounded-lg w-1/4"
+    <div className="p-4 bg-white rounded-xl shadow-md space-y-4">
+      {/* Select School */}
+      <div>
+        <label className="block font-medium text-gray-700 mb-2">Select School</label>
+        <Select
+          placeholder="Choose School"
+          loading={schoolLoading}
+          className="w-full"
+          onChange={(value) => setSelectedSchool(value)}
           value={selectedSchool}
-          onChange={(e) => setSelectedSchool(e.target.value)}
+          allowClear
         >
-          <option value="">Select school</option>
-          {schools.map((sch) => (
-            <option key={sch._id} value={sch._id}>
-              {sch.name}
-            </option>
+          {schools.map((s) => (
+            <Select.Option key={s._id} value={s._id}>
+              {s.name}
+            </Select.Option>
           ))}
-        </select>
+        </Select>
       </div>
 
-      {/* Classes Table */}
-      <div className="border p-2 rounded-lg">
-        <h1 className="font-semibold mb-2">Class</h1>
-        {selectedSchool ? (
-          classList.length > 0 ? (
-            <table className="w-full border mt-2">
-              <thead>
-                <tr>
-                  <th className="border px-2 py-1">Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {classList.map((cls) => (
-                  <tr key={cls._id}>
-                    <td className="border px-2 py-1">{cls.name}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No classes found for this school.</p>
-          )
+      {/* Select Class */}
+      <div>
+        <label className="block font-medium text-gray-700 mb-2">Select Class</label>
+        {classLoading ? (
+          <Spin />
         ) : (
-          <p>Please select a school to view classes.</p>
+          <Select
+            placeholder="Choose Class"
+            disabled={!selectedSchool}
+            className="w-full"
+            onChange={(value) => setSelectedClass(value)}
+            value={selectedClass}
+            allowClear
+          >
+            {classList.map((c) => (
+              <Select.Option key={c._id} value={c._id}>
+                {c.name}
+              </Select.Option>
+            ))}
+          </Select>
         )}
       </div>
 
       {/* Sections Table */}
-      <div className="border p-2 rounded-lg">
-        <h1 className="font-semibold mb-2">Section</h1>
-
-        {loading && <p>Loading sections...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-
-        {!loading && !error && selectedSchool ? (
-          sectionList.length > 0 ? (
-            <table className="w-full border mt-2">
-              <thead>
-                <tr>
-                  <th className="border px-2 py-1">Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sectionList.map((s) => (
-                  <tr key={s._id}>
-                    <td className="border px-2 py-1">{s.name}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No sections found for this school.</p>
-          )
+      <div>
+        <h2 className="font-semibold text-gray-700 mb-2">Sections</h2>
+        {sectionLoading ? (
+          <Spin />
         ) : (
-          <p>Please select a school to view sections.</p>
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            pagination={false}
+            bordered
+          />
         )}
       </div>
     </div>
   );
-}
+};
 
-export default ClassSectionList;
+export default SchoolClassSectionFilter;

@@ -31,18 +31,9 @@ import {
 export const sidebarMenu = {
   "super admin": [
     { title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
-    {
-      title: "Schools", icon: School,
-      subMenu: [
-        { title: "All Schools", path: "superadmin/schools", icon: School },
-      ],
-    },
-    {
-      title: "Admins", icon: UserCog,
-      subMenu: [
-        { title: "All Admins", path: "superadmin/admins", icon: Users },
-      ],
-    },
+    { title: "Schools", path: "superadmin/schools", icon: School },
+    { title: "Admins", path: "superadmin/admins", icon: Users },
+    
     {
       title: "Roles & Permissions", icon: ShieldCheck,
       subMenu: [

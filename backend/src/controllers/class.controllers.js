@@ -77,57 +77,68 @@ const deleteClass = asyncHandler(async (req, res) => {
 // ✅ Get All Classes with Pagination + Filtering + Search
 // ✅ Fetch all classes with populated sections
 const getAllClasses = asyncHandler(async (req, res) => {
-  let { page = 1, limit = 10, schoolId, academicYearId } = req.query;
+  let { page = 1, limit = 10, schoolId, schoolName, academicYearId } = req.query;
 
   page = parseInt(page);
   limit = parseInt(limit);
 
   const query = {};
+
+  // ✅ Filter by schoolId (if provided)
   if (schoolId) query.schoolId = schoolId;
+
+  // ✅ Optional: Find by schoolName (case-insensitive)
+  if (schoolName) {
+    const school = await School.findOne({
+      name: { $regex: schoolName, $options: "i" },
+    });
+    if (school) query.schoolId = school._id;
+    else
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            data: [],
+            total: 0,
+            page,
+            limit,
+            totalPages: 0,
+          },
+          "No school found with this name"
+        )
+      );
+  }
+
   if (academicYearId) query.academicYearId = academicYearId;
 
   const skip = (page - 1) * limit;
-
   const totalClasses = await Class.countDocuments(query);
 
   if (totalClasses === 0) {
     return res.status(200).json(
       new ApiResponse(
         200,
-        {
-          data: [],
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-        },
+        { data: [], total: 0, page, limit, totalPages: 0 },
         "No classes found"
       )
     );
   }
 
   const classes = await Class.find(query)
-    .populate("schoolId") // ✅ separate populate
-    .populate("students") // ✅ if students are ObjectIds
+    .populate("schoolId")
+    .populate("students")
     .populate({
       path: "teacherId",
-      populate: {
-        path: "role", // ✅ populate role if it's ref
-        match: { name: "Teacher" }, 
-      },
+      populate: { path: "role", match: { name: "Teacher" } },
     })
     .populate("subjects.subjectId")
     .populate({
       path: "subjects.teacherId",
-      populate: {
-        path: "role",
-        match: { name: "Teacher" },
-      },
+      populate: { path: "role", match: { name: "Teacher" } },
     })
     .skip(skip)
     .limit(limit);
 
-  // ✅ Populate mapped sections for each class
   const classIds = classes.map((c) => c._id);
   const classSectionMappings = await ClassSection.find({
     classId: { $in: classIds },
@@ -137,7 +148,6 @@ const getAllClasses = asyncHandler(async (req, res) => {
     const sections = classSectionMappings
       .filter((m) => String(m.classId) === String(c._id))
       .map((m) => m.sectionId);
-
     return { ...c.toObject(), sections };
   });
 
@@ -155,6 +165,7 @@ const getAllClasses = asyncHandler(async (req, res) => {
     )
   );
 });
+
 
 
 

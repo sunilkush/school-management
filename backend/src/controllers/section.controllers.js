@@ -26,6 +26,7 @@ export const getSections = async (req, res) => {
   try {
     const { schoolId, classId, academicYearId } = req.query;
     const filters = {};
+    
     if (schoolId) filters.schoolId = schoolId;
     if (classId) filters.classId = classId;
     if (academicYearId) filters.academicYearId = academicYearId;
