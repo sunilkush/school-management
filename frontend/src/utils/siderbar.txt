@@ -1,0 +1,358 @@
+export const roleBasedMenu = {
+  superAdmin: [
+    {
+      title: "Dashboard",
+      icon: "LayoutDashboard",
+      path: "/super-admin/dashboard"
+    },
+    {
+      title: "Schools Management",
+      icon: "School",
+      children: [
+        { title: "All Schools", path: "/super-admin/schools" },
+        { title: "Add New School", path: "/super-admin/schools/add" },
+        { title: "Subscription Plans", path: "/super-admin/subscriptions" },
+        { title: "School Reports", path: "/super-admin/reports/schools" }
+      ]
+    },
+    {
+      title: "Users Management",
+      icon: "Users",
+      children: [
+        { title: "School Admins", path: "/super-admin/users/admins" },
+        { title: "Teachers", path: "/super-admin/users/teachers" },
+        { title: "Students", path: "/super-admin/users/students" },
+        { title: "Parents", path: "/super-admin/users/parents" },
+        { title: "Staff Members", path: "/super-admin/users/staff" }
+      ]
+    },
+    {
+      title: "Master Settings",
+      icon: "Settings",
+      children: [
+        { title: "Academic Years", path: "/super-admin/academic-years" },
+        { title: "Classes & Sections", path: "/super-admin/classes" },
+        { title: "Subjects", path: "/super-admin/subjects" },
+        { title: "Fee Categories", path: "/super-admin/fees/categories" },
+        { title: "Designations", path: "/super-admin/designations" },
+        { title: "Departments", path: "/super-admin/departments" }
+      ]
+    },
+    {
+      title: "Reports",
+      icon: "BarChart3",
+      children: [
+        { title: "School-Wise Reports", path: "/super-admin/reports/school-wise" },
+        { title: "Attendance Summary", path: "/super-admin/reports/attendance" },
+        { title: "Finance Summary", path: "/super-admin/reports/finance" },
+        { title: "Academic Reports", path: "/super-admin/reports/academic" },
+        { title: "Activity Logs", path: "/super-admin/reports/activity" }
+      ]
+    },
+    {
+      title: "System Settings",
+      icon: "Cog",
+      children: [
+        { title: "Global Configuration", path: "/super-admin/settings/global" },
+        { title: "Role & Permission Manager", path: "/super-admin/settings/roles" },
+        { title: "Backups", path: "/super-admin/settings/backup" },
+        { title: "Audit Logs", path: "/super-admin/settings/audit" }
+      ]
+    }
+  ],
+
+  schoolAdmin: [
+    {
+      title: "Dashboard",
+      icon: "LayoutDashboard",
+      path: "/school-admin/dashboard"
+    },
+    {
+      title: "Academic",
+      icon: "BookOpen",
+      children: [
+        { title: "Classes & Sections", path: "/school-admin/classes" },
+        { title: "Subjects", path: "/school-admin/subjects" },
+        { title: "Time Table", path: "/school-admin/timetable" },
+        { title: "Lesson Planner", path: "/school-admin/lesson-planner" },
+        { title: "Attendance", path: "/school-admin/attendance" }
+      ]
+    },
+    {
+      title: "Examinations",
+      icon: "GraduationCap",
+      children: [
+        { title: "Exam Setup", path: "/school-admin/exams/setup" },
+        { title: "Marks Entry", path: "/school-admin/exams/marks" },
+        { title: "Result Generation", path: "/school-admin/exams/results" },
+        { title: "Report Cards", path: "/school-admin/exams/report-cards" }
+      ]
+    },
+    {
+      title: "Students",
+      icon: "UserCircle",
+      children: [
+        { title: "Student List", path: "/school-admin/students" },
+        { title: "Admission", path: "/school-admin/admission" },
+        { title: "Promotion", path: "/school-admin/students/promotion" },
+        { title: "Attendance Report", path: "/school-admin/reports/attendance" },
+        { title: "ID Cards", path: "/school-admin/students/id-cards" }
+      ]
+    },
+    {
+      title: "Teachers",
+      icon: "ChalkboardTeacher",
+      children: [
+        { title: "Teacher List", path: "/school-admin/teachers" },
+        { title: "Assign Class/Subject", path: "/school-admin/teachers/assign" },
+        { title: "Attendance", path: "/school-admin/teachers/attendance" },
+        { title: "Performance Report", path: "/school-admin/teachers/performance" }
+      ]
+    },
+    {
+      title: "Finance",
+      icon: "Wallet",
+      children: [
+        { title: "Fees Structure", path: "/school-admin/fees/structure" },
+        { title: "Fees Collection", path: "/school-admin/fees/collection" },
+        { title: "Pending Fees", path: "/school-admin/fees/pending" },
+        { title: "Expense Manager", path: "/school-admin/expenses" },
+        { title: "Finance Reports", path: "/school-admin/reports/finance" }
+      ]
+    },
+    {
+      title: "Communication",
+      icon: "Bell",
+      children: [
+        { title: "Notice Board", path: "/school-admin/notices" },
+        { title: "Events", path: "/school-admin/events" },
+        { title: "Circulars", path: "/school-admin/circulars" },
+        { title: "Messaging", path: "/school-admin/messages" }
+      ]
+    },
+    {
+      title: "Infrastructure",
+      icon: "Building2",
+      children: [
+        { title: "Library", path: "/school-admin/library" },
+        { title: "Transport", path: "/school-admin/transport" },
+        { title: "Hostel", path: "/school-admin/hostel" },
+        { title: "Inventory", path: "/school-admin/inventory" }
+      ]
+    },
+    {
+      title: "Reports",
+      icon: "BarChart3",
+      children: [
+        { title: "Attendance Reports", path: "/school-admin/reports/attendance" },
+        { title: "Fee Reports", path: "/school-admin/reports/fees" },
+        { title: "Exam Reports", path: "/school-admin/reports/exams" },
+        { title: "Library Reports", path: "/school-admin/reports/library" }
+      ]
+    },
+    {
+      title: "Settings",
+      icon: "Cog",
+      children: [
+        { title: "School Profile", path: "/school-admin/settings/profile" },
+        { title: "Role Permissions", path: "/school-admin/settings/roles" },
+        { title: "Academic Year", path: "/school-admin/settings/academic-year" },
+        { title: "Backup/Restore", path: "/school-admin/settings/backup" }
+      ]
+    }
+  ],
+
+  teacher: [
+    { title: "Dashboard", icon: "LayoutDashboard", path: "/teacher/dashboard" },
+    {
+      title: "My Classes",
+      icon: "Notebook",
+      children: [
+        { title: "Class List", path: "/teacher/classes" },
+        { title: "Attendance", path: "/teacher/attendance" },
+        { title: "Assignments", path: "/teacher/assignments" },
+        { title: "Homework", path: "/teacher/homework" },
+        { title: "Lesson Plan", path: "/teacher/lesson-plan" }
+      ]
+    },
+    {
+      title: "Examinations",
+      icon: "GraduationCap",
+      children: [
+        { title: "Marks Entry", path: "/teacher/exams/marks" },
+        { title: "Exam Schedule", path: "/teacher/exams/schedule" }
+      ]
+    },
+    {
+      title: "Communication",
+      icon: "MessageSquare",
+      children: [
+        { title: "Student Messages", path: "/teacher/messages/students" },
+        { title: "Announcements", path: "/teacher/announcements" },
+        { title: "Parent Communication", path: "/teacher/messages/parents" }
+      ]
+    },
+    {
+      title: "Profile",
+      icon: "User",
+      children: [
+        { title: "My Profile", path: "/teacher/profile" },
+        { title: "Leave Apply", path: "/teacher/leave" },
+        { title: "My Attendance", path: "/teacher/my-attendance" }
+      ]
+    }
+  ],
+
+  student: [
+    { title: "Dashboard", icon: "LayoutDashboard", path: "/student/dashboard" },
+    {
+      title: "Academics",
+      icon: "BookOpen",
+      children: [
+        { title: "My Subjects", path: "/student/subjects" },
+        { title: "Assignments", path: "/student/assignments" },
+        { title: "Homework", path: "/student/homework" },
+        { title: "Exam Schedule", path: "/student/exams" }
+      ]
+    },
+    {
+      title: "Attendance",
+      icon: "ClipboardList",
+      children: [
+        { title: "Daily Attendance", path: "/student/attendance/daily" },
+        { title: "Monthly Attendance", path: "/student/attendance/monthly" }
+      ]
+    },
+    {
+      title: "Results",
+      icon: "Award",
+      children: [
+        { title: "Marks", path: "/student/results/marks" },
+        { title: "Report Card", path: "/student/results/report-card" },
+        { title: "Performance Chart", path: "/student/results/performance" }
+      ]
+    },
+    {
+      title: "Finance",
+      icon: "Wallet",
+      children: [
+        { title: "My Fees", path: "/student/fees" },
+        { title: "Pay Fees", path: "/student/fees/pay" },
+        { title: "Fees Receipts", path: "/student/fees/receipts" }
+      ]
+    },
+    {
+      title: "Communication",
+      icon: "Bell",
+      children: [
+        { title: "Messages", path: "/student/messages" },
+        { title: "Announcements", path: "/student/announcements" },
+        { title: "Events", path: "/student/events" }
+      ]
+    }
+  ],
+
+  parent: [
+    { title: "Dashboard", icon: "LayoutDashboard", path: "/parent/dashboard" },
+    {
+      title: "Children",
+      icon: "Users",
+      children: [
+        { title: "Attendance", path: "/parent/children/attendance" },
+        { title: "Marks / Report Card", path: "/parent/children/results" },
+        { title: "Assignments", path: "/parent/children/assignments" },
+        { title: "Time Table", path: "/parent/children/timetable" }
+      ]
+    },
+    {
+      title: "Fees",
+      icon: "Wallet",
+      children: [
+        { title: "Pay Fees", path: "/parent/fees/pay" },
+        { title: "Payment History", path: "/parent/fees/history" },
+        { title: "Pending Dues", path: "/parent/fees/pending" }
+      ]
+    },
+    {
+      title: "Communication",
+      icon: "MessageSquare",
+      children: [
+        { title: "Messages", path: "/parent/messages" },
+        { title: "Notices", path: "/parent/notices" },
+        { title: "Events", path: "/parent/events" }
+      ]
+    }
+  ],
+
+  accountant: [
+    { title: "Dashboard", icon: "LayoutDashboard", path: "/accountant/dashboard" },
+    {
+      title: "Fees Management",
+      icon: "Wallet",
+      children: [
+        { title: "Fee Categories", path: "/accountant/fees/categories" },
+        { title: "Fee Structure", path: "/accountant/fees/structure" },
+        { title: "Collect Fees", path: "/accountant/fees/collect" },
+        { title: "Defaulters List", path: "/accountant/fees/defaulters" }
+      ]
+    },
+    {
+      title: "Expenses",
+      icon: "Receipt",
+      children: [
+        { title: "Add Expense", path: "/accountant/expenses/add" },
+        { title: "Expense Categories", path: "/accountant/expenses/categories" },
+        { title: "Expense Reports", path: "/accountant/reports/expenses" }
+      ]
+    },
+    {
+      title: "Reports",
+      icon: "BarChart3",
+      children: [
+        { title: "Fee Collection Report", path: "/accountant/reports/fees" },
+        { title: "Expense Summary", path: "/accountant/reports/summary" },
+        { title: "Finance Overview", path: "/accountant/reports/overview" }
+      ]
+    }
+  ],
+
+  staff: [
+    { title: "Dashboard", icon: "LayoutDashboard", path: "/staff/dashboard" },
+    {
+      title: "Library",
+      icon: "Book",
+      children: [
+        { title: "Books List", path: "/staff/library/books" },
+        { title: "Issue / Return", path: "/staff/library/issue" },
+        { title: "Library Reports", path: "/staff/library/reports" }
+      ]
+    },
+    {
+      title: "Transport",
+      icon: "Bus",
+      children: [
+        { title: "Vehicles", path: "/staff/transport/vehicles" },
+        { title: "Routes", path: "/staff/transport/routes" },
+        { title: "Driver Info", path: "/staff/transport/drivers" }
+      ]
+    },
+    {
+      title: "Hostel",
+      icon: "Home",
+      children: [
+        { title: "Room List", path: "/staff/hostel/rooms" },
+        { title: "Allotments", path: "/staff/hostel/allotments" },
+        { title: "Hostel Attendance", path: "/staff/hostel/attendance" }
+      ]
+    },
+    {
+      title: "Inventory",
+      icon: "Package",
+      children: [
+        { title: "Stock Items", path: "/staff/inventory/items" },
+        { title: "Issue / Return", path: "/staff/inventory/issue" },
+        { title: "Inventory Reports", path: "/staff/inventory/reports" }
+      ]
+    }
+  ]
+};

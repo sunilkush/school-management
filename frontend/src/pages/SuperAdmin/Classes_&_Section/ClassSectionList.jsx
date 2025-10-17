@@ -79,7 +79,7 @@ const SchoolClassSectionFilter = () => {
       {/* Select Class */}
       <div>
         <label className="block font-medium text-gray-700 mb-2">Select Class</label>
-        {classLoading ? (
+        {classLoading ? ( 
           <Spin />
         ) : (
           <Select
