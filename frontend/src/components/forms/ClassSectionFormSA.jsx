@@ -28,7 +28,7 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchAllClasses(schoolId));
-      dispatch(fetchSection(schoolId));
+      dispatch(fetchSection({schoolId}));
       dispatch(fetchAllUser({ schoolId }));
       dispatch(fetchAllSubjects({ schoolId }));
       dispatch(fetchActiveAcademicYear(schoolId));
@@ -109,6 +109,7 @@ const ClassSectionForm = ({ onSuccess, initialData }) => {
             {classList.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
+            {console.log(classList)}
           </select>
         </div>
 

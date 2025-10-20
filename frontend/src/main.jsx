@@ -28,9 +28,8 @@ import Schedule from "./pages/Schedule.jsx";
 import UserRegister from "./pages/UserRegister.jsx";
 import Schools from "./pages/SuperAdmin/Schools/Schools.jsx";
 import AddSchool from "./pages/SuperAdmin/Schools/AddSchool.jsx";
-import Admins from "./pages/SuperAdmin/Admins/Admins.jsx";
-import Roles from "./pages/SuperAdmin/Roles_&_Permissions/Roles.jsx";
-import Permissions from "./pages/SuperAdmin/Roles_&_Permissions/Permissions.jsx";
+import Roles from "./pages/SuperAdmin/System_Settings/Roles.jsx";
+import Permissions from "./pages/SuperAdmin/System_Settings/Permissions.jsx";
 import AcademicYears from "./pages/SuperAdmin/Modules/AcademicYears.jsx";
 import Modules from "./pages/SuperAdmin/Modules/Modules.jsx";
 import SettingsPage from "./pages/Settings.jsx";
@@ -77,6 +76,13 @@ import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
 import Events from './pages/SchoolAdmin/Events_&_Calendar/events.jsx';
 import Assets from './pages/SchoolAdmin/Inventory/assets.jsx';
 import ExamSchedule from './pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx';
+import SubscriptionPlans from './pages/SuperAdmin/Schools/SubscriptionPlans.jsx';
+import SchoolReports from './pages/SuperAdmin/Schools/SchoolReports.jsx';
+import Admins from "./pages/SuperAdmin/Users_Management/Admins.jsx";
+import Staff from './pages/SuperAdmin/Users_Management/Staff.jsx';
+import Teachers from './pages/SuperAdmin/Users_Management/Teachers.jsx';
+import Parents from './pages/SuperAdmin/Users_Management/Parents.jsx';
+import Students from './pages/SuperAdmin/Users_Management/students.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -101,19 +107,25 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <SuperAdminDashboard /> },
               { path: "schools", element: <Schools /> },
+              { path:"subscriptions", element: <SubscriptionPlans />},
+              { path:"reports/schools", element:<SchoolReports />},
               { path: "schools/add", element: <AddSchool /> },
-              { path: "admins", element: <Admins /> },
+              { path: "users/admins", element: <Admins /> },
+              { path: "users/teachers", element: <Teachers/> },
+              { path: "users/staff", element: <Staff /> },
+              { path: "users/students", element: <Students /> },
+              { path: "users/parents", element: <Parents /> },
               { path: "user-create", element: <UserRegister /> },
-              { path: "roles", element: <Roles /> },
-              { path: "permissions", element: <Permissions /> },
+              { path: "settings/roles", element: <Roles /> },
+              { path: "settings/permissions", element: <Permissions /> },
               { path: "modules", element: <Modules /> },
-              { path: "modules/academicyears", element: <AcademicYears /> },
+              { path: "academic-years", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <Settings /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "classes-sections/form", element: <ClassSectionFrom /> },
+              { path: "classes", element: <ClassSectionFrom /> },
               { path: "classes-sections/list", element: <ClassSectionList /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
@@ -128,6 +140,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <SchoolAdminDashboard /> },
+             
               { path: "users/student/add", element: <AddStudent /> },
               { path: "users/teacher/add", element: <AddTeacher /> },
               { path: "users/parent/add", element: <AddParent /> },

@@ -25,38 +25,66 @@ import {
   Briefcase,
   MessageSquare,
   User,
-  IndianRupee
+  IndianRupee,
+  Cog
 } from "lucide-react";
 
 export const sidebarMenu = {
   "super admin": [
     { title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
-    { title: "Schools", path: "superadmin/schools", icon: School },
-    { title: "Admins", path: "superadmin/admins", icon: Users },
-    
-    {
-      title: "Roles & Permissions", icon: ShieldCheck,
-      subMenu: [
-        { title: "Roles", path: "superadmin/roles", icon: ShieldCheck },
-        { title: "Permissions", path: "superadmin/permissions", icon: ShieldCheck },
-      ],
-    },
+    { title: "Schools",  icon: School,
+      subMenu:[
+        { title: "School List", path: "superadmin/schools"},
+        { title: "Subscription Plans", path: "superadmin/subscriptions" },
+        { title: "School Reports", path: "superadmin/reports/schools" }
+      ]
+     },
+    { title: "Users Management", icon: Users,
+       subMenu: [
+        { title: "School Admins", path: "superadmin/users/admins" },
+        { title: "Teachers", path: "superadmin/users/teachers" },
+        { title: "Students", path: "superadmin/users/students" },
+        { title: "Parents", path: "superadmin/users/parents" },
+        { title: "Staff Members", path: "superadmin/users/staff" }
+      ]
+     },
     {
       title: "Modules", icon: Puzzle,
       subMenu: [
-        { title: "Academic Years", path: "superadmin/modules/academicyears", icon: CalendarClock },
         { title: "All Modules", path: "superadmin/modules", icon: Puzzle },
       ],
     },
-    {
-      title: "Classes & Sections", icon: Puzzle,
+  
+    { title: "Reports", path: "superadmin/reports", icon: FileText,
       subMenu: [
-        { title: "Class & Section Form", path: "superadmin/classes-sections/form", icon: CalendarClock },
-        { title: "Class & Section List", path: "superadmin/classes-sections/list", icon: FileText },
-      ],
-    },
-    { title: "Reports", path: "superadmin/reports", icon: FileText },
-    { title: "Settings", path: "superadmin/settings", icon: Settings },
+        { title: "School-Wise Reports", path: "superadmin/reports/school-wise" },
+        { title: "Attendance Summary", path: "superadmin/reports/attendance" },
+        { title: "Finance Summary", path: "superadmin/reports/finance" },
+        { title: "Academic Reports", path: "superadmin/reports/academic" },
+        { title: "Activity Logs", path: "superadmin/reports/activity" }
+      ]
+     },
+    { title: "Master Settings", path: "superadmin/settings", icon: Settings,
+      subMenu: [
+        { title: "Academic Years", path: "superadmin/academic-years" },
+        { title: "Classes & Sections", path: "superadmin/classes" },
+        { title: "Subjects", path: "superadmin/subjects" },
+        { title: "Fee Categories", path: "superadmin/fees/categories" },
+        { title: "Designations", path: "superadmin/designations" },
+        { title: "Departments", path: "superadmin/departments" }
+      ]
+     },
+     {
+      title: "System Settings",
+      icon: Cog,
+      subMenu: [
+        { title: "Global Configuration", path: "superadmin/settings/global" },
+        { title: "Role Manager", path: "superadmin/settings/roles" },
+        { title: "Permission Manager", path: "superadmin/settings/permissions" },
+        { title: "Backups", path: "superadmin/settings/backup" },
+        { title: "Audit Logs", path: "superadmin/settings/audit" }
+      ]
+    }
   ],
 
   "school admin": [

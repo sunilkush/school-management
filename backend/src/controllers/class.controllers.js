@@ -77,7 +77,7 @@ const deleteClass = asyncHandler(async (req, res) => {
 // ✅ Get All Classes with Pagination + Filtering + Search
 // ✅ Fetch all classes with populated sections
 const getAllClasses = asyncHandler(async (req, res) => {
-  let { page = 1, limit = 10, schoolId, schoolName, academicYearId } = req.query;
+  let { page = 1, limit = 20, schoolId, schoolName, academicYearId } = req.query;
 
   page = parseInt(page);
   limit = parseInt(limit);
