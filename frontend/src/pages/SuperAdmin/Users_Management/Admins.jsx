@@ -64,8 +64,8 @@ const columns = [
       <span
         className={`${
           row.isActive
-            ? "bg-green-300 text-green-800"
-            : "bg-red-300 text-red-800"
+            ? "bg-green-500 text-white"
+            : "bg-red-500 text-white"
         } px-5 py-1 rounded-xl block text-center`}
       >
         {row.isActive ? "Active" : "Deactivated"}
