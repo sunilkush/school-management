@@ -47,7 +47,7 @@ import Books from "./pages/SchoolAdmin/Library/Books.jsx";
 import IssueBook from "./pages/SchoolAdmin/Library/IssueBook.jsx";
 import ClassTimetable from "./pages/SchoolAdmin/Timetables/ClassTimetable.jsx";
 import TeacherTimetable from "./pages/SchoolAdmin/Timetables/TeacherTimetable.jsx";
-import FeeCategories from "./pages/SchoolAdmin/Fees_Management/FeeCategories.jsx";
+
 import CollectFees from "./pages/SchoolAdmin/Fees_Management/CollectFees.jsx";
 import HostelManagement from "./pages/SchoolAdmin/Hostel/HostelManagement.jsx";
 import RoomAllocation from "./pages/SchoolAdmin/Hostel/RoomAllocation.jsx";
@@ -83,6 +83,16 @@ import Staff from './pages/SuperAdmin/Users_Management/Staff.jsx';
 import Teachers from './pages/SuperAdmin/Users_Management/Teachers.jsx';
 import Parents from './pages/SuperAdmin/Users_Management/Parents.jsx';
 import Students from './pages/SuperAdmin/Users_Management/students.jsx';
+import SchoolWiseReports from './pages/SuperAdmin/Reports/SchoolWiseReports.jsx';
+import AttendanceSummary from './pages/SuperAdmin/Reports/AttendanceSummary.jsx';
+import FinanceSummary from './pages/SuperAdmin/Reports/FinanceSummary.jsx';
+import AcademicReports from './pages/SuperAdmin/Reports/AcademicReports.jsx';
+import ActivityLogs from './pages/SuperAdmin/Reports/ActivityLogs.jsx';
+import SubjectsAdmin from './pages/SuperAdmin/Master_Settings/SubjectsAdmin.jsx';
+import FeeCategories from "./pages/SuperAdmin/Master_Settings/FeeCategories.jsx";
+import Designations from './pages/SuperAdmin/Master_Settings/Designations.jsx';
+import Departments from './pages/SuperAdmin/Master_Settings/Departments.jsx';
+import GlobalConfig from './pages/SuperAdmin/System_Settings/GlobalConfig.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -109,7 +119,7 @@ const router = createBrowserRouter([
               { path: "schools", element: <Schools /> },
               { path:"subscriptions", element: <SubscriptionPlans />},
               { path:"reports/schools", element:<SchoolReports />},
-              { path: "schools/add", element: <AddSchool /> },
+              //{ path: "schools/add", element: <AddSchool /> },
               { path: "users/admins", element: <Admins /> },
               { path: "users/teachers", element: <Teachers/> },
               { path: "users/staff", element: <Staff /> },
@@ -122,6 +132,7 @@ const router = createBrowserRouter([
               { path: "academic-years", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <Settings /> },
+              { path:"subjects" , element:<SubjectsAdmin/>},
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -129,6 +140,16 @@ const router = createBrowserRouter([
               { path: "classes-sections/list", element: <ClassSectionList /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
+              { path: "reports/school-wise", element:<SchoolWiseReports/>},
+              { path: "reports/attendance", element:<AttendanceSummary/>},
+              { path: "reports/finance", element:<FinanceSummary/>},
+              { path: "reports/academic", element: <AcademicReports/>},
+              { path: "reports/activity", element: <ActivityLogs/>},
+              { path: "fees/categories", element: <FeeCategories /> },
+              { path: "designations", element: <Designations /> },
+              { path: "departments", element: <Departments /> },
+              { path:"settings/global", element:<GlobalConfig/>}
+              
             ],
           },
           {
@@ -140,7 +161,6 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <SchoolAdminDashboard /> },
-             
               { path: "users/student/add", element: <AddStudent /> },
               { path: "users/teacher/add", element: <AddTeacher /> },
               { path: "users/parent/add", element: <AddParent /> },
