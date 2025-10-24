@@ -93,6 +93,8 @@ import FeeCategories from "./pages/SuperAdmin/Master_Settings/FeeCategories.jsx"
 import Designations from './pages/SuperAdmin/Master_Settings/Designations.jsx';
 import Departments from './pages/SuperAdmin/Master_Settings/Departments.jsx';
 import GlobalConfig from './pages/SuperAdmin/System_Settings/GlobalConfig.jsx';
+import AuditLogs from './pages/SuperAdmin/System_Settings/AuditLogs.jsx';
+import Backups from './pages/SuperAdmin/System_Settings/Backups.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -148,7 +150,9 @@ const router = createBrowserRouter([
               { path: "fees/categories", element: <FeeCategories /> },
               { path: "designations", element: <Designations /> },
               { path: "departments", element: <Departments /> },
-              { path:"settings/global", element:<GlobalConfig/>}
+              { path:"settings/global", element:<GlobalConfig/>},
+              { path:"settings/audit", element: <AuditLogs/>},
+              { path:"settings/backup", element:<Backups/>}
               
             ],
           },
