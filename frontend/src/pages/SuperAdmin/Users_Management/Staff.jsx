@@ -6,7 +6,7 @@ import { fetchAllUser ,  deleteUser,
 import { fetchSchools } from '../../../features/schoolSlice';
 import { Select } from 'antd';
 import 'antd/dist/reset.css';
-
+import { FaUserCircle } from "react-icons/fa";
 const { Option } = Select;
 
 const Staff = () => {
@@ -51,6 +51,20 @@ const Staff = () => {
     };
   const columns = [
     { name: '#', selector: (row, index) => index + 1, sortable: true, width: '70px' },
+    {
+        name: "Avatar",
+        selector: (row) =>
+          row.avatar ? (
+            <img
+              src={row.avatar}
+              alt="avatar"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <FaUserCircle className="text-gray-400 text-2xl" />
+          ),
+        width: "80px",
+      },
     { name: 'Name', selector: (row) => row.name, sortable: true },
     { name: 'Email', selector: (row) => row.email, sortable: true },
     { name: 'School', selector: (row) => row.school?.name || '—' },

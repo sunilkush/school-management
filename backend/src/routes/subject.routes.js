@@ -1,33 +1,38 @@
 import { Router } from "express";
 import {
-    createSubject,
-    getAllSubjects,
-    getSubject,
-    updateSubject,
-    deleteSubject
+  createSubject,
+  getAllSubjects,
+  getSubject,
+  updateSubject,
+  deleteSubject,
 } from "../controllers/subject.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// ✅ Define Role-Based Access
-const ADMIN_ROLE = ["Super Admin", "School Admin"];
-const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
-const ALL_ROLES = ["Super Admin", "School Admin", "Teacher", "Student"];
+// ✅ Define roles
+const SUPER_ADMIN = "Super Admin";
+const SCHOOL_ADMIN = "School Admin";
+const TEACHER = "Teacher";
+const STUDENT = "Student";
 
-// ✅ Create Subject (Super Admin & Admin)
-router.post("/create", auth, roleMiddleware(ADMIN_ROLE), createSubject);
+const ADMIN_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN];
+const TEACHER_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER];
+const ALL_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STUDENT];
 
-// ✅ Get All Subjects (Admin & Teacher)
-router.get("/all", auth, roleMiddleware(TEACHER_ROLE), getAllSubjects);
+// ✅ Create Subject (Super Admin & School Admin)
+router.post("/create", auth, roleMiddleware(ADMIN_ROLES), createSubject);
 
-// ✅ Get Subject by ID (All Users)
+// ✅ Get All Subjects (Super Admin, School Admin, Teacher)
+router.get("/all", auth, roleMiddleware(TEACHER_ROLES), getAllSubjects);
+
+// ✅ Get Subject by ID (All Roles)
 router.get("/:id", auth, roleMiddleware(ALL_ROLES), getSubject);
 
-// ✅ Update Subject (Super Admin & Admin)
-router.put("/:id", auth, roleMiddleware(ADMIN_ROLE), updateSubject);
+// ✅ Update Subject (Super Admin & School Admin)
+router.put("/:id", auth, roleMiddleware(ADMIN_ROLES), updateSubject);
 
-// ✅ Delete Subject (Super Admin & Admin)
-router.delete("/:id", auth, roleMiddleware(ADMIN_ROLE), deleteSubject);
+// ✅ Delete Subject (Super Admin & School Admin)
+router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), deleteSubject);
 
 export default router;
