@@ -1,8 +1,11 @@
-import SubjectForm from "../../../components/forms/SubjectFrom.jsx";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
-import { fetchAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
+import SubjectForm from "../../../components/forms/SubjectForm.jsx"; // ✅ fixed filename
+import {
+  fetchAllSubjects,
+  deleteSubject,
+} from "../../../features/subjectSlice.js";
 
 const Subjects = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -11,20 +14,21 @@ const Subjects = () => {
   const dispatch = useDispatch();
   const { subjectList, loading } = useSelector((state) => state.subject);
 
+  // ✅ User from localStorage
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
   const role = storedUser?.role || "";
 
-  // ✅ Fetch all subjects once
+  // ✅ Fetch all subjects (depends on role or school)
   useEffect(() => {
-    if (schoolId || role === "Super Admin") {
-      dispatch(fetchAllSubjects({schoolId}));
-    }
-  }, [dispatch, schoolId, isModalOpen]);
-  console.log("Subjects List:", subjectList);
+ 
+    dispatch(fetchAllSubjects({ schoolId }));
+  
+}, [dispatch, schoolId]);
+
   // ✅ Filter based on role
   const filteredSubjects =
-    role === "super-admin"
+    role === "Super Admin"
       ? subjectList
       : subjectList.filter(
           (subj) =>
@@ -32,11 +36,13 @@ const Subjects = () => {
             String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
         );
 
+  // ✅ Edit
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
     setIsModalOpen(true);
   };
 
+  // ✅ Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       await dispatch(deleteSubject(id));
@@ -44,7 +50,7 @@ const Subjects = () => {
     }
   };
 
-  // ✅ Columns aligned with latest schema
+  // ✅ DataTable Columns
   const columns = [
     {
       name: "Subject Name",
@@ -79,15 +85,28 @@ const Subjects = () => {
       center: true,
     },
     {
-      name: "Teacher",
-      selector: (row) => row.teacherId?.name || "—",
+      name: "Assigned Teachers",
+      selector: (row) =>
+        row.assignedTeachers?.length
+          ? row.assignedTeachers.map((t) => t.name || "Unnamed").join(", ")
+          : "Not Assigned",
       sortable: true,
-      width: "180px",
       wrap: true,
+      width: "240px",
+    },
+    {
+      name: "Teacher IDs",
+      selector: (row) =>
+        row.assignedTeachers?.length
+          ? row.assignedTeachers.map((t) => t._id).join(", ")
+          : "—",
+      wrap: true,
+      width: "220px",
     },
     {
       name: "School",
-      selector: (row) => row.schoolId?.name || (row.isGlobal ? "🌐 Global" : "—"),
+      selector: (row) =>
+        row.schoolId?.name || (row.isGlobal ? "🌐 Global" : "—"),
       sortable: true,
       wrap: true,
     },
@@ -133,9 +152,10 @@ const Subjects = () => {
       {/* ✅ Modal Form */}
       <SubjectForm
         isOpen={isModalOpen}
-        onClose={() => {
+       onClose={() => {
           setIsModalOpen(false);
           setSelectedSubject(null);
+          dispatch(fetchAllSubjects({ schoolId }));
         }}
         editData={selectedSubject}
       />
@@ -166,7 +186,7 @@ const Subjects = () => {
       <div className="bg-white p-4 rounded-lg shadow-md">
         <DataTable
           columns={columns}
-          data={filteredSubjects}
+          data={filteredSubjects || []}
           progressPending={loading}
           pagination
           highlightOnHover

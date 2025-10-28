@@ -3,40 +3,44 @@ import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import  {School}  from '../models/school.model.js'
+import { initializeNewSchool } from "../utils/schoolSetup.js"; // ✅ import setup function
 
 const registerSchool = asyncHandler(async (req, res) => {
-    const { name, address, email, phone, website, isActive } = req.body
+  const { name, address, email, phone, website, isActive } = req.body;
 
-    // Validate required fields
-    if (!name || !email) return res.status(400).json({massege: 'Name and Email are required'})
-       
+  // Validate required fields
+  if (!name || !email)
+    return res.status(400).json({ message: "Name and Email are required" });
 
-    // Check if school already exists
-    const existingSchool = await School.findOne({ email })
-    console.log(existingSchool)
-    if (existingSchool) throw new ApiError(400, 'School already registered')
+  // Check if school already exists
+  const existingSchool = await School.findOne({ email });
+  if (existingSchool) throw new ApiError(400, "School already registered");
 
-    // Handle logo upload
-    let logoUrl = ''
-    if (req.files?.logo?.[0]?.path) {
-        const uploadLogo = await uploadOnCloudinary(req.files.logo[0].path)
-        logoUrl = uploadLogo?.url || ''
-    }
+  // Handle logo upload
+  let logoUrl = "";
+  if (req.files?.logo?.[0]?.path) {
+    const uploadLogo = await uploadOnCloudinary(req.files.logo[0].path);
+    logoUrl = uploadLogo?.url || "";
+  }
 
-    // Create and save new school
-    const newSchool = await School.create({
-        name,
-        address,
-        email,
-        phone,
-        website,
-        logo: logoUrl,
-        isActive,
-    })
-    res.status(201).json(
-        new ApiResponse(201, newSchool, 'School registered successfully')
-    )
-})
+  // Create and save new school
+  const newSchool = await School.create({
+    name,
+    address,
+    email,
+    phone,
+    website,
+    logo: logoUrl,
+    isActive,
+  });
+
+  // ✅ Initialize default setup
+  await initializeNewSchool(newSchool._id);
+
+  res
+    .status(201)
+    .json(new ApiResponse(201, newSchool, "School registered successfully and setup completed."));
+});
 
 const getAllSchools = asyncHandler(async (req, res) => {
     const {

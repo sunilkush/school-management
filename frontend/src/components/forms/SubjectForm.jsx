@@ -18,34 +18,34 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
     name: "",
     category: "",
     type: "",
-    teacherId: "",
+    assignedTeachers: [],
     schoolId: schoolId || "",
     academicYearId: activeYear?._id || "",
     maxMarks: "",
     passMarks: "",
     isActive: true,
     createdByRole: roleName || "",
-
   });
 
-  // ✅ Pre-fill when editing
+  // ✅ Pre-fill data when editing
   useEffect(() => {
     if (editData) {
       setFormData({
         name: editData.name || "",
         category: editData.category || "",
         type: editData.type || "",
-        teacherId: editData.teacherId?._id || "",
+        assignedTeachers: editData.assignedTeachers?.map(t => t._id) || [],
         schoolId: editData.schoolId?._id || schoolId,
         academicYearId: editData.academicYearId?._id || activeYear?._id || "",
         maxMarks: editData.maxMarks || "",
         passMarks: editData.passMarks || "",
         isActive: editData.isActive ?? true,
+        createdByRole: roleName || "",
       });
     }
-  }, [editData, activeYear]);
+  }, [editData, schoolId, activeYear,roleName]);
 
-  // ✅ Fetch teachers & active academic year for School Admin
+  // ✅ Fetch teachers and active academic year
   useEffect(() => {
     if (roleName === "School Admin" && schoolId) {
       dispatch(fetchAllUser({ schoolId }));
@@ -53,7 +53,7 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
     }
   }, [dispatch, roleName, schoolId]);
 
-  // ✅ Update academic year after it's fetched
+  // ✅ Update academic year when fetched
   useEffect(() => {
     if (activeYear?._id) {
       setFormData((prev) => ({
@@ -63,10 +63,10 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
     }
   }, [activeYear]);
 
-  // ✅ Filter only teachers
+  // ✅ Filter only teacher users
   const teachers = users?.filter((u) => u.role?.name?.toLowerCase() === "teacher");
 
-  // ✅ Subject list
+  // ✅ Subject name options (for Super Admin)
   const SubjectList = [
     "English", "Science", "History", "Geography", "Art", "Physical Education",
     "Computer Science", "Music", "Economics", "Psychology", "Sociology",
@@ -79,19 +79,26 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
     "Social Work"
   ];
 
+  // ✅ Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, options, multiple } = e.target;
+    if (multiple) {
+      const selected = Array.from(options)
+        .filter((opt) => opt.selected)
+        .map((opt) => opt.value);
+      setFormData((prev) => ({ ...prev, [name]: selected }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
+  // ✅ Handle form submit
   const handleSubmit = (e) => {
     e.preventDefault();
-
     let payload = { ...formData };
 
     if (roleName === "Super Admin") {
       payload.isGlobal = true;
-      delete payload.teacherId;
       delete payload.schoolId;
       delete payload.academicYearId;
     } else {
@@ -106,7 +113,7 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
     }
 
     if (editData?._id) {
-      dispatch(updateSubject({ id: editData._id, data: payload }));
+      dispatch(updateSubject({ subjectId: editData._id, subjectData: payload }));
     } else {
       dispatch(createSubject(payload));
     }
@@ -135,29 +142,39 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
         </h2>
 
         {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-        {successMessage && (
-          <p className="text-green-500 text-sm mb-2">{successMessage}</p>
-        )}
+        {successMessage && <p className="text-green-500 text-sm mb-2">{successMessage}</p>}
 
         {/* 🧾 FORM */}
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
           {/* Subject Name */}
           <div className="col-span-2">
             <label className="block text-xs font-medium mb-1">Subject Name</label>
-            <select
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full border rounded-lg px-2 py-2 text-xs"
-              required
-            >
-              <option value="">Select Subject</option>
-              {SubjectList.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
+            {roleName === "Super Admin" ? (
+              <select
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full border rounded-lg px-2 py-2 text-xs"
+                required
+              >
+                <option value="">Select Subject</option>
+                {SubjectList.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full border rounded-lg p-2 text-xs"
+                placeholder="Enter subject name (e.g. Moral Science)"
+                required
+              />
+            )}
           </div>
 
           {/* Category */}
@@ -224,24 +241,26 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
             />
           </div>
 
-          {/* Teacher - only for School Admin */}
+          {/* Multi Assign Teachers */}
           {roleName === "School Admin" && (
             <div className="col-span-2">
-              <label className="block text-xs font-medium mb-1">Assign Teacher</label>
+              <label className="block text-xs font-medium mb-1">Assign Teachers (Multiple)</label>
               <select
-                name="teacherId"
-                value={formData.teacherId}
+                name="assignedTeachers"
+                multiple
+                value={formData.assignedTeachers}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-2 py-2 text-xs"
-                required
+                className="w-full border rounded-lg p-2 text-xs h-28"
               >
-                <option value="">Select Teacher</option>
                 {teachers?.map((t) => (
                   <option key={t._id} value={t._id}>
                     {t.name}
                   </option>
                 ))}
               </select>
+              <p className="text-[10px] text-gray-500 mt-1">
+                Hold Ctrl (Windows) or Cmd (Mac) to select multiple teachers
+              </p>
             </div>
           )}
 

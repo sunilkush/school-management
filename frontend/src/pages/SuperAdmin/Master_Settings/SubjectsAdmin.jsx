@@ -1,49 +1,242 @@
-import React from "react";
-import { BookOpen } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import SubjectForm from "../../../components/forms/SubjectForm.jsx";
+import { useDispatch, useSelector } from "react-redux";
+import DataTable from "react-data-table-component";
+import { fetchAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
+import * as XLSX from "xlsx";
 
 const SubjectsAdmin = () => {
-  const subjects = [
-    { id: 1, name: "Mathematics", code: "MTH101", status: "Active" },
-    { id: 2, name: "Science", code: "SCI102", status: "Active" },
-    { id: 3, name: "History", code: "HIS103", status: "Inactive" },
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const dispatch = useDispatch();
+  const { subjectList, loading } = useSelector((state) => state.subject);
+
+  // ✅ Get user info from localStorage
+  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const schoolId = storedUser?.school?._id || "";
+  const role = storedUser?.role || "";
+
+  // ✅ Fetch all subjects once
+  useEffect(() => {
+    if (schoolId || role === "Super Admin") {
+      dispatch(fetchAllSubjects());
+    }
+  }, [dispatch, schoolId, role]);
+
+  // ✅ Filter subjects based on role
+  const filteredSubjects =
+    role === "Super Admin"
+      ? subjectList
+      : subjectList.filter(
+          (subj) =>
+            subj.isGlobal === true ||
+            String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
+        );
+
+  // ✅ Search filter
+  const searchedSubjects = filteredSubjects.filter((subj) =>
+    subj.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // ✅ Edit Handler
+  const handleEdit = (subject) => {
+    setSelectedSubject(subject);
+    setIsModalOpen(true);
+  };
+
+  // ✅ Delete Handler
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this subject?")) {
+      await dispatch(deleteSubject(id)).unwrap();
+      dispatch(fetchAllSubjects());
+    }
+  };
+
+  // ✅ Export to Excel
+  const handleExport = () => {
+    const exportData = filteredSubjects.map((s) => ({
+      "Subject Name": s.name,
+      Category: s.category,
+      Type: s.type,
+      "Max Marks": s.maxMarks,
+      "Pass Marks": s.passMarks,
+      Teacher: s.teacherId?.name || "Not Assigned",
+      School: s.schoolId?.name || (s.isGlobal ? "🌐 Global" : "—"),
+      Status: s.isActive ? "Active" : "Inactive",
+      "Created Type": s.isGlobal ? "Global" : "School",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Subjects");
+    XLSX.writeFile(wb, "Subjects_List.xlsx");
+  };
+
+  // ✅ Table Columns
+  const columns = [
+    {
+      name: "Subject Name",
+      selector: (row) => row.name || "—",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Category",
+      selector: (row) => row.category || "—",
+      sortable: true,
+      width: "140px",
+    },
+    {
+      name: "Type",
+      selector: (row) => row.type || "—",
+      sortable: true,
+      width: "120px",
+    },
+    {
+      name: "Max Marks",
+      selector: (row) => row.maxMarks ?? "—",
+      sortable: true,
+      width: "120px",
+      center: true,
+    },
+    {
+      name: "Pass Marks",
+      selector: (row) => row.passMarks ?? "—",
+      sortable: true,
+      width: "120px",
+      center: true,
+    },
+    {
+      name: "Teacher",
+      selector: (row) => row.teacherId?.name || "Not Assigned",
+      sortable: true,
+      width: "180px",
+      wrap: true,
+    },
+    {
+      name: "School",
+      selector: (row) => row.schoolId?.name || (row.isGlobal ? "🌐 Global" : "—"),
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Status",
+      selector: (row) => (
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded-full ${
+            row.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
+        >
+          {row.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
+      sortable: true,
+      width: "140px",
+      center: true,
+    },
+    {
+      name: "Created Type",
+      selector: (row) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${
+            row.isGlobal ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {row.isGlobal ? "Global 🌐" : "School 🏫"}
+        </span>
+      ),
+      sortable: true,
+      width: "140px",
+      center: true,
+    },
+    {
+      name: "Actions",
+      cell: (row) => (
+        <div className="flex gap-2">
+          <button
+            className="text-blue-600 hover:underline text-sm"
+            onClick={() => handleEdit(row)}
+          >
+            Edit
+          </button>
+          <button
+            className="text-red-600 hover:underline text-sm"
+            onClick={() => handleDelete(row._id)}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+      width: "140px",
+      center: true,
+    },
   ];
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold flex items-center gap-2">
-        <BookOpen /> Subjects
-      </h1>
+    <>
+      {/* ✅ Subject Modal */}
+      <SubjectForm
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedSubject(null);
+        }}
+        editData={selectedSubject}
+      />
 
-      <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-        ➕ Add New Subject
-      </button>
+      {/* ✅ Header Section */}
+      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800">Subjects List</h2>
+          <p className="text-sm text-gray-500">
+            Manage subjects for your school or global context.
+          </p>
+        </div>
 
-      <table className="min-w-full border mt-4 bg-white rounded-lg shadow-md">
-        <thead className="bg-gray-100 text-left">
-          <tr>
-            <th className="p-3">#</th>
-            <th className="p-3">Subject Name</th>
-            <th className="p-3">Code</th>
-            <th className="p-3">Status</th>
-            <th className="p-3 text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {subjects.map((s, index) => (
-            <tr key={s.id} className="border-t hover:bg-gray-50">
-              <td className="p-3">{index + 1}</td>
-              <td className="p-3">{s.name}</td>
-              <td className="p-3">{s.code}</td>
-              <td className="p-3">{s.status}</td>
-              <td className="p-3 text-center">
-                <button className="text-blue-600 hover:underline">Edit</button> |
-                <button className="text-red-600 hover:underline"> Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        <div className="flex flex-col md:flex-row gap-2 mt-3 md:mt-0">
+          <input
+            type="text"
+            placeholder="Search subject..."
+            className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button
+            onClick={handleExport}
+            className="bg-green-600 text-white px-3 py-2 text-sm rounded-lg hover:bg-green-700"
+          >
+            📥 Export Excel
+          </button>
+          <button
+            onClick={() => {
+              setSelectedSubject(null);
+              setIsModalOpen(true);
+            }}
+            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-lg hover:bg-blue-700"
+          >
+            + Add New Subject
+          </button>
+        </div>
+      </div>
+
+      {/* ✅ Table Section */}
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        <DataTable
+          keyField="_id"
+          columns={columns}
+          data={searchedSubjects}
+          progressPending={loading}
+          pagination
+          highlightOnHover
+          striped
+          dense
+          responsive
+          persistTableHead
+        />
+      </div>
+    </>
   );
 };
 

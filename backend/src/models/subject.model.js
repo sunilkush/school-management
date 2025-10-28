@@ -93,7 +93,7 @@ const subjectSchema = new Schema(
     academicYearId: {
       type: Schema.Types.ObjectId,
       ref: "AcademicYear",
-      required: true,
+      default: null, // null if global
       index: true,
     },
 
