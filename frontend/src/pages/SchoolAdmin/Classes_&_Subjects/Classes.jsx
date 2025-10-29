@@ -1,30 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  fetchClassSections,
-  deleteClassSection,
-} from "../../../features/classSectionSlice";
+ fetchAllClasses as fetchClasses,
+  deleteClass,
+} from "../../../features/classSlice.js";
 import DataTable from "react-data-table-component";
 import { Edit, Trash2 } from "lucide-react";
-
-import ClassSectionFormSA from "../../../components/forms/ClassSectionFormSA";
+import ClassFormSA from "../../../components/forms/ClassSectionFormSA.jsx";
 
 function Classes() {
   const dispatch = useDispatch();
-
-  // ensure classList is always an array
-  const { mappings = [], loading } = useSelector((state) => state.classSection || {});
+  const { classList = [], loading } = useSelector((state) => state.class || {});
   const { user } = useSelector((state) => state.auth || {});
 
   const [isOpen, setIsOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [filterText, setFilterText] = useState("");
+
   const schoolId = user?.school?._id || null;
-  // Fetch only classes from the user's school
+
+  // ✅ Fetch Classes
   useEffect(() => {
-    if (schoolId) {
-      dispatch(fetchClassSections({ schoolId })); // ✅ pass as object
-    }
+    dispatch(fetchClasses({ schoolId }));
   }, [dispatch, schoolId]);
 
   const handleEdit = (cls) => {
@@ -34,10 +31,8 @@ function Classes() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this class?")) {
-      await dispatch(deleteClassSection(id));
-      if (schoolId) {
-        dispatch(fetchClassSections({ schoolId })); // ✅ pass as object
-      }
+      await dispatch(deleteClass(id));
+      dispatch(fetchClasses({ schoolId }));
     }
   };
 
@@ -46,70 +41,100 @@ function Classes() {
     setIsOpen(true);
   };
 
-  // Columns for DataTable
+  // ✅ Columns
   const columns = [
     {
       name: "Class Name",
-      selector: (row) => row.class?.name || "—",
+      selector: (row) => row.name || "—",
       sortable: true,
       cell: (row) => (
         <span className="px-2 py-1 text-xs bg-gray-100 rounded-md">
-          {row.class?.name || "—"}
+          {row.name || "—"}
         </span>
       ),
     },
     {
-      name: "Section",
-      selector: (row) => row.section?.name || "—",
+      name: "Code",
+      selector: (row) => row.code || "—",
       sortable: true,
+    },
+    {
+      name: "Sections",
+      cell: (row) =>
+        row.sections?.length ? (
+          <div className="flex flex-wrap gap-1 py-1">
+            {row.sections.map((s, idx) => (
+              <span
+                key={s.sectionId?._id || idx}
+                className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-md"
+              >
+                {s.sectionId?.name || "—"}
+              </span>
+            ))}
+          </div>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      name: "Class Teacher",
+      selector: (row) => row.teacherId?.name || "—",
       cell: (row) => (
-        <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-md">
-          {row.section?.name || "—"}
+        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
+          {row.teacherId?.name || "—"}
         </span>
       ),
     },
     {
       name: "Subjects",
-      cell: (row) => (
-        <div className="flex flex-wrap gap-1 py-1">
-          {row.subjects?.map((sub, idx) => (
-            <span
-              key={sub.subjectId?._id || idx}
-              className="px-2 py-1 text-xs bg-gray-200 rounded-md"
-            >
-              {sub.subjectId?.name || "—"} ({sub.teacherId?.name || "—"})
-            </span>
-          ))}
-        </div>
-      ),
-    },
-    {
-      name: "Class Teacher",
-      selector: (row) => row.classTeacher?.name || "—",
-      sortable: true,
-      cell: (row) => (
-        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
-          {row.classTeacher?.name || "—"}
-        </span>
-      ),
+      cell: (row) =>
+        row.subjects?.length ? (
+          <div className="flex flex-wrap gap-1 py-1">
+            {row.subjects.map((sub, idx) => (
+              <span
+                key={sub.subjectId?._id || idx}
+                className="px-2 py-1 text-xs bg-gray-200 rounded-md"
+              >
+                {sub.subjectId?.name || "—"} ({sub.teacherId?.name || "—"})
+              </span>
+            ))}
+          </div>
+        ) : (
+          "—"
+        ),
     },
     {
       name: "School",
-      selector: (row) => row.school?.name || "—",
+      selector: (row) => row.schoolId?.name || (row.isGlobal ? "🌍 Global" : "—"),
       sortable: true,
       cell: (row) => (
         <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-md">
-          {row.school?.name || "—"}
+          {row.isGlobal ? "🌍 Global" : row.schoolId?.name || "—"}
         </span>
       ),
     },
     {
       name: "Academic Year",
-      selector: (row) => row.academicYear?.name || "—",
+      selector: (row) => row.academicYearId?.name || "—",
       sortable: true,
       cell: (row) => (
         <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-md">
-          {row.academicYear?.name || "—"}
+          {row.academicYearId?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      name: "Status",
+      selector: (row) => row.status || "active",
+      cell: (row) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-md ${
+            row.status === "inactive"
+              ? "bg-red-100 text-red-700"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
+          {row.status}
         </span>
       ),
     },
@@ -134,18 +159,10 @@ function Classes() {
     },
   ];
 
-
-  // Show only classes for this school
-  const schoolClasses = mappings.filter(
-   (cls) => String(cls.school?._id) === String(user?.school?._id)
- );
-
-  // Apply search filter
-  const filteredItems = schoolClasses.filter(
-   (item) =>
-    item.class?.name?.toLowerCase().includes(filterText.toLowerCase()) ||
-     item.section?.name?.toLowerCase().includes(filterText.toLowerCase())
-);
+  // ✅ Search Filter
+  const filteredItems = classList.filter((item) =>
+    item.name?.toLowerCase().includes(filterText.toLowerCase())
+  );
 
   return (
     <>
@@ -159,11 +176,11 @@ function Classes() {
             >
               ✕
             </button>
-            <ClassSectionFormSA
+            <ClassFormSA
               onClose={() => setIsOpen(false)}
               initialData={editingClass}
               onSuccess={() => {
-                if (schoolId) dispatch(fetchClassSections({ schoolId })); // refresh table
+                dispatch(fetchClasses({ schoolId }));
                 setIsOpen(false);
               }}
             />
@@ -171,7 +188,7 @@ function Classes() {
         </div>
       )}
 
-      {/* Main Table */}
+      {/* Table */}
       <div className="w-full bg-white p-4 border rounded-lg">
         <div className="flex justify-between items-center mb-4">
           <h4 className="text-xl font-bold">Class List</h4>
@@ -186,7 +203,7 @@ function Classes() {
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Search by Class or Section..."
+            placeholder="Search by Class..."
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
             className="w-full md:w-1/3 px-3 py-2 border rounded-lg text-xs"

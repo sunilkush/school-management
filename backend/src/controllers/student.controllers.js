@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
-import { Class } from "../models/classes.model.js";
+import Class from "../models/Classes.model.js";
 import { ClassSection } from "../models/classSection.model.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import mongoose from "mongoose";

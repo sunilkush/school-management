@@ -1,236 +1,343 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllClasses } from "../../features/classSlice";
-import { fetchSection } from "../../features/sectionSlice";
-import { createClassSection } from "../../features/classSectionSlice";
-import { fetchAllUser } from "../../features/authSlice";
-import { fetchAllSubjects } from "../../features/subjectSlice";
+import { createClass, updateClass } from "../../features/classSlice.js";
+import { fetchSection } from "../../features/sectionSlice.js";
+import { fetchAllSubjects } from "../../features/subjectSlice.js";
+import { fetchAllUser } from "../../features/authSlice.js";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
-import { Trash, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
-const ClassSectionForm = ({ onSuccess, initialData }) => {
+const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
   const dispatch = useDispatch();
 
-  const { classList = [] } = useSelector((state) => state.class || {});
   const { sectionList = [] } = useSelector((state) => state.section || {});
+  const { subjectList = [] } = useSelector((state) => state.subject || {});
   const { users = [], user } = useSelector((state) => state.auth || {});
-  const { subjectList } = useSelector((state) => state.subject);
   const { activeYear } = useSelector((state) => state.academicYear || {});
-
-  const [classId, setClassId] = useState("");
-  const [sectionId, setSectionId] = useState("");
-  const [academicYearId, setAcademicYearId] = useState("");
-  const [classTeacherId, setClassTeacherId] = useState("");
-  const [subjectMappings, setSubjectMappings] = useState([{ subjectId: "", teacherId: "" }]);
-
   const schoolId = user?.school?._id || null;
+
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    description: "",
+    academicYearId: "",
+    teacherId: "",
+    isGlobal: false,
+    isActive: true,
+    sections: [{ sectionId: "", inChargeId: "" }],
+    subjects: [{ subjectId: "", teacherId: "", periodPerWeek: 0, isCompulsory: true }],
+  });
 
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchAllClasses(schoolId));
-      dispatch(fetchSection({schoolId}));
-      dispatch(fetchAllUser({ schoolId }));
+      dispatch(fetchSection({ schoolId }));
       dispatch(fetchAllSubjects({ schoolId }));
+      dispatch(fetchAllUser({ schoolId }));
       dispatch(fetchActiveAcademicYear(schoolId));
     }
   }, [dispatch, schoolId]);
 
-  // ✅ prefill when editing
   useEffect(() => {
     if (initialData) {
-      setClassId(initialData.classId?._id || "");
-      setSectionId(initialData.sectionId?._id || "");
-      setClassTeacherId(initialData.teacherId?._id || "");
-      setAcademicYearId(initialData.academicYearId?._id || "");
-      setSubjectMappings(
-        initialData.subjects?.map((s) => ({
-          subjectId: s.subjectId?._id,
-          teacherId: s.teacherId?._id,
-        })) || [{ subjectId: "", teacherId: "" }]
-      );
+      setFormData({
+        name: initialData.name || "",
+        code: initialData.code || "",
+        description: initialData.description || "",
+        academicYearId: initialData.academicYearId?._id || "",
+        teacherId: initialData.teacherId?._id || "",
+        isGlobal: initialData.isGlobal || false,
+        isActive: initialData.isActive || true,
+        sections:
+          initialData.sections?.map((s) => ({
+            sectionId: s.sectionId?._id,
+            inChargeId: s.inChargeId?._id,
+          })) || [{ sectionId: "", inChargeId: "" }],
+        subjects:
+          initialData.subjects?.map((s) => ({
+            subjectId: s.subjectId?._id,
+            teacherId: s.teacherId?._id,
+            periodPerWeek: s.periodPerWeek || 0,
+            isCompulsory: s.isCompulsory ?? true,
+          })) || [{ subjectId: "", teacherId: "", periodPerWeek: 0, isCompulsory: true }],
+      });
     }
   }, [initialData]);
 
-  const handleAddMapping = () => {
-    setSubjectMappings([...subjectMappings, { subjectId: "", teacherId: "" }]);
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
-  const handleRemoveMapping = (index) => {
-    setSubjectMappings(subjectMappings.filter((_, i) => i !== index));
+  const handleArrayChange = (type, index, field, value) => {
+    const updated = [...formData[type]];
+    updated[index][field] = value;
+    setFormData({ ...formData, [type]: updated });
   };
 
-  const handleMappingChange = (index, field, value) => {
-    const newMappings = [...subjectMappings];
-    newMappings[index][field] = value;
-    setSubjectMappings(newMappings);
+  const addArrayItem = (type, itemTemplate) => {
+    setFormData({ ...formData, [type]: [...formData[type], itemTemplate] });
+  };
+
+  const removeArrayItem = (type, index) => {
+    setFormData({
+      ...formData,
+      [type]: formData[type].filter((_, i) => i !== index),
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await dispatch(
-        createClassSection({
-          classId,
-          sectionId,
-          academicYearId,
-          teacherId: classTeacherId,
-          subjects: subjectMappings,
-          schoolId,
-        })
-      ).unwrap();
-
-      // reset
-      setClassId("");
-      setSectionId("");
-      setAcademicYearId("");
-      setClassTeacherId("");
-      setSubjectMappings([{ subjectId: "", teacherId: "" }]);
-
+      if (initialData) {
+        await dispatch(updateClass({ id: initialData._id, data: { ...formData, schoolId } })).unwrap();
+      } else {
+        await dispatch(createClass({ ...formData, schoolId })).unwrap();
+      }
       onSuccess?.();
+      onClose?.();
     } catch (err) {
-      console.error("Error creating mapping:", err);
+      console.error("Error saving class:", err);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <h3>Create Class</h3>
+    <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+      <h3 className="text-lg font-semibold mb-2">
+        {initialData ? "Edit Class" : "Create Class"}
+      </h3>
+
+      {/* Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Class */}
         <div>
-          <label className="block text-xs  text-gray-500">Class</label>
-          <select
-            className="w-full border rounded px-2 py-1 text-sm"
-            value={classId}
-            onChange={(e) => setClassId(e.target.value)}
+          <label className="block text-xs text-gray-500">Class Name</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
             required
-          >
-            <option value="">Select Class</option>
-            {classList.map((c) => (
-              <option key={c._id} value={c._id}>{c.name}</option>
-            ))}
-            {console.log(classList)}
-          </select>
+            className="w-full border rounded px-2 py-1"
+          />
         </div>
-
-        {/* Section */}
         <div>
-          <label className="block text-xs  text-gray-500">Section</label>
-          <select
-            className="w-full border rounded px-2 py-1 text-sm"
-            value={sectionId}
-            onChange={(e) => setSectionId(e.target.value)}
-            required
-          >
-            <option value="">Select Section</option>
-            {sectionList.map((s) => (
-              <option key={s._id} value={s._id}>{s.name}</option>
-            ))}
-          </select>
+          <label className="block text-xs text-gray-500">Code</label>
+          <input
+            type="text"
+            name="code"
+            value={formData.code}
+            onChange={handleChange}
+            className="w-full border rounded px-2 py-1"
+          />
         </div>
+        <div className="md:col-span-2">
+          <label className="block text-xs text-gray-500">Description</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            className="w-full border rounded px-2 py-1"
+          />
+        </div>
+      </div>
 
-        {/* Academic Year */}
+      {/* Academic Year & Teacher */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs  text-gray-500">Academic Year</label>
+          <label className="block text-xs text-gray-500">Academic Year</label>
           <select
-            className="w-full border rounded px-2 py-1 text-sm"
-            value={academicYearId}
-            onChange={(e) => setAcademicYearId(e.target.value)}
+            name="academicYearId"
+            value={formData.academicYearId}
+            onChange={handleChange}
             required
+            className="w-full border rounded px-2 py-1"
           >
             <option value="">Select Academic Year</option>
-            {activeYear && (
-              <option key={activeYear._id} value={activeYear._id}>{activeYear.name}</option>
-            )}
+            {activeYear && <option value={activeYear._id}>{activeYear.name}</option>}
           </select>
         </div>
-
-        {/* Class Teacher */}
         <div>
-          <label className="block text-xs  text-gray-500">Class Teacher</label>
+          <label className="block text-xs text-gray-500">Class Teacher</label>
           <select
-            className="w-full border rounded px-2 py-1 text-sm"
-            value={classTeacherId}
-            onChange={(e) => setClassTeacherId(e.target.value)}
+            name="teacherId"
+            value={formData.teacherId}
+            onChange={handleChange}
             required
+            className="w-full border rounded px-2 py-1"
           >
             <option value="">Select Teacher</option>
             {users
-              .filter((u) => u.role.name === "Teacher")
+              .filter((u) => u.role?.name === "Teacher")
               .map((t) => (
-                <option key={t._id} value={t._id}>{t.name}</option>
+                <option key={t._id} value={t._id}>
+                  {t.name}
+                </option>
               ))}
           </select>
         </div>
       </div>
 
-      {/* Subject-Teacher mappings */}
-      <div className="my-4">
-        {subjectMappings.map((mapping, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end space-y-2 mb-2">
-            <div>
-              <label className="block text-xs  text-gray-500">Subject</label>
-              <select
-                className="w-full border rounded px-2 py-1 text-sm"
-                value={mapping.subjectId}
-                onChange={(e) => handleMappingChange(index, "subjectId", e.target.value)}
-                required
-              >
-                <option value="">Select Subject</option>
-                {subjectList.map((s) => (
-                  <option key={s._id} value={s._id}>{s.name}</option>
+      {/* Sections */}
+      <div>
+        <label className="block text-xs text-gray-500">Sections</label>
+        {formData.sections.map((sec, idx) => (
+          <div key={idx} className="flex items-center gap-2 my-1">
+            <select
+              value={sec.sectionId}
+              onChange={(e) => handleArrayChange("sections", idx, "sectionId", e.target.value)}
+              className="w-1/2 border rounded px-2 py-1"
+            >
+              <option value="">Select Section</option>
+              {sectionList.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sec.inChargeId}
+              onChange={(e) => handleArrayChange("sections", idx, "inChargeId", e.target.value)}
+              className="w-1/2 border rounded px-2 py-1"
+            >
+              <option value="">Select In-Charge</option>
+              {users
+                .filter((u) => u.role?.name === "Teacher")
+                .map((t) => (
+                  <option key={t._id} value={t._id}>
+                    {t.name}
+                  </option>
                 ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs  text-gray-500" >Teacher</label>
-              <select
-                className="w-full border rounded px-2 py-1 text-sm"
-                value={mapping.teacherId}
-                onChange={(e) => handleMappingChange(index, "teacherId", e.target.value)}
-                required
-              >
-                <option value="">Select Teacher</option>
-                {users
-                  .filter((u) => u.role.name === "Teacher")
-                  .map((t) => (
-                    <option key={t._id} value={t._id}>{t.name}</option>
-                  ))}
-              </select>
-            </div>
-
-            <div className="w-50">
-              {index > 0 && (
-                <button
-                  type="button"
-                
-                  onClick={() => handleRemoveMapping(index)}
-                >
-                  <Trash2 className="text-red-500"/>               </button>
-              )}
-            </div>
+            </select>
+            {idx > 0 && (
+              <button type="button" onClick={() => removeArrayItem("sections", idx)}>
+                <Trash2 size={16} className="text-red-500" />
+              </button>
+            )}
           </div>
         ))}
-
         <button
           type="button"
-          className=" text-blue-600 text-xs"
-          onClick={handleAddMapping}
+          className="text-blue-600 text-xs mt-1"
+          onClick={() =>
+            addArrayItem("sections", { sectionId: "", inChargeId: "" })
+          }
+        >
+          + Add Section
+        </button>
+      </div>
+
+      {/* Subjects */}
+      <div>
+        <label className="block text-xs text-gray-500">Subjects</label>
+        {formData.subjects.map((sub, idx) => (
+          <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 my-1 items-center">
+            <select
+              value={sub.subjectId}
+              onChange={(e) => handleArrayChange("subjects", idx, "subjectId", e.target.value)}
+              className="border rounded px-2 py-1"
+            >
+              <option value="">Select Subject</option>
+              {subjectList.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sub.teacherId}
+              onChange={(e) => handleArrayChange("subjects", idx, "teacherId", e.target.value)}
+              className="border rounded px-2 py-1"
+            >
+              <option value="">Select Teacher</option>
+              {users
+                .filter((u) => u.role?.name === "Teacher")
+                .map((t) => (
+                  <option key={t._id} value={t._id}>
+                    {t.name}
+                  </option>
+                ))}
+            </select>
+            <input
+              type="number"
+              placeholder="Periods"
+              value={sub.periodPerWeek}
+              onChange={(e) =>
+                handleArrayChange("subjects", idx, "periodPerWeek", e.target.value)
+              }
+              className="border rounded px-2 py-1"
+            />
+            <label className="flex items-center text-xs gap-1">
+              <input
+                type="checkbox"
+                checked={sub.isCompulsory}
+                onChange={(e) =>
+                  handleArrayChange("subjects", idx, "isCompulsory", e.target.checked)
+                }
+              />
+              Compulsory
+            </label>
+            {idx > 0 && (
+              <button
+                type="button"
+                onClick={() => removeArrayItem("subjects", idx)}
+                className="text-red-500"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          type="button"
+          className="text-blue-600 text-xs mt-1"
+          onClick={() =>
+            addArrayItem("subjects", {
+              subjectId: "",
+              teacherId: "",
+              periodPerWeek: 0,
+              isCompulsory: true,
+            })
+          }
         >
           + Add Subject
         </button>
-       
       </div>
+
+      {/* Toggles */}
+      <div className="flex gap-4 mt-2">
+        <label className="flex items-center text-xs gap-1">
+          <input
+            type="checkbox"
+            name="isGlobal"
+            checked={formData.isGlobal}
+            onChange={handleChange}
+          />
+          Global
+        </label>
+        <label className="flex items-center text-xs gap-1">
+          <input
+            type="checkbox"
+            name="isActive"
+            checked={formData.isActive}
+            onChange={handleChange}
+          />
+          Active
+        </label>
+      </div>
+
+      {/* Submit */}
+      <div className="flex justify-end">
         <button
-        type="submit"
-        className="bg-blue-600 text-white px-3 py-2 rounded  text-sm float-end"
-      >
-        Map Class & Section
-      </button>
-     
+          type="submit"
+          className="bg-blue-600 text-white px-3 py-2 rounded text-sm"
+        >
+          {initialData ? "Update Class" : "Create Class"}
+        </button>
+      </div>
     </form>
   );
 };
 
-export default ClassSectionForm;
+export default ClassFormSA;

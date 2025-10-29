@@ -1,22 +1,18 @@
 import { Router } from "express";
 import {
-    createClass,
-    getAllClasses,
-    getClassById,
-    updateClass,
-    deleteClass
+  createClass,
+  getAllClasses,
+  getClassById,
+  updateClass,
+  deleteClass,
 } from "../controllers/class.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// 🔑 Role Groups
+// Role groups
 const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
-
-// ============================
-// 📌 Class Routes (Protected)
-// ============================
 
 // ➕ Create Class
 router.post("/create", auth, roleMiddleware(ADMIN_ONLY), createClass);

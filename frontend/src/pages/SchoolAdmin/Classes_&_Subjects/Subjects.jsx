@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
-import SubjectForm from "../../../components/forms/SubjectForm.jsx"; // ✅ fixed filename
+import SubjectForm from "../../../components/forms/SubjectForm.jsx";
 import {
   fetchAllSubjects,
   deleteSubject,
@@ -19,12 +19,10 @@ const Subjects = () => {
   const schoolId = storedUser?.school?._id || "";
   const role = storedUser?.role || "";
 
-  // ✅ Fetch all subjects (depends on role or school)
+  // ✅ Fetch all subjects
   useEffect(() => {
- 
     dispatch(fetchAllSubjects({ schoolId }));
-  
-}, [dispatch, schoolId]);
+  }, [dispatch, schoolId]);
 
   // ✅ Filter based on role
   const filteredSubjects =
@@ -36,13 +34,12 @@ const Subjects = () => {
             String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
         );
 
-  // ✅ Edit
+  // ✅ Edit & Delete Handlers
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
     setIsModalOpen(true);
   };
 
-  // ✅ Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       await dispatch(deleteSubject(id));
@@ -53,58 +50,40 @@ const Subjects = () => {
   // ✅ DataTable Columns
   const columns = [
     {
-      name: "Subject Name",
+      name: "Subject",
       selector: (row) => row.name || "—",
       sortable: true,
       wrap: true,
+      grow: 2,
     },
     {
       name: "Category",
       selector: (row) => row.category || "—",
       sortable: true,
-      width: "140px",
+      hide: "sm", // hides on small devices
     },
     {
       name: "Type",
       selector: (row) => row.type || "—",
       sortable: true,
-      width: "120px",
+      hide: "md", // hides on medium and below
     },
     {
       name: "Max Marks",
       selector: (row) => row.maxMarks ?? "—",
       sortable: true,
-      width: "120px",
       center: true,
+      hide: "sm",
     },
     {
       name: "Pass Marks",
       selector: (row) => row.passMarks ?? "—",
       sortable: true,
-      width: "120px",
       center: true,
+      hide: "sm",
     },
     {
-      name: "Assigned Teachers",
-      selector: (row) =>
-        row.assignedTeachers?.length
-          ? row.assignedTeachers.map((t) => t.name || "Unnamed").join(", ")
-          : "Not Assigned",
-      sortable: true,
-      wrap: true,
-      width: "240px",
-    },
-    {
-      name: "Teacher IDs",
-      selector: (row) =>
-        row.assignedTeachers?.length
-          ? row.assignedTeachers.map((t) => t._id).join(", ")
-          : "—",
-      wrap: true,
-      width: "220px",
-    },
-    {
-      name: "School",
+      name: "School / Scope",
       selector: (row) =>
         row.schoolId?.name || (row.isGlobal ? "🌐 Global" : "—"),
       sortable: true,
@@ -113,46 +92,38 @@ const Subjects = () => {
     {
       name: "Status",
       selector: (row) => (row.isActive ? "🟢 Active" : "🔴 Inactive"),
-      sortable: true,
-      width: "120px",
       center: true,
-    },
-    {
-      name: "Created Type",
-      selector: (row) => (row.isGlobal ? "Global" : "School"),
-      sortable: true,
-      width: "130px",
-      center: true,
+      hide: "md",
     },
     {
       name: "Actions",
       cell: (row) => (
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2 justify-center">
           <button
-            className="text-blue-600 hover:underline text-sm"
+            className="text-blue-600 hover:underline text-xs sm:text-sm"
             onClick={() => handleEdit(row)}
           >
             Edit
           </button>
           <button
-            className="text-red-600 hover:underline text-sm"
+            className="text-red-600 hover:underline text-xs sm:text-sm"
             onClick={() => handleDelete(row._id)}
           >
             Delete
           </button>
         </div>
       ),
-      width: "140px",
       center: true,
+      minWidth: "120px",
     },
   ];
 
   return (
     <>
-      {/* ✅ Modal Form */}
+      {/* ✅ Modal */}
       <SubjectForm
         isOpen={isModalOpen}
-       onClose={() => {
+        onClose={() => {
           setIsModalOpen(false);
           setSelectedSubject(null);
           dispatch(fetchAllSubjects({ schoolId }));
@@ -161,40 +132,61 @@ const Subjects = () => {
       />
 
       {/* ✅ Header */}
-      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800">Subjects List</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+            Subjects List
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-500">
             Manage subjects for your school or global context.
           </p>
         </div>
-        <div className="mt-3 md:mt-0">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedSubject(null);
-              setIsModalOpen(true);
-            }}
-            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-lg hover:bg-blue-700"
-          >
-            + Add New Subject
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSubject(null);
+            setIsModalOpen(true);
+          }}
+          className="bg-blue-600 text-white px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition"
+        >
+          + Add New Subject
+        </button>
       </div>
 
-      {/* ✅ Table */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <DataTable
-          columns={columns}
-          data={filteredSubjects || []}
-          progressPending={loading}
-          pagination
-          highlightOnHover
-          striped
-          dense
-          responsive
-          persistTableHead
-        />
+      {/* ✅ Responsive Table Wrapper */}
+      <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md overflow-x-auto">
+        <div className="min-w-[600px] sm:min-w-full">
+          <DataTable
+            columns={columns}
+            data={filteredSubjects || []}
+            progressPending={loading}
+            pagination
+            highlightOnHover
+            striped
+            dense
+            responsive
+            persistTableHead
+            customStyles={{
+              table: {
+                style: { minWidth: "100%" },
+              },
+              headCells: {
+                style: {
+                  fontWeight: "600",
+                  fontSize: "0.8rem",
+                  padding: "8px",
+                },
+              },
+              cells: {
+                style: {
+                  fontSize: "0.75rem",
+                  padding: "6px",
+                  whiteSpace: "normal",
+                },
+              },
+            }}
+          />
+        </div>
       </div>
     </>
   );
