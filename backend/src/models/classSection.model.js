@@ -17,17 +17,30 @@ const classSectionSchema = new Schema(
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
-      required: true,
+      required: function () {
+        // ✅ Only required if NOT global
+        return !this.isGlobal;
+      },
       index: true,
     },
     academicYearId: {
       type: Schema.Types.ObjectId,
       ref: "AcademicYear",
-      required: true,
+      required: function () {
+        // ✅ Only required if NOT global
+        return !this.isGlobal;
+      },
       index: true,
     },
 
-    // Optional: assign a section in-charge or class teacher
+    // ✅ If mapping is global (used by all schools)
+    isGlobal: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    // Optional: Section in-charge / Class teacher
     teacherId: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -36,8 +49,16 @@ const classSectionSchema = new Schema(
     // Subjects mapped to this class-section with assigned teachers
     subjects: [
       {
-        subjectId: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
-        teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        subjectId: {
+          type: Schema.Types.ObjectId,
+          ref: "Subject",
+          required: true,
+        },
+        teacherId: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
       },
     ],
 
@@ -50,14 +71,8 @@ const classSectionSchema = new Schema(
     ],
 
     // Metadata
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    updatedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
     status: {
       type: String,
       enum: ["active", "inactive"],
@@ -67,13 +82,20 @@ const classSectionSchema = new Schema(
   { timestamps: true }
 );
 
-// 🔑 Prevent duplicate class-section mapping per school + academic year
+// 🔑 Unique mapping
 classSectionSchema.index(
-  { classId: 1, sectionId: 1, academicYearId: 1, schoolId: 1 },
+  {
+    classId: 1,
+    sectionId: 1,
+    academicYearId: 1,
+    schoolId: 1,
+    isGlobal: 1,
+  },
   { unique: true }
 );
 
-// 🔎 For faster lookups
-classSectionSchema.index({ schoolId: 1, academicYearId: 1 });
+// 🔎 Faster lookups
+classSectionSchema.index({ schoolId: 1, academicYearId: 1, isGlobal: 1 });
+
 
 export const ClassSection = mongoose.model("ClassSection", classSectionSchema);

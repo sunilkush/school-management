@@ -1,53 +1,68 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import Sidebar from '../sidebar/Sidebar';
 import Topbar from '../navbar/Topbar';
-import { Outlet } from 'react-router-dom';
 
 const Dashboard = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
   const navigate = useNavigate();
 
   const { user } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
   
   const role = user?.role?.name;
-  // ✅ BLOCK IF NO ACTIVE YEAR AND NOT SUPER ADMIN
+
+  // ✅ Redirect if not Super Admin and no active academic year
   useEffect(() => {
     if (role !== 'Super Admin' && !activeYear?._id) {
-      // Redirect to no active year page if the user is not a Super Admin and there is no active academic year
-     
-    } 
+      // Example redirect (optional)
+      // navigate('/no-active-year');
+    }
   }, [role, activeYear, navigate]);
 
-  const closeSidebar = () => setIsSidebarOpen(false);
-
+  // ✅ Auto hide sidebar when screen < 1024px (tablet or mobile)
   useEffect(() => {
     const handleResize = () => {
-      setIsSidebarOpen(window.innerWidth >= 768);
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setIsSidebarOpen(false);
+
   return (
-    <div className="flex h-screen  overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
+      {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} />
+
+      {/* Overlay for mobile and tablet */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-40 z-30 lg:hidden"
           onClick={closeSidebar}
         ></div>
       )}
+
+      {/* Main Content Area */}
       <div
-        className={`flex flex-col flex-1 transition-all duration-300 md:ml-0 ${isSidebarOpen ? 'ml-72' : ''
-          }`}
+        className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${
+          isSidebarOpen && window.innerWidth >= 1023 ?  'ml-0' : 'lg:ml-72'
+        }`}
       >
+        {/* Topbar */}
         <Topbar
           isSidebarOpen={isSidebarOpen}
-          toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          toggleSidebar={toggleSidebar}
         />
+
+        {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 bg-slate-200">
           <Outlet />
         </main>

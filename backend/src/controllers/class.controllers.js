@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import  Class from "../models/Classes.model.js";
 import { ClassSection } from "../models/classSection.model.js";
 import { School } from "../models/school.model.js";
-
+import mongoose from "mongoose";
 // ✅ Create Class
 const createClass = asyncHandler(async (req, res) => {
   const { name, schoolId, academicYearId, teacherId, students = [], subjects = [] } = req.body;
@@ -44,24 +44,103 @@ const createClass = asyncHandler(async (req, res) => {
 // ✅ Update Class
 const updateClass = asyncHandler(async (req, res) => {
   const { classId } = req.params;
-  const { name, teacherId, students, subjects, status } = req.body;
+  const {
+    name,
+    code,
+    description,
+    academicYearId,
+    teacherId,
+    isGlobal,
+    isActive,
+    schoolId,
+    sections = [],
+    subjects = [],
+  } = req.body;
 
   if (!classId) throw new ApiError(400, "Class ID is required");
 
   const classToUpdate = await Class.findById(classId);
   if (!classToUpdate) throw new ApiError(404, "Class not found");
 
-  if (name) classToUpdate.name = name.trim().toUpperCase();
-  if (teacherId) classToUpdate.teacherId = teacherId;
-  if (students) classToUpdate.students = students;
-  if (subjects) classToUpdate.subjects = subjects;
-  if (status) classToUpdate.status = status;
+  // ✅ Clean valid ObjectIds only
+  const cleanSections = Array.isArray(sections)
+    ? sections.filter(
+        (s) =>
+          s.sectionId &&
+          mongoose.Types.ObjectId.isValid(s.sectionId) &&
+          (!s.inChargeId || mongoose.Types.ObjectId.isValid(s.inChargeId))
+      )
+    : [];
 
+  const cleanSubjects = Array.isArray(subjects)
+    ? subjects.filter(
+        (s) =>
+          s.subjectId &&
+          mongoose.Types.ObjectId.isValid(s.subjectId) &&
+          s.teacherId &&
+          mongoose.Types.ObjectId.isValid(s.teacherId)
+      )
+    : [];
+
+  // ✅ Update Class fields
+  if (name) classToUpdate.name = name.trim().toUpperCase();
+  if (code) classToUpdate.code = code.trim();
+  if (description) classToUpdate.description = description.trim();
+  if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId))
+    classToUpdate.academicYearId = academicYearId;
+  if (teacherId && mongoose.Types.ObjectId.isValid(teacherId))
+    classToUpdate.teacherId = teacherId;
+  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId))
+    classToUpdate.schoolId = schoolId;
+  if (typeof isGlobal === "boolean") classToUpdate.isGlobal = isGlobal;
+  if (typeof isActive === "boolean") classToUpdate.isActive = isActive;
+
+  classToUpdate.subjects = cleanSubjects;
   classToUpdate.updatedBy = req.user?._id;
 
+  // ✅ Save class
   const updatedClass = await classToUpdate.save();
-  return res.status(200).json(new ApiResponse(200, updatedClass, "Class updated successfully"));
+
+  
+ // ✅ Update ClassSection mappings (delete old + insert new)
+if (cleanSections.length > 0) {
+  // First, remove all old mappings of this class
+  await ClassSection.deleteMany({ classId });
+
+  // Then, create fresh mappings for each selected section
+  const newSectionMappings = cleanSections.map((sec) => ({
+    classId, // required
+    sectionId: sec.sectionId, // required
+    teacherId: sec.inChargeId || null, // optional section in-charge
+    schoolId: isGlobal ? null : schoolId, // required only if not global
+    academicYearId: isGlobal ? null : academicYearId, // required only if not global
+    isGlobal: !!isGlobal, // mark global explicitly
+    createdBy: req.user?._id,
+    
+  }));
+
+  // Insert all new mappings
+  await ClassSection.insertMany(newSectionMappings);
+}
+
+  // ✅ Refetch full class with updated relations
+  const populatedClass = await Class.findById(classId)
+    .populate("schoolId", "name logo")
+    .populate("academicYearId", "name startDate endDate")
+    .populate("teacherId", "name email")
+    .populate("subjects.subjectId", "name code")
+    .populate("subjects.teacherId", "name email")
+    // 👇 Add this line to populate section info
+    .populate("sections.sectionId", "name code")
+    .populate("sections.inChargeId", "name email");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, populatedClass, "Class updated successfully with sections")
+    );
 });
+
 
 // ✅ Delete Class
 const deleteClass = asyncHandler(async (req, res) => {

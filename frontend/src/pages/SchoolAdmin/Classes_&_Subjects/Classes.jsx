@@ -42,122 +42,133 @@ function Classes() {
   };
 
   // ✅ Columns
-  const columns = [
-    {
-      name: "Class Name",
-      selector: (row) => row.name || "—",
-      sortable: true,
-      cell: (row) => (
+ // ✅ Columns
+const columns = [
+  {
+    name: "Class",
+    selector: (row) => row.name || "—",
+    sortable: true,
+    cell: (row) => (
+      <div>
         <span className="px-2 py-1 text-xs bg-gray-100 rounded-md">
           {row.name || "—"}
         </span>
-      ),
-    },
-    {
-      name: "Code",
-      selector: (row) => row.code || "—",
-      sortable: true,
-    },
-    {
-      name: "Sections",
-      cell: (row) =>
-        row.sections?.length ? (
-          <div className="flex flex-wrap gap-1 py-1">
-            {row.sections.map((s, idx) => (
-              <span
-                key={s.sectionId?._id || idx}
-                className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-md"
-              >
-                {s.sectionId?.name || "—"}
-              </span>
-            ))}
-          </div>
-        ) : (
-          "—"
-        ),
-    },
-    {
-      name: "Class Teacher",
-      selector: (row) => row.teacherId?.name || "—",
-      cell: (row) => (
-        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
-          {row.teacherId?.name || "—"}
-        </span>
-      ),
-    },
-    {
-      name: "Subjects",
-      cell: (row) =>
-        row.subjects?.length ? (
-          <div className="flex flex-wrap gap-1 py-1">
-            {row.subjects.map((sub, idx) => (
-              <span
-                key={sub.subjectId?._id || idx}
-                className="px-2 py-1 text-xs bg-gray-200 rounded-md"
-              >
-                {sub.subjectId?.name || "—"} ({sub.teacherId?.name || "—"})
-              </span>
-            ))}
-          </div>
-        ) : (
-          "—"
-        ),
-    },
-    {
-      name: "School",
-      selector: (row) => row.schoolId?.name || (row.isGlobal ? "🌍 Global" : "—"),
-      sortable: true,
-      cell: (row) => (
-        <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-md">
-          {row.isGlobal ? "🌍 Global" : row.schoolId?.name || "—"}
-        </span>
-      ),
-    },
-    {
-      name: "Academic Year",
-      selector: (row) => row.academicYearId?.name || "—",
-      sortable: true,
-      cell: (row) => (
-        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-md">
-          {row.academicYearId?.name || "—"}
-        </span>
-      ),
-    },
-    {
-      name: "Status",
-      selector: (row) => row.status || "active",
-      cell: (row) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-md ${
-            row.status === "inactive"
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      name: "Actions",
-      cell: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleEdit(row)}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            <Edit size={18} />
-          </button>
-          <button
-            onClick={() => handleDelete(row._id)}
-            className="text-red-600 hover:text-red-800"
-          >
-            <Trash2 size={18} />
-          </button>
+        {row.code && (
+          <span className="ml-2 px-2 py-1 text-[10px] bg-gray-200 text-gray-700 rounded-md">
+            {row.code}
+          </span>
+        )}
+      </div>
+    ),
+  },
+  {
+    name: "Sections",
+    cell: (row) =>
+      row.sections?.length ? (
+        <div className="flex flex-wrap gap-1 py-1">
+          {row.sections.map((s, idx) => (
+            <span
+              key={s.sectionId?._id || idx}
+              className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-md"
+            >
+              {s.name || "—"}
+             
+            </span>
+          ))}
         </div>
+      ) : (
+        "—"
       ),
-    },
-  ];
+  },
+  {
+    name: "Class Teacher",
+    selector: (row) => row.teacherId?.name || "—",
+    cell: (row) => (
+      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
+        {row.teacherId?.name || "—"}
+      </span>
+    ),
+  },
+  {
+    name: "Subjects",
+    cell: (row) =>
+      row.subjects?.length ? (
+        <div className="flex flex-wrap gap-1 py-1">
+          {row.subjects.map((sub, idx) => (
+            <span
+              key={sub.subjectId?._id || idx}
+              className="px-2 py-1 text-xs bg-gray-200 rounded-md"
+            >
+              {sub.subjectId?.name || "—"}{" "}
+              {sub.subjectId?.code && (
+                <span className="text-[10px] text-gray-700">
+                  ({sub.subjectId.code})
+                </span>
+              )}{" "}
+              ({sub.teacherId?.name || "—"})
+            </span>
+          ))}
+        </div>
+      ) : (
+        "—"
+      ),
+  },
+  {
+    name: "School",
+    selector: (row) => row.schoolId?.name || (row.isGlobal ? "🌍 Global" : "—"),
+    sortable: true,
+    cell: (row) => (
+      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-md">
+        {row.isGlobal ? "🌍 Global" : row.schoolId?.name || "—"}
+      </span>
+    ),
+  },
+  {
+    name: "Academic Year",
+    selector: (row) => row.academicYearId?.name || "—",
+    sortable: true,
+    cell: (row) => (
+      <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-md">
+        {row.academicYearId?.name || "—"}
+      </span>
+    ),
+  },
+  {
+    name: "Status",
+    selector: (row) => row.status || "active",
+    cell: (row) => (
+      <span
+        className={`px-2 py-1 text-xs rounded-md ${
+          row.status === "inactive"
+            ? "bg-red-100 text-red-700"
+            : "bg-green-100 text-green-700"
+        }`}
+      >
+        {row.status}
+      </span>
+    ),
+  },
+  {
+    name: "Actions",
+    cell: (row) => (
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleEdit(row)}
+          className="text-blue-600 hover:text-blue-800"
+        >
+          <Edit size={18} />
+        </button>
+        <button
+          onClick={() => handleDelete(row._id)}
+          className="text-red-600 hover:text-red-800"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+    ),
+  },
+];
+
 
   // ✅ Search Filter
   const filteredItems = classList.filter((item) =>

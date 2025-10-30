@@ -45,7 +45,7 @@ const ClassForm = ({ onClose, onSuccess, initialData }) => {
         value={formData.name}
         onChange={handleChange}
         required
-        className="w-full border rounded px-2 py-1"
+        className="w-full border rounded px-2 py-1 text-sm"
       >
         <option value="">Select Class</option>
         {["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"].map(cls => (

@@ -9,11 +9,10 @@ import { Trash2 } from "lucide-react";
 
 const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
   const dispatch = useDispatch();
-
-  const { sectionList = [] } = useSelector((state) => state.section || {});
-  const { subjectList = [] } = useSelector((state) => state.subject || {});
-  const { users = [], user } = useSelector((state) => state.auth || {});
-  const { activeYear } = useSelector((state) => state.academicYear || {});
+  const { sectionList = [] } = useSelector((s) => s.section || {});
+  const { subjectList = [] } = useSelector((s) => s.subject || {});
+  const { users = [], user } = useSelector((s) => s.auth || {});
+  const { activeYear } = useSelector((s) => s.academicYear || {});
   const schoolId = user?.school?._id || null;
 
   const [formData, setFormData] = useState({
@@ -28,6 +27,7 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
     subjects: [{ subjectId: "", teacherId: "", periodPerWeek: 0, isCompulsory: true }],
   });
 
+  // ✅ Load data
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchSection({ schoolId }));
@@ -37,38 +37,84 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
     }
   }, [dispatch, schoolId]);
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name || "",
-        code: initialData.code || "",
-        description: initialData.description || "",
-        academicYearId: initialData.academicYearId?._id || "",
-        teacherId: initialData.teacherId?._id || "",
-        isGlobal: initialData.isGlobal || false,
-        isActive: initialData.isActive || true,
-        sections:
-          initialData.sections?.map((s) => ({
-            sectionId: s.sectionId?._id,
-            inChargeId: s.inChargeId?._id,
-          })) || [{ sectionId: "", inChargeId: "" }],
-        subjects:
-          initialData.subjects?.map((s) => ({
-            subjectId: s.subjectId?._id,
-            teacherId: s.teacherId?._id,
-            periodPerWeek: s.periodPerWeek || 0,
-            isCompulsory: s.isCompulsory ?? true,
-          })) || [{ subjectId: "", teacherId: "", periodPerWeek: 0, isCompulsory: true }],
-      });
-    }
-  }, [initialData]);
+  // ✅ Single unified effect for editing + mapping
+useEffect(() => {
+  if (!initialData) return;
 
+  // wait until data lists are ready
+  const allReady =
+    sectionList.length > 0 &&
+    subjectList.length > 0 &&
+    users.length > 0 &&
+    activeYear;
+
+  if (!allReady) return; // ⛔ wait karo jab tak sab list load nahi ho jati
+
+  console.log("All lists loaded, mapping initialData...");
+
+  setFormData({
+    name: initialData.name || "",
+    code: initialData.code || "",
+    academicYearId:
+      initialData.academicYearId?._id ||
+      initialData.academicYearId ||
+      activeYear._id ||
+      "",
+    teacherId:
+      initialData.teacherId?._id ||
+      initialData.teacherId ||
+      "",
+    isGlobal: initialData.isGlobal || false,
+    isActive: initialData.isActive ?? true,
+
+    sections:
+      initialData.sections?.map((s) => ({
+        sectionId:
+          sectionList.find(
+            (sec) =>
+              sec._id === s.sectionId?._id || sec._id === s.sectionId
+          )?._id || "",
+        inChargeId:
+          users.find(
+            (u) =>
+              u._id === s.inChargeId?._id || u._id === s.inChargeId
+          )?._id || "",
+      })) || [{ sectionId: "", inChargeId: "" }],
+
+    subjects:
+      initialData.subjects?.map((sub) => ({
+        subjectId:
+          subjectList.find(
+            (sb) =>
+              sb._id === sub.subjectId?._id || sb._id === sub.subjectId
+          )?._id || "",
+        teacherId:
+          users.find(
+            (u) =>
+              u._id === sub.teacherId?._id || u._id === sub.teacherId
+          )?._id || "",
+        periodPerWeek: sub.periodPerWeek || 1,
+        isCompulsory:
+          sub.isCompulsory !== undefined ? sub.isCompulsory : true,
+      })) || [
+        {
+          subjectId: "",
+          teacherId: "",
+          periodPerWeek: 1,
+          isCompulsory: true,
+        },
+      ],
+  });
+}, [initialData, sectionList, subjectList, users, activeYear]);
+
+
+
+
+
+  // ✅ Handlers
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
   };
 
   const handleArrayChange = (type, index, field, value) => {
@@ -77,24 +123,23 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
     setFormData({ ...formData, [type]: updated });
   };
 
-  const addArrayItem = (type, itemTemplate) => {
-    setFormData({ ...formData, [type]: [...formData[type], itemTemplate] });
-  };
+  const addArrayItem = (type, template) =>
+    setFormData({ ...formData, [type]: [...formData[type], template] });
 
-  const removeArrayItem = (type, index) => {
+  const removeArrayItem = (type, index) =>
     setFormData({
       ...formData,
       [type]: formData[type].filter((_, i) => i !== index),
     });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = { ...formData, schoolId };
       if (initialData) {
-        await dispatch(updateClass({ id: initialData._id, data: { ...formData, schoolId } })).unwrap();
+        await dispatch(updateClass({ id: initialData._id, data: payload })).unwrap();
       } else {
-        await dispatch(createClass({ ...formData, schoolId })).unwrap();
+        await dispatch(createClass(payload)).unwrap();
       }
       onSuccess?.();
       onClose?.();
@@ -103,13 +148,20 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
     }
   };
 
+  if (!sectionList.length || !subjectList.length || !users.length) {
+    return <p className="text-sm text-gray-500">Loading form data...</p>;
+  }
+
+  // ✅ UI
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+    <>
+ 
+  <form onSubmit={handleSubmit} className="space-y-4 text-sm">
       <h3 className="text-lg font-semibold mb-2">
         {initialData ? "Edit Class" : "Create Class"}
       </h3>
 
-      {/* Basic Info */}
+      {/* Class Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs text-gray-500">Class Name</label>
@@ -118,8 +170,8 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            required
             className="w-full border rounded px-2 py-1"
+            required
           />
         </div>
         <div>
@@ -132,18 +184,9 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
             className="w-full border rounded px-2 py-1"
           />
         </div>
-        <div className="md:col-span-2">
-          <label className="block text-xs text-gray-500">Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full border rounded px-2 py-1"
-          />
-        </div>
       </div>
 
-      {/* Academic Year & Teacher */}
+      {/* Academic Year + Teacher */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs text-gray-500">Academic Year</label>
@@ -151,7 +194,6 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
             name="academicYearId"
             value={formData.academicYearId}
             onChange={handleChange}
-            required
             className="w-full border rounded px-2 py-1"
           >
             <option value="">Select Academic Year</option>
@@ -164,7 +206,6 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
             name="teacherId"
             value={formData.teacherId}
             onChange={handleChange}
-            required
             className="w-full border rounded px-2 py-1"
           >
             <option value="">Select Teacher</option>
@@ -186,7 +227,9 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
           <div key={idx} className="flex items-center gap-2 my-1">
             <select
               value={sec.sectionId}
-              onChange={(e) => handleArrayChange("sections", idx, "sectionId", e.target.value)}
+              onChange={(e) =>
+                handleArrayChange("sections", idx, "sectionId", e.target.value)
+              }
               className="w-1/2 border rounded px-2 py-1"
             >
               <option value="">Select Section</option>
@@ -196,9 +239,12 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
                 </option>
               ))}
             </select>
+
             <select
               value={sec.inChargeId}
-              onChange={(e) => handleArrayChange("sections", idx, "inChargeId", e.target.value)}
+              onChange={(e) =>
+                handleArrayChange("sections", idx, "inChargeId", e.target.value)
+              }
               className="w-1/2 border rounded px-2 py-1"
             >
               <option value="">Select In-Charge</option>
@@ -210,6 +256,7 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
                   </option>
                 ))}
             </select>
+
             {idx > 0 && (
               <button type="button" onClick={() => removeArrayItem("sections", idx)}>
                 <Trash2 size={16} className="text-red-500" />
@@ -220,9 +267,7 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
         <button
           type="button"
           className="text-blue-600 text-xs mt-1"
-          onClick={() =>
-            addArrayItem("sections", { sectionId: "", inChargeId: "" })
-          }
+          onClick={() => addArrayItem("sections", { sectionId: "", inChargeId: "" })}
         >
           + Add Section
         </button>
@@ -235,7 +280,9 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
           <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 my-1 items-center">
             <select
               value={sub.subjectId}
-              onChange={(e) => handleArrayChange("subjects", idx, "subjectId", e.target.value)}
+              onChange={(e) =>
+                handleArrayChange("subjects", idx, "subjectId", e.target.value)
+              }
               className="border rounded px-2 py-1"
             >
               <option value="">Select Subject</option>
@@ -245,9 +292,12 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
                 </option>
               ))}
             </select>
+
             <select
               value={sub.teacherId}
-              onChange={(e) => handleArrayChange("subjects", idx, "teacherId", e.target.value)}
+              onChange={(e) =>
+                handleArrayChange("subjects", idx, "teacherId", e.target.value)
+              }
               className="border rounded px-2 py-1"
             >
               <option value="">Select Teacher</option>
@@ -259,6 +309,7 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
                   </option>
                 ))}
             </select>
+
             <input
               type="number"
               placeholder="Periods"
@@ -268,6 +319,7 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
               }
               className="border rounded px-2 py-1"
             />
+
             <label className="flex items-center text-xs gap-1">
               <input
                 type="checkbox"
@@ -278,13 +330,10 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
               />
               Compulsory
             </label>
+
             {idx > 0 && (
-              <button
-                type="button"
-                onClick={() => removeArrayItem("subjects", idx)}
-                className="text-red-500"
-              >
-                <Trash2 size={16} />
+              <button type="button" onClick={() => removeArrayItem("subjects", idx)}>
+                <Trash2 size={16} className="text-red-500" />
               </button>
             )}
           </div>
@@ -327,16 +376,14 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
         </label>
       </div>
 
-      {/* Submit */}
       <div className="flex justify-end">
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-3 py-2 rounded text-sm"
-        >
+        <button type="submit" className="bg-blue-600 text-white px-3 py-2 rounded text-sm">
           {initialData ? "Update Class" : "Create Class"}
         </button>
       </div>
     </form>
+    </>
+   
   );
 };
 

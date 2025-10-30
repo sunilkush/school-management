@@ -67,10 +67,10 @@ export const deleteClass = createAsyncThunk(
 // UPDATE class
 export const updateClass = createAsyncThunk(
   "class/updateClass",
-  async ({ id, classData }, { rejectWithValue }) => {
+  async ({ id, data }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/class/${id}`, classData, {
+      const res = await axios.put(`${Api_Base_Url}/class/${id}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

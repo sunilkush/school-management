@@ -6,7 +6,7 @@ import {
   fetchAllSubjects,
   deleteSubject,
 } from "../../../features/subjectSlice.js";
-
+import { SquarePen,Trash2 } from "lucide-react";
 const Subjects = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -89,6 +89,20 @@ const Subjects = () => {
       sortable: true,
       wrap: true,
     },
+     {
+  name: "Teachers Assigned",
+  selector: (row) => {
+    if (!row.assignedTeachers || row.assignedTeachers.length === 0) {
+      return "—";
+    }
+    // If assignedTeachers is an array of teacher objects
+    return row.assignedTeachers
+      .map((t) => t.name || t.fullName || t.teacherName || "Unnamed")
+      .join(", ");
+  },
+  sortable: true,
+  wrap: true,
+},
     {
       name: "Status",
       selector: (row) => (row.isActive ? "🟢 Active" : "🔴 Inactive"),
@@ -103,13 +117,13 @@ const Subjects = () => {
             className="text-blue-600 hover:underline text-xs sm:text-sm"
             onClick={() => handleEdit(row)}
           >
-            Edit
+            <SquarePen className="w-4" />
           </button>
           <button
             className="text-red-600 hover:underline text-xs sm:text-sm"
             onClick={() => handleDelete(row._id)}
           >
-            Delete
+            <Trash2  className="w-4" />
           </button>
         </div>
       ),

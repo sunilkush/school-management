@@ -161,7 +161,7 @@ const RegisterForm = () => {
       )}
       {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
 
-      <form className="grid grid-cols-1 gap-4" onSubmit={handleSubmit}>
+      <form className="grid grid-cols-1 gap-1" onSubmit={handleSubmit}>
         {/* Name */}
         <div>
           <label className="text-xs text-gray-600">Name</label>
