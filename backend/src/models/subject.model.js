@@ -7,26 +7,20 @@ const subjectSchema = new Schema(
       type: String,
       required: [true, "Subject name is required"],
       trim: true,
-      uppercase: true, // prevent duplicates like "math" vs "Math"
+      uppercase: true,
     },
-
     code: {
       type: String,
       trim: true,
       uppercase: true,
-      unique: true, // unique system-wide code
+      unique: true,
     },
-
     shortName: {
       type: String,
       trim: true,
       uppercase: true,
     },
-
-    description: {
-      type: String,
-      trim: true,
-    },
+    description: { type: String, trim: true },
 
     // 🔹 Classification
     category: {
@@ -34,127 +28,73 @@ const subjectSchema = new Schema(
       enum: ["Core", "Elective", "Language", "Practical", "Optional"],
       default: "Core",
     },
-
     type: {
       type: String,
       enum: ["Theory", "Practical", "Both"],
       default: "Theory",
     },
-
-    maxMarks: {
-      type: Number,
-      default: 100,
-      min: 1,
-    },
-
+    maxMarks: { type: Number, default: 100, min: 1 },
     passMarks: {
       type: Number,
       default: 33,
       min: 0,
-      validate: {
-        validator: function (v) {
-          return v <= this.maxMarks;
-        },
-        message: "Pass marks cannot exceed maximum marks",
+      validate(v) {
+        return v <= this.maxMarks;
       },
     },
 
-    // 🔹 Role & Ownership Info
+    // 🔹 Ownership
     createdByRole: {
       type: String,
       enum: ["Super Admin", "School Admin"],
       required: true,
     },
-
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
 
-    updatedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-
-    // 🔹 Global / School-level Control
-    isGlobal: {
-      type: Boolean,
-      default: false, // true → visible to all schools
-    },
-
+    // 🔹 Global/Local
+    isGlobal: { type: Boolean, default: false },
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
-      default: null, // null if global
+      default: null,
       index: true,
     },
-
     academicYearId: {
       type: Schema.Types.ObjectId,
       ref: "AcademicYear",
-      default: null, // null if global
+      default: null,
       index: true,
     },
 
     // 🔹 Assignments
-    assignedSchools: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "School",
-      },
-    ],
-
-    assignedClasses: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Class",
-      },
-    ],
-
-    assignedTeachers: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User", // Teacher or HOD
-      },
-    ],
-
-    gradingSchemeId: {
-      type: Schema.Types.ObjectId,
-      ref: "Grade",
-    },
+    assignedSchools: [{ type: Schema.Types.ObjectId, ref: "School" }],
+    assignedClasses: [{ type: Schema.Types.ObjectId, ref: "Class" }],
+    assignedTeachers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    gradingSchemeId: { type: Schema.Types.ObjectId, ref: "Grade" },
 
     // 🔹 Status
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-
-    status: {
-      type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
-    },
-
-    remarks: {
-      type: String,
-      trim: true,
-    },
+    isActive: { type: Boolean, default: true },
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    remarks: { type: String, trim: true },
   },
   { timestamps: true }
 );
 
-//
-// 🔹 Indexes
-//
+// ✅ Compound index for school-level uniqueness
 subjectSchema.index(
   { name: 1, schoolId: 1, academicYearId: 1 },
-  { unique: true, partialFilterExpression: { schoolId: { $type: "objectId" } } }
+  {
+    unique: true,
+    partialFilterExpression: { schoolId: { $exists: true } },
+  }
 );
 
-//
-// 🔹 Auto-generate shortName & code if missing
-//
+// ✅ Auto-generate shortName & code
 subjectSchema.pre("save", function (next) {
   if (!this.shortName && this.name)
     this.shortName = this.name.substring(0, 4).toUpperCase();

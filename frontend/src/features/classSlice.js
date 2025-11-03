@@ -84,6 +84,24 @@ export const updateClass = createAsyncThunk(
   }
 );
 
+export const assignsubjects = createAsyncThunk(
+  "class/assignsubjects",
+      async (data, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await axios.post(`${Api_Base_Url}/class/assign-subjects`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.data?.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || "Assigning subjects failed!"
+      );
+    }});
+
+
+
+
 const classSlice = createSlice({
   name: "class",
   initialState: {

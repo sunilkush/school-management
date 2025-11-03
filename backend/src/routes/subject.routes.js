@@ -33,13 +33,10 @@ router.get("/:id", auth, roleMiddleware(ALL_ROLES), getSubject);
 // ✅ Update Subject (Super Admin & School Admin)
 router.put("/:id", auth, roleMiddleware(ADMIN_ROLES), updateSubject);
 
+// ✅ Assign Schools to Subject (Super Admin & School Admin)
+router.put("/assign/:id", auth, roleMiddleware(ADMIN_ROLES), assignSchoolsToSubject);
 
 // ✅ Delete Subject (Super Admin & School Admin)
 router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), deleteSubject);
-
-
-router.put("/:id", auth, roleMiddleware(ADMIN_ROLES), assignSchoolsToSubject);
-
-
 
 export default router;

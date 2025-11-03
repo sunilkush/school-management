@@ -4,9 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Subject } from "../models/subject.model.js";
 import mongoose from "mongoose";
 
-//
-// ✅ Create Subject (Super Admin & School Admin)
-//
+// ✅ CREATE SUBJECT
 const createSubject = asyncHandler(async (req, res) => {
   const {
     name,
@@ -17,6 +15,7 @@ const createSubject = asyncHandler(async (req, res) => {
     description,
     assignedTeachers = [],
     assignedClasses = [],
+    assignedSchools = [],
     academicYearId,
     schoolId,
     isGlobal = false,
@@ -26,24 +25,20 @@ const createSubject = asyncHandler(async (req, res) => {
   const createdBy = req.user?._id;
   const userRole = createdByRole || req.user?.role;
 
-  // ✅ Role-based validation
-  if (userRole === "Super Admin") {
-    if (!name || !createdBy || !createdByRole) {
-      throw new ApiError(400, "Missing required fields for Super Admin");
-    }
-  } else {
-    if (!name || !academicYearId || !createdBy || !createdByRole) {
-      throw new ApiError(400, "Missing required fields for School Admin");
-    }
-  }
+  // 🔍 Validation
+  if (!name || !createdBy || !createdByRole)
+    throw new ApiError(400, "Missing required fields");
+
+  if (userRole === "School Admin" && !academicYearId)
+    throw new ApiError(400, "Academic year is required for school admins");
 
   // 🔍 Duplicate check
   const query = isGlobal
     ? { name: name.toUpperCase(), isGlobal: true }
     : { name: name.toUpperCase(), schoolId, academicYearId };
 
-  const existing = await Subject.findOne(query);
-  if (existing) throw new ApiError(400, "Subject already exists in this context");
+  if (await Subject.findOne(query))
+    throw new ApiError(400, "Subject already exists");
 
   // ✅ Create subject
   const subject = await Subject.create({
@@ -55,6 +50,7 @@ const createSubject = asyncHandler(async (req, res) => {
     description,
     assignedTeachers,
     assignedClasses,
+    assignedSchools,
     academicYearId: userRole === "Super Admin" ? null : academicYearId,
     schoolId: isGlobal ? null : schoolId,
     isGlobal,
@@ -68,78 +64,50 @@ const createSubject = asyncHandler(async (req, res) => {
     .populate("schoolId", "name")
     .populate("academicYearId", "name startYear endYear");
 
-  return res.status(201).json(
-    new ApiResponse(201, populated, "Subject created successfully")
-  );
+  return res
+    .status(201)
+    .json(new ApiResponse(201, populated, "Subject created successfully"));
 });
 
-
-
-//
-// ✅ Get All Subjects (Super Admin → all, School Admin → own + global)
-//
+// ✅ GET ALL SUBJECTS
 const getAllSubjects = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, search, schoolId, isGlobal } = req.query;
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-  const query = {};
+  const skip = (page - 1) * limit;
 
   const role = req.user.role?.toLowerCase();
+  const query = {};
 
-  // 🧩 Role-based filter
-  if (role === "Super Admin") {
+  if (role === "super admin") {
     if (isGlobal !== undefined) query.isGlobal = isGlobal === "true";
     if (schoolId) query.schoolId = new mongoose.Types.ObjectId(schoolId);
-  } else if (role === "School Admin") {
+  } else if (role === "school admin") {
     query.$or = [
       { schoolId: new mongoose.Types.ObjectId(req.user.schoolId) },
       { isGlobal: true },
     ];
   }
 
-  // 🧩 Search filter
-  if (search) {
-    query.name = { $regex: search, $options: "i" };
-  }
+  if (search) query.name = { $regex: search, $options: "i" };
 
-  // 🧩 Fetch and populate related data
   const subjects = await Subject.find(query)
     .populate("schoolId", "name")
     .populate("assignedTeachers", "name email schoolId")
     .populate("assignedClasses", "name")
-    .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(limit)
+    .sort({ createdAt: -1 });
 
   const total = await Subject.countDocuments(query);
-
-  // 🧹 Filter out teachers who belong to other schools
-  const filteredSubjects = subjects.map((subj) => {
-    let filteredTeachers = subj.assignedTeachers;
-    if (schoolId) {
-      filteredTeachers = subj.assignedTeachers?.filter(
-        (t) => String(t.schoolId) === String(schoolId)
-      );
-    } else if (req.user.schoolId && role === "School Admin") {
-      filteredTeachers = subj.assignedTeachers?.filter(
-        (t) => String(t.schoolId) === String(req.user.schoolId)
-      );
-    }
-
-    return {
-      ...subj.toObject(),
-      assignedTeachers: filteredTeachers || [],
-    };
-  });
 
   return res.status(200).json(
     new ApiResponse(
       200,
       {
-        subjects: filteredSubjects,
+        subjects,
         pagination: {
           total,
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page: Number(page),
+          limit: Number(limit),
           totalPages: Math.ceil(total / limit),
         },
       },
@@ -148,116 +116,64 @@ const getAllSubjects = asyncHandler(async (req, res) => {
   );
 });
 
-//
-// ✅ Get Single Subject by ID
-//
-const getSubject = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const subject = await Subject.findById(id)
-    .populate("assignedTeachers", "name email")
-    .populate("assignedClasses", "name")
-    .populate("schoolId", "name")
-    .populate("academicYearId", "name startYear endYear")
-    .populate("gradingSchemeId", "name minMarks maxMarks");
-
-  if (!subject) throw new ApiError(404, "Subject not found");
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, subject, "Subject retrieved successfully"));
-});
-
-//
-// ✅ Update Subject
-//
+// ✅ UPDATE SUBJECT
 const updateSubject = asyncHandler(async (req, res) => {
-  const { id } = req.params; // ✅ Subject ID from route parameter
-  const {
-    name,
-    category,
-    type,
-    maxMarks,
-    passMarks,
-    assignedTeachers = [],
-    assignedClasses = [],
-    isActive,
-    description,
-  } = req.body;
+  const { id } = req.params;
+  const updates = req.body;
 
-  // ✅ Check if subject exists
   const subject = await Subject.findById(id);
   if (!subject) throw new ApiError(404, "Subject not found");
 
-  // ✅ Restrict School Admin from editing global subjects or others' data
   if (
     req.user.role === "School Admin" &&
-    (subject.isGlobal || subject.schoolId?.toString() !== req.user.schoolId?.toString())
+    (subject.isGlobal ||
+      subject.schoolId?.toString() !== req.user.schoolId?.toString())
   ) {
     throw new ApiError(403, "Not authorized to update this subject");
   }
 
-  // ✅ Update only provided fields
-  if (name !== undefined) subject.name = name;
-  if (category !== undefined) subject.category = category;
-  if (type !== undefined) subject.type = type;
-  if (maxMarks !== undefined) subject.maxMarks = maxMarks;
-  if (passMarks !== undefined) subject.passMarks = passMarks;
-  if (assignedTeachers !== undefined) subject.assignedTeachers = assignedTeachers;
-  if (assignedClasses !== undefined) subject.assignedClasses = assignedClasses;
-  if (isActive !== undefined) subject.isActive = isActive;
-  if (description !== undefined) subject.description = description;
-
-  subject.updatedBy = req.user._id;
-
-  // ✅ Save updates
+  Object.assign(subject, updates, { updatedBy: req.user._id });
   await subject.save();
 
-  // ✅ Populate for response
   const updatedSubject = await Subject.findById(id)
     .populate("assignedTeachers", "name email")
     .populate("assignedClasses", "name")
     .populate("schoolId", "name");
 
-  return res
+  res
     .status(200)
     .json(new ApiResponse(200, updatedSubject, "Subject updated successfully"));
 });
 
-//
-// ✅ Delete Subject
-//
+// ✅ DELETE SUBJECT
 const deleteSubject = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
   const subject = await Subject.findById(id);
   if (!subject) throw new ApiError(404, "Subject not found");
 
-  // Role-based restriction
   if (
     req.user.role === "School Admin" &&
-    (subject.isGlobal || subject.schoolId?.toString() !== req.user.schoolId)
+    (subject.isGlobal ||
+      subject.schoolId?.toString() !== req.user.schoolId?.toString())
   ) {
     throw new ApiError(403, "Not authorized to delete this subject");
   }
 
   await subject.deleteOne();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Subject deleted successfully"));
+  res.status(200).json(new ApiResponse(200, {}, "Subject deleted successfully"));
 });
 
-
+// ✅ ASSIGN MULTIPLE SCHOOLS TO GLOBAL SUBJECT
 const assignSchoolsToSubject = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { schoolIds = [] } = req.body;
 
+  if (req.user.role !== "Super Admin")
+    throw new ApiError(403, "Only Super Admin can assign schools");
+
   const subject = await Subject.findById(id);
   if (!subject) throw new ApiError(404, "Subject not found");
-
-  if (req.user.role !== "Super Admin") {
-    throw new ApiError(403, "Only Super Admin can assign schools");
-  }
 
   subject.assignedSchools = [...new Set([...subject.assignedSchools, ...schoolIds])];
   await subject.save();
@@ -268,11 +184,79 @@ const assignSchoolsToSubject = asyncHandler(async (req, res) => {
 });
 
 
+//
+// ✅ Get Single Subject by ID (Detailed + Role Safe)
+//
+const getSubject = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  // 🧩 Validate MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid subject ID");
+  }
+
+  // 🔍 Fetch subject with full population
+  const subject = await Subject.findById(id)
+    .populate("assignedTeachers", "name email role schoolId")
+    .populate("assignedClasses", "name section code")
+    .populate("schoolId", "name code")
+    .populate("academicYearId", "name startYear endYear")
+    .populate("gradingSchemeId", "name minMarks maxMarks");
+
+  if (!subject) throw new ApiError(404, "Subject not found");
+
+  // 🧩 Role-based access check
+  const userRole = req.user.role;
+  if (
+    userRole === "School Admin" &&
+    subject.isGlobal === false &&
+    subject.schoolId &&
+    subject.schoolId._id.toString() !== req.user.schoolId?.toString()
+  ) {
+    throw new ApiError(403, "You are not authorized to view this subject");
+  }
+
+  // 🧹 Filter assigned teachers (if School Admin → only same school teachers)
+  let filteredTeachers = subject.assignedTeachers;
+  if (userRole === "School Admin") {
+    filteredTeachers = subject.assignedTeachers.filter(
+      (t) => t.schoolId?.toString() === req.user.schoolId?.toString()
+    );
+  }
+
+  const responseData = {
+    _id: subject._id,
+    name: subject.name,
+    code: subject.code,
+    shortName: subject.shortName,
+    category: subject.category,
+    type: subject.type,
+    maxMarks: subject.maxMarks,
+    passMarks: subject.passMarks,
+    description: subject.description,
+    isGlobal: subject.isGlobal,
+    school: subject.schoolId,
+    academicYear: subject.academicYearId,
+    gradingScheme: subject.gradingSchemeId,
+    assignedClasses: subject.assignedClasses,
+    assignedTeachers: filteredTeachers,
+    status: subject.status,
+    isActive: subject.isActive,
+    remarks: subject.remarks,
+    createdAt: subject.createdAt,
+    updatedAt: subject.updatedAt,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, responseData, "Subject retrieved successfully"));
+});
+
 export {
   createSubject,
-  getAllSubjects,
   getSubject,
+  getAllSubjects,
   updateSubject,
   deleteSubject,
-  assignSchoolsToSubject
+  assignSchoolsToSubject,
 };

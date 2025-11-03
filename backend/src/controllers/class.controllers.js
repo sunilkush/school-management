@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import  Class from "../models/Classes.model.js";
+import  Class  from "../models/classes.model.js";
 import { ClassSection } from "../models/classSection.model.js";
 import { School } from "../models/school.model.js";
 import mongoose from "mongoose";
@@ -249,4 +249,64 @@ const getClassById = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, classData, "Class fetched successfully"));
 });
 
-export { createClass, getAllClasses, getClassById, updateClass, deleteClass };
+
+
+
+const assignSubjectsToClass = asyncHandler(async (req, res) => {
+  const { classId, assignments } = req.body;
+  const user = req.user;
+
+  // 🧩 Validate permissions
+  if (user.role?.toLowerCase() !== "super admin") {
+    return res.status(403).json(new ApiResponse(403, null, "Access denied"));
+  }
+
+  if (!classId || !Array.isArray(assignments)) {
+    return res.status(400).json(new ApiResponse(400, null, "Invalid data format"));
+  }
+
+  // 🧩 Validate class exists
+  const classData = await Class.findById(classId);
+  if (!classData) {
+    return res.status(404).json(new ApiResponse(404, null, "Class not found"));
+  }
+
+  // 🧩 Prepare assignments array
+  const subjectAssignments = [];
+
+  for (const item of assignments) {
+    const { subjectId, teacherId, periodPerWeek, isCompulsory } = item;
+
+    if (!subjectId || !teacherId) continue;
+
+    // Validate subject and teacher belong to same school
+    const [subject, teacher] = await Promise.all([
+      Subject.findById(subjectId),
+      User.findById(teacherId),
+    ]);
+
+    if (!subject || !teacher) continue;
+
+    subjectAssignments.push({
+      subjectId: new mongoose.Types.ObjectId(subjectId),
+      teacherId: new mongoose.Types.ObjectId(teacherId),
+      periodPerWeek: periodPerWeek || 0,
+      isCompulsory: isCompulsory ?? true,
+    });
+  }
+
+  // 🧩 Update class with subject assignments
+  classData.subjects = subjectAssignments;
+  classData.updatedBy = user._id;
+  await classData.save();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      classData,
+      "Subjects and teachers assigned to class successfully"
+    )
+  );
+});
+
+export { createClass, getAllClasses, getClassById, updateClass, deleteClass,assignSubjectsToClass };

@@ -5,6 +5,7 @@ import {
   getClassById,
   updateClass,
   deleteClass,
+  assignSubjectsToClass,
 } from "../controllers/class.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -28,5 +29,9 @@ router.put("/:classId", auth, roleMiddleware(ADMIN_ONLY), updateClass);
 
 // 🗑️ Delete Class
 router.delete("/:classId", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
+
+//
+router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
+
 
 export default router;

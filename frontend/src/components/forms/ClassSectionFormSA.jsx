@@ -14,6 +14,7 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
   const { users = [], user } = useSelector((s) => s.auth || {});
   const { activeYear } = useSelector((s) => s.academicYear || {});
   const schoolId = user?.school?._id || null;
+  const role = user?.role?.name || null;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -50,7 +51,7 @@ useEffect(() => {
 
   if (!allReady) return; // ⛔ wait karo jab tak sab list load nahi ho jati
 
-  console.log("All lists loaded, mapping initialData...");
+  
 
   setFormData({
     name: initialData.name || "",
@@ -210,7 +211,7 @@ useEffect(() => {
           >
             <option value="">Select Teacher</option>
             {users
-              .filter((u) => u.role?.name === "Teacher")
+              .filter((u) => u.role?.name === "Teacher").filter((u) => u.isActive === true)
               .map((t) => (
                 <option key={t._id} value={t._id}>
                   {t.name}
@@ -248,13 +249,13 @@ useEffect(() => {
               className="w-1/2 border rounded px-2 py-1"
             >
               <option value="">Select In-Charge</option>
-              {users
-                .filter((u) => u.role?.name === "Teacher")
-                .map((t) => (
-                  <option key={t._id} value={t._id}>
-                    {t.name}
-                  </option>
-                ))}
+               {users
+              .filter((u) => u.role?.name === "Teacher").filter((u) => u.isActive === true)
+              .map((t) => (
+                <option key={t._id} value={t._id}>
+                  {t.name}
+                </option>
+              ))}
             </select>
 
             {idx > 0 && (
@@ -356,7 +357,8 @@ useEffect(() => {
 
       {/* Toggles */}
       <div className="flex gap-4 mt-2">
-        <label className="flex items-center text-xs gap-1">
+       {role === "Super Admin" && (
+         <label className="flex items-center text-xs gap-1">
           <input
             type="checkbox"
             name="isGlobal"
@@ -365,6 +367,7 @@ useEffect(() => {
           />
           Global
         </label>
+       )}
         <label className="flex items-center text-xs gap-1">
           <input
             type="checkbox"

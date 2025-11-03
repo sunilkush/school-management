@@ -13,19 +13,19 @@ const SubjectsAdmin = () => {
   const dispatch = useDispatch();
   const { subjectList, loading } = useSelector((state) => state.subject);
 
-  // ✅ Get user info from localStorage
+  // ✅ Get logged-in user info
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
   const role = storedUser?.role || "";
 
-  // ✅ Fetch all subjects once
+  // ✅ Fetch subjects once when mounted
   useEffect(() => {
     if (schoolId || role === "Super Admin") {
-      dispatch(fetchAllSubjects());
+      dispatch(fetchAllSubjects({ schoolId }));
     }
   }, [dispatch, schoolId, role]);
 
-  // ✅ Filter subjects based on role
+  // ✅ Role-based filtering
   const filteredSubjects =
     role === "Super Admin"
       ? subjectList
@@ -35,22 +35,26 @@ const SubjectsAdmin = () => {
             String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
         );
 
-  // ✅ Search filter
+  // ✅ Local search filter
   const searchedSubjects = filteredSubjects.filter((subj) =>
     subj.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ Edit Handler
+  // ✅ Edit handler
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
     setIsModalOpen(true);
   };
 
-  // ✅ Delete Handler
+  // ✅ Delete handler
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
-      await dispatch(deleteSubject(id)).unwrap();
-      dispatch(fetchAllSubjects());
+      try {
+        await dispatch(deleteSubject(id)).unwrap();
+        dispatch(fetchAllSubjects({ schoolId }));
+      } catch (err) {
+        console.error("Delete failed:", err);
+      }
     }
   };
 
@@ -58,10 +62,10 @@ const SubjectsAdmin = () => {
   const handleExport = () => {
     const exportData = filteredSubjects.map((s) => ({
       "Subject Name": s.name,
-      Category: s.category,
-      Type: s.type,
-      "Max Marks": s.maxMarks,
-      "Pass Marks": s.passMarks,
+      Category: s.category || "—",
+      Type: s.type || "—",
+      "Max Marks": s.maxMarks ?? "—",
+      "Pass Marks": s.passMarks ?? "—",
       Teacher: s.teacherId?.name || "Not Assigned",
       School: s.schoolId?.name || (s.isGlobal ? "🌐 Global" : "—"),
       Status: s.isActive ? "Active" : "Inactive",
@@ -74,26 +78,11 @@ const SubjectsAdmin = () => {
     XLSX.writeFile(wb, "Subjects_List.xlsx");
   };
 
-  // ✅ Table Columns
+  // ✅ Table columns
   const columns = [
-    {
-      name: "Subject Name",
-      selector: (row) => row.name || "—",
-      sortable: true,
-      wrap: true,
-    },
-    {
-      name: "Category",
-      selector: (row) => row.category || "—",
-      sortable: true,
-      width: "140px",
-    },
-    {
-      name: "Type",
-      selector: (row) => row.type || "—",
-      sortable: true,
-      width: "120px",
-    },
+    { name: "Subject Name", selector: (row) => row.name || "—", sortable: true, wrap: true },
+    { name: "Category", selector: (row) => row.category || "—", sortable: true, width: "140px" },
+    { name: "Type", selector: (row) => row.type || "—", sortable: true, width: "120px" },
     {
       name: "Max Marks",
       selector: (row) => row.maxMarks ?? "—",
@@ -132,8 +121,7 @@ const SubjectsAdmin = () => {
           {row.isActive ? "Active" : "Inactive"}
         </span>
       ),
-      sortable: true,
-      width: "140px",
+      width: "120px",
       center: true,
     },
     {
@@ -147,8 +135,7 @@ const SubjectsAdmin = () => {
           {row.isGlobal ? "Global 🌐" : "School 🏫"}
         </span>
       ),
-      sortable: true,
-      width: "140px",
+      width: "130px",
       center: true,
     },
     {
@@ -176,7 +163,7 @@ const SubjectsAdmin = () => {
 
   return (
     <>
-      {/* ✅ Subject Modal */}
+      {/* ✅ Modal form for Add/Edit */}
       <SubjectForm
         isOpen={isModalOpen}
         onClose={() => {
@@ -186,7 +173,7 @@ const SubjectsAdmin = () => {
         editData={selectedSubject}
       />
 
-      {/* ✅ Header Section */}
+      {/* ✅ Header */}
       <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Subjects List</h2>
@@ -221,7 +208,7 @@ const SubjectsAdmin = () => {
         </div>
       </div>
 
-      {/* ✅ Table Section */}
+      {/* ✅ Table */}
       <div className="bg-white p-4 rounded-lg shadow-md">
         <DataTable
           keyField="_id"
@@ -234,6 +221,7 @@ const SubjectsAdmin = () => {
           dense
           responsive
           persistTableHead
+          noDataComponent={<div className="py-4 text-gray-500">No subjects found</div>}
         />
       </div>
     </>
