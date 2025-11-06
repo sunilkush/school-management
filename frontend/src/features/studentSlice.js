@@ -10,6 +10,7 @@ export const fetchLastStudent = createAsyncThunk(
   "students/fetchLastStudent",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
+      
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(
         `${Api_Base_Url}/student/last?schoolId=${schoolId}&academicYearId=${academicYearId}`,
@@ -52,29 +53,56 @@ export const createStudent = createAsyncThunk(
 // fetch all students
 export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
-  async ({ schoolId, academicYearId,classId } = {}, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId, classId } = {}, { rejectWithValue }) => {
     try {
+    
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${Api_Base_Url}/student/all`, {
+      // ✅ Choose URL based on schoolId presence
+      const url = `${Api_Base_Url}/student/all`;
+
+      // ✅ Fetch data
+      const res = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        params:{schoolId, academicYearId,classId }
+        params: { schoolId, academicYearId, classId },
       });
-      return res.data
+
+      return res.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message);
+      
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch students");
     }
   }
 );
+
+export const fetchStudentsBySchoolId = createAsyncThunk("student/fetchBySchoolId", async ({ schoolId }, { rejectWithValue }) => {
+  try {
+    console.log("Fetching students for schoolId:", schoolId);
+    const token = localStorage.getItem("accessToken");
+    if (!token) throw new Error("No access token found");
+    const res = await axios.get(`${Api_Base_Url}/student/${schoolId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data.data;
+  }
+
+  catch (error) {
+    return rejectWithValue(error.response?.data?.message || "Failed to fetch students by school ID");
+  }
+})
 
 const initialState = {
   lastStudent: null, // last stide
   student: null,   // single student
   studentList: [],    // list of students
+  schoolStudents: [],
   loading: false,
   error: null,
   success: false,
@@ -98,9 +126,9 @@ const studentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchLastStudent.fulfilled, (state, action) => {
-  state.loading = false;
-  state.lastStudent = action.payload || null;  // ✅ no .data here
-})
+        state.loading = false;
+        state.lastStudent = action.payload || null;  // ✅ no .data here
+      })
       .addCase(fetchLastStudent.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
@@ -132,7 +160,7 @@ const studentSlice = createSlice({
       })
       .addCase(fetchAllStudent.fulfilled, (state, action) => {
         state.loading = false;
-         state.studentList = action.payload.data?.students || []
+        state.studentList = action.payload.data?.students || []
         state.success = true;
       })
       .addCase(fetchAllStudent.rejected, (state, action) => {
@@ -140,7 +168,23 @@ const studentSlice = createSlice({
         state.error = action.payload;
         state.success = false;
       })
-      
+
+      .addCase(fetchStudentsBySchoolId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(fetchStudentsBySchoolId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.schoolStudents = action.payload.data || [];
+        state.success = true;
+      })
+      .addCase(fetchStudentsBySchoolId.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
+      });
+
   },
 });
 

@@ -1,60 +1,77 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
-import { fetchAllStudent } from "../../../features/studentSlice";
-import { User, Download, SquarePen, Trash, X } from "lucide-react";
+import {
+  fetchAllStudent,
+  fetchStudentsBySchoolId,
+} from "../../../features/studentSlice";
+import { User, Download, X } from "lucide-react";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
-import { fetchClassSections } from "../../../features/classSectionSlice";
 import { activeUser } from "../../../features/authSlice";
 
 const StudentList = () => {
   const dispatch = useDispatch();
-  const { studentList } = useSelector((state) => state.students);
 
+  const { studentList = [], schoolStudents = [] } = useSelector(
+    (state) => state.students
+  );
+  console.log("studentList from state:", studentList);
+  console.log("schoolStudents from state:", schoolStudents);
   const { user } = useSelector((state) => state.auth);
-  const [isOpen, setIsOpen] = useState(false);
 
-  const [searchText, setSearchText] = useState(""); // 🔹 track search text
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const schoolId = user?.school?._id;
+  
 
+  // ✅ Fetch user if not loaded
   useEffect(() => {
-    dispatch(fetchAllStudent());
-    if (schoolId) {
-      dispatch(fetchClassSections({ schoolId })); // ✅ pass as object
+    if (!user) dispatch(activeUser());
+  }, [dispatch, user]);
+
+  // ✅ Fetch data based on role
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.role?.name === "Super Admin") {
+      dispatch(fetchAllStudent());
+    } else if (user.role?.name === "School Admin" && schoolId) {
+      dispatch(fetchStudentsBySchoolId({ schoolId }));
     }
-    dispatch(activeUser());
-  }, [dispatch, schoolId, isOpen]);
-  console.log("studentList", studentList);
-  // ✅ format data
-  const formattedStudents = Array.isArray(studentList)
-    ? studentList.map((stu) => ({
-      id: stu._id,
-      name: stu.userDetails?.name ?? "N/A",
-      class: stu.classDetails?.name ?? "N/A",
-      section: stu.sectionDetails?.name ?? "N/A",
-      dateOfBirth: stu.studentInfo?.dateOfBirth
-        ? new Date(stu.studentInfo?.dateOfBirth).toISOString().split("T")[0]
-        : "N/A",
-      mobileNumber: stu.mobileNumber ?? "N/A",
-      admissionDate: stu.admissionDate
-        ? new Date(stu.admissionDate).toISOString().split("T")[0]
-        : "N/A",
-      bloodGroup: stu.studentInfo?.bloodGroup ?? "N/A",
-      email: stu.userDetails?.email ?? "Not Marked",
-    }))
+  }, [dispatch, user, schoolId, isOpen]);
+
+  // ✅ Decide which list to display
+  const studentsData =
+    user?.role?.name === "Super Admin" ? studentList : schoolStudents;
+
+  // ✅ Format data
+  const formattedStudents = Array.isArray(studentsData)
+    ? studentsData.map((stu) => ({
+        id: stu._id,
+        name: stu.userDetails?.name ?? "N/A",
+        class: stu.classDetails?.name ?? "N/A",
+        section: stu.sectionDetails?.name ?? "N/A",
+        dateOfBirth: stu.studentInfo?.dateOfBirth
+          ? new Date(stu.studentInfo.dateOfBirth).toISOString().split("T")[0]
+          : "N/A",
+        mobileNumber: stu.mobileNumber ?? "N/A",
+        admissionDate: stu.admissionDate
+          ? new Date(stu.admissionDate).toISOString().split("T")[0]
+          : "N/A",
+        bloodGroup: stu.studentInfo?.bloodGroup ?? "N/A",
+        email: stu.userDetails?.email ?? "Not Marked",
+      }))
     : [];
 
-  // 🔹 Filter students by selected class and search text
-  const filteredStudents = formattedStudents.filter((stu) => {
-
-    const matchesSearch = searchText
+  // ✅ Search filter
+  const filteredStudents = formattedStudents.filter((stu) =>
+    searchText
       ? stu.name.toLowerCase().includes(searchText.toLowerCase())
-      : true;
+      : true
+  );
 
-    return matchesSearch;
-  });
-  // ✅ columns
+  // ✅ Columns
   const columns = [
     {
       name: "Name",
@@ -82,7 +99,7 @@ const StudentList = () => {
 
   return (
     <>
-      {/* ✅ Popup Modal */}
+      {/* ✅ Modal */}
       {isOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl relative">
@@ -103,10 +120,10 @@ const StudentList = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <h2 className="font-bold text-xl">Students Details</h2>
           <div className="flex gap-2">
-            {/* 🔹 Search filter */}
+            {/* 🔹 Search */}
             <input
               type="text"
-              placeholder="Search your Student"
+              placeholder="Search Student"
               className="border px-2 py-1 rounded-md text-xs"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -128,7 +145,7 @@ const StudentList = () => {
         <div className="mt-4">
           <DataTable
             columns={columns}
-            data={filteredStudents} // 🔹 use filtered data
+            data={filteredStudents}
             pagination
             highlightOnHover
             striped

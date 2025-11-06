@@ -6,13 +6,12 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
  */
 export const checkActiveAcademicYear = async (req, res, next) => {
   try {
-   
-    // Allow Super Admin to bypass
-    if (req.user?.role === "School Admin") {
+    // ✅ Allow Super Admin to bypass
+    if (req.user?.role === "Super Admin") {
       return next();
     }
 
-    // School ID is required
+    // ✅ School ID is required for School Admins and others
     const schoolId = req.user?.schoolId;
     if (!schoolId) {
       return res.status(400).json({
@@ -21,7 +20,7 @@ export const checkActiveAcademicYear = async (req, res, next) => {
       });
     }
 
-    // Check for active academic year in that school
+    // ✅ Check for active academic year in that school
     const activeYear = await AcademicYear.findOne({
       schoolId,
       isActive: true,
@@ -35,7 +34,7 @@ export const checkActiveAcademicYear = async (req, res, next) => {
       });
     }
 
-    // Attach academic year ID to request for downstream use
+    // ✅ Attach academic year ID to request for downstream use
     req.academicYearId = activeYear._id;
     next();
   } catch (error) {

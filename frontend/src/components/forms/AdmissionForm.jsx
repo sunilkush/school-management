@@ -25,7 +25,6 @@ const AdmissionForm = () => {
   const { user } = useSelector((state) => state.auth);
   const schoolId = user?.school?._id
   const { classList = [] } = useSelector((state) => state.class);
-  console.log("Classes List:", classList); // Debugging line 
   const selectAcademicYear = localStorage.getItem("selectedAcademicYear");
   const academicYearObj = selectAcademicYear ? JSON.parse(selectAcademicYear) : null;
   const academicYearId = academicYearObj?._id || "";

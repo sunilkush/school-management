@@ -130,7 +130,7 @@ const getStudents = asyncHandler(async (req, res) => {
   const match = { academicYearId: new mongoose.Types.ObjectId(academicYearId) };
 
   // 🔹 Role-based filter
-  if (user.role === "School Admin" || user.role === "Teacher") {
+  if (user.role === "School Admin" || user.role === "Super Admin") {
     if (!user.schoolId) {
       throw new ApiError(400, "School ID not found for admin user!");
     }
@@ -368,41 +368,45 @@ const deleteStudent = asyncHandler(async (req, res) => {
 });
 
 // ✅ Get last student & generate next reg no
-// controller (assuming you import generateNextRegNumber earlier)
 const getLastRegisteredStudent = async (req, res, next) => {
   try {
     const { schoolId, academicYearId } = req.query;
+   
+   /*  console.log("schoolId:", schoolId, "academicYearId:", academicYearId);
 
     if (!schoolId || !academicYearId) {
       throw new ApiError(400, "schoolId and academicYearId are required");
     }
 
-    // ✅ Get last enrolled student for this school & academic year
+    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+      throw new ApiError(400, "Invalid schoolId format");
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
+      throw new ApiError(400, "Invalid academicYearId format");
+    }
+ */
     const lastStudent = await StudentEnrollment.findOne({
       schoolId: new mongoose.Types.ObjectId(schoolId),
       academicYearId: new mongoose.Types.ObjectId(academicYearId),
     })
       .sort({ createdAt: -1 })
       .select("registrationNumber studentId")
-      .populate("studentId", "studentName") // 👈 populate student name from Student collection
+      .populate("studentId", "studentName")
       .lean();
 
     console.log("lastStudent:", lastStudent);
 
     const lastRegNumber = lastStudent?.registrationNumber ?? null;
-    
-
-      // ✅ Reset numbering for each academic year
     const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
-    const yearLabel = academicYearDoc?.code || new Date().getFullYear(); 
-    // e.g. academicYearDoc.name = "2025" or "2025-26"
-    // ✅ Generate next registration number
+    const yearLabel = academicYearDoc?.code || new Date().getFullYear();
+
     const nextRegNo = generateNextRegNumber(lastRegNumber, {
       prefix: "REG",
       year: yearLabel,
       digits: 4,
     });
-     
+
     return res.json(
       new ApiResponse(200, {
         registrationNumber: nextRegNo,
@@ -422,11 +426,6 @@ const getLastRegisteredStudent = async (req, res, next) => {
 const getStudentsBySchoolId = asyncHandler(async (req, res) => {
   const { schoolId } = req.params;
 
-  if (!schoolId) {
-    throw new ApiError(400, "schoolId is required");
-  }
-
-  // ✅ Validate ObjectId
   if (!mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "Invalid schoolId format");
   }
