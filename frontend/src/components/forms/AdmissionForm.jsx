@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastStudent, createStudent } from "../../features/studentSlice";
+import { fetchAllClasses } from "../../features/classSlice"
 
-import { fetchClassSections } from "../../features/classSectionSlice";
 
 
 const Tab = ({ label, isActive, onClick }) => (
@@ -24,7 +24,8 @@ const AdmissionForm = () => {
 
   const { user } = useSelector((state) => state.auth);
   const schoolId = user?.school?._id
-  const { mappings = [], } = useSelector((state) => state.classSection || {});
+  const { classList = [] } = useSelector((state) => state.class);
+  console.log("Classes List:", classList); // Debugging line 
   const selectAcademicYear = localStorage.getItem("selectedAcademicYear");
   const academicYearObj = selectAcademicYear ? JSON.parse(selectAcademicYear) : null;
   const academicYearId = academicYearObj?._id || "";
@@ -82,19 +83,19 @@ const AdmissionForm = () => {
       dispatch(fetchLastStudent({ schoolId, academicYearId }));
     }
     if (schoolId) {
-      dispatch(fetchClassSections({ schoolId }));
+      dispatch(fetchAllClasses({ schoolId }));
     }
   }, [dispatch, schoolId, academicYearId]);
 
-useEffect(() => {
-  if (lastStudent?.registrationNumber) {
-    setFormData((prev) => ({
-      ...prev,
-      registrationNumber: lastStudent.registrationNumber,
-      role: "student",
-    }));
-  }
-}, [lastStudent]);
+  useEffect(() => {
+    if (lastStudent?.registrationNumber) {
+      setFormData((prev) => ({
+        ...prev,
+        registrationNumber: lastStudent.registrationNumber,
+        role: "student",
+      }));
+    }
+  }, [lastStudent]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -128,8 +129,7 @@ useEffect(() => {
     dispatch(fetchLastStudent({ schoolId, academicYearId })); // get next reg no
   };
 
-  const inputClass =
-    "w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs";
+  const inputClass = "w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs";
 
   const labelClass = "block text-xs font-medium text-gray-700 mb-1";
   const tabList = ["Student Info", "Other Info", "Father Info", "Mother Info"];
@@ -212,37 +212,27 @@ useEffect(() => {
                 maxLength={6}
               />
             </div>
-             <div>
-      {/* 🔹 Class + Section Dropdown */}
-      <label className={labelClass}>Class</label>
-      <select
-        name="classId"
-        value={
-          formData.classId && formData.sectionId
-            ? `${formData.classId}|${formData.sectionId}`
-            : ""
-        }
-        onChange={handleChange}
-        className={inputClass}
-        required
-      >
-        <option value="">Select Class</option>
-        {mappings && mappings.length > 0 ? (
-          mappings.map((cls) => (
-            <option
-              key={cls._id}
-              value={`${cls.class._id}|${cls.section._id}`} // ✅ Combine IDs
-            >
-              {cls.class.name} - {cls.section.name}
-            </option>
-          ))
-        ) : (
-          <option disabled>No Classes Available</option>
-        )}
-      </select>
-
-    
-    </div>
+            <div>
+                <label className={labelClass}>Class</label>
+                <select
+                  name="classId"
+                  value={formData.classId}
+                  onChange={handleChange}
+                  className={inputClass}
+                  required
+                >
+                  <option value="">Select Class</option>
+                  {classList && classList.length > 0 ? (
+                    classList.map((cls) => (
+                      <option key={cls._id} value={cls._id}>
+                        {cls.name }
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No Classes Available</option>
+                  )}
+                </select>
+              </div>
             <div>
               <label className={labelClass}>Registration No.</label>
 
@@ -255,10 +245,10 @@ useEffect(() => {
 
 
               {lastStudent && (
-                  <span className="text-xs text-red-500 mb-0 mt-1">
-                    Last Student : ( {lastStudent?.lastStudent?.registrationNumber} )
-                  </span>
-                )}
+                <span className="text-xs text-red-500 mb-0 mt-1">
+                  Last Student : ( {lastStudent?.lastStudent?.registrationNumber} )
+                </span>
+              )}
             </div>
 
             <div>

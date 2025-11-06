@@ -5,7 +5,8 @@ import {
     getStudentById,
     updateStudent,
     deleteStudent,
-    getLastRegisteredStudent
+    getLastRegisteredStudent,
+    getStudentsBySchoolId
 } from "../controllers/student.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { checkActiveAcademicYear } from "../middlewares/checActiveYear.middleware.js";
@@ -20,6 +21,7 @@ router.post("/register", auth, roleMiddleware(ADMIN_ROLE), registerStudent);
 
 // ✅ Get All Students (Super Admin, Admin, Teacher)
 router.get("/all", auth, roleMiddleware(TEACHER_ROLE),checkActiveAcademicYear, getStudents);
+router.get("/:schoolId", auth, roleMiddleware(TEACHER_ROLE),checkActiveAcademicYear, getStudentsBySchoolId);
 
 // ✅ Get Student by ID (Super Admin, Admin, Teacher, Student)
 router.get("/getStudent/:id", auth, roleMiddleware(STUDENT_ROLE), getStudentById);
