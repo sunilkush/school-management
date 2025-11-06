@@ -116,22 +116,38 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email and password are required");
   }
 
-  const user = await User.findOne({ email });
+  // 🔹 Find user and populate role + school
+  const user = await User.findOne({ email })
+    .populate("roleId")
+    .populate("schoolId");
+
   if (!user || !(await user.isPasswordCorrect(password))) {
     throw new ApiError(401, "Invalid email or password");
   }
 
+  // 🔹 Check user active status
   if (!user.isActive) {
-    throw new ApiError(
-      403,
-      "User is inactive. Please contact the administrator."
-    );
+    throw new ApiError(403, "User is inactive. Please contact administrator.");
   }
 
+  // 🔹 If NOT Super Admin → check if school is active
+  const isSuperAdmin =
+    user.roleId && user.roleId.name?.toLowerCase() === "super admin";
+
+  if (!isSuperAdmin) {
+    if (!user.schoolId || user.schoolId.isActive === false) {
+      throw new ApiError(
+        403,
+        "Your school is deactivated. Please contact administrator."
+      );
+    }
+  }
+
+  // 🔹 Generate tokens
   const { accessToken, refreshToken } =
     await generateAccessAndRefreshToken(user._id);
 
-  // ✅ Populate role, school, academicYear
+  // 🔹 Enrich user details via aggregation (optional)
   const userWithDetails = await User.aggregate([
     { $match: { _id: user._id } },
 
@@ -161,14 +177,14 @@ const loginUser = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "academicyears",
-        localField: "academicYearId", // ✅ lowercase, matches User schema
+        localField: "academicYearId",
         foreignField: "_id",
         as: "academicYear",
       },
     },
     { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
 
-    // Final projection
+    // Projection
     {
       $project: {
         _id: 1,
@@ -184,6 +200,7 @@ const loginUser = asyncHandler(async (req, res) => {
         school: {
           _id: "$school._id",
           name: "$school.name",
+          isActive: "$school.isActive",
         },
         academicYear: {
           _id: "$academicYear._id",
@@ -202,6 +219,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const finalUser = userWithDetails[0];
 
+  // 🔹 Send response
   return res
     .status(200)
     .cookie("accessToken", accessToken, { httpOnly: true, secure: true })
@@ -214,6 +232,8 @@ const loginUser = asyncHandler(async (req, res) => {
       )
     );
 });
+
+
 
 
 

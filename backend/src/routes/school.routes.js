@@ -47,9 +47,9 @@ router.get("/getRoleBySchool:id", auth,roleMiddleware("Super Admin"), getSchoolB
 router.put("/activate/:id", auth, roleMiddleware(ADMIN_ROLE), activateSchool);
 
 // ✅ Deactivate School (Super Admin & Admin)
-router.put("/deactivate/:id", auth, roleMiddleware(ADMIN_ROLE), deactivateSchool);
+router.put("/deactivate/:schoolId", auth, roleMiddleware(ADMIN_ROLE), deactivateSchool);
 
 // ✅ Delete School (Super Admin & Admin)
-router.delete("/:id", auth, roleMiddleware(ADMIN_ROLE), deleteSchool);
+router.delete("/delete/:schoolId", auth, roleMiddleware(ADMIN_ROLE), deleteSchool);
 
 export default router;

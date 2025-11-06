@@ -116,27 +116,39 @@ const activateSchool = asyncHandler(async (req, res) => {
     )
 })
 
+// ✅ Deactivate School
 const deactivateSchool = asyncHandler(async (req, res) => {
-    const school = await School.findByIdAndUpdate(
-        req.params.schoolId,
-        { isActive: false },
-        { new: true }
-    )
-    if (!school) throw new ApiError(404, 'School not found')
+  const { schoolId } = req.params;
 
-    res.status(200).json(
-        new ApiResponse(200, school, 'School deactivated successfully')
-    )
-})
+  const school = await School.findByIdAndUpdate(
+    schoolId,
+    { isActive: false },
+    { new: true }
+  );
 
+  if (!school) {
+    throw new ApiError(404, 'School not found');
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, school, 'School deactivated successfully')
+  );
+});
+
+// ✅ Delete School
 const deleteSchool = asyncHandler(async (req, res) => {
-    const school = await School.findByIdAndDelete(req.params.schoolId)
-    if (!school) throw new ApiError(404, 'School not found')
+  const { schoolId } = req.params;
 
-    res.status(200).json(
-        new ApiResponse(200, null, 'School deleted successfully')
-    )
-})
+  const school = await School.findByIdAndDelete(schoolId);
+
+  if (!school) {
+    throw new ApiError(404, 'School not found');
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, null, 'School deleted successfully')
+  );
+});
 
 export {
     registerSchool,
