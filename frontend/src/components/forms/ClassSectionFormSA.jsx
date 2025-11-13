@@ -303,7 +303,7 @@ useEffect(() => {
             >
               <option value="">Select Teacher</option>
               {users
-                .filter((u) => u.role?.name === "Teacher")
+                 .filter((u) => u.role?.name === "Teacher").filter((u) => u.isActive === true)
                 .map((t) => (
                   <option key={t._id} value={t._id}>
                     {t.name}

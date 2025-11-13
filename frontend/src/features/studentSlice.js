@@ -5,21 +5,29 @@ import { toast } from "react-toastify";
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
 // fetch last student
-// ✅ Fetch last student (backend auto-generates next reg number)
-export const fetchLastStudent = createAsyncThunk(
-  "students/fetchLastStudent",
+export const fetchLastRegisteredStudent = createAsyncThunk(
+  "students/fetchLastRegisteredStudent",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
-      
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get(
-        `${Api_Base_Url}/student/last?schoolId=${schoolId}&academicYearId=${academicYearId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      if (!token) throw new Error("No access token found");
+
+      const response = await axios.get(
+        `${Api_Base_Url}/student/last-registered`,
+        {
+          params: { schoolId, academicYearId },
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ add this line
+          },
+        }
       );
-      // ✅ Only return actual student data
-      return res.data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      console.log("Last registered student response:", response.data.data);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "Failed to fetch last registered student"
+      );
     }
   }
 );
@@ -79,24 +87,33 @@ export const fetchAllStudent = createAsyncThunk(
   }
 );
 
-export const fetchStudentsBySchoolId = createAsyncThunk("student/fetchBySchoolId", async ({ schoolId }, { rejectWithValue }) => {
-  try {
-    console.log("Fetching students for schoolId:", schoolId);
-    const token = localStorage.getItem("accessToken");
-    if (!token) throw new Error("No access token found");
-    const res = await axios.get(`${Api_Base_Url}/student/${schoolId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return res.data.data;
-  }
+export const fetchStudentsBySchoolId = createAsyncThunk(
+  "student/fetchBySchoolId",
+  async ({ schoolId, academicYearId }, { rejectWithValue }) => {
+    try {
+      console.log("Fetching students for schoolId:", schoolId, "academicYearId:", academicYearId);
 
-  catch (error) {
-    return rejectWithValue(error.response?.data?.message || "Failed to fetch students by school ID");
+      const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+
+      const res = await axios.get(`${Api_Base_Url}/student/${schoolId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        params: {
+          academicYearId, // ✅ send academicYearId as query param
+        },
+      });
+      return res.data.data;
+    } catch (error) {
+     
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch students by school ID"
+      );
+    }
   }
-})
+);
 
 const initialState = {
   lastStudent: null, // last stide
@@ -106,30 +123,37 @@ const initialState = {
   loading: false,
   error: null,
   success: false,
+  registrationNumber: "",
 };
 
 const studentSlice = createSlice({
   name: "students",
   initialState,
   reducers: {
-    resetStudentState: (state) => {
-      state.student = null;
-      state.success = false;
+    clearStudentState: (state) => {
+      state.loading = false;
       state.error = null;
+      state.lastStudent = null;
+      state.registrationNumber = "";
     },
   },
   extraReducers: (builder) => {
     builder
       // fetch last student
-      .addCase(fetchLastStudent.pending, (state) => {
+      // Pending
+      .addCase(fetchLastRegisteredStudent.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchLastStudent.fulfilled, (state, action) => {
+      // Fulfilled
+      .addCase(fetchLastRegisteredStudent.fulfilled, (state, action) => {
         state.loading = false;
-        state.lastStudent = action.payload || null;  // ✅ no .data here
+        state.error = null;
+        state.lastStudent = action.payload.lastStudent;
+        state.registrationNumber = action.payload.registrationNumber;
       })
-      .addCase(fetchLastStudent.rejected, (state, action) => {
+      // Rejected
+      .addCase(fetchLastRegisteredStudent.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -176,7 +200,7 @@ const studentSlice = createSlice({
       })
       .addCase(fetchStudentsBySchoolId.fulfilled, (state, action) => {
         state.loading = false;
-        state.schoolStudents = action.payload.data || [];
+        state.schoolStudents = action.payload || [];
         state.success = true;
       })
       .addCase(fetchStudentsBySchoolId.rejected, (state, action) => {
@@ -188,5 +212,5 @@ const studentSlice = createSlice({
   },
 });
 
-export const { resetStudentState } = studentSlice.actions;
+export const { clearStudentState } = studentSlice.actions;
 export default studentSlice.reducer;

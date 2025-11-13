@@ -6,8 +6,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
-import Class from "../models/Classes.model.js";
 import { ClassSection } from "../models/classSection.model.js";
+
+import Class from "../models/classes.model.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import mongoose from "mongoose";
 
@@ -81,13 +82,20 @@ const registerStudent = asyncHandler(async (req, res) => {
   });
 
   // 🔹 Get last registration number
+// 🔹 Get last registration number
 const lastRegNumber = await StudentEnrollment.find({ schoolId, academicYearId })
   .sort({ createdAt: -1 })
   .limit(1)
   .select("registrationNumber");
 
-// 🔹 Generate next registration number (await!)
-const registrationNumber = await generateNextRegNumber(lastRegNumber?.[0]?.registrationNumber, academicYearId);
+const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
+const yearLabel = academicYearDoc?.code || new Date().getFullYear();
+
+const registrationNumber = generateNextRegNumber(lastRegNumber?.[0]?.registrationNumber, {
+  prefix: "REG",
+  year: yearLabel,
+  digits: 4,
+});
 
 
 // 🔹 Create enrollment
@@ -368,111 +376,227 @@ const deleteStudent = asyncHandler(async (req, res) => {
 });
 
 // ✅ Get last student & generate next reg no
-const getLastRegisteredStudent = async (req, res, next) => {
-  try {
-    const { schoolId, academicYearId } = req.query;
-   
-   /*  console.log("schoolId:", schoolId, "academicYearId:", academicYearId);
-
-    if (!schoolId || !academicYearId) {
-      throw new ApiError(400, "schoolId and academicYearId are required");
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-      throw new ApiError(400, "Invalid schoolId format");
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
-      throw new ApiError(400, "Invalid academicYearId format");
-    }
- */
-    const lastStudent = await StudentEnrollment.findOne({
-      schoolId: new mongoose.Types.ObjectId(schoolId),
-      academicYearId: new mongoose.Types.ObjectId(academicYearId),
-    })
-      .sort({ createdAt: -1 })
-      .select("registrationNumber studentId")
-      .populate("studentId", "studentName")
-      .lean();
-
-    console.log("lastStudent:", lastStudent);
-
-    const lastRegNumber = lastStudent?.registrationNumber ?? null;
-    const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
-    const yearLabel = academicYearDoc?.code || new Date().getFullYear();
-
-    const nextRegNo = generateNextRegNumber(lastRegNumber, {
-      prefix: "REG",
-      year: yearLabel,
-      digits: 4,
-    });
-
-    return res.json(
-      new ApiResponse(200, {
-        registrationNumber: nextRegNo,
-        lastStudent: lastStudent
-          ? {
-              name: lastStudent.studentId?.studentName ?? null,
-              registrationNumber: lastStudent.registrationNumber,
-            }
-          : null,
-      })
-    );
-  } catch (err) {
-    next(err);
+const getLastRegisteredStudent = asyncHandler(async (req, res) => {
+  debugger;
+  const { schoolId, academicYearId } = req.query;
+  console.log("Received request for last registered student with schoolId:", schoolId, "and academicYearId:", academicYearId);
+  // ✅ Validate IDs
+  if (!schoolId || !academicYearId) {
+    throw new ApiError(400, "schoolId and academicYearId are required");
   }
-};
-
-const getStudentsBySchoolId = asyncHandler(async (req, res) => {
-  const { schoolId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "Invalid schoolId format");
   }
 
-  // ✅ Fetch students by schoolId with all necessary details
-  const students = await StudentEnrollment.find({
-    schoolId: new mongoose.Types.ObjectId(schoolId),
-  })
-    .populate({
-      path: "studentId",
-      populate: {
-        path: "userId",
-        select: "name email isActive avatar",
-      },
-    })
-    .populate({
-      path: "classId",
-      select: "name",
-    })
-    .populate({
-      path: "sectionId",
-      select: "name",
-    })
-    .populate({
-      path: "schoolId",
-      select: "name address isActive",
-    })
-    .populate({
-      path: "academicYearId",
-      select: "name startDate endDate isActive",
-    })
-    .sort({ createdAt: -1 });
+  if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
+    throw new ApiError(400, "Invalid academicYearId format");
+  }
 
-  if (!students || students.length === 0) {
+  // ✅ Use aggregation instead of findOne()
+  const lastStudentAgg = await StudentEnrollment.aggregate([
+    {
+      $match: {
+        schoolId: new mongoose.Types.ObjectId(schoolId),
+        academicYearId: new mongoose.Types.ObjectId(academicYearId),
+      },
+    },
+    {
+      $sort: { createdAt: -1 },
+    },
+    {
+      $limit: 1,
+    },
+    {
+      $lookup: {
+        from: "students",
+        localField: "studentId",
+        foreignField: "_id",
+        as: "student",
+      },
+    },
+    {
+      $unwind: {
+        path: "$student",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        registrationNumber: 1,
+        studentName: "$student.studentName",
+      },
+    },
+  ]);
+
+  const lastStudent = lastStudentAgg[0] || null;
+
+  // ✅ Fetch Academic Year Code
+  const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
+  const yearLabel = academicYearDoc?.code || new Date().getFullYear();
+
+  // ✅ Generate next registration number
+  const lastRegNumber = lastStudent?.registrationNumber ?? null;
+  const nextRegNo = generateNextRegNumber(lastRegNumber, {
+    prefix: "REG",
+    year: yearLabel,
+    digits: 4,
+  });
+
+  // ✅ Send response
+  return res.status(200).json(
+    new ApiResponse(200, {
+      registrationNumber: nextRegNo,
+      lastStudent: lastStudent
+        ? {
+            name: lastStudent.studentName || null,
+            registrationNumber: lastStudent.registrationNumber,
+          }
+        : null,
+    }, "Last registered student fetched successfully")
+  );
+});
+
+
+const getStudentsBySchoolId = asyncHandler(async (req, res) => {
+  const { schoolId } = req.params;
+  
+   let { academicYearId } = req.query; // 👈 important
+  // ✅ Validate schoolId
+  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+    throw new ApiError(400, "Invalid schoolId format");
+  }
+
+  // ✅ If academicYearId not provided → fetch active academic year
+  if (!academicYearId) {
+    const activeYear = await AcademicYear.findOne({
+      schoolId: new mongoose.Types.ObjectId(schoolId),
+      isActive: true,
+    }).lean();
+
+    if (!activeYear) {
+      throw new ApiError(404, "No active academic year found for this school");
+    }
+
+    academicYearId = activeYear._id.toString();
+  }
+
+  // ✅ Aggregation pipeline
+  const students = await StudentEnrollment.aggregate([
+    {
+      $match: {
+        schoolId: new mongoose.Types.ObjectId(schoolId),
+        academicYearId: new mongoose.Types.ObjectId(academicYearId),
+      },
+    },
+    {
+      $lookup: {
+        from: "students",
+        localField: "studentId",
+        foreignField: "_id",
+        as: "student",
+      },
+    },
+    { $unwind: { path: "$student", preserveNullAndEmptyArrays: true } },
+    {
+  $lookup: {
+    from: "users",
+    localField: "student.userId",
+    foreignField: "_id",
+    as: "userDetails",
+  },
+},
+{ $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "classes",
+        localField: "classId",
+        foreignField: "_id",
+        as: "class",
+      },
+    },
+    { $unwind: { path: "$class", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "sections",
+        localField: "sectionId",
+        foreignField: "_id",
+        as: "section",
+      },
+    },
+    { $unwind: { path: "$section", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "schools",
+        localField: "schoolId",
+        foreignField: "_id",
+        as: "school",
+      },
+    },
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "academicyears",
+        localField: "academicYearId",
+        foreignField: "_id",
+        as: "academicYear",
+      },
+    },
+    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
+    { $sort: { createdAt: -1 } },
+    {
+  $project: {
+    _id: 1,
+    registrationNumber: 1,
+    admissionDate: 1,
+    mobileNumber: 1,
+    feeDiscount: 1,
+    status: 1,
+    createdAt: 1,
+
+    "student._id": 1,
+    "student.dateOfBirth": 1,
+    "student.gender": 1,
+    "student.religion": 1,
+    "student.cast": 1,
+    "student.bloodGroup": 1,
+    "student.address": 1,
+    "student.identificationMark": 1,
+    "student.fatherInfo": 1,
+    "student.motherInfo": 1,
+
+    // ✅ FIX — these should not be inside "student."
+    "userDetails._id": 1,
+    "userDetails.name": 1,
+    "userDetails.email": 1,
+    "userDetails.isActive": 1,
+    "userDetails.avatar": 1,
+
+    "class._id": 1,
+    "class.name": 1,
+    "section._id": 1,
+    "section.name": 1,
+    "school._id": 1,
+    "school.name": 1,
+    "school.address": 1,
+    "school.isActive": 1,
+    "academicYear._id": 1,
+    "academicYear.name": 1,
+    "academicYear.startDate": 1,
+    "academicYear.endDate": 1,
+    "academicYear.isActive": 1,
+  },
+},
+  ]);
+
+  if (!students.length) {
     throw new ApiError(404, "No students found for this school");
   }
 
-  // ✅ Send response
   return res
     .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        students,
-        "Students retrieved successfully for the given school"
-      )
-    );
+    .json(new ApiResponse(200, students, "Students retrieved successfully"));
 });
 
 

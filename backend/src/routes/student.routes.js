@@ -21,6 +21,7 @@ router.post("/register", auth, roleMiddleware(ADMIN_ROLE), registerStudent);
 
 // ✅ Get All Students (Super Admin, Admin, Teacher)
 router.get("/all", auth, roleMiddleware(TEACHER_ROLE),checkActiveAcademicYear, getStudents);
+router.get("/last-registered",auth,roleMiddleware(ADMIN_ROLE), getLastRegisteredStudent);
 router.get("/:schoolId", auth, roleMiddleware(ADMIN_ROLE),checkActiveAcademicYear, getStudentsBySchoolId);
 
 // ✅ Get Student by ID (Super Admin, Admin, Teacher, Student)
@@ -32,6 +33,6 @@ router.put("/update/:id", auth, roleMiddleware(ADMIN_ROLE), updateStudent);
 // ✅ Delete Student (Super Admin & Admin)
 router.delete("/delete/:id", auth, roleMiddleware(ADMIN_ROLE), deleteStudent);
 
-router.get("/last",auth, getLastRegisteredStudent);
+
 
 export default router;

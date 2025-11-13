@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchLastStudent, createStudent } from "../../features/studentSlice";
+import { fetchLastRegisteredStudent, createStudent } from "../../features/studentSlice";
 import { fetchAllClasses } from "../../features/classSlice"
 
 
@@ -18,16 +18,16 @@ const Tab = ({ label, isActive, onClick }) => (
 );
 
 const AdmissionForm = () => {
-
   const [activeTab, setActiveTab] = useState("Student Info");
-  const { lastStudent } = useSelector((state) => state.students);
-
+  const { lastStudent,registrationNumber } = useSelector((state) => state.students);
+  console.log("Last Student in Admission Form:", lastStudent);
   const { user } = useSelector((state) => state.auth);
   const schoolId = user?.school?._id
   const { classList = [] } = useSelector((state) => state.class);
   const selectAcademicYear = localStorage.getItem("selectedAcademicYear");
   const academicYearObj = selectAcademicYear ? JSON.parse(selectAcademicYear) : null;
   const academicYearId = academicYearObj?._id || "";
+  const [availableSections, setAvailableSections] = useState([]);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     studentName: "",
@@ -79,7 +79,7 @@ const AdmissionForm = () => {
 
   useEffect(() => {
     if (schoolId && academicYearId) {
-      dispatch(fetchLastStudent({ schoolId, academicYearId }));
+       dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
     }
     if (schoolId) {
       dispatch(fetchAllClasses({ schoolId }));
@@ -87,14 +87,14 @@ const AdmissionForm = () => {
   }, [dispatch, schoolId, academicYearId]);
 
   useEffect(() => {
-    if (lastStudent?.registrationNumber) {
-      setFormData((prev) => ({
-        ...prev,
-        registrationNumber: lastStudent.registrationNumber,
-        role: "student",
-      }));
-    }
-  }, [lastStudent]);
+  if (registrationNumber) {
+    setFormData((prev) => ({
+      ...prev,
+      registrationNumber,
+       role: "student",
+    }));
+  }
+}, [registrationNumber]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -125,7 +125,7 @@ const AdmissionForm = () => {
 
     const studentData = Object.fromEntries(data);
     dispatch(createStudent(studentData));
-    dispatch(fetchLastStudent({ schoolId, academicYearId })); // get next reg no
+    dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId })); // get next reg no
   };
 
   const inputClass = "w-full px-2 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs";
@@ -211,44 +211,80 @@ const AdmissionForm = () => {
                 maxLength={6}
               />
             </div>
-            <div>
-                <label className={labelClass}>Class</label>
-                <select
-                  name="classId"
-                  value={formData.classId}
-                  onChange={handleChange}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select Class</option>
-                  {classList && classList.length > 0 ? (
-                    classList.map((cls) => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.name }
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>No Classes Available</option>
-                  )}
-                </select>
-              </div>
-            <div>
-              <label className={labelClass}>Registration No.</label>
+            {/* ✅ Class Dropdown */}
+<div>
+  <label className={labelClass}>Class</label>
+  <select
+    name="classId"
+    value={formData.classId}
+    onChange={(e) => {
+      const selectedClassId = e.target.value;
+      const selectedClass = classList.find((cls) => cls._id === selectedClassId);
 
-              <input
-                name="registrationNumber"
-                value={formData.registrationNumber || ""}
-                disabled
-                className={`${inputClass} bg-gray-100`}
-              />
+      setFormData((prev) => ({
+        ...prev,
+        classId: selectedClassId,
+        sectionId: "", // reset section when class changes
+      }));
 
+      // ✅ Update available sections for the selected class
+      setAvailableSections(selectedClass?.sections || []);
+    }}
+    className={inputClass}
+    required
+  >
+    <option value="">Select Class</option>
+    {classList && classList.length > 0 ? (
+      classList.map((cls) => (
+        <option key={cls._id} value={cls._id}>
+          {cls.name}
+        </option>
+      ))
+    ) : (
+      <option disabled>No Classes Available</option>
+    )}
+  </select>
+</div>
 
-              {lastStudent && (
-                <span className="text-xs text-red-500 mb-0 mt-1">
-                  Last Student : ( {lastStudent?.lastStudent?.registrationNumber} )
-                </span>
-              )}
-            </div>
+{/* ✅ Section Dropdown */}
+<div>
+  <label className={labelClass}>Section</label>
+  <select
+    name="sectionId"
+    value={formData.sectionId}
+    onChange={handleChange}
+    className={inputClass}
+    required
+    disabled={!availableSections.length}
+  >
+    <option value="">Select Section</option>
+    {availableSections.length > 0 ? (
+      availableSections.map((sec) => (
+        <option key={sec._id} value={sec._id}>
+          {sec.name}
+        </option>
+      ))
+    ) : (
+      <option disabled>No Sections Available</option>
+    )}
+  </select>
+</div>
+
+           <div>
+  <label className={labelClass}>Registration No.</label>
+  <input
+    name="registrationNumber"
+    value={formData.registrationNumber || registrationNumber}
+    disabled
+    className={`${inputClass} bg-gray-100`}
+  />
+
+  {lastStudent && (
+    <span className="text-xs text-red-500 mb-0 mt-1">
+      Last Student: {lastStudent?.registrationNumber}
+    </span>
+  )}
+</div>
 
             <div>
               <label className={labelClass}>Admission Date</label>

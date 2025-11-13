@@ -23,6 +23,7 @@ const StudentList = () => {
   const [searchText, setSearchText] = useState("");
 
   const schoolId = user?.school?._id;
+  const academicYearId = user?.academicYear?._id;
   
 
   // ✅ Fetch user if not loaded
@@ -37,32 +38,38 @@ const StudentList = () => {
     if (user.role?.name === "Super Admin") {
       dispatch(fetchAllStudent());
     } else if (user.role?.name === "School Admin" && schoolId) {
-      dispatch(fetchStudentsBySchoolId({ schoolId }));
+      dispatch(fetchStudentsBySchoolId({ 
+        schoolId,academicYearId 
+      }));
     }
-  }, [dispatch, user, schoolId, isOpen]);
+  }, [dispatch, user, schoolId, isOpen,academicYearId]);
 
   // ✅ Decide which list to display
   const studentsData =
     user?.role?.name === "Super Admin" ? studentList : schoolStudents;
-
+  console.log("Displaying studentsData:", studentsData);
   // ✅ Format data
-  const formattedStudents = Array.isArray(studentsData)
-    ? studentsData.map((stu) => ({
-        id: stu._id,
-        name: stu.userDetails?.name ?? "N/A",
-        class: stu.classDetails?.name ?? "N/A",
-        section: stu.sectionDetails?.name ?? "N/A",
-        dateOfBirth: stu.studentInfo?.dateOfBirth
-          ? new Date(stu.studentInfo.dateOfBirth).toISOString().split("T")[0]
-          : "N/A",
-        mobileNumber: stu.mobileNumber ?? "N/A",
-        admissionDate: stu.admissionDate
-          ? new Date(stu.admissionDate).toISOString().split("T")[0]
-          : "N/A",
-        bloodGroup: stu.studentInfo?.bloodGroup ?? "N/A",
-        email: stu.userDetails?.email ?? "Not Marked",
-      }))
-    : [];
+const formattedStudents = Array.isArray(studentsData)
+  ? studentsData.map((stu) => ({
+      id: stu._id,
+      name: stu.userDetails?.name ?? "N/A",
+      email: stu.userDetails?.email ?? "N/A",
+      class: stu.class?.name ?? "N/A",
+      section: stu.section?.name ?? "N/A",
+      dateOfBirth: stu.student?.dateOfBirth
+        ? new Date(stu.student.dateOfBirth).toISOString().split("T")[0]
+        : "N/A",
+      mobileNumber: stu.mobileNumber ?? "N/A",
+      admissionDate: stu.admissionDate
+        ? new Date(stu.admissionDate).toISOString().split("T")[0]
+        : "N/A",
+      bloodGroup: stu.student?.bloodGroup ?? "N/A",
+      schoolName: stu.school?.name ?? "N/A",
+      academicYear: stu.academicYear?.name ?? "N/A",
+      status: stu.status ?? "N/A",
+    }))
+  : [];
+
 
   // ✅ Search filter
   const filteredStudents = formattedStudents.filter((stu) =>
