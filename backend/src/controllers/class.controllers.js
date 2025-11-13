@@ -210,14 +210,7 @@ const getAllClasses = asyncHandler(async (req, res) => {
         as: "subjectDetails",
       },
     },
-    {
-      $lookup: {
-        from: "classsections",
-        localField: "_id",
-        foreignField: "classId",
-        as: "classSections",
-      },
-    },
+    
     {
       $lookup: {
         from: "sections",
