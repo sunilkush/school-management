@@ -157,21 +157,22 @@ function Classes() {
                   {/* Subjects */}
                   <div className="mb-2">
                     <p className="text-sm font-medium text-gray-700 mb-1">Subjects:</p>
-                    {cls.subjectDetails?.length ? (
+                    
+                    {cls.subjects?.length ? (
                       <div className="flex flex-wrap gap-1">
-                        {cls.subjectDetails.map((sub) => (
+                        {cls.subjects.map((sub) => (
                           <span
-                            key={sub._id}
+                            key={sub?._id}
                             className="px-2 py-1 text-xs bg-gray-100 border border-gray-200 rounded-md"
                           >
                             <BookOpen
                               size={12}
                               className="inline mr-1 text-gray-500"
                             />
-                            {sub.name}
-                            {sub.code && (
+                            {sub?.subjectId?.name}
+                            {sub?.subjectId?.code && (
                               <span className="text-[10px] text-gray-500 ml-1">
-                                ({sub.code})
+                                ({sub?.subjectId?.code})
                               </span>
                             )}
                           </span>

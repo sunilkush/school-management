@@ -146,15 +146,17 @@ const getAllClasses = asyncHandler(async (req, res) => {
   page = parseInt(page);
   limit = parseInt(limit);
 
-  const matchStage = {};
+  const query = {};
 
-  if (schoolId) matchStage.schoolId = new mongoose.Types.ObjectId(schoolId);
+  // Filter by schoolId
+  if (schoolId) query.schoolId = schoolId;
 
+  // Optional: Find by schoolName
   if (schoolName) {
     const school = await School.findOne({
       name: { $regex: schoolName, $options: "i" },
     });
-    if (school) matchStage.schoolId = school._id;
+    if (school) query.schoolId = school._id;
     else
       return res.status(200).json(
         new ApiResponse(
@@ -165,93 +167,53 @@ const getAllClasses = asyncHandler(async (req, res) => {
       );
   }
 
-  if (academicYearId)
-    matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
+  if (academicYearId) query.academicYearId = academicYearId;
 
   const skip = (page - 1) * limit;
+  const totalClasses = await Class.countDocuments(query);
 
-  const pipeline = [
-    { $match: matchStage },
-    {
-      $lookup: {
-        from: "schools",
-        localField: "schoolId",
-        foreignField: "_id",
-        as: "schoolId",
-      },
-    },
-    { $unwind: { path: "$schoolId", preserveNullAndEmptyArrays: true } },
-    {
-      $lookup: {
-        from: "academicyears",
-        localField: "academicYearId",
-        foreignField: "_id",
-        as: "academicYearId",
-      },
-    },
-    { $unwind: { path: "$academicYearId", preserveNullAndEmptyArrays: true } },
-    {
-      $lookup: {
-        from: "teachers",
-        localField: "teacherId",
-        foreignField: "_id",
-        as: "teacherId",
-      },
-    },
-    { $unwind: { path: "$teacherId", preserveNullAndEmptyArrays: true } },
-    {
-      $addFields: { teacherName: "$teacherId.name" },
-    },
-    {
-      $lookup: {
-        from: "subjects",
-        localField: "subjects.subjectId",
-        foreignField: "_id",
-        as: "subjectDetails",
-      },
-    },
-    
-    {
-      $lookup: {
-        from: "sections",
-        localField: "classSections.sectionId",
-        foreignField: "_id",
-        as: "sections",
-      },
-    },
-    {
-      $addFields: {
-        numericName: {
-          $convert: { input: "$name", to: "int", onError: 9999, onNull: 9999 },
-        },
-      },
-    },
-    { $sort: { numericName: 1, name: 1 } },
-    {
-      $setWindowFields: {
-        sortBy: { numericName: 1 },
-        output: { serial: { $documentNumber: {} } },
-      },
-    },
-    { $skip: skip },
-    { $limit: limit },
-    { $project: { numericName: 0, classSections: 0, teacherId: 0 } },
-  ];
+  if (totalClasses === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { data: [], total: 0, page, limit, totalPages: 0 }, "No classes found"));
+  }
 
-  const classes = await Class.aggregate(pipeline);
-  const totalClasses = await Class.countDocuments(matchStage);
+  const classes = await Class.find(query)
+    .populate("schoolId", "name logo")
+    .populate("academicYearId", "name startDate endDate")
+    .populate("students", "name email")
+    .populate("teacherId", "name email")
+    .populate("subjects.subjectId", "name code")
+    .populate("subjects.teacherId", "name email")
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  // Get linked sections
+  const classIds = classes.map((c) => c._id);
+  const classSectionMappings = await ClassSection.find({
+    classId: { $in: classIds },
+  }).populate("sectionId", "name capacity");
+
+  // Combine class + sections
+  const classesWithSections = classes.map((c) => {
+    const sections = classSectionMappings
+      .filter((m) => String(m.classId) === String(c._id))
+      .map((m) => m.sectionId);
+    return { ...c.toObject(), sections };
+  });
 
   return res.status(200).json(
     new ApiResponse(
       200,
       {
-        data: classes,
+        data: classesWithSections,
         total: totalClasses,
         page,
         limit,
         totalPages: Math.ceil(totalClasses / limit),
       },
-      "Classes fetched successfully (with serial)"
+      "Classes fetched successfully"
     )
   );
 });
