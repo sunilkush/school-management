@@ -6,13 +6,18 @@ import {
   fetchAllSubjects,
   deleteSubject,
 } from "../../../features/subjectSlice.js";
-import { SquarePen,Trash2 } from "lucide-react";
+import { SquarePen, Trash2 } from "lucide-react";
+
 const Subjects = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
 
   const dispatch = useDispatch();
-  const { subjectList, loading } = useSelector((state) => state.subject);
+
+  // ✅ Always provide a safe fallback to avoid undefined errors
+  const { subjectList = [], loading = false } = useSelector(
+    (state) => state.subject || {}
+  );
 
   // ✅ User from localStorage
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -21,14 +26,14 @@ const Subjects = () => {
 
   // ✅ Fetch all subjects
   useEffect(() => {
-    dispatch(fetchAllSubjects({ schoolId }));
+    if (schoolId) dispatch(fetchAllSubjects({ schoolId }));
   }, [dispatch, schoolId]);
 
-  // ✅ Filter based on role
+  // ✅ Filter based on role (safe filter)
   const filteredSubjects =
     role === "Super Admin"
       ? subjectList
-      : subjectList.filter(
+      : (subjectList || []).filter(
           (subj) =>
             subj.isGlobal === true ||
             String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
@@ -60,13 +65,13 @@ const Subjects = () => {
       name: "Category",
       selector: (row) => row.category || "—",
       sortable: true,
-      hide: "sm", // hides on small devices
+      hide: "sm",
     },
     {
       name: "Type",
       selector: (row) => row.type || "—",
       sortable: true,
-      hide: "md", // hides on medium and below
+      hide: "md",
     },
     {
       name: "Max Marks",
@@ -89,20 +94,19 @@ const Subjects = () => {
       sortable: true,
       wrap: true,
     },
-     {
-  name: "Teachers Assigned",
-  selector: (row) => {
-    if (!row.assignedTeachers || row.assignedTeachers.length === 0) {
-      return "—";
-    }
-    // If assignedTeachers is an array of teacher objects
-    return row.assignedTeachers
-      .map((t) => t.name || t.fullName || t.teacherName || "Unnamed")
-      .join(", ");
-  },
-  sortable: true,
-  wrap: true,
-},
+    {
+      name: "Teachers Assigned",
+      selector: (row) => {
+        if (!row.assignedTeachers || row.assignedTeachers.length === 0) {
+          return "—";
+        }
+        return row.assignedTeachers
+          .map((t) => t.name || t.fullName || t.teacherName || "Unnamed")
+          .join(", ");
+      },
+      sortable: true,
+      wrap: true,
+    },
     {
       name: "Status",
       selector: (row) => (row.isActive ? "🟢 Active" : "🔴 Inactive"),
@@ -123,7 +127,7 @@ const Subjects = () => {
             className="text-red-600 hover:underline text-xs sm:text-sm"
             onClick={() => handleDelete(row._id)}
           >
-            <Trash2  className="w-4" />
+            <Trash2 className="w-4" />
           </button>
         </div>
       ),
@@ -167,7 +171,7 @@ const Subjects = () => {
         </button>
       </div>
 
-      {/* ✅ Responsive Table Wrapper */}
+      {/* ✅ Table */}
       <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md overflow-x-auto">
         <div className="min-w-[600px] sm:min-w-full">
           <DataTable
@@ -181,9 +185,7 @@ const Subjects = () => {
             responsive
             persistTableHead
             customStyles={{
-              table: {
-                style: { minWidth: "100%" },
-              },
+              table: { style: { minWidth: "100%" } },
               headCells: {
                 style: {
                   fontWeight: "600",

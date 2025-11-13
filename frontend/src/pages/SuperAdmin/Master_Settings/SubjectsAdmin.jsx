@@ -11,7 +11,7 @@ const SubjectsAdmin = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const dispatch = useDispatch();
-  const { subjectList, loading } = useSelector((state) => state.subject);
+  const { subjectList=[], loading } = useSelector((state) => state.subject);
 
   // ✅ Get logged-in user info
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -26,14 +26,14 @@ const SubjectsAdmin = () => {
   }, [dispatch, schoolId, role]);
 
   // ✅ Role-based filtering
-  const filteredSubjects =
-    role === "Super Admin"
-      ? subjectList
-      : subjectList.filter(
-          (subj) =>
-            subj.isGlobal === true ||
-            String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
-        );
+ const filteredSubjects =
+  role === "Super Admin"
+    ? subjectList
+    : subjectList.filter(
+        (subj) =>
+          subj.isGlobal === true ||
+          String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
+      );
 
   // ✅ Local search filter
   const searchedSubjects = filteredSubjects.filter((subj) =>

@@ -4,7 +4,7 @@ import axios from "axios";
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
 // ==========================================================
-// ✅ Create Subject (Super Admin or School Admin)
+// ✅ Create Subject
 // ==========================================================
 export const createSubject = createAsyncThunk(
   "subject/createSubject",
@@ -24,7 +24,7 @@ export const createSubject = createAsyncThunk(
 );
 
 // ==========================================================
-// ✅ Fetch All Subjects (Role-based + Pagination + Search)
+// ✅ Fetch All Subjects
 // ==========================================================
 export const fetchAllSubjects = createAsyncThunk(
   "subject/fetchAllSubjects",
@@ -38,7 +38,8 @@ export const fetchAllSubjects = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
         params: { page, limit, schoolId, search, isGlobal },
       });
-      return res.data;
+      // ✅ Expected response: { data: { subjects: [], totalPages, page } }
+      return res.data.data;
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Failed to fetch subjects!"
@@ -68,7 +69,7 @@ export const updateSubject = createAsyncThunk(
 );
 
 // ==========================================================
-// ✅ Assign Schools to Subject (New Route Fixed)
+// ✅ Assign Schools to Subject
 // ==========================================================
 export const assignSchoolsToSubject = createAsyncThunk(
   "subject/assignSchoolsToSubject",
@@ -78,9 +79,7 @@ export const assignSchoolsToSubject = createAsyncThunk(
       const res = await axios.put(
         `${Api_Base_Url}/subject/assign/${subjectId}`,
         { schoolIds },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       return res.data;
     } catch (error) {
@@ -117,7 +116,7 @@ export const deleteSubject = createAsyncThunk(
 const initialState = {
   loading: false,
   error: null,
-  subjectList: [],
+  subjects: [], // ✅ unified key for subject data
   pagination: { total: 0, page: 1, totalPages: 1 },
   success: false,
   successMessage: null,
@@ -133,6 +132,7 @@ const subjectSlice = createSlice({
     clearSubjectMessages: (state) => {
       state.successMessage = null;
       state.error = null;
+      state.success = false;
     },
   },
   extraReducers: (builder) => {
@@ -146,7 +146,7 @@ const subjectSlice = createSlice({
       .addCase(createSubject.fulfilled, (state, action) => {
         state.loading = false;
         const newSubject = action.payload?.data;
-        if (newSubject) state.subjectList.unshift(newSubject);
+        if (newSubject) state.subjects.unshift(newSubject);
         state.success = true;
         state.successMessage =
           action.payload?.message || "Subject created successfully!";
@@ -163,14 +163,12 @@ const subjectSlice = createSlice({
       })
       .addCase(fetchAllSubjects.fulfilled, (state, action) => {
         state.loading = false;
-        state.subjectList = action.payload?.data?.subjects || [];
-        state.pagination =
-          action.payload?.data?.pagination || {
-            total: 0,
-            page: 1,
-            totalPages: 1,
-          };
-        state.success = true;
+        state.subjects = action.payload?.subjects || [];
+        state.pagination = {
+          total: action.payload?.total || 0,
+          page: action.payload?.page || 1,
+          totalPages: action.payload?.totalPages || 1,
+        };
       })
       .addCase(fetchAllSubjects.rejected, (state, action) => {
         state.loading = false;
@@ -185,8 +183,8 @@ const subjectSlice = createSlice({
       .addCase(updateSubject.fulfilled, (state, action) => {
         const updated = action.payload;
         if (updated) {
-          const index = state.subjectList.findIndex((s) => s._id === updated._id);
-          if (index !== -1) state.subjectList[index] = updated;
+          const index = state.subjects.findIndex((s) => s._id === updated._id);
+          if (index !== -1) state.subjects[index] = updated;
         }
         state.loading = false;
         state.success = true;
@@ -221,9 +219,7 @@ const subjectSlice = createSlice({
       .addCase(deleteSubject.fulfilled, (state, action) => {
         const deletedId = action.payload?.data?._id;
         if (deletedId) {
-          state.subjectList = state.subjectList.filter(
-            (s) => s._id !== deletedId
-          );
+          state.subjects = state.subjects.filter((s) => s._id !== deletedId);
         }
         state.loading = false;
         state.success = true;
