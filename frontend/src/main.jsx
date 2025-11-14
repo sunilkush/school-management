@@ -134,7 +134,7 @@ const router = createBrowserRouter([
               { path: "academic-years", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <Settings /> },
-              { path:"subjects" , element:<SubjectsAdmin/>},
+              { path: "subjects" , element:<SubjectsAdmin/>},
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Table, Button, Input, Tag, Popconfirm, message } from "antd";
 import SubjectForm from "../../../components/forms/SubjectForm.jsx";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
 import { fetchAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
 import * as XLSX from "xlsx";
 
@@ -11,54 +11,53 @@ const SubjectsAdmin = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const dispatch = useDispatch();
-  const { subjectList=[], loading } = useSelector((state) => state.subject);
+  const { subjects = [], loading } = useSelector((state) => state.subject);
 
-  // ✅ Get logged-in user info
+  // Get logged-in user info
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
   const role = storedUser?.role || "";
 
-  // ✅ Fetch subjects once when mounted
   useEffect(() => {
     if (schoolId || role === "Super Admin") {
       dispatch(fetchAllSubjects({ schoolId }));
     }
   }, [dispatch, schoolId, role]);
 
-  // ✅ Role-based filtering
- const filteredSubjects =
-  role === "Super Admin"
-    ? subjectList
-    : subjectList.filter(
-        (subj) =>
-          subj.isGlobal === true ||
-          String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
-      );
+  // Role-based filter
+  const filteredSubjects =
+    role === "Super Admin"
+      ? subjects
+      : subjects.filter(
+          (subj) =>
+            subj.isGlobal === true ||
+            String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
+        );
 
-  // ✅ Local search filter
+  // Local search
   const searchedSubjects = filteredSubjects.filter((subj) =>
     subj.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ Edit handler
+  // Edit
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
     setIsModalOpen(true);
   };
 
-  // ✅ Delete handler
+  // Delete
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this subject?")) {
-      try {
-        await dispatch(deleteSubject(id)).unwrap();
-        dispatch(fetchAllSubjects({ schoolId }));
-      } catch (err) {
-        console.error("Delete failed:", err);
-      }
+    try {
+      await dispatch(deleteSubject(id)).unwrap();
+      message.success("Subject deleted");
+      dispatch(fetchAllSubjects({ schoolId }));
+    } catch (err) {
+      console.error(err);
+      message.error("Delete failed");
     }
   };
 
-  // ✅ Export to Excel
+  // Export Excel
   const handleExport = () => {
     const exportData = filteredSubjects.map((s) => ({
       "Subject Name": s.name,
@@ -67,7 +66,7 @@ const SubjectsAdmin = () => {
       "Max Marks": s.maxMarks ?? "—",
       "Pass Marks": s.passMarks ?? "—",
       Teacher: s.teacherId?.name || "Not Assigned",
-      School: s.schoolId?.name || (s.isGlobal ? "🌐 Global" : "—"),
+      School: s.schoolId?.name || (s.isGlobal ? "Global" : "—"),
       Status: s.isActive ? "Active" : "Inactive",
       "Created Type": s.isGlobal ? "Global" : "School",
     }));
@@ -78,92 +77,85 @@ const SubjectsAdmin = () => {
     XLSX.writeFile(wb, "Subjects_List.xlsx");
   };
 
-  // ✅ Table columns
+  // AntD Table Columns
   const columns = [
-    { name: "Subject Name", selector: (row) => row.name || "—", sortable: true, wrap: true },
-    { name: "Category", selector: (row) => row.category || "—", sortable: true, width: "140px" },
-    { name: "Type", selector: (row) => row.type || "—", sortable: true, width: "120px" },
+    { title: "Subject Name", dataIndex: "name", key: "name", width: 180 },
+    { title: "Category", dataIndex: "category", key: "category", width: 120 },
+    { title: "Type", dataIndex: "type", key: "type", width: 100 },
+    { title: "Max Marks", dataIndex: "maxMarks", key: "maxMarks", width: 100 },
+    { title: "Pass Marks", dataIndex: "passMarks", key: "passMarks", width: 100 },
+
     {
-      name: "Max Marks",
-      selector: (row) => row.maxMarks ?? "—",
-      sortable: true,
-      width: "120px",
-      center: true,
+      title: "Teacher",
+      dataIndex: ["teacherId", "name"],
+      key: "teacherId",
+      width: 150,
+      render: (value) => value || "Not Assigned",
     },
+
     {
-      name: "Pass Marks",
-      selector: (row) => row.passMarks ?? "—",
-      sortable: true,
-      width: "120px",
-      center: true,
+      title: "School",
+      key: "school",
+      width: 160,
+      render: (row) =>
+        row.isGlobal ? <Tag color="blue">🌐 Global</Tag> : row.schoolId?.name,
     },
+
     {
-      name: "Teacher",
-      selector: (row) => row.teacherId?.name || "Not Assigned",
-      sortable: true,
-      width: "180px",
-      wrap: true,
+      title: "Status",
+      dataIndex: "isActive",
+      key: "status",
+      width: 120,
+      render: (active) =>
+        active ? (
+          <Tag color="green">Active</Tag>
+        ) : (
+          <Tag color="red">Inactive</Tag>
+        ),
     },
+
     {
-      name: "School",
-      selector: (row) => row.schoolId?.name || (row.isGlobal ? "🌐 Global" : "—"),
-      sortable: true,
-      wrap: true,
+      title: "Created Type",
+      key: "createdType",
+      width: 130,
+      render: (row) =>
+        row.isGlobal ? (
+          <Tag color="blue">Global 🌐</Tag>
+        ) : (
+          <Tag color="gray">School 🏫</Tag>
+        ),
     },
+
     {
-      name: "Status",
-      selector: (row) => (
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${
-            row.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-          }`}
-        >
-          {row.isActive ? "Active" : "Inactive"}
-        </span>
-      ),
-      width: "120px",
-      center: true,
-    },
-    {
-      name: "Created Type",
-      selector: (row) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${
-            row.isGlobal ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          {row.isGlobal ? "Global 🌐" : "School 🏫"}
-        </span>
-      ),
-      width: "130px",
-      center: true,
-    },
-    {
-      name: "Actions",
-      cell: (row) => (
+      title: "Actions",
+      key: "actions",
+      width: 150,
+      render: (row) => (
         <div className="flex gap-2">
-          <button
-            className="text-blue-600 hover:underline text-sm"
+          <Button
+            size="small"
+            type="link"
             onClick={() => handleEdit(row)}
           >
             Edit
-          </button>
-          <button
-            className="text-red-600 hover:underline text-sm"
-            onClick={() => handleDelete(row._id)}
+          </Button>
+
+          <Popconfirm
+            title="Are you sure?"
+            onConfirm={() => handleDelete(row._id)}
           >
-            Delete
-          </button>
+            <Button size="small" type="link" danger>
+              Delete
+            </Button>
+          </Popconfirm>
         </div>
       ),
-      width: "140px",
-      center: true,
     },
   ];
 
   return (
     <>
-      {/* ✅ Modal form for Add/Edit */}
+      {/* Modal */}
       <SubjectForm
         isOpen={isModalOpen}
         onClose={() => {
@@ -173,57 +165,48 @@ const SubjectsAdmin = () => {
         editData={selectedSubject}
       />
 
-      {/* ✅ Header */}
-      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between mb-4 gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800">Subjects List</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-xl font-semibold">Subjects List</h2>
+          <p className="text-sm text-gray-600">
             Manage subjects for your school or global context.
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-2 mt-3 md:mt-0">
-          <input
-            type="text"
+        <div className="flex gap-2">
+          <Input
             placeholder="Search subject..."
-            className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: 200,height: 32 }}
           />
-          <button
-            onClick={handleExport}
-            className="bg-green-600 text-white px-3 py-2 text-sm rounded-lg hover:bg-green-700"
-          >
-            📥 Export Excel
-          </button>
-          <button
+
+          <Button type="primary" danger onClick={handleExport}>
+            Export Excel
+          </Button>
+
+          <Button
+            type="primary"
             onClick={() => {
               setSelectedSubject(null);
               setIsModalOpen(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-lg hover:bg-blue-700"
           >
             + Add New Subject
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* ✅ Table */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <DataTable
-          keyField="_id"
-          columns={columns}
-          data={searchedSubjects}
-          progressPending={loading}
-          pagination
-          highlightOnHover
-          striped
-          dense
-          responsive
-          persistTableHead
-          noDataComponent={<div className="py-4 text-gray-500">No subjects found</div>}
-        />
-      </div>
+      {/* AntD Table */}
+      <Table
+        rowKey="_id"
+        columns={columns}
+        dataSource={searchedSubjects}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        bordered
+      />
     </>
   );
 };

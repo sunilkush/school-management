@@ -15,10 +15,10 @@ const Subjects = () => {
   const dispatch = useDispatch();
 
   // ✅ Always provide a safe fallback to avoid undefined errors
-  const { subjectList = [], loading = false } = useSelector(
+  const { subjects = [], loading = false } = useSelector(
     (state) => state.subject || {}
   );
-
+  console.log("Subjects List:", subjects);
   // ✅ User from localStorage
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
@@ -32,8 +32,8 @@ const Subjects = () => {
   // ✅ Filter based on role (safe filter)
   const filteredSubjects =
     role === "Super Admin"
-      ? subjectList
-      : (subjectList || []).filter(
+      ? subjects
+      : (subjects || []).filter(
           (subj) =>
             subj.isGlobal === true ||
             String(subj.schoolId?._id || subj.schoolId) === String(schoolId)

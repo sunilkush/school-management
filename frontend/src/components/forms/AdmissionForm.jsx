@@ -133,10 +133,10 @@ const AdmissionForm = () => {
   const labelClass = "block text-xs font-medium text-gray-700 mb-1";
   const tabList = ["Student Info", "Other Info", "Father Info", "Mother Info"];
   const tabFields = {
-    "Student Info": ["studentName", "email", "password", "classId", "admissionDate"],
+    "Student Info": ["studentName", "email", "password", "classId","sectionId", "admissionDate","mobileNumber"],
     "Other Info": ["dateOfBirth", "birthFormId", "gender", "religion"],
-    "Father Info": ["fatherName", "fatherOccupation", "fatherMobile"],
-    "Mother Info": ["motherName", "motherOccupation", "motherMobile"],
+    "Father Info": ["fatherName", "fatherOccupation", "fatherMobile","motherMobile","fatherNationalId"],
+    "Mother Info": ["motherName", "motherOccupation", "motherMobile","motherMobile","motherNationalId"],
   };
   const isTabValid = () => {
     const requiredFields = tabFields[activeTab] || [];
@@ -179,7 +179,7 @@ const AdmissionForm = () => {
         {activeTab === "Student Info" && (
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <label className={labelClass}>Student Name</label>
+              <label className={labelClass}>Student Name <sup className="text-red-900">*</sup></label>
               <input
                 name="studentName"
                 value={formData.studentName}
@@ -189,7 +189,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Email</label>
+              <label className={labelClass}>Email <sup className="text-red-900">*</sup></label>
               <input
                 name="email"
                 type="email"
@@ -200,7 +200,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Password</label>
+              <label className={labelClass}>Password <sup className="text-red-900">*</sup></label>
               <input
                 name="password"
                 type="password"
@@ -213,7 +213,7 @@ const AdmissionForm = () => {
             </div>
             {/* ✅ Class Dropdown */}
 <div>
-  <label className={labelClass}>Class</label>
+  <label className={labelClass}>Class <sup className="text-red-900">*</sup></label>
   <select
     name="classId"
     value={formData.classId}
@@ -233,7 +233,7 @@ const AdmissionForm = () => {
     className={inputClass}
     required
   >
-    <option value="">Select Class</option>
+    <option value="">Select Class </option>
     {classList && classList.length > 0 ? (
       classList.map((cls) => (
         <option key={cls._id} value={cls._id}>
@@ -248,7 +248,7 @@ const AdmissionForm = () => {
 
 {/* ✅ Section Dropdown */}
 <div>
-  <label className={labelClass}>Section</label>
+  <label className={labelClass}>Section <sup className="text-red-900">*</sup></label>
   <select
     name="sectionId"
     value={formData.sectionId}
@@ -287,7 +287,7 @@ const AdmissionForm = () => {
 </div>
 
             <div>
-              <label className={labelClass}>Admission Date</label>
+              <label className={labelClass}>Admission Date <sup className="text-red-900">*</sup></label>
               <input
                 name="admissionDate"
                 type="date"
@@ -308,7 +308,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Mobile Number</label>
+              <label className={labelClass}>Mobile Number <sup className="text-red-900">*</sup></label>
               <input
                 name="mobileNumber"
                 value={formData.mobileNumber}
@@ -332,7 +332,7 @@ const AdmissionForm = () => {
         {activeTab === "Other Info" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className={labelClass}>Date Of Birth</label>
+              <label className={labelClass}>Date Of Birth <sup className="text-red-900">*</sup></label>
               <input
                 name="dateOfBirth"
                 type="date"
@@ -343,7 +343,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Student Birth Form ID / NIC</label>
+              <label className={labelClass}>Student Birth Form ID / NIC <sup className="text-red-900">*</sup></label>
               <input
                 name="birthFormId"
                 placeholder="Student Birth Form ID / NIC"
@@ -366,7 +366,7 @@ const AdmissionForm = () => {
               </select>
             </div>
             <div>
-              <label className={labelClass}>Gender</label>
+              <label className={labelClass}>Gender <sup className="text-red-900">*</sup></label>
               <select
                 name="gender"
                 value={formData.gender}
@@ -379,7 +379,7 @@ const AdmissionForm = () => {
               </select>
             </div>
             <div>
-              <label className={labelClass}>Cast</label>
+              <label className={labelClass}>Cast <sup className="text-red-900">*</sup></label>
               <input
                 name="cast"
                 placeholder="Cast"
@@ -419,7 +419,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Religion</label>
+              <label className={labelClass}>Religion <sup className="text-red-900">*</sup></label>
               <input
                 name="religion"
                 placeholder="Religion"
@@ -429,7 +429,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Blood Group</label>
+              <label className={labelClass}>Blood Group <sup className="text-red-900">*</sup></label>
               <input
                 name="bloodGroup"
                 placeholder="Blood Group"
@@ -479,7 +479,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Total Siblings</label>
+              <label className={labelClass}>Total Siblings <sup className="text-red-900">*</sup></label>
               <input
                 name="siblings"
                 placeholder="Total Siblings"
@@ -489,7 +489,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Address</label>
+              <label className={labelClass}>Address <sup className="text-red-900">*</sup></label>
               <textarea
                 name="address"
                 placeholder="Address"
@@ -505,7 +505,7 @@ const AdmissionForm = () => {
         {activeTab === "Father Info" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className={labelClass}>Name</label>
+              <label className={labelClass}>Name <sup className="text-red-900">*</sup></label>
               <input
                 name="fatherName"
                 placeholder="Father Name"
@@ -515,7 +515,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>National ID</label>
+              <label className={labelClass}>National ID <sup className="text-red-900">*</sup></label>
               <input
                 name="fatherNID"
                 placeholder="Father National ID"
@@ -545,7 +545,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Mobile No</label>
+              <label className={labelClass}>Mobile No <sup className="text-red-900">*</sup></label>
               <input
                 name="fatherMobile"
                 placeholder="Mobile No"
@@ -581,7 +581,7 @@ const AdmissionForm = () => {
         {activeTab === "Mother Info" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className={labelClass}>Name</label>
+              <label className={labelClass}>Name <sup className="text-red-900">*</sup></label>
               <input
                 name="motherName"
                 placeholder="Mother Name"
@@ -591,7 +591,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>National ID</label>
+              <label className={labelClass}>National ID <sup className="text-red-900">*</sup></label>
               <input
                 name="motherNationalId"
                 placeholder="Mother National ID"
@@ -621,7 +621,7 @@ const AdmissionForm = () => {
               />
             </div>
             <div>
-              <label className={labelClass}>Mobile No</label>
+              <label className={labelClass}>Mobile No <sup className="text-red-900">*</sup></label>
               <input
                 name="motherMobile"
                 placeholder="Mobile No"

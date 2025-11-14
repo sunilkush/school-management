@@ -38,7 +38,7 @@ export const fetchAllSubjects = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
         params: { page, limit, schoolId, search, isGlobal },
       });
-      // ✅ Expected response: { data: { subjects: [], totalPages, page } }
+     
       return res.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -118,6 +118,7 @@ const initialState = {
   error: null,
   subjects: [], // ✅ unified key for subject data
   pagination: { total: 0, page: 1, totalPages: 1 },
+  
   success: false,
   successMessage: null,
 };

@@ -1,10 +1,25 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { sidebarMenu } from "../../../utils/sidebar";
-import { LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
+import * as LucideIcons from "lucide-react";
 
-// ✅ ModuleCard now accepts `Icon` as a prop (actual Lucide component)
+// ⭐ Convert string → Lucide react icon safely
+const getLucideIcon = (icon) => {
+  if (!icon) return LucideIcons.LayoutDashboard;
+
+  // If icon already a React component (function)
+  if (typeof icon === "function") return icon;
+
+  // If icon is a string inside LucideIcons map
+  if (typeof icon === "string" && LucideIcons[icon]) {
+    return LucideIcons[icon];
+  }
+
+  return LucideIcons.LayoutDashboard; // fallback icon
+};
+
+// ⭐ Module Card
 const ModuleCard = ({ title, parent, hasAccess, path, Icon }) => {
   const content = (
     <div
@@ -17,14 +32,16 @@ const ModuleCard = ({ title, parent, hasAccess, path, Icon }) => {
           hasAccess ? "text-blue-600" : "text-gray-400"
         }`}
       >
-        {Icon && <Icon className="w-6 h-6" />} {/* ✅ render icon safely */}
+        {Icon && <Icon className="w-6 h-6" />}
         <h2 className="font-semibold text-base">{title}</h2>
       </div>
+
       {parent && (
         <p className="text-xs text-gray-500 mt-1">
           Module Group: <span className="font-medium">{parent}</span>
         </p>
       )}
+
       <p className="text-sm text-gray-500 mt-2">
         {hasAccess ? "Access granted" : "No access"}
       </p>
@@ -38,54 +55,54 @@ const ModuleCard = ({ title, parent, hasAccess, path, Icon }) => {
   );
 };
 
+// ⭐ Main Component
 const AllModules = () => {
   const user = useSelector((state) => state.auth?.user);
 
-  // ✅ normalize role
-  const role =
-    (typeof user?.role === "string" && user?.role?.name) ||
-    "school admin";
-  const normalizedRole = role.toLowerCase();
+  // normalize role
+  const normalizedRole =
+    (user?.role?.name || user?.role || "school admin").toLowerCase();
 
-  // ✅ permissions fallback
+  // permissions array
   const permissions = Array.isArray(user?.role?.permissions)
     ? user.role.permissions
     : [];
 
-  // ✅ menu fallback
+  // menu
   const menu = Array.isArray(sidebarMenu[normalizedRole])
     ? sidebarMenu[normalizedRole]
     : [];
 
-  // ✅ flatten menu with fallback icons
+  // ⭐ Flatten menu & ensure icon safety
   const flattenMenu = (items) =>
     items.flatMap((item) =>
       item.subMenu && Array.isArray(item.subMenu)
         ? item.subMenu.map((sub) => ({
             title: sub.title,
             path: sub.path,
-            icon: sub.icon || LayoutDashboard,
             parent: item.title,
+            icon: getLucideIcon(sub.icon),
           }))
         : [
             {
               title: item.title,
               path: item.path,
-              icon: item.icon || LayoutDashboard,
               parent: null,
+              icon: getLucideIcon(item.icon),
             },
           ]
     );
 
-  const flattenedModules = flattenMenu(menu);
+  const modules = flattenMenu(menu);
 
-  // ✅ Safe permission check
-  const hasPermission = (moduleTitle) => {
-    if (normalizedRole === "super admin") return true; // full access
+  // ⭐ Check permission
+  const hasPermission = (title) => {
+    if (normalizedRole === "super admin") return true;
+
     return permissions?.some(
       (perm) =>
         typeof perm?.module === "string" &&
-        perm.module.toLowerCase() === moduleTitle.toLowerCase()
+        perm.module.toLowerCase() === title.toLowerCase()
     );
   };
 
@@ -96,19 +113,19 @@ const AllModules = () => {
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-        {flattenedModules.map((mod, idx) => (
+        {modules.map((mod, idx) => (
           <ModuleCard
             key={idx}
             title={mod.title}
             parent={mod.parent}
-            Icon={mod.icon}   // ✅ pass actual icon
             path={mod.path}
+            Icon={mod.icon}
             hasAccess={hasPermission(mod.title)}
           />
         ))}
       </div>
 
-      {flattenedModules.length === 0 && (
+      {modules.length === 0 && (
         <p className="text-center text-gray-500 mt-6">No modules available.</p>
       )}
     </div>
