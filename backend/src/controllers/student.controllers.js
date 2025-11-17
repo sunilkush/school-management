@@ -48,10 +48,11 @@ const registerStudent = asyncHandler(async (req, res) => {
   const student = await Student.create({
     userId: user._id,
     dateOfBirth,
-
+    birthFormId,
     gender,
     religion,
     cast,
+    osc,
     bloodGroup,
     address,
     identificationMark,

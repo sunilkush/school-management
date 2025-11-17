@@ -134,9 +134,10 @@ const AdmissionForm = () => {
   const tabList = ["Student Info", "Other Info", "Father Info", "Mother Info"];
   const tabFields = {
     "Student Info": ["studentName", "email", "password", "classId","sectionId", "admissionDate","mobileNumber"],
-    "Other Info": ["dateOfBirth", "birthFormId", "gender", "religion"],
-    "Father Info": ["fatherName", "fatherOccupation", "fatherMobile","motherMobile","fatherNationalId"],
-    "Mother Info": ["motherName", "motherOccupation", "motherMobile","motherMobile","motherNationalId"],
+    "Other Info"  : ["dateOfBirth", "birthFormId", "gender", "religion"],
+    "Father Info" : ["fatherName", "fatherOccupation", "fatherMobile","fatherNID"],
+    "Mother Info" : ["motherName", "motherOccupation", "motherMobile","motherNID"],
+    
   };
   const isTabValid = () => {
     const requiredFields = tabFields[activeTab] || [];
@@ -274,7 +275,7 @@ const AdmissionForm = () => {
   <label className={labelClass}>Registration No.</label>
   <input
     name="registrationNumber"
-    value={formData.registrationNumber || registrationNumber}
+     value={formData.registrationNumber}
     disabled
     className={`${inputClass} bg-gray-100`}
   />
@@ -519,13 +520,13 @@ const AdmissionForm = () => {
               <input
                 name="fatherNID"
                 placeholder="Father National ID"
-                value={formData.fatherNationalId}
+                value={formData.fatherNID}
                 onChange={handleChange}
                 className={inputClass}
               />
             </div>
             <div>
-              <label className={labelClass}>Occupation</label>
+              <label className={labelClass}>Occupation <sup className="text-red-900">*</sup></label>
               <input
                 name="fatherOccupation"
                 placeholder="Occupation"
@@ -588,26 +589,32 @@ const AdmissionForm = () => {
                 value={formData.motherName}
                 onChange={handleChange}
                 className={inputClass}
+                
+ 
               />
             </div>
             <div>
               <label className={labelClass}>National ID <sup className="text-red-900">*</sup></label>
               <input
-                name="motherNationalId"
+                name="motherNID"
                 placeholder="Mother National ID"
-                value={formData.motherNationalId}
+                value={formData.motherNID}
                 onChange={handleChange}
                 className={inputClass}
+                 
+   
               />
             </div>
             <div>
-              <label className={labelClass}>Occupation</label>
+              <label className={labelClass}>Occupation <sup className="text-red-900">*</sup></label>
               <input
                 name="motherOccupation"
                 placeholder="Occupation"
                 value={formData.motherOccupation}
                 onChange={handleChange}
                 className={inputClass}
+            
+    
               />
             </div>
             <div>
@@ -618,6 +625,7 @@ const AdmissionForm = () => {
                 value={formData.motherEducation}
                 onChange={handleChange}
                 className={inputClass}
+   
               />
             </div>
             <div>

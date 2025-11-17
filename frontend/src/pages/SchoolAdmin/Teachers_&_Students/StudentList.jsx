@@ -47,7 +47,7 @@ const StudentList = () => {
   // ✅ Decide which list to display
   const studentsData =
     user?.role?.name === "Super Admin" ? studentList : schoolStudents;
-  console.log("Displaying studentsData:", studentsData);
+ 
   // ✅ Format data
 const formattedStudents = Array.isArray(studentsData)
   ? studentsData.map((stu) => ({
