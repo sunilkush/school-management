@@ -14,6 +14,7 @@ import attemptReducer from "../features/attemptSlice";
 import sectionReducer from "../features/sectionSlice";
 import classSectionReducer from "../features/classSectionSlice";
 import employeeReducer from "../features/employeeSlice";
+import subscriptionPlanReducer from "../features/subscriptionPlanSlice";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -31,6 +32,7 @@ const store = configureStore({
     section: sectionReducer,
     classSection:classSectionReducer,
     employee: employeeReducer,
+    subscriptionPlans: subscriptionPlanReducer,
   },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

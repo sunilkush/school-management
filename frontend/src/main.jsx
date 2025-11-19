@@ -95,6 +95,7 @@ import Departments from './pages/SuperAdmin/Master_Settings/Departments.jsx';
 import GlobalConfig from './pages/SuperAdmin/System_Settings/GlobalConfig.jsx';
 import AuditLogs from './pages/SuperAdmin/System_Settings/AuditLogs.jsx';
 import Backups from './pages/SuperAdmin/System_Settings/Backups.jsx';
+//import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -119,11 +120,11 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <SuperAdminDashboard /> },
               { path: "schools", element: <Schools /> },
-              { path:"subscriptions", element: <SubscriptionPlans />},
-              { path:"reports/schools", element:<SchoolReports />},
-              //{ path: "schools/add", element: <AddSchool /> },
+              { path: "subscriptions", element: <SubscriptionPlans /> },
+              /* { path: "subscriptions/:id/logs", element: <PlanLogs /> }, */
+              { path: "reports/schools", element: <SchoolReports /> },
               { path: "users/admins", element: <Admins /> },
-              { path: "users/teachers", element: <Teachers/> },
+              { path: "users/teachers", element: <Teachers /> },
               { path: "users/staff", element: <Staff /> },
               { path: "users/students", element: <Students /> },
               { path: "users/parents", element: <Parents /> },
@@ -134,7 +135,7 @@ const router = createBrowserRouter([
               { path: "academic-years", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <Settings /> },
-              { path: "subjects" , element:<SubjectsAdmin/>},
+              { path: "subjects", element: <SubjectsAdmin /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -142,18 +143,18 @@ const router = createBrowserRouter([
               { path: "classes-sections/list", element: <ClassSectionList /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
-              { path: "reports/school-wise", element:<SchoolWiseReports/>},
-              { path: "reports/attendance", element:<AttendanceSummary/>},
-              { path: "reports/finance", element:<FinanceSummary/>},
-              { path: "reports/academic", element: <AcademicReports/>},
-              { path: "reports/activity", element: <ActivityLogs/>},
+              { path: "reports/school-wise", element: <SchoolWiseReports /> },
+              { path: "reports/attendance", element: <AttendanceSummary /> },
+              { path: "reports/finance", element: <FinanceSummary /> },
+              { path: "reports/academic", element: <AcademicReports /> },
+              { path: "reports/activity", element: <ActivityLogs /> },
               { path: "fees/categories", element: <FeeCategories /> },
               { path: "designations", element: <Designations /> },
               { path: "departments", element: <Departments /> },
-              { path:"settings/global", element:<GlobalConfig/>},
-              { path:"settings/audit", element: <AuditLogs/>},
-              { path:"settings/backup", element:<Backups/>}
-              
+              { path: "settings/global", element: <GlobalConfig /> },
+              { path: "settings/audit", element: <AuditLogs /> },
+              { path: "settings/backup", element: <Backups /> }
+
             ],
           },
           {
