@@ -50,7 +50,7 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
       setFormData(updated);
       form.setFieldsValue(updated);
     }
-  }, [editData]);
+  }, [editData, form, schoolId, activeYear, roleName]);
 
   // Fetch Teachers
   useEffect(() => {
