@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-//import { useDispatch } from "react-redux";
-/* import { updateGlobalConfig } from "../../../features/globalConfigSlice"; */
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "antd";
+import { Input, Select, Upload, Button, Form } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+
+const { Option } = Select;
 
 const GlobalConfig = () => {
- // const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     schoolName: "",
     defaultAcademicYear: "",
@@ -13,128 +13,109 @@ const GlobalConfig = () => {
     timezone: "Asia/Kolkata",
     dateFormat: "DD/MM/YYYY",
     theme: "light",
-    logo: "",
+    logo: null,
   });
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value,
-    });
+  const handleChange = (value, name) => {
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-   // dispatch(updateGlobalConfig(formData));
+  const handleFileChange = ({ file }) => {
+    setFormData({ ...formData, logo: file });
+  };
+
+  const handleSubmit = () => {
+    console.log("Submitted Data:", formData);
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">🌍 Global Configuration</h1>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-semibold mb-6">🌍 Global Configuration</h1>
 
-      <Card className="max-w-3xl">
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block mb-2 font-medium">School Name</label>
-              <input
-                type="text"
-                name="schoolName"
-                value={formData.schoolName}
-                onChange={handleChange}
-                className="w-full border rounded-md p-2"
-                placeholder="Enter School Name"
-              />
-            </div>
+      <Card className="shadow-lg rounded-xl p-4">
+        <Form layout="vertical" onFinish={handleSubmit} className="space-y-4">
+          <Form.Item label="School Name">
+            <Input
+              placeholder="Enter School Name"
+              value={formData.schoolName}
+              onChange={(e) => handleChange(e.target.value, "schoolName")}
+              className="!py-2"
+            />
+          </Form.Item>
 
-            <div>
-              <label className="block mb-2 font-medium">Default Academic Year</label>
-              <input
-                type="text"
-                name="defaultAcademicYear"
-                value={formData.defaultAcademicYear}
-                onChange={handleChange}
-                className="w-full border rounded-md p-2"
-                placeholder="e.g., 2025-2026"
-              />
-            </div>
+          <Form.Item label="Default Academic Year">
+            <Input
+              placeholder="2025-2026"
+              value={formData.defaultAcademicYear}
+              onChange={(e) => handleChange(e.target.value, "defaultAcademicYear")}
+              className="!py-2"
+            />
+          </Form.Item>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-2 font-medium">Currency</label>
-                <select
-                  name="currency"
-                  value={formData.currency}
-                  onChange={handleChange}
-                  className="w-full border rounded-md p-2"
-                >
-                  <option value="INR">INR (₹)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-2 font-medium">Timezone</label>
-                <select
-                  name="timezone"
-                  value={formData.timezone}
-                  onChange={handleChange}
-                  className="w-full border rounded-md p-2"
-                >
-                  <option value="Asia/Kolkata">Asia/Kolkata</option>
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">America/New_York</option>
-                  <option value="Europe/London">Europe/London</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block mb-2 font-medium">Date Format</label>
-              <select
-                name="dateFormat"
-                value={formData.dateFormat}
-                onChange={handleChange}
-                className="w-full border rounded-md p-2"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item label="Currency">
+              <Select
+                value={formData.currency}
+                onChange={(val) => handleChange(val, "currency")}
+                className="w-full"
               >
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-              </select>
-            </div>
+                <Option value="INR">INR (₹)</Option>
+                <Option value="USD">USD ($)</Option>
+                <Option value="EUR">EUR (€)</Option>
+                <Option value="GBP">GBP (£)</Option>
+              </Select>
+            </Form.Item>
 
-            <div>
-              <label className="block mb-2 font-medium">Theme</label>
-              <select
-                name="theme"
-                value={formData.theme}
-                onChange={handleChange}
-                className="w-full border rounded-md p-2"
+            <Form.Item label="Timezone">
+              <Select
+                value={formData.timezone}
+                onChange={(val) => handleChange(val, "timezone")}
+                className="w-full"
               >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="auto">Auto</option>
-              </select>
-            </div>
+                <Option value="Asia/Kolkata">Asia/Kolkata</Option>
+                <Option value="UTC">UTC</Option>
+                <Option value="America/New_York">America/New_York</Option>
+                <Option value="Europe/London">Europe/London</Option>
+              </Select>
+            </Form.Item>
+          </div>
 
-            <div>
-              <label className="block mb-2 font-medium">Upload Logo</label>
-              <input
-                type="file"
-                name="logo"
-                onChange={handleChange}
-                className="w-full border rounded-md p-2"
-              />
-            </div>
+          <Form.Item label="Date Format">
+            <Select
+              value={formData.dateFormat}
+              onChange={(val) => handleChange(val, "dateFormat")}
+            >
+              <Option value="DD/MM/YYYY">DD/MM/YYYY</Option>
+              <Option value="MM/DD/YYYY">MM/DD/YYYY</Option>
+              <Option value="YYYY-MM-DD">YYYY-MM-DD</Option>
+            </Select>
+          </Form.Item>
 
-            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
-              Save Configuration
-            </Button>
-          </form>
-        </CardContent>
+          <Form.Item label="Theme">
+            <Select
+              value={formData.theme}
+              onChange={(val) => handleChange(val, "theme")}
+            >
+              <Option value="light">Light</Option>
+              <Option value="dark">Dark</Option>
+              <Option value="auto">Auto</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Upload Logo">
+            <Upload beforeUpload={() => false} onChange={handleFileChange}>
+              <Button icon={<UploadOutlined />}>Click to Upload</Button>
+            </Upload>
+          </Form.Item>
+
+          <Button
+            type="primary"
+            htmlType="submit"
+            className="bg-blue-600 hover:!bg-blue-700 px-6 py-2 rounded-md"
+          >
+            Save Configuration
+          </Button>
+        </Form>
       </Card>
     </div>
   );
