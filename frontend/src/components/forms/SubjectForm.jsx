@@ -1,18 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
+import { Modal, Input, Select, Form, InputNumber, Button as AntBtn } from "antd";
 import { createSubject, updateSubject } from "../../features/subjectSlice";
 import { fetchAllUser } from "../../features/authSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
-import { Button } from "@/components/ui/button";
+
+const { Option } = Select;
 
 const SubjectForm = ({ isOpen, onClose, editData = null }) => {
   const dispatch = useDispatch();
   const { users = [], user } = useSelector((state) => state.auth);
-  const { loading, successMessage, error } = useSelector((state) => state.subject);
+  const { loading } = useSelector((state) => state.subject);
   const { activeYear } = useSelector((state) => state.academicYear);
 
   const schoolId = user?.school?._id || "";
   const roleName = user?.role?.name || "";
+
+  const [form] = Form.useForm();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -27,75 +32,83 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
     createdByRole: roleName || "",
   });
 
-  // ✅ Pre-fill data when editing
+  // Prefill when editing
   useEffect(() => {
     if (editData) {
-      setFormData({
+      const updated = {
         name: editData.name || "",
         category: editData.category || "",
         type: editData.type || "",
-        assignedTeachers: editData.assignedTeachers?.map(t => t._id) || [],
+        assignedTeachers: editData.assignedTeachers?.map((t) => t._id) || [],
         schoolId: editData.schoolId?._id || schoolId,
         academicYearId: editData.academicYearId?._id || activeYear?._id || "",
         maxMarks: editData.maxMarks || "",
         passMarks: editData.passMarks || "",
         isActive: editData.isActive ?? true,
-        createdByRole: roleName || "",
-      });
+        createdByRole: roleName,
+      };
+      setFormData(updated);
+      form.setFieldsValue(updated);
     }
-  }, [editData, schoolId, activeYear,roleName]);
+  }, [editData]);
 
-  // ✅ Fetch teachers and active academic year
+  // Fetch Teachers
   useEffect(() => {
     if (roleName === "School Admin" && schoolId) {
       dispatch(fetchAllUser({ schoolId }));
       dispatch(fetchActiveAcademicYear(schoolId));
     }
-  }, [dispatch, roleName, schoolId]);
+  }, [dispatch, schoolId, roleName]);
 
-  // ✅ Update academic year when fetched
+  // assign academic year
   useEffect(() => {
     if (activeYear?._id) {
-      setFormData((prev) => ({
-        ...prev,
-        academicYearId: activeYear._id,
-      }));
+      setFormData((prev) => ({ ...prev, academicYearId: activeYear._id }));
     }
   }, [activeYear]);
 
-  // ✅ Filter only teacher users
   const teachers = users?.filter((u) => u.role?.name?.toLowerCase() === "teacher");
 
-  // ✅ Subject name options (for Super Admin)
   const SubjectList = [
-    "English", "Science", "History", "Geography", "Art", "Physical Education",
-    "Computer Science", "Music", "Economics", "Psychology", "Sociology",
-    "Political Science", "Philosophy", "Biology", "Chemistry", "Physics",
-    "Mathematics", "Business Studies", "Accounting", "Statistics",
-    "Environmental Science", "Information Technology", "Data Science",
-    "Artificial Intelligence", "Web Development", "Graphic Design",
-    "Digital Marketing", "Project Management", "Finance", "Marketing",
-    "Animation", "Music Production", "Film Studies", "Creative Writing",
-    "Social Work"
+    "English",
+    "Science",
+    "History",
+    "Geography",
+    "Art",
+    "Physical Education",
+    "Computer Science",
+    "Music",
+    "Economics",
+    "Psychology",
+    "Sociology",
+    "Political Science",
+    "Philosophy",
+    "Biology",
+    "Chemistry",
+    "Physics",
+    "Mathematics",
+    "Business Studies",
+    "Accounting",
+    "Statistics",
+    "Environmental Science",
+    "Information Technology",
+    "Data Science",
+    "Artificial Intelligence",
+    "Web Development",
+    "Graphic Design",
+    "Digital Marketing",
+    "Project Management",
+    "Finance",
+    "Marketing",
+    "Animation",
+    "Music Production",
+    "Film Studies",
+    "Creative Writing",
+    "Social Work",
   ];
 
-  // ✅ Handle input changes
-  const handleChange = (e) => {
-    const { name, value, options, multiple } = e.target;
-    if (multiple) {
-      const selected = Array.from(options)
-        .filter((opt) => opt.selected)
-        .map((opt) => opt.value);
-      setFormData((prev) => ({ ...prev, [name]: selected }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  // ✅ Handle form submit
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    let payload = { ...formData };
+  const handleSubmit = (values) => {
+    let payload = { ...values };
 
     if (roleName === "Super Admin") {
       payload.isGlobal = true;
@@ -107,184 +120,117 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
       payload.academicYearId = activeYear?._id;
     }
 
-    if (!payload.name || !payload.category || !payload.type) {
-      alert("Please fill all required fields.");
-      return;
-    }
-
     if (editData?._id) {
       dispatch(updateSubject({ subjectId: editData._id, subjectData: payload }));
     } else {
       dispatch(createSubject(payload));
     }
+    onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg p-6 relative">
-        {/* ❌ Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-        >
-          ✖
-        </button>
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      footer={null}
+      centered
+      className="rounded-xl"
+      width={600}
+    >
+      <h2 className="text-xl font-semibold mb-4">
+        {editData
+          ? "Edit Subject"
+          : roleName === "Super Admin"
+          ? "Create Global Subject"
+          : "Create School Subject"}
+      </h2>
 
-        {/* 🧩 Title */}
-        <h2 className="text-xl font-bold mb-4">
-          {editData
-            ? "Edit Subject"
-            : roleName === "Super Admin"
-            ? "Create Global Subject"
-            : "Create School Subject"}
-        </h2>
-
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-        {successMessage && <p className="text-green-500 text-sm mb-2">{successMessage}</p>}
-
-        {/* 🧾 FORM */}
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-          {/* Subject Name */}
-          <div className="col-span-2">
-            <label className="block text-xs font-medium mb-1">Subject Name</label>
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={formData}
+        onFinish={handleSubmit}
+        className="grid grid-cols-2 gap-4"
+      >
+        {/* Name */}
+        <div className="col-span-2">
+          <Form.Item label="Subject Name" name="name" rules={[{ required: true }]}>
             {roleName === "Super Admin" ? (
-              <select
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-2 py-2 text-xs"
-                required
-              >
-                <option value="">Select Subject</option>
-                {SubjectList.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
+              <Select placeholder="Select Subject">
+                {SubjectList.map((s) => (
+                  <Option key={s} value={s}>
+                    {s}
+                  </Option>
                 ))}
-              </select>
+              </Select>
             ) : (
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full border rounded-lg p-2 text-xs"
-                placeholder="Enter subject name (e.g. Moral Science)"
-                required
-              />
+              <Input placeholder="Enter Subject Name" />
             )}
-          </div>
+          </Form.Item>
+        </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-xs font-medium mb-1">Category</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2 text-xs"
-              required
-            >
-              <option value="">Select Category</option>
-              {["Core", "Elective", "Language", "Practical", "Optional"].map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Category */}
+        <Form.Item label="Category" name="category" rules={[{ required: true }]}>
+          <Select placeholder="Select Category">
+            {["Core", "Elective", "Language", "Practical", "Optional"].map((c) => (
+              <Option key={c} value={c}>
+                {c}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
 
-          {/* Type */}
-          <div>
-            <label className="block text-xs font-medium mb-1">Type</label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2 text-xs"
-              required
-            >
-              <option value="">Select Type</option>
-              {["Theory", "Practical", "Both"].map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Type */}
+        <Form.Item label="Type" name="type" rules={[{ required: true }]}>
+          <Select placeholder="Select Type">
+            {["Theory", "Practical", "Both"].map((t) => (
+              <Option key={t} value={t}>
+                {t}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
 
-          {/* Max Marks */}
-          <div>
-            <label className="block text-xs font-medium mb-1">Max Marks</label>
-            <input
-              type="number"
-              name="maxMarks"
-              value={formData.maxMarks}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2 text-xs"
-              placeholder="e.g. 100"
-            />
-          </div>
+        {/* Max Marks */}
+        <Form.Item label="Max Marks" name="maxMarks">
+          <InputNumber className="w-full" placeholder="e.g. 100" />
+        </Form.Item>
 
-          {/* Pass Marks */}
-          <div>
-            <label className="block text-xs font-medium mb-1">Pass Marks</label>
-            <input
-              type="number"
-              name="passMarks"
-              value={formData.passMarks}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2 text-xs"
-              placeholder="e.g. 33"
-            />
-          </div>
+        {/* Pass Marks */}
+        <Form.Item label="Pass Marks" name="passMarks">
+          <InputNumber className="w-full" placeholder="e.g. 33" />
+        </Form.Item>
 
-          {/* Multi Assign Teachers */}
-          {roleName === "School Admin" && (
-            <div className="col-span-2">
-              <label className="block text-xs font-medium mb-1">Assign Teachers (Multiple)</label>
-              <select
-                name="assignedTeachers"
-                multiple
-                value={formData.assignedTeachers}
-                onChange={handleChange}
-                className="w-full border rounded-lg p-2 text-xs h-28"
-              >
+        {/* Teachers - only for admin */}
+        {roleName === "School Admin" && (
+          <div className="col-span-2">
+            <Form.Item label="Assign Teachers" name="assignedTeachers">
+              <Select mode="multiple" placeholder="Select Teachers">
                 {teachers?.map((t) => (
-                  <option key={t._id} value={t._id}>
+                  <Option key={t._id} value={t._id}>
                     {t.name}
-                  </option>
+                  </Option>
                 ))}
-              </select>
-              <p className="text-[10px] text-gray-500 mt-1">
-                Hold Ctrl (Windows) or Cmd (Mac) to select multiple teachers
-              </p>
-            </div>
-          )}
-
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 col-span-2 mt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="text-xs"
-            >
-              Close
-            </Button>
-            <Button type="submit" disabled={loading} className="text-xs">
-              {loading
-                ? "Saving..."
-                : editData
-                ? "Update Subject"
-                : "Create Subject"}
-            </Button>
+              </Select>
+            </Form.Item>
           </div>
-        </form>
-      </div>
-    </div>
+        )}
+
+        {/* Buttons */}
+        <div className="col-span-2 flex justify-end gap-3 mt-2">
+          <AntBtn onClick={onClose}>Cancel</AntBtn>
+
+          <AntBtn
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            className="bg-blue-600 px-4"
+          >
+            {editData ? "Update Subject" : "Create Subject"}
+          </AntBtn>
+        </div>
+      </Form>
+    </Modal>
   );
 };
 
