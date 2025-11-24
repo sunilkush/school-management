@@ -8,7 +8,6 @@ import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import { ClassSection } from "../models/classSection.model.js";
 
-import Class from "../models/classes.model.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import mongoose from "mongoose";
 

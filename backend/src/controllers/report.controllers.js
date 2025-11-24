@@ -1,116 +1,173 @@
-import { Report } from "../models/Report.model.js";
-import { AcademicYear } from "../models/AcademicYear.model.js";
+import { User } from "../models/user.model.js";
 import { School } from "../models/school.model.js";
-import APIFeatures from "../utils/apiFeatures.js";
 
-// @desc Get all reports with filtering, sorting, field limiting, pagination
-// Get reports
-export const getReport = async (req, res) => {
+import mongoose from "mongoose";
+
+// ------------------------
+// SCHOOL OVERVIEW REPORT
+// ------------------------
+export const getSchoolOverviewReport = async (req, res) => {
   try {
-    const queryObj = { ...req.query };
+    const { schoolId, academicYearId } = req.params;
 
-    // If IDs are passed, no need to convert names
-    if (queryObj.session) {
-      const academicYear = await AcademicYear.findById(queryObj.session);
-      if (!academicYear) {
-        return res.status(404).json({ status: "error", message: "Academic year not found" });
+    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid school ID",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Academic Year ID",
+      });
+    }
+
+    // Check school exists
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return res.status(404).json({
+        success: false,
+        message: "School not found",
+      });
+    }
+
+    // ------------------------
+    // AGGREGATION PIPELINE
+    // ------------------------
+    const report = await User.aggregate([
+      {
+        $match: {
+          school: new mongoose.Types.ObjectId(schoolId),
+          academicYear: new mongoose.Types.ObjectId(academicYearId)
+        },
+      },
+
+      {
+        $facet: {
+          // TOTAL USERS
+          totalUsers: [
+            { $count: "count" }
+          ],
+
+          // ACTIVE / INACTIVE
+          activeStatus: [
+            {
+              $group: {
+                _id: "$isActive",
+                count: { $sum: 1 }
+              }
+            }
+          ],
+
+          // ROLE WISE COUNT (Admin, Teacher, Student, Parent)
+          roleWise: [
+            {
+              $lookup: {
+                from: "roles",
+                localField: "role",
+                foreignField: "_id",
+                as: "roleData"
+              }
+            },
+            { $unwind: "$roleData" },
+            {
+              $group: {
+                _id: "$roleData.level",
+                count: { $sum: 1 }
+              }
+            }
+          ],
+
+          // GENDER GRAPH
+          genderStats: [
+            {
+              $group: {
+                _id: "$gender",
+                count: { $sum: 1 }
+              }
+            }
+          ],
+
+          // CLASS WISE STUDENT COUNT (For Student Reports)
+          classWiseStudents: [
+            {
+              $match: {
+                classAssigned: { $exists: true, $ne: null }
+              }
+            },
+            {
+              $lookup: {
+                from: "classes",
+                localField: "classAssigned",
+                foreignField: "_id",
+                as: "classData"
+              }
+            },
+            { $unwind: "$classData" },
+            {
+              $group: {
+                _id: "$classData.name",
+                count: { $sum: 1 }
+              }
+            },
+            { $sort: { _id: 1 } }
+          ],
+
+          // DEPARTMENT WISE EMPLOYEES
+          departmentWise: [
+            {
+              $match: {
+                department: { $exists: true, $ne: null }
+              }
+            },
+            {
+              $lookup: {
+                from: "departments",
+                localField: "department",
+                foreignField: "_id",
+                as: "deptData"
+              }
+            },
+            { $unwind: "$deptData" },
+            {
+              $group: {
+                _id: "$deptData.name",
+                count: { $sum: 1 }
+              }
+            }
+          ],
+        }
+      },
+
+      // Format Output
+      {
+        $project: {
+          totalUsers: { $arrayElemAt: ["$totalUsers.count", 0] },
+          activeStatus: 1,
+          roleWise: 1,
+          genderStats: 1,
+          classWiseStudents: 1,
+          departmentWise: 1,
+        }
       }
-    }
+    ]);
 
-    if (queryObj.school) {
-      const schoolDoc = await School.findById(queryObj.school);
-      if (!schoolDoc) {
-        return res.status(404).json({ status: "error", message: "School not found" });
-      }
-    }
-
-    const features = new APIFeatures(
-      Report.find(queryObj)
-        .populate("school", "name")
-        .populate("session", "name")
-        .populate("generatedBy", "name"),
-      queryObj
-    )
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
-
-    const reports = await features.query;
-
-    res.status(200).json({
-      status: "success",
-      results: reports.length,
-      data: reports,
-    });
-  } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
-  }
-};
-// @desc Create report
-export const createReport = async (req, res) => {
-  try {
-    const { session, school, ...rest } = req.body;
-
-    // Validate session exists
-    const academicYear = await AcademicYear.findById(session);
-    if (!academicYear) {
-      return res.status(400).json({ status: "error", message: "Academic year not found" });
-    }
-
-    // Validate school exists
-    const schoolDoc = await School.findById(school);
-    if (!schoolDoc) {
-      return res.status(400).json({ status: "error", message: "School not found" });
-    }
-
-    const newReport = await Report.create({
-      ...rest,
-      session: academicYear._id,
-      school: schoolDoc._id,
-      generatedBy: req.user._id,
+    return res.status(200).json({
+      success: true,
+      school: school.name,
+      academicYearId,
+      report: report[0],
     });
 
-    res.status(201).json({
-      status: "success",
-      data: newReport,
+  } catch (error) {
+    console.log("Report Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
     });
-  } catch (err) {
-    res.status(400).json({ status: "error", message: err.message });
   }
 };
 
-// @desc Delete report
-export const deleteReport = async (req, res) => {
-  try {
-    const deleted = await Report.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ status: "error", message: "Report not found" });
-    }
-
-    res.status(204).json({ status: "success", data: null });
-  } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
-  }
-};
-
-// @desc View single report
-export const viewReport = async (req, res) => {
-  try {
-    const report = await Report.findById(req.params.id)
-      .populate("school", "name")
-      .populate("session", "name")
-      .populate("generatedBy", "name");
-
-    if (!report) {
-      return res.status(404).json({ status: "error", message: "Report not found" });
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: report,
-    });
-  } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
-  }
-};
