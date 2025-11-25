@@ -3,163 +3,183 @@ import { User } from "../models/user.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { Role } from "../models/Roles.model.js";
-import  Class  from "../models/classes.model.js";
+import Class from "../models/classes.model.js";
 import { Section } from "../models/section.model.js";
-import { School } from "../models/school.model.js";
 
 export const getSchoolOverviewReport = async (req, res) => {
   try {
     const { schoolId, academicYearId } = req.params;
 
-    const sId = new mongoose.Types.ObjectId(schoolId);
-    const aId = new mongoose.Types.ObjectId(academicYearId);
-
-    // SCHOOL CHECK
-    const school = await School.findById(sId);
-    if (!school) {
-      return res.status(404).json({ success: false, message: "School not found" });
+    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+      return res.status(400).json({ success: false, message: "Invalid School ID" });
     }
 
-    // -------------------------------
-    // 📌 1) TEACHER / ADMIN / PARENT COUNT (from USER)
-    // -------------------------------
-    const roleCounts = await User.aggregate([
-      {
-        $match: {
-          school: sId,
-          academicYear: aId
-        }
-      },
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
+      return res.status(400).json({ success: false, message: "Invalid Academic Year ID" });
+    }
+
+    // ----------------------------
+    // 1️⃣ ROLE WISE USER COUNTS
+    // ----------------------------
+    const roleWise = await User.aggregate([
+      { $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } },
+
       {
         $lookup: {
           from: "roles",
-          localField: "role",
+          localField: "roleId",
           foreignField: "_id",
-          as: "roleData"
-        }
+          as: "roleData",
+        },
       },
       { $unwind: "$roleData" },
+
       {
         $group: {
-          _id: "$roleData.level",
-          count: { $sum: 1 }
-        }
-      }
+          _id: "$roleData.name", // admin / teacher / parent
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
-    // Convert array → object
-    const roleWise = roleCounts.reduce((acc, item) => {
-      acc[item._id] = item.count;
-      return acc;
-    }, {});
+    // Extract specific role-wise
+    const adminCount =
+      roleWise.find((x) => x._id?.toLowerCase() === "admin")?.count || 0;
 
-    // -------------------------------
-    // 📌 2) TOTAL STUDENTS (from StudentEnrollment)
-    // -------------------------------
-    const studentCount = await StudentEnrollment.countDocuments({
-      school: sId,
-      academicYear: aId
+    const teacherCount =
+      roleWise.find((x) => x._id?.toLowerCase() === "teacher")?.count || 0;
+
+    const parentCount =
+      roleWise.find((x) => x._id?.toLowerCase() === "parent")?.count || 0;
+
+    // ----------------------------
+    // 2️⃣ TOTAL STUDENT COUNT (ENROLLMENT)
+    // ----------------------------
+    const totalStudents = await StudentEnrollment.countDocuments({
+      schoolId,
+      academicYearId,
+      status: "Active",
     });
 
-    // -------------------------------
-    // 📌 3) CLASS-WISE STUDENT COUNT
-    // -------------------------------
+    // ----------------------------
+    // 3️⃣ CLASS WISE STUDENT COUNTS
+    // ----------------------------
     const classWise = await StudentEnrollment.aggregate([
       {
         $match: {
-          school: sId,
-          academicYear: aId
-        }
+          schoolId: new mongoose.Types.ObjectId(schoolId),
+          academicYearId: new mongoose.Types.ObjectId(academicYearId),
+        },
       },
+
       {
         $lookup: {
           from: "classes",
-          localField: "class",
+          localField: "classId",
           foreignField: "_id",
-          as: "classData"
-        }
+          as: "classData",
+        },
       },
       { $unwind: "$classData" },
+
       {
         $group: {
           _id: "$classData.name",
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { _id: 1 } }
+
+      { $sort: { _id: 1 } },
     ]);
 
-    // -------------------------------
-    // 📌 4) SECTION-WISE STUDENT COUNT
-    // -------------------------------
+    // ----------------------------
+    // 4️⃣ SECTION WISE STUDENT COUNTS
+    // ----------------------------
     const sectionWise = await StudentEnrollment.aggregate([
       {
         $match: {
-          school: sId,
-          academicYear: aId
-        }
+          schoolId: new mongoose.Types.ObjectId(schoolId),
+          academicYearId: new mongoose.Types.ObjectId(academicYearId),
+        },
       },
+
       {
         $lookup: {
           from: "sections",
-          localField: "section",
+          localField: "sectionId",
           foreignField: "_id",
-          as: "sectionData"
-        }
+          as: "sectionData",
+        },
       },
       { $unwind: "$sectionData" },
+
       {
         $group: {
-          _id: "$sectionData.name",
-          count: { $sum: 1 }
-        }
+          _id: "$sectionData.name", // A/B/C
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { _id: 1 } }
+
+      { $sort: { _id: 1 } },
     ]);
 
-    // -------------------------------
-    // 📌 5) GENDER STATS (from Student)
-    // -------------------------------
+    // ----------------------------
+    // 5️⃣ GENDER ANALYSIS (FROM STUDENT COLLECTION)
+    // ----------------------------
     const genderStats = await Student.aggregate([
       {
-        $match: {
-          school: sId
-        }
+        $lookup: {
+          from: "StudentEnrollments",
+          localField: "_id",
+          foreignField: "studentId",
+          as: "enroll",
+        },
       },
+
+      { $unwind: "$enroll" },
+
+      {
+        $match: {
+          "enroll.schoolId": new mongoose.Types.ObjectId(schoolId),
+          "enroll.academicYearId": new mongoose.Types.ObjectId(academicYearId),
+        },
+      },
+
       {
         $group: {
           _id: "$gender",
-          count: { $sum: 1 }
-        }
-      }
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
-    // -------------------------------
-    // 📌 FINAL RESPONSE
-    // -------------------------------
+    // ----------------------------
+    // 6️⃣ FINAL RESPONSE
+    // ----------------------------
     return res.status(200).json({
       success: true,
-      school: school.name,
+
+      schoolId,
       academicYearId,
-      report: {
-        teachers: roleWise.teacher || 0,
-        admins: roleWise.admin || 0,
-        parents: roleWise.parent || 0,
-        students: studentCount,
 
-        roleWise,
+      summary: {
+        adminCount,
+        teacherCount,
+        parentCount,
+        studentCount: totalStudents,
+      },
 
-        classWise,
-        sectionWise,
-        genderStats
-      }
+      roleWise,
+      classWise,
+      sectionWise,
+      genderStats,
     });
-
   } catch (error) {
-    console.log("Error:", error);
+    console.log("Report Error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
