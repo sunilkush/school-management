@@ -18,11 +18,14 @@ export const getSchoolOverviewReport = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid Academic Year ID" });
     }
 
+    const schoolObjId = new mongoose.Types.ObjectId(schoolId);
+    const academicObjId = new mongoose.Types.ObjectId(academicYearId);
+
     // ----------------------------
     // 1️⃣ ROLE WISE USER COUNTS
     // ----------------------------
     const roleWise = await User.aggregate([
-      { $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } },
+      { $match: { schoolId: schoolObjId } },
 
       {
         $lookup: {
@@ -36,28 +39,23 @@ export const getSchoolOverviewReport = async (req, res) => {
 
       {
         $group: {
-          _id: "$roleData.name", // admin / teacher / parent
+          _id: "$roleData.name", // School Admin/Teacher/Parent/Student
           count: { $sum: 1 },
         },
       },
     ]);
 
-    // Extract specific role-wise
-    const adminCount =
-      roleWise.find((x) => x._id?.toLowerCase() === "admin")?.count || 0;
-
-    const teacherCount =
-      roleWise.find((x) => x._id?.toLowerCase() === "teacher")?.count || 0;
-
-    const parentCount =
-      roleWise.find((x) => x._id?.toLowerCase() === "parent")?.count || 0;
+    const adminCount = roleWise.find((x) => x._id === "School Admin")?.count || 0;
+    const teacherCount = roleWise.find((x) => x._id === "Teacher")?.count || 0;
+    const parentCount = roleWise.find((x) => x._id === "Parent")?.count || 0;
+    const studentCount = roleWise.find((x) => x._id === "Student")?.count || 0;
 
     // ----------------------------
     // 2️⃣ TOTAL STUDENT COUNT (ENROLLMENT)
     // ----------------------------
     const totalStudents = await StudentEnrollment.countDocuments({
-      schoolId,
-      academicYearId,
+      schoolId: schoolObjId,
+      academicYearId: academicObjId,
       status: "Active",
     });
 
@@ -67,8 +65,8 @@ export const getSchoolOverviewReport = async (req, res) => {
     const classWise = await StudentEnrollment.aggregate([
       {
         $match: {
-          schoolId: new mongoose.Types.ObjectId(schoolId),
-          academicYearId: new mongoose.Types.ObjectId(academicYearId),
+          schoolId: schoolObjId,
+          academicYearId: academicObjId,
         },
       },
 
@@ -98,8 +96,8 @@ export const getSchoolOverviewReport = async (req, res) => {
     const sectionWise = await StudentEnrollment.aggregate([
       {
         $match: {
-          schoolId: new mongoose.Types.ObjectId(schoolId),
-          academicYearId: new mongoose.Types.ObjectId(academicYearId),
+          schoolId: schoolObjId,
+          academicYearId: academicObjId,
         },
       },
 
@@ -115,7 +113,7 @@ export const getSchoolOverviewReport = async (req, res) => {
 
       {
         $group: {
-          _id: "$sectionData.name", // A/B/C
+          _id: "$sectionData.name",
           count: { $sum: 1 },
         },
       },
@@ -124,12 +122,12 @@ export const getSchoolOverviewReport = async (req, res) => {
     ]);
 
     // ----------------------------
-    // 5️⃣ GENDER ANALYSIS (FROM STUDENT COLLECTION)
+    // 5️⃣ GENDER ANALYSIS
     // ----------------------------
     const genderStats = await Student.aggregate([
       {
         $lookup: {
-          from: "StudentEnrollments",
+          from: "studentenrollments", // FIXED COLLECTION NAME
           localField: "_id",
           foreignField: "studentId",
           as: "enroll",
@@ -140,14 +138,14 @@ export const getSchoolOverviewReport = async (req, res) => {
 
       {
         $match: {
-          "enroll.schoolId": new mongoose.Types.ObjectId(schoolId),
-          "enroll.academicYearId": new mongoose.Types.ObjectId(academicYearId),
+          "enroll.schoolId": schoolObjId,
+          "enroll.academicYearId": academicObjId,
         },
       },
 
       {
         $group: {
-          _id: "$gender",
+          _id: "$gender", // Male/Female/Other
           count: { $sum: 1 },
         },
       },
@@ -158,7 +156,6 @@ export const getSchoolOverviewReport = async (req, res) => {
     // ----------------------------
     return res.status(200).json({
       success: true,
-
       schoolId,
       academicYearId,
 
