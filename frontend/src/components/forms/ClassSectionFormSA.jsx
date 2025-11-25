@@ -4,13 +4,14 @@ import { createClass, updateClass } from "../../features/classSlice.js";
 import { fetchSection } from "../../features/sectionSlice.js";
 import { fetchAllSubjects } from "../../features/subjectSlice.js";
 import { fetchAllUser } from "../../features/authSlice.js";
-import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice.js";
 import { Trash2 } from "lucide-react";
+
 
 const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
   const dispatch = useDispatch();
   const { sectionList = [] } = useSelector((s) => s.section || {});
-  const { subjectList = [] } = useSelector((s) => s.subject || {});
+  const { subjects = [] } = useSelector((s) => s.subject || {});
   const { users = [], user } = useSelector((s) => s.auth || {});
   const { activeYear } = useSelector((s) => s.academicYear || {});
   const schoolId = user?.school?._id || null;
@@ -42,29 +43,28 @@ const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
 useEffect(() => {
   if (!initialData) return;
 
-  // wait until data lists are ready
   const allReady =
-    sectionList.length > 0 &&
-    subjectList.length > 0 &&
-    users.length > 0 &&
-    activeYear;
+    sectionList.length &&
+    subjects.length &&
+    users.length &&
+    activeYear?._id;
 
-  if (!allReady) return; // ⛔ wait karo jab tak sab list load nahi ho jati
-
-  
+  if (!allReady) return;
 
   setFormData({
     name: initialData.name || "",
     code: initialData.code || "",
     academicYearId:
-      initialData.academicYearId?._id ||
-      initialData.academicYearId ||
-      activeYear._id ||
+      initialData.academicYearId?._id ??
+      initialData.academicYearId ??
+      activeYear?._id ??
       "",
+
     teacherId:
-      initialData.teacherId?._id ||
-      initialData.teacherId ||
+      initialData.teacherId?._id ??
+      initialData.teacherId ??
       "",
+
     isGlobal: initialData.isGlobal || false,
     isActive: initialData.isActive ?? true,
 
@@ -73,27 +73,30 @@ useEffect(() => {
         sectionId:
           sectionList.find(
             (sec) =>
-              sec._id === s.sectionId?._id || sec._id === s.sectionId
+              sec._id === (s.sectionId?._id ?? s.sectionId)
           )?._id || "",
+
         inChargeId:
           users.find(
             (u) =>
-              u._id === s.inChargeId?._id || u._id === s.inChargeId
+              u._id === (s.inChargeId?._id ?? s.inChargeId)
           )?._id || "",
       })) || [{ sectionId: "", inChargeId: "" }],
 
     subjects:
       initialData.subjects?.map((sub) => ({
         subjectId:
-          subjectList.find(
+          subjects.find(
             (sb) =>
-              sb._id === sub.subjectId?._id || sb._id === sub.subjectId
+              sb._id === (sub.subjectId?._id ?? sub.subjectId)
           )?._id || "",
+
         teacherId:
           users.find(
             (u) =>
-              u._id === sub.teacherId?._id || u._id === sub.teacherId
+              u._id === (sub.teacherId?._id ?? sub.teacherId)
           )?._id || "",
+
         periodPerWeek: sub.periodPerWeek || 1,
         isCompulsory:
           sub.isCompulsory !== undefined ? sub.isCompulsory : true,
@@ -106,7 +109,8 @@ useEffect(() => {
         },
       ],
   });
-}, [initialData, sectionList, subjectList, users, activeYear]);
+}, [initialData, sectionList, subjects, users, activeYear]);
+
 
 
 
@@ -148,8 +152,8 @@ useEffect(() => {
       console.error("Error saving class:", err);
     }
   };
-
-  if (!sectionList.length || !subjectList.length || !users.length) {
+  console.log(sectionList.length ,subjects.length ,users.length)
+  if (!sectionList.length || !subjects.length || !users.length) {
     return <p className="text-sm text-gray-500">Loading form data...</p>;
   }
 
@@ -287,7 +291,7 @@ useEffect(() => {
               className="border rounded px-2 py-1"
             >
               <option value="">Select Subject</option>
-              {subjectList.map((s) => (
+              {subjects.map((s) => (
                 <option key={s._id} value={s._id}>
                   {s.name}
                 </option>
