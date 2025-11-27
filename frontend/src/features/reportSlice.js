@@ -1,51 +1,58 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import qs from 'qs';
-const  App_Base_Url = import.meta.env.VITE_API_URL;
+
+const App_Base_Url = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem('accessToken');
-// fetchReports accepts an object of filters: { school, type, session, dateFrom, dateTo }
+
+// Get all reports with filters
 export const fetchReports = createAsyncThunk(
   'reports/fetchReports',
   async (filters = {}, { rejectWithValue }) => {
     try {
-      // build query params, remove empty
-      
-      const cleaned = Object.entries(filters || {}).reduce((acc, [k, v]) => {
-        if (v !== undefined && v !== null && v !== '') acc[k] = v;
-        return acc;
-      }, {});
+      // Remove empty values
+      const cleaned = Object.fromEntries(
+        Object.entries(filters).filter(([v]) => v !== '' && v != null)
+      );
+
       const query = qs.stringify(cleaned, { addQueryPrefix: true });
-      const res = await axios.get(`${App_Base_Url}/report/getReport${query}`,{
-         headers: { Authorization: `Bearer ${token}` },
+
+      const res = await axios.get(`${App_Base_Url}/report/getReport${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+
       return res.data.data || [];
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
     }
   }
 );
-// createReport accepts the report data
+
+// Create report
 export const createReport = createAsyncThunk(
   'reports/createReport',
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${App_Base_Url}/report/create`, payload,{
+      const res = await axios.post(`${App_Base_Url}/report/create`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
     }
   }
 );
-// deleteReport accepts the report ID to delete
+
+// Delete Report
 export const deleteReport = createAsyncThunk(
   'reports/deleteReport',
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${App_Base_Url}/report/delete/${id}`,{
+      await axios.delete(`${App_Base_Url}/report/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       return id;
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
@@ -53,32 +60,56 @@ export const deleteReport = createAsyncThunk(
   }
 );
 
-export const reportView = createAsyncThunk('reports/reportView', async(id, { rejectWithValue }) => {
-  try {
-    
-    const res = await axios.get(`${App_Base_Url}/report/view/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return res.data.data;
-  } catch (err) {
-    return rejectWithValue(err.response?.data || { message: err.message });
+// View report
+export const reportView = createAsyncThunk(
+  'reports/reportView',
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await axios.get(`${App_Base_Url}/report/view/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || { message: err.message });
+    }
   }
-})
+);
+
+// Fetch School Reports (FIXED URL)
+export const fetchSchoolReports = createAsyncThunk(
+  "reports/fetchSchoolReports",
+  async ({ schoolId, academicYearId }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const res = await axios.get(
+        `${App_Base_Url}/report/school/${schoolId}/academic-year/${academicYearId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: error.message });
+    }
+  }
+);
 
 
-// Report slice to manage reports state
 const reportSlice = createSlice({
   name: 'reports',
-  
   initialState: {
     items: [],
+    schoolReports: [], // FIXED
     loading: false,
     error: null,
-   
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Fetch Reports
       .addCase(fetchReports.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -92,50 +123,43 @@ const reportSlice = createSlice({
         state.error = action.payload?.message || 'Failed to fetch reports';
       })
 
-      .addCase(createReport.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // Create Report
       .addCase(createReport.fulfilled, (state, action) => {
         state.loading = false;
         state.items.unshift(action.payload);
       })
-      .addCase(createReport.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to create report';
-      })
 
-      .addCase(deleteReport.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // Delete Report
       .addCase(deleteReport.fulfilled, (state, action) => {
         state.loading = false;
         state.items = state.items.filter((r) => r._id !== action.payload);
       })
-      .addCase(deleteReport.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to delete report';
-      })
 
-      .addCase(reportView.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // View Report
       .addCase(reportView.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.items.findIndex((r) => r._id === action.payload._id);
         if (index !== -1) {
-          state.items[index] = action.payload; // update existing report
+          state.items[index] = action.payload;
         } else {
-          state.items.push(action.payload); // or add new report
+          state.items.push(action.payload);
         }
       })
-      .addCase(reportView.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Failed to view report';
+
+      .addCase(fetchSchoolReports.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-  }
+      .addCase(fetchSchoolReports.fulfilled, (state, action) => {
+        state.loading = false;
+        state.schoolReports = action.payload || [];
+      })
+      .addCase(fetchSchoolReports.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to fetch school reports";
+      });
+
+  },
 });
 
 export default reportSlice.reducer;

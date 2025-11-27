@@ -137,7 +137,7 @@ export const currentUser = createAsyncThunk(
       });
       return res.data;
     } catch (error) {
-      console.log('currentUser error:', error.response?.data);
+     
       return rejectWithValue(error.response?.data?.message);
     }
   }

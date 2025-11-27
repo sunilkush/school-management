@@ -1,39 +1,157 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchSchoolReports } from "../../../features/reportSlice.js";
+import { Select, Table, Button, Card } from "antd";
+import { fetchSchools } from "../../../features/schoolSlice.js";
+import { fetchActiveAcademicYear } from "../../../features/academicYearSlice.js";
 
-// Sample data
-const schoolReports = [
-  { id: 1, name: "ABC Public School", students: 500, teachers: 35, status: "Active" },
-  { id: 2, name: "XYZ International", students: 300, teachers: 20, status: "Active" },
-  { id: 3, name: "Sunrise Academy", students: 450, teachers: 28, status: "Inactive" },
-];
+const { Option } = Select;
 
 const SchoolReports = () => {
+  const dispatch = useDispatch();
+
+  const { schoolReports, loading } = useSelector((state) => state.reports);
+  const { schools } = useSelector((state) => state.school);
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+
+  const [schoolId, setSchoolId] = useState(null);
+  const [academicYears, setAcademicYears] = useState([]);
+  const [academicYearId, setAcademicYearId] = useState(null);
+
+  // Load all schools
+  useEffect(() => {
+    dispatch(fetchSchools());
+  }, [dispatch]);
+
+  // When school changes
+  const handleSchoolChange = (id) => {
+    setSchoolId(id);
+
+    const selectedSchool = schools.find((s) => s._id === id);
+
+    setAcademicYears(selectedSchool?.academicYears || []);
+
+    setAcademicYearId(null); // reset selection
+
+    dispatch(fetchActiveAcademicYear(id)); // fetch active year
+    return setAcademicYearId(selectedAcademicYear?._id || null);
+  };
+
+  // Auto-select active academic year
+  useEffect(() => {
+    if (
+      academicYears.length > 0 &&
+      selectedAcademicYear?._id &&
+      academicYears.some((y) => y._id === selectedAcademicYear._id)
+    ) {
+      setAcademicYearId(selectedAcademicYear._id);
+    }
+  }, [academicYears, selectedAcademicYear]);
+
+  // Fetch reports only when both selected
+  useEffect(() => {
+    if (schoolId && academicYearId) {
+      dispatch(fetchSchoolReports({ schoolId, academicYearId }));
+    }
+  }, [dispatch, schoolId, academicYearId]);
+
+  /* Convert API response to array for Table */
+  const tableData = schoolReports ? [{ ...schoolReports, key: schoolReports.academicYearId }] : [];
+
+const columns = [
+  {
+    title: "Report Name",
+    dataIndex: "name",
+    key: "name",
+  },
+  {
+    title: "Admins",
+    key: "adminCount",
+    render: (_, record) => record.summary?.adminCount || 0,
+    
+  },
+  {
+    title: "Teachers",
+    key: "teacherCount",
+    render: (_, record) => record.summary?.teacherCount || 0,
+  },
+  {
+    title: "Students",
+    key: "studentCount",
+    render: (_, record) => record.summary?.studentCount || 0,
+  },
+  {
+    title: "Date Created",
+    dataIndex: "createdAt",
+    key: "createdAt",
+    render: (date) => (date ? new Date(date).toLocaleDateString() : "-"),
+  },
+  {
+    title: "Actions",
+    key: "actions",
+    render: (record) => (
+      <Button type="primary" onClick={() => console.log(record)}>
+        View
+      </Button>
+    ),
+  },
+];
+
+
+
   return (
-    <div className="bg-white">
-      <h1 className="text-2xl font-bold mb-4">School Reports</h1>
-      <table className="min-w-full border rounded-lg overflow-hidden">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 border">#</th>
-            <th className="px-4 py-2 border">School Name</th>
-            <th className="px-4 py-2 border">Students</th>
-            <th className="px-4 py-2 border">Teachers</th>
-            <th className="px-4 py-2 border">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schoolReports.map((school) => (
-            <tr key={school.id} className="text-center hover:bg-gray-50">
-              <td className="px-4 py-2 border">{school.id}</td>
-              <td className="px-4 py-2 border">{school.name}</td>
-              <td className="px-4 py-2 border">{school.students}</td>
-              <td className="px-4 py-2 border">{school.teachers}</td>
-              <td className="px-4 py-2 border">{school.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card className="shadow-lg">
+      <h1 className="text-xl font-semibold mb-4">School Reports</h1>
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+        {/* School Dropdown */}
+        <div>
+          <label className="block mb-1 font-medium">Select School</label>
+          <Select
+            placeholder="Select School"
+            className="w-full"
+            value={schoolId}
+            onChange={handleSchoolChange}
+          >
+            {schools.map((school) => (
+              <Option key={school._id} value={school._id}>
+                {school.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        {/* Academic Year */}
+        <div className="hidden">
+          <label className="block mb-1 font-medium">Select Academic Year</label>
+          <Select
+            placeholder="Select Academic Year"
+            className="w-full"
+            disabled={!academicYears.length}
+            value={academicYearId}
+            onChange={(value) => setAcademicYearId(value)}
+          >
+            {academicYears.map((yr) => (
+              <Option key={yr._id} value={yr._id}>
+                {yr.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+      </div>
+
+      {/* Table */}
+      <Table
+        loading={loading}
+        columns={columns}
+        dataSource={tableData}
+        rowKey="_id"
+        bordered
+      />
+    </Card>
   );
 };
 
