@@ -15,7 +15,7 @@ export const fetchAllFees = createAsyncThunk(
                     headers: { Authorization: `Bearer ${token}` }
                 },
                 { params });
-            return res.data.data; // ✅ API format ke according
+            return res.data.data.data; // ✅ API format ke according
         } catch (e) {
             return rejectWithValue(e.response?.data || "Failed to load fees");
         }
