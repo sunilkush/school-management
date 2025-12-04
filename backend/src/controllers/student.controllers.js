@@ -460,145 +460,163 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
 
 
 const getStudentsBySchoolId = asyncHandler(async (req, res) => {
-  const { schoolId } = req.params;
-  
-   let { academicYearId } = req.query; // 👈 important
+   
+  // ✅ FIX: using req.query
+  let { schoolId, academicYearId } = req.query;
+  console.log("Fetching students for schoolId:", schoolId, "and academicYearId:", academicYearId);
   // ✅ Validate schoolId
   if (!mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "Invalid schoolId format");
   }
 
-  // ✅ If academicYearId not provided → fetch active academic year
+  // ✅ If academicYearId not provided → fetch active academic year automatically
   if (!academicYearId) {
     const activeYear = await AcademicYear.findOne({
       schoolId: new mongoose.Types.ObjectId(schoolId),
-      isActive: true,
+      isActive: true
     }).lean();
 
     if (!activeYear) {
       throw new ApiError(404, "No active academic year found for this school");
     }
 
-    academicYearId = activeYear._id.toString();
+    academicYearId = activeYear._id;
   }
 
-  // ✅ Aggregation pipeline
+  // ✅ Aggregation Pipeline — Multi School + Academic Year Filter
   const students = await StudentEnrollment.aggregate([
     {
       $match: {
         schoolId: new mongoose.Types.ObjectId(schoolId),
-        academicYearId: new mongoose.Types.ObjectId(academicYearId),
-      },
+        academicYearId: new mongoose.Types.ObjectId(academicYearId)
+      }
     },
+
+    // ✅ Student Profile
     {
       $lookup: {
         from: "students",
         localField: "studentId",
         foreignField: "_id",
-        as: "student",
-      },
+        as: "student"
+      }
     },
-    { $unwind: { path: "$student", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$student" },
+
+    // ✅ User (Login User Data)
     {
-  $lookup: {
-    from: "users",
-    localField: "student.userId",
-    foreignField: "_id",
-    as: "userDetails",
-  },
-},
-{ $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } },
+      $lookup: {
+        from: "users",
+        localField: "student.userId",
+        foreignField: "_id",
+        as: "userDetails"
+      }
+    },
+    { $unwind: "$userDetails" },
+
+    // ✅ Class
     {
       $lookup: {
         from: "classes",
         localField: "classId",
         foreignField: "_id",
-        as: "class",
-      },
+        as: "class"
+      }
     },
-    { $unwind: { path: "$class", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$class" },
+
+    // ✅ Section
     {
       $lookup: {
         from: "sections",
         localField: "sectionId",
         foreignField: "_id",
-        as: "section",
-      },
+        as: "section"
+      }
     },
-    { $unwind: { path: "$section", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$section" },
+
+    // ✅ School
     {
       $lookup: {
         from: "schools",
         localField: "schoolId",
         foreignField: "_id",
-        as: "school",
-      },
+        as: "school"
+      }
     },
-    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$school" },
+
+    // ✅ Academic Year
     {
       $lookup: {
         from: "academicyears",
         localField: "academicYearId",
         foreignField: "_id",
-        as: "academicYear",
-      },
+        as: "academicYear"
+      }
     },
-    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$academicYear" },
+
     { $sort: { createdAt: -1 } },
+
+    // ✅ Final Data Projection for Frontend
     {
-  $project: {
-    _id: 1,
-    registrationNumber: 1,
-    admissionDate: 1,
-    mobileNumber: 1,
-    feeDiscount: 1,
-    status: 1,
-    createdAt: 1,
+      $project: {
+        registrationNumber: 1,
+        admissionDate: 1,
+        mobileNumber: 1,
+        feeDiscount: 1,
+        status: 1,
 
-    "student._id": 1,
-    "student.dateOfBirth": 1,
-    "student.gender": 1,
-    "student.religion": 1,
-    "student.cast": 1,
-    "student.bloodGroup": 1,
-    "student.address": 1,
-    "student.identificationMark": 1,
-    "student.fatherInfo": 1,
-    "student.motherInfo": 1,
+        student: {
+          dateOfBirth: 1,
+          gender: 1,
+          religion: 1,
+          cast: 1,
+          bloodGroup: 1,
+          address: 1,
+          fatherInfo: 1,
+          motherInfo: 1,
+          identificationMark: 1
+        },
 
-    // ✅ FIX — these should not be inside "student."
-    "userDetails._id": 1,
-    "userDetails.name": 1,
-    "userDetails.email": 1,
-    "userDetails.isActive": 1,
-    "userDetails.avatar": 1,
+        userDetails: {
+          name: 1,
+          email: 1,
+          isActive: 1,
+          avatar: 1
+        },
 
-    "class._id": 1,
-    "class.name": 1,
-    "section._id": 1,
-    "section.name": 1,
-    "school._id": 1,
-    "school.name": 1,
-    "school.address": 1,
-    "school.isActive": 1,
-    "academicYear._id": 1,
-    "academicYear.name": 1,
-    "academicYear.startDate": 1,
-    "academicYear.endDate": 1,
-    "academicYear.isActive": 1,
-  },
-},
+        class: {
+          name: 1
+        },
+        section: {
+          name: 1
+        },
+
+        school: {
+          name: 1,
+          address: 1
+        },
+
+        academicYear: {
+          name: 1,
+          startDate: 1,
+          endDate: 1
+        }
+      }
+    }
   ]);
 
   if (!students.length) {
-    throw new ApiError(404, "No students found for this school");
+    throw new ApiError(404, "No students found");
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, students, "Students retrieved successfully"));
+    .json(new ApiResponse(200, students, "Students Retrieved Successfully"));
 });
-
 
 
 export {

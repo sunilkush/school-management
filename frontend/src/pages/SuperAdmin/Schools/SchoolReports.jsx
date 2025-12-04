@@ -56,57 +56,65 @@ const SchoolReports = () => {
   }, [dispatch, schoolId, academicYearId]);
 
   /* Convert API response to array for Table */
-  const tableData = schoolReports ? [{ ...schoolReports, key: schoolReports.academicYearId }] : [];
+  const tableData = schoolReports ? [schoolReports] : [];
 
-const columns = [
-  {
-    title: "Report Name",
-    dataIndex: "name",
-    key: "name",
-  },
-  {
-    title: "Admins",
-    key: "adminCount",
-    render: (_, record) => record.summary?.adminCount || 0,
-    
-  },
-  {
-    title: "Teachers",
-    key: "teacherCount",
-    render: (_, record) => record.summary?.teacherCount || 0,
-  },
-  {
-    title: "Students",
-    key: "studentCount",
-    render: (_, record) => record.summary?.studentCount || 0,
-  },
-  {
-    title: "Date Created",
-    dataIndex: "createdAt",
-    key: "createdAt",
-    render: (date) => (date ? new Date(date).toLocaleDateString() : "-"),
-  },
-  {
-    title: "Actions",
-    key: "actions",
-    render: (record) => (
-      <Button type="primary" onClick={() => console.log(record)}>
-        View
-      </Button>
-    ),
-  },
-];
+  const columns = [
+    {
+      title: "Academic Year",
+      key: "academicYear",
+      render: (_, record) => record.academicYearId,
+    },
+    {
+      title: "Admins",
+      key: "adminCount",
+      align: "center",
+      render: (_, record) => record.summary?.adminCount ?? 0,
+    },
+    {
+      title: "Teachers",
+      key: "teacherCount",
+      align: "center",
+      render: (_, record) => record.summary?.teacherCount ?? 0,
+    },
+    {
+      title: "Students",
+      key: "studentCount",
+      align: "center",
+      render: (_, record) => record.summary?.studentCount ?? 0,
+    },
+    {
+      title: "Parents",
+      key: "parentCount",
+      align: "center",
+      render: (_, record) => record.summary?.parentCount ?? 0,
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Button type="primary" onClick={() => console.log(record)}>
+          View
+        </Button>
+      ),
+    },
+  ];
+
 
 
 
   return (
-    <Card className="shadow-lg">
+    <Card
+      className="shadow-lg"
+      styles={{
+        body: {
+          padding: 16,
+        },
+      }}
+    >
       <h1 className="text-xl font-semibold mb-4">School Reports</h1>
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
-        {/* School Dropdown */}
         <div>
           <label className="block mb-1 font-medium">Select School</label>
           <Select
@@ -123,7 +131,6 @@ const columns = [
           </Select>
         </div>
 
-        {/* Academic Year */}
         <div className="hidden">
           <label className="block mb-1 font-medium">Select Academic Year</label>
           <Select
@@ -140,19 +147,17 @@ const columns = [
             ))}
           </Select>
         </div>
-
       </div>
 
-      {/* Table */}
       <Table
         loading={loading}
         columns={columns}
         dataSource={tableData}
-        rowKey="_id"
+        rowKey={(record) => record.academicYearId}
         bordered
       />
     </Card>
   );
-};
 
+}
 export default SchoolReports;

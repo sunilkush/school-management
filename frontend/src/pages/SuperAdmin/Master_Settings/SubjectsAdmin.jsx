@@ -16,8 +16,9 @@ const SubjectsAdmin = () => {
   // Get logged-in user info
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
-  const role = storedUser?.role || "";
-
+  const role = storedUser?.role?.name || "";
+  
+  // Fetch subjects on mount or when schoolId/role changes
   useEffect(() => {
     if (schoolId || role === "Super Admin") {
       dispatch(fetchAllSubjects({ schoolId }));

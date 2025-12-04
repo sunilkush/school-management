@@ -89,8 +89,8 @@ export const fetchSchoolReports = createAsyncThunk(
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-
-      return res.data.data;
+       
+      return res.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: error.message });
     }

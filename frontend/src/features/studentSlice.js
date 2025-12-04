@@ -91,25 +91,30 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
   "student/fetchBySchoolId",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
-      console.log("Fetching students for schoolId:", schoolId, "academicYearId:", academicYearId);
 
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${Api_Base_Url}/student/${schoolId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        params: {
-          academicYearId, // ✅ send academicYearId as query param
-        },
-      });
+      const res = await axios.get(
+        `${Api_Base_Url}/student/school`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          params: {
+            schoolId,
+            academicYearId,
+          },
+        }
+      );
+      console.log("Students by school response:", res.data.data);
       return res.data.data;
+
     } catch (error) {
-     
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch students by school ID"
+        error.response?.data?.message ||
+          "Failed to fetch students by school"
       );
     }
   }
