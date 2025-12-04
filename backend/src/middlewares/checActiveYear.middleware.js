@@ -7,7 +7,7 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 export const checkActiveAcademicYear = async (req, res, next) => {
   try {
     // ✅ Allow Super Admin to bypass
-    if (req.user?.role === "Super Admin") {
+    if (req.user?.role?.name === "Super Admin") {
       return next();
     }
 

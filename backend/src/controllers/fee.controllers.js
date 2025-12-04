@@ -3,6 +3,7 @@ import { Fees } from "../models/fees.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js"
 
 /* =====================================================
    ✅ CREATE FEES RECORD
@@ -10,34 +11,46 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 export const createFees = asyncHandler(async (req, res) => {
 
   const {
-    academicYearId,
     studentId,
     amount,
     paymentMethod,
     transactionId,
     status,
     dueDate,
-  } = req.body
+  } = req.body;
 
-  if (!academicYearId || !studentId || !amount || !paymentMethod || !transactionId || !dueDate) {
-    throw new ApiError(400, "All fields are required")
+  if (!studentId || !amount || !paymentMethod || !transactionId || !dueDate) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  // ✅ FETCH STUDENT ENROLLMENT (SOURCE OF TRUTH)
+  const enrollment = await StudentEnrollment.findOne({
+    studentId: new mongoose.Types.ObjectId(studentId),
+    status: "active",
+  });
+
+  if (!enrollment) {
+    throw new ApiError(404, "Student enrollment not found");
   }
 
   const newFees = await Fees.create({
-    academicYearId,
-    schoolId: req.user.schoolId,
-    studentId,
+    studentId: enrollment.studentId,
+    academicYearId: enrollment.academicYearId,
+    schoolId: enrollment.schoolId,
+    classId: enrollment.classId,
+    sectionId: enrollment.sectionId,
+
     amount,
     paymentMethod,
     transactionId,
     status: status || "pending",
     dueDate,
-  })
+  });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, newFees, "Fees record created"))
-})
+  return res.status(201).json(
+    new ApiResponse(201, newFees, "Fees record created")
+  );
+});
 
 
 

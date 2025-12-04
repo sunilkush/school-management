@@ -92,30 +92,47 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
 
-      const token = localStorage.getItem("accessToken");
-      if (!token) throw new Error("No access token found");
+      // ✅ check valid schoolId
+      if (!schoolId) {
+        return rejectWithValue("schoolId is required");
+      }
 
+      // ✅ token safety
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        return rejectWithValue("Authentication token missing");
+      }
+
+      // ✅ API Call
       const res = await axios.get(
         `${Api_Base_Url}/student/school`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
           params: {
             schoolId,
-            academicYearId,
-          },
+            ...(academicYearId && { academicYearId }) // ✅ send only if exists
+          }
         }
       );
-      console.log("Students by school response:", res.data.data);
+
+      
+      
+      console.log("Fetched students by school ID:", res.data.data);
       return res.data.data;
 
     } catch (error) {
+
+      console.error("❌ Fetch students error:", error);
+
       return rejectWithValue(
         error.response?.data?.message ||
-          "Failed to fetch students by school"
+        error.message ||
+        "Failed to fetch students by school"
       );
+
     }
   }
 );

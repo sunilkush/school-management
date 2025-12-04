@@ -22,7 +22,13 @@ router.post("/register", auth, roleMiddleware(ADMIN_ROLE), registerStudent);
 // ✅ Get All Students (Super Admin, Admin, Teacher)
 router.get("/all", auth, roleMiddleware(TEACHER_ROLE),checkActiveAcademicYear, getStudents);
 router.get("/last-registered",auth,roleMiddleware(ADMIN_ROLE), getLastRegisteredStudent);
-router.get("/school", auth, roleMiddleware(ADMIN_ROLE),checkActiveAcademicYear, getStudentsBySchoolId);
+router.get(
+  "/school",
+  auth,
+  roleMiddleware(ADMIN_ROLE),
+  getStudentsBySchoolId
+);
+
 
 // ✅ Get Student by ID (Super Admin, Admin, Teacher, Student)
 router.get("/getStudent/:id", auth, roleMiddleware(STUDENT_ROLE), getStudentById);

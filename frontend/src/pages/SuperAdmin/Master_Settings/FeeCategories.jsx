@@ -38,7 +38,7 @@ const FeesCategories = () => {
   const { activeYear } = useSelector((s) => s.academicYear);
   const { feesList = [], loading } = useSelector((s) => s.fees);
   const { schoolStudents = [] } = useSelector((s) => s.students);
-
+  console.log("schoolStudents:", schoolStudents);
   const [schoolId, setSchoolId] = useState(null);
   const [academicYearId, setAcademicYearId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
@@ -82,7 +82,15 @@ const FeesCategories = () => {
     if (!schoolId || !academicYearId) return;
 
     dispatch(fetchAllFees({ schoolId, academicYearId }));
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+    
+    if (schoolId) {
+    dispatch(
+      fetchStudentsBySchoolId({
+        schoolId,
+        academicYearId // ya leave undefined
+      })
+    );
+  }
 
   }, [dispatch, schoolId, academicYearId]);
 
@@ -153,37 +161,36 @@ const FeesCategories = () => {
   /* ======================
           SUBMIT
   ====================== */
-  const handleSubmit = async (values) => {
+const handleSubmit = async (values) => {
+  try {
+    setSubmitting(true);
 
-    try {
-      setSubmitting(true);
+    await dispatch(
+      createFee({
+        academicYearId: values.academicYearId,
+        studentId: values.studentId,   // ✅ enough to derive all info
+        amount: values.amount,
+        paymentMethod: values.paymentMethod,
+        transactionId: values.transactionId,
+        status: values.status,
+        dueDate: values.dueDate.toISOString(),
+      })
+    ).unwrap();
 
-      await dispatch(
-        createFee({
-          schoolId,
-          academicYearId,
-          studentId: values.studentId,
-          amount: values.amount,
-          paymentMethod: values.paymentMethod,
-          transactionId: values.transactionId,
-          status: values.status,
-          dueDate: values.dueDate.toISOString(),
-        })
-      ).unwrap();
+    message.success("✅ Fee added successfully");
 
-      message.success("✅ Fee added successfully");
+    setOpenModal(false);
+    form.resetFields();
 
-      setOpenModal(false);
-      form.resetFields();
+    // ✅ reload via selected filters
+    dispatch(fetchAllFees({ schoolId, academicYearId }));
 
-      dispatch(fetchAllFees({ schoolId, academicYearId }));
-
-    } catch (err) {
-      message.error(err || "❌ Failed to add fee");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  } catch (err) {
+    message.error(err || "❌ Failed to add fee");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
 
   /* ======================

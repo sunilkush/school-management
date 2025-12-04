@@ -53,7 +53,7 @@ const Dashboard = () => {
       {/* Main Content Area */}
       <div
         className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${
-          isSidebarOpen && window.innerWidth >= 1023 ?  'ml-0' : 'lg:ml-72'
+          isSidebarOpen && window.innerWidth >= 1023 ?  'ml-0' : 'xl:ml-72'
         }`}
       >
         {/* Topbar */}
