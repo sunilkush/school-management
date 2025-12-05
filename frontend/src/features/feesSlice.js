@@ -15,7 +15,8 @@ export const fetchAllFees = createAsyncThunk(
                     headers: { Authorization: `Bearer ${token}` }
                 },
                 { params });
-            return res.data.data.data; // ✅ API format ke according
+            console.log("Fees Response:", res.data.data.data);
+            return res.data; // ✅ API format ke according
         } catch (e) {
             return rejectWithValue(e.response?.data || "Failed to load fees");
         }
@@ -84,9 +85,11 @@ const feesSlice = createSlice({
             .addCase(fetchAllFees.pending, (s) => {
                 s.loading = true;
             })
-            .addCase(fetchAllFees.fulfilled, (s, { payload }) => {
-                s.loading = false;
-                s.feesList = payload;
+            .addCase(fetchAllFees.fulfilled, (state, action) => {
+                state.loading = false;
+
+                // ✅ Always assign ARRAY only
+                state.feesList = action.payload?.data || [];
             })
             .addCase(fetchAllFees.rejected, (s, { payload }) => {
                 s.loading = false;
@@ -97,11 +100,8 @@ const feesSlice = createSlice({
             .addCase(createFee.pending, (s) => {
                 s.loading = true;
             })
-            .addCase(createFee.fulfilled, (s, { payload }) => {
-                s.loading = false;
-
-                // ✅ Add new fee to top of list
-                s.feesList.unshift(payload);
+            .addCase(createFee.fulfilled, (state, action) => {
+                state.feesList.unshift(action.payload?.data);
             })
             .addCase(createFee.rejected, (s, { payload }) => {
                 s.loading = false;
@@ -109,11 +109,11 @@ const feesSlice = createSlice({
             })
 
             /* DELETE */
-            .addCase(deleteFees.fulfilled, (s, { payload }) => {
-                s.feesList = s.feesList.filter(
-                    (f) => f._id !== payload
+            .addCase(deleteFees.fulfilled, (state, action) => {
+                state.feesList = state.feesList.filter(
+                    (f) => f._id !== action.payload
                 );
-            });
+            })
     },
 });
 // eslint-disable-next-line no-empty-pattern

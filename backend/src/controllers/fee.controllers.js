@@ -1,9 +1,9 @@
-import mongoose from "mongoose"
-import { Fees } from "../models/fees.model.js"
-import { ApiError } from "../utils/ApiError.js"
-import { ApiResponse } from "../utils/ApiResponse.js"
-import { asyncHandler } from "../utils/asyncHandler.js"
-import { StudentEnrollment } from "../models/StudentEnrollment.model.js"
+import mongoose from "mongoose";
+import { Fees } from "../models/fees.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 
 /* =====================================================
    ✅ CREATE FEES RECORD
@@ -23,23 +23,32 @@ export const createFees = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  // ✅ FETCH STUDENT ENROLLMENT (SOURCE OF TRUTH)
-  const enrollment = await StudentEnrollment.findOne({
-    studentId: new mongoose.Types.ObjectId(studentId),
-    status: "active",
-  });
-
-  if (!enrollment) {
-    throw new ApiError(404, "Student enrollment not found");
+  // ✅ Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(studentId)) {
+    throw new ApiError(400, "Invalid studentId");
   }
 
+  const id = new mongoose.Types.ObjectId(studentId);
+
+  // ✅ Fetch active enrollment
+  const enrollment = await StudentEnrollment.findOne({
+    _id: id,
+    status: "Active",
+  });
+
+  console.log(enrollment);
+
+  if (!enrollment) {
+    throw new ApiError(404, "Active enrollment not found for this student");
+  }
+
+  // ✅ Create Fees record
   const newFees = await Fees.create({
     studentId: enrollment.studentId,
     academicYearId: enrollment.academicYearId,
     schoolId: enrollment.schoolId,
     classId: enrollment.classId,
     sectionId: enrollment.sectionId,
-
     amount,
     paymentMethod,
     transactionId,
@@ -51,7 +60,6 @@ export const createFees = asyncHandler(async (req, res) => {
     new ApiResponse(201, newFees, "Fees record created")
   );
 });
-
 
 
 /* =====================================================
@@ -67,18 +75,19 @@ export const getAllFees = asyncHandler(async (req, res) => {
     paymentMethod,
     academicYearId,
     studentId,
+    schoolId,
   } = req.query
-
+  console.log("Get All Fees Query:", req.query);
   const filter = {
-    schoolId: new mongoose.Types.ObjectId(req.user.schoolId)
+    schoolId: new mongoose.Types.ObjectId(schoolId)
   }
 
   if (status) filter.status = status
   if (paymentMethod) filter.paymentMethod = paymentMethod
 
-  if (studentId && mongoose.isValidObjectId(studentId))
+   if (studentId && mongoose.isValidObjectId(studentId))
     filter.studentId = new mongoose.Types.ObjectId(studentId)
-
+ 
   if (academicYearId && mongoose.isValidObjectId(academicYearId))
     filter.academicYearId = new mongoose.Types.ObjectId(academicYearId)
 

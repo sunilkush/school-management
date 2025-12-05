@@ -36,7 +36,12 @@ const FeesCategories = () => {
 
   const { schools = [] } = useSelector((s) => s.school);
   const { activeYear } = useSelector((s) => s.academicYear);
-  const { feesList = [], loading } = useSelector((s) => s.fees);
+  const { feesList: rawFees = [], loading } = useSelector((s) => s.fees);
+
+const feesList = Array.isArray(rawFees)
+  ? rawFees
+  : rawFees?.data || [];
+
   const { schoolStudents = [] } = useSelector((s) => s.students);
   console.log("schoolStudents:", schoolStudents);
   const [schoolId, setSchoolId] = useState(null);
@@ -147,15 +152,16 @@ const FeesCategories = () => {
   /* ======================
         SUMMARY
   ====================== */
-  const paidTotal = feesList
-    .filter((f) => f.status === "paid")
-    .reduce((a, b) => a + (b.amount || 0), 0);
+const paidTotal = feesList.filter(f => f.status === "paid")
+  .reduce((a,b)=>a + (b.amount || 0), 0);
 
-  const pendingTotal = feesList
-    .filter((f) => f.status === "pending")
-    .reduce((a, b) => a + (b.amount || 0), 0);
+const pendingTotal = Array.isArray(feesList)
+  ? feesList.filter((f) => f.status === "pending")
+      .reduce((a, b) => a + (b.amount || 0), 0)
+  : 0;
 
-  const total = paidTotal + pendingTotal;
+const total = paidTotal + pendingTotal;
+
 
 
   /* ======================
@@ -263,12 +269,12 @@ const handleSubmit = async (values) => {
       {/* -------------- TABLE -------------- */}
       <Card title="Fees Records">
         <Table
-          rowKey="_id"
-          columns={columns}
-          dataSource={feesList}
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-        />
+        rowKey="_id"
+        columns={columns}
+        dataSource={feesList}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+      />
       </Card>
 
 
@@ -289,10 +295,11 @@ const handleSubmit = async (values) => {
             label="Student"
             rules={[{ required: true }]}
           >
+          
             <Select placeholder="Select Student">
               {schoolStudents.map((s) => (
                 <Option key={s._id} value={s._id}>
-                  {s.name}
+                  {s?.userDetails?.name}
                 </Option>
               ))}
             </Select>
