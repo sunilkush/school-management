@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
+import { Table, Tag } from "antd";
 import { Clock, User, Settings } from "lucide-react";
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
 
-  // Simulated API data
+  // ---------------------------------
+  // Simulated API Data
+  // ---------------------------------
   useEffect(() => {
     const fakeLogs = [
       {
@@ -29,60 +32,66 @@ const AuditLogs = () => {
         timestamp: "2025-10-22 10:05",
       },
     ];
+
     setLogs(fakeLogs);
   }, []);
 
+  // ---------------------------------
+  // TABLE CONFIG
+  // ---------------------------------
+  const columns = [
+    {
+      title: "User",
+      dataIndex: "user",
+      render: (user) => (
+        <div className="flex items-center gap-2 text-gray-800">
+          <User size={16} className="text-gray-500" />
+          {user}
+        </div>
+      ),
+    },
+    {
+      title: "Action",
+      dataIndex: "action",
+    },
+    {
+      title: "Module",
+      dataIndex: "module",
+      render: (module) => (
+        <div className="flex items-center gap-2">
+          <Settings size={16} className="text-gray-500" />
+          <Tag color="blue">{module}</Tag>
+        </div>
+      ),
+    },
+    {
+      title: "Timestamp",
+      dataIndex: "timestamp",
+      width: 180,
+    },
+  ];
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <Clock className="h-6 w-6 text-purple-600" />
-          Audit Logs
-        </h1>
+    <div className="min-h-screen space-y-4">
+
+      {/* HEADER */}
+      <h1 className="text-2xl font-semibold flex items-center gap-2">
+        <Clock className="text-purple-600" />
+        Audit Logs
+      </h1>
+
+      {/* TABLE */}
+      <div className="bg-white p-4 rounded-lg shadow">
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={logs}
+          pagination={{ pageSize: 6 }}
+          bordered
+          locale={{ emptyText: "No audit logs found" }}
+        />
       </div>
 
-      <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-        <table className="w-full table-auto">
-          <thead className="bg-gray-100 text-gray-700 text-sm uppercase">
-            <tr>
-              <th className="px-6 py-3 text-left">User</th>
-              <th className="px-6 py-3 text-left">Action</th>
-              <th className="px-6 py-3 text-left">Module</th>
-              <th className="px-6 py-3 text-left">Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.length > 0 ? (
-              logs.map((log) => (
-                <tr
-                  key={log.id}
-                  className="border-t border-gray-100 hover:bg-gray-50 transition"
-                >
-                  <td className="px-6 py-3 flex items-center gap-2 text-gray-800">
-                    <User className="h-4 w-4 text-gray-500" />
-                    {log.user}
-                  </td>
-                  <td className="px-6 py-3 text-gray-700">{log.action}</td>
-                  <td className="px-6 py-3 text-gray-700 flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-gray-500" />
-                    {log.module}
-                  </td>
-                  <td className="px-6 py-3 text-gray-500">{log.timestamp}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="4"
-                  className="text-center text-gray-500 py-6 italic"
-                >
-                  No audit logs found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 };
