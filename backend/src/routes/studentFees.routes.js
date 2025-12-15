@@ -1,57 +1,60 @@
 import express from "express";
 import {
-  createFees,
-  getAllFees,
-  updateFee,
-  deleteFee,
-} from "../controllers/fee.controllers.js";
+  assignFeesToStudents,
+  getMyFees,
+  payStudentFee,
+  studentFeeSummary
+} from "../controllers/studentFees.controllers.js";
 
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+const ADMIN_ROLE = ["Super Admin", "School Admin"];
+
+const ALL_USERS = [ "Student", "Parent"];
 /* =====================================================
-   ✅ CREATE FEE
-   Role: super_admin, school_admin
+   ✅ ASSIGN FEES TO STUDENTS
+   Role: school_admin
 =====================================================*/
 router.post(
-  "/create",
+  "/assign",
   auth,
-  roleMiddleware("Super Admin", "School Admin"),
-  createFees
+  roleMiddleware("School Admin"),
+  assignFeesToStudents
 );
 
 /* =====================================================
-   ✅ GET ALL FEES (School + Academic Year)
-   Role: super_admin, school_admin
+   ✅ STUDENT/PARENT FEES LIST
+   Role: student, parent
 =====================================================*/
 router.get(
-  "/",
+  "/my",
   auth,
-  roleMiddleware("Super Admin", "School Admin"),
-  getAllFees
+  roleMiddleware(ALL_USERS),
+  getMyFees
 );
 
 /* =====================================================
-   ✅ UPDATE FEE
-   Role: school_admin
+   ✅ PAY FEES
+   Role: student
 =====================================================*/
-router.put(
-  "/:id",
+router.post(
+  "/pay/:id",
   auth,
-  roleMiddleware("School Admin"),
-  updateFee
+  roleMiddleware(ALL_USERS),
+  payStudentFee
 );
 
 /* =====================================================
-   ✅ DELETE FEE
+   ✅ ADMIN FEES SUMMARY
    Role: school_admin
 =====================================================*/
-router.delete(
-  "/:id",
+router.get(
+  "/summary",
   auth,
-  roleMiddleware("School Admin"),
-  deleteFee
+  roleMiddleware(ADMIN_ROLE),
+  studentFeeSummary
 );
 
 export default router;

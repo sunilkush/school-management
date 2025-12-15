@@ -3,229 +3,100 @@ import { Fees } from "../models/fees.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 
 /* =====================================================
-   ✅ CREATE FEES RECORD
-===================================================== */
+   ✅ CREATE MASTER FEE  (Super Admin + School Admin)
+=====================================================*/
 export const createFees = asyncHandler(async (req, res) => {
+  const { feeName, amount, dueDate, academicYearId, schoolId } = req.body;
 
-  const {
-    studentId,
+  if (!feeName || !amount || !dueDate) {
+    throw new ApiError(400, "Fee name, amount and dueDate are required");
+  }
+
+  // ✅ schoolId
+  const finalSchoolId =
+    req.user.role === "super_admin"
+      ? schoolId
+      : req.user.schoolId;
+
+  if (!finalSchoolId) {
+    throw new ApiError(400, "School Id is required");
+  }
+
+  // ✅ academic year
+  const finalAcademicYear =
+    academicYearId || req.user.activeAcademicYearId;
+
+  const fee = await Fees.create({
+    feeName,
     amount,
-    paymentMethod,
-    transactionId,
-    status,
     dueDate,
-  } = req.body;
-
-  if (!studentId || !amount || !paymentMethod || !transactionId || !dueDate) {
-    throw new ApiError(400, "All fields are required");
-  }
-
-  // ✅ Validate ObjectId
-  if (!mongoose.Types.ObjectId.isValid(studentId)) {
-    throw new ApiError(400, "Invalid studentId");
-  }
-
-  const id = new mongoose.Types.ObjectId(studentId);
-
-  // ✅ Fetch active enrollment
-  const enrollment = await StudentEnrollment.findOne({
-    _id: id,
-    status: "Active",
+    academicYearId: finalAcademicYear,
+    schoolId: finalSchoolId,
+    createdBy: req.user._id,
   });
 
-  console.log(enrollment);
-
-  if (!enrollment) {
-    throw new ApiError(404, "Active enrollment not found for this student");
-  }
-
-  // ✅ Create Fees record
-  const newFees = await Fees.create({
-    studentId: enrollment.studentId,
-    academicYearId: enrollment.academicYearId,
-    schoolId: enrollment.schoolId,
-    classId: enrollment.classId,
-    sectionId: enrollment.sectionId,
-    amount,
-    paymentMethod,
-    transactionId,
-    status: status || "pending",
-    dueDate,
-  });
-
-  return res.status(201).json(
-    new ApiResponse(201, newFees, "Fees record created")
-  );
+  return res.json(new ApiResponse(201, fee, "Fee Created Successfully"));
 });
 
-
 /* =====================================================
-   ✅ GET ALL FEES (ADMIN DASHBOARD)
+   ✅ GET ALL FEES (School + Academic Year Wise)
 ===================================================== */
 export const getAllFees = asyncHandler(async (req, res) => {
+  const { academicYearId } = req.query;
 
-  const {
-    page = 1,
-    limit = 10,
-    search,
-    status,
-    paymentMethod,
-    academicYearId,
-    studentId,
-    schoolId,
-  } = req.query
-  console.log("Get All Fees Query:", req.query);
   const filter = {
-    schoolId: new mongoose.Types.ObjectId(schoolId)
+    schoolId: req.user.schoolId,
+  };
+
+  if (academicYearId && mongoose.isValidObjectId(academicYearId)) {
+    filter.academicYearId = academicYearId;
   }
 
-  if (status) filter.status = status
-  if (paymentMethod) filter.paymentMethod = paymentMethod
-
-   if (studentId && mongoose.isValidObjectId(studentId))
-    filter.studentId = new mongoose.Types.ObjectId(studentId)
- 
-  if (academicYearId && mongoose.isValidObjectId(academicYearId))
-    filter.academicYearId = new mongoose.Types.ObjectId(academicYearId)
-
-
-  const pipeline = [
-
-    { $match: filter },
-
-    {
-      $lookup: {
-        from: "users",
-        localField: "studentId",
-        foreignField: "_id",
-        as: "student"
-      }
-    },
-    { $unwind: "$student" },
-
-    ...(search ? [{
-      $match: {
-        $or: [
-          { "student.name": { $regex: search, $options: "i" } },
-          { transactionId: { $regex: search, $options: "i" } }
-        ]
-      }
-    }] : []),
-
-    { $sort: { createdAt: -1 } },
-
-    { $skip: (page - 1) * limit },
-
-    { $limit: +limit }
-  ]
-
-  const data = await Fees.aggregate(pipeline)
-
-  const total = await Fees.countDocuments(filter)
-
-  return res.json(
-    new ApiResponse(200, {
-      data,
-      total,
-      page: +page,
-      limit: +limit,
-    })
-  )
-})
-
-
-
-/* =====================================================
-   ✅ STUDENT FEES HISTORY
-===================================================== */
-export const getStudentFees = asyncHandler(async (req, res) => {
-
-  const { studentId } = req.params
-
-  if (!mongoose.isValidObjectId(studentId)) {
-    throw new ApiError(400, "Invalid student ID")
-  }
-
-  const data = await Fees
-    .find({
-      schoolId: req.user.schoolId,
-      studentId
-    })
+  const data = await Fees.find(filter)
     .populate("academicYearId", "name")
-    .sort({ dueDate: 1 })
+    .sort({ createdAt: -1 });
 
-  return res.json(new ApiResponse(200, data))
-})
-
-
+  return res.json(new ApiResponse(200, data));
+});
 
 /* =====================================================
-   ✅ UPDATE FEES
+   ✅ UPDATE FEE
 ===================================================== */
-export const updateFees = asyncHandler(async (req, res) => {
-
+export const updateFee = asyncHandler(async (req, res) => {
   const updated = await Fees.findOneAndUpdate(
     {
       _id: req.params.id,
-      schoolId: req.user.schoolId
+      schoolId: req.user.schoolId,
     },
     req.body,
     { new: true }
-  )
+  );
 
   if (!updated) {
-    throw new ApiError(404, "Fees record not found")
+    throw new ApiError(404, "Fee not found");
   }
 
   return res.json(
-    new ApiResponse(200, updated, "Fees updated successfully")
-  )
-})
-
-
+    new ApiResponse(200, updated, "Fee updated successfully")
+  );
+});
 
 /* =====================================================
-   ✅ DELETE FEES
+   ✅ DELETE FEE
 ===================================================== */
-export const deleteFees = asyncHandler(async (req, res) => {
-
+export const deleteFee = asyncHandler(async (req, res) => {
   const deleted = await Fees.findOneAndDelete({
     _id: req.params.id,
-    schoolId: req.user.schoolId
-  })
+    schoolId: req.user.schoolId,
+  });
 
   if (!deleted) {
-    throw new ApiError(404, "Fees record not found")
+    throw new ApiError(404, "Fee not found");
   }
 
   return res.json(
-    new ApiResponse(200, null, "Fees deleted successfully")
-  )
-})
-
-
-
-/* =====================================================
-   ✅ FEES SUMMARY (DASHBOARD)
-===================================================== */
-export const getFeesSummary = asyncHandler(async (req, res) => {
-
-  const summary = await Fees.aggregate([
-
-    { $match: { schoolId: new mongoose.Types.ObjectId(req.user.schoolId) } },
-
-    {
-      $group: {
-        _id: "$status",
-        totalAmount: { $sum: "$amount" },
-        totalCount: { $sum: 1 },
-      }
-    }
-
-  ])
-
-  return res.json(new ApiResponse(200, summary))
-})
+    new ApiResponse(200, null, "Fee deleted successfully")
+  );
+});
