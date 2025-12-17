@@ -14,26 +14,12 @@ export const createFees = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Fee name, amount and dueDate are required");
   }
 
-  // ✅ schoolId
-  const finalSchoolId =
-    req.user.role === "super_admin"
-      ? schoolId
-      : req.user.schoolId;
-
-  if (!finalSchoolId) {
-    throw new ApiError(400, "School Id is required");
-  }
-
-  // ✅ academic year
-  const finalAcademicYear =
-    academicYearId || req.user.activeAcademicYearId;
-
   const fee = await Fees.create({
     feeName,
     amount,
     dueDate,
-    academicYearId: finalAcademicYear,
-    schoolId: finalSchoolId,
+    academicYearId: academicYearId,
+    schoolId: schoolId,
     createdBy: req.user._id,
   });
 
@@ -44,23 +30,42 @@ export const createFees = asyncHandler(async (req, res) => {
    ✅ GET ALL FEES (School + Academic Year Wise)
 ===================================================== */
 export const getAllFees = asyncHandler(async (req, res) => {
-  const { academicYearId } = req.query;
+  const { academicYearId, schoolId } = req.query;
+  
+  const filter = {};
 
-  const filter = {
-    schoolId: req.user.schoolId,
-  };
+  /* ================= ROLE BASED SCHOOL ACCESS ================= */
 
-  if (academicYearId && mongoose.isValidObjectId(academicYearId)) {
-    filter.academicYearId = academicYearId;
+  // SUPER ADMIN → can view any school (schoolId required in query)
+  if (req.user?.role?.name === "Super Admin") {
+    if (!schoolId || !mongoose.isValidObjectId(schoolId)) {
+      throw new ApiError(400, "Valid schoolId is required");
+    }
+    filter.schoolId = new mongoose.Types.ObjectId(schoolId);
   }
 
-  const data = await Fees.find(filter)
+  // SCHOOL ADMIN → only own school
+  if (req.user?.role?.name === "School Admin") {
+    filter.schoolId = new mongoose.Types.ObjectId(req.user?.school?._id);
+  }
+
+  /* ================= ACADEMIC YEAR FILTER ================= */
+
+  if (academicYearId && mongoose.isValidObjectId(academicYearId)) {
+    filter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
+  }
+
+  /* ================= FETCH DATA ================= */
+
+  const fees = await Fees.find(filter)
     .populate("academicYearId", "name")
+    .populate("studentId", "name admissionNumber")
     .sort({ createdAt: -1 });
 
-  return res.json(new ApiResponse(200, data));
+  return res.status(200).json(
+    new ApiResponse(200, fees, "Fees fetched successfully")
+  );
 });
-
 /* =====================================================
    ✅ UPDATE FEE
 ===================================================== */
@@ -68,7 +73,7 @@ export const updateFee = asyncHandler(async (req, res) => {
   const updated = await Fees.findOneAndUpdate(
     {
       _id: req.params.id,
-      schoolId: req.user.schoolId,
+      schoolId: req.user?.school?._id,
     },
     req.body,
     { new: true }
@@ -89,7 +94,7 @@ export const updateFee = asyncHandler(async (req, res) => {
 export const deleteFee = asyncHandler(async (req, res) => {
   const deleted = await Fees.findOneAndDelete({
     _id: req.params.id,
-    schoolId: req.user.schoolId,
+    schoolId: req.user?.school?._id,
   });
 
   if (!deleted) {

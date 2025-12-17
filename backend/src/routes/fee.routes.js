@@ -15,7 +15,7 @@ const router = express.Router();
    Role: super_admin, school_admin
 =====================================================*/
 router.post(
-  "/create",
+  "/createFees",
   auth,
   roleMiddleware("Super Admin", "School Admin"),
   createFees
@@ -26,7 +26,7 @@ router.post(
    Role: super_admin, school_admin
 =====================================================*/
 router.get(
-  "/",
+  "/allFees",
   auth,
   roleMiddleware("Super Admin", "School Admin"),
   getAllFees

@@ -19,7 +19,7 @@ const FeeCategories = () => {
 
   const { schools } = useSelector(s => s.school);
   const { activeYear } = useSelector(s => s.academicYear);
-  const { feesList, loading } = useSelector(s => s.fees);
+  const { feesList=[], loading } = useSelector(s => s.fees);
 
   const [schoolId, setSchoolId] = useState(null);
   const [academicYearId, setAcademicYearId] = useState(null);
@@ -168,10 +168,10 @@ const FeeCategories = () => {
 
       {/* ===== FEES TABLE ===== */}
       <Card title="School Fees">
-        <Table
+       <Table
           rowKey="_id"
           columns={columns}
-          dataSource={feesList}
+          dataSource={Array.isArray(feesList) ? feesList : []}
           loading={loading}
         />
       </Card>
