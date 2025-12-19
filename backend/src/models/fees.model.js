@@ -20,7 +20,7 @@ const FeesSchema = new Schema(
 
     academicYearId: {
       type: Schema.Types.ObjectId,
-      ref: "AcademicYears",
+      ref: "AcademicYear",
       required: true,
     },
 

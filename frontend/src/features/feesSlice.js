@@ -20,7 +20,7 @@ export const fetchAllFees = createAsyncThunk(
       });
 
       // APIResponse format: { success, data: { data, total, page, limit } }
-      return res.data.data;
+      return res.data;
     } catch (e) {
       return rejectWithValue(e.response?.data || "Failed to load fees");
     }

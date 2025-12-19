@@ -57,6 +57,9 @@ export const sidebarMenu = {
         { title: "Students", path: "superadmin/users/students" },
         { title: "Parents", path: "superadmin/users/parents" },
         { title: "Staff Members", path: "superadmin/users/staff" },
+        { title: "Accountant", path: "superadmin/users/accountant" },
+        { title: "Librarian", path: "superadmin/users/librarian" },
+        { title: "Transport", path: "superadmin/users/transport" },
       ],
     },
     {

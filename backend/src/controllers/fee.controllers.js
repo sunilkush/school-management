@@ -3,7 +3,7 @@ import { Fees } from "../models/fees.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import { AcademicYear } from "../models/AcademicYear.model.js";
 /* =====================================================
    ✅ CREATE MASTER FEE  (Super Admin + School Admin)
 =====================================================*/
@@ -12,7 +12,21 @@ export const createFees = asyncHandler(async (req, res) => {
 
   if (!feeName || !amount || !dueDate) {
     throw new ApiError(400, "Fee name, amount and dueDate are required");
+  } 
+  
+  console.log("role:", req.user?.role?.name);
+
+  if (req.user?.role?.name === "Super Admin") {
+    if (!schoolId || !mongoose.isValidObjectId(schoolId)) {
+      throw new ApiError(400, "Valid schoolId is required");
+    }
   }
+  if (req.user?.role?.name === "School Admin") {
+    if (!schoolId || schoolId.toString() !== req.user?.school?._id.toString()) {
+      throw new ApiError(403, "You can only create fees for your own school");
+    }
+  }
+
 
   const fee = await Fees.create({
     feeName,
@@ -31,9 +45,9 @@ export const createFees = asyncHandler(async (req, res) => {
 ===================================================== */
 export const getAllFees = asyncHandler(async (req, res) => {
   const { academicYearId, schoolId } = req.query;
-  
-  const filter = {};
 
+  const filter = {};
+  
   /* ================= ROLE BASED SCHOOL ACCESS ================= */
 
   // SUPER ADMIN → can view any school (schoolId required in query)
@@ -59,7 +73,6 @@ export const getAllFees = asyncHandler(async (req, res) => {
 
   const fees = await Fees.find(filter)
     .populate("academicYearId", "name")
-    .populate("studentId", "name admissionNumber")
     .sort({ createdAt: -1 });
 
   return res.status(200).json(
