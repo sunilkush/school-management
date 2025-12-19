@@ -93,6 +93,7 @@ import AcademicReports from './pages/SuperAdmin/Reports/AcademicReports.jsx';
 import ActivityLogs from './pages/SuperAdmin/Reports/ActivityLogs.jsx';
 import SubjectsAdmin from './pages/SuperAdmin/Master_Settings/SubjectsAdmin.jsx';
 import FeeCategories from "./pages/SuperAdmin/Master_Settings/FeeCategories.jsx";
+import SchoolFeeCategories from "./pages/SchoolAdmin/Fees_Management/SchoolFeeCategories.jsx";
 import Designations from './pages/SuperAdmin/Master_Settings/Designations.jsx';
 import Departments from './pages/SuperAdmin/Master_Settings/Departments.jsx';
 import GlobalConfig from './pages/SuperAdmin/System_Settings/GlobalConfig.jsx';
@@ -187,7 +188,7 @@ const router = createBrowserRouter([
               { path: "library/issue", element: <IssueBook /> },
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
-              { path: "fees/categories", element: <FeeCategories /> },
+              { path: "fees/categories", element: <SchoolFeeCategories /> },
               { path: "fees/collect", element: <CollectFees /> },
               { path: "hostel", element: <HostelManagement /> },
               { path: "hostel/allocation", element: <RoomAllocation /> },

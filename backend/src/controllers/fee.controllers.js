@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
+import {Role} from "../models/Roles.model.js";
 /* =====================================================
    ✅ CREATE MASTER FEE  (Super Admin + School Admin)
 =====================================================*/
@@ -44,23 +45,27 @@ export const createFees = asyncHandler(async (req, res) => {
    ✅ GET ALL FEES (School + Academic Year Wise)
 ===================================================== */
 export const getAllFees = asyncHandler(async (req, res) => {
-  const { academicYearId, schoolId } = req.query;
-
+  const { academicYearId, schoolId} = req.query;
+  console.log("role:", req.user);
   const filter = {};
-  
+  const roleName = await Role.findById(req.user.roleId).then(role => role.name);
   /* ================= ROLE BASED SCHOOL ACCESS ================= */
 
-  // SUPER ADMIN → can view any school (schoolId required in query)
-  if (req.user?.role?.name === "Super Admin") {
-    if (!schoolId || !mongoose.isValidObjectId(schoolId)) {
-      throw new ApiError(400, "Valid schoolId is required");
+  // 👑 SUPER ADMIN → all schools (schoolId OPTIONAL)
+  if (roleName === "Super Admin") {
+    if (schoolId && mongoose.isValidObjectId(schoolId)) {
+      filter.schoolId = new mongoose.Types.ObjectId(schoolId);
     }
-    filter.schoolId = new mongoose.Types.ObjectId(schoolId);
+    // schoolId na ho → ALL schools
   }
 
-  // SCHOOL ADMIN → only own school
-  if (req.user?.role?.name === "School Admin") {
-    filter.schoolId = new mongoose.Types.ObjectId(req.user?.school?._id);
+  // 🏫 SCHOOL ADMIN → only own school (IGNORE query schoolId)
+  else if (roleName === "School Admin") {
+    filter.schoolId = new mongoose.Types.ObjectId(req.user.schoolId);
+  }
+
+  else {
+    throw new ApiError(403, "Unauthorized access");
   }
 
   /* ================= ACADEMIC YEAR FILTER ================= */
@@ -79,6 +84,7 @@ export const getAllFees = asyncHandler(async (req, res) => {
     new ApiResponse(200, fees, "Fees fetched successfully")
   );
 });
+
 /* =====================================================
    ✅ UPDATE FEE
 ===================================================== */
