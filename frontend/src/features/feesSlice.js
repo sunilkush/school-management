@@ -7,21 +7,42 @@ const token = localStorage.getItem('accessToken');
    FETCH ALL FEES
 ================================ */
 export const fetchAllFees = createAsyncThunk(
-    "fees/fetchAll",
-    async (params, { rejectWithValue }) => {
-        try {
-            const res = await axios.get(`${API_BASE_URL}/fees/allFees`,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                },
-                { params });
-            console.log("Fees Response:", res.data.data.data);
-            return res.data; // ✅ API format ke according
-        } catch (e) {
-            return rejectWithValue(e.response?.data || "Failed to load fees");
+  "fees/fetchAll",
+  async ({ page=1, limit=10, search="", schoolId, academicYearId }, { rejectWithValue }) => {
+    try {
+      
+
+      const res = await axios.get(
+        `${API_BASE_URL}/fees/allFees`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+
+          // ✅ QUERY PARAMS
+          params: {
+            page,
+            limit,
+            search,
+            schoolId,
+            academicYearId,
+          }
         }
+      )
+
+      console.log("Fees Response:", res.data.data)
+
+      // ✅ Controller sends ApiResponse -> { success, data:{ data, total, page, limit } }
+      return res.data.data
+
+    } catch (e) {
+      return rejectWithValue(
+        e.response?.data?.message || "Failed to load fees"
+      )
     }
-);
+  }
+)
+
 
 
 /* ===============================

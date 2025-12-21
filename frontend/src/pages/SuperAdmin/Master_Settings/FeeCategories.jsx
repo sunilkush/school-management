@@ -85,7 +85,7 @@ const feesList = Array.isArray(rawFees)
   useEffect(() => {
 
     if (!schoolId || !academicYearId) return;
-
+     console.log("Fetching fees for:", { schoolId, academicYearId });
     dispatch(fetchAllFees({ schoolId, academicYearId }));
     
     if (schoolId) {

@@ -66,34 +66,41 @@ export const createFees = asyncHandler(async (req, res) => {
    ✅ GET ALL FEES (ADMIN DASHBOARD)
 ===================================================== */
 export const getAllFees = asyncHandler(async (req, res) => {
-
-  const {
+  let {
     page = 1,
     limit = 10,
     search,
-    status,
-    paymentMethod,
     academicYearId,
-    studentId,
     schoolId,
   } = req.query
-  console.log("Get All Fees Query:", req.query);
-  const filter = {
-    schoolId: new mongoose.Types.ObjectId(schoolId)
+
+  page = Number(page)
+  limit = Number(limit)
+
+  // ----------------------
+  // ✅ Dynamic filters
+  // ----------------------
+  const filter = {}
+
+  // ✅ schoolId filter
+  if (schoolId && mongoose.isValidObjectId(schoolId)) {
+    filter.schoolId = new mongoose.Types.ObjectId(schoolId)
   }
 
-  if (status) filter.status = status
-  if (paymentMethod) filter.paymentMethod = paymentMethod
-
-   if (studentId && mongoose.isValidObjectId(studentId))
-    filter.studentId = new mongoose.Types.ObjectId(studentId)
- 
-  if (academicYearId && mongoose.isValidObjectId(academicYearId))
+  // ✅ academicYearId filter
+  if (academicYearId && mongoose.isValidObjectId(academicYearId)) {
     filter.academicYearId = new mongoose.Types.ObjectId(academicYearId)
+  }
 
+  // ✅ At least one filter required
+  if (!filter.schoolId && !filter.academicYearId) {
+    throw new ApiError(400, "schoolId or academicYearId is required")
+  }
 
-  const pipeline = [
-
+  // ----------------------
+  // ✅ Base pipeline
+  // ----------------------
+  const basePipeline = [
     { $match: filter },
 
     {
@@ -101,40 +108,61 @@ export const getAllFees = asyncHandler(async (req, res) => {
         from: "users",
         localField: "studentId",
         foreignField: "_id",
-        as: "student"
+        as: "student",
       }
     },
     { $unwind: "$student" },
+  ]
 
-    ...(search ? [{
+  // ----------------------
+  // ✅ Search
+  // ----------------------
+  if (search) {
+    basePipeline.push({
       $match: {
         $or: [
           { "student.name": { $regex: search, $options: "i" } },
-          { transactionId: { $regex: search, $options: "i" } }
+          { transactionId: { $regex: search, $options: "i" } },
         ]
       }
-    }] : []),
+    })
+  }
 
+  // ----------------------
+  // ✅ Data pipeline
+  // ----------------------
+  const dataPipeline = [
+    ...basePipeline,
     { $sort: { createdAt: -1 } },
-
     { $skip: (page - 1) * limit },
-
-    { $limit: +limit }
+    { $limit: limit },
   ]
 
-  const data = await Fees.aggregate(pipeline)
+  // ----------------------
+  // ✅ Count pipeline
+  // ----------------------
+  const countPipeline = [
+    ...basePipeline,
+    { $count: "total" },
+  ]
 
-  const total = await Fees.countDocuments(filter)
+  const [data, countResult] = await Promise.all([
+    Fees.aggregate(dataPipeline),
+    Fees.aggregate(countPipeline),
+  ])
+
+  const total = countResult[0]?.total || 0
 
   return res.json(
     new ApiResponse(200, {
       data,
       total,
-      page: +page,
-      limit: +limit,
-    })
+      page,
+      limit,
+    }),
   )
 })
+
 
 
 
