@@ -48,6 +48,7 @@ import AttemptRoutes from "./routes/attempt.routes.js"
 import ClassSectionSubjectRoutes from "./routes/classSection&subject.routes.js"
 import SubscriptionPlans from "./routes/subscriptionPlan.routes.js";
 import FeeRoutes from "./routes/fee.routes.js";
+import studentFeesRoutes from "./routes/studentFees.routes.js";
 // route
 app.use('/', indexRouter);
 app.use("/app/v1/school", schoolRoutes)
@@ -70,6 +71,7 @@ app.use("/app/v1/attempt",AttemptRoutes);
 app.use("/app/v1/classSection", ClassSectionSubjectRoutes)
 app.use("/app/v1/subscription", SubscriptionPlans)
 app.use("/app/v1/fees", FeeRoutes)
+app.use("/app/v1/studentFees", studentFeesRoutes);
 
 export { app }
 

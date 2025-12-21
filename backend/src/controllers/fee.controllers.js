@@ -3,257 +3,118 @@ import { Fees } from "../models/fees.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
-
+import { AcademicYear } from "../models/AcademicYear.model.js";
 /* =====================================================
-   ✅ CREATE FEES RECORD
-===================================================== */
+   ✅ CREATE MASTER FEE  (Super Admin + School Admin)
+=====================================================*/
 export const createFees = asyncHandler(async (req, res) => {
+  const { feeName, amount, dueDate, academicYearId, schoolId } = req.body;
 
-  const {
-    studentId,
+  if (!feeName || !amount || !dueDate) {
+    throw new ApiError(400, "Fee name, amount and dueDate are required");
+  } 
+  
+  console.log("role:", req.user?.role?.name);
+
+  if (req.user?.role?.name === "Super Admin") {
+    if (!schoolId || !mongoose.isValidObjectId(schoolId)) {
+      throw new ApiError(400, "Valid schoolId is required");
+    }
+  }
+  if (req.user?.role?.name === "School Admin") {
+    if (!schoolId || schoolId.toString() !== req.user?.school?._id.toString()) {
+      throw new ApiError(403, "You can only create fees for your own school");
+    }
+  }
+
+
+  const fee = await Fees.create({
+    feeName,
     amount,
-    paymentMethod,
-    transactionId,
-    status,
     dueDate,
-  } = req.body;
-
-  if (!studentId || !amount || !paymentMethod || !transactionId || !dueDate) {
-    throw new ApiError(400, "All fields are required");
-  }
-
-  // ✅ Validate ObjectId
-  if (!mongoose.Types.ObjectId.isValid(studentId)) {
-    throw new ApiError(400, "Invalid studentId");
-  }
-
-  const id = new mongoose.Types.ObjectId(studentId);
-
-  // ✅ Fetch active enrollment
-  const enrollment = await StudentEnrollment.findOne({
-    _id: id,
-    status: "Active",
+    academicYearId: academicYearId,
+    schoolId: schoolId,
+    createdBy: req.user._id,
   });
 
-  console.log(enrollment);
-
-  if (!enrollment) {
-    throw new ApiError(404, "Active enrollment not found for this student");
-  }
-
-  // ✅ Create Fees record
-  const newFees = await Fees.create({
-    studentId: enrollment.studentId,
-    academicYearId: enrollment.academicYearId,
-    schoolId: enrollment.schoolId,
-    classId: enrollment.classId,
-    sectionId: enrollment.sectionId,
-    amount,
-    paymentMethod,
-    transactionId,
-    status: status || "pending",
-    dueDate,
-  });
-
-  return res.status(201).json(
-    new ApiResponse(201, newFees, "Fees record created")
-  );
+  return res.json(new ApiResponse(201, fee, "Fee Created Successfully"));
 });
 
-
 /* =====================================================
-   ✅ GET ALL FEES (ADMIN DASHBOARD)
+   ✅ GET ALL FEES (School + Academic Year Wise)
 ===================================================== */
 export const getAllFees = asyncHandler(async (req, res) => {
-  let {
-    page = 1,
-    limit = 10,
-    search,
-    academicYearId,
-    schoolId,
-  } = req.query
+  const { academicYearId, schoolId } = req.query;
 
-  page = Number(page)
-  limit = Number(limit)
+  const filter = {};
+  
+  /* ================= ROLE BASED SCHOOL ACCESS ================= */
 
-  // ----------------------
-  // ✅ Dynamic filters
-  // ----------------------
-  const filter = {}
-
-  // ✅ schoolId filter
-  if (schoolId && mongoose.isValidObjectId(schoolId)) {
-    filter.schoolId = new mongoose.Types.ObjectId(schoolId)
+  // SUPER ADMIN → can view any school (schoolId required in query)
+  if (req.user?.role?.name === "Super Admin") {
+    if (!schoolId || !mongoose.isValidObjectId(schoolId)) {
+      throw new ApiError(400, "Valid schoolId is required");
+    }
+    filter.schoolId = new mongoose.Types.ObjectId(schoolId);
   }
 
-  // ✅ academicYearId filter
+  // SCHOOL ADMIN → only own school
+  if (req.user?.role?.name === "School Admin") {
+    filter.schoolId = new mongoose.Types.ObjectId(req.user?.school?._id);
+  }
+
+  /* ================= ACADEMIC YEAR FILTER ================= */
+
   if (academicYearId && mongoose.isValidObjectId(academicYearId)) {
-    filter.academicYearId = new mongoose.Types.ObjectId(academicYearId)
+    filter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
   }
 
-  // ✅ At least one filter required
-  if (!filter.schoolId && !filter.academicYearId) {
-    throw new ApiError(400, "schoolId or academicYearId is required")
-  }
+  /* ================= FETCH DATA ================= */
 
-  // ----------------------
-  // ✅ Base pipeline
-  // ----------------------
-  const basePipeline = [
-    { $match: filter },
-
-    {
-      $lookup: {
-        from: "users",
-        localField: "studentId",
-        foreignField: "_id",
-        as: "student",
-      }
-    },
-    { $unwind: "$student" },
-  ]
-
-  // ----------------------
-  // ✅ Search
-  // ----------------------
-  if (search) {
-    basePipeline.push({
-      $match: {
-        $or: [
-          { "student.name": { $regex: search, $options: "i" } },
-          { transactionId: { $regex: search, $options: "i" } },
-        ]
-      }
-    })
-  }
-
-  // ----------------------
-  // ✅ Data pipeline
-  // ----------------------
-  const dataPipeline = [
-    ...basePipeline,
-    { $sort: { createdAt: -1 } },
-    { $skip: (page - 1) * limit },
-    { $limit: limit },
-  ]
-
-  // ----------------------
-  // ✅ Count pipeline
-  // ----------------------
-  const countPipeline = [
-    ...basePipeline,
-    { $count: "total" },
-  ]
-
-  const [data, countResult] = await Promise.all([
-    Fees.aggregate(dataPipeline),
-    Fees.aggregate(countPipeline),
-  ])
-
-  const total = countResult[0]?.total || 0
-
-  return res.json(
-    new ApiResponse(200, {
-      data,
-      total,
-      page,
-      limit,
-    }),
-  )
-})
-
-
-
-
-/* =====================================================
-   ✅ STUDENT FEES HISTORY
-===================================================== */
-export const getStudentFees = asyncHandler(async (req, res) => {
-
-  const { studentId } = req.params
-
-  if (!mongoose.isValidObjectId(studentId)) {
-    throw new ApiError(400, "Invalid student ID")
-  }
-
-  const data = await Fees
-    .find({
-      schoolId: req.user.schoolId,
-      studentId
-    })
+  const fees = await Fees.find(filter)
     .populate("academicYearId", "name")
-    .sort({ dueDate: 1 })
+    .sort({ createdAt: -1 });
 
-  return res.json(new ApiResponse(200, data))
-})
-
-
-
+  return res.status(200).json(
+    new ApiResponse(200, fees, "Fees fetched successfully")
+  );
+});
 /* =====================================================
-   ✅ UPDATE FEES
+   ✅ UPDATE FEE
 ===================================================== */
-export const updateFees = asyncHandler(async (req, res) => {
-
+export const updateFee = asyncHandler(async (req, res) => {
   const updated = await Fees.findOneAndUpdate(
     {
       _id: req.params.id,
-      schoolId: req.user.schoolId
+      schoolId: req.user?.school?._id,
     },
     req.body,
     { new: true }
-  )
+  );
 
   if (!updated) {
-    throw new ApiError(404, "Fees record not found")
+    throw new ApiError(404, "Fee not found");
   }
 
   return res.json(
-    new ApiResponse(200, updated, "Fees updated successfully")
-  )
-})
-
-
+    new ApiResponse(200, updated, "Fee updated successfully")
+  );
+});
 
 /* =====================================================
-   ✅ DELETE FEES
+   ✅ DELETE FEE
 ===================================================== */
-export const deleteFees = asyncHandler(async (req, res) => {
-
+export const deleteFee = asyncHandler(async (req, res) => {
   const deleted = await Fees.findOneAndDelete({
     _id: req.params.id,
-    schoolId: req.user.schoolId
-  })
+    schoolId: req.user?.school?._id,
+  });
 
   if (!deleted) {
-    throw new ApiError(404, "Fees record not found")
+    throw new ApiError(404, "Fee not found");
   }
 
   return res.json(
-    new ApiResponse(200, null, "Fees deleted successfully")
-  )
-})
-
-
-
-/* =====================================================
-   ✅ FEES SUMMARY (DASHBOARD)
-===================================================== */
-export const getFeesSummary = asyncHandler(async (req, res) => {
-
-  const summary = await Fees.aggregate([
-
-    { $match: { schoolId: new mongoose.Types.ObjectId(req.user.schoolId) } },
-
-    {
-      $group: {
-        _id: "$status",
-        totalAmount: { $sum: "$amount" },
-        totalCount: { $sum: 1 },
-      }
-    }
-
-  ])
-
-  return res.json(new ApiResponse(200, summary))
-})
+    new ApiResponse(200, null, "Fee deleted successfully")
+  );
+});

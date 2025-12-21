@@ -83,6 +83,9 @@ import Staff from './pages/SuperAdmin/Users_Management/Staff.jsx';
 import Teachers from './pages/SuperAdmin/Users_Management/Teachers.jsx';
 import Parents from './pages/SuperAdmin/Users_Management/Parents.jsx';
 import Students from './pages/SuperAdmin/Users_Management/students.jsx';
+import Accountant from './pages/SuperAdmin/Users_Management/Accountant.jsx';
+import Librarian from './pages/SuperAdmin/Users_Management/Librarian.jsx';
+import Transport from './pages/SuperAdmin/Users_Management/Transport.jsx';
 import SchoolWiseReports from './pages/SuperAdmin/Reports/SchoolWiseReports.jsx';
 import AttendanceSummary from './pages/SuperAdmin/Reports/AttendanceSummary.jsx';
 import FinanceSummary from './pages/SuperAdmin/Reports/FinanceSummary.jsx';
@@ -128,6 +131,9 @@ const router = createBrowserRouter([
               { path: "users/staff", element: <Staff /> },
               { path: "users/students", element: <Students /> },
               { path: "users/parents", element: <Parents /> },
+              { path: "users/accountant", element: <Accountant /> },
+              { path: "users/librarian", element: <Librarian /> },
+              { path: "users/transport", element: <Transport /> },
               { path: "user-create", element: <UserRegister /> },
               { path: "settings/roles", element: <Roles /> },
               { path: "settings/permissions", element: <Permissions /> },

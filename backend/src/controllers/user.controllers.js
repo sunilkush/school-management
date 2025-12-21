@@ -285,10 +285,87 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
  * @route GET /api/users/me
  */
 const getCurrentUser = asyncHandler(async (req, res) => {
-  return res
-    .status(200)
-    .json(new ApiResponse(200, req.user, 'User fetched successfully'))
-})
+
+  const userId = new mongoose.Types.ObjectId(req.user._id);
+
+  const userWithDetails = await User.aggregate([
+    {
+      $match: { _id: userId }
+    },
+
+    // ===== ROLE =====
+    {
+      $lookup: {
+        from: "roles",
+        localField: "roleId",
+        foreignField: "_id",
+        as: "role",
+      },
+    },
+    { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+
+    // ===== SCHOOL =====
+    {
+      $lookup: {
+        from: "schools",
+        localField: "schoolId",
+        foreignField: "_id",
+        as: "school",
+      },
+    },
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+
+    // ===== ACADEMIC YEAR =====
+    {
+      $lookup: {
+        from: "academicyears",
+        localField: "academicYearId",
+        foreignField: "_id",
+        as: "academicYear",
+      },
+    },
+    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
+
+    // ===== PROJECTION =====
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        email: 1,
+        avatar: 1,
+        isActive: 1,
+
+        role: {
+          _id: "$role._id",
+          name: "$role.name",
+          permissions: "$role.permissions",
+        },
+
+        school: {
+          _id: "$school._id",
+          name: "$school.name",
+          isActive: "$school.isActive",
+        },
+
+        academicYear: {
+          _id: "$academicYear._id",
+          name: "$academicYear.name",
+          startDate: "$academicYear.startDate",
+          endDate: "$academicYear.endDate",
+          isActive: "$academicYear.isActive",
+        },
+      },
+    },
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      userWithDetails[0] || null,
+      "User fetched successfully"
+    )
+  );
+});
 
 /**
  * @desc Logout user
