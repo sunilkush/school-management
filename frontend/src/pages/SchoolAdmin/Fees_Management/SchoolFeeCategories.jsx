@@ -18,7 +18,7 @@ import { currentUser } from "../../../features/authSlice.js";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice.js";
 import { fetchAllFees, createFee } from "../../../features/feesSlice.js";
 import { fetchAllClasses } from "../../../features/classSlice.js";
-import { fetchSection } from "../../../features/sectionSlice.js";
+import { fetchClassSections } from "../../../features/classSectionSlice.js";
  
 const { Option } = Select;
 
@@ -33,8 +33,8 @@ const SchoolFeeCategories = () => {
   const { activeYear } = useSelector((s) => s.academicYear);
   const { feesList = [], loading } = useSelector((s) => s.fees);
    const { classList = [] } = useSelector((state) => state.class || {});
-  const { sections = [] } = useSelector((s) => s.section);
-   console.log("sections:", sections);
+  const { mappings = [] } = useSelector((s) => s.classSection);
+  
   /* =======================
      LOCAL STATE
   ======================= */
@@ -89,7 +89,7 @@ const SchoolFeeCategories = () => {
   const handleClassChange = (classId) => {
     setSelectedClassId(classId);
     form.setFieldsValue({ sectionId: undefined });
-    dispatch(fetchSection({ schoolId, classId }));
+    dispatch(fetchClassSections({ schoolId, classId, academicYearId }));
   };
 
   /* =======================
@@ -201,9 +201,9 @@ const SchoolFeeCategories = () => {
             rules={[{ required: true, message: "Section is required" }]}
           >
             <Select placeholder="Select section" disabled={!selectedClassId}>
-              {sections.map((sec) => (
+              {mappings.map((sec) => (
                 <Option key={sec._id} value={sec._id}>
-                  {sec.name}
+                  {sec.sectionName}
                 </Option>
               ))}
             </Select>

@@ -1,63 +1,109 @@
-import {Section} from '../models/section.model.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiResponse } from '../utils/ApiResponse.js';
-import { ApiError } from '../utils/ApiError.js';
-// Create Section
-export const createSection = asyncHandler(async (req, res) => {
-  const { name, academicYearId, schoolId } = req.body;
+import { Section } from "../models/section.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 
-  if (!name || !academicYearId || !schoolId) {
+/**
+ * ===============================
+ * CREATE SECTION
+ * ===============================
+ */
+export const createSection = asyncHandler(async (req, res) => {
+  const { name, academicYearId, schoolId, classId } = req.body;
+
+  if (!name || !academicYearId || !schoolId || !classId) {
     throw new ApiError(400, "All fields are required");
+  }
+
+  const existingSection = await Section.findOne({
+    name,
+    academicYearId,
+    schoolId,
+    classId,
+  });
+
+  if (existingSection) {
+    throw new ApiError(409, "Section already exists");
   }
 
   const section = await Section.create({
     name,
     academicYearId,
     schoolId,
-    createdBy: req.user?._id || null, // ✅ safe check
+    classId,
+    createdBy: req.user?._id || null,
   });
 
-  res.status(201).json(new ApiResponse(201, section, "Section created successfully"));
+  res
+    .status(201)
+    .json(new ApiResponse(201, section, "Section created successfully"));
 });
 
+/**
+ * ===============================
+ * GET SECTIONS (FILTERED)
+ * ===============================
+ */
+export const getSections = asyncHandler(async (req, res) => {
+  const { schoolId, classId, academicYearId } = req.query;
 
-// Get All Sections for a School + Class + Year
-export const getSections = async (req, res) => {
-  try {
-    const { schoolId, classId, academicYearId } = req.query;
-    const filters = {};
-    
-    if (schoolId) filters.schoolId = schoolId;
-    if (classId) filters.classId = classId;
-    if (academicYearId) filters.academicYearId = academicYearId;
+  const filters = {};
+  if (schoolId) filters.schoolId = schoolId;
+  if (classId) filters.classId = classId;
+  if (academicYearId) filters.academicYearId = academicYearId;
 
-    const sections = await Section.find(filters)
-      .populate('classId', 'name')
-      .populate('academicYearId', 'name')
-      .sort({ name: 1 });
+  const sections = await Section.find(filters)
+    .populate("classId", "name")
+    .populate("academicYearId", "name")
+    .sort({ name: 1 });
+    console.log("Fetched Sections:", sections);
+  res
+    .status(200)
+    .json(new ApiResponse(200, sections, "Sections fetched successfully"));
+});
 
-    res.json(sections);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+/**
+ * ===============================
+ * UPDATE SECTION
+ * ===============================
+ */
+export const updateSection = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const section = await Section.findById(id);
+  if (!section) {
+    throw new ApiError(404, "Section not found");
   }
-};
 
-// Update Section
-export const updateSection = async (req, res) => {
-  try {
-    const updated = await Section.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updated);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+  const updatedSection = await Section.findByIdAndUpdate(
+    id,
+    req.body,
+    { new: true }
+  );
 
-// Delete Section
-export const deleteSection = async (req, res) => {
-  try {
-    await Section.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Section deleted' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedSection, "Section updated successfully")
+    );
+});
+
+/**
+ * ===============================
+ * DELETE SECTION
+ * ===============================
+ */
+export const deleteSection = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const section = await Section.findById(id);
+  if (!section) {
+    throw new ApiError(404, "Section not found");
   }
-};
+
+  await Section.findByIdAndDelete(id);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Section deleted successfully"));
+});
