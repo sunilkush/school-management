@@ -1,175 +1,179 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Select, Table, Button, Modal, Form, Input, DatePicker, message } from "antd";
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  DatePicker,
+  Select,
+  message,
+} from "antd";
 import dayjs from "dayjs";
 import { Plus } from "lucide-react";
 
-import { fetchSchools } from "../../../features/schoolSlice";
-import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
-import { fetchAllFees, createFee } from "../../../features/feesSlice";
-import { currentUser } from "../../../features/authSlice";
-
+import { currentUser } from "../../../features/authSlice.js";
+import { fetchActiveAcademicYear } from "../../../features/academicYearSlice.js";
+import { fetchAllFees, createFee } from "../../../features/feesSlice.js";
+import { fetchAllClasses } from "../../../features/classSlice.js";
+import { fetchSection } from "../../../features/sectionSlice.js";
+ 
 const { Option } = Select;
 
 const SchoolFeeCategories = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-  const { schools } = useSelector((s) => s.school);
+  /* =======================
+     REDUX STATE
+  ======================= */
   const { user, loading: userLoading } = useSelector((s) => s.auth);
   const { activeYear } = useSelector((s) => s.academicYear);
   const { feesList = [], loading } = useSelector((s) => s.fees);
-
-  const [schoolId, setSchoolId] = useState(null);
+   const { classList = [] } = useSelector((state) => state.class || {});
+  const { sections = [] } = useSelector((s) => s.section);
+   console.log("sections:", sections);
+  /* =======================
+     LOCAL STATE
+  ======================= */
   const [academicYearId, setAcademicYearId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
-  /* =========================
+  const [selectedClassId, setSelectedClassId] = useState(null);
+
+  /* =======================
      LOAD CURRENT USER
-  ========================= */
+  ======================= */
   useEffect(() => {
     dispatch(currentUser());
   }, [dispatch]);
 
-  /* =========================
-     ROLE BASED SCHOOL SETUP
-  ========================= */
+  /* =======================
+     SCHOOL ID
+  ======================= */
+  const schoolId = user?.school?._id || user?.schoolId;
+  
+  /* =======================
+     LOAD ACADEMIC YEAR + CLASSES
+  ======================= */
   useEffect(() => {
-    if (!user) return;
+    if (!schoolId) return;
 
-    // School Admin → auto school
-    if (user.role?.name === "School Admin") {
-      setSchoolId(user.school?._id || user.schoolId);
-      dispatch(fetchActiveAcademicYear(user.school?._id || user.schoolId));
-    }
+    dispatch(fetchActiveAcademicYear(schoolId));
+    dispatch(fetchAllClasses({schoolId}));
+  }, [schoolId, dispatch]);
 
-    // Super Admin → load schools list
-    if (user.role?.name === "Super Admin") {
-      dispatch(fetchSchools());
-    }
-  }, [user, dispatch]);
-
-  /* =========================
-     ACADEMIC YEAR SET
-  ========================= */
+  /* =======================
+     SET ACTIVE YEAR
+  ======================= */
   useEffect(() => {
     if (activeYear?._id) {
       setAcademicYearId(activeYear._id);
     }
   }, [activeYear]);
 
-  /* =========================
-     SCHOOL CHANGE (SUPER ADMIN)
-  ========================= */
-  const handleSchoolChange = (id) => {
-    setSchoolId(id);
-    setAcademicYearId(null);
-    dispatch(fetchActiveAcademicYear(id));
-  };
-
-  /* =========================
-     LOAD FEES
-  ========================= */
+  /* =======================
+     LOAD FEES (FIXED)
+  ======================= */
   useEffect(() => {
     if (schoolId && academicYearId) {
-      dispatch(fetchAllFees({ schoolId, academicYearId }));
+     // dispatch(fetchAllFees({ schoolId, academicYearId }));
     }
   }, [schoolId, academicYearId, dispatch]);
 
-  /* =========================
-     SUBMIT
-  ========================= */
+  /* =======================
+     CLASS CHANGE → LOAD SECTIONS
+  ======================= */
+  const handleClassChange = (classId) => {
+    setSelectedClassId(classId);
+    form.setFieldsValue({ sectionId: undefined });
+    dispatch(fetchSection({ schoolId, classId }));
+  };
+
+  /* =======================
+     SUBMIT FORM (FIXED)
+  ======================= */
   const handleSubmit = async (values) => {
     try {
       setSubmitting(true);
 
       await dispatch(
         createFee({
-          schoolId,
-          academicYearId,
+          schoolId,                 // ✅ REQUIRED
+          academicYearId,           // ✅ REQUIRED
+          classId: values.classId,
+          sectionId: values.sectionId,
           feeName: values.feeName,
-          amount: values.amount,
+          amount: Number(values.amount),
           dueDate: values.dueDate.toISOString(),
         })
       ).unwrap();
 
-      message.success("✅ Fee Created");
+      message.success("✅ Fee created successfully");
       setOpenModal(false);
       form.resetFields();
 
       dispatch(fetchAllFees({ schoolId, academicYearId }));
     } catch (err) {
-      console.error(err);
-      message.error("❌ Failed to create fee");
+      message.error(err?.message || "❌ Failed to create fee");
     } finally {
       setSubmitting(false);
     }
   };
 
-  /* =========================
-     TABLE
-  ========================= */
+  /* =======================
+     TABLE COLUMNS
+  ======================= */
   const columns = [
+    { title: "Class", render: (_, r) => r.classId?.name },
+    { title: "Section", render: (_, r) => r.sectionId?.name },
     { title: "Fee Name", dataIndex: "feeName" },
     { title: "Amount", dataIndex: "amount" },
     {
       title: "Due Date",
-      render: (r) => dayjs(r.dueDate).format("DD MMM YYYY"),
+      render: (_, r) => dayjs(r.dueDate).format("DD MMM YYYY"),
     },
   ];
 
   if (userLoading) return null;
 
-  /* =========================
+  /* =======================
      UI
-  ========================= */
+  ======================= */
   return (
     <div className="p-6 space-y-5 bg-gray-50">
-      <Card>
-        <div className="grid md:grid-cols-3 gap-4">
-          {user?.role?.name === "Super Admin" && (
-            <Select
-              placeholder="Select School"
-              value={schoolId}
-              onChange={handleSchoolChange}
-            >
-              {schools?.map((s) => (
-                <Option key={s._id} value={s._id}>
-                  {s.name}
-                </Option>
-              ))}
-            </Select>
-          )}
+      <Card className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">School Fees</h3>
 
-          <Select disabled value={academicYearId}>
-            {activeYear && (
-              <Option value={activeYear._id}>{activeYear.name}</Option>
-            )}
-          </Select>
-
-          <Button
-            type="primary"
-            icon={<Plus size={18} />}
-            disabled={!schoolId || !academicYearId}
-            onClick={() => setOpenModal(true)}
-          >
-            Add Fees
-          </Button>
-        </div>
+        <Button
+          type="primary"
+          icon={<Plus size={18} />}
+          disabled={!academicYearId || !schoolId}
+          onClick={() => setOpenModal(true)}
+        >
+          Add Fee
+        </Button>
       </Card>
 
-      <Card title="School Fees">
-        <Table
-          rowKey="_id"
-          columns={columns}
-          dataSource={feesList}
-          loading={loading}
-        />
-      </Card>
-        {console.log(feesList)}
+      {Array.isArray(feesList) && feesList.length > 0 && (
+        <Card>
+          <Table
+            rowKey="_id"
+            columns={columns}
+            dataSource={feesList}
+            loading={loading}
+            pagination={false}
+          />
+        </Card>
+      )}
+
+      {/* =======================
+          CREATE FEE MODAL
+      ======================= */}
       <Modal
-        title="Create School Fee"
+        title="Create Fee"
         open={openModal}
         onCancel={() => setOpenModal(false)}
         onOk={() => form.submit()}
@@ -177,15 +181,63 @@ const SchoolFeeCategories = () => {
         okText="Create Fee"
       >
         <Form layout="vertical" form={form} onFinish={handleSubmit}>
-          <Form.Item name="feeName" label="Fee Name" rules={[{ required: true }]}>
+          <Form.Item
+            name="classId"
+            label="Class"
+            rules={[{ required: true, message: "Class is required" }]}
+          >
+            <Select placeholder="Select class" onChange={handleClassChange}>
+              {classList.map((cls) => (
+                <Option key={cls._id} value={cls._id}>
+                  {cls.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="sectionId"
+            label="Section"
+            rules={[{ required: true, message: "Section is required" }]}
+          >
+            <Select placeholder="Select section" disabled={!selectedClassId}>
+              {sections.map((sec) => (
+                <Option key={sec._id} value={sec._id}>
+                  {sec.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="feeName"
+            label="Fee Name"
+            rules={[{ required: true, message: "Fee name is required" }]}
+          >
             <Input />
           </Form.Item>
 
-          <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
+          <Form.Item
+            name="amount"
+            label="Amount"
+            rules={[
+              { required: true, message: "Amount is required" },
+              {
+                validator: (_, v) =>
+                  v > 0
+                    ? Promise.resolve()
+                    : Promise.reject("Amount must be greater than 0"),
+              },
+            ]}
+          >
             <Input type="number" />
           </Form.Item>
 
-          <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]}>
+          <Form.Item
+            name="dueDate"
+            label="Due Date"
+            rules={[{ required: true, message: "Due date is required" }]}
+          >
             <DatePicker className="w-full" />
           </Form.Item>
         </Form>

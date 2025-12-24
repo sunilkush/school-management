@@ -9,118 +9,149 @@ import {Role} from "../models/Roles.model.js";
    ✅ CREATE MASTER FEE  (Super Admin + School Admin)
 =====================================================*/
 export const createFees = asyncHandler(async (req, res) => {
-  const { feeName, amount, dueDate, academicYearId, schoolId } = req.body;
+  const {
+    feeName,
+    amount,
+    frequency,
+    dueDate,
+    classId,
+    sectionId,
+    academicYearId,
+    schoolId,
+  } = req.body;
 
-  if (!feeName || !amount || !dueDate) {
-    throw new ApiError(400, "Fee name, amount and dueDate are required");
-  } 
-  
-  console.log("role:", req.user?.role?.name);
-
-  if (req.user?.role?.name === "Super Admin") {
-    if (!schoolId || !mongoose.isValidObjectId(schoolId)) {
-      throw new ApiError(400, "Valid schoolId is required");
-    }
-  }
-  if (req.user?.role?.name === "School Admin") {
-    if (!schoolId || schoolId.toString() !== req.user?.school?._id.toString()) {
-      throw new ApiError(403, "You can only create fees for your own school");
-    }
+  if (!["Super Admin", "School Admin"].includes(req.user.role)) {
+    throw new ApiError(403, "You are not allowed to declare fees");
   }
 
+  const finalSchoolId =
+    req.user.role === "School Admin" ? req.user.schoolId : schoolId;
+
+  if (!finalSchoolId) {
+    throw new ApiError(400, "School is required");
+  }
+
+  const exists = await Fees.findOne({
+    feeName,
+    classId,
+    sectionId,
+    academicYearId,
+    schoolId: finalSchoolId,
+    isActive: true,
+  });
+
+  if (exists) {
+    throw new ApiError(409, "Fee already declared for this class");
+  }
 
   const fee = await Fees.create({
     feeName,
     amount,
+    frequency,
     dueDate,
-    academicYearId: academicYearId,
-    schoolId: schoolId,
-    createdBy: req.user._id,
+    classId,
+    sectionId,
+    academicYearId,
+    schoolId: finalSchoolId,
+    declaredBy: req.user._id,
   });
 
-  return res.json(new ApiResponse(201, fee, "Fee Created Successfully"));
+  res
+    .status(201)
+    .json(new ApiResponse(201, fee, "Fees declared successfully"));
 });
 
 /* =====================================================
    ✅ GET ALL FEES (School + Academic Year Wise)
 ===================================================== */
 export const getAllFees = asyncHandler(async (req, res) => {
-  const { academicYearId, schoolId} = req.query;
-  console.log("role:", req.user);
-  const filter = {};
-  const roleName = await Role.findById(req.user.roleId).then(role => role.name);
-  /* ================= ROLE BASED SCHOOL ACCESS ================= */
+  const filter = { isActive: true };
 
-  // 👑 SUPER ADMIN → all schools (schoolId OPTIONAL)
-  if (roleName === "Super Admin") {
-    if (schoolId && mongoose.isValidObjectId(schoolId)) {
-      filter.schoolId = new mongoose.Types.ObjectId(schoolId);
-    }
-    // schoolId na ho → ALL schools
+  /* ================= REQUIRED / COMMON FILTERS ================= */
+
+  if (req.query.schoolId) {
+    filter.schoolId = req.query.schoolId;
   }
 
-  // 🏫 SCHOOL ADMIN → only own school (IGNORE query schoolId)
-  else if (roleName === "School Admin") {
-    filter.schoolId = new mongoose.Types.ObjectId(req.user.schoolId);
+  if (req.query.academicYearId) {
+    filter.academicYearId = req.query.academicYearId;
   }
 
-  else {
-    throw new ApiError(403, "Unauthorized access");
+  /* ================= OPTIONAL FILTERS ================= */
+
+  if (req.query.classId) {
+    filter.classId = req.query.classId;
   }
 
-  /* ================= ACADEMIC YEAR FILTER ================= */
-
-  if (academicYearId && mongoose.isValidObjectId(academicYearId)) {
-    filter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
+  if (req.query.sectionId) {
+    filter.sectionId = req.query.sectionId;
   }
-
-  /* ================= FETCH DATA ================= */
 
   const fees = await Fees.find(filter)
+    .populate("classId", "name")
+    .populate("sectionId", "name")
     .populate("academicYearId", "name")
+    .populate("schoolId", "name")
     .sort({ createdAt: -1 });
 
-  return res.status(200).json(
-    new ApiResponse(200, fees, "Fees fetched successfully")
+  res.status(200).json(
+    new ApiResponse(200, fees, "Fees list fetched successfully")
   );
 });
+
+
+
+
 
 /* =====================================================
    ✅ UPDATE FEE
 ===================================================== */
 export const updateFee = asyncHandler(async (req, res) => {
-  const updated = await Fees.findOneAndUpdate(
-    {
-      _id: req.params.id,
-      schoolId: req.user?.school?._id,
-    },
-    req.body,
-    { new: true }
-  );
+  const { id } = req.params;
 
-  if (!updated) {
+  const fee = await Fees.findById(id);
+  if (!fee) {
     throw new ApiError(404, "Fee not found");
   }
 
-  return res.json(
-    new ApiResponse(200, updated, "Fee updated successfully")
-  );
+  if (
+    req.user.role === "School Admin" &&
+    fee.schoolId.toString() !== req.user.schoolId.toString()
+  ) {
+    throw new ApiError(403, "You cannot update this fee");
+  }
+
+  Object.assign(fee, req.body);
+  await fee.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, fee, "Fees updated successfully"));
 });
 
 /* =====================================================
    ✅ DELETE FEE
 ===================================================== */
 export const deleteFee = asyncHandler(async (req, res) => {
-  const deleted = await Fees.findOneAndDelete({
-    _id: req.params.id,
-    schoolId: req.user?.school?._id,
-  });
+  const { id } = req.params;
 
-  if (!deleted) {
+  const fee = await Fees.findById(id);
+  if (!fee) {
     throw new ApiError(404, "Fee not found");
   }
 
-  return res.json(
-    new ApiResponse(200, null, "Fee deleted successfully")
-  );
+  if (
+    req.user.role === "School Admin" &&
+    fee.schoolId.toString() !== req.user.schoolId.toString()
+  ) {
+    throw new ApiError(403, "You cannot delete this fee");
+  }
+
+  fee.isActive = false;
+  await fee.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Fees deleted successfully"));
 });
+

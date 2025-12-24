@@ -16,16 +16,19 @@ export const fetchAllFees = createAsyncThunk(
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        params, // ✅ Correct way
+        params,
       });
 
-      // APIResponse format: { success, data: { data, total, page, limit } }
+      console.log("Fetched Fees:", res.data);
+
+      // ✅ RETURN FULL RESPONSE
       return res.data;
     } catch (e) {
       return rejectWithValue(e.response?.data || "Failed to load fees");
     }
   }
 );
+
 
 /* ===============================
    CREATE FEES (Super Admin + School Admin)
@@ -134,14 +137,15 @@ const feesSlice = createSlice({
       .addCase(fetchAllFees.fulfilled, (state, action) => {
         state.loading = false;
 
-        state.feesList = action.payload?.data || [];
-        state.total = action.payload?.total || 0;
-        state.page = action.payload?.page || 1;
-        state.limit = action.payload?.limit || 10;
+        state.feesList = action.payload?.data?.data || [];
+        state.total = action.payload?.data?.total || 0;
+        state.page = action.payload?.data?.page || 1;
+        state.limit = action.payload?.data?.limit || 10;
       })
       .addCase(fetchAllFees.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
+        state.feesList = [];
       })
 
       /* CREATE */
