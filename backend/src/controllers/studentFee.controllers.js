@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { StudentFee } from "../models/studentFees.model.js";
+import { StudentFee } from "../models/studentFee.model.js";
 import { Fees } from "../models/fees.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";

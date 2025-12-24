@@ -1,157 +1,137 @@
 import mongoose from "mongoose";
-import { Fees } from "../models/fees.model.js";
+import { FeeStructure } from "../models/feeStructure.model.js";
+import { FeeHead } from "../models/feeHead.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { AcademicYear } from "../models/AcademicYear.model.js";
-import {Role} from "../models/Roles.model.js";
+
 /* =====================================================
-   ✅ CREATE MASTER FEE  (Super Admin + School Admin)
-=====================================================*/
-export const createFees = asyncHandler(async (req, res) => {
+   ✅ CREATE FEE STRUCTURE (Super Admin / School Admin)
+===================================================== */
+export const createFeeStructure = asyncHandler(async (req, res) => {
   const {
-    feeName,
+    schoolId,
+    classId,
+    sessionId,
+    feeHeadId,
     amount,
     frequency,
-    dueDate,
-    classId,
-    sectionId,
-    academicYearId,
-    schoolId,
   } = req.body;
 
   if (!["Super Admin", "School Admin"].includes(req.user.role)) {
-    throw new ApiError(403, "You are not allowed to declare fees");
+    throw new ApiError(403, "Not allowed to create fee structure");
   }
 
   const finalSchoolId =
-    req.user.role === "School Admin" ? req.user.schoolId : schoolId;
+    req.user.role === "School Admin"
+      ? req.user.schoolId
+      : schoolId;
 
   if (!finalSchoolId) {
     throw new ApiError(400, "School is required");
   }
 
-  const exists = await Fees.findOne({
-    feeName,
-    classId,
-    sectionId,
-    academicYearId,
+  // prevent duplicate
+  const exists = await FeeStructure.findOne({
     schoolId: finalSchoolId,
-    isActive: true,
+    classId,
+    sessionId,
+    feeHeadId,
   });
 
   if (exists) {
-    throw new ApiError(409, "Fee already declared for this class");
+    throw new ApiError(
+      409,
+      "Fee structure already exists for this class & fee head"
+    );
   }
 
-  const fee = await Fees.create({
-    feeName,
+  const feeStructure = await FeeStructure.create({
+    schoolId: finalSchoolId,
+    classId,
+    sessionId,
+    feeHeadId,
     amount,
     frequency,
-    dueDate,
-    classId,
-    sectionId,
-    academicYearId,
-    schoolId: finalSchoolId,
-    declaredBy: req.user._id,
   });
 
-  res
-    .status(201)
-    .json(new ApiResponse(201, fee, "Fees declared successfully"));
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      feeStructure,
+      "Fee structure created successfully"
+    )
+  );
 });
 
-/* =====================================================
-   ✅ GET ALL FEES (School + Academic Year Wise)
-===================================================== */
-export const getAllFees = asyncHandler(async (req, res) => {
-  const filter = { isActive: true };
-
-  /* ================= REQUIRED / COMMON FILTERS ================= */
+export const getFeeStructures = asyncHandler(async (req, res) => {
+  const filter = {};
 
   if (req.query.schoolId) {
     filter.schoolId = req.query.schoolId;
   }
 
-  if (req.query.academicYearId) {
-    filter.academicYearId = req.query.academicYearId;
+  if (req.query.sessionId) {
+    filter.sessionId = req.query.sessionId;
   }
-
-  /* ================= OPTIONAL FILTERS ================= */
 
   if (req.query.classId) {
     filter.classId = req.query.classId;
   }
 
-  if (req.query.sectionId) {
-    filter.sectionId = req.query.sectionId;
-  }
-
-  const fees = await Fees.find(filter)
+  const fees = await FeeStructure.find(filter)
     .populate("classId", "name")
-    .populate("sectionId", "name")
-    .populate("academicYearId", "name")
+    .populate("sessionId", "name")
+    .populate("feeHeadId", "name type")
     .populate("schoolId", "name")
     .sort({ createdAt: -1 });
 
-  res.status(200).json(
-    new ApiResponse(200, fees, "Fees list fetched successfully")
+  return res.status(200).json(
+    new ApiResponse(200, fees, "Fee structures fetched successfully")
   );
 });
 
-
-
-
-
-/* =====================================================
-   ✅ UPDATE FEE
-===================================================== */
-export const updateFee = asyncHandler(async (req, res) => {
+export const updateFeeStructure = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const fee = await Fees.findById(id);
+  const fee = await FeeStructure.findById(id);
   if (!fee) {
-    throw new ApiError(404, "Fee not found");
+    throw new ApiError(404, "Fee structure not found");
   }
 
   if (
     req.user.role === "School Admin" &&
     fee.schoolId.toString() !== req.user.schoolId.toString()
   ) {
-    throw new ApiError(403, "You cannot update this fee");
+    throw new ApiError(403, "You cannot update this fee structure");
   }
 
   Object.assign(fee, req.body);
   await fee.save();
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, fee, "Fees updated successfully"));
+  return res.status(200).json(
+    new ApiResponse(200, fee, "Fee structure updated successfully")
+  );
 });
 
-/* =====================================================
-   ✅ DELETE FEE
-===================================================== */
-export const deleteFee = asyncHandler(async (req, res) => {
+export const deleteFeeStructure = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const fee = await Fees.findById(id);
+  const fee = await FeeStructure.findById(id);
   if (!fee) {
-    throw new ApiError(404, "Fee not found");
+    throw new ApiError(404, "Fee structure not found");
   }
 
   if (
     req.user.role === "School Admin" &&
     fee.schoolId.toString() !== req.user.schoolId.toString()
   ) {
-    throw new ApiError(403, "You cannot delete this fee");
+    throw new ApiError(403, "You cannot delete this fee structure");
   }
 
-  fee.isActive = false;
-  await fee.save();
+  await fee.deleteOne();
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, null, "Fees deleted successfully"));
+  return res.status(200).json(
+    new ApiResponse(200, null, "Fee structure deleted successfully")
+  );
 });
-

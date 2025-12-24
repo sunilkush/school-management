@@ -1,192 +1,193 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Select, Table, Button, Modal, Form, Input, DatePicker, message } from "antd";
-import dayjs from "dayjs";
+import {
+  Card,
+  Select,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Switch,
+  message,
+} from "antd";
 import { Plus } from "lucide-react";
 
-import { fetchSchools } from "../../../features/schoolSlice";
-import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
-import { fetchAllFees, createFee } from "../../../features/feesSlice";
-import { currentUser } from "../../../features/authSlice";
+import { fetchSchools } from "../../../features/schoolSlice.js";
+import {
+  fetchFeeHeads,
+  createFeeHead,
+} from "../../../features/headSlice.js";
 
 const { Option } = Select;
+
+const FEE_HEAD_TYPES = [
+  "Admission Fee",
+  "Tuition Fee",
+  "Registration Fee",
+  "Transport Fee",
+  "Exam Fee",
+  "Library Fee",
+  "Computer Fee",
+  "Hostel Fee",
+  "Mess Fee",
+  "Sports Fee",
+  "Books Fee",
+  "Uniform Fee",
+  "Fine",
+  "Late Fee Fine",
+];
 
 const FeeCategories = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
   const { schools } = useSelector((s) => s.school);
-  const { user, loading: userLoading } = useSelector((s) => s.auth);
-  const { activeYear } = useSelector((s) => s.academicYear);
-  const { feesList = [], loading } = useSelector((s) => s.fees);
+  const { feeHeads = [], loading } = useSelector((s) => s.feeHead);
 
   const [schoolId, setSchoolId] = useState(null);
-  const [academicYearId, setAcademicYearId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  /* =========================
-     LOAD CURRENT USER
-  ========================= */
+  /* ================= LOAD SCHOOLS ================= */
   useEffect(() => {
-    dispatch(currentUser());
+    dispatch(fetchSchools());
   }, [dispatch]);
 
-  /* =========================
-     ROLE BASED SCHOOL SETUP
-  ========================= */
+  /* ================= LOAD FEE HEADS ================= */
   useEffect(() => {
-    if (!user) return;
-
-    // School Admin → auto school
-    if (user.role?.name === "School Admin") {
-      setSchoolId(user.school?._id || user.schoolId);
-      dispatch(fetchActiveAcademicYear(user.school?._id || user.schoolId));
+    if (schoolId) {
+      dispatch(fetchFeeHeads({ schoolId }));
     }
+  }, [schoolId, dispatch]);
 
-    // Super Admin → load schools list
-    if (user.role?.name === "Super Admin") {
-      dispatch(fetchSchools());
-    }
-  }, [user, dispatch]);
-
-  /* =========================
-     ACADEMIC YEAR SET
-  ========================= */
-  useEffect(() => {
-    if (activeYear?._id) {
-      setAcademicYearId(activeYear._id);
-    }
-  }, [activeYear]);
-
-  /* =========================
-     SCHOOL CHANGE (SUPER ADMIN)
-  ========================= */
-  const handleSchoolChange = (id) => {
-    setSchoolId(id);
-    setAcademicYearId(null);
-    dispatch(fetchActiveAcademicYear(id));
-  };
-
-  /* =========================
-     LOAD FEES
-  ========================= */
-  useEffect(() => {
-    if (schoolId && academicYearId) {
-      dispatch(fetchAllFees({ schoolId, academicYearId }));
-    }
-  }, [schoolId, academicYearId, dispatch]);
-
-  /* =========================
-     SUBMIT
-  ========================= */
+  /* ================= SUBMIT ================= */
   const handleSubmit = async (values) => {
+    if (!schoolId) {
+      return message.warning("Please select school first");
+    }
+
     try {
       setSubmitting(true);
-
+      console.log("Submitting:", { schoolId, ...values });
       await dispatch(
-        createFee({
-          schoolId,
-          academicYearId,
-          feeName: values.feeName,
-          amount: values.amount,
-          dueDate: values.dueDate.toISOString(),
+        createFeeHead({
+          schoolId, // ✅ ONLY FROM SELECT
+          name: values.name,
+          type: values.type,
+          isEditable: values.isEditable,
         })
       ).unwrap();
-
-      message.success("✅ Fee Created");
+       
+      message.success("Fee Head Created Successfully");
       setOpenModal(false);
       form.resetFields();
 
-      dispatch(fetchAllFees({ schoolId, academicYearId }));
+      dispatch(fetchFeeHeads({ schoolId }));
     } catch (err) {
-      console.error(err);
-      message.error("❌ Failed to create fee");
+      message.error(err?.message || "Failed to create fee head");
     } finally {
       setSubmitting(false);
     }
   };
 
-  /* =========================
-     TABLE
-  ========================= */
+  /* ================= TABLE ================= */
   const columns = [
-    { title: "Fee Name", dataIndex: "feeName" },
-    { title: "Amount", dataIndex: "amount" },
+    { title: "Fee Head", dataIndex: "name" },
+    { title: "Type", dataIndex: "type" },
     {
-      title: "Due Date",
-      render: (r) => dayjs(r.dueDate).format("DD MMM YYYY"),
+      title: "Editable",
+      render: (r) => (r.isEditable ? "Yes" : "No"),
     },
   ];
 
-  if (userLoading) return null;
-
-  /* =========================
-     UI
-  ========================= */
+  /* ================= UI ================= */
   return (
     <div className="p-6 space-y-5 bg-gray-50">
+      {/* ================= HEADER ================= */}
       <Card>
-        <div className="grid md:grid-cols-3 gap-4">
-          {user?.role?.name === "Super Admin" && (
-            <Select
-              placeholder="Select School"
-              value={schoolId}
-              onChange={handleSchoolChange}
-            >
-              {schools?.map((s) => (
-                <Option key={s._id} value={s._id}>
-                  {s.name}
-                </Option>
-              ))}
-            </Select>
-          )}
-
-          <Select disabled value={academicYearId}>
-            {activeYear && (
-              <Option value={activeYear._id}>{activeYear.name}</Option>
-            )}
+        <div className="flex gap-4 items-center">
+          <Select
+            placeholder="Select School"
+            value={schoolId}
+            onChange={setSchoolId}
+            style={{ width: 260 }}
+          >
+            {schools?.map((s) => (
+              <Option key={s._id} value={s._id}>
+                {s.name}
+              </Option>
+            ))}
           </Select>
 
           <Button
             type="primary"
             icon={<Plus size={18} />}
-            disabled={!schoolId || !academicYearId}
+            disabled={!schoolId}
             onClick={() => setOpenModal(true)}
           >
-            Add Fees
+            Add Fee Head
           </Button>
         </div>
       </Card>
 
-      <Card title="School Fees">
+      {/* ================= TABLE ================= */}
+      <Card title="Fee Heads">
         <Table
           rowKey="_id"
           columns={columns}
-          dataSource={feesList}
+          dataSource={feeHeads}
           loading={loading}
+          pagination={{ pageSize: 10 }}
         />
       </Card>
-        {console.log(feesList)}
+
+      {/* ================= MODAL ================= */}
       <Modal
-        title="Create School Fee"
+        title="Create Fee Head"
         open={openModal}
         onCancel={() => setOpenModal(false)}
         onOk={() => form.submit()}
         confirmLoading={submitting}
-        okText="Create Fee"
+        okText="Create"
       >
-        <Form layout="vertical" form={form} onFinish={handleSubmit}>
-          <Form.Item name="feeName" label="Fee Name" rules={[{ required: true }]}>
-            <Input />
+        <Form
+          layout="vertical"
+          form={form}
+          onFinish={handleSubmit}
+          initialValues={{ isEditable: true }}
+        >
+          <Form.Item
+            name="name"
+            label="Fee Head Name"
+            rules={[{ required: true, message: "Select fee head" }]}
+          >
+            <Select placeholder="Select Fee Head">
+              {FEE_HEAD_TYPES.map((t) => (
+                <Option key={t} value={t}>
+                  {t}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
 
-          <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
-            <Input type="number" />
+          <Form.Item
+            name="type"
+            label="Fee Type"
+            rules={[{ required: true, message: "Select fee type" }]}
+          >
+            <Select placeholder="Select Type">
+              <Option value="recurring">Recurring</Option>
+              <Option value="one-time">One Time</Option>
+              <Option value="penalty">Penalty</Option>
+            </Select>
           </Form.Item>
 
-          <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]}>
-            <DatePicker className="w-full" />
+          <Form.Item
+            name="isEditable"
+            label="Is Editable?"
+            valuePropName="checked"
+          >
+            <Switch />
           </Form.Item>
         </Form>
       </Modal>

@@ -47,8 +47,14 @@ import ExamRoutes from "./routes/exam.routes.js";
 import AttemptRoutes from "./routes/attempt.routes.js"
 import ClassSectionSubjectRoutes from "./routes/classSection&subject.routes.js"
 import SubscriptionPlans from "./routes/subscriptionPlan.routes.js";
-import FeeRoutes from "./routes/fee.routes.js";
-import studentFeesRoutes from "./routes/studentFees.routes.js";
+//import FeeRoutes from "./routes";
+//import studentFeesRoutes from "./routes/studentFees.routes.js";
+import feeHeadRoutes from "./routes/feeHead.routes.js";
+import feeStructureRoutes from "./routes/feeStructure.routes.js";
+import studentFeeRoutes from "./routes/studentFee.routes.js";
+import feeInstallmentRoutes from "./routes/feeInstallment.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
+import feeReportRoutes from "./routes/feeReport.routes.js";
 // route
 app.use('/', indexRouter);
 app.use("/app/v1/school", schoolRoutes)
@@ -65,13 +71,20 @@ app.use("/app/v1/academicYear", AcademicYearRoutes);
 app.use("/app/v1/section", SectionRoutes);
 app.use("/app/v1/report", ReportsRoutes);
 app.use("/app/v1/dashboard", DashboardRoutes);
-app.use("/app/v1/questions",QuestionRoutes);
-app.use("/app/v1/exam",ExamRoutes);
-app.use("/app/v1/attempt",AttemptRoutes);
+app.use("/app/v1/questions", QuestionRoutes);
+app.use("/app/v1/exam", ExamRoutes);
+app.use("/app/v1/attempt", AttemptRoutes);
 app.use("/app/v1/classSection", ClassSectionSubjectRoutes)
 app.use("/app/v1/subscription", SubscriptionPlans)
-app.use("/app/v1/fees", FeeRoutes)
-app.use("/app/v1/studentFees", studentFeesRoutes);
+//app.use("/app/v1/fees", FeeRoutes)
+//app.use("/app/v1/studentFees", studentFeesRoutes);
+app.use("/app/v1/fee-heads", feeHeadRoutes);
+app.use("/app/v1/fee-structures", feeStructureRoutes);
+app.use("/app/v1/student-fees", studentFeeRoutes);
+app.use("/app/v1/fee-installments", feeInstallmentRoutes);
+app.use("/app/v1/payments", paymentRoutes);
+app.use("/app/v1/fees/report", feeReportRoutes);
+
 
 export { app }
 
