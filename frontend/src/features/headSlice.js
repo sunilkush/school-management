@@ -49,6 +49,29 @@ export const fetchFeeHeads = createAsyncThunk(
       );
     }}
 );
+
+export const fetchFeeHeadsBySchool = createAsyncThunk(
+  "feeHeads/fetchBySchool",
+  async (params, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const res = await axios.get(`${API_BASE_URL}/fee-heads/by-school/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params, // ✅ yahin aayega
+      });
+
+      return res.data.data || res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch fee heads by school"
+      );
+    }
+  }
+);
+
 /* =====================================================
    ✅ FEE HEAD SLICE
 ===================================================== */
@@ -60,6 +83,7 @@ const headSlice = createSlice({
     error: null,
     lead: null,
     feeHeads: [],
+    feeHeadsList:[]
   },
 
   reducers: {
@@ -97,6 +121,19 @@ const headSlice = createSlice({
             state.feeHeads = action.payload?.data || action.payload || [];
         })
         .addCase(fetchFeeHeads.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+
+        .addCase(fetchFeeHeadsBySchool.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(fetchFeeHeadsBySchool.fulfilled, (state, action) => {
+            state.loading = false;
+            state.feeHeadsList = action.payload?.data || action.payload || [];
+        })
+        .addCase(fetchFeeHeadsBySchool.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload;
         });

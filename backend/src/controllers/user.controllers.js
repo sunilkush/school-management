@@ -116,7 +116,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email and password are required");
   }
 
-  // 🔹 Find user and populate role + school
+  // 1️⃣ Find user
   const user = await User.findOne({ email })
     .populate("roleId")
     .populate("schoolId");
@@ -125,33 +125,37 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
-  // 🔹 Check user active status
+  // 2️⃣ Active user check
   if (!user.isActive) {
-    throw new ApiError(403, "User is inactive. Please contact administrator.");
+    throw new ApiError(403, "User is inactive. Contact administrator.");
   }
 
-  // 🔹 If NOT Super Admin → check if school is active
+  // 3️⃣ Role check
   const isSuperAdmin =
-    user.roleId && user.roleId.name?.toLowerCase() === "super admin";
+    user.roleId?.name?.toLowerCase() === "super admin";
 
+  // 4️⃣ School active check (non super admin)
   if (!isSuperAdmin) {
     if (!user.schoolId || user.schoolId.isActive === false) {
       throw new ApiError(
         403,
-        "Your school is deactivated. Please contact administrator."
+        "Your school is deactivated. Contact administrator."
       );
     }
   }
 
-  // 🔹 Generate tokens
+  // 5️⃣ Tokens
   const { accessToken, refreshToken } =
     await generateAccessAndRefreshToken(user._id);
 
-  // 🔹 Enrich user details via aggregation (optional)
+  // 6️⃣ Aggregation for frontend-ready user
   const userWithDetails = await User.aggregate([
-    { $match: { _id: user._id } },
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(user._id),
+      },
+    },
 
-    // Role
     {
       $lookup: {
         from: "roles",
@@ -160,9 +164,8 @@ const loginUser = asyncHandler(async (req, res) => {
         as: "role",
       },
     },
-    { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$role" },
 
-    // School
     {
       $lookup: {
         from: "schools",
@@ -173,7 +176,6 @@ const loginUser = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
 
-    // Academic Year
     {
       $lookup: {
         from: "academicyears",
@@ -184,7 +186,6 @@ const loginUser = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
 
-    // Projection
     {
       $project: {
         _id: 1,
@@ -192,16 +193,19 @@ const loginUser = asyncHandler(async (req, res) => {
         email: 1,
         avatar: 1,
         isActive: 1,
+
         role: {
           _id: "$role._id",
           name: "$role.name",
           permissions: "$role.permissions",
         },
+
         school: {
           _id: "$school._id",
           name: "$school.name",
           isActive: "$school.isActive",
         },
+
         academicYear: {
           _id: "$academicYear._id",
           name: "$academicYear.name",
@@ -213,26 +217,35 @@ const loginUser = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!userWithDetails || userWithDetails.length === 0) {
+  if (!userWithDetails.length) {
     throw new ApiError(500, "User aggregation failed");
   }
 
-  const finalUser = userWithDetails[0];
-
-  // 🔹 Send response
+  // 7️⃣ Response
   return res
     .status(200)
-    .cookie("accessToken", accessToken, { httpOnly: true, secure: true })
-    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true })
+    .cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    })
+    .cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    })
     .json(
       new ApiResponse(
         200,
-        { user: finalUser, accessToken, refreshToken },
+        {
+          user: userWithDetails[0],
+          accessToken,
+          refreshToken,
+        },
         "User logged in successfully"
       )
     );
 });
-
 
 
 

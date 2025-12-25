@@ -164,6 +164,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Fee Categories", path: "schooladmin/fees/categories", icon: CreditCard },
         { title: "Collect Fees", path: "schooladmin/fees/collect", icon: IndianRupee },
+        { title: "Fee Structure", path: "schooladmin/fees/feestructure", icon: IndianRupee },
       ],
     },
     {

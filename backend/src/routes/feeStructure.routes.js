@@ -11,9 +11,9 @@ const router = Router();
 
 router.use(auth);
 
-router.post("/", createFeeStructure);
-router.get("/", getFeeStructures);
-router.put("/:id", updateFeeStructure);
-router.delete("/:id", deleteFeeStructure);
+router.post("/",roleMiddleware("School Admin"), createFeeStructure);
+router.get("/",roleMiddleware("School Admin"), getFeeStructures);
+router.put("/:id",roleMiddleware("School Admin"), updateFeeStructure);
+router.delete("/:id",roleMiddleware("School Admin"), deleteFeeStructure);
 
 export default router;

@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 /* ================= CREATE ================= */
 export const createFeeStructure = asyncHandler(async (req, res) => {
-  const { schoolId, classId, sessionId, feeHeadId, amount, frequency } = req.body;
+  const { schoolId, classId,  academicYearId, feeHeadId, amount, frequency } = req.body;
 
   const finalSchoolId =
     req.user.role === "School Admin" ? req.user.schoolId : schoolId;
@@ -13,7 +13,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
   const exists = await FeeStructure.findOne({
     schoolId: finalSchoolId,
     classId,
-    sessionId,
+     academicYearId,
     feeHeadId,
   });
 
@@ -22,7 +22,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
   const fee = await FeeStructure.create({
     schoolId: finalSchoolId,
     classId,
-    sessionId,
+    academicYearId,
     feeHeadId,
     amount,
     frequency,
@@ -34,14 +34,14 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
 /* ================= GET ================= */
 export const getFeeStructures = asyncHandler(async (req, res) => {
   const filter = {};
-  ["schoolId", "classId", "sessionId"].forEach(
+  ["schoolId", "classId", " academicYearId"].forEach(
     (k) => req.query[k] && (filter[k] = req.query[k])
   );
 
   const data = await FeeStructure.find(filter)
     .populate("feeHeadId", "name")
     .populate("classId", "name")
-    .populate("sessionId", "name");
+    .populate(" academicYearId", "name");
 
   res.status(200).json(new ApiResponse(200, data, "Fetched"));
 });

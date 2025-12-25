@@ -44,7 +44,7 @@ const roleMiddleware = (allowedRoles) => {
   return async (req, res, next) => {
 
     let roleId = req?.user?.roleId?._id; // ✅ Extract _id
-    console.log("Role ID:", roleId); // Debugging log
+    
 
     try {
       if (!roleId) {
@@ -56,7 +56,7 @@ const roleMiddleware = (allowedRoles) => {
       // Fetch role details using only _id
       const userRole = await Role.findById(roleId).lean(); // ✅ Use lean() for performance
       
-       console.log( userRole.name)
+       
       if (!userRole) {
        
           return res.status(403).json(

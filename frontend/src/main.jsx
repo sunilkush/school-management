@@ -47,7 +47,6 @@ import Books from "./pages/SchoolAdmin/Library/Books.jsx";
 import IssueBook from "./pages/SchoolAdmin/Library/IssueBook.jsx";
 import ClassTimetable from "./pages/SchoolAdmin/Timetables/ClassTimetable.jsx";
 import TeacherTimetable from "./pages/SchoolAdmin/Timetables/TeacherTimetable.jsx";
-
 import CollectFees from "./pages/SchoolAdmin/Fees_Management/CollectFees.jsx";
 import HostelManagement from "./pages/SchoolAdmin/Hostel/HostelManagement.jsx";
 import RoomAllocation from "./pages/SchoolAdmin/Hostel/RoomAllocation.jsx";
@@ -99,6 +98,7 @@ import Departments from './pages/SuperAdmin/Master_Settings/Departments.jsx';
 import GlobalConfig from './pages/SuperAdmin/System_Settings/GlobalConfig.jsx';
 import AuditLogs from './pages/SuperAdmin/System_Settings/AuditLogs.jsx';
 import Backups from './pages/SuperAdmin/System_Settings/Backups.jsx';
+import FeeStructure from './pages/SchoolAdmin/Fees_Management/FeeStructure.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -214,6 +214,7 @@ const router = createBrowserRouter([
               { path: "events", element: <Events /> },
               { path: "inventory/supplies", element: <Supplies /> },
               { path: "inventory/assets", element: <Assets /> },
+              { path: "fees/feestructure", element: <FeeStructure /> }
 
             ],
           },
