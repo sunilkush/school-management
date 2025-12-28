@@ -3,28 +3,44 @@ import { Card, Table, Tag, Button, Modal, Descriptions, message } from "antd";
 import { CreditCardOutlined, EyeOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyFees, payStudentFee } from "../../../features/studentFeeSlice";
+import { fetchMyStudentEnrollment } from "../../../features/studentSlice";
 
-import { currentUser } from "../../../features/authSlice";
 const FeeStudent = () => {
   const dispatch = useDispatch();
-  const { myFees = [], loading } = useSelector((state) => state.studentFee);
-    const { user } = useSelector((state) => state.auth);
-  const studentId = user?._id ;
+
+  const { myFees = [], loading: feeLoading } = useSelector(
+    (state) => state.studentFee
+  );
+
+  const { myEnrollment, loading: enrollmentLoading } = useSelector(
+    (state) => state.students
+  );
+
   const [open, setOpen] = useState(false);
   const [selectedFee, setSelectedFee] = useState(null);
+
+  const enrollmentId = myEnrollment?.enrollmentId;
+
+  /* ================= FETCH ENROLLMENT ================= */
+  useEffect(() => {
+    dispatch(fetchMyStudentEnrollment());
+  }, [dispatch]);
+
   /* ================= FETCH FEES ================= */
   useEffect(() => {
-    dispatch(fetchMyFees(studentId));
-    dispatch(currentUser());
-  }, [dispatch, studentId]);
+    if (enrollmentId) {
+      dispatch(fetchMyFees(enrollmentId));
+    }
+  }, [dispatch, enrollmentId]);
 
   /* ================= PAY FEE ================= */
   const handlePay = async (feeId) => {
     try {
-      await dispatch(payStudentFee({ id: feeId, payload: {} })).unwrap();
+      await dispatch(payStudentFee({ id: feeId })).unwrap();
       message.success("Fee paid successfully");
+      dispatch(fetchMyFees(enrollmentId)); // refresh
     } catch (err) {
-      message.error(err?.message || "Failed to pay fee");
+      message.error(err || "Failed to pay fee");
     }
   };
 
@@ -32,11 +48,11 @@ const FeeStudent = () => {
   const columns = [
     {
       title: "Academic Year",
-      dataIndex: ["academicYear", "name"],
+      render: (_, record) => record.academicYearId?.name || "-",
     },
     {
       title: "Fee Type",
-      dataIndex: ["fee", "feeName"],
+      render: (_, record) => record.feeStructureId?.name || "-",
     },
     {
       title: "Total Fee",
@@ -50,13 +66,17 @@ const FeeStudent = () => {
     },
     {
       title: "Due",
-      render: (_, record) => `₹ ${record.totalAmount - record.paidAmount}`,
+      render: (_, record) => `₹ ${record.dueAmount}`,
     },
     {
       title: "Status",
       dataIndex: "status",
       render: (status) =>
-        status === "paid" ? <Tag color="green">PAID</Tag> : <Tag color="red">DUE</Tag>,
+        status === "paid" ? (
+          <Tag color="green">PAID</Tag>
+        ) : (
+          <Tag color="red">DUE</Tag>
+        ),
     },
     {
       title: "Action",
@@ -91,29 +111,47 @@ const FeeStudent = () => {
 
   return (
     <>
-      <Card title="My Fees" bordered={false} style={{ marginBottom: 20 }}>
+      <Card title="My Fees">
         <Table
           columns={columns}
           dataSource={myFees}
           rowKey="_id"
-          loading={loading}
+          loading={feeLoading || enrollmentLoading}
           pagination={false}
         />
       </Card>
 
-      {/* ================= PAYMENT DETAIL MODAL ================= */}
-      <Modal open={open} onCancel={() => setOpen(false)} footer={null} title="Fee Details" width={600}>
+      {/* ================= MODAL ================= */}
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        title="Fee Details"
+        width={600}
+      >
         {selectedFee && (
           <Descriptions bordered column={1}>
-            <Descriptions.Item label="Academic Year">{selectedFee.academicYear?.name}</Descriptions.Item>
-            <Descriptions.Item label="Fee Type">{selectedFee.fee?.feeName}</Descriptions.Item>
-            <Descriptions.Item label="Total Fee">₹ {selectedFee.totalAmount}</Descriptions.Item>
-            <Descriptions.Item label="Paid Amount">₹ {selectedFee.paidAmount}</Descriptions.Item>
+            <Descriptions.Item label="Academic Year">
+              {selectedFee.academicYearId?.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Fee Type">
+              {selectedFee.feeStructureId?.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Total Fee">
+              ₹ {selectedFee.totalAmount}
+            </Descriptions.Item>
+            <Descriptions.Item label="Paid Amount">
+              ₹ {selectedFee.paidAmount}
+            </Descriptions.Item>
             <Descriptions.Item label="Due Amount">
-              ₹ {selectedFee.totalAmount - selectedFee.paidAmount}
+              ₹ {selectedFee.dueAmount}
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              {selectedFee.status === "paid" ? <Tag color="green">PAID</Tag> : <Tag color="red">DUE</Tag>}
+              {selectedFee.status === "paid" ? (
+                <Tag color="green">PAID</Tag>
+              ) : (
+                <Tag color="red">DUE</Tag>
+              )}
             </Descriptions.Item>
           </Descriptions>
         )}

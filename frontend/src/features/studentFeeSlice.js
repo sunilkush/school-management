@@ -33,11 +33,8 @@ export const fetchMyFees = createAsyncThunk(
   async (studentId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const url = studentId
-        ? `${Api_Base_Url}/student-fees/my/${studentId}`
-        : `${Api_Base_Url}/student-fees/my`;
 
-      const { data } = await axios.get(url, {
+      const { data } = await axios.get( `${Api_Base_Url}/student-fees/my/${studentId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

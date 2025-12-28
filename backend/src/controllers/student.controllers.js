@@ -270,18 +270,28 @@ const getStudents = asyncHandler(async (req, res) => {
 
 
 // ✅ Get Student by ID
-const getStudentById = asyncHandler(async (req, res) => {
-  try {
-    const student = await Student.findById(req.params.id).populate("userId", "-password -refreshToken");
-    if (!student) {
-      throw new ApiError(404, "Student not found!");
-    }
+ const getStudentById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    return res.status(200).json(new ApiResponse(200, student, "Student found successfully!"));
-  } catch (error) {
-    throw new ApiError(500, error.message || "Something went wrong!");
+  // ✅ Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid student ID");
   }
+
+  // ✅ Student can access ONLY his own profile
+  const student = await Student.findOne({
+    userId: req.user._id, // 🔐 ownership check
+  }).populate("userId", "-password -refreshToken");
+
+  if (!student) {
+    throw new ApiError(403, "You are not authorized to view this student");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, student, "Student fetched successfully"));
 });
+
 
 // ✅ Update Student
 const updateStudent = asyncHandler(async (req, res) => {
@@ -701,6 +711,50 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
 
 });
 
+const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
+  // 🔐 Step 1: Find student by logged-in user
+  const student = await Student.findOne({ userId: req.user._id }).select("_id");
+
+  if (!student) {
+    throw new ApiError(404, "Student profile not found");
+  }
+
+  // 🔐 Step 2: Get active academic year
+  const academicYear = await AcademicYear.findOne({
+    schoolId: req.user.schoolId,
+    isActive: true,
+  }).select("_id");
+
+  if (!academicYear) {
+    throw new ApiError(404, "Active academic year not found");
+  }
+
+  // 🔐 Step 3: Find enrollment
+  const enrollment = await StudentEnrollment.findOne({
+    studentId: student._id,
+    schoolId: req.user.schoolId,
+    academicYearId: academicYear._id,
+  }).select("_id registrationNumber classId sectionId");
+
+  if (!enrollment) {
+    throw new ApiError(404, "Student enrollment not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        studentId: student._id,
+        enrollmentId: enrollment._id,
+        registrationNumber: enrollment.registrationNumber,
+        classId: enrollment.classId,
+        sectionId: enrollment.sectionId,
+        academicYearId: academicYear._id,
+      },
+      "Student enrollment fetched successfully"
+    )
+  );
+});
 
 export {
   registerStudent,
@@ -709,5 +763,6 @@ export {
   updateStudent,
   deleteStudent,
   getLastRegisteredStudent,
-  getStudentsBySchoolId
+  getStudentsBySchoolId,
+  getMyStudentEnrollmentId
 };

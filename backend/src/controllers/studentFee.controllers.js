@@ -72,19 +72,25 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
 
 /* =====================================================
    ✅ STUDENT FEES LIST (Student + Parent)
-=====================================================*/
+=====================================================*/ 
 export const getMyFees = asyncHandler(async (req, res) => {
-  const studentId =
-    req.user.role === "Parent"
-      ? req.params.studentId
-      : req.user._id;
+  const { studentId } = req.params;
 
-  const fees = await StudentFee.find({ studentId })
+  // ✅ ObjectId validation
+  if (!mongoose.Types.ObjectId.isValid(studentId)) {
+    throw new ApiError(400, "Invalid student ID");
+  }
+
+  const fees = await StudentFee.find({ studentId }) // ✅ FIX HERE
     .populate("feeStructureId", "name amount")
     .populate("academicYearId", "name")
     .sort({ createdAt: -1 });
 
-  return res.json(new ApiResponse(200, fees));
+  console.log("fees data:", fees);
+
+  return res.status(200).json(
+    new ApiResponse(200, fees, "Fees fetched successfully")
+  );
 });
 
 /* =====================================================

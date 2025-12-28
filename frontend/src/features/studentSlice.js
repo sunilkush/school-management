@@ -125,6 +125,58 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
   }
 );
 
+export const fetchStudentById = createAsyncThunk(
+  "student/fetchStudentById",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+
+      const res = await axios.get(`${Api_Base_Url}/student/getStudent/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch student by ID"
+      );
+    }
+  }
+);
+
+
+export const fetchMyStudentEnrollment = createAsyncThunk(
+  "student/fetchMyStudentEnrollment",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+
+      const res = await axios.get(
+        `${Api_Base_Url}/student/my/enrollment-id`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return res.data.data; // { enrollmentId, studentId, classId, sectionId }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch student enrollment"
+      );
+    }
+  }
+);
+
 const initialState = {
   lastStudent: null, // last stide
   student: null, // single student
@@ -134,6 +186,7 @@ const initialState = {
   error: null,
   success: false,
   registrationNumber: "",
+   myEnrollment: null,
 };
 
 const studentSlice = createSlice({
@@ -217,6 +270,35 @@ const studentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.success = false;
+      })
+
+      .addCase(fetchStudentById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(fetchStudentById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.student = action.payload || null;
+        state.success = true;
+      })
+      .addCase(fetchStudentById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
+      })
+
+      .addCase(fetchMyStudentEnrollment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyStudentEnrollment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myEnrollment = action.payload;
+      })
+      .addCase(fetchMyStudentEnrollment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

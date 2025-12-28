@@ -298,12 +298,11 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
  * @route GET /api/users/me
  */
 const getCurrentUser = asyncHandler(async (req, res) => {
-
-  const userId = new mongoose.Types.ObjectId(req.user._id);
+  const userId = req.user._id; // ✅ already ObjectId
 
   const userWithDetails = await User.aggregate([
     {
-      $match: { _id: userId }
+      $match: { _id: userId },
     },
 
     // ===== ROLE =====
@@ -371,15 +370,19 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     },
   ]);
 
+  // ✅ User existence check
+  if (!userWithDetails.length) {
+    throw new ApiError(404, "User not found");
+  }
+
   return res.status(200).json(
     new ApiResponse(
       200,
-      userWithDetails[0] || null,
+      userWithDetails[0],
       "User fetched successfully"
     )
   );
 });
-
 /**
  * @desc Logout user
  * @route POST /api/auth/logout

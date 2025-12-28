@@ -30,8 +30,8 @@ router.post("/assign",auth, roleMiddleware(ADMIN_ONLY), assignFeesToStudents);
    GET /api/v1/student-fees/my
    GET /api/v1/student-fees/my/:studentId
 ===================================================== */
-router.get("/my",auth, roleMiddleware(STUDENT_PARENT), getMyFees);
-router.get("/my/:studentId", auth, roleMiddleware(STUDENT_PARENT), getMyFees);
+//router.get("/my",auth, roleMiddleware(STUDENT_PARENT), getMyFees);
+router.get("/my/:studentId", auth, getMyFees);
 
 /* =====================================================
    ✅ PAY STUDENT FEE

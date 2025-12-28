@@ -19,12 +19,13 @@ const studentFeeSchema = new mongoose.Schema(
     },
 
     // 🔹 Student
+ 
     studentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Student",
-      required: true,
-      index: true,
-    },
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Student",
+          required: true,
+          index: true,
+        },
 
     // 🔹 Fee Structure
     feeStructureId: {
