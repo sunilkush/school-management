@@ -82,7 +82,14 @@ export const getMyFees = asyncHandler(async (req, res) => {
   }
 
   const fees = await StudentFee.find({ studentId }) // ✅ FIX HERE
-    .populate("feeStructureId", "name amount")
+    .populate({
+  path: "feeStructureId",
+  select: "name amount feeHeadId",
+  populate: {
+    path: "feeHeadId",
+    select: "name",
+  },
+})
     .populate("academicYearId", "name")
     .sort({ createdAt: -1 });
 

@@ -52,7 +52,7 @@ const FeeStudent = () => {
     },
     {
       title: "Fee Type",
-      render: (_, record) => record.feeStructureId?.name || "-",
+      render: (_, record) => record.feeStructureId?.feeHeadId?.name || "-",
     },
     {
       title: "Total Fee",
@@ -135,7 +135,7 @@ const FeeStudent = () => {
               {selectedFee.academicYearId?.name}
             </Descriptions.Item>
             <Descriptions.Item label="Fee Type">
-              {selectedFee.feeStructureId?.name}
+              {selectedFee.feeStructureId?.feeHeadId?.name}
             </Descriptions.Item>
             <Descriptions.Item label="Total Fee">
               ₹ {selectedFee.totalAmount}
