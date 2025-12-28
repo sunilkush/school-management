@@ -10,10 +10,11 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 router.use(auth);
+const ADMIN_ONLY = ["School Admin"];
 
-router.post("/",roleMiddleware("School Admin"), createFeeStructure);
-router.get("/",roleMiddleware("School Admin"), getFeeStructures);
-router.put("/:id",roleMiddleware("School Admin"), updateFeeStructure);
-router.delete("/:id",roleMiddleware("School Admin"), deleteFeeStructure);
+router.post("/",roleMiddleware(ADMIN_ONLY), createFeeStructure);
+router.get("/",roleMiddleware(ADMIN_ONLY), getFeeStructures);
+router.put("/:id",roleMiddleware(ADMIN_ONLY), updateFeeStructure);
+router.delete("/:id",roleMiddleware(ADMIN_ONLY), deleteFeeStructure);
 
 export default router;

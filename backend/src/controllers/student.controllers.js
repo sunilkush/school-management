@@ -570,47 +570,124 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
 
     // ✅ Clean Projection for Frontend
     {
-      $project: {
-        registrationNumber: 1,
-        admissionDate: 1,
-        mobileNumber: 1,
-        feeDiscount: 1,
-        status: 1,
+  $project: {
+    _id: 1, // enrollment id
 
-        student: {
-          dateOfBirth: 1,
-          gender: 1,
-          religion: 1,
-          cast: 1,
-          bloodGroup: 1,
-          address: 1,
-          fatherInfo: 1,
-          motherInfo: 1,
-          identificationMark: 1,
-        },
+    registrationNumber: 1,
+    admissionDate: 1,
+    mobileNumber: 1,
+    feeDiscount: 1,
+    status: 1,
 
-        userDetails: {
-          name: 1,
-          email: 1,
-          isActive: 1,
-          avatar: 1,
-        },
-
-        class: { name: 1 },
-        section: { name: 1 },
-
-        school: {
-          name: 1,
-          address: 1,
-        },
-
-        academicYear: {
-          name: 1,
-          startDate: 1,
-          endDate: 1,
-        },
-      },
+    student: {
+      _id: "$student._id",
+      dateOfBirth: "$student.dateOfBirth",
+      gender: "$student.gender",
+      religion: "$student.religion",
+      cast: "$student.cast",
+      bloodGroup: "$student.bloodGroup",
+      address: "$student.address",
+      fatherInfo: "$student.fatherInfo",
+      motherInfo: "$student.motherInfo",
+      identificationMark: "$student.identificationMark",
     },
+
+    userDetails: {
+      _id: "$userDetails._id",
+      name: "$userDetails.name",
+      email: "$userDetails.email",
+      isActive: "$userDetails.isActive",
+      avatar: "$userDetails.avatar",
+    },
+
+    /* ✅ CLASS ID + NAME */
+    class: {
+      _id: "$class._id",
+      name: "$class.name",
+    },
+
+    /* ✅ SECTION ID + NAME */
+    section: {
+      _id: "$section._id",
+      name: "$section.name",
+    },
+
+    /* ✅ SCHOOL ID + DETAILS */
+    school: {
+      _id: "$school._id",
+      name: "$school.name",
+      address: "$school.address",
+    },
+
+    /* ✅ ACADEMIC YEAR ID + DETAILS */
+    academicYear: {
+      _id: "$academicYear._id",
+      name: "$academicYear.name",
+      startDate: "$academicYear.startDate",
+      endDate: "$academicYear.endDate",
+    },
+  },
+},
+{
+  $project: {
+    _id: 1, // enrollment id
+
+    registrationNumber: 1,
+    admissionDate: 1,
+    mobileNumber: 1,
+    feeDiscount: 1,
+    status: 1,
+
+    student: {
+      _id: "$student._id",
+      dateOfBirth: "$student.dateOfBirth",
+      gender: "$student.gender",
+      religion: "$student.religion",
+      cast: "$student.cast",
+      bloodGroup: "$student.bloodGroup",
+      address: "$student.address",
+      fatherInfo: "$student.fatherInfo",
+      motherInfo: "$student.motherInfo",
+      identificationMark: "$student.identificationMark",
+    },
+
+    userDetails: {
+      _id: "$userDetails._id",
+      name: "$userDetails.name",
+      email: "$userDetails.email",
+      isActive: "$userDetails.isActive",
+      avatar: "$userDetails.avatar",
+    },
+
+    /* ✅ CLASS ID + NAME */
+    class: {
+      _id: "$class._id",
+      name: "$class.name",
+    },
+
+    /* ✅ SECTION ID + NAME */
+    section: {
+      _id: "$section._id",
+      name: "$section.name",
+    },
+
+    /* ✅ SCHOOL ID + DETAILS */
+    school: {
+      _id: "$school._id",
+      name: "$school.name",
+      address: "$school.address",
+    },
+
+    /* ✅ ACADEMIC YEAR ID + DETAILS */
+    academicYear: {
+      _id: "$academicYear._id",
+      name: "$academicYear.name",
+      startDate: "$academicYear.startDate",
+      endDate: "$academicYear.endDate",
+    },
+  },
+}
+,
   ]);
 
   // ✅ If No Students Found

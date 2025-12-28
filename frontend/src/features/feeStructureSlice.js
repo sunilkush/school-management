@@ -26,13 +26,14 @@ export const createFeeStructure = createAsyncThunk(
 /* ================= GET ALL ================= */
 export const fetchFeeStructures = createAsyncThunk(
     "feeStructure/getAll",
-    async (_, { rejectWithValue }) => {
+    async (params, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("accessToken");
             const res = await axios.get(`${API_BASE_URL}/fee-structures`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
-                }
+                },
+                params
             });
             return res.data.data;
         } catch (err) {

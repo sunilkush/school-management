@@ -2,6 +2,31 @@ import mongoose from "mongoose";
 
 const feeInstallmentSchema = new mongoose.Schema(
   {
+    // 🔹 Multi-school support
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true,
+    },
+
+    // 🔹 Academic year
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      required: true,
+      index: true,
+    },
+
+    // 🔹 Student
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      required: true,
+      index: true,
+    },
+
+    // 🔹 Parent fee
     studentFeeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "StudentFee",
@@ -9,28 +34,38 @@ const feeInstallmentSchema = new mongoose.Schema(
       index: true,
     },
 
+    // 🔹 Installment label
     installmentName: {
       type: String,
       required: true,
       trim: true,
-      // examples: Apr, May, Q1, First Installment
+      // Apr, May, Q1, Annual
     },
 
+    // 🔹 Amounts
     amount: {
       type: Number,
       required: true,
       min: 0,
     },
 
+    paidAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     dueDate: {
       type: Date,
       required: true,
+      index: true,
     },
 
     status: {
       type: String,
-      enum: ["pending", "paid", "late"],
+      enum: ["pending", "partial", "paid", "late"],
       default: "pending",
+      index: true,
     },
   },
   {
@@ -40,26 +75,12 @@ const feeInstallmentSchema = new mongoose.Schema(
 );
 
 /**
- * Prevent duplicate installments for same StudentFee
- * Example: "Apr" installment should not repeat
+ * 🔒 Prevent duplicate installment per StudentFee
  */
 feeInstallmentSchema.index(
   { studentFeeId: 1, installmentName: 1 },
   { unique: true }
 );
-
-/**
- * Auto-mark late installments
- */
-feeInstallmentSchema.pre("save", function (next) {
-  if (
-    this.status === "pending" &&
-    this.dueDate < new Date()
-  ) {
-    this.status = "late";
-  }
-  next();
-});
 
 export const FeeInstallment = mongoose.model(
   "FeeInstallment",

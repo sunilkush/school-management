@@ -7,20 +7,17 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 export const createFeeStructure = asyncHandler(async (req, res) => {
   const { schoolId, classId,  academicYearId, feeHeadId, amount, frequency } = req.body;
 
-  const finalSchoolId =
-    req.user.role === "School Admin" ? req.user.schoolId : schoolId;
-
   const exists = await FeeStructure.findOne({
-    schoolId: finalSchoolId,
+    schoolId,
     classId,
-     academicYearId,
+    academicYearId,
     feeHeadId,
   });
 
   if (exists) throw new ApiError(409, "FeeStructure already exists");
 
   const fee = await FeeStructure.create({
-    schoolId: finalSchoolId,
+    schoolId,
     classId,
     academicYearId,
     feeHeadId,
@@ -34,14 +31,15 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
 /* ================= GET ================= */
 export const getFeeStructures = asyncHandler(async (req, res) => {
   const filter = {};
-  ["schoolId", "classId", " academicYearId"].forEach(
-    (k) => req.query[k] && (filter[k] = req.query[k])
-  );
+
+  ["schoolId", "classId", "academicYearId"].forEach((k) => {
+    if (req.query[k]) filter[k] = req.query[k];
+  });
 
   const data = await FeeStructure.find(filter)
     .populate("feeHeadId", "name")
     .populate("classId", "name")
-    .populate(" academicYearId", "name");
+    .populate("academicYearId", "name");
 
   res.status(200).json(new ApiResponse(200, data, "Fetched"));
 });

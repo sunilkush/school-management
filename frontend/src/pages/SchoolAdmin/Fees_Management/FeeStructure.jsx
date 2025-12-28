@@ -48,7 +48,7 @@ const FeeStructure = () => {
   /* ================= SUBMIT ================= */
   const handleSubmit = async (values) => {
     try {
-      await dispatch(createFeeStructure(values)).unwrap();
+      await dispatch(createFeeStructure({ ...values, schoolId })).unwrap();
 
       message.success("Fee Structure Created");
       setOpen(false);

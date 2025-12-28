@@ -1,121 +1,129 @@
 import mongoose from "mongoose";
 import { StudentFee } from "../models/studentFee.model.js";
-import { Fees } from "../models/fees.model.js";
+import { FeeStructure } from "../models/feeStructure.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 /* =====================================================
-   ✅ ASSIGN FEES TO STUDENTS
+   ✅ ASSIGN FEES TO STUDENTS (Single / Bulk)
    (School Admin)
 =====================================================*/
 export const assignFeesToStudents = asyncHandler(async (req, res) => {
-  const { feeId, studentIds } = req.body;
+  const {
+    feeStructureId,
+    studentId,
+    studentIds,
+    academicYearId,
+    schoolId,
+    customAmount,
+  } = req.body;
 
-  if (!feeId || !studentIds?.length) {
-    throw new ApiError(400, "feeId and studentIds are required");
+  if (!feeStructureId || !academicYearId || !schoolId) {
+    throw new ApiError(
+      400,
+      "feeStructureId, academicYearId and schoolId are required"
+    );
   }
 
-  const fee = await Fees.findById(feeId);
+  // 🎯 Normalize students (single → array)
+  let students = [];
 
-  if (!fee) throw new ApiError(404, "Fee not found");
+  if (Array.isArray(studentIds) && studentIds.length) {
+    students = studentIds;
+  } else if (studentId) {
+    students = [studentId];
+  }
 
-  const records = studentIds.map((studentId) => ({
-    feeId,
-    studentId,
+  if (!students.length) {
+    throw new ApiError(400, "studentId or studentIds required");
+  }
+
+  const feeStructure = await FeeStructure.findById(feeStructureId);
+  if (!feeStructure) throw new ApiError(404, "Fee structure not found");
+
+  const totalAmount = customAmount ?? feeStructure.amount;
+
+  const records = students.map((sid) => ({
+    schoolId,
+    academicYearId,
+    studentId: sid,
+    feeStructureId,
+    customAmount: customAmount ?? null,
+    totalAmount,
+    paidAmount: 0,
+    dueAmount: totalAmount,
     status: "pending",
+    assignedBy: req.user._id,
   }));
 
-  await StudentFee.insertMany(records);
+  // 🔒 ordered:false → duplicates skip, baki insert ho jayenge
+  await StudentFee.insertMany(records, { ordered: false });
 
   return res.json(
-    new ApiResponse(201, null, "Fees assigned successfully")
+    new ApiResponse(
+      201,
+      { assignedCount: records.length },
+      "Fees assigned successfully"
+    )
   );
 });
 
+
 /* =====================================================
-   ✅ STUDENT FEES LIST  (Student + Parent)
+   ✅ STUDENT FEES LIST (Student + Parent)
 =====================================================*/
 export const getMyFees = asyncHandler(async (req, res) => {
-
   const studentId =
-    req.user.role === "parent"
+    req.user.role === "Parent"
       ? req.params.studentId
       : req.user._id;
 
-  const data = await StudentFee.find({ studentId })
-    .populate({
-      path: "feeId",
-      select: "feeName amount dueDate academicYearId",
-      populate: {
-        path: "academicYearId",
-        select: "name",
-      },
-    })
+  const fees = await StudentFee.find({ studentId })
+    .populate("feeStructureId", "name amount")
+    .populate("academicYearId", "name")
     .sort({ createdAt: -1 });
 
-  return res.json(
-    new ApiResponse(200, data)
-  );
+  return res.json(new ApiResponse(200, fees));
 });
 
-
 /* =====================================================
-   ✅ PAY FEES
+   ✅ PAY FEES (Partial / Full)
 =====================================================*/
 export const payStudentFee = asyncHandler(async (req, res) => {
-  const { paymentMethod, transactionId, paidAmount } = req.body;
+  const { paidAmount } = req.body;
 
-  if (!paymentMethod || !transactionId || !paidAmount) {
-    throw new ApiError(400, "Payment fields required");
+  if (!paidAmount || paidAmount <= 0) {
+    throw new ApiError(400, "Valid paidAmount required");
   }
 
-  const receipt = await StudentFee.findByIdAndUpdate(
-    req.params.id,
-    {
-      paymentMethod,
-      transactionId,
-      paidAmount,
-      status: "paid",
-      paymentDate: new Date(),
-    },
-    { new: true }
-  );
+  const feeRecord = await StudentFee.findById(req.params.id);
+  if (!feeRecord) throw new ApiError(404, "Fee record not found");
 
-  if (!receipt) throw new ApiError(404, "Fee record not found");
+  feeRecord.paidAmount += paidAmount;
+
+  await feeRecord.save(); // status & due auto handled by schema middleware
 
   return res.json(
-    new ApiResponse(200, receipt, "Fee Paid Successfully")
+    new ApiResponse(200, feeRecord, "Fee payment successful")
   );
 });
 
 /* =====================================================
-   ✅ FEES SUMMARY DASHBOARD
+   ✅ FEES SUMMARY DASHBOARD (School Admin)
 =====================================================*/
 export const studentFeeSummary = asyncHandler(async (req, res) => {
   const summary = await StudentFee.aggregate([
     {
-      $lookup: {
-        from: "fees",
-        localField: "feeId",
-        foreignField: "_id",
-        as: "fee",
-      },
-    },
-    { $unwind: "$fee" },
-
-    {
       $match: {
-        "fee.schoolId": new mongoose.Types.ObjectId(
-          req.user.schoolId
-        ),
+        schoolId: new mongoose.Types.ObjectId(req.user.schoolId),
       },
     },
-
     {
       $group: {
         _id: "$status",
-        totalAmount: { $sum: "$paidAmount" },
+        totalCollected: { $sum: "$paidAmount" },
+        totalDue: { $sum: "$dueAmount" },
         studentsCount: { $sum: 1 },
       },
     },

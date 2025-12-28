@@ -25,13 +25,13 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 router.post("/create", auth, roleMiddleware(ADMIN_ROLE), createAcademicYear);
 
 // ✅ Get All Academic Years for a School
-router.get("/school/:schoolId", auth, roleMiddleware(ADMIN_ROLE), getAcademicYearsBySchool);
+router.get("/school/:schoolId", auth, roleMiddleware(ALL_USERS), getAcademicYearsBySchool);
 
 // ✅ Get Active Academic Year by School
-router.get("/active/:schoolId", auth, roleMiddleware(ADMIN_ROLE), getActiveAcademicYearBySchool);
+router.get("/active/:schoolId", auth, roleMiddleware(ALL_USERS), getActiveAcademicYearBySchool);
 
 // ✅ Get Single Academic Year by ID
-router.get("/:id", auth, roleMiddleware(ADMIN_ROLE), getSingleAcademicYear);
+router.get("/:id", auth, roleMiddleware(ALL_USERS), getSingleAcademicYear);
 
 // ✅ Update Academic Year by ID
 router.put("/:id", auth, roleMiddleware(ADMIN_ROLE), updateAcademicYear);

@@ -99,6 +99,7 @@ import GlobalConfig from './pages/SuperAdmin/System_Settings/GlobalConfig.jsx';
 import AuditLogs from './pages/SuperAdmin/System_Settings/AuditLogs.jsx';
 import Backups from './pages/SuperAdmin/System_Settings/Backups.jsx';
 import FeeStructure from './pages/SchoolAdmin/Fees_Management/FeeStructure.jsx';
+import StudentAssignFees from './pages/SchoolAdmin/Fees_Management/AssignStudentFeeForm.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -214,7 +215,8 @@ const router = createBrowserRouter([
               { path: "events", element: <Events /> },
               { path: "inventory/supplies", element: <Supplies /> },
               { path: "inventory/assets", element: <Assets /> },
-              { path: "fees/feestructure", element: <FeeStructure /> }
+              { path: "fees/feestructure", element: <FeeStructure /> },
+              { path: "fees/assign", element: <StudentAssignFees /> }
 
             ],
           },

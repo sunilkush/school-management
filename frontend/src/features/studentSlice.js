@@ -63,7 +63,6 @@ export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
   async ({ schoolId, academicYearId, classId } = {}, { rejectWithValue }) => {
     try {
-    
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
@@ -81,8 +80,9 @@ export const fetchAllStudent = createAsyncThunk(
 
       return res.data;
     } catch (error) {
-      
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch students");
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch students"
+      );
     }
   }
 );
@@ -91,7 +91,6 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
   "student/fetchBySchoolId",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
-
       // ✅ check valid schoolId
       if (!schoolId) {
         return rejectWithValue("schoolId is required");
@@ -105,42 +104,31 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
       }
 
       // ✅ API Call
-      const res = await axios.get(
-        `${Api_Base_Url}/student/school`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            schoolId,
-            ...(academicYearId && { academicYearId }) // ✅ send only if exists
-          }
-        }
-      );
+      const res = await axios.get(`${Api_Base_Url}/student/school`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          schoolId,
+          ...(academicYearId && { academicYearId }), // ✅ send only if exists
+        },
+      });
 
-      
-      
-      console.log("Fetched students by school ID:", res.data.data);
       return res.data.data;
-
     } catch (error) {
-
-      console.error("❌ Fetch students error:", error);
-
       return rejectWithValue(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to fetch students by school"
+          error.message ||
+          "Failed to fetch students by school"
       );
-
     }
   }
 );
 
 const initialState = {
   lastStudent: null, // last stide
-  student: null,   // single student
-  studentList: [],    // list of students
+  student: null, // single student
+  studentList: [], // list of students
   schoolStudents: [],
   loading: false,
   error: null,
@@ -206,7 +194,7 @@ const studentSlice = createSlice({
       })
       .addCase(fetchAllStudent.fulfilled, (state, action) => {
         state.loading = false;
-        state.studentList = action.payload.data?.students || []
+        state.studentList = action.payload.data?.students || [];
         state.success = true;
       })
       .addCase(fetchAllStudent.rejected, (state, action) => {
@@ -230,7 +218,6 @@ const studentSlice = createSlice({
         state.error = action.payload;
         state.success = false;
       });
-
   },
 });
 
