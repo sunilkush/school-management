@@ -19,6 +19,8 @@ import feeReducer from "../features/feesSlice.js";
 import feeHeadReducer from "../features/headSlice.js";
 import feeStructureReducer from "../features/feeStructureSlice.js";
 import studentFeeReducer from "../features/studentFeeSlice.js";
+import paymentReducer from "../features/paymentSlice.js";
+import feeInstallmentReducer from "../features/feeInstallmentSlice.js";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -41,6 +43,8 @@ const store = configureStore({
     feeHead:feeHeadReducer,
     feeStructure:feeStructureReducer,
     studentFee: studentFeeReducer,
+    payment: paymentReducer,
+    feeInstallment: feeInstallmentReducer,
     },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

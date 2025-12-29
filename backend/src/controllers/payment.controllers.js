@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { Payment } from "../models/payment.model.js";
-import { StudentFee } from "../models/studentFee.model.js";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createPayment = asyncHandler(async (req, res) => {
@@ -11,117 +11,100 @@ export const createPayment = asyncHandler(async (req, res) => {
 
   try {
     const {
-      studentFeeId,
+      studentId,
       installmentId,
       amountPaid,
       paymentMode,
       transactionId,
-      remarks,
+      receiptNo,
     } = req.body;
 
-    if (!studentFeeId || !amountPaid || !paymentMode) {
+    /* ================= BASIC VALIDATION ================= */
+    if (!studentId || !installmentId || !amountPaid || !paymentMode) {
       throw new ApiError(400, "Required fields missing");
     }
 
-    // 🔹 Fetch StudentFee
-    const studentFee = await StudentFee.findOne({
-      _id: studentFeeId,
-      schoolId: req.user.school._id,
-    }).session(session);
-
-    if (!studentFee) {
-      throw new ApiError(404, "StudentFee not found");
+    if (!mongoose.Types.ObjectId.isValid(installmentId)) {
+      throw new ApiError(400, "Invalid installment ID");
     }
 
-    // 🔹 Overpayment check (StudentFee)
-    if (amountPaid > studentFee.dueAmount) {
-      throw new ApiError(400, "Amount exceeds due amount");
+    if (amountPaid <= 0) {
+      throw new ApiError(400, "Amount must be greater than 0");
     }
 
-    let installment = null;
+    /* ================= FIND INSTALLMENT ================= */
+    const installment = await FeeInstallment.findById(installmentId)
+      .session(session);
 
-    if (installmentId) {
-      installment = await FeeInstallment.findOne({
-        _id: installmentId,
-        studentFeeId,
-      }).session(session);
-
-      if (!installment) {
-        throw new ApiError(404, "Installment not found");
-      }
-
-      installment.paidAmount = installment.paidAmount || 0;
-
-      const remaining =
-        installment.amount - installment.paidAmount;
-
-      if (amountPaid > remaining) {
-        throw new ApiError(
-          400,
-          "Amount exceeds installment due"
-        );
-      }
-
-      installment.paidAmount += amountPaid;
-
-      installment.status =
-        installment.paidAmount === installment.amount
-          ? "paid"
-          : "partial";
-
-      await installment.save({ session });
+    if (!installment) {
+      throw new ApiError(404, "Installment not found");
     }
 
-    // 🔹 Update StudentFee
-    studentFee.paidAmount =
-      (studentFee.paidAmount || 0) + amountPaid;
+    /* ================= STUDENT SAFETY CHECK ================= */
+    if (String(installment.studentId) !== String(studentId)) {
+      throw new ApiError(403, "Student mismatch for installment");
+    }
 
-    studentFee.dueAmount =
-      studentFee.totalAmount - studentFee.paidAmount;
+    /* ================= AMOUNT CALCULATION ================= */
+    installment.paidAmount = installment.paidAmount || 0;
 
-    studentFee.status =
-      studentFee.dueAmount === 0
-        ? "paid"
-        : "partial";
+    const remainingAmount =
+      installment.amount - installment.paidAmount;
 
-    await studentFee.save({ session });
+    if (amountPaid > remainingAmount) {
+      throw new ApiError(
+        400,
+        "Amount exceeds installment due"
+      );
+    }
 
-    // 🔹 Create Payment
+    /* ================= CREATE PAYMENT ================= */
     const [payment] = await Payment.create(
       [
         {
-          schoolId: studentFee.schoolId,
-          academicYearId: studentFee.academicYearId,
-          studentId: studentFee.studentId,
-          studentFeeId,
-          installmentId: installmentId || null,
+          studentId,
+          installmentId,
           amountPaid,
           paymentMode,
-          transactionId,
-          receiptNo: `RCPT-${Date.now()}-${Math.floor(
-            Math.random() * 1000
-          )}`,
-          collectedBy: req.user._id,
-          remarks,
+          transactionId: transactionId || null,
+          receiptNo:
+            receiptNo ||
+            `RCPT-${Date.now()}-${Math.floor(
+              Math.random() * 1000
+            )}`,
         },
       ],
       { session }
     );
 
+    /* ================= UPDATE INSTALLMENT ================= */
+    installment.paidAmount += amountPaid;
+
+    if (installment.paidAmount === installment.amount) {
+      installment.status = "paid";
+    } else {
+      installment.status = "partial";
+    }
+
+    await installment.save({ session });
+
     await session.commitTransaction();
     session.endSession();
 
-    res.status(201).json({
-      success: true,
-      message: "Payment successful",
-      payment,
-    });
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        payment,
+        "Payment created successfully"
+      )
+    );
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     throw error;
   }
 });
+
 
 /* =====================================================
    ✅ GET PAYMENTS

@@ -10,9 +10,9 @@ const router = Router();
 
 router.use(auth);
 
-router.post("/", createPayment);
-router.get("/", getPayments);
-router.get("/:id", getPayments);
-router.get('/summary',paymentSummary)
+router.post("/", auth, roleMiddleware(['Super Admin','School Admin','Student','Parent']), createPayment);
+router.get("/", auth, roleMiddleware(['Super Admin','School Admin','Student','Parent']), getPayments);
+router.get("/:id", auth, roleMiddleware(['Super Admin','School Admin','Student','Parent']), getPayments);
+router.get('/summary', auth,roleMiddleware(['Super Admin','School Admin','Student','Parent']), paymentSummary)
 
 export default router;

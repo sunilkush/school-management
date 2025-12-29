@@ -1,25 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Tag, Button, Modal, Descriptions, message } from "antd";
-import { CreditCardOutlined, EyeOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Table,
+  Tag,
+  Button,
+  Modal,
+  Descriptions,
+  InputNumber,
+  message,
+} from "antd";
+import { CreditCardOutlined, PlusOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMyFees, payStudentFee } from "../../../features/studentFeeSlice";
+import { fetchMyFees } from "../../../features/studentFeeSlice";
 import { fetchMyStudentEnrollment } from "../../../features/studentSlice";
+import { createPayment } from "../../../features/paymentSlice";
+import { generateInstallments, fetchFeeInstallments, resetInstallmentState } from "../../../features/feeInstallmentSlice";
 
 const FeeStudent = () => {
   const dispatch = useDispatch();
 
-  const { myFees = [], loading: feeLoading } = useSelector(
+  const { myFees = [], loading } = useSelector(
     (state) => state.studentFee
   );
-
-  const { myEnrollment, loading: enrollmentLoading } = useSelector(
-    (state) => state.students
-  );
-
-  const [open, setOpen] = useState(false);
-  const [selectedFee, setSelectedFee] = useState(null);
+  const { myEnrollment } = useSelector((state) => state.students);
+  const { installments, loading: instLoading, success } = useSelector((state) => state.feeInstallment);
 
   const enrollmentId = myEnrollment?.enrollmentId;
+
+  const [open, setOpen] = useState(false);
+  const [selectedInstallment, setSelectedInstallment] = useState(null);
+  const [amountPaid, setAmountPaid] = useState(0);
 
   /* ================= FETCH ENROLLMENT ================= */
   useEffect(() => {
@@ -30,32 +40,66 @@ const FeeStudent = () => {
   useEffect(() => {
     if (enrollmentId) {
       dispatch(fetchMyFees(enrollmentId));
+      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     }
-  }, [dispatch, enrollmentId]);
+  }, [dispatch, enrollmentId, success]);
 
-  /* ================= PAY FEE ================= */
-  const handlePay = async (feeId) => {
+  /* ================= OPEN PAY MODAL ================= */
+  const openPayModal = (installment) => {
+    if (installment.status === "paid") {
+      message.info("Installment already paid");
+      return;
+    }
+    setSelectedInstallment(installment);
+    setAmountPaid(installment.dueAmount);
+    setOpen(true);
+  };
+
+  /* ================= SUBMIT PAYMENT ================= */
+  const handleSubmitPayment = async () => {
+    if (!selectedInstallment) return;
+
+    const payload = {
+      studentId: selectedInstallment.studentId,
+      installmentId: selectedInstallment._id,
+      amountPaid,
+      paymentMode: "cash",
+      receiptNo: `RCT-${Date.now()}`,
+    };
+
     try {
-      await dispatch(payStudentFee({ id: feeId })).unwrap();
-      message.success("Fee paid successfully");
-      dispatch(fetchMyFees(enrollmentId)); // refresh
+      await dispatch(createPayment(payload)).unwrap();
+      message.success("Payment Successful");
+      setOpen(false);
+      dispatch(fetchMyFees(enrollmentId));
+      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     } catch (err) {
-      message.error(err || "Failed to pay fee");
+      message.error(err || "Payment failed");
     }
   };
 
-  /* ================= TABLE COLUMNS ================= */
+  /* ================= GENERATE INSTALLMENTS ================= */
+  const handleGenerateInstallments = async () => {
+    if (!enrollmentId) return;
+
+    try {
+      await dispatch(generateInstallments({ studentId: enrollmentId })).unwrap();
+      message.success("Installments generated successfully");
+      dispatch(resetInstallmentState());
+      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
+    } catch (err) {
+      message.error(err || "Failed to generate installments");
+    }
+  };
+
+  /* ================= TABLE ================= */
   const columns = [
-    {
-      title: "Academic Year",
-      render: (_, record) => record.academicYearId?.name || "-",
-    },
     {
       title: "Fee Type",
       render: (_, record) => record.feeStructureId?.feeHeadId?.name || "-",
     },
     {
-      title: "Total Fee",
+      title: "Total",
       dataIndex: "totalAmount",
       render: (v) => `₹ ${v}`,
     },
@@ -66,94 +110,83 @@ const FeeStudent = () => {
     },
     {
       title: "Due",
-      render: (_, record) => `₹ ${record.dueAmount}`,
+      dataIndex: "dueAmount",
+      render: (v) => `₹ ${v}`,
     },
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) =>
-        status === "paid" ? (
-          <Tag color="green">PAID</Tag>
-        ) : (
-          <Tag color="red">DUE</Tag>
-        ),
+      render: (s) =>
+        s === "paid" ? <Tag color="green">PAID</Tag> : <Tag color="red">DUE</Tag>,
     },
     {
       title: "Action",
-      render: (_, record) => (
-        <>
+      render: (_, record) =>
+        record.status !== "paid" && (
           <Button
-            icon={<EyeOutlined />}
+            type="primary"
             size="small"
-            onClick={() => {
-              setSelectedFee(record);
-              setOpen(true);
-            }}
-            style={{ marginRight: 8 }}
+            onClick={() => openPayModal(record)}
           >
-            View
+            Pay
           </Button>
-
-          {record.status !== "paid" && (
-            <Button
-              type="primary"
-              icon={<CreditCardOutlined />}
-              size="small"
-              onClick={() => handlePay(record._id)}
-            >
-              Pay
-            </Button>
-          )}
-        </>
-      ),
+        ),
     },
   ];
 
   return (
     <>
-      <Card title="My Fees">
+      <Card
+        title="My Fees"
+        extra={
+          <Button
+            type="dashed"
+            icon={<PlusOutlined />}
+            onClick={handleGenerateInstallments}
+            loading={instLoading}
+          >
+            Generate Installments
+          </Button>
+        }
+      >
         <Table
           columns={columns}
-          dataSource={myFees}
+          dataSource={installments.length ? installments : myFees}
           rowKey="_id"
-          loading={feeLoading || enrollmentLoading}
+          loading={loading || instLoading}
           pagination={false}
         />
       </Card>
 
-      {/* ================= MODAL ================= */}
+      {/* ================= PAY MODAL ================= */}
       <Modal
+        title="Pay Fee"
         open={open}
         onCancel={() => setOpen(false)}
-        footer={null}
-        title="Fee Details"
-        width={600}
+        onOk={handleSubmitPayment}
       >
-        {selectedFee && (
-          <Descriptions bordered column={1}>
-            <Descriptions.Item label="Academic Year">
-              {selectedFee.academicYearId?.name}
-            </Descriptions.Item>
-            <Descriptions.Item label="Fee Type">
-              {selectedFee.feeStructureId?.feeHeadId?.name}
-            </Descriptions.Item>
-            <Descriptions.Item label="Total Fee">
-              ₹ {selectedFee.totalAmount}
-            </Descriptions.Item>
-            <Descriptions.Item label="Paid Amount">
-              ₹ {selectedFee.paidAmount}
-            </Descriptions.Item>
-            <Descriptions.Item label="Due Amount">
-              ₹ {selectedFee.dueAmount}
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              {selectedFee.status === "paid" ? (
-                <Tag color="green">PAID</Tag>
-              ) : (
-                <Tag color="red">DUE</Tag>
-              )}
-            </Descriptions.Item>
-          </Descriptions>
+        {selectedInstallment && (
+          <>
+            <Descriptions bordered column={1} size="small">
+              <Descriptions.Item label="Installment">
+                {selectedInstallment.name || "Installment"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Due Amount">
+                ₹ {selectedInstallment.dueAmount}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <div style={{ marginTop: 16 }}>
+              <label>Amount to Pay</label>
+              <InputNumber
+                style={{ width: "100%" }}
+                min={1}
+                max={selectedInstallment.dueAmount}
+                value={amountPaid}
+                onChange={setAmountPaid}
+              />
+            </div>
+          </>
         )}
       </Modal>
     </>
