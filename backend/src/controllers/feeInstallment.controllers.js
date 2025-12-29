@@ -125,3 +125,102 @@ export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
     new ApiResponse(200, installments, "Fee installments fetched successfully")
   );
 });
+
+/**
+ * =================================================
+ * 💳 PAY INSTALLMENT
+ * =================================================
+ * @route   POST /api/fees/installments/pay/:installmentId
+ * @access  Student / Parent
+ */
+export const payInstallment = asyncHandler(async (req, res) => {
+  const { installmentId } = req.params;
+  const { amount, paymentMode = "cash", razorpay } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(installmentId)) {
+    throw new ApiError(400, "Invalid installment ID");
+  }
+
+  if (!amount || amount <= 0) {
+    throw new ApiError(400, "Invalid payment amount");
+  }
+
+  /* ================= FIND INSTALLMENT ================= */
+  const installment = await FeeInstallment.findById(installmentId);
+
+  if (!installment) {
+    throw new ApiError(404, "Installment not found");
+  }
+
+  if (installment.status === "paid") {
+    throw new ApiError(400, "Installment already paid");
+  }
+
+  const remainingAmount =
+    installment.amount - installment.paidAmount;
+
+  if (amount > remainingAmount) {
+    throw new ApiError(
+      400,
+      `Amount exceeds due. Remaining: ₹${remainingAmount}`
+    );
+  }
+
+  /* ================= SAVE PAYMENT ================= */
+  const payment = await Payment.create({
+    schoolId: installment.schoolId,
+    academicYearId: installment.academicYearId,
+    studentId: installment.studentId,
+    studentFeeId: installment.studentFeeId,
+    installmentId: installment._id,
+
+    amount,
+    paymentMode, // cash | online | razorpay
+    razorpayDetails: razorpay || null,
+
+    status: "success",
+    paidAt: new Date(),
+  });
+
+  /* ================= UPDATE INSTALLMENT ================= */
+  installment.paidAmount += amount;
+
+  if (installment.paidAmount === installment.amount) {
+    installment.status = "paid";
+  } else {
+    installment.status = "partial";
+  }
+
+  await installment.save();
+
+  /* ================= UPDATE STUDENT FEE ================= */
+  const studentFee = await StudentFee.findById(
+    installment.studentFeeId
+  );
+
+  if (!studentFee) {
+    throw new ApiError(404, "Student fee record not found");
+  }
+
+  studentFee.paidAmount += amount;
+  studentFee.dueAmount -= amount;
+
+  if (studentFee.dueAmount <= 0) {
+    studentFee.status = "paid";
+  } else {
+    studentFee.status = "partial";
+  }
+
+  await studentFee.save();
+
+  /* ================= RESPONSE ================= */
+  res.status(200).json({
+    success: true,
+    message: "Installment payment successful",
+    data: {
+      installment,
+      payment,
+      studentFee,
+    },
+  });
+});

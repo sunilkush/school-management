@@ -7,7 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
    ASYNC THUNKS
 ============================ */
 
-// ✅ Generate Installments
+// Generate Installments
 export const generateInstallments = createAsyncThunk(
   "feeInstallment/generate",
   async (payload, { rejectWithValue }) => {
@@ -17,9 +17,7 @@ export const generateInstallments = createAsyncThunk(
         `${API_BASE_URL}/fee-installments/generate`,
         payload,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       return res.data;
@@ -31,22 +29,44 @@ export const generateInstallments = createAsyncThunk(
   }
 );
 
-// ✅ Get All Installments (optional)
+// Fetch Installments
 export const fetchFeeInstallments = createAsyncThunk(
   "feeInstallment/fetchAll",
   async (params = {}, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(`${API_BASE_URL}/fee-installments`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         params,
       });
       return res.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch installments"
+      );
+    }
+  }
+);
+
+// ✅ Pay Installment (FIXED)
+export const payInstallment = createAsyncThunk(
+  "feeInstallment/pay",
+  async ({ installmentId, amount, paymentMode, razorpay }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const res = await axios.post(
+        `${API_BASE_URL}/fee-installments/pay/${installmentId}`,
+        { amount, paymentMode, razorpay },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to pay installment"
       );
     }
   }
@@ -73,7 +93,7 @@ const feeInstallmentSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // GENERATE INSTALLMENTS
+      // GENERATE
       .addCase(generateInstallments.pending, (state) => {
         state.loading = true;
       })
@@ -87,7 +107,7 @@ const feeInstallmentSlice = createSlice({
         state.error = action.payload;
       })
 
-      // FETCH INSTALLMENTS
+      // FETCH
       .addCase(fetchFeeInstallments.pending, (state) => {
         state.loading = true;
       })
@@ -96,6 +116,29 @@ const feeInstallmentSlice = createSlice({
         state.installments = action.payload?.data || [];
       })
       .addCase(fetchFeeInstallments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // PAY
+      .addCase(payInstallment.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(payInstallment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+
+        const updatedInstallment = action.payload?.data?.installment;
+        if (updatedInstallment) {
+          const index = state.installments.findIndex(
+            (i) => i._id === updatedInstallment._id
+          );
+          if (index !== -1) {
+            state.installments[index] = updatedInstallment;
+          }
+        }
+      })
+      .addCase(payInstallment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
