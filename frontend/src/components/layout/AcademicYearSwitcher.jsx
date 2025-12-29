@@ -1,9 +1,13 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Select, Spin, Typography } from "antd";
 import {
   fetchActiveAcademicYear,
   fetchAllAcademicYears,
 } from "../../features/academicYearSlice";
+
+const { Option } = Select;
+const { Text } = Typography;
 
 const AcademicYearSwitcher = ({ onChange }) => {
   const dispatch = useDispatch();
@@ -18,29 +22,21 @@ const AcademicYearSwitcher = ({ onChange }) => {
   useEffect(() => {
     if (!schoolId) return;
 
-    // ✅ Only fetch when Redux has no data
+    // Only fetch when Redux has no data
     if (academicYears.length === 0) {
       dispatch(fetchAllAcademicYears(schoolId));
     }
     if (!activeYear) {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
-  }, [dispatch, schoolId,academicYears,activeYear]);
+  }, [dispatch, schoolId, academicYears, activeYear]);
 
-  const handleChange = (e) => {
-    const selectedYear = academicYears.find((y) => y._id === e.target.value);
+  const handleChange = (value) => {
+    const selectedYear = academicYears.find((y) => y._id === value);
     if (onChange) onChange(selectedYear);
   };
 
-  if (loading && academicYears.length === 0 && !activeYear) {
-    return <p className="text-sm text-gray-500">Loading academic years...</p>;
-  }
-
-  if (error) {
-    return <p className="text-sm text-red-500">{error}</p>;
-  }
-
-  // 📌 Date format helper
+  // Date format helper
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     return new Date(dateStr).toLocaleDateString("en-GB", {
@@ -50,21 +46,28 @@ const AcademicYearSwitcher = ({ onChange }) => {
     });
   };
 
+  if (loading && academicYears.length === 0 && !activeYear) {
+    return <Spin size="small" tip="Loading academic years..." />;
+  }
+
+  if (error) {
+    return <Text type="danger">{error}</Text>;
+  }
+
   return (
-    <select
+    <Select
+      style={{ width: 220 }}
+      placeholder="Select Academic Year"
+      value={activeYear?._id || undefined}
       onChange={handleChange}
-      value={activeYear?._id || ""}
-      className="border rounded px-2 py-1 text-xs"
+      size="middle"
     >
-      <option value="" disabled>
-        Select Academic Year
-      </option>
       {academicYears.map((year) => (
-        <option key={year._id} value={year._id}>
-         {formatDate(year.startDate)} - {formatDate(year.endDate)}
-        </option>
+        <Option key={year._id} value={year._id}>
+          {formatDate(year.startDate)} - {formatDate(year.endDate)}
+        </Option>
       ))}
-    </select>
+    </Select>
   );
 };
 

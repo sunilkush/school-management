@@ -1,41 +1,57 @@
 import React from "react";
+import { Card, Radio, Input, Typography, Space } from "antd";
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const QuestionCard = ({ question, index, onAnswerChange, userAnswer }) => {
   return (
-    <div className="p-4 border rounded-lg shadow mb-4 bg-white">
-      <h3 className="font-semibold text-lg mb-2">
+    <Card
+      style={{ marginBottom: 16 }}
+      bordered
+    >
+      <Title level={5} style={{ marginBottom: 12 }}>
         Q{index + 1}. {question.text}
-      </h3>
+      </Title>
 
-      {/* Render options if MCQ */}
-      {question.type === "mcq" &&
-        question.options?.map((opt, i) => (
-          <label
-            key={i}
-            className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-100"
-          >
-            <input
-              type="radio"
-              name={`q-${question._id}`}
-              value={opt}
-              checked={userAnswer === opt}
-              onChange={() => onAnswerChange(question._id, opt)}
-            />
-            <span>{opt}</span>
-          </label>
-        ))}
+      {/* MCQ */}
+      {question.type === "mcq" && (
+        <Radio.Group
+          value={userAnswer}
+          onChange={(e) =>
+            onAnswerChange(question._id, e.target.value)
+          }
+        >
+          <Space direction="vertical" style={{ width: "100%" }}>
+            {question.options?.map((opt, i) => (
+              <Radio
+                key={i}
+                value={opt}
+                style={{
+                  padding: 8,
+                  border: "1px solid #f0f0f0",
+                  borderRadius: 6,
+                }}
+              >
+                {opt}
+              </Radio>
+            ))}
+          </Space>
+        </Radio.Group>
+      )}
 
-      {/* Subjective answer */}
+      {/* Subjective */}
       {question.type === "subjective" && (
-        <textarea
-          className="w-full p-2 border rounded mt-2"
+        <TextArea
           rows={4}
           placeholder="Write your answer..."
           value={userAnswer || ""}
-          onChange={(e) => onAnswerChange(question._id, e.target.value)}
+          onChange={(e) =>
+            onAnswerChange(question._id, e.target.value)
+          }
         />
       )}
-    </div>
+    </Card>
   );
 };
 

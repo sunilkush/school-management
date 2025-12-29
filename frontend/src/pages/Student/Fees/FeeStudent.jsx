@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Tag, Button, Modal, Descriptions, message } from "antd";
+import { Card, Table, Tag, Button, Modal, Descriptions, message, Col } from "antd";
 import { CreditCardOutlined, EyeOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyFees, payStudentFee } from "../../../features/studentFeeSlice";
@@ -111,14 +111,17 @@ const FeeStudent = () => {
 
   return (
     <>
-      <Card title="My Fees">
-        <Table
-          columns={columns}
-          dataSource={myFees}
-          rowKey="_id"
-          loading={feeLoading || enrollmentLoading}
-          pagination={false}
-        />
+      <Card title="My Fees" >
+        <Col style={{overflow:"auto"}}>
+          <Table
+            columns={columns}
+            dataSource={myFees}
+            rowKey="_id"
+            loading={feeLoading || enrollmentLoading}
+            pagination={false}
+          />
+        </Col>
+       
       </Card>
 
       {/* ================= MODAL ================= */}
