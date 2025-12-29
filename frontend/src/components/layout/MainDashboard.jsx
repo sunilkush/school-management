@@ -1,73 +1,82 @@
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useNavigate, Outlet } from 'react-router-dom';
-import Sidebar from '../sidebar/Sidebar';
-import Topbar from '../navbar/Topbar';
+import React, { useEffect, useState } from "react";
+import { Layout, Drawer } from "antd";
+import { useSelector } from "react-redux";
+import { useNavigate, Outlet } from "react-router-dom";
+
+import Sidebar from "../sidebar/Sidebar";
+import Topbar from "../navbar/Topbar";
+
+const { Header, Content } = Layout;
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
-  const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
-  
+
   const role = user?.role?.name;
 
-  // ✅ Redirect if not Super Admin and no active academic year
+  // Redirect if no active year for non-Super Admin
   useEffect(() => {
-    if (role !== 'Super Admin' && !activeYear?._id) {
-      // Example redirect (optional)
-      // navigate('/no-active-year');
+    if (role !== "Super Admin" && !activeYear?._id) {
+      // navigate("/no-active-year");
     }
   }, [role, activeYear, navigate]);
 
-  // ✅ Auto hide sidebar when screen < 1024px (tablet or mobile)
+  // Handle screen resize
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      setIsSidebarOpen(!mobile);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-  const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} />
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Desktop Sidebar */}
+      {!isMobile && <Sidebar isOpen={isSidebarOpen} />}
 
-      {/* Overlay for mobile and tablet */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-30 lg:hidden"
-          onClick={closeSidebar}
-        ></div>
+      {/* Mobile Sidebar Drawer */}
+      {isMobile && (
+        <Drawer
+          title={user?.school?.name || "School"}
+          placement="left"
+          closable={false}
+          onClose={toggleSidebar}
+          open={isSidebarOpen}
+          bodyStyle={{ padding: 0 }}
+          width={260}
+        >
+          <Sidebar isOpen={true} />
+        </Drawer>
       )}
 
-      {/* Main Content Area */}
-      <div
-        className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${
-          isSidebarOpen && window.innerWidth >= 1023 ?  'ml-0' : 'xl:ml-72'
-        }`}
-      >
-        {/* Topbar */}
-        <Topbar
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-        />
+       <Layout style={{ marginLeft: isSidebarOpen ? 260 : 0}}>
+        {/* Topbar / Header */}
+        <Header style={{ padding: 0, background: "#fff" }}>
+          <Topbar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        </Header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 bg-slate-200">
+        {/* Main Content */}
+        <Content
+          style={{
+            margin: 0,
+            padding: 16,
+            background: "#f0f2f5",
+            overflowY: "auto",
+          }}
+        >
           <Outlet />
-        </main>
-      </div>
-    </div>
+        </Content>
+      </Layout>
+    </Layout>
   );
 };
 

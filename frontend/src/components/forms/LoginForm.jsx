@@ -1,152 +1,167 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, resetAuthState } from "../../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
+
+import {
+  Layout,
+  Row,
+  Col,
+  Form,
+  Input,
+  Button,
+  Checkbox,
+  Typography,
+  Card,
+  Alert,
+} from "antd";
+
+import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import logo from "../../assets/logo.png";
-import loginIllustration from "../../assets/login-illustration.png";
+
+const { Title, Text } = Typography;
+const { Content } = Layout;
+
 const LoginForm = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
   const { loading, error, user } = useSelector((state) => state.auth);
   const [navigated, setNavigated] = useState(false);
+
   const roleName = user?.role?.name?.toLowerCase();
 
   useEffect(() => {
     if (roleName && !navigated) {
-      const roleRoutes = [
-        { role: "super admin", path: "/dashboard/superadmin" },
-        { role: "school admin", path: "/dashboard/schooladmin" },
-        { role: "student", path: "/dashboard/student" },
-        { role: "parent", path: "/dashboard/parent" },
-        { role: "teacher", path: "/dashboard/teacher" },
-        { role: "accountant", path: "/dashboard/accountant" },
-        { role: "staff", path: "/dashboard/staff" },
-      ];
+      const roleRoutes = {
+        "super admin": "/dashboard/superadmin",
+        "school admin": "/dashboard/schooladmin",
+        student: "/dashboard/student",
+        parent: "/dashboard/parent",
+        teacher: "/dashboard/teacher",
+        accountant: "/dashboard/accountant",
+        staff: "/dashboard/staff",
+      };
 
-      const match = roleRoutes.find((r) => r.role === roleName);
-      if (match) {
+      const path = roleRoutes[roleName];
+      if (path) {
         setNavigated(true);
-        navigate(match.path);
+        navigate(path);
       }
     }
   }, [roleName, navigate, navigated]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) {
-      dispatch(resetAuthState());
-    }
+  const onFinish = (values) => {
+    dispatch(login(values));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(login(formData));
+  const onValuesChange = () => {
+    if (error) dispatch(resetAuthState());
   };
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Left Side – Login Form */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24">
-        {/* Logo */}
-        <div className="mb-8">
-          <img src={logo} alt="Logo" className="h-8" />
-        </div>
+    <Layout style={{ minHeight: "100vh" }}>
+      <Content>
+        <Row
+          align="middle"
+          justify="center"
+          style={{ minHeight: "100vh" }}
+        >
+          <Col xs={22} sm={16} md={10} lg={8}>
+            <Card bordered={false} style={{ textAlign: "center" }}>
+              {/* Logo */}
+              <img
+                src={logo}
+                alt="Logo"
+                style={{ height: 28, marginBottom: 16 }}
+              />
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
-        <p className="text-gray-500 mb-8">Please enter your details</p>
+              <Title level={3} style={{ marginBottom: 4 }}>
+                Welcome Back
+              </Title>
+              <Text type="secondary">
+                Please enter your login details
+              </Text>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email address
-            </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
-            />
-          </div>
+              <Form
+                layout="vertical"
+                style={{ marginTop: 24, textAlign: "left" }}
+                onFinish={onFinish}
+                onValuesChange={onValuesChange}
+              >
+                <Form.Item
+                  label="Email"
+                  name="email"
+                  rules={[
+                    { required: true, message: "Email is required" },
+                    { type: "email", message: "Invalid email" },
+                  ]}
+                >
+                  <Input
+                    prefix={<MailOutlined />}
+                    placeholder="Enter email"
+                  />
+                </Form.Item>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
-            />
-          </div>
+                <Form.Item
+                  label="Password"
+                  name="password"
+                  rules={[
+                    { required: true, message: "Password is required" },
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Enter password"
+                  />
+                </Form.Item>
 
-          {/* Remember & Forgot */}
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center text-gray-600">
-              <input type="checkbox" className="mr-2 accent-purple-600" />
-              Remember for 30 days
-            </label>
-            <Link
-              to="/forgot-password"
-              className="text-purple-600 hover:text-purple-700"
-            >
-              Forgot password
-            </Link>
-          </div>
+                <Row justify="space-between" align="middle">
+                  <Form.Item name="remember" valuePropName="checked">
+                    <Checkbox>Remember me</Checkbox>
+                  </Form.Item>
 
-          {/* Sign In */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-purple-700 hover:bg-purple-800 text-white font-medium py-2.5 rounded-md transition duration-200"
-          >
-            {loading ? "Logging in..." : "Sign in"}
-          </button>
+                  <Link to="/forgot-password">Forgot password?</Link>
+                </Row>
 
-          {/* Google Sign In */}
-          <button
-            type="button"
-            className="w-full border border-gray-300 flex items-center justify-center gap-2 py-2.5 rounded-md hover:bg-gray-50 transition"
-          >
-            <img
-              src="https://www.svgrepo.com/show/355037/google.svg"
-              alt="Google"
-              className="h-5 w-5"
-            />
-            <span>Sign in with Google</span>
-          </button>
+                {error && (
+                  <Alert
+                    message={error}
+                    type="error"
+                    showIcon
+                    style={{ marginBottom: 16 }}
+                  />
+                )}
 
-          {/* Error */}
-          {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
-          )}
-        </form>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={loading}
+                >
+                  Sign In
+                </Button>
 
-        <p className="text-sm text-gray-600 text-center mt-6">
-          Don’t have an account?{" "}
-          <Link to="/register" className="text-purple-600 hover:text-purple-700">
-            Sign up
-          </Link>
-        </p>
-      </div>
+                <Button block style={{ marginTop: 12 }}>
+                  Sign in with Google
+                </Button>
+              </Form>
 
-      {/* Right Side – Illustration */}
-      <div className="hidden md:flex w-1/2 bg-purple-100 items-center justify-center">
-        <img
-          src={loginIllustration}
-          alt="Illustration"
-          className="max-w-md"
-        />
-      </div>
-    </div>
+              <Text
+                style={{
+                  display: "block",
+                  marginTop: 16,
+                  textAlign: "center",
+                }}
+              >
+                Don’t have an account?{" "}
+                <Link to="/register">Sign up</Link>
+              </Text>
+            </Card>
+          </Col>
+        </Row>
+      </Content>
+    </Layout>
   );
 };
 

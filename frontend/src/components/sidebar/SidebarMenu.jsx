@@ -1,90 +1,68 @@
-import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import React, { useMemo } from "react";
+import { Layout, Menu } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
 import { sidebarMenu } from "../../utils/sidebar";
 
-function SidebarMenu({ role }) {
-  const [openMenus, setOpenMenus] = useState({});
-  const location = useLocation(); // ✅ get current path
+const { Sider } = Layout;
 
-  const toggleMenu = (title) => {
-    setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }));
-  };
+const SidebarMenu = ({ role }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = sidebarMenu[role] || [];
 
-  // Helper: check if parent should be active
-  const isParentActive = (item) => {
-    if (!item.subMenu) return false;
-    return item.subMenu.some((sub) => sub.path === location.pathname);
-  };
+  // 🔹 Convert your sidebar config to AntD Menu format
+  const antMenuItems = useMemo(() => {
+    return menuItems.map((item) => {
+      if (!item.subMenu) {
+        return {
+          key: item.path,
+          icon: item.icon ? <item.icon size={16} /> : null,
+          label: item.title,
+        };
+      }
+
+      return {
+        key: item.title,
+        icon: item.icon ? <item.icon size={16} /> : null,
+        label: item.title,
+        children: item.subMenu.map((sub) => ({
+          key: sub.path,
+          icon: sub.icon ? <sub.icon size={14} /> : null,
+          label: sub.title,
+        })),
+      };
+    });
+  }, [menuItems]);
+
+  // 🔹 Open parent submenu automatically
+  const openKeys = menuItems
+    .filter((item) =>
+      item.subMenu?.some((sub) => sub.path === location.pathname)
+    )
+    .map((item) => item.title);
 
   return (
-    <aside className="w-72 h-screen bg-white border-r p-4 pb-28 overflow-auto">
-      <nav className="space-y-2">
-        {menuItems.map((item, index) => {
-          const Icon = item.icon;
-          const parentActive = isParentActive(item); // ✅ parent active check
-
-          return (
-            <div key={index}>
-              {!item.subMenu ? (
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 hover:text-blue-800 text-sm ${
-                      isActive ? "bg-blue-100 font-semibold text-blue-800" : "text-gray-700"
-                    }`
-                  }
-                >
-                  {Icon && <Icon size={18} />}
-                  <span>{item.title}</span>
-                </NavLink>
-              ) : (
-                <>
-                  <button
-                    onClick={() => toggleMenu(item.title)}
-                    className={`flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm hover:bg-blue-100 hover:text-blue-600 ${
-                      parentActive ? "bg-blue-100 font-semibold text-blue-800" : "text-gray-700"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {Icon && <Icon size={18} />}
-                      <span>{item.title}</span>
-                    </div>
-                    {openMenus[item.title] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  </button>
-
-                  {(openMenus[item.title] || parentActive) && (
-                    <ul className="ml-8 mt-1 text-sm space-y-1">
-                      {item.subMenu.map((sub, subIndex) => {
-                        const SubIcon = sub.icon;
-                        return (
-                          <li key={subIndex}>
-                            <NavLink
-                              to={sub.path}
-                              className={({ isActive }) =>
-                                `flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-100 hover:text-blue-600 ${
-                                  isActive ? "font-medium text-blue-600" : "text-gray-700"
-                                }`
-                              }
-                            >
-                              {SubIcon && <SubIcon size={16} />}
-                              <span>{sub.title}</span>
-                            </NavLink>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
+    <Sider
+      width={260}
+      theme="light"
+      style={{
+        borderRight: "1px solid #f0f0f0",
+        height: "100vh",
+        position: "fixed",
+        left: 0,
+      }}
+    >
+      <Menu
+        mode="inline"
+        selectedKeys={[location.pathname]}
+        defaultOpenKeys={openKeys}
+        items={antMenuItems}
+        onClick={({ key }) => navigate(key)}
+        style={{ height: "100%", borderRight: 0 }}
+      />
+    </Sider>
   );
-}
+};
 
 export default SidebarMenu;

@@ -1,4 +1,8 @@
-import { Plus, MoreHorizontal } from "lucide-react";
+import { PlusOutlined, MoreOutlined } from "@ant-design/icons";
+import { Layout, Avatar, Badge, Typography, List, Button, Divider } from "antd";
+
+const { Sider } = Layout;
+const { Text } = Typography;
 
 const chatGroups = {
   A: [
@@ -102,55 +106,61 @@ const chatGroups = {
   ],
 };
 
+const statusColors = {
+  online: "green",
+  away: "gray",
+  busy: "red",
+};
+
 const ChatSidebar = () => {
   return (
-    <div className="w-80 bg-white border-r shadow-sm h-screen flex flex-col">
+    <Sider width={300} style={{ background: "#fff", borderRight: "1px solid #f0f0f0", height: "100vh" }}>
       {/* Header */}
-      <div className="flex justify-between items-center px-4 py-3 border-b bg-blue-100">
-        <div className="flex space-x-6">
-          <span className="text-sm font-medium text-gray-500">NOTES</span>
-          <span className="text-sm font-medium text-gray-500">ALERTS</span>
-          <span className="text-sm font-semibold text-deep-purple-700 border-b-2 border-purple-600 pb-1">CHAT</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottom: "1px solid #f0f0f0", backgroundColor: "#e6f7ff" }}>
+        <div style={{ display: "flex", gap: 24 }}>
+          <Text type="secondary">NOTES</Text>
+          <Text type="secondary">ALERTS</Text>
+          <Text strong style={{ borderBottom: "2px solid #722ed1" }}>CHAT</Text>
         </div>
-        <MoreHorizontal className="w-5 h-5 text-gray-500" />
+        <MoreOutlined style={{ fontSize: 16, color: "#595959" }} />
       </div>
 
       {/* Chat List Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
-        <h3 className="text-sm font-semibold text-gray-800">Chat List</h3>
-        <div className="flex items-center gap-2">
-          <button className="bg-gray-100 p-1 rounded-full hover:bg-gray-200">
-            <Plus className="w-4 h-4 text-gray-700" />
-          </button>
-        </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottom: "1px solid #f0f0f0" }}>
+        <Text strong>Chat List</Text>
+        <Button shape="circle" icon={<PlusOutlined />} size="small" />
       </div>
 
       {/* Chat List */}
-      <div className="overflow-y-auto flex-1">
+      <div style={{ overflowY: "auto", flex: 1 }}>
         {Object.entries(chatGroups).map(([letter, users]) => (
           <div key={letter}>
-            <div className="bg-gray-100 px-4 py-2 text-xs font-medium text-gray-600 uppercase">{letter}</div>
-            {users.map((user, idx) => (
-              <div
-                key={idx}
-                className="flex items-center px-4 py-3 hover:bg-gray-50 border-b"
-              >
-                <div className="relative">
-                  <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
-                  <span
-                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-${user.color}-500`}
+            <Divider style={{ margin: "8px 0" }}>{letter}</Divider>
+            <List
+              itemLayout="horizontal"
+              dataSource={users}
+              renderItem={(user) => (
+                <List.Item style={{ padding: "8px 16px", cursor: "pointer" }}>
+                  <List.Item.Meta
+                    avatar={
+                      <Badge
+                        dot
+                        color={statusColors[user.status]}
+                        offset={[-2, 28]}
+                      >
+                        <Avatar src={user.avatar} />
+                      </Badge>
+                    }
+                    title={<Text>{user.name}</Text>}
+                    description={<Text type="secondary" style={{ fontSize: 12 }}>{user.lastSeen}</Text>}
                   />
-                </div>
-                <div className="ml-3">
-                  <h4 className="text-sm font-semibold text-gray-800">{user.name}</h4>
-                  <p className="text-xs text-gray-400">{user.lastSeen}</p>
-                </div>
-              </div>
-            ))}
+                </List.Item>
+              )}
+            />
           </div>
         ))}
       </div>
-    </div>
+    </Sider>
   );
 };
 

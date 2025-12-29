@@ -100,6 +100,7 @@ import AuditLogs from './pages/SuperAdmin/System_Settings/AuditLogs.jsx';
 import Backups from './pages/SuperAdmin/System_Settings/Backups.jsx';
 import FeeStructure from './pages/SchoolAdmin/Fees_Management/FeeStructure.jsx';
 import StudentAssignFees from './pages/SchoolAdmin/Fees_Management/AssignStudentFeeForm.jsx';
+import StudentHomework from './pages/Student/Homework/StudentHomework.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -261,7 +262,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <StudentDashboard /> },
               { path: "profile", element: <Profile /> },
-              { path: "homework", element: <Schedule /> },
+              { path: "homework", element: <StudentHomework /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "grades", element: <EnterGrades /> },
               { path: "timetable", element: <ClassTimetable /> },

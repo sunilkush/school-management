@@ -6,24 +6,34 @@ import {
   Button,
   Modal,
   Descriptions,
-  InputNumber,
   message,
+  Col,
+  InputNumber,
 } from "antd";
-import { CreditCardOutlined, PlusOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyFees } from "../../../features/studentFeeSlice";
 import { fetchMyStudentEnrollment } from "../../../features/studentSlice";
 import { createPayment } from "../../../features/paymentSlice";
-import { generateInstallments, fetchFeeInstallments, resetInstallmentState } from "../../../features/feeInstallmentSlice";
+import {
+  generateInstallments,
+  fetchFeeInstallments,
+  resetInstallmentState,
+} from "../../../features/feeInstallmentSlice";
 
 const FeeStudent = () => {
   const dispatch = useDispatch();
 
-  const { myFees = [], loading } = useSelector(
+  const { myFees = [], loading: feeLoading } = useSelector(
     (state) => state.studentFee
   );
-  const { myEnrollment } = useSelector((state) => state.students);
-  const { installments, loading: instLoading, success } = useSelector((state) => state.feeInstallment);
+
+  const { myEnrollment, loading: enrollmentLoading } = useSelector(
+    (state) => state.students
+  );
+
+  const { installments, loading: instLoading } = useSelector(
+    (state) => state.feeInstallment
+  );
 
   const enrollmentId = myEnrollment?.enrollmentId;
 
@@ -42,7 +52,7 @@ const FeeStudent = () => {
       dispatch(fetchMyFees(enrollmentId));
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     }
-  }, [dispatch, enrollmentId, success]);
+  }, [dispatch, enrollmentId]);
 
   /* ================= OPEN PAY MODAL ================= */
   const openPayModal = (installment) => {
@@ -74,7 +84,7 @@ const FeeStudent = () => {
       dispatch(fetchMyFees(enrollmentId));
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     } catch (err) {
-      message.error(err || "Payment failed");
+      message.error(err?.message || "Payment failed");
     }
   };
 
@@ -88,7 +98,7 @@ const FeeStudent = () => {
       dispatch(resetInstallmentState());
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     } catch (err) {
-      message.error(err || "Failed to generate installments");
+      message.error(err?.message || "Failed to generate installments");
     }
   };
 
@@ -96,7 +106,8 @@ const FeeStudent = () => {
   const columns = [
     {
       title: "Fee Type",
-      render: (_, record) => record.feeStructureId?.feeHeadId?.name || "-",
+      render: (_, record) =>
+        record.feeStructureId?.feeHeadId?.name || "-",
     },
     {
       title: "Total",
@@ -117,17 +128,17 @@ const FeeStudent = () => {
       title: "Status",
       dataIndex: "status",
       render: (s) =>
-        s === "paid" ? <Tag color="green">PAID</Tag> : <Tag color="red">DUE</Tag>,
+        s === "paid" ? (
+          <Tag color="green">PAID</Tag>
+        ) : (
+          <Tag color="red">DUE</Tag>
+        ),
     },
     {
       title: "Action",
       render: (_, record) =>
         record.status !== "paid" && (
-          <Button
-            type="primary"
-            size="small"
-            onClick={() => openPayModal(record)}
-          >
+          <Button type="primary" size="small" onClick={() => openPayModal(record)}>
             Pay
           </Button>
         ),
@@ -136,26 +147,16 @@ const FeeStudent = () => {
 
   return (
     <>
-      <Card
-        title="My Fees"
-        extra={
-          <Button
-            type="dashed"
-            icon={<PlusOutlined />}
-            onClick={handleGenerateInstallments}
-            loading={instLoading}
-          >
-            Generate Installments
-          </Button>
-        }
-      >
-        <Table
-          columns={columns}
-          dataSource={installments.length ? installments : myFees}
-          rowKey="_id"
-          loading={loading || instLoading}
-          pagination={false}
-        />
+      <Card title="My Fees">
+        <Col style={{ overflow: "auto" }}>
+          <Table
+            columns={columns}
+            dataSource={myFees}
+            rowKey="_id"
+            loading={feeLoading || enrollmentLoading}
+            pagination={false}
+          />
+        </Col>
       </Card>
 
       {/* ================= PAY MODAL ================= */}
@@ -164,6 +165,7 @@ const FeeStudent = () => {
         open={open}
         onCancel={() => setOpen(false)}
         onOk={handleSubmitPayment}
+        okText="Pay Now"
       >
         {selectedInstallment && (
           <>

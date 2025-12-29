@@ -1,36 +1,91 @@
-import { Home } from 'lucide-react';
-import SidebarMenu from './SidebarMenu';
-import { useSelector } from 'react-redux';
+import React from "react";
+import { Layout, Typography, Spin } from "antd";
+import { HomeOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
+import SidebarMenu from "./SidebarMenu";
 
-export default function Sidebar({ isOpen }) {
-  const token = localStorage.getItem('accessToken');
+const { Sider } = Layout;
+const { Text } = Typography;
+
+const Sidebar = ({ isOpen }) => {
+  const token = localStorage.getItem("accessToken");
   const { user } = useSelector((state) => state.auth);
-  const role = user?.role?.name?.toLowerCase();
 
+  const role = user?.role?.name?.toLowerCase();
+  const schoolName = user?.school?.name || "School";
+
+  // 🔹 Loading / unauthenticated state
   if (!token) {
     return (
-      <aside className="w-64 h-screen bg-white flex items-center justify-center">
-        <span className="text-gray-400">Authenticating...</span>
-      </aside>
+      <Sider
+        width={260}
+        theme="light"
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRight: "1px solid #f0f0f0",
+        }}
+      >
+        <Spin tip="Authenticating..." />
+      </Sider>
     );
   }
 
   return (
-    <aside
-      className={`fixed top-0 left-0 h-full w-72 bg-white border-r transition-transform duration-300 z-40
-      ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-      md:translate-x-0 md:relative md:block`}
+    <Sider
+      width={260}
+      theme="light"
+      collapsible
+      collapsed={!isOpen}
+      trigger={null}
+      style={{
+        height: "100vh",
+        position: "fixed",
+        left: 0,
+        top: 0,
+        borderRight: "1px solid #f0f0f0",
+        zIndex: 100,
+        overflow: "auto",
+      }}
     >
-      <div>
-        <div className="p-2 text-blue-600 font-bold text-lg flex items-center gap-2">
-          <div className="bg-blue-100 p-2 rounded-full">
-            <Home size={20} />
-          </div>
-          <span className='text-sms'>{user?.school?.name}</span>
+      {/* 🔹 School Header */}
+      <div
+        style={{
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          fontWeight: 600,
+          color: "#1677ff",
+        }}
+      >
+        <div
+          style={{
+            background: "#e6f4ff",
+            padding: 8,
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <HomeOutlined style={{ fontSize: 16 }} />
         </div>
-        <hr className="border-gray-100" />
-        <SidebarMenu role={role} />
+
+        <Text ellipsis style={{ fontSize: 14 }}>
+          {schoolName}
+        </Text>
       </div>
-    </aside>
+
+      {/* 🔹 Divider */}
+      <div style={{ borderBottom: "1px solid #f0f0f0", margin: "0 16px" }} />
+
+      {/* 🔹 Role Based Menu */}
+      <SidebarMenu role={role} />
+    </Sider>
   );
-}
+};
+
+export default Sidebar;

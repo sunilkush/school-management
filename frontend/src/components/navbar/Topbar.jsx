@@ -1,53 +1,65 @@
-import { Bell, MessageSquare, Search, Menu, X } from 'lucide-react';
-import UserDropdown from './UserDropdown';
-import NotificationDropdown from './NotificationDropdown';
-import AcademicYearSwitcher from '../layout/AcademicYearSwitcher';
-import { useSelector } from 'react-redux';
+import React from "react";
+import { Layout, Input, Button, Space } from "antd";
+import {
+  MenuOutlined,
+  CloseOutlined,
+  SearchOutlined,
+  MessageOutlined,
+} from "@ant-design/icons";
+import UserDropdown from "./UserDropdown";
+import NotificationDropdown from "./NotificationDropdown";
+import AcademicYearSwitcher from "../layout/AcademicYearSwitcher";
+import { useSelector } from "react-redux";
+
+
+const { Header } = Layout;
+
 const Topbar = ({ toggleSidebar, isOpen }) => {
-  const {user} = useSelector((state)=>state.auth)
+  const { user } = useSelector((state) => state.auth);
+
   return (
-    <>
-     <header className="flex items-center justify-between gap-2 bg-white border-b transition-all duration-300 px-2 py-2 w-full">
-      {/* Mobile Sidebar Toggle Button */}
-      <button
-        className="p-2 text-blue-600 block md:hidden"
+    <Header
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 16px",
+        background: "#fff",
+        borderBottom: "1px solid #f0f0f0",
+      }}
+    >
+      {/* Mobile Sidebar Toggle */}
+      <Button
+        type="text"
         onClick={toggleSidebar}
-        type="button"
+        className="sidebar-toggle-btn"
       >
-        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-      </button>
+        {isOpen ? <CloseOutlined style={{ fontSize: 20 }} /> : <MenuOutlined style={{ fontSize: 20 }} />}
+      </Button>
 
       {/* Search Bar */}
-      <div className="hidden md:flex items-center bg-gray-100 px-3 py-2 rounded-full w-72">
-        <Search className="w-4 h-4 text-gray-500 mr-2" />
-        <input
-          type="text"
+      <div style={{ flex: 1, maxWidth: 300, marginLeft: 16, marginRight: 16 }}>
+        <Input
           placeholder="Search..."
-          className="bg-transparent focus:outline-none text-sm flex-1"
+          prefix={<SearchOutlined />}
+          size="middle"
+          allowClear
         />
-        <div className="ml-2 text-xs text-gray-400 border border-gray-300 px-1.5 py-0.5 rounded-md">
-          ⌘ K
-        </div>
       </div>
 
-      {/* Icons and Profile */}
-      <div className="flex items-center gap-4 ml-auto">
-       {user?.role?.name === "Super Admin" ? "" : <AcademicYearSwitcher onChange={(year) => console.log("Switched to:", year)} /> } 
+      {/* Right Icons & Profile */}
+      <Space size="middle" align="center">
+        {user?.role?.name !== "Super Admin" && (
+          <AcademicYearSwitcher onChange={(year) => console.log("Switched to:", year)} />
+        )}
 
-        {/* Chat Icon */}
-        <button className="relative text-gray-600 hover:text-black">
-          <MessageSquare className="w-5 h-5" />
-        </button>
+        <Button type="text" icon={<MessageOutlined style={{ fontSize: 18 }} />} />
 
-        {/* Notification Dropdown */}
         <NotificationDropdown />
 
-        {/* User Dropdown */}
         <UserDropdown />
-      </div>
-    </header>
-    </>
-   
+      </Space>
+    </Header>
   );
 };
 
