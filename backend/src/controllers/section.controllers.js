@@ -56,7 +56,7 @@ export const getSections = asyncHandler(async (req, res) => {
     .populate("classId", "name")
     .populate("academicYearId", "name")
     .sort({ name: 1 });
-    console.log("Fetched Sections:", sections);
+   
   res
     .status(200)
     .json(new ApiResponse(200, sections, "Sections fetched successfully"));

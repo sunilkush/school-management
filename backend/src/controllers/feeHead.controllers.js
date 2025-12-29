@@ -60,7 +60,7 @@ export const getFeeHeads = asyncHandler(async (req, res) => {
 /* ================= GET BY SCHOOL ================= */
 export const getFeeHeadsBySchool = asyncHandler(async (req, res) => {
     const { schoolId } = req.params;
-    console.log("Fetching fee heads for schoolId:", schoolId);
+   
     const feeHeads = await FeeHead.find({ schoolId }).sort({ createdAt: -1 });
     res.status(200).json(new ApiResponse(200, feeHeads, "Fee heads fetched"));
 });

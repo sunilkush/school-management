@@ -46,7 +46,7 @@ export const createPlan = asyncHandler(async (req, res) => {
       .status(201)
       .json(new ApiResponse(201, plan, "Subscription Plan created successfully"));
   } catch (error) {
-    console.log("Create Plan Error:", error);
+  
     throw new ApiError(500, "Failed to create subscription plan");
   }
 });

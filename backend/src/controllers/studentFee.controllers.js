@@ -93,7 +93,7 @@ export const getMyFees = asyncHandler(async (req, res) => {
     .populate("academicYearId", "name")
     .sort({ createdAt: -1 });
 
-  console.log("fees data:", fees);
+ 
 
   return res.status(200).json(
     new ApiResponse(200, fees, "Fees fetched successfully")

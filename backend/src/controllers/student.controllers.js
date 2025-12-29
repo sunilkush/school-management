@@ -360,7 +360,7 @@ const updateStudent = asyncHandler(async (req, res) => {
     updatedAt: new Date(),
     changes: req.body,
   };
-  console.log("[AUDIT] Student update:", JSON.stringify(auditTrail, null, 2));
+ 
 
   const updatedStudent = await student.save();
 
@@ -389,7 +389,7 @@ const deleteStudent = asyncHandler(async (req, res) => {
 const getLastRegisteredStudent = asyncHandler(async (req, res) => {
   debugger;
   const { schoolId, academicYearId } = req.query;
-  console.log("Received request for last registered student with schoolId:", schoolId, "and academicYearId:", academicYearId);
+ 
   // ✅ Validate IDs
   if (!schoolId || !academicYearId) {
     throw new ApiError(400, "schoolId and academicYearId are required");
@@ -473,7 +473,7 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
   // ✅ Use query param properly
   let { schoolId, academicYearId } = req.query;
 
-  console.log("Fetching students:", { schoolId, academicYearId });
+ 
 
   // ✅ Validate schoolId properly
   if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {

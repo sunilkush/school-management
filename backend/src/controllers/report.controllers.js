@@ -172,7 +172,7 @@ export const getSchoolOverviewReport = async (req, res) => {
       genderStats,
     });
   } catch (error) {
-    console.log("Report Error:", error);
+   
     return res.status(500).json({
       success: false,
       message: "Server Error",
