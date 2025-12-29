@@ -5,12 +5,12 @@ import {
   CloseOutlined,
   SearchOutlined,
   MessageOutlined,
-  BellOutlined,
 } from "@ant-design/icons";
 import UserDropdown from "./UserDropdown";
 import NotificationDropdown from "./NotificationDropdown";
 import AcademicYearSwitcher from "../layout/AcademicYearSwitcher";
 import { useSelector } from "react-redux";
+
 
 const { Header } = Layout;
 
@@ -32,7 +32,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
       <Button
         type="text"
         onClick={toggleSidebar}
-        style={{ display: "none", alignItems: "center" }}
+        className="sidebar-toggle-btn"
       >
         {isOpen ? <CloseOutlined style={{ fontSize: 20 }} /> : <MenuOutlined style={{ fontSize: 20 }} />}
       </Button>

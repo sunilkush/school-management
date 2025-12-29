@@ -9,3 +9,14 @@ body {
     margin-right: 2px;
     text-align: center!important;
 }
+
+/* Show button on mobile/tablet, hide on desktop */
+.sidebar-toggle-btn {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-toggle-btn {
+    display: none;
+  }
+}
