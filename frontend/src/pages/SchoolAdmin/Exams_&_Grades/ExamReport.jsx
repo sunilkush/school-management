@@ -1,10 +1,25 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  Card,
+  Table,
+  Typography,
+  Button,
+  Space,
+  Spin,
+  Tag,
+} from "antd";
+import {
+  FileExcelOutlined,
+  FilePdfOutlined,
+} from "@ant-design/icons";
 import { fetchReports, exportReportPDF } from "../../../features/examReportSlice";
+
+const { Title } = Typography;
 
 const ExamReports = () => {
   const dispatch = useDispatch();
-  const { reports, loading } = useSelector((s) => s.reports);
+  const { reports, loading } = useSelector((state) => state.reports);
 
   useEffect(() => {
     dispatch(fetchReports());
@@ -14,46 +29,90 @@ const ExamReports = () => {
     dispatch(exportReportPDF(format));
   };
 
-  return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">📑 Reports</h2>
-      {loading && <p>Loading...</p>}
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2 border">Exam</th>
-            <th className="p-2 border">Student</th>
-            <th className="p-2 border">Score</th>
-            <th className="p-2 border">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reports?.map((r) => (
-            <tr key={r._id}>
-              <td className="p-2 border">{r.examTitle}</td>
-              <td className="p-2 border">{r.studentName}</td>
-              <td className="p-2 border">{r.score}</td>
-              <td className="p-2 border">{r.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  const columns = [
+    {
+      title: "Exam",
+      dataIndex: "examTitle",
+      key: "examTitle",
+    },
+    {
+      title: "Student",
+      dataIndex: "studentName",
+      key: "studentName",
+    },
+    {
+      title: "Score",
+      dataIndex: "score",
+      key: "score",
+      align: "center",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => {
+        const color =
+          status === "Pass"
+            ? "green"
+            : status === "Fail"
+            ? "red"
+            : "blue";
 
-      <div className="mt-4 space-x-2">
-        <button
-          onClick={() => handleExport("excel")}
-          className="px-4 py-2 bg-green-600 text-white rounded"
-        >
-          Export Excel
-        </button>
-        <button
-          onClick={() => handleExport("pdf")}
-          className="px-4 py-2 bg-red-600 text-white rounded"
-        >
-          Export PDF
-        </button>
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+  ];
+
+  return (
+    <Card
+      bordered={false}
+      style={{ borderRadius: 12 }}
+      bodyStyle={{ padding: 24 }}
+    >
+      {/* Header */}
+      <Space
+        style={{ width: "100%", justifyContent: "space-between" }}
+      >
+        <Title level={3} style={{ margin: 0 }}>
+          📑 Exam Reports
+        </Title>
+
+        <Space>
+          <Button
+            icon={<FileExcelOutlined />}
+            onClick={() => handleExport("excel")}
+          >
+            Export Excel
+          </Button>
+          <Button
+            danger
+            icon={<FilePdfOutlined />}
+            onClick={() => handleExport("pdf")}
+          >
+            Export PDF
+          </Button>
+        </Space>
+      </Space>
+
+      {/* Table */}
+      <div style={{ marginTop: 20 }}>
+        {loading ? (
+          <Spin size="large" />
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={reports}
+            rowKey="_id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+            }}
+            bordered
+          />
+        )}
       </div>
-    </div>
+    </Card>
   );
 };
 

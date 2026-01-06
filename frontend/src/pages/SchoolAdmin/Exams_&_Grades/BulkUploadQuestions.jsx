@@ -1,19 +1,28 @@
+// BulkUploadQuestions.jsx
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import { useDispatch } from "react-redux";
 import { bulkCreateQuestions } from "../../../features/questionSlice";
+import {
+  Card,
+  Upload,
+  Button,
+  Table,
+  message,
+  Typography,
+  Space,
+} from "antd";
+import { UploadOutlined, CloudUploadOutlined } from "@ant-design/icons";
+
+const { Title, Text } = Typography;
 
 const BulkUploadQuestions = () => {
-  // Removed unused 'file' state
   const [preview, setPreview] = useState([]);
   const dispatch = useDispatch();
 
-  // Parse Excel file
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    // Removed setFile(selectedFile) as 'file' state is not used
-
+  const handleFileChange = (file) => {
     const reader = new FileReader();
+
     reader.onload = (event) => {
       const data = new Uint8Array(event.target.result);
       const workbook = XLSX.read(data, { type: "array" });
@@ -21,49 +30,81 @@ const BulkUploadQuestions = () => {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      setPreview(jsonData); // preview before upload
+      if (jsonData.length === 0) {
+        message.error("Excel file is empty");
+        return;
+      }
+
+      setPreview(jsonData);
+      message.success("File parsed successfully");
     };
-    reader.readAsArrayBuffer(selectedFile);
+
+    reader.readAsArrayBuffer(file);
+    return false; // prevent auto upload
   };
 
-  // Upload to backend
- const handleUpload = () => {
-  if (preview.length === 0) {
-    alert("Please select a valid Excel file!");
-    return;
-  }
+  const handleUpload = () => {
+    if (!preview.length) {
+      message.warning("Please upload an Excel file first");
+      return;
+    }
 
-  // ✅ wrap with "questions"
-  dispatch(bulkCreateQuestions({ questions: preview }));
-};
+    dispatch(bulkCreateQuestions({ questions: preview }));
+    message.success("Questions uploaded successfully");
+    setPreview([]);
+  };
+
+  const columns =
+    preview.length > 0
+      ? Object.keys(preview[0]).map((key) => ({
+          title: key.toUpperCase(),
+          dataIndex: key,
+          key,
+        }))
+      : [];
 
   return (
-    <div className="p-6 max-w-xl mx-auto bg-white shadow rounded-lg">
-      <h2 className="text-xl font-bold mb-4">Bulk Upload Questions</h2>
+    <Card style={{ maxWidth: 900, margin: "auto" }}>
+      <Title level={3}>📥 Bulk Upload Questions</Title>
 
-      <input
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={handleFileChange}
-        className="mb-4"
-      />
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        <Upload
+          beforeUpload={handleFileChange}
+          accept=".xlsx,.xls"
+          maxCount={1}
+        >
+          <Button icon={<UploadOutlined />}>Select Excel File</Button>
+        </Upload>
 
-      {preview.length > 0 && (
-        <div className="mb-4">
-          <h3 className="font-medium">Preview (first 5 rows)</h3>
-          <pre className="bg-gray-100 p-2 rounded text-sm max-h-40 overflow-auto">
-            {JSON.stringify(preview.slice(0, 5), null, 2)}
-          </pre>
-        </div>
-      )}
+        <Text type="secondary">
+          Upload an Excel file with question data (MCQ / descriptive).
+        </Text>
 
-      <button
-        onClick={handleUpload}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        Upload
-      </button>
-    </div>
+        {preview.length > 0 && (
+          <>
+            <Title level={5}>Preview (First 5 Records)</Title>
+
+            <Table
+              columns={columns}
+              dataSource={preview.slice(0, 5)}
+              rowKey={(_, index) => index}
+              size="small"
+              bordered
+              pagination={false}
+              scroll={{ x: true }}
+            />
+
+            <Button
+              type="primary"
+              icon={<CloudUploadOutlined />}
+              onClick={handleUpload}
+            >
+              Upload Questions
+            </Button>
+          </>
+        )}
+      </Space>
+    </Card>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Layout, Menu } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { sidebarMenu } from "../../utils/sidebar";
@@ -11,7 +11,27 @@ const SidebarMenu = ({ role }) => {
 
   const menuItems = sidebarMenu[role] || [];
 
-  // 🔹 Convert your sidebar config to AntD Menu format
+  // 🔹 Find active parent menu (on page refresh)
+  const initialOpenKeys = menuItems
+    .filter((item) =>
+      item.subMenu?.some((sub) => sub.path === location.pathname)
+    )
+    .map((item) => item.title);
+
+  const [openKeys, setOpenKeys] = useState(initialOpenKeys);
+
+  // 🔹 Auto update open menu on route change
+  useEffect(() => {
+    setOpenKeys(initialOpenKeys);
+  }, [location.pathname]);
+
+  // 🔹 Allow only ONE submenu open
+  const onOpenChange = (keys) => {
+    const latestOpenKey = keys.find((key) => !openKeys.includes(key));
+    setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
+  };
+
+  // 🔹 Convert sidebar config to AntD format
   const antMenuItems = useMemo(() => {
     return menuItems.map((item) => {
       if (!item.subMenu) {
@@ -35,13 +55,6 @@ const SidebarMenu = ({ role }) => {
     });
   }, [menuItems]);
 
-  // 🔹 Open parent submenu automatically
-  const openKeys = menuItems
-    .filter((item) =>
-      item.subMenu?.some((sub) => sub.path === location.pathname)
-    )
-    .map((item) => item.title);
-
   return (
     <Sider
       width={260}
@@ -51,13 +64,15 @@ const SidebarMenu = ({ role }) => {
         height: "100vh",
         position: "fixed",
         left: 0,
+        overflow: "auto",
       }}
     >
       <Menu
         mode="inline"
-        selectedKeys={[location.pathname]}
-        defaultOpenKeys={openKeys}
         items={antMenuItems}
+        selectedKeys={[location.pathname]}
+        openKeys={openKeys}              // ✅ controlled
+        onOpenChange={onOpenChange}      // ✅ one open at a time
         onClick={({ key }) => navigate(key)}
         style={{ height: "100%", borderRight: 0 }}
       />

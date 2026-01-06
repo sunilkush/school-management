@@ -1,8 +1,32 @@
 import React, { useState } from "react";
-import { Calendar, Badge, Modal, Form, Input, DatePicker, Select, Button, Popconfirm } from "antd";
+import {
+  Calendar,
+  Badge,
+  Modal,
+  Form,
+  Input,
+  DatePicker,
+  Select,
+  Button,
+  Popconfirm,
+  Card,
+  Typography,
+  Row,
+  Col,
+  Space,
+  Tag,
+} from "antd";
 import dayjs from "dayjs";
 
+const { Title, Text } = Typography;
 const { Option } = Select;
+
+const examTypeColor = {
+  Midterm: "blue",
+  Final: "red",
+  Quiz: "green",
+  Practical: "orange",
+};
 
 const ExamSchedule = () => {
   const [exams, setExams] = useState([
@@ -24,10 +48,10 @@ const ExamSchedule = () => {
   const [editingExam, setEditingExam] = useState(null);
   const [form] = Form.useForm();
 
-  // Handle add/edit exam
+  /* ---------------- ADD / EDIT ---------------- */
   const handleOk = () => {
     form.validateFields().then((values) => {
-      const newExam = {
+      const payload = {
         id: editingExam ? editingExam.id : Date.now(),
         subject: values.subject,
         type: values.type,
@@ -35,9 +59,11 @@ const ExamSchedule = () => {
       };
 
       if (editingExam) {
-        setExams((prev) => prev.map((exam) => (exam.id === editingExam.id ? newExam : exam)));
+        setExams((prev) =>
+          prev.map((e) => (e.id === editingExam.id ? payload : e))
+        );
       } else {
-        setExams((prev) => [...prev, newExam]);
+        setExams((prev) => [...prev, payload]);
       }
 
       setIsModalOpen(false);
@@ -46,71 +72,90 @@ const ExamSchedule = () => {
     });
   };
 
-  // Delete exam
+  /* ---------------- DELETE ---------------- */
   const handleDelete = (id) => {
-    setExams((prev) => prev.filter((exam) => exam.id !== id));
+    setExams((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Render exams inside calendar cells
+  /* ---------------- CALENDAR CELL ---------------- */
   const dateCellRender = (value) => {
-    const dayExams = exams.filter((exam) => exam.date.isSame(value, "day"));
+    const dayExams = exams.filter((e) =>
+      e.date.isSame(value, "day")
+    );
+
+    if (!dayExams.length) return null;
 
     return (
-      <ul className="events">
+      <Space direction="vertical" size={4} style={{ width: "100%" }}>
         {dayExams.map((exam) => (
-          <li key={exam.id}>
-            <Badge
-              status={exam.type === "Midterm" ? "processing" : "error"}
-              text={
-                <span
-                  onClick={() => {
-                    setEditingExam(exam);
-                    form.setFieldsValue({
-                      subject: exam.subject,
-                      type: exam.type,
-                      date: exam.date,
-                    });
-                    setIsModalOpen(true);
-                  }}
-                  style={{ cursor: "pointer" }}
+          <Card
+            key={exam.id}
+            size="small"
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              setEditingExam(exam);
+              form.setFieldsValue(exam);
+              setIsModalOpen(true);
+            }}
+          >
+            <Space direction="vertical" size={2}>
+              <Text strong>{exam.subject}</Text>
+              <Tag color={examTypeColor[exam.type]}>
+                {exam.type}
+              </Tag>
+              <Popconfirm
+                title="Delete this exam?"
+                onConfirm={(e) => {
+                  e.stopPropagation();
+                  handleDelete(exam.id);
+                }}
+              >
+                <Button
+                  size="small"
+                  danger
+                  type="link"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {exam.subject}
-                </span>
-              }
-            />
-            <Popconfirm
-              title="Delete exam?"
-              onConfirm={() => handleDelete(exam.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="link" size="small" danger>
-                Delete
-              </Button>
-            </Popconfirm>
-          </li>
+                  Delete
+                </Button>
+              </Popconfirm>
+            </Space>
+          </Card>
         ))}
-      </ul>
+      </Space>
     );
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <Button
-        type="primary"
-        onClick={() => {
-          setEditingExam(null);
-          form.resetFields();
-          setIsModalOpen(true);
-        }}
-        style={{ marginBottom: 16 }}
-      >
-        Add Exam
-      </Button>
+    <Card bordered={false}>
+      {/* 🔹 HEADER */}
+      <Row justify="space-between" align="middle">
+        <Col>
+          <Title level={4}>📅 Exam Schedule</Title>
+          <Text type="secondary">
+            Plan, edit & manage exams (Principal View)
+          </Text>
+        </Col>
+        <Col>
+          <Button
+            type="primary"
+            onClick={() => {
+              setEditingExam(null);
+              form.resetFields();
+              setIsModalOpen(true);
+            }}
+          >
+            + Add Exam
+          </Button>
+        </Col>
+      </Row>
 
-      <Calendar dateCellRender={dateCellRender} />
+      {/* 🔹 CALENDAR */}
+      <Card style={{ marginTop: 16 }}>
+        <Calendar dateCellRender={dateCellRender} />
+      </Card>
 
-      {/* Add/Edit Exam Modal */}
+      {/* 🔹 MODAL */}
       <Modal
         title={editingExam ? "Edit Exam" : "Add Exam"}
         open={isModalOpen}
@@ -120,22 +165,23 @@ const ExamSchedule = () => {
           setEditingExam(null);
           form.resetFields();
         }}
+        okText="Save"
       >
-        <Form form={form} layout="vertical">
+        <Form layout="vertical" form={form}>
           <Form.Item
-            name="subject"
             label="Subject"
-            rules={[{ required: true, message: "Please enter subject" }]}
+            name="subject"
+            rules={[{ required: true }]}
           >
-            <Input />
+            <Input placeholder="Enter subject name" />
           </Form.Item>
 
           <Form.Item
-            name="type"
             label="Exam Type"
-            rules={[{ required: true, message: "Please select exam type" }]}
+            name="type"
+            rules={[{ required: true }]}
           >
-            <Select placeholder="Select type">
+            <Select placeholder="Select exam type">
               <Option value="Midterm">Midterm</Option>
               <Option value="Final">Final</Option>
               <Option value="Quiz">Quiz</Option>
@@ -144,15 +190,15 @@ const ExamSchedule = () => {
           </Form.Item>
 
           <Form.Item
-            name="date"
             label="Exam Date"
-            rules={[{ required: true, message: "Please select date" }]}
+            name="date"
+            rules={[{ required: true }]}
           >
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </Card>
   );
 };
 

@@ -1,322 +1,280 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  Card,
+  Form,
+  Input,
+  Select,
+  Button,
+  Row,
+  Col,
+  Divider,
+  Space,
+  InputNumber,
+  Switch,
+  Typography,
+  message,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+
 import { fetchAllSubjects } from "../../../features/subjectSlice";
-import { createQuestion } from "../../../features/questionSlice"
 import { fetchAllClasses } from "../../../features/classSlice";
+import { createQuestion } from "../../../features/questionSlice";
+
+const { Title } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
+
 const CreateQuestion = () => {
   const dispatch = useDispatch();
-  const { subjectList } = useSelector((state) => state.subject)
-  const { classList } = useSelector((state) => state.class)
-  console.log(subjectList)
-  useEffect(() => {
-    dispatch(fetchAllSubjects())
-    dispatch(fetchAllClasses())
-  }, [dispatch])
+  const [form] = Form.useForm();
+
+  const { subjectList = [] } = useSelector((state) => state.subject);
+  const { classList = [] } = useSelector((state) => state.class);
+
   const user = JSON.parse(localStorage.getItem("user"));
-  const SchoolId = user?.school?._id
+  const schoolId = user?.school?._id;
 
+  const [options, setOptions] = useState([]);
+  const [correctAnswers, setCorrectAnswers] = useState([]);
+  const [questionType, setQuestionType] = useState("mcq_single");
 
-  const [formData, setFormData] = useState({
-    schoolId: SchoolId,
-    classId: "",
-    subjectId: "",
-    chapter: "",
-    topic: "",
-    questionType: "mcq_single",
-    statement: "",
-    options: [],
-    correctAnswers: [],
-    difficulty: "medium",
-    marks: 1,
-    negativeMarks: 0,
-    tags: "",
-    isActive: true,
-  });
+  useEffect(() => {
+    dispatch(fetchAllSubjects());
+    dispatch(fetchAllClasses());
+  }, [dispatch]);
 
-  // Add option for MCQ/Match
-  const addOption = () => {
-    setFormData((prev) => ({
-      ...prev,
-      options: [...prev.options, { key: "", text: "" }],
-    }));
-  };
+  /* -------------------- HANDLERS -------------------- */
 
-  // Add correct answer
-  const addCorrectAnswer = () => {
-    setFormData((prev) => ({
-      ...prev,
-      correctAnswers: [...prev.correctAnswers, ""],
-    }));
-  };
+  const addOption = () =>
+    setOptions((prev) => [...prev, { key: "", text: "" }]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(createQuestion({
-      ...formData,
-      tags: formData.tags
-        ? formData.tags.split(",").map((t) => t.trim().toLowerCase())
-        : []
-    }));
+  const addCorrectAnswer = () =>
+    setCorrectAnswers((prev) => [...prev, ""]);
+
+  const onFinish = (values) => {
+    const payload = {
+      ...values,
+      schoolId,
+      options,
+      correctAnswers,
+      tags: values.tags
+        ? values.tags.split(",").map((t) => t.trim().toLowerCase())
+        : [],
+    };
+
+    dispatch(createQuestion(payload));
+    message.success("Question created successfully");
+    form.resetFields();
+    setOptions([]);
+    setCorrectAnswers([]);
   };
 
   return (
-    <div className="max-w-4xl mx-auto ">
-      <div className="">
+    <Card bordered={false} style={{ borderRadius: 12 }}>
+      <Title level={4}>📝 Create Question</Title>
 
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{
+          questionType: "mcq_single",
+          difficulty: "medium",
+          marks: 1,
+          negativeMarks: 0,
+          isActive: true,
+        }}
+        onFinish={onFinish}
+      >
+        {/* 🔹 CLASS & SUBJECT */}
+        <Divider orientation="left">Class & Subject</Divider>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* School / Subject */}
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-
-            <div>
-              <label className="block font-medium mb-1">Class
-              </label>
-              <select
-                className="w-full border rounded-lg p-2"
-                value={formData.classId}
-                onChange={(e) =>
-                  setFormData({ ...formData, classId: e.target.value })
-                }
-                required
-              >
-                <option value="">Select Class</option>
-                {classList.map((cls) => (
-                  <option key={cls._id} value={cls._id}>
-                    {cls.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-
-            <div>
-              <label className="block font-medium mb-1">Subject</label>
-              <select
-                className="w-full border rounded-lg p-2"
-                value={formData.subjectId}
-                onChange={(e) =>
-                  setFormData({ ...formData, subjectId: e.target.value })
-                }
-                required
-              >
-                <option value="">Select Subject</option>
-                {subjectList.map((subj) => (
-                  <option key={subj._id} value={subj._id}>
-                    {subj.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-          </div>
-
-          {/* Chapter & Topic */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Chapter</label>
-              <input
-                type="text"
-                className="w-full border rounded-lg p-2"
-                value={formData.chapter}
-                onChange={(e) =>
-                  setFormData({ ...formData, chapter: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="block font-medium mb-1">Topic</label>
-              <input
-                type="text"
-                className="w-full border rounded-lg p-2"
-                value={formData.topic}
-                onChange={(e) =>
-                  setFormData({ ...formData, topic: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          {/* Question Type */}
-          <div>
-            <label className="block font-medium mb-1">Question Type</label>
-            <select
-              className="w-full border rounded-lg p-2"
-              value={formData.questionType}
-              onChange={(e) =>
-                setFormData({ ...formData, questionType: e.target.value, options: [], correctAnswers: [] })
-              }
+        <Row gutter={16}>
+          <Col md={12} xs={24}>
+            <Form.Item
+              name="classId"
+              label="Class"
+              rules={[{ required: true }]}
             >
-              <option value="mcq_single">MCQ (Single Answer)</option>
-              <option value="mcq_multi">MCQ (Multiple Answer)</option>
-              <option value="true_false">True / False</option>
-              <option value="fill_blank">Fill in the Blank</option>
-              <option value="match">Match the Following</option>
-            </select>
-          </div>
+              <Select placeholder="Select Class">
+                {classList.map((cls) => (
+                  <Option key={cls._id} value={cls._id}>
+                    {cls.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
 
-          {/* Statement */}
-          <div>
-            <label className="block font-medium mb-1">Question Statement</label>
-            <textarea
-              className="w-full border rounded-lg p-2"
-              rows="3"
-              value={formData.statement}
-              onChange={(e) =>
-                setFormData({ ...formData, statement: e.target.value })
-              }
-              required
-            />
-          </div>
+          <Col md={12} xs={24}>
+            <Form.Item
+              name="subjectId"
+              label="Subject"
+              rules={[{ required: true }]}
+            >
+              <Select placeholder="Select Subject">
+                {subjectList.map((subj) => (
+                  <Option key={subj._id} value={subj._id}>
+                    {subj.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
-          {/* Dynamic Options for MCQ / Match */}
-          {(formData.questionType === "mcq_single" ||
-            formData.questionType === "mcq_multi" ||
-            formData.questionType === "match") && (
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="font-medium">Options</label>
-                  <button
-                    type="button"
-                    onClick={addOption}
-                    className="bg-blue-500 text-white px-3 py-1 rounded-lg"
-                  >
-                    + Add Option
-                  </button>
-                </div>
-                {formData.options.map((opt, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
-                    <input
-                      type="text"
-                      className="border p-2 rounded-lg w-1/4"
+        {/* 🔹 CHAPTER / TOPIC */}
+        <Row gutter={16}>
+          <Col md={12} xs={24}>
+            <Form.Item name="chapter" label="Chapter">
+              <Input placeholder="Chapter name" />
+            </Form.Item>
+          </Col>
+          <Col md={12} xs={24}>
+            <Form.Item name="topic" label="Topic">
+              <Input placeholder="Topic name" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 🔹 QUESTION TYPE */}
+        <Form.Item name="questionType" label="Question Type">
+          <Select
+            onChange={(val) => {
+              setQuestionType(val);
+              setOptions([]);
+              setCorrectAnswers([]);
+            }}
+          >
+            <Option value="mcq_single">MCQ (Single)</Option>
+            <Option value="mcq_multi">MCQ (Multiple)</Option>
+            <Option value="true_false">True / False</Option>
+            <Option value="fill_blank">Fill in the Blank</Option>
+            <Option value="match">Match the Following</Option>
+          </Select>
+        </Form.Item>
+
+        {/* 🔹 STATEMENT */}
+        <Form.Item
+          name="statement"
+          label="Question Statement"
+          rules={[{ required: true }]}
+        >
+          <TextArea rows={4} placeholder="Enter question statement" />
+        </Form.Item>
+
+        {/* 🔹 OPTIONS */}
+        {(questionType === "mcq_single" ||
+          questionType === "mcq_multi" ||
+          questionType === "match") && (
+          <>
+            <Divider orientation="left">Options</Divider>
+
+            <Button
+              type="dashed"
+              icon={<PlusOutlined />}
+              onClick={addOption}
+              block
+            >
+              Add Option
+            </Button>
+
+            <Space direction="vertical" style={{ width: "100%", marginTop: 12 }}>
+              {options.map((opt, index) => (
+                <Row gutter={12} key={index}>
+                  <Col span={6}>
+                    <Input
                       placeholder="Key"
                       value={opt.key}
                       onChange={(e) => {
-                        const updated = [...formData.options];
+                        const updated = [...options];
                         updated[index].key = e.target.value;
-                        setFormData({ ...formData, options: updated });
+                        setOptions(updated);
                       }}
                     />
-                    <input
-                      type="text"
-                      className="border p-2 rounded-lg w-3/4"
+                  </Col>
+                  <Col span={18}>
+                    <Input
                       placeholder="Option Text"
                       value={opt.text}
                       onChange={(e) => {
-                        const updated = [...formData.options];
+                        const updated = [...options];
                         updated[index].text = e.target.value;
-                        setFormData({ ...formData, options: updated });
+                        setOptions(updated);
                       }}
                     />
-                  </div>
-                ))}
-              </div>
-            )}
+                  </Col>
+                </Row>
+              ))}
+            </Space>
+          </>
+        )}
 
-          {/* Correct Answers */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="font-medium">Correct Answers</label>
-              <button
-                type="button"
-                onClick={addCorrectAnswer}
-                className="bg-green-500 text-white px-3 py-1 rounded-lg"
-              >
-                + Add Answer
-              </button>
-            </div>
-            {formData.correctAnswers.map((ans, index) => (
-              <input
-                key={index}
-                type="text"
-                className="border p-2 rounded-lg w-full mb-2"
-                placeholder="Correct Answer"
-                value={ans}
-                onChange={(e) => {
-                  const updated = [...formData.correctAnswers];
-                  updated[index] = e.target.value;
-                  setFormData({ ...formData, correctAnswers: updated });
-                }}
-              />
-            ))}
-          </div>
+        {/* 🔹 CORRECT ANSWERS */}
+        <Divider orientation="left">Correct Answers</Divider>
 
-          {/* Difficulty / Marks */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Difficulty</label>
-              <select
-                className="w-full border rounded-lg p-2"
-                value={formData.difficulty}
-                onChange={(e) =>
-                  setFormData({ ...formData, difficulty: e.target.value })
-                }
-              >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-            <div>
-              <label className="block font-medium mb-1">Marks</label>
-              <input
-                type="number"
-                className="w-full border rounded-lg p-2"
-                value={formData.marks}
-                onChange={(e) =>
-                  setFormData({ ...formData, marks: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="block font-medium mb-1">Negative Marks</label>
-              <input
-                type="number"
-                className="w-full border rounded-lg p-2"
-                value={formData.negativeMarks}
-                onChange={(e) =>
-                  setFormData({ ...formData, negativeMarks: e.target.value })
-                }
-              />
-            </div>
-          </div>
+        <Button type="dashed" onClick={addCorrectAnswer} block>
+          Add Correct Answer
+        </Button>
 
-          {/* Tags */}
-          <div>
-            <label className="block font-medium mb-1">Tags (comma separated)</label>
-            <input
-              type="text"
-              className="w-full border rounded-lg p-2"
-              value={formData.tags}
-              onChange={(e) =>
-                setFormData({ ...formData, tags: e.target.value })
-              }
+        <Space direction="vertical" style={{ width: "100%", marginTop: 12 }}>
+          {correctAnswers.map((ans, index) => (
+            <Input
+              key={index}
+              placeholder="Correct Answer"
+              value={ans}
+              onChange={(e) => {
+                const updated = [...correctAnswers];
+                updated[index] = e.target.value;
+                setCorrectAnswers(updated);
+              }}
             />
-          </div>
+          ))}
+        </Space>
 
-          {/* Active Status */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={formData.isActive}
-              onChange={(e) =>
-                setFormData({ ...formData, isActive: e.target.checked })
-              }
-            />
-            <span>Active</span>
-          </div>
+        {/* 🔹 MARKS & DIFFICULTY */}
+        <Divider orientation="left">Evaluation</Divider>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
-          >
-            Save Question
-          </button>
-        </form>
-      </div>
-    </div>
+        <Row gutter={16}>
+          <Col md={8} xs={24}>
+            <Form.Item name="difficulty" label="Difficulty">
+              <Select>
+                <Option value="easy">Easy</Option>
+                <Option value="medium">Medium</Option>
+                <Option value="hard">Hard</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+
+          <Col md={8} xs={24}>
+            <Form.Item name="marks" label="Marks">
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+
+          <Col md={8} xs={24}>
+            <Form.Item name="negativeMarks" label="Negative Marks">
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 🔹 TAGS */}
+        <Form.Item name="tags" label="Tags (comma separated)">
+          <Input placeholder="mcq, algebra, class-10" />
+        </Form.Item>
+
+        {/* 🔹 STATUS */}
+        <Form.Item name="isActive" label="Active" valuePropName="checked">
+          <Switch />
+        </Form.Item>
+
+        {/* 🔹 SUBMIT */}
+        <Button type="primary" htmlType="submit" block size="large">
+          Save Question
+        </Button>
+      </Form>
+    </Card>
   );
 };
 

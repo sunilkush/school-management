@@ -1,298 +1,268 @@
 import React, { useState } from "react";
+import dayjs from "dayjs";
+import {
+  Card,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  InputNumber,
+  Switch,
+  Button,
+  Row,
+  Col,
+  Divider,
+  Space,
+  message,
+  Typography,
+} from "antd";
+
+const { Title } = Typography;
+const { Option } = Select;
 
 const CreateExam = () => {
-
-  const [formData, setFormData] = useState({
-    schoolId: "",
-    title: "",
-    classId: "",
-    sectionId: "",
-    subjectId: "",
-    examType: "objective",
-    startTime: "",
-    endTime: "",
-    durationMinutes: "",
-    totalMarks: "",
-    passingMarks: "",
-    questionOrder: "random",
-    shuffleOptions: true,
-    settings: {
-      negativeMarking: 0,
-      allowPartialScoring: false,
-      maxAttempts: 1,
-    },
-    questions: [],
-    status: "draft",
-  });
+  const [form] = Form.useForm();
+  const [questions, setQuestions] = useState([]);
 
   const addQuestion = () => {
-    setFormData((prev) => ({
-      ...prev,
-      questions: [...prev.questions, { questionId: "", marks: 0 }],
-    }));
+    setQuestions((prev) => [...prev, { questionId: "", marks: 0 }]);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (parseInt(formData.passingMarks) > parseInt(formData.totalMarks)) {
-      alert("⚠️ Passing marks cannot be greater than total marks!");
+  const handleSubmit = (values) => {
+    if (values.passingMarks > values.totalMarks) {
+      message.error("Passing marks cannot be greater than total marks");
       return;
     }
 
-    console.log("✅ Exam Data:", formData);
-    alert("Exam saved successfully!");
+    const payload = {
+      ...values,
+      startTime: values.time?.[0]?.toISOString(),
+      endTime: values.time?.[1]?.toISOString(),
+      questions,
+    };
+
+    console.log("✅ Exam Data:", payload);
+    message.success("Exam created successfully");
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="bg-white shadow-lg rounded-2xl p-6">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">📝 Create Exam</h1>
+    <Card bordered={false} style={{ borderRadius: 12 }}>
+      <Title level={4}>📝 Create Exam</Title>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Exam Title */}
-          <div>
-            <label className="block font-medium mb-1">Exam Title</label>
-            <input
-              type="text"
-              className="w-full border rounded-lg p-2 focus:ring focus:ring-indigo-300"
-              placeholder="Enter exam title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              required
-            />
-          </div>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        initialValues={{
+          examType: "objective",
+          questionOrder: "random",
+          shuffleOptions: true,
+          status: "draft",
+          negativeMarking: 0,
+          allowPartialScoring: false,
+          maxAttempts: 1,
+          time: [dayjs(), dayjs().add(1, "hour")],
+        }}
+      >
+        {/* 🔹 BASIC INFO */}
+        <Divider orientation="left">Basic Information</Divider>
 
-          {/* Class / Section / Subject */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {["classId", "sectionId", "subjectId"].map((field, i) => (
-              <div key={i}>
-                <label className="block font-medium mb-1 capitalize">
-                  {field.replace("Id", "")}
-                </label>
-                <input
-                  type="text"
-                  className="w-full border rounded-lg p-2 focus:ring focus:ring-indigo-300"
-                  placeholder={`${field.replace("Id", "")} ID`}
-                  value={formData[field]}
-                  onChange={(e) =>
-                    setFormData({ ...formData, [field]: e.target.value })
-                  }
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Exam Type */}
-          <div>
-            <label className="block font-medium mb-1">Exam Type</label>
-            <select
-              className="w-full border rounded-lg p-2"
-              value={formData.examType}
-              onChange={(e) =>
-                setFormData({ ...formData, examType: e.target.value })
-              }
+        <Row gutter={16}>
+          <Col span={24}>
+            <Form.Item
+              name="title"
+              label="Exam Title"
+              rules={[{ required: true, message: "Enter exam title" }]}
             >
-              <option value="objective">Objective</option>
-              <option value="subjective">Subjective</option>
-              <option value="mixed">Mixed</option>
-            </select>
-          </div>
+              <Input placeholder="Mid Term Examination" />
+            </Form.Item>
+          </Col>
 
-          {/* Timing */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { label: "Start Time", key: "startTime", type: "datetime-local" },
-              { label: "End Time", key: "endTime", type: "datetime-local" },
-              { label: "Duration (Minutes)", key: "durationMinutes", type: "number", min: 1 },
-            ].map(({ label, key, type, min }) => (
-              <div key={key}>
-                <label className="block font-medium mb-1">{label}</label>
-                <input
-                  type={type}
-                  min={min}
-                  className="w-full border rounded-lg p-2 focus:ring focus:ring-indigo-300"
-                  value={formData[key]}
-                  onChange={(e) =>
-                    setFormData({ ...formData, [key]: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Marks */}
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "Total Marks", key: "totalMarks", min: 1 },
-              { label: "Passing Marks", key: "passingMarks", min: 0 },
-            ].map(({ label, key, min }) => (
-              <div key={key}>
-                <label className="block font-medium mb-1">{label}</label>
-                <input
-                  type="number"
-                  min={min}
-                  className="w-full border rounded-lg p-2"
-                  value={formData[key]}
-                  onChange={(e) =>
-                    setFormData({ ...formData, [key]: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Question Settings */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Question Order</label>
-              <select
-                className="w-full border rounded-lg p-2"
-                value={formData.questionOrder}
-                onChange={(e) =>
-                  setFormData({ ...formData, questionOrder: e.target.value })
-                }
+          {["classId", "sectionId", "subjectId"].map((field) => (
+            <Col md={8} xs={24} key={field}>
+              <Form.Item
+                name={field}
+                label={field.replace("Id", "")}
+                rules={[{ required: true }]}
               >
-                <option value="fixed">Fixed</option>
-                <option value="random">Random</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2 mt-6">
-              <input
-                type="checkbox"
-                checked={formData.shuffleOptions}
-                onChange={(e) =>
-                  setFormData({ ...formData, shuffleOptions: e.target.checked })
-                }
-              />
-              <span>Shuffle Options</span>
-            </div>
-          </div>
+                <Select placeholder={`Select ${field.replace("Id", "")}`}>
+                  <Option value="1">Option 1</Option>
+                  <Option value="2">Option 2</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          ))}
+        </Row>
 
-          {/* Advanced Settings */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Negative Marking</label>
-              <input
-                type="number"
-                className="w-full border rounded-lg p-2"
-                value={formData.settings.negativeMarking}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    settings: {
-                      ...formData.settings,
-                      negativeMarking: e.target.value,
-                    },
-                  })
-                }
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-6">
-              <input
-                type="checkbox"
-                checked={formData.settings.allowPartialScoring}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    settings: {
-                      ...formData.settings,
-                      allowPartialScoring: e.target.checked,
-                    },
-                  })
-                }
-              />
-              <span>Allow Partial Scoring</span>
-            </div>
-            <div>
-              <label className="block font-medium mb-1">Max Attempts</label>
-              <input
-                type="number"
-                className="w-full border rounded-lg p-2"
-                value={formData.settings.maxAttempts}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    settings: {
-                      ...formData.settings,
-                      maxAttempts: e.target.value,
-                    },
-                  })
-                }
-              />
-            </div>
-          </div>
+        {/* 🔹 EXAM TYPE */}
+        <Form.Item name="examType" label="Exam Type">
+          <Select>
+            <Option value="objective">Objective</Option>
+            <Option value="subjective">Subjective</Option>
+            <Option value="mixed">Mixed</Option>
+          </Select>
+        </Form.Item>
 
-          {/* Questions */}
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <label className="font-medium">Questions</label>
-              <button
-                type="button"
-                onClick={addQuestion}
-                className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600"
-              >
-                + Add Question
-              </button>
-            </div>
-            {formData.questions.map((q, index) => (
-              <div key={index} className="flex gap-4 mb-2">
-                <input
-                  type="text"
-                  className="border rounded-lg p-2 w-2/3"
+        {/* 🔹 SCHEDULE */}
+        <Divider orientation="left">Schedule</Divider>
+
+        <Row gutter={16}>
+          <Col md={16} xs={24}>
+            <Form.Item
+              name="time"
+              label="Exam Time"
+              rules={[{ required: true }]}
+            >
+              <DatePicker.RangePicker
+                showTime
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col md={8} xs={24}>
+            <Form.Item
+              name="durationMinutes"
+              label="Duration (Minutes)"
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 🔹 MARKS */}
+        <Divider orientation="left">Marks</Divider>
+
+        <Row gutter={16}>
+          <Col md={12} xs={24}>
+            <Form.Item
+              name="totalMarks"
+              label="Total Marks"
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+
+          <Col md={12} xs={24}>
+            <Form.Item
+              name="passingMarks"
+              label="Passing Marks"
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 🔹 QUESTION SETTINGS */}
+        <Divider orientation="left">Question Settings</Divider>
+
+        <Row gutter={16}>
+          <Col md={8} xs={24}>
+            <Form.Item name="questionOrder" label="Question Order">
+              <Select>
+                <Option value="fixed">Fixed</Option>
+                <Option value="random">Random</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+
+          <Col md={8} xs={24}>
+            <Form.Item
+              name="shuffleOptions"
+              label="Shuffle Options"
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 🔹 ADVANCED SETTINGS */}
+        <Divider orientation="left">Advanced Settings</Divider>
+
+        <Row gutter={16}>
+          <Col md={8} xs={24}>
+            <Form.Item name="negativeMarking" label="Negative Marking">
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+
+          <Col md={8} xs={24}>
+            <Form.Item
+              name="allowPartialScoring"
+              label="Partial Scoring"
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+          </Col>
+
+          <Col md={8} xs={24}>
+            <Form.Item name="maxAttempts" label="Max Attempts">
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* 🔹 QUESTIONS */}
+        <Divider orientation="left">Questions</Divider>
+
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Button type="dashed" onClick={addQuestion} block>
+            + Add Question
+          </Button>
+
+          {questions.map((q, index) => (
+            <Row gutter={12} key={index}>
+              <Col span={16}>
+                <Input
                   placeholder="Question ID"
                   value={q.questionId}
                   onChange={(e) => {
-                    const updated = [...formData.questions];
+                    const updated = [...questions];
                     updated[index].questionId = e.target.value;
-                    setFormData({ ...formData, questions: updated });
+                    setQuestions(updated);
                   }}
                 />
-                <input
-                  type="number"
-                  className="border rounded-lg p-2 w-1/3"
+              </Col>
+
+              <Col span={8}>
+                <InputNumber
                   placeholder="Marks"
+                  min={0}
+                  style={{ width: "100%" }}
                   value={q.marks}
-                  onChange={(e) => {
-                    const updated = [...formData.questions];
-                    updated[index].marks = e.target.value;
-                    setFormData({ ...formData, questions: updated });
+                  onChange={(val) => {
+                    const updated = [...questions];
+                    updated[index].marks = val;
+                    setQuestions(updated);
                   }}
                 />
-              </div>
-            ))}
-          </div>
+              </Col>
+            </Row>
+          ))}
+        </Space>
 
-          {/* Status */}
-          <div>
-            <label className="block font-medium mb-1">Status</label>
-            <select
-              className="w-full border rounded-lg p-2"
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
-              }
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
+        {/* 🔹 STATUS */}
+        <Divider />
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
-          >
-            Save Exam
-          </button>
-        </form>
-      </div>
-    </div>
+        <Form.Item name="status" label="Status">
+          <Select>
+            <Option value="draft">Draft</Option>
+            <Option value="published">Published</Option>
+            <Option value="completed">Completed</Option>
+          </Select>
+        </Form.Item>
+
+        {/* 🔹 ACTION */}
+        <Button type="primary" htmlType="submit" block size="large">
+          Save Exam
+        </Button>
+      </Form>
+    </Card>
   );
 };
 

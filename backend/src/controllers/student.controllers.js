@@ -128,7 +128,7 @@ const getStudents = asyncHandler(async (req, res) => {
   const user = req.user;
   const { classId, page = 1, limit = 10 } = req.query;
   const academicYearId = req.academicYearId;
-
+  console.log(user)
   // 🔹 Common validation
   if (!academicYearId) {
     throw new ApiError(400, "Academic year is required!");
@@ -138,12 +138,12 @@ const getStudents = asyncHandler(async (req, res) => {
   const match = { academicYearId: new mongoose.Types.ObjectId(academicYearId) };
 
   // 🔹 Role-based filter
-  if (user.role === "School Admin" || user.role === "Super Admin") {
+  if (user?.role?.name === "School Admin" || user?.role?.name === "Super Admin") {
     if (!user.schoolId) {
       throw new ApiError(400, "School ID not found for admin user!");
     }
     match.schoolId = new mongoose.Types.ObjectId(user.schoolId);
-  } else if (user.role === "Super Admin") {
+  } else if (user?.role?.name === "Super Admin") {
     // Super Admin — no school filter
   } else {
     throw new ApiError(403, "Access denied. Only admins can view student data.");

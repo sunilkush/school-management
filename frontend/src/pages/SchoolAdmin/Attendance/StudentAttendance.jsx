@@ -1,173 +1,270 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
-import { fetchAllStudent } from "../../../features/studentSlice";
+import {
+  Card,
+  Table,
+  Select,
+  Button,
+  Row,
+  Col,
+  Typography,
+  Tag,
+  DatePicker,
+  message,
+  Space,
+  Radio
+} from "antd";
+import dayjs from "dayjs";
+
+import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { activeUser } from "../../../features/authSlice";
-import {markAttendance} from "../../../features/attendanceSlice";
+import { markAttendance } from "../../../features/attendanceSlice";
+import { fetchAllClasses } from "../../../features/classSlice";
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+
 const StudentAttendance = () => {
   const dispatch = useDispatch();
-  const { studentList = [], loading } = useSelector((state) => state.students);
+
+  const { schoolStudents = [], loading } = useSelector(
+    (state) => state.students
+  );
   const { user: currentUser } = useSelector((state) => state.auth);
+  const { classList = [] } = useSelector((state) => state.class);
 
   const schoolId = currentUser?.school?._id;
+  const academicYearId = currentUser?.academicYear?._id;
 
-  const academicYearId = currentUser?.academicYear?._id
-  // 🔹 Filters
-
-  const [filterClass, setFilterClass] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-
-  // 🔹 Local state to track marked attendance
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [filterStatus, setFilterStatus] = useState(null);
+  const [attendanceDate, setAttendanceDate] = useState(dayjs());
   const [attendance, setAttendance] = useState({});
 
+  // 🔹 Initial Load
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchAllStudent({ schoolId }));
+      dispatch(fetchStudentsBySchoolId({ schoolId }));
+      dispatch(fetchAllClasses({ schoolId }));
     }
     dispatch(activeUser());
   }, [dispatch, schoolId]);
 
-  // 🔹 Update attendance state
+  // 🔹 Default Attendance = Present
+  useEffect(() => {
+    const defaultAttendance = {};
+    schoolStudents.forEach((s) => {
+      defaultAttendance[s._id] = "present";
+    });
+    setAttendance(defaultAttendance);
+  }, [schoolStudents]);
+
+  // 🔹 Class Change
+  const handleClassChange = (value) => {
+    setSelectedClass(value);
+    setSelectedSection(null); // reset section
+  };
+
+  // 🔹 Attendance Change
   const handleAttendanceChange = (studentId, status) => {
     setAttendance((prev) => ({
       ...prev,
       [studentId]: status,
     }));
-   
   };
 
-  // 🔹 Columns
+  // 🔹 Section list based on class
+  const sectionList = useMemo(() => {
+    if (!selectedClass) return [];
+
+    const sections = schoolStudents
+      .filter((s) => s.class?.name === selectedClass)
+      .map((s) => s.section?.name)
+      .filter(Boolean);
+
+    return [...new Set(sections)];
+  }, [schoolStudents, selectedClass]);
+
+  // 🔹 Filter Students
+  const filteredData = useMemo(() => {
+    return schoolStudents.filter((item) => {
+      return (
+        (selectedClass ? item.class?.name === selectedClass : false) &&
+        (selectedSection ? item.section?.name === selectedSection : true) &&
+        (filterStatus
+          ? attendance[item._id] === filterStatus
+          : true)
+      );
+    });
+  }, [
+    schoolStudents,
+    selectedClass,
+    selectedSection,
+    filterStatus,
+    attendance,
+  ]);
+
+  // 🔹 Attendance Summary
+  const summary = useMemo(() => {
+    let present = 0;
+    let absent = 0;
+    filteredData.forEach((s) => {
+      attendance[s._id] === "absent" ? absent++ : present++;
+    });
+    return { present, absent };
+  }, [filteredData, attendance]);
+
+  // 🔹 Mark All Present
+  const markAllPresent = () => {
+    const updated = {};
+    filteredData.forEach((s) => {
+      updated[s._id] = "present";
+    });
+    setAttendance((prev) => ({ ...prev, ...updated }));
+  };
+
+  // 🔹 Table Columns
   const columns = [
     {
-      name: "Student Name",
-      selector: (row) => row.userDetails?.name || "N/A",
-      sortable: true,
+      title: "Student Name",
+      dataIndex: ["userDetails", "name"],
     },
     {
-      name: "Class",
-      selector: (row) => row.classDetails?.name || "N/A",
-      sortable: true,
+      title: "Class",
+      render: (_, record) =>
+        `${record.class?.name} - ${record.section?.name || ""}`,
     },
-    {
-      name: "School",
-      selector: (row) => row.school?.name || "N/A",
-      sortable: true,
-    },
-    {
-      name: "Date",
-      selector: () => new Date().toLocaleDateString(), // today's date
-      sortable: true,
-    },
-    {
-      name: "Mark Attendance",
-      cell: (row) => (
-        <select
-          value={attendance[row._id] || ""}
-          onChange={(e) => handleAttendanceChange(row._id, e.target.value)}
-          className="border p-1 rounded"
+   {
+      title: "Attendance",
+      key: "attendance",
+      render: (_, record) => (
+        <Radio.Group
+          value={attendance[record._id]}
+          onChange={(e) =>
+            handleAttendanceChange(record._id, e.target.value)
+          }
         >
-          <option value="">Select</option>
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-        </select>
+          <Space>
+            <Radio value="present">
+              <Tag color="green">Present</Tag>
+            </Radio>
+            <Radio value="absent">
+              <Tag color="red">Absent</Tag>
+            </Radio>
+          </Space>
+        </Radio.Group>
       ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
     },
   ];
 
-  // 🔹 Filtering logic
-  const filteredRecords = studentList.filter((item) => {
-    return (
-    
-      (filterClass ? item.classDetails?.name === filterClass : true) &&
-      (filterStatus
-        ? (attendance[item._id] || item.status) === filterStatus
-        : true)
-    );
-  });
+  // 🔹 Submit Attendance
+  const handleSubmit = () => {
+    if (!selectedClass || !selectedSection) {
+      message.warning("Please select class and section");
+      return;
+    }
 
-  // 🔹 Submit Attendance (can send to backend)
-const handleSubmit = () => {
-  const today = new Date();
-
-  const attendanceData = studentList
-    .filter((student) => attendance[student._id])
-    .map((student) => ({
-      schoolId: schoolId,
+    const attendanceData = filteredData.map((student) => ({
+      schoolId,
       studentId: student._id,
-      classId: student.classDetails?._id,
-      date: today.toISOString(),
-      status: attendance[student._id] || "present",
+      classId: student.class?._id,
+      sectionId: student.section?._id,
+      date: attendanceDate.toISOString(),
+      status: attendance[student._id],
       recordedBy: currentUser?._id,
-      academicYearId:academicYearId  // 🔹 don’t forget this if required in schema
+      academicYearId,
     }));
 
-  console.log("Attendance Payload:", attendanceData);
-
-  // ✅ Correct way to call thunk
-  dispatch(markAttendance({ attendanceData }));
-};
-
+    dispatch(markAttendance({ attendanceData }));
+    message.success("Attendance saved successfully");
+  };
 
   return (
-    <div className="p-6 bg-white shadow rounded">
-      <h2 className="text-xl font-semibold mb-4">Mark Attendance</h2>
+    <Card>
+      <Title level={4}>Student Attendance</Title>
 
       {/* 🔹 Filters */}
-      <div className="flex gap-4 mb-4 justify-between">
-        <div className="grid gap-3 grid-cols-2">
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={6}>
+          <Select
+            placeholder="Select Class *"
+            style={{ width: "100%" }}
+            onChange={handleClassChange}
+          >
+            {classList.map((cls) => (
+              <Option key={cls._id} value={cls.name}>
+                {cls.name}
+              </Option>
+            ))}
+          </Select>
+        </Col>
 
-        <select
-          value={filterClass}
-          onChange={(e) => setFilterClass(e.target.value)}
-          className="border p-2 rounded text-xs"
-        >
-          <option value="">All Classes</option>
-          {[...new Set(studentList.map((r) => r.classDetails?.name))].map(
-            (cls) =>
-              cls && (
-                <option key={cls} value={cls}>
-                  {cls}
-                </option>
-              )
-          )}
-        </select>
+        <Col xs={24} md={6}>
+          <Select
+            placeholder="Select Section *"
+            style={{ width: "100%" }}
+            disabled={!selectedClass}
+            value={selectedSection}
+            onChange={setSelectedSection}
+          >
+            {sectionList.map((sec) => (
+              <Option key={sec} value={sec}>
+                {sec}
+              </Option>
+            ))}
+          </Select>
+        </Col>
 
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="border p-2 rounded text-xs"
-        >
-          <option value="">All Status</option>
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-        </select>
-        </div>
-         {/* 🔹 Save Button */}
-      <div className="">
-        <button
+        <Col xs={24} md={6}>
+          <DatePicker
+            style={{ width: "100%" }}
+            value={attendanceDate}
+            onChange={setAttendanceDate}
+          />
+        </Col>
+
+        <Col xs={24} md={6}>
+          <Select
+            placeholder="Filter Status"
+            allowClear
+            style={{ width: "100%" }}
+            onChange={setFilterStatus}
+          >
+            <Option value="present">Present</Option>
+            <Option value="absent">Absent</Option>
+          </Select>
+        </Col>
+      </Row>
+
+      {/* 🔹 Actions */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 12 }}>
+        <Space>
+          <Button onClick={markAllPresent}>Mark All Present</Button>
+          <Text>
+            <Tag color="green">Present: {summary.present}</Tag>
+            <Tag color="red">Absent: {summary.absent}</Tag>
+          </Text>
+        </Space>
+
+        <Button
+          type="primary"
           onClick={handleSubmit}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-xs"
+          disabled={!selectedClass || !selectedSection}
         >
           Save Attendance
-        </button>
-      </div>
-      </div>
+        </Button>
+      </Row>
 
-      {/* 🔹 DataTable */}
-      <DataTable
+      {/* 🔹 Table */}
+      <Table
+        rowKey="_id"
         columns={columns}
-        data={filteredRecords}
-        progressPending={loading}
-        pagination
-        highlightOnHover
-        striped
+        dataSource={filteredData}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
       />
-
-     
-    </div>
+    </Card>
   );
 };
 

@@ -127,10 +127,13 @@ export const sidebarMenu = {
       title: "Exams & Grades",
       icon: GraduationCap,
       subMenu: [
+         { title: "Create Exam", path: "schooladmin/exams/create-exam", icon: ClipboardList },
+          { title: "Question Bank", path: "schooladmin/exams/question-bank", icon: ClipboardList },
         { title: "Schedule Exams", path: "schooladmin/exams/schedule", icon: ClipboardSignature },
         { title: "Enter Grades", path: "schooladmin/exams/grades", icon: ClipboardList },
-        { title: "Question Bank", path: "schooladmin/exams/question-bank", icon: ClipboardList },
-        { title: "Create Exam", path: "schooladmin/exams/create-exam", icon: ClipboardList },
+        { title: "Exams", path: "schooladmin/exams/exams-list", icon: ClipboardList },
+       
+       
         { title: "Reports", path: "schooladmin/exams/reports", icon: ClipboardList },
       ],
     },
@@ -148,6 +151,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Books", path: "schooladmin/library/books", icon: Book },
         { title: "Issue Book", path: "schooladmin/library/issue", icon: FileCheck },
+        { title: "Issue Card", path: "schooladmin/library/card", icon: FileCheck },
       ],
     },
     {

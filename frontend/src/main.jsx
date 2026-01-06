@@ -32,7 +32,7 @@ import Roles from "./pages/SuperAdmin/System_Settings/Roles.jsx";
 import Permissions from "./pages/SuperAdmin/System_Settings/Permissions.jsx";
 import AcademicYears from "./pages/SuperAdmin/Modules/AcademicYears.jsx";
 import Modules from "./pages/SuperAdmin/Modules/Modules.jsx";
-import SettingsPage from "./pages/Settings.jsx";
+import SettingsPage from "./pages/SchoolAdmin/Settings/SettingsPage.jsx";
 import UsersPage from "./pages/SchoolAdmin/Teachers_&_Students/UsersList.jsx";
 import AddStudent from "./pages/SchoolAdmin/Teachers_&_Students/AddStudent.jsx";
 import AddTeacher from "./pages/SchoolAdmin/Teachers_&_Students/AddTeacher.jsx";
@@ -70,7 +70,7 @@ import ClassSectionList from './pages/SuperAdmin/Classes_&_Section/ClassSectionL
 import EmployeeForm from './components/forms/EmployeeForm.jsx';
 import EmployeeDetailes from './pages/Teacher/Profile/EmployeeDetailes.jsx';
 import FeeStudent from './pages/Student/Fees/FeeStudent.jsx';
-import Calendar from './pages/SchoolAdmin/Events_&_Calendar/calendar.jsx';
+
 import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
 import Events from './pages/SchoolAdmin/Events_&_Calendar/events.jsx';
 import Assets from './pages/SchoolAdmin/Inventory/assets.jsx';
@@ -101,6 +101,10 @@ import Backups from './pages/SuperAdmin/System_Settings/Backups.jsx';
 import FeeStructure from './pages/SchoolAdmin/Fees_Management/FeeStructure.jsx';
 import StudentAssignFees from './pages/SchoolAdmin/Fees_Management/AssignStudentFeeForm.jsx';
 import StudentHomework from './pages/Student/Homework/StudentHomework.jsx';
+import ExamsPage from './pages/SchoolAdmin/Exams_&_Grades/ExamPage.jsx';
+import LibraryCard from './pages/SchoolAdmin/Library/LibraryCard.jsx';
+import CalendarPage from './pages/SchoolAdmin/Events_&_Calendar/CalendarPage.jsx';
+
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -188,6 +192,7 @@ const router = createBrowserRouter([
               { path: "attendance/staff", element: <StaffAttendance /> },
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
+              { path: "library/card", element: <LibraryCard /> },
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
@@ -210,9 +215,10 @@ const router = createBrowserRouter([
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/create-exam", element: <CreateExam /> },
+              { path: "exams/exams-list", element: <ExamsPage /> },
               { path: "users/employee-from", element: <EmployeeForm /> },
               { path: "users/employee-detailes", element: <EmployeeDetailes /> },
-              { path: "calendar", element: <Calendar /> },
+              { path: "calendar", element: <CalendarPage /> },
               { path: "events", element: <Events /> },
               { path: "inventory/supplies", element: <Supplies /> },
               { path: "inventory/assets", element: <Assets /> },

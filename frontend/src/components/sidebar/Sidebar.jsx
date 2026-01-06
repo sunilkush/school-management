@@ -26,6 +26,7 @@ const Sidebar = ({ isOpen }) => {
           alignItems: "center",
           justifyContent: "center",
           borderRight: "1px solid #f0f0f0",
+          overflow:"auto"
         }}
       >
         <Spin tip="Authenticating..." />
