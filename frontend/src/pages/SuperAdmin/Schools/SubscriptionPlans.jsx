@@ -108,7 +108,7 @@ const SubscriptionPlans = () => {
   ];
 
   return (
-    <div className="p-5">
+    <div className="">
       <div className="flex justify-between mb-4">
         <h2 className="text-2xl font-semibold">Subscription Plans</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>

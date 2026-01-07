@@ -13,143 +13,148 @@ import {
   Empty,
   Popconfirm,
   message,
+  Typography,
+  Space,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import { Trash2 } from "lucide-react";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  BankOutlined,
+} from "@ant-design/icons";
 import schoolImg from "../../../assets/school.png";
+
+const { Title, Text } = Typography;
 
 const Schools = () => {
   const dispatch = useDispatch();
   const { schools, loading, error } = useSelector((state) => state.school);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ✅ Fetch schools on mount
   useEffect(() => {
     dispatch(fetchSchools());
   }, [dispatch]);
 
-  // ✅ Delete handler (fixed with unwrap)
-  const handleDeleteSchool = async (schoolId) => {
+  const handleDeleteSchool = async (id) => {
     try {
-      await dispatch(deleteSchool(schoolId)).unwrap();
-      message.success("School deleted successfully!");
+      await dispatch(deleteSchool(id)).unwrap();
+      message.success("School deleted successfully");
       dispatch(fetchSchools());
-    } catch (error) {
-      message.error(error || "Failed to delete school");
+    } catch (err) {
+      message.error(err,"Failed to delete school");
     }
   };
 
   return (
-    <div className="p-3 sm:p-5 lg:p-8 bg-gray-50 min-h-screen">
-      {/* ✅ Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-800">
-          Schools
-        </h1>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      {/* 🔹 Header */}
+      <Space
+        className="w-full mb-4"
+        align="center"
+        style={{ justifyContent: "space-between" }}
+      >
+        <div>
+          <Title level={3} className="!mb-0 text-blue-800">
+            Schools Management
+          </Title>
+          <Text type="secondary">
+            Manage all registered schools
+          </Text>
+        </div>
+
         <Button
           type="primary"
+          size="large"
           icon={<PlusOutlined />}
           onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto h-10 text-sm sm:text-base"
         >
           Add School
         </Button>
-      </div>
+      </Space>
 
-      <hr className="mb-4 border-gray-300" />
-
-      {/* ✅ Content Section */}
+      {/* 🔹 Content */}
       {loading ? (
-        <div className="flex justify-center items-center py-20">
+        <div className="flex justify-center py-24">
           <Spin size="large" />
         </div>
       ) : error ? (
-        <p className="text-center text-red-500 font-medium">{error}</p>
+        <Text type="danger" className="block text-center">
+          {error}
+        </Text>
       ) : schools?.length === 0 ? (
-        <Empty description="No schools found" className="my-10" />
+        <Empty description="No schools found" />
       ) : (
-        <Row gutter={[16, 16]} justify="start">
+        <Row gutter={[16, 16]}>
           {schools.map((school) => (
-            <Col
-              key={school._id}
-              xs={24}
-              sm={12}
-              md={8}
-              lg={6}
-              xl={6}
-              className="flex"
-            >
+            <Col key={school._id} xs={24} sm={12} lg={6}>
               <Card
                 hoverable
-                className="w-full rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-lg relative"
+                className="h-full rounded-xl border border-gray-200"
                 bodyStyle={{
-                  padding: "12px 14px",
+                  padding: 16,
                   display: "flex",
                   flexDirection: "column",
                   height: "100%",
                 }}
               >
-                <div className="flex-1 flex flex-col justify-between">
-                  {/* ✅ Header with name and delete */}
-                  <div className="flex justify-between items-start mb-2">
-                    <h2 className="text-base sm:text-lg font-semibold text-blue-800 uppercase mb-1 truncate w-3/4">
+                {/* 🔹 Card Header */}
+                <Space className="w-full justify-between">
+                  <Space>
+                    <BankOutlined className="text-blue-600 text-lg" />
+                    <Text strong className="uppercase text-blue-800">
                       {school.name}
-                    </h2>
-                    <Popconfirm
-                      title="Are you sure you want to delete this school?"
-                      onConfirm={() => handleDeleteSchool(school._id)}
-                      okText="Yes"
-                      cancelText="No"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Trash2 className="text-gray-500 hover:text-red-500 cursor-pointer w-4 h-4 sm:w-5 sm:h-5" />
-                    </Popconfirm>
-                  </div>
+                    </Text>
+                  </Space>
 
-                  {/* ✅ Description */}
-                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
-                    {school.description || "No description"}
-                  </p>
+                  <Popconfirm
+                    title="Delete this school?"
+                    okText="Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ danger: true }}
+                    onConfirm={() => handleDeleteSchool(school._id)}
+                  >
+                    <DeleteOutlined className="text-gray-400 hover:text-red-500 cursor-pointer" />
+                  </Popconfirm>
+                </Space>
 
-                  {/* ✅ Status and Date */}
-                  <div className="text-xs sm:text-sm mb-1">
-                    <span className="font-medium">Status:</span>{" "}
+                {/* 🔹 Description */}
+                <Text type="secondary" className="mt-2 line-clamp-2">
+                  {school.description || "No description available"}
+                </Text>
+
+                {/* 🔹 Footer */}
+                <div className="mt-auto pt-3">
+                  <Space size="small">
+                    <Text>Status:</Text>
                     <Tag color={school.isActive ? "green" : "red"}>
                       {school.isActive ? "Active" : "Inactive"}
                     </Tag>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    <span className="text-black font-medium">Created:</span>{" "}
-                    {new Date(school.createdAt).toLocaleDateString()}
-                  </p>
+                  </Space>
 
-                  {/* ✅ Decorative Image */}
-                  <img
-                    src={schoolImg}
-                    alt="School"
-                    className="absolute bottom-3 right-3 w-8 sm:w-10 opacity-80"
-                  />
+                  <Text type="secondary" className="block text-xs mt-1">
+                    Created on {new Date(school.createdAt).toLocaleDateString()}
+                  </Text>
                 </div>
+
+                {/* 🔹 Decorative Icon */}
+                <img
+                  src={schoolImg}
+                  alt="school"
+                  className="absolute bottom-3 right-3 w-10 opacity-70"
+                />
               </Card>
             </Col>
           ))}
         </Row>
       )}
 
-      {/* ✅ Add School Modal */}
+      {/* 🔹 Modal */}
       <Modal
-        title={
-          <span className="text-lg sm:text-xl font-semibold text-blue-700">
-            Add School
-          </span>
-        }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         centered
-        width="95%"
-        style={{ maxWidth: 600 }}
-        bodyStyle={{ padding: "16px" }}
+        width={600}
+        title={<Title level={4}>Add New School</Title>}
       >
         <AddSchoolForm onClose={() => setIsModalOpen(false)} />
       </Modal>

@@ -3,55 +3,82 @@ import { useSelector } from "react-redux";
 import { sidebarMenu } from "../../../utils/sidebar";
 import { Link } from "react-router-dom";
 import * as LucideIcons from "lucide-react";
+import {
+  Row,
+  Col,
+  Card,
+  Tag,
+  Typography,
+  Empty,
+  Tooltip,
+} from "antd";
 
-// ⭐ Convert string → Lucide react icon safely
+const { Title, Text } = Typography;
+
+// 🎨 Controlled random colors
+const COLORS = [
+  "blue",
+  "green",
+  "purple",
+  "cyan",
+  "geekblue",
+  "magenta",
+  "volcano",
+];
+
+// ⭐ Safe icon resolver
 const getLucideIcon = (icon) => {
   if (!icon) return LucideIcons.LayoutDashboard;
-
-  // If icon already a React component (function)
   if (typeof icon === "function") return icon;
-
-  // If icon is a string inside LucideIcons map
-  if (typeof icon === "string" && LucideIcons[icon]) {
-    return LucideIcons[icon];
-  }
-
-  return LucideIcons.LayoutDashboard; // fallback icon
+  if (typeof icon === "string" && LucideIcons[icon]) return LucideIcons[icon];
+  return LucideIcons.LayoutDashboard;
 };
 
 // ⭐ Module Card
-const ModuleCard = ({ title, parent, hasAccess, path, Icon }) => {
+const ModuleCard = ({ title, parent, path, Icon, hasAccess, color }) => {
   const content = (
-    <div
-      className={`border rounded-lg p-4 shadow-sm transition ${
-        hasAccess ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
+    <Card
+      hoverable={hasAccess}
+      className={`h-full rounded-xl transition-all ${
+        hasAccess
+          ? "border border-gray-200 hover:shadow-lg"
+          : "border border-dashed opacity-70"
       }`}
+      bodyStyle={{ padding: 16 }}
     >
-      <div
-        className={`flex items-center gap-3 ${
-          hasAccess ? "text-blue-600" : "text-gray-400"
-        }`}
-      >
-        {Icon && <Icon className="w-6 h-6" />}
-        <h2 className="font-semibold text-base">{title}</h2>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-2">
+        <div
+          className={`flex items-center justify-center w-10 h-10 rounded-lg bg-${color}-50 text-${color}-600`}
+        >
+          {Icon && <Icon size={20} />}
+        </div>
+
+        <div>
+          <Text strong className="block">
+            {title}
+          </Text>
+          {parent && (
+            <Text type="secondary" className="text-xs">
+              {parent}
+            </Text>
+          )}
+        </div>
       </div>
 
-      {parent && (
-        <p className="text-xs text-gray-500 mt-1">
-          Module Group: <span className="font-medium">{parent}</span>
-        </p>
-      )}
-
-      <p className="text-sm text-gray-500 mt-2">
-        {hasAccess ? "Access granted" : "No access"}
-      </p>
-    </div>
+      {/* Status */}
+      <div className="mt-3">
+        <Tag color={hasAccess ? "green" : "red"}>
+          {hasAccess ? "Access Granted" : "No Access"}
+        </Tag>
+      </div>
+    </Card>
   );
 
   return hasAccess ? (
     <Link to={`/dashboard/${path}`}>{content}</Link>
   ) : (
-    <div className="cursor-not-allowed opacity-70">{content}</div>
+    <Tooltip title="You do not have permission">{content}</Tooltip>
   );
 };
 
@@ -59,24 +86,20 @@ const ModuleCard = ({ title, parent, hasAccess, path, Icon }) => {
 const AllModules = () => {
   const user = useSelector((state) => state.auth?.user);
 
-  // normalize role
   const normalizedRole =
     (user?.role?.name || user?.role || "school admin").toLowerCase();
 
-  // permissions array
   const permissions = Array.isArray(user?.role?.permissions)
     ? user.role.permissions
     : [];
 
-  // menu
   const menu = Array.isArray(sidebarMenu[normalizedRole])
     ? sidebarMenu[normalizedRole]
     : [];
 
-  // ⭐ Flatten menu & ensure icon safety
   const flattenMenu = (items) =>
     items.flatMap((item) =>
-      item.subMenu && Array.isArray(item.subMenu)
+      item.subMenu
         ? item.subMenu.map((sub) => ({
             title: sub.title,
             path: sub.path,
@@ -95,38 +118,45 @@ const AllModules = () => {
 
   const modules = flattenMenu(menu);
 
-  // ⭐ Check permission
   const hasPermission = (title) => {
     if (normalizedRole === "super admin") return true;
 
-    return permissions?.some(
+    return permissions.some(
       (perm) =>
-        typeof perm?.module === "string" &&
-        perm.module.toLowerCase() === title.toLowerCase()
+        perm?.module?.toLowerCase() === title.toLowerCase()
     );
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">
-        All Modules - <span className="capitalize">{normalizedRole}</span>
-      </h1>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-        {modules.map((mod, idx) => (
-          <ModuleCard
-            key={idx}
-            title={mod.title}
-            parent={mod.parent}
-            path={mod.path}
-            Icon={mod.icon}
-            hasAccess={hasPermission(mod.title)}
-          />
-        ))}
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-6">
+        <Title level={3} className="!mb-1">
+          All Modules
+        </Title>
+        <Text type="secondary">
+          Role: <span className="capitalize">{normalizedRole}</span>
+        </Text>
       </div>
 
-      {modules.length === 0 && (
-        <p className="text-center text-gray-500 mt-6">No modules available.</p>
+      {/* Grid */}
+      {modules.length === 0 ? (
+        <Empty description="No modules available" />
+      ) : (
+        <Row gutter={[16, 16]}>
+          {modules.map((mod, index) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={index}>
+              <ModuleCard
+                title={mod.title}
+                parent={mod.parent}
+                path={mod.path}
+                Icon={mod.icon}
+                hasAccess={hasPermission(mod.title)}
+                color={COLORS[index % COLORS.length]}
+              />
+            </Col>
+          ))}
+        </Row>
       )}
     </div>
   );
