@@ -1,7 +1,24 @@
 import { useEffect } from "react";
-import { Form, Input, InputNumber, Switch, Button, Select } from "antd";
+import {
+  Form,
+  Input,
+  InputNumber,
+  Switch,
+  Button,
+  Select,
+  Card,
+  Space,
+  Divider,
+  Typography,
+} from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { createSubscriptionPlan, updateSubscriptionPlan } from "../../features/subscriptionPlanSlice.js";
+import {
+  createSubscriptionPlan,
+  updateSubscriptionPlan,
+} from "../../features/subscriptionPlanSlice.js";
+
+const { Title, Text } = Typography;
 
 const PlanForm = ({ initialValues, onClose }) => {
   const [form] = Form.useForm();
@@ -9,22 +26,42 @@ const PlanForm = ({ initialValues, onClose }) => {
   const { loading } = useSelector((state) => state.subscriptionPlans);
 
   const moduleOptions = [
-    "Schools", "Users", "Teachers", "Students", "Parents", "Classes", "Subjects", "Exams",
-    "Attendance", "Finance", "Settings", "Fees", "Reports", "Hostel", "Transport", "Assignments",
-    "Timetable", "Notifications", "Expenses", "Library", "Books", "IssuedBooks", "Rooms",
-    "Routes", "Vehicles",
+    "Schools",
+    "Users",
+    "Teachers",
+    "Students",
+    "Parents",
+    "Classes",
+    "Subjects",
+    "Exams",
+    "Attendance",
+    "Finance",
+    "Fees",
+    "Reports",
+    "Hostel",
+    "Transport",
+    "Assignments",
+    "Timetable",
+    "Notifications",
+    "Expenses",
+    "Library",
+    "Books",
+    "IssuedBooks",
+    "Rooms",
+    "Routes",
+    "Vehicles",
   ];
 
+  // 🔹 Prefill for edit
   useEffect(() => {
     if (initialValues) {
-      const features = Array.isArray(initialValues.features)
-        ? initialValues.features.map(f => ({
-            module: f.module || "",
-            allowed: f.allowed ?? true,
-            limitKey: f.limits ? Object.keys(f.limits)[0] : "",
-            limitValue: f.limits ? Object.values(f.limits)[0] : undefined,
-          }))
-        : [];
+      const features =
+        initialValues.features?.map((f) => ({
+          module: f.module,
+          allowed: f.allowed ?? true,
+          limitKey: f.limits ? Object.keys(f.limits)[0] : "",
+          limitValue: f.limits ? Object.values(f.limits)[0] : undefined,
+        })) || [];
 
       form.setFieldsValue({ ...initialValues, features });
     } else {
@@ -32,17 +69,24 @@ const PlanForm = ({ initialValues, onClose }) => {
     }
   }, [initialValues, form]);
 
-  const handleFinish = (values) => {
-    const formattedFeatures = values.features?.map(f => ({
-      module: f.module,
-      allowed: f.allowed ?? true,
-      limits: f.limitKey ? { [f.limitKey]: f.limitValue } : {},
-    })) || [];
+  // 🔹 Submit
+  const onFinish = (values) => {
+    const features =
+      values.features?.map((f) => ({
+        module: f.module,
+        allowed: f.allowed ?? true,
+        limits: f.limitKey ? { [f.limitKey]: f.limitValue } : {},
+      })) || [];
 
-    const payload = { ...values, features: formattedFeatures };
+    const payload = { ...values, features };
 
     if (initialValues?._id) {
-      dispatch(updateSubscriptionPlan({ id: initialValues._id, formData: payload }));
+      dispatch(
+        updateSubscriptionPlan({
+          id: initialValues._id,
+          formData: payload,
+        })
+      );
     } else {
       dispatch(createSubscriptionPlan(payload));
     }
@@ -51,92 +95,145 @@ const PlanForm = ({ initialValues, onClose }) => {
   };
 
   return (
-    <div className="max-h-[70vh] overflow-y-auto pr-2">
-      <Form form={form} layout="vertical" onFinish={handleFinish} className="space-y-2">
-        <Form.Item label="Plan Name" name="name" rules={[{ required: true }]}>
-          <Input size="large" placeholder="Premium Plan" className="rounded-md" />
+    <Form form={form} layout="vertical" onFinish={onFinish}>
+      {/* PLAN DETAILS */}
+      <Card>
+        <Title level={4}>Plan Details</Title>
+
+        <Form.Item
+          label="Plan Name"
+          name="name"
+          rules={[{ required: true, message: "Plan name is required" }]}
+        >
+          <Input size="large" placeholder="Premium / Enterprise / Starter" />
         </Form.Item>
 
-        <Form.Item label="Price (₹)" name="price" rules={[{ required: true }]}>
-          <InputNumber className="w-full rounded-md" size="large" min={1} />
-        </Form.Item>
+        <Space size="large" style={{ display: "flex" }}>
+          <Form.Item
+            label="Price (₹)"
+            name="price"
+            rules={[{ required: true }]}
+            style={{ flex: 1 }}
+          >
+            <InputNumber min={1} size="large" className="w-full" />
+          </Form.Item>
 
-        <Form.Item label="Duration (Days)" name="durationInDays" rules={[{ required: true }]}>
-          <InputNumber className="w-full rounded-md" size="large" min={1} />
-        </Form.Item>
+          <Form.Item
+            label="Duration (Days)"
+            name="durationInDays"
+            rules={[{ required: true }]}
+            style={{ flex: 1 }}
+          >
+            <InputNumber min={1} size="large" className="w-full" />
+          </Form.Item>
+        </Space>
+      </Card>
 
-        {/* Features / Modules */}
-        <Form.List name="features">
-          {(fields, { add, remove }) => (
-            <>
-              <div className="flex justify-between items-center my-1">
-                <h2 className="font-semibold text-base">Features / Modules</h2>
-                <Button type="primary" onClick={() => add()} className="text-sm py-1 px-2">
-                  + Add Module
-                </Button>
-              </div>
+      <Divider />
 
-              <div className="space-y-1">
-                {fields.map(({ key, name }) => (
-                  <div key={key} className="border rounded-lg bg-gray-50 p-2 shadow-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-                      <Form.Item
-                        label="Module"
-                        name={[name, "module"]}
-                        rules={[{ required: true, message: "Select a module" }]}
-                        className="mb-1"
-                      >
-                        <Select
-                          placeholder="Select Module"
-                          size="large"
-                          options={moduleOptions.map(m => ({ label: m, value: m }))}
-                        />
-                      </Form.Item>
+      {/* FEATURES */}
+      <Form.List name="features">
+        {(fields, { add, remove }) => (
+          <Card
+            title="Features & Modules"
+            extra={
+              <Button type="primary" icon={<PlusOutlined />} onClick={add}>
+                Add Module
+              </Button>
+            }
+          >
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              {fields.map(({ key, name }) => (
+                <Card
+                  key={key}
+                  size="small"
+                  type="inner"
+                  title={`Module ${name + 1}`}
+                  extra={
+                    <Button
+                      danger
+                      type="text"
+                      icon={<DeleteOutlined />}
+                      onClick={() => remove(name)}
+                    />
+                  }
+                >
+                  <Space size="large" style={{ display: "flex" }}>
+                    <Form.Item
+                      label="Module"
+                      name={[name, "module"]}
+                      rules={[{ required: true }]}
+                      style={{ flex: 2 }}
+                    >
+                      <Select
+                        placeholder="Select module"
+                        options={moduleOptions.map((m) => ({
+                          label: m,
+                          value: m,
+                        }))}
+                      />
+                    </Form.Item>
 
-                      <Form.Item
-                        label="Allowed"
-                        name={[name, "allowed"]}
-                        valuePropName="checked"
-                        className="mb-1"
-                      >
-                        <Switch />
-                      </Form.Item>
+                    <Form.Item
+                      label="Allowed"
+                      name={[name, "allowed"]}
+                      valuePropName="checked"
+                      style={{ flex: 1 }}
+                    >
+                      <Switch />
+                    </Form.Item>
+                  </Space>
 
-                      <Form.Item label="Limit Key" name={[name, "limitKey"]} className="mb-1">
-                        <Input size="large" placeholder="maxStudents / maxTeachers / etc." className="rounded-md" />
-                      </Form.Item>
+                  <Space size="large" style={{ display: "flex" }}>
+                    <Form.Item
+                      label="Limit Key"
+                      name={[name, "limitKey"]}
+                      style={{ flex: 1 }}
+                    >
+                      <Input placeholder="e.g. maxStudents" />
+                    </Form.Item>
 
-                      <Form.Item label="Limit Value" name={[name, "limitValue"]} className="mb-1">
-                        <InputNumber size="large" className="w-full rounded-md" placeholder="e.g. 500" />
-                      </Form.Item>
-                    </div>
+                    <Form.Item
+                      label="Limit Value"
+                      name={[name, "limitValue"]}
+                      style={{ flex: 1 }}
+                    >
+                      <InputNumber className="w-full" />
+                    </Form.Item>
+                  </Space>
+                </Card>
+              ))}
 
-                    <div className="flex justify-end mt-1">
-                      <Button danger onClick={() => remove(name)} className="rounded-md text-sm py-1 px-2">
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </Form.List>
+              {fields.length === 0 && (
+                <Text type="secondary">
+                  No modules added yet. Click “Add Module” to begin.
+                </Text>
+              )}
+            </Space>
+          </Card>
+        )}
+      </Form.List>
 
-        <Form.Item name="isActive" label="Active" valuePropName="checked" className="mb-1">
+      <Divider />
+
+      {/* STATUS & ACTIONS */}
+      <Card>
+        <Form.Item
+          label="Plan Status"
+          name="isActive"
+          valuePropName="checked"
+        >
           <Switch />
         </Form.Item>
 
-        <div className="flex justify-end gap-1 mt-2">
-          <Button onClick={() => form.resetFields()} className="rounded-md text-sm py-1 px-2">
-            Reset
-          </Button>
-          <Button type="primary" htmlType="submit" loading={loading} className="rounded-md text-sm py-1 px-2">
+        <Space style={{ justifyContent: "flex-end", width: "100%" }}>
+          <Button onClick={() => form.resetFields()}>Reset</Button>
+          <Button type="primary" htmlType="submit" loading={loading}>
             {initialValues ? "Update Plan" : "Create Plan"}
           </Button>
-        </div>
-      </Form>
-    </div>
+        </Space>
+      </Card>
+    </Form>
   );
 };
 

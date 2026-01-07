@@ -44,7 +44,7 @@ const userSchema = new Schema({
         type: Boolean,
         default: true
     },
-   
+    student: [{ type: Schema.Types.ObjectId, ref: "User" }],
     refreshToken: String,
     accessToken: String,
 }, { timestamps: true });

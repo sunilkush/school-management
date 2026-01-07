@@ -1,146 +1,74 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import {
+  Form,
+  Input,
+  Select,
+  Switch,
+  Button,
+  Card,
+  Row,
+  Col,
+  Divider,
+  Space,
+  InputNumber,
+} from "antd";
+import { Trash2, Plus } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { createClass, updateClass } from "../../features/classSlice.js";
-import { fetchSection } from "../../features/sectionSlice.js";
-import { fetchAllSubjects } from "../../features/subjectSlice.js";
-import { fetchAllUser } from "../../features/authSlice.js";
-import { fetchActiveAcademicYear } from "../../features/academicYearSlice.js";
-import { Trash2 } from "lucide-react";
+import {
+  createClass,
+  updateClass,
+} from "../../features/classSlice";
+import { fetchSection } from "../../features/sectionSlice";
+import { fetchAllSubjects } from "../../features/subjectSlice";
+import { fetchAllUser } from "../../features/authSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 
+const { Option } = Select;
 
-const ClassFormSA = ({ onSuccess, initialData, onClose }) => {
+const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
+  const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const { sectionList = [] } = useSelector((s) => s.section || {});
-  const { subjects = [] } = useSelector((s) => s.subject || {});
-  const { users = [], user } = useSelector((s) => s.auth || {});
-  const { activeYear } = useSelector((s) => s.academicYear || {});
-  const schoolId = user?.school?._id || null;
-  const role = user?.role?.name || null;
 
-  const [formData, setFormData] = useState({
-    name: "",
-    code: "",
-    description: "",
-    academicYearId: "",
-    teacherId: "",
-    isGlobal: false,
-    isActive: true,
-    sections: [{ sectionId: "", inChargeId: "" }],
-    subjects: [{ subjectId: "", teacherId: "", periodPerWeek: 0, isCompulsory: true }],
-  });
+  const { sectionList = [] } = useSelector((s) => s.section);
+  const { subjects = [] } = useSelector((s) => s.subject);
+  const { users = [], user } = useSelector((s) => s.auth);
+  const { activeYear } = useSelector((s) => s.academicYear);
 
-  // ✅ Load data
+  const schoolId = user?.school?._id;
+  const role = user?.role?.name;
+
+  /* ================= LOAD MASTER DATA ================= */
   useEffect(() => {
-    if (schoolId) {
-      dispatch(fetchSection({ schoolId }));
-      dispatch(fetchAllSubjects({ schoolId }));
-      dispatch(fetchAllUser({ schoolId }));
-      dispatch(fetchActiveAcademicYear(schoolId));
-    }
-  }, [dispatch, schoolId]);
+    if (!schoolId) return;
+    dispatch(fetchSection({ schoolId }));
+    dispatch(fetchAllSubjects({ schoolId }));
+    dispatch(fetchAllUser({ schoolId }));
+    dispatch(fetchActiveAcademicYear(schoolId));
+  }, [schoolId, dispatch]);
 
-  // ✅ Single unified effect for editing + mapping
-useEffect(() => {
-  if (!initialData) return;
+  /* ================= EDIT MODE ================= */
+  useEffect(() => {
+    if (!initialData || !activeYear) return;
 
-  const allReady =
-    sectionList.length &&
-    subjects.length &&
-    users.length &&
-    activeYear?._id;
-
-  if (!allReady) return;
-
-  setFormData({
-    name: initialData.name || "",
-    code: initialData.code || "",
-    academicYearId:
-      initialData.academicYearId?._id ??
-      initialData.academicYearId ??
-      activeYear?._id ??
-      "",
-
-    teacherId:
-      initialData.teacherId?._id ??
-      initialData.teacherId ??
-      "",
-
-    isGlobal: initialData.isGlobal || false,
-    isActive: initialData.isActive ?? true,
-
-    sections:
-      initialData.sections?.map((s) => ({
-        sectionId:
-          sectionList.find(
-            (sec) =>
-              sec._id === (s.sectionId?._id ?? s.sectionId)
-          )?._id || "",
-
-        inChargeId:
-          users.find(
-            (u) =>
-              u._id === (s.inChargeId?._id ?? s.inChargeId)
-          )?._id || "",
-      })) || [{ sectionId: "", inChargeId: "" }],
-
-    subjects:
-      initialData.subjects?.map((sub) => ({
-        subjectId:
-          subjects.find(
-            (sb) =>
-              sb._id === (sub.subjectId?._id ?? sub.subjectId)
-          )?._id || "",
-
-        teacherId:
-          users.find(
-            (u) =>
-              u._id === (sub.teacherId?._id ?? sub.teacherId)
-          )?._id || "",
-
-        periodPerWeek: sub.periodPerWeek || 1,
-        isCompulsory:
-          sub.isCompulsory !== undefined ? sub.isCompulsory : true,
-      })) || [
-        {
-          subjectId: "",
-          teacherId: "",
-          periodPerWeek: 1,
-          isCompulsory: true,
-        },
-      ],
-  });
-}, [initialData, sectionList, subjects, users, activeYear]);
-
-
-
-
-
-
-  // ✅ Handlers
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
-  };
-
-  const handleArrayChange = (type, index, field, value) => {
-    const updated = [...formData[type]];
-    updated[index][field] = value;
-    setFormData({ ...formData, [type]: updated });
-  };
-
-  const addArrayItem = (type, template) =>
-    setFormData({ ...formData, [type]: [...formData[type], template] });
-
-  const removeArrayItem = (type, index) =>
-    setFormData({
-      ...formData,
-      [type]: formData[type].filter((_, i) => i !== index),
+    form.setFieldsValue({
+      name: initialData.name,
+      code: initialData.code,
+      academicYearId:
+        initialData.academicYearId?._id ||
+        initialData.academicYearId ||
+        activeYear._id,
+      teacherId: initialData.teacherId?._id || initialData.teacherId,
+      isGlobal: initialData.isGlobal,
+      isActive: initialData.isActive,
+      sections: initialData.sections || [],
+      subjects: initialData.subjects || [],
     });
+  }, [initialData, activeYear, form]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  /* ================= SUBMIT ================= */
+  const onFinish = async (values) => {
+    const payload = { ...values, schoolId };
     try {
-      const payload = { ...formData, schoolId };
       if (initialData) {
         await dispatch(updateClass({ id: initialData._id, data: payload })).unwrap();
       } else {
@@ -149,248 +77,251 @@ useEffect(() => {
       onSuccess?.();
       onClose?.();
     } catch (err) {
-      console.error("Error saving class:", err);
+      console.error(err);
     }
   };
-  console.log(sectionList.length ,subjects.length ,users.length)
-  if (!sectionList.length || !subjects.length || !users.length) {
-    return <p className="text-sm text-gray-500">Loading form data...</p>;
-  }
 
-  // ✅ UI
+  /* ================= UI ================= */
   return (
-    <>
- 
-  <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-      <h3 className="text-lg font-semibold mb-2">
-        {initialData ? "Edit Class" : "Create Class"}
-      </h3>
-
-      {/* Class Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs text-gray-500">Class Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full border rounded px-2 py-1"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500">Code</label>
-          <input
-            type="text"
-            name="code"
-            value={formData.code}
-            onChange={handleChange}
-            className="w-full border rounded px-2 py-1"
-          />
-        </div>
-      </div>
-
-      {/* Academic Year + Teacher */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs text-gray-500">Academic Year</label>
-          <select
-            name="academicYearId"
-            value={formData.academicYearId}
-            onChange={handleChange}
-            className="w-full border rounded px-2 py-1"
-          >
-            <option value="">Select Academic Year</option>
-            {activeYear && <option value={activeYear._id}>{activeYear.name}</option>}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500">Class Teacher</label>
-          <select
-            name="teacherId"
-            value={formData.teacherId}
-            onChange={handleChange}
-            className="w-full border rounded px-2 py-1"
-          >
-            <option value="">Select Teacher</option>
-            {users
-              .filter((u) => u.role?.name === "Teacher").filter((u) => u.isActive === true)
-              .map((t) => (
-                <option key={t._id} value={t._id}>
-                  {t.name}
-                </option>
-              ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Sections */}
-      <div>
-        <label className="block text-xs text-gray-500">Sections</label>
-        {formData.sections.map((sec, idx) => (
-          <div key={idx} className="flex items-center gap-2 my-1">
-            <select
-              value={sec.sectionId}
-              onChange={(e) =>
-                handleArrayChange("sections", idx, "sectionId", e.target.value)
-              }
-              className="w-1/2 border rounded px-2 py-1"
+    <Card
+      title={initialData ? "Edit Class" : "Create Class"}
+      bordered
+      style={{ padding: "0px" }}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        initialValues={{
+          isActive: true,
+          sections: [{ sectionId: "", inChargeId: "" }],
+          subjects: [
+            { subjectId: "", teacherId: "", periodPerWeek: 1, isCompulsory: true },
+          ],
+        }}
+      >
+        {/* BASIC INFO */}
+        <Divider orientation="left">Class Information</Divider>
+        <Row gutter={16}>
+          <Col md={12}>
+            <Form.Item
+              name="name"
+              label="Class Name"
+              rules={[{ required: true }]}
+              style={{marginBottom:"0px"}}
             >
-              <option value="">Select Section</option>
-              {sectionList.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name}
-                </option>
+              <Input placeholder="e.g. Class 10" />
+            </Form.Item>
+          </Col>
+
+          <Col md={12}>
+            <Form.Item name="code" label="Class Code" style={{marginBottom:"0px"}}>
+              <Input placeholder="e.g. X-A" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col md={12}>
+            <Form.Item name="academicYearId" label="Academic Year" style={{marginBottom:"0px"}}>
+              <Select disabled>
+                {activeYear && (
+                  <Option value={activeYear._id}>{activeYear.name}</Option>
+                )}
+              </Select>
+            </Form.Item>
+          </Col>
+
+          <Col md={12}>
+            <Form.Item name="teacherId" label="Class Teacher" style={{marginBottom:"0px"}}>
+              <Select allowClear>
+                {users
+                  .filter(
+                    (u) => u.role?.name === "Teacher" && u.isActive
+                  )
+                  .map((t) => (
+                    <Option key={t._id} value={t._id}>
+                      {t.name}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {/* SECTIONS */}
+        <Divider orientation="left">Sections</Divider>
+        <Form.List name="sections">
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map(({ key, name }) => (
+                <Space key={key} align="baseline" className="mb-2">
+                  <Form.Item
+                    name={[name, "sectionId"]}
+                    rules={[{ required: true }]}
+                    style={{marginBottom:"0px"}}
+                  >
+                    <Select placeholder="Section" style={{ width: 150 }}>
+                      {sectionList.map((s) => (
+                        <Option key={s._id} value={s._id}>
+                          {s.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+
+                  <Form.Item name={[name, "inChargeId"]} style={{marginBottom:"0px"}}>
+                    <Select placeholder="In-Charge" style={{ width: 180 }}>
+                      {users
+                        .filter(
+                          (u) =>
+                            u.role?.name === "Teacher" && u.isActive
+                        )
+                        .map((t) => (
+                          <Option key={t._id} value={t._id}>
+                            {t.name}
+                          </Option>
+                        ))}
+                    </Select>
+                  </Form.Item>
+
+                  {fields.length > 1 && (
+                    <Trash2
+                      size={16}
+                      className="text-red-500 cursor-pointer"
+                      onClick={() => remove(name)}
+                    />
+                  )}
+                </Space>
               ))}
-            </select>
 
-            <select
-              value={sec.inChargeId}
-              onChange={(e) =>
-                handleArrayChange("sections", idx, "inChargeId", e.target.value)
-              }
-              className="w-1/2 border rounded px-2 py-1"
-            >
-              <option value="">Select In-Charge</option>
-               {users
-              .filter((u) => u.role?.name === "Teacher").filter((u) => u.isActive === true)
-              .map((t) => (
-                <option key={t._id} value={t._id}>
-                  {t.name}
-                </option>
+              <Button
+                type="dashed"
+                icon={<Plus size={14} />}
+                onClick={() => add({ sectionId: "", inChargeId: "" })}
+              >
+                Add Section
+              </Button>
+            </>
+          )}
+        </Form.List>
+
+        {/* SUBJECTS */}
+        <Divider orientation="left">Subjects</Divider>
+        <Form.List name="subjects">
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map(({ key, name }) => (
+                <Row key={key} gutter={12} align="middle">
+                  <Col md={8}>
+                    <Form.Item
+                      name={[name, "subjectId"]}
+                      rules={[{ required: true }]}
+                      style={{marginBottom:"0px"}}
+                    >
+                      <Select placeholder="Subject">
+                        {subjects.map((s) => (
+                          <Option key={s._id} value={s._id}>
+                            {s.name}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={8}>
+                    <Form.Item name={[name, "teacherId"]} style={{marginBottom:"0px"}}>
+                      <Select placeholder="Teacher">
+                        {users
+                          .filter(
+                            (u) =>
+                              u.role?.name === "Teacher" && u.isActive
+                          )
+                          .map((t) => (
+                            <Option key={t._id} value={t._id}>
+                              {t.name}
+                            </Option>
+                          ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={8}>
+                    <Form.Item name={[name, "periodPerWeek"]} style={{marginBottom:"0px"}}>
+                      <InputNumber min={1} placeholder="Periods"  />
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={8}>
+                    <Form.Item
+                      name={[name, "isCompulsory"]}
+                      valuePropName="checked" style={{marginBottom:"0px"}}
+                    >
+                      <Switch checkedChildren="Compulsory" />
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={8}>
+                    {fields.length > 1 && (
+                      <Trash2
+                        size={16}
+                        className="text-red-500 cursor-pointer"
+                        onClick={() => remove(name)}
+                      />
+                    )}
+                  </Col>
+                </Row>
               ))}
-            </select>
 
-            {idx > 0 && (
-              <button type="button" onClick={() => removeArrayItem("sections", idx)}>
-                <Trash2 size={16} className="text-red-500" />
-              </button>
-            )}
-          </div>
-        ))}
-        <button
-          type="button"
-          className="text-blue-600 text-xs mt-1"
-          onClick={() => addArrayItem("sections", { sectionId: "", inChargeId: "" })}
-        >
-          + Add Section
-        </button>
-      </div>
-
-      {/* Subjects */}
-      <div>
-        <label className="block text-xs text-gray-500">Subjects</label>
-        {formData.subjects.map((sub, idx) => (
-          <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 my-1 items-center">
-            <select
-              value={sub.subjectId}
-              onChange={(e) =>
-                handleArrayChange("subjects", idx, "subjectId", e.target.value)
-              }
-              className="border rounded px-2 py-1"
-            >
-              <option value="">Select Subject</option>
-              {subjects.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={sub.teacherId}
-              onChange={(e) =>
-                handleArrayChange("subjects", idx, "teacherId", e.target.value)
-              }
-              className="border rounded px-2 py-1"
-            >
-              <option value="">Select Teacher</option>
-              {users
-                 .filter((u) => u.role?.name === "Teacher").filter((u) => u.isActive === true)
-                .map((t) => (
-                  <option key={t._id} value={t._id}>
-                    {t.name}
-                  </option>
-                ))}
-            </select>
-
-            <input
-              type="number"
-              placeholder="Periods"
-              value={sub.periodPerWeek}
-              onChange={(e) =>
-                handleArrayChange("subjects", idx, "periodPerWeek", e.target.value)
-              }
-              className="border rounded px-2 py-1"
-            />
-
-            <label className="flex items-center text-xs gap-1">
-              <input
-                type="checkbox"
-                checked={sub.isCompulsory}
-                onChange={(e) =>
-                  handleArrayChange("subjects", idx, "isCompulsory", e.target.checked)
+              <Button
+                type="dashed"
+                icon={<Plus size={14} />}
+                onClick={() =>
+                  add({
+                    subjectId: "",
+                    teacherId: "",
+                    periodPerWeek: 1,
+                    isCompulsory: true,
+                  })
                 }
-              />
-              Compulsory
-            </label>
+              >
+                Add Subject
+              </Button>
+            </>
+          )}
+        </Form.List>
 
-            {idx > 0 && (
-              <button type="button" onClick={() => removeArrayItem("subjects", idx)}>
-                <Trash2 size={16} className="text-red-500" />
-              </button>
-            )}
-          </div>
-        ))}
-        <button
-          type="button"
-          className="text-blue-600 text-xs mt-1"
-          onClick={() =>
-            addArrayItem("subjects", {
-              subjectId: "",
-              teacherId: "",
-              periodPerWeek: 0,
-              isCompulsory: true,
-            })
-          }
-        >
-          + Add Subject
-        </button>
-      </div>
+        {/* FLAGS */}
+        <Divider />
+        <Space>
+          {role === "Super Admin" && (
+            <Form.Item
+              name="isGlobal"
+              valuePropName="checked"
+            >
+              <Switch checkedChildren="Global" />
+            </Form.Item>
+          )}
 
-      {/* Toggles */}
-      <div className="flex gap-4 mt-2">
-       {role === "Super Admin" && (
-         <label className="flex items-center text-xs gap-1">
-          <input
-            type="checkbox"
-            name="isGlobal"
-            checked={formData.isGlobal}
-            onChange={handleChange}
-          />
-          Global
-        </label>
-       )}
-        <label className="flex items-center text-xs gap-1">
-          <input
-            type="checkbox"
+          <Form.Item
             name="isActive"
-            checked={formData.isActive}
-            onChange={handleChange}
-          />
-          Active
-        </label>
-      </div>
+            valuePropName="checked"
+          >
+            <Switch checkedChildren="Active" />
+          </Form.Item>
+        </Space>
 
-      <div className="flex justify-end">
-        <button type="submit" className="bg-blue-600 text-white px-3 py-2 rounded text-sm">
-          {initialData ? "Update Class" : "Create Class"}
-        </button>
-      </div>
-    </form>
-    </>
-   
+        {/* ACTIONS */}
+        <div className="flex justify-end mt-4">
+          <Space>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="primary" htmlType="submit">
+              {initialData ? "Update Class" : "Create Class"}
+            </Button>
+          </Space>
+        </div>
+      </Form>
+    </Card>
   );
 };
 

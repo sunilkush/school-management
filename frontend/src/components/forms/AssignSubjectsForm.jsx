@@ -1,35 +1,56 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Select, Table, Checkbox, InputNumber, Button, Spin, message } from "antd";
-import { fetchSchools } from "../../features/schoolSlice";
-import { fetchClasses } from "../../features/classSlice";
-import { fetchAllSubjects } from "../../features/subjectSlice";
-import { fetchAllUser } from "../../features/authSlice";
+import {
+  Card,
+  Form,
+  Select,
+  Table,
+  Checkbox,
+  InputNumber,
+  Button,
+  Spin,
+  Typography,
+  message,
+  Space,
+} from "antd";
+import {
+  fetchSchools,
+} from "../../features/schoolSlice";
+import {
+  fetchClasses,
+} from "../../features/classSlice";
+import {
+  fetchAllSubjects,
+} from "../../features/subjectSlice";
+import {
+  fetchAllUser,
+} from "../../features/authSlice";
 import axios from "axios";
 
-const { Option } = Select;
+const { Title, Text } = Typography;
 
 const AssignSubjectsForm = () => {
   const dispatch = useDispatch();
+  const [form] = Form.useForm();
 
-  // ✅ Redux states
-  const { schools } = useSelector((state) => state.school);
-  const { classes } = useSelector((state) => state.class);
-  const { subjects } = useSelector((state) => state.subject);
-  const { users } = useSelector((state) => state.auth);
+  // 🔹 Redux state
+  const { schools = [] } = useSelector((s) => s.school);
+  const { classes = [] } = useSelector((s) => s.class);
+  const { subjects = [] } = useSelector((s) => s.subject);
+  const { users = [] } = useSelector((s) => s.auth);
 
-  // ✅ Local state
+  // 🔹 Local state
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
   const [assignments, setAssignments] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // 🧩 Fetch all schools initially (Super Admin)
+  // 🔹 Initial fetch (Super Admin)
   useEffect(() => {
     dispatch(fetchSchools());
   }, [dispatch]);
 
-  // 🧩 When school changes, fetch class, subjects, teachers
+  // 🔹 Fetch dependent data
   useEffect(() => {
     if (selectedSchool) {
       dispatch(fetchClasses({ schoolId: selectedSchool }));
@@ -38,177 +59,193 @@ const AssignSubjectsForm = () => {
     }
   }, [selectedSchool, dispatch]);
 
-  // 🧩 Handle change in subject assignment
-  const handleChange = (subjectId, field, value) => {
+  // 🔹 Handle assignment change
+  const updateAssignment = (subjectId, field, value) => {
     setAssignments((prev) => ({
       ...prev,
-      [subjectId]: { ...(prev[subjectId] || {}), [field]: value },
+      [subjectId]: {
+        ...(prev[subjectId] || {}),
+        [field]: value,
+      },
     }));
   };
 
-  // 🧩 Submit assignment
+  // 🔹 Submit handler
   const handleSubmit = async () => {
     if (!selectedClass) {
-      message.warning("Please select a class first!");
+      message.warning("Please select a class");
       return;
     }
 
-    const formattedAssignments = Object.entries(assignments).map(
-      ([subjectId, { teacherId, periodPerWeek, isCompulsory }]) => ({
+    const payload = Object.entries(assignments).map(
+      ([subjectId, values]) => ({
         subjectId,
-        teacherId,
-        periodPerWeek: periodPerWeek || 0,
-        isCompulsory: isCompulsory ?? true,
+        teacherId: values.teacherId,
+        periodPerWeek: values.periodPerWeek || 0,
+        isCompulsory: values.isCompulsory ?? true,
       })
     );
 
     setLoading(true);
     try {
-      const res = await axios.post("/api/class/assign-subjects", {
+      await axios.post("/api/class/assign-subjects", {
         classId: selectedClass,
-        assignments: formattedAssignments,
+        assignments: payload,
       });
-      message.success("Subjects assigned successfully!");
-      console.log("Response:", res.data);
+      message.success("Subjects assigned successfully");
       setAssignments({});
-    } catch (err) {
-      console.error(err);
-      message.error("Failed to assign subjects");
+    } catch (error) {
+      message.error(error, "Failed to assign subjects");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🧩 Table columns
+  // 🔹 Table columns
   const columns = [
     {
-      title: "Subject Name",
+      title: "Subject",
       dataIndex: "name",
       key: "name",
-      render: (text) => <span className="font-medium">{text}</span>,
+      render: (text) => <Text strong>{text}</Text>,
     },
     {
-      title: "Assign Teacher",
+      title: "Teacher",
       dataIndex: "_id",
       key: "teacher",
       render: (subjectId) => (
         <Select
-          className="w-full"
           placeholder="Select Teacher"
-          onChange={(value) => handleChange(subjectId, "teacherId", value)}
-          value={assignments[subjectId]?.teacherId || undefined}
+          className="w-full"
+          allowClear
+          value={assignments[subjectId]?.teacherId}
+          onChange={(val) =>
+            updateAssignment(subjectId, "teacherId", val)
+          }
         >
           {users
-            ?.filter((u) => u.role?.toLowerCase() === "teacher")
-            ?.map((t) => (
-              <Option key={t._id} value={t._id}>
+            .filter((u) => u.role?.toLowerCase() === "teacher")
+            .map((t) => (
+              <Select.Option key={t._id} value={t._id}>
                 {t.name}
-              </Option>
+              </Select.Option>
             ))}
         </Select>
       ),
     },
     {
-      title: "Periods/Week",
+      title: "Periods / Week",
       dataIndex: "_id",
-      key: "periodPerWeek",
+      key: "period",
+      align: "center",
       render: (subjectId) => (
         <InputNumber
           min={0}
-          className="w-24"
-          onChange={(value) => handleChange(subjectId, "periodPerWeek", value)}
           value={assignments[subjectId]?.periodPerWeek || 0}
+          onChange={(val) =>
+            updateAssignment(subjectId, "periodPerWeek", val)
+          }
         />
       ),
     },
     {
       title: "Compulsory",
       dataIndex: "_id",
-      key: "isCompulsory",
+      key: "compulsory",
+      align: "center",
       render: (subjectId) => (
         <Checkbox
           checked={assignments[subjectId]?.isCompulsory ?? true}
-          onChange={(e) => handleChange(subjectId, "isCompulsory", e.target.checked)}
+          onChange={(e) =>
+            updateAssignment(
+              subjectId,
+              "isCompulsory",
+              e.target.checked
+            )
+          }
         />
       ),
     },
   ];
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-md">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-        Assign Subjects to Class
-      </h2>
-
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">
-            Select School
-          </label>
-          <Select
-            showSearch
-            placeholder="Select a School"
-            className="w-full"
-            onChange={(val) => {
-              setSelectedSchool(val);
-              setSelectedClass(null);
-              setAssignments({});
-            }}
-            value={selectedSchool || undefined}
-          >
-            {schools?.map((school) => (
-              <Option key={school._id} value={school._id}>
-                {school.name}
-              </Option>
-            ))}
-          </Select>
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">
-            Select Class
-          </label>
-          <Select
-            showSearch
-            placeholder="Select Class"
-            className="w-full"
-            onChange={(val) => setSelectedClass(val)}
-            value={selectedClass || undefined}
-          >
-            {classes?.map((cls) => (
-              <Option key={cls._id} value={cls._id}>
-                {cls.name}
-              </Option>
-            ))}
-          </Select>
-        </div>
+    <Card className="rounded-2xl shadow-sm">
+      {/* Header */}
+      <div className="mb-6">
+        <Title level={4} className="!mb-1">
+          Assign Subjects to Class
+        </Title>
+        <Text type="secondary">
+          Select school and class, then configure subject assignments
+        </Text>
       </div>
 
+      {/* Selection */}
+      <Form form={form} layout="vertical">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Form.Item label="School" required>
+            <Select
+              showSearch
+              placeholder="Select School"
+              value={selectedSchool}
+              onChange={(val) => {
+                setSelectedSchool(val);
+                setSelectedClass(null);
+                setAssignments({});
+              }}
+            >
+              {schools.map((s) => (
+                <Select.Option key={s._id} value={s._id}>
+                  {s.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Class" required>
+            <Select
+              showSearch
+              placeholder="Select Class"
+              value={selectedClass}
+              disabled={!selectedSchool}
+              onChange={setSelectedClass}
+            >
+              {classes.map((c) => (
+                <Select.Option key={c._id} value={c._id}>
+                  {c.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </div>
+      </Form>
+
+      {/* Table */}
       {selectedClass && (
         <Spin spinning={loading}>
           <Table
+            rowKey="_id"
             columns={columns}
             dataSource={subjects}
-            rowKey="_id"
             pagination={false}
             bordered
-            className="rounded-xl overflow-hidden"
+            size="middle"
+            className="rounded-lg overflow-hidden"
           />
 
           <div className="flex justify-end mt-6">
             <Button
               type="primary"
               size="large"
-              className="!bg-blue-600 hover:!bg-blue-700"
-              onClick={handleSubmit}
               loading={loading}
+              onClick={handleSubmit}
             >
-              Assign Subjects
+              Save Assignments
             </Button>
           </div>
         </Spin>
       )}
-    </div>
+    </Card>
   );
 };
 

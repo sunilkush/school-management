@@ -192,11 +192,18 @@ const StudentAttendance = () => {
             style={{ width: "100%" }}
             onChange={handleClassChange}
           >
-            {classList.map((cls) => (
+           {[...classList] // spread operator se naya array banaya
+            .sort((a, b) => {
+              const numA = parseInt(a.name.replace(/\D/g, ""), 10);
+              const numB = parseInt(b.name.replace(/\D/g, ""), 10);
+              return numA - numB;
+            })
+            .map((cls) => (
               <Option key={cls._id} value={cls.name}>
                 {cls.name}
               </Option>
             ))}
+
           </Select>
         </Col>
 

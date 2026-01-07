@@ -181,7 +181,7 @@ const router = createBrowserRouter([
               { index: true, element: <SchoolAdminDashboard /> },
               { path: "users/student/add", element: <AddStudent /> },
               { path: "users/teacher/add", element: <AddTeacher /> },
-              { path: "users/parent/add", element: <AddParent /> },
+              { path: "parents-register", element: <AddParent /> },
               { path: "users", element: <UsersPage /> },
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },

@@ -1,144 +1,150 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
+import { Table, Tag, Button, Space, Modal, Input } from "antd";
+import { Edit, Trash2 } from "lucide-react";
 import SubjectForm from "../../../components/forms/SubjectForm.jsx";
-import {
-  fetchAllSubjects,
-  deleteSubject,
-} from "../../../features/subjectSlice.js";
-import { SquarePen, Trash2 } from "lucide-react";
+import { fetchAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
+
+const { Search } = Input;
 
 const Subjects = () => {
+  const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
-  const dispatch = useDispatch();
+  const { subjects = [], loading = false } = useSelector((state) => state.subject || {});
 
-  // ✅ Always provide a safe fallback to avoid undefined errors
-  const { subjects = [], loading = false } = useSelector(
-    (state) => state.subject || {}
-  );
-  console.log("Subjects List:", subjects);
-  // ✅ User from localStorage
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
   const role = storedUser?.role || "";
 
-  // ✅ Fetch all subjects
+  // Fetch subjects
   useEffect(() => {
     if (schoolId) dispatch(fetchAllSubjects({ schoolId }));
   }, [dispatch, schoolId]);
 
-  // ✅ Filter based on role (safe filter)
-  const filteredSubjects =
-    role === "Super Admin"
-      ? subjects
-      : (subjects || []).filter(
-          (subj) =>
-            subj.isGlobal === true ||
-            String(subj.schoolId?._id || subj.schoolId) === String(schoolId)
-        );
+  // Filter subjects by role and search
+  const filteredSubjects = (subjects || []).filter((subj) => {
+    const matchesRole =
+      role === "Super Admin" || subj.isGlobal || String(subj.schoolId?._id || subj.schoolId) === String(schoolId);
+    const matchesSearch = subj.name?.toLowerCase().includes(searchText.toLowerCase());
+    return matchesRole && matchesSearch;
+  });
 
-  // ✅ Edit & Delete Handlers
+  // Handlers
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this subject?")) {
-      await dispatch(deleteSubject(id));
-      dispatch(fetchAllSubjects({ schoolId }));
-    }
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: "Delete Subject",
+      content: "Are you sure you want to delete this subject?",
+      okText: "Yes",
+      cancelText: "No",
+      onOk: async () => {
+        await dispatch(deleteSubject(id));
+        dispatch(fetchAllSubjects({ schoolId }));
+      },
+    });
   };
 
-  // ✅ DataTable Columns
+  const handleAddNew = () => {
+    setSelectedSubject(null);
+    setIsModalOpen(true);
+  };
+
+  // Ant Design Columns
   const columns = [
     {
-      name: "Subject",
-      selector: (row) => row.name || "—",
-      sortable: true,
-      wrap: true,
-      grow: 2,
+      title: "Subject",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (text) => <span className="font-medium">{text || "—"}</span>,
     },
     {
-      name: "Category",
-      selector: (row) => row.category || "—",
-      sortable: true,
-      hide: "sm",
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      sorter: (a, b) => (a.category || "").localeCompare(b.category || ""),
     },
     {
-      name: "Type",
-      selector: (row) => row.type || "—",
-      sortable: true,
-      hide: "md",
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
     },
     {
-      name: "Max Marks",
-      selector: (row) => row.maxMarks ?? "—",
-      sortable: true,
-      center: true,
-      hide: "sm",
+      title: "Max Marks",
+      dataIndex: "maxMarks",
+      key: "maxMarks",
+      align: "center",
     },
     {
-      name: "Pass Marks",
-      selector: (row) => row.passMarks ?? "—",
-      sortable: true,
-      center: true,
-      hide: "sm",
+      title: "Pass Marks",
+      dataIndex: "passMarks",
+      key: "passMarks",
+      align: "center",
     },
     {
-      name: "School / Scope",
-      selector: (row) =>
-        row.schoolId?.name || (row.isGlobal ? "🌐 Global" : "—"),
-      sortable: true,
-      wrap: true,
-    },
-    {
-      name: "Teachers Assigned",
-      selector: (row) => {
-        if (!row.assignedTeachers || row.assignedTeachers.length === 0) {
-          return "—";
-        }
-        return row.assignedTeachers
-          .map((t) => t.name || t.fullName || t.teacherName || "Unnamed")
-          .join(", ");
-      },
-      sortable: true,
-      wrap: true,
-    },
-    {
-      name: "Status",
-      selector: (row) => (row.isActive ? "🟢 Active" : "🔴 Inactive"),
-      center: true,
-      hide: "md",
-    },
-    {
-      name: "Actions",
-      cell: (row) => (
-        <div className="flex gap-1 sm:gap-2 justify-center">
-          <button
-            className="text-blue-600 hover:underline text-xs sm:text-sm"
-            onClick={() => handleEdit(row)}
-          >
-            <SquarePen className="w-4" />
-          </button>
-          <button
-            className="text-red-600 hover:underline text-xs sm:text-sm"
-            onClick={() => handleDelete(row._id)}
-          >
-            <Trash2 className="w-4" />
-          </button>
-        </div>
+      title: "Scope",
+      key: "scope",
+      render: (_, record) => (
+        <span>{record.schoolId?.name || (record.isGlobal ? "🌐 Global" : "—")}</span>
       ),
-      center: true,
-      minWidth: "120px",
+    },
+    {
+      title: "Teachers Assigned",
+      key: "teachers",
+      render: (_, record) =>
+        record.assignedTeachers?.length ? (
+          <Space wrap>
+            {record.assignedTeachers.map((t) => (
+              <Tag key={t._id || t.name}>{t.name || t.fullName || t.teacherName}</Tag>
+            ))}
+          </Space>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      title: "Status",
+      key: "status",
+      render: (_, record) => (
+        <Tag color={record.isActive ? "green" : "red"}>
+          {record.isActive ? "Active" : "Inactive"}
+        </Tag>
+      ),
+      align: "center",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Space size="middle">
+          <Button
+            type="link"
+            icon={<Edit size={16} />}
+            onClick={() => handleEdit(record)}
+          />
+          <Button
+            type="link"
+            icon={<Trash2 size={16} />}
+            danger
+            onClick={() => handleDelete(record._id)}
+          />
+        </Space>
+      ),
+      align: "center",
+      width: 120,
     },
   ];
 
   return (
     <>
-      {/* ✅ Modal */}
+      {/* Modal for Add/Edit Subject */}
       <SubjectForm
         isOpen={isModalOpen}
         onClose={() => {
@@ -149,60 +155,39 @@ const Subjects = () => {
         editData={selectedSubject}
       />
 
-      {/* ✅ Header */}
-      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-            Subjects List
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-500">
+          <h2 className="text-xl font-semibold text-gray-800">Subjects List</h2>
+          <p className="text-sm text-gray-500">
             Manage subjects for your school or global context.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedSubject(null);
-            setIsModalOpen(true);
-          }}
-          className="bg-blue-600 text-white px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition"
-        >
-          + Add New Subject
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <Search
+            placeholder="Search subject..."
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <Button type="primary" onClick={handleAddNew}>
+            + Add New Subject
+          </Button>
+        </div>
       </div>
 
-      {/* ✅ Table */}
-      <div className="bg-white p-2 sm:p-4 rounded-lg shadow-md overflow-x-auto">
-        <div className="min-w-[600px] sm:min-w-full">
-          <DataTable
-            columns={columns}
-            data={filteredSubjects || []}
-            progressPending={loading}
-            pagination
-            highlightOnHover
-            striped
-            dense
-            responsive
-            persistTableHead
-            customStyles={{
-              table: { style: { minWidth: "100%" } },
-              headCells: {
-                style: {
-                  fontWeight: "600",
-                  fontSize: "0.8rem",
-                  padding: "8px",
-                },
-              },
-              cells: {
-                style: {
-                  fontSize: "0.75rem",
-                  padding: "6px",
-                  whiteSpace: "normal",
-                },
-              },
-            }}
-          />
-        </div>
+      {/* Table */}
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        <Table
+          columns={columns}
+          dataSource={filteredSubjects}
+          loading={loading}
+          rowKey="_id"
+          pagination={{ pageSize: 10 }}
+          bordered
+          scroll={{ x: "max-content" }}
+        />
       </div>
     </>
   );
