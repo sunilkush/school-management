@@ -16,8 +16,8 @@ const stats = [
 
 const shortcuts = [
   { title: "Manage Schools", path: "/dashboard/superadmin/schools", icon: <School /> },
-  { title: "Admins", path: "/dashboard/superadmin/admins", icon: <Users /> },
-  { title: "Roles", path: "/dashboard/superadmin/roles", icon: <ShieldCheck /> },
+  { title: "Admins", path: "/dashboard/superadmin/users/admins", icon: <Users /> },
+  { title: "Roles", path: "/dashboard/superadmin/settings/roles", icon: <ShieldCheck /> },
   { title: "Settings", path: "/dashboard/superadmin/settings", icon: <Settings /> },
 ];
 

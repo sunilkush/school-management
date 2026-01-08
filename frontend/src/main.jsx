@@ -30,7 +30,7 @@ import Schools from "./pages/SuperAdmin/Schools/Schools.jsx";
 import AddSchool from "./pages/SuperAdmin/Schools/AddSchool.jsx";
 import Roles from "./pages/SuperAdmin/System_Settings/Roles.jsx";
 import Permissions from "./pages/SuperAdmin/System_Settings/Permissions.jsx";
-import AcademicYears from "./pages/SuperAdmin/Modules/AcademicYears.jsx";
+import AcademicYears from "./pages/SuperAdmin/Master_Settings/AcademicYears.jsx";
 import Modules from "./pages/SuperAdmin/Modules/Modules.jsx";
 import SettingsPage from "./pages/SchoolAdmin/Settings/SettingsPage.jsx";
 import UsersPage from "./pages/SchoolAdmin/Teachers_&_Students/UsersList.jsx";

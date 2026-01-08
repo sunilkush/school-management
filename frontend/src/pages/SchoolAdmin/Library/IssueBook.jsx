@@ -10,143 +10,225 @@ import {
   Table,
   Space,
   message,
+  Row,
+  Col,
+  Card,
+  Tag,
 } from "antd";
-import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  RollbackOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 
 const { Content } = Layout;
 const { Option } = Select;
 
 const IssueBook = () => {
-  const [form] = Form.useForm();
+  const [issueForm] = Form.useForm();
+  const [returnForm] = Form.useForm();
+
   const [issuedBooks, setIssuedBooks] = useState([]);
 
+  /* ================= ISSUE BOOK ================= */
   const handleIssueBook = (values) => {
     const newEntry = {
-      key: issuedBooks.length + 1,
+      key: Date.now(),
       studentName: values.studentName,
       bookTitle: values.bookTitle,
       issueDate: values.issueDate.format("DD-MM-YYYY"),
       returnDate: values.returnDate.format("DD-MM-YYYY"),
+      status: "Issued",
     };
+
     setIssuedBooks([...issuedBooks, newEntry]);
-    message.success("Book issued successfully!");
-    form.resetFields();
+    message.success("Book issued successfully");
+    issueForm.resetFields();
   };
 
+  /* ================= RETURN BOOK ================= */
+  const handleReturnBook = (values) => {
+    setIssuedBooks((prev) =>
+      prev.map((book) =>
+        book.key === values.issueId
+          ? { ...book, status: "Returned" }
+          : book
+      )
+    );
+    message.success("Book returned successfully");
+    returnForm.resetFields();
+  };
+
+  /* ================= TABLE ================= */
   const columns = [
+    { title: "Student", dataIndex: "studentName" },
+    { title: "Book", dataIndex: "bookTitle" },
+    { title: "Issue Date", dataIndex: "issueDate" },
+    { title: "Return Date", dataIndex: "returnDate" },
     {
-      title: "Student Name",
-      dataIndex: "studentName",
-      key: "studentName",
+      title: "Status",
+      dataIndex: "status",
+      render: (status) =>
+        status === "Issued" ? (
+          <Tag color="orange">Issued</Tag>
+        ) : (
+          <Tag color="green">Returned</Tag>
+        ),
     },
     {
-      title: "Book Title",
-      dataIndex: "bookTitle",
-      key: "bookTitle",
-    },
-    {
-      title: "Issue Date",
-      dataIndex: "issueDate",
-      key: "issueDate",
-    },
-    {
-      title: "Return Date",
-      dataIndex: "returnDate",
-      key: "returnDate",
-    },
-    {
-      title: "Actions",
-      key: "actions",
+      title: "Action",
       render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            danger
-            onClick={() => {
-              setIssuedBooks(issuedBooks.filter((b) => b.key !== record.key));
-              message.success("Entry removed");
-            }}
-          >
-            Remove
-          </Button>
-        </Space>
+        <Button
+          danger
+          type="link"
+          icon={<DeleteOutlined />}
+          onClick={() => {
+            setIssuedBooks(issuedBooks.filter((b) => b.key !== record.key));
+            message.success("Record deleted");
+          }}
+        >
+          Delete
+        </Button>
       ),
     },
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
+    <Layout style={{ padding: 24, minHeight: "100vh", background: "#f5f7fa" }}>
+      <Breadcrumb style={{ marginBottom: 20 }}>
         <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
         <Breadcrumb.Item>Library</Breadcrumb.Item>
-        <Breadcrumb.Item>Issue Book</Breadcrumb.Item>
+        <Breadcrumb.Item>Issue / Return Book</Breadcrumb.Item>
       </Breadcrumb>
 
       <Content>
-        {/* Issue Book Form */}
-        <div style={{ marginBottom: 32 }}>
-          <h2 style={{ marginBottom: 16 }}>Issue a New Book</h2>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleIssueBook}
-            style={{ maxWidth: 600 }}
-          >
-            <Form.Item
-              label="Student Name"
-              name="studentName"
-              rules={[{ required: true, message: "Please enter student name" }]}
+        <Row gutter={[24, 24]}>
+          {/* ================= ISSUE BOOK ================= */}
+          <Col xs={24} md={12}>
+            <Card
+              title="📘 Issue Book"
+              bordered={false}
+              style={{ borderRadius: 12 }}
             >
-              <Input placeholder="Enter student name" />
-            </Form.Item>
+              <Form
+                form={issueForm}
+                layout="vertical"
+                onFinish={handleIssueBook}
+              >
+                <Form.Item
+                  label="Student Name"
+                  name="studentName"
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="Enter student name" />
+                </Form.Item>
 
-            <Form.Item
-              label="Book Title"
-              name="bookTitle"
-              rules={[{ required: true, message: "Please enter book title" }]}
+                <Form.Item
+                  label="Book Title"
+                  name="bookTitle"
+                  rules={[{ required: true }]}
+                >
+                  <Select placeholder="Select book">
+                    <Option value="Mathematics">Mathematics</Option>
+                    <Option value="Science">Science</Option>
+                    <Option value="English">English</Option>
+                    <Option value="History">History</Option>
+                  </Select>
+                </Form.Item>
+
+                <Row gutter={12}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="Issue Date"
+                      name="issueDate"
+                      rules={[{ required: true }]}
+                    >
+                      <DatePicker style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={12}>
+                    <Form.Item
+                      label="Expected Return Date"
+                      name="returnDate"
+                      rules={[{ required: true }]}
+                    >
+                      <DatePicker style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<PlusOutlined />}
+                  block
+                >
+                  Issue Book
+                </Button>
+              </Form>
+            </Card>
+          </Col>
+
+          {/* ================= RETURN BOOK ================= */}
+          <Col xs={24} md={12}>
+            <Card
+              title="📗 Return Book"
+              bordered={false}
+              style={{ borderRadius: 12 }}
             >
-              <Select placeholder="Select a book" showSearch optionFilterProp="children">
-                <Option value="Mathematics">Mathematics</Option>
-                <Option value="Science">Science</Option>
-                <Option value="English">English</Option>
-                <Option value="History">History</Option>
-              </Select>
-            </Form.Item>
+              <Form
+                form={returnForm}
+                layout="vertical"
+                onFinish={handleReturnBook}
+              >
+                <Form.Item
+                  label="Issued Book Record"
+                  name="issueId"
+                  rules={[{ required: true }]}
+                >
+                  <Select placeholder="Select issued book">
+                    {issuedBooks
+                      .filter((b) => b.status === "Issued")
+                      .map((book) => (
+                        <Option key={book.key} value={book.key}>
+                          {book.studentName} - {book.bookTitle}
+                        </Option>
+                      ))}
+                  </Select>
+                </Form.Item>
 
-            <Form.Item
-              label="Issue Date"
-              name="issueDate"
-              rules={[{ required: true, message: "Please select issue date" }]}
-            >
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
+                <Form.Item label="Return Date" name="actualReturnDate">
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
 
-            <Form.Item
-              label="Return Date"
-              name="returnDate"
-              rules={[{ required: true, message: "Please select return date" }]}
-            >
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
+                <Button
+                  type="primary"
+                  danger
+                  htmlType="submit"
+                  icon={<RollbackOutlined />}
+                  block
+                >
+                  Return Book
+                </Button>
+              </Form>
+            </Card>
+          </Col>
+        </Row>
 
-            <Form.Item>
-              <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
-                Issue Book
-              </Button>
-            </Form.Item>
-          </Form>
-        </div>
-
-        {/* Issued Books Table */}
-        <div>
-          <h2 style={{ marginBottom: 16 }}>Issued Books</h2>
+        {/* ================= TABLE ================= */}
+        <Card
+          title="📋 Issued Book Records"
+          style={{ marginTop: 24, borderRadius: 12 }}
+          bordered={false}
+        >
           <Table
             columns={columns}
             dataSource={issuedBooks}
             pagination={{ pageSize: 5 }}
             rowKey="key"
           />
-        </div>
+        </Card>
       </Content>
     </Layout>
   );

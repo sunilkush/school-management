@@ -1,150 +1,186 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import DataTable from 'react-data-table-component';
-import { fetchAllUser,  deleteUser,
-  activeUser, } from '../../../features/authSlice';
-import { fetchSchools } from '../../../features/schoolSlice';
-import { Select } from 'antd';
-import 'antd/dist/reset.css';
+import React, { useEffect, useState, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import DataTable from "react-data-table-component";
+import {
+  fetchAllUser,
+  deleteUser,
+  activeUser,
+} from "../../../features/authSlice";
+import { fetchSchools } from "../../../features/schoolSlice";
+import {
+  Card,
+  Select,
+  Typography,
+  Button,
+  Tag,
+  Flex,
+  Space,
+  message,
+} from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 import { FaUserCircle } from "react-icons/fa";
+
 const { Option } = Select;
+const { Title, Text } = Typography;
 
 const Students = () => {
   const dispatch = useDispatch();
-  const { users = [], loading, error,user: currentUser } = useSelector((state) => state.auth);
+  const { users = [], loading, error, user: currentUser } = useSelector(
+    (state) => state.auth
+  );
   const { schools = [] } = useSelector((state) => state.school);
 
-  const [selectedSchool, setSelectedSchool] = useState('All');
+  const [selectedSchool, setSelectedSchool] = useState("All");
 
   useEffect(() => {
     dispatch(fetchAllUser());
     dispatch(fetchSchools());
   }, [dispatch]);
 
-  // Filter only teachers
-  let students = users.filter((user) => user?.role?.name === "Student");
+  // ✅ Filter students
+  const students = useMemo(() => {
+    let data = users.filter((u) => u?.role?.name === "Student");
+    if (selectedSchool !== "All") {
+      data = data.filter((s) => s.school?.name === selectedSchool);
+    }
+    return data;
+  }, [users, selectedSchool]);
 
-  // Filter teachers by selected school name
-  if (selectedSchool !== 'All') {
-    students = students.filter(
-      (teacher) => teacher.school?.name === selectedSchool
-    );
-  }
-
-  // Get unique school names for dropdown
-  const schoolNames = ['All', ...new Set(schools.map((s) => s.name).filter(Boolean))];
-  // ✅ Toggle status (with self-protection)
-    const handleToggleStatus = (user) => {
-      if (user._id === currentUser?._id) {
-        alert("You cannot change your own status.");
-        return;
-      }
-  
-      const action = user.isActive ? "deactivate" : "activate";
-      if (window.confirm(`Are you sure you want to ${action} this user?`)) {
-        dispatch(
-          user.isActive
-            ? deleteUser({ id: user._id, isActive: false })
-            : activeUser({ id: user._id, isActive: true })
-        ).then(() => dispatch(fetchAllUser()));
-      }
-    };
-  const columns = [
-    { name: '#', selector: (row, index) => index + 1, sortable: true, width: '70px' },
-    {
-        name: "Avatar",
-        selector: (row) =>
-          row.avatar ? (
-            <img
-              src={row.avatar}
-              alt="avatar"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <FaUserCircle className="text-gray-400 text-2xl" />
-          ),
-        width: "80px",
-      },
-    { name: 'Name', selector: (row) => row.name, sortable: true },
-    { name: 'Email', selector: (row) => row.email, sortable: true },
-    { name: 'School', selector: (row) => row.school?.name || '—' },
-    {
-    name: "Status",
-    selector: (row) => (
-      <span
-        className={`${
-          row.isActive
-           ? "bg-green-500 text-white"
-            : "bg-red-500 text-white"
-        } px-5 py-1 rounded-xl block text-center`}
-      >
-        {row.isActive ? "Active" : "Deactivated"}
-      </span>
-    ),
-    sortable: true,
-  },
-  {
-    name: "Actions",
-    cell: (row) => (
-      <button
-        onClick={() => handleToggleStatus(row)}
-        className={`font-semibold ${
-          row.isActive
-            ? "bg-red-600 hover:bg-red-800"
-            : "bg-green-600 hover:bg-green-800"
-        } px-3 py-1 text-white rounded-full w-full`}
-      >
-        {row.isActive ? "Deactivate" : "Activate"}
-      </button>
-    ),
-    width: "150px",
-  },
+  const schoolNames = [
+    "All",
+    ...new Set(schools.map((s) => s.name).filter(Boolean)),
   ];
 
-  if (loading) return <div className="text-center py-6 text-blue-600 font-semibold">Loading...</div>;
-  if (error) return <div className="text-center py-6 text-red-600">Error: {error}</div>;
+  // ✅ Toggle status (self-protection)
+  const handleToggleStatus = (user) => {
+    if (user._id === currentUser?._id) {
+      message.warning("You cannot change your own status");
+      return;
+    }
+
+    dispatch(
+      user.isActive
+        ? deleteUser({ id: user._id, isActive: false })
+        : activeUser({ id: user._id, isActive: true })
+    ).then(() => dispatch(fetchAllUser()));
+  };
+
+  // ✅ Columns
+  const columns = [
+    {
+      name: "#",
+      selector: (_, index) => index + 1,
+      width: "60px",
+    },
+    {
+      name: "Avatar",
+      cell: (row) =>
+        row.avatar ? (
+          <img
+            src={row.avatar}
+            alt="avatar"
+            style={{ width: 36, height: 36, borderRadius: "50%" }}
+          />
+        ) : (
+          <FaUserCircle size={28} color="#9CA3AF" />
+        ),
+      width: "80px",
+    },
+    { name: "Name", selector: (row) => row.name, sortable: true },
+    { name: "Email", selector: (row) => row.email, sortable: true },
+    {
+      name: "School",
+      selector: (row) => row.school?.name || "—",
+    },
+    {
+      name: "Status",
+      cell: (row) => (
+        <Tag color={row.isActive ? "green" : "red"}>
+          {row.isActive ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <Button
+          size="small"
+          type="primary"
+          danger={row.isActive}
+          onClick={() => handleToggleStatus(row)}
+        >
+          {row.isActive ? "Deactivate" : "Activate"}
+        </Button>
+      ),
+      width: "140px",
+    },
+  ];
+
+  if (error)
+    return (
+      <Text type="danger" className="block text-center mt-6">
+        {error}
+      </Text>
+    );
 
   return (
-    <div className=" min-h-screen">
-      <h1 className="text-md font-semibold text-gray-800 mb-4">All Students</h1>
+    <div style={{ padding: 16 }}>
+      {/* ✅ Header */}
+      <Card bordered={false} style={{ marginBottom: 16 }}>
+        <Flex justify="space-between" align="center" wrap="wrap">
+          <div>
+            <Title level={4} style={{ marginBottom: 0 }}>
+              Student Management
+            </Title>
+            <Text type="secondary">
+              Super Admin can manage students across all schools
+            </Text>
+          </div>
 
-      {/* School Filter */}
-      <div className="mb-4 flex items-center space-x-4">
-        <label className="font-small text-gray-700 text-sm">Filter by School:</label>
-        <Select
-          value={selectedSchool}
-          onChange={setSelectedSchool}
-          style={{ width: 200 }}
-        >
-          {schoolNames.map((name) => (
-            <Option key={name} value={name}>
-              {name}
-            </Option>
-          ))}
-        </Select>
-      </div>
+          <Space>
+            <Select
+              value={selectedSchool}
+              onChange={setSelectedSchool}
+              style={{ width: 220 }}
+            >
+              {schoolNames.map((name) => (
+                <Option key={name} value={name}>
+                  {name}
+                </Option>
+              ))}
+            </Select>
 
-      <div className="bg-white rounded-xl shadow border border-gray-200 p-3">
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => dispatch(fetchAllUser())}
+            >
+              Refresh
+            </Button>
+          </Space>
+        </Flex>
+      </Card>
+
+      {/* ✅ Table */}
+      <Card bordered={false}>
         <DataTable
           columns={columns}
           data={students}
+          progressPending={loading}
           pagination
           highlightOnHover
           striped
-          dense
+          responsive
           noDataComponent="No students found"
           customStyles={{
             headCells: {
               style: {
-                fontWeight: 'bold',
-                backgroundColor: '#f9fafb',
-                color: '#374151',
-                fontSize: '14px',
+                fontWeight: 600,
+                backgroundColor: "#F9FAFB",
               },
             },
           }}
         />
-      </div>
+      </Card>
     </div>
   );
 };

@@ -1,29 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Input, Tag, Popconfirm, message } from "antd";
+import { Table, Button, Input, Tag, Popconfirm, message, Select, Row, Col, Card, Typography, Space } from "antd";
 import SubjectForm from "../../../components/forms/SubjectForm.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
 import * as XLSX from "xlsx";
 
+const { Option } = Select;
+const { Title, Text } = Typography;
+
 const SubjectsAdmin = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSchool, setSelectedSchool] = useState("");
 
   const dispatch = useDispatch();
   const { subjects = [], loading } = useSelector((state) => state.subject);
+  const { schools = [] } = useSelector((state) => state.school);
 
   // Get logged-in user info
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
   const role = storedUser?.role?.name || "";
-  
+
   // Fetch subjects on mount or when schoolId/role changes
   useEffect(() => {
     if (schoolId || role === "Super Admin") {
-      dispatch(fetchAllSubjects({ schoolId }));
+      dispatch(fetchAllSubjects({ schoolId: selectedSchool || schoolId }));
     }
-  }, [dispatch, schoolId, role]);
+  }, [dispatch, schoolId, role, selectedSchool]);
 
   // Role-based filter
   const filteredSubjects =
@@ -40,25 +45,22 @@ const SubjectsAdmin = () => {
     subj.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Edit
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
     setIsModalOpen(true);
   };
 
-  // Delete
   const handleDelete = async (id) => {
     try {
       await dispatch(deleteSubject(id)).unwrap();
       message.success("Subject deleted");
-      dispatch(fetchAllSubjects({ schoolId }));
+      dispatch(fetchAllSubjects({ schoolId: selectedSchool || schoolId }));
     } catch (err) {
       console.error(err);
       message.error("Delete failed");
     }
   };
 
-  // Export Excel
   const handleExport = () => {
     const exportData = filteredSubjects.map((s) => ({
       "Subject Name": s.name,
@@ -78,85 +80,28 @@ const SubjectsAdmin = () => {
     XLSX.writeFile(wb, "Subjects_List.xlsx");
   };
 
-  // AntD Table Columns
   const columns = [
     { title: "Subject Name", dataIndex: "name", key: "name", width: 180 },
     { title: "Category", dataIndex: "category", key: "category", width: 120 },
     { title: "Type", dataIndex: "type", key: "type", width: 100 },
     { title: "Max Marks", dataIndex: "maxMarks", key: "maxMarks", width: 100 },
     { title: "Pass Marks", dataIndex: "passMarks", key: "passMarks", width: 100 },
-
-    {
-      title: "Teacher",
-      dataIndex: ["teacherId", "name"],
-      key: "teacherId",
-      width: 150,
-      render: (value) => value || "Not Assigned",
-    },
-
-    {
-      title: "School",
-      key: "school",
-      width: 160,
-      render: (row) =>
-        row.isGlobal ? <Tag color="blue">🌐 Global</Tag> : row.schoolId?.name,
-    },
-
-    {
-      title: "Status",
-      dataIndex: "isActive",
-      key: "status",
-      width: 120,
-      render: (active) =>
-        active ? (
-          <Tag color="green">Active</Tag>
-        ) : (
-          <Tag color="red">Inactive</Tag>
-        ),
-    },
-
-    {
-      title: "Created Type",
-      key: "createdType",
-      width: 130,
-      render: (row) =>
-        row.isGlobal ? (
-          <Tag color="blue">Global 🌐</Tag>
-        ) : (
-          <Tag color="gray">School 🏫</Tag>
-        ),
-    },
-
-    {
-      title: "Actions",
-      key: "actions",
-      width: 150,
-      render: (row) => (
-        <div className="flex gap-2">
-          <Button
-            size="small"
-            type="link"
-            onClick={() => handleEdit(row)}
-          >
-            Edit
-          </Button>
-
-          <Popconfirm
-            title="Are you sure?"
-            onConfirm={() => handleDelete(row._id)}
-          >
-            <Button size="small" type="link" danger>
-              Delete
-            </Button>
-          </Popconfirm>
-        </div>
-      ),
-    },
+    { title: "Teacher", dataIndex: ["teacherId", "name"], key: "teacherId", width: 150, render: (value) => value || "Not Assigned" },
+    { title: "School", key: "school", width: 160, render: (row) => (row.isGlobal ? <Tag color="blue">🌐 Global</Tag> : row.schoolId?.name) },
+    { title: "Status", dataIndex: "isActive", key: "status", width: 120, render: (active) => active ? <Tag color="green">Active</Tag> : <Tag color="red">Inactive</Tag> },
+    { title: "Created Type", key: "createdType", width: 130, render: (row) => row.isGlobal ? <Tag color="blue">Global 🌐</Tag> : <Tag color="gray">School 🏫</Tag> },
+    { title: "Actions", key: "actions", width: 150, render: (row) => (
+      <div className="flex gap-2">
+        <Button size="small" type="link" onClick={() => handleEdit(row)}>Edit</Button>
+        <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(row._id)}>
+          <Button size="small" type="link" danger>Delete</Button>
+        </Popconfirm>
+      </div>
+    )}
   ];
 
   return (
     <>
-      {/* Modal */}
       <SubjectForm
         isOpen={isModalOpen}
         onClose={() => {
@@ -166,48 +111,45 @@ const SubjectsAdmin = () => {
         editData={selectedSubject}
       />
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between mb-4 gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">Subjects List</h2>
-          <p className="text-sm text-gray-600">
-            Manage subjects for your school or global context.
-          </p>
-        </div>
+      <Card>
+        <Row gutter={[16, 16]} justify="space-between" align="middle">
+          <Col xs={24} md={12}>
+            <Title level={4}>Subjects Management</Title>
+            <Text type="secondary">Manage subjects for your school or global context.</Text>
+          </Col>
 
-        <div className="flex gap-2">
-          <Input
-            placeholder="Search subject..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: 200,height: 32 }}
-          />
+          <Col xs={24} md={12}>
+            <Space wrap>
+              {role === "Super Admin" && (
+                <Select
+                  placeholder="Filter by School"
+                  value={selectedSchool || undefined}
+                  onChange={setSelectedSchool}
+                  style={{ minWidth: 160 }}
+                  allowClear
+                >
+                  {schools.map((s) => (
+                    <Option key={s._id} value={s._id}>{s.name}</Option>
+                  ))}
+                </Select>
+              )}
+              <Input placeholder="Search subject..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: 200 }} />
+              <Button type="primary" danger onClick={handleExport}>Export Excel</Button>
+              <Button type="primary" onClick={() => setIsModalOpen(true)}>+ Add New Subject</Button>
+            </Space>
+          </Col>
+        </Row>
 
-          <Button type="primary" danger onClick={handleExport}>
-            Export Excel
-          </Button>
-
-          <Button
-            type="primary"
-            onClick={() => {
-              setSelectedSubject(null);
-              setIsModalOpen(true);
-            }}
-          >
-            + Add New Subject
-          </Button>
-        </div>
-      </div>
-
-      {/* AntD Table */}
-      <Table
-        rowKey="_id"
-        columns={columns}
-        dataSource={searchedSubjects}
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-        bordered
-      />
+        <Table
+          rowKey="_id"
+          columns={columns}
+          dataSource={searchedSubjects}
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+          bordered
+          style={{ marginTop: 16 }}
+        />
+      </Card>
     </>
   );
 };

@@ -1,22 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Form, Input, Select, Button, Space, message, Card, Divider } from "antd";
+import { Form, Input, Select, Button, Space, message, Card, Divider, Table, Modal } from "antd";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js"; // fetch students for dropdown
 import axios from "axios";
 
 const { Option } = Select;
 
-const AddParent = () => {
+const ParentsPage = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const { schoolStudents = [] } = useSelector((state) => state.students || {});
   const { user } = useSelector((state) => state.auth || {});
   const schoolId = user?.school?._id;
+
   const [loading, setLoading] = useState(false);
-   console.log("schoolStudents", schoolStudents);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [parentsList, setParentsList] = useState([]);
+  const [tableLoading, setTableLoading] = useState(false);
+
   useEffect(() => {
     dispatch(fetchStudentsBySchoolId({ schoolId }));
+    fetchParents();
   }, [dispatch, schoolId]);
+
+  // Fetch parents for table
+  const fetchParents = async () => {
+    try {
+      setTableLoading(true);
+      const res = await axios.get(`/api/v1/parents?schoolId=${schoolId}`);
+      setParentsList(res.data.parents || []);
+    } catch (err) {
+      message.error(err.response?.data?.message || "Failed to fetch parents");
+    } finally {
+      setTableLoading(false);
+    }
+  };
 
   const handleSubmit = async (values) => {
     try {
@@ -27,6 +45,8 @@ const AddParent = () => {
       });
       message.success("Parent registered successfully!");
       form.resetFields();
+      setModalVisible(false);
+      fetchParents(); // refresh table
     } catch (err) {
       message.error(err.response?.data?.message || "Registration failed");
     } finally {
@@ -34,10 +54,43 @@ const AddParent = () => {
     }
   };
 
+  // Table columns
+  const columns = [
+    { title: "Name", dataIndex: "name", key: "name" },
+    { title: "Email", dataIndex: "email", key: "email" },
+    { title: "Phone", dataIndex: "phone", key: "phone" },
+    {
+      title: "Assigned Student",
+      key: "student",
+      render: (_, record) => record.student?.userDetails?.name || "—",
+    },
+  ];
+
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <Card title="Register New Parent" bordered>
-        <Divider />
+    <div className=" max-w-full mx-auto">
+      <Card
+        title="Parents List"
+        extra={
+          <Button type="primary" onClick={() => setModalVisible(true)}>
+            Add Parent
+          </Button>
+        }
+      >
+        <Table
+          dataSource={parentsList}
+          columns={columns}
+          rowKey={(record) => record._id}
+          loading={tableLoading}
+        />
+      </Card>
+
+      {/* Modal Form */}
+      <Modal
+        title="Register New Parent"
+        open={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        footer={null}
+      >
         <Form
           form={form}
           layout="vertical"
@@ -80,10 +133,7 @@ const AddParent = () => {
             name="studentId"
             rules={[{ required: true, message: "Please select a student" }]}
           >
-            <Select
-              placeholder="Select student"
-              loading={!schoolStudents.length}
-            >
+            <Select placeholder="Select student" loading={!schoolStudents.length}>
               {schoolStudents.map((s) => (
                 <Option key={s._id} value={s._id}>
                   {s.userDetails?.name || "—"} ({s.class?.name || "—"})
@@ -97,15 +147,13 @@ const AddParent = () => {
               <Button type="primary" htmlType="submit" loading={loading}>
                 Register Parent
               </Button>
-              <Button htmlType="reset" onClick={() => form.resetFields()}>
-                Reset
-              </Button>
+              <Button onClick={() => form.resetFields()}>Reset</Button>
             </Space>
           </Form.Item>
         </Form>
-      </Card>
+      </Modal>
     </div>
   );
 };
 
-export default AddParent;
+export default ParentsPage;
