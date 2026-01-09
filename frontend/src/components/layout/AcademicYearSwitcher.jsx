@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Select, Spin, Typography } from "antd";
 import {
@@ -19,34 +19,41 @@ const AcademicYearSwitcher = ({ onChange }) => {
 
   const schoolId = user?.school?._id;
 
+  // 🔹 Derived flags (avoid repeated logic)
+  const hasAcademicYears = academicYears?.length > 0;
+  const hasActiveYear = Boolean(activeYear);
+
   useEffect(() => {
     if (!schoolId) return;
 
-    // Only fetch when Redux has no data
-    if (academicYears.length === 0) {
+    if (!hasAcademicYears) {
       dispatch(fetchAllAcademicYears(schoolId));
     }
-    if (!activeYear) {
+
+    if (!hasActiveYear) {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
-  }, [dispatch, schoolId, academicYears, activeYear]);
+  }, [dispatch, schoolId, hasAcademicYears, hasActiveYear]);
 
   const handleChange = (value) => {
     const selectedYear = academicYears.find((y) => y._id === value);
-    if (onChange) onChange(selectedYear);
+    onChange?.(selectedYear);
   };
 
-  // Date format helper
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // 🔹 Memoized date formatter (optional optimization)
+  const formatDate = useMemo(
+    () => (dateStr) =>
+      dateStr
+        ? new Date(dateStr).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : "",
+    []
+  );
 
-  if (loading && academicYears.length === 0 && !activeYear) {
+  if (loading && !hasAcademicYears && !hasActiveYear) {
     return <Spin size="small" tip="Loading academic years..." />;
   }
 
@@ -58,9 +65,9 @@ const AcademicYearSwitcher = ({ onChange }) => {
     <Select
       style={{ width: 220 }}
       placeholder="Select Academic Year"
-      value={activeYear?._id || undefined}
+      value={activeYear?._id}
       onChange={handleChange}
-      size="middle"
+      allowClear={false}
     >
       {academicYears.map((year) => (
         <Option key={year._id} value={year._id}>
