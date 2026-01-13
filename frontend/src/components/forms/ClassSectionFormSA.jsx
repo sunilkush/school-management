@@ -42,7 +42,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
     if (!schoolId) return;
     dispatch(fetchSection({ schoolId }));
     dispatch(fetchAllSubjects({ schoolId }));
-    dispatch(fetchAllUser({ schoolId }));
+    dispatch(fetchAllUser( schoolId ));
     dispatch(fetchActiveAcademicYear(schoolId));
   }, [schoolId, dispatch]);
 
@@ -137,7 +137,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
               <Select allowClear>
                 {users
                   .filter(
-                    (u) => u.role?.name === "Teacher" && u.isActive
+                    (u) => u.role?.name === "Teacher" && u.isActive === true
                   )
                   .map((t) => (
                     <Option key={t._id} value={t._id}>
