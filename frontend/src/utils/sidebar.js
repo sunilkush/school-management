@@ -116,7 +116,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Teachers & Staff", path: "schooladmin/users" },
         { title: "Students", path: "schooladmin/studentList" },
-       
+        { title: "Parents", path: "schooladmin/parents-register" },
       ],
     },
 
@@ -225,7 +225,7 @@ export const sidebarMenu = {
     { title: "Grades", path: "parent/grades", icon: Clipboard },
     { title: "Homework", path: "parent/homework", icon: ClipboardList },
     { title: "Fees", path: "parent/fees", icon: CreditCard },
-    { title: "Messages", path: "parent/messages", icon: MessageCircle },
+    { title: "Messages", path: "parent/message", icon: MessageCircle },
     { title: "Reports", path: "parent/reports", icon: FileBarChart2 },
   ],
 

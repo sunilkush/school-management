@@ -1,54 +1,75 @@
-import React from 'react';
+import React from "react";
+import { Card, Progress, Typography, Space } from "antd";
+import {
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+} from "@ant-design/icons";
 
-const SummaryCard = ({ title, value, percentage, trend, color, label }) => {
-  const ringColor = {
-    purple: 'text-deep-purple-500',
-    blue: 'text-blue-500',
-    green: 'text-green-500',
-    orange: 'text-orange-500',
-  }[color];
+const { Text, Title } = Typography;
 
-  const textColor = trend.includes('Decrease') ? 'text-red-500' : 'text-green-500';
+const colorMap = {
+  purple: "#722ed1",
+  blue: "#1677ff",
+  green: "#52c41a",
+  orange: "#fa8c16",
+};
+
+const SummaryCard = ({
+  title,
+  value,
+  percentage = 0,
+  trend = "",
+  color = "blue",
+  label = "",
+}) => {
+  const isDecrease = trend.toLowerCase().includes("decrease");
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-sm border flex flex-col justify-between">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-gray-500 text-sm">{title}</p>
-          <h2 className="text-xl font-semibold">{value}</h2>
-        </div>
-        <div className="relative w-16 h-16">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-            <path
-              className="text-gray-200"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-              d="M18 2.0845
-                 a 15.9155 15.9155 0 0 1 0 31.831
-                 a 15.9155 15.9155 0 0 1 0 -31.831"
-            />
-            <path
-              className={ringColor}
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-              strokeDasharray={`${percentage}, 100`}
-              d="M18 2.0845
-                 a 15.9155 15.9155 0 0 1 0 31.831
-                 a 15.9155 15.9155 0 0 1 0 -31.831"
-            />
-          </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-medium">
-            {percentage}%
-          </span>
-        </div>
-      </div>
-      <div className="flex justify-between text-sm mt-4">
-        <span className={textColor}>{trend}</span>
-        <span className="text-gray-400">{label}</span>
-      </div>
-    </div>
+    <Card bordered hoverable>
+      <Space
+        align="start"
+        style={{ width: "100%", justifyContent: "space-between" }}
+      >
+        {/* Left Content */}
+        <Space direction="vertical" size={0}>
+          <Text type="secondary">{title}</Text>
+          <Title level={4} style={{ margin: 0 }}>
+            {value}
+          </Title>
+        </Space>
+
+        {/* Progress Ring */}
+        <Progress
+          type="circle"
+          percent={percentage}
+          width={60}
+          strokeColor={colorMap[color]}
+          format={(percent) => `${percent}%`}
+        />
+      </Space>
+
+      {/* Footer */}
+      <Space
+        style={{
+          marginTop: 16,
+          width: "100%",
+          justifyContent: "space-between",
+        }}
+      >
+        <Space>
+          {isDecrease ? (
+            <ArrowDownOutlined style={{ color: "#ff4d4f" }} />
+          ) : (
+            <ArrowUpOutlined style={{ color: "#52c41a" }} />
+          )}
+          <Text type={isDecrease ? "danger" : "success"}>
+            {trend}
+          </Text>
+        </Space>
+
+        <Text type="secondary">{label}</Text>
+      </Space>
+    </Card>
   );
 };
 

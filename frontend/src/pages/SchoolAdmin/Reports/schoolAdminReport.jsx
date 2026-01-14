@@ -97,7 +97,7 @@ const SchoolAdminReport = () => {
   };
 
   return (
-    <Layout style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
+    <Layout style={{ padding: "0px", background: "#f0f2f5", minHeight: "100vh" }}>
       <Breadcrumb style={{ marginBottom: 24 }}>
         <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
         <Breadcrumb.Item>Reports</Breadcrumb.Item>
@@ -164,7 +164,7 @@ const SchoolAdminReport = () => {
             </Card>
 
             {/* Hostel Report */}
-            <Card title="Hostel Report" style={{ marginTop: 24 }}>
+            <Card title="Hostel Report" style={{ marginTop: 24 }} >
               <Table
                 columns={[
                   { title: "Room", dataIndex: "roomNumber", key: "roomNumber" },

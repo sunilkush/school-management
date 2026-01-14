@@ -3,23 +3,9 @@ import mongoose, { Schema } from "mongoose";
 const subjectSchema = new Schema(
   {
     // 🔹 Basic Details
-    name: {
-      type: String,
-      required: [true, "Subject name is required"],
-      trim: true,
-      uppercase: true,
-    },
-    code: {
-      type: String,
-      trim: true,
-      uppercase: true,
-      unique: true,
-    },
-    shortName: {
-      type: String,
-      trim: true,
-      uppercase: true,
-    },
+    name: { type: String, required: true, trim: true, uppercase: true },
+    code: { type: String, trim: true, uppercase: true, unique: true },
+    shortName: { type: String, trim: true, uppercase: true },
     description: { type: String, trim: true },
 
     // 🔹 Classification
@@ -49,33 +35,18 @@ const subjectSchema = new Schema(
       enum: ["Super Admin", "School Admin"],
       required: true,
     },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
 
-    // 🔹 Global/Local
+    // 🔹 Global / School-specific
     isGlobal: { type: Boolean, default: false },
-    schoolId: {
-      type: Schema.Types.ObjectId,
-      ref: "School",
-      default: null,
-      index: true,
-    },
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      default: null,
-      index: true,
-    },
+    schoolId: { type: Schema.Types.ObjectId, ref: "School", default: null, index: true }, // school that owns this subject if not global
+    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear", default: null, index: true },
 
     // 🔹 Assignments
-    assignedSchools: [{ type: Schema.Types.ObjectId, ref: "School" }],
-    assignedClasses: [{ type: Schema.Types.ObjectId, ref: "Class" }],
-    assignedTeachers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    gradingSchemeId: { type: Schema.Types.ObjectId, ref: "Grade" },
+    schoolByAssignedClasses: [{ schoolId: { type: Schema.Types.ObjectId, ref: "School" }, classId: { type: Schema.Types.ObjectId, ref: "Class" } }],
+    schoolByAssignedTeachers: [{ schoolId: { type: Schema.Types.ObjectId, ref: "School" }, teacherId: { type: Schema.Types.ObjectId, ref: "User" } }], // only teachers from same school!
+    schoolByGradingSchemeId: { schoolId: { type: Schema.Types.ObjectId, ref: "School" }, gradeId:{type: Schema.Types.ObjectId, ref: "Grade"} },
 
     // 🔹 Status
     isActive: { type: Boolean, default: true },
@@ -88,16 +59,12 @@ const subjectSchema = new Schema(
 // ✅ Compound index for school-level uniqueness
 subjectSchema.index(
   { name: 1, schoolId: 1, academicYearId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { schoolId: { $exists: true } },
-  }
+  { unique: true, partialFilterExpression: { schoolId: { $exists: true } } }
 );
 
 // ✅ Auto-generate shortName & code
 subjectSchema.pre("save", function (next) {
-  if (!this.shortName && this.name)
-    this.shortName = this.name.substring(0, 4).toUpperCase();
+  if (!this.shortName && this.name) this.shortName = this.name.substring(0, 4).toUpperCase();
 
   if (!this.code && this.name) {
     const prefix = this.name.replace(/\s+/g, "").substring(0, 4).toUpperCase();

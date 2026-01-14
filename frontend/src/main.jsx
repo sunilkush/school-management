@@ -104,6 +104,12 @@ import StudentHomework from './pages/Student/Homework/StudentHomework.jsx';
 import ExamsPage from './pages/SchoolAdmin/Exams_&_Grades/ExamPage.jsx';
 import LibraryCard from './pages/SchoolAdmin/Library/LibraryCard.jsx';
 import CalendarPage from './pages/SchoolAdmin/Events_&_Calendar/CalendarPage.jsx';
+import MyChildren from './pages/Parent/Children/MyChildren.jsx';
+import ParentDashboard from './pages/Parent/Dashboard/ParentDashboard.jsx';
+import ChildAttendance from './pages/Parent/Attendance/ChildAttendance.jsx';
+import ChildGrades from './pages/Parent/Grades/ChildGrades.jsx';
+import ChildHomework from './pages/Parent/Homework/ChildHomework.jsx';
+import ChildMessages from './pages/Parent/Messages/ChildMessages.jsx';
 
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
@@ -294,17 +300,17 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
             children: [
-              { index: true, element: <Profile /> },
-              { path: "children", element: <UsersPage /> },
-              { path: "attendance", element: <StudentAttendance /> },
-              { path: "grades", element: <EnterGrades /> },
-              { path: "homework", element: <Schedule /> },
-              { path: "fees", element: <FeeCategories /> },
+              { index: true, element: <ParentDashboard /> },
+              { path: "children", element: <MyChildren /> },
+              { path: "attendance", element: <ChildAttendance /> },
+              { path: "grades", element: <ChildGrades /> },
+              { path: "homework", element: <ChildHomework /> },
+              { path: "fees", element: <FeeStudent /> },
               { path: "settings", element: <SettingsPage /> },
-              { path: "message", element: <Message /> },
+              { path: "message", element: <ChildMessages /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "exams/reports", element: <ExamReports /> },
+              { path: "reports", element: <ExamReports /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],

@@ -5,13 +5,33 @@ import {
   deleteClass,
 } from "../../../features/classSlice.js";
 
-import { Edit, Trash2, Layers, X } from "lucide-react";
-import { Table, Tag, Input, Button, Space, Modal } from "antd";
+import {
+  Table,
+  Tag,
+  Input,
+  Button,
+  Space,
+  Modal,
+  Card,
+  Typography,
+  Row,
+  Col,
+  Tooltip,
+} from "antd";
+
+import {
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ApartmentOutlined,
+} from "@ant-design/icons";
+
 import ClassFormSA from "../../../components/forms/ClassSectionFormSA.jsx";
 
 const { Search } = Input;
+const { Title, Text } = Typography;
 
-function Classes() {
+const Classes = () => {
   const dispatch = useDispatch();
   const { classList = [], loading } = useSelector((state) => state.class || {});
   const { user } = useSelector((state) => state.auth || {});
@@ -20,9 +40,8 @@ function Classes() {
   const [editingClass, setEditingClass] = useState(null);
   const [filterText, setFilterText] = useState("");
 
-  const schoolId = user?.school?._id || null;
+  const schoolId = user?.school?._id;
 
-  // Fetch classes
   useEffect(() => {
     if (schoolId) dispatch(fetchClasses({ schoolId }));
   }, [dispatch, schoolId]);
@@ -32,11 +51,12 @@ function Classes() {
     setIsOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     Modal.confirm({
-      title: "Are you sure you want to delete this class?",
-      okText: "Yes",
-      cancelText: "No",
+      title: "Delete Class",
+      content: "This action cannot be undone. Are you sure?",
+      okText: "Delete",
+      okType: "danger",
       onOk: async () => {
         await dispatch(deleteClass(id));
         dispatch(fetchClasses({ schoolId }));
@@ -44,46 +64,41 @@ function Classes() {
     });
   };
 
-  const handleAddNew = () => {
+/*   const handleAddNew = () => {
     setEditingClass(null);
     setIsOpen(true);
-  };
+  }; */
 
-  // Filtered classes
- const filteredItems = [...classList]  // copy to avoid mutating props/state
-  .filter((item) =>
-    item.name?.toLowerCase().includes(filterText.toLowerCase())
-  )
-  .sort((a, b) => {
-    // Extract number from "Class 1", "Class 10", etc.
-    const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
-    const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
-    return numA - numB;
-  });
+  const filteredItems = [...classList]
+    .filter((item) =>
+      item.name?.toLowerCase().includes(filterText.toLowerCase())
+    )
+    .sort((a, b) => {
+      const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
+      return numA - numB;
+    });
 
-  // Ant Design Table Columns
   const columns = [
     {
       title: "S.No",
-      dataIndex: "serial",
-      key: "serial",
       width: 70,
-      render: (_, __, index) => <span>{index + 1}</span>,
+      render: (_, __, index) => index + 1,
     },
     {
       title: "Class Name",
       dataIndex: "name",
-      key: "name",
-      render: (t) => (
-        <span className="flex items-center gap-2 font-semibold text-gray-800">
-          <Layers size={16} className="text-blue-600" /> {t}
-        </span>
+      render: (name) => (
+        <Space>
+          <ApartmentOutlined style={{ color: "#1677ff" }} />
+          <Text strong>{name}</Text>
+        </Space>
       ),
     },
     {
       title: "Status",
       dataIndex: "status",
-      key: "status",
+      align: "center",
       render: (status) =>
         status === "inactive" ? (
           <Tag color="red">Inactive</Tag>
@@ -92,21 +107,13 @@ function Classes() {
         ),
     },
     {
-      title: "School",
-      dataIndex: "schoolId",
-      key: "schoolId",
-      render: (school) => school?.name || "—",
-    },
-    {
       title: "Academic Year",
       dataIndex: "academicYearId",
-      key: "academicYearId",
       render: (year) => year?.name || "—",
     },
     {
       title: "Sections",
       dataIndex: "sections",
-      key: "sections",
       render: (sections) =>
         sections?.length ? (
           <Space wrap>
@@ -117,13 +124,12 @@ function Classes() {
             ))}
           </Space>
         ) : (
-          <span className="text-gray-400">No Sections</span>
+          <Text type="secondary">No Sections</Text>
         ),
     },
     {
       title: "Subjects",
       dataIndex: "subjects",
-      key: "subjects",
       render: (subjects) =>
         subjects?.length ? (
           <Space wrap>
@@ -134,31 +140,35 @@ function Classes() {
             ))}
           </Space>
         ) : (
-          <span className="text-gray-400">No Subjects</span>
+          <Text type="secondary">No Subjects</Text>
         ),
     },
     {
       title: "Class Teacher",
       dataIndex: "teacherId",
-      key: "teacherId",
       render: (teacher) => teacher?.name || "—",
     },
     {
       title: "Actions",
-      key: "actions",
+      align: "center",
       render: (_, cls) => (
-        <Space size="middle">
-          <Button
-            type="link"
-            icon={<Edit size={16} />}
-            onClick={() => handleEdit(cls)}
-          />
-          <Button
-            type="link"
-            icon={<Trash2 size={16} />}
-            danger
-            onClick={() => handleDelete(cls._id)}
-          />
+        <Space>
+          <Tooltip title="Edit">
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(cls)}
+            />
+          </Tooltip>
+
+          <Tooltip title="Delete">
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(cls._id)}
+            />
+          </Tooltip>
         </Space>
       ),
     },
@@ -166,17 +176,18 @@ function Classes() {
 
   return (
     <>
-      {/* Modal for Add/Edit */}
+      {/* Add / Edit Modal */}
       <Modal
         title={editingClass ? "Edit Class" : "Add New Class"}
         open={isOpen}
         onCancel={() => setIsOpen(false)}
         footer={null}
         destroyOnClose
+        style={{padding:"0px"}}
       >
         <ClassFormSA
-          onClose={() => setIsOpen(false)}
           initialData={editingClass}
+          onClose={() => setIsOpen(false)}
           onSuccess={() => {
             dispatch(fetchClasses({ schoolId }));
             setIsOpen(false);
@@ -184,28 +195,35 @@ function Classes() {
         />
       </Modal>
 
-      {/* Main Container */}
-      <div className="bg-white p-6 rounded-xl shadow border w-full">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-5 gap-3">
-          <h4 className="text-xl font-semibold flex items-center gap-2">
-            <Layers className="text-blue-600" size={20} /> Class Management
-          </h4>
+      {/* Main UI */}
+      <Card bordered={false}>
+        <Row justify="space-between" align="middle" gutter={[16, 16]}>
+          <Col>
+            <Title level={4}>Class Management</Title>
+          </Col>
 
-          <Button type="primary" onClick={handleAddNew}>
-            + Add New Class
-          </Button>
-        </div>
+          <Col>
+            <Space wrap>
+              <Search
+                placeholder="Search class"
+                allowClear
+                onChange={(e) => setFilterText(e.target.value)}
+                style={{ width: 220 }}
+              />
 
-        <div className="mb-4 md:w-1/3">
-          <Search
-            placeholder="Search class..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            allowClear
-          />
-        </div>
+             {/*  <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAddNew}
+              >
+                Add Class
+              </Button> */}
+            </Space>
+          </Col>
+        </Row>
 
         <Table
+          className="mt-4"
           columns={columns}
           dataSource={filteredItems}
           loading={loading}
@@ -213,9 +231,9 @@ function Classes() {
           pagination={{ pageSize: 10 }}
           bordered
         />
-      </div>
+      </Card>
     </>
   );
-}
+};
 
 export default Classes;

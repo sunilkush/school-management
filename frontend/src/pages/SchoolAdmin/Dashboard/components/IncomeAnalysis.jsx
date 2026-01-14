@@ -1,31 +1,52 @@
-import React from 'react';
+import React from "react";
+import { Card, Typography, Progress, Row, Col } from "antd";
+
+const { Title, Text } = Typography;
+
+const incomeData = [
+  {
+    label: "Design",
+    value: 55,
+    color: "#1677ff",
+  },
+  {
+    label: "Development",
+    value: 25,
+    color: "#13c2c2",
+  },
+  {
+    label: "SEO",
+    value: 20,
+    color: "#52c41a",
+  },
+];
 
 const IncomeAnalysis = () => {
-    return (
-        <div className="bg-white p-5 rounded-xl shadow-sm border w-full flex flex-col justify-center items-center">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Income Analysis</h2>
-            <div className="relative w-72 h-72 mx-auto flex items-center justify-center">
+  return (
+    <Card bordered={false} style={{ height: "100%" }}>
+      <Title level={5} style={{ marginBottom: 24 }}>
+        Income Analysis
+      </Title>
 
-                <div className="absolute left-0 bottom-0 bg-blue-600 text-white rounded-full w-64 h-64 flex flex-col items-center justify-center text-center shadow-lg">
-                    <span className="text-2xl font-bold">55</span>
-                    <span className="text-sm">Design</span>
-                </div>
-
-
-                <div className="absolute top-0 right-6 bg-cyan-500 text-white rounded-full w-36 h-36 flex flex-col items-center justify-center text-center shadow-lg">
-                    <span className="text-xl font-bold">25</span>
-                    <span className="text-sm">Development</span>
-                </div>
-
-
-                <div className="absolute bottom-2 right-0 bg-green-400 text-white rounded-full w-24 h-24 flex flex-col items-center justify-center text-center shadow-lg">
-                    <span className="text-xl font-bold">20</span>
-                    <span className="text-sm">SEO</span>
-                </div>
+      <Row gutter={[16, 16]} justify="center">
+        {incomeData.map((item, index) => (
+          <Col xs={24} sm={8} key={index} style={{ textAlign: "center" }}>
+            <Progress
+              type="circle"
+              percent={item.value}
+              strokeColor={item.color}
+              width={90}
+            />
+            <div style={{ marginTop: 12 }}>
+              <Text strong>{item.label}</Text>
+              <br />
+              <Text type="secondary">{item.value}%</Text>
             </div>
-        </div>
-
-    );
+          </Col>
+        ))}
+      </Row>
+    </Card>
+  );
 };
 
 export default IncomeAnalysis;

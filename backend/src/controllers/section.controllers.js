@@ -9,9 +9,9 @@ import { ApiError } from "../utils/ApiError.js";
  * ===============================
  */
 export const createSection = asyncHandler(async (req, res) => {
-  const { name, academicYearId, schoolId, classId } = req.body;
+  const { name, academicYearId, schoolId} = req.body;
 
-  if (!name || !academicYearId || !schoolId || !classId) {
+  if (!name || !academicYearId || !schoolId ) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -19,7 +19,7 @@ export const createSection = asyncHandler(async (req, res) => {
     name,
     academicYearId,
     schoolId,
-    classId,
+   
   });
 
   if (existingSection) {
@@ -30,7 +30,7 @@ export const createSection = asyncHandler(async (req, res) => {
     name,
     academicYearId,
     schoolId,
-    classId,
+    
     createdBy: req.user?._id || null,
   });
 

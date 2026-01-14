@@ -1,187 +1,186 @@
 import React from "react";
 import {
+  Card,
   Row,
   Col,
-  Card,
-  Avatar,
-  Progress,
-  Table,
-  List,
-  Badge,
-  Button,
   Typography,
-  Calendar,
+  Statistic,
+  Table,
+  Tag,
+  Button,
+  Space,
+  Progress,
+  List,
+  Avatar,
 } from "antd";
 import {
   UserOutlined,
   BookOutlined,
   CalendarOutlined,
-  DollarCircleOutlined,
   BellOutlined,
-  SmileOutlined,
+  DollarOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
-/* 🔹 Helper component for equal-height cards */
-const DashboardCol = ({ children, ...props }) => (
-  <Col {...props} style={{ display: "flex" }}>
-    <Card hoverable style={{ flex: 1 }}>{children}</Card>
-  </Col>
-);
-
 const StudentDashboard = () => {
-  const attendance = { present: 20, absent: 2, leave: 1 };
+  /* Dummy data – API se replace hoga */
+  const student = {
+    name: "Aarav Sharma",
+    class: "Class 5 - A",
+    attendance: 92,
+    subjects: 6,
+    pendingFees: 1200,
+  };
 
-  const subjects = [
-    { key: 1, name: "Math", score: 95 },
-    { key: 2, name: "Science", score: 88 },
-    { key: 3, name: "English", score: 92 },
+  const attendanceData = [
+    { key: 1, subject: "Maths", percentage: 95 },
+    { key: 2, subject: "Science", percentage: 90 },
+    { key: 3, subject: "English", percentage: 88 },
   ];
-
-  const exams = [
-    { key: 1, subject: "Math", date: "10 Jan 2026" },
-    { key: 2, subject: "Science", date: "12 Jan 2026" },
-  ];
-
-  const notifications = [
-    { key: 1, title: "Library closed tomorrow", type: "info" },
-    { key: 2, title: "Submit assignment by 15th Jan", type: "warning" },
-  ];
-
-  const activities = ["Chess Club", "Football Team", "Science Fair"];
-
-  const totalFees = 30000;
-  const paidFees = 25000;
-
-  const attendancePercent = Math.round(
-    (attendance.present /
-      (attendance.present + attendance.absent + attendance.leave)) *
-      100
-  );
 
   return (
-    <div style={{ padding: 5, maxWidth:"100%", margin: "auto" }}>
-      {/* 🔹 Header */}
-      <Card bordered={false} style={{ marginBottom: 24 }}>
-        <Row align="middle" gutter={16}>
-          <Col>
-            <Avatar size={72} icon={<UserOutlined />} />
-          </Col>
-          <Col>
-            <Title level={3} style={{ marginBottom: 0 }}>
-              Welcome, John Doe
-            </Title>
-            <Text type="secondary">Class 10-A | Roll No: 23</Text>
-          </Col>
-        </Row>
-      </Card>
+    <>
+      {/* Header */}
+      <Space direction="vertical" size={0}>
+        <Title level={3}>👋 Welcome, {student.name}</Title>
+        <Text type="secondary">
+          {student.class} • Track your academic progress
+        </Text>
+      </Space>
 
-      {/* 🔹 Summary Cards */}
-      <Row gutter={[16, 16]}>
-        <DashboardCol xs={24} sm={12} md={6}>
-          <BookOutlined style={{ fontSize: 26, color: "#1677ff" }} />
-          <Title level={4}>Attendance</Title>
-          <Progress percent={attendancePercent} />
-          <Text>P: {attendance.present} | A: {attendance.absent} | L: {attendance.leave}</Text>
-        </DashboardCol>
+      {/* Stats Cards */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Attendance"
+              value={student.attendance}
+              suffix="%"
+              prefix={<CalendarOutlined />}
+            />
+          </Card>
+        </Col>
 
-        <DashboardCol xs={24} sm={12} md={6}>
-          <DollarCircleOutlined style={{ fontSize: 26, color: "#52c41a" }} />
-          <Title level={4}>Fees</Title>
-          <Text>Paid: ₹{paidFees}</Text><br />
-          <Text>Pending: ₹{totalFees - paidFees}</Text>
-          <Progress percent={(paidFees / totalFees) * 100} />
-        </DashboardCol>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Subjects"
+              value={student.subjects}
+              prefix={<BookOutlined />}
+            />
+          </Card>
+        </Col>
 
-        <DashboardCol xs={24} sm={12} md={6}>
-          <CalendarOutlined style={{ fontSize: 26, color: "#faad14" }} />
-          <Title level={4}>Upcoming Exams</Title>
-          <Text>{exams.length} Scheduled</Text>
-        </DashboardCol>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Pending Fees"
+              value={student.pendingFees}
+              prefix={<DollarOutlined />}
+            />
+          </Card>
+        </Col>
 
-        <DashboardCol xs={24} sm={12} md={6}>
-          <BellOutlined style={{ fontSize: 26, color: "#f5222d" }} />
-          <Title level={4}>Notifications</Title>
-          <Text>{notifications.length} New</Text>
-        </DashboardCol>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Notifications"
+              value={4}
+              prefix={<BellOutlined />}
+            />
+          </Card>
+        </Col>
       </Row>
 
-      {/* 🔹 Academic + Exams */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-        <DashboardCol xs={24} md={12}>
-          <Title level={4}>📊 Academic Performance</Title>
-          <Table
-            dataSource={subjects}
-            pagination={false}
-            columns={[
-              { title: "Subject", dataIndex: "name" },
-              { title: "Score", dataIndex: "score" },
-            ]}
-          />
-        </DashboardCol>
+      {/* Main Content */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        {/* Attendance Overview */}
+        <Col xs={24} lg={14}>
+          <Card title="Attendance Overview">
+            <Table
+              pagination={false}
+              dataSource={attendanceData}
+              rowKey="key"
+              columns={[
+                {
+                  title: "Subject",
+                  dataIndex: "subject",
+                },
+                {
+                  title: "Attendance %",
+                  dataIndex: "percentage",
+                  render: (val) => <Progress percent={val} size="small" />,
+                },
+                {
+                  title: "Status",
+                  render: (_, record) =>
+                    record.percentage >= 75 ? (
+                      <Tag color="green">Good</Tag>
+                    ) : (
+                      <Tag color="red">Low</Tag>
+                    ),
+                },
+              ]}
+            />
+          </Card>
+        </Col>
 
-        <DashboardCol xs={24} md={12}>
-          <Title level={4}>📝 Upcoming Exams</Title>
-          <List
-            dataSource={exams}
-            renderItem={(item) => (
-              <List.Item>
-                <List.Item.Meta
-                  title={item.subject}
-                  description={`Date: ${item.date}`}
-                />
-                <Badge status="processing" text="Upcoming" />
-              </List.Item>
-            )}
-          />
-        </DashboardCol>
+        {/* Right Panel */}
+        <Col xs={24} lg={10}>
+          {/* Upcoming Exams */}
+          <Card title="Upcoming Exams">
+            <List
+              itemLayout="horizontal"
+              dataSource={[
+                { title: "Maths Unit Test", date: "25 Jan 2026" },
+                { title: "Science Practical", date: "30 Jan 2026" },
+              ]}
+              renderItem={(item) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={<Avatar icon={<BookOutlined />} />}
+                    title={item.title}
+                    description={item.date}
+                  />
+                </List.Item>
+              )}
+            />
+          </Card>
+
+          {/* Assignments */}
+          <Card title="Pending Assignments" style={{ marginTop: 16 }}>
+            <List
+              size="small"
+              dataSource={[
+                "Maths Homework – Chapter 6",
+                "English Essay Submission",
+                "Science Lab Record",
+              ]}
+              renderItem={(item) => (
+                <List.Item>
+                  <Space>
+                    <FileTextOutlined />
+                    <Text>{item}</Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
+          </Card>
+
+          {/* Quick Actions */}
+          <Card title="Quick Actions" style={{ marginTop: 16 }}>
+            <Space wrap>
+              <Button type="primary">View Attendance</Button>
+              <Button>View Results</Button>
+              <Button>Assignments</Button>
+              <Button>Messages</Button>
+            </Space>
+          </Card>
+        </Col>
       </Row>
-
-      {/* 🔹 Notifications + Activities */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-        <DashboardCol xs={24} md={12}>
-          <Title level={4}>🔔 Notifications</Title>
-          <List
-            dataSource={notifications}
-            renderItem={(item) => (
-              <List.Item>
-                <Badge status={item.type === "info" ? "success" : "warning"} />
-                <Text style={{ marginLeft: 8 }}>{item.title}</Text>
-              </List.Item>
-            )}
-          />
-        </DashboardCol>
-
-        <DashboardCol xs={24} md={12}>
-          <Title level={4}>🏅 Activities</Title>
-          <List
-            dataSource={activities}
-            renderItem={(item) => (
-              <List.Item>
-                <SmileOutlined style={{ marginRight: 8 }} /> {item}
-              </List.Item>
-            )}
-          />
-        </DashboardCol>
-      </Row>
-
-      {/* 🔹 Calendar + Quick Actions */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-        <DashboardCol xs={24} md={16}>
-          <Title level={4}>📅 Academic Calendar</Title>
-          <Calendar fullscreen={false} />
-        </DashboardCol>
-
-        <DashboardCol xs={24} md={8}>
-          <Title level={4}>⚡ Quick Actions</Title>
-          <Button block type="primary" style={{ marginBottom: 8 }}>View Profile</Button>
-          <Button block>Submit Assignment</Button>
-          <Button block style={{ marginTop: 8 }}>Pay Fees</Button>
-          <Button block type="link">Contact Teacher</Button>
-        </DashboardCol>
-      </Row>
-    </div>
+    </>
   );
 };
 

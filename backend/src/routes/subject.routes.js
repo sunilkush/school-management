@@ -5,7 +5,8 @@ import {
   getSubject,
   updateSubject,
   deleteSubject,
-  assignSchoolsToSubject
+  assignSchoolsToSubject,
+  assignTeachersToSubject, // ✅ Add this
 } from "../controllers/subject.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -34,7 +35,10 @@ router.get("/:id", auth, roleMiddleware(ALL_ROLES), getSubject);
 router.put("/:id", auth, roleMiddleware(ADMIN_ROLES), updateSubject);
 
 // ✅ Assign Schools to Subject (Super Admin & School Admin)
-router.put("/assign/:id", auth, roleMiddleware(ADMIN_ROLES), assignSchoolsToSubject);
+router.put("/assign-schools/:id", auth, roleMiddleware(ADMIN_ROLES), assignSchoolsToSubject);
+
+// ✅ Assign Teachers to Subject (Super Admin & School Admin)
+router.put("/assign-teachers/:id", auth, roleMiddleware(ADMIN_ROLES), assignTeachersToSubject);
 
 // ✅ Delete Subject (Super Admin & School Admin)
 router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), deleteSubject);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Card, Input, Button, Modal, Space, Avatar } from "antd";
-import { User, Download, X } from "lucide-react";
+import { Table, Card, Input, Button, Modal, Space, Avatar, Select } from "antd";
+import { User, Download } from "lucide-react";
 
 import {
   fetchAllStudent,
@@ -10,9 +10,10 @@ import {
 import AdmissionForm from "../../../components/forms/AdmissionForm";
 import { activeUser } from "../../../features/authSlice";
 
+const { Option } = Select;
+
 const StudentList = () => {
   const dispatch = useDispatch();
-
   const { studentList = [], schoolStudents = [] } = useSelector(
     (state) => state.students
   );
@@ -20,6 +21,8 @@ const StudentList = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [selectedClass, setSelectedClass] = useState("all");
+  const [selectedSection, setSelectedSection] = useState("all");
 
   const schoolId = user?.school?._id;
   const academicYearId = user?.academicYear?._id;
@@ -70,12 +73,31 @@ const StudentList = () => {
       }))
     : [];
 
-  // Filter by search
-  const filteredStudents = formattedStudents.filter((stu) =>
-    searchText
+  // Generate class and section options dynamically
+  const classOptions = [
+    "all",
+    ...new Set(formattedStudents.map((s) => s.class).filter(Boolean)),
+  ];
+
+  const sectionOptions = [
+    "all",
+    ...new Set(
+      formattedStudents
+        .filter((s) => selectedClass === "all" || s.class === selectedClass)
+        .map((s) => s.section)
+        .filter(Boolean)
+    ),
+  ];
+
+  // Combined filter: search + class + section
+  const filteredStudents = formattedStudents.filter((stu) => {
+    const matchSearch = searchText
       ? stu.name.toLowerCase().includes(searchText.toLowerCase())
-      : true
-  );
+      : true;
+    const matchClass = selectedClass === "all" || stu.class === selectedClass;
+    const matchSection = selectedSection === "all" || stu.section === selectedSection;
+    return matchSearch && matchClass && matchSection;
+  });
 
   // Table columns
   const columns = [
@@ -109,7 +131,7 @@ const StudentList = () => {
     <Card
       title="Students Details"
       extra={
-        <Space>
+        <Space wrap>
           <Input.Search
             placeholder="Search Student"
             value={searchText}
@@ -117,13 +139,40 @@ const StudentList = () => {
             allowClear
             style={{ width: 200 }}
           />
-          <Button icon={<Download size={16} />} >
-            Export
-          </Button>
+
+          <Select
+            value={selectedClass}
+            onChange={(value) => {
+              setSelectedClass(value);
+              setSelectedSection("all"); // reset section on class change
+            }}
+            style={{ width: 160 }}
+          >
+            {classOptions.map((cls) => (
+              <Option key={cls} value={cls}>
+                {cls === "all" ? "All Classes" : cls}
+              </Option>
+            ))}
+          </Select>
+
+          <Select
+            value={selectedSection}
+            onChange={setSelectedSection}
+            style={{ width: 160 }}
+            disabled={selectedClass === "all"}
+          >
+            {sectionOptions.map((sec) => (
+              <Option key={sec} value={sec}>
+                {sec === "all" ? "All Sections" : sec}
+              </Option>
+            ))}
+          </Select>
+
+          <Button icon={<Download size={16} />}>Export</Button>
+
           <Button
             type="primary"
             icon={<User size={16} />}
-            
             onClick={() => setIsModalOpen(true)}
           >
             Student Admission
@@ -140,7 +189,7 @@ const StudentList = () => {
 
       {/* Add Student Modal */}
       <Modal
-        title="Student Admission From"
+        title="Student Admission Form"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
@@ -148,7 +197,6 @@ const StudentList = () => {
         destroyOnClose
       >
         <AdmissionForm onClose={() => setIsModalOpen(false)} />
-          
       </Modal>
     </Card>
   );

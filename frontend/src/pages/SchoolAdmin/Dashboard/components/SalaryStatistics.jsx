@@ -1,46 +1,59 @@
-import React from 'react';
-import { Select } from "antd";
+import React from "react";
+import { Card, Select, Typography, Space, Progress, Row, Col } from "antd";
 
 const { Option } = Select;
+const { Title, Text } = Typography;
+
 const stats = [
-  { title: 'Developer', value: '6k USD', height: 'h-32', color: 'bg-indigo-400' },
-  { title: 'Marketing', value: '3k USD', height: 'h-24', color: 'bg-indigo-300' },
-  { title: 'Sales', value: '2k USD', height: 'h-16', color: 'bg-indigo-200' },
+  { title: "Developer", value: 6000, color: "#6366f1" },
+  { title: "Marketing", value: 3000, color: "#818cf8" },
+  { title: "Sales", value: 2000, color: "#a5b4fc" },
 ];
+
+// Max value for percentage calculation
+const maxValue = Math.max(...stats.map((s) => s.value));
 
 const SalaryStatistics = () => {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border flex justify-between flex-col">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-semibold">Salary Statistics</h3>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-         <Select
-            defaultValue="lastMonth"
-            size="small"
-            style={{ width: 120 }}
-            className="text-gray-600"
-          >
-          <Option value="lastMonth">Last month</Option>
-          <Option value="thisMonth">This month</Option>
-          <Option value="lastWeek">Last week</Option>
+    <Card
+      title="Salary Statistics"
+      extra={
+        <Select defaultValue="lastMonth" size="small" style={{ width: 120 }}>
+          <Option value="lastMonth">Last Month</Option>
+          <Option value="thisMonth">This Month</Option>
+          <Option value="lastWeek">Last Week</Option>
         </Select>
-        </div>
-      </div>
+      }
+      bordered
+      hoverable
+    >
+      <Row gutter={24} align="bottom">
+        {stats.map((item) => {
+          const percent = Math.round((item.value / maxValue) * 100);
 
-      <div className="flex items-end  justify-between space-x-4">
-        {stats.map((item, index) => (
-          <div key={index} className="flex flex-col items-center justify-end flex-1">
-            <div className="mb-2 text-center">
-              <p className="text-sm text-gray-500">{item.title}</p>
-              <p className="text-lg font-semibold text-gray-900">{item.value}</p>
-            </div>
-            <div
-              className={`${item.height} ${item.color} w-full rounded-t-md transition-all duration-300`}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+          return (
+            <Col span={8} key={item.title}>
+              <Space direction="vertical" align="center" style={{ width: "100%" }}>
+                {/* Value */}
+                <Space direction="vertical" align="center" size={0}>
+                  <Text type="secondary">{item.title}</Text>
+                  <Title level={5} style={{ margin: 0 }}>
+                    {item.value / 1000}k USD
+                  </Title>
+                </Space>
+
+                {/* Bar */}
+                <Progress
+                  percent={percent}
+                  showInfo={false}
+                  strokeColor={item.color}
+                />
+              </Space>
+            </Col>
+          );
+        })}
+      </Row>
+    </Card>
   );
 };
 

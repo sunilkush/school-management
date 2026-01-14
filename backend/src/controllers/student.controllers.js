@@ -108,6 +108,7 @@ const registerStudent = asyncHandler(async (req, res) => {
         password: fatherMobile || "parent@123",
         roleId: parentRole._id,
         schoolId,
+        students: [studentUser._id],
       });
     }
   }

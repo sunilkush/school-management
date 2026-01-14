@@ -1,48 +1,95 @@
-import React from 'react';
-import SummaryCard from './SummaryCard';
+import React from "react";
+import { Card, Row, Col, Statistic, Progress, Typography, Space } from "antd";
+import {
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  UserAddOutlined,
+  TeamOutlined,
+  SolutionOutlined,
+  DollarOutlined,
+} from "@ant-design/icons";
+
+const { Text } = Typography;
 
 const cardData = [
   {
     title: "New Admission",
-    value: "1203",
+    value: 1203,
     percentage: 10,
-    trend: "10% increase",
-    color: "purple",
-    label: "Last month",
+    trend: "increase",
+    icon: <UserAddOutlined />,
   },
   {
-    title: "Total Student",
-    value: "12300",
+    title: "Total Students",
+    value: 12300,
     percentage: 20,
-    trend: "20% increase",
-    color: "blue",
-    label: "Last month",
+    trend: "increase",
+    icon: <TeamOutlined />,
   },
   {
-    title: "Total Teacher",
-    value: "1280k",
+    title: "Total Teachers",
+    value: 1280,
     percentage: 20,
-    trend: "20% increase",
-    color: "green",
-    label: "Last month",
+    trend: "increase",
+    icon: <SolutionOutlined />,
   },
   {
     title: "Income",
-    value: "65865k",
+    value: 65865,
     percentage: 20,
-    trend: "20% Decrease",
-    color: "orange",
-    label: "Last month",
+    trend: "decrease",
+    icon: <DollarOutlined />,
   },
 ];
 
 const SummaryCards = () => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-      {cardData.map((card, index) => (
-        <SummaryCard key={index} {...card} />
-      ))}
-    </div>
+    <Row gutter={[16, 16]}>
+      {cardData.map((item, index) => {
+        const isDecrease = item.trend === "decrease";
+
+        return (
+          <Col xs={24} sm={12} lg={12} key={index}>
+            <Card hoverable bordered>
+              <Space
+                align="start"
+                style={{ width: "100%", justifyContent: "space-between" }}
+              >
+                {/* Left Content */}
+                <Space direction="vertical">
+                  <Statistic
+                    title={item.title}
+                    value={item.value}
+                    prefix={item.icon}
+                  />
+
+                  <Text
+                    type={isDecrease ? "danger" : "success"}
+                    style={{ fontSize: 13 }}
+                  >
+                    {isDecrease ? (
+                      <ArrowDownOutlined />
+                    ) : (
+                      <ArrowUpOutlined />
+                    )}{" "}
+                    {item.percentage}% {isDecrease ? "decrease" : "increase"} ·
+                    Last Month
+                  </Text>
+                </Space>
+
+                {/* Right Progress */}
+                <Progress
+                  type="circle"
+                  percent={item.percentage}
+                  width={70}
+                  strokeColor={isDecrease ? "#ff4d4f" : "#52c41a"}
+                />
+              </Space>
+            </Card>
+          </Col>
+        );
+      })}
+    </Row>
   );
 };
 
