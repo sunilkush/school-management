@@ -12,7 +12,6 @@ import {
   InputNumber,
   message,
 } from "antd";
-
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -28,7 +27,7 @@ const AdmissionForm = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
-  const { lastStudent, registrationNumber } = useSelector(
+  const { lastStudent = [], registrationNumber } = useSelector(
     (state) => state.students
   );
   const { user } = useSelector((state) => state.auth);
@@ -52,11 +51,11 @@ const AdmissionForm = () => {
   useEffect(() => {
     if (registrationNumber) {
       form.setFieldsValue({
-        registrationNumber,
-        role: "student",
+        registrationNumber: registrationNumber,
       });
     }
   }, [registrationNumber, form]);
+
 
   const handleClassChange = (classId) => {
     const selectedClass = classList.find((c) => c._id === classId);
@@ -84,7 +83,7 @@ const AdmissionForm = () => {
   };
 
   return (
-    <Card title="Student Admission Form">
+    <Card >
       <Form layout="vertical" form={form} onFinish={onFinish}>
         <Tabs defaultActiveKey="student">
 
@@ -98,7 +97,7 @@ const AdmissionForm = () => {
               </Col>
 
               <Col md={8}>
-                <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]}>
+                <Form.Item name="email" label="Student Email" rules={[{ required: true, type: "email" }]}>
                   <Input />
                 </Form.Item>
               </Col>
@@ -136,11 +135,11 @@ const AdmissionForm = () => {
               </Col>
 
               <Col md={8}>
-                <Form.Item name="registrationNumber" label="Registration No" style={{ marginBottom: "0px" }}>
-                  <Input disabled />
+                <Form.Item name="registrationNumber" label="Registration No" style={{ margin: 0 }}>
+                  <Input disabled value={registrationNumber} />
                 </Form.Item>
                 {lastStudent && (
-                  <small className="text-red-500">
+                  <small className="text-red-400">
                     Last Reg No: {lastStudent.registrationNumber}
                   </small>
                 )}
@@ -159,7 +158,13 @@ const AdmissionForm = () => {
               </Col>
 
               <Col md={8}>
-                <Form.Item name="mobileNumber" label="Mobile Number" rules={[{ required: true }]}>
+                <Form.Item name="mobileNumber" label="Student Mobile" rules={[{ required: true }]}>
+                  <Input maxLength={10} />
+                </Form.Item>
+              </Col>
+
+              <Col md={8}>
+                <Form.Item name="smsMobile" label="SMS Mobile">
                   <Input maxLength={10} />
                 </Form.Item>
               </Col>
@@ -176,70 +181,68 @@ const AdmissionForm = () => {
               </Col>
 
               <Col md={8}>
-                <Form.Item name="birthFormId" label="Birth Form ID / NIC">
+                <Form.Item name="birthFormId" label="Birth Form ID">
                   <Input />
                 </Form.Item>
               </Col>
 
               <Col md={8}>
                 <Form.Item name="orphan" label="Orphan">
-                  <Select options={[{ value: "Yes" }, { value: "No" }]} />
+                  <Select options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
                 </Form.Item>
               </Col>
 
               <Col md={8}>
-                <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Please select gender" }]}>
+                <Form.Item name="gender" label="Gender" rules={[{ required: true }]}>
                   <Select options={[{ value: "Male" }, { value: "Female" }]} />
                 </Form.Item>
               </Col>
 
               <Col md={8}>
-                <Form.Item name="caste" label="Caste">
+                <Form.Item name="cast" label="Caste">
                   <Input />
                 </Form.Item>
               </Col>
 
               <Col md={8}>
-                <Form.Item
-                  name="religion"
-                  label="Religion"
-                  rules={[{ required: true, message: "Please select religion" }]}
-                >
-                  <Select placeholder="Select Religion">
-                    {["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"].map((r) => (
-                      <Select.Option key={r} value={r}>
-                        {r}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                <Form.Item name="religion" label="Religion">
+                  <Select options={["Hindu", "Muslim", "Christian", "Sikh", "Other"].map(r => ({ value: r }))} />
                 </Form.Item>
               </Col>
 
               <Col md={8}>
-                <Form.Item
-                  name="bloodGroup"
-                  label="Blood Group"
-                  rules={[{ required: true, message: "Please select blood group" }]}
-                >
-                  <Select placeholder="Select Blood Group">
-                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-","Rh"].map((bg) => (
-                      <Select.Option key={bg} value={bg}>
-                        {bg}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                <Form.Item name="bloodGroup" label="Blood Group">
+                  <Select options={["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(b => ({ value: b }))} />
                 </Form.Item>
               </Col>
 
               <Col md={8}>
-                <Form.Item name="previousSchool" label="Previous School">
-                  <Input />
+                <Form.Item name="osc" label="OSC">
+                  <Select options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
                 </Form.Item>
               </Col>
 
               <Col md={8}>
-                <Form.Item name="siblings" label="Total Siblings">
+                <Form.Item name="siblings" label="Siblings">
                   <InputNumber className="w-full" />
+                </Form.Item>
+              </Col>
+
+              <Col md={24}>
+                <Form.Item name="identificationMark" label="Identification Mark">
+                  <Input />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="family" label="Family Info">
+                  <TextArea rows={3} />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="disease" label="Disease">
+                  <TextArea rows={3} />
                 </Form.Item>
               </Col>
 
@@ -250,7 +253,7 @@ const AdmissionForm = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="notes" label="Additional Notes">
+                <Form.Item name="notes" label="Notes">
                   <TextArea rows={3} />
                 </Form.Item>
               </Col>
@@ -260,88 +263,30 @@ const AdmissionForm = () => {
           {/* ================= FATHER INFO ================= */}
           <TabPane tab="Father Info" key="father">
             <Row gutter={16}>
-              <Col md={8}>
-                <Form.Item name="fatherName" label="Father Name" rules={[{ required: true }]}>
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="fatherNID" label="Father NID">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="fatherOccupation" label="Occupation">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="fatherMobile" label="Mobile" rules={[{ required: true }]}>
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="fatherEducation" label="Education">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="fatherIncome" label="Income">
-                  <InputNumber className="w-full" />
-                </Form.Item>
-              </Col>
+              <Col md={8}><Form.Item name="fatherName" label="Father Name" rules={[{ required: true }]}><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="fatherMobile" label="Father Mobile" rules={[{ required: true }]}><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="fatherEmail" label="Father Email"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="fatherOccupation" label="Occupation"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="fatherEducation" label="Education"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="fatherIncome" label="Income"><InputNumber className="w-full" /></Form.Item></Col>
             </Row>
           </TabPane>
 
           {/* ================= MOTHER INFO ================= */}
           <TabPane tab="Mother Info" key="mother">
             <Row gutter={16}>
-              <Col md={8}>
-                <Form.Item name="motherName" label="Mother Name" rules={[{ required: true }]}>
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="motherNID" label="Mother NID">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="motherOccupation" label="Occupation">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="motherMobile" label="Mobile" rules={[{ required: true }]}>
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="motherEducation" label="Education">
-                  <Input />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="motherIncome" label="Income">
-                  <InputNumber className="w-full" />
-                </Form.Item>
-              </Col>
+              <Col md={8}><Form.Item name="motherName" label="Mother Name"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="motherMobile" label="Mother Mobile"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="motherEmail" label="Mother Email"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="motherOccupation" label="Occupation"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="motherEducation" label="Education"><Input /></Form.Item></Col>
+              <Col md={8}><Form.Item name="motherIncome" label="Income"><InputNumber className="w-full" /></Form.Item></Col>
             </Row>
           </TabPane>
 
         </Tabs>
 
-        <div className="flex justify-end mt-6">
+        <div style={{ textAlign: "right", marginTop: 24 }}>
           <Button type="primary" htmlType="submit">
             Submit Admission
           </Button>

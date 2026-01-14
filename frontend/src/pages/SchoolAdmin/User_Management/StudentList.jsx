@@ -126,7 +126,7 @@ const StudentList = () => {
             
             onClick={() => setIsModalOpen(true)}
           >
-            Add Student
+            Student Admission
           </Button>
         </Space>
       }
@@ -140,7 +140,7 @@ const StudentList = () => {
 
       {/* Add Student Modal */}
       <Modal
-        title="Add Student"
+        title="Student Admission From"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
@@ -148,7 +148,7 @@ const StudentList = () => {
         destroyOnClose
       >
         <AdmissionForm onClose={() => setIsModalOpen(false)} />
-          <Button icon={<X size={16} />}>Close</Button>
+          
       </Modal>
     </Card>
   );

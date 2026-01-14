@@ -33,12 +33,12 @@ import Permissions from "./pages/SuperAdmin/System_Settings/Permissions.jsx";
 import AcademicYears from "./pages/SuperAdmin/Master_Settings/AcademicYears.jsx";
 import Modules from "./pages/SuperAdmin/Modules/Modules.jsx";
 import SettingsPage from "./pages/SchoolAdmin/Settings/SettingsPage.jsx";
-import UsersPage from "./pages/SchoolAdmin/Teachers_&_Students/UsersList.jsx";
-import AddStudent from "./pages/SchoolAdmin/Teachers_&_Students/AddStudent.jsx";
-import AddTeacher from "./pages/SchoolAdmin/Teachers_&_Students/AddTeacher.jsx";
-import AddParent from "./pages/SchoolAdmin/Teachers_&_Students/AddParent.jsx";
-import Classes from "./pages/SchoolAdmin/Classes_&_Subjects/Classes.jsx";
-import Subjects from "./pages/SchoolAdmin/Classes_&_Subjects/Subjects.jsx";
+import UsersPage from "./pages/SchoolAdmin/User_Management/UsersList.jsx";
+import AddStudent from "./pages/SchoolAdmin/User_Management/AddStudent.jsx";
+import AddTeacher from "./pages/SchoolAdmin/User_Management/AddTeacher.jsx";
+import AddParent from "./pages/SchoolAdmin/User_Management/AddParent.jsx";
+import Classes from "./pages/SchoolAdmin/Academic_Management/Classes.jsx";
+import Subjects from "./pages/SchoolAdmin/Academic_Management/Subjects.jsx";
 import ScheduleExams from "./pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx";
 import EnterGrades from "./pages/SchoolAdmin/Exams_&_Grades/EnterGrades.jsx";
 import StudentAttendance from "./pages/SchoolAdmin/Attendance/StudentAttendance.jsx";
@@ -58,7 +58,7 @@ import SendNotification from "./pages/SchoolAdmin/Communication/SendNotification
 import SmsEmailHistory from "./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx";
-import StudentList from "./pages/SchoolAdmin/Teachers_&_Students/StudentList.jsx"
+import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
 import ExamReports from './pages/SchoolAdmin/Exams_&_Grades/ExamReport.jsx';
 import QuestionBank from './pages/SchoolAdmin/Exams_&_Grades/QuestionBank.jsx';

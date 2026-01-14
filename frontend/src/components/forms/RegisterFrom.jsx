@@ -9,7 +9,6 @@ import {
   Checkbox,
   Typography,
   Alert,
-  Space,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 
@@ -21,7 +20,7 @@ import {
   fetchAllUser,
 } from "../../features/authSlice";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const RegisterForm = ({ onClose }) => {
   const [form] = Form.useForm();
@@ -44,7 +43,7 @@ const RegisterForm = ({ onClose }) => {
       confirmPassword: "",
       roleId: "",
       schoolId:
-        currentUserRole !== "super admin" ? currentSchoolId || "" : "",
+        currentUserRole === "school admin" ? currentSchoolId : undefined,
       isActive: false,
       avatar: null,
     }),
@@ -54,89 +53,78 @@ const RegisterForm = ({ onClose }) => {
   const [filteredRoles, setFilteredRoles] = useState([]);
   const [message, setMessage] = useState("");
 
-  // 🔹 Fetch base data
+  /* ✅ FIX 1: API only if data not present */
   useEffect(() => {
-    dispatch(fetchSchools());
-    dispatch(fetchRoles());
-  }, [dispatch]);
+    if (!schools || schools.length === 0) {
+      dispatch(fetchSchools());
+    }
+    if (!roles || roles.length === 0) {
+      dispatch(fetchRoles());
+    }
+  }, [dispatch, schools?.length, roles?.length]);
 
-  // 🔹 Filter roles
+  /* ✅ FIX 2: set school only once */
   useEffect(() => {
-    let updatedRoles = [];
+    if (currentUserRole === "school admin" && currentSchoolId) {
+      form.setFieldsValue({ schoolId: currentSchoolId });
+    }
+  }, [currentUserRole, currentSchoolId]);
+
+  /* ✅ FIX 3: role filtering without re-trigger */
+  useEffect(() => {
+    if (!roles?.length || !currentUserRole) return;
 
     if (currentUserRole === "super admin") {
-      updatedRoles = roles.filter(
-        (role) =>
-          role.name.toLowerCase() === "school admin"
+      setFilteredRoles(
+        roles.filter((r) => r.name.toLowerCase() === "school admin")
       );
     } else if (currentUserRole === "school admin") {
-      updatedRoles = roles.filter(
-        (role) =>
-          !["super admin", "school admin", "student", "parent"].includes(
-            role.name.toLowerCase()
-          )
+      setFilteredRoles(
+        roles.filter(
+          (r) =>
+            !["super admin", "school admin", "student", "parent"].includes(
+              r.name.toLowerCase()
+            )
+        )
       );
     }
-
-    setFilteredRoles(updatedRoles);
   }, [roles, currentUserRole]);
 
-  // 🔹 Success handling
+  /* ✅ FIX 4: success logic safe */
   useEffect(() => {
-    if (success) {
-      setMessage("🎉 User registered successfully!");
-      form.resetFields();
-      dispatch(fetchAllUser());
+    if (!success) return;
 
-      setTimeout(() => {
-        setMessage("");
-        dispatch(resetAuthState());
-        onClose?.();
-      }, 2000);
-    }
-  }, [success, dispatch, form, onClose]);
+    setMessage("User registered successfully");
+    form.resetFields();
+    dispatch(fetchAllUser());
 
-  // 🔹 Avatar resize & validation
+    const timer = setTimeout(() => {
+      setMessage("");
+      dispatch(resetAuthState());
+      onClose?.();
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [success]);
+
   const handleAvatarUpload = (file) => {
-    return new Promise((resolve, reject) => {
-      if (file.size > 1024 * 1024) {
-        reject("Image must be under 1MB");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = 50;
-          canvas.height = 50;
-          canvas.getContext("2d").drawImage(img, 0, 0, 50, 50);
-
-          canvas.toBlob((blob) => {
-            if (!blob || blob.size > 50 * 1024) {
-              reject("Image too large after resize");
-              return;
-            }
-            resolve(
-              new File([blob], file.name, { type: file.type })
-            );
-          });
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
+    if (file.size > 1024 * 1024) {
+      return Upload.LIST_IGNORE;
+    }
+    return false;
   };
 
-  // 🔹 Submit
-  const onFinish = async (values) => {
+  const onFinish = (values) => {
     const formData = new FormData();
 
+    if (currentUserRole === "school admin") {
+      values.schoolId = currentSchoolId;
+    }
+
     Object.entries(values).forEach(([key, value]) => {
-      if (key === "avatar" && value) {
+      if (key === "avatar" && value?.file) {
         formData.append("avatar", value.file.originFileObj);
-      } else {
+      } else if (value !== undefined && value !== null) {
         formData.append(key, value);
       }
     });
@@ -146,16 +134,7 @@ const RegisterForm = ({ onClose }) => {
 
   return (
     <>
-      <Title level={4} style={{ textAlign: "center" }}>
-        Register User
-      </Title>
-
-      <Text
-        type="secondary"
-        style={{ display: "block", textAlign: "center", marginBottom: 16 }}
-      >
-        Create staff account for your school
-      </Text>
+      <Text type="secondary">Create user account</Text>
 
       {message && <Alert type="success" message={message} showIcon />}
       {error && <Alert type="error" message={error} showIcon />}
@@ -167,23 +146,16 @@ const RegisterForm = ({ onClose }) => {
         onFinish={onFinish}
         style={{ marginTop: 16 }}
       >
-        <Form.Item
-          label="Full Name"
-          name="name"
-          rules={[{ required: true, message: "Name is required" }]}
-        >
-          <Input placeholder="Enter full name" />
+        <Form.Item label="Full Name" name="name" rules={[{ required: true }]}>
+          <Input />
         </Form.Item>
 
         <Form.Item
           label="Email"
           name="email"
-          rules={[
-            { required: true },
-            { type: "email", message: "Enter valid email" },
-          ]}
+          rules={[{ required: true }, { type: "email" }]}
         >
-          <Input placeholder="Email address" />
+          <Input />
         </Form.Item>
 
         <Form.Item
@@ -202,10 +174,9 @@ const RegisterForm = ({ onClose }) => {
             { required: true },
             ({ getFieldValue }) => ({
               validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject("Passwords do not match");
+                return !value || getFieldValue("password") === value
+                  ? Promise.resolve()
+                  : Promise.reject("Passwords do not match");
               },
             }),
           ]}
@@ -214,44 +185,29 @@ const RegisterForm = ({ onClose }) => {
         </Form.Item>
 
         {currentUserRole === "super admin" && (
-          <Form.Item
-            label="School"
-            name="schoolId"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="School" name="schoolId" rules={[{ required: true }]}>
             <Select placeholder="Select school">
-              {schools.map((school) => (
-                <Select.Option key={school._id} value={school._id}>
-                  {school.name}
+              {schools.map((s) => (
+                <Select.Option key={s._id} value={s._id}>
+                  {s.name}
                 </Select.Option>
               ))}
             </Select>
           </Form.Item>
         )}
 
-        <Form.Item
-          label="Role"
-          name="roleId"
-          rules={[{ required: true }]}
-        >
+        <Form.Item label="Role" name="roleId" rules={[{ required: true }]}>
           <Select placeholder="Select role">
-            {filteredRoles.map((role) => (
-              <Select.Option key={role._id} value={role._id}>
-                {role.name}
+            {filteredRoles.map((r) => (
+              <Select.Option key={r._id} value={r._id}>
+                {r.name}
               </Select.Option>
             ))}
           </Select>
         </Form.Item>
 
-        <Form.Item
-          label="Avatar"
-          name="avatar"
-          valuePropName="file"
-        >
-          <Upload
-            beforeUpload={handleAvatarUpload}
-            maxCount={1}
-          >
+        <Form.Item label="Avatar" name="avatar">
+          <Upload beforeUpload={handleAvatarUpload} maxCount={1}>
             <Button icon={<UploadOutlined />}>Upload Avatar</Button>
           </Upload>
         </Form.Item>
@@ -260,16 +216,9 @@ const RegisterForm = ({ onClose }) => {
           <Checkbox>Active User</Checkbox>
         </Form.Item>
 
-        <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={isLoading}
-            block
-          >
-            Register User
-          </Button>
-        </Form.Item>
+        <Button type="primary" htmlType="submit" loading={isLoading} block>
+          Register User
+        </Button>
       </Form>
     </>
   );

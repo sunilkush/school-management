@@ -116,7 +116,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Teachers & Staff", path: "schooladmin/users" },
         { title: "Students", path: "schooladmin/studentList" },
-        { title: "Parents", path: "schooladmin/parents-register" },
+       
       ],
     },
 

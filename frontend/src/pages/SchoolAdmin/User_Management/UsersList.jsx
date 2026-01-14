@@ -44,23 +44,30 @@ const UsersPage = () => {
   }, [dispatch, schoolId]);
 
   // Filter users based on role
-  const filteredUsers = users?.filter((u) => {
-    if (!u.isActive) return false;
-    const sameSchool = u.school?._id === schoolId;
+const filteredUsers = users?.filter((u) => {
+  if (!u.isActive) return false;
 
-    if (role?.toLowerCase() === "teacher") {
-      return sameSchool && u.role?.name?.toLowerCase() === "student";
+  const sameSchool = u.school?._id === schoolId;
+  if (!sameSchool) return false;
+
+  const userRole = u.role?.name?.toLowerCase();
+
+  // 👨‍🏫 Teacher → only students
+  if (role?.toLowerCase() === "teacher") {
+    return userRole === "student";
+  }
+
+  // 🏫 School Admin → all staff (except super admin + student + parent)
+  if (role?.toLowerCase() === "school admin") {
+    if (selectedRole === "all") {
+      return !["super admin", "student", "parent"].includes(userRole);
     }
+    return userRole === selectedRole;
+  }
 
-    if (role?.toLowerCase() === "school admin") {
-      if (selectedRole === "all") {
-        return sameSchool && ["teacher", "school admin"].includes(u.role?.name?.toLowerCase());
-      }
-      return sameSchool && u.role?.name?.toLowerCase() === selectedRole;
-    }
+  return false;
+});
 
-    return false;
-  });
 
   const columns = [
     {
@@ -150,16 +157,19 @@ const UsersPage = () => {
 
             {role?.toLowerCase() === "school admin" && (
               <Space wrap>
-                <Select
+               <Select
                   value={selectedRole}
                   style={{ minWidth: 160 }}
                   onChange={setSelectedRole}
                   options={[
                     { value: "all", label: "All Roles" },
                     { value: "teacher", label: "Teachers" },
-                    { value: "school admin", label: "School Admins" },
+                    { value: "staff", label: "Staff" },
+                    { value: "accountant", label: "Accountants" },
+                    { value: "librarian", label: "Librarians" },
                   ]}
                 />
+
 
                 <Button
                   type="primary"

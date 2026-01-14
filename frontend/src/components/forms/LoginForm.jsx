@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, resetAuthState } from "../../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
-
 import {
   Layout,
   Row,
@@ -15,9 +14,8 @@ import {
   Card,
   Alert,
 } from "antd";
-
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import logo from "../../assets/logo.png";
+
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -25,7 +23,6 @@ const { Content } = Layout;
 const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { loading, error, user } = useSelector((state) => state.auth);
   const [navigated, setNavigated] = useState(false);
 
@@ -42,55 +39,57 @@ const LoginForm = () => {
         accountant: "/dashboard/accountant",
         staff: "/dashboard/staff",
       };
-
-      const path = roleRoutes[roleName];
-      if (path) {
+      if (roleRoutes[roleName]) {
         setNavigated(true);
-        navigate(path);
+        navigate(roleRoutes[roleName]);
       }
     }
   }, [roleName, navigate, navigated]);
 
-  const onFinish = (values) => {
-    dispatch(login(values));
-  };
-
-  const onValuesChange = () => {
-    if (error) dispatch(resetAuthState());
-  };
+  const onFinish = (values) => dispatch(login(values));
+  const onValuesChange = () => error && dispatch(resetAuthState());
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Content>
-        <Row
-          align="middle"
-          justify="center"
-          style={{ minHeight: "100vh" }}
-        >
-          <Col xs={22} sm={16} md={10} lg={8}>
-            <Card bordered={false} style={{ textAlign: "center" }}>
-              {/* Logo */}
-              <img
-                src={logo}
-                alt="Logo"
-                style={{ height: 28, marginBottom: 16 }}
-              />
-
-              <Title level={3} style={{ marginBottom: 4 }}>
-                Welcome Back
+        <Row style={{ minHeight: "100vh",margin:"0px auto"}}>
+          {/* LEFT BRAND PANEL */}
+          
+          {/* RIGHT LOGIN PANEL */}
+          <Col
+            xs={24}
+            md={24}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 24,
+            }}
+          >
+            <Card
+              style={{
+                width: "100%",
+                maxWidth: 420,
+                boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                borderRadius: 12,
+              }}
+              bordered={false}
+            >
+              <Title level={3} style={{ marginBottom: 0 }}>
+                Welcome Back 👋
               </Title>
               <Text type="secondary">
-                Please enter your login details
+                Login to continue to your dashboard
               </Text>
 
               <Form
                 layout="vertical"
-                style={{ marginTop: 24, textAlign: "left" }}
+                style={{ marginTop: 24 }}
                 onFinish={onFinish}
                 onValuesChange={onValuesChange}
               >
                 <Form.Item
-                  label="Email"
+                  label="Email Address"
                   name="email"
                   rules={[
                     { required: true, message: "Email is required" },
@@ -98,21 +97,21 @@ const LoginForm = () => {
                   ]}
                 >
                   <Input
+                    size="large"
                     prefix={<MailOutlined />}
-                    placeholder="Enter email"
+                    placeholder="admin@example.com"
                   />
                 </Form.Item>
 
                 <Form.Item
                   label="Password"
                   name="password"
-                  rules={[
-                    { required: true, message: "Password is required" },
-                  ]}
+                  rules={[{ required: true, message: "Password is required" }]}
                 >
                   <Input.Password
+                    size="large"
                     prefix={<LockOutlined />}
-                    placeholder="Enter password"
+                    placeholder="••••••••"
                   />
                 </Form.Item>
 
@@ -120,7 +119,6 @@ const LoginForm = () => {
                   <Form.Item name="remember" valuePropName="checked">
                     <Checkbox>Remember me</Checkbox>
                   </Form.Item>
-
                   <Link to="/forgot-password">Forgot password?</Link>
                 </Row>
 
@@ -136,13 +134,14 @@ const LoginForm = () => {
                 <Button
                   type="primary"
                   htmlType="submit"
+                  size="large"
                   block
                   loading={loading}
                 >
                   Sign In
                 </Button>
 
-                <Button block style={{ marginTop: 12 }}>
+                <Button block size="large" style={{ marginTop: 12 }}>
                   Sign in with Google
                 </Button>
               </Form>
@@ -154,8 +153,7 @@ const LoginForm = () => {
                   textAlign: "center",
                 }}
               >
-                Don’t have an account?{" "}
-                <Link to="/register">Sign up</Link>
+                Don’t have an account? <Link to="/register">Sign up</Link>
               </Text>
             </Card>
           </Col>

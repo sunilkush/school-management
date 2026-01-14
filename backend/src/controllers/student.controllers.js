@@ -14,44 +14,24 @@ import mongoose from "mongoose";
 // ✅ Register and admit student
 const registerStudent = asyncHandler(async (req, res) => {
   const {
-    studentName, email, password, schoolId, classId, sectionId, admissionDate,
-    feeDiscount, smsMobile, dateOfBirth, birthFormId, orphan, gender, cast,
-    osc, identificationMark, previousSchool, religion, bloodGroup, previousId,
-    family, disease, notes, siblings, address, fatherName, fatherNID, fatherOccupation,
-    fatherEducation, fatherMobile, fatherProfession, fatherIncome,
-    motherName, motherNID, motherOccupation, motherEducation, motherMobile,
-    motherProfession, motherIncome, academicYearId, mobileNumber
-  } = req.body;
+    studentName,
+    email,
+    password,
+    schoolId,
+    classId,
+    sectionId,
+    academicYearId,
+    admissionDate,
+    feeDiscount,
+    smsMobile,
+    mobileNumber,
 
-  if (!studentName || !email || !password || !classId || !schoolId || !sectionId || !academicYearId) {
-    throw new ApiError(400, "Missing required fields including sectionId and academicYearId");
-  }
-
-  // 🔹 Get student role
-  const roleDoc = await Role.findOne({ name: { $regex: /^student$/i } });
-  if (!roleDoc) throw new ApiError(400, "Student role not found");
-
-  // 🔹 Create user if not exists
-  let user = await User.findOne({ email });
-  if (!user) {
-    user = await User.create({
-      name: studentName,
-      email,
-      password,
-      roleId: roleDoc._id,
-      schoolId,
-    });
-  }
-
-  // 🔹 Create student (permanent info)
-  const student = await Student.create({
-    userId: user._id,
+    // Student personal
     dateOfBirth,
     birthFormId,
     gender,
-    religion,
     cast,
-    osc,
+    religion,
     bloodGroup,
     address,
     identificationMark,
@@ -61,6 +41,97 @@ const registerStudent = asyncHandler(async (req, res) => {
     notes,
     siblings,
     previousSchool,
+
+    // Father
+    fatherName,
+    fatherNID,
+    fatherOccupation,
+    fatherEducation,
+    fatherMobile,
+    fatherProfession,
+    fatherIncome,
+    fatherEmail,
+
+    // Mother
+    motherName,
+    motherNID,
+    motherOccupation,
+    motherEducation,
+    motherMobile,
+    motherProfession,
+    motherIncome,
+    motherEmail,
+  } = req.body;
+
+  if (!studentName || !email || !password || !schoolId || !classId || !sectionId || !academicYearId) {
+    throw new ApiError(400, "Required fields missing");
+  }
+
+  /* ===========================
+     1️⃣ STUDENT USER CREATION
+  ============================ */
+  const studentRole = await Role.findOne({ name: /student/i });
+  if (!studentRole) throw new ApiError(400, "Student role not found");
+
+  let studentUser = await User.findOne({ email });
+  if (!studentUser) {
+    studentUser = await User.create({
+      name: studentName,
+      email,
+      password,
+      roleId: studentRole._id,
+      schoolId,
+    });
+  }
+
+  /* ===========================
+     2️⃣ PARENT USER CREATION
+  ============================ */
+  const parentRole = await Role.findOne({ name: /parent/i });
+  if (!parentRole) throw new ApiError(400, "Parent role not found");
+
+  let parentUser = null;
+
+  if (fatherMobile || fatherEmail) {
+    parentUser = await User.findOne({
+      $or: [
+        fatherEmail ? { email: fatherEmail } : null,
+        fatherMobile ? { mobile: fatherMobile } : null,
+      ].filter(Boolean),
+    });
+
+    if (!parentUser) {
+      parentUser = await User.create({
+        name: fatherName || "Parent",
+        email: fatherEmail,
+        mobile: fatherMobile,
+        password: fatherMobile || "parent@123",
+        roleId: parentRole._id,
+        schoolId,
+      });
+    }
+  }
+
+  /* ===========================
+     3️⃣ STUDENT PROFILE
+  ============================ */
+  const student = await Student.create({
+    userId: studentUser._id,
+    dateOfBirth,
+    birthFormId,
+    gender,
+    cast,
+    religion,
+    bloodGroup,
+    address,
+    identificationMark,
+    orphan,
+    family,
+    disease,
+    notes,
+    siblings,
+    previousSchool,
+    parents: parentUser ? [parentUser._id] : [],
     fatherInfo: {
       name: fatherName,
       NID: fatherNID,
@@ -69,6 +140,7 @@ const registerStudent = asyncHandler(async (req, res) => {
       mobile: fatherMobile,
       profession: fatherProfession,
       income: fatherIncome,
+      email: fatherEmail,
     },
     motherInfo: {
       name: motherName,
@@ -78,48 +150,56 @@ const registerStudent = asyncHandler(async (req, res) => {
       mobile: motherMobile,
       profession: motherProfession,
       income: motherIncome,
+      email: motherEmail,
     },
   });
 
-  // 🔹 Get last registration number
-// 🔹 Get last registration number
-const lastRegNumber = await StudentEnrollment.find({ schoolId, academicYearId })
-  .sort({ createdAt: -1 })
-  .limit(1)
-  .select("registrationNumber");
+  /* ===========================
+     4️⃣ REGISTRATION NUMBER
+  ============================ */
+  const lastReg = await StudentEnrollment.find({ schoolId, academicYearId })
+    .sort({ createdAt: -1 })
+    .limit(1)
+    .select("registrationNumber");
 
-const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
-const yearLabel = academicYearDoc?.code || new Date().getFullYear();
+  const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
+  const yearLabel = academicYearDoc?.code || new Date().getFullYear();
 
-const registrationNumber = generateNextRegNumber(lastRegNumber?.[0]?.registrationNumber, {
-  prefix: "REG",
-  year: yearLabel,
-  digits: 4,
-});
+  const registrationNumber = generateNextRegNumber(
+    lastReg?.[0]?.registrationNumber,
+    { prefix: "REG", year: yearLabel, digits: 4 }
+  );
 
+  /* ===========================
+     5️⃣ ENROLLMENT
+  ============================ */
+  const enrollment = await StudentEnrollment.create({
+    studentId: student._id,
+    schoolId,
+    academicYearId,
+    registrationNumber,
+    classId,
+    sectionId,
+    admissionDate,
+    feeDiscount,
+    smsMobile,
+    mobileNumber,
+  });
 
-// 🔹 Create enrollment
-const enrollment = await StudentEnrollment.create({
-  studentId: student._id,
-  schoolId,
-  academicYearId,
-  registrationNumber,
-  classId,
-  sectionId,
-  admissionDate,
-  feeDiscount,
-  smsMobile,
-  mobileNumber,
-});
-
-  // 🔹 Add student to ClassSection
-  const classSection = await ClassSection.findOne({ classId, sectionId, schoolId, academicYearId });
-  if (classSection) {
-    await ClassSection.findByIdAndUpdate(classSection._id, { $addToSet: { students: user._id } });
-  }
+  /* ===========================
+     6️⃣ CLASS SECTION MAP
+  ============================ */
+  await ClassSection.findOneAndUpdate(
+    { classId, sectionId, schoolId, academicYearId },
+    { $addToSet: { students: studentUser._id } }
+  );
 
   return res.status(201).json(
-    new ApiResponse(201, { student, enrollment }, "Student registered and enrolled successfully")
+    new ApiResponse(
+      201,
+      { student, enrollment, parent: parentUser },
+      "Student & Parent registered successfully"
+    )
   );
 });
 
