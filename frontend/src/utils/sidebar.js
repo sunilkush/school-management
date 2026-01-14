@@ -281,4 +281,110 @@ export const sidebarMenu = {
     { title: "Transport Reports", path: "transport/reports", icon: FileBarChart2 },
     { title: "Transport Settings", path: "transport/settings", icon: Settings },
   ],
+  /* ================= SUPPORT STAFF ================= */
+  "support staff": [
+    { title: "Dashboard", path: "support", icon: LayoutDashboard },
+    { title: "Assigned Tasks", path: "support/tasks", icon: ClipboardList },
+    { title: "Attendance", path: "support/attendance", icon: Clock },
+    { title: "Notices", path: "support/notices", icon: Bell },
+    { title: "Messages", path: "support/messages", icon: MessageSquare, },
+    {title: "Profile",path: "support/profile",icon: User,},
+  ],
+  /* ================= SECURITY ================= */
+  security: [
+    { title: "Dashboard", path: "security", icon: LayoutDashboard },
+    {title: "Visitor Entry",path: "security/visitors",icon: UserPlus,},
+    {title: "Gate Log",path: "security/gate-log",icon: ClipboardCheck,},
+    {title: "Shift Attendance",path: "security/attendance",icon: Clock,},
+    {title: "Emergency Alerts",path: "security/alerts",icon: Bell,},
+    {title: "Profile", path: "security/profile",icon: User,},
+  ],
+  /* ================= PRINCIPAL ================= */
+  "principal": [
+    { title: "Dashboard", path: "principal", icon: LayoutDashboard },
+    {title: "School Overview",path: "principal/overview",icon: School,},
+    {title: "Staff Management",path: "principal/staff",icon: Users,},
+    {title: "Student Management",path: "principal/students",icon: Users,},
+    {title: "Academic Reports",path: "principal/reports/academic",icon: FileText,},
+    {title: "Attendance Reports",path: "principal/reports/attendance",icon: CalendarClock,},
+    { title: "Exams & Grades", path: "principal/exams", icon: GraduationCap },
+    { title: "Library Overview", path: "principal/library", icon: BookOpen },
+    { title: "Transport Overview", path: "principal/transport", icon: Bus },
+    { title: "School Settings", path: "principal/settings", icon: Settings },
+  ],
+
+  /* ================= VICE PRINCIPAL ================= */
+  "vice principal": [
+    { title: "Dashboard", path: "viceprincipal", icon: LayoutDashboard },
+    { title: "Academic Management", path: "viceprincipal/academics", icon: BookOpen },
+    { title: "Exams & Grades", path: "viceprincipal/exams", icon: GraduationCap },
+    { title: "Student Attendance", path: "viceprincipal/attendance/students", icon: UserCheck },
+    { title: "Teacher Attendance", path: "viceprincipal/attendance/staff", icon: UserCheck },
+    { title: "Reports", path: "viceprincipal/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "viceprincipal/profile", icon: User },
+  ],
+
+  /* ================= EXAM COORDINATOR ================= */
+  "exam coordinator": [
+    { title: "Dashboard", path: "examcoordinator", icon: LayoutDashboard },
+    { title: "Create Exams", path: "examcoordinator/exams/create", icon: GraduationCap },
+    { title: "Question Bank", path: "examcoordinator/exams/question-bank", icon: ClipboardList },
+    { title: "Exam Schedule", path: "examcoordinator/exams/schedule", icon: CalendarClock },
+    { title: "Grade Entry", path: "examcoordinator/exams/grades", icon: ClipboardSignature },
+    { title: "Exam Reports", path: "examcoordinator/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "examcoordinator/profile", icon: User },
+  ],
+
+  /* ================= RECEPTIONIST ================= */
+  "receptionist": [
+    { title: "Dashboard", path: "receptionist", icon: LayoutDashboard },
+    { title: "Visitor Management", path: "receptionist/visitors", icon: UserPlus },
+    { title: "Enquiries", path: "receptionist/enquiries", icon: MessageSquare },
+    { title: "Phone Calls Log", path: "receptionist/calls", icon: ClipboardCheck },
+    { title: "Notifications", path: "receptionist/notifications", icon: Bell },
+    { title: "Profile", path: "receptionist/profile", icon: User },
+  ],
+
+  /* ================= IT SUPPORT ================= */
+  "it support": [
+    { title: "Dashboard", path: "itsupport", icon: LayoutDashboard },
+    { title: "System Maintenance", path: "itsupport/maintenance", icon: Wrench },
+    { title: "User Support Tickets", path: "itsupport/tickets", icon: ClipboardList },
+    { title: "Network Status", path: "itsupport/network", icon: Fuel },
+    { title: "System Logs", path: "itsupport/logs", icon: FileBarChart2 },
+    { title: "Profile", path: "itsupport/profile", icon: User },
+  ],
+
+  /* ================= COUNSELOR ================= */
+  "counselor": [
+    { title: "Dashboard", path: "counselor", icon: LayoutDashboard },
+    { title: "Student Profiles", path: "counselor/students", icon: Users },
+    { title: "Counseling Sessions", path: "counselor/sessions", icon: CalendarClock },
+    { title: "Appointments", path: "counselor/appointments", icon: Clock },
+    { title: "Reports", path: "counselor/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "counselor/profile", icon: User },
+  ],
+
+  /* ================= SUBJECT COORDINATOR ================= */
+  "subject coordinator": [
+    { title: "Dashboard", path: "subjectcoordinator", icon: LayoutDashboard },
+    { title: "Subjects Overview", path: "subjectcoordinator/subjects", icon: BookOpen },
+    { title: "Teacher Assignment", path: "subjectcoordinator/teachers", icon: Users },
+    { title: "Class Assignment", path: "subjectcoordinator/classes", icon: Book },
+    { title: "Exams & Grades", path: "subjectcoordinator/exams", icon: GraduationCap },
+    { title: "Reports", path: "subjectcoordinator/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "subjectcoordinator/profile", icon: User },
+  ],
+
+  /* ================= HOSTEL WARDEN ================= */
+  "hostel warden": [
+    { title: "Dashboard", path: "hostelwarden", icon: LayoutDashboard },
+    { title: "Hostel Rooms", path: "hostelwarden/rooms", icon: BookOpen },
+    { title: "Student Allocation", path: "hostelwarden/students", icon: Users },
+    { title: "Attendance", path: "hostelwarden/attendance", icon: UserCheck },
+    { title: "Visitor Log", path: "hostelwarden/visitors", icon: UserPlus },
+    { title: "Reports", path: "hostelwarden/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "hostelwarden/profile", icon: User },
+  ],
+
 };

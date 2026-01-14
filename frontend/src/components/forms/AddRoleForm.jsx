@@ -35,7 +35,7 @@ const actionOptions = [
 const roleOptions = [
   "School Admin","Principal","Vice Principal","Teacher","Student","Parent",
   "Accountant","Staff","Librarian","Hostel Warden","Transport Manager",
-  "Exam Coordinator","Receptionist","IT Support","Counselor","Subject Coordinator"
+  "Exam Coordinator","Receptionist","IT Support","Counselor","Subject Coordinator", "support staff","security"
 ];
 
 const AddRoleForm = () => {
