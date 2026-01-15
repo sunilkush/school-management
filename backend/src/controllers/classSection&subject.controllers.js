@@ -1,5 +1,5 @@
 import { ClassSection } from "../models/classSection.model.js";
-import  Class  from "../models/Classes.model.js";
+import  Class   from "../models/classes.model.js";
 import { Section } from "../models/section.model.js";
 import { ClassSubject } from "../models/ClassSubject.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -260,33 +260,39 @@ export const updateClassSection = asyncHandler(async (req, res) => {
   const { classId, sectionId, subjects } = req.body;
 
   const mapping = await ClassSection.findById(id);
-  if (!mapping) throw new ApiError(404, "Mapping not found!");
+  if (!mapping) throw new ApiError(404, "Mapping not found");
 
-  if (classId) mapping.classId = classId;
-  if (sectionId) mapping.sectionId = sectionId;
-  if (subjects) mapping.subjects = subjects;
+  mapping.classId = classId ?? mapping.classId;
+  mapping.sectionId = sectionId ?? mapping.sectionId;
+  mapping.subjects = subjects ?? mapping.subjects;
+  mapping.updatedBy = req.user._id;
 
   await mapping.save();
 
-  // Optional: update ClassSubject records
-  if (subjects && subjects.length > 0) {
-    // Remove old ClassSubjects for this class-section
-    await ClassSubject.deleteMany({ classId: mapping.classId, sectionId: mapping.sectionId });
+  if (subjects?.length) {
+    await ClassSubject.deleteMany({
+      classId: mapping.classId,
+      sectionId: mapping.sectionId,
+      academicYearId: mapping.academicYearId,
+      schoolId: mapping.schoolId,
+    });
+
     for (const s of subjects) {
       await ClassSubject.create({
         classId: mapping.classId,
         sectionId: mapping.sectionId,
-        schoolId: mapping.schoolId,
-        academicYearId: mapping.academicYearId,
         subjectId: s.subjectId,
         teacherId: s.teacherId,
+        schoolId: mapping.schoolId,
+        academicYearId: mapping.academicYearId,
+        createdBy: req.user._id,
       });
     }
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, mapping, "Class-Section mapping updated successfully!"));
+    .json(new ApiResponse(200, mapping, "Class-Section updated successfully"));
 });
 
 /**

@@ -17,22 +17,29 @@ import {
   Row,
   Col,
   Tooltip,
+  Grid,
+  Empty,
 } from "antd";
 
 import {
   EditOutlined,
   DeleteOutlined,
-  PlusOutlined,
   ApartmentOutlined,
+  BookOutlined,
+  TeamOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 
 import ClassFormSA from "../../../components/forms/ClassSectionFormSA.jsx";
 
 const { Search } = Input;
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const Classes = () => {
   const dispatch = useDispatch();
+  const screens = useBreakpoint();
+
   const { classList = [], loading } = useSelector((state) => state.class || {});
   const { user } = useSelector((state) => state.auth || {});
 
@@ -64,29 +71,27 @@ const Classes = () => {
     });
   };
 
-/*   const handleAddNew = () => {
-    setEditingClass(null);
-    setIsOpen(true);
-  }; */
-
-  const filteredItems = [...classList]
-    .filter((item) =>
-      item.name?.toLowerCase().includes(filterText.toLowerCase())
-    )
-    .sort((a, b) => {
-      const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
-      const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
-      return numA - numB;
-    });
-
+  /* ================= FILTER ================= */
+const filteredItems = [...classList]
+  .filter((item) =>
+    item.name?.toLowerCase().includes(filterText.toLowerCase())
+  )
+  .sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    })
+  );
+  /* ================= TABLE VIEW (DESKTOP/TABLET) ================= */
   const columns = [
     {
       title: "S.No",
-      width: 70,
+      width: 60,
       render: (_, __, index) => index + 1,
+      responsive: ["md"],
     },
     {
-      title: "Class Name",
+      title: "Class",
       dataIndex: "name",
       render: (name) => (
         <Space>
@@ -99,6 +104,7 @@ const Classes = () => {
       title: "Status",
       dataIndex: "status",
       align: "center",
+      responsive: ["md"],
       render: (status) =>
         status === "inactive" ? (
           <Tag color="red">Inactive</Tag>
@@ -109,11 +115,13 @@ const Classes = () => {
     {
       title: "Academic Year",
       dataIndex: "academicYearId",
+      responsive: ["lg"],
       render: (year) => year?.name || "—",
     },
     {
       title: "Sections",
       dataIndex: "sections",
+      responsive: ["lg"],
       render: (sections) =>
         sections?.length ? (
           <Space wrap>
@@ -124,12 +132,13 @@ const Classes = () => {
             ))}
           </Space>
         ) : (
-          <Text type="secondary">No Sections</Text>
+          <Text type="secondary">—</Text>
         ),
     },
     {
       title: "Subjects",
       dataIndex: "subjects",
+      responsive: ["lg"],
       render: (subjects) =>
         subjects?.length ? (
           <Space wrap>
@@ -140,12 +149,13 @@ const Classes = () => {
             ))}
           </Space>
         ) : (
-          <Text type="secondary">No Subjects</Text>
+          <Text type="secondary">—</Text>
         ),
     },
     {
       title: "Class Teacher",
       dataIndex: "teacherId",
+      responsive: ["lg"],
       render: (teacher) => teacher?.name || "—",
     },
     {
@@ -160,7 +170,6 @@ const Classes = () => {
               onClick={() => handleEdit(cls)}
             />
           </Tooltip>
-
           <Tooltip title="Delete">
             <Button
               type="link"
@@ -174,16 +183,108 @@ const Classes = () => {
     },
   ];
 
+  /* ================= MOBILE CARD VIEW ================= */
+  const MobileView = () => {
+    if (!filteredItems.length)
+      return <Empty description="No Classes Found" />;
+
+    return (
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        {filteredItems.map((cls) => (
+          <Card
+            key={cls._id}
+            size="small"
+            title={
+              <Space>
+                <ApartmentOutlined />
+                <Text strong>{cls.name}</Text>
+              </Space>
+            }
+            extra={
+              <Tag color={cls.status === "inactive" ? "red" : "green"}>
+                {cls.status === "inactive" ? "Inactive" : "Active"}
+              </Tag>
+            }
+          >
+            <Space direction="vertical" size={6} style={{ width: "100%" }}>
+              <Text>
+                <CalendarOutlined /> <strong>Academic Year:</strong>{" "}
+                {cls.academicYearId?.name || "—"}
+              </Text>
+
+              <Text>
+                <TeamOutlined /> <strong>Class Teacher:</strong>{" "}
+                {cls.teacherId?.name || "—"}
+              </Text>
+
+              <div>
+                <Text strong>Sections:</Text>
+                <br />
+                {cls.sections?.length ? (
+                  <Space wrap>
+                    {cls.sections.map((s) => (
+                      <Tag key={s._id} color="blue">
+                        {s.name}
+                      </Tag>
+                    ))}
+                  </Space>
+                ) : (
+                  <Text type="secondary">—</Text>
+                )}
+              </div>
+
+              <div>
+                <Text strong>
+                  <BookOutlined /> Subjects:
+                </Text>
+                <br />
+                {cls.subjects?.length ? (
+                  <Space wrap>
+                    {cls.subjects.map((sub) => (
+                      <Tag key={sub._id} color="purple">
+                        {sub?.subjectId?.name}
+                      </Tag>
+                    ))}
+                  </Space>
+                ) : (
+                  <Text type="secondary">—</Text>
+                )}
+              </div>
+
+              <Space>
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEdit(cls)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => handleDelete(cls._id)}
+                >
+                  Delete
+                </Button>
+              </Space>
+            </Space>
+          </Card>
+        ))}
+      </Space>
+    );
+  };
+
   return (
     <>
-      {/* Add / Edit Modal */}
+      {/* MODAL */}
       <Modal
-        title={editingClass ? "Edit Class" : "Add New Class"}
+        title={editingClass ? "Edit Class" : "Add Class"}
         open={isOpen}
         onCancel={() => setIsOpen(false)}
         footer={null}
         destroyOnClose
-        style={{padding:"0px"}}
+        width={screens.md ? 900 : "100%"}
       >
         <ClassFormSA
           initialData={editingClass}
@@ -195,42 +296,38 @@ const Classes = () => {
         />
       </Modal>
 
-      {/* Main UI */}
+      {/* PAGE */}
       <Card bordered={false}>
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
           <Col>
             <Title level={4}>Class Management</Title>
           </Col>
 
-          <Col>
-            <Space wrap>
-              <Search
-                placeholder="Search class"
-                allowClear
-                onChange={(e) => setFilterText(e.target.value)}
-                style={{ width: 220 }}
-              />
-
-             {/*  <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleAddNew}
-              >
-                Add Class
-              </Button> */}
-            </Space>
+          <Col xs={24} sm={12} md={8}>
+            <Search
+              placeholder="Search class"
+              allowClear
+              onChange={(e) => setFilterText(e.target.value)}
+            />
           </Col>
         </Row>
 
-        <Table
-          className="mt-4"
-          columns={columns}
-          dataSource={filteredItems}
-          loading={loading}
-          rowKey="_id"
-          pagination={{ pageSize: 10 }}
-          bordered
-        />
+        <div style={{ marginTop: 16 }}>
+          {/* Mobile */}
+          {!screens.md && <MobileView />}
+
+          {/* Tablet / Desktop */}
+          {screens.md && (
+            <Table
+              columns={columns}
+              dataSource={filteredItems}
+              loading={loading}
+              rowKey="_id"
+              pagination={{ pageSize: 10 }}
+              bordered
+            />
+          )}
+        </div>
       </Card>
     </>
   );
