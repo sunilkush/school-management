@@ -188,7 +188,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
 
         {/* ================= SECTIONS ================= */}
         <Divider orientation="left">Sections</Divider>
-
+       
         <Form.List name="sections" >
           {(fields, { add, remove }) => (
             <>

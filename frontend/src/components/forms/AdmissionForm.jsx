@@ -26,7 +26,21 @@ const { TextArea } = Input;
 const AdmissionForm = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const tabKeys = ["student", "other", "father", "mother"];
+  const [activeTab, setActiveTab] = useState("student");
+  const currentIndex = tabKeys.indexOf(activeTab);
 
+  const nextTab = () => {
+    if (currentIndex < tabKeys.length - 1) {
+      setActiveTab(tabKeys[currentIndex + 1]);
+    }
+  };
+
+  const prevTab = () => {
+    if (currentIndex > 0) {
+      setActiveTab(tabKeys[currentIndex - 1]);
+    }
+  };
   const { lastStudent = [], registrationNumber } = useSelector(
     (state) => state.students
   );
@@ -85,7 +99,7 @@ const AdmissionForm = () => {
   return (
     <Card >
       <Form layout="vertical" form={form} onFinish={onFinish}>
-        <Tabs defaultActiveKey="student">
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
 
           {/* ================= STUDENT INFO ================= */}
           <TabPane tab="Student Info" key="student">
@@ -200,7 +214,7 @@ const AdmissionForm = () => {
 
               <Col md={8}>
                 <Form.Item name="cast" label="Caste">
-                  <Input />
+                  <Select options={["General", "OBC", "SC", "ST", "Other"].map(c => ({ value: c }))} />
                 </Form.Item>
               </Col>
 
@@ -286,10 +300,25 @@ const AdmissionForm = () => {
 
         </Tabs>
 
-        <div style={{ textAlign: "right", marginTop: 24 }}>
-          <Button type="primary" htmlType="submit">
-            Submit Admission
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
+          {/* Previous Button */}
+          <Button
+            disabled={currentIndex === 0}
+            onClick={prevTab}
+          >
+            Previous
           </Button>
+
+          {/* Next / Submit */}
+          {currentIndex < tabKeys.length - 1 ? (
+            <Button type="primary" onClick={nextTab}>
+              Next
+            </Button>
+          ) : (
+            <Button type="primary" htmlType="submit">
+              Submit Admission
+            </Button>
+          )}
         </div>
       </Form>
     </Card>

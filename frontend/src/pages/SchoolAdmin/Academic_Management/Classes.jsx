@@ -119,45 +119,59 @@ const filteredItems = [...classList]
       render: (year) => year?.name || "—",
     },
     {
-      title: "Sections",
-      dataIndex: "sections",
-      responsive: ["lg"],
-      render: (sections) =>
-        sections?.length ? (
-          <Space wrap>
-            {sections.map((s) => (
-              <Tag key={s._id} color="blue">
-                {s.name}
-              </Tag>
-            ))}
-          </Space>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
-    },
+  title: "Sections",
+  dataIndex: "sections",
+  responsive: ["lg"],
+  render: (sections = []) =>
+    sections.length ? (
+      <Space wrap>
+        {[...sections]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((s) => (
+            <Tag key={s._id} color="blue">
+              {s.name}
+            </Tag>
+          ))}
+      </Space>
+    ) : (
+      <Text type="secondary">—</Text>
+    ),
+},
     {
-      title: "Subjects",
-      dataIndex: "subjects",
-      responsive: ["lg"],
-      render: (subjects) =>
-        subjects?.length ? (
-          <Space wrap>
-            {subjects.map((sub) => (
-              <Tag key={sub._id} color="purple">
-                {sub?.subjectId?.name}
-              </Tag>
-            ))}
-          </Space>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
-    },
+  title: "Subjects",
+  dataIndex: "subjects",
+  responsive: ["lg"],
+  render: (subjects = []) =>
+    subjects.length ? (
+      <Space wrap>
+        {[...subjects]
+          .sort((a, b) =>
+            (a?.subjectId?.name || "").localeCompare(
+              b?.subjectId?.name || ""
+            )
+          )
+          .map((sub) => (
+            <Tag key={sub._id} color="purple">
+              {sub?.subjectId?.name}
+            </Tag>
+          ))}
+      </Space>
+    ) : (
+      <Text type="secondary">—</Text>
+    ),
+},
+
     {
-      title: "Class Teacher",
-      dataIndex: "teacherId",
-      responsive: ["lg"],
-      render: (teacher) => teacher?.name || "—",
-    },
+  title: "Class Teacher",
+  dataIndex: "teacherId",
+  responsive: ["lg"],
+  sorter: (a, b) =>
+    (a?.teacherId?.name || "").localeCompare(
+      b?.teacherId?.name || ""
+    ),
+  render: (teacher) => teacher?.name || "—",
+},
+
     {
       title: "Actions",
       align: "center",
