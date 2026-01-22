@@ -24,7 +24,7 @@ const paymentSchema = new mongoose.Schema(
 
     paymentMode: {
       type: String,
-      enum: ["cash", "online", "cheque"],
+      enum: ["cash", "online", "cheque","razorpay"],
       required: true,
     },
 
@@ -38,7 +38,8 @@ const paymentSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-
+   razorpay: Object,
+  status: String,
     receiptNo: {
       type: String,
       required: true,
