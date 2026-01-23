@@ -72,231 +72,122 @@ const Classes = () => {
   };
 
   /* ================= FILTER ================= */
-const filteredItems = [...classList]
-  .filter((item) =>
-    item.name?.toLowerCase().includes(filterText.toLowerCase())
+ const filteredItems = classList
+  .filter(item =>
+    (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
   )
-  .sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, {
-      numeric: true,
-      sensitivity: "base",
-    })
-  );
-  /* ================= TABLE VIEW (DESKTOP/TABLET) ================= */
+  .sort((a, b) => {
+    // Extract the number from "Class X"
+    const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
+    return numA - numB; // numeric ascending
+  });
+
+  /* ================= TABLE ================= */
   const columns = [
-    {
-      title: "S.No",
-      width: 60,
-      render: (_, __, index) => index + 1,
-      responsive: ["md"],
-    },
-    {
-      title: "Class",
-      dataIndex: "name",
-      render: (name) => (
-        <Space>
-          <ApartmentOutlined style={{ color: "#1677ff" }} />
-          <Text strong>{name}</Text>
-        </Space>
-      ),
-    },
+ {
+    title: "S.No",
+    render: (_, __, index) => index + 1,
+    width: 60,
+  },
+  {
+    title: "Class",
+    dataIndex: "name",
+    
+    render: (name) => (
+      <Space>
+        <ApartmentOutlined />
+        <Text strong>{name}</Text>
+      </Space>
+    ),
+  },
+
     {
       title: "Status",
       dataIndex: "status",
       align: "center",
-      responsive: ["md"],
-      render: (status) =>
-        status === "inactive" ? (
-          <Tag color="red">Inactive</Tag>
-        ) : (
-          <Tag color="green">Active</Tag>
-        ),
+      render: (status) => (
+        <Tag color={status === "inactive" ? "red" : "green"}>
+          {status === "inactive" ? "Inactive" : "Active"}
+        </Tag>
+      ),
     },
     {
       title: "Academic Year",
       dataIndex: "academicYearId",
-      responsive: ["lg"],
       render: (year) => year?.name || "—",
     },
     {
   title: "Sections",
   dataIndex: "sections",
-  responsive: ["lg"],
   render: (sections = []) =>
     sections.length ? (
       <Space wrap>
-        {[...sections]
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((s) => (
-            <Tag key={s._id} color="blue">
-              {s.name}
-            </Tag>
-          ))}
+        {sections.map((s) => (
+          <Tag key={s._id} color="blue">
+            {s.sectionId?.name || "—"}{" "}
+            {s.inChargeId?.name ? `(${s.inChargeId.name})` : ""}
+          </Tag>
+        ))}
       </Space>
     ) : (
       <Text type="secondary">—</Text>
     ),
 },
+    
     {
-  title: "Subjects",
-  dataIndex: "subjects",
-  responsive: ["lg"],
-  render: (subjects = []) =>
-    subjects.length ? (
-      <Space wrap>
-        {[...subjects]
-          .sort((a, b) =>
-            (a?.subjectId?.name || "").localeCompare(
-              b?.subjectId?.name || ""
-            )
-          )
-          .map((sub) => (
-            <Tag key={sub._id} color="purple">
-              {sub?.subjectId?.name}
-            </Tag>
-          ))}
-      </Space>
-    ) : (
-      <Text type="secondary">—</Text>
-    ),
-},
-
+      title: "Subjects",
+      dataIndex: "subjects",
+      render: (subjects = []) =>
+        subjects.length ? (
+          <Space wrap>
+            {subjects.map((sub) => (
+              <Tag key={sub._id} color="purple">
+                {sub.subjectId?.name || "—"}
+              </Tag>
+            ))}
+          </Space>
+        ) : (
+          <Text type="secondary">—</Text>
+        ),
+    },
     {
-  title: "Class Teacher",
-  dataIndex: "teacherId",
-  responsive: ["lg"],
-  sorter: (a, b) =>
-    (a?.teacherId?.name || "").localeCompare(
-      b?.teacherId?.name || ""
-    ),
-  render: (teacher) => teacher?.name || "—",
-},
-
+      title: "Class Teacher",
+      dataIndex: "teacherId",
+      sorter: (a, b) =>
+        (a?.teacherId?.name || "").localeCompare(
+          b?.teacherId?.name || ""
+        ),
+      render: (teacher) => teacher?.name || "—",
+    },
     {
       title: "Actions",
       align: "center",
       render: (_, cls) => (
         <Space>
-          <Tooltip title="Edit">
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(cls)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Button
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(cls._id)}
-            />
-          </Tooltip>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(cls)}
+          />
+          <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(cls._id)}
+          />
         </Space>
       ),
     },
   ];
 
-  /* ================= MOBILE CARD VIEW ================= */
-  const MobileView = () => {
-    if (!filteredItems.length)
-      return <Empty description="No Classes Found" />;
-
-    return (
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        {filteredItems.map((cls) => (
-          <Card
-            key={cls._id}
-            size="small"
-            title={
-              <Space>
-                <ApartmentOutlined />
-                <Text strong>{cls.name}</Text>
-              </Space>
-            }
-            extra={
-              <Tag color={cls.status === "inactive" ? "red" : "green"}>
-                {cls.status === "inactive" ? "Inactive" : "Active"}
-              </Tag>
-            }
-          >
-            <Space direction="vertical" size={6} style={{ width: "100%" }}>
-              <Text>
-                <CalendarOutlined /> <strong>Academic Year:</strong>{" "}
-                {cls.academicYearId?.name || "—"}
-              </Text>
-
-              <Text>
-                <TeamOutlined /> <strong>Class Teacher:</strong>{" "}
-                {cls.teacherId?.name || "—"}
-              </Text>
-
-              <div>
-                <Text strong>Sections:</Text>
-                <br />
-                {cls.sections?.length ? (
-                  <Space wrap>
-                    {cls.sections.map((s) => (
-                      <Tag key={s._id} color="blue">
-                        {s.name}
-                      </Tag>
-                    ))}
-                  </Space>
-                ) : (
-                  <Text type="secondary">—</Text>
-                )}
-              </div>
-
-              <div>
-                <Text strong>
-                  <BookOutlined /> Subjects:
-                </Text>
-                <br />
-                {cls.subjects?.length ? (
-                  <Space wrap>
-                    {cls.subjects.map((sub) => (
-                      <Tag key={sub._id} color="purple">
-                        {sub?.subjectId?.name}
-                      </Tag>
-                    ))}
-                  </Space>
-                ) : (
-                  <Text type="secondary">—</Text>
-                )}
-              </div>
-
-              <Space>
-                <Button
-                  size="small"
-                  icon={<EditOutlined />}
-                  onClick={() => handleEdit(cls)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="small"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={() => handleDelete(cls._id)}
-                >
-                  Delete
-                </Button>
-              </Space>
-            </Space>
-          </Card>
-        ))}
-      </Space>
-    );
-  };
-
   return (
     <>
-      {/* MODAL */}
       <Modal
         title={editingClass ? "Edit Class" : "Add Class"}
         open={isOpen}
-        onCancel={() => setIsOpen(false)}
         footer={null}
+        onCancel={() => setIsOpen(false)}
         destroyOnClose
         width={screens.md ? 900 : "100%"}
       >
@@ -310,14 +201,12 @@ const filteredItems = [...classList]
         />
       </Modal>
 
-      {/* PAGE */}
-      <Card bordered={false}>
-        <Row justify="space-between" align="middle" gutter={[16, 16]}>
+      <Card>
+        <Row justify="space-between" gutter={[16, 16]}>
           <Col>
             <Title level={4}>Class Management</Title>
           </Col>
-
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} md={8}>
             <Search
               placeholder="Search class"
               allowClear
@@ -327,19 +216,16 @@ const filteredItems = [...classList]
         </Row>
 
         <div style={{ marginTop: 16 }}>
-          {/* Mobile */}
-          {!screens.md && <MobileView />}
-
-          {/* Tablet / Desktop */}
-          {screens.md && (
+          {screens.md ? (
             <Table
               columns={columns}
               dataSource={filteredItems}
-              loading={loading}
               rowKey="_id"
-              pagination={{ pageSize: 10 }}
+              loading={loading}
               bordered
             />
+          ) : (
+            <Empty description="Use desktop for table view" />
           )}
         </div>
       </Card>

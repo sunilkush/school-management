@@ -45,88 +45,97 @@ const createClass = asyncHandler(async (req, res) => {
 // ✅ Update Class
 const updateClass = asyncHandler(async (req, res) => {
   const { classId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(classId)) {
+    throw new ApiError(400, "Invalid Class ID");
+  }
+
   const {
     name,
     code,
     description,
     academicYearId,
     teacherId,
-    isGlobal,
+    isGlobal = false,
     isActive,
     schoolId,
     sections = [],
     subjects = [],
   } = req.body;
 
-  if (!classId) throw new ApiError(400, "Class ID is required");
+  const classDoc = await Class.findById(classId);
+  if (!classDoc) throw new ApiError(404, "Class not found");
 
-  const classToUpdate = await Class.findById(classId);
-  if (!classToUpdate) throw new ApiError(404, "Class not found");
+  /* ========== CLEAN SECTIONS ========== */
+  const cleanSections = sections.filter(
+    (s) =>
+      mongoose.Types.ObjectId.isValid(s.sectionId) &&
+      (!s.inChargeId || mongoose.Types.ObjectId.isValid(s.inChargeId))
+  );
 
-  const cleanSections = Array.isArray(sections)
-    ? sections.filter(
-        (s) =>
-          s.sectionId &&
-          mongoose.Types.ObjectId.isValid(s.sectionId) &&
-          (!s.inChargeId || mongoose.Types.ObjectId.isValid(s.inChargeId))
-      )
-    : [];
+  /* ========== CLEAN SUBJECTS ========== */
+  const cleanSubjects = subjects.filter(
+    (s) =>
+      mongoose.Types.ObjectId.isValid(s.subjectId) &&
+      mongoose.Types.ObjectId.isValid(s.teacherId)
+  );
 
-  const cleanSubjects = Array.isArray(subjects)
-    ? subjects.filter(
-        (s) =>
-          s.subjectId &&
-          mongoose.Types.ObjectId.isValid(s.subjectId) &&
-          s.teacherId &&
-          mongoose.Types.ObjectId.isValid(s.teacherId)
-      )
-    : [];
+  /* ========== UPDATE CLASS ========== */
+  if (name) classDoc.name = name.trim().toUpperCase();
+  if (code) classDoc.code = code.trim();
+  if (description) classDoc.description = description.trim();
+  if (academicYearId) classDoc.academicYearId = academicYearId;
+  if (teacherId) classDoc.teacherId = teacherId;
+  if (schoolId) classDoc.schoolId = schoolId;
+  if (typeof isGlobal === "boolean") classDoc.isGlobal = isGlobal;
+  if (typeof isActive === "boolean") classDoc.isActive = isActive;
 
-  if (name) classToUpdate.name = name.trim().toUpperCase();
-  if (code) classToUpdate.code = code.trim();
-  if (description) classToUpdate.description = description.trim();
-  if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId))
-    classToUpdate.academicYearId = academicYearId;
-  if (teacherId && mongoose.Types.ObjectId.isValid(teacherId))
-    classToUpdate.teacherId = teacherId;
-  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId))
-    classToUpdate.schoolId = schoolId;
-  if (typeof isGlobal === "boolean") classToUpdate.isGlobal = isGlobal;
-  if (typeof isActive === "boolean") classToUpdate.isActive = isActive;
+  classDoc.subjects = cleanSubjects;
+  classDoc.updatedBy = req.user._id;
 
-  classToUpdate.subjects = cleanSubjects;
-  classToUpdate.updatedBy = req.user?._id;
+  await classDoc.save();
 
-  const updatedClass = await classToUpdate.save();
+  /* ========== RESET CLASS SECTIONS ========== */
+  await ClassSection.deleteMany({ classId });
 
-  // ✅ Update ClassSection
-  if (cleanSections.length > 0) {
-    await ClassSection.deleteMany({ classId });
-
-    const newSectionMappings = cleanSections.map((sec) => ({
-      classId,
-      sectionId: sec.sectionId,
-      teacherId: sec.inChargeId || null,
-      schoolId: isGlobal ? null : schoolId,
-      academicYearId: isGlobal ? null : academicYearId,
-      isGlobal: !!isGlobal,
-      createdBy: req.user?._id,
-    }));
-
-    await ClassSection.insertMany(newSectionMappings);
+  if (cleanSections.length) {
+    await ClassSection.insertMany(
+      cleanSections.map((s) => ({
+        classId,
+        sectionId: s.sectionId,
+        teacherId: s.inChargeId || null, // ✅ IN-CHARGE SAVED HERE
+        schoolId: isGlobal ? null : schoolId,
+        academicYearId: isGlobal ? null : academicYearId,
+        isGlobal,
+        createdBy: req.user._id,
+      }))
+    );
   }
 
-  const populatedClass = await Class.findById(classId)
+  /* ========== FINAL RESPONSE ========== */
+  const classData = await Class.findById(classId)
     .populate("schoolId", "name logo")
     .populate("academicYearId", "name startDate endDate")
     .populate("teacherId", "name email")
     .populate("subjects.subjectId", "name code")
-    .populate("subjects.teacherId", "name email")
-    .populate("sections.sectionId", "name code")
-    .populate("sections.inChargeId", "name email");
+    .populate("subjects.teacherId", "name email");
 
-  return res.status(200).json(new ApiResponse(200, populatedClass, "Class updated successfully with sections"));
+  const sectionsData = await ClassSection.find({ classId })
+    .populate("sectionId", "name code")
+    .populate("teacherId", "name email"); // ✅ IN-CHARGE DATA
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        ...classData.toObject(),
+        sections: sectionsData,
+      },
+      "Class updated successfully"
+    )
+  );
 });
+
 
 // ✅ Delete Class
 const deleteClass = asyncHandler(async (req, res) => {
@@ -191,17 +200,27 @@ const getAllClasses = asyncHandler(async (req, res) => {
 
   // Get linked sections
   const classIds = classes.map((c) => c._id);
-  const classSectionMappings = await ClassSection.find({
-    classId: { $in: classIds },
-  }).populate("sectionId", "name capacity");
+const classSectionMappings = await ClassSection.find({
+  classId: { $in: classIds },
+})
+  .populate("sectionId", "name capacity")
+  .populate("teacherId", "name email"); // ✅ IN-CHARGE
 
   // Combine class + sections
-  const classesWithSections = classes.map((c) => {
-    const sections = classSectionMappings
-      .filter((m) => String(m.classId) === String(c._id))
-      .map((m) => m.sectionId);
-    return { ...c.toObject(), sections };
-  });
+ const classesWithSections = classes.map((c) => {
+  const sections = classSectionMappings
+    .filter((m) => String(m.classId) === String(c._id))
+    .map((m) => ({
+      _id: m._id,
+      sectionId: m.sectionId,
+      inChargeId: m.teacherId || null, // ✅ NAME + EMAIL
+    }));
+
+  return {
+    ...c.toObject(),
+    sections,
+  };
+})
 
   return res.status(200).json(
     new ApiResponse(

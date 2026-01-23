@@ -56,38 +56,41 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
      PREFILL EDIT MODE
   ============================ */
   useEffect(() => {
-    if (!initialData || !activeYear) return;
+  if (!initialData || !activeYear) return;
 
-    form.setFieldsValue({
-      name: initialData.name,
-      code: initialData.code,
-      academicYearId: initialData.academicYearId?._id || activeYear._id,
-      teacherId: initialData.teacherId?._id || "",
-      isGlobal: initialData.isGlobal,
-      isActive: initialData.isActive ?? true,
+  form.setFieldsValue({
+    name: initialData.name || "",
+    code: initialData.code || "",
+    academicYearId: initialData.academicYearId?._id || activeYear?._id || "",
+    teacherId: initialData.teacherId?._id || "",
+    isGlobal: initialData.isGlobal ?? false,
+    isActive: initialData.isActive ?? true,
 
-      sections:
-        initialData.sections?.map((s) => ({
-          sectionId: s._id,
-          inChargeId: s.inChargeId?._id || "",
-        })) || [{ sectionId: "", inChargeId: "" }],
+    // Fix Sections
+    sections:
+      initialData.sections?.map((s) => ({
+        sectionId: s.sectionId?._id || "", // make sure we use sectionId._id
+        inChargeId: s.inChargeId?._id || "", // teacher in charge
+      })) || [{ sectionId: "", inChargeId: "" }],
 
-      subjects:
-        initialData.subjects?.map((s) => ({
-          subjectId: s.subjectId?._id || "",
-          teacherId: s.teacherId?._id || "",
-          periodPerWeek: s.periodPerWeek || 1,
-          isCompulsory: s.isCompulsory ?? true,
-        })) || [
-          {
-            subjectId: "",
-            teacherId: "",
-            periodPerWeek: 1,
-            isCompulsory: true,
-          },
-        ],
-    });
-  }, [initialData, activeYear, form]);
+    // Fix Subjects
+    subjects:
+      initialData.subjects?.map((s) => ({
+        subjectId: s.subjectId?._id || "",
+        teacherId: s.teacherId?._id || "",
+        periodPerWeek: s.periodPerWeek || 1,
+        isCompulsory: s.isCompulsory ?? true,
+      })) || [
+        {
+          subjectId: "",
+          teacherId: "",
+          periodPerWeek: 1,
+          isCompulsory: true,
+        },
+      ],
+  });
+}, [initialData, activeYear, form]);
+
 
   /* ============================
      SUBMIT
