@@ -32,7 +32,7 @@ router.get("/all", auth, roleMiddleware(TEACHER_ROLES), getAllSubjects);
 router.get("/:id", auth, roleMiddleware(ALL_ROLES), getSubject);
 
 // ✅ Update Subject (Super Admin & School Admin)
-router.put("/:id", auth, roleMiddleware(ADMIN_ROLES), updateSubject);
+router.put("/:id/assign-teachers", auth, roleMiddleware(ADMIN_ROLES), updateSubject);
 
 // ✅ Assign Schools to Subject (Super Admin & School Admin)
 router.put("/assign-schools/:id", auth, roleMiddleware(ADMIN_ROLES), assignSchoolsToSubject);

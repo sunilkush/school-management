@@ -61,14 +61,14 @@ const RegisterForm = ({ onClose }) => {
     if (!roles || roles.length === 0) {
       dispatch(fetchRoles());
     }
-  }, [dispatch, schools?.length, roles?.length]);
+  }, [dispatch, schools, roles]);
 
   /* ✅ FIX 2: set school only once */
   useEffect(() => {
     if (currentUserRole === "school admin" && currentSchoolId) {
       form.setFieldsValue({ schoolId: currentSchoolId });
     }
-  }, [currentUserRole, currentSchoolId]);
+  }, [currentUserRole, currentSchoolId,form]);
 
   /* ✅ FIX 3: role filtering without re-trigger */
   useEffect(() => {
@@ -105,7 +105,7 @@ const RegisterForm = ({ onClose }) => {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [success]);
+  }, [success, dispatch, form, onClose]);
 
   const handleAvatarUpload = (file) => {
     if (file.size > 1024 * 1024) {

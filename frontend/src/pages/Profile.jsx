@@ -28,12 +28,20 @@ import {
 
 import userProfile from "../assets/userProfile.png";
 import AttendanceCalendar from "./AttendanceCalendar";
-
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { currentUser } from "../features/authSlice";
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 const Profile = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState("profile");
+  
+  useEffect(() => {
+    dispatch(currentUser());
+  }, [dispatch]);
 
   return (
     <Layout style={{ background: "#f5f7fa", minHeight: "100vh" }}>
@@ -45,10 +53,10 @@ const Profile = () => {
               <Space size="large">
                 <Avatar size={64} src={userProfile} />
                 <div>
-                  <Title level={4} style={{ marginBottom: 4 }}>
-                    Sumit Kumar
+                  <Title level={4} style={{ marginBottom: 4, textTransform: "capitalize" }}>
+                   {user?.name}
                   </Title>
-                  <Tag color="green">Active</Tag>
+                  <Tag color={`${user?.isActive ? "green" : "red"}`}>{user?.isActive ? "Active" : "Inactive"}</Tag>
                 </div>
 
                 <Space size="large">
@@ -220,12 +228,12 @@ const Profile = () => {
               >
                 <Text type="secondary">Phone</Text>
                 <br />
-                <Tag color="blue">+91-7845123265</Tag>
+                <Tag color="blue">{user?.phone}</Tag>
                 <br />
                 <br />
                 <Text type="secondary">Email</Text>
                 <br />
-                <Tag color="blue">example@gmail.com</Tag>
+                <Tag color="blue">{user?.email}</Tag>
               </Card>
 
               <Card title="Student Overview" style={{ marginTop: 16 }}>
@@ -233,7 +241,7 @@ const Profile = () => {
                   <Col span={12}>
                     <Text type="secondary">Role</Text>
                     <br />
-                    <Text>Student</Text>
+                    <Text>{user?.role?.name}</Text>
                   </Col>
                   <Col span={12}>
                     <Text type="secondary">Status</Text>

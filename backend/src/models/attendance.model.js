@@ -7,39 +7,66 @@ const attendanceSchema = new Schema(
 
     // Date Info
     date: { type: Date, required: true, index: true },
-    session: { type: String, enum: ["Morning", "Afternoon", "FullDay"], default: "FullDay" }, // ✅ Half-day / session support
+    session: {
+      type: String,
+      enum: ["Morning", "Afternoon", "FullDay"],
+      default: "FullDay",
+    },
 
     // Entity Info
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    role: { type: String, enum: ["Student", "Teacher"], required: true },
+
+    role: {
+      type: String,
+      enum: ["Student", "Staff", "Teacher"],
+      required: true,
+    },
 
     // Attendance Status
-    status: { 
-      type: String, 
-      enum: ["Present", "Absent", "Leave", "Holiday", "Late", "Excused"], 
-      required: true 
+    status: {
+      type: String,
+      enum: ["Present", "Absent", "Leave", "Holiday", "Late", "Excused"],
+      required: true,
     },
+
     remarks: { type: String, maxlength: 200 },
 
-    // Student-specific
+    /* ================= STUDENT ONLY ================= */
     classId: { type: Schema.Types.ObjectId, ref: "Class" },
     sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
 
-    // Teacher-specific
+    /* ================= STAFF / TEACHER ONLY ================= */
     departmentId: { type: Schema.Types.ObjectId, ref: "Department" },
     subjectId: { type: Schema.Types.ObjectId, ref: "Subject" },
 
-    // Metadata
-    markedBy: { type: Schema.Types.ObjectId, ref: "User" }, // ✅ who marked attendance
-    markedAt: { type: Date, default: Date.now },
+    /* ================= LEAVE / SELF ATTENDANCE ================= */
+    appliedBy: {
+      type: String,
+      enum: ["Self", "Teacher", "Admin"],
+      default: "Teacher",
+    },
 
-    // Audit trail
+    isApproved: {
+      type: Boolean,
+      default: true, // students auto approved
+    },
+
+    approvedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    approvedAt: { type: Date },
+
+    /* ================= AUDIT ================= */
+    markedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    markedAt: { type: Date, default: Date.now },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedAt: { type: Date },
   },
   { timestamps: true }
 );
 
-attendanceSchema.index({ userId: 1, date: 1 }, { unique: true }); // ✅ Prevent duplicate marking
+// ✅ Prevent duplicate attendance
+attendanceSchema.index(
+  { userId: 1, date: 1, session: 1 },
+  { unique: true }
+);
 
 export const Attendance = mongoose.model("Attendance", attendanceSchema);

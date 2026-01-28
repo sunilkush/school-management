@@ -109,7 +109,7 @@ export const sidebarMenu = {
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
     { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
-
+    { title: "My Self", path: "schooladmin/profile", icon: User, },
     {
       title: "User Management",
       icon: Users,

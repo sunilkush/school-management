@@ -9,71 +9,81 @@ import mongoose from "mongoose";
 // =============================
 export const createQuestion = asyncHandler(async (req, res) => {
   try {
-    const question = await Question.create(req.body);
+    const user = req.user;
+    const payload = {
+      ...req.body,
+      schoolId: user?.school?._id,
+      createdBy: user._id,
+    };
+
+    const question = await Question.create(payload);
     return res
       .status(201)
       .json(new ApiResponse(201, question, "Question created successfully"));
   } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json(new ApiResponse(400, null, messages.join(", ")));
+    }
     return res.status(500).json(new ApiResponse(500, null, error.message));
   }
 });
 
 // =============================
-// Bulk Create (Excel/JSON Import)
+// Bulk Create Questions from Excel
 // =============================
 export const bulkCreateQuestionsFromExcel = asyncHandler(async (req, res) => {
   try {
-    if (!req.file) {
+    if (!req.file)
       return res.status(400).json(new ApiResponse(400, null, "Excel file required"));
-    }
 
-    // Read Excel file
     const workbook = XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    if (!sheetData.length) {
+    if (!sheetData.length)
       return res.status(400).json(new ApiResponse(400, null, "Excel sheet is empty"));
-    }
 
-    // Transform Excel rows into Question schema
+    const user = req.user;
+
     const questions = sheetData.map((row) => ({
-      schoolId: row.schoolId,
+      schoolId: user?.school?._id,
       subjectId: row.subjectId,
-      chapter: row.chapter,
-      topic: row.topic,
+      chapter: row.chapter || "",
+      topic: row.topic || "",
       questionType: row.questionType || "mcq_single",
       statement: row.statement,
-      options: row.options ? JSON.parse(row.options) : [], // Excel cell must have JSON string for options
+      options: row.options ? JSON.parse(row.options) : [],
       correctAnswers: row.correctAnswers ? row.correctAnswers.split(",") : [],
       difficulty: row.difficulty || "medium",
       marks: Number(row.marks) || 1,
       negativeMarks: Number(row.negativeMarks) || 0,
-      tags: row.tags ? row.tags.split(",") : [],
+      tags: row.tags ? row.tags.split(",").map((t) => t.trim().toLowerCase()) : [],
+      createdBy: user._id,
     }));
 
-    // Bulk insert
     const created = await Question.insertMany(questions, { ordered: false });
 
     return res
       .status(201)
-      .json(new ApiResponse(201, created, "Bulk questions created successfully from Excel"));
+      .json(new ApiResponse(201, created, "Bulk questions created successfully"));
   } catch (error) {
     return res.status(500).json(new ApiResponse(500, null, error.message));
   }
 });
 
 // =============================
-// Get Questions (Advanced Filtering + Pagination)
+// Get Questions (filters + pagination + search)
 // =============================
 export const getQuestions = asyncHandler(async (req, res) => {
   try {
+    const user = req.user;
+
     const {
       page = 1,
       limit = 10,
       difficulty,
       subjectId,
-      schoolId,
       questionType,
       tags,
       search,
@@ -81,18 +91,25 @@ export const getQuestions = asyncHandler(async (req, res) => {
     } = req.query;
 
     const filters = {};
+
+    // Multi-tenant
+    if (user.role !== "Super Admin") {
+      filters.schoolId = user.schoolId;
+    } else if (req.query.schoolId) {
+      filters.schoolId = req.query.schoolId;
+    }
+
     if (difficulty) filters.difficulty = difficulty;
     if (subjectId) filters.subjectId = subjectId;
-    if (schoolId) filters.schoolId = schoolId;
     if (questionType) filters.questionType = questionType;
-    if (tags) filters.tags = { $in: tags.split(",") };
+    if (tags) filters.tags = { $in: tags.split(",").map((t) => t.trim().toLowerCase()) };
     if (search) filters.statement = { $regex: search, $options: "i" };
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const [questions, total] = await Promise.all([
       Question.find(filters)
-        .populate("subjectId schoolId createdBy")
+        .populate("subjectId schoolId createdBy", "name")
         .skip(skip)
         .limit(parseInt(limit))
         .sort(sort),
@@ -107,8 +124,7 @@ export const getQuestions = asyncHandler(async (req, res) => {
           page: parseInt(page),
           pages: Math.ceil(total / limit),
         },
-      },
-      "Questions fetched successfully")
+      }, "Questions fetched successfully")
     );
   } catch (error) {
     return res.status(500).json(new ApiResponse(500, null, error.message));
@@ -121,14 +137,12 @@ export const getQuestions = asyncHandler(async (req, res) => {
 export const getQuestionById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json(new ApiResponse(400, null, "Invalid ID"));
-    }
 
-    const question = await Question.findById(id).populate("subjectId schoolId createdBy");
-    if (!question) {
-      return res.status(404).json(new ApiResponse(404, null, "Question not found"));
-    }
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json(new ApiResponse(400, null, "Invalid ID"));
+
+    const question = await Question.findById(id).populate("subjectId schoolId createdBy", "name");
+    if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
     return res.status(200).json(new ApiResponse(200, question, "Question fetched successfully"));
   } catch (error) {
@@ -142,14 +156,20 @@ export const getQuestionById = asyncHandler(async (req, res) => {
 export const updateQuestion = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const question = await Question.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
 
-    if (!question) {
-      return res.status(404).json(new ApiResponse(404, null, "Question not found"));
-    }
+    const question = await Question.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
     return res.status(200).json(new ApiResponse(200, question, "Question updated successfully"));
   } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json(new ApiResponse(400, null, messages.join(", ")));
+    }
     return res.status(500).json(new ApiResponse(500, null, error.message));
   }
 });
@@ -162,9 +182,7 @@ export const deleteQuestion = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const question = await Question.findByIdAndDelete(id);
 
-    if (!question) {
-      return res.status(404).json(new ApiResponse(404, null, "Question not found"));
-    }
+    if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
     return res.status(200).json(new ApiResponse(200, null, "Question deleted successfully"));
   } catch (error) {
@@ -179,6 +197,7 @@ export const toggleQuestionStatus = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const question = await Question.findById(id);
+
     if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
     question.isActive = !question.isActive;

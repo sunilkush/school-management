@@ -3,8 +3,9 @@ import { EllipsisVertical,MailPlus,User,CalendarCheck,ClipboardList,MessageCircl
 import { useState } from 'react';
 import userProfile from '../assets/userProfile.png';
 import AttendanceCalendar from './AttendanceCalendar';
-const Profile = () => { 
 
+const Profile = () => { 
+  
   const [activeTab, setActiveTab] = useState('Profile');
   return (
     <>
@@ -22,7 +23,7 @@ const Profile = () => {
               </div>
 
               <div>
-                <h3 className='text-lg  font-medium'>Sumit Kumar</h3>
+                <h3 className='text-lg  font-medium'>{}</h3>
                 <p className='text-xs text-white text-center bg-green-600 rounded-full  px-2 inline-block'>Active</p>
               </div>
             </div>

@@ -4,16 +4,37 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
+import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 // ✅ Create Attendance
 export const createAttendance = asyncHandler(async (req, res) => {
-  const { 
-    schoolId, academicYearId, date, session, 
-    userId, role, status, remarks, 
-    classId, sectionId, departmentId, subjectId 
+  const {
+    schoolId,
+    academicYearId,
+    date,
+    session,
+    userId,
+    role,
+    status,
+    remarks,
+    classId,
+    sectionId,
+    departmentId,
+    subjectId,
   } = req.body;
 
   if (!schoolId || !academicYearId || !date || !userId || !role || !status) {
     throw new ApiError(400, "Required fields missing!");
+  }
+
+  // 🔐 Teacher validation
+  if (req.user.role === "TEACHER") {
+    const isAssigned = req.user.schoolByAssignedTeachers?.some(
+      (s) => s.schoolId.toString() === schoolId
+    );
+
+    if (!isAssigned) {
+      throw new ApiError(403, "You are not assigned to this school");
+    }
   }
 
   const attendance = await Attendance.create({
@@ -29,77 +50,113 @@ export const createAttendance = asyncHandler(async (req, res) => {
     sectionId,
     departmentId,
     subjectId,
-    markedBy: req.user?._id,
+    markedBy: req.user._id,
     markedAt: new Date(),
   });
 
-  return res.status(201).json(new ApiResponse(201, attendance, "Attendance created successfully"));
+  return res
+    .status(201)
+    .json(new ApiResponse(201, attendance, "Attendance created successfully"));
 });
+
 
 // ✅ Get Attendance (Filterable)
 export const getAttendances = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, classId, sectionId, role, date } = req.query;
+  const { academicYearId, classId, sectionId, role, date } = req.query;
 
-  const filter = {};
-  if (schoolId) filter.schoolId = schoolId;
+  let filter = {};
   if (academicYearId) filter.academicYearId = academicYearId;
   if (classId) filter.classId = classId;
   if (sectionId) filter.sectionId = sectionId;
   if (role) filter.role = role;
   if (date) filter.date = new Date(date);
 
+  filter = buildSchoolAccessFilter(req, filter);
+
   const attendances = await Attendance.find(filter)
-    .populate("userId", "fullName email")
+    .populate("userId", "fullName email role")
     .populate("classId", "name")
     .populate("sectionId", "name")
     .populate("departmentId", "name")
     .populate("subjectId", "name")
-    .populate("markedBy", "fullName");
+    .populate("markedBy", "fullName role");
 
-  return res.status(200).json(new ApiResponse(200, attendances, "Attendance list fetched successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, attendances, "Attendance list fetched"));
 });
+
 
 // ✅ Update Attendance
 export const updateAttendance = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  const attendance = await Attendance.findById(id);
+  if (!attendance) throw new ApiError(404, "Attendance not found");
+
+  // 🔐 Teacher can update only own marked records
+  if (
+    req.user.role === "TEACHER" &&
+    attendance.markedBy.toString() !== req.user._id.toString()
+  ) {
+    throw new ApiError(403, "Not allowed to update this record");
+  }
+
   const updated = await Attendance.findByIdAndUpdate(
     id,
-    { ...req.body, updatedBy: req.user?._id, updatedAt: new Date() },
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date() },
     { new: true }
   );
 
-  if (!updated) throw new ApiError(404, "Attendance not found");
-
-  return res.status(200).json(new ApiResponse(200, updated, "Attendance updated successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updated, "Attendance updated"));
 });
+
 
 // ✅ Delete Attendance
 export const deleteAttendance = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const deleted = await Attendance.findByIdAndDelete(id);
-  if (!deleted) throw new ApiError(404, "Attendance not found");
+  const attendance = await Attendance.findById(id);
+  if (!attendance) throw new ApiError(404, "Attendance not found");
 
-  return res.status(200).json(new ApiResponse(200, deleted, "Attendance deleted successfully"));
+  if (
+    req.user.role === "TEACHER" &&
+    attendance.markedBy.toString() !== req.user._id.toString()
+  ) {
+    throw new ApiError(403, "Not allowed to delete this record");
+  }
+
+  await attendance.deleteOne();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Attendance deleted"));
 });
+
 
 // ✅ Daily Report (By Date)
 export const getDailyReport = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, date } = req.query;
+  const { academicYearId, date } = req.query;
+  if (!academicYearId || !date)
+    throw new ApiError(400, "academicYearId and date required");
 
-  if (!schoolId || !academicYearId || !date) {
-    throw new ApiError(400, "schoolId, academicYearId and date are required!");
-  }
-
-  const records = await Attendance.find({
-    schoolId,
+  let filter = {
     academicYearId,
     date: new Date(date),
-  }).populate("userId", "fullName email role");
+  };
 
-  return res.status(200).json(new ApiResponse(200, records, "Daily Report fetched"));
+  filter = buildSchoolAccessFilter(req, filter);
+
+  const records = await Attendance.find(filter).populate(
+    "userId",
+    "fullName role"
+  );
+
+  res.status(200).json(new ApiResponse(200, records, "Daily report"));
 });
+
 
 // ✅ Monthly Report (By Month)
 export const getMonthlyReport = asyncHandler(async (req, res) => {

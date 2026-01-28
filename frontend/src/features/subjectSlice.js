@@ -56,7 +56,7 @@ export const updateSubject = createAsyncThunk(
   async ({ subjectId, subjectData }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/subject/${subjectId}`, subjectData, {
+      const res = await axios.put(`${Api_Base_Url}/subject/${subjectId}/assign-teachers`, subjectData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return res.data?.data;

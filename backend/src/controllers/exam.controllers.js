@@ -9,12 +9,96 @@ import { Question } from "../models/Questions.model.js";
 // Create Exam
 // =============================
 export const createExam = asyncHandler(async (req, res) => {
-  try {
-    const exam = await Exam.create(req.body);
-    return res.status(201).json(new ApiResponse(201, exam, "Exam created successfully"));
-  } catch (error) {
-    return res.status(500).json(new ApiResponse(500, null, error.message));
+  const {
+    title,
+    classId,
+    sectionId,
+    subjectId,
+    examType,
+    startTime,
+    endTime,
+    durationMinutes,
+    totalMarks,
+    passingMarks,
+    questionOrder,
+    shuffleOptions,
+    questions = [],
+    negativeMarking,
+    allowPartialScoring,
+    maxAttempts,
+    status,
+  } = req.body;
+
+  /* ================= BASIC VALIDATION ================= */
+  if (!title || !startTime || !endTime || !durationMinutes) {
+    throw new ApiError(400, "Required exam fields missing");
   }
+
+  if (passingMarks > totalMarks) {
+    throw new ApiError(400, "Passing marks cannot exceed total marks");
+  }
+
+  if (new Date(endTime) <= new Date(startTime)) {
+    throw new ApiError(400, "End time must be after start time");
+  }
+
+  /* ================= USER CONTEXT ================= */
+  const schoolId = req.user.schoolId || req.user.school?._id;
+  const academicYearId = req.user.academicYearId;
+
+  if (!schoolId || !academicYearId) {
+    throw new ApiError(400, "School or Academic Year not found in user context");
+  }
+
+  /* ================= QUESTIONS MAPPING ================= */
+  const formattedQuestions = questions.map((q) => {
+    if (!mongoose.Types.ObjectId.isValid(q.questionId)) {
+      throw new ApiError(400, "Invalid Question ID");
+    }
+
+    return {
+      questionId: q.questionId,
+      marks: q.marks || 0,
+      snapshot: {}, // 🔒 future-proof (question snapshot)
+    };
+  });
+
+  /* ================= CREATE EXAM ================= */
+  const exam = await Exam.create({
+    academicYearId,
+    schoolId,
+    title,
+    classId,
+    sectionId,
+    subjectId,
+    examType,
+
+    startTime: new Date(startTime),
+    endTime: new Date(endTime),
+    durationMinutes,
+
+    totalMarks,
+    passingMarks,
+
+    questionOrder,
+    shuffleOptions,
+
+    questions: formattedQuestions,
+
+    settings: {
+      negativeMarking: negativeMarking || 0,
+      allowPartialScoring: !!allowPartialScoring,
+      maxAttempts: maxAttempts || 1,
+    },
+
+    status: status || "draft",
+    createdBy: req.user._id,
+  });
+
+  /* ================= RESPONSE ================= */
+  res.status(201).json(
+    new ApiResponse(201, exam, "Exam created & scheduled successfully")
+  );
 });
 
 // =============================
@@ -23,15 +107,41 @@ export const createExam = asyncHandler(async (req, res) => {
 export const getExams = asyncHandler(async (req, res) => {
   try {
     const filters = {};
-    if (req.query.schoolId) filters.schoolId = req.query.schoolId;
+
+    // Multi-tenant: If user is not super-admin, restrict to their school
+    if (req.user.role !== "Super Admin") {
+      filters.schoolId = req.user.schoolId;
+    } else if (req.query.schoolId) {
+      filters.schoolId = req.query.schoolId;
+    }
+
+    // Optional filters
     if (req.query.status) filters.status = req.query.status;
     if (req.query.classId) filters.classId = req.query.classId;
+    if (req.query.sectionId) filters.sectionId = req.query.sectionId;
+    if (req.query.subjectId) filters.subjectId = req.query.subjectId;
 
+    // Pagination support
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const total = await Exam.countDocuments(filters);
     const exams = await Exam.find(filters)
       .populate("schoolId classId sectionId subjectId createdBy")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    return res.status(200).json(new ApiResponse(200, exams, "Exams fetched successfully"));
+    return res.status(200).json(
+      new ApiResponse(200, {
+        total,
+        page,
+        limit,
+        exams
+      }, "Exams fetched successfully")
+    );
+
   } catch (error) {
     return res.status(500).json(new ApiResponse(500, null, error.message));
   }
