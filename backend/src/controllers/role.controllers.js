@@ -118,7 +118,30 @@ const defaultPermissions = {
     { module: "Teachers", actions: ["read"] },
   ],
 };
+const ROLE_LEVEL_MAP = {
+  "Super Admin": 1,
 
+  "School Admin": 2,
+  "Principal": 2,
+  "Vice Principal": 2,
+
+  "Teacher": 3,
+  "Subject Coordinator": 3,
+
+  "Student": 4,
+  "Parent": 4,
+  "Accountant": 4,
+  "Staff": 4,
+  "Support Staff": 4,
+  "Librarian": 4,
+  "Hostel Warden": 4,
+  "Transport Manager": 4,
+  "Exam Coordinator": 4,
+  "Receptionist": 4,
+  "IT Support": 4,
+  "Counselor": 4,
+  "Security": 4,
+};
 // ✅ Helper to validate permissions
 const validatePermissions = (permissions) => {
   if (!Array.isArray(permissions)) {
@@ -140,62 +163,108 @@ const validatePermissions = (permissions) => {
  * ✅ Create Role
  */
 export const createRole = asyncHandler(async (req, res) => {
-  let { name, code, type, level, description, schoolId, permissions } = req.body;
+  let {
+    name,
+    code,
+    description,
+    type,
+    level,
+    permissions,
+    schoolId,
+  } = req.body;
 
+  /* ===============================
+     1. BASIC VALIDATION
+  ================================ */
   if (!name || typeof name !== "string") {
-    throw new ApiError(400, "Role name is required and must be a string");
+    throw new ApiError(400, "Role name is required");
   }
 
-  // Format name + code
-  name = name.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  code = code || name.replace(/\s+/g, "_").toUpperCase();
+  // Normalize name & code
+  name = name.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  code = code
+    ? code.trim().toUpperCase()
+    : name.replace(/\s+/g, "_").toUpperCase();
 
-  // Assign type & hierarchy level
-  type = type || (["Super Admin", "School Admin", "Teacher", "Student"].includes(name) ? "system" : "custom");
-  level = level || (name === "Super Admin" ? 1 : name === "School Admin" ? 2 : name === "Teacher" ? 3 : 4);
+  /* ===============================
+     2. AUTO ROLE TYPE
+  ================================ */
+  const SYSTEM_ROLES = ["Super Admin"];
 
-  // Validate schoolId for custom roles
+  if (!type) {
+    type = SYSTEM_ROLES.includes(name) ? "system" : "custom";
+  }
+
+  /* ===============================
+     3. AUTO ROLE LEVEL (🔥 MAIN PART)
+  ================================ */
+  if (!level) {
+    level = ROLE_LEVEL_MAP[name] || 4;
+  }
+
+  /* ===============================
+     4. SCHOOL ID LOGIC
+  ================================ */
   let schoolObjectId = null;
-  if (type !== "system") {
+
+  // System roles → no school
+  if (type === "custom") {
     if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
-      throw new ApiError(400, "Valid school ID is required for custom roles");
+      throw new ApiError(
+        400,
+        "Valid schoolId is required for custom roles"
+      );
     }
     schoolObjectId = new mongoose.Types.ObjectId(schoolId);
   }
 
-  // Default permissions if not provided
+  /* ===============================
+     5. PERMISSIONS
+  ================================ */
   if (!permissions || permissions.length === 0) {
     permissions = defaultPermissions[name];
     if (!permissions) {
-      throw new ApiError(400, `No default permissions defined for role: ${name}`);
+      throw new ApiError(
+        400,
+        `No default permissions defined for role: ${name}`
+      );
     }
   }
 
-  // Validate permissions
   validatePermissions(permissions);
 
-  // Prevent duplicate role (unique per school)
+  /* ===============================
+     6. DUPLICATE CHECK
+  ================================ */
   const existingRole = await Role.findOne({
     name: { $regex: `^${name}$`, $options: "i" },
-    ...(schoolObjectId ? { schoolId: schoolObjectId } : { schoolId: null }),
+    schoolId: schoolObjectId, // null for system
   });
 
   if (existingRole) {
     throw new ApiError(400, `Role "${name}" already exists`);
   }
 
-  // Save role
+  /* ===============================
+     7. CREATE ROLE
+  ================================ */
   const role = await Role.create({
     name,
     code,
+    description: description || "",
     type,
     level,
-    description: description || "",
     permissions,
-    ...(schoolObjectId && { schoolId: schoolObjectId }),
+    schoolId: schoolObjectId, // null for system
+    createdBy: req.user._id,
   });
 
-  return res.status(201).json(new ApiResponse(201, role, "Role created successfully"));
+  /* ===============================
+     8. RESPONSE
+  ================================ */
+  return res.status(201).json(
+    new ApiResponse(201, role, "Role created successfully")
+  );
 });
 
 /**

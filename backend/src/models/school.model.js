@@ -89,7 +89,15 @@ const schoolSchema = new Schema(
         default: false,
       },
     },
+     activeAcademicYearId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
 
+     },
+     boardId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Board",
+     },
     /* ================= META ================= */
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

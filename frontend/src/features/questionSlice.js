@@ -7,12 +7,18 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 // ---------------- Async Thunks ---------------- //
 
 // --- Create Question ---
-export const createQuestion = createAsyncThunk(
-  "questions/createQuestion",
+export const createQuestions = createAsyncThunk(
+  "questions/createQuestions",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/questions/create`, payload);
-      toast.success("Question created successfully!");
+       const token = localStorage.getItem('accessToken');
+      const res = await axios.post(`${API_BASE_URL}/questions/create`, payload,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+      toast.success("Questions created successfully!");
       return res.data.data;
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
@@ -51,10 +57,17 @@ export const getQuestions = createAsyncThunk(
   "questions/getQuestions",
   async (params = {}, { rejectWithValue }) => {
     try {
+       const token = localStorage.getItem("accessToken");
       const query = new URLSearchParams(params).toString();
       const res = await axios.get(
-        `${API_BASE_URL}/questions/getQuestions?${query}`
+        `${API_BASE_URL}/questions/getQuestions?${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -148,16 +161,16 @@ const questionSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // --- Create Question ---
-      .addCase(createQuestion.pending, (state) => {
+      .addCase(createQuestions.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(createQuestion.fulfilled, (state, action) => {
+      .addCase(createQuestions.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
         state.questions.push(action.payload);
       })
-      .addCase(createQuestion.rejected, (state, action) => {
+      .addCase(createQuestions.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

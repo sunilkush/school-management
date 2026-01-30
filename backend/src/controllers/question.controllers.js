@@ -8,24 +8,94 @@ import mongoose from "mongoose";
 // Create Question
 // =============================
 export const createQuestion = asyncHandler(async (req, res) => {
-  try {
-    const user = req.user;
-    const payload = {
-      ...req.body,
-      schoolId: user?.school?._id,
-      createdBy: user._id,
-    };
+  const user = req.user;
+  console.log("User creating question:", user);
+  if (!user || !user.schoolId?._id) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, null, "Unauthorized user"));
+  }
 
+  const {
+    classId,
+    subjectId,
+    chapter,
+    topic,
+    questionType,
+    statement,
+    options = [],
+    correctAnswers = [],
+    difficulty,
+    marks,
+    negativeMarks,
+    tags,
+    isActive
+  } = req.body;
+
+  // 🔐 Basic required checks
+  if (!classId || !subjectId || !questionType || !statement) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          null,
+          "classId, subjectId, questionType and statement are required"
+        )
+      );
+  }
+
+  // 🔍 ObjectId validation
+  if (
+    !mongoose.Types.ObjectId.isValid(classId) ||
+    !mongoose.Types.ObjectId.isValid(subjectId)
+  ) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Invalid classId or subjectId"));
+  }
+
+  const payload = {
+    schoolId: user.schoolId._id,
+    classId,
+    subjectId,
+    chapter,
+    topic,
+    questionType,
+    statement,
+    options,
+    correctAnswers,
+    difficulty,
+    marks,
+    negativeMarks,
+    tags,
+    isActive,
+    createdBy: user._id
+  };
+
+  try {
     const question = await Question.create(payload);
+
     return res
       .status(201)
-      .json(new ApiResponse(201, question, "Question created successfully"));
+      .json(
+        new ApiResponse(201, question, "Question created successfully")
+      );
   } catch (error) {
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json(new ApiResponse(400, null, messages.join(", ")));
+    // 🧠 Mongoose validation errors (schema + pre-validate)
+    if (error.name === "ValidationError" || error.message) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, null, error.message)
+        );
     }
-    return res.status(500).json(new ApiResponse(500, null, error.message));
+
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(500, null, "Internal Server Error")
+      );
   }
 });
 

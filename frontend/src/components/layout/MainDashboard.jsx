@@ -9,29 +9,30 @@ import Topbar from "../navbar/Topbar";
 const { Header, Content } = Layout;
 
 const Dashboard = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
 
   const role = user?.role?.name;
 
-  // Redirect if no active year for non-Super Admin
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
+
+  // Redirect if no active academic year
   useEffect(() => {
     if (role !== "Super Admin" && !activeYear?._id) {
       // navigate("/no-active-year");
     }
   }, [role, activeYear, navigate]);
 
-  // Handle screen resize
+  // Handle responsive resize
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
       setIsSidebarOpen(!mobile);
     };
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -43,31 +44,37 @@ const Dashboard = () => {
       {/* Desktop Sidebar */}
       {!isMobile && <Sidebar isOpen={isSidebarOpen} />}
 
-      {/* Mobile Sidebar Drawer */}
-      {isMobile && (
-        <Drawer
-          title={user?.school?.name || "School"}
-          placement="left"
-          closable={false}
-          onClose={toggleSidebar}
-          open={isSidebarOpen}
-          bodyStyle={{ padding: 0 }}
-          width={260}
-        >
-          <Sidebar isOpen={true} />
-        </Drawer>
-      )}
+      {/* Mobile Sidebar */}
+      <Drawer
+        title={user?.school?.name || "School"}
+        placement="left"
+        closable={false}
+        open={isMobile && isSidebarOpen}
+        onClose={toggleSidebar}
+        width={260}
+        bodyStyle={{ padding: 0 }}
+      >
+        <Sidebar isOpen />
+      </Drawer>
 
-       <Layout style={{ marginLeft: isSidebarOpen ? 260 : 0}}>
-        {/* Topbar / Header */}
+      {/* Main Layout */}
+      <Layout
+        style={{
+          marginLeft: !isMobile && isSidebarOpen ? 260 : 0,
+          transition: "margin-left 0.2s ease",
+        }}
+      >
+        {/* Header */}
         <Header style={{ padding: 0, background: "#fff" }}>
-          <Topbar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+          <Topbar
+            isSidebarOpen={isSidebarOpen}
+            toggleSidebar={toggleSidebar}
+          />
         </Header>
 
-        {/* Main Content */}
+        {/* Page Content */}
         <Content
           style={{
-            margin: 0,
             padding: 16,
             background: "#f0f2f5",
             overflowY: "auto",

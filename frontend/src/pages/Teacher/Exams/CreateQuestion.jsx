@@ -19,7 +19,7 @@ import { PlusOutlined } from "@ant-design/icons";
 
 import { fetchAllSubjects } from "../../../features/subjectSlice";
 import { fetchAllClasses } from "../../../features/classSlice";
-import { createQuestion } from "../../../features/questionSlice";
+import { createQuestions } from "../../../features/questionSlice";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -71,7 +71,7 @@ const CreateQuestion = () => {
         : [],
     };
 
-    dispatch(createQuestion(payload));
+    dispatch(createQuestions(payload));
     message.success("Question created successfully");
     form.resetFields();
     setOptions([]);

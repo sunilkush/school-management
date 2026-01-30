@@ -21,6 +21,18 @@ const OptionSchema = new Schema(
 
 const QuestionSchema = new Schema(
   {
+    boardId: { 
+      type: Schema.Types.ObjectId,
+       ref: "Board", 
+       required: true, 
+       index: true 
+      },
+    academicYearId: { 
+      type: Schema.Types.ObjectId, 
+      ref: "AcademicYear", 
+      required: true, 
+      index: true 
+    },
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
@@ -42,14 +54,18 @@ const QuestionSchema = new Schema(
       index: true
     },
 
-    chapter: {
-      type: String,
-      trim: true
+    chapterId: {
+      type: Schema.Types.ObjectId,
+      ref: "Chapter",
+      required: true,
+      index: true
     },
 
-    topic: {
-      type: String,
-      trim: true
+    topicId: {
+      type: Schema.Types.ObjectId,
+      ref: "Topic",
+      required: true,
+      index: true
     },
 
     questionType: {
@@ -115,7 +131,8 @@ const QuestionSchema = new Schema(
     isActive: {
       type: Boolean,
       default: true
-    }
+    },
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   },
   { timestamps: true }
 );

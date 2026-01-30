@@ -26,8 +26,8 @@ import StaffDashboard from "./pages/Staff/Dashboard/StaffDashboard.jsx";
 import Documents from "./pages/Documents.jsx";
 import Schedule from "./pages/Schedule.jsx";
 import UserRegister from "./pages/UserRegister.jsx";
-import Schools from "./pages/SuperAdmin/Schools/Schools.jsx";
-import AddSchool from "./pages/SuperAdmin/Schools/AddSchool.jsx";
+import Schools from "./pages/SuperAdmin/School_Management/Schools.jsx";
+import AddSchool from "./pages/SuperAdmin/School_Management/AddSchool.jsx";
 import Roles from "./pages/SuperAdmin/System_Settings/Roles.jsx";
 import Permissions from "./pages/SuperAdmin/System_Settings/Permissions.jsx";
 import AcademicYears from "./pages/SuperAdmin/Master_Settings/AcademicYears.jsx";
@@ -74,8 +74,8 @@ import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
 import Events from './pages/SchoolAdmin/Events_&_Calendar/events.jsx';
 import Assets from './pages/SchoolAdmin/Inventory/assets.jsx';
 import ExamSchedule from './pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx';
-import SubscriptionPlans from './pages/SuperAdmin/Schools/SubscriptionPlans.jsx';
-import SchoolReports from './pages/SuperAdmin/Schools/SchoolReports.jsx';
+import SubscriptionPlans from './pages/SuperAdmin/School_Management/SubscriptionPlans.jsx';
+import SchoolReports from './pages/SuperAdmin/School_Management/SchoolReports.jsx';
 import Admins from "./pages/SuperAdmin/Users_Management/Admins.jsx";
 import Staff from './pages/SuperAdmin/Users_Management/Staff.jsx';
 import Teachers from './pages/SuperAdmin/Users_Management/Teachers.jsx';
@@ -110,7 +110,8 @@ import ChildAttendance from './pages/Parent/Attendance/ChildAttendance.jsx';
 import ChildGrades from './pages/Parent/Grades/ChildGrades.jsx';
 import ChildHomework from './pages/Parent/Homework/ChildHomework.jsx';
 import ChildMessages from './pages/Parent/Messages/ChildMessages.jsx';
-
+import SchoolBoards from './pages/SuperAdmin/Master_Settings/SchoolBoards.jsx';
+import ChaptersTopics from './pages/SuperAdmin/Master_Settings/ChaptersTopics.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -172,7 +173,11 @@ const router = createBrowserRouter([
               { path: "departments", element: <Departments /> },
               { path: "settings/global", element: <GlobalConfig /> },
               { path: "settings/audit", element: <AuditLogs /> },
-              { path: "settings/backup", element: <Backups /> }
+              { path: "settings/backup", element: <Backups /> },
+              { path: "boards", element: <SchoolBoards /> },
+              { path: "chapters-topics", element: <ChaptersTopics /> },
+             
+
 
             ],
           },

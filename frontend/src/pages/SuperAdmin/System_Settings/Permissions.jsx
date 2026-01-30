@@ -1,118 +1,156 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Select } from "antd";
-import DataTable from "react-data-table-component";
+import {
+  Card,
+  Select,
+  Table,
+  Typography,
+  Tag,
+  Tooltip,
+  Spin,
+  Empty,
+} from "antd";
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchRoles, fetchRoleBySchool } from "../../../features/roleSlice";
 
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 const Permissions = () => {
   const dispatch = useDispatch();
-  const [selectedSchoolId, setSelectedSchoolId] = useState("");
+  const [selectedSchoolId, setSelectedSchoolId] = useState(null);
 
-  const { schools } = useSelector((state) => state.school);
+  const { schools = [] } = useSelector((state) => state.school);
   const { roles = [], loading } = useSelector((state) => state.role);
+  
+  /* ================= LOAD DATA ================= */
 
-  // Load all schools
   useEffect(() => {
     dispatch(fetchSchools());
+    dispatch(fetchRoles());
   }, [dispatch]);
 
-  // Load roles depending on school selection
   useEffect(() => {
     if (selectedSchoolId) {
       dispatch(fetchRoleBySchool(selectedSchoolId));
     } else {
-      dispatch(fetchRoles()); // load global roles
+      dispatch(fetchRoles());
     }
   }, [dispatch, selectedSchoolId]);
 
-  // Extract unique modules
-  const allModules = Array.from(
-    new Set(
-      roles.flatMap((role) => role.permissions?.map((perm) => perm.module))
-    )
-  );
+  /* ================= PREPARE MODULES ================= */
 
-  // Prepare rows
-  const rows = allModules
-    .sort((a, b) => a.localeCompare(b))
-    .map((module) => {
-      const row = { module };
-      roles.forEach((role) => {
-        const hasPerm = role.permissions?.some(
-          (perm) => perm.module === module && perm.actions.length > 0
-        );
-        row[role._id] = hasPerm;
-      });
-      return row;
+  const modules = useMemo(() => {
+    return Array.from(
+      new Set(
+        roles.flatMap((role) =>
+          role.permissions?.map((perm) => perm.module)
+        )
+      )
+    ).sort();
+  }, [roles]);
+
+  /* ================= TABLE DATA ================= */
+
+  const dataSource = modules.map((module, index) => {
+    const row = { key: index, module };
+    roles.forEach((role) => {
+      row[role._id] = role.permissions?.some(
+        (p) => p.module === module && p.actions?.length
+      );
     });
+    return row;
+  });
 
-  // Prepare columns
+  /* ================= TABLE COLUMNS ================= */
+
   const columns = [
     {
-      name: "Module",
-      selector: (row) => row.module,
-      sortable: true,
-      wrap: true,
+      title: "Module",
+      dataIndex: "module",
+      key: "module",
+      fixed: "left",
+      width: 220,
+      render: (text) => <Text strong>{text}</Text>,
     },
     ...roles.map((role) => ({
-      name: role.name,
-      selector: (row) => row[role._id],
-      cell: (row) =>
-        row[role._id] ? (
-          <span className="text-green-600 font-bold text-lg">✔️</span>
+      title: role.name,
+      dataIndex: role._id,
+      key: role._id,
+      align: "center",
+      render: (value) =>
+        value ? (
+          <Tooltip title="Permission Granted">
+            <Tag color="green" icon={<CheckCircleOutlined />}>
+              Yes
+            </Tag>
+          </Tooltip>
         ) : (
-          <span className="text-gray-400">—</span>
+          <Tooltip title="No Permission">
+            <Tag color="red" icon={<CloseCircleOutlined />}>
+              No
+            </Tag>
+          </Tooltip>
         ),
-      center: true,
     })),
   ];
 
-  return (
-    <div className="p-4 space-y-4 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold">Check Permissions</h2>
+  /* ================= UI ================= */
 
-      <div className="mt-4 max-w-md">
-        <label className="block mb-1 font-semibold">
-          Select School (optional):
-        </label>
-        {!schools.length ? (
-          <p className="text-gray-500">Loading schools...</p>
-        ) : (
-          <Select
-            value={selectedSchoolId || undefined}
-            onChange={(value) => setSelectedSchoolId(value)}
-            allowClear
-            placeholder="-- Global Roles --"
-            className="w-full"
-          >
-            {schools.map((school) => (
-              <Option key={school._id} value={school._id}>
-                {school.name}
-              </Option>
-            ))}
-          </Select>
-        )}
+  return (
+    <Card className="shadow-sm">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
+        <div>
+          <Title level={4} className="mb-0">
+            Permissions Matrix
+          </Title>
+          <Text type="secondary">
+            View module-wise permissions for each role
+          </Text>
+        </div>
+
+        <Select
+          allowClear
+          placeholder="Global Roles"
+          style={{ minWidth: 260 }}
+          value={selectedSchoolId}
+          onChange={setSelectedSchoolId}
+        >
+          {schools.map((school) => (
+            <Option key={school._id} value={school._id}>
+              {school.name}
+            </Option>
+          ))}
+        </Select>
       </div>
 
-      <DataTable
-        className="border border-gray-200 p-3"
-        title={`Role-wise Permissions Matrix ${
-          selectedSchoolId ? "(School Specific)" : "(Global)"
-        }`}
-        columns={columns}
-        data={rows}
-        striped
-        highlightOnHover
-        progressPending={loading}
-        pagination
-        dense
-        responsive
-        noDataComponent="No permissions found."
-      />
-    </div>
+      {/* Status */}
+      <div className="mb-3">
+        <Tag color={selectedSchoolId ? "blue" : "default"}>
+          {selectedSchoolId ? "School Specific Permissions" : "Global Permissions"}
+        </Tag>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Spin size="large" />
+        </div>
+      ) : dataSource.length === 0 ? (
+        <Empty description="No permissions found" />
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={dataSource}
+          bordered
+          scroll={{ x: "max-content" }}
+          pagination={{ pageSize: 10 }}
+          size="middle"
+        />
+      )}
+    </Card>
   );
 };
 

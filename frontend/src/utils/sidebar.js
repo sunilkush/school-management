@@ -87,8 +87,10 @@ export const sidebarMenu = {
       icon: Settings,
       subMenu: [
         { title: "Academic Years", path: "superadmin/academic-years" },
+        { title: "School Board", path: "superadmin/boards" },
         { title: "Classes & Sections", path: "superadmin/classes" },
         { title: "Subjects", path: "superadmin/subjects" },
+        { title: "Chapters & Topics", path: "superadmin/chapters-topics" },
         { title: "Departments", path: "superadmin/departments" },
         { title: "Designations", path: "superadmin/designations" },
       ],

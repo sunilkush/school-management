@@ -7,7 +7,7 @@ import {
   createSubscriptionPlan,
   updateSubscriptionPlan,
   fetchPlanLogs,
-} from "../../../features/subscriptionPlanSlice";
+} from "../../../features/subscriptionPlanSlice.js";
 
 import { Table, Card, Button, Tag, Space, Popconfirm, Modal } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
