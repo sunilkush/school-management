@@ -61,8 +61,8 @@ import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx
 import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
 import ExamReports from './pages/SchoolAdmin/Exams_&_Grades/ExamReport.jsx';
-import QuestionBank from './pages/SchoolAdmin/Exams_&_Grades/QuestionBank.jsx';
-import CreateExam from './pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx';
+import QuestionBank from './pages/Teacher/Exams/QuestionBank.jsx';
+import CreateExam from './pages/Teacher/Exams/CreateExam.jsx';
 import ExamLive from './pages/Student/Exams/ExamLive.jsx';
 import AttemptReview from './pages/Student/Exams/AttemptReview.jsx';
 import ClassSectionFrom from './pages/SuperAdmin/Classes_&_Section/ClassSectionFrom.jsx';
@@ -70,7 +70,6 @@ import ClassSectionList from './pages/SuperAdmin/Classes_&_Section/ClassSectionL
 import EmployeeForm from './components/forms/EmployeeForm.jsx';
 import EmployeeDetailes from './pages/Teacher/Profile/EmployeeDetailes.jsx';
 import FeeStudent from './pages/Student/Fees/FeeStudent.jsx';
-
 import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
 import Events from './pages/SchoolAdmin/Events_&_Calendar/events.jsx';
 import Assets from './pages/SchoolAdmin/Inventory/assets.jsx';
@@ -102,6 +101,7 @@ import FeeStructure from './pages/SchoolAdmin/Fees_Management/FeeStructure.jsx';
 import StudentAssignFees from './pages/SchoolAdmin/Fees_Management/AssignStudentFeeForm.jsx';
 import StudentHomework from './pages/Student/Homework/StudentHomework.jsx';
 import ExamsPage from './pages/SchoolAdmin/Exams_&_Grades/ExamPage.jsx';
+import TeacherExamsPage from './pages/Teacher/Exams/TeacherExamsPage.jsx';
 import LibraryCard from './pages/SchoolAdmin/Library/LibraryCard.jsx';
 import CalendarPage from './pages/SchoolAdmin/Events_&_Calendar/CalendarPage.jsx';
 import MyChildren from './pages/Parent/Children/MyChildren.jsx';
@@ -248,6 +248,7 @@ const router = createBrowserRouter([
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/create-exam", element: <CreateExam /> },
+              { path: "exams/list", element: <TeacherExamsPage /> },
               { path: "timetable", element: <ClassTimetable /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },

@@ -5,7 +5,6 @@ import {
   Space,
   Popconfirm,
   message,
-  Modal,
   Card,
   Tag,
   Typography,
@@ -16,34 +15,28 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
-const ExamsPage = () => {
+const TeacherExamsPage = () => {
   const [exams, setExams] = useState([]);
-  
-  /* -------------------- HANDLERS -------------------- */
+  const navigate = useNavigate();
 
-  
   const handleDelete = (key) => {
     setExams((prev) => prev.filter((exam) => exam.key !== key));
     message.success("Exam deleted");
   };
 
-  /* -------------------- TABLE COLUMNS -------------------- */
-
   const columns = [
     {
       title: "Exam Title",
       dataIndex: "title",
-      key: "title",
       render: (text) => <Text strong>{text}</Text>,
     },
     {
       title: "Type",
       dataIndex: "examType",
-      key: "examType",
       render: (type) => (
         <Tag color="blue">{type?.toUpperCase()}</Tag>
       ),
@@ -51,27 +44,22 @@ const ExamsPage = () => {
     {
       title: "Start Time",
       dataIndex: "startTime",
-      key: "startTime",
     },
     {
       title: "End Time",
       dataIndex: "endTime",
-      key: "endTime",
     },
     {
       title: "Total Marks",
       dataIndex: "totalMarks",
-      key: "totalMarks",
     },
     {
       title: "Passing Marks",
       dataIndex: "passingMarks",
-      key: "passingMarks",
     },
     {
       title: "Status",
       dataIndex: "status",
-      key: "status",
       render: (status) => {
         const color =
           status === "published"
@@ -84,14 +72,17 @@ const ExamsPage = () => {
     },
     {
       title: "Actions",
-      key: "actions",
       align: "center",
       render: (_, record) => (
         <Space>
-        
+          <Button
+            icon={<EditOutlined />}
+            onClick={() =>
+              navigate(`/teacher/exams/edit/${record.key}`)
+            }
+          />
           <Popconfirm
             title="Delete this exam?"
-            description="This action cannot be undone"
             onConfirm={() => handleDelete(record.key)}
           >
             <Button danger icon={<DeleteOutlined />} />
@@ -101,11 +92,8 @@ const ExamsPage = () => {
     },
   ];
 
-  /* -------------------- UI -------------------- */
-
   return (
     <Card bordered={false} style={{ borderRadius: 12 }}>
-      {/* 🔹 HEADER */}
       <Space
         style={{
           width: "100%",
@@ -116,11 +104,16 @@ const ExamsPage = () => {
         <Title level={4} style={{ margin: 0 }}>
           📘 Exams Management
         </Title>
-       
-          
+
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => navigate("/dashboard/teacher/exams/create-exam")}
+        >
+          Create Exam
+        </Button>
       </Space>
 
-      {/* 🔹 TABLE / EMPTY STATE */}
       <Table
         columns={columns}
         dataSource={exams}
@@ -136,10 +129,8 @@ const ExamsPage = () => {
           ),
         }}
       />
-
-      
     </Card>
   );
 };
 
-export default ExamsPage;
+export default TeacherExamsPage;

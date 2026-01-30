@@ -13,45 +13,48 @@ import {
   FileExcelOutlined,
   FilePdfOutlined,
 } from "@ant-design/icons";
-import { fetchReports, exportReportPDF } from "../../../features/examReportSlice";
+import {
+  fetchReports,
+  exportExamReport,
+} from "../../../features/examReportSlice";
 
 const { Title } = Typography;
 
 const ExamReports = () => {
   const dispatch = useDispatch();
-  const { reports, loading } = useSelector((state) => state.reports);
+
+  const { reports = [], loading } = useSelector(
+    (state) => state.examReports
+  );
 
   useEffect(() => {
     dispatch(fetchReports());
   }, [dispatch]);
 
   const handleExport = (format) => {
-    dispatch(exportReportPDF(format));
+    dispatch(exportExamReport({ format }));
   };
 
   const columns = [
     {
       title: "Exam",
-      dataIndex: "examTitle",
-      key: "examTitle",
+      render: (_, record) => record.exam?.title || "-",
     },
     {
       title: "Student",
-      dataIndex: "studentName",
-      key: "studentName",
+      render: (_, record) => record.student?.name || "-",
     },
     {
       title: "Score",
-      dataIndex: "score",
-      key: "score",
       align: "center",
+      render: (_, record) =>
+        record.totalObtainedMarks ?? 0,
     },
     {
       title: "Status",
-      dataIndex: "status",
-      key: "status",
       align: "center",
-      render: (status) => {
+      render: (_, record) => {
+        const status = record.status;
         const color =
           status === "Pass"
             ? "green"
@@ -65,12 +68,7 @@ const ExamReports = () => {
   ];
 
   return (
-    <Card
-      bordered={false}
-      style={{ borderRadius: 12 }}
-      bodyStyle={{ padding: 24 }}
-    >
-      {/* Header */}
+    <Card bordered={false} style={{ borderRadius: 12 }}>
       <Space
         style={{ width: "100%", justifyContent: "space-between" }}
       >
@@ -95,7 +93,6 @@ const ExamReports = () => {
         </Space>
       </Space>
 
-      {/* Table */}
       <div style={{ marginTop: 20 }}>
         {loading ? (
           <Spin size="large" />
@@ -103,12 +100,8 @@ const ExamReports = () => {
           <Table
             columns={columns}
             dataSource={reports}
-            rowKey="_id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-            }}
-            bordered
+            rowKey={(record) => record._id}
+            pagination={{ pageSize: 10 }}
           />
         )}
       </div>

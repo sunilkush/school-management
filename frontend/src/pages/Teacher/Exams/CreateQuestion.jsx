@@ -29,7 +29,7 @@ const CreateQuestion = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-  const { subjectList = [] } = useSelector((state) => state.subject);
+  const { subjects = [] } = useSelector((state) => state.subject);
   const { classList = [] } = useSelector((state) => state.class);
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -38,11 +38,19 @@ const CreateQuestion = () => {
   const [options, setOptions] = useState([]);
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [questionType, setQuestionType] = useState("mcq_single");
+   const shortClass = [...classList]
+  .sort((a, b) => {
+    const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
+    return numA - numB;
+  })
+  const shortsubjects = [...subjects]
+  .sort((a, b) => a.name.localeCompare(b.name))
 
   useEffect(() => {
-    dispatch(fetchAllSubjects());
-    dispatch(fetchAllClasses());
-  }, [dispatch]);
+    dispatch(fetchAllSubjects({schoolId}));
+    dispatch(fetchAllClasses({schoolId}));
+  }, [dispatch, schoolId]);
 
   /* -------------------- HANDLERS -------------------- */
 
@@ -72,7 +80,7 @@ const CreateQuestion = () => {
 
   return (
     <Card bordered={false} style={{ borderRadius: 12 }}>
-      <Title level={4}>📝 Create Question</Title>
+     
 
       <Form
         form={form}
@@ -97,7 +105,7 @@ const CreateQuestion = () => {
               rules={[{ required: true }]}
             >
               <Select placeholder="Select Class">
-                {classList.map((cls) => (
+                {shortClass.map((cls) => (
                   <Option key={cls._id} value={cls._id}>
                     {cls.name}
                   </Option>
@@ -113,7 +121,7 @@ const CreateQuestion = () => {
               rules={[{ required: true }]}
             >
               <Select placeholder="Select Subject">
-                {subjectList.map((subj) => (
+                {shortsubjects.map((subj) => (
                   <Option key={subj._id} value={subj._id}>
                     {subj.name}
                   </Option>

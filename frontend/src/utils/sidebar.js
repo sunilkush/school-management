@@ -133,10 +133,11 @@ export const sidebarMenu = {
       title: "Examination Management",
       icon: GraduationCap,
       subMenu: [
-        { title: "Exam Reports", path: "schooladmin/exams/reports" },
+       
         { title: "Exams List", path: "schooladmin/exams/exams-list" },
         { title: "Exam Schedule", path: "schooladmin/exams/schedule" },
         { title: "Grade Entry", path: "schooladmin/exams/grades" },
+         { title: "Exam Reports", path: "schooladmin/exams/reports" },
       ],
     },
 
@@ -192,9 +193,11 @@ export const sidebarMenu = {
       title: "Examinations",
       icon: GraduationCap,
       subMenu: [
+        { title: "Exams List", path: "teacher/exams/list" },
         { title: "Question Bank", path: "teacher/exams/question-bank" },
         { title: "Create Exam", path: "teacher/exams/create-exam" },
         { title: "Exam Reports", path: "teacher/exams/reports" },
+       
       ],
     },
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
