@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-//
-// Exam Schema (same as before, with fixes)
-//
 const ExamSchema = new mongoose.Schema(
   {
     academicYearId: 

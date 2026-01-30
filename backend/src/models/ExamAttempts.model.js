@@ -1,47 +1,122 @@
+// models/ExamAttempt.js
 import mongoose from "mongoose";
 
-const AttemptSchema = new mongoose.Schema(
+const { Schema } = mongoose;
+
+const AnswerSchema = new Schema(
   {
-    examId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Exam", 
-      required: true 
-    },
-    studentId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", 
-      required: true 
+    questionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Question",
+      required: true
     },
 
-    startedAt: { type: Date, default: Date.now },
-    submittedAt: { type: Date },
-    durationSeconds: { type: Number, min: 0 },
-
-    status: { 
-      type: String, 
-      enum: ["in_progress", "submitted", "evaluated", "abandoned"], 
-      default: "in_progress" 
+    // Immutable snapshot of question at exam time
+    questionSnapshot: {
+      statement: String,
+      questionType: String,
+      options: Array,
+      marks: Number,
+      negativeMarks: Number
     },
 
-    answers: [
-      {
-        questionRef: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
-        snapshot: mongoose.Schema.Types.Mixed, // immutable copy of the question
-        answer: mongoose.Schema.Types.Mixed,   // e.g., ['A'], ['A','B'], "true", "Some text"
-        marksObtained: { type: Number, default: 0, min: 0 },
-        isCorrect: { type: Boolean, default: null },
-        flagged: { type: Boolean, default: false }
-      }
-    ],
+    answer: Schema.Types.Mixed, // ['A'], ['A','B'], "true", "text"
 
-    totalMarksObtained: { type: Number, default: 0, min: 0 },
-    grade: { type: String, trim: true },
-    reviewComments: { type: String, trim: true }
+    marksObtained: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+
+    isCorrect: {
+      type: Boolean,
+      default: null
+    },
+
+    flagged: {
+      type: Boolean,
+      default: false
+    }
   },
-  { timestamps: true } // auto-manages createdAt & updatedAt
+  { _id: false }
 );
 
-// ✅ Auto-calculate durationSeconds if submittedAt exists
+const AttemptSchema = new Schema(
+  {
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true
+    },
+
+    examId: {
+      type: Schema.Types.ObjectId,
+      ref: "Exam",
+      required: true
+    },
+
+    examSubjectId: {
+      type: Schema.Types.ObjectId,
+      ref: "ExamSubject",
+      required: true,
+      index: true
+    },
+
+    studentId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
+    },
+
+    startedAt: {
+      type: Date,
+      default: Date.now
+    },
+
+    submittedAt: {
+      type: Date
+    },
+
+    durationSeconds: {
+      type: Number,
+      min: 0
+    },
+
+    status: {
+      type: String,
+      enum: ["in_progress", "submitted", "evaluated", "abandoned"],
+      default: "in_progress"
+    },
+
+    answers: {
+      type: [AnswerSchema],
+      default: []
+    },
+
+    totalMarksObtained: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+
+    grade: {
+      type: String,
+      trim: true
+    },
+
+    reviewComments: {
+      type: String,
+      trim: true
+    }
+  },
+  { timestamps: true }
+);
+
+/* ===============================
+   HOOKS
+================================ */
 AttemptSchema.pre("save", function (next) {
   if (this.submittedAt && this.startedAt) {
     this.durationSeconds = Math.floor(
@@ -50,5 +125,14 @@ AttemptSchema.pre("save", function (next) {
   }
   next();
 });
+
+/* ===============================
+   INDEXES (CRITICAL)
+================================ */
+// One attempt per student per subject
+AttemptSchema.index(
+  { schoolId: 1, examSubjectId: 1, studentId: 1 },
+  { unique: true }
+);
 
 export const Attempt = mongoose.model("Attempt", AttemptSchema);

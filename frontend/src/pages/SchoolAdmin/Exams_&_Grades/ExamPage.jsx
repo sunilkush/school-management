@@ -24,7 +24,9 @@ const ExamsPage = () => {
   const [exams, setExams] = useState([]);
   const [editingExam, setEditingExam] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const user = localStorage.getItem('user')
 
+  const roleName = user ? JSON.parse(user).roleName : null;
   /* -------------------- HANDLERS -------------------- */
 
   const handleSaveExam = (formData) => {
@@ -145,14 +147,16 @@ const ExamsPage = () => {
         <Title level={4} style={{ margin: 0 }}>
           📘 Exams Management
         </Title>
-
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setIsModalOpen(true)}
-        >
-          Create Exam
-        </Button>
+        {roleName === "Super Admin" && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsModalOpen(true)}
+          >
+            Create Exam
+          </Button>
+        )}
+          
       </Space>
 
       {/* 🔹 TABLE / EMPTY STATE */}

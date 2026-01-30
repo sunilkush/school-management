@@ -133,11 +133,10 @@ export const sidebarMenu = {
       title: "Examination Management",
       icon: GraduationCap,
       subMenu: [
-        { title: "Create Exam", path: "schooladmin/exams/create-exam" },
-        { title: "Question Bank", path: "schooladmin/exams/question-bank" },
+        { title: "Exam Reports", path: "schooladmin/exams/reports" },
+        { title: "Exams List", path: "schooladmin/exams/exams-list" },
         { title: "Exam Schedule", path: "schooladmin/exams/schedule" },
         { title: "Grade Entry", path: "schooladmin/exams/grades" },
-        { title: "Exam Reports", path: "schooladmin/exams/reports" },
       ],
     },
 

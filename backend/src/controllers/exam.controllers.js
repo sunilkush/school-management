@@ -8,8 +8,11 @@ import { Question } from "../models/Questions.model.js";
 // =============================
 // Create Exam
 // =============================
+
+
 export const createExam = asyncHandler(async (req, res) => {
   const {
+    academicYearId,
     title,
     classId,
     sectionId,
@@ -22,84 +25,38 @@ export const createExam = asyncHandler(async (req, res) => {
     passingMarks,
     questionOrder,
     shuffleOptions,
-    questions = [],
-    negativeMarking,
-    allowPartialScoring,
-    maxAttempts,
-    status,
+    settings
   } = req.body;
 
-  /* ================= BASIC VALIDATION ================= */
-  if (!title || !startTime || !endTime || !durationMinutes) {
-    throw new ApiError(400, "Required exam fields missing");
+  if (!academicYearId || !title || !startTime || !endTime || !durationMinutes) {
+    throw new ApiError(400, "Required fields missing");
   }
 
-  if (passingMarks > totalMarks) {
-    throw new ApiError(400, "Passing marks cannot exceed total marks");
-  }
-
-  if (new Date(endTime) <= new Date(startTime)) {
-    throw new ApiError(400, "End time must be after start time");
-  }
-
-  /* ================= USER CONTEXT ================= */
-  const schoolId = req.user.schoolId || req.user.school?._id;
-  const academicYearId = req.user.academicYearId;
-
-  if (!schoolId || !academicYearId) {
-    throw new ApiError(400, "School or Academic Year not found in user context");
-  }
-
-  /* ================= QUESTIONS MAPPING ================= */
-  const formattedQuestions = questions.map((q) => {
-    if (!mongoose.Types.ObjectId.isValid(q.questionId)) {
-      throw new ApiError(400, "Invalid Question ID");
-    }
-
-    return {
-      questionId: q.questionId,
-      marks: q.marks || 0,
-      snapshot: {}, // 🔒 future-proof (question snapshot)
-    };
-  });
-
-  /* ================= CREATE EXAM ================= */
   const exam = await Exam.create({
     academicYearId,
-    schoolId,
+    schoolId: req.user.schoolId,
     title,
     classId,
     sectionId,
     subjectId,
     examType,
-
-    startTime: new Date(startTime),
-    endTime: new Date(endTime),
+    startTime,
+    endTime,
     durationMinutes,
-
     totalMarks,
     passingMarks,
-
     questionOrder,
     shuffleOptions,
-
-    questions: formattedQuestions,
-
-    settings: {
-      negativeMarking: negativeMarking || 0,
-      allowPartialScoring: !!allowPartialScoring,
-      maxAttempts: maxAttempts || 1,
-    },
-
-    status: status || "draft",
+    settings,
     createdBy: req.user._id,
+    status: "draft"
   });
 
-  /* ================= RESPONSE ================= */
-  res.status(201).json(
-    new ApiResponse(201, exam, "Exam created & scheduled successfully")
-  );
+  return res
+    .status(201)
+    .json(new ApiResponse(201, exam, "Exam created in draft mode"));
 });
+
 
 // =============================
 // Get All Exams (with filters)
