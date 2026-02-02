@@ -3,58 +3,100 @@ import mongoose, { Schema } from "mongoose";
 
 const boardSchema = new Schema(
   {
-    // school ID
-    schoolId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "School",
-      required: true,
-    },
-    academicYearId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      required: true,
-    },
     // 🔹 Basic Details
-    name: { type: String, required: true, trim: true, uppercase: true }, // CBSE, ICSE, State Board
-    code: { type: String, trim: true, uppercase: true, unique: true }, // e.g., CBSE01
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      unique: true,
+      sparse: true, // prevent null duplicate issue
+    },
+
     description: { type: String, trim: true },
 
-    // 🔹 Ownership / School Level
+    // 🔹 Ownership
     createdByRole: {
       type: String,
-      enum: ["Super Admin", "School Admin"],
+      enum: ["Super Admin", "School Admin"], // Future safe
       required: true,
     },
-    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
 
     // 🔹 Status
-    isActive: { type: Boolean, default: true },
-    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
+
     remarks: { type: String, trim: true },
-    schoolId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "School",
-          required: true,
-        },
   },
   { timestamps: true }
 );
 
-// ✅ Indexes for fast queries & uniqueness
+// ✅ Unique Index (Only Once)
 boardSchema.index({ name: 1 }, { unique: true });
-boardSchema.index({ code: 1 }, { unique: true });
 
-// ✅ Auto-generate code if missing
+// ===============================
+// ✅ Sync Status & isActive
+// ===============================
 boardSchema.pre("save", function (next) {
-  if (!this.code && this.name) {
-    const prefix = this.name.replace(/\s+/g, "").substring(0, 4).toUpperCase();
-    const randomNum = Math.floor(100 + Math.random() * 900);
-    this.code = `${prefix}${randomNum}`;
+  if (this.isActive) {
+    this.status = "Active";
+  } else {
+    this.status = "Inactive";
   }
   next();
 });
 
-// ✅ Safe model registration
+// ===============================
+// ✅ Auto Generate Unique Code
+// ===============================
+boardSchema.pre("save", async function (next) {
+  if (!this.code && this.name) {
+    const prefix = this.name.replace(/\s+/g, "").substring(0, 4).toUpperCase();
+
+    let isUnique = false;
+    let newCode;
+
+    while (!isUnique) {
+      const randomNum = Math.floor(100 + Math.random() * 9000);
+      newCode = `${prefix}${randomNum}`;
+
+      const exists = await mongoose.models.Board.findOne({ code: newCode });
+      if (!exists) isUnique = true;
+    }
+
+    this.code = newCode;
+  }
+
+  next();
+});
+
+// ===============================
+// ✅ Safe Model Export
+// ===============================
 const Board = mongoose.models.Board || mongoose.model("Board", boardSchema);
 export default Board;

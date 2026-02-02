@@ -12,105 +12,86 @@ import {
   Tag,
   Select,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
   createBoard,
   getBoards,
   updateBoard,
   deleteBoard,
+  assignSchoolBoards
 } from "../../../features/boardSlice.js";
+
 import { fetchSchools } from "../../../features/schoolSlice.js";
-import { fetchActiveAcademicYear } from "../../../features/academicYearSlice.js";
+ 
+
+const { Option } = Select;
 
 const SchoolBoards = () => {
   const dispatch = useDispatch();
-  const { boards = { boards: [], pagination: {} }, loading } = useSelector(
-    (state) => state.boards || {}
-  );
-  const { schools = [] } = useSelector((state) => state.school || {});
-  const { activeYear } = useSelector((state) => state.academicYear || {});
 
+  // ==============================
+  // Boards State
+  // ==============================
+  const boardsState = useSelector((state) => state.boards || {});
+  const boards =
+    boardsState?.boards?.boards ||
+    boardsState?.boards ||
+    [];
+
+  const loading = boardsState?.loading || false;
+
+  // ==============================
+  // Schools State (Assuming schoolSlice hai)
+  // ==============================
+  const { schools = [] } = useSelector((state) => state.school || {});
+  // ==============================
+  // Local States
+  // ==============================
   const [modalVisible, setModalVisible] = useState(false);
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  
   const [editingBoard, setEditingBoard] = useState(null);
 
   const [form] = Form.useForm();
-
-  const user = localStorage.getItem("user");
-  const createdByRole = user ? JSON.parse(user).role.name : null;
+  const [assignForm] = Form.useForm();
 
   // ==============================
-  // All India Boards List
+  // Safe User Parse
   // ==============================
-  const centralBoards = [
-    "CBSE - Central Board of Secondary Education",
-    "CISCE - Council for the Indian School Certificate Examinations (ICSE/ISC)",
-    "NIOS - National Institute of Open Schooling",
-  ];
-
-  const internationalBoards = [
-    "IB - International Baccalaureate",
-    "Cambridge International (CAIE - IGCSE / A Levels)",
-    "Pearson Edexcel (UK Board)",
-  ];
-
-  const stateBoards = [
-    "UPMSP - Uttar Pradesh Madhyamik Shiksha Parishad (UP Board)",
-    "BSEB - Bihar School Examination Board",
-    "HBSE - Haryana Board of School Education",
-    "PSEB - Punjab School Education Board",
-    "JKBOSE - Jammu & Kashmir Board of School Education",
-    "HPBOSE - Himachal Pradesh Board of School Education",
-    "UBSE - Uttarakhand Board of School Education",
-    "RBSE - Rajasthan Board of Secondary Education",
-    "GSEB - Gujarat Secondary and Higher Secondary Education Board",
-    "MSBSHSE - Maharashtra State Board",
-    "GBSHSE - Goa Board of Secondary and Higher Secondary Education",
-    "MPBSE - Madhya Pradesh Board of Secondary Education",
-    "CGBSE - Chhattisgarh Board of Secondary Education",
-    "WBBSE - West Bengal Board of Secondary Education",
-    "WBCHSE - West Bengal Council of Higher Secondary Education",
-    "BSE Odisha - Board of Secondary Education Odisha",
-    "CHSE Odisha - Council of Higher Secondary Education Odisha",
-    "JAC - Jharkhand Academic Council",
-    "BSEAP - Andhra Pradesh Board of Secondary Education",
-    "APOSS - Andhra Pradesh Open School Society",
-    "BSE Telangana - Telangana State Board of Secondary Education",
-    "TOSS - Telangana Open School Society",
-    "KSEAB - Karnataka School Examination and Assessment Board",
-    "KBPE - Kerala Board of Public Examinations",
-    "DHSE Kerala - Directorate of Higher Secondary Education Kerala",
-    "TNBSE - Tamil Nadu State Board",
-    "DGE Tamil Nadu - Directorate of Government Examinations",
-    "PUE Karnataka - Pre University Board Karnataka",
-    "SEBA - Board of Secondary Education Assam",
-    "AHSEC - Assam Higher Secondary Education Council",
-    "MBSE - Mizoram Board of School Education",
-    "NBSE - Nagaland Board of School Education",
-    "TBSE - Tripura Board of Secondary Education",
-    "MBOSE - Meghalaya Board of School Education",
-    "BOSEM - Board of Secondary Education Manipur",
-    "COHSEM - Council of Higher Secondary Education Manipur",
-    "Sikkim Board of Secondary Education",
-    "Arunachal Pradesh Board of Secondary Education",
-  ];
-
-  const allIndiaBoards = [...centralBoards, ...internationalBoards, ...stateBoards];
+  let createdByRole = null;
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    createdByRole = user?.role?.name || null;
+  } catch {
+    createdByRole = null;
+  }
 
   // ==============================
-  // Load Data
+  // Load Boards
   // ==============================
   useEffect(() => {
-    dispatch(getBoards({ page: 1, limit: 10 }));
-    dispatch(fetchSchools());
+    dispatch(getBoards());
+    dispatch(fetchSchools())
   }, [dispatch]);
 
   // ==============================
-  // Handle Add/Edit/Delete
+  // Board CRUD Handlers
   // ==============================
   const handleAddBoard = () => {
-    form.resetFields();
     setEditingBoard(null);
+    form.resetFields();
+
+    form.setFieldsValue({
+      createdByRole,
+      isActive: true,
+    });
+
     setModalVisible(true);
   };
 
@@ -118,9 +99,10 @@ const SchoolBoards = () => {
     setEditingBoard(board);
 
     form.setFieldsValue({
-      ...board,
-      schoolId: board?.schoolId?._id || board?.schoolId,
-      academicYearId: board?.academicYearId?._id || board?.academicYearId,
+      name: board?.name,
+      code: board?.code,
+      description: board?.description,
+      isActive: board?.isActive,
       createdByRole: board?.createdByRole || createdByRole,
     });
 
@@ -131,7 +113,7 @@ const SchoolBoards = () => {
     try {
       await dispatch(deleteBoard(id)).unwrap();
       message.success("Deleted Successfully");
-      dispatch(getBoards({ page: boards.pagination.page, limit: boards.pagination.limit }));
+      dispatch(getBoards());
     } catch (err) {
       message.error(err?.message || "Delete failed");
     }
@@ -141,7 +123,10 @@ const SchoolBoards = () => {
     try {
       if (editingBoard) {
         await dispatch(
-          updateBoard({ id: editingBoard._id, boardData: values })
+          updateBoard({
+            id: editingBoard._id,
+            boardData: values,
+          })
         ).unwrap();
         message.success("Updated Successfully");
       } else {
@@ -150,21 +135,31 @@ const SchoolBoards = () => {
       }
 
       setModalVisible(false);
-      dispatch(getBoards({ page: boards.pagination.page, limit: boards.pagination.limit }));
+      dispatch(getBoards());
     } catch (err) {
       message.error(err?.message || "Operation failed");
     }
   };
 
   // ==============================
-  // Handle School Change -> Fetch Active Academic Year
+  // ✅ Assign Modal Handlers
   // ==============================
-  const handleSchoolChange = async (schoolId) => {
+  const handleOpenAssignModal = () => {
+    assignForm.resetFields();
+    setAssignModalVisible(true);
+  };
+
+  const handleAssignSubmit = async (values) => {
     try {
-      const res = await dispatch(fetchActiveAcademicYear(schoolId)).unwrap();
-      form.setFieldsValue({ academicYearId: res._id });
+      console.log("Assign Data", values);
+
+      // 👉 API Call (agar hai)
+       await dispatch(assignSchoolBoards(values)).unwrap();
+
+      message.success("Boards Assigned Successfully");
+      setAssignModalVisible(false);
     } catch (err) {
-      message.error("Active Academic Year not found: " + err?.message || "");
+      message.error(err?.message || "Assign Failed");
     }
   };
 
@@ -172,17 +167,27 @@ const SchoolBoards = () => {
   // Table Columns
   // ==============================
   const columns = [
-    { title: "Board Name", dataIndex: "name" },
-    { title: "Code", dataIndex: "code" },
-    { title: "Description", dataIndex: "description" },
+    {
+      title: "Board Name",
+      dataIndex: "name",
+    },
+    {
+      title: "Code",
+      dataIndex: "code",
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+    },
     {
       title: "Status",
       dataIndex: "isActive",
-      render: (val) => (val ? <Tag color="green">Active</Tag> : <Tag color="red">Inactive</Tag>),
-    },
-    {
-      title: "School",
-      render: (_, record) => record?.schoolId?.name || "-",
+      render: (val) =>
+        val ? (
+          <Tag color="green">Active</Tag>
+        ) : (
+          <Tag color="red">Inactive</Tag>
+        ),
     },
     {
       title: "Actions",
@@ -210,32 +215,42 @@ const SchoolBoards = () => {
     },
   ];
 
+  // ==============================
+  // UI
+  // ==============================
   return (
     <div className="p-4">
       <Card
-        title="School Boards"
+        title="School Exam Boards"
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddBoard}>
-            Add Board
-          </Button>
+          <Space>
+            <Button
+              type="default"
+              onClick={handleOpenAssignModal}
+              loading={boardsState.loading}
+            >
+              Assign School Boards
+            </Button>
+
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddBoard}
+            >
+              Add Board
+            </Button>
+          </Space>
         }
       >
         <Table
           rowKey="_id"
-          dataSource={Array.isArray(boards.boards) ? boards.boards : []}
+          dataSource={Array.isArray(boards) ? boards : []}
           columns={columns}
           loading={loading}
-          pagination={{
-            current: boards.pagination?.page || 1,
-            pageSize: boards.pagination?.limit || 10,
-            total: boards.pagination?.total || 0,
-            onChange: (page, pageSize) => {
-              dispatch(getBoards({ page, limit: pageSize }));
-            },
-          }}
         />
       </Card>
 
+      {/* ================= Add/Edit Modal ================= */}
       <Modal
         title={editingBoard ? "Edit Board" : "Add Board"}
         open={modalVisible}
@@ -243,30 +258,16 @@ const SchoolBoards = () => {
         onOk={() => form.submit()}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item label="School" name="schoolId" rules={[{ required: true }]}>
-            <Select
-              onChange={handleSchoolChange}
-              options={schools.map((s) => ({ label: s.name, value: s._id }))}
-              placeholder="Select School"
-            />
-          </Form.Item>
-
-          <Form.Item name="academicYearId" hidden>
-            <Input value={activeYear?._id || ""} />
-          </Form.Item>
-
           <Form.Item name="createdByRole" hidden>
-            <Input value={createdByRole || ""} readOnly />
+            <Input />
           </Form.Item>
 
-          <Form.Item label="Board Name" name="name" rules={[{ required: true }]}>
-            <Select
-              showSearch
-              options={allIndiaBoards
-                .map((name) => ({ label: name, value: name }))
-                .sort((a, b) => a.label.localeCompare(b.label))}
-              placeholder="Select Board Name"
-            />
+          <Form.Item
+            label="Board Name"
+            name="name"
+            rules={[{ required: true }]}
+          >
+            <Input />
           </Form.Item>
 
           <Form.Item label="Code" name="code">
@@ -274,11 +275,58 @@ const SchoolBoards = () => {
           </Form.Item>
 
           <Form.Item label="Description" name="description">
-            <Input.TextArea rows={3} />
+            <Input.TextArea />
           </Form.Item>
 
           <Form.Item name="isActive" valuePropName="checked">
             <Checkbox>Active</Checkbox>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ================= Assign Modal ================= */}
+      <Modal
+        title="Assign School Boards"
+        open={assignModalVisible}
+        onCancel={() => setAssignModalVisible(false)}
+        onOk={() => assignForm.submit()}
+      >
+        <Form
+          form={assignForm}
+          layout="vertical"
+          onFinish={handleAssignSubmit}
+        >
+          {/* School Select */}
+          <Form.Item
+            label="Select School"
+            name="schoolId"
+            rules={[{ required: true }]}
+          >
+            <Select placeholder="Select School">
+              {schools.map((school) => (
+                <Option key={school._id} value={school._id}>
+                  {school.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          {/* Boards Multi Select */}
+          <Form.Item
+            label="Select Boards"
+            name="boardIds"
+            rules={[{ required: true }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select Boards"
+            >
+              {boards.map((board) => (
+                <Option key={board._id} value={board._id}>
+                  {board.name}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

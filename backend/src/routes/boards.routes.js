@@ -7,6 +7,8 @@ import {
     getBoardById,
     updateBoard,
     deleteBoard,
+    assignSchoolBoards,
+    removeSchoolBoard
 } from "../controllers/board.controllers.js";
 
 const router = express.Router();
@@ -25,4 +27,8 @@ router.get("/:id",auth,roleMiddleware(ADMIN_ROLE), getBoardById);
 router.put("/:id",auth,roleMiddleware(ADMIN_ROLE), updateBoard);
 // Delete Board
 router.delete("/:id",auth,roleMiddleware(ADMIN_ROLE), deleteBoard);
+// Assign school boards
+router.put("/assignSchool-boards",auth,roleMiddleware(ADMIN_ROLE), assignSchoolBoards);
+// Remove Assign Boards
+router.put("/removeAssignSchool-boards", auth, roleMiddleware(ADMIN_ROLE), removeSchoolBoard)
 export default router;

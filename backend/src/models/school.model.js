@@ -94,8 +94,8 @@ const schoolSchema = new Schema(
       ref: "AcademicYear",
 
      },
-     boardId:{
-      type: mongoose.Schema.Types.ObjectId,
+     boardIds:{
+      type: [mongoose.Schema.Types.ObjectId],
       ref: "Board",
      },
     /* ================= META ================= */
@@ -112,3 +112,4 @@ schoolSchema.index({ name: 1, email: 1 });
 
 /* ================= MODEL ================= */
 export const School = mongoose.model("School", schoolSchema);
+
