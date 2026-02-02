@@ -226,8 +226,8 @@ export const assignSchoolBoards = asyncHandler(async (req, res) => {
      ✅ Populate Response
   =============================== */
   const updatedSchool = await School.findById(schoolId)
-    .populate("boardIds", "name code")
-    .lean();
+  .populate("boards", "name code")
+  .lean();
 
   return res.status(200).json(
     new ApiResponse(
