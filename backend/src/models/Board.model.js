@@ -3,6 +3,17 @@ import mongoose, { Schema } from "mongoose";
 
 const boardSchema = new Schema(
   {
+    // school ID
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+    },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      required: true,
+    },
     // 🔹 Basic Details
     name: { type: String, required: true, trim: true, uppercase: true }, // CBSE, ICSE, State Board
     code: { type: String, trim: true, uppercase: true, unique: true }, // e.g., CBSE01

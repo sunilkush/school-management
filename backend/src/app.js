@@ -54,6 +54,7 @@ import feeInstallmentRoutes from "./routes/feeInstallment.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import feeReportRoutes from "./routes/feeReport.routes.js";
 import activityLogRoutes from "./routes/activity.routes.js";
+import boardRoutes from "./routes/boards.routes.js"
 // route
 app.use('/', indexRouter);
 app.use("/app/v1/school", schoolRoutes)
@@ -82,6 +83,7 @@ app.use("/app/v1/fee-installments", feeInstallmentRoutes);
 app.use("/app/v1/payments", paymentRoutes);
 app.use("/app/v1/fees/report", feeReportRoutes);
 app.use("/app/v1/activity-logs", activityLogRoutes);
+app.use("/app/v1/boards", boardRoutes);
 
 
 
