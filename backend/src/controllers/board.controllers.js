@@ -3,7 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import Board from "../models/Board.model.js";
 import mongoose from "mongoose";
-
+import { School } from "../models/school.model.js";
 /* =====================================================
    CREATE BOARD
 ===================================================== */
@@ -105,7 +105,6 @@ export const updateBoard = asyncHandler(async (req, res) => {
     "name",
     "code",
     "description",
-    "academicYearId",
   ];
 
   const updateData = {};
@@ -152,14 +151,14 @@ export const deleteBoard = asyncHandler(async (req, res) => {
 });
 
 
-// controllers/schoolBoard.controller.js
+
 
 export const assignSchoolBoards = asyncHandler(async (req, res) => {
-  const { schoolId, boardIds } = req.body;
+  let { schoolId, boardIds } = req.body;
 
-  // ===============================
-  // ✅ Validation
-  // ===============================
+  /* ===============================
+     ✅ BASIC VALIDATION
+  =============================== */
   if (!schoolId) {
     throw new ApiError(400, "School ID is required");
   }
@@ -168,47 +167,66 @@ export const assignSchoolBoards = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Board IDs array is required");
   }
 
-  // ===============================
-  // ✅ Check School Exists
-  // ===============================
-  const school = await School.findById(schoolId);
+  /* ===============================
+     ✅ OBJECT ID VALIDATION
+  =============================== */
+  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+    throw new ApiError(400, "Invalid School ID");
+  }
 
+  // Validate all board ids
+  for (const id of boardIds) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new ApiError(400, `Invalid board id: ${id}`);
+    }
+  }
+
+  /* ===============================
+     ✅ Convert to ObjectId
+  =============================== */
+  boardIds = boardIds.map((id) => new mongoose.Types.ObjectId(id));
+
+  /* ===============================
+     ✅ Check School Exists
+  =============================== */
+  const school = await School.findById(schoolId);
   if (!school) {
     throw new ApiError(404, "School not found");
   }
 
-  // ===============================
-  // ✅ Check Boards Exist
-  // ===============================
-  const boards = await Board.find({
-    _id: { $in: boardIds },
-  });
+  /* ===============================
+     ✅ Check Boards Exist
+  =============================== */
+  const boards = await Board.find({ _id: { $in: boardIds } });
 
   if (boards.length !== boardIds.length) {
     throw new ApiError(400, "Some boards are invalid");
   }
 
-  // ===============================
-  // ✅ Remove Duplicate Boards
-  // ===============================
-  const existingBoards = school.boards?.map((b) => b.toString()) || [];
+  /* ===============================
+     ✅ Remove Duplicate Boards
+  =============================== */
+  const existingBoards = (school.boards || []).map((b) => b.toString());
 
   const newBoards = boardIds.filter(
-    (id) => !existingBoards.includes(id)
+    (id) => !existingBoards.includes(id.toString())
   );
 
-  // ===============================
-  // ✅ Assign Boards
-  // ===============================
-  school.boards = [...existingBoards, ...newBoards];
+  /* ===============================
+     ✅ Assign Boards
+  =============================== */
+  school.boards = [
+    ...(school.boards || []),
+    ...newBoards,
+  ];
 
   await school.save();
 
-  // ===============================
-  // ✅ Populate Response
-  // ===============================
+  /* ===============================
+     ✅ Populate Response
+  =============================== */
   const updatedSchool = await School.findById(schoolId)
-    .populate("boards", "name code")
+    .populate("boardIds", "name code")
     .lean();
 
   return res.status(200).json(
@@ -224,19 +242,27 @@ export const assignSchoolBoards = asyncHandler(async (req, res) => {
 export const removeSchoolBoard = asyncHandler(async (req, res) => {
   const { schoolId, boardId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+    throw new ApiError(400, "Invalid school id");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(boardId)) {
+    throw new ApiError(400, "Invalid board id");
+  }
+
   const school = await School.findById(schoolId);
 
   if (!school) {
     throw new ApiError(404, "School not found");
   }
 
-  school.boards = school.boards.filter(
+  school.boards = (school.boards || []).filter(
     (b) => b.toString() !== boardId
   );
 
   await school.save();
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, school, "Board removed successfully"));
+  return res.status(200).json(
+    new ApiResponse(200, school, "Board removed successfully")
+  );
 });

@@ -94,10 +94,10 @@ const schoolSchema = new Schema(
       ref: "AcademicYear",
 
      },
-     boardIds:{
-      type: [mongoose.Schema.Types.ObjectId],
+     boards:[{
+      type:mongoose.Schema.Types.ObjectId,
       ref: "Board",
-     },
+     }],
     /* ================= META ================= */
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

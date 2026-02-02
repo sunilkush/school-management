@@ -23,12 +23,14 @@ router.post("/",auth,roleMiddleware(ADMIN_ROLE), createBoard);
 router.get("/",auth,roleMiddleware(ADMIN_ROLE), getBoards);
 // Get Board by ID
 router.get("/:id",auth,roleMiddleware(ADMIN_ROLE), getBoardById);
+// Assign school boards
+router.put("/assignSchool-boards",auth,roleMiddleware(ADMIN_ROLE), assignSchoolBoards);
+// Remove Assign Boards
+router.put("/removeAssignSchool-boards", auth, roleMiddleware(ADMIN_ROLE), removeSchoolBoard);
 // Update Board
 router.put("/:id",auth,roleMiddleware(ADMIN_ROLE), updateBoard);
 // Delete Board
 router.delete("/:id",auth,roleMiddleware(ADMIN_ROLE), deleteBoard);
-// Assign school boards
-router.put("/assignSchool-boards",auth,roleMiddleware(ADMIN_ROLE), assignSchoolBoards);
-// Remove Assign Boards
-router.put("/removeAssignSchool-boards", auth, roleMiddleware(ADMIN_ROLE), removeSchoolBoard)
+
+
 export default router;
