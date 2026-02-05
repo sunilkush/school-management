@@ -14,13 +14,14 @@ import {
   Space,
   message,
   Typography,
+  TimePicker,
 } from "antd";
 import { Spin } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllClasses } from "../../../features/classSlice.js";
 import { getQuestions } from "../../../features/questionSlice.js";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-
+import {createExam} from "../../../features/examSlice.js"
 const { Title } = Typography;
 const { Option } = Select;
 
@@ -31,8 +32,9 @@ const CreateExam = () => {
   /* ================= LOCAL STATE ================= */
   const [examQuestions, setExamQuestions] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
-  const [sectionList, setSectionList] = useState([]);
+
   const [subjectList, setSubjectList] = useState([]);
+  const [filteredQuestions, setFilteredQuestions] = useState([]);
 
   /* ================= REDUX ================= */
   const { classList = [], loading } = useSelector(
@@ -46,8 +48,12 @@ const CreateExam = () => {
   /* ================= USER ================= */
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const schoolId = user?.school?._id || null;
-
+  const userId = user?._id
+  
+  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
+  const selectedAcademicYear = storeAcadmicYear ? JSON.parse(storeAcadmicYear) : null;
+  const academicYearId = selectedAcademicYear?._id || null
+  const schoolId = selectedAcademicYear?.schoolId || null
   /* ================= FETCH ================= */
   useEffect(() => {
     if (schoolId) {
@@ -56,17 +62,25 @@ const CreateExam = () => {
     }
   }, [schoolId, dispatch]);
 
+
+  const handleSubjectChange = (subjectId) => {
+    const classId = form.getFieldValue("classId");
+
+    const filtered = questionBank.filter(
+      (q) =>
+        q.classId === classId &&
+        (q.subjectId?._id === subjectId || q.subjectId === subjectId)
+    );
+
+    setFilteredQuestions(filtered);
+  };
   /* ================= CLASS CHANGE ================= */
   const handleClassChange = (classId) => {
     setSelectedClass(classId);
 
     const selected = classList.find((c) => c._id === classId);
 
-    const sections =
-      selected?.sections?.map((s) => ({
-        _id: s.sectionId?._id,
-        name: s.sectionId?.name,
-      })) || [];
+
 
     const subjects =
       selected?.subjects?.map((s) => ({
@@ -74,8 +88,10 @@ const CreateExam = () => {
         name: s.subjectId?.name,
       })) || [];
 
-    setSectionList(sections);
+
     setSubjectList(subjects);
+
+    setFilteredQuestions([]); // ⭐ important
 
     form.setFieldsValue({
       sectionId: undefined,
@@ -113,7 +129,8 @@ const CreateExam = () => {
 
   /* ================= SUBMIT ================= */
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
+  try {
     if (values.passingMarks > values.totalMarks) {
       message.error("Passing marks cannot be greater than total marks");
       return;
@@ -130,16 +147,47 @@ const CreateExam = () => {
       return;
     }
 
+    // ⭐ Combine Date + Time Properly
+    const startDateTime = dayjs(values.examDate)
+      .hour(dayjs(values.startTime).hour())
+      .minute(dayjs(values.startTime).minute())
+      .second(0);
+
+    const endDateTime = dayjs(values.examDate)
+      .hour(dayjs(values.endTime).hour())
+      .minute(dayjs(values.endTime).minute())
+      .second(0);
+
     const payload = {
-      ...values,
-      startTime: values.time?.[0]?.toISOString(),
-      endTime: values.time?.[1]?.toISOString(),
+      academicYearId,
+      schoolId,
+      userId,
+      title: values.title,
+      classId: values.classId,
+      subjectId: values.subjectId,
+      examType: values.examType,
+      examDate: values.examDate?.toISOString(),
+      startTime: startDateTime.toISOString(),
+      endTime: endDateTime.toISOString(),
+      durationMinutes: values.durationMinutes,
+      totalMarks: values.totalMarks,
+      passingMarks: values.passingMarks,
+      status: values.status || "draft",
       questions: examQuestions,
+      
     };
 
-    console.log("Exam Payload:", payload);
+    await dispatch(createExam(payload)).unwrap();
+
     message.success("Exam Created Successfully");
-  };
+    form.resetFields();
+    setExamQuestions([]);
+
+  } catch (err) {
+    console.error(err);
+    message.error("Failed to create exam");
+  }
+};
 
   /* ================= UI ================= */
 
@@ -167,7 +215,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={8}>
+            <Col md={12}>
               <Form.Item name="classId" label="Class" rules={[{ required: true }]}>
                 <Select onChange={handleClassChange}>
                   {classList.map((cls) => (
@@ -179,21 +227,11 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={8}>
-              <Form.Item name="sectionId" label="Section" rules={[{ required: true }]}>
-                <Select disabled={!selectedClass}>
-                  {sectionList.map((sec) => (
-                    <Option key={sec._id} value={sec._id}>
-                      {sec.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
 
-            <Col md={8}>
+
+            <Col md={12}>
               <Form.Item name="subjectId" label="Subject" rules={[{ required: true }]}>
-                <Select disabled={!selectedClass}>
+                <Select disabled={!selectedClass} onChange={handleSubjectChange}>
                   {subjectList.map((sub) => (
                     <Option key={sub._id} value={sub._id}>
                       {sub.name}
@@ -201,20 +239,76 @@ const CreateExam = () => {
                   ))}
                 </Select>
               </Form.Item>
+
             </Col>
           </Row>
           {/* SCHEDULE */}
           <Divider orientation="left">Schedule</Divider>
-          <Row gutter={16}>
-            <Col md={16}>
-              <Form.Item name="time" label="Exam Time" rules={[{ required: true }]}>
-                <DatePicker.RangePicker showTime style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-            <Col md={8}> <Form.Item name="durationMinutes" label="Duration" rules={[{ required: true }]} >
-              <InputNumber min={1} style={{ width: "100%" }} />
-            </Form.Item> </Col>
-          </Row>
+
+            <Row gutter={16}>
+              {/* Exam Type */}
+              <Col md={6}>
+                <Form.Item
+                  name="examType"
+                  label="Exam Type"
+                  rules={[{ required: true }]}
+                  initialValue="objective"
+                >
+                  <Select>
+                    <Option value="objective">Objective</Option>
+                    <Option value="subjective">Subjective</Option>
+                    <Option value="mixed">Mixed</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+
+              {/* Exam Date */}
+              <Col md={6}>
+                <Form.Item
+                  name="examDate"
+                  label="Exam Date"
+                  rules={[{ required: true }]}
+                >
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+
+              {/* Start Time */}
+              <Col md={6}>
+                <Form.Item
+                  name="startTime"
+                  label="Start Time"
+                  rules={[{ required: true }]}
+                >
+                  <TimePicker style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+
+              {/* End Time */}
+              <Col md={6}>
+                <Form.Item
+                  name="endTime"
+                  label="End Time"
+                  rules={[{ required: true }]}
+                >
+                  <TimePicker style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              {/* Duration */}
+              <Col md={8}>
+                <Form.Item
+                  name="durationMinutes"
+                  label="Duration (Minutes)"
+                  rules={[{ required: true }]}
+                >
+                  <InputNumber min={1} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
           {/* MARKS */}
           <Divider orientation="left">Marks</Divider>
           <Row gutter={16}>
@@ -250,7 +344,7 @@ const CreateExam = () => {
                     optionFilterProp="children"
                     style={{ width: "100%" }}
                   >
-                    {questionBank.map((ques) => (
+                    {filteredQuestions.map((ques) => (
                       <Option key={ques._id} value={ques._id}>
                         {ques.statement}
                       </Option>
@@ -291,7 +385,8 @@ const CreateExam = () => {
             Save Exam
           </Button>
         </Form>
-      </Card></Spin>
+      </Card>
+    </Spin>
   );
 };
 

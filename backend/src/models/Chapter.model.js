@@ -21,6 +21,8 @@ const chapterSchema = new Schema(
       trim: true
     },
 
+    
+
     /* ================= RELATIONS ================= */
 
     boardId: {

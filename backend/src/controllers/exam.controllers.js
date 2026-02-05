@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Exam } from "../models/Exam.model.js";
 import { Attempt } from "../models/ExamAttempts.model.js"; // same file has both schemas
 import { Question } from "../models/Questions.model.js";
-
+import {ApiError} from "../utils/ApiError.js";
 // =============================
 // Create Exam
 // =============================
@@ -20,12 +20,15 @@ export const createExam = asyncHandler(async (req, res) => {
     examType,
     startTime,
     endTime,
+    examDate,
     durationMinutes,
     totalMarks,
     passingMarks,
     questionOrder,
     shuffleOptions,
-    settings
+    settings,
+    schoolId,
+    userId
   } = req.body;
 
   if (!academicYearId || !title || !startTime || !endTime || !durationMinutes) {
@@ -34,7 +37,7 @@ export const createExam = asyncHandler(async (req, res) => {
 
   const exam = await Exam.create({
     academicYearId,
-    schoolId: req.user.schoolId,
+    schoolId,
     title,
     classId,
     sectionId,
@@ -42,13 +45,14 @@ export const createExam = asyncHandler(async (req, res) => {
     examType,
     startTime,
     endTime,
+    examDate,
     durationMinutes,
     totalMarks,
     passingMarks,
     questionOrder,
     shuffleOptions,
     settings,
-    createdBy: req.user._id,
+    createdBy: userId,
     status: "draft"
   });
 

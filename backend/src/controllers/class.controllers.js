@@ -108,6 +108,7 @@ const updateClass = asyncHandler(async (req, res) => {
         academicYearId: isGlobal ? null : academicYearId,
         isGlobal,
         createdBy: req.user._id,
+        
       }))
     );
   }

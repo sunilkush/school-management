@@ -11,12 +11,13 @@ const ExamSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
 
     classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
-    sectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Section" },
+   /*  sectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Section" }, */
     subjectId: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },
 
     examType: { type: String, enum: ["objective", "subjective", "mixed"], default: "objective" },
 
     startTime: { type: Date, required: true },
+    examDate:{ type:Date,required: true},
     endTime: { type: Date, required: true },
     durationMinutes: { type: Number, required: true, min: 1 },
 

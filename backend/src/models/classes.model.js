@@ -5,7 +5,7 @@ const classSchema = new Schema(
     name: { type: String, required: true, trim: true, uppercase: true },
     code: { type: String, trim: true },
     description: { type: String, trim: true },
-    boardId: { type: Schema.Types.ObjectId, ref: "Board", required: true, index: true },
+    boardId: { type: Schema.Types.ObjectId, ref: "Board",  index: true },
     schoolId: { type: Schema.Types.ObjectId, ref: "School", index: true },
     academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear", index: true },
 

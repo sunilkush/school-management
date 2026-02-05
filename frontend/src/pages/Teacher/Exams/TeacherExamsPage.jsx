@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   Table,
   Button,
@@ -16,18 +16,41 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { getExams } from "../../../features/examSlice.js";
+import { useDispatch, useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
 
 const TeacherExamsPage = () => {
-  const [exams, setExams] = useState([]);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleDelete = (key) => {
-    setExams((prev) => prev.filter((exam) => exam.key !== key));
+  /* ✅ Redux State */
+  const { exams = [], loading } = useSelector((state) => state.exams || {});
+
+  /* ✅ Academic Year + School */
+  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
+  const selectedAcademicYear = storeAcadmicYear
+    ? JSON.parse(storeAcadmicYear)
+    : null;
+
+  const academicYearId = selectedAcademicYear?._id || null;
+  const schoolId = selectedAcademicYear?.schoolId || null;
+
+  /* ✅ Fetch Exams */
+  useEffect(() => {
+    if (schoolId) {
+      dispatch(getExams({ schoolId, academicYearId }));
+    }
+  }, [schoolId, academicYearId, dispatch]);
+
+  /* ✅ Delete Handler (Frontend Only Example) */
+  const handleDelete = () => {
     message.success("Exam deleted");
+    // ⭐ If backend delete API hai to dispatch(deleteExam(id))
   };
 
+  /* ✅ Table Columns */
   const columns = [
     {
       title: "Exam Title",
@@ -44,10 +67,12 @@ const TeacherExamsPage = () => {
     {
       title: "Start Time",
       dataIndex: "startTime",
+      render: (time) => new Date(time).toLocaleString(),
     },
     {
       title: "End Time",
       dataIndex: "endTime",
+      render: (time) => new Date(time).toLocaleString(),
     },
     {
       title: "Total Marks",
@@ -78,12 +103,12 @@ const TeacherExamsPage = () => {
           <Button
             icon={<EditOutlined />}
             onClick={() =>
-              navigate(`/teacher/exams/edit/${record.key}`)
+              navigate(`/teacher/exams/edit/${record._id}`)
             }
           />
           <Popconfirm
             title="Delete this exam?"
-            onConfirm={() => handleDelete(record.key)}
+            onConfirm={() => handleDelete(record._id)}
           >
             <Button danger icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -108,16 +133,19 @@ const TeacherExamsPage = () => {
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          onClick={() => navigate("/dashboard/teacher/exams/create-exam")}
+          onClick={() =>
+            navigate("/dashboard/teacher/exams/create-exam")
+          }
         >
           Create Exam
         </Button>
       </Space>
 
       <Table
+        loading={loading}
         columns={columns}
         dataSource={exams}
-        rowKey="key"
+        rowKey="_id"
         bordered
         pagination={{ pageSize: 5 }}
         locale={{

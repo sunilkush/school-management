@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-
+const token = localStorage.getItem('accessToken');
 // ---------------- Async Thunks ---------------- //
 
 // --- Exam CRUD --- //
@@ -10,7 +10,14 @@ export const createExam = createAsyncThunk(
   "exams/createExam",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/exams`, payload);
+       
+      const res = await axios.post(`${API_BASE_URL}/exams/`, payload,
+        {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+      );
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -22,8 +29,13 @@ export const getExams = createAsyncThunk(
   "exams/getExams",
   async (params = {}, { rejectWithValue }) => {
     try {
+      
       const query = new URLSearchParams(params).toString();
-      const res = await axios.get(`${API_BASE_URL}/exams?${query}`);
+      const res = await axios.get(`${API_BASE_URL}/exams?${query}`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -35,7 +47,11 @@ export const getExamById = createAsyncThunk(
   "exams/getExamById",
   async (examId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/exams/${examId}`);
+      const res = await axios.get(`${API_BASE_URL}/exams/${examId}`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -47,7 +63,11 @@ export const updateExam = createAsyncThunk(
   "exams/updateExam",
   async ({ examId, payload }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${API_BASE_URL}/exams/${examId}`, payload);
+      const res = await axios.put(`${API_BASE_URL}/exams/${examId}`, payload,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -59,7 +79,11 @@ export const deleteExam = createAsyncThunk(
   "exams/deleteExam",
   async (examId, { rejectWithValue }) => {
     try {
-      const res = await axios.delete(`${API_BASE_URL}/exams/${examId}`);
+      const res = await axios.delete(`${API_BASE_URL}/exams/${examId}`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -72,7 +96,11 @@ export const publishExam = createAsyncThunk(
   "exams/publishExam",
   async (examId, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${API_BASE_URL}/exams/${examId}/publish`);
+      const res = await axios.put(`${API_BASE_URL}/exams/${examId}/publish`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -85,7 +113,11 @@ export const startExamAttempt = createAsyncThunk(
   "exams/startExamAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/exams/attempt/start`, payload);
+      const res = await axios.post(`${API_BASE_URL}/exams/attempt/start`, payload,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -97,7 +129,13 @@ export const submitExamAttempt = createAsyncThunk(
   "exams/submitExamAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/exams/attempt/submit`, payload);
+      const res = await axios.post(`${API_BASE_URL}/exams/attempt/submit`, payload,
+        {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+      );
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -109,7 +147,11 @@ export const evaluateAttempt = createAsyncThunk(
   "exams/evaluateAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/exams/attempt/evaluate`, payload);
+      const res = await axios.post(`${API_BASE_URL}/exams/attempt/evaluate`, payload,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
