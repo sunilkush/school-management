@@ -36,7 +36,8 @@ export const getExams = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      return res.data.data;
+     
+      return res.data.data.exams;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
@@ -52,6 +53,7 @@ export const getExamById = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

@@ -29,7 +29,7 @@ const ExamSchema = new mongoose.Schema(
 
     questions: [
       {
-        questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
+        questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
         snapshot: mongoose.Schema.Types.Mixed, // snapshot for immutability
         marks: { type: Number, default: 0, min: 0 }
       }

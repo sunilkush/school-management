@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   Table,
   Button,
   Space,
   Popconfirm,
   message,
-  Modal,
   Card,
   Tag,
   Typography,
@@ -16,34 +15,56 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-
+import { useNavigate } from "react-router-dom";
+import { getExams,deleteExam } from "../../../features/examSlice.js";
+import { useDispatch, useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
 
 const ExamsPage = () => {
-  const [exams, setExams] = useState([]);
-  
-  /* -------------------- HANDLERS -------------------- */
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  
-  const handleDelete = (key) => {
-    setExams((prev) => prev.filter((exam) => exam.key !== key));
-    message.success("Exam deleted");
-  };
+  /* ✅ Redux State */
+  const { exams = [], loading } = useSelector((state) => state.exams || {});
 
-  /* -------------------- TABLE COLUMNS -------------------- */
+  /* ✅ Academic Year + School */
+  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
+  const selectedAcademicYear = storeAcadmicYear
+    ? JSON.parse(storeAcadmicYear)
+    : null;
 
+  const academicYearId = selectedAcademicYear?._id || null;
+  const schoolId = selectedAcademicYear?.schoolId || null;
+
+  /* ✅ Fetch Exams */
+  useEffect(() => {
+    if (schoolId) {
+      dispatch(getExams({ schoolId, academicYearId }));
+    }
+  }, [schoolId, academicYearId, dispatch]);
+
+  /* ✅ Delete Handler (Frontend Only Example) */
+const handleDelete = async (id) => {
+  try {
+    await dispatch(deleteExam(id)).unwrap();   // API call
+
+    message.success("Exam deleted successfully");  // Success after API
+  } catch (error) {
+    console.error(error);
+    message.error("Failed to delete exam");
+  }
+};
+  /* ✅ Table Columns */
   const columns = [
     {
       title: "Exam Title",
       dataIndex: "title",
-      key: "title",
       render: (text) => <Text strong>{text}</Text>,
     },
     {
       title: "Type",
       dataIndex: "examType",
-      key: "examType",
       render: (type) => (
         <Tag color="blue">{type?.toUpperCase()}</Tag>
       ),
@@ -51,27 +72,24 @@ const ExamsPage = () => {
     {
       title: "Start Time",
       dataIndex: "startTime",
-      key: "startTime",
+      render: (time) => new Date(time).toLocaleString(),
     },
     {
       title: "End Time",
       dataIndex: "endTime",
-      key: "endTime",
+      render: (time) => new Date(time).toLocaleString(),
     },
     {
       title: "Total Marks",
       dataIndex: "totalMarks",
-      key: "totalMarks",
     },
     {
       title: "Passing Marks",
       dataIndex: "passingMarks",
-      key: "passingMarks",
     },
     {
       title: "Status",
       dataIndex: "status",
-      key: "status",
       render: (status) => {
         const color =
           status === "published"
@@ -84,15 +102,13 @@ const ExamsPage = () => {
     },
     {
       title: "Actions",
-      key: "actions",
       align: "center",
       render: (_, record) => (
         <Space>
-        
+          
           <Popconfirm
-            title="Delete this exam?"
-            description="This action cannot be undone"
-            onConfirm={() => handleDelete(record.key)}
+            title="Delete Exam?"
+            onConfirm={() => handleDelete(record._id)}
           >
             <Button danger icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -101,11 +117,8 @@ const ExamsPage = () => {
     },
   ];
 
-  /* -------------------- UI -------------------- */
-
   return (
     <Card bordered={false} style={{ borderRadius: 12 }}>
-      {/* 🔹 HEADER */}
       <Space
         style={{
           width: "100%",
@@ -116,15 +129,23 @@ const ExamsPage = () => {
         <Title level={4} style={{ margin: 0 }}>
           📘 Exams Management
         </Title>
-       
-          
+
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() =>
+            navigate("/dashboard/teacher/exams/create-exam")
+          }
+        >
+          Create Exam
+        </Button>
       </Space>
 
-      {/* 🔹 TABLE / EMPTY STATE */}
       <Table
+        loading={loading}
         columns={columns}
         dataSource={exams}
-        rowKey="key"
+        rowKey="_id"
         bordered
         pagination={{ pageSize: 5 }}
         locale={{
@@ -136,8 +157,6 @@ const ExamsPage = () => {
           ),
         }}
       />
-
-      
     </Card>
   );
 };

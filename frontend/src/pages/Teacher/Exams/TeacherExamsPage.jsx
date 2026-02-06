@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect ,useState} from "react";
 import {
   Table,
   Button,
@@ -15,16 +15,18 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+
 import { getExams } from "../../../features/examSlice.js";
 import { useDispatch, useSelector } from "react-redux";
-
+import { Modal } from "antd";
+import EditExamForm from "./EditExamForm";
 const { Title, Text } = Typography;
 
 const TeacherExamsPage = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-
+ 
+const [editModalOpen, setEditModalOpen] = useState(false);
+const [selectedExamId, setSelectedExamId] = useState(null);
   /* ✅ Redux State */
   const { exams = [], loading } = useSelector((state) => state.exams || {});
 
@@ -49,7 +51,10 @@ const TeacherExamsPage = () => {
     message.success("Exam deleted");
     // ⭐ If backend delete API hai to dispatch(deleteExam(id))
   };
-
+  const handleEdit = (examId) => {
+  setSelectedExamId(examId);
+  setEditModalOpen(true);
+};
   /* ✅ Table Columns */
   const columns = [
     {
@@ -100,12 +105,10 @@ const TeacherExamsPage = () => {
       align: "center",
       render: (_, record) => (
         <Space>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate(`/teacher/exams/edit/${record._id}`)
-            }
-          />
+        <Button
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record._id)}
+            />
           <Popconfirm
             title="Delete this exam?"
             onConfirm={() => handleDelete(record._id)}
@@ -129,16 +132,6 @@ const TeacherExamsPage = () => {
         <Title level={4} style={{ margin: 0 }}>
           📘 Exams Management
         </Title>
-
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() =>
-            navigate("/dashboard/teacher/exams/create-exam")
-          }
-        >
-          Create Exam
-        </Button>
       </Space>
 
       <Table
@@ -157,7 +150,20 @@ const TeacherExamsPage = () => {
           ),
         }}
       />
+          <Modal
+  title="Edit Exam"
+  open={editModalOpen}
+  onCancel={() => setEditModalOpen(false)}
+  footer={null}
+  width={900}
+  destroyOnClose
+>
+  {selectedExamId && (
+    <EditExamForm examId={selectedExamId} />
+  )}
+</Modal>
     </Card>
+
   );
 };
 

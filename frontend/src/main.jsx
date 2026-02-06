@@ -62,7 +62,7 @@ import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
 import ExamReports from './pages/SchoolAdmin/Exams_&_Grades/ExamReport.jsx';
 import QuestionBank from './pages/Teacher/Exams/QuestionBank.jsx';
-import CreateExam from './pages/Teacher/Exams/CreateExam.jsx';
+import CreateExam from './pages/Teacher/Exams/EditExamForm.jsx';
 import ExamLive from './pages/Student/Exams/ExamLive.jsx';
 import AttemptReview from './pages/Student/Exams/AttemptReview.jsx';
 import ClassSectionFrom from './pages/SuperAdmin/Classes_&_Section/ClassSectionFrom.jsx';
@@ -112,6 +112,8 @@ import ChildHomework from './pages/Parent/Homework/ChildHomework.jsx';
 import ChildMessages from './pages/Parent/Messages/ChildMessages.jsx';
 import SchoolBoards from './pages/SuperAdmin/Master_Settings/SchoolBoards.jsx';
 import ChaptersTopics from './pages/SuperAdmin/Master_Settings/ChaptersTopics.jsx';
+import ExamCreate from './pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx';
+import EditExam from './pages/Teacher/Exams/EditExamForm.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -176,7 +178,6 @@ const router = createBrowserRouter([
               { path: "settings/backup", element: <Backups /> },
               { path: "boards", element: <SchoolBoards /> },
               { path: "chapters-topics", element: <ChaptersTopics /> },
-             
 
 
             ],
@@ -221,6 +222,7 @@ const router = createBrowserRouter([
               { path: "notification", element: <Notification /> },
               { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
+              { path: "exams/exams-create", element: <ExamCreate/>, },
               { path: "exams/exams-list", element: <ExamsPage /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
@@ -252,7 +254,6 @@ const router = createBrowserRouter([
               { path: "exams", element: <ScheduleExams /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
-              { path: "exams/create-exam", element: <CreateExam /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
               { path: "timetable", element: <ClassTimetable /> },
               { path: "message", element: <Message /> },

@@ -24,7 +24,7 @@ export const createExam = asyncHandler(async (req, res) => {
     durationMinutes,
     totalMarks,
     passingMarks,
-    questionOrder,
+    
     shuffleOptions,
     settings,
     schoolId,
@@ -49,7 +49,7 @@ export const createExam = asyncHandler(async (req, res) => {
     durationMinutes,
     totalMarks,
     passingMarks,
-    questionOrder,
+   
     shuffleOptions,
     settings,
     createdBy: userId,
@@ -67,46 +67,71 @@ export const createExam = asyncHandler(async (req, res) => {
 // =============================
 export const getExams = asyncHandler(async (req, res) => {
   try {
+    /* ================= FILTER BUILD ================= */
     const filters = {};
 
-    // Multi-tenant: If user is not super-admin, restrict to their school
+    // Multi Tenant Security
     if (req.user.role !== "Super Admin") {
       filters.schoolId = req.user.schoolId;
     } else if (req.query.schoolId) {
       filters.schoolId = req.query.schoolId;
     }
 
-    // Optional filters
+    // Optional Filters
     if (req.query.status) filters.status = req.query.status;
     if (req.query.classId) filters.classId = req.query.classId;
-    if (req.query.sectionId) filters.sectionId = req.query.sectionId;
     if (req.query.subjectId) filters.subjectId = req.query.subjectId;
+   
 
-    // Pagination support
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    /* ================= SEARCH SUPPORT ================= */
+    if (req.query.search) {
+      filters.examName = {
+        $regex: req.query.search,
+        $options: "i",
+      };
+    }
+
+    /* ================= PAGINATION ================= */
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const total = await Exam.countDocuments(filters);
-    const exams = await Exam.find(filters)
-      .populate("schoolId classId sectionId subjectId createdBy")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    /* ================= PARALLEL QUERY ================= */
+    const [total, exams] = await Promise.all([
+      Exam.countDocuments(filters),
 
+      Exam.find(filters)
+        .populate("schoolId", "name")
+        .populate("classId", "name")
+        .populate("subjectId", "name")
+        .populate("createdBy", "name email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
+
+    /* ================= RESPONSE ================= */
     return res.status(200).json(
-      new ApiResponse(200, {
-        total,
-        page,
-        limit,
-        exams
-      }, "Exams fetched successfully")
+      new ApiResponse(
+        200,
+        {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          exams,
+        },
+        "Exams fetched successfully"
+      )
     );
-
   } catch (error) {
-    return res.status(500).json(new ApiResponse(500, null, error.message));
+    return res
+      .status(500)
+      .json(new ApiResponse(500, null, error.message));
   }
 });
+
 
 // =============================
 // Get Exam By ID
