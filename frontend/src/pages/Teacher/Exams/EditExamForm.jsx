@@ -25,17 +25,23 @@ import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 const { Title } = Typography;
 const { Option } = Select;
 
+/* ⭐ Safe Mongo Id Extract */
+const getId = (val) => {
+  if (!val) return null;
+  if (typeof val === "string") return val;
+  return val._id;
+};
+
 const EditExamForm = ({ examId }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-
   const isLoadedRef = useRef(false);
 
   const [examQuestions, setExamQuestions] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
 
-  /* ================= SAFE REDUX SELECTORS ================= */
+  /* ================= REDUX ================= */
 
   const classList = useSelector(
     (state) => state.class?.classList || [],
@@ -48,35 +54,48 @@ const EditExamForm = ({ examId }) => {
   );
 
   const { currentExam, loading } = useSelector(
-    (state) => state.exam || {},
+    (state) => state.exams || {},
     shallowEqual
   );
+  console.log("questionBank", questionBank);
+  /* ================= SAFE QUESTION ARRAY ================= */
 
-  /* ================= USER ================= */
+  const questionBankArray = useMemo(() => {
+    if (Array.isArray(questionBank)) return questionBank;
+    if (Array.isArray(questionBank?.data)) return questionBank.data;
+    if (Array.isArray(questionBank?.questions)) return questionBank.questions;
+    return [];
+  }, [questionBank]);
+ 
+  /* ================= WATCH FORM VALUES ================= */
+
+  const watchClassId = Form.useWatch("classId", form);
+  const watchSubjectId = Form.useWatch("subjectId", form);
+
+  /* ================= USER CONTEXT ================= */
 
   const selectedAcademicYear = useMemo(
-    () =>
-      JSON.parse(localStorage.getItem("selectedAcademicYear") || "{}"),
+    () => JSON.parse(localStorage.getItem("selectedAcademicYear") || "{}"),
     []
   );
 
-  const academicYearId = selectedAcademicYear?._id;
+  
   const schoolId = selectedAcademicYear?.schoolId;
 
   /* ================= FETCH ================= */
 
   useEffect(() => {
-    if (schoolId) {
-      dispatch(fetchAllClasses({ schoolId }));
-      dispatch(getQuestions({ schoolId }));
-    }
+  if (schoolId) {
+    dispatch(fetchAllClasses({ schoolId }));
+    dispatch(getQuestions({ schoolId }));
+  }
 
-    if (examId) {
-      dispatch(getExamById(examId));
-    }
-  }, [schoolId, examId, dispatch]);
+  if (examId) {
+    dispatch(getExamById(examId));
+  }
+}, [schoolId, examId, dispatch]);
 
-  /* Reset loader */
+  /* Reset Loader */
   useEffect(() => {
     isLoadedRef.current = false;
   }, [examId]);
@@ -90,31 +109,30 @@ const EditExamForm = ({ examId }) => {
 
     isLoadedRef.current = true;
 
-    const classId = currentExam.classId?._id || currentExam.classId;
-    const subjectId = currentExam.subjectId?._id || currentExam.subjectId;
+    const classId = getId(currentExam.classId);
+    const subjectId = getId(currentExam.subjectId);
 
     setSelectedClass(classId);
 
-    /* Subjects */
-    const selectedClassObj = classList.find((c) => c._id === classId);
+    const selectedClassObj = classList.find(
+      (c) => String(c._id) === String(classId)
+    );
 
     const subjects =
       selectedClassObj?.subjects?.map((s) => ({
-        _id: s.subjectId?._id,
+        _id: getId(s.subjectId),
         name: s.subjectId?.name,
       })) || [];
 
     setSubjectList(subjects);
 
-    /* Questions */
     setExamQuestions(
       currentExam.questions?.map((q) => ({
-        questionId: q.questionId?._id || q.questionId,
+        questionId: getId(q.questionId),
         marks: q.marks || 0,
       })) || []
     );
 
-    /* Form */
     form.setFieldsValue({
       title: currentExam.title,
       classId,
@@ -127,39 +145,39 @@ const EditExamForm = ({ examId }) => {
     });
   }, [currentExam, classList, form]);
 
-  /* ================= FILTER QUESTIONS (MEMO) ================= */
+  /* ================= FILTER QUESTIONS ================= */
 
   const filteredQuestions = useMemo(() => {
-    if (!questionBank.length) return [];
+    const classId = watchClassId || getId(currentExam?.classId);
+    const subjectId = watchSubjectId || getId(currentExam?.subjectId);
 
-    const classId =
-      form.getFieldValue("classId") ||
-      currentExam?.classId?._id ||
-      currentExam?.classId;
+    if (!classId || !subjectId) return [];
 
-    const subjectId =
-      form.getFieldValue("subjectId") ||
-      currentExam?.subjectId?._id ||
-      currentExam?.subjectId;
-
-    return questionBank.filter((q) => {
-      const qClass = q.classId?._id || q.classId;
-      const qSub = q.subjectId?._id || q.subjectId;
-
-      return qClass === classId && qSub === subjectId;
+    return questionBankArray.filter((q) => {
+      return (
+        String(getId(q.classId)) === String(classId) &&
+        String(getId(q.subjectId)) === String(subjectId)
+      );
     });
-  }, [questionBank, form, currentExam]);
-
+  }, [
+    questionBankArray,
+    watchClassId,
+    watchSubjectId,
+    currentExam,
+  ]);
+  console.log("filteredQuestions", filteredQuestions);
   /* ================= CLASS CHANGE ================= */
 
   const handleClassChange = (classId) => {
     setSelectedClass(classId);
 
-    const selected = classList.find((c) => c._id === classId);
+    const selected = classList.find(
+      (c) => String(c._id) === String(classId)
+    );
 
     const subjects =
       selected?.subjects?.map((s) => ({
-        _id: s.subjectId?._id,
+        _id: getId(s.subjectId),
         name: s.subjectId?.name,
       })) || [];
 
@@ -171,7 +189,10 @@ const EditExamForm = ({ examId }) => {
   /* ================= QUESTIONS ================= */
 
   const addQuestion = () => {
-    setExamQuestions((prev) => [...prev, { questionId: "", marks: 0 }]);
+    setExamQuestions((prev) => [
+      ...prev,
+      { questionId: "", marks: 0 },
+    ]);
   };
 
   const removeQuestion = (index) => {
@@ -179,7 +200,9 @@ const EditExamForm = ({ examId }) => {
   };
 
   const handleQuestionSelect = (index, questionId) => {
-    const selected = questionBank.find((q) => q._id === questionId);
+    const selected = questionBankArray.find(
+      (q) => String(q._id) === String(questionId)
+    );
 
     setExamQuestions((prev) =>
       prev.map((q, i) =>
@@ -192,30 +215,29 @@ const EditExamForm = ({ examId }) => {
 
   /* ================= SUBMIT ================= */
 
-  const handleSubmit = async (values) => {
-    try {
-      const payload = {
-        examId,
-        academicYearId,
-        schoolId,
-        title: values.title,
-        classId: values.classId,
-        subjectId: values.subjectId,
-        examType: values.examType,
-        durationMinutes: values.durationMinutes,
-        totalMarks: values.totalMarks,
-        passingMarks: values.passingMarks,
-        status: values.status,
-        questions: examQuestions,
-      };
+const handleSubmit = async () => {
+  try {
+    /* ✅ Questions Safe Format */
+    const formattedQuestions = examQuestions.map((q) => ({
+      questionId: q.questionId,
+      marks: Number(q.marks || 0),
+    }));
 
-      await dispatch(updateExam(payload)).unwrap();
+    /* ✅ Only Questions Payload */
+    const payload = {
+      questions: formattedQuestions,
+    };
 
-      message.success("Exam Updated Successfully");
-    } catch (err) {
-      message.error(err?.message || "Failed to update exam");
-    }
-  };
+    await dispatch(updateExam({ examId, payload })).unwrap();
+
+    message.success("Questions Updated Successfully");
+
+  } catch (err) {
+    console.error("UPDATE ERROR 👉", err);
+    message.error(err?.message || "Failed to update questions");
+  }
+};
+
 
   /* ================= UI ================= */
 
@@ -233,8 +255,9 @@ const EditExamForm = ({ examId }) => {
                 name="title"
                 label="Exam Title"
                 rules={[{ required: true }]}
+                disabled
               >
-                <Input />
+                <Input disabled value={currentExam?.title} />
               </Form.Item>
             </Col>
 
@@ -243,8 +266,9 @@ const EditExamForm = ({ examId }) => {
                 name="classId"
                 label="Class"
                 rules={[{ required: true }]}
+                disabled
               >
-                <Select onChange={handleClassChange}>
+                <Select onChange={handleClassChange} disabled>
                   {classList.map((cls) => (
                     <Option key={cls._id} value={cls._id}>
                       {cls.name}
@@ -259,8 +283,9 @@ const EditExamForm = ({ examId }) => {
                 name="subjectId"
                 label="Subject"
                 rules={[{ required: true }]}
+               
               >
-                <Select disabled={!selectedClass}>
+                <Select disabled >
                   {subjectList.map((sub) => (
                     <Option key={sub._id} value={sub._id}>
                       {sub.name}
@@ -289,6 +314,8 @@ const EditExamForm = ({ examId }) => {
                   value={q.questionId}
                   onChange={(val) => handleQuestionSelect(index, val)}
                   style={{ width: "100%" }}
+                  showSearch
+                  optionFilterProp="children"
                 >
                   {filteredQuestions.map((ques) => (
                     <Option key={ques._id} value={ques._id}>
@@ -299,7 +326,11 @@ const EditExamForm = ({ examId }) => {
               </Col>
 
               <Col span={4}>
-                <InputNumber value={q.marks} disabled style={{ width: "100%" }} />
+                <InputNumber
+                  value={q.marks}
+                  disabled
+                  style={{ width: "100%" }}
+                />
               </Col>
 
               <Col span={4}>

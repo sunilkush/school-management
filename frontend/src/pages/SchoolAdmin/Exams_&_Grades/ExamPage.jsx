@@ -134,7 +134,7 @@ const handleDelete = async (id) => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() =>
-            navigate("/dashboard/teacher/exams/create-exam")
+            navigate("/dashboard/schooladmin/exams/exams-create")
           }
         >
           Create Exam

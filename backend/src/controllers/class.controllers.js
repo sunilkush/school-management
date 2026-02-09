@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import Class from "../models/classes.model.js";
+import {Class} from "../models/classes.model.js";
 import { ClassSection } from "../models/classSection.model.js";
 import { School } from "../models/school.model.js";
 import { Subject } from "../models/subject.model.js";
@@ -195,6 +195,7 @@ const getAllClasses = asyncHandler(async (req, res) => {
     .populate("teacherId", "name email")
     .populate("subjects.subjectId", "name code")
     .populate("subjects.teacherId", "name email")
+  
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
@@ -303,6 +304,115 @@ const assignSubjectsToClass = asyncHandler(async (req, res) => {
   );
 });
 
+// Assign teacher
+const classAssignTeacher = asyncHandler(async (req, res) => {
+  const { teacherId, schoolId, academicYearId } = req.query;
+
+  /* ================= VALIDATION ================= */
+
+  if (!teacherId || !schoolId || !academicYearId) {
+    return res.status(400).json(
+      new ApiResponse(
+        400,
+        null,
+        "teacherId, schoolId and academicYearId are required"
+      )
+    );
+  }
+
+  if (
+    !mongoose.Types.ObjectId.isValid(teacherId) ||
+    !mongoose.Types.ObjectId.isValid(schoolId) ||
+    !mongoose.Types.ObjectId.isValid(academicYearId)
+  ) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Invalid ObjectId provided"));
+  }
+
+  /* ================= OBJECT IDs ================= */
+
+  const teacherObjectId = new mongoose.Types.ObjectId(teacherId);
+  const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+  const academicYearObjectId = new mongoose.Types.ObjectId(academicYearId);
+
+  /* ================= FETCH CLASSES ================= */
+
+  const classes = await Class.find({
+    schoolId: schoolObjectId,
+    academicYearId: academicYearObjectId,
+    status: "active",
+  })
+    .populate("schoolId", "name logo")
+    .populate("academicYearId", "name startDate endDate")
+    .populate("teacherId", "name email")
+    .populate("students", "name email")
+    .populate("subjects.subjectId", "name code")
+    .populate("subjects.teacherId", "name email")
+    .lean();
+
+  if (!classes.length) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, [], "No classes found"));
+  }
+
+  /* ================= FETCH ONLY TEACHER SECTIONS ================= */
+
+  const classIds = classes.map((c) => c._id);
+
+  const classSectionMappings = await ClassSection.find({
+    classId: { $in: classIds },
+    teacherId: teacherObjectId, // ⭐ MOST IMPORTANT LINE
+  })
+    .populate("sectionId", "name capacity")
+    .populate("teacherId", "name email")
+    .lean();
+
+  /* ================= COMBINE DATA ================= */
+
+  const finalData = classes
+    .map((cls) => {
+      // Only teacher mapped sections
+      const teacherSections = classSectionMappings
+        .filter((m) => String(m.classId) === String(cls._id))
+        .map((m) => ({
+          _id: m._id,
+          sectionId: m.sectionId,
+          inChargeId: m.teacherId,
+        }));
+
+      // Only teacher subjects
+      const teacherSubjects =
+        cls.subjects?.filter(
+          (sub) =>
+            sub.teacherId?._id?.toString() === teacherId
+        ) || [];
+
+      // Only return class if teacher has section OR subject
+      if (!teacherSections.length && !teacherSubjects.length) {
+        return null;
+      }
+
+      return {
+        ...cls,
+        sections: teacherSections, // ⭐ ONLY MATCHED SECTIONS
+        subjects: teacherSubjects,
+        studentCount: cls.students?.length || 0,
+        subjectCount: teacherSubjects.length,
+      };
+    })
+    .filter(Boolean);
+
+  /* ================= RESPONSE ================= */
+
+  return res.status(200).json(
+    new ApiResponse(200, finalData, "Classes fetched successfully")
+  );
+});
+
+
+
 export {
   createClass,
   getAllClasses,
@@ -310,4 +420,5 @@ export {
   updateClass,
   deleteClass,
   assignSubjectsToClass,
+  classAssignTeacher
 };

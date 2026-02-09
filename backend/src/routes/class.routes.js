@@ -6,7 +6,9 @@ import {
   updateClass,
   deleteClass,
   assignSubjectsToClass,
+  classAssignTeacher
 } from "../controllers/class.controllers.js";
+
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -18,10 +20,16 @@ const ADMIN_ONLY = ["Super Admin", "School Admin"];
 // ➕ Create Class
 router.post("/create", auth, roleMiddleware(ADMIN_ONLY), createClass);
 
-// 📋 Get All Classes (with pagination, filtering, search)
+// 📋 Get All Classes
 router.get("/all", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
 
-// 🔍 Get Class by ID
+// ✅ Assign Teacher (STATIC ROUTE FIRST)
+router.get("/assign-teacher", auth, roleMiddleware(ADMIN_TEACHER), classAssignTeacher);
+
+// ✅ Assign Subjects (STATIC ROUTE FIRST)
+router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
+
+// 🔍 Get Class by ID (DYNAMIC ROUTE LAST)
 router.get("/:classId", auth, roleMiddleware(ADMIN_TEACHER), getClassById);
 
 // ✏️ Update Class
@@ -29,9 +37,5 @@ router.put("/:classId", auth, roleMiddleware(ADMIN_ONLY), updateClass);
 
 // 🗑️ Delete Class
 router.delete("/:classId", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
-
-//
-router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
-
 
 export default router;

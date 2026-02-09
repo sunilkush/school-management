@@ -37,7 +37,7 @@ export const fetchAllClasses = createAsyncThunk(
         params: { schoolId, academicYearId },
         signal, // ✅ axios v1+ supports signal (for cancellation)
       });
-
+     
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data?.message || "Failed to fetch classes");
@@ -100,6 +100,30 @@ export const assignsubjects = createAsyncThunk(
     }});
 
 
+export const fetchAssignedClasses = createAsyncThunk(
+  "class/fetchAssignedClasses",
+  async (paramsData, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const res = await axios.get(
+        `${Api_Base_Url}/class/assign-teacher`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: paramsData,
+        }
+      );
+     
+      return res.data?.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message ||
+        "Fetching assigned classes failed!"
+      );
+    }
+  }
+);
+
 
 
 const classSlice = createSlice({
@@ -113,6 +137,7 @@ const classSlice = createSlice({
     limit: 10,
     totalPages: 0,
     success: false,
+    classAssignTeacher:[]
   },
   reducers: {
     resetClassState: (state) => {
@@ -189,7 +214,21 @@ const classSlice = createSlice({
       .addCase(updateClass.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+
+      //class assign teacher
+      .addCase(fetchAssignedClasses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAssignedClasses.fulfilled, (state, action) => {
+          state.loading = false;
+          state.classAssignTeacher = action.payload || [];
+        })
+      .addCase(fetchAssignedClasses.rejected, (state, action) => {
+           state.loading = false;
+           state.error = action.payload;
+      })
   },
 });
 

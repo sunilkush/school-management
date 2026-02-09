@@ -42,6 +42,6 @@ classSchema.index({ name: 1, schoolId: 1, academicYearId: 1, }, { unique: true, 
 classSchema.index({ schoolId: 1, academicYearId: 1 });
 
 // ✅ Safe model registration (avoids overwrite errors)
-const Class = mongoose.models.Class || mongoose.model("Class", classSchema);
+export const Class = mongoose.models.Class || mongoose.model("Class", classSchema);
 
-export default Class;
+

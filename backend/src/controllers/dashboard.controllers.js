@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import  Class  from "../models/Classes.model.js";
+import { Class } from "../models/classes.model.js";
 import { User } from "../models/user.model.js";
 import { Student } from "../models/student.model.js";
 import { Fees } from "../models/fees.model.js";

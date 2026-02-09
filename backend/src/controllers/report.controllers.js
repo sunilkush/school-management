@@ -3,7 +3,7 @@ import { User } from "../models/user.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { Role } from "../models/Roles.model.js";
-import Class from "../models/classes.model.js";
+import {Class} from "../models/classes.model.js";
 import { Section } from "../models/section.model.js";
 
 export const getSchoolOverviewReport = async (req, res) => {

@@ -65,6 +65,7 @@ export const updateExam = createAsyncThunk(
   "exams/updateExam",
   async ({ examId, payload }, { rejectWithValue }) => {
     try {
+      
       const res = await axios.put(`${API_BASE_URL}/exams/${examId}`, payload,{
         headers: {
           Authorization: `Bearer ${token}`,

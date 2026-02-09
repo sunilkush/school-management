@@ -1,5 +1,5 @@
 import { ClassSection } from "../models/classSection.model.js";
-import  Class   from "../models/classes.model.js";
+import { Class }  from "../models/classes.model.js";
 import { Section } from "../models/section.model.js";
 import { ClassSubject } from "../models/ClassSubject.model.js";
 import { ApiError } from "../utils/ApiError.js";

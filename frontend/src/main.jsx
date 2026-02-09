@@ -114,6 +114,8 @@ import SchoolBoards from './pages/SuperAdmin/Master_Settings/SchoolBoards.jsx';
 import ChaptersTopics from './pages/SuperAdmin/Master_Settings/ChaptersTopics.jsx';
 import ExamCreate from './pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx';
 import EditExam from './pages/Teacher/Exams/EditExamForm.jsx';
+import AssignedClasses from "./pages/Teacher/Classes/AssignedClasses.jsx";
+import Assignments from "./pages/Teacher/Assignments/Assignments.jsx";
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -247,9 +249,9 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <TeacherDashboard /> },
-              { path: "classes", element: <Classes /> },
+              { path: "classes", element: <AssignedClasses /> },
               { path: "students", element: <StudentList /> },
-              { path: "assignments", element: <Schedule /> },
+              { path: "assignments", element: <Assignments /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "exams", element: <ScheduleExams /> },
               { path: "exams/reports", element: <ExamReports /> },
