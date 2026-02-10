@@ -59,4 +59,4 @@ sectionSchema.index(
 sectionSchema.index({ schoolId: 1, academicYearId: 1 });
 
 // ✅ Check if model already exists
-export const Section = mongoose.models.Section || mongoose.model("Section", sectionSchema);
+export const Section = mongoose.model("Section", sectionSchema);
