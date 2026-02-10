@@ -41,7 +41,7 @@ import Classes from "./pages/SchoolAdmin/Academic_Management/Classes.jsx";
 import Subjects from "./pages/SchoolAdmin/Academic_Management/Subjects.jsx";
 import ScheduleExams from "./pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx";
 import EnterGrades from "./pages/SchoolAdmin/Exams_&_Grades/EnterGrades.jsx";
-import StudentAttendance from "./pages/SchoolAdmin/Attendance/StudentAttendance.jsx";
+import AllStudentsAttendance from "./pages/SchoolAdmin/Attendance/AllStudentsAttendance.jsx";
 import StaffAttendance from "./pages/SchoolAdmin/Attendance/StaffAttendance.jsx";
 import Books from "./pages/SchoolAdmin/Library/Books.jsx";
 import IssueBook from "./pages/SchoolAdmin/Library/IssueBook.jsx";
@@ -116,6 +116,8 @@ import ExamCreate from './pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx';
 import EditExam from './pages/Teacher/Exams/EditExamForm.jsx';
 import AssignedClasses from "./pages/Teacher/Classes/AssignedClasses.jsx";
 import Assignments from "./pages/Teacher/Assignments/Assignments.jsx";
+import MyStudents from "./pages/Teacher/My_Students/MyStudents.jsx";
+import StudentAttendance from "./pages/Teacher/Attendance/StudentAttendance.jsx";
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -200,7 +202,7 @@ const router = createBrowserRouter([
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
-              { path: "attendance/students", element: <StudentAttendance /> },
+              { path: "attendance/students", element: <AllStudentsAttendance /> },
               { path: "attendance/staff", element: <StaffAttendance /> },
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
@@ -250,7 +252,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <TeacherDashboard /> },
               { path: "classes", element: <AssignedClasses /> },
-              { path: "students", element: <StudentList /> },
+              { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
               { path: "attendance", element: <StudentAttendance /> },
               { path: "exams", element: <ScheduleExams /> },
@@ -282,7 +284,7 @@ const router = createBrowserRouter([
               { index: true, element: <StudentDashboard /> },
               { path: "profile", element: <Profile /> },
               { path: "homework", element: <StudentHomework /> },
-              { path: "attendance", element: <StudentAttendance /> },
+              { path: "attendance", element: <AllStudentsAttendance /> },
               { path: "grades", element: <EnterGrades /> },
               { path: "timetable", element: <ClassTimetable /> },
               { path: "library", element: <Books /> },
@@ -353,7 +355,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <StaffDashboard /> },
               { path: "tasks", element: <Schedule /> },
-              { path: "attendance", element: <StudentAttendance /> },
+              { path: "attendance", element: <AllStudentsAttendance /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },

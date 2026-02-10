@@ -15,11 +15,9 @@ const classSchema = new Schema(
     sections: [
       {
         sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
-        inChargeId: { type: Schema.Types.ObjectId, ref: "User" },
+         teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true },
       },
     ],
-
-    teacherId: { type: Schema.Types.ObjectId, ref: "User" },
     students: [{ type: Schema.Types.ObjectId, ref: "User" }],
 
     subjects: [

@@ -1,48 +1,59 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import {Class} from "../models/classes.model.js";
-import { ClassSection } from "../models/classSection.model.js";
+import { Class } from "../models/classes.model.js";
 import { School } from "../models/school.model.js";
 import { Subject } from "../models/subject.model.js";
-import { User } from "../models/user.model.js"; // ✅ for teacher validation
+import { User } from "../models/user.model.js";
 import mongoose from "mongoose";
 
-// ✅ Create Class
+/* =========================================================
+   ✅ CREATE CLASS
+========================================================= */
 const createClass = asyncHandler(async (req, res) => {
-  const { name, schoolId, academicYearId, teacherId, students = [], subjects = [] } = req.body;
+  const {
+    name,
+    schoolId,
+    academicYearId,
+    students = [],
+    subjects = [],
+    sections = [],
+  } = req.body;
 
   if (!name || !schoolId || !academicYearId) {
-    throw new ApiError(400, "Name, School ID, and Academic Year are required");
+    throw new ApiError(400, "Name, School ID, Academic Year required");
   }
 
   const formattedName = name.trim().toUpperCase();
 
   const existingClass = await Class.findOne({
+    name: formattedName,
     schoolId,
     academicYearId,
-    name: formattedName,
   });
 
   if (existingClass) {
-    throw new ApiError(400, "Class with same name already exists in this school and academic year");
+    throw new ApiError(400, "Class already exists");
   }
 
-  const newClass = new Class({
+  const newClass = await Class.create({
     name: formattedName,
     schoolId,
     academicYearId,
-    teacherId,
     students,
     subjects,
+    sections,
     createdBy: req.user?._id,
   });
 
-  const savedClass = await newClass.save();
-  return res.status(201).json(new ApiResponse(201, savedClass, "Class created successfully"));
+  return res
+    .status(201)
+    .json(new ApiResponse(201, newClass, "Class created successfully"));
 });
 
-// ✅ Update Class
+/* =========================================================
+   ✅ UPDATE CLASS
+========================================================= */
 const updateClass = asyncHandler(async (req, res) => {
   const { classId } = req.params;
 
@@ -50,235 +61,266 @@ const updateClass = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Class ID");
   }
 
+  const classDoc = await Class.findById(classId);
+  if (!classDoc) throw new ApiError(404, "Class not found");
+
   const {
     name,
     code,
     description,
-    academicYearId,
-    teacherId,
-    isGlobal = false,
-    isActive,
     schoolId,
+    academicYearId,
+    isGlobal,
+    isActive,
     sections = [],
     subjects = [],
   } = req.body;
 
-  const classDoc = await Class.findById(classId);
-  if (!classDoc) throw new ApiError(404, "Class not found");
-
-  /* ========== CLEAN SECTIONS ========== */
+  /* ===== CLEAN SECTIONS ===== */
   const cleanSections = sections.filter(
     (s) =>
       mongoose.Types.ObjectId.isValid(s.sectionId) &&
-      (!s.inChargeId || mongoose.Types.ObjectId.isValid(s.inChargeId))
+      mongoose.Types.ObjectId.isValid(s.teacherId)
   );
 
-  /* ========== CLEAN SUBJECTS ========== */
+  /* ===== CLEAN SUBJECTS ===== */
   const cleanSubjects = subjects.filter(
     (s) =>
       mongoose.Types.ObjectId.isValid(s.subjectId) &&
       mongoose.Types.ObjectId.isValid(s.teacherId)
   );
 
-  /* ========== UPDATE CLASS ========== */
   if (name) classDoc.name = name.trim().toUpperCase();
   if (code) classDoc.code = code.trim();
   if (description) classDoc.description = description.trim();
-  if (academicYearId) classDoc.academicYearId = academicYearId;
-  if (teacherId) classDoc.teacherId = teacherId;
   if (schoolId) classDoc.schoolId = schoolId;
+  if (academicYearId) classDoc.academicYearId = academicYearId;
+
   if (typeof isGlobal === "boolean") classDoc.isGlobal = isGlobal;
   if (typeof isActive === "boolean") classDoc.isActive = isActive;
 
+  classDoc.sections = cleanSections;
   classDoc.subjects = cleanSubjects;
   classDoc.updatedBy = req.user._id;
 
   await classDoc.save();
 
-  /* ========== RESET CLASS SECTIONS ========== */
-  await ClassSection.deleteMany({ classId });
-
-  if (cleanSections.length) {
-    await ClassSection.insertMany(
-      cleanSections.map((s) => ({
-        classId,
-        sectionId: s.sectionId,
-        teacherId: s.inChargeId || null, // ✅ IN-CHARGE SAVED HERE
-        schoolId: isGlobal ? null : schoolId,
-        academicYearId: isGlobal ? null : academicYearId,
-        isGlobal,
-        createdBy: req.user._id,
-        
-      }))
-    );
-  }
-
-  /* ========== FINAL RESPONSE ========== */
-  const classData = await Class.findById(classId)
+  const updated = await Class.findById(classId)
     .populate("schoolId", "name logo")
-    .populate("academicYearId", "name startDate endDate")
-    .populate("teacherId", "name email")
+    .populate("academicYearId", "name")
+    .populate("sections.sectionId", "name code")
+    .populate("sections.teacherId", "name email")
     .populate("subjects.subjectId", "name code")
     .populate("subjects.teacherId", "name email");
 
-  const sectionsData = await ClassSection.find({ classId })
-    .populate("sectionId", "name code")
-    .populate("teacherId", "name email"); // ✅ IN-CHARGE DATA
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        ...classData.toObject(),
-        sections: sectionsData,
-      },
-      "Class updated successfully"
-    )
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updated, "Class updated successfully"));
 });
 
-
-// ✅ Delete Class
+/* =========================================================
+   ✅ DELETE CLASS
+========================================================= */
 const deleteClass = asyncHandler(async (req, res) => {
   const { classId } = req.params;
 
-  if (!classId) throw new ApiError(400, "Class ID is required");
+  const deleted = await Class.findByIdAndDelete(classId);
+  if (!deleted) throw new ApiError(404, "Class not found");
 
-  const deletedClass = await Class.findByIdAndDelete(classId);
-  if (!deletedClass) throw new ApiError(404, "Class not found");
-
-  return res.status(200).json(new ApiResponse(200, deletedClass, "Class deleted successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, deleted, "Class deleted successfully"));
 });
 
-// ✅ Get All Classes (Aggregation + Teacher Name + Serial)
+/* =========================================================
+   ✅ GET ALL CLASSES
+========================================================= */
 const getAllClasses = asyncHandler(async (req, res) => {
-  let { page = 1, limit = 20, schoolId, schoolName, academicYearId } = req.query;
+  let { page = 1, limit = 20, schoolId, schoolName, academicYearId } =
+    req.query;
+
   page = parseInt(page);
   limit = parseInt(limit);
 
   const query = {};
 
-  // Filter by schoolId
   if (schoolId) query.schoolId = schoolId;
 
-  // Optional: Find by schoolName
   if (schoolName) {
     const school = await School.findOne({
       name: { $regex: schoolName, $options: "i" },
     });
     if (school) query.schoolId = school._id;
-    else
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          { data: [], total: 0, page, limit, totalPages: 0 },
-          "No school found with this name"
-        )
-      );
   }
 
   if (academicYearId) query.academicYearId = academicYearId;
 
   const skip = (page - 1) * limit;
-  const totalClasses = await Class.countDocuments(query);
 
-  if (totalClasses === 0) {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, { data: [], total: 0, page, limit, totalPages: 0 }, "No classes found"));
-  }
+  const total = await Class.countDocuments(query);
 
   const classes = await Class.find(query)
     .populate("schoolId", "name logo")
-    .populate("academicYearId", "name startDate endDate")
-    .populate("students", "name email")
-    .populate("teacherId", "name email")
+    .populate("academicYearId", "name")
+    .populate("sections.sectionId", "name code")
+    .populate("sections.teacherId", "name email")
     .populate("subjects.subjectId", "name code")
     .populate("subjects.teacherId", "name email")
-  
+    .populate("students", "name email")
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
-
-  // Get linked sections
-  const classIds = classes.map((c) => c._id);
-const classSectionMappings = await ClassSection.find({
-  classId: { $in: classIds },
-})
-  .populate("sectionId", "name capacity")
-  .populate("teacherId", "name email"); // ✅ IN-CHARGE
-
-  // Combine class + sections
- const classesWithSections = classes.map((c) => {
-  const sections = classSectionMappings
-    .filter((m) => String(m.classId) === String(c._id))
-    .map((m) => ({
-      _id: m._id,
-      sectionId: m.sectionId,
-      inChargeId: m.teacherId || null, // ✅ NAME + EMAIL
-    }));
-
-  return {
-    ...c.toObject(),
-    sections,
-  };
-})
 
   return res.status(200).json(
     new ApiResponse(
       200,
       {
-        data: classesWithSections,
-        total: totalClasses,
+        data: classes,
+        total,
         page,
         limit,
-        totalPages: Math.ceil(totalClasses / limit),
+        totalPages: Math.ceil(total / limit),
       },
       "Classes fetched successfully"
     )
   );
 });
 
-// ✅ Get Class By ID
+/* =========================================================
+   ✅ GET CLASS BY ID
+========================================================= */
 const getClassById = asyncHandler(async (req, res) => {
   const { classId } = req.params;
 
-  const classData = await Class.findById(classId)
+  const data = await Class.findById(classId)
     .populate("schoolId", "name logo")
     .populate("academicYearId", "name")
-    .populate("teacherId", "name email")
-    .populate("students", "name email")
+    .populate("sections.sectionId", "name code")
+    .populate("sections.teacherId", "name email")
     .populate("subjects.subjectId", "name code")
-    .populate("subjects.teacherId", "name email");
+    .populate("subjects.teacherId", "name email")
+    .populate("students", "name email");
 
-  if (!classData) throw new ApiError(404, "Class not found");
+  if (!data) throw new ApiError(404, "Class not found");
 
-  return res.status(200).json(new ApiResponse(200, classData, "Class fetched successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, data, "Class fetched successfully"));
 });
 
-// ✅ Assign Subjects to Class
+/* =========================================================
+   ✅ CLASS ASSIGN TEACHER (MODEL BASED)
+========================================================= */
+const classAssignTeacher = asyncHandler(async (req, res) => {
+  const { teacherId, schoolId, academicYearId } = req.query;
+
+  if (!teacherId || !schoolId || !academicYearId) {
+    throw new ApiError(400, "teacherId, schoolId, academicYearId required");
+  }
+
+  const classes = await Class.find({
+    schoolId,
+    academicYearId,
+    status: "active",
+  })
+    .populate("sections.sectionId", "name code")
+    .populate("sections.teacherId", "name email")
+    .populate("subjects.subjectId", "name code")
+    .populate("subjects.teacherId", "name email")
+    .populate("students", "name email")
+    .lean();
+
+  const finalData = classes
+    .map((cls) => {
+
+      /* ===== MATCHED SECTIONS ===== */
+      const teacherSections =
+        cls.sections?.filter(
+          (s) => s.teacherId?._id?.toString() === teacherId
+        ) || [];
+
+      /* ===== MATCHED SUBJECTS ===== */
+      const teacherSubjects =
+        cls.subjects?.filter(
+          (s) => s.teacherId?._id?.toString() === teacherId
+        ) || [];
+
+      /* ===== CLASS SHOW CONDITION ===== */
+      if (!teacherSections.length && !teacherSubjects.length) {
+        return null;
+      }
+
+      /* ===== FINAL SECTION LOGIC ===== */
+
+      let finalSections = [];
+
+      // ⭐ If teacher subject teacher hai → ALL sections
+      if (teacherSubjects.length > 0) {
+        finalSections = cls.sections;
+      } else {
+        // ⭐ Agar sirf section teacher hai → Only matched sections
+        finalSections = teacherSections;
+      }
+
+      return {
+        ...cls,
+        sections: finalSections,
+        subjects: teacherSubjects,
+        studentCount: cls.students?.length || 0,
+        subjectCount: teacherSubjects.length,
+        sectionCount: finalSections.length,
+        isSubjectTeacher: teacherSubjects.length > 0,
+        isSectionTeacher: teacherSections.length > 0,
+      };
+    })
+    .filter(Boolean);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      finalData,
+      "Teacher classes fetched successfully"
+    )
+  );
+});
+
+
+
+
 const assignSubjectsToClass = asyncHandler(async (req, res) => {
   const { classId, assignments } = req.body;
   const user = req.user;
 
   if (user.role?.toLowerCase() !== "super admin") {
-    return res.status(403).json(new ApiResponse(403, null, "Access denied"));
+    return res
+      .status(403)
+      .json(new ApiResponse(403, null, "Access denied"));
   }
 
   if (!classId || !Array.isArray(assignments)) {
-    return res.status(400).json(new ApiResponse(400, null, "Invalid data format"));
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Invalid data format"));
   }
 
   const classData = await Class.findById(classId);
+
   if (!classData) {
-    return res.status(404).json(new ApiResponse(404, null, "Class not found"));
+    return res
+      .status(404)
+      .json(new ApiResponse(404, null, "Class not found"));
   }
 
   const subjectAssignments = [];
 
   for (const item of assignments) {
     const { subjectId, teacherId, periodPerWeek, isCompulsory } = item;
-    if (!subjectId || !teacherId) continue;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(subjectId) ||
+      !mongoose.Types.ObjectId.isValid(teacherId)
+    )
+      continue;
 
     const [subject, teacher] = await Promise.all([
       Subject.findById(subjectId),
@@ -297,128 +339,25 @@ const assignSubjectsToClass = asyncHandler(async (req, res) => {
 
   classData.subjects = subjectAssignments;
   classData.updatedBy = user._id;
+
   await classData.save();
 
   return res.status(200).json(
-    new ApiResponse(200, classData, "Subjects and teachers assigned to class successfully")
+    new ApiResponse(
+      200,
+      classData,
+      "Subjects and teachers assigned successfully"
+    )
   );
 });
-
-// Assign teacher
-const classAssignTeacher = asyncHandler(async (req, res) => {
-  const { teacherId, schoolId, academicYearId } = req.query;
-
-  /* ================= VALIDATION ================= */
-
-  if (!teacherId || !schoolId || !academicYearId) {
-    return res.status(400).json(
-      new ApiResponse(
-        400,
-        null,
-        "teacherId, schoolId and academicYearId are required"
-      )
-    );
-  }
-
-  if (
-    !mongoose.Types.ObjectId.isValid(teacherId) ||
-    !mongoose.Types.ObjectId.isValid(schoolId) ||
-    !mongoose.Types.ObjectId.isValid(academicYearId)
-  ) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, null, "Invalid ObjectId provided"));
-  }
-
-  /* ================= OBJECT IDs ================= */
-
-  const teacherObjectId = new mongoose.Types.ObjectId(teacherId);
-  const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
-  const academicYearObjectId = new mongoose.Types.ObjectId(academicYearId);
-
-  /* ================= FETCH CLASSES ================= */
-
-  const classes = await Class.find({
-    schoolId: schoolObjectId,
-    academicYearId: academicYearObjectId,
-    status: "active",
-  })
-    .populate("schoolId", "name logo")
-    .populate("academicYearId", "name startDate endDate")
-    .populate("teacherId", "name email")
-    .populate("students", "name email")
-    .populate("subjects.subjectId", "name code")
-    .populate("subjects.teacherId", "name email")
-    .lean();
-
-  if (!classes.length) {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, [], "No classes found"));
-  }
-
-  /* ================= FETCH ONLY TEACHER SECTIONS ================= */
-
-  const classIds = classes.map((c) => c._id);
-
-  const classSectionMappings = await ClassSection.find({
-    classId: { $in: classIds },
-    teacherId: teacherObjectId, // ⭐ MOST IMPORTANT LINE
-  })
-    .populate("sectionId", "name capacity")
-    .populate("teacherId", "name email")
-    .lean();
-
-  /* ================= COMBINE DATA ================= */
-
-  const finalData = classes
-    .map((cls) => {
-      // Only teacher mapped sections
-      const teacherSections = classSectionMappings
-        .filter((m) => String(m.classId) === String(cls._id))
-        .map((m) => ({
-          _id: m._id,
-          sectionId: m.sectionId,
-          inChargeId: m.teacherId,
-        }));
-
-      // Only teacher subjects
-      const teacherSubjects =
-        cls.subjects?.filter(
-          (sub) =>
-            sub.teacherId?._id?.toString() === teacherId
-        ) || [];
-
-      // Only return class if teacher has section OR subject
-      if (!teacherSections.length && !teacherSubjects.length) {
-        return null;
-      }
-
-      return {
-        ...cls,
-        sections: teacherSections, // ⭐ ONLY MATCHED SECTIONS
-        subjects: teacherSubjects,
-        studentCount: cls.students?.length || 0,
-        subjectCount: teacherSubjects.length,
-      };
-    })
-    .filter(Boolean);
-
-  /* ================= RESPONSE ================= */
-
-  return res.status(200).json(
-    new ApiResponse(200, finalData, "Classes fetched successfully")
-  );
-});
-
 
 
 export {
   createClass,
-  getAllClasses,
-  getClassById,
   updateClass,
   deleteClass,
-  assignSubjectsToClass,
-  classAssignTeacher
+  getAllClasses,
+  getClassById,
+  classAssignTeacher,
+  assignSubjectsToClass
 };

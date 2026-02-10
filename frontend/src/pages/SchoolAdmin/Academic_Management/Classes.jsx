@@ -118,15 +118,15 @@ const Classes = () => {
       render: (year) => year?.name || "—",
     },
     {
-  title: "Sections",
+  title: "Sections & Teachers",
   dataIndex: "sections",
   render: (sections = []) =>
     sections.length ? (
       <Space wrap>
         {sections.map((s) => (
-          <Tag key={s._id} color="blue">
+          <Tag key={s._id} color="blue" style={{textTransform:"capitalize"}}>
             {s.sectionId?.name || "—"}{" "}
-            {s.inChargeId?.name ? `(${s.inChargeId.name})` : ""}
+            {s.teacherId?.name ? `(${s.teacherId.name})` : ""}
           </Tag>
         ))}
       </Space>
@@ -136,29 +136,21 @@ const Classes = () => {
 },
     
     {
-      title: "Subjects",
+      title: "Subjects & Teachers",
       dataIndex: "subjects",
       render: (subjects = []) =>
         subjects.length ? (
           <Space wrap>
             {subjects.map((sub) => (
-              <Tag key={sub._id} color="purple">
-                {sub.subjectId?.name || "—"}
+              <Tag key={sub._id} color="purple" style={{textTransform:"capitalize"}}>
+                {sub.subjectId?.name || "—"}{" "}
+                {sub.teacherId?.name ? `(${sub.teacherId.name})` : ""}
               </Tag>
             ))}
           </Space>
         ) : (
           <Text type="secondary">—</Text>
         ),
-    },
-    {
-      title: "Class Teacher",
-      dataIndex: "teacherId",
-      sorter: (a, b) =>
-        (a?.teacherId?.name || "").localeCompare(
-          b?.teacherId?.name || ""
-        ),
-      render: (teacher) => teacher?.name || "—",
     },
     {
       title: "Actions",
@@ -223,6 +215,7 @@ const Classes = () => {
               rowKey="_id"
               loading={loading}
               bordered
+              pagination={{ pageSize: 12 }}
             />
           ) : (
             <Empty description="Use desktop for table view" />

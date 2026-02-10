@@ -62,7 +62,6 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
     name: initialData.name || "",
     code: initialData.code || "",
     academicYearId: initialData.academicYearId?._id || activeYear?._id || "",
-    teacherId: initialData.teacherId?._id || "",
     isGlobal: initialData.isGlobal ?? false,
     isActive: initialData.isActive ?? true,
 
@@ -70,8 +69,8 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
     sections:
       initialData.sections?.map((s) => ({
         sectionId: s.sectionId?._id || "", // make sure we use sectionId._id
-        inChargeId: s.inChargeId?._id || "", // teacher in charge
-      })) || [{ sectionId: "", inChargeId: "" }],
+        teacherId: s.teacherId?._id || "", // teacher in charge
+      })) || [{ sectionId: "", teacherId: "" }],
 
     // Fix Subjects
     subjects:
@@ -132,7 +131,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
         style={{padding:"0px"}}
         initialValues={{
           isActive: true,
-          sections: [{ sectionId: "", inChargeId: "" }],
+          sections: [{ sectionId: "", teacherId: "" }],
           subjects: [
             {
               subjectId: "",
@@ -176,17 +175,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
             </Form.Item>
           </Col>
 
-          <Col md={12}>
-            <Form.Item name="teacherId" label="Class Teacher" style={{marginBottom:"0px"}}>
-              <Select allowClear placeholder="Select Teacher">
-                {activeTeachers.map((t) => (
-                  <Option key={t._id} value={t._id}>
-                    {t.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
+         
         </Row>
 
         {/* ================= SECTIONS ================= */}
@@ -230,7 +219,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
 
                     <Col md={12}>
                       <Form.Item
-                        name={[name, "inChargeId"]}
+                        name={[name, "teacherId"]}
                         label="Section In-Charge"
                         style={{marginBottom:"0px"}}
                       >
@@ -251,7 +240,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
                 type="dashed"
                 block
                 icon={<PlusOutlined />}
-                onClick={() => add({ sectionId: "", inChargeId: "" })}
+                onClick={() => add({ sectionId: "", teacherId: "" })}
               >
                 Add Section
               </Button>
