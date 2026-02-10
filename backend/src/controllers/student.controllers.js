@@ -554,7 +554,7 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
   // ✅ Use query param properly
   let { schoolId, academicYearId } = req.query;
 
- 
+  console.log("Received schoolId:", schoolId, "academicYearId:", academicYearId);
 
   // ✅ Validate schoolId properly
   if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {

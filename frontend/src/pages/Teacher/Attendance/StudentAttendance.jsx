@@ -12,265 +12,291 @@ import {
   DatePicker,
   message,
   Space,
-  Radio
+  Radio,
+  Statistic,
+  Divider
 } from "antd";
 import dayjs from "dayjs";
 
-import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
-import { activeUser } from "../../../features/authSlice";
-import { markAttendance } from "../../../features/attendanceSlice";
-import { fetchAllClasses } from "../../../features/classSlice";
+import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
+import { activeUser } from "../../../features/authSlice.js";
+import { submitAttendance } from "../../../features/attendanceSlice.js";
+import { fetchAssignedClasses } from "../../../features/classSlice.js";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 
 const StudentAttendance = () => {
+
   const dispatch = useDispatch();
 
-  const { schoolStudents = [], loading } = useSelector(
-    (state) => state.students
-  );
-  const { user: currentUser } = useSelector((state) => state.auth);
-  const { classList = [] } = useSelector((state) => state.class);
+  const { schoolStudents = [], loading } = useSelector(state => state.students);
+  const { user } = useSelector(state => state.auth);
+  const { classAssignTeacher = [] } = useSelector(state => state.class);
 
-  const schoolId = currentUser?.school?._id;
-  const academicYearId = currentUser?.academicYear?._id;
+  const schoolId = user?.school?._id;
+  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
+  const academicYearId = storeAcadmicYear
+    ? JSON.parse(storeAcadmicYear)._id
+    : null;
 
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
-  const [filterStatus, setFilterStatus] = useState(null);
+  const [selectedClassObj, setSelectedClassObj] = useState(null);
+  const [selectedSubject, setSelectedSubject] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
   const [attendance, setAttendance] = useState({});
 
-  // 🔹 Initial Load
+  /* ================= INIT ================= */
+
   useEffect(() => {
-    if (schoolId) {
-      dispatch(fetchStudentsBySchoolId({ schoolId }));
-      dispatch(fetchAllClasses({ schoolId }));
-    }
     dispatch(activeUser());
-  }, [dispatch, schoolId]);
 
-  // 🔹 Default Attendance = Present
+    if (schoolId && academicYearId && user?._id) {
+      dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+      dispatch(fetchAssignedClasses({
+        schoolId,
+        academicYearId,
+        teacherId: user?._id
+      }));
+    }
+
+  }, [schoolId, academicYearId, user?._id, dispatch]);
+
+  /* ================= FLATTEN ASSIGNED DATA ================= */
+
+  const assignedClassSections = useMemo(() => {
+
+    if (!classAssignTeacher?.length || !user?._id) return [];
+
+    let result = [];
+
+    classAssignTeacher.forEach(cls => {
+
+      // Section Teacher / Class Teacher
+      cls.sections?.forEach(sec => {
+        if (sec.teacherId?._id === user._id) {
+          result.push({
+            key: `${cls._id}_${sec.sectionId?._id}`,
+            classId: cls._id,
+            className: cls.name,
+            sectionId: sec.sectionId?._id,
+            sectionName: sec.sectionId?.name,
+            type: "section"
+          });
+        }
+      });
+
+      // Subject Teacher
+      cls.subjects?.forEach(sub => {
+        if (sub.teacherId?._id === user._id) {
+          cls.sections?.forEach(sec => {
+            result.push({
+              key: `${cls._id}_${sec.sectionId?._id}_${sub.subjectId?._id}`,
+              classId: cls._id,
+              className: cls.name,
+              sectionId: sec.sectionId?._id,
+              sectionName: sec.sectionId?.name,
+              subjectId: sub.subjectId?._id,
+              subjectName: sub.subjectId?.name,
+              type: "subject"
+            });
+          });
+        }
+      });
+
+    });
+
+    return result;
+
+  }, [classAssignTeacher, user]);
+
+  /* ================= AUTO SELECT FIRST ================= */
+
   useEffect(() => {
-    const defaultAttendance = {};
-    schoolStudents.forEach((s) => {
-      defaultAttendance[s._id] = "present";
+    if (assignedClassSections.length && !selectedClassObj) {
+      setSelectedClassObj(assignedClassSections[0]);
+    }
+  }, [assignedClassSections,selectedClassObj]);
+
+  /* ================= FILTER STUDENTS ================= */
+
+  const filteredStudents = useMemo(() => {
+
+    if (!selectedClassObj) return [];
+
+    return schoolStudents.filter(s =>
+      s.class?._id === selectedClassObj.classId &&
+      s.section?._id === selectedClassObj.sectionId
+    );
+
+  }, [schoolStudents, selectedClassObj]);
+
+  /* ================= DEFAULT ATTENDANCE ================= */
+
+  useEffect(() => {
+    const obj = {};
+    filteredStudents.forEach(s => {
+      obj[s._id] = "present";
     });
-    setAttendance(defaultAttendance);
-  }, [schoolStudents]);
+    setAttendance(obj);
+  }, [filteredStudents]);
 
-  // 🔹 Class Change
-  const handleClassChange = (value) => {
-    setSelectedClass(value);
-    setSelectedSection(null); // reset section
-  };
+  /* ================= SUMMARY ================= */
 
-  // 🔹 Attendance Change
-  const handleAttendanceChange = (studentId, status) => {
-    setAttendance((prev) => ({
-      ...prev,
-      [studentId]: status,
-    }));
-  };
-
-  // 🔹 Section list based on class
-  const sectionList = useMemo(() => {
-    if (!selectedClass) return [];
-
-    const sections = schoolStudents
-      .filter((s) => s.class?.name === selectedClass)
-      .map((s) => s.section?.name)
-      .filter(Boolean);
-
-    return [...new Set(sections)];
-  }, [schoolStudents, selectedClass]);
-
-  // 🔹 Filter Students
-  const filteredData = useMemo(() => {
-    return schoolStudents.filter((item) => {
-      return (
-        (selectedClass ? item.class?.name === selectedClass : false) &&
-        (selectedSection ? item.section?.name === selectedSection : true) &&
-        (filterStatus
-          ? attendance[item._id] === filterStatus
-          : true)
-      );
-    });
-  }, [
-    schoolStudents,
-    selectedClass,
-    selectedSection,
-    filterStatus,
-    attendance,
-  ]);
-
-  // 🔹 Attendance Summary
   const summary = useMemo(() => {
+
     let present = 0;
     let absent = 0;
-    filteredData.forEach((s) => {
+
+    filteredStudents.forEach(s => {
       attendance[s._id] === "absent" ? absent++ : present++;
     });
-    return { present, absent };
-  }, [filteredData, attendance]);
 
-  // 🔹 Mark All Present
-  const markAllPresent = () => {
-    const updated = {};
-    filteredData.forEach((s) => {
-      updated[s._id] = "present";
-    });
-    setAttendance((prev) => ({ ...prev, ...updated }));
+    return { present, absent };
+
+  }, [filteredStudents, attendance]);
+
+  /* ================= ACTIONS ================= */
+
+  const handleAttendanceChange = (id, value) => {
+    setAttendance(prev => ({ ...prev, [id]: value }));
   };
 
-  // 🔹 Table Columns
+  const markAll = status => {
+    const obj = {};
+    filteredStudents.forEach(s => obj[s._id] = status);
+    setAttendance(prev => ({ ...prev, ...obj }));
+  };
+
+  /* ================= SUBMIT ================= */
+
+  const handleSubmit = () => {
+
+    if (!selectedClassObj) {
+      return message.warning("Please select class");
+    }
+
+    const records = filteredStudents.map(s => ({
+      studentId: s._id,
+      status: attendance[s._id]
+    }));
+
+    dispatch(submitAttendance({
+      records,
+      role: "teacher",
+      date: attendanceDate.toISOString(),
+      classId: selectedClassObj.classId,
+      sectionId: selectedClassObj.sectionId,
+      subjectId: selectedClassObj.subjectId || selectedSubject
+    }));
+
+    message.success("Attendance Saved");
+  };
+
+  /* ================= TABLE ================= */
+
   const columns = [
     {
-      title: "Student Name",
-      dataIndex: ["userDetails", "name"],
+      title: "Student",
+      render: (_, record) => record?.userDetails?.name
     },
     {
-      title: "Class",
-      render: (_, record) =>
-        `${record.class?.name} - ${record.section?.name || ""}`,
-    },
-   {
       title: "Attendance",
-      key: "attendance",
       render: (_, record) => (
         <Radio.Group
           value={attendance[record._id]}
-          onChange={(e) =>
+          onChange={e =>
             handleAttendanceChange(record._id, e.target.value)
           }
         >
-          <Space>
-            <Radio value="present">
-              <Tag color="green">Present</Tag>
-            </Radio>
-            <Radio value="absent">
-              <Tag color="red">Absent</Tag>
-            </Radio>
-          </Space>
+          <Radio value="present">
+            <Tag color="green">Present</Tag>
+          </Radio>
+          <Radio value="absent">
+            <Tag color="red">Absent</Tag>
+          </Radio>
         </Radio.Group>
-      ),
-    },
+      )
+    }
   ];
 
-  // 🔹 Submit Attendance
-  const handleSubmit = () => {
-    if (!selectedClass || !selectedSection) {
-      message.warning("Please select class and section");
-      return;
-    }
-
-    const attendanceData = filteredData.map((student) => ({
-      schoolId,
-      studentId: student._id,
-      classId: student.class?._id,
-      sectionId: student.section?._id,
-      date: attendanceDate.toISOString(),
-      status: attendance[student._id],
-      recordedBy: currentUser?._id,
-      academicYearId,
-    }));
-
-    dispatch(markAttendance({ attendanceData }));
-    message.success("Attendance saved successfully");
-  };
+  /* ================= UI ================= */
 
   return (
-    <Card>
+    <Card bordered={false}>
+
       <Title level={4}>Student Attendance</Title>
 
-      {/* 🔹 Filters */}
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={6}>
-          <Select
-            placeholder="Select Class *"
-            style={{ width: "100%" }}
-            onChange={handleClassChange}
-          >
-           {[...classList] // spread operator se naya array banaya
-            .sort((a, b) => {
-              const numA = parseInt(a.name.replace(/\D/g, ""), 10);
-              const numB = parseInt(b.name.replace(/\D/g, ""), 10);
-              return numA - numB;
-            })
-            .map((cls) => (
-              <Option key={cls._id} value={cls.name}>
-                {cls.name}
-              </Option>
-            ))}
-
-          </Select>
+      {/* Stats */}
+      <Row gutter={16} style={{ marginBottom: 20 }}>
+        <Col span={6}>
+          <Statistic title="Present" value={summary.present} />
         </Col>
-
-        <Col xs={24} md={6}>
-          <Select
-            placeholder="Select Section *"
-            style={{ width: "100%" }}
-            disabled={!selectedClass}
-            value={selectedSection}
-            onChange={setSelectedSection}
-          >
-            {sectionList.map((sec) => (
-              <Option key={sec} value={sec}>
-                {sec}
-              </Option>
-            ))}
-          </Select>
+        <Col span={6}>
+          <Statistic title="Absent" value={summary.absent} />
         </Col>
-
-        <Col xs={24} md={6}>
+        <Col span={6}>
           <DatePicker
-            style={{ width: "100%" }}
             value={attendanceDate}
             onChange={setAttendanceDate}
-          />
-        </Col>
-
-        <Col xs={24} md={6}>
-          <Select
-            placeholder="Filter Status"
-            allowClear
             style={{ width: "100%" }}
-            onChange={setFilterStatus}
-          >
-            <Option value="present">Present</Option>
-            <Option value="absent">Absent</Option>
-          </Select>
+          />
         </Col>
       </Row>
 
-      {/* 🔹 Actions */}
-      <Row justify="space-between" align="middle" style={{ marginBottom: 12 }}>
+      <Divider />
+
+      {/* Filters */}
+      <Row gutter={16} style={{ marginBottom: 20 }}>
+
+        {/* Class Section */}
+        <Col span={8}>
+          <Select
+            placeholder="Select Class & Section"
+            style={{ width: "100%" }}
+            value={selectedClassObj?.key}
+            onChange={val => {
+              const selected = assignedClassSections.find(
+                c => c.key === val
+              );
+              setSelectedClassObj(selected);
+            }}
+          >
+            {assignedClassSections.map(cls => (
+              <Option key={cls.key} value={cls.key}>
+                {cls.className} - {cls.sectionName}
+                {cls.subjectName ? ` (${cls.subjectName})` : ""}
+              </Option>
+            ))}
+          </Select>
+        </Col>
+
+      </Row>
+
+      {/* Actions */}
+      <Row justify="space-between" style={{ marginBottom: 16 }}>
         <Space>
-          <Button onClick={markAllPresent}>Mark All Present</Button>
-          <Text>
-            <Tag color="green">Present: {summary.present}</Tag>
-            <Tag color="red">Absent: {summary.absent}</Tag>
-          </Text>
+          <Button onClick={() => markAll("present")}>
+            Mark All Present
+          </Button>
+          <Button danger onClick={() => markAll("absent")}>
+            Mark All Absent
+          </Button>
         </Space>
 
-        <Button
-          type="primary"
-          onClick={handleSubmit}
-          disabled={!selectedClass || !selectedSection}
-        >
+        <Button type="primary" onClick={handleSubmit}>
           Save Attendance
         </Button>
       </Row>
 
-      {/* 🔹 Table */}
+      {/* Table */}
       <Table
         rowKey="_id"
         columns={columns}
-        dataSource={filteredData}
+        dataSource={filteredStudents}
         loading={loading}
         pagination={{ pageSize: 10 }}
       />
+
     </Card>
   );
 };

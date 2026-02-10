@@ -53,10 +53,16 @@ router.get(
 router.get(
   "/school",
   auth,
-  roleMiddleware(ADMIN_ROLE),
+  roleMiddleware(TEACHER_ROLE),
   getStudentsBySchoolId
 );
 
+router.get(
+  "/my/enrollment-id",
+  auth,
+  roleMiddleware(["Student"]),
+  getMyStudentEnrollmentId
+);
 // ✅ Get Student by ID (Student can access ONLY own profile — controller handles security)
 router.get(
   "/getStudent/:id",
@@ -81,11 +87,5 @@ router.delete(
   deleteStudent
 );
 
-router.get(
-  "/my/enrollment-id",
-  auth,
-  roleMiddleware(["Student"]),
-  getMyStudentEnrollmentId
-);
 
 export default router;
