@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
-
+const token = localStorage.getItem("accessToken");
 // ================== Async Thunks ==================
 
 // 📌 Fetch Students for Attendance
@@ -10,9 +10,12 @@ export const fetchStudents = createAsyncThunk(
   "attendance/fetchStudents",
   async ({ classId, sectionId, date }, { rejectWithValue }) => {
     try {
+      
       const res = await axios.get(`${API_URL}/attendance/students`, {
         params: { classId, sectionId, date },
-      });
+        
+      }
+    ,{headers: { Authorization: `Bearer ${token}` }});
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -27,7 +30,10 @@ export const fetchTeachers = createAsyncThunk(
     try {
       const res = await axios.get(`${API_URL}/attendance/teachers`, {
         params: { departmentId, subjectId, date },
-      });
+         
+      },
+      {headers: { Authorization: `Bearer ${token}` }}
+    );
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -48,7 +54,9 @@ export const submitAttendance = createAsyncThunk(
         sectionId,
         departmentId,
         subjectId,
-      });
+      },
+      {headers: { Authorization: `Bearer ${token}` }}
+    );
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -63,7 +71,8 @@ export const fetchReports = createAsyncThunk(
     try {
       const res = await axios.get(`${API_URL}/attendance/reports`, {
         params: { reportType, date, classId, sectionId },
-      });
+      }
+      ,{headers: { Authorization: `Bearer ${token}` }});
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
