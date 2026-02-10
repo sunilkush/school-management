@@ -2,7 +2,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
-import { Section } from "../models/section.model.js";
+import Section from "../models/section.model.js";
 /**
  * ===============================
  * CREATE SECTION
