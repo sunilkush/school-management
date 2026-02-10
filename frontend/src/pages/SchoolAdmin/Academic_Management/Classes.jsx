@@ -16,7 +16,6 @@ import {
   Typography,
   Row,
   Col,
-  Tooltip,
   Grid,
   Empty,
 } from "antd";
@@ -25,9 +24,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   ApartmentOutlined,
-  BookOutlined,
-  TeamOutlined,
-  CalendarOutlined,
 } from "@ant-design/icons";
 
 import ClassFormSA from "../../../components/forms/ClassSectionFormSA.jsx";
@@ -72,36 +68,33 @@ const Classes = () => {
   };
 
   /* ================= FILTER ================= */
- const filteredItems = classList
-  .filter(item =>
-    (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
-  )
-  .sort((a, b) => {
-    // Extract the number from "Class X"
-    const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
-    const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
-    return numA - numB; // numeric ascending
-  });
+  const filteredItems = classList
+    .filter((item) =>
+      (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
+    )
+    .sort((a, b) => {
+      const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
+      return numA - numB;
+    });
 
   /* ================= TABLE ================= */
   const columns = [
- {
-    title: "S.No",
-    render: (_, __, index) => index + 1,
-    width: 60,
-  },
-  {
-    title: "Class",
-    dataIndex: "name",
-    
-    render: (name) => (
-      <Space>
-        <ApartmentOutlined />
-        <Text strong>{name}</Text>
-      </Space>
-    ),
-  },
-
+    {
+      title: "S.No",
+      render: (_, __, index) => index + 1,
+      width: 70,
+    },
+    {
+      title: "Class",
+      dataIndex: "name",
+      render: (name) => (
+        <Space>
+          <ApartmentOutlined />
+          <Text strong>{name}</Text>
+        </Space>
+      ),
+    },
     {
       title: "Status",
       dataIndex: "status",
@@ -118,50 +111,38 @@ const Classes = () => {
       render: (year) => year?.name || "—",
     },
     {
-  title: "Sections & Teachers",
-  dataIndex: "sections",
-  render: (sections = []) =>
-    sections.length ? (
-      <Space wrap>
-        {sections.map((s) => (
-          <Tag key={s._id} color="blue" style={{textTransform:"capitalize"}}>
-            {s.sectionId?.name || "—"}{" "}
-            {s.teacherId?.name ? `(${s.teacherId.name})` : ""}
-          </Tag>
-        ))}
-      </Space>
-    ) : (
-      <Text type="secondary">—</Text>
-    ),
-},
-    
+      title: "Sections",
+      dataIndex: "sections",
+      render: (sections = []) => (
+        <Space wrap>
+          {sections.map((s) => (
+            <Tag key={s._id} color="blue">
+              {s.sectionId?.name}
+              {s.teacherId?.name ? ` (${s.teacherId.name})` : ""}
+            </Tag>
+          ))}
+        </Space>
+      ),
+    },
     {
-      title: "Subjects & Teachers",
+      title: "Subjects",
       dataIndex: "subjects",
-      render: (subjects = []) =>
-        subjects.length ? (
-          <Space wrap>
-            {subjects.map((sub) => (
-              <Tag key={sub._id} color="purple" style={{textTransform:"capitalize"}}>
-                {sub.subjectId?.name || "—"}{" "}
-                {sub.teacherId?.name ? `(${sub.teacherId.name})` : ""}
-              </Tag>
-            ))}
-          </Space>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
+      render: (subjects = []) => (
+        <Space wrap>
+          {subjects.map((s) => (
+            <Tag key={s._id} color="purple">
+              {s.subjectId?.name}
+              {s.teacherId?.name ? ` (${s.teacherId.name})` : ""}
+            </Tag>
+          ))}
+        </Space>
+      ),
     },
     {
       title: "Actions",
-      align: "center",
       render: (_, cls) => (
         <Space>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(cls)}
-          />
+          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(cls)} />
           <Button
             type="link"
             danger
@@ -173,6 +154,74 @@ const Classes = () => {
     },
   ];
 
+  /* ================= MOBILE CARD VIEW ================= */
+  const MobileCards = () => {
+    if (!filteredItems.length) return <Empty />;
+
+    return (
+      <Row gutter={[12, 12]}>
+        {filteredItems.map((cls, index) => (
+          <Col xs={24} key={cls._id}>
+            <Card size="small">
+              <Space direction="vertical" style={{ width: "100%" }}>
+                <Space style={{ justifyContent: "space-between", width: "100%" }}>
+                  <Space>
+                    <ApartmentOutlined />
+                    <Text strong>{cls.name}</Text>
+                  </Space>
+
+                  <Tag color={cls.status === "inactive" ? "red" : "green"}>
+                    {cls.status === "inactive" ? "Inactive" : "Active"}
+                  </Tag>
+                </Space>
+
+                <Text type="secondary">
+                  Academic Year: {cls.academicYearId?.name || "—"}
+                </Text>
+
+                <div>
+                  <Text strong>Sections:</Text>
+                  <br />
+                  <Space wrap>
+                    {cls.sections?.map((s) => (
+                      <Tag key={s._id} color="blue">
+                        {s.sectionId?.name}
+                        {s.teacherId?.name ? ` (${s.teacherId.name})` : ""}
+                      </Tag>
+                    ))}
+                  </Space>
+                </div>
+
+                <div>
+                  <Text strong>Subjects:</Text>
+                  <br />
+                  <Space wrap>
+                    {cls.subjects?.map((s) => (
+                      <Tag key={s._id} color="purple">
+                        {s.subjectId?.name}
+                        {s.teacherId?.name ? ` (${s.teacherId.name})` : ""}
+                      </Tag>
+                    ))}
+                  </Space>
+                </div>
+
+                <Space>
+                  <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(cls)} />
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDelete(cls._id)}
+                  />
+                </Space>
+              </Space>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    );
+  };
+
   return (
     <>
       <Modal
@@ -181,7 +230,7 @@ const Classes = () => {
         footer={null}
         onCancel={() => setIsOpen(false)}
         destroyOnClose
-        width={screens.md ? 900 : "100%"}
+        width={screens.lg ? 900 : screens.md ? 700 : "100%"}
       >
         <ClassFormSA
           initialData={editingClass}
@@ -194,10 +243,11 @@ const Classes = () => {
       </Modal>
 
       <Card>
-        <Row justify="space-between" gutter={[16, 16]}>
-          <Col>
+        <Row gutter={[16, 16]} justify="space-between">
+          <Col xs={24} md={12}>
             <Title level={4}>Class Management</Title>
           </Col>
+
           <Col xs={24} md={8}>
             <Search
               placeholder="Search class"
@@ -215,10 +265,11 @@ const Classes = () => {
               rowKey="_id"
               loading={loading}
               bordered
-              pagination={{ pageSize: 12 }}
+              scroll={{ x: 900 }}
+              pagination={{ pageSize: 10 }}
             />
           ) : (
-            <Empty description="Use desktop for table view" />
+            <MobileCards />
           )}
         </div>
       </Card>
