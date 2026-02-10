@@ -49,11 +49,11 @@ const SummaryCards = () => {
         const isDecrease = item.trend === "decrease";
 
         return (
-          <Col xs={24} sm={12} lg={12} key={index}>
+          <Col xs={24} sm={12} lg={6} key={index}>
             <Card hoverable bordered>
               <Space
                 align="start"
-                style={{ width: "100%", justifyContent: "space-between" }}
+                style={{ width: "100%", justifyContent: "space-between",alignItems: "center" }}
               >
                 {/* Left Content */}
                 <Space direction="vertical">

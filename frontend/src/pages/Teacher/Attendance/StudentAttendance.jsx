@@ -181,12 +181,16 @@ const StudentAttendance = () => {
     }));
 
     dispatch(submitAttendance({
+      schoolId,
+      academicYearId,
       records,
       role: "teacher",
       date: attendanceDate.toISOString(),
       classId: selectedClassObj.classId,
       sectionId: selectedClassObj.sectionId,
-      subjectId: selectedClassObj.subjectId || selectedSubject
+      subjectId: selectedClassObj.subjectId || selectedSubject,
+      
+      userId: filteredStudents[0]?.userId || user?._id
     }));
 
     message.success("Attendance Saved");

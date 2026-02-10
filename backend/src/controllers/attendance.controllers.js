@@ -11,47 +11,48 @@ export const createAttendance = asyncHandler(async (req, res) => {
     schoolId,
     academicYearId,
     date,
-    session,
-    userId,
+    session = "FullDay",
     role,
-    status,
     remarks,
     classId,
     sectionId,
     departmentId,
     subjectId,
+    records
   } = req.body;
 
-  if (!schoolId || !academicYearId || !date || !userId || !role || !status) {
+  if (!schoolId || !academicYearId || !date || !role) {
     throw new ApiError(400, "Required fields missing!");
   }
 
-  // 🔐 Teacher validation
-  if (req.user.role === "TEACHER") {
-    const isAssigned = req.user.schoolByAssignedTeachers?.some(
-      (s) => s.schoolId.toString() === schoolId
-    );
 
-    if (!isAssigned) {
-      throw new ApiError(403, "You are not assigned to this school");
-    }
+
+  let attendanceDocs = [];
+
+  // ✅ MULTIPLE STUDENT RECORDS
+  if (records && records.length > 0) {
+    attendanceDocs = records.map((rec) => ({
+      schoolId,
+      academicYearId,
+      date,
+      session,
+      userId: rec.studentId,
+      role: "Student",
+      status:
+        rec.status.charAt(0).toUpperCase() +
+        rec.status.slice(1).toLowerCase(),
+      classId,
+      sectionId,
+      subjectId,
+      remarks,
+      markedBy: req.user._id,
+      markedAt: new Date(),
+    }));
   }
 
-  const attendance = await Attendance.create({
-    schoolId,
-    academicYearId,
-    date,
-    session,
-    userId,
-    role,
-    status,
-    remarks,
-    classId,
-    sectionId,
-    departmentId,
-    subjectId,
-    markedBy: req.user._id,
-    markedAt: new Date(),
+  // ✅ INSERT MANY
+  const attendance = await Attendance.insertMany(attendanceDocs, {
+    ordered: false,
   });
 
   return res

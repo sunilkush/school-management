@@ -13,9 +13,9 @@ export const fetchStudents = createAsyncThunk(
       
       const res = await axios.get(`${API_URL}/attendance/students`, {
         params: { classId, sectionId, date },
-        
+        headers: { Authorization: `Bearer ${token}` }
       }
-    ,{headers: { Authorization: `Bearer ${token}` }});
+    );
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -30,9 +30,9 @@ export const fetchTeachers = createAsyncThunk(
     try {
       const res = await axios.get(`${API_URL}/attendance/teachers`, {
         params: { departmentId, subjectId, date },
+        headers: { Authorization: `Bearer ${token}` }
          
-      },
-      {headers: { Authorization: `Bearer ${token}` }}
+      }      
     );
       return res.data;
     } catch (err) {
@@ -44,7 +44,7 @@ export const fetchTeachers = createAsyncThunk(
 // 📌 Submit Attendance
 export const submitAttendance = createAsyncThunk(
   "attendance/submit",
-  async ({ records, role, date, classId, sectionId, departmentId, subjectId }, { rejectWithValue }) => {
+  async ({ records, role, date, classId, sectionId, departmentId, subjectId,schoolId,academicYearId,userId }, { rejectWithValue }) => {
     try {
       const res = await axios.post(`${API_URL}/attendance/mark`, {
         records,
@@ -54,6 +54,10 @@ export const submitAttendance = createAsyncThunk(
         sectionId,
         departmentId,
         subjectId,
+        schoolId,
+        academicYearId,
+        userId
+        
       },
       {headers: { Authorization: `Bearer ${token}` }}
     );
