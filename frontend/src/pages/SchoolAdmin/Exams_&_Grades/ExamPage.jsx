@@ -16,7 +16,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getExams,deleteExam } from "../../../features/examSlice.js";
+import { getExams, deleteExam } from "../../../features/examSlice.js";
 import { useDispatch, useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
@@ -44,17 +44,28 @@ const ExamsPage = () => {
     }
   }, [schoolId, academicYearId, dispatch]);
 
-  /* ✅ Delete Handler (Frontend Only Example) */
-const handleDelete = async (id) => {
-  try {
-    await dispatch(deleteExam(id)).unwrap();   // API call
+  /* ✅ Delete Handler */
+  const handleDelete = async (id) => {
+    try {
+      await dispatch(deleteExam(id)).unwrap();
+      message.success("Exam deleted successfully");
+    } catch (error) {
+      console.error(error);
+      message.error("Failed to delete exam");
+    }
+  };
 
-    message.success("Exam deleted successfully");  // Success after API
-  } catch (error) {
-    console.error(error);
-    message.error("Failed to delete exam");
-  }
-};
+  /* ✅ Edit Handler (Navigate) */
+  const handleEdit = (id) => {
+    navigate(`/dashboard/schooladmin/exams/edit/${id}`);
+  };
+
+  /* ✅ Safe Date Formatter */
+  const formatDate = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleString();
+  };
+
   /* ✅ Table Columns */
   const columns = [
     {
@@ -65,19 +76,17 @@ const handleDelete = async (id) => {
     {
       title: "Type",
       dataIndex: "examType",
-      render: (type) => (
-        <Tag color="blue">{type?.toUpperCase()}</Tag>
-      ),
+      render: (type) => <Tag color="blue">{type?.toUpperCase()}</Tag>,
     },
     {
       title: "Start Time",
       dataIndex: "startTime",
-      render: (time) => new Date(time).toLocaleString(),
+      render: formatDate,
     },
     {
       title: "End Time",
       dataIndex: "endTime",
-      render: (time) => new Date(time).toLocaleString(),
+      render: formatDate,
     },
     {
       title: "Total Marks",
@@ -105,11 +114,11 @@ const handleDelete = async (id) => {
       align: "center",
       render: (_, record) => (
         <Space>
-          
-          <Popconfirm
-            title="Delete Exam?"
-            onConfirm={() => handleDelete(record._id)}
-          >
+          <Popconfirm title="Edit Exam?" onConfirm={() => handleEdit(record._id)}>
+            <Button type="primary" icon={<EditOutlined />} />
+          </Popconfirm>
+
+          <Popconfirm title="Delete Exam?" onConfirm={() => handleDelete(record._id)}>
             <Button danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>

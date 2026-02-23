@@ -19,7 +19,13 @@ import {
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllClasses } from "../../../features/classSlice.js";
-import { createExam } from "../../../features/examSlice.js";
+import {
+  createExam,
+  updateExam,
+ 
+} from "../../../features/examSlice.js";
+
+import { useNavigate, useParams } from "react-router-dom";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -27,9 +33,12 @@ const { Option } = Select;
 const CreateExam = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const { id } = useParams(); // ⭐ EDIT MODE KEY
+
+  const isEditMode = Boolean(id);
 
   /* ================= LOCAL STATE ================= */
-  
   const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
 
@@ -37,7 +46,7 @@ const CreateExam = () => {
   const { classList = [], loading } = useSelector(
     (state) => state.class || {}
   );
- 
+
   /* ================= USER ================= */
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
@@ -50,12 +59,44 @@ const CreateExam = () => {
   const academicYearId = selectedAcademicYear?._id;
   const schoolId = selectedAcademicYear?.schoolId;
 
-  /* ================= FETCH ================= */
+  /* ================= FETCH CLASSES ================= */
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchAllClasses({ schoolId }));
     }
   }, [schoolId, dispatch]);
+
+  /* ================= EDIT MODE DATA LOAD ================= */
+  useEffect(() => {
+    if (isEditMode) {
+      loadExam();
+    }
+  }, [id]);
+
+  const loadExam = async () => {
+    try {
+      const res = await dispatch(updateExam(id)).unwrap();
+      const exam = res;
+
+      handleClassChange(exam.classId?._id || exam.classId);
+
+      form.setFieldsValue({
+        title: exam.title,
+        classId: exam.classId?._id || exam.classId,
+        subjectId: exam.subjectId?._id || exam.subjectId,
+        examType: exam.examType,
+        examDate: dayjs(exam.examDate),
+        startTime: dayjs(exam.startTime),
+        endTime: dayjs(exam.endTime),
+        durationMinutes: exam.durationMinutes,
+        totalMarks: exam.totalMarks,
+        passingMarks: exam.passingMarks,
+        status: exam.status,
+      });
+    } catch (error) {
+      message.error("Failed to load exam");
+    }
+  };
 
   /* ================= CLASS CHANGE ================= */
   const handleClassChange = (classId) => {
@@ -77,26 +118,13 @@ const CreateExam = () => {
   /* ================= SUBMIT ================= */
   const handleSubmit = async (values) => {
     try {
-      if (values.passingMarks > values.totalMarks) {
-        return message.error(
-          "Passing marks cannot be greater than total marks"
-        );
-      }
-
-     
       const startDateTime = dayjs(values.examDate)
         .hour(dayjs(values.startTime).hour())
-        .minute(dayjs(values.startTime).minute())
-        .second(0);
+        .minute(dayjs(values.startTime).minute());
 
       const endDateTime = dayjs(values.examDate)
         .hour(dayjs(values.endTime).hour())
-        .minute(dayjs(values.endTime).minute())
-        .second(0);
-
-      if (endDateTime.isBefore(startDateTime)) {
-        return message.error("End time must be after start time");
-      }
+        .minute(dayjs(values.endTime).minute());
 
       const payload = {
         academicYearId,
@@ -113,20 +141,20 @@ const CreateExam = () => {
         totalMarks: values.totalMarks,
         passingMarks: values.passingMarks,
         status: values.status || "draft",
-      
       };
 
-      await dispatch(createExam(payload)).unwrap();
+      if (isEditMode) {
+        await dispatch(updateExam({ id, data: payload })).unwrap();
+        message.success("Exam Updated Successfully");
+      } else {
+        await dispatch(createExam(payload)).unwrap();
+        message.success("Exam Created Successfully");
+      }
 
-      message.success("Exam Created Successfully");
-
-      form.resetFields();
-     
-      setSelectedClass(null);
-      setSubjectList([]);
+      navigate("/dashboard/schooladmin/exams");
     } catch (err) {
       console.error(err);
-      message.error("Failed to create exam");
+      message.error("Failed to save exam");
     }
   };
 
@@ -134,7 +162,9 @@ const CreateExam = () => {
   return (
     <Spin spinning={loading}>
       <Card bordered={false} style={{ borderRadius: 12 }}>
-        <Title level={4}>Create Exam</Title>
+        <Title level={4}>
+          {isEditMode ? "Edit Exam" : "Create Exam"}
+        </Title>
 
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
            

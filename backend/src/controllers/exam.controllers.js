@@ -71,7 +71,7 @@ export const getExams = asyncHandler(async (req, res) => {
     const filters = {};
 
     // Multi Tenant Security
-    if (req.user.role !== "Super Admin") {
+    if (req.user?.role?.name !== "Super Admin") {
       filters.schoolId = req.user.schoolId;
     } else if (req.query.schoolId) {
       filters.schoolId = req.query.schoolId;
@@ -104,6 +104,7 @@ export const getExams = asyncHandler(async (req, res) => {
         .populate("schoolId", "name")
         .populate("classId", "name")
         .populate("subjectId", "name")
+        .populate("academicYearId", "name")
         .populate("createdBy", "name email")
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -314,3 +315,4 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
     return res.status(500).json(new ApiResponse(500, null, error.message));
   }
 });
+
