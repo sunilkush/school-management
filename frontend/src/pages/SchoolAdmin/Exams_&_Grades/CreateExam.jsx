@@ -22,7 +22,7 @@ import { fetchAllClasses } from "../../../features/classSlice.js";
 import {
   createExam,
   updateExam,
- 
+  getExamById,
 } from "../../../features/examSlice.js";
 
 import { useNavigate, useParams } from "react-router-dom";
@@ -34,7 +34,7 @@ const CreateExam = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { id } = useParams(); // ⭐ EDIT MODE KEY
+  const { id } = useParams();
 
   const isEditMode = Boolean(id);
 
@@ -66,35 +66,38 @@ const CreateExam = () => {
     }
   }, [schoolId, dispatch]);
 
-  /* ================= EDIT MODE DATA LOAD ================= */
+  /* ================= EDIT MODE ================= */
   useEffect(() => {
     if (isEditMode) {
       loadExam();
     }
-  }, [id]);
+    // eslint-disable-next-line
+  }, [id, isEditMode]);
 
   const loadExam = async () => {
     try {
-      const res = await dispatch(updateExam(id)).unwrap();
+      const res = await dispatch(getExamById(id)).unwrap();
       const exam = res;
 
-      handleClassChange(exam.classId?._id || exam.classId);
+      const classIdValue = exam.classId?._id || exam.classId;
+
+      handleClassChange(classIdValue);
 
       form.setFieldsValue({
         title: exam.title,
-        classId: exam.classId?._id || exam.classId,
+        classId: classIdValue,
         subjectId: exam.subjectId?._id || exam.subjectId,
         examType: exam.examType,
-        examDate: dayjs(exam.examDate),
-        startTime: dayjs(exam.startTime),
-        endTime: dayjs(exam.endTime),
+        examDate: exam.examDate ? dayjs(exam.examDate) : null,
+        startTime: exam.startTime ? dayjs(exam.startTime) : null,
+        endTime: exam.endTime ? dayjs(exam.endTime) : null,
         durationMinutes: exam.durationMinutes,
         totalMarks: exam.totalMarks,
         passingMarks: exam.passingMarks,
         status: exam.status,
       });
     } catch (error) {
-      message.error("Failed to load exam");
+      message.error(error?.message || "Failed to load exam");
     }
   };
 
@@ -115,9 +118,27 @@ const CreateExam = () => {
     form.setFieldsValue({ subjectId: undefined });
   };
 
+  /* ================= AUTO DURATION ================= */
+  const calculateDuration = () => {
+    const start = form.getFieldValue("startTime");
+    const end = form.getFieldValue("endTime");
+
+    if (start && end) {
+      const diff = dayjs(end).diff(dayjs(start), "minute");
+
+      if (diff > 0) {
+        form.setFieldsValue({ durationMinutes: diff });
+      }
+    }
+  };
+
   /* ================= SUBMIT ================= */
   const handleSubmit = async (values) => {
     try {
+      if (dayjs(values.endTime).isBefore(dayjs(values.startTime))) {
+        return message.error("End time must be after start time");
+      }
+
       const startDateTime = dayjs(values.examDate)
         .hour(dayjs(values.startTime).hour())
         .minute(dayjs(values.startTime).minute());
@@ -151,7 +172,7 @@ const CreateExam = () => {
         message.success("Exam Created Successfully");
       }
 
-      navigate("/dashboard/schooladmin/exams");
+      navigate("/dashboard/schooladmin/exams/exams-list");
     } catch (err) {
       console.error(err);
       message.error("Failed to save exam");
@@ -167,7 +188,6 @@ const CreateExam = () => {
         </Title>
 
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-           
           {/* BASIC INFO */}
           <Divider orientation="left">Basic Info</Divider>
 
@@ -176,7 +196,7 @@ const CreateExam = () => {
               <Form.Item
                 name="title"
                 label="Exam Title"
-                rules={[{ required: true }]}
+                rules={[{ required: true, message: "Enter exam title" }]}
               >
                 <Input />
               </Form.Item>
@@ -186,7 +206,7 @@ const CreateExam = () => {
               <Form.Item
                 name="classId"
                 label="Class"
-                rules={[{ required: true }]}
+                rules={[{ required: true, message: "Select class" }]}
               >
                 <Select onChange={handleClassChange}>
                   {classList.map((cls) => (
@@ -202,7 +222,7 @@ const CreateExam = () => {
               <Form.Item
                 name="subjectId"
                 label="Subject"
-                rules={[{ required: true }]}
+                rules={[{ required: true, message: "Select subject" }]}
               >
                 <Select disabled={!selectedClass}>
                   {subjectList.map((sub) => (
@@ -223,8 +243,8 @@ const CreateExam = () => {
               <Form.Item
                 name="examType"
                 label="Exam Type"
-                rules={[{ required: true }]}
                 initialValue="objective"
+                rules={[{ required: true }]}
               >
                 <Select>
                   <Option value="objective">Objective</Option>
@@ -250,7 +270,10 @@ const CreateExam = () => {
                 label="Start Time"
                 rules={[{ required: true }]}
               >
-                <TimePicker style={{ width: "100%" }} />
+                <TimePicker
+                  style={{ width: "100%" }}
+                  onChange={calculateDuration}
+                />
               </Form.Item>
             </Col>
 
@@ -260,7 +283,10 @@ const CreateExam = () => {
                 label="End Time"
                 rules={[{ required: true }]}
               >
-                <TimePicker style={{ width: "100%" }} />
+                <TimePicker
+                  style={{ width: "100%" }}
+                  onChange={calculateDuration}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -312,7 +338,7 @@ const CreateExam = () => {
             </Select>
           </Form.Item>
 
-          <Button type="primary" htmlType="submit" block >
+          <Button type="primary" htmlType="submit" block>
             Save Exam
           </Button>
         </Form>

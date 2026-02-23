@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { currentUser } from './features/authSlice';
 import { setSelectedAcademicYear } from './features/academicYearSlice';
-
+import { SpeedInsights } from '@vercel/speed-insights/react'
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -45,6 +45,7 @@ function App() {
     <>
       <Outlet />
       <ToastContainer />
+      <SpeedInsights />
     </>
   );
 }
