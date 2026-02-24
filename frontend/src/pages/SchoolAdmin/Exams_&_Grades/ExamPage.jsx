@@ -55,10 +55,7 @@ const ExamsPage = () => {
     }
   };
 
-  /* ✅ Edit Handler (Navigate) */
-  const handleEdit = (id) => {
-    navigate(`/dashboard/schooladmin/exams/edit/${id}`);
-  };
+ 
 
   /* ✅ Safe Date Formatter */
   const formatDate = (date) => {
@@ -114,7 +111,13 @@ const ExamsPage = () => {
       align: "center",
       render: (_, record) => (
         <Space>
-          <Popconfirm title="Edit Exam?" onConfirm={() => handleEdit(record._id)}>
+          <Popconfirm title="Edit Exam?" onClick={() => {
+  if (!record?._id) {
+    message.error("Invalid exam id");
+    return;
+  }
+  navigate(`/dashboard/schooladmin/exams/edit/${record._id}`);
+}}>
             <Button type="primary" icon={<EditOutlined />} />
           </Popconfirm>
 

@@ -36,11 +36,15 @@ const CreateExam = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const isEditMode = Boolean(id);
+  console.log("Exam ID from URL:", id);
 
+  // ✅ HARD SAFE EDIT MODE
+  const isEditMode = id && id !== "undefined" && id !== "null";
+  console.log("Is Edit Mode:", isEditMode);
   /* ================= LOCAL STATE ================= */
   const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
+  const [examData, setExamData] = useState(null); // ⭐ important
 
   /* ================= REDUX ================= */
   const { classList = [], loading } = useSelector(
@@ -66,43 +70,55 @@ const CreateExam = () => {
     }
   }, [schoolId, dispatch]);
 
-  /* ================= EDIT MODE ================= */
+  /* ================= LOAD EXAM ================= */
   useEffect(() => {
-    if (isEditMode) {
-      loadExam();
-    }
+    if (!isEditMode) return;
+    if (!id) return;
+
+    loadExam();
     // eslint-disable-next-line
-  }, [id, isEditMode]);
+  }, [id]);
 
   const loadExam = async () => {
     try {
+      if (!id || id === "undefined" || id === "null") {
+        console.error("Invalid exam id:", id);
+        return;
+      }
+
       const res = await dispatch(getExamById(id)).unwrap();
-      const exam = res;
-
-      const classIdValue = exam.classId?._id || exam.classId;
-
-      handleClassChange(classIdValue);
-
-      form.setFieldsValue({
-        title: exam.title,
-        classId: classIdValue,
-        subjectId: exam.subjectId?._id || exam.subjectId,
-        examType: exam.examType,
-        examDate: exam.examDate ? dayjs(exam.examDate) : null,
-        startTime: exam.startTime ? dayjs(exam.startTime) : null,
-        endTime: exam.endTime ? dayjs(exam.endTime) : null,
-        durationMinutes: exam.durationMinutes,
-        totalMarks: exam.totalMarks,
-        passingMarks: exam.passingMarks,
-        status: exam.status,
-      });
+      setExamData(res); // ⭐ store first
     } catch (error) {
       message.error(error?.message || "Failed to load exam");
     }
   };
 
+  /* ================= AFTER CLASSES + EXAM READY ================= */
+  useEffect(() => {
+    if (!examData) return;
+    if (!classList.length) return;
+
+    const classIdValue = examData.classId?._id || examData.classId;
+
+    handleClassChange(classIdValue, examData.subjectId?._id || examData.subjectId);
+
+    form.setFieldsValue({
+      title: examData.title,
+      classId: classIdValue,
+      subjectId: examData.subjectId?._id || examData.subjectId,
+      examType: examData.examType,
+      examDate: examData.examDate ? dayjs(examData.examDate) : null,
+      startTime: examData.startTime ? dayjs(examData.startTime) : null,
+      endTime: examData.endTime ? dayjs(examData.endTime) : null,
+      durationMinutes: examData.durationMinutes,
+      totalMarks: examData.totalMarks,
+      passingMarks: examData.passingMarks,
+      status: examData.status,
+    });
+  }, [examData, classList]);
+
   /* ================= CLASS CHANGE ================= */
-  const handleClassChange = (classId) => {
+  const handleClassChange = (classId, subjectIdFromEdit = null) => {
     setSelectedClass(classId);
 
     const selected = classList.find((c) => c._id === classId);
@@ -115,7 +131,10 @@ const CreateExam = () => {
 
     setSubjectList(subjects);
 
-    form.setFieldsValue({ subjectId: undefined });
+    // ✅ only reset when NOT edit
+    if (!subjectIdFromEdit) {
+      form.setFieldsValue({ subjectId: undefined });
+    }
   };
 
   /* ================= AUTO DURATION ================= */
@@ -125,7 +144,6 @@ const CreateExam = () => {
 
     if (start && end) {
       const diff = dayjs(end).diff(dayjs(start), "minute");
-
       if (diff > 0) {
         form.setFieldsValue({ durationMinutes: diff });
       }
@@ -163,9 +181,14 @@ const CreateExam = () => {
         passingMarks: values.passingMarks,
         status: values.status || "draft",
       };
-
+      
       if (isEditMode) {
-        await dispatch(updateExam({ id, data: payload })).unwrap();
+      
+        if (!id || id === "undefined" || id === "null") {
+          return message.error("Invalid exam id 2");
+        }
+
+        await dispatch(updateExam({ Id: id, payload })).unwrap();
         message.success("Exam Updated Successfully");
       } else {
         await dispatch(createExam(payload)).unwrap();
