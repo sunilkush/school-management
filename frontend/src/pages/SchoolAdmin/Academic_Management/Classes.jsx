@@ -160,7 +160,7 @@ const Classes = () => {
 
     return (
       <Row gutter={[12, 12]}>
-        {filteredItems.map((cls, index) => (
+         {filteredItems.map((cls) => (
           <Col xs={24} key={cls._id}>
             <Card size="small">
               <Space direction="vertical" style={{ width: "100%" }}>

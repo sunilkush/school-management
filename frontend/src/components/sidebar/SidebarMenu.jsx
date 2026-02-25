@@ -9,7 +9,7 @@ const SidebarMenu = ({ role }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems = sidebarMenu[role] || [];
+const menuItems = useMemo(() => sidebarMenu[role] || [], [role]);
 
   // 🔹 Find active parent menu (on page refresh)
   const initialOpenKeys = menuItems
@@ -23,7 +23,7 @@ const SidebarMenu = ({ role }) => {
   // 🔹 Auto update open menu on route change
   useEffect(() => {
     setOpenKeys(initialOpenKeys);
-  }, [location.pathname]);
+ }, [initialOpenKeys]);
 
   // 🔹 Allow only ONE submenu open
   const onOpenChange = (keys) => {

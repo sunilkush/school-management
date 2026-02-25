@@ -39,38 +39,38 @@ const SchoolAdminReport = () => {
   }, [dispatch, parsedRole, parsedSchoolId]);
 
   // Mock detailed data for tables
-  const [attendanceData, setAttendanceData] = useState([
+  const [attendanceData] = useState([
     { key: 1, class: "1st Grade", total: 50, present: 48, absent: 2 },
     { key: 2, class: "2nd Grade", total: 45, present: 43, absent: 2 },
     { key: 3, class: "3rd Grade", total: 40, present: 38, absent: 2 },
   ]);
 
-  const [feeData, setFeeData] = useState([
+  const [feeData] = useState([
     { key: 1, student: "John Doe", totalFee: 5000, paid: 5000, pending: 0 },
     { key: 2, student: "Jane Smith", totalFee: 5000, paid: 3000, pending: 2000 },
   ]);
 
-  const [hostelData, setHostelData] = useState([
+  const [hostelData] = useState([
     { key: 1, roomNumber: "101", capacity: 2, occupied: 2 },
     { key: 2, roomNumber: "102", capacity: 3, occupied: 1 },
   ]);
 
-  const [transportData, setTransportData] = useState([
+  const [transportData] = useState([
     { key: 1, vehicle: "Bus 1", route: "Route A", students: 20 },
     { key: 2, vehicle: "Bus 2", route: "Route B", students: 15 },
   ]);
 
-  const [libraryData, setLibraryData] = useState([
+  const [libraryData] = useState([
     { key: 1, book: "Mathematics", issued: 5, overdue: 1 },
     { key: 2, book: "Science", issued: 3, overdue: 0 },
   ]);
 
-  const [employeeSalaries, setEmployeeSalaries] = useState([
+  const [employeeSalaries] = useState([
     { key: 1, name: "John Doe", salary: 30000, paid: 30000, pending: 0 },
     { key: 2, name: "Jane Smith", salary: 25000, paid: 20000, pending: 5000 },
   ]);
 
-  const [inventoryData, setInventoryData] = useState([
+  const [inventoryData] = useState([
     { key: 1, item: "Projector", quantity: 5, lowStock: false },
     { key: 2, item: "Markers", quantity: 2, lowStock: true },
   ]);

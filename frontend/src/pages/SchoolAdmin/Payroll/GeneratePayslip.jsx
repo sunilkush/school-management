@@ -22,7 +22,7 @@ const { Content } = Layout;
 const { Option } = Select;
 
 const GeneratePayslip = () => {
-  const [employees, setEmployees] = useState([
+  const [employees] = useState([
     {
       key: 1,
       name: "John Doe",

@@ -30,7 +30,7 @@ const CollectFees = () => {
   const [searchName, setSearchName] = useState("");
   const [filterClass, setFilterClass] = useState("");
 
-  const handleCollectFee = (values) => {
+  const handleCollectFee = () => {
     setStudents(
       students.map((student) =>
         student.key === selectedStudent.key

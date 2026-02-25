@@ -41,7 +41,7 @@ const StudentAttendance = () => {
     : null;
 
   const [selectedClassObj, setSelectedClassObj] = useState(null);
-  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedSubject] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
   const [attendance, setAttendance] = useState({});
 

@@ -20,7 +20,7 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const SmsEmailHistory = () => {
-  const [history, setHistory] = useState([
+  const [history] = useState([
     {
       key: 1,
       type: "SMS",

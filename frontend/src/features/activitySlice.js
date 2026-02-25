@@ -45,7 +45,7 @@ export const deleteActivityLog = createAsyncThunk(
   "activity/deleteLog",
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await axios.delete(`${API_BASE_URL}/activity-logs/${id}`, {
+       await axios.delete(`${API_BASE_URL}/activity-logs/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
