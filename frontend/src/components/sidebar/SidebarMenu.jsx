@@ -9,21 +9,25 @@ const SidebarMenu = ({ role }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems = sidebarMenu[role] || [];
+  const menuItems = useMemo(() => sidebarMenu[role] || [], [role]);
 
   // 🔹 Find active parent menu (on page refresh)
-  const initialOpenKeys = menuItems
-    .filter((item) =>
-      item.subMenu?.some((sub) => sub.path === location.pathname)
-    )
-    .map((item) => item.title);
+  const initialOpenKeys = useMemo(
+    () =>
+      menuItems
+        .filter((item) =>
+          item.subMenu?.some((sub) => sub.path === location.pathname)
+        )
+        .map((item) => item.title),
+    [menuItems, location.pathname]
+  );
 
   const [openKeys, setOpenKeys] = useState(initialOpenKeys);
 
   // 🔹 Auto update open menu on route change
   useEffect(() => {
     setOpenKeys(initialOpenKeys);
-  }, [location.pathname]);
+  }, [initialOpenKeys]);
 
   // 🔹 Allow only ONE submenu open
   const onOpenChange = (keys) => {

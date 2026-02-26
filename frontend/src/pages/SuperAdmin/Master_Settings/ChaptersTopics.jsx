@@ -102,7 +102,7 @@ const ChaptersTopics = () => {
     {
       title: "Actions",
       key: "actions",
-      render: (_, record) => (
+      render: () => (
         <Space>
           <Button icon={<EditOutlined />} type="primary" size="small">
             Edit

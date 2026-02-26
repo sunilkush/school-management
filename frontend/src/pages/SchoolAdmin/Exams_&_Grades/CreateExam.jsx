@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import {
   Card,
@@ -115,10 +115,10 @@ const CreateExam = () => {
       passingMarks: examData.passingMarks,
       status: examData.status,
     });
-  }, [examData, classList]);
+  }, [examData, classList, form, handleClassChange]);
 
   /* ================= CLASS CHANGE ================= */
-  const handleClassChange = (classId, subjectIdFromEdit = null) => {
+  const handleClassChange = useCallback((classId, subjectIdFromEdit = null) => {
     setSelectedClass(classId);
 
     const selected = classList.find((c) => c._id === classId);
@@ -135,7 +135,7 @@ const CreateExam = () => {
     if (!subjectIdFromEdit) {
       form.setFieldsValue({ subjectId: undefined });
     }
-  };
+  }, [classList, form]);
 
   /* ================= AUTO DURATION ================= */
   const calculateDuration = () => {

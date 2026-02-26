@@ -38,7 +38,6 @@ const EditExamForm = ({ examId }) => {
   const isLoadedRef = useRef(false);
 
   const [examQuestions, setExamQuestions] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
 
   /* ================= REDUX ================= */
@@ -57,7 +56,6 @@ const EditExamForm = ({ examId }) => {
     (state) => state.exams || {},
     shallowEqual
   );
-  console.log("questionBank", questionBank);
   /* ================= SAFE QUESTION ARRAY ================= */
 
   const questionBankArray = useMemo(() => {
@@ -112,7 +110,6 @@ const EditExamForm = ({ examId }) => {
     const classId = getId(currentExam.classId);
     const subjectId = getId(currentExam.subjectId);
 
-    setSelectedClass(classId);
 
     const selectedClassObj = classList.find(
       (c) => String(c._id) === String(classId)
@@ -165,11 +162,9 @@ const EditExamForm = ({ examId }) => {
     watchSubjectId,
     currentExam,
   ]);
-  console.log("filteredQuestions", filteredQuestions);
   /* ================= CLASS CHANGE ================= */
 
   const handleClassChange = (classId) => {
-    setSelectedClass(classId);
 
     const selected = classList.find(
       (c) => String(c._id) === String(classId)
