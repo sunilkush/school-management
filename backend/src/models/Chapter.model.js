@@ -105,21 +105,19 @@ const chapterSchema = new Schema(
 
 // Prevent wrong combinations
 chapterSchema.pre("validate", function (next) {
-  if (this.isGlobal && this.schoolId) {
-    return next(
-      new Error("Global chapter cannot have schoolId")
-    );
+  // ✅ Global chapter must NOT have school
+  if (this.isGlobal) {
+    this.schoolId = null;
+    return next();
   }
 
+  // ✅ Non-global MUST have school
   if (!this.isGlobal && !this.schoolId) {
-    return next(
-      new Error("School chapter must have schoolId")
-    );
+    return next(new Error("School chapter must have schoolId"));
   }
 
   next();
 });
-
 /* ================= UNIQUE INDEX ================= */
 
 // Global uniqueness

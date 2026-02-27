@@ -1,127 +1,145 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 const getToken = () => localStorage.getItem("accessToken");
-
-/* =====================================================
-   🔧 AXIOS INSTANCE
-===================================================== */
-
-const api = axios.create({
-  baseURL: Api_Base_Url,
-  withCredentials: true,
-});
 
 /* =====================================================
    🚀 THUNKS
 ===================================================== */
 
-// ⭐ Get Visible Chapters (MOST USED)
+/* ================= FETCH VISIBLE ================= */
 export const fetchVisibleChapters = createAsyncThunk(
   "chapters/fetchVisible",
-  async (params = {}, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      const { data } = await api.get("/chapters/visible", { 
-        params, 
-        headers: { 
-            Authorization: `Bearer ${getToken()}` 
-        } 
-    });
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed");
+      const res = await axios.get(`${Api_Base_Url}/chapters/visible`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+        params,
+        withCredentials: true,
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || "Fetch visible chapters failed"
+      );
     }
   }
 );
 
-// Get All Chapters (Super Admin)
+/* ================= FETCH ALL ================= */
 export const fetchAllChapters = createAsyncThunk(
   "chapters/fetchAll",
-  async (params = {}, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      const { data } = await api.get("/chapters/", { 
+      const res = await axios.get(`${Api_Base_Url}/chapters`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
         params,
-        headers: { Authorization: `Bearer ${getToken()}` } });
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed");
+        withCredentials: true,
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || "Fetch all chapters failed"
+      );
     }
   }
 );
 
-// Get Single Chapter
+/* ================= FETCH BY ID ================= */
 export const fetchChapterById = createAsyncThunk(
   "chapters/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await api.get(`/chapters/${id}`,{
+      const res = await axios.get(`${Api_Base_Url}/chapters/${id}`, {
         headers: { Authorization: `Bearer ${getToken()}` },
+        withCredentials: true,
       });
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed");
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || "Fetch chapter failed"
+      );
     }
   }
 );
 
-// Create Chapter
+/* ================= CREATE ================= */
 export const createChapterThunk = createAsyncThunk(
   "chapters/create",
   async (payload, { rejectWithValue }) => {
     try {
-      const { data } = await api.post("/chapters/", payload, {
+      const res = await axios.post(`${Api_Base_Url}/chapters`, payload, {
         headers: { Authorization: `Bearer ${getToken()}` },
+        withCredentials: true,
       });
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed");
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || "Create chapter failed"
+      );
     }
   }
 );
 
-// Update Chapter
+/* ================= UPDATE ================= */
 export const updateChapterThunk = createAsyncThunk(
   "chapters/update",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const { data } = await api.patch(`/chapters/${id}`, payload, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed");
+      const res = await axios.patch(
+        `${Api_Base_Url}/chapters/${id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${getToken()}` },
+          withCredentials: true,
+        }
+      );
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || "Update chapter failed"
+      );
     }
   }
 );
 
-// Delete Chapter
+/* ================= DELETE ================= */
 export const deleteChapterThunk = createAsyncThunk(
   "chapters/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await api.delete(`/chapters/${id}`, {
+      const res = await axios.delete(`${Api_Base_Url}/chapters/${id}`, {
         headers: { Authorization: `Bearer ${getToken()}` },
+        withCredentials: true,
       });
-      return id;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed");
+      return { id, ...res.data };
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || "Delete chapter failed"
+      );
     }
   }
 );
 
-// ⭐ Assign Chapter to School
+/* ================= ASSIGN SCHOOL ================= */
 export const assignChapterToSchoolThunk = createAsyncThunk(
   "chapters/assignSchool",
   async (payload, { rejectWithValue }) => {
     try {
-      const { data } = await api.post("/chapters/assign-school", payload, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed");
+      const res = await axios.post(
+        `${Api_Base_Url}/chapters/assign-school`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${getToken()}` },
+          withCredentials: true,
+        }
+      );
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || "Assign chapter failed"
+      );
     }
   }
 );
@@ -130,15 +148,17 @@ export const assignChapterToSchoolThunk = createAsyncThunk(
    🧠 SLICE
 ===================================================== */
 
+const initialState = {
+  chapters: [],
+  selectedChapter: null,
+  pagination: {},
+  loading: false,
+  error: null,
+};
+
 const chapterSlice = createSlice({
   name: "chapters",
-  initialState: {
-    chapters: [],
-    selectedChapter: null,
-    pagination: {},
-    loading: false,
-    error: null,
-  },
+  initialState,
   reducers: {
     clearChapterError: (state) => {
       state.error = null;
@@ -150,11 +170,12 @@ const chapterSlice = createSlice({
       /* ================= FETCH VISIBLE ================= */
       .addCase(fetchVisibleChapters.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchVisibleChapters.fulfilled, (state, action) => {
         state.loading = false;
-        state.chapters = action.payload.data;
-        state.pagination = action.payload.pagination;
+        state.chapters = action.payload?.data?.data || [];
+        state.pagination = action.payload?.data?.pagination || {};
       })
       .addCase(fetchVisibleChapters.rejected, (state, action) => {
         state.loading = false;
@@ -163,37 +184,53 @@ const chapterSlice = createSlice({
 
       /* ================= FETCH ALL ================= */
       .addCase(fetchAllChapters.fulfilled, (state, action) => {
-        state.chapters = action.payload.data;
-        state.pagination = action.payload.pagination;
+        state.chapters = action.payload?.data?.data || [];
+        state.pagination = action.payload?.data?.pagination || {};
       })
 
       /* ================= FETCH BY ID ================= */
       .addCase(fetchChapterById.fulfilled, (state, action) => {
-        state.selectedChapter = action.payload;
+        state.selectedChapter = action.payload?.data || null;
       })
 
       /* ================= CREATE ================= */
       .addCase(createChapterThunk.fulfilled, (state, action) => {
-        state.chapters.unshift(action.payload);
+        const newChapter = action.payload?.data;
+        if (newChapter) state.chapters.unshift(newChapter);
       })
 
       /* ================= UPDATE ================= */
       .addCase(updateChapterThunk.fulfilled, (state, action) => {
+        const updated = action.payload?.data;
+        if (!updated) return;
+
         const index = state.chapters.findIndex(
-          (c) => c._id === action.payload._id
+          (c) => c._id === updated._id
         );
-        if (index !== -1) state.chapters[index] = action.payload;
+        if (index !== -1) state.chapters[index] = updated;
       })
 
       /* ================= DELETE ================= */
       .addCase(deleteChapterThunk.fulfilled, (state, action) => {
+        const deletedId = action.payload?.id;
         state.chapters = state.chapters.filter(
-          (c) => c._id !== action.payload
+          (c) => c._id !== deletedId
         );
+      })
+
+      /* ================= ASSIGN SCHOOL ================= */
+      .addCase(assignChapterToSchoolThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(assignChapterToSchoolThunk.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(assignChapterToSchoolThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
 export const { clearChapterError } = chapterSlice.actions;
-
 export default chapterSlice.reducer;

@@ -9,10 +9,16 @@ dotenv.config();
 
 const app = express()
 
-app.use(cors({
+app.use(
+  cors({
+    origin: process.env.ORIGIN_URI, // must be exact
     credentials: true,
-    origin: process.env.ORIGIN_URI
-}))
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+app.options("*", cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -86,8 +92,5 @@ app.use("/api/v1/fees/report", feeReportRoutes);
 app.use("/api/v1/activity-logs", activityLogRoutes);
 app.use("/api/v1/boards", boardRoutes);
 app.use("/api/v1/chapters", chapterRoutes);
-
-
-
 export { app }
 

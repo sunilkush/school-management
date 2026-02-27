@@ -4,7 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import ChapterSchoolMap from "../models/ChapterSchoolMap.model.js";
-
+import { User } from "../models/user.model.js";
 /* =====================================================
    🔧 HELPER
 ===================================================== */
@@ -26,44 +26,86 @@ export const createChapter = asyncHandler(async (req, res) => {
       boardId,
       classId,
       subjectId,
-      academicYearId,
       isGlobal,
-      schoolId: bodySchoolId
+      schoolId: bodySchoolId,
     } = req.body;
 
     const user = req.user;
 
-    /* ✅ REQUIRED VALIDATION */
-    if (!name || !chapterNo || !boardId || !classId || !subjectId || !academicYearId) {
+    /* =====================================================
+       ✅ BASIC VALIDATION
+    ===================================================== */
+    if (!name || !chapterNo || !boardId || !classId || !subjectId) {
       throw new ApiError(400, "Required fields missing");
     }
 
-    /* ✅ OBJECT ID VALIDATION */
-    const idsToValidate = [boardId, classId, subjectId, academicYearId];
+    /* =====================================================
+       ✅ OBJECT ID VALIDATION
+    ===================================================== */
+    const idsToValidate = [boardId, classId, subjectId];
     if (idsToValidate.some((id) => !isValidObjectId(id))) {
       throw new ApiError(400, "Invalid reference id");
     }
 
+    /* =====================================================
+       ✅ GET USER ROLE
+    ===================================================== */
+    const populatedUser = await User.findById(user._id)
+      .populate("roleId", "name")
+      .session(session);
+
+    const roleName = populatedUser?.roleId?.name;
+
+    if (!roleName) {
+      throw new ApiError(403, "User role not found");
+    }
+
     let schoolId = null;
-    let createdByRole = user.role;
+    let finalIsGlobal = false;
 
-    /* 🧠 BUSINESS LOGIC */
+    /* =====================================================
+       🧠 ROLE BASED BUSINESS LOGIC (ENTERPRISE SAFE)
+    ===================================================== */
 
-    if (user.role === "Super Admin") {
-      if (!isGlobal && bodySchoolId) {
+    // ✅ SUPER ADMIN
+    if (roleName === "Super Admin") {
+      finalIsGlobal = isGlobal ?? true; // ⭐ default GLOBAL
+
+      if (!finalIsGlobal) {
+        // school specific chapter
+        if (!bodySchoolId) {
+          throw new ApiError(
+            400,
+            "schoolId required when creating school chapter"
+          );
+        }
+
         if (!isValidObjectId(bodySchoolId)) {
           throw new ApiError(400, "Invalid schoolId");
         }
+
         schoolId = bodySchoolId;
       }
-    } else if (user.role === "School Admin") {
+    }
+
+    // ✅ SCHOOL ADMIN
+    else if (roleName === "School Admin") {
+      if (!user?.schoolId) {
+        throw new ApiError(400, "School Admin has no school assigned");
+      }
+
+      finalIsGlobal = false;
       schoolId = user.schoolId;
-    } else {
+    }
+
+    // ❌ OTHER ROLES
+    else {
       throw new ApiError(403, "Unauthorized role");
     }
 
-    /* 🚫 CREATE */
-
+    /* =====================================================
+       🚀 CREATE CHAPTER
+    ===================================================== */
     const chapter = await Chapter.create(
       [
         {
@@ -73,12 +115,11 @@ export const createChapter = asyncHandler(async (req, res) => {
           boardId,
           classId,
           subjectId,
-          academicYearId,
-          isGlobal: user.role === "Super Admin" ? !!isGlobal : false,
+          isGlobal: finalIsGlobal,
           schoolId,
-          createdByRole,
-          createdBy: user._id
-        }
+          createdByRole: roleName,
+          createdBy: user._id,
+        },
       ],
       { session }
     );
@@ -88,20 +129,23 @@ export const createChapter = asyncHandler(async (req, res) => {
 
     return res
       .status(201)
-      .json(new ApiResponse(201, chapter[0], "Chapter created successfully"));
+      .json(
+        new ApiResponse(201, chapter[0], "Chapter created successfully")
+      );
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
 
-    /* 🔥 DUPLICATE SAFE */
-    if (error.code === 11000) {
+    /* =====================================================
+       🔥 DUPLICATE SAFE
+    ===================================================== */
+    if (error?.code === 11000) {
       throw new ApiError(409, "Chapter already exists with same number");
     }
 
     throw error;
   }
 });
-
 /* =====================================================
    ✅ GET ALL CHAPTERS (OPTIMIZED)
 ===================================================== */
@@ -110,7 +154,6 @@ export const getAllChapters = asyncHandler(async (req, res) => {
     boardId,
     classId,
     subjectId,
-    academicYearId,
     page = 1,
     limit = 10,
     search = ""
@@ -134,8 +177,6 @@ export const getAllChapters = asyncHandler(async (req, res) => {
   if (boardId && isValidObjectId(boardId)) filter.boardId = boardId;
   if (classId && isValidObjectId(classId)) filter.classId = classId;
   if (subjectId && isValidObjectId(subjectId)) filter.subjectId = subjectId;
-  if (academicYearId && isValidObjectId(academicYearId))
-    filter.academicYearId = academicYearId;
 
   if (search) {
     filter.name = { $regex: search, $options: "i" };
@@ -324,7 +365,6 @@ export const getVisibleChapters = asyncHandler(async (req, res) => {
     boardId,
     classId,
     subjectId,
-    academicYearId,
     search = "",
     page = 1,
     limit = 10,
@@ -345,8 +385,6 @@ export const getVisibleChapters = asyncHandler(async (req, res) => {
   if (boardId) matchStage.boardId = new mongoose.Types.ObjectId(boardId);
   if (classId) matchStage.classId = new mongoose.Types.ObjectId(classId);
   if (subjectId) matchStage.subjectId = new mongoose.Types.ObjectId(subjectId);
-  if (academicYearId)
-    matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
 
   if (search) {
     matchStage.name = { $regex: search, $options: "i" };
