@@ -11,115 +11,172 @@ import {
   Checkbox,
   message,
   InputNumber,
+  Spin,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
 
-// 🔹 Dummy user context (replace from auth)
-const currentUser = {
-  role: "Super Admin", // or "School Admin"
-  schoolId: "school1",
-};
+// 🔹 Redux actions
+import { getBoards } from "../../../features/boardSlice.js";
+import { fetchAllClasses } from "../../../features/classSlice.js";
+import { fetchAllSubjects } from "../../../features/subjectSlice.js";
+import {
+  fetchVisibleChapters,
+  createChapterThunk,
+  updateChapterThunk,
+  deleteChapterThunk,
+} from "../../../features/chapterSlice.js";
 
-// Dummy data (replace with API)
-const fetchBoards = async () => [
-  { _id: "b1", name: "CBSE" },
-  { _id: "b2", name: "ICSE" },
-];
-
-const fetchClasses = async () => [
-  { _id: "c1", name: "Class 1" },
-  { _id: "c2", name: "Class 2" },
-];
-
-const fetchSubjects = async () => [
-  { _id: "s1", name: "Mathematics" },
-  { _id: "s2", name: "Science" },
-];
-
-const fetchChapters = async () => [
-  {
-    _id: "1",
-    chapterNo: 1,
-    name: "Algebra",
-    boardName: "CBSE",
-    className: "Class 1",
-    subjectName: "Mathematics",
-    isGlobal: true,
-  },
-];
+// 🔹 auth
+import { currentUser } from "../../../features/authSlice.js";
 
 const ChaptersTopics = () => {
-  const [chapters, setChapters] = useState([]);
-  const [boards, setBoards] = useState([]);
-  const [classes, setClasses] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [chapterModalVisible, setChapterModalVisible] = useState(false);
+  const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-  const isSuperAdmin = currentUser.role === "Super Admin";
+  const { user } = useSelector((state) => state.auth);
 
-  // 🔹 Load initial data
+  const [chapterModalVisible, setChapterModalVisible] = useState(false);
+  const [editingChapter, setEditingChapter] = useState(null);
+
+  const isSuperAdmin = user?.role?.name === "Super Admin";
+
+  // ================= REDUX STATE =================
+
+  const boardsState = useSelector((state) => state.boards);
+const boards = boardsState?.boards || [];
+const boardLoading = boardsState?.loading || false;
+
+const classState = useSelector((state) => state.class);
+const classList = classState?.classList || [];
+
+const subjectState = useSelector((state) => state.subject);
+const subjects = subjectState?.subjects || [];
+  const { chapters, loading: chapterLoading } = useSelector(
+    (state) => state.chapters
+  );
+
+  // ================= LOAD USER (REFRESH SAFE) =================
+
   useEffect(() => {
-    const loadData = async () => {
-      setChapters(await fetchChapters());
-      setBoards(await fetchBoards());
-      setClasses(await fetchClasses());
-      setSubjects(await fetchSubjects());
-    };
-    loadData();
-  }, []);
+    if (!user) {
+      dispatch(currentUser());
+    }
+  }, [dispatch, user]);
+
+  // ================= LOAD MASTER DATA =================
+
+  useEffect(() => {
+    dispatch(getBoards());
+    dispatch(fetchAllClasses());
+    dispatch(fetchAllSubjects());
+  }, [dispatch]);
+
+  // ================= LOAD CHAPTERS (RBAC SAFE) =================
+
+  useEffect(() => {
+    if (!user) return; // ⭐ VERY IMPORTANT
+
+    dispatch(
+      fetchVisibleChapters({
+        schoolId: isSuperAdmin ? undefined : user?.schoolId,
+      })
+    );
+  }, [dispatch, user, isSuperAdmin]);
+
+  // ================= HANDLERS =================
 
   const handleAddChapter = () => {
+    setEditingChapter(null);
     form.resetFields();
     setChapterModalVisible(true);
   };
 
-  const handleChapterSubmit = (values) => {
-    const board = boards.find((b) => b._id === values.boardId)?.name;
-    const cls = classes.find((c) => c._id === values.classId)?.name;
-    const subject = subjects.find((s) => s._id === values.subjectId)?.name;
-
-    // 🔥 ownership logic (VERY IMPORTANT)
-    const payload = {
-      ...values,
-      createdByRole: currentUser.role,
-      schoolId: values.isGlobal ? null : currentUser.schoolId,
-    };
-
-    const newChapter = {
-      _id: Date.now().toString(),
-      ...payload,
-      boardName: board,
-      className: cls,
-      subjectName: subject,
-    };
-
-    setChapters((prev) => [...prev, newChapter]);
-    message.success("Chapter added successfully!");
-    setChapterModalVisible(false);
+  const handleEdit = (record) => {
+    setEditingChapter(record);
+    form.setFieldsValue({
+      ...record,
+      boardId: record.boardId?._id || record.boardId,
+      classId: record.classId?._id || record.classId,
+      subjectId: record.subjectId?._id || record.subjectId,
+    });
+    setChapterModalVisible(true);
   };
 
+  const handleDelete = async (id) => {
+    const res = await dispatch(deleteChapterThunk(id));
+    if (!res.error) message.success("Chapter deleted");
+    else message.error(res.payload);
+  };
+
+  // ✅ FINAL FIXED SUBMIT
+  const handleChapterSubmit = async (values) => {
+    if (!user) {
+      message.error("User not loaded yet");
+      return;
+    }
+
+    const payload = {
+      ...values,
+      schoolId: values.isGlobal ? null : user?.schoolId,
+    };
+
+    let res;
+
+    if (editingChapter) {
+      res = await dispatch(
+        updateChapterThunk({ id: editingChapter._id, payload })
+      );
+      if (!res.error) message.success("Chapter updated");
+    } else {
+      res = await dispatch(createChapterThunk(payload));
+      if (!res.error) message.success("Chapter created");
+    }
+
+    if (!res.error) {
+      setChapterModalVisible(false);
+      form.resetFields();
+    } else {
+      message.error(res.payload);
+    }
+  };
+
+  // ================= TABLE =================
+
   const chapterColumns = [
-    { title: "Chapter No", dataIndex: "chapterNo", key: "chapterNo" },
-    { title: "Chapter Name", dataIndex: "name", key: "name" },
-    { title: "Board", dataIndex: "boardName", key: "boardName" },
-    { title: "Class", dataIndex: "className", key: "className" },
-    { title: "Subject", dataIndex: "subjectName", key: "subjectName" },
+    { title: "Chapter No", dataIndex: "chapterNo" },
+    { title: "Chapter Name", dataIndex: "name" },
+    { title: "Board", dataIndex: ["boardId", "name"] },
+    { title: "Class", dataIndex: ["classId", "name"] },
+    { title: "Subject", dataIndex: ["subjectId", "name"] },
     {
       title: "Global",
       dataIndex: "isGlobal",
-      key: "isGlobal",
       render: (val) => (val ? "Yes" : "No"),
     },
     {
       title: "Actions",
-      key: "actions",
-      render: () => (
+      render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} type="primary" size="small">
+          <Button
+            icon={<EditOutlined />}
+            type="primary"
+            size="small"
+            onClick={() => handleEdit(record)}
+          >
             Edit
           </Button>
-          <Button icon={<DeleteOutlined />} danger size="small">
+
+          <Button
+            icon={<DeleteOutlined />}
+            danger
+            size="small"
+            onClick={() => handleDelete(record._id)}
+          >
             Delete
           </Button>
         </Space>
@@ -127,22 +184,29 @@ const ChaptersTopics = () => {
     },
   ];
 
+  // ================= UI =================
+
   return (
     <div className="p-4">
       <Card
         title="Chapters Management"
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddChapter}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddChapter}
+          >
             Add Chapter
           </Button>
         }
       >
-        <Table dataSource={chapters} columns={chapterColumns} rowKey="_id" />
+        <Spin spinning={chapterLoading}>
+          <Table dataSource={chapters} columns={chapterColumns} rowKey="_id" />
+        </Spin>
       </Card>
 
-      {/* 🔥 Chapter Modal */}
       <Modal
-        title="Add Chapter"
+        title={editingChapter ? "Edit Chapter" : "Add Chapter"}
         open={chapterModalVisible}
         onCancel={() => setChapterModalVisible(false)}
         onOk={() => form.submit()}
@@ -153,7 +217,7 @@ const ChaptersTopics = () => {
           <Form.Item
             label="Chapter Name"
             name="name"
-            rules={[{ required: true, message: "Please input chapter name!" }]}
+            rules={[{ required: true }]}
           >
             <Input />
           </Form.Item>
@@ -161,7 +225,7 @@ const ChaptersTopics = () => {
           <Form.Item
             label="Chapter No"
             name="chapterNo"
-            rules={[{ required: true, message: "Please input chapter number!" }]}
+            rules={[{ required: true }]}
           >
             <InputNumber min={1} style={{ width: "100%" }} />
           </Form.Item>
@@ -169,10 +233,10 @@ const ChaptersTopics = () => {
           <Form.Item
             label="Board"
             name="boardId"
-            rules={[{ required: true, message: "Please select board!" }]}
+            rules={[{ required: true }]}
           >
-            <Select placeholder="Select Board">
-              {(boards || []).map((b) => (
+            <Select loading={boardLoading} placeholder="Select Board">
+              {boards?.map((b) => (
                 <Select.Option key={b._id} value={b._id}>
                   {b.name}
                 </Select.Option>
@@ -183,10 +247,10 @@ const ChaptersTopics = () => {
           <Form.Item
             label="Class"
             name="classId"
-            rules={[{ required: true, message: "Please select class!" }]}
+            rules={[{ required: true }]}
           >
             <Select placeholder="Select Class">
-              {(classes || []).map((c) => (
+              {classList?.map((c) => (
                 <Select.Option key={c._id} value={c._id}>
                   {c.name}
                 </Select.Option>
@@ -197,10 +261,10 @@ const ChaptersTopics = () => {
           <Form.Item
             label="Subject"
             name="subjectId"
-            rules={[{ required: true, message: "Please select subject!" }]}
+            rules={[{ required: true }]}
           >
             <Select placeholder="Select Subject">
-              {(subjects || []).map((s) => (
+              {subjects?.map((s) => (
                 <Select.Option key={s._id} value={s._id}>
                   {s.name}
                 </Select.Option>
@@ -208,7 +272,6 @@ const ChaptersTopics = () => {
             </Select>
           </Form.Item>
 
-          {/* 🔥 Only Super Admin can create global */}
           {isSuperAdmin && (
             <Form.Item name="isGlobal" valuePropName="checked">
               <Checkbox>Global (Super Admin)</Checkbox>

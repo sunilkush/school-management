@@ -23,6 +23,7 @@ import paymentReducer from "../features/paymentSlice.js";
 import feeInstallmentReducer from "../features/feeInstallmentSlice.js";
 import activityReducer from "../features/activitySlice.js";
 import boardsReducer from "../features/boardSlice.js";
+import chapterReducer from "../features/chapterSlice.js";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -48,6 +49,7 @@ const store = configureStore({
     payment: paymentReducer,
     feeInstallment: feeInstallmentReducer,
     activity: activityReducer,
+    chapters: chapterReducer,
     boards: boardsReducer
     },
   // Optional: Add middleware for debugging or logging
