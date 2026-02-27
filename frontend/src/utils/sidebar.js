@@ -286,12 +286,12 @@ export const sidebarMenu = {
   ],
   /* ================= SUPPORT STAFF ================= */
   "support staff": [
-    { title: "Dashboard", path: "support", icon: LayoutDashboard },
-    { title: "Assigned Tasks", path: "support/tasks", icon: ClipboardList },
-    { title: "Attendance", path: "support/attendance", icon: Clock },
-    { title: "Notices", path: "support/notices", icon: Bell },
-    { title: "Messages", path: "support/messages", icon: MessageSquare, },
-    {title: "Profile",path: "support/profile",icon: User,},
+    { title: "Dashboard", path: "staff", icon: LayoutDashboard },
+    { title: "Assigned Tasks", path: "staff/tasks", icon: ClipboardList },
+    { title: "Attendance", path: "staff/attendance", icon: Clock },
+    { title: "Notifications", path: "staff/notification", icon: Bell },
+    { title: "Messages", path: "staff/message", icon: MessageSquare, },
+    {title: "Profile",path: "staff/profile",icon: User,},
   ],
   /* ================= SECURITY ================= */
   security: [
