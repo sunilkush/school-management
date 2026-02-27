@@ -3,25 +3,29 @@ import mongoose, { Schema } from "mongoose";
 const chapterSchema = new Schema(
   {
     /* ================= BASIC DETAILS ================= */
+
     name: {
       type: String,
       required: true,
-      trim: true
-      // Example: "Algebra", "Crop Production"
+      trim: true,
+    },
+
+    slug: {
+      type: String,
+      lowercase: true,
+      trim: true,
     },
 
     chapterNo: {
       type: Number,
       required: true,
-      min: 1
+      min: 1,
     },
 
     description: {
       type: String,
-      trim: true
+      trim: true,
     },
-
-    
 
     /* ================= RELATIONS ================= */
 
@@ -29,57 +33,50 @@ const chapterSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Board",
       required: true,
-      index: true
+      index: true,
     },
 
     classId: {
       type: Schema.Types.ObjectId,
       ref: "Class",
       required: true,
-      index: true
+      index: true,
     },
 
     subjectId: {
       type: Schema.Types.ObjectId,
       ref: "Subject",
       required: true,
-      index: true
-    },
-
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      required: true,
-      index: true
+      index: true,
     },
 
     /* ================= OWNERSHIP ================= */
 
     isGlobal: {
       type: Boolean,
-      default: false
-      // true → Super Admin (CBSE global syllabus)
-      // false → School specific chapter
+      default: false,
+      index: true,
     },
 
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
       default: null,
-      index: true
+      index: true,
     },
 
     /* ================= STATUS ================= */
 
     isActive: {
       type: Boolean,
-      default: true
+      default: true,
+      index: true,
     },
 
     status: {
       type: String,
       enum: ["Active", "Inactive"],
-      default: "Active"
+      default: "Active",
     },
 
     /* ================= AUDIT ================= */
@@ -87,54 +84,74 @@ const chapterSchema = new Schema(
     createdByRole: {
       type: String,
       enum: ["Super Admin", "School Admin"],
-      required: true
+      required: true,
     },
 
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     updatedBy: {
       type: Schema.Types.ObjectId,
-      ref: "User"
-    }
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
 
-/* ================= INDEXES ================= */
+/* ================= VALIDATION GUARD ================= */
 
-/*
- Same:
- School + AcademicYear + Board + Class + Subject
- me same chapterNo repeat nahi hoga
-*/
+// Prevent wrong combinations
+chapterSchema.pre("validate", function (next) {
+  if (this.isGlobal && this.schoolId) {
+    return next(
+      new Error("Global chapter cannot have schoolId")
+    );
+  }
+
+  if (!this.isGlobal && !this.schoolId) {
+    return next(
+      new Error("School chapter must have schoolId")
+    );
+  }
+
+  next();
+});
+
+/* ================= UNIQUE INDEX ================= */
+
+// Global uniqueness
+chapterSchema.index(
+  {
+    chapterNo: 1,
+    classId: 1,
+    subjectId: 1,
+    boardId: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: { isGlobal: true },
+  }
+);
+
+// School uniqueness
 chapterSchema.index(
   {
     chapterNo: 1,
     classId: 1,
     subjectId: 1,
     schoolId: 1,
-    academicYearId: 1
   },
-  { unique: true, sparse: true }
+  {
+    unique: true,
+    partialFilterExpression: { isGlobal: false },
+  }
 );
 
-/*
- Fast filtering for Question Bank & syllabus UI
-*/
-chapterSchema.index({
-  boardId: 1,
-  classId: 1,
-  subjectId: 1,
-  academicYearId: 1,
-  schoolId: 1
-});
+/* ================= MODEL ================= */
 
-/* ✅ Safe model export */
-const Chapter =
-  mongoose.models.Chapter || mongoose.model("Chapter", chapterSchema);
+const Chapter = mongoose.models.Chapter || mongoose.model("Chapter", chapterSchema);
 
 export default Chapter;

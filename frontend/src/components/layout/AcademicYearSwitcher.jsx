@@ -36,7 +36,7 @@ const AcademicYearSwitcher = ({ onChange }) => {
   }, [dispatch, schoolId, hasAcademicYears, hasActiveYear]);
 
   const handleChange = (value) => {
-    const selectedYear = academicYears.find((y) => y._id === value);
+    const selectedYear = academicYears?.find((y) => y._id === value);
     onChange?.(selectedYear);
   };
 
@@ -63,18 +63,21 @@ const AcademicYearSwitcher = ({ onChange }) => {
 
   return (
     <Select
-      style={{ width: 220 }}
-      placeholder="Select Academic Year"
-      value={activeYear?._id}
-      onChange={handleChange}
-      allowClear={false}
-    >
-      {academicYears.map((year) => (
-        <Option key={year._id} value={year._id}>
-          {formatDate(year.startDate)} - {formatDate(year.endDate)}
-        </Option>
-      ))}
-    </Select>
+  style={{ width: 220 }}
+  placeholder="Select Academic Year"
+  value={activeYear?._id}
+  onChange={handleChange}
+  allowClear={false}
+  loading={loading}
+  
+>
+  {Array.isArray(academicYears) &&
+    academicYears.map((year) => (
+      <Option key={year._id} value={year._id}>
+        {formatDate(year.startDate)} - {formatDate(year.endDate)}
+      </Option>
+    ))}
+</Select>
   );
 };
 

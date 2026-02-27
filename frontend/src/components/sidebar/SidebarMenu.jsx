@@ -9,32 +9,40 @@ const SidebarMenu = ({ role }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-const menuItems = useMemo(() => sidebarMenu[role] || [], [role]);
+  // ✅ Always array safe
+  const menuItems = useMemo(() => {
+    return Array.isArray(sidebarMenu?.[role]) ? sidebarMenu[role] : [];
+  }, [role]);
 
-  // 🔹 Find active parent menu (on page refresh)
-  const initialOpenKeys = menuItems
-    .filter((item) =>
-      item.subMenu?.some((sub) => sub.path === location.pathname)
-    )
-    .map((item) => item.title);
+  // ✅ memoized initial open keys
+  const initialOpenKeys = useMemo(() => {
+    return menuItems
+      .filter((item) =>
+        item.subMenu?.some((sub) => sub.path === location.pathname)
+      )
+      .map((item) => item.title);
+  }, [menuItems, location.pathname]);
 
   const [openKeys, setOpenKeys] = useState(initialOpenKeys);
 
-  // 🔹 Auto update open menu on route change
+  // ✅ sync when route changes
   useEffect(() => {
     setOpenKeys(initialOpenKeys);
- }, [initialOpenKeys]);
+  }, [initialOpenKeys]);
 
-  // 🔹 Allow only ONE submenu open
+  // ✅ single submenu open (fixed stale state bug)
   const onOpenChange = (keys) => {
     const latestOpenKey = keys.find((key) => !openKeys.includes(key));
     setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
   };
 
-  // 🔹 Convert sidebar config to AntD format
+  // ✅ AntD items safe mapping
   const antMenuItems = useMemo(() => {
+    if (!Array.isArray(menuItems)) return [];
+
     return menuItems.map((item) => {
-      if (!item.subMenu) {
+      // 🔹 no submenu
+      if (!item?.subMenu?.length) {
         return {
           key: item.path,
           icon: item.icon ? <item.icon size={16} /> : null,
@@ -42,6 +50,7 @@ const menuItems = useMemo(() => sidebarMenu[role] || [], [role]);
         };
       }
 
+      // 🔹 with submenu
       return {
         key: item.title,
         icon: item.icon ? <item.icon size={16} /> : null,
@@ -71,9 +80,9 @@ const menuItems = useMemo(() => sidebarMenu[role] || [], [role]);
         mode="inline"
         items={antMenuItems}
         selectedKeys={[location.pathname]}
-        openKeys={openKeys}              // ✅ controlled
-        onOpenChange={onOpenChange}      // ✅ one open at a time
-        onClick={({ key }) => navigate(key)}
+        openKeys={openKeys}
+        onOpenChange={onOpenChange}
+        onClick={({ key }) => key && navigate(key)}
         style={{ height: "100%", borderRight: 0 }}
       />
     </Sider>
