@@ -52,7 +52,7 @@ export const createChapter = asyncHandler(async (req, res) => {
     ===================================================== */
     const populatedUser = await User.findById(user._id)
       .populate("roleId", "name")
-      .session(session);
+      
 
     const roleName = populatedUser?.roleId?.name;
 
@@ -165,10 +165,18 @@ export const getAllChapters = asyncHandler(async (req, res) => {
   limit = Math.min(100, Number(limit));
 
   const filter = { isActive: true };
+      /* =====================================================
+       ✅ GET USER ROLE
+    ===================================================== */
+    const populatedUser = await User.findById(user._id)
+      .populate("roleId", "name")
+      
+
+    const roleName = populatedUser?.roleId?.name;
 
   /* 🧠 VISIBILITY */
 
-  if (user.role === "School Admin") {
+  if (roleName === "School Admin") {
     filter.$or = [{ isGlobal: true }, { schoolId: user.schoolId }];
   }
 
@@ -240,6 +248,16 @@ export const updateChapter = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const user = req.user;
 
+  /* =====================================================
+       ✅ GET USER ROLE
+    ===================================================== */
+    const populatedUser = await User.findById(user._id)
+      .populate("roleId", "name")
+      
+
+    const roleName = populatedUser?.roleId?.name;
+
+
   if (!isValidObjectId(id)) {
     throw new ApiError(400, "Invalid chapter id");
   }
@@ -251,13 +269,13 @@ export const updateChapter = asyncHandler(async (req, res) => {
   }
 
   /* 🔥 GLOBAL PROTECTION */
-  if (chapter.isGlobal && user.role !== "Super Admin") {
+  if (chapter.isGlobal && roleName !== "Super Admin") {
     throw new ApiError(403, "Cannot modify global chapter");
   }
 
   /* 🔐 SCHOOL SECURITY */
   if (
-    user.role === "School Admin" &&
+    roleName === "School Admin" &&
     chapter.schoolId?.toString() !== user.schoolId?.toString()
   ) {
     throw new ApiError(403, "You cannot update this chapter");
@@ -287,6 +305,15 @@ export const deleteChapter = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const user = req.user;
 
+  /* =====================================================
+       ✅ GET USER ROLE
+    ===================================================== */
+    const populatedUser = await User.findById(user._id)
+      .populate("roleId", "name")
+      
+
+    const roleName = populatedUser?.roleId?.name;
+
   if (!isValidObjectId(id)) {
     throw new ApiError(400, "Invalid chapter id");
   }
@@ -298,13 +325,13 @@ export const deleteChapter = asyncHandler(async (req, res) => {
   }
 
   /* 🔥 GLOBAL PROTECTION */
-  if (chapter.isGlobal && user.role !== "Super Admin") {
+  if (chapter.isGlobal && roleName !== "Super Admin") {
     throw new ApiError(403, "Cannot delete global chapter");
   }
-
+  
   /* 🔐 SCHOOL SECURITY */
   if (
-    user.role === "School Admin" &&
+    roleName === "School Admin" &&
     chapter.schoolId?.toString() !== user.schoolId?.toString()
   ) {
     throw new ApiError(403, "You cannot delete this chapter");
@@ -324,9 +351,16 @@ export const deleteChapter = asyncHandler(async (req, res) => {
 export const assignChapterToSchool = asyncHandler(async (req, res) => {
   const { chapterId, schoolId } = req.body;
   const user = req.user;
+  /* =====================================================
+       ✅ GET USER ROLE
+    ===================================================== */
+    const populatedUser = await User.findById(user._id)
+      .populate("roleId", "name")
+      
 
+    const roleName = populatedUser?.roleId?.name;
   /* 🔐 only super admin */
-  if (user.role !== "Super Admin") {
+  if (roleName !== "Super Admin") {
     throw new ApiError(403, "Only Super Admin can assign chapters");
   }
 
@@ -375,6 +409,15 @@ export const getVisibleChapters = asyncHandler(async (req, res) => {
   const skip = (pageNum - 1) * limitNum;
 
   /* =====================================================
+       ✅ GET USER ROLE
+    ===================================================== */
+    const populatedUser = await User.findById(user._id)
+      .populate("roleId", "name")
+      
+
+    const roleName = populatedUser?.roleId?.name;
+
+  /* =====================================================
      🧠 BASE MATCH
   ===================================================== */
 
@@ -395,11 +438,12 @@ export const getVisibleChapters = asyncHandler(async (req, res) => {
   ===================================================== */
 
   let visibilityPipeline = [];
+  
 
-  if (user.role === "Super Admin") {
+  if (roleName === "Super Admin") {
     // Super admin sees everything
     visibilityPipeline = [{ $match: matchStage }];
-  } else if (user.role === "School Admin") {
+  } else if (roleName === "School Admin") {
     if (!user.schoolId) {
       throw new ApiError(400, "School not attached to user");
     }

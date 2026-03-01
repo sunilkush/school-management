@@ -13,10 +13,10 @@ export const fetchVisibleChapters = createAsyncThunk(
   "chapters/fetchVisible",
   async (params, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem("accessToken");
       const res = await axios.get(`${Api_Base_Url}/chapters/visible`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        params,
-        withCredentials: true,
+        headers: { Authorization: `Bearer ${token}` },
+        params
       });
       return res.data;
     } catch (error) {
@@ -69,9 +69,10 @@ export const createChapterThunk = createAsyncThunk(
   "chapters/create",
   async (payload, { rejectWithValue }) => {
     try {
+       const token = localStorage.getItem("accessToken");
       const res = await axios.post(`${Api_Base_Url}/chapters`, payload, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        withCredentials: true,
+        headers: { Authorization: `Bearer ${token}` },
+        
       });
       return res.data;
     } catch (error) {
