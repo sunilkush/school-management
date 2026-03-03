@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Card,
   Table,
@@ -20,7 +20,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 
-// 🔹 Redux actions
+// Redux
 import { getBoards } from "../../../features/boardSlice.js";
 import { fetchAllClasses } from "../../../features/classSlice.js";
 import { fetchAllSubjects } from "../../../features/subjectSlice.js";
@@ -30,56 +30,45 @@ import {
   updateChapterThunk,
   deleteChapterThunk,
 } from "../../../features/chapterSlice.js";
-
-// 🔹 auth
 import { currentUser } from "../../../features/authSlice.js";
 
 const ChaptersTopics = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
+  const hasFetchedRef = useRef(false);
 
   const { user } = useSelector((state) => state.auth);
+  const { chapters, loading: chapterLoading } = useSelector(
+    (state) => state.chapters
+  );
+
+  const boards = useSelector((state) => state.boards?.boards || []);
+  const boardLoading = useSelector((state) => state.boards?.loading);
+  const classList = useSelector((state) => state.class?.classList || []);
+  const subjects = useSelector((state) => state.subject?.subjects || []);
 
   const [chapterModalVisible, setChapterModalVisible] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
 
   const isSuperAdmin = user?.role?.name === "Super Admin";
 
-  // ================= REDUX STATE =================
-
-  const boardsState = useSelector((state) => state.boards);
-const boards = boardsState?.boards || [];
-const boardLoading = boardsState?.loading || false;
-
-const classState = useSelector((state) => state.class);
-const classList = classState?.classList || [];
-
-const subjectState = useSelector((state) => state.subject);
-const subjects = subjectState?.subjects || [];
-  const { chapters, loading: chapterLoading } = useSelector(
-    (state) => state.chapters
-  );
-
-  // ================= LOAD USER (REFRESH SAFE) =================
-
+  // ================= LOAD USER =================
   useEffect(() => {
-    if (!user) {
-      dispatch(currentUser());
-    }
-  }, [dispatch, user]);
+    if (!user) dispatch(currentUser());
+  }, [dispatch,user]);
 
-  // ================= LOAD MASTER DATA =================
-
+  // ================= LOAD MASTER =================
   useEffect(() => {
     dispatch(getBoards());
     dispatch(fetchAllClasses());
     dispatch(fetchAllSubjects());
   }, [dispatch]);
 
-  // ================= LOAD CHAPTERS (RBAC SAFE) =================
-
+  // ================= LOAD CHAPTERS =================
   useEffect(() => {
-    if (!user) return; // ⭐ VERY IMPORTANT
+    if (!user || hasFetchedRef.current) return;
+
+    hasFetchedRef.current = true;
 
     dispatch(
       fetchVisibleChapters({
@@ -89,7 +78,6 @@ const subjects = subjectState?.subjects || [];
   }, [dispatch, user, isSuperAdmin]);
 
   // ================= HANDLERS =================
-
   const handleAddChapter = () => {
     setEditingChapter(null);
     form.resetFields();
@@ -98,12 +86,14 @@ const subjects = subjectState?.subjects || [];
 
   const handleEdit = (record) => {
     setEditingChapter(record);
+
     form.setFieldsValue({
       ...record,
-      boardId: record.boardId?._id || record.boardId,
-      classId: record.classId?._id || record.classId,
-      subjectId: record.subjectId?._id || record.subjectId,
+      boardId: record?.board?._id,
+      classId: record?.class?._id,
+      subjectId: record?.subject?._id,
     });
+
     setChapterModalVisible(true);
   };
 
@@ -113,12 +103,8 @@ const subjects = subjectState?.subjects || [];
     else message.error(res.payload);
   };
 
-  // ✅ FINAL FIXED SUBMIT
   const handleChapterSubmit = async (values) => {
-    if (!user) {
-      message.error("User not loaded yet");
-      return;
-    }
+    if (!user) return message.error("User not loaded");
 
     const payload = {
       ...values,
@@ -131,13 +117,12 @@ const subjects = subjectState?.subjects || [];
       res = await dispatch(
         updateChapterThunk({ id: editingChapter._id, payload })
       );
-      if (!res.error) message.success("Chapter updated");
     } else {
       res = await dispatch(createChapterThunk(payload));
-      if (!res.error) message.success("Chapter created");
     }
 
     if (!res.error) {
+      message.success(editingChapter ? "Updated" : "Created");
       setChapterModalVisible(false);
       form.resetFields();
     } else {
@@ -145,47 +130,122 @@ const subjects = subjectState?.subjects || [];
     }
   };
 
-  // ================= TABLE =================
+  // =========================================================
+  // 🔥 GROUPING: Board → Class → Subject → Chapter
+  // =========================================================
+  const treeData = useMemo(() => {
+    if (!chapters?.length) return [];
 
-  const chapterColumns = [
-    { title: "Chapter No", dataIndex: "chapterNo" },
-    { title: "Chapter Name", dataIndex: "name" },
-    { title: "Board", dataIndex: ["boardId", "name"] },
-    { title: "Class", dataIndex: ["classId", "name"] },
-    { title: "Subject", dataIndex: ["subjectId", "name"] },
+    const boardMap = {};
+
+    chapters.forEach((ch) => {
+      const boardName = ch?.board?.name || "Unknown Board";
+      const className = ch?.class?.name || "Unknown Class";
+      const subjectName = ch?.subject?.name || "Unknown Subject";
+
+      // ===== BOARD =====
+      if (!boardMap[boardName]) {
+        boardMap[boardName] = {
+          key: `board-${boardName}`,
+          title: boardName,
+          type: "board",
+          children: [],
+        };
+      }
+
+      // ===== CLASS =====
+      let classNode = boardMap[boardName].children.find(
+        (c) => c.title === className
+      );
+
+      if (!classNode) {
+        classNode = {
+          key: `class-${boardName}-${className}`,
+          title: className,
+          type: "class",
+          children: [],
+        };
+        boardMap[boardName].children.push(classNode);
+      }
+
+      // ===== SUBJECT =====
+      let subjectNode = classNode.children.find(
+        (s) => s.title === subjectName
+      );
+
+      if (!subjectNode) {
+        subjectNode = {
+          key: `subject-${boardName}-${className}-${subjectName}`,
+          title: subjectName,
+          type: "subject",
+          children: [],
+        };
+        classNode.children.push(subjectNode);
+      }
+
+      // ===== CHAPTER =====
+      subjectNode.children.push({
+        ...ch,
+        key: ch._id,
+        title: ch?.name,
+        type: "chapter",
+      });
+    });
+
+    return Object.values(boardMap);
+  }, [chapters]);
+
+  // ================= TABLE COLUMNS =================
+  const columns = [
+    {
+      title: "Board / Class / Subject / Chapter",
+      dataIndex: "title",
+      render: (text, record) => {
+        if (record.type === "board") return <b>{text}</b>;
+        if (record.type === "class")
+          return <span style={{ paddingLeft: 8 }}>{text}</span>;
+        if (record.type === "subject")
+          return <span style={{ paddingLeft: 16 }}>{text}</span>;
+        return <span style={{ paddingLeft: 24 }}>{text}</span>;
+      },
+    },
+    {
+      title: "Chapter No",
+      render: (_, r) => (r.type === "chapter" ? r.chapterNo || "-" : "-"),
+    },
+    {
+      title: "Subject",
+      render: (_, r) =>
+        r.type === "chapter" ? r?.subject?.name || "-" : "-",
+    },
     {
       title: "Global",
-      dataIndex: "isGlobal",
-      render: (val) => (val ? "Yes" : "No"),
+      render: (_, r) =>
+        r.type === "chapter" ? (r.isGlobal ? "Yes" : "No") : "-",
     },
     {
       title: "Actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            icon={<EditOutlined />}
-            type="primary"
-            size="small"
-            onClick={() => handleEdit(record)}
-          >
-            Edit
-          </Button>
-
-          <Button
-            icon={<DeleteOutlined />}
-            danger
-            size="small"
-            onClick={() => handleDelete(record._id)}
-          >
-            Delete
-          </Button>
-        </Space>
-      ),
+      render: (_, record) =>
+        record.type === "chapter" ? (
+          <Space>
+            <Button
+              icon={<EditOutlined />}
+              type="primary"
+              size="small"
+              onClick={() => handleEdit(record)}
+            />
+            <Button
+              icon={<DeleteOutlined />}
+              danger
+              size="small"
+              onClick={() => handleDelete(record._id)}
+            />
+          </Space>
+        ) : null,
     },
   ];
 
   // ================= UI =================
-
   return (
     <div className="p-4">
       <Card
@@ -201,16 +261,24 @@ const subjects = subjectState?.subjects || [];
         }
       >
         <Spin spinning={chapterLoading}>
-          <Table dataSource={chapters} columns={chapterColumns} rowKey="_id" />
+          <Table
+            columns={columns}
+            dataSource={treeData}
+            rowKey="key"
+            pagination={false}
+            expandable={{
+              childrenColumnName: "children",
+            }}
+          />
         </Spin>
       </Card>
 
+      {/* ================= MODAL ================= */}
       <Modal
         title={editingChapter ? "Edit Chapter" : "Add Chapter"}
         open={chapterModalVisible}
         onCancel={() => setChapterModalVisible(false)}
         onOk={() => form.submit()}
-        okText="Save"
         destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={handleChapterSubmit}>
@@ -235,8 +303,8 @@ const subjects = subjectState?.subjects || [];
             name="boardId"
             rules={[{ required: true }]}
           >
-            <Select loading={boardLoading} placeholder="Select Board">
-              {boards?.map((b) => (
+            <Select loading={boardLoading}>
+              {boards.map((b) => (
                 <Select.Option key={b._id} value={b._id}>
                   {b.name}
                 </Select.Option>
@@ -249,8 +317,8 @@ const subjects = subjectState?.subjects || [];
             name="classId"
             rules={[{ required: true }]}
           >
-            <Select placeholder="Select Class">
-              {classList?.map((c) => (
+            <Select>
+              {classList.map((c) => (
                 <Select.Option key={c._id} value={c._id}>
                   {c.name}
                 </Select.Option>
@@ -263,8 +331,8 @@ const subjects = subjectState?.subjects || [];
             name="subjectId"
             rules={[{ required: true }]}
           >
-            <Select placeholder="Select Subject">
-              {subjects?.map((s) => (
+            <Select>
+              {subjects.map((s) => (
                 <Select.Option key={s._id} value={s._id}>
                   {s.name}
                 </Select.Option>

@@ -54,7 +54,7 @@ const SubjectsAdmin = () => {
     try {
       await dispatch(deleteSubject(id)).unwrap();
       message.success("Subject deleted");
-      dispatch(fetchAllSubjects({ schoolId: selectedSchool || schoolId }));
+      dispatch(fetchAllSubjects({ schoolId: selectedSchool || schoolId  }));
     } catch (err) {
       console.error(err);
       message.error("Delete failed");

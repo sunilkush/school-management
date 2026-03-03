@@ -123,7 +123,7 @@ const assignTeachersToSubject = asyncHandler(async (req, res) => {
 
 // ✅ GET ALL SUBJECTS
 const getAllSubjects = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, search, schoolId, isGlobal } = req.query;
+  const { page,limit, search, schoolId, isGlobal } = req.query;
   const skip = (page - 1) * limit;
 
   const role = req.user.role;

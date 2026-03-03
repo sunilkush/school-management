@@ -42,7 +42,10 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
 
   const teachers = users.filter((u) => u.role?.name?.toLowerCase() === "teacher" && u.isActive);
 
-  const SUBJECTS = ["English","Mathematics","Science","Physics","Chemistry","Biology","History","Geography","Computer Science","IT","AI","Data Science","Economics","Business Studies"];
+  const SUBJECTS = ["English","Hindi","Mathematics","EVS","General Knowledge","Computer","Drawing",
+    "Moral Science","Science","Social Science","Sanskrit","Physical Education","Art & Craft","Music","Physics",
+    "Chemistry","Biology","History","Geography","Civics","Information Technology","Economics","Political Science","Accountancy","Business Studies","Sociology","Psychology","Philosophy","Environmental Science","Foreign Language","Informatics Practices","Physical Science","Life Science","Health Education","Moral Education","Work Education","Home Science","Financial Literacy","Entrepreneurship",
+    "Legal Studies","Media Studies","Film Studies","Dance","Drama","Public Speaking","Debate","Robotics","Artificial Intelligence","Data Science"];
 
   const onFinish = (values) => {
     let payload = { ...values };

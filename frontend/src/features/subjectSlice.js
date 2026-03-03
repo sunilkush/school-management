@@ -29,7 +29,7 @@ export const createSubject = createAsyncThunk(
 export const fetchAllSubjects = createAsyncThunk(
   "subject/fetchAllSubjects",
   async (
-    { page = 1, limit = 10, schoolId, search = "", isGlobal } = {},
+    { page, limit, schoolId, search = "", isGlobal } = {},
     { rejectWithValue }
   ) => {
     try {
