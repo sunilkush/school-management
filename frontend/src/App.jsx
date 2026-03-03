@@ -7,6 +7,7 @@ import { currentUser } from './features/authSlice';
 import { setSelectedAcademicYear } from './features/academicYearSlice';
 import { SpeedInsights } from '@vercel/speed-insights/react'
 function App() {
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
