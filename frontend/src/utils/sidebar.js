@@ -71,10 +71,12 @@ export const sidebarMenu = {
   title: "Acadmic Management",
   icon: BookOpen,
   subMenu: [
-    { title:"board Management",path:"superadmin/academics/boards"},
-    { title:"Chapter & Topic Management", path: "superadmin/academics/chapters-topics" },
+    { title: "Board Management", path:"superadmin/academics/boards"},
+    { title: "Chapter & Topic Management", path: "superadmin/academics/chapters-topics" },
+    { title: "Academic Years", path:"superadmin/academics/academic-years"},
     { title: "Class Management", path: "superadmin/academics/classes" },
     { title: "Subject Management", path: "superadmin/academics/subjects" },
+    
 
   ],
 

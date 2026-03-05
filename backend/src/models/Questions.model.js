@@ -40,9 +40,9 @@ const QuestionSchema = new Schema(
       index: true
     },
 
-    classId: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
+   schoolClassId: { 
+       type: Schema.Types.ObjectId, 
+       ref: "SchoolClass",
       required: true,
       index: true
     },

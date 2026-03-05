@@ -12,9 +12,9 @@ const TimetableSchema = new mongoose.Schema(
       ref: "School",
       required: true,
     },
-    classId: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
+    schoolClassId: { 
+        type: Schema.Types.ObjectId, 
+        ref: "SchoolClass",
       required: function () {
         return this.role === "student"; // Required for students
       },

@@ -15,9 +15,9 @@ const teacherSchema = new Schema({
     ref: "AcademicYear", 
     required: true 
 },
-  classId: { 
+  schoolClassId: { 
     type: Schema.Types.ObjectId, 
-    ref: "Class"  
+    ref: "SchoolClass"  
 },
   subjectId: { 
     type: Schema.Types.ObjectId,

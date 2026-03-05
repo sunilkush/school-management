@@ -158,7 +158,7 @@ const router = createBrowserRouter([
               { path: "settings/roles", element: <Roles /> },
               { path: "settings/permissions", element: <Permissions /> },
               { path: "modules", element: <Modules /> },
-              { path: "academic-years", element: <AcademicYears /> },
+              { path: "academics/academic-years", element: <AcademicYears /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <Settings /> },
               { path: "academics/subjects", element: <SubjectsAdmin /> },

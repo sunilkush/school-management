@@ -2,25 +2,33 @@ import mongoose, { Schema } from "mongoose";
 
 const sectionSchema = new Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      uppercase: true,
-    },
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      required: true,
-      index: true,
-    },
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
       required: true,
       index: true,
     },
-    sectionTeacherId: {
+
+    schoolClassId: {
+      type: Schema.Types.ObjectId,
+      ref: "SchoolClass",
+      required: true,
+      index: true,
+    },
+
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    capacity: {
+      type: Number,
+      default: 100,
+    },
+
+    classTeacherId: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
@@ -30,18 +38,22 @@ const sectionSchema = new Schema(
         ref: "User",
       },
     ],
-    classId: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
+
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+
     updatedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+
     status: {
       type: String,
       enum: ["active", "inactive"],
@@ -51,12 +63,16 @@ const sectionSchema = new Schema(
   { timestamps: true }
 );
 
+/* ========= INDEXES ========= */
+
+// Same class me duplicate section na ho
 sectionSchema.index(
-  { name: 1, schoolId: 1, academicYearId: 1, classId: 1 },
+  { schoolClassId: 1, name: 1 },
   { unique: true }
 );
 
+// Fast queries
 sectionSchema.index({ schoolId: 1, academicYearId: 1 });
 
-// ✅ Check if model already exists
-export const Section = mongoose.model("Section", sectionSchema);
+export const Section =
+  mongoose.models.Section || mongoose.model("Section", sectionSchema);

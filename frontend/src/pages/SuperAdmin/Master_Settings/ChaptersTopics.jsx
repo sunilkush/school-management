@@ -13,11 +13,13 @@ import {
   InputNumber,
   Spin,
 } from "antd";
+
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+
 import { useDispatch, useSelector } from "react-redux";
 
 // Redux
@@ -32,6 +34,8 @@ import {
 } from "../../../features/chapterSlice.js";
 import { currentUser } from "../../../features/authSlice.js";
 
+const { Search } = Input;
+
 const ChaptersTopics = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
@@ -44,27 +48,30 @@ const ChaptersTopics = () => {
 
   const boards = useSelector((state) => state.boards?.boards || []);
   const boardLoading = useSelector((state) => state.boards?.loading);
+
   const classList = useSelector((state) => state.class?.classList || []);
   const subjects = useSelector((state) => state.subject?.subjects || []);
-
   const [chapterModalVisible, setChapterModalVisible] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
 
+  const [selectedBoard, setSelectedBoard] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
+
   const isSuperAdmin = user?.role?.name === "Super Admin";
 
-  // ================= LOAD USER =================
+  // ================= USER =================
   useEffect(() => {
     if (!user) dispatch(currentUser());
-  }, [dispatch,user]);
+  }, [dispatch, user]);
 
-  // ================= LOAD MASTER =================
+  // ================= MASTER DATA =================
   useEffect(() => {
     dispatch(getBoards());
     dispatch(fetchAllClasses());
     dispatch(fetchAllSubjects());
   }, [dispatch]);
 
-  // ================= LOAD CHAPTERS =================
+  // ================= CHAPTERS =================
   useEffect(() => {
     if (!user || hasFetchedRef.current) return;
 
@@ -77,15 +84,33 @@ const ChaptersTopics = () => {
     );
   }, [dispatch, user, isSuperAdmin]);
 
+  // ================= FILTERED DATA =================
+
+  const filteredClasses = useMemo(() => {
+    if (!selectedBoard) return classList;
+    return classList.filter((c) => c.boardId === selectedBoard);
+  }, [selectedBoard, classList]);
+
+  const filteredSubjects = useMemo(() => {
+    if (!selectedClass) return subjects;
+    return subjects.filter((s) => s.classId === selectedClass);
+  }, [selectedClass, subjects]);
+
   // ================= HANDLERS =================
+
   const handleAddChapter = () => {
     setEditingChapter(null);
     form.resetFields();
+    setSelectedBoard(null);
+    setSelectedClass(null);
     setChapterModalVisible(true);
   };
 
   const handleEdit = (record) => {
     setEditingChapter(record);
+
+    setSelectedBoard(record?.board?._id);
+    setSelectedClass(record?.class?._id);
 
     form.setFieldsValue({
       ...record,
@@ -99,6 +124,7 @@ const ChaptersTopics = () => {
 
   const handleDelete = async (id) => {
     const res = await dispatch(deleteChapterThunk(id));
+
     if (!res.error) message.success("Chapter deleted");
     else message.error(res.payload);
   };
@@ -115,14 +141,17 @@ const ChaptersTopics = () => {
 
     if (editingChapter) {
       res = await dispatch(
-        updateChapterThunk({ id: editingChapter._id, payload })
+        updateChapterThunk({
+          id: editingChapter._id,
+          payload,
+        })
       );
     } else {
       res = await dispatch(createChapterThunk(payload));
     }
 
     if (!res.error) {
-      message.success(editingChapter ? "Updated" : "Created");
+      message.success(editingChapter ? "Chapter updated" : "Chapter created");
       setChapterModalVisible(false);
       form.resetFields();
     } else {
@@ -130,9 +159,8 @@ const ChaptersTopics = () => {
     }
   };
 
-  // =========================================================
-  // 🔥 GROUPING: Board → Class → Subject → Chapter
-  // =========================================================
+  // ================= TREE DATA =================
+
   const treeData = useMemo(() => {
     if (!chapters?.length) return [];
 
@@ -143,7 +171,6 @@ const ChaptersTopics = () => {
       const className = ch?.class?.name || "Unknown Class";
       const subjectName = ch?.subject?.name || "Unknown Subject";
 
-      // ===== BOARD =====
       if (!boardMap[boardName]) {
         boardMap[boardName] = {
           key: `board-${boardName}`,
@@ -153,7 +180,6 @@ const ChaptersTopics = () => {
         };
       }
 
-      // ===== CLASS =====
       let classNode = boardMap[boardName].children.find(
         (c) => c.title === className
       );
@@ -165,10 +191,10 @@ const ChaptersTopics = () => {
           type: "class",
           children: [],
         };
+
         boardMap[boardName].children.push(classNode);
       }
 
-      // ===== SUBJECT =====
       let subjectNode = classNode.children.find(
         (s) => s.title === subjectName
       );
@@ -180,14 +206,14 @@ const ChaptersTopics = () => {
           type: "subject",
           children: [],
         };
+
         classNode.children.push(subjectNode);
       }
 
-      // ===== CHAPTER =====
       subjectNode.children.push({
         ...ch,
         key: ch._id,
-        title: ch?.name,
+        title: ch.name,
         type: "chapter",
       });
     });
@@ -195,34 +221,43 @@ const ChaptersTopics = () => {
     return Object.values(boardMap);
   }, [chapters]);
 
-  // ================= TABLE COLUMNS =================
+  // ================= TABLE =================
+
   const columns = [
     {
       title: "Board / Class / Subject / Chapter",
       dataIndex: "title",
       render: (text, record) => {
-        if (record.type === "board") return <b>{text}</b>;
+        if (record.type === "board")
+          return <span style={{ fontWeight: 700 }}>{text}</span>;
+
         if (record.type === "class")
-          return <span style={{ paddingLeft: 8 }}>{text}</span>;
+          return <span style={{ paddingLeft: 20 }}>📚 {text}</span>;
+
         if (record.type === "subject")
-          return <span style={{ paddingLeft: 16 }}>{text}</span>;
-        return <span style={{ paddingLeft: 24 }}>{text}</span>;
+          return <span style={{ paddingLeft: 40 }}>📘 {text}</span>;
+
+        return <span style={{ paddingLeft: 60 }}>📖 {text}</span>;
       },
     },
+
     {
       title: "Chapter No",
       render: (_, r) => (r.type === "chapter" ? r.chapterNo || "-" : "-"),
     },
+
     {
       title: "Subject",
       render: (_, r) =>
         r.type === "chapter" ? r?.subject?.name || "-" : "-",
     },
+
     {
       title: "Global",
       render: (_, r) =>
         r.type === "chapter" ? (r.isGlobal ? "Yes" : "No") : "-",
     },
+
     {
       title: "Actions",
       render: (_, record) =>
@@ -234,6 +269,7 @@ const ChaptersTopics = () => {
               size="small"
               onClick={() => handleEdit(record)}
             />
+
             <Button
               icon={<DeleteOutlined />}
               danger
@@ -246,8 +282,9 @@ const ChaptersTopics = () => {
   ];
 
   // ================= UI =================
+
   return (
-    <div className="p-4">
+    <div style={{ padding: 20 }}>
       <Card
         title="Chapters Management"
         extra={
@@ -260,6 +297,18 @@ const ChaptersTopics = () => {
           </Button>
         }
       >
+        <Search
+          placeholder="Search chapters..."
+          style={{ width: 300, marginBottom: 20 }}
+          onChange={(e) =>
+            dispatch(
+              fetchVisibleChapters({
+                search: e.target.value,
+              })
+            )
+          }
+        />
+
         <Spin spinning={chapterLoading}>
           <Table
             columns={columns}
@@ -274,36 +323,30 @@ const ChaptersTopics = () => {
       </Card>
 
       {/* ================= MODAL ================= */}
+
       <Modal
         title={editingChapter ? "Edit Chapter" : "Add Chapter"}
         open={chapterModalVisible}
+        width={650}
         onCancel={() => setChapterModalVisible(false)}
         onOk={() => form.submit()}
         destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={handleChapterSubmit}>
           <Form.Item
-            label="Chapter Name"
-            name="name"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="Chapter No"
-            name="chapterNo"
-            rules={[{ required: true }]}
-          >
-            <InputNumber min={1} style={{ width: "100%" }} />
-          </Form.Item>
-
-          <Form.Item
             label="Board"
             name="boardId"
             rules={[{ required: true }]}
           >
-            <Select loading={boardLoading}>
+            <Select
+              showSearch
+              loading={boardLoading}
+              placeholder="Select Board"
+              onChange={(value) => {
+                setSelectedBoard(value);
+                form.setFieldsValue({ classId: null, subjectId: null });
+              }}
+            >
               {boards.map((b) => (
                 <Select.Option key={b._id} value={b._id}>
                   {b.name}
@@ -317,8 +360,16 @@ const ChaptersTopics = () => {
             name="classId"
             rules={[{ required: true }]}
           >
-            <Select>
-              {classList.map((c) => (
+            <Select
+              showSearch
+              placeholder="Select Class"
+              disabled={!selectedBoard}
+              onChange={(value) => {
+                setSelectedClass(value);
+                form.setFieldsValue({ subjectId: null });
+              }}
+            >
+              {filteredClasses.map((c) => (
                 <Select.Option key={c._id} value={c._id}>
                   {c.name}
                 </Select.Option>
@@ -331,8 +382,12 @@ const ChaptersTopics = () => {
             name="subjectId"
             rules={[{ required: true }]}
           >
-            <Select>
-              {subjects.map((s) => (
+            <Select
+              showSearch
+              placeholder="Select Subject"
+              disabled={!selectedClass}
+            >
+              {filteredSubjects.map((s) => (
                 <Select.Option key={s._id} value={s._id}>
                   {s.name}
                 </Select.Option>
@@ -340,9 +395,25 @@ const ChaptersTopics = () => {
             </Select>
           </Form.Item>
 
+          <Form.Item
+            label="Chapter Name"
+            name="name"
+            rules={[{ required: true }]}
+          >
+            <Input placeholder="Enter chapter name" />
+          </Form.Item>
+
+          <Form.Item
+            label="Chapter Number"
+            name="chapterNo"
+            rules={[{ required: true }]}
+          >
+            <InputNumber min={1} style={{ width: "100%" }} />
+          </Form.Item>
+
           {isSuperAdmin && (
             <Form.Item name="isGlobal" valuePropName="checked">
-              <Checkbox>Global (Super Admin)</Checkbox>
+              <Checkbox>Make Global (All Schools)</Checkbox>
             </Form.Item>
           )}
 

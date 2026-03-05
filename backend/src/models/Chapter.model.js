@@ -29,16 +29,9 @@ const chapterSchema = new Schema(
 
     /* ================= RELATIONS ================= */
 
-    boardId: {
+    boardClassId: {
       type: Schema.Types.ObjectId,
-      ref: "Board",
-      required: true,
-      index: true,
-    },
-
-    classId: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
+      ref: "BoardClass",
       required: true,
       index: true,
     },
@@ -101,32 +94,28 @@ const chapterSchema = new Schema(
   { timestamps: true }
 );
 
-/* ================= VALIDATION GUARD ================= */
+/* ================= VALIDATION ================= */
 
-// Prevent wrong combinations
 chapterSchema.pre("validate", function (next) {
-  // ✅ Global chapter must NOT have school
   if (this.isGlobal) {
     this.schoolId = null;
     return next();
   }
 
-  // ✅ Non-global MUST have school
   if (!this.isGlobal && !this.schoolId) {
     return next(new Error("School chapter must have schoolId"));
   }
 
   next();
 });
+
 /* ================= UNIQUE INDEX ================= */
 
-// Global uniqueness
 chapterSchema.index(
   {
     chapterNo: 1,
-    classId: 1,
     subjectId: 1,
-    boardId: 1,
+    boardClassId: 1,
   },
   {
     unique: true,
@@ -134,12 +123,11 @@ chapterSchema.index(
   }
 );
 
-// School uniqueness
 chapterSchema.index(
   {
     chapterNo: 1,
-    classId: 1,
     subjectId: 1,
+    boardClassId: 1,
     schoolId: 1,
   },
   {
@@ -148,8 +136,4 @@ chapterSchema.index(
   }
 );
 
-/* ================= MODEL ================= */
-
-const Chapter = mongoose.models.Chapter || mongoose.model("Chapter", chapterSchema);
-
-export default Chapter;
+export const Chapter = mongoose.model("Chapter", chapterSchema);

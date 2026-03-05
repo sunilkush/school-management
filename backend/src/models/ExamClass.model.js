@@ -17,9 +17,9 @@ const ExamClassSchema = new Schema(
       required: true,
     },
 
-    classId: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
+    schoolClassId: { 
+                type: mongoose.Schema.Types.ObjectId, 
+                ref: "SchoolClass",
       required: true,
     },
 

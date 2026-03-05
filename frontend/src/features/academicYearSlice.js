@@ -2,33 +2,43 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
+
 const getToken = () => localStorage.getItem("accessToken");
 
-// Create Academic Year
+const authHeader = () => ({
+  headers: { Authorization: `Bearer ${getToken()}` },
+});
+
+/* ================= CREATE ================= */
+
 export const createAcademicYear = createAsyncThunk(
   "academicYear/create",
   async (data, { rejectWithValue }) => {
     try {
-     
-      const res = await axios.post(`${Api_Base_Url}/academicYear/create`, data, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      return res.data.data; // ✅ make sure backend returns { data: {...} }
+      const res = await axios.post(
+        `${Api_Base_Url}/academicYear/create`,
+        data,
+        authHeader()
+      );
+
+      return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
-// Fetch All
+/* ================= FETCH ALL ================= */
+
 export const fetchAllAcademicYears = createAsyncThunk(
   "academicYear/fetchAll",
   async (schoolId, { rejectWithValue }) => {
     try {
       const res = await axios.get(
         `${Api_Base_Url}/academicYear/school/${schoolId}`,
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        authHeader()
       );
+
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -36,16 +46,17 @@ export const fetchAllAcademicYears = createAsyncThunk(
   }
 );
 
-// Fetch Active
+/* ================= FETCH ACTIVE ================= */
+
 export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
   async (schoolId, { rejectWithValue }) => {
     try {
-     
       const res = await axios.get(
         `${Api_Base_Url}/academicYear/active/${schoolId}`,
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        authHeader()
       );
+
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -53,7 +64,8 @@ export const fetchActiveAcademicYear = createAsyncThunk(
   }
 );
 
-// Set Active
+/* ================= SET ACTIVE ================= */
+
 export const setActiveAcademicYear = createAsyncThunk(
   "academicYear/setActive",
   async (academicYearId, { rejectWithValue }) => {
@@ -61,8 +73,9 @@ export const setActiveAcademicYear = createAsyncThunk(
       const res = await axios.post(
         `${Api_Base_Url}/academicYear/activate/${academicYearId}`,
         {},
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        authHeader()
       );
+
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -70,7 +83,8 @@ export const setActiveAcademicYear = createAsyncThunk(
   }
 );
 
-// Archive
+/* ================= ARCHIVE ================= */
+
 export const archiveAcademicYear = createAsyncThunk(
   "academicYear/archive",
   async (id, { rejectWithValue }) => {
@@ -78,17 +92,58 @@ export const archiveAcademicYear = createAsyncThunk(
       const res = await axios.post(
         `${Api_Base_Url}/academicYear/archive/${id}`,
         {},
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        authHeader()
       );
-      return res.data; // ✅ ensure backend returns { message, data: {...} }
+
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
+/* ================= DELETE ================= */
+
+export const deleteAcademicYear = createAsyncThunk(
+  "academicYear/delete",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await axios.delete(
+        `${Api_Base_Url}/academicYear/${id}`,
+        authHeader()
+      );
+
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+/* ================= UPDATE ================= */
+
+export const updateAcademicYear = createAsyncThunk(
+  "academicYear/update",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const res = await axios.put(
+        `${Api_Base_Url}/academicYear/${id}`,
+        data,
+        authHeader()
+      );
+
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+/* ================= SLICE ================= */
+
 const academicYearSlice = createSlice({
   name: "academicYear",
+
   initialState: {
     academicYears: [],
     activeYear: null,
@@ -98,70 +153,130 @@ const academicYearSlice = createSlice({
     error: null,
     message: null,
   },
+
   reducers: {
     clearAcademicYearMessages: (state) => {
       state.error = null;
       state.message = null;
     },
+
     setSelectedAcademicYear: (state, action) => {
       state.selectedAcademicYear = action.payload;
-      localStorage.setItem("selectedAcademicYear", JSON.stringify(action.payload));
+
+      localStorage.setItem(
+        "selectedAcademicYear",
+        JSON.stringify(action.payload)
+      );
     },
   },
+
   extraReducers: (builder) => {
     builder
-      // Create
+
+      /* CREATE */
+
       .addCase(createAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
         state.academicYears.push(action.payload);
-        state.message = "Academic year created successfully.";
+        state.message = "Academic year created successfully";
       })
-      // Fetch All
+
+      /* FETCH ALL */
+
       .addCase(fetchAllAcademicYears.fulfilled, (state, action) => {
         state.loading = false;
         state.academicYears = action.payload;
       })
-      // Fetch Active
+
+      /* FETCH ACTIVE */
+
       .addCase(fetchActiveAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
         state.activeYear = action.payload;
+
         if (!state.selectedAcademicYear) {
           state.selectedAcademicYear = action.payload;
-          localStorage.setItem("selectedAcademicYear", JSON.stringify(action.payload));
+
+          localStorage.setItem(
+            "selectedAcademicYear",
+            JSON.stringify(action.payload)
+          );
         }
       })
-      // Set Active
+
+      /* SET ACTIVE */
+
       .addCase(setActiveAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
+
         state.activeYear = action.payload;
         state.selectedAcademicYear = action.payload;
-        localStorage.setItem("selectedAcademicYear", JSON.stringify(action.payload));
-        state.message = "Active academic year updated successfully.";
+
+        localStorage.setItem(
+          "selectedAcademicYear",
+          JSON.stringify(action.payload)
+        );
+
+        state.message = "Active academic year updated";
+
         state.academicYears = state.academicYears.map((y) =>
           y._id === action.payload._id
             ? { ...y, isActive: true, archived: false }
             : { ...y, isActive: false }
         );
       })
-      // Archive
+
+      /* ARCHIVE */
+
       .addCase(archiveAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
+
         state.academicYears = state.academicYears.map((y) =>
           y._id === action.payload.data._id
             ? { ...y, isActive: false, archived: true }
             : y
         );
+
         if (state.activeYear?._id === action.payload.data._id) {
           state.activeYear = null;
         }
       })
-      // Handle pending
-      .addMatcher((action) => action.type.endsWith("/pending"), (state) => {
-        state.loading = true;
-        state.error = null;
+
+      /* DELETE */
+
+      .addCase(deleteAcademicYear.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.message;
+
+        state.academicYears = state.academicYears.filter(
+          (y) => y._id !== action.payload.data._id
+        );
       })
-      // Handle rejected
+
+      /* UPDATE */
+
+      .addCase(updateAcademicYear.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = "Academic year updated";
+
+        state.academicYears = state.academicYears.map((y) =>
+          y._id === action.payload._id ? action.payload : y
+        );
+      })
+
+      /* PENDING */
+
+      .addMatcher(
+        (action) => action.type.endsWith("/pending"),
+        (state) => {
+          state.loading = true;
+          state.error = null;
+        }
+      )
+
+      /* REJECTED */
+
       .addMatcher(
         (action) => action.type.endsWith("/rejected"),
         (state, action) => {
@@ -174,4 +289,5 @@ const academicYearSlice = createSlice({
 
 export const { clearAcademicYearMessages, setSelectedAcademicYear } =
   academicYearSlice.actions;
+
 export default academicYearSlice.reducer;

@@ -1,37 +1,123 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const ExamSchema = new mongoose.Schema(
+/* ================================
+            EXAM SCHEMA
+================================ */
+
+const examSchema = new Schema(
   {
-    academicYearId: 
-        { type: mongoose.Schema.Types.ObjectId, 
-          ref: "AcademicYear",
-          required: true,
-         },
-    schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
-    title: { type: String, required: true, trim: true },
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      required: true,
+      index: true
+    },
 
-    classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
-   /*  sectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Section" }, */
-    subjectId: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true
+    },
 
-    examType: { type: String, enum: ["objective", "subjective", "mixed"], default: "objective" },
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
 
-    startTime: { type: Date, required: true },
-    examDate:{ type:Date,required: true},
-    endTime: { type: Date, required: true },
-    durationMinutes: { type: Number, required: true, min: 1 },
+    schoolClassId: {
+      type: Schema.Types.ObjectId,
+      ref: "SchoolClass",
+      required: true,
+      index: true
+    },
 
-    totalMarks: { type: Number, required: true, min: 1 },
-    passingMarks: { type: Number, required: true, min: 0 },
+    sectionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Section",
+      default: null,
+      index: true
+    },
 
-    questionOrder: { type: String, enum: ["fixed", "random"], default: "random" },
-    shuffleOptions: { type: Boolean, default: true },
+    subjectId: {
+      type: Schema.Types.ObjectId,
+      ref: "Subject",
+      required: true,
+      index: true
+    },
+
+    examType: {
+      type: String,
+      enum: ["objective", "subjective", "mixed"],
+      default: "objective"
+    },
+
+    examDate: {
+      type: Date,
+      required: true,
+      index: true
+    },
+
+    startTime: {
+      type: Date,
+      required: true
+    },
+
+    endTime: {
+      type: Date,
+      required: true
+    },
+
+    durationMinutes: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+
+    totalMarks: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+
+    passingMarks: {
+      type: Number,
+      required: true,
+      min: 0,
+      validate: {
+        validator: function (v) {
+          return v <= this.totalMarks;
+        },
+        message: "Passing marks cannot exceed total marks"
+      }
+    },
+
+    questionOrder: {
+      type: String,
+      enum: ["fixed", "random"],
+      default: "random"
+    },
+
+    shuffleOptions: {
+      type: Boolean,
+      default: true
+    },
 
     questions: [
       {
-        questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
-        snapshot: mongoose.Schema.Types.Mixed, // snapshot for immutability
-        marks: { type: Number, default: 0, min: 0 }
+        questionId: {
+          type: Schema.Types.ObjectId,
+          ref: "Question"
+        },
+
+        snapshot: Schema.Types.Mixed, // immutable snapshot
+
+        marks: {
+          type: Number,
+          default: 0,
+          min: 0
+        }
       }
     ],
 
@@ -41,57 +127,130 @@ const ExamSchema = new mongoose.Schema(
       maxAttempts: { type: Number, default: 1 }
     },
 
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    status: { type: String, enum: ["draft", "published", "completed"], default: "draft" }
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+
+    status: {
+      type: String,
+      enum: ["draft", "published", "completed"],
+      default: "draft"
+    }
   },
   { timestamps: true }
 );
 
-// Validation hooks
-ExamSchema.pre("validate", function (next) {
-  if (this.endTime && this.startTime && this.endTime <= this.startTime) {
-    return next(new Error("End time must be after start time."));
-  }
-  if (this.passingMarks > this.totalMarks) {
-    return next(new Error("Passing marks cannot exceed total marks."));
+/* ================================
+          VALIDATION HOOK
+================================ */
+
+examSchema.pre("validate", function (next) {
+  if (this.endTime <= this.startTime) {
+    return next(new Error("End time must be after start time"));
   }
   next();
 });
 
-export const Exam = mongoose.model("Exam", ExamSchema);
+/* ================================
+              INDEXES
+================================ */
 
-//
-// Exam Attempt Schema (tracks each student’s attempt)
-//
-const ExamAttemptSchema = new mongoose.Schema(
+examSchema.index({
+  schoolId: 1,
+  academicYearId: 1,
+  schoolClassId: 1,
+  subjectId: 1
+});
+
+export const Exam =
+  mongoose.models.Exam || mongoose.model("Exam", examSchema);
+
+
+const examAttemptSchema = new Schema(
   {
-    examId: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
-    studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
-    schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
+    examId: {
+      type: Schema.Types.ObjectId,
+      ref: "Exam",
+      required: true,
+      index: true
+    },
 
-    attemptNumber: { type: Number, default: 1 }, // in case multiple attempts are allowed
-    startedAt: { type: Date, default: Date.now },
-    endedAt: { type: Date },
+    studentId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
+    },
+
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true
+    },
+
+    attemptNumber: {
+      type: Number,
+      default: 1
+    },
+
+    startedAt: {
+      type: Date,
+      default: Date.now
+    },
+
+    endedAt: {
+      type: Date
+    },
 
     answers: [
       {
-        questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question", required: true },
-        response: mongoose.Schema.Types.Mixed, // could be option keys, text, or match pairs
-        isCorrect: { type: Boolean },
-        marksObtained: { type: Number, default: 0 }
+        questionId: {
+          type: Schema.Types.ObjectId,
+          ref: "Question",
+          required: true
+        },
+
+        response: Schema.Types.Mixed,
+
+        isCorrect: {
+          type: Boolean
+        },
+
+        marksObtained: {
+          type: Number,
+          default: 0
+        }
       }
     ],
 
-    totalObtainedMarks: { type: Number, default: 0 },
-    status: { 
-      type: String, 
-      enum: ["in_progress", "submitted", "evaluated"], 
-      default: "in_progress" 
+    totalObtainedMarks: {
+      type: Number,
+      default: 0
     },
 
-    evaluatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" } // for subjective/manual checking
+    status: {
+      type: String,
+      enum: ["in_progress", "submitted", "evaluated"],
+      default: "in_progress"
+    },
+
+    evaluatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User"
+    }
   },
   { timestamps: true }
 );
 
-export const ExamAttempt = mongoose.model("ExamAttempt", ExamAttemptSchema);
+/* Prevent duplicate attempts */
+examAttemptSchema.index(
+  { examId: 1, studentId: 1, attemptNumber: 1 },
+  { unique: true }
+);
+
+export const ExamAttempt =
+  mongoose.models.ExamAttempt ||
+  mongoose.model("ExamAttempt", examAttemptSchema);

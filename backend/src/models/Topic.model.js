@@ -8,7 +8,6 @@ const topicSchema = new Schema(
       type: String,
       required: true,
       trim: true
-      // Example: "Linear Equations", "Photosynthesis"
     },
 
     topicNo: {
@@ -23,27 +22,6 @@ const topicSchema = new Schema(
     },
 
     /* ================= RELATIONS ================= */
-
-    boardId: {
-      type: Schema.Types.ObjectId,
-      ref: "Board",
-      required: true,
-      index: true
-    },
-
-    classId: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
-      required: true,
-      index: true
-    },
-
-    subjectId: {
-      type: Schema.Types.ObjectId,
-      ref: "Subject",
-      required: true,
-      index: true
-    },
 
     chapterId: {
       type: Schema.Types.ObjectId,
@@ -64,8 +42,6 @@ const topicSchema = new Schema(
     isGlobal: {
       type: Boolean,
       default: false
-      // true → CBSE / ICSE global syllabus
-      // false → School specific customization
     },
 
     schoolId: {
@@ -110,13 +86,8 @@ const topicSchema = new Schema(
   { timestamps: true }
 );
 
-/* ================= INDEXES ================= */
+/* ================= INDEX ================= */
 
-/*
- Same:
- School + AcademicYear + Chapter
- me same topicNo repeat nahi hoga
-*/
 topicSchema.index(
   {
     topicNo: 1,
@@ -127,20 +98,6 @@ topicSchema.index(
   { unique: true, sparse: true }
 );
 
-/*
- Fast filtering for Question Bank & syllabus UI
-*/
-topicSchema.index({
-  boardId: 1,
-  classId: 1,
-  subjectId: 1,
-  chapterId: 1,
-  academicYearId: 1,
-  schoolId: 1
-});
-
-/* ✅ Safe model export */
-const Topic =
-  mongoose.models.Topic || mongoose.model("Topic", topicSchema);
+const Topic = mongoose.models.Topic || mongoose.model("Topic", topicSchema);
 
 export default Topic;

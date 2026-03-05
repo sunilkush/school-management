@@ -201,23 +201,33 @@ const chapterSlice = createSlice({
       })
 
       /* ================= UPDATE ================= */
-      .addCase(updateChapterThunk.fulfilled, (state, action) => {
-        const updated = action.payload?.data;
-        if (!updated) return;
+        .addCase(updateChapterThunk.fulfilled, (state, action) => {
 
-        const index = state.chapters.findIndex(
-          (c) => c._id === updated._id
-        );
-        if (index !== -1) state.chapters[index] = updated;
-      })
+          const updated = action.payload?.data;
+          if (!updated) return;
 
-      /* ================= DELETE ================= */
-      .addCase(deleteChapterThunk.fulfilled, (state, action) => {
-        const deletedId = action.payload?.id;
-        state.chapters = state.chapters.filter(
-          (c) => c._id !== deletedId
-        );
-      })
+          const index = state.chapters.findIndex(
+            (c) => c._id === updated._id
+          );
+
+          if (index !== -1) {
+            state.chapters[index] = updated;
+          }
+
+        })
+
+        /* ================= DELETE ================= */
+        .addCase(deleteChapterThunk.fulfilled, (state, action) => {
+
+          const deletedId = action.payload?.id;
+
+          if (!deletedId) return;
+
+          state.chapters = state.chapters.filter(
+            (c) => c._id !== deletedId
+          );
+
+        })
 
       /* ================= ASSIGN SCHOOL ================= */
       .addCase(assignChapterToSchoolThunk.pending, (state) => {
