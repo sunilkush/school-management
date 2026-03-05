@@ -31,7 +31,7 @@ const subjectSchema = new Schema(
 
     /* ================= CURRICULUM ================= */
 
-    boardschoolClassId: {
+    boardClassId: {
       type: Schema.Types.ObjectId,
       ref: "BoardClass",
       required: true,

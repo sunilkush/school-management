@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
-import Chapter from "../models/Chapter.model.js";
+import { Chapter } from "../models/Chapter.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import ChapterSchoolMap from "../models/ChapterSchoolMap.model.js";
 import { User } from "../models/user.model.js";
 /* =====================================================
    🔧 HELPER
@@ -348,49 +347,7 @@ export const deleteChapter = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Chapter deleted successfully"));
 });
 
-export const assignChapterToSchool = asyncHandler(async (req, res) => {
-  const { chapterId, schoolId } = req.body;
-  const user = req.user;
-  /* =====================================================
-       ✅ GET USER ROLE
-    ===================================================== */
-    const populatedUser = await User.findById(user._id)
-      .populate("roleId", "name")
-      
 
-    const roleName = populatedUser?.roleId?.name;
-  /* 🔐 only super admin */
-  if (roleName !== "Super Admin") {
-    throw new ApiError(403, "Only Super Admin can assign chapters");
-  }
-
-  if (
-    !mongoose.Types.ObjectId.isValid(chapterId) ||
-    !mongoose.Types.ObjectId.isValid(schoolId)
-  ) {
-    throw new ApiError(400, "Invalid ids");
-  }
-
-  const chapter = await Chapter.findById(chapterId);
-
-  if (!chapter) {
-    throw new ApiError(404, "Chapter not found");
-  }
-
-  if (!chapter.isGlobal) {
-    throw new ApiError(400, "Only global chapters can be assigned");
-  }
-
-  const mapping = await ChapterSchoolMap.create({
-    chapterId,
-    schoolId,
-    assignedBy: user._id
-  });
-
-  return res
-    .status(201)
-    .json(new ApiResponse(201, mapping, "Chapter assigned to school"));
-});
 
 export const getVisibleChapters = asyncHandler(async (req, res) => {
   const user = req.user;

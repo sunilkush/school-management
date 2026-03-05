@@ -26,7 +26,7 @@ const SubjectsAdmin = () => {
   // Fetch subjects on mount or when schoolId/role changes
   useEffect(() => {
     if (schoolId || role === "Super Admin") {
-      dispatch(fetchAllSubjects({ schoolId: selectedSchool || schoolId }));
+      dispatch(fetchAllSubjects());
     }
   }, [dispatch, schoolId, role, selectedSchool]);
 

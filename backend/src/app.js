@@ -51,7 +51,7 @@ import DashboardRoutes from "./routes/dashboard.routes.js";
 import QuestionRoutes from "./routes/question.routes.js";
 import ExamRoutes from "./routes/exam.routes.js";
 import AttemptRoutes from "./routes/attempt.routes.js"
-import ClassSectionSubjectRoutes from "./routes/classSection&subject.routes.js"
+
 import SubscriptionPlans from "./routes/subscriptionPlan.routes.js";
 import feeHeadRoutes from "./routes/feeHead.routes.js";
 import feeStructureRoutes from "./routes/feeStructure.routes.js";
@@ -81,7 +81,7 @@ app.use("/api/v1/dashboard", DashboardRoutes);
 app.use("/api/v1/questions", QuestionRoutes);
 app.use("/api/v1/exams", ExamRoutes);
 app.use("/api/v1/attempt", AttemptRoutes);
-app.use("/api/v1/classSection", ClassSectionSubjectRoutes)
+
 app.use("/api/v1/subscription", SubscriptionPlans)
 app.use("/api/v1/fee-heads", feeHeadRoutes);
 app.use("/api/v1/fee-structures", feeStructureRoutes);

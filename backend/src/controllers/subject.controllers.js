@@ -10,63 +10,39 @@ import { mergeSchoolWiseAssignments } from "../utils/mergeAssignments.js";
 const createSubject = asyncHandler(async (req, res) => {
   const {
     name,
+    boardClassId,
     category,
     type,
     maxMarks,
     passMarks,
-    description,
-    assignedTeachers = [],
-    assignedClasses = [],
-    academicYearId,
-    schoolId,
-    isGlobal = false,
-    createdByRole,
+    description
   } = req.body;
 
-  const createdBy = req.user?._id;
-  const user = await User.findById(createdBy);
-  const role = await Role.findById(user?.roleId);
-  const userRole = role?.name;
-  if (!name || !createdBy || !userRole) throw new ApiError(400, "Missing required fields");
-  
-  if (userRole === "School Admin" && !academicYearId)
-    throw new ApiError(400, "Academic year is required for school admins");
+  if (!name || !boardClassId)
+    throw new ApiError(400, "Name and BoardClass are required");
 
-  // Duplicate check
-  const query = isGlobal
-    ? { name: name.toUpperCase(), isGlobal: true }
-    : { name: name.toUpperCase(), schoolId, academicYearId };
+  const exists = await Subject.findOne({
+    name: name.toUpperCase(),
+    boardClassId
+  });
 
-  if (await Subject.findOne(query)) throw new ApiError(400, "Subject already exists");
+  if (exists)
+    throw new ApiError(400, "Subject already exists in this class");
 
-  // ✅ Create subject
   const subject = await Subject.create({
     name,
+    boardClassId,
     category,
     type,
     maxMarks,
     passMarks,
     description,
-    academicYearId: userRole === "Super Admin" ? null : academicYearId,
-    schoolId: isGlobal ? null : schoolId,
-    schoolByAssignedClasses: [
-      ...assignedClasses.map((schoolClassId) => ({ schoolId: schoolId, schoolClassId })),
-    ],
-    schoolByAssignedTeachers: [
-      ...assignedTeachers.map((teacherId) => ({ schoolId: schoolId, teacherId })),
-    ],
-    schoolByGradingSchemeId: null,
-    isGlobal,
-    createdBy,
-    createdByRole: userRole,
+    createdBy: req.user._id
   });
 
-  const populated = await Subject.findById(subject._id)
-    .populate("schoolByAssignedClasses", "name")
-    .populate("schoolId", "name")
-    .populate("academicYearId", "name startYear endYear");
-
-  res.status(201).json(new ApiResponse(201, populated, "Subject created successfully"));
+  res
+    .status(201)
+    .json(new ApiResponse(201, subject, "Subject created successfully"));
 });
 
 // ✅ ASSIGN SCHOOLS TO SUBJECT
@@ -123,7 +99,7 @@ const assignTeachersToSubject = asyncHandler(async (req, res) => {
 
 // ✅ GET ALL SUBJECTS
 const getAllSubjects = asyncHandler(async (req, res) => {
-  const { page,limit, search, schoolId, isGlobal } = req.query;
+  const { page,limit, search,  isGlobal } = req.query;
   const skip = (page - 1) * limit;
 
   const role = req.user.role;
@@ -133,9 +109,7 @@ const getAllSubjects = asyncHandler(async (req, res) => {
 
   if (role === "Super Admin") {
     if (isGlobal !== undefined) query.isGlobal = isGlobal === "true";
-    if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
-      query.schoolId = schoolId;
-    }
+    
   }
 
   if (role === "School Admin") {

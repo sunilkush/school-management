@@ -29,14 +29,14 @@ export const createSubject = createAsyncThunk(
 export const fetchAllSubjects = createAsyncThunk(
   "subject/fetchAllSubjects",
   async (
-    { page, limit, schoolId, search = "", isGlobal } = {},
+    { page, limit, search = "", isGlobal } = {},
     { rejectWithValue }
   ) => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(`${Api_Base_Url}/subject/all`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { page, limit, schoolId, search, isGlobal },
+        params: { page, limit,  search, isGlobal },
       });
      
       return res.data.data;

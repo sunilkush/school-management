@@ -5,7 +5,6 @@ import {
   getChapterById,
   updateChapter,
   deleteChapter,
-  assignChapterToSchool,
   getVisibleChapters,
 } from "../controllers/chapter.controllers.js";
 
@@ -73,11 +72,11 @@ router.delete(
 ===================================================== */
 
 // ⭐ Assign Global Chapter to School (Super Admin only)
-router.post(
+/* router.post(
   "/assign-school",
   auth,
   roleMiddleware(["Super Admin"]),
   assignChapterToSchool
 );
-
+ */
 export default router;

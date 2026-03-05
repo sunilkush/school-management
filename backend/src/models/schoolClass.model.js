@@ -16,7 +16,7 @@ const schoolClassSchema = new Schema(
       index: true,
     },
 
-    boardschoolClassId: {
+    boardClassId: {
       type: Schema.Types.ObjectId,
       ref: "BoardClass",
       required: true,
