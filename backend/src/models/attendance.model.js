@@ -32,7 +32,7 @@ const attendanceSchema = new Schema(
     remarks: { type: String, maxlength: 200 },
 
     /* ================= STUDENT ONLY ================= */
-    schoolschoolClassId: { type: Schema.Types.ObjectId, ref: "SchoolClass" },
+    schoolClassId: { type: Schema.Types.ObjectId, ref: "SchoolClass" },
     sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
 
     /* ================= STAFF / TEACHER ONLY ================= */

@@ -21,7 +21,7 @@ const studentEnrollmentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    schoolschoolClassId: {
+    schoolClassId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SchoolClass",
       required: true,

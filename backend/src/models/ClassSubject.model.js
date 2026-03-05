@@ -9,7 +9,7 @@ const classSubjectSchema = new Schema(
       index: true
     },
 
-    schoolschoolClassId: {
+    schoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "SchoolClass",
       required: true,
@@ -82,7 +82,7 @@ const classSubjectSchema = new Schema(
 /* Unique subject assignment */
 classSubjectSchema.index(
   {
-    schoolschoolClassId: 1,
+    schoolClassId: 1,
     sectionId: 1,
     subjectId: 1,
     academicYearId: 1

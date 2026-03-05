@@ -9,7 +9,7 @@ const feeStructureSchema = new mongoose.Schema(
             index: true,
         },
 
-        schoolschoolClassId: { 
+        schoolClassId: { 
             type: mongoose.Schema.Types.ObjectId, 
             ref: "SchoolClass",
             required: true,

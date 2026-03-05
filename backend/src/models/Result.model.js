@@ -26,7 +26,7 @@ const ResultSchema = new Schema(
       index: true
     },
 
-   schoolschoolClassId: { 
+   schoolClassId: { 
        type: Schema.Types.ObjectId, 
        ref: "SchoolClass",
       required: true,

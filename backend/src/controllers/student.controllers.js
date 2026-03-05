@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
-import { ClassSection } from "../models/classSection.model.js";
+import { Section } from "../models/section.model.js";
 
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import mongoose from "mongoose";
@@ -190,7 +190,7 @@ const registerStudent = asyncHandler(async (req, res) => {
   /* ===========================
      6️⃣ CLASS SECTION MAP
   ============================ */
-  await ClassSection.findOneAndUpdate(
+  await Section.findOneAndUpdate(
     { schoolClassId, sectionId, schoolId, academicYearId },
     { $addToSet: { students: studentUser._id } }
   );
