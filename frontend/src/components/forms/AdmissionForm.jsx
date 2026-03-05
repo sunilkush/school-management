@@ -71,8 +71,8 @@ const AdmissionForm = () => {
   }, [registrationNumber, form]);
 
 
-  const handleClassChange = (classId) => {
-    const selectedClass = classList.find((c) => c._id === classId);
+  const handleClassChange = (schoolClassId) => {
+    const selectedClass = classList.find((c) => c._id === schoolClassId);
     setSections(selectedClass?.sections || []);
     form.setFieldsValue({ sectionId: undefined });
   };
@@ -123,7 +123,7 @@ const AdmissionForm = () => {
               </Col>
 
               <Col md={8}>
-                <Form.Item name="classId" label="Class" rules={[{ required: true }]}>
+                <Form.Item name="schoolClassId" label="Class" rules={[{ required: true }]}>
                   <Select
                     placeholder="Select Class"
                     onChange={handleClassChange}

@@ -68,7 +68,7 @@ const EditExamForm = ({ examId }) => {
  
   /* ================= WATCH FORM VALUES ================= */
 
-  const watchClassId = Form.useWatch("classId", form);
+  const watchschoolClassId = Form.useWatch("schoolClassId", form);
   const watchSubjectId = Form.useWatch("subjectId", form);
 
   /* ================= USER CONTEXT ================= */
@@ -108,13 +108,13 @@ const EditExamForm = ({ examId }) => {
 
     isLoadedRef.current = true;
 
-    const classId = getId(currentExam.classId);
+    const schoolClassId = getId(currentExam.schoolClassId);
     const subjectId = getId(currentExam.subjectId);
 
     
 
     const selectedClassObj = classList.find(
-      (c) => String(c._id) === String(classId)
+      (c) => String(c._id) === String(schoolClassId)
     );
 
     const subjects =
@@ -134,7 +134,7 @@ const EditExamForm = ({ examId }) => {
 
     form.setFieldsValue({
       title: currentExam.title,
-      classId,
+      schoolClassId,
       subjectId,
       examType: currentExam.examType,
       durationMinutes: currentExam.durationMinutes,
@@ -147,31 +147,31 @@ const EditExamForm = ({ examId }) => {
   /* ================= FILTER QUESTIONS ================= */
 
   const filteredQuestions = useMemo(() => {
-    const classId = watchClassId || getId(currentExam?.classId);
+    const schoolClassId = watchschoolClassId || getId(currentExam?.schoolClassId);
     const subjectId = watchSubjectId || getId(currentExam?.subjectId);
 
-    if (!classId || !subjectId) return [];
+    if (!schoolClassId || !subjectId) return [];
 
     return questionBankArray.filter((q) => {
       return (
-        String(getId(q.classId)) === String(classId) &&
+        String(getId(q.schoolClassId)) === String(schoolClassId) &&
         String(getId(q.subjectId)) === String(subjectId)
       );
     });
   }, [
     questionBankArray,
-    watchClassId,
+    watchschoolClassId,
     watchSubjectId,
     currentExam,
   ]);
   
   /* ================= CLASS CHANGE ================= */
 
-  const handleClassChange = (classId) => {
+  const handleClassChange = (schoolClassId) => {
    
 
     const selected = classList.find(
-      (c) => String(c._id) === String(classId)
+      (c) => String(c._id) === String(schoolClassId)
     );
 
     const subjects =
@@ -262,7 +262,7 @@ const handleSubmit = async () => {
 
             <Col md={12}>
               <Form.Item
-                name="classId"
+                name="schoolClassId"
                 label="Class"
                 rules={[{ required: true }]}
                 disabled

@@ -31,7 +31,7 @@ const subjectSchema = new Schema(
 
     /* ================= CURRICULUM ================= */
 
-    boardClassId: {
+    boardschoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "BoardClass",
       required: true,
@@ -98,7 +98,7 @@ const subjectSchema = new Schema(
 /* ================= INDEXES ================= */
 
 subjectSchema.index(
-  { name: 1, boardClassId: 1 },
+  { name: 1, boardschoolClassId: 1 },
   { unique: true }
 );
 

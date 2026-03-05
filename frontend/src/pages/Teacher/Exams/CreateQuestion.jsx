@@ -100,7 +100,7 @@ const CreateQuestion = () => {
         <Row gutter={16}>
           <Col md={12} xs={24}>
             <Form.Item
-              name="classId"
+              name="schoolClassId"
               label="Class"
               rules={[{ required: true }]}
             >

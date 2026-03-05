@@ -3,14 +3,14 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Fetch all class-section mappings (optionally filtered by classId)
+// Fetch all class-section mappings (optionally filtered by schoolClassId)
 export const fetchClassSections = createAsyncThunk(
   "classSection/fetch",
-  async ({ classId, schoolId, academicYearId } = {}, { rejectWithValue }) => {
+  async ({ schoolClassId, schoolId, academicYearId } = {}, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       const params = {};
-      if (classId) params.classId = classId;
+      if (schoolClassId) params.schoolClassId = schoolClassId;
       if (schoolId) params.schoolId = schoolId;
       if (academicYearId) params.academicYearId = academicYearId;
 

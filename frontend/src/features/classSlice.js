@@ -49,13 +49,13 @@ export const fetchAllClasses = createAsyncThunk(
 // DELETE class
 export const deleteClass = createAsyncThunk(
   "class/deleteClass",
-  async (classId, { rejectWithValue }) => {
+  async (schoolClassId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
-      await axios.delete(`${Api_Base_Url}/class/${classId}`, {
+      await axios.delete(`${Api_Base_Url}/class/${schoolClassId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return classId;
+      return schoolClassId;
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Class deletion failed!"

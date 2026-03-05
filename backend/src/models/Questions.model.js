@@ -40,7 +40,7 @@ const QuestionSchema = new Schema(
       index: true
     },
 
-   schoolClassId: { 
+   schoolschoolClassId: { 
        type: Schema.Types.ObjectId, 
        ref: "SchoolClass",
       required: true,
@@ -206,7 +206,7 @@ QuestionSchema.pre("validate", function (next) {
 ================================ */
 QuestionSchema.index({
   schoolId: 1,
-  classId: 1,
+  schoolClassId: 1,
   subjectId: 1,
   difficulty: 1
 });

@@ -50,7 +50,7 @@ const createSubject = asyncHandler(async (req, res) => {
     academicYearId: userRole === "Super Admin" ? null : academicYearId,
     schoolId: isGlobal ? null : schoolId,
     schoolByAssignedClasses: [
-      ...assignedClasses.map((classId) => ({ schoolId: schoolId, classId })),
+      ...assignedClasses.map((schoolClassId) => ({ schoolId: schoolId, schoolClassId })),
     ],
     schoolByAssignedTeachers: [
       ...assignedTeachers.map((teacherId) => ({ schoolId: schoolId, teacherId })),
@@ -162,7 +162,7 @@ const getAllSubjects = asyncHandler(async (req, res) => {
       select: "name email",
     })
     .populate({
-      path: "schoolByAssignedClasses.classId",
+      path: "schoolByAssignedClasses.schoolClassId",
       select: "name",
     })
     .skip(skip)
@@ -219,7 +219,7 @@ const getSubject = asyncHandler(async (req, res) => {
       select: "name email",
     })
     .populate({
-      path: "schoolByAssignedClasses.classId",
+      path: "schoolByAssignedClasses.schoolClassId",
       select: "name",
     });
 
@@ -266,7 +266,7 @@ const updateSubject = asyncHandler(async (req, res) => {
     academicYearId,
     isGlobal,
     assignedTeachers,
-    classIds,
+    schoolClassIds,
     schoolId,
   } = req.body;
 
@@ -303,10 +303,10 @@ const updateSubject = asyncHandler(async (req, res) => {
     }
 
     // ✅ merge classes safely
-    if (Array.isArray(classIds)) {
+    if (Array.isArray(schoolClassIds)) {
       subject.schoolByAssignedClasses = mergeSchoolWiseAssignments(
         subject.schoolByAssignedClasses,
-        classIds,
+        schoolClassIds,
         adminSchoolId
       );
     }
@@ -329,7 +329,7 @@ const updateSubject = asyncHandler(async (req, res) => {
 
   const updatedSubject = await Subject.findById(id)
     .populate("schoolByAssignedTeachers.teacherId", "name email")
-    .populate("schoolByAssignedClasses.classId", "name")
+    .populate("schoolByAssignedClasses.schoolClassId", "name")
     .populate("schoolId", "name")
     .populate("academicYearId", "name startYear endYear");
 

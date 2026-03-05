@@ -14,7 +14,7 @@ export const createExam = asyncHandler(async (req, res) => {
   const {
     academicYearId,
     title,
-    classId,
+    schoolClassId,
     sectionId,
     subjectId,
     examType,
@@ -39,7 +39,7 @@ export const createExam = asyncHandler(async (req, res) => {
     academicYearId,
     schoolId,
     title,
-    classId,
+    schoolClassId,
     sectionId,
     subjectId,
     examType,
@@ -79,7 +79,7 @@ export const getExams = asyncHandler(async (req, res) => {
 
     // Optional Filters
     if (req.query.status) filters.status = req.query.status;
-    if (req.query.classId) filters.classId = req.query.classId;
+    if (req.query.schoolClassId) filters.schoolClassId = req.query.schoolClassId;
     if (req.query.subjectId) filters.subjectId = req.query.subjectId;
    
 
@@ -102,7 +102,7 @@ export const getExams = asyncHandler(async (req, res) => {
 
       Exam.find(filters)
         .populate("schoolId", "name")
-        .populate("classId", "name")
+        .populate("schoolClassId", "name")
         .populate("subjectId", "name")
         .populate("academicYearId", "name")
         .populate("createdBy", "name email")

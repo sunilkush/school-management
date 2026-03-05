@@ -18,7 +18,7 @@ const registerStudent = asyncHandler(async (req, res) => {
     email,
     password,
     schoolId,
-    classId,
+    schoolClassId,
     sectionId,
     academicYearId,
     admissionDate,
@@ -63,7 +63,7 @@ const registerStudent = asyncHandler(async (req, res) => {
     motherEmail,
   } = req.body;
 
-  if (!studentName || !email || !password || !schoolId || !classId || !sectionId || !academicYearId) {
+  if (!studentName || !email || !password || !schoolId || !schoolClassId || !sectionId || !academicYearId) {
     throw new ApiError(400, "Required fields missing");
   }
 
@@ -179,7 +179,7 @@ const registerStudent = asyncHandler(async (req, res) => {
     schoolId,
     academicYearId,
     registrationNumber,
-    classId,
+    schoolClassId,
     sectionId,
     admissionDate,
     feeDiscount,
@@ -191,7 +191,7 @@ const registerStudent = asyncHandler(async (req, res) => {
      6️⃣ CLASS SECTION MAP
   ============================ */
   await ClassSection.findOneAndUpdate(
-    { classId, sectionId, schoolId, academicYearId },
+    { schoolClassId, sectionId, schoolId, academicYearId },
     { $addToSet: { students: studentUser._id } }
   );
 
@@ -207,7 +207,7 @@ const registerStudent = asyncHandler(async (req, res) => {
 // ✅ Get Students (with aggregation)
 const getStudents = asyncHandler(async (req, res) => {
   const user = req.user;
-  const { classId, page = 1, limit = 10 } = req.query;
+  const { schoolClassId, page = 1, limit = 10 } = req.query;
   const academicYearId = req.academicYearId;
   console.log(user)
   // 🔹 Common validation
@@ -230,8 +230,8 @@ const getStudents = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Access denied. Only admins can view student data.");
   }
 
-  if (classId) {
-    match.classId = new mongoose.Types.ObjectId(classId);
+  if (schoolClassId) {
+    match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   }
 
   // 🔹 Aggregate pipeline
@@ -264,7 +264,7 @@ const getStudents = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "classes",
-        localField: "classId",
+        localField: "schoolClassId",
         foreignField: "_id",
         as: "classDetails",
       },
@@ -379,7 +379,7 @@ const updateStudent = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
     registrationNumber,
-    class: classId,
+    class: schoolClassId,
     schoolId,
     admissionDate,
     feeDiscount,
@@ -396,7 +396,7 @@ const updateStudent = asyncHandler(async (req, res) => {
   }
 
   if (registrationNumber) student.registrationNumber = registrationNumber;
-  if (classId) student.class = classId;
+  if (schoolClassId) student.class = schoolClassId;
   if (schoolId) student.schoolId = schoolId;
   if (admissionDate) student.admissionDate = admissionDate;
   if (feeDiscount !== undefined) student.feeDiscount = feeDiscount;
@@ -617,7 +617,7 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "classes",
-        localField: "classId",
+        localField: "schoolClassId",
         foreignField: "_id",
         as: "class",
       },
@@ -815,7 +815,7 @@ const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
     studentId: student._id,
     schoolId: req.user.schoolId,
     academicYearId: academicYear._id,
-  }).select("_id registrationNumber classId sectionId");
+  }).select("_id registrationNumber schoolClassId sectionId");
 
   if (!enrollment) {
     throw new ApiError(404, "Student enrollment not found");
@@ -828,7 +828,7 @@ const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
         studentId: student._id,
         enrollmentId: enrollment._id,
         registrationNumber: enrollment.registrationNumber,
-        classId: enrollment.classId,
+        schoolClassId: enrollment.schoolClassId,
         sectionId: enrollment.sectionId,
         academicYearId: academicYear._id,
       },

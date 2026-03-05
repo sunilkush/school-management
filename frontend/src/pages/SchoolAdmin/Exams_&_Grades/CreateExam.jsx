@@ -98,13 +98,13 @@ const CreateExam = () => {
     if (!examData) return;
     if (!classList.length) return;
 
-    const classIdValue = examData.classId?._id || examData.classId;
+    const schoolClassIdValue = examData.schoolClassId?._id || examData.schoolClassId;
 
-    handleClassChange(classIdValue, examData.subjectId?._id || examData.subjectId);
+    handleClassChange(schoolClassIdValue, examData.subjectId?._id || examData.subjectId);
 
     form.setFieldsValue({
       title: examData.title,
-      classId: classIdValue,
+      schoolClassId: schoolClassIdValue,
       subjectId: examData.subjectId?._id || examData.subjectId,
       examType: examData.examType,
       examDate: examData.examDate ? dayjs(examData.examDate) : null,
@@ -118,10 +118,10 @@ const CreateExam = () => {
   }, [examData, classList]);
 
   /* ================= CLASS CHANGE ================= */
-  const handleClassChange = (classId, subjectIdFromEdit = null) => {
-    setSelectedClass(classId);
+  const handleClassChange = (schoolClassId, subjectIdFromEdit = null) => {
+    setSelectedClass(schoolClassId);
 
-    const selected = classList.find((c) => c._id === classId);
+    const selected = classList.find((c) => c._id === schoolClassId);
 
     const subjects =
       selected?.subjects?.map((s) => ({
@@ -170,7 +170,7 @@ const CreateExam = () => {
         schoolId,
         userId,
         title: values.title,
-        classId: values.classId,
+        schoolClassId: values.schoolClassId,
         subjectId: values.subjectId,
         examType: values.examType,
         examDate: values.examDate.toISOString(),
@@ -227,7 +227,7 @@ const CreateExam = () => {
 
             <Col md={12}>
               <Form.Item
-                name="classId"
+                name="schoolClassId"
                 label="Class"
                 rules={[{ required: true, message: "Select class" }]}
               >

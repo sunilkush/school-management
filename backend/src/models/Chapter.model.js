@@ -29,7 +29,7 @@ const chapterSchema = new Schema(
 
     /* ================= RELATIONS ================= */
 
-    boardClassId: {
+    boardschoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "BoardClass",
       required: true,
@@ -115,7 +115,7 @@ chapterSchema.index(
   {
     chapterNo: 1,
     subjectId: 1,
-    boardClassId: 1,
+    boardschoolClassId: 1,
   },
   {
     unique: true,
@@ -127,7 +127,7 @@ chapterSchema.index(
   {
     chapterNo: 1,
     subjectId: 1,
-    boardClassId: 1,
+    boardschoolClassId: 1,
     schoolId: 1,
   },
   {

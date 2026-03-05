@@ -45,15 +45,15 @@ export const createSection = asyncHandler(async (req, res) => {
  * ===============================
  */
 export const getSections = asyncHandler(async (req, res) => {
-  const { schoolId, classId, academicYearId } = req.query;
+  const { schoolId, schoolClassId, academicYearId } = req.query;
 
   const filters = {};
   if (schoolId) filters.schoolId = schoolId;
-  if (classId) filters.classId = classId;
+  if (schoolClassId) filters.schoolClassId = schoolClassId;
   if (academicYearId) filters.academicYearId = academicYearId;
 
   const sections = await Section.find(filters)
-    .populate("classId", "name")
+    .populate("schoolClassId", "name")
     .populate("academicYearId", "name")
     .sort({ name: 1 });
    

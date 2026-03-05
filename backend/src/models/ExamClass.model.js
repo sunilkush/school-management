@@ -17,7 +17,7 @@ const ExamClassSchema = new Schema(
       required: true,
     },
 
-    schoolClassId: { 
+    schoolschoolClassId: { 
                 type: mongoose.Schema.Types.ObjectId, 
                 ref: "SchoolClass",
       required: true,
@@ -54,7 +54,7 @@ const ExamClassSchema = new Schema(
 
 // Prevent duplicate entries for same exam + class + section
 ExamClassSchema.index(
-  { examId: 1, classId: 1, sectionId: 1 },
+  { examId: 1, schoolClassId: 1, sectionId: 1 },
   { unique: true }
 );
 

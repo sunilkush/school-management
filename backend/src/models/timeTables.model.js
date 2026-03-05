@@ -12,7 +12,7 @@ const TimetableSchema = new mongoose.Schema(
       ref: "School",
       required: true,
     },
-    schoolClassId: { 
+    schoolschoolClassId: { 
         type: Schema.Types.ObjectId, 
         ref: "SchoolClass",
       required: function () {

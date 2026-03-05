@@ -55,13 +55,13 @@ const createClass = asyncHandler(async (req, res) => {
    ✅ UPDATE CLASS
 ========================================================= */
 const updateClass = asyncHandler(async (req, res) => {
-  const { classId } = req.params;
+  const { schoolClassId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(classId)) {
+  if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
     throw new ApiError(400, "Invalid Class ID");
   }
 
-  const classDoc = await Class.findById(classId);
+  const classDoc = await Class.findById(schoolClassId);
   if (!classDoc) throw new ApiError(404, "Class not found");
 
   const {
@@ -105,7 +105,7 @@ const updateClass = asyncHandler(async (req, res) => {
 
   await classDoc.save();
 
-  const updated = await Class.findById(classId)
+  const updated = await Class.findById(schoolClassId)
     .populate("schoolId", "name logo")
     .populate("academicYearId", "name")
     .populate("sections.sectionId", "name code")
@@ -122,9 +122,9 @@ const updateClass = asyncHandler(async (req, res) => {
    ✅ DELETE CLASS
 ========================================================= */
 const deleteClass = asyncHandler(async (req, res) => {
-  const { classId } = req.params;
+  const { schoolClassId } = req.params;
 
-  const deleted = await Class.findByIdAndDelete(classId);
+  const deleted = await Class.findByIdAndDelete(schoolClassId);
   if (!deleted) throw new ApiError(404, "Class not found");
 
   return res
@@ -190,9 +190,9 @@ const getAllClasses = asyncHandler(async (req, res) => {
    ✅ GET CLASS BY ID
 ========================================================= */
 const getClassById = asyncHandler(async (req, res) => {
-  const { classId } = req.params;
+  const { schoolClassId } = req.params;
 
-  const data = await Class.findById(classId)
+  const data = await Class.findById(schoolClassId)
     .populate("schoolId", "name logo")
     .populate("academicYearId", "name")
     .populate("sections.sectionId", "name code")
@@ -288,7 +288,7 @@ const classAssignTeacher = asyncHandler(async (req, res) => {
 
 
 const assignSubjectsToClass = asyncHandler(async (req, res) => {
-  const { classId, assignments } = req.body;
+  const { schoolClassId, assignments } = req.body;
   const user = req.user;
 
   if (user.role?.toLowerCase() !== "super admin") {
@@ -297,13 +297,13 @@ const assignSubjectsToClass = asyncHandler(async (req, res) => {
       .json(new ApiResponse(403, null, "Access denied"));
   }
 
-  if (!classId || !Array.isArray(assignments)) {
+  if (!schoolClassId || !Array.isArray(assignments)) {
     return res
       .status(400)
       .json(new ApiResponse(400, null, "Invalid data format"));
   }
 
-  const classData = await Class.findById(classId);
+  const classData = await Class.findById(schoolClassId);
 
   if (!classData) {
     return res

@@ -8,12 +8,12 @@ const Api_Base_Url = import.meta.env.VITE_API_URL;
 // 🔹 Fetch Sections
 export const fetchSection = createAsyncThunk(
   "section/fetchSection",
-  async ({ schoolId, classId, academicYearId }, { rejectWithValue }) => {
+  async ({ schoolId, schoolClassId, academicYearId }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       const params = new URLSearchParams();
       if (schoolId) params.append("schoolId", schoolId);
-      if (classId) params.append("classId", classId);
+      if (schoolClassId) params.append("schoolClassId", schoolClassId);
       if (academicYearId) params.append("academicYearId", academicYearId);
 
       const res = await axios.get(`${Api_Base_Url}/section?${params.toString()}`, {

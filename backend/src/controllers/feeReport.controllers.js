@@ -19,10 +19,10 @@ import { generateFeeReport } from "../services/feeReport.js";
  * - year
  *
  * Class Wise:
- * - classId
+ * - schoolClassId
  *
  * Pending:
- * - classId (optional)
+ * - schoolClassId (optional)
  */
 export const getFeeReport = asyncHandler(async (req, res) => {
   const {
@@ -30,7 +30,7 @@ export const getFeeReport = asyncHandler(async (req, res) => {
     from,
     to,
     year,
-    classId,
+    schoolClassId,
   } = req.query;
 
   // 🔴 Mandatory
@@ -59,16 +59,16 @@ export const getFeeReport = asyncHandler(async (req, res) => {
       break;
 
     case "class":
-      if (!classId) {
+      if (!schoolClassId) {
         throw new ApiError(
           400,
-          "classId is required for class-wise report"
+          "schoolClassId is required for class-wise report"
         );
       }
       break;
 
     case "pending":
-      // classId optional
+      // schoolClassId optional
       break;
 
     default:

@@ -14,7 +14,7 @@ export const createAttendance = asyncHandler(async (req, res) => {
     session = "FullDay",
     role,
     remarks,
-    classId,
+    schoolClassId,
     sectionId,
     departmentId,
     subjectId,
@@ -41,7 +41,7 @@ export const createAttendance = asyncHandler(async (req, res) => {
       status:
         rec.status.charAt(0).toUpperCase() +
         rec.status.slice(1).toLowerCase(),
-      classId,
+      schoolClassId,
       sectionId,
       subjectId,
       remarks,
@@ -63,11 +63,11 @@ export const createAttendance = asyncHandler(async (req, res) => {
 
 // ✅ Get Attendance (Filterable)
 export const getAttendances = asyncHandler(async (req, res) => {
-  const { academicYearId, classId, sectionId, role, date } = req.query;
+  const { academicYearId, schoolClassId, sectionId, role, date } = req.query;
 
   let filter = {};
   if (academicYearId) filter.academicYearId = academicYearId;
-  if (classId) filter.classId = classId;
+  if (schoolClassId) filter.schoolClassId = schoolClassId;
   if (sectionId) filter.sectionId = sectionId;
   if (role) filter.role = role;
   if (date) filter.date = new Date(date);
@@ -76,7 +76,7 @@ export const getAttendances = asyncHandler(async (req, res) => {
 
   const attendances = await Attendance.find(filter)
     .populate("userId", "fullName email role")
-    .populate("classId", "name")
+    .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("departmentId", "name")
     .populate("subjectId", "name")
@@ -181,10 +181,10 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
 
 // ✅ Class-wise Monthly Report
 export const getClassMonthlyReport = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, classId, sectionId, month, year } = req.query;
+  const { schoolId, academicYearId, schoolClassId, sectionId, month, year } = req.query;
 
-  if (!schoolId || !academicYearId || !classId || !month || !year) {
-    throw new ApiError(400, "schoolId, academicYearId, classId, month and year are required!");
+  if (!schoolId || !academicYearId || !schoolClassId || !month || !year) {
+    throw new ApiError(400, "schoolId, academicYearId, schoolClassId, month and year are required!");
   }
 
   const start = new Date(year, month - 1, 1);
@@ -193,7 +193,7 @@ export const getClassMonthlyReport = asyncHandler(async (req, res) => {
   const records = await Attendance.find({
     schoolId,
     academicYearId,
-    classId,
+    schoolClassId,
     ...(sectionId && { sectionId }),
     date: { $gte: start, $lte: end },
   }).populate("userId", "fullName email role");

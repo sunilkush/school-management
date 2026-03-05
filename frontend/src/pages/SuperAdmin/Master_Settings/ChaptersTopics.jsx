@@ -93,7 +93,7 @@ const ChaptersTopics = () => {
 
   const filteredSubjects = useMemo(() => {
     if (!selectedClass) return subjects;
-    return subjects.filter((s) => s.classId === selectedClass);
+    return subjects.filter((s) => s.schoolClassId === selectedClass);
   }, [selectedClass, subjects]);
 
   // ================= HANDLERS =================
@@ -115,7 +115,7 @@ const ChaptersTopics = () => {
     form.setFieldsValue({
       ...record,
       boardId: record?.board?._id,
-      classId: record?.class?._id,
+      schoolClassId: record?.class?._id,
       subjectId: record?.subject?._id,
     });
 
@@ -344,7 +344,7 @@ const ChaptersTopics = () => {
               placeholder="Select Board"
               onChange={(value) => {
                 setSelectedBoard(value);
-                form.setFieldsValue({ classId: null, subjectId: null });
+                form.setFieldsValue({ schoolClassId: null, subjectId: null });
               }}
             >
               {boards.map((b) => (
@@ -357,7 +357,7 @@ const ChaptersTopics = () => {
 
           <Form.Item
             label="Class"
-            name="classId"
+            name="schoolClassId"
             rules={[{ required: true }]}
           >
             <Select

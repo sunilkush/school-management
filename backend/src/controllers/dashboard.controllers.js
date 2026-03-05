@@ -92,7 +92,7 @@ export const getDashboardSummary = async (req, res) => {
 
       const [studentsCount, attendance] = await Promise.all([
         Student.countDocuments({
-          classId: { $in: teacherClasses.map((c) => c._id) },
+          schoolClassId: { $in: teacherClasses.map((c) => c._id) },
         }),
         Attendance.aggregate([
           { $match: { teacherId: teacherId } },

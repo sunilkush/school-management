@@ -61,7 +61,7 @@ export const createStudent = createAsyncThunk(
 // fetch all students
 export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
-  async ({ schoolId, academicYearId, classId } = {}, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId, schoolClassId } = {}, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
@@ -75,7 +75,7 @@ export const fetchAllStudent = createAsyncThunk(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        params: { schoolId, academicYearId, classId },
+        params: { schoolId, academicYearId, schoolClassId },
       });
 
       return res.data;
@@ -166,7 +166,7 @@ export const fetchMyStudentEnrollment = createAsyncThunk(
         }
       );
 
-      return res.data.data; // { enrollmentId, studentId, classId, sectionId }
+      return res.data.data; // { enrollmentId, studentId, schoolClassId, sectionId }
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||

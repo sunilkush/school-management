@@ -98,7 +98,7 @@ const AssignStudentFee = () => {
       // 🔹 BULK (Class-wise)
       if (mode === "bulk") {
         const studentIds = schoolStudents
-          .filter((s) => s.class?._id === values.classId)
+          .filter((s) => s.class?._id === values.schoolClassId)
           .map((s) => s._id);
 
         if (!studentIds.length) {
@@ -157,7 +157,7 @@ const AssignStudentFee = () => {
         {/* BULK */}
         {mode === "bulk" && (
           <Form.Item
-            name="classId"
+            name="schoolClassId"
             label="Class"
             rules={[{ required: true }]}
           >

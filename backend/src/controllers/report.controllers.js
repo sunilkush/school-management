@@ -71,7 +71,7 @@ export const getSchoolOverviewReport = async (req, res) => {
       {
         $lookup: {
           from: "classes",
-          localField: "classId",
+          localField: "schoolClassId",
           foreignField: "_id",
           as: "classData",
         },

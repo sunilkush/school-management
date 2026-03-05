@@ -44,7 +44,7 @@ export const generateNextRegId = async (schoolId) => {
  */
 // ✅ Register User Controller
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, roleId, schoolId, classId, parentId } = req.body;
+  const { name, email, password, roleId, schoolId, schoolClassId, parentId } = req.body;
 
   if (!name || !email || !password || !roleId || !schoolId) {
     throw new ApiError(400, "All required fields must be provided");
@@ -89,7 +89,7 @@ const registerUser = asyncHandler(async (req, res) => {
     roleId,
     avatar: avatarUrl,
     schoolId,
-    classId,
+    schoolClassId,
     parentId,
     regId,          // 🔹 auto-generated
     isActive: true,

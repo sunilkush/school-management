@@ -76,7 +76,7 @@ const StudentAttendance = () => {
         if (sec.teacherId?._id === user._id) {
           result.push({
             key: `${cls._id}_${sec.sectionId?._id}`,
-            classId: cls._id,
+            schoolClassId: cls._id,
             className: cls.name,
             sectionId: sec.sectionId?._id,
             sectionName: sec.sectionId?.name,
@@ -91,7 +91,7 @@ const StudentAttendance = () => {
           cls.sections?.forEach(sec => {
             result.push({
               key: `${cls._id}_${sec.sectionId?._id}_${sub.subjectId?._id}`,
-              classId: cls._id,
+              schoolClassId: cls._id,
               className: cls.name,
               sectionId: sec.sectionId?._id,
               sectionName: sec.sectionId?.name,
@@ -124,7 +124,7 @@ const StudentAttendance = () => {
     if (!selectedClassObj) return [];
 
     return schoolStudents.filter(s =>
-      s.class?._id === selectedClassObj.classId &&
+      s.class?._id === selectedClassObj.schoolClassId &&
       s.section?._id === selectedClassObj.sectionId
     );
 
@@ -186,7 +186,7 @@ const StudentAttendance = () => {
       records,
       role: "teacher",
       date: attendanceDate.toISOString(),
-      classId: selectedClassObj.classId,
+      schoolClassId: selectedClassObj.schoolClassId,
       sectionId: selectedClassObj.sectionId,
       subjectId: selectedClassObj.subjectId || selectedSubject,
       

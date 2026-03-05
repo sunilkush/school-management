@@ -37,7 +37,7 @@ const QuestionBank = () => {
   const [deletingId, setDeletingId] = useState(null);
 
   const [filters, setFilters] = useState({
-    classId: "",
+    schoolClassId: "",
     subjectId: "",
     chapter: "",
     search: "",
@@ -96,7 +96,7 @@ const QuestionBank = () => {
         allowClear
         loading={classLoading}
         style={{ width: "100%" }}
-        value={filters.classId || undefined}
+        value={filters.schoolClassId || undefined}
         onChange={(value) => {
           const cls = classList.find((c) => c._id === value);
 
@@ -105,7 +105,7 @@ const QuestionBank = () => {
 
           setFilters({
             ...filters,
-            classId: value || "",
+            schoolClassId: value || "",
             subjectId: "",
             chapter: "",
           });

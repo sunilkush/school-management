@@ -26,7 +26,7 @@ const examSchema = new Schema(
       trim: true
     },
 
-    schoolClassId: {
+    schoolschoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "SchoolClass",
       required: true,
@@ -160,7 +160,7 @@ examSchema.pre("validate", function (next) {
 examSchema.index({
   schoolId: 1,
   academicYearId: 1,
-  schoolClassId: 1,
+  schoolschoolClassId: 1,
   subjectId: 1
 });
 

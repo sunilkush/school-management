@@ -24,7 +24,7 @@ export const createChapter = asyncHandler(async (req, res) => {
       chapterNo,
       description,
       boardId,
-      classId,
+      schoolClassId,
       subjectId,
       isGlobal,
       schoolId: bodySchoolId,
@@ -35,14 +35,14 @@ export const createChapter = asyncHandler(async (req, res) => {
     /* =====================================================
        ✅ BASIC VALIDATION
     ===================================================== */
-    if (!name || !chapterNo || !boardId || !classId || !subjectId) {
+    if (!name || !chapterNo || !boardId || !schoolClassId || !subjectId) {
       throw new ApiError(400, "Required fields missing");
     }
 
     /* =====================================================
        ✅ OBJECT ID VALIDATION
     ===================================================== */
-    const idsToValidate = [boardId, classId, subjectId];
+    const idsToValidate = [boardId, schoolClassId, subjectId];
     if (idsToValidate.some((id) => !isValidObjectId(id))) {
       throw new ApiError(400, "Invalid reference id");
     }
@@ -113,7 +113,7 @@ export const createChapter = asyncHandler(async (req, res) => {
           chapterNo,
           description,
           boardId,
-          classId,
+          schoolClassId,
           subjectId,
           isGlobal: finalIsGlobal,
           schoolId,
@@ -152,7 +152,7 @@ export const createChapter = asyncHandler(async (req, res) => {
 export const getAllChapters = asyncHandler(async (req, res) => {
   let {
     boardId,
-    classId,
+    schoolClassId,
     subjectId,
     page = 1,
     limit = 10,
@@ -183,7 +183,7 @@ export const getAllChapters = asyncHandler(async (req, res) => {
   /* 🎯 FILTERS */
 
   if (boardId && isValidObjectId(boardId)) filter.boardId = boardId;
-  if (classId && isValidObjectId(classId)) filter.classId = classId;
+  if (schoolClassId && isValidObjectId(schoolClassId)) filter.schoolClassId = schoolClassId;
   if (subjectId && isValidObjectId(subjectId)) filter.subjectId = subjectId;
 
   if (search) {
@@ -194,7 +194,7 @@ export const getAllChapters = asyncHandler(async (req, res) => {
 
   const [chapters, total] = await Promise.all([
     Chapter.find(filter)
-      .populate("boardId classId subjectId academicYearId schoolId")
+      .populate("boardId schoolClassId subjectId academicYearId schoolId")
       .sort({ chapterNo: 1 })
       .skip(skip)
       .limit(limit)
@@ -231,7 +231,7 @@ export const getChapterById = asyncHandler(async (req, res) => {
   }
 
   const chapter = await Chapter.findById(id)
-    .populate("boardId classId subjectId academicYearId schoolId")
+    .populate("boardId schoolClassId subjectId academicYearId schoolId")
     .lean();
 
   if (!chapter) {
@@ -397,7 +397,7 @@ export const getVisibleChapters = asyncHandler(async (req, res) => {
 
   const {
     boardId,
-    classId,
+    schoolClassId,
     subjectId,
     search = "",
     page = 1,
@@ -426,7 +426,7 @@ export const getVisibleChapters = asyncHandler(async (req, res) => {
   };
 
   if (boardId) matchStage.boardId = new mongoose.Types.ObjectId(boardId);
-  if (classId) matchStage.classId = new mongoose.Types.ObjectId(classId);
+  if (schoolClassId) matchStage.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   if (subjectId) matchStage.subjectId = new mongoose.Types.ObjectId(subjectId);
 
   if (search) {
@@ -521,7 +521,7 @@ export const getVisibleChapters = asyncHandler(async (req, res) => {
           {
             $lookup: {
               from: "classes",
-              localField: "classId",
+              localField: "schoolClassId",
               foreignField: "_id",
               as: "class",
             },

@@ -9,7 +9,7 @@ const feeStructureSchema = new mongoose.Schema(
             index: true,
         },
 
-        schoolClassId: { 
+        schoolschoolClassId: { 
             type: mongoose.Schema.Types.ObjectId, 
             ref: "SchoolClass",
             required: true,
@@ -51,7 +51,7 @@ const feeStructureSchema = new mongoose.Schema(
  * Same school + class + session + feeHead should exist only once
  */
 feeStructureSchema.index(
-    { schoolId: 1, classId: 1, sessionId: 1, feeHeadId: 1 },
+    { schoolId: 1, schoolClassId: 1, sessionId: 1, feeHeadId: 1 },
     { unique: true }
 );
 

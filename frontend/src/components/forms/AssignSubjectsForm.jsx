@@ -89,7 +89,7 @@ const AssignSubjectsForm = () => {
     setLoading(true);
     try {
       await axios.post("/api/class/assign-subjects", {
-        classId: selectedClass,
+        schoolClassId: selectedClass,
         assignments: payload,
       });
       message.success("Subjects assigned successfully");

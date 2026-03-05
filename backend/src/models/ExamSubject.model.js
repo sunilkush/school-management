@@ -17,7 +17,7 @@ const ExamSubjectSchema = new Schema(
       required: true,
     },
 
-    schoolClassId: { 
+    schoolschoolClassId: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: "SchoolClass",
       required: true,
@@ -81,7 +81,7 @@ const ExamSubjectSchema = new Schema(
 
 // Avoid duplicate subject scheduling for same exam & class
 ExamSubjectSchema.index(
-  { examId: 1, classId: 1, sectionId: 1, subjectId: 1 },
+  { examId: 1, schoolClassId: 1, sectionId: 1, subjectId: 1 },
   { unique: true }
 );
 

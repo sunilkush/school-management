@@ -31,7 +31,7 @@ const SchoolClassSectionFilter = () => {
 
   // Filter sections based on selected class
   const filteredSections = selectedClass
-    ? sectionList.filter((sec) => String(sec.classId?._id) === String(selectedClass))
+    ? sectionList.filter((sec) => String(sec.schoolClassId?._id) === String(selectedClass))
     : sectionList;
 
   // Table Columns
@@ -51,7 +51,7 @@ const SchoolClassSectionFilter = () => {
   // Table Data
   const tableData = filteredSections.map((sec) => ({
     key: sec._id,
-    className: sec.classId?.name || "N/A",
+    className: sec.schoolClassId?.name || "N/A",
     sectionName: sec.name,
   }));
 

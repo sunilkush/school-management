@@ -168,7 +168,7 @@ const AllStudentsAttendance = () => {
     const attendanceData = filteredData.map((student) => ({
       schoolId,
       studentId: student._id,
-      classId: student.class?._id,
+      schoolClassId: student.class?._id,
       sectionId: student.section?._id,
       date: attendanceDate.toISOString(),
       status: attendance[student._id],

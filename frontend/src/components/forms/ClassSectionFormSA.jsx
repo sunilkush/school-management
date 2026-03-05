@@ -98,7 +98,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
     const payload = {
       ...values,
       schoolId,
-      classId: initialData?._id,
+      schoolClassId: initialData?._id,
     };
 
     try {

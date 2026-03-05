@@ -26,7 +26,7 @@ const ResultSchema = new Schema(
       index: true
     },
 
-   schoolClassId: { 
+   schoolschoolClassId: { 
        type: Schema.Types.ObjectId, 
        ref: "SchoolClass",
       required: true,
@@ -106,7 +106,7 @@ ResultSchema.index(
 ResultSchema.index({
   schoolId: 1,
   examId: 1,
-  classId: 1,
+  schoolClassId: 1,
   sectionId: 1,
   obtainedMarks: -1
 });

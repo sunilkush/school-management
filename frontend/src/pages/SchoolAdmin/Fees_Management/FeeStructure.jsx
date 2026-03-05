@@ -64,7 +64,7 @@ const FeeStructure = () => {
   const columns = [
     {
       title: "Class",
-      render: (r) => r.classId?.name,
+      render: (r) => r.schoolClassId?.name,
     },
     {
       title: "Academic Year",
@@ -121,7 +121,7 @@ const FeeStructure = () => {
           onFinish={handleSubmit}
         >
           <Form.Item
-            name="classId"
+            name="schoolClassId"
             label="Class"
             rules={[{ required: true }]}
           >

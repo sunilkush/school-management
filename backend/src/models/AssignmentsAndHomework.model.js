@@ -16,7 +16,7 @@ const AssignmentSchema = new Schema(
             ref: 'User',
             required: true,
         },
-         schoolclassId: { type: Schema.Types.ObjectId, ref: "SchoolClass" ,
+         schoolschoolClassId: { type: Schema.Types.ObjectId, ref: "SchoolClass" ,
             required: true,
         },
         subjectId: {

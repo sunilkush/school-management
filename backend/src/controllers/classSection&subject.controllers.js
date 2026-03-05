@@ -11,25 +11,25 @@ import mongoose from "mongoose";
  * Create ClassSection mapping with multiple subjects
  */
 export const createClassSection = asyncHandler(async (req, res) => {
-  const { classId, sectionId, schoolId, academicYearId, teacherId, subjects = [] } = req.body;
+  const { schoolClassId, sectionId, schoolId, academicYearId, teacherId, subjects = [] } = req.body;
 
-  if (!classId || !sectionId || !schoolId || !academicYearId || !teacherId) {
+  if (!schoolClassId || !sectionId || !schoolId || !academicYearId || !teacherId) {
     throw new ApiError(400, "All required fields must be provided!");
   }
 
   // validate IDs
-  [classId, sectionId, schoolId, academicYearId, teacherId].forEach((id) => {
+  [schoolClassId, sectionId, schoolId, academicYearId, teacherId].forEach((id) => {
     if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid ID provided!");
   });
 
   // check class and section existence
-  const classExists = await Class.findById(classId);
+  const classExists = await Class.findById(schoolClassId);
   const sectionExists = await Section.findById(sectionId);
   if (!classExists || !sectionExists) throw new ApiError(404, "Class or Section not found!");
 
   // create Class-Section mapping with classTeacherId
   const classSection = await ClassSection.create({
-    classId,
+    schoolClassId,
     sectionId,
     schoolId,
     academicYearId,
@@ -41,7 +41,7 @@ export const createClassSection = asyncHandler(async (req, res) => {
   if (subjects.length > 0) {
     for (const s of subjects) {
       await ClassSubject.create({
-        classId,
+        schoolClassId,
         sectionId,
         schoolId,
         academicYearId,
@@ -60,15 +60,15 @@ export const createClassSection = asyncHandler(async (req, res) => {
  * Get all mappings
  */
 export const getClassSections = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, classId } = req.query;
+  const { schoolId, academicYearId, schoolClassId } = req.query;
 
   const matchStage = {};
   if (schoolId && mongoose.Types.ObjectId.isValid(schoolId))
     matchStage.schoolId = new mongoose.Types.ObjectId(schoolId);
   if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId))
     matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
-  if (classId && mongoose.Types.ObjectId.isValid(classId))
-    matchStage.classId = new mongoose.Types.ObjectId(classId);
+  if (schoolClassId && mongoose.Types.ObjectId.isValid(schoolClassId))
+    matchStage.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
 
   const mappings = await ClassSection.aggregate([
     { $match: matchStage },
@@ -77,7 +77,7 @@ export const getClassSections = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "classes",
-        localField: "classId",
+        localField: "schoolClassId",
         foreignField: "_id",
         as: "class",
       },
@@ -238,7 +238,7 @@ export const getClassSectionById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const mapping = await ClassSection.findById(id)
-    .populate("classId", "name")
+    .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("schoolId", "name")
     .populate("academicYearId", "name startDate endDate")
@@ -257,12 +257,12 @@ export const getClassSectionById = asyncHandler(async (req, res) => {
  */
 export const updateClassSection = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { classId, sectionId, subjects } = req.body;
+  const { schoolClassId, sectionId, subjects } = req.body;
 
   const mapping = await ClassSection.findById(id);
   if (!mapping) throw new ApiError(404, "Mapping not found");
 
-  mapping.classId = classId ?? mapping.classId;
+  mapping.schoolClassId = schoolClassId ?? mapping.schoolClassId;
   mapping.sectionId = sectionId ?? mapping.sectionId;
   mapping.subjects = subjects ?? mapping.subjects;
   mapping.updatedBy = req.user._id;
@@ -271,7 +271,7 @@ export const updateClassSection = asyncHandler(async (req, res) => {
 
   if (subjects?.length) {
     await ClassSubject.deleteMany({
-      classId: mapping.classId,
+      schoolClassId: mapping.schoolClassId,
       sectionId: mapping.sectionId,
       academicYearId: mapping.academicYearId,
       schoolId: mapping.schoolId,
@@ -279,7 +279,7 @@ export const updateClassSection = asyncHandler(async (req, res) => {
 
     for (const s of subjects) {
       await ClassSubject.create({
-        classId: mapping.classId,
+        schoolClassId: mapping.schoolClassId,
         sectionId: mapping.sectionId,
         subjectId: s.subjectId,
         teacherId: s.teacherId,
@@ -305,7 +305,7 @@ export const deleteClassSection = asyncHandler(async (req, res) => {
   if (!mapping) throw new ApiError(404, "Mapping not found!");
 
   // Optional: delete corresponding ClassSubject records
-  await ClassSubject.deleteMany({ classId: mapping.classId, sectionId: mapping.sectionId });
+  await ClassSubject.deleteMany({ schoolClassId: mapping.schoolClassId, sectionId: mapping.sectionId });
 
   return res
     .status(200)

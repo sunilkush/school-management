@@ -9,7 +9,7 @@ const sectionSchema = new Schema(
       index: true,
     },
 
-    schoolClassId: {
+    schoolschoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "SchoolClass",
       required: true,
@@ -67,7 +67,7 @@ const sectionSchema = new Schema(
 
 // Same class me duplicate section na ho
 sectionSchema.index(
-  { schoolClassId: 1, name: 1 },
+  { schoolschoolClassId: 1, name: 1 },
   { unique: true }
 );
 

@@ -11,7 +11,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 export const createFeeStructure = asyncHandler(async (req, res) => {
   const {
     schoolId,
-    classId,
+    schoolClassId,
     sessionId,
     feeHeadId,
     amount,
@@ -34,7 +34,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
   // prevent duplicate
   const exists = await FeeStructure.findOne({
     schoolId: finalSchoolId,
-    classId,
+    schoolClassId,
     sessionId,
     feeHeadId,
   });
@@ -48,7 +48,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
 
   const feeStructure = await FeeStructure.create({
     schoolId: finalSchoolId,
-    classId,
+    schoolClassId,
     sessionId,
     feeHeadId,
     amount,
@@ -75,12 +75,12 @@ export const getFeeStructures = asyncHandler(async (req, res) => {
     filter.sessionId = req.query.sessionId;
   }
 
-  if (req.query.classId) {
-    filter.classId = req.query.classId;
+  if (req.query.schoolClassId) {
+    filter.schoolClassId = req.query.schoolClassId;
   }
 
   const fees = await FeeStructure.find(filter)
-    .populate("classId", "name")
+    .populate("schoolClassId", "name")
     .populate("sessionId", "name")
     .populate("feeHeadId", "name type")
     .populate("schoolId", "name")

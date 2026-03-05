@@ -8,11 +8,11 @@ const token = localStorage.getItem("accessToken");
 // 📌 Fetch Students for Attendance
 export const fetchStudents = createAsyncThunk(
   "attendance/fetchStudents",
-  async ({ classId, sectionId, date }, { rejectWithValue }) => {
+  async ({ schoolClassId, sectionId, date }, { rejectWithValue }) => {
     try {
       
       const res = await axios.get(`${API_URL}/attendance/students`, {
-        params: { classId, sectionId, date },
+        params: { schoolClassId, sectionId, date },
         headers: { Authorization: `Bearer ${token}` }
       }
     );
@@ -44,13 +44,13 @@ export const fetchTeachers = createAsyncThunk(
 // 📌 Submit Attendance
 export const submitAttendance = createAsyncThunk(
   "attendance/submit",
-  async ({ records, role, date, classId, sectionId, departmentId, subjectId,schoolId,academicYearId,userId }, { rejectWithValue }) => {
+  async ({ records, role, date, schoolClassId, sectionId, departmentId, subjectId,schoolId,academicYearId,userId }, { rejectWithValue }) => {
     try {
       const res = await axios.post(`${API_URL}/attendance/mark`, {
         records,
         role,
         date,
-        classId,
+        schoolClassId,
         sectionId,
         departmentId,
         subjectId,
@@ -71,10 +71,10 @@ export const submitAttendance = createAsyncThunk(
 // 📌 Fetch Reports (Daily, Monthly, Class-Monthly)
 export const fetchReports = createAsyncThunk(
   "attendance/fetchReports",
-  async ({ reportType, date, classId, sectionId }, { rejectWithValue }) => {
+  async ({ reportType, date, schoolClassId, sectionId }, { rejectWithValue }) => {
     try {
       const res = await axios.get(`${API_URL}/attendance/reports`, {
-        params: { reportType, date, classId, sectionId },
+        params: { reportType, date, schoolClassId, sectionId },
       }
       ,{headers: { Authorization: `Bearer ${token}` }});
       return res.data;
@@ -89,7 +89,7 @@ const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
     filters: {
-      classId: null,
+      schoolClassId: null,
       sectionId: null,
       departmentId: null,
       subjectId: null,

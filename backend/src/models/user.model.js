@@ -36,15 +36,11 @@ const userSchema = new Schema({
         ref: "School",
         required: true,
     },
-    parentId: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-    },
     isActive: {
         type: Boolean,
         default: true
     },
-    student: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    
     refreshToken: String,
     accessToken: String,
 }, { timestamps: true });
