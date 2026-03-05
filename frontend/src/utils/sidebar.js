@@ -38,75 +38,87 @@ export const sidebarMenu = {
 
   /* ================= SUPER ADMIN ================= */
   "super admin": [
-    { title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
 
-    {
-      title: "School Management",
-      icon: School,
-      subMenu: [
-        { title: "School List", path: "superadmin/schools" },
-        { title: "Subscription Plans", path: "superadmin/subscriptions" },
-        { title: "School Reports", path: "superadmin/reports/schools" },
-      ],
-    },
+{ title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
 
-    {
-      title: "User Management",
-      icon: Users,
-      subMenu: [
-        { title: "School Admins", path: "superadmin/users/admins" },
-        { title: "Teachers", path: "superadmin/users/teachers" },
-        { title: "Students", path: "superadmin/users/students" },
-        { title: "Parents", path: "superadmin/users/parents" },
-        { title: "Staff Members", path: "superadmin/users/staff" },
-        { title: "Accountants", path: "superadmin/users/accountant" },
-        { title: "Librarians", path: "superadmin/users/librarian" },
-        { title: "Transport Staff", path: "superadmin/users/transport" },
-      ],
-    },
-
-    {
-      title: "Module Management",
-      icon: Puzzle,
-      subMenu: [{ title: "All Modules", path: "superadmin/modules" }],
-    },
-
-    {
-      title: "Reports & Analytics",
-      icon: FileText,
-      subMenu: [
-        { title: "Academic Reports", path: "superadmin/reports/academic" },
-        { title: "Attendance Reports", path: "superadmin/reports/attendance" },
-        { title: "Finance Reports", path: "superadmin/reports/finance" },
-        { title: "Activity Logs", path: "superadmin/reports/activity" },
-      ],
-    },
-
-    {
-      title: "Academic Setup",
-      icon: Settings,
-      subMenu: [
-        { title: "Academic Years", path: "superadmin/academic-years" },
-        { title: "School Board", path: "superadmin/boards" },
-        { title: "Classes & Sections", path: "superadmin/classes" },
-        { title: "Subjects", path: "superadmin/subjects" },
-        { title: "Chapters & Topics", path: "superadmin/chapters-topics" },
-        { title: "Departments", path: "superadmin/departments" },
-        { title: "Designations", path: "superadmin/designations" },
-      ],
-    },
-     
-    {
-      title: "System Administration",
-      icon: Cog,
-      subMenu: [
-        { title: "Role Management", path: "superadmin/settings/roles" },
-        { title: "Permission Management", path: "superadmin/settings/permissions" },
-        { title: "System Backup", path: "superadmin/settings/backup" },
-        { title: "Audit Logs", path: "superadmin/settings/audit" },
-      ],
-    },
+{
+  title: "School Management",
+  icon: School,
+  subMenu: [
+    { title: "School List", path: "superadmin/schools" },
+    { title: "School Reports", path: "superadmin/reports/schools" },
   ],
+},
+
+{
+  title: "Subscription & Billing",
+  icon: CreditCard,
+  subMenu: [
+    { title: "Subscription Plans", path: "superadmin/subscriptions" },
+    { title: "Payment History", path: "superadmin/payments" },
+    { title: "Revenue Reports", path: "superadmin/revenue" },
+  ],
+},
+
+{
+  title: "User Management",
+  icon: Users,
+  subMenu: [
+    { title: "School Admins", path: "superadmin/users/admins" },
+  ],
+},
+{
+  title: "Acadmic Management",
+  icon: BookOpen,
+  subMenu: [
+    { title:"board Management",path:"superadmin/academics/boards"},
+    { title:"Chapter & Topic Management", path: "superadmin/academics/chapters-topics" },
+    { title: "Class Management", path: "superadmin/academics/classes" },
+    { title: "Subject Management", path: "superadmin/academics/subjects" },
+
+  ],
+
+},
+{
+  title: "Module Management",
+  icon: Puzzle,
+  subMenu: [
+    { title: "All Modules", path: "superadmin/modules" },
+  ],
+},
+
+{
+  title: "Reports & Analytics",
+  icon: FileText,
+  subMenu: [
+    { title: "Platform Usage", path: "superadmin/reports/usage" },
+    { title: "Revenue Analytics", path: "superadmin/reports/revenue" },
+    { title: "Activity Logs", path: "superadmin/reports/activity" },
+  ],
+},
+
+{
+  title: "System Administration",
+  icon: Cog,
+  subMenu: [
+    { title: "Role Management", path: "superadmin/settings/roles" },
+    { title: "Permission Management", path: "superadmin/settings/permissions" },
+    { title: "System Backup", path: "superadmin/settings/backup" },
+    { title: "Audit Logs", path: "superadmin/settings/audit" },
+  ],
+},
+{
+  title:"Support & Help",
+  icon: MessageSquare,
+  subMenu:[
+    {title:"Submit a Ticket",path:"superadmin/support/tickets"},
+    {title:"Documentation",path:"superadmin/support/documentation"},
+    {title:"Contact Support",path:"superadmin/support/contact"},
+    {title:"FAQs",path:"superadmin/support/faqs"},
+  ]
+}
+
+],
 
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [

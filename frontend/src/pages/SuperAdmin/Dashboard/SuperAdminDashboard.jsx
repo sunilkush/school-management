@@ -1,71 +1,115 @@
 import React from "react";
+import { Card, Row, Col, Statistic, Progress, List, Tag } from "antd";
 import {
-  School,
-  Users,
-  ShieldCheck,
-  LayoutDashboard,
-  Settings,
-} from "lucide-react";
-
-const stats = [
-  { title: "Total Schools", count: 18, icon: <School className="w-6 h-6" /> },
-  { title: "Admins", count: 42, icon: <Users className="w-6 h-6" /> },
-  { title: "Roles", count: 12, icon: <ShieldCheck className="w-6 h-6" /> },
-  { title: "Settings", count: 1, icon: <Settings className="w-6 h-6" /> },
-];
-
-const shortcuts = [
-  { title: "Manage Schools", path: "/dashboard/superadmin/schools", icon: <School /> },
-  { title: "Admins", path: "/dashboard/superadmin/users/admins", icon: <Users /> },
-  { title: "Roles", path: "/dashboard/superadmin/settings/roles", icon: <ShieldCheck /> },
-  { title: "Settings", path: "/dashboard/superadmin/settings", icon: <Settings /> },
-];
+  BankOutlined,
+  CheckCircleOutlined,
+  TeamOutlined,
+  DollarOutlined,
+  ClockCircleOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
 
 const SuperAdminDashboard = () => {
+  const stats = [
+    {
+      title: "Total Schools",
+      value: 28,
+      icon: <BankOutlined style={{ fontSize: 22 }} />,
+      color: "#1677ff",
+    },
+    {
+      title: "Active Schools",
+      value: 24,
+      icon: <CheckCircleOutlined style={{ fontSize: 22 }} />,
+      color: "#52c41a",
+    },
+    {
+      title: "Total Students",
+      value: 12540,
+      icon: <TeamOutlined style={{ fontSize: 22 }} />,
+      color: "#722ed1",
+    },
+    {
+      title: "Revenue",
+      value: "₹4,85,000",
+      icon: <DollarOutlined style={{ fontSize: 22 }} />,
+      color: "#fa8c16",
+    },
+    {
+      title: "Expiring Subscriptions",
+      value: 6,
+      icon: <ClockCircleOutlined style={{ fontSize: 22 }} />,
+      color: "#f5222d",
+    },
+    {
+      title: "System Health",
+      value: "98%",
+      icon: <ThunderboltOutlined style={{ fontSize: 22 }} />,
+      color: "#13c2c2",
+    },
+  ];
+
+  const activities = [
+    "New school 'Green Valley School' registered",
+    "Subscription renewed for 'DPS Noida'",
+    "Admin 'Rahul Sharma' added to Sunrise School",
+    "System backup completed successfully",
+  ];
+
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-semibold mb-4">Welcome, Super Admin</h1>
+    <div style={{ padding: 20 }}>
+      <h2 style={{ fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
+        Super Admin Dashboard
+      </h2>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {stats.map((item, idx) => (
-          <div
-            key={idx}
-            className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center gap-4"
-          >
-            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">{item.icon}</div>
-            <div>
-              <h2 className="text-lg font-semibold">{item.count}</h2>
-              <p className="text-sm text-gray-500">{item.title}</p>
-            </div>
-          </div>
+      {/* Widgets */}
+      <Row gutter={[16, 16]}>
+        {stats.map((item, index) => (
+          <Col xs={24} sm={12} md={8} lg={8} key={index}>
+            <Card bordered={false}>
+              <Statistic
+                title={item.title}
+                value={item.value}
+                prefix={
+                  <span style={{ color: item.color }}>{item.icon}</span>
+                }
+              />
+            </Card>
+          </Col>
         ))}
-      </div>
+      </Row>
 
-      {/* Shortcuts */}
-      <h2 className="text-xl font-semibold mb-3">Quick Access</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {shortcuts.map((item, idx) => (
-          <a
-            key={idx}
-            href={item.path}
-            className="border hover:shadow-md transition bg-white rounded-xl p-4 flex items-center gap-3"
-          >
-            <div className="p-2 bg-gray-100 rounded">{item.icon}</div>
-            <span className="text-gray-800 font-medium">{item.title}</span>
-          </a>
-        ))}
-      </div>
+      {/* Charts / Progress */}
+      <Row gutter={16} style={{ marginTop: 25 }}>
+        <Col xs={24} md={12}>
+          <Card title="System Health">
+            <Progress percent={98} status="active" />
+          </Card>
+        </Col>
 
-      {/* Activity / Log */}
-      <h2 className="text-xl font-semibold mb-3">Recent Activity</h2>
-      <div className="bg-white p-4 border rounded-xl text-sm text-gray-600">
-        <ul className="space-y-2">
-          <li>✅ Sunil created a new school: “Green Valley High”</li>
-          <li>🛠️ Role “Teacher” was updated with new permissions</li>
-          <li>📤 Admin “Rajesh” was added to School #12</li>
-        </ul>
-      </div>
+        <Col xs={24} md={12}>
+          <Card title="Subscription Status">
+            <p>
+              Expiring Soon <Tag color="red">6 Schools</Tag>
+            </p>
+            <p>
+              Active Plans <Tag color="green">24 Schools</Tag>
+            </p>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Activity */}
+      <Row style={{ marginTop: 25 }}>
+        <Col span={24}>
+          <Card title="Recent Activity">
+            <List
+              dataSource={activities}
+              renderItem={(item) => <List.Item>• {item}</List.Item>}
+            />
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

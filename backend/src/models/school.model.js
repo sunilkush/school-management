@@ -20,8 +20,6 @@ const schoolSchema = new Schema(
       type: String,
       required: [true, "School name is required"],
       trim: true,
-      minlength: 2,
-      maxlength: 120,
       index: true,
     },
 
@@ -118,14 +116,6 @@ const schoolSchema = new Schema(
       ref: "AcademicYear",
       index: true,
     },
-
-    boards: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Board",
-      },
-    ],
-
     /* ================= META ================= */
 
     createdBy: {

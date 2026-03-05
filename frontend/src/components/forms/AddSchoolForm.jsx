@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addSchool, resetSchoolState } from "../../features/schoolSlice";
+import { getBoards } from "../../features/boardSlice";
+import {fetchSubscriptionPlans} from "../../features/subscriptionPlanSlice";
 import {
   Card,
   Form,
@@ -13,17 +15,24 @@ import {
   Typography,
   Divider,
   message,
+  Select,
 } from "antd";
 import { UploadOutlined, BankOutlined } from "@ant-design/icons";
-
 const { Title, Text } = Typography;
 
 const AddSchoolForm = () => {
   const dispatch = useDispatch();
+  const [form] = Form.useForm();
   const { loading, error, message: successMessage, success } = useSelector(
     (state) => state.school
   );
-
+   const boards = useSelector((state) => state.boards?.boards || []);
+   const { plans} = useSelector((state) => state.subscriptionPlans);
+  /* ==================== FETCH BOARDS ==================== */
+  useEffect(() => {
+    dispatch(getBoards());
+    dispatch(fetchSubscriptionPlans());
+  }, [dispatch]);
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
 
@@ -60,27 +69,31 @@ const AddSchoolForm = () => {
     };
     dispatch(addSchool(payload));
   };
+  useEffect(() => {
+  if (success) {
+    form.resetFields();
+    setLogoFile(null);
+    setLogoPreview(null);
+    message.success("School created successfully!");
 
+    const timer = setTimeout(() => {
+      dispatch(resetSchoolState());
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }
+
+  if (error) {
+    message.error(error);
+  }
+}, [success, error, dispatch, form]);
   /* ==================== UI ==================== */
   return (
     <Card
       className="rounded-2xl shadow-sm"
       style={{ maxWidth: 900, margin: "0 auto" }}
     >
-      {/* ===== HEADER ===== */}
-      <div className="flex items-center gap-3 mb-2">
-        <BankOutlined style={{ fontSize: 28, color: "#1677ff" }} />
-        <div>
-          <Title level={4} className="!mb-0">
-            Add New School
-          </Title>
-          <Text type="secondary">
-            Create and manage a school under the system
-          </Text>
-        </div>
-      </div>
-
-      <Divider />
+      
 
       {/* ===== FEEDBACK ===== */}
       {error && (
@@ -96,6 +109,7 @@ const AddSchoolForm = () => {
 
       {/* ===== FORM ===== */}
       <Form
+        form={form}
         layout="vertical"
         onFinish={onFinish}
         initialValues={{ isActive: true }}
@@ -150,15 +164,45 @@ const AddSchoolForm = () => {
             </Form.Item>
           </Col>
         </Row>
+      
+          {/* ===== CONFIGURATION ===== */}
+        <Title level={5}>Configuration</Title>
+        <Row gutter={16}>
+          <Col md={12}>
+            <Form.Item label="Exam Board" name="boards">
+               <Select mode="multiple" placeholder="Select boards">
+                {boards.map((board) => (
+                  <Select.Option key={board._id} value={board._id}>
+                    {board.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
 
-        {/* ===== STATUS ===== */}
+          <Col md={12}>
+            <Form.Item label="Subscription Plan" name="subscriptionPlan">
+              <Select placeholder="Select plan">
+                {plans.map((plan) => (
+                  <Select.Option key={plan._id} value={plan._id}>
+                    {plan.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+
+        </Row>
+        <Row>
+          <Col md={12}>
+           {/* ===== STATUS ===== */}
         <Title level={5}>Status</Title>
 
         <Form.Item name="isActive" valuePropName="checked">
           <Checkbox>School is Active</Checkbox>
-        </Form.Item>
-
-        {/* ===== BRANDING ===== */}
+        </Form.Item></Col>
+          <Col md={12}>
+           {/* ===== BRANDING ===== */}
         <Title level={5}>Branding</Title>
 
         <Form.Item label="School Logo (Max 50 KB)">
@@ -186,8 +230,9 @@ const AddSchoolForm = () => {
               <Text type="secondary">Logo Preview</Text>
             </div>
           )}
-        </Form.Item>
-
+        </Form.Item></Col>
+        </Row>
+       
         <Divider />
 
         {/* ===== ACTION ===== */}

@@ -84,67 +84,105 @@ const Schools = () => {
         <Empty description="No schools found" />
       ) : (
         <Row gutter={[16, 16]}>
-          {schools.map((school) => (
-            <Col key={school._id} xs={24} sm={12} lg={6}>
-              <Card
-                hoverable
-                className="h-full rounded-xl border border-gray-200"
-                bodyStyle={{
-                  padding: 16,
-                  display: "flex",
-                  flexDirection: "column",
-                  height: "100%",
-                }}
-              >
-                {/* 🔹 Card Header */}
-                <Space className="w-full justify-between">
-                  <Space>
-                    <BankOutlined className="text-blue-600 text-lg" />
-                    <Text strong className="uppercase text-blue-800">
-                      {school.name}
-                    </Text>
-                  </Space>
+  {schools.map((school) => (
+    <Col key={school._id} xs={24} sm={12} lg={6}>
+      <Card
+        hoverable
+        className="h-full rounded-xl border border-gray-200 relative"
+        bodyStyle={{
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+        }}
+      >
+        {/* HEADER */}
+        <Space className="w-full justify-between">
+          <Space>
+            <BankOutlined className="text-blue-600 text-lg" />
+            <Text strong className="uppercase text-blue-800">
+              {school.name}
+            </Text>
+          </Space>
 
-                  <Popconfirm
-                    title="Delete this school?"
-                    okText="Delete"
-                    cancelText="Cancel"
-                    okButtonProps={{ danger: true }}
-                    onConfirm={() => handleDeleteSchool(school._id)}
-                  >
-                    <DeleteOutlined className="text-gray-400 hover:text-red-500 cursor-pointer" />
-                  </Popconfirm>
-                </Space>
+          <Popconfirm
+            title="Delete this school?"
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDeleteSchool(school._id)}
+          >
+            <DeleteOutlined className="text-gray-400 hover:text-red-500 cursor-pointer" />
+          </Popconfirm>
+        </Space>
 
-                {/* 🔹 Description */}
-                <Text type="secondary" className="mt-2 line-clamp-2">
-                  {school.description || "No description available"}
-                </Text>
+        {/* ADDRESS */}
+        <Text type="secondary" className="text-xs mt-2">
+          {school.address}
+        </Text>
 
-                {/* 🔹 Footer */}
-                <div className="mt-auto pt-3">
-                  <Space size="small">
-                    <Text>Status:</Text>
-                    <Tag color={school.isActive ? "green" : "red"}>
-                      {school.isActive ? "Active" : "Inactive"}
-                    </Tag>
-                  </Space>
+        {/* BOARDS */}
+        <div className="mt-3">
+          <Text strong className="text-xs">
+            Boards:
+          </Text>
 
-                  <Text type="secondary" className="block text-xs mt-1">
-                    Created on {new Date(school.createdAt).toLocaleDateString()}
-                  </Text>
-                </div>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {school.boards?.map((board) => (
+              <Tag color="blue" key={board._id}>
+                {board.name}
+              </Tag>
+            ))}
+          </div>
+        </div>
 
-                {/* 🔹 Decorative Icon */}
-                <img
-                  src={schoolImg}
-                  alt="school"
-                  className="absolute bottom-3 right-3 w-10 opacity-70"
-                />
-              </Card>
-            </Col>
-          ))}
-        </Row>
+        {/* SUBSCRIPTION */}
+        {school.subscriptionPlan && (
+          <div className="mt-3">
+            <Text strong className="text-xs">
+              Plan:
+            </Text>
+
+            <div className="flex flex-wrap gap-1 mt-1">
+              <Tag color="purple">
+                {school.subscriptionPlan.name}
+              </Tag>
+
+              <Tag color="gold">
+                ₹{school.subscriptionPlan.price}
+              </Tag>
+
+              <Tag color="geekblue">
+                {school.subscriptionPlan.durationInDays} days
+              </Tag>
+            </div>
+          </div>
+        )}
+
+        {/* FOOTER */}
+        <div className="mt-auto pt-3">
+          <Space size="small">
+            <Text>Status:</Text>
+            <Tag color={school.isActive ? "green" : "red"}>
+              {school.isActive ? "Active" : "Inactive"}
+            </Tag>
+          </Space>
+
+          <Text type="secondary" className="block text-xs mt-1">
+            Created on {new Date(school.createdAt).toLocaleDateString()}
+          </Text>
+        </div>
+
+        {/* ICON */}
+        <img
+          src={schoolImg}
+          alt="school"
+          className="absolute bottom-3 right-3 w-10 opacity-70"
+        />
+      </Card>
+    </Col>
+  ))}
+</Row>
       )}
 
       {/* 🔹 Modal */}

@@ -24,7 +24,7 @@ const boardSchema = new Schema(
     // 🔹 Ownership
     createdByRole: {
       type: String,
-      enum: ["Super Admin", "School Admin"], // Future safe
+      enum: ["Super Admin"], // Future safe
       required: true,
     },
 
