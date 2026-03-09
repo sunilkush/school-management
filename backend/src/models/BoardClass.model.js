@@ -16,7 +16,7 @@ const boardClassSchema = new Schema(
       index: true,
     },
 
-    displayName: {
+    name: {
       type: String,
       trim: true,
     },
@@ -24,11 +24,6 @@ const boardClassSchema = new Schema(
     order: {
       type: Number,
       default: 0,
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
     },
 
     description: {

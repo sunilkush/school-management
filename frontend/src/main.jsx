@@ -118,6 +118,7 @@ import AssignedClasses from "./pages/Teacher/Classes/AssignedClasses.jsx";
 import Assignments from "./pages/Teacher/Assignments/Assignments.jsx";
 import MyStudents from "./pages/Teacher/My_Students/MyStudents.jsx";
 import StudentAttendance from "./pages/Teacher/Attendance/StudentAttendance.jsx";
+import BoardClassPage from './pages/SuperAdmin/Master_Settings/BoardClassPage.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -182,6 +183,7 @@ const router = createBrowserRouter([
               { path: "settings/backup", element: <Backups /> },
               { path: "academics/boards", element: <SchoolBoards /> },
               { path: "academics/chapters-topics", element: <ChaptersTopics /> },
+              { path: "academics/boards-class", element:<BoardClassPage/>},
 
 
             ],

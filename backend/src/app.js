@@ -50,8 +50,7 @@ import ReportsRoutes from "./routes/report.routes.js";
 import DashboardRoutes from "./routes/dashboard.routes.js";
 import QuestionRoutes from "./routes/question.routes.js";
 import ExamRoutes from "./routes/exam.routes.js";
-import AttemptRoutes from "./routes/attempt.routes.js"
-
+import AttemptRoutes from "./routes/attempt.routes.js";
 import SubscriptionPlans from "./routes/subscriptionPlan.routes.js";
 import feeHeadRoutes from "./routes/feeHead.routes.js";
 import feeStructureRoutes from "./routes/feeStructure.routes.js";
@@ -62,6 +61,7 @@ import feeReportRoutes from "./routes/feeReport.routes.js";
 import activityLogRoutes from "./routes/activity.routes.js";
 import boardRoutes from "./routes/boards.routes.js";
 import chapterRoutes from "./routes/chapters.routes.js";
+import boardClassRoutes from "./routes/boardsClass.routes.js";
 // route
 app.use('/', indexRouter);
 app.use("/api/v1/school", schoolRoutes)
@@ -81,7 +81,6 @@ app.use("/api/v1/dashboard", DashboardRoutes);
 app.use("/api/v1/questions", QuestionRoutes);
 app.use("/api/v1/exams", ExamRoutes);
 app.use("/api/v1/attempt", AttemptRoutes);
-
 app.use("/api/v1/subscription", SubscriptionPlans)
 app.use("/api/v1/fee-heads", feeHeadRoutes);
 app.use("/api/v1/fee-structures", feeStructureRoutes);
@@ -92,5 +91,6 @@ app.use("/api/v1/fees/report", feeReportRoutes);
 app.use("/api/v1/activity-logs", activityLogRoutes);
 app.use("/api/v1/boards", boardRoutes);
 app.use("/api/v1/chapters", chapterRoutes);
+app.use("/api/v1/board-classes", boardClassRoutes);
 export { app }
 
