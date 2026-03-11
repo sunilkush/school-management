@@ -52,34 +52,84 @@ export const getBoardClass = createAsyncThunk(
         }
     }
 );
+export const getBoardClassById = createAsyncThunk(
+  "boardClass/getBoardClassById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
 
+      const res = await axios.get(
+        `${ApiUrl}/board-class/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || "Fetch Class Failed"
+      );
+    }
+  }
+);
 /* =========== UPDATE CLASS ============== */
 export const updateBoardClass = createAsyncThunk(
-    "boardClass/updateBoardClass",
-    async (id, { rejectWithValue }) => {
+  "boardClass/updateBoardClass",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
 
-        try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.put(`${ApiUrl}/`, id, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-            return res.data
-        } catch (error) {
-            return rejectWithValue(error.response.data.message || "Update Class")
+      const res = await axios.put(
+        `${ApiUrl}/board-class/${id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || "Update Class Failed"
+      );
     }
-)
+  }
+);
+
+export const deleteBoardClass = createAsyncThunk(
+  "boardClass/deleteBoardClass",
+  async (id, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      await axios.delete(`${ApiUrl}/board-class/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return id;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || "Delete Class Failed"
+      );
+    }
+  }
+);
 /* ================= INITIAL STATE ================= */
 
 const initialState = {
-    loading: false,
-    error: null,
-    success: false,
-    boardClass: [],
-};
-
+  boardClass: [],
+  singleBoardClass: {},
+  loading: false,
+  error: null,
+  success: false
+}
 /* ================= SLICE ================= */
 
 const boardClassSlice = createSlice({
@@ -126,7 +176,24 @@ const boardClassSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+             /* ===== GET BOARD CLASS BY ID ===== */
 
+                .addCase(getBoardClassById.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+                })
+
+                .addCase(getBoardClassById.fulfilled, (state, action) => {
+                state.loading = false;
+                state.singleBoardClass = action.payload;
+                state.success = true;
+                })
+
+                .addCase(getBoardClassById.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.success = false;
+                })
             /* ====== update class ======= */
 
             .addCase(updateBoardClass.pending, (state) => {
@@ -154,6 +221,30 @@ const boardClassSlice = createSlice({
                 state.error = action.payload;
                 state.success = false;
             })
+
+            /* ============ Delete Class ============ */
+
+                .addCase(deleteBoardClass.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+                })
+
+                .addCase(deleteBoardClass.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+
+                const deletedId = action.payload;
+
+                state.boardClass = state.boardClass.filter(
+                    (item) => item._id !== deletedId
+                );
+                })
+
+                .addCase(deleteBoardClass.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.success = false;
+                })
 
     },
 });

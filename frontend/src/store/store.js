@@ -24,6 +24,7 @@ import feeInstallmentReducer from "../features/feeInstallmentSlice.js";
 import activityReducer from "../features/activitySlice.js";
 import boardsReducer from "../features/boardSlice.js";
 import chapterReducer from "../features/chapterSlice.js";
+import boardClassReducer from "../features/boardClassSlice.js";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -50,7 +51,8 @@ const store = configureStore({
     feeInstallment: feeInstallmentReducer,
     activity: activityReducer,
     chapters: chapterReducer,
-    boards: boardsReducer
+    boards: boardsReducer,
+    boardClass : boardClassReducer
     },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>
