@@ -9,7 +9,7 @@ const boardClassSchema = new Schema(
       index: true,
     },
 
-    schoolClassId: {
+    ClassId: {
       type: Schema.Types.ObjectId,
       ref: "Class",
       required: true,

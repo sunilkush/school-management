@@ -16,14 +16,14 @@ const TimetableSchema = new mongoose.Schema(
         type: Schema.Types.ObjectId, 
         ref: "SchoolClass",
       required: function () {
-        return this.role === "student"; // Required for students
+        return this.role === "Student"; // Required for students
       },
     },
     teacherId: {
       type: Schema.Types.ObjectId,
       ref: "Teacher",
       required: function () {
-        return this.role === "teacher"; // Required for teachers
+        return this.role === "Teacher"; // Required for teachers
       },
     },
     subjectId: {
@@ -58,7 +58,7 @@ const TimetableSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["student", "teacher", "admin"],
+      enum: ["Student", "Teacher", "School Admin"],
       required: true,
     },
   },

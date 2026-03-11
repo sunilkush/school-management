@@ -5,6 +5,7 @@ import AddBoardClassModal from "../../../components/forms/AddBoardClassModal.jsx
 export default function BoardClassPage() {
 
   const [open, setOpen] = useState(false);
+  
 
   const dataSource = [
     {

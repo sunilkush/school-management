@@ -1,12 +1,11 @@
 import { Router } from "express";
 import {
   createClass,
-  getAllClasses,
-  getClassById,
-  updateClass,
-  deleteClass,
-  assignSubjectsToClass,
-  classAssignTeacher
+   updateClass,
+   deleteClass,
+   getAllClasses,
+   getClassById,
+  
 } from "../controllers/class.controllers.js";
 
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
@@ -24,10 +23,10 @@ router.post("/create", auth, roleMiddleware(ADMIN_ONLY), createClass);
 router.get("/all", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
 
 // ✅ Assign Teacher (STATIC ROUTE FIRST)
-router.get("/assign-teacher", auth, roleMiddleware(ADMIN_TEACHER), classAssignTeacher);
+//router.get("/assign-teacher", auth, roleMiddleware(ADMIN_TEACHER), classAssignTeacher);
 
 // ✅ Assign Subjects (STATIC ROUTE FIRST)
-router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
+//router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
 
 // 🔍 Get Class by ID (DYNAMIC ROUTE LAST)
 router.get("/:schoolClassId", auth, roleMiddleware(ADMIN_TEACHER), getClassById);

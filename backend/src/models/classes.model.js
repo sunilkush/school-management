@@ -20,10 +20,6 @@ const classSchema = new Schema(
       type: Boolean,
       default: false
     },
-    isActive: {
-      type: Boolean,
-      default: true
-    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User"

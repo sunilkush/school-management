@@ -65,7 +65,7 @@ import QuestionBank from './pages/Teacher/Exams/QuestionBank.jsx';
 import CreateExam from './pages/Teacher/Exams/EditExamForm.jsx';
 import ExamLive from './pages/Student/Exams/ExamLive.jsx';
 import AttemptReview from './pages/Student/Exams/AttemptReview.jsx';
-import ClassSectionFrom from './pages/SuperAdmin/Classes_&_Section/ClassSectionFrom.jsx';
+import ClassPage from './pages/SuperAdmin/Classes_&_Section/ClassPage.jsx';
 import ClassSectionList from './pages/SuperAdmin/Classes_&_Section/ClassSectionList.jsx';
 import EmployeeForm from './components/forms/EmployeeForm.jsx';
 import EmployeeDetailes from './pages/Teacher/Profile/EmployeeDetailes.jsx';
@@ -166,7 +166,7 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "academics/classes", element: <ClassSectionFrom /> },
+              { path: "academics/classes", element: <ClassPage /> },
               { path: "classes-sections/list", element: <ClassSectionList /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },

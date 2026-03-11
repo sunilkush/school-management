@@ -30,12 +30,6 @@ const topicSchema = new Schema(
       index: true
     },
 
-    academicYearId: {
-      type: Schema.Types.ObjectId,
-      ref: "AcademicYear",
-      required: true,
-      index: true
-    },
 
     /* ================= OWNERSHIP ================= */
 
@@ -43,14 +37,6 @@ const topicSchema = new Schema(
       type: Boolean,
       default: false
     },
-
-    schoolId: {
-      type: Schema.Types.ObjectId,
-      ref: "School",
-      default: null,
-      index: true
-    },
-
     /* ================= STATUS ================= */
 
     isActive: {
@@ -70,17 +56,6 @@ const topicSchema = new Schema(
       type: String,
       enum: ["Super Admin", "School Admin"],
       required: true
-    },
-
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
-
-    updatedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User"
     }
   },
   { timestamps: true }

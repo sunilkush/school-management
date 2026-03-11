@@ -6,10 +6,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const createBoardClass = asyncHandler(async (req, res) => {
     // Implementation for creating a board class
-    const { name, boardId, status, description, createdBy, schoolClassId } = req.body;
+    const { name, boardId, status, description, createdBy, classId } = req.body;
 
     if (!name || !boardId || !schoolClassId) {
-        throw new ApiError(400, "Name, Board ID and School Class ID are required");
+        throw new ApiError(400, "Name, Board ID and Class ID are required");
     }
 
     const boardClass = await BoardClass.create({
@@ -18,7 +18,7 @@ const createBoardClass = asyncHandler(async (req, res) => {
         status,
         description,
         createdBy,
-        schoolClassId
+        classId
     });
 
     if (!boardClass) {
