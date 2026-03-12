@@ -130,7 +130,7 @@ const getAllSubjects = asyncHandler(async (req, res) => {
 
   /* ================= FETCH ================= */
   const subjects = await Subject.find(query)
-    .populate("schoolId", "name")
+   
     .populate({
       path: "schoolByAssignedTeachers.teacherId",
       select: "name email",
