@@ -34,7 +34,7 @@ const { Text } = Typography;
 const Admins = () => {
   const dispatch = useDispatch();
   const { users = [], loading, error, user: currentUser } = useSelector(
-    (state) => state.auth
+    (state) => state.auth?.users?.data || []
   );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,11 +67,13 @@ const Admins = () => {
   };
 
   /* ================= FILTER ONLY SCHOOL ADMINS ================= */
-  const filteredUsers = useMemo(() => {
-    return users.filter(
-      (u) => u.role?.name?.toLowerCase() === "school admin"
-    );
-  }, [users]);
+ const filteredUsers = useMemo(() => {
+  if (!Array.isArray(users)) return [];
+
+  return users.filter(
+    (u) => u.role?.name === "School Admin"
+  );
+}, [users]);
 
   /* ================= TABLE COLUMNS ================= */
   const columns = [
