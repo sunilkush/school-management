@@ -57,6 +57,7 @@ import GeneratePayslip from "./pages/SchoolAdmin/Payroll/GeneratePayslip.jsx";
 import SendNotification from "./pages/SchoolAdmin/Communication/SendNotification.jsx";
 import SmsEmailHistory from "./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
+import RoleWorkspace from "./pages/RoleWorkspace.jsx";
 import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx";
 import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
@@ -347,6 +348,29 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
+          },
+          {
+            path: "workspace",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Principal",
+                  "Vice Principal",
+                  "Subject Coordinator",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <RoleWorkspace />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "staff",

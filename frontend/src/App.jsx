@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { currentUser } from './features/authSlice';
+import { fetchMyPermissions } from './features/roleUiSlice';
 import { setSelectedAcademicYear } from './features/academicYearSlice';
 import { SpeedInsights } from '@vercel/speed-insights/react'
 function App() {
@@ -11,13 +12,20 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { profile } = useSelector(state => state.auth);
+  const { profile, user, accessToken } = useSelector(state => state.auth);
   const { selectedAcademicYear } = useSelector(state => state.academicYear);
 
   // 1. Load current user
   useEffect(() => {
     dispatch(currentUser());
   }, [dispatch]);
+
+
+  useEffect(() => {
+    if (accessToken && user) {
+      dispatch(fetchMyPermissions());
+    }
+  }, [dispatch, accessToken, user]);
 
   // 2. Redirect to login if not authenticated
   useEffect(() => {
