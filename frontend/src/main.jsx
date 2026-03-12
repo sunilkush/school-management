@@ -58,6 +58,7 @@ import SendNotification from "./pages/SchoolAdmin/Communication/SendNotification
 import SmsEmailHistory from "./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import RoleWorkspace from "./pages/RoleWorkspace.jsx";
+import RoleDynamicPortal from "./pages/RoleDynamicPortal.jsx";
 import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx";
 import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
@@ -348,6 +349,95 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
+          },
+
+          {
+            path: "principal/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Principal"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "librarian/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Librarian"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "hostelwarden/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Hostel Warden"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "transportmanager/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "examcoordinator/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Exam Coordinator"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "receptionist/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "itsupport/*",
+            element: (
+              <ProtectedRoute allowedRoles={["IT Support"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "counselor/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "workspace",
