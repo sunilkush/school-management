@@ -57,6 +57,10 @@ import GeneratePayslip from "./pages/SchoolAdmin/Payroll/GeneratePayslip.jsx";
 import SendNotification from "./pages/SchoolAdmin/Communication/SendNotification.jsx";
 import SmsEmailHistory from "./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
+import RoleWorkspace from "./pages/RoleWorkspace.jsx";
+import RoleDynamicPortal from "./pages/RoleDynamicPortal.jsx";
+import ModuleOverview from "./pages/modules/ModuleOverview.jsx";
+import ModuleDetail from "./pages/modules/ModuleDetail.jsx";
 import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx";
 import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
@@ -134,6 +138,67 @@ const router = createBrowserRouter([
         element: <Dashboard />,
         children: [
           { index: true, element: <RoleBasedRedirect /> },
+
+          {
+            path: "modules",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <ModuleOverview />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "modules/:moduleKey",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <ModuleDetail />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "superadmin",
             element: (
@@ -347,6 +412,118 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
+          },
+
+          {
+            path: "principal/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Principal"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "librarian/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Librarian"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "hostelwarden/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Hostel Warden"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "transportmanager/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "examcoordinator/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Exam Coordinator"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "receptionist/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "itsupport/*",
+            element: (
+              <ProtectedRoute allowedRoles={["IT Support"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "counselor/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/*",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "workspace",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Principal",
+                  "Vice Principal",
+                  "Subject Coordinator",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <RoleWorkspace />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "staff",

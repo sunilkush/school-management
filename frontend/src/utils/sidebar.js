@@ -405,4 +405,15 @@ export const sidebarMenu = {
     { title: "Profile", path: "hostelwarden/profile", icon: User },
   ],
 
+
+
+  /* ================= TRANSPORT MANAGER ================= */
+  "transport manager": [
+    { title: "Dashboard", path: "transportmanager", icon: LayoutDashboard },
+    { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
+    { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
+    { title: "Drivers", path: "transportmanager/drivers", icon: Users },
+    { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
+  ],
+
 };

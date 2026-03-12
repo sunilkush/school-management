@@ -1,47 +1,79 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Typography } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { sidebarMenu } from "../../utils/sidebar";
 
 const { Sider } = Layout;
+const { Text } = Typography;
+
+const buildFallbackMenuFromPermissions = (permissions = []) => {
+  if (!Array.isArray(permissions) || permissions.length === 0) return [];
+
+  return permissions.map((permission) => {
+    const moduleKey = permission?.module
+      ?.toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    return {
+      title: permission.module,
+      path: `workspace/module/${moduleKey || "general"}`,
+      subMenu: (permission.actions || []).map((action) => ({
+        title: `${action[0]?.toUpperCase() || ""}${action.slice(1)} ${permission.module}`,
+        path: `workspace/module/${moduleKey || "general"}/${action}`,
+      })),
+    };
+  });
+};
+
+const withModuleCenterMenu = (menuItems = []) => {
+  const alreadyExists = menuItems.some((item) => item.path === "modules");
+  if (alreadyExists) return menuItems;
+
+  return [
+    ...menuItems,
+    {
+      title: "ERP Modules",
+      path: "modules",
+    },
+  ];
+};
 
 const SidebarMenu = ({ role }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const permissions = useSelector((state) => state.roleUi.permissions);
 
-  // ✅ Always array safe
   const menuItems = useMemo(() => {
-    return Array.isArray(sidebarMenu?.[role]) ? sidebarMenu[role] : [];
-  }, [role]);
+    const roleMenu = Array.isArray(sidebarMenu?.[role]) ? sidebarMenu[role] : [];
+    if (roleMenu.length) return withModuleCenterMenu(roleMenu);
+    return withModuleCenterMenu(buildFallbackMenuFromPermissions(permissions));
+  }, [role, permissions]);
 
-  // ✅ memoized initial open keys
   const initialOpenKeys = useMemo(() => {
     return menuItems
       .filter((item) =>
-        item.subMenu?.some((sub) => sub.path === location.pathname)
+        item.subMenu?.some((sub) => location.pathname.endsWith(sub.path))
       )
       .map((item) => item.title);
   }, [menuItems, location.pathname]);
 
   const [openKeys, setOpenKeys] = useState(initialOpenKeys);
 
-  // ✅ sync when route changes
   useEffect(() => {
     setOpenKeys(initialOpenKeys);
   }, [initialOpenKeys]);
 
-  // ✅ single submenu open (fixed stale state bug)
   const onOpenChange = (keys) => {
     const latestOpenKey = keys.find((key) => !openKeys.includes(key));
     setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
   };
 
-  // ✅ AntD items safe mapping
   const antMenuItems = useMemo(() => {
     if (!Array.isArray(menuItems)) return [];
 
     return menuItems.map((item) => {
-      // 🔹 no submenu
       if (!item?.subMenu?.length) {
         return {
           key: item.path,
@@ -50,7 +82,6 @@ const SidebarMenu = ({ role }) => {
         };
       }
 
-      // 🔹 with submenu
       return {
         key: item.title,
         icon: item.icon ? <item.icon size={16} /> : null,
@@ -76,15 +107,21 @@ const SidebarMenu = ({ role }) => {
         overflow: "auto",
       }}
     >
-      <Menu
-        mode="inline"
-        items={antMenuItems}
-        selectedKeys={[location.pathname]}
-        openKeys={openKeys}
-        onOpenChange={onOpenChange}
-        onClick={({ key }) => key && navigate(key)}
-        style={{ height: "100%", borderRight: 0 }}
-      />
+      {antMenuItems.length === 0 ? (
+        <div className="p-4">
+          <Text type="secondary">No menu configured for this role yet.</Text>
+        </div>
+      ) : (
+        <Menu
+          mode="inline"
+          items={antMenuItems}
+          selectedKeys={[location.pathname.replace("/dashboard/", "")]}
+          openKeys={openKeys}
+          onOpenChange={onOpenChange}
+          onClick={({ key }) => key && navigate(`/dashboard/${key}`)}
+          style={{ height: "100%", borderRight: 0 }}
+        />
+      )}
     </Sider>
   );
 };

@@ -5,6 +5,10 @@ import { User } from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { AcademicYear } from '../models/AcademicYear.model.js'
 import mongoose from 'mongoose'
+import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
+import { sendEmail } from '../utils/mailServices.js'
+import { Role } from '../models/Roles.model.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -22,6 +26,33 @@ const generateAccessAndRefreshToken = async (userId) => {
     throw new ApiError(500, 'Error generating tokens')
   }
 }
+
+const buildClientUrl = (path = '') => {
+  const base = process.env.FRONTEND_URL || 'http://localhost:5173';
+  return `${base}${path}`;
+};
+
+const sendVerificationEmail = async (user) => {
+  const token = user.generateEmailVerificationToken();
+  await user.save({ validateBeforeSave: false });
+
+  const verifyUrl = buildClientUrl(`/verify-email/${token}`);
+  await sendEmail(user.email, 'Verify your email', `Please verify your email by clicking this link: ${verifyUrl}`);
+};
+
+
+const getRoleById = async (roleId) => {
+  if (!roleId || !mongoose.Types.ObjectId.isValid(roleId)) return null;
+  return Role.findById(roleId).lean();
+};
+
+const getRequesterRoleName = async (req) => {
+  if (req?.userRole?.name) return req.userRole.name;
+
+  const roleId = req?.user?.roleId?._id || req?.user?.roleId;
+  const roleDoc = await getRoleById(roleId);
+  return roleDoc?.name || null;
+};
 
 // 🔹 Generate next regId school-wise
 export const generateNextRegId = async (schoolId) => {
@@ -96,8 +127,10 @@ const registerUser = asyncHandler(async (req, res) => {
     academicYearId,
   });
 
+  await sendVerificationEmail(newUser);
+
   const createdUser = await User.findById(newUser._id).select(
-    "-password -refreshToken"
+    "-password -refreshToken -emailVerificationToken -resetPasswordToken"
   );
 
   return res
@@ -134,13 +167,17 @@ const loginUser = asyncHandler(async (req, res) => {
   const isSuperAdmin =
     user.roleId?.name?.toLowerCase() === "super admin";
 
-  // 4️⃣ School active check (non super admin)
+  // 4️⃣ School active + email verification check (non super admin)
   if (!isSuperAdmin) {
     if (!user.schoolId || user.schoolId.isActive === false) {
       throw new ApiError(
         403,
         "Your school is deactivated. Contact administrator."
       );
+    }
+
+    if (!user.isEmailVerified) {
+      throw new ApiError(403, "Email is not verified. Please verify before login.");
     }
   }
 
@@ -404,54 +441,71 @@ const logoutUser = asyncHandler(async (req, res) => {
 const getAllUsers = asyncHandler(async (req, res) => {
   let schoolId;
 
-  // If Super Admin → use query param, else use user's own schoolId
-  if (req.user?.role?.name && req.user.role.name === "Super Admin") {
+  const requesterRole = await getRequesterRoleName(req);
+
+  if (requesterRole === "Super Admin") {
     schoolId = req.query.schoolId;
   } else {
     schoolId = req.user?.schoolId;
   }
 
-  const matchStage = schoolId
-    ? { schoolId: new mongoose.Types.ObjectId(schoolId) }
-    : {};
+  const { page = 1, limit = 20, sort = '-createdAt', search = '', isActive } = req.query;
+  const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+  const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+  const skip = (parsedPage - 1) * parsedLimit;
+
+  const matchStage = {};
+  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
+    matchStage.schoolId = new mongoose.Types.ObjectId(schoolId);
+  }
+  if (typeof isActive !== 'undefined') {
+    matchStage.isActive = isActive === 'true';
+  }
+  if (search) {
+    matchStage.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+      { regId: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  const sortStage = {};
+  sort.split(',').filter(Boolean).forEach((field) => {
+    const key = field.startsWith('-') ? field.slice(1) : field;
+    sortStage[key] = field.startsWith('-') ? -1 : 1;
+  });
+
+  if (!Object.keys(sortStage).length) sortStage.createdAt = -1;
 
   const users = await User.aggregate([
     { $match: matchStage },
-
-    // Join Role
     {
       $lookup: {
-        from: "roles",
-        localField: "roleId",
-        foreignField: "_id",
-        as: "role",
+        from: 'roles',
+        localField: 'roleId',
+        foreignField: '_id',
+        as: 'role',
       },
     },
-    { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
-
-    // Join School
+    { $unwind: { path: '$role', preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
-        from: "schools",
-        localField: "schoolId",
-        foreignField: "_id",
-        as: "school",
+        from: 'schools',
+        localField: 'schoolId',
+        foreignField: '_id',
+        as: 'school',
       },
     },
-    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
-
-    // ✅ Join Academic Year
+    { $unwind: { path: '$school', preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
-        from: "academicyears",
-        localField: "academicYearId", // assuming your User schema has academicYearId
-        foreignField: "_id",
-        as: "academicYear",
+        from: 'academicyears',
+        localField: 'academicYearId',
+        foreignField: '_id',
+        as: 'academicYear',
       },
     },
-    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
-
-    // Final projection
+    { $unwind: { path: '$academicYear', preserveNullAndEmptyArrays: true } },
     {
       $project: {
         _id: 1,
@@ -459,30 +513,41 @@ const getAllUsers = asyncHandler(async (req, res) => {
         email: 1,
         avatar: 1,
         isActive: 1,
-        regNumber: 1,
-        role: {
-          _id: "$role._id",
-          name: "$role.name",
-          permissions: "$role.permissions",
-        },
-        school: {
-          _id: "$school._id",
-          name: "$school.name",
-        },
+        regId: 1,
+        role: { _id: '$role._id', name: '$role.name', permissions: '$role.permissions' },
+        school: { _id: '$school._id', name: '$school.name' },
         academicYear: {
-          _id: "$academicYear._id",
-          name: "$academicYear.name",
-          startDate: "$academicYear.startDate",
-          endDate: "$academicYear.endDate",
-          isActive: "$academicYear.isActive",
+          _id: '$academicYear._id',
+          name: '$academicYear.name',
+          startDate: '$academicYear.startDate',
+          endDate: '$academicYear.endDate',
+          isActive: '$academicYear.isActive',
         },
+      },
+    },
+    { $sort: sortStage },
+    {
+      $facet: {
+        data: [{ $skip: skip }, { $limit: parsedLimit }],
+        totalCount: [{ $count: 'count' }],
       },
     },
   ]);
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, users, "Users fetched successfully"));
+  const data = users[0]?.data || [];
+  const total = users[0]?.totalCount?.[0]?.count || 0;
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      data,
+      pagination: {
+        page: parsedPage,
+        limit: parsedLimit,
+        total,
+        totalPages: Math.ceil(total / parsedLimit) || 1,
+      },
+    }, 'Users fetched successfully')
+  );
 });
 
 
@@ -537,8 +602,20 @@ const getUserById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Valid User ID is required");
   }
 
+  const requesterRole = await getRequesterRoleName(req);
+  const requesterSchoolId = req?.user?.schoolId;
+
+  const userMatch = { _id: new mongoose.Types.ObjectId(id) };
+  if (
+    requesterRole !== "Super Admin" &&
+    requesterSchoolId &&
+    mongoose.Types.ObjectId.isValid(requesterSchoolId)
+  ) {
+    userMatch.schoolId = new mongoose.Types.ObjectId(requesterSchoolId);
+  }
+
   const user = await User.aggregate([
-    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    { $match: userMatch },
 
     // Join Role
     {
@@ -613,6 +690,129 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+  if (!incomingRefreshToken) throw new ApiError(401, 'Refresh token is required');
+
+  let decoded;
+  try {
+    decoded = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+  } catch {
+    throw new ApiError(401, 'Invalid refresh token');
+  }
+
+  const user = await User.findById(decoded?._id);
+  if (!user || user.refreshToken !== incomingRefreshToken) {
+    throw new ApiError(401, 'Refresh token expired or mismatched');
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+  return res
+    .status(200)
+    .cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' })
+    .cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' })
+    .json(new ApiResponse(200, { accessToken, refreshToken }, 'Access token refreshed successfully'));
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new ApiError(400, 'Email is required');
+
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const token = user.generateResetPasswordToken();
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = buildClientUrl(`/reset-password/${token}`);
+  await sendEmail(user.email, 'Reset your password', `Reset your password using this link: ${resetUrl}`);
+
+  return res.status(200).json(new ApiResponse(200, {}, 'Password reset link sent successfully'));
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  if (!token || !newPassword) throw new ApiError(400, 'Token and newPassword are required');
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: new Date() },
+  });
+
+  if (!user) throw new ApiError(400, 'Invalid or expired reset token');
+
+  user.password = newPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save();
+
+  return res.status(200).json(new ApiResponse(200, {}, 'Password reset successful'));
+});
+
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  if (!token) throw new ApiError(400, 'Verification token is required');
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpire: { $gt: new Date() },
+  });
+
+  if (!user) throw new ApiError(400, 'Invalid or expired verification token');
+
+  user.isEmailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpire = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  return res.status(200).json(new ApiResponse(200, {}, 'Email verified successfully'));
+});
+
+const resendVerificationEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new ApiError(400, 'Email is required');
+
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(404, 'User not found');
+
+  if (user.isEmailVerified) {
+    return res.status(200).json(new ApiResponse(200, {}, 'Email already verified'));
+  }
+
+  await sendVerificationEmail(user);
+
+  return res.status(200).json(new ApiResponse(200, {}, 'Verification email sent successfully'));
+});
+
+
+const getMyPermissions = asyncHandler(async (req, res) => {
+  const roleId = req?.user?.roleId?._id || req?.user?.roleId;
+  if (!roleId || !mongoose.Types.ObjectId.isValid(roleId)) {
+    throw new ApiError(400, 'User role is not assigned');
+  }
+
+  const role = await Role.findById(roleId).lean();
+  if (!role) throw new ApiError(404, 'Role not found');
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      role: {
+        _id: role._id,
+        name: role.name,
+        code: role.code,
+        level: role.level,
+      },
+      permissions: role.permissions || [],
+    }, 'Permissions fetched successfully')
+  );
+});
+
 export {
   registerUser,
   loginUser,
@@ -623,5 +823,11 @@ export {
   getAllUsers,
   deleteUser,
   activeUser,
-  getUserById
+  getUserById,
+  refreshAccessToken,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  resendVerificationEmail,
+  getMyPermissions
 }

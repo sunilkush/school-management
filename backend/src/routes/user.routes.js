@@ -9,7 +9,13 @@ import {
             getAllUsers,
             deleteUser,
             activeUser,
-            getUserById
+            getUserById,
+            refreshAccessToken,
+            forgotPassword,
+            resetPassword,
+            verifyEmail,
+            resendVerificationEmail,
+            getMyPermissions
 } from "../controllers/user.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
@@ -18,16 +24,22 @@ const router = Router();
 // Role-Based Access Control
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 
-const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"];
+const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent", "Accountant", "Librarian"];
 //
 
 // ✅ Public Routes
 
 router.post("/login", loginUser);
+router.post("/refresh-token", refreshAccessToken);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
+router.get("/verify-email/:token", verifyEmail);
+router.post("/resend-verification", resendVerificationEmail);
 
 // ✅ Protected Routes
 router.post("/register",auth,roleMiddleware(ADMIN_ROLE), upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
 router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
+router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
 router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
 router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);
