@@ -6,12 +6,28 @@ import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 
-const getScopedSchoolId = (req, schoolIdFromRequest) => {
-  if (req.userRole === "Super Admin") {
-    return schoolIdFromRequest;
+const getScopedSchoolId = (req, schoolIdFromRequest, { requiredForSuperAdmin = false } = {}) => {
+  const roleName = req.userRole || req.user?.role;
+  const userSchoolId = req.user?.schoolId?.toString?.() || req.user?.schoolId;
+  const requestedSchoolId = schoolIdFromRequest?.toString?.() || schoolIdFromRequest;
+
+  if (roleName === "Super Admin") {
+    if (requiredForSuperAdmin && !requestedSchoolId) {
+      throw new ApiError(400, "schoolId is required for Super Admin");
+    }
+
+    return requestedSchoolId;
   }
 
-  return req.user?.schoolId;
+  if (!userSchoolId) {
+    throw new ApiError(403, "School scope missing for current user");
+  }
+
+  if (requestedSchoolId && requestedSchoolId !== userSchoolId) {
+    throw new ApiError(403, "Cross-school access is not allowed");
+  }
+
+  return userSchoolId;
 };
 
 // ✅ Create Attendance
@@ -173,7 +189,7 @@ export const getDailyReport = asyncHandler(async (req, res) => {
 // ✅ Monthly Report (By Month)
 export const getMonthlyReport = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, month, year } = req.query;
-  const scopedSchoolId = getScopedSchoolId(req, schoolId);
+  const scopedSchoolId = getScopedSchoolId(req, schoolId, { requiredForSuperAdmin: true });
 
   if (!scopedSchoolId || !academicYearId || !month || !year) {
     throw new ApiError(400, "schoolId, academicYearId, month and year are required!");
@@ -194,7 +210,7 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
 // ✅ Class-wise Monthly Report
 export const getClassMonthlyReport = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, schoolClassId, sectionId, month, year } = req.query;
-  const scopedSchoolId = getScopedSchoolId(req, schoolId);
+  const scopedSchoolId = getScopedSchoolId(req, schoolId, { requiredForSuperAdmin: true });
 
   if (!scopedSchoolId || !academicYearId || !schoolClassId || !month || !year) {
     throw new ApiError(400, "schoolId, academicYearId, schoolClassId, month and year are required!");
@@ -218,7 +234,7 @@ export const getClassMonthlyReport = asyncHandler(async (req, res) => {
 // ✅ Export to Excel
 export const exportAttendanceExcel = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, month, year } = req.query;
-  const scopedSchoolId = getScopedSchoolId(req, schoolId);
+  const scopedSchoolId = getScopedSchoolId(req, schoolId, { requiredForSuperAdmin: true });
 
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 0, 23, 59, 59);
@@ -260,7 +276,7 @@ export const exportAttendanceExcel = asyncHandler(async (req, res) => {
 // ✅ Export to PDF
 export const exportAttendancePDF = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, month, year } = req.query;
-  const scopedSchoolId = getScopedSchoolId(req, schoolId);
+  const scopedSchoolId = getScopedSchoolId(req, schoolId, { requiredForSuperAdmin: true });
 
   if (!scopedSchoolId || !academicYearId || !month || !year) {
     throw new ApiError(400, "schoolId, academicYearId, month and year are required!");
