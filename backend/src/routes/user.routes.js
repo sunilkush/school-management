@@ -14,7 +14,8 @@ import {
             forgotPassword,
             resetPassword,
             verifyEmail,
-            resendVerificationEmail
+            resendVerificationEmail,
+            getMyPermissions
 } from "../controllers/user.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
@@ -38,6 +39,7 @@ router.post("/resend-verification", resendVerificationEmail);
 // ✅ Protected Routes
 router.post("/register",auth,roleMiddleware(ADMIN_ROLE), upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
 router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
+router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
 router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
 router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);

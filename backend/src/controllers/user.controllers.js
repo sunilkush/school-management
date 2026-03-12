@@ -8,6 +8,7 @@ import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { sendEmail } from '../utils/mailServices.js'
+import { Role } from '../models/Roles.model.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -37,6 +38,20 @@ const sendVerificationEmail = async (user) => {
 
   const verifyUrl = buildClientUrl(`/verify-email/${token}`);
   await sendEmail(user.email, 'Verify your email', `Please verify your email by clicking this link: ${verifyUrl}`);
+};
+
+
+const getRoleById = async (roleId) => {
+  if (!roleId || !mongoose.Types.ObjectId.isValid(roleId)) return null;
+  return Role.findById(roleId).lean();
+};
+
+const getRequesterRoleName = async (req) => {
+  if (req?.userRole?.name) return req.userRole.name;
+
+  const roleId = req?.user?.roleId?._id || req?.user?.roleId;
+  const roleDoc = await getRoleById(roleId);
+  return roleDoc?.name || null;
 };
 
 // 🔹 Generate next regId school-wise
@@ -152,13 +167,17 @@ const loginUser = asyncHandler(async (req, res) => {
   const isSuperAdmin =
     user.roleId?.name?.toLowerCase() === "super admin";
 
-  // 4️⃣ School active check (non super admin)
+  // 4️⃣ School active + email verification check (non super admin)
   if (!isSuperAdmin) {
     if (!user.schoolId || user.schoolId.isActive === false) {
       throw new ApiError(
         403,
         "Your school is deactivated. Contact administrator."
       );
+    }
+
+    if (!user.isEmailVerified) {
+      throw new ApiError(403, "Email is not verified. Please verify before login.");
     }
   }
 
@@ -422,7 +441,9 @@ const logoutUser = asyncHandler(async (req, res) => {
 const getAllUsers = asyncHandler(async (req, res) => {
   let schoolId;
 
-  if (req.user?.role?.name && req.user.role.name === "Super Admin") {
+  const requesterRole = await getRequesterRoleName(req);
+
+  if (requesterRole === "Super Admin") {
     schoolId = req.query.schoolId;
   } else {
     schoolId = req.user?.schoolId;
@@ -449,10 +470,12 @@ const getAllUsers = asyncHandler(async (req, res) => {
   }
 
   const sortStage = {};
-  sort.split(',').forEach((field) => {
+  sort.split(',').filter(Boolean).forEach((field) => {
     const key = field.startsWith('-') ? field.slice(1) : field;
     sortStage[key] = field.startsWith('-') ? -1 : 1;
   });
+
+  if (!Object.keys(sortStage).length) sortStage.createdAt = -1;
 
   const users = await User.aggregate([
     { $match: matchStage },
@@ -579,8 +602,20 @@ const getUserById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Valid User ID is required");
   }
 
+  const requesterRole = await getRequesterRoleName(req);
+  const requesterSchoolId = req?.user?.schoolId;
+
+  const userMatch = { _id: new mongoose.Types.ObjectId(id) };
+  if (
+    requesterRole !== "Super Admin" &&
+    requesterSchoolId &&
+    mongoose.Types.ObjectId.isValid(requesterSchoolId)
+  ) {
+    userMatch.schoolId = new mongoose.Types.ObjectId(requesterSchoolId);
+  }
+
   const user = await User.aggregate([
-    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    { $match: userMatch },
 
     // Join Role
     {
@@ -755,6 +790,29 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, 'Verification email sent successfully'));
 });
 
+
+const getMyPermissions = asyncHandler(async (req, res) => {
+  const roleId = req?.user?.roleId?._id || req?.user?.roleId;
+  if (!roleId || !mongoose.Types.ObjectId.isValid(roleId)) {
+    throw new ApiError(400, 'User role is not assigned');
+  }
+
+  const role = await Role.findById(roleId).lean();
+  if (!role) throw new ApiError(404, 'Role not found');
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      role: {
+        _id: role._id,
+        name: role.name,
+        code: role.code,
+        level: role.level,
+      },
+      permissions: role.permissions || [],
+    }, 'Permissions fetched successfully')
+  );
+});
+
 export {
   registerUser,
   loginUser,
@@ -770,5 +828,6 @@ export {
   forgotPassword,
   resetPassword,
   verifyEmail,
-  resendVerificationEmail
+  resendVerificationEmail,
+  getMyPermissions
 }

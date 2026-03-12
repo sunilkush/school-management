@@ -1,6 +1,6 @@
 # Backend API Catalog
 
-Total discovered route handlers: **190**
+Total discovered route handlers: **191**
 
 ## Query features supported
 - Pagination: `page`, `limit`
@@ -258,6 +258,7 @@ Total discovered route handlers: **190**
 - `POST /api/v1/user/resend-verification`
 - `POST /api/v1/user/register`
 - `GET /api/v1/user/profile`
+- `GET /api/v1/user/my-permissions`
 - `PUT /api/v1/user/update`
 - `PUT /api/v1/user/change-password`
 - `POST /api/v1/user/logout`
