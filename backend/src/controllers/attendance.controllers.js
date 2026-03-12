@@ -5,6 +5,15 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
+
+const getScopedSchoolId = (req, schoolIdFromRequest) => {
+  if (req.userRole === "Super Admin") {
+    return schoolIdFromRequest;
+  }
+
+  return req.user?.schoolId;
+};
+
 // ✅ Create Attendance
 export const createAttendance = asyncHandler(async (req, res) => {
   const {
@@ -21,7 +30,9 @@ export const createAttendance = asyncHandler(async (req, res) => {
     records
   } = req.body;
 
-  if (!schoolId || !academicYearId || !date || !role) {
+  const scopedSchoolId = getScopedSchoolId(req, schoolId);
+
+  if (!scopedSchoolId || !academicYearId || !date || !role) {
     throw new ApiError(400, "Required fields missing!");
   }
 
@@ -32,7 +43,7 @@ export const createAttendance = asyncHandler(async (req, res) => {
   // ✅ MULTIPLE STUDENT RECORDS
   if (records && records.length > 0) {
     attendanceDocs = records.map((rec) => ({
-      schoolId,
+      schoolId: scopedSchoolId,
       academicYearId,
       date,
       session,
@@ -97,7 +108,7 @@ export const updateAttendance = asyncHandler(async (req, res) => {
 
   // 🔐 Teacher can update only own marked records
   if (
-    req.user.role === "TEACHER" &&
+    req.userRole === "Teacher" &&
     attendance.markedBy.toString() !== req.user._id.toString()
   ) {
     throw new ApiError(403, "Not allowed to update this record");
@@ -123,7 +134,7 @@ export const deleteAttendance = asyncHandler(async (req, res) => {
   if (!attendance) throw new ApiError(404, "Attendance not found");
 
   if (
-    req.user.role === "TEACHER" &&
+    req.userRole === "Teacher" &&
     attendance.markedBy.toString() !== req.user._id.toString()
   ) {
     throw new ApiError(403, "Not allowed to delete this record");
@@ -162,8 +173,9 @@ export const getDailyReport = asyncHandler(async (req, res) => {
 // ✅ Monthly Report (By Month)
 export const getMonthlyReport = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, month, year } = req.query;
+  const scopedSchoolId = getScopedSchoolId(req, schoolId);
 
-  if (!schoolId || !academicYearId || !month || !year) {
+  if (!scopedSchoolId || !academicYearId || !month || !year) {
     throw new ApiError(400, "schoolId, academicYearId, month and year are required!");
   }
 
@@ -171,7 +183,7 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
   const end = new Date(year, month, 0, 23, 59, 59);
 
   const records = await Attendance.find({
-    schoolId,
+    schoolId: scopedSchoolId,
     academicYearId,
     date: { $gte: start, $lte: end },
   }).populate("userId", "fullName email role");
@@ -182,8 +194,9 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
 // ✅ Class-wise Monthly Report
 export const getClassMonthlyReport = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, schoolClassId, sectionId, month, year } = req.query;
+  const scopedSchoolId = getScopedSchoolId(req, schoolId);
 
-  if (!schoolId || !academicYearId || !schoolClassId || !month || !year) {
+  if (!scopedSchoolId || !academicYearId || !schoolClassId || !month || !year) {
     throw new ApiError(400, "schoolId, academicYearId, schoolClassId, month and year are required!");
   }
 
@@ -191,7 +204,7 @@ export const getClassMonthlyReport = asyncHandler(async (req, res) => {
   const end = new Date(year, month, 0, 23, 59, 59);
 
   const records = await Attendance.find({
-    schoolId,
+    schoolId: scopedSchoolId,
     academicYearId,
     schoolClassId,
     ...(sectionId && { sectionId }),
@@ -205,12 +218,13 @@ export const getClassMonthlyReport = asyncHandler(async (req, res) => {
 // ✅ Export to Excel
 export const exportAttendanceExcel = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, month, year } = req.query;
+  const scopedSchoolId = getScopedSchoolId(req, schoolId);
 
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 0, 23, 59, 59);
 
   const records = await Attendance.find({
-    schoolId,
+    schoolId: scopedSchoolId,
     academicYearId,
     date: { $gte: start, $lte: end },
   }).populate("userId", "fullName email role");
@@ -246,12 +260,17 @@ export const exportAttendanceExcel = asyncHandler(async (req, res) => {
 // ✅ Export to PDF
 export const exportAttendancePDF = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, month, year } = req.query;
+  const scopedSchoolId = getScopedSchoolId(req, schoolId);
+
+  if (!scopedSchoolId || !academicYearId || !month || !year) {
+    throw new ApiError(400, "schoolId, academicYearId, month and year are required!");
+  }
 
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 0, 23, 59, 59);
 
   const records = await Attendance.find({
-    schoolId,
+    schoolId: scopedSchoolId,
     academicYearId,
     date: { $gte: start, $lte: end },
   }).populate("userId", "fullName email role");

@@ -70,6 +70,9 @@ const roleMiddleware = (allowedRoles) => {
           new ApiError(401, "Access denied. You do not have the necessary permissions."));
       }
 
+      // expose resolved role for downstream tenant checks
+      req.userRole = userRole.name;
+
       next();
     } catch (error) {
       return res.status(500).json({ 
