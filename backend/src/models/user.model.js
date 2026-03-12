@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -43,6 +44,14 @@ const userSchema = new Schema({
     
     refreshToken: String,
     accessToken: String,
+    emailVerificationToken: String,
+    emailVerificationExpire: Date,
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
 }, { timestamps: true });
 
 // 🔹 Password Hash
@@ -94,6 +103,26 @@ userSchema.methods.generateRefreshToken = function () {
     }, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: process.env.REFRESH_TOKEN_EXPIRY
     });
+};
+
+userSchema.methods.generateEmailVerificationToken = function () {
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    this.emailVerificationToken = crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+    this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000;
+    return rawToken;
+};
+
+userSchema.methods.generateResetPasswordToken = function () {
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    this.resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+    this.resetPasswordExpire = Date.now() + 60 * 60 * 1000;
+    return rawToken;
 };
 
 export const User = mongoose.model("User", userSchema);
