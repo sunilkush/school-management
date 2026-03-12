@@ -59,6 +59,8 @@ import SmsEmailHistory from "./pages/SchoolAdmin/Communication/SmsEmailHistory.j
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import RoleWorkspace from "./pages/RoleWorkspace.jsx";
 import RoleDynamicPortal from "./pages/RoleDynamicPortal.jsx";
+import ModuleOverview from "./pages/modules/ModuleOverview.jsx";
+import ModuleDetail from "./pages/modules/ModuleDetail.jsx";
 import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx";
 import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
 import NoActiveYear from "./pages/no-active-year.jsx";
@@ -136,6 +138,67 @@ const router = createBrowserRouter([
         element: <Dashboard />,
         children: [
           { index: true, element: <RoleBasedRedirect /> },
+
+          {
+            path: "modules",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <ModuleOverview />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "modules/:moduleKey",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <ModuleDetail />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "superadmin",
             element: (

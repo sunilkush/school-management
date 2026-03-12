@@ -27,6 +27,19 @@ const buildFallbackMenuFromPermissions = (permissions = []) => {
   });
 };
 
+const withModuleCenterMenu = (menuItems = []) => {
+  const alreadyExists = menuItems.some((item) => item.path === "modules");
+  if (alreadyExists) return menuItems;
+
+  return [
+    ...menuItems,
+    {
+      title: "ERP Modules",
+      path: "modules",
+    },
+  ];
+};
+
 const SidebarMenu = ({ role }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,8 +47,8 @@ const SidebarMenu = ({ role }) => {
 
   const menuItems = useMemo(() => {
     const roleMenu = Array.isArray(sidebarMenu?.[role]) ? sidebarMenu[role] : [];
-    if (roleMenu.length) return roleMenu;
-    return buildFallbackMenuFromPermissions(permissions);
+    if (roleMenu.length) return withModuleCenterMenu(roleMenu);
+    return withModuleCenterMenu(buildFallbackMenuFromPermissions(permissions));
   }, [role, permissions]);
 
   const initialOpenKeys = useMemo(() => {
