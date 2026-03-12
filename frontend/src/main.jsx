@@ -69,8 +69,8 @@ import QuestionBank from './pages/Teacher/Exams/QuestionBank.jsx';
 import CreateExam from './pages/Teacher/Exams/EditExamForm.jsx';
 import ExamLive from './pages/Student/Exams/ExamLive.jsx';
 import AttemptReview from './pages/Student/Exams/AttemptReview.jsx';
-import ClassPage from './pages/SuperAdmin/Classes_&_Section/ClassPage.jsx';
-import ClassSectionList from './pages/SuperAdmin/Classes_&_Section/ClassSectionList.jsx';
+import ClassPage from './pages/SuperAdmin/Master_Settings/ClassPage.jsx';
+import ClassSectionList from './pages/SuperAdmin/Master_Settings/ClassSectionList.jsx';
 import EmployeeForm from './components/forms/EmployeeForm.jsx';
 import EmployeeDetailes from './pages/Teacher/Profile/EmployeeDetailes.jsx';
 import FeeStudent from './pages/Student/Fees/FeeStudent.jsx';
@@ -123,6 +123,8 @@ import Assignments from "./pages/Teacher/Assignments/Assignments.jsx";
 import MyStudents from "./pages/Teacher/My_Students/MyStudents.jsx";
 import StudentAttendance from "./pages/Teacher/Attendance/StudentAttendance.jsx";
 import BoardClassPage from './pages/SuperAdmin/Master_Settings/BoardClassPage.jsx';
+import PaymentsPage from './pages/SuperAdmin/School_Management/PaymentsPage.jsx';
+import RevenuePage from './pages/SuperAdmin/School_Management/RevenuePage.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -249,6 +251,8 @@ const router = createBrowserRouter([
               { path: "academics/boards", element: <SchoolBoards /> },
               { path: "academics/chapters-topics", element: <ChaptersTopics /> },
               { path: "academics/boards-class", element:<BoardClassPage/>},
+              { path: "payments", element:<PaymentsPage/>},
+              { path: "revenue", element:<RevenuePage/>},
 
 
             ],

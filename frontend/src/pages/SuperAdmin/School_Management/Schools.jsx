@@ -85,7 +85,7 @@ const Schools = () => {
       ) : (
         <Row gutter={[16, 16]}>
   {schools.map((school) => (
-    <Col key={school._id} xs={24} sm={12} lg={6}>
+    <Col key={school._id} xs={24} sm={12} lg={8}>
       <Card
         hoverable
         className="h-full rounded-xl border border-gray-200 relative"
