@@ -39,7 +39,10 @@ const paymentSchema = new mongoose.Schema(
       default: Date.now,
     },
    razorpay: Object,
-  status: String,
+  status: {
+  type: String,
+  enum: ["success", "failed", "pending"]
+},
     receiptNo: {
       type: String,
       required: true,

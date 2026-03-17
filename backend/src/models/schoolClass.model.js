@@ -46,7 +46,7 @@ const schoolClassSchema = new Schema(
 );
 
 schoolClassSchema.index(
-  { schoolId: 1, academicYearId: 1, boardschoolClassId: 1,classId: 1 },
+ { schoolId: 1, academicYearId: 1, boardClassId: 1, classId: 1 },
   { unique: true }
 );
 

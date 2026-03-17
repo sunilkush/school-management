@@ -56,6 +56,22 @@ const topicSchema = new Schema(
       type: String,
       enum: ["Super Admin", "School Admin"],
       required: true
+    },
+    slug: {
+      type: String,
+      lowercase: true
+    },
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      required: function () {
+        return !this.isGlobal;
+      }
+    },
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      required: true
     }
   },
   { timestamps: true }
@@ -72,6 +88,7 @@ topicSchema.index(
   },
   { unique: true, sparse: true }
 );
+
 
 const Topic = mongoose.models.Topic || mongoose.model("Topic", topicSchema);
 

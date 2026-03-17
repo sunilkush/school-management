@@ -51,6 +51,6 @@ const loginLogSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-
+loginLogSchema.index({ userId: 1, loginTime: -1 });
 // Index for faster querying by userId and loginTime
 export const LoginLog = mongoose.model('LoginLog', loginLogSchema);

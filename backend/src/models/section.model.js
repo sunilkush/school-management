@@ -32,7 +32,7 @@ const sectionSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    students: [
+    StudentEnrollmentId: [
       {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -59,6 +59,10 @@ const sectionSchema = new Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    academicYearId: {
+  type: Schema.Types.ObjectId,
+  ref: "AcademicYear",
+}
   },
   { timestamps: true }
 );

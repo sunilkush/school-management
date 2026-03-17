@@ -1,14 +1,13 @@
-// models/Board.js
 import mongoose, { Schema } from "mongoose";
 
 const boardSchema = new Schema(
   {
-    // 🔹 Basic Details
     name: {
       type: String,
       required: true,
       trim: true,
       uppercase: true,
+      unique: true, // ✅ yahi rakh do, alag index ki zarurat nahi
     },
 
     code: {
@@ -16,15 +15,14 @@ const boardSchema = new Schema(
       trim: true,
       uppercase: true,
       unique: true,
-      sparse: true, // prevent null duplicate issue
+      sparse: true,
     },
 
     description: { type: String, trim: true },
 
-    // 🔹 Ownership
     createdByRole: {
       type: String,
-      enum: ["Super Admin"], // Future safe
+      enum: ["Super Admin"],
       required: true,
     },
 
@@ -39,16 +37,9 @@ const boardSchema = new Schema(
       ref: "User",
     },
 
-    // 🔹 Status
     isActive: {
       type: Boolean,
       default: true,
-    },
-
-    status: {
-      type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
     },
 
     remarks: { type: String, trim: true },
@@ -56,20 +47,8 @@ const boardSchema = new Schema(
   { timestamps: true }
 );
 
-// ✅ Unique Index (Only Once)
-boardSchema.index({ name: 1 }, { unique: true });
-
-// ===============================
-// ✅ Sync Status & isActive
-// ===============================
-boardSchema.pre("save", function (next) {
-  if (this.isActive) {
-    this.status = "Active";
-  } else {
-    this.status = "Inactive";
-  }
-  next();
-});
+// ❌ REMOVE THIS (duplicate unique)
+// boardSchema.index({ name: 1 }, { unique: true });
 
 // ===============================
 // ✅ Auto Generate Unique Code
@@ -82,7 +61,7 @@ boardSchema.pre("save", async function (next) {
     let newCode;
 
     while (!isUnique) {
-      const randomNum = Math.floor(100 + Math.random() * 9000);
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
       newCode = `${prefix}${randomNum}`;
 
       const exists = await mongoose.models.Board.findOne({ code: newCode });
@@ -95,8 +74,5 @@ boardSchema.pre("save", async function (next) {
   next();
 });
 
-// ===============================
-// ✅ Safe Model Export
-// ===============================
 const Board = mongoose.models.Board || mongoose.model("Board", boardSchema);
 export default Board;

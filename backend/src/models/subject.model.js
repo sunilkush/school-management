@@ -98,7 +98,7 @@ const subjectSchema = new Schema(
 /* ================= INDEXES ================= */
 
 subjectSchema.index(
-  { name: 1, boardschoolClassId: 1 },
+  { name: 1, boardClassId: 1 },
   { unique: true }
 );
 
