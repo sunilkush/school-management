@@ -2,8 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 // ================= CONFIG ================= //
 const API_URL = import.meta.env.VITE_API_URL;
-const storedUser = localStorage.getItem("user");
-const storedToken = localStorage.getItem("accessToken");
+
 
 
 // ================= HELPER ================= //
@@ -95,6 +94,7 @@ export const logoutUser = createAsyncThunk(
       await axios.post(`${API_URL}/user/logout`, {}, {
         headers: { Authorization: `Bearer ${token}`, }
       });
+       
       return true;
     }
     catch (err) {
@@ -269,8 +269,8 @@ export const getUserById = createAsyncThunk(
 // // ================= SLICE ================= 
 // ================= INITIAL STATE ================= // 
 const initialState = {
-  user: storedUser ? JSON.parse(storedUser) : null,
-  accessToken: storedToken || null, users: [],
+  /* user: storedUser ? JSON.parse(storedUser) : null,
+  accessToken: storedToken || null, users: [], */
   profile: null,
   permissions: [],
   loading: false,
