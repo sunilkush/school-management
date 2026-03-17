@@ -1,18 +1,18 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logout } from '../features/authSlice'; // ✅ Make sure this path is correct
+import { logoutUser } from '../features/authSlice'; // ✅ Make sure this path is correct
 
 const NoActiveYear = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { user } = useSelector((state) => state.auth); // ✅ logout removed from here
+    const { user } = useSelector((state) => state.auth); // ✅ logoutUser removed from here
     const role = user?.role?.name;
 
     const handleGoToSettings = () => {
         // If the user is not a Super Admin, log them out and redirect to the home page
         if (role !== 'Super Admin') {
-            dispatch(logout()); // ✅ Correctly dispatch the logout action
+            dispatch(logoutUser()); // ✅ Correctly dispatch the logoutUser action
             localStorage.clear(); // Clear local storage
             navigate('/', { replace: true });
         } else {

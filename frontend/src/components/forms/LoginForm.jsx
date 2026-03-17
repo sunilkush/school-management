@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login, resetAuthState } from "../../features/authSlice";
+import { loginUser, resetState } from "../../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Layout,
@@ -46,8 +46,8 @@ const LoginForm = () => {
     }
   }, [roleName, navigate, navigated]);
 
-  const onFinish = (values) => dispatch(login(values));
-  const onValuesChange = () => error && dispatch(resetAuthState());
+  const onFinish = (values) => dispatch(loginUser(values));
+  const onValuesChange = () => error && dispatch(resetState());
 
   return (
     <Layout style={{ minHeight: "100vh" }}>

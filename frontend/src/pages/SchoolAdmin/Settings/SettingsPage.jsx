@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateProfile } from "../../../features/authSlice";
+import { updateUser } from "../../../features/authSlice";
 import { fetchRoles } from "../../../features/roleSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
 import {
@@ -64,7 +64,7 @@ const Settings = () => {
   }, [user, form]);
 
   const handleSave = (values) => {
-    dispatch(updateProfile({ name: values.fullName, email: values.email, phone: values.phone }));
+    dispatch(updateUser({ name: values.fullName, email: values.email, phone: values.phone }));
     message.success("Settings saved successfully!");
   };
 

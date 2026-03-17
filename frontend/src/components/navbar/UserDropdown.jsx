@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../../features/authSlice";
+import { logoutUser } from "../../features/authSlice";
 import { Avatar, Dropdown, Menu, Button, Typography ,Col} from "antd";
 import {
   UserOutlined,
@@ -20,7 +20,7 @@ const UserDropdown = () => {
   const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") || "user";
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     navigate("/");
   };
 

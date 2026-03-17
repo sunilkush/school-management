@@ -15,7 +15,11 @@ const classSubjectSchema = new Schema(
       required: true,
       index: true
     },
-
+     streamId: {
+      type: Schema.Types.ObjectId,
+      ref: "Stream",
+      default: null, // only for 11-12
+    },
     sectionId: {
       type: Schema.Types.ObjectId,
       ref: "Section",

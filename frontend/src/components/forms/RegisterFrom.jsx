@@ -16,7 +16,7 @@ import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
 import {
   registerUser,
-  resetAuthState,
+  resetState,
   fetchAllUser,
 } from "../../features/authSlice";
 
@@ -100,7 +100,7 @@ const RegisterForm = ({ onClose }) => {
 
     const timer = setTimeout(() => {
       setMessage("");
-      dispatch(resetAuthState());
+      dispatch(resetState());
       onClose?.();
     }, 1500);
 

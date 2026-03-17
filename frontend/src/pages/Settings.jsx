@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {  useDispatch, useSelector } from "react-redux";
-import { updateProfile } from "../features/authSlice";
+import { updateUser } from "../features/authSlice";
 import { fetchRoles } from "../features/roleSlice";
 import { fetchSchools } from "../features/schoolSlice";
 
@@ -60,7 +60,7 @@ const Settings = () => {
   };
 
   const handleSave = () => {
-    dispatch(updateProfile({ name: form.fullName, email: form.email, phone: form.phone }));
+    dispatch(updateUser({ name: form.fullName, email: form.email, phone: form.phone }));
     alert("Settings saved!");
   };
 
