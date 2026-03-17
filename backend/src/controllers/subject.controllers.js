@@ -130,15 +130,6 @@ const getAllSubjects = asyncHandler(async (req, res) => {
 
   /* ================= FETCH ================= */
   const subjects = await Subject.find(query)
-   
-    .populate({
-      path: "schoolByAssignedTeachers.teacherId",
-      select: "name email",
-    })
-    .populate({
-      path: "schoolByAssignedClasses.schoolClassId",
-      select: "name",
-    })
     .skip(skip)
     .limit(Number(limit))
     .sort({ createdAt: -1 });

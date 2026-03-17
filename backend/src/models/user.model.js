@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { type } from "os";
 
 const userSchema = new Schema(
   {
@@ -25,8 +26,7 @@ const userSchema = new Schema(
 
     password: {
       type: String,
-      required: true,
-      select: false, // 🔥 security (password hide by default)
+      required: true
     },
 
     roleId: {
@@ -36,23 +36,15 @@ const userSchema = new Schema(
       index: true,
     },
 
-    schoolId: {
-      type: Schema.Types.ObjectId,
-      ref: "School",
-      required: true,
-      index: true,
-    },
+
 
     avatar: {
       type: String,
       default: null,
     },
-
-    // 🔹 Multi-Tenant Safety
-    tenantId: {
-      type: String,
-      required: true,
-      index: true,
+    schoolId:{
+        type:Schema.Types.ObjectId,
+        ref:"School",
     },
 
     // 🔹 Status
@@ -75,16 +67,24 @@ const userSchema = new Schema(
     },
 
     // 🔹 Email Verification
-    emailVerificationToken: String,
-    emailVerificationExpire: Date,
+    emailVerificationToken: {
+        type:String
+    },
+    emailVerificationExpire: {
+        type:Date
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
     },
 
     // 🔹 Password Reset
-    resetPasswordToken: String,
-    resetPasswordExpire: Date,
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordExpire:{
+       type: String,
+    },
 
     // 🔹 Audit Fields (Enterprise MUST)
     createdBy: {
@@ -96,7 +96,9 @@ const userSchema = new Schema(
       ref: "User",
     },
 
-    lastLoginAt: Date,
+    lastLoginAt: {
+        type:Date
+    },
   },
   {
     timestamps: true,
@@ -110,13 +112,14 @@ userSchema.index({ regId: 1, schoolId: 1 }, { unique: true });
 
 
 // 🔹 Password Hash Middleware
+// Hash password
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  this.password = await bcrypt.hash(this.password, 12);
-
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
+
 
 
 // 🔹 Generate School-wise RegId (Race Condition Safe)

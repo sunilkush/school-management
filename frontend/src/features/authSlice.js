@@ -4,40 +4,33 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 const storedUser = localStorage.getItem("user");
 const storedToken = localStorage.getItem("accessToken");
-// ================= INITIAL STATE ================= // 
-const initialState = {
-  user: storedUser ? JSON.parse(storedUser) : null,
-  accessToken: storedToken || null, users: [],
-  profile: null,
-  permissions: [],
-  loading: false,
-  error: null,
-  success: false,
-};
+
 
 // ================= HELPER ================= //
-const authHeader = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}`, }, });
+
 // ================= AUTH ================= // LOGIN 
 
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (data, { rejectWithValue }) => {
     try {
+      // ❌ REMOVE TOKEN FROM LOGIN
       const res = await axios.post(`${API_URL}/user/login`, data);
       return res.data.data;
-    }
-
-    catch (err) {
+    } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
-  });
+  }
+);
 // REFRESH TOKEN 
 
 export const refreshToken = createAsyncThunk(
   "auth/refreshToken",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_URL}/user/refresh-token`);
+      const res = await axios.post(`${API_URL}/user/refresh-token`, {}, {
+        withCredentials: true
+      });
       return res.data.data;
     }
     catch (err) {
@@ -95,7 +88,13 @@ export const logoutUser = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await axios.post(`${API_URL}/user/logout`, {}, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      await axios.post(`${API_URL}/user/logout`, {}, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return true;
     }
     catch (err) {
@@ -107,7 +106,13 @@ export const registerUser = createAsyncThunk(
   "auth/register",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_URL}/user/register`, data, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      const res = await axios.post(`${API_URL}/user/register`, data, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return res.data;
     }
     catch (err) {
@@ -120,20 +125,39 @@ export const currentUser = createAsyncThunk(
   "auth/profile",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/user/profile`, authHeader());
+     const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+
+
+      const res = await axios.get(`${API_URL}/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || err.message || "Something went wrong"
+      );
     }
-    catch (err) {
-      return rejectWithValue(err.response?.data?.message);
-    }
-  });
+  }
+);
 // UPDATE USER
 
 export const updateUser = createAsyncThunk(
   "auth/updateUser",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${API_URL}/user/update`, data, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      const res = await axios.put(`${API_URL}/user/update`, data, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message);
@@ -144,7 +168,13 @@ export const changePassword = createAsyncThunk(
   "auth/changePassword",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${API_URL}/user/change-password`, data, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      const res = await axios.put(`${API_URL}/user/change-password`, data, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return res.data.message;
     }
     catch (err) {
@@ -154,7 +184,13 @@ export const changePassword = createAsyncThunk(
 // PERMISSIONS
 export const getMyPermissions = createAsyncThunk("auth/permissions", async (_, { rejectWithValue }) => {
   try {
-    const res = await axios.get(`${API_URL}/user/my-permissions`, authHeader());
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      return rejectWithValue("No token found");
+    }
+    const res = await axios.get(`${API_URL}/user/my-permissions`, {
+      headers: { Authorization: `Bearer ${token}`, }
+    });
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -165,7 +201,13 @@ export const fetchAllUser = createAsyncThunk(
   "auth/allUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/user/all`, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      const res = await axios.get(`${API_URL}/user/all`, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return res.data.data;
     }
     catch (err) {
@@ -177,7 +219,13 @@ export const deleteUser = createAsyncThunk(
   "auth/deleteUser",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.patch(`${API_URL}/user/delete/${id}`, {}, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      const res = await axios.patch(`${API_URL}/user/delete/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return res.data.data;
     }
     catch (err) {
@@ -189,7 +237,13 @@ export const activeUser = createAsyncThunk(
   "auth/activeUser",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.patch(`${API_URL}/user/active/${id}`, {}, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      const res = await axios.patch(`${API_URL}/user/active/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message);
@@ -200,13 +254,29 @@ export const getUserById = createAsyncThunk(
   "auth/getUserById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/user/single/${id}`, authHeader());
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return rejectWithValue("No token found");
+      }
+      const res = await axios.get(`${API_URL}/user/single/${id}`, {
+        headers: { Authorization: `Bearer ${token}`, }
+      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message);
     }
   });
 // // ================= SLICE ================= 
+// ================= INITIAL STATE ================= // 
+const initialState = {
+  user: storedUser ? JSON.parse(storedUser) : null,
+  accessToken: storedToken || null, users: [],
+  profile: null,
+  permissions: [],
+  loading: false,
+  error: null,
+  success: false,
+};
 const authSlice = createSlice({
   name: "auth", initialState, reducers: {
     logoutLocal: (state) => {

@@ -313,22 +313,32 @@ const updateUser = asyncHandler(async (req, res) => {
  * @route PUT /api/users/change-password
  */
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const { oldPassword, newPassword } = req.body
-  if (!oldPassword || !newPassword)
-    throw new ApiError(400, 'Old and new passwords are required')
+  const { oldPassword, newPassword } = req.body;
 
-  const user = await User.findById(req.user?._id)
-  if (!user || !(await user.isPasswordCorrect(oldPassword))) {
-    throw new ApiError(400, 'Invalid old password')
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, 'Old and new passwords are required');
   }
 
-  user.password = newPassword
-  await user.save()
+  // ✅ FIX: password select karo
+  const user = await User.findById(req.user?._id).select("+password");
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, 'Password changed successfully'))
-})
+  if (!user || !user.password) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  const isMatch = await user.isPasswordCorrect(oldPassword);
+
+  if (!isMatch) {
+    throw new ApiError(400, 'Invalid old password');
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, 'Password changed successfully')
+  );
+});
 
 /**
  * @desc Get current logged-in user

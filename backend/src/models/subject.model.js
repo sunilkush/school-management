@@ -30,14 +30,6 @@ const subjectSchema = new Schema(
     },
 
     /* ================= CURRICULUM ================= */
-
-    boardClassId: {
-      type: Schema.Types.ObjectId,
-      ref: "BoardClass",
-      required: true,
-      index: true,
-    },
-
     category: {
       type: String,
       enum: ["Core", "Elective", "Language", "Practical", "Optional"],
@@ -98,7 +90,7 @@ const subjectSchema = new Schema(
 /* ================= INDEXES ================= */
 
 subjectSchema.index(
-  { name: 1, boardClassId: 1 },
+  { name: 1 },
   { unique: true }
 );
 
