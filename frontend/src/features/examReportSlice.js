@@ -12,7 +12,7 @@ export const fetchExamReport = createAsyncThunk(
   async (examId, { rejectWithValue }) => {
     try {
       
-      const res = await axios.get(`${API_BASE_URL}/reports/exam/${examId}`, {
+     const res = await axios.get(`${API_BASE_URL}/exam-report/exam/${examId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
       return res.data.data;
@@ -27,7 +27,7 @@ export const fetchStudentReport = createAsyncThunk(
   "reports/fetchStudentReport",
   async (studentId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/student/${studentId}`, {
+      const res = await axios.get(`${API_BASE_URL}/exam-report/student/${studentId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
       return res.data.data;
@@ -42,7 +42,7 @@ export const fetchOverallReport = createAsyncThunk(
   "reports/fetchOverallReport",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/overall`, {
+     const res = await axios.get(`${API_BASE_URL}/exam-report`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
       return res.data.data;
@@ -57,7 +57,7 @@ export const fetchReports = createAsyncThunk(
   "reports/fetchReports",
   async (filters, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports`, {
+     const res = await axios.get(`${API_BASE_URL}/exam-report`, {
         params: filters,
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
@@ -73,7 +73,7 @@ export const exportReportExcel = createAsyncThunk(
   "reports/exportExcel",
   async (filters, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/export/excel`, {
+      const res = await axios.get(`${API_BASE_URL}/exam-report/export/excel`, {
         params: filters,
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         responseType: "blob", // required for file
@@ -99,7 +99,7 @@ export const exportReportPDF = createAsyncThunk(
   "reports/exportPDF",
   async (filters, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/export/pdf`, {
+       const res = await axios.get(`${API_BASE_URL}/exam-report/export/pdf`, {
         params: filters,
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         responseType: "blob",

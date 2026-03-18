@@ -15,7 +15,10 @@ import {
 } from "@ant-design/icons";
 import {
   fetchReports,
-  exportExamReport,
+ exportReportExcel,
+  exportReportPDF,
+  
+
 } from "../../../features/examReportSlice";
 
 const { Title } = Typography;
@@ -23,44 +26,46 @@ const { Title } = Typography;
 const ExamReports = () => {
   const dispatch = useDispatch();
 
-  const { reports = [], loading } = useSelector(
-    (state) => state.examReports
-  );
+  const { reports = [], loading } = useSelector((state) => state.examReports);
 
   useEffect(() => {
     dispatch(fetchReports());
   }, [dispatch]);
 
   const handleExport = (format) => {
-    dispatch(exportExamReport({ format }));
+     if (format === "excel") {
+      dispatch(exportReportExcel());
+      return;
+    }
+
+    dispatch(exportReportPDF());
   };
 
   const columns = [
     {
       title: "Exam",
-      render: (_, record) => record.exam?.title || "-",
+       dataIndex: "examTitle",
+      key: "examTitle",
     },
     {
       title: "Student",
-      render: (_, record) => record.student?.name || "-",
+       dataIndex: "studentName",
+      key: "studentName",
     },
     {
-      title: "Score",
+       title: "Score",
+      dataIndex: "score",
+      key: "score",
       align: "center",
-      render: (_, record) =>
-        record.totalObtainedMarks ?? 0,
+      
     },
     {
       title: "Status",
-      align: "center",
+       dataIndex: "status",
+      key: "status",
       render: (_, record) => {
         const status = record.status;
-        const color =
-          status === "Pass"
-            ? "green"
-            : status === "Fail"
-            ? "red"
-            : "blue";
+        const color = status === "Pass" ? "green" : status === "Fail" ? "red" : "blue";
 
         return <Tag color={color}>{status}</Tag>;
       },
@@ -100,7 +105,7 @@ const ExamReports = () => {
           <Table
             columns={columns}
             dataSource={reports}
-            rowKey={(record) => record._id}
+           rowKey="_id"
             pagination={{ pageSize: 10 }}
           />
         )}

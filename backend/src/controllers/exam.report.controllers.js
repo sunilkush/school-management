@@ -1,8 +1,8 @@
 import { Attempt } from "../models/ExamAttempts.model.js";
-import { Exam } from "../models/Exam.model.js"; // ⚠ ensure file name matches exactly
-import { Student } from "../models/student.model.js";
+import { Exam } from "../models/Exam.model.js";
+import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import asyncHandler from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateGradingReport } from "../utils/gradingService.js";
 import { exportToExcel, exportToPDF } from "../utils/exportService.js";
 
@@ -20,7 +20,7 @@ export const getExamReport = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, "Exam not found"));
   }
 
-  const attempts = await Attempt.find({ examId }).populate("studentId", "name email rollNo");
+    const attempts = await Attempt.find({ examId }).populate("studentId", "name email");
 
   return res.status(200).json(
     new ApiResponse(200, { exam, attempts }, "Exam report fetched successfully")
@@ -36,7 +36,7 @@ export const getStudentReport = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, "Student ID is required"));
   }
 
-  const student = await Student.findById(studentId);
+  const student = await User.findById(studentId);
   if (!student) {
     return res.status(404).json(new ApiResponse(404, null, "Student not found"));
   }
@@ -62,15 +62,15 @@ export const getPerformanceSummary = asyncHandler(async (req, res) => {
     return res.status(404).json(new ApiResponse(404, null, "No attempts found for this exam"));
   }
 
-  const totalMarks = attempts.reduce((acc, attempt) => acc + (attempt.totalMarks || 0), 0);
+  const totalMarks = attempts.reduce((acc, attempt) => acc + (attempt.totalMarksObtained || 0), 0);
   const avgMarks = totalMarks / attempts.length;
 
   const summary = {
     totalAttempts: attempts.length,
     totalMarks,
     avgMarks,
-    highest: Math.max(...attempts.map(a => a.totalMarks || 0)),
-    lowest: Math.min(...attempts.map(a => a.totalMarks || 0)),
+    highest: Math.max(...attempts.map((a) => a.totalMarksObtained || 0)),
+    lowest: Math.min(...attempts.map((a) => a.totalMarksObtained || 0)),
   };
 
   return res.status(200).json(
@@ -93,7 +93,7 @@ export const getReports = asyncHandler(async (req, res) => {
 export const exportReportsExcel = asyncHandler(async (req, res) => {
   const { examId, schoolId, type } = req.query;
   const reportData = await generateGradingReport({ examId, schoolId, type });
-  const fileBuffer = await exportToExcel(reportData, "Exam_Report");
+  const fileBuffer = await exportToExcel(reportData);
 
   res.setHeader("Content-Disposition", "attachment; filename=exam_report.xlsx");
   res.setHeader(
@@ -110,7 +110,7 @@ export const exportReportsExcel = asyncHandler(async (req, res) => {
 export const exportReportsPDF = asyncHandler(async (req, res) => {
   const { examId, schoolId, type } = req.query;
   const reportData = await generateGradingReport({ examId, schoolId, type });
-  const fileBuffer = await exportToPDF(reportData, "Exam_Report");
+  const fileBuffer = await exportToPDF(reportData);
 
   res.setHeader("Content-Disposition", "attachment; filename=exam_report.pdf");
   res.setHeader("Content-Type", "application/pdf");

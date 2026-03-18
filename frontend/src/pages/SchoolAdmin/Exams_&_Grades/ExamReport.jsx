@@ -13,20 +13,26 @@ import {
   FileExcelOutlined,
   FilePdfOutlined,
 } from "@ant-design/icons";
-import { fetchReports, exportReportPDF } from "../../../features/examReportSlice";
+import { fetchReports,
+  exportReportExcel,exportReportPDF } from "../../../features/examReportSlice";
 
 const { Title } = Typography;
 
 const ExamReports = () => {
   const dispatch = useDispatch();
-  const { reports, loading } = useSelector((state) => state.reports);
+  const { reports = [], loading } = useSelector((state) => state.examReports);
 
   useEffect(() => {
     dispatch(fetchReports());
   }, [dispatch]);
 
   const handleExport = (format) => {
-    dispatch(exportReportPDF(format));
+    if (format === "excel") {
+      dispatch(exportReportExcel());
+      return;
+    }
+
+    dispatch(exportReportPDF());
   };
 
   const columns = [
@@ -53,11 +59,7 @@ const ExamReports = () => {
       align: "center",
       render: (status) => {
         const color =
-          status === "Pass"
-            ? "green"
-            : status === "Fail"
-            ? "red"
-            : "blue";
+           status === "Pass" ? "green" : status === "Fail" ? "red" : "blue";
 
         return <Tag color={color}>{status}</Tag>;
       },
