@@ -13,22 +13,24 @@ import {
 } from "../controllers/exam.controllers.js";
 import {auth, roleMiddleware} from "../middlewares/auth.middleware.js";
 const router = express.Router();
-const SUPER_ADMIN = ['Super Admin','Teacher','School Admin']
+const EXAM_MANAGERS = ['Super Admin', 'Teacher', 'School Admin'];
+const EXAM_READERS = [...EXAM_MANAGERS, 'Student', 'Parent'];
+const EXAM_ATTEMPT_ROLES = [...EXAM_MANAGERS, 'Student'];
 // Exam CRUD
-router.post("/",auth,roleMiddleware(SUPER_ADMIN), createExam);
-router.get("/",auth,roleMiddleware(SUPER_ADMIN), getExams);
+router.post("/", auth, roleMiddleware(EXAM_MANAGERS), createExam);
+router.get("/", auth, roleMiddleware(EXAM_READERS), getExams);
 
 // Attempts
-router.post("/attempt/start",auth,roleMiddleware(SUPER_ADMIN), startExamAttempt);
-router.post("/attempt/submit",auth,roleMiddleware(SUPER_ADMIN), submitExamAttempt);
-router.post("/attempt/evaluate",auth,roleMiddleware(SUPER_ADMIN), evaluateAttempt);
+router.post("/attempt/start", auth, roleMiddleware(EXAM_ATTEMPT_ROLES), startExamAttempt);
+router.post("/attempt/submit", auth, roleMiddleware(EXAM_ATTEMPT_ROLES), submitExamAttempt);
+router.post("/attempt/evaluate", auth, roleMiddleware(EXAM_MANAGERS), evaluateAttempt);
 
-router.get("/:id",auth,roleMiddleware(SUPER_ADMIN), getExamById);
-router.put("/:id",auth,roleMiddleware(SUPER_ADMIN), updateExam);
-router.delete("/:id",auth,roleMiddleware(SUPER_ADMIN), deleteExam);
+router.get("/:id", auth, roleMiddleware(EXAM_READERS), getExamById);
+router.put("/:id", auth, roleMiddleware(EXAM_MANAGERS), updateExam);
+router.delete("/:id", auth, roleMiddleware(EXAM_MANAGERS), deleteExam);
 
 // Publish
-router.put("/:id/publish",auth,roleMiddleware(SUPER_ADMIN), publishExam);
+router.put("/:id/publish", auth, roleMiddleware(EXAM_MANAGERS), publishExam);
 
 
 

@@ -125,6 +125,8 @@ import StudentAttendance from "./pages/Teacher/Attendance/StudentAttendance.jsx"
 import BoardClassPage from './pages/SuperAdmin/Master_Settings/BoardClassPage.jsx';
 import PaymentsPage from './pages/SuperAdmin/School_Management/PaymentsPage.jsx';
 import RevenuePage from './pages/SuperAdmin/School_Management/RevenuePage.jsx';
+import ParentExamsPage from './pages/Parent/Exams/ParentExamsPage.jsx';
+import StudentExamsPage from './pages/Student/Exams/StudentExamsPage.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -365,6 +367,7 @@ const router = createBrowserRouter([
               { path: "fees", element: <FeeStudent /> },
               { path: "exams/attempt-review", element: <AttemptReview /> },
               { path: "exams/exam-live", element: <ExamLive /> },
+              { path: "exams", element: <StudentExamsPage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "communication/send", element: <SendNotification /> },
@@ -387,6 +390,7 @@ const router = createBrowserRouter([
               { path: "grades", element: <ChildGrades /> },
               { path: "homework", element: <ChildHomework /> },
               { path: "fees", element: <FeeStudent /> },
+              { path: "exams", element: <ParentExamsPage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <ChildMessages /> },
               { path: "profile", element: <Profile /> },

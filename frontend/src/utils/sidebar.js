@@ -224,8 +224,15 @@ export const sidebarMenu = {
   student: [
     { title: "Dashboard", path: "student", icon: LayoutDashboard },
     { title: "Profile", path: "student/profile", icon: User },
-    { title: "Live Exams", path: "student/exams/exam-live", icon: MessageCircle },
-    { title: "Exam Review", path: "student/exams/attempt-review", icon: Clipboard },
+    {
+      title: "Examinations",
+      icon: GraduationCap,
+      subMenu: [
+        { title: "Exam Hub", path: "student/exams" },
+        { title: "Live Exams", path: "student/exams/exam-live" },
+        { title: "Exam Review", path: "student/exams/attempt-review" },
+      ],
+    },
     { title: "Homework", path: "student/homework", icon: ClipboardList },
     { title: "Attendance", path: "student/attendance", icon: UserCheck },
     { title: "Grades", path: "student/grades", icon: ClipboardSignature },
@@ -242,6 +249,15 @@ export const sidebarMenu = {
     { title: "Attendance", path: "parent/attendance", icon: UserCheck },
     { title: "Grades", path: "parent/grades", icon: Clipboard },
     { title: "Homework", path: "parent/homework", icon: ClipboardList },
+    {
+      title: "Examinations",
+      icon: GraduationCap,
+      subMenu: [
+        { title: "Exam Hub", path: "student/exams" },
+        { title: "Live Exams", path: "student/exams/exam-live" },
+        { title: "Exam Review", path: "student/exams/attempt-review" },
+      ],
+    },
     { title: "Fees", path: "parent/fees", icon: CreditCard },
     { title: "Messages", path: "parent/message", icon: MessageCircle },
     { title: "Reports", path: "parent/reports", icon: FileBarChart2 },
