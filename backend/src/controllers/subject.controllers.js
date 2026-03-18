@@ -10,7 +10,6 @@ import { mergeSchoolWiseAssignments } from "../utils/mergeAssignments.js";
 const createSubject = asyncHandler(async (req, res) => {
   const {
     name,
-    boardClassId,
     category,
     type,
     maxMarks,
@@ -18,12 +17,11 @@ const createSubject = asyncHandler(async (req, res) => {
     description
   } = req.body;
 
-  if (!name || !boardClassId)
+  if (!name ){
     throw new ApiError(400, "Name and BoardClass are required");
-
+  }
   const exists = await Subject.findOne({
-    name: name.toUpperCase(),
-    boardClassId
+    name: name.toUpperCase()
   });
 
   if (exists)
@@ -31,7 +29,6 @@ const createSubject = asyncHandler(async (req, res) => {
 
   const subject = await Subject.create({
     name,
-    boardClassId,
     category,
     type,
     maxMarks,

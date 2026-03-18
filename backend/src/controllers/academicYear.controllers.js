@@ -16,17 +16,27 @@ function generateAcademicYearName(startDate, endDate) {
 // ✅ CREATE academic year
 export const createAcademicYear = asyncHandler(async (req, res) => {
   const { code, startDate, endDate, schoolId, isActive } = req.body;
- 
+
   if (!startDate || !endDate || !schoolId) {
     throw new ApiError(400, "Start Date, End Date, and School ID are required.");
   }
 
-  const startDateF = parseDateString(startDate);
-  const endDateF = parseDateString(endDate);
-  const name = generateAcademicYearName(startDateF, endDateF);
-  const codeValue = code || `AY${new Date(startDateF).getFullYear()}`;
+  // ✅ Direct ISO parsing
+  const startDateF = new Date(startDate);
+  const endDateF = new Date(endDate);
 
-  // Only one active year per school
+  // ✅ Validation
+  if (isNaN(startDateF.getTime()) || isNaN(endDateF.getTime())) {
+    throw new ApiError(400, "Invalid date format");
+  }
+
+  if (startDateF >= endDateF) {
+    throw new ApiError(400, "Start date must be before end date");
+  }
+
+  const name = generateAcademicYearName(startDateF, endDateF);
+  const codeValue = code || `AY${startDateF.getFullYear()}`;
+
   if (isActive) {
     await AcademicYear.updateMany(
       { schoolId },
@@ -50,7 +60,6 @@ export const createAcademicYear = asyncHandler(async (req, res) => {
     data: academicYear,
   });
 });
-
 // ✅ GET all academic years for a school
 export const getAcademicYearsBySchool = asyncHandler(async (req, res) => {
   const { schoolId } = req.params;

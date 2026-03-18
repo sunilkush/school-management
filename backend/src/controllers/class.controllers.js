@@ -96,7 +96,7 @@ const deleteClass = asyncHandler(async (req, res) => {
    GET ALL CLASSES
 ========================================================= */
 const getAllClasses = asyncHandler(async (req, res) => {
-  let { page = 1, limit = 10, search, status } = req.query;
+  let { page , limit, search, status } = req.query;
 
   page = parseInt(page);
   limit = parseInt(limit);

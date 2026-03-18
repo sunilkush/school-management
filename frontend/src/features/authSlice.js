@@ -200,7 +200,8 @@ export const fetchAllUser = createAsyncThunk(
       const res = await axios.get(`${API_URL}/user/all`, {
         headers: { Authorization: `Bearer ${token}`, }
       });
-      return res.data.data;
+      
+      return res.data;
     }
     catch (err) {
       return rejectWithValue(err.response?.data?.message);
@@ -312,7 +313,7 @@ const authSlice = createSlice({
       })
       // USERS 
       .addCase(fetchAllUser.fulfilled, (state, action) => {
-        state.users = action.payload;
+        state.users = action.payload.data.data;
       })
       // DELETE 
       .addCase(deleteUser.fulfilled, (state, action) => {
