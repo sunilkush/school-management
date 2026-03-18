@@ -3,7 +3,8 @@ import axios from "axios";
 // ================= CONFIG ================= //
 const API_URL = import.meta.env.VITE_API_URL;
 
-
+const storedUser = localStorage.getItem('user')
+const storedToken = localStorage.getItem('accessToken')
 
 // ================= HELPER ================= //
 const clearAuthStorage = () => {
@@ -260,8 +261,8 @@ export const getUserById = createAsyncThunk(
 // // ================= SLICE ================= 
 // ================= INITIAL STATE ================= // 
 const initialState = {
-  /* user: storedUser ? JSON.parse(storedUser) : null,
-  accessToken: storedToken || null, users: [], */
+  user: storedUser ? JSON.parse(storedUser) : null,
+  accessToken: storedToken || null, users: [],
   profile: null,
   permissions: [],
   loading: false,
@@ -292,6 +293,7 @@ const authSlice = createSlice({
       })
       // // PROFILE 
       .addCase(currentUser.fulfilled, (state, action) => {
+        state.user = action.payload; 
         state.profile = action.payload;
       })
       .addCase(logoutUser.fulfilled, (state) => {
