@@ -75,8 +75,8 @@ export const generateNextRegId = async (schoolId) => {
  */
 // ✅ Register User Controller
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, roleId, schoolId, schoolClassId, parentId } = req.body;
-
+  const { name, email, password, roleId, schoolId, schoolClassId, parentId,isActive } = req.body;
+  
   if (!name || !email || !password || !roleId || !schoolId) {
     throw new ApiError(400, "All required fields must be provided");
   }
@@ -123,7 +123,7 @@ const registerUser = asyncHandler(async (req, res) => {
     schoolClassId,
     parentId,
     regId,          // 🔹 auto-generated
-    isActive: true,
+    isActive,
     academicYearId,
   });
 
@@ -176,9 +176,9 @@ const loginUser = asyncHandler(async (req, res) => {
       );
     }
 
-    if (!user.isEmailVerified) {
+    /* if (!user.isEmailVerified) {
       throw new ApiError(403, "Email is not verified. Please verify before login.");
-    }
+    } */
   }
 
   // 5️⃣ Tokens
@@ -436,11 +436,16 @@ const getCurrentUser = asyncHandler(async (req, res) => {
  */
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } })
+ const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  }
 
   return res
     .status(200)
-    .clearCookie('accessToken', { httpOnly: true, secure: true })
-    .clearCookie('refreshToken', { httpOnly: true, secure: true })
+     .clearCookie('accessToken', cookieOptions)
+    .clearCookie('refreshToken', cookieOptions)
     .json(new ApiResponse(200, {}, 'User logged out successfully'))
 })
 

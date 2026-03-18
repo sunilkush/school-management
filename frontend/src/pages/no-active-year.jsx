@@ -9,12 +9,12 @@ const NoActiveYear = () => {
     const { user } = useSelector((state) => state.auth); // ✅ logoutUser removed from here
     const role = user?.role?.name;
 
-    const handleGoToSettings = () => {
+    const handleGoToSettings = async () => {
         // If the user is not a Super Admin, log them out and redirect to the home page
         if (role !== 'Super Admin') {
-            dispatch(logoutUser()); // ✅ Correctly dispatch the logoutUser action
-            localStorage.clear(); // Clear local storage
-            navigate('/', { replace: true });
+            await dispatch(logoutUser()); // ✅ Correctly dispatch the logoutUser action
+            navigate('/', { replace: true }); // Clear local storage
+           
         } else {
             navigate('/settings'); // ✅ Add this if you want to go to settings for Super Admin
         }

@@ -37,7 +37,7 @@ router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerificationEmail);
 
 // ✅ Protected Routes
-router.post("/register", upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
+router.post("/register",  upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
 router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
 router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);

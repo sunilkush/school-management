@@ -45,7 +45,7 @@ const RegisterForm = ({ onClose }) => {
       schoolId:
         currentUserRole === "school admin" ? currentSchoolId : undefined,
       isActive: false,
-      avatar: null,
+      avatar: [],
     }),
     [currentUserRole, currentSchoolId]
   );
@@ -53,24 +53,20 @@ const RegisterForm = ({ onClose }) => {
   const [filteredRoles, setFilteredRoles] = useState([]);
   const [message, setMessage] = useState("");
 
-  /* ✅ FIX 1: API only if data not present */
+  /* Fetch data */
   useEffect(() => {
-    if (!schools || schools.length === 0) {
-      dispatch(fetchSchools());
-    }
-    if (!roles || roles.length === 0) {
-      dispatch(fetchRoles());
-    }
+    if (!schools?.length) dispatch(fetchSchools());
+    if (!roles?.length) dispatch(fetchRoles());
   }, [dispatch, schools, roles]);
 
-  /* ✅ FIX 2: set school only once */
+  /* Auto set school for school admin */
   useEffect(() => {
     if (currentUserRole === "school admin" && currentSchoolId) {
       form.setFieldsValue({ schoolId: currentSchoolId });
     }
-  }, [currentUserRole, currentSchoolId,form]);
+  }, [currentUserRole, currentSchoolId, form]);
 
-  /* ✅ FIX 3: role filtering without re-trigger */
+  /* Role filter */
   useEffect(() => {
     if (!roles?.length || !currentUserRole) return;
 
@@ -90,7 +86,7 @@ const RegisterForm = ({ onClose }) => {
     }
   }, [roles, currentUserRole]);
 
-  /* ✅ FIX 4: success logic safe */
+  /* Success handler */
   useEffect(() => {
     if (!success) return;
 
@@ -107,13 +103,15 @@ const RegisterForm = ({ onClose }) => {
     return () => clearTimeout(timer);
   }, [success, dispatch, form, onClose]);
 
+  /* Upload validation */
   const handleAvatarUpload = (file) => {
     if (file.size > 1024 * 1024) {
       return Upload.LIST_IGNORE;
     }
-    return false;
+    return false; // prevent auto upload
   };
 
+  /* Submit */
   const onFinish = (values) => {
     const formData = new FormData();
 
@@ -122,8 +120,9 @@ const RegisterForm = ({ onClose }) => {
     }
 
     Object.entries(values).forEach(([key, value]) => {
-      if (key === "avatar" && value?.file) {
-        formData.append("avatar", value.file.originFileObj);
+      if (key === "avatar" && value?.length > 0) {
+        // ✅ correct avatar handling
+        formData.append("avatar", value[0].originFileObj);
       } else if (value !== undefined && value !== null) {
         formData.append(key, value);
       }
@@ -206,7 +205,13 @@ const RegisterForm = ({ onClose }) => {
           </Select>
         </Form.Item>
 
-        <Form.Item label="Avatar" name="avatar">
+        {/* ✅ FINAL AVATAR FIX */}
+        <Form.Item
+          label="Avatar"
+          name="avatar"
+          valuePropName="fileList"
+          getValueFromEvent={(e) => e?.fileList}
+        >
           <Upload beforeUpload={handleAvatarUpload} maxCount={1}>
             <Button icon={<UploadOutlined />}>Upload Avatar</Button>
           </Upload>

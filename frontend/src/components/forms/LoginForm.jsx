@@ -25,7 +25,6 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { loading, error, user } = useSelector((state) => state.auth);
   const [navigated, setNavigated] = useState(false);
-
   const roleName = user?.role?.name?.toLowerCase();
 
   useEffect(() => {
@@ -73,8 +72,8 @@ const LoginForm = () => {
                 boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
                 borderRadius: 12,
               }}
-              bordered={false}
-            >
+              variant="borderless"
+              >
               <Title level={3} style={{ marginBottom: 0 }}>
                 Welcome Back 👋
               </Title>
@@ -121,7 +120,7 @@ const LoginForm = () => {
                   </Form.Item>
                   <Link to="/forgot-password">Forgot password?</Link>
                 </Row>
-
+               
                 {error && (
                   <Alert
                     message={error}

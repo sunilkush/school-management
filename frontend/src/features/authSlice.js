@@ -6,7 +6,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 
 // ================= HELPER ================= //
-
+const clearAuthStorage = () => {
+  localStorage.removeItem("user");
+  localStorage.removeItem("accessToken");
+};
 // ================= AUTH ================= // LOGIN 
 
 export const loginUser = createAsyncThunk(
@@ -85,21 +88,9 @@ export const resendVerification = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk(
   "auth/logout",
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        return rejectWithValue("No token found");
-      }
-      await axios.post(`${API_URL}/user/logout`, {}, {
-        headers: { Authorization: `Bearer ${token}`, }
-      });
-       
-      return true;
-    }
-    catch (err) {
-      return rejectWithValue("Logout failed", err);
-    }
+  async () => {
+    clearAuthStorage();
+    return true;
   });
 // ================= USER ================= // REGISTER (ADMIN) 
 export const registerUser = createAsyncThunk(
@@ -283,7 +274,7 @@ const authSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.profile = null;
-      localStorage.clear();
+      clearAuthStorage();
     },
     resetState: (state) => {
       state.error = null;
@@ -302,6 +293,20 @@ const authSlice = createSlice({
       // // PROFILE 
       .addCase(currentUser.fulfilled, (state, action) => {
         state.profile = action.payload;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.accessToken = null;
+        state.profile = null;
+        state.permissions = [];
+        state.success = false;
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        state.user = null;
+        state.accessToken = null;
+        state.profile = null;
+        state.permissions = [];
+        state.success = false;
       })
       // USERS 
       .addCase(fetchAllUser.fulfilled, (state, action) => {

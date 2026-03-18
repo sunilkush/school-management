@@ -19,9 +19,9 @@ const UserDropdown = () => {
   const { user } = useSelector((state) => state.auth);
   const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") || "user";
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
-    navigate("/");
+const handleLogout = async () => {
+    await dispatch(logoutUser());
+    navigate("/", { replace: true });
   };
 
   const menu = (
