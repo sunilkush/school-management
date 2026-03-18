@@ -2,12 +2,9 @@ import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute = ({ allowedRoles = [] }) => {
-  const { user, accessToken, loading } = useSelector((state) => state.auth);
-  console.log(user, accessToken)
-  // ⏳ Wait until loading complete
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const { user, accessToken} = useSelector((state) => state.auth);
+  
+ 
 
   // 🔐 Not logged in
   if (!accessToken || !user) {

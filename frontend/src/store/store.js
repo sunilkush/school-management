@@ -7,6 +7,7 @@ import subjectReducer from "../features/subjectSlice"
 import classReducer from "../features/classSlice";
 import academicYearReducer from "../features/academicYearSlice";
 import reportReducer from "../features/reportSlice";
+import examReportReducer from "../features/examReportSlice.js";
 import dashboardReducer from "../features/dashboardSlice";
 import examReducer from "../features/examSlice";
 import questionReducer from "../features/questionSlice";
@@ -36,6 +37,7 @@ const store = configureStore({
     class: classReducer,
     academicYear: academicYearReducer,
     reports: reportReducer,
+    examReports: examReportReducer,
     dashboard: dashboardReducer,
     exams: examReducer,
     questions: questionReducer,

@@ -20,7 +20,8 @@ const { Title } = Typography;
 
 const ExamReports = () => {
   const dispatch = useDispatch();
-  const { reports = [], loading } = useSelector((state) => state.examReports);
+  const { reports = [], loading = false } =
+  useSelector((state) => state.examReports || {});
 
   useEffect(() => {
     dispatch(fetchReports());
