@@ -126,7 +126,12 @@ export const sidebarMenu = {
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
     { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
-    { title: "My Self", path: "schooladmin/profile", icon: User, },
+    { title:"School Setup", icon: School, subMenu:[
+         {title:"Add Board", path:"schooladmin/add-boards"},
+         {title:"Add Acadmic Year", path:"schooladmin/add-acadmin-year"},
+         {title:"Add Class & Section", path:"schooladmin/add-class-section"},
+    ]},
+   /*  { title: "My Self", path: "schooladmin/profile", icon: User, }, */
     {
       title: "User Management",
       icon: Users,

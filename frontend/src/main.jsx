@@ -127,6 +127,9 @@ import PaymentsPage from './pages/SuperAdmin/School_Management/PaymentsPage.jsx'
 import RevenuePage from './pages/SuperAdmin/School_Management/RevenuePage.jsx';
 import ParentExamsPage from './pages/Parent/Exams/ParentExamsPage.jsx';
 import StudentExamsPage from './pages/Student/Exams/StudentExamsPage.jsx';
+import SchoolAcadmicYear from './pages/SchoolAdmin/SchoolSetup/SchoolAcadmicYear.jsx';
+import SchoolBoard from './pages/SchoolAdmin/SchoolSetup/SchoolBoard.jsx';
+import SchoolClass from './pages/SchoolAdmin/SchoolSetup/SchoolClass.jsx';
 //import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
@@ -312,7 +315,10 @@ const router = createBrowserRouter([
               { path: "inventory/supplies", element: <Supplies /> },
               { path: "inventory/assets", element: <Assets /> },
               { path: "fees/feestructure", element: <FeeStructure /> },
-              { path: "fees/assign", element: <StudentAssignFees /> }
+              { path: "fees/assign", element: <StudentAssignFees /> },
+              { path: "add-acadmin-year", element:<SchoolAcadmicYear/>},
+              { path: "add-boards", element:<SchoolBoard/> },
+              { path: "add-class-section", element:<SchoolClass/>  }
 
             ],
           },
