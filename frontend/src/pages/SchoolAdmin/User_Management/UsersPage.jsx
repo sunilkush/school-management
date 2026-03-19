@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Card,
   Table,
@@ -28,47 +28,57 @@ const UsersPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { users = [], user: loggedInUser } = useSelector((state) => state.auth);
-
+  // Redux state
+  const users = useSelector((state) => state.auth.users) || [];
+  const loggedInUser = useSelector((state) => state.auth.user);
+  const hasFetchedUsers = useSelector(state => state.auth.hasFetchedUsers);
+  // Local state
   const [selectedRole, setSelectedRole] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const schoolId = loggedInUser?.school?._id;
+  // Stable schoolId
+  const schoolId = useMemo(
+    () => loggedInUser?.school?._id || null,
+    [loggedInUser?.school?._id]
+  );
+
+  // Role
   const role =
     loggedInUser?.role?.name ||
     JSON.parse(localStorage.getItem("user"))?.role?.name;
 
-  // Fetch users
-  useEffect(() => {
-    dispatch(fetchAllUser(schoolId));
-  }, [dispatch, schoolId]);
+
+
+ useEffect(() => {
+  if (!hasFetchedUsers) {
+    dispatch(fetchAllUser());
+  }
+}, [dispatch, hasFetchedUsers]);
 
   // Filter users based on role
-const filteredUsers = users?.filter((u) => {
-  if (!u.isActive) return false;
+  const filteredUsers = useMemo(() => {
+    return users?.filter((u) => {
+      if (!u.isActive) return false;
+      if (u.school?._id !== schoolId) return false;
 
-  const sameSchool = u.school?._id === schoolId;
-  if (!sameSchool) return false;
+      const userRole = u.role?.name?.toLowerCase();
 
-  const userRole = u.role?.name?.toLowerCase();
+      if (role?.toLowerCase() === "teacher") {
+        return userRole === "student";
+      }
 
-  // 👨‍🏫 Teacher → only students
-  if (role?.toLowerCase() === "teacher") {
-    return userRole === "student";
-  }
+      if (role?.toLowerCase() === "school admin") {
+        if (selectedRole === "all") {
+          return !["super admin", "student", "parent"].includes(userRole);
+        }
+        return userRole === selectedRole;
+      }
 
-  // 🏫 School Admin → all staff (except super admin + student + parent)
-  if (role?.toLowerCase() === "school admin") {
-    if (selectedRole === "all") {
-      return !["super admin", "student", "parent"].includes(userRole);
-    }
-    return userRole === selectedRole;
-  }
+      return false;
+    });
+  }, [users, schoolId, role, selectedRole]);
 
-  return false;
-});
-
-
+  // Table columns
   const columns = [
     {
       title: "#",
@@ -105,7 +115,9 @@ const filteredUsers = users?.filter((u) => {
               icon={<EditOutlined />}
               type="text"
               onClick={() =>
-                navigate(`/dashboard/schooladmin/users/employee-from?id=${record._id}`)
+                navigate(
+                  `/dashboard/schooladmin/users/employee-from?id=${record._id}`
+                )
               }
             />
           </Tooltip>
@@ -115,7 +127,9 @@ const filteredUsers = users?.filter((u) => {
               icon={<EyeOutlined />}
               type="text"
               onClick={() =>
-                navigate(`/dashboard/schooladmin/users/employee-detailes?id=${record._id}`)
+                navigate(
+                  `/dashboard/schooladmin/users/employee-detailes?id=${record._id}`
+                )
               }
             />
           </Tooltip>
@@ -125,11 +139,7 @@ const filteredUsers = users?.filter((u) => {
             description="This user will be deactivated."
             okText="Yes"
             cancelText="No"
-            onConfirm={() =>
-              dispatch(deleteUser({ id: record._id, isActive: false }))
-                .unwrap()
-                .then(() => dispatch(fetchAllUser(schoolId)))
-            }
+            onConfirm={() => dispatch(deleteUser(record._id))} // ✅ Fixed
           >
             <Button danger icon={<DeleteOutlined />} type="text" />
           </Popconfirm>
@@ -147,17 +157,16 @@ const filteredUsers = users?.filter((u) => {
           size="middle"
           style={{ width: "100%", marginBottom: 16 }}
         >
-          <Space
-            style={{ width: "100%", justifyContent: "space-between" }}
-            wrap
-          >
+          <Space style={{ width: "100%", justifyContent: "space-between" }} wrap>
             <Title level={4}>
-              {role?.toLowerCase() === "teacher" ? "Students List" : "Teachers & Staff"}
+              {role?.toLowerCase() === "teacher"
+                ? "Students List"
+                : "Teachers & Staff"}
             </Title>
 
             {role?.toLowerCase() === "school admin" && (
               <Space wrap>
-               <Select
+                <Select
                   value={selectedRole}
                   style={{ minWidth: 160 }}
                   onChange={setSelectedRole}
@@ -169,7 +178,6 @@ const filteredUsers = users?.filter((u) => {
                     { value: "librarian", label: "Librarians" },
                   ]}
                 />
-
 
                 <Button
                   type="primary"
@@ -185,6 +193,7 @@ const filteredUsers = users?.filter((u) => {
           {/* Table */}
           <Table
             className="mt-4"
+            loading={!users.length}
             columns={columns}
             dataSource={filteredUsers}
             rowKey="_id"

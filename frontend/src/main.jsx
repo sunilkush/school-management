@@ -78,7 +78,7 @@ const Librarian = lazy(() => import("./pages/SuperAdmin/Users_Management/Librari
 const Transport = lazy(() => import("./pages/SuperAdmin/Users_Management/Transport.jsx"));
 
 // School Admin
-const UsersPage = lazy(() => import("./pages/SchoolAdmin/User_Management/UsersList.jsx"));
+const UsersPage = lazy(() => import("./pages/SchoolAdmin/User_Management/UsersPage.jsx"));
 const AddStudent = lazy(() => import("./pages/SchoolAdmin/User_Management/AddStudent.jsx"));
 const AddTeacher = lazy(() => import("./pages/SchoolAdmin/User_Management/AddTeacher.jsx"));
 const AddParent = lazy(() => import("./pages/SchoolAdmin/User_Management/AddParent.jsx"));

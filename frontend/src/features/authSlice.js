@@ -269,6 +269,7 @@ const initialState = {
   loading: false,
   error: null,
   success: false,
+  hasFetchedUsers: false,
 };
 const authSlice = createSlice({
   name: "auth", initialState, reducers: {
@@ -314,11 +315,16 @@ const authSlice = createSlice({
       // USERS 
       .addCase(fetchAllUser.fulfilled, (state, action) => {
         state.users = action.payload.data.data;
+        state.hasFetchedUsers = true;
       })
       // DELETE 
       .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter((u) => u._id !== action.payload._id);
+        const id = action.meta.arg.id;
+        state.users = state.users.map((u) =>
+          u._id === id ? { ...u, isActive: false } : u
+        );
       })
+
       // ACTIVE 
       .addCase(activeUser.fulfilled, (state, action) => {
         state.users = state.users.map((u) => u._id === action.payload._id ? action.payload : u);
