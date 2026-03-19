@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { Layout, Input, Button, Space, Grid, Drawer } from "antd";
 import {
   MenuOutlined,
@@ -19,6 +19,12 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
   const screens = useBreakpoint();
 
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+
+  // ✅ Handle Search (future API / filter)
+  const handleSearch = (value) => {
+    console.log("Search:", value);
+  };
 
   return (
     <>
@@ -33,30 +39,36 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           position: "sticky",
           top: 0,
           zIndex: 100,
+          height: 64, // ✅ important
         }}
       >
         {/* LEFT */}
-        <Space align="center">
+        <Space  align="center" style={{ height: "100%" }}>
           {/* Sidebar Toggle */}
           <Button
             type="text"
             onClick={toggleSidebar}
+            aria-label="Toggle Sidebar"
             icon={
               isOpen ? (
-                <CloseOutlined style={{ fontSize: 20 }} />
-              ) : (
                 <MenuOutlined style={{ fontSize: 20 }} />
+              ) : (
+                <CloseOutlined style={{ fontSize: 20 }} />
+                
               )
             }
           />
 
           {/* Desktop Search */}
           {screens.md && (
-            <Input
+            <Input.Search
               placeholder="Search..."
-              prefix={<SearchOutlined />}
               allowClear
-              style={{ width: 260 }}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onSearch={handleSearch}
+              prefix={<SearchOutlined />}
+              style={{ width: 260,marginTop:15 }}
             />
           )}
         </Space>
@@ -67,21 +79,21 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           {!screens.md && (
             <Button
               type="text"
+              aria-label="Open Search"
               icon={<SearchOutlined style={{ fontSize: 18 }} />}
               onClick={() => setMobileSearchOpen(true)}
             />
           )}
 
-          {/* Academic Year (Hide on mobile) */}
+          {/* Academic Year */}
           {screens.sm && user?.role?.name !== "Super Admin" && (
-            <AcademicYearSwitcher
-              onChange={(year) => console.log("Switched to:", year)}
-            />
+            <AcademicYearSwitcher />
           )}
 
           {/* Messages */}
           <Button
             type="text"
+            aria-label="Messages"
             icon={<MessageOutlined style={{ fontSize: 18 }} />}
           />
 
@@ -101,16 +113,26 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
         onClose={() => setMobileSearchOpen(false)}
         open={mobileSearchOpen}
         closable={false}
+        styles={{
+          body: { padding: 12 },
+        }}
       >
-        <Input
+        <Input.Search
           autoFocus
           placeholder="Search..."
-          prefix={<SearchOutlined />}
           allowClear
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onSearch={(value) => {
+            handleSearch(value);
+            setMobileSearchOpen(false); // close after search
+          }}
+          prefix={<SearchOutlined />}
+          
         />
       </Drawer>
     </>
   );
 };
 
-export default Topbar;
+export default memo(Topbar);

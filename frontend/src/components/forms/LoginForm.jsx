@@ -16,17 +16,20 @@ import {
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 
-
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const { loading, error, user } = useSelector((state) => state.auth);
+
   const [navigated, setNavigated] = useState(false);
+
   const roleName = user?.role?.name?.toLowerCase();
 
+  // ✅ Role-based redirect (safe)
   useEffect(() => {
     if (roleName && !navigated) {
       const roleRoutes = {
@@ -38,6 +41,7 @@ const LoginForm = () => {
         accountant: "/dashboard/accountant",
         staff: "/dashboard/staff",
       };
+
       if (roleRoutes[roleName]) {
         setNavigated(true);
         navigate(roleRoutes[roleName]);
@@ -45,16 +49,26 @@ const LoginForm = () => {
     }
   }, [roleName, navigate, navigated]);
 
-  const onFinish = (values) => dispatch(loginUser(values));
-  const onValuesChange = () => error && dispatch(resetState());
+  // ✅ Submit
+  const onFinish = (values) => {
+    dispatch(loginUser(values));
+  };
+
+  // ✅ Clear error on typing
+  const onValuesChange = () => {
+    if (error) dispatch(resetState());
+  };
+
+  // ✅ Hide "No token found" type errors
+  const showError =
+    error &&
+    !error.toLowerCase().includes("token") &&
+    !error.toLowerCase().includes("unauthorized");
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Content>
-        <Row style={{ minHeight: "100vh",margin:"0px auto"}}>
-          {/* LEFT BRAND PANEL */}
-          
-          {/* RIGHT LOGIN PANEL */}
+        <Row style={{ minHeight: "100vh", margin: "0 auto" }}>
           <Col
             xs={24}
             md={24}
@@ -73,7 +87,8 @@ const LoginForm = () => {
                 borderRadius: 12,
               }}
               variant="borderless"
-              >
+            >
+              {/* Header */}
               <Title level={3} style={{ marginBottom: 0 }}>
                 Welcome Back 👋
               </Title>
@@ -81,6 +96,7 @@ const LoginForm = () => {
                 Login to continue to your dashboard
               </Text>
 
+              {/* Form */}
               <Form
                 layout="vertical"
                 style={{ marginTop: 24 }}
@@ -120,8 +136,9 @@ const LoginForm = () => {
                   </Form.Item>
                   <Link to="/forgot-password">Forgot password?</Link>
                 </Row>
-               
-                {error && (
+
+                {/* ✅ Error (filtered) */}
+                {showError && (
                   <Alert
                     message={error}
                     type="error"
@@ -130,6 +147,7 @@ const LoginForm = () => {
                   />
                 )}
 
+                {/* Submit */}
                 <Button
                   type="primary"
                   htmlType="submit"
@@ -140,11 +158,13 @@ const LoginForm = () => {
                   Sign In
                 </Button>
 
+                {/* Google */}
                 <Button block size="large" style={{ marginTop: 12 }}>
                   Sign in with Google
                 </Button>
               </Form>
 
+              {/* Footer */}
               <Text
                 style={{
                   display: "block",

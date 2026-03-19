@@ -19,7 +19,7 @@ const SchoolBoard = () => {
       const data = await res.json();
       setBoards(data.data || []);
     } catch (err) {
-      message.error("Failed to load boards");
+      message.error("Failed to load boards",err);
     } finally {
       setLoading(false);
     }
@@ -34,7 +34,7 @@ const SchoolBoard = () => {
       const boardIds = data.data.map((b) => b.boardId);
       setSelectedBoards(boardIds);
     } catch (err) {
-      message.error("Failed to load school boards");
+      message.error("Failed to load school boards",err);
     }
   };
 
@@ -61,7 +61,7 @@ const SchoolBoard = () => {
 
       message.success("Boards assigned successfully ✅");
     } catch (err) {
-      message.error("Failed to save");
+      message.error("Failed to save",err);
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ const SchoolBoard = () => {
   return (
     <Card
       title="Assign Boards to School"
-      style={{ maxWidth: 500, margin: "auto" }}
+      style={{  margin: "auto" }}
     >
       <Spin spinning={loading}>
         <Select

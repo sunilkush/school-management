@@ -227,7 +227,7 @@ const SchoolClass = () => {
   return (
     <Card
       title="Assign Classes & Manage Sections"
-      style={{ maxWidth: 900, margin: "auto" }}
+      style={{  margin: "auto" }}
     >
       <Spin spinning={loading}>
         <Table

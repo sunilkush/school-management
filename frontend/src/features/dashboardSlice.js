@@ -51,36 +51,47 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
         state.loading = false;
+
         const { role, data } = action.payload;
+
+        // ❌ Safety check (important)
+        if (!data || typeof data !== "object") {
+          state.summary = [];
+          state.error = "No data found";
+          return;
+        }
 
         if (role === "Super Admin") {
           state.summary = [
-            { title: "Total Schools", value: data.schools },
-            { title: "Total Admin", value: data.admins },
-            { title: "Total Users", value: data.users },
-            { title: "Fees Collected", value: data.feesCollected, format: "currency" },
+            { title: "Total Schools", value: data.schools || 0 },
+            { title: "Total Admin", value: data.admins || 0 },
+            { title: "Total Users", value: data.users || 0 },
+            { title: "Fees Collected", value: data.feesCollected || 0, format: "currency" },
           ];
         } else if (role === "School Admin") {
           state.summary = [
-            { title: "Students", value: data.students },
-            { title: "Teachers", value: data.teachers },
-            { title: "Classes", value: data.classes },
-            { title: "Fees Collected", value: data.feesCollected, format: "currency" },
-          ];
-        } else if (role === "Teacher") {
-          state.summary = [
-            { title: "My Classes", value: data.classes },
-            { title: "Students in Class", value: data.students },
-            { title: "Attendance Today", value: data.presentPercent, format: "percent" },
+            { title: "Students", value: data.students || 0 },
+            { title: "Teachers", value: data.teachers || 0 },
+            { title: "Classes", value: data.classes || 0 },
+            { title: "Fees Collected", value: data.feesCollected || 0, format: "currency" },
           ];
         } else {
           state.summary = [];
         }
+
+        state.error = null;
       })
       .addCase(fetchDashboardSummary.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
-      });
+        state.summary = [];
+
+        // ✅ API message store karo
+        state.error =
+          action.payload?.message ||
+          action.payload?.error ||
+          "Failed to load dashboard";
+      })
+      
   },
 });
 

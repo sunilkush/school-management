@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Layout, Typography, Spin } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
@@ -14,7 +14,7 @@ const Sidebar = ({ isOpen }) => {
   const role = user?.role?.name?.toLowerCase();
   const schoolName = user?.school?.name || "School";
 
-  // 🔹 Loading / unauthenticated state
+  // ✅ Loading / unauthenticated state (perfect center fix)
   if (!token) {
     return (
       <Sider
@@ -26,40 +26,49 @@ const Sidebar = ({ isOpen }) => {
           alignItems: "center",
           justifyContent: "center",
           borderRight: "1px solid #f0f0f0",
-          overflow:"auto"
         }}
       >
-        <Spin tip="Authenticating..." />
+        <div style={{ textAlign: "center" }}>
+          <Spin size="large" />
+          <Text type="secondary" style={{ display: "block", marginTop: 8 }}>
+            Authenticating...
+          </Text>
+        </div>
       </Sider>
     );
   }
 
   return (
     <Sider
-      width={260}
-      theme="light"
-      collapsible
-      collapsed={!isOpen}
-      trigger={null}
-      style={{
-        height: "100vh",
-        position: "fixed",
-        left: 0,
-        top: 0,
-        borderRight: "1px solid #f0f0f0",
-        zIndex: 100,
-        overflow: "auto",
-      }}
-    >
-      {/* 🔹 School Header */}
+        width={260}
+        theme="light"
+        trigger={null}
+        style={{
+          height: "100vh",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          borderRight: "1px solid #f0f0f0",
+          zIndex: 1000,
+
+          // ✅ MAIN FIX
+          transform: isOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "all 0.3s ease",
+
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+      {/* 🔹 HEADER */}
       <div
         style={{
-          padding: "16px 20px",
+          padding: "16px",
           display: "flex",
           alignItems: "center",
           gap: 12,
           fontWeight: 600,
           color: "#1677ff",
+          minHeight: 64,
         }}
       >
         <div
@@ -70,23 +79,37 @@ const Sidebar = ({ isOpen }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            minWidth: 32,
+            minHeight: 32,
           }}
         >
           <HomeOutlined style={{ fontSize: 16 }} />
         </div>
 
-        <Text ellipsis style={{ fontSize: 14 }}>
-          {schoolName}
-        </Text>
+        {/* Collapse hone par hide text */}
+        {!(!isOpen) && (
+          <Text ellipsis style={{ fontSize: 14 }}>
+            {schoolName}
+          </Text>
+        )}
       </div>
 
       {/* 🔹 Divider */}
-      <div style={{ borderBottom: "1px solid #f0f0f0", margin: "0 16px" }} />
+      <div style={{ borderBottom: "1px solid #f0f0f0", margin: "0 12px" }} />
 
-      {/* 🔹 Role Based Menu */}
-      <SidebarMenu role={role} />
+      {/* 🔹 MENU (Scrollable Fix) */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: "8px 0",
+        }}
+      >
+        <SidebarMenu role={role} />
+      </div>
     </Sider>
   );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

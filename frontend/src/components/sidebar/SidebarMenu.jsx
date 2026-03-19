@@ -32,11 +32,7 @@ const withModuleCenterMenu = (menuItems = []) => {
   if (alreadyExists) return menuItems;
 
   return [
-    ...menuItems,
-    {
-      title: "ERP Modules",
-      path: "modules",
-    },
+    ...menuItems
   ];
 };
 

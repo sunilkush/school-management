@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateUser } from "../../../features/authSlice";
 import { fetchRoles } from "../../../features/roleSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
+
 import {
   Form,
   Input,
@@ -14,15 +15,25 @@ import {
   Card,
   Row,
   Col,
-  Collapse,
+  Tabs,
   message,
   Typography,
+  Space,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+
+import {
+  UploadOutlined,
+  SaveOutlined,
+  ReloadOutlined,
+  UserOutlined,
+  SettingOutlined,
+  BankOutlined,
+  LockOutlined,
+  DatabaseOutlined,
+} from "@ant-design/icons";
 
 const { Option } = Select;
-const { Panel } = Collapse;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const Settings = () => {
   const dispatch = useDispatch();
@@ -46,77 +57,98 @@ const Settings = () => {
         defaultRole: user?.role?.name,
         theme: "light",
         language: "english",
-        notifications: true,
         timezone: "Asia/Kolkata",
+        notifications: true,
         approvalRequired: true,
         maxSchools: 10,
         twoFactor: false,
-        emailNotif: true,
-        smsKey: "",
-        emailSignature: "",
-        whatsappSupport: false,
         autoBackup: true,
         backupFreq: "Weekly",
-        appName: "SchoolPro",
-        maintenance: false,
       });
     }
   }, [user, form]);
 
   const handleSave = (values) => {
-    dispatch(updateUser({ name: values.fullName, email: values.email, phone: values.phone }));
-    message.success("Settings saved successfully!");
+    dispatch(
+      updateUser({
+        name: values.fullName,
+        email: values.email,
+        phone: values.phone,
+      })
+    );
+    message.success("Settings updated successfully!");
   };
 
   return (
-    <div className="p-6 w-full mx-auto">
-      <Title level={2} className="text-blue-700 mb-6">{user?.role?.name} Settings</Title>
+    <div style={{ padding: 20, margin: "0 auto" }}>
+      
+      {/* HEADER */}
+      <Card bordered={false} style={{ marginBottom: 20 }}>
+        <Title level={3}>
+          <SettingOutlined /> Settings
+        </Title>
+        <Text type="secondary">
+          Manage your account, system and preferences
+        </Text>
+      </Card>
 
       <Form form={form} layout="vertical" onFinish={handleSave}>
-        <Collapse defaultActiveKey={["profile"]} ghost>
-          {/* Profile Settings */}
-          <Panel header="👤 Profile Settings" key="profile" style={{background:"white",border:"1px soild #dcdcdc"}}>
-            <Card bordered={false}>
+        
+        <Card>
+          <Tabs
+            defaultActiveKey="profile"
+            tabPosition="left"
+            style={{ minHeight: 400 }}
+          >
+            {/* PROFILE TAB */}
+            <Tabs.TabPane
+              tab={
+                <span>
+                  <UserOutlined /> Profile
+                </span>
+              }
+              key="profile"
+            >
               <Row gutter={16}>
                 <Col xs={24} md={12}>
-                  <Form.Item
-                    label="Full Name"
-                    name="fullName"
-                    rules={[{ required: true, message: "Enter full name" }]}
-                  >
-                    <Input placeholder="Full Name" />
+                  <Form.Item label="Full Name" name="fullName" rules={[{ required: true }]}>
+                    <Input prefix={<UserOutlined />} />
                   </Form.Item>
                 </Col>
+
                 <Col xs={24} md={12}>
-                  <Form.Item
-                    label="Email"
-                    name="email"
-                    rules={[{ required: true, type: "email", message: "Enter valid email" }]}
-                  >
-                    <Input placeholder="Email" />
+                  <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
+                    <Input />
                   </Form.Item>
                 </Col>
+
                 <Col xs={24} md={12}>
                   <Form.Item label="Phone" name="phone">
-                    <Input placeholder="Phone Number" />
+                    <Input />
                   </Form.Item>
                 </Col>
+
                 <Col xs={24} md={12}>
-                  <Form.Item label="Profile Picture">
-                    <Upload maxCount={1}>
+                  <Form.Item label="Profile Image">
+                    <Upload maxCount={1} listType="picture">
                       <Button icon={<UploadOutlined />}>Upload</Button>
                     </Upload>
                   </Form.Item>
                 </Col>
               </Row>
-            </Card>
-          </Panel>
+            </Tabs.TabPane>
 
-          {/* Preferences */}
-          <Panel header="⚙️ Preferences" key="preferences" style={{background:"white",border:"1px soild #dcdcdc"}}>
-            <Card bordered={false}>
+            {/* PREFERENCES */}
+            <Tabs.TabPane
+              tab={
+                <span>
+                  <SettingOutlined /> Preferences
+                </span>
+              }
+              key="preferences"
+            >
               <Row gutter={16}>
-                <Col xs={24} md={8}>
+                <Col md={8}>
                   <Form.Item label="Theme" name="theme">
                     <Select>
                       <Option value="light">Light</Option>
@@ -124,7 +156,8 @@ const Settings = () => {
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={8}>
+
+                <Col md={8}>
                   <Form.Item label="Language" name="language">
                     <Select>
                       <Option value="english">English</Option>
@@ -132,7 +165,8 @@ const Settings = () => {
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={8}>
+
+                <Col md={8}>
                   <Form.Item label="Timezone" name="timezone">
                     <Select>
                       <Option value="Asia/Kolkata">Asia/Kolkata</Option>
@@ -140,121 +174,116 @@ const Settings = () => {
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24}>
-                  <Form.Item label="Enable Notifications" name="notifications" valuePropName="checked">
-                    <Switch />
+
+                <Col span={24}>
+                  <Form.Item name="notifications" valuePropName="checked">
+                    <Switch /> Enable Notifications
                   </Form.Item>
                 </Col>
               </Row>
-            </Card>
-          </Panel>
+            </Tabs.TabPane>
 
-          {/* School Management */}
-          <Panel header="🏫 School Management" key="school" style={{background:"white",border:"1px soild #dcdcdc"}}>
-            <Card bordered={false}>
+            {/* SCHOOL */}
+            <Tabs.TabPane
+              tab={
+                <span>
+                  <BankOutlined /> School
+                </span>
+              }
+              key="school"
+            >
               <Row gutter={16}>
-                <Col xs={24} md={12}>
+                <Col md={12}>
                   <Form.Item label="Default Role" name="defaultRole">
-                    <Select placeholder="Select role">
-                      {roles.map((role) => (
-                        <Option key={role._id} value={role.name}>
-                          {role.name}
+                    <Select>
+                      {roles.map((r) => (
+                        <Option key={r._id} value={r.name}>
+                          {r.name}
                         </Option>
                       ))}
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={12}>
+
+                <Col md={12}>
                   <Form.Item label="Academic Year" name="academicYear">
-                    <Select placeholder="Select Academic Year">
-                      {schools.map((school) => (
-                        <Option key={school._id} value={school.academicYear}>
-                          {school.academicYear}
+                    <Select>
+                      {schools.map((s) => (
+                        <Option key={s._id} value={s.academicYear}>
+                          {s.academicYear}
                         </Option>
                       ))}
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable Approval for New Schools" name="approvalRequired" valuePropName="checked">
-                    <Switch />
+
+                <Col md={12}>
+                  <Form.Item name="approvalRequired" valuePropName="checked">
+                    <Switch /> Approval Required
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Max Allowed Schools" name="maxSchools">
-                    <InputNumber min={1} style={{ width: "100%" }} />
+
+                <Col md={12}>
+                  <Form.Item label="Max Schools" name="maxSchools">
+                    <InputNumber style={{ width: "100%" }} />
                   </Form.Item>
                 </Col>
               </Row>
-            </Card>
-          </Panel>
+            </Tabs.TabPane>
 
-          {/* Security */}
-          <Panel header="🔐 Security" key="security" style={{background:"white",border:"1px soild #dcdcdc"}}>
-            <Card bordered={false}>
+            {/* SECURITY */}
+            <Tabs.TabPane
+              tab={
+                <span>
+                  <LockOutlined /> Security
+                </span>
+              }
+              key="security"
+            >
               <Row gutter={16}>
-                <Col xs={24} md={8}>
+                <Col md={8}>
                   <Form.Item label="Current Password" name="currentPassword">
                     <Input.Password />
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={8}>
+
+                <Col md={8}>
                   <Form.Item label="New Password" name="newPassword">
                     <Input.Password />
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={8}>
+
+                <Col md={8}>
                   <Form.Item label="Confirm Password" name="confirmPassword">
                     <Input.Password />
                   </Form.Item>
                 </Col>
-                <Col xs={24}>
-                  <Form.Item label="Enable 2FA" name="twoFactor" valuePropName="checked">
-                    <Switch />
+
+                <Col span={24}>
+                  <Form.Item name="twoFactor" valuePropName="checked">
+                    <Switch /> Enable 2FA
                   </Form.Item>
                 </Col>
               </Row>
-            </Card>
-          </Panel>
+            </Tabs.TabPane>
 
-          {/* Communication */}
-          <Panel header="📢 Communication" key="communication" style={{background:"white",border:"1px soild #dcdcdc"}}>
-            <Card bordered={false}>
+            {/* BACKUP */}
+            <Tabs.TabPane
+              tab={
+                <span>
+                  <DatabaseOutlined /> Backup
+                </span>
+              }
+              key="backup"
+            >
               <Row gutter={16}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable Email Notifications" name="emailNotif" valuePropName="checked">
-                    <Switch />
+                <Col md={12}>
+                  <Form.Item name="autoBackup" valuePropName="checked">
+                    <Switch /> Auto Backup
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="SMS API Key" name="smsKey">
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col xs={24}>
-                  <Form.Item label="Email Signature" name="emailSignature">
-                    <Input.TextArea rows={3} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24}>
-                  <Form.Item label="Enable WhatsApp Support" name="whatsappSupport" valuePropName="checked">
-                    <Switch />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Card>
-          </Panel>
 
-          {/* Backup & System */}
-          <Panel header="💾 Backup & System" key="backup" style={{background:"white",border:"1px soild #dcdcdc"}}>
-            <Card bordered={false}>
-              <Row gutter={16}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable Auto Backup" name="autoBackup" valuePropName="checked">
-                    <Switch />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
+                <Col md={12}>
                   <Form.Item label="Backup Frequency" name="backupFreq">
                     <Select>
                       <Option value="Daily">Daily</Option>
@@ -263,29 +292,23 @@ const Settings = () => {
                     </Select>
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="App Name" name="appName">
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Maintenance Mode" name="maintenance" valuePropName="checked">
-                    <Switch />
-                  </Form.Item>
-                </Col>
               </Row>
-            </Card>
-          </Panel>
-        </Collapse>
+            </Tabs.TabPane>
+          </Tabs>
+        </Card>
 
-        <div className="flex justify-end gap-4 mt-6">
-          <Button type="default" htmlType="reset">
-            Reset
-          </Button>
-          <Button type="primary" htmlType="submit">
-            Save Settings
-          </Button>
-        </div>
+        {/* FOOTER */}
+        <Card style={{ marginTop: 20 }}>
+          <Space style={{ width: "100%", justifyContent: "flex-end" }}>
+            <Button icon={<ReloadOutlined />} htmlType="reset">
+              Reset
+            </Button>
+
+            <Button type="primary" icon={<SaveOutlined />} htmlType="submit">
+              Save Changes
+            </Button>
+          </Space>
+        </Card>
       </Form>
     </div>
   );

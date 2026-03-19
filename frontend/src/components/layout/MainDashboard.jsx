@@ -15,69 +15,88 @@ const Dashboard = () => {
 
   const role = user?.role?.name;
 
+  // ✅ Responsive State
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
 
-  // Redirect if no active academic year
+  // ✅ Redirect (optional)
   useEffect(() => {
     if (role !== "Super Admin" && !activeYear?._id) {
       // navigate("/no-active-year");
     }
   }, [role, activeYear, navigate]);
 
-  // Handle responsive resize
+  // ✅ Resize Handler (optimized)
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
+
       setIsMobile(mobile);
-      setIsSidebarOpen(!mobile);
+
+      // 👉 Desktop = open | Mobile = closed
+      if (mobile) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  // ✅ Toggle
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      {/* Desktop Sidebar */}
+      {/* ================= DESKTOP SIDEBAR ================= */}
       {!isMobile && <Sidebar isOpen={isSidebarOpen} />}
 
-      {/* Mobile Sidebar */}
+      {/* ================= MOBILE SIDEBAR ================= */}
       <Drawer
-        title={user?.school?.name || "School"}
         placement="left"
         closable={false}
         open={isMobile && isSidebarOpen}
         onClose={toggleSidebar}
         width={260}
-        bodyStyle={{ padding: 0 }}
+        styles={{ body: { padding: 0 } }}
       >
         <Sidebar isOpen />
       </Drawer>
 
-      {/* Main Layout */}
+      {/* ================= MAIN LAYOUT ================= */}
       <Layout
         style={{
           marginLeft: !isMobile && isSidebarOpen ? 260 : 0,
-          transition: "margin-left 0.2s ease",
+          transition: "margin-left 0.3s ease",
         }}
       >
-        {/* Header */}
-        <Header style={{ padding: 0, background: "#fff" }}>
+        {/* HEADER */}
+        <Header
+          style={{
+            padding: 0,
+            background: "#fff",
+            position: "sticky",
+            top: 0,
+            zIndex: 999,
+          }}
+        >
           <Topbar
-            isSidebarOpen={isSidebarOpen}
             toggleSidebar={toggleSidebar}
+            isOpen={isSidebarOpen} // ✅ FIXED PROP NAME
           />
         </Header>
 
-        {/* Page Content */}
+        {/* CONTENT */}
         <Content
           style={{
             padding: 16,
             background: "#f0f2f5",
-            overflowY: "auto",
+            minHeight: "calc(100vh - 64px)",
+            overflow: "auto",
           }}
         >
           <Outlet />

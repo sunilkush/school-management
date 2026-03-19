@@ -20,7 +20,7 @@ const SchoolAcademicYear = () => {
       const data = await res.json();
       setYears(data.data || []);
     } catch (err) {
-      message.error("Failed to load academic years");
+      message.error("Failed to load academic years",err);
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ const SchoolAcademicYear = () => {
       setDates([]);
       fetchYears();
     } catch (err) {
-      message.error("Failed to create");
+      message.error("Failed to create",err);
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ const SchoolAcademicYear = () => {
       message.success("Active year updated ✅");
       fetchYears();
     } catch (err) {
-      message.error("Failed to update active year");
+      message.error("Failed to update active year",err);
     }
   };
 
@@ -108,7 +108,7 @@ const SchoolAcademicYear = () => {
   return (
     <Card
       title="School Academic Year"
-      style={{ maxWidth: 800, margin: "auto" }}
+      style={{  margin: "auto" }}
     >
       {/* 🔹 Create Form */}
       <Space direction="vertical" style={{ width: "100%" }}>

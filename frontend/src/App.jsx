@@ -1,59 +1,92 @@
-import { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { useDispatch, useSelector } from 'react-redux';
-import { currentUser } from './features/authSlice';
-import { fetchMyPermissions } from './features/roleUiSlice';
-import { setSelectedAcademicYear } from './features/academicYearSlice';
-import { SpeedInsights } from '@vercel/speed-insights/react'
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useDispatch, useSelector } from "react-redux";
+
+import { currentUser } from "./features/authSlice";
+import { fetchMyPermissions } from "./features/roleUiSlice";
+import { setSelectedAcademicYear } from "./features/academicYearSlice";
+
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import Loader from "./components/Loader/Loader";
+
 function App() {
-  
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  const { profile, user, accessToken, loading } = useSelector(
+    (state) => state.auth
+  );
+  const { selectedAcademicYear } = useSelector(
+    (state) => state.academicYear
+  );
 
-  const { profile, user, accessToken } = useSelector(state => state.auth);
-  const { selectedAcademicYear } = useSelector(state => state.academicYear);
-
-  // 1. Load current user
+  // 1. Load current user (only if not loaded)
   useEffect(() => {
-    dispatch(currentUser());
-  }, [dispatch]);
+    if (!user) {
+      dispatch(currentUser());
+    }
+  }, [dispatch, user]);
 
-
+  // 2. Load permissions
   useEffect(() => {
     if (accessToken && user) {
       dispatch(fetchMyPermissions());
     }
   }, [dispatch, accessToken, user]);
 
-  // 2. Redirect to login if not authenticated
+  // 3. Redirect if unauthorized
   useEffect(() => {
     if (profile?.statusCode === 401) {
-      navigate('/login');
+      navigate("/"); // ⚠️ fixed (no /login route)
     }
   }, [profile, navigate]);
 
-  // 3. Persist and Sync Academic Year on App Load
+  // 4. Load Academic Year from localStorage
   useEffect(() => {
-    const savedYear = localStorage.getItem('academicYear');
-    if (savedYear && !selectedAcademicYear?._id) {
-      // sync from localStorage to redux
-      dispatch(setSelectedAcademicYear(JSON.parse(savedYear)));
+    try {
+      const savedYear = localStorage.getItem("academicYear");
+
+      if (savedYear && !selectedAcademicYear?._id) {
+        dispatch(setSelectedAcademicYear(JSON.parse(savedYear)));
+      }
+    } catch (err) {
+      console.error("Invalid academicYear in localStorage",err);
     }
   }, [dispatch, selectedAcademicYear]);
 
-  // 4. Optional: Keep Redux changes in sync with localStorage
+  // ✅ 5. Save Academic Year to localStorage
   useEffect(() => {
     if (selectedAcademicYear?._id) {
-      localStorage.setItem('academicYear', JSON.stringify(selectedAcademicYear));
+      localStorage.setItem(
+        "academicYear",
+        JSON.stringify(selectedAcademicYear)
+      );
     }
   }, [selectedAcademicYear]);
+
+  // ✅ 6. Global Loader (important)
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <>
       <Outlet />
-      <ToastContainer />
+
+      {/* ✅ Toast Config */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="colored"
+      />
+
+      {/* ✅ Performance Insights */}
       <SpeedInsights />
     </>
   );

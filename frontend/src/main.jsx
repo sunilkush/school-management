@@ -8,129 +8,164 @@ import "antd/dist/reset.css";
 import App from "./App.jsx";
 import store from "./store/store.js";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
-import LoginPage from "./pages/Auth/LoginPage.jsx";
-import Dashboard from "./components/layout/MainDashboard.jsx";
-import Reports from "./pages/SuperAdmin/Reports/Reports.jsx";
-import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard/SuperAdminDashboard.jsx";
-import SchoolAdminDashboard from "./pages/SchoolAdmin/Dashboard/SchoolAdminDashboard.jsx";
-import StudentDashboard from "./pages/Student/Dashboard/StudentDashboard.jsx";
-import Profile from "./pages/Profile.jsx";
-import Notification from "./pages/Notification.jsx";
-import Message from "./pages/Message.jsx";
-import Settings from "./pages/Settings.jsx";
+import { lazy } from "react";
+import React, { Suspense } from "react";
+// Auth & Core
+const LoginPage = lazy(() => import("./pages/Auth/LoginPage.jsx"));
+const Dashboard = lazy(() => import("./components/layout/MainDashboard.jsx"));
+const Unauthorized = lazy(() => import("./pages/Unauthorized.jsx"));
+const NoActiveYear = lazy(() => import("./pages/no-active-year.jsx"));
+
+// Dashboards
+const SuperAdminDashboard = lazy(() => import("./pages/SuperAdmin/Dashboard/SuperAdminDashboard.jsx"));
+const SchoolAdminDashboard = lazy(() => import("./pages/SchoolAdmin/Dashboard/SchoolAdminDashboard.jsx"));
+const StudentDashboard = lazy(() => import("./pages/Student/Dashboard/StudentDashboard.jsx"));
+const TeacherDashboard = lazy(() => import("./pages/Teacher/Dashboard/TeacherDashboard.jsx"));
+const AccountantDashboard = lazy(() => import("./pages/Accountant/Dashboard/AccountantDashboard.jsx"));
+const StaffDashboard = lazy(() => import("./pages/Staff/Dashboard/StaffDashboard.jsx"));
+const ParentDashboard = lazy(() => import("./pages/Parent/Dashboard/ParentDashboard.jsx"));
+
+// Common
+const Profile = lazy(() => import("./pages/Profile.jsx"));
+const Notification = lazy(() => import("./pages/Notification.jsx"));
+const Message = lazy(() => import("./pages/Message.jsx"));
+const Settings = lazy(() => import("./pages/Settings.jsx"));
+const Documents = lazy(() => import("./pages/Documents.jsx"));
+const Schedule = lazy(() => import("./pages/Schedule.jsx"));
+const Loader = lazy(()=> import("./components/Loader/Loader.jsx"));
+// Super Admin
+const Reports = lazy(() => import("./pages/SuperAdmin/Reports/Reports.jsx"));
+const Schools = lazy(() => import("./pages/SuperAdmin/School_Management/Schools.jsx"));
+const AddSchool = lazy(() => import("./pages/SuperAdmin/School_Management/AddSchool.jsx"));
+const SubscriptionPlans = lazy(() => import("./pages/SuperAdmin/School_Management/SubscriptionPlans.jsx"));
+const SchoolReports = lazy(() => import("./pages/SuperAdmin/School_Management/SchoolReports.jsx"));
+const PaymentsPage = lazy(() => import("./pages/SuperAdmin/School_Management/PaymentsPage.jsx"));
+const RevenuePage = lazy(() => import("./pages/SuperAdmin/School_Management/RevenuePage.jsx"));
+//const PlanLogs = lazy(() => import("./pages/SuperAdmin/Schools/PlanLogs.jsx"));
+
+const Roles = lazy(() => import("./pages/SuperAdmin/System_Settings/Roles.jsx"));
+const Permissions = lazy(() => import("./pages/SuperAdmin/System_Settings/Permissions.jsx"));
+const GlobalConfig = lazy(() => import("./pages/SuperAdmin/System_Settings/GlobalConfig.jsx"));
+const AuditLogs = lazy(() => import("./pages/SuperAdmin/System_Settings/AuditLogs.jsx"));
+const Backups = lazy(() => import("./pages/SuperAdmin/System_Settings/Backups.jsx"));
+
+const AcademicYears = lazy(() => import("./pages/SuperAdmin/Master_Settings/AcademicYears.jsx"));
+const ClassPage = lazy(() => import("./pages/SuperAdmin/Master_Settings/ClassPage.jsx"));
+const ClassSectionList = lazy(() => import("./pages/SuperAdmin/Master_Settings/ClassSectionList.jsx"));
+const SubjectsAdmin = lazy(() => import("./pages/SuperAdmin/Master_Settings/SubjectsAdmin.jsx"));
+const FeeCategories = lazy(() => import("./pages/SuperAdmin/Master_Settings/FeeCategories.jsx"));
+const Designations = lazy(() => import("./pages/SuperAdmin/Master_Settings/Designations.jsx"));
+const Departments = lazy(() => import("./pages/SuperAdmin/Master_Settings/Departments.jsx"));
+const SchoolBoards = lazy(() => import("./pages/SuperAdmin/Master_Settings/SchoolBoards.jsx"));
+const ChaptersTopics = lazy(() => import("./pages/SuperAdmin/Master_Settings/ChaptersTopics.jsx"));
+const BoardClassPage = lazy(() => import("./pages/SuperAdmin/Master_Settings/BoardClassPage.jsx"));
+
+const Modules = lazy(() => import("./pages/SuperAdmin/Modules/Modules.jsx"));
+const SchoolWiseReports = lazy(() => import("./pages/SuperAdmin/Reports/SchoolWiseReports.jsx"));
+const AttendanceSummary = lazy(() => import("./pages/SuperAdmin/Reports/AttendanceSummary.jsx"));
+const FinanceSummary = lazy(() => import("./pages/SuperAdmin/Reports/FinanceSummary.jsx"));
+const AcademicReports = lazy(() => import("./pages/SuperAdmin/Reports/AcademicReports.jsx"));
+const ActivityLogs = lazy(() => import("./pages/SuperAdmin/Reports/ActivityLogs.jsx"));
+
+// Super Admin Users
+const Admins = lazy(() => import("./pages/SuperAdmin/Users_Management/Admins.jsx"));
+const Staff = lazy(() => import("./pages/SuperAdmin/Users_Management/Staff.jsx"));
+const Teachers = lazy(() => import("./pages/SuperAdmin/Users_Management/Teachers.jsx"));
+const Parents = lazy(() => import("./pages/SuperAdmin/Users_Management/Parents.jsx"));
+const Students = lazy(() => import("./pages/SuperAdmin/Users_Management/students.jsx"));
+const Accountant = lazy(() => import("./pages/SuperAdmin/Users_Management/Accountant.jsx"));
+const Librarian = lazy(() => import("./pages/SuperAdmin/Users_Management/Librarian.jsx"));
+const Transport = lazy(() => import("./pages/SuperAdmin/Users_Management/Transport.jsx"));
+
+// School Admin
+const UsersPage = lazy(() => import("./pages/SchoolAdmin/User_Management/UsersList.jsx"));
+const AddStudent = lazy(() => import("./pages/SchoolAdmin/User_Management/AddStudent.jsx"));
+const AddTeacher = lazy(() => import("./pages/SchoolAdmin/User_Management/AddTeacher.jsx"));
+const AddParent = lazy(() => import("./pages/SchoolAdmin/User_Management/AddParent.jsx"));
+const StudentList = lazy(() => import("./pages/SchoolAdmin/User_Management/StudentList.jsx"));
+
+const Classes = lazy(() => import("./pages/SchoolAdmin/Academic_Management/Classes.jsx"));
+const Subjects = lazy(() => import("./pages/SchoolAdmin/Academic_Management/Subjects.jsx"));
+
+const ExamSchedule = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx"));
+const EnterGrades = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/EnterGrades.jsx"));
+const ExamReports = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/ExamReport.jsx"));
+const ExamsPage = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/ExamPage.jsx"));
+const ExamCreate = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx"));
+
+const AllStudentsAttendance = lazy(() => import("./pages/SchoolAdmin/Attendance/AllStudentsAttendance.jsx"));
+const StaffAttendance = lazy(() => import("./pages/SchoolAdmin/Attendance/StaffAttendance.jsx"));
+
+const Books = lazy(() => import("./pages/SchoolAdmin/Library/Books.jsx"));
+const IssueBook = lazy(() => import("./pages/SchoolAdmin/Library/IssueBook.jsx"));
+const LibraryCard = lazy(() => import("./pages/SchoolAdmin/Library/LibraryCard.jsx"));
+
+const ClassTimetable = lazy(() => import("./pages/SchoolAdmin/Timetables/ClassTimetable.jsx"));
+const TeacherTimetable = lazy(() => import("./pages/SchoolAdmin/Timetables/TeacherTimetable.jsx"));
+
+const CollectFees = lazy(() => import("./pages/SchoolAdmin/Fees_Management/CollectFees.jsx"));
+const FeeStructure = lazy(() => import("./pages/SchoolAdmin/Fees_Management/FeeStructure.jsx"));
+const StudentAssignFees = lazy(() => import("./pages/SchoolAdmin/Fees_Management/AssignStudentFeeForm.jsx"));
+const SchoolFeeCategories = lazy(() => import("./pages/SchoolAdmin/Fees_Management/SchoolFeeCategories.jsx"));
+
+const HostelManagement = lazy(() => import("./pages/SchoolAdmin/Hostel/HostelManagement.jsx"));
+const RoomAllocation = lazy(() => import("./pages/SchoolAdmin/Hostel/RoomAllocation.jsx"));
+
+const RoutesPage = lazy(() => import("./pages/SchoolAdmin/Transport/RoutesPage.jsx"));
+const Vehicles = lazy(() => import("./pages/SchoolAdmin/Transport/Vehicles.jsx"));
+
+const EmployeeSalaries = lazy(() => import("./pages/SchoolAdmin/Payroll/EmployeeSalaries.jsx"));
+const GeneratePayslip = lazy(() => import("./pages/SchoolAdmin/Payroll/GeneratePayslip.jsx"));
+
+const SendNotification = lazy(() => import("./pages/SchoolAdmin/Communication/SendNotification.jsx"));
+const SmsEmailHistory = lazy(() => import("./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx"));
+
+const Supplies = lazy(() => import("./pages/SchoolAdmin/Inventory/supplies.jsx"));
+const Assets = lazy(() => import("./pages/SchoolAdmin/Inventory/assets.jsx"));
+
+const Events = lazy(() => import("./pages/SchoolAdmin/Events_&_Calendar/events.jsx"));
+const CalendarPage = lazy(() => import("./pages/SchoolAdmin/Events_&_Calendar/CalendarPage.jsx"));
+
+const SettingsPage = lazy(() => import("./pages/SchoolAdmin/Settings/SettingsPage.jsx"));
+const SchoolAdminReport = lazy(() => import("./pages/SchoolAdmin/Reports/schoolAdminReport.jsx"));
+const SchoolSetup = lazy(()=>import("./pages/SchoolAdmin/SchoolSetup/SchoolSetup.jsx"));
+
+// Teacher
+const QuestionBank = lazy(() => import("./pages/Teacher/Exams/QuestionBank.jsx"));
+const CreateExam = lazy(() => import("./pages/Teacher/Exams/EditExamForm.jsx"));
+const TeacherExamsPage = lazy(() => import("./pages/Teacher/Exams/TeacherExamsPage.jsx"));
+const AssignedClasses = lazy(() => import("./pages/Teacher/Classes/AssignedClasses.jsx"));
+const Assignments = lazy(() => import("./pages/Teacher/Assignments/Assignments.jsx"));
+const MyStudents = lazy(() => import("./pages/Teacher/My_Students/MyStudents.jsx"));
+const StudentAttendance = lazy(() => import("./pages/Teacher/Attendance/StudentAttendance.jsx"));
+const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDetailes.jsx"));
+
+// Student
+const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
+const StudentHomework = lazy(() => import("./pages/Student/Homework/StudentHomework.jsx"));
+const ExamLive = lazy(() => import("./pages/Student/Exams/ExamLive.jsx"));
+const AttemptReview = lazy(() => import("./pages/Student/Exams/AttemptReview.jsx"));
+const StudentExamsPage = lazy(() => import("./pages/Student/Exams/StudentExamsPage.jsx"));
+
+// Parent
+const MyChildren = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
+const ChildAttendance = lazy(() => import("./pages/Parent/Attendance/ChildAttendance.jsx"));
+const ChildGrades = lazy(() => import("./pages/Parent/Grades/ChildGrades.jsx"));
+const ChildHomework = lazy(() => import("./pages/Parent/Homework/ChildHomework.jsx"));
+const ChildMessages = lazy(() => import("./pages/Parent/Messages/ChildMessages.jsx"));
+const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.jsx"));
+
+// Other
+const UserRegister = lazy(() => import("./pages/UserRegister.jsx"));
+const RoleWorkspace = lazy(() => import("./pages/RoleWorkspace.jsx"));
+const RoleDynamicPortal = lazy(() => import("./pages/RoleDynamicPortal.jsx"));
+const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
+const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
+const EmployeeForm = lazy(() => import("./components/forms/EmployeeForm.jsx"));
+
+// Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
-import Unauthorized from "./pages/Unauthorized.jsx";
-import TeacherDashboard from "./pages/Teacher/Dashboard/TeacherDashboard.jsx";
-import AccountantDashboard from "./pages/Accountant/Dashboard/AccountantDashboard.jsx";
-import StaffDashboard from "./pages/Staff/Dashboard/StaffDashboard.jsx";
-import Documents from "./pages/Documents.jsx";
-import Schedule from "./pages/Schedule.jsx";
-import UserRegister from "./pages/UserRegister.jsx";
-import Schools from "./pages/SuperAdmin/School_Management/Schools.jsx";
-import AddSchool from "./pages/SuperAdmin/School_Management/AddSchool.jsx";
-import Roles from "./pages/SuperAdmin/System_Settings/Roles.jsx";
-import Permissions from "./pages/SuperAdmin/System_Settings/Permissions.jsx";
-import AcademicYears from "./pages/SuperAdmin/Master_Settings/AcademicYears.jsx";
-import Modules from "./pages/SuperAdmin/Modules/Modules.jsx";
-import SettingsPage from "./pages/SchoolAdmin/Settings/SettingsPage.jsx";
-import UsersPage from "./pages/SchoolAdmin/User_Management/UsersList.jsx";
-import AddStudent from "./pages/SchoolAdmin/User_Management/AddStudent.jsx";
-import AddTeacher from "./pages/SchoolAdmin/User_Management/AddTeacher.jsx";
-import AddParent from "./pages/SchoolAdmin/User_Management/AddParent.jsx";
-import Classes from "./pages/SchoolAdmin/Academic_Management/Classes.jsx";
-import Subjects from "./pages/SchoolAdmin/Academic_Management/Subjects.jsx";
-import ScheduleExams from "./pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx";
-import EnterGrades from "./pages/SchoolAdmin/Exams_&_Grades/EnterGrades.jsx";
-import AllStudentsAttendance from "./pages/SchoolAdmin/Attendance/AllStudentsAttendance.jsx";
-import StaffAttendance from "./pages/SchoolAdmin/Attendance/StaffAttendance.jsx";
-import Books from "./pages/SchoolAdmin/Library/Books.jsx";
-import IssueBook from "./pages/SchoolAdmin/Library/IssueBook.jsx";
-import ClassTimetable from "./pages/SchoolAdmin/Timetables/ClassTimetable.jsx";
-import TeacherTimetable from "./pages/SchoolAdmin/Timetables/TeacherTimetable.jsx";
-import CollectFees from "./pages/SchoolAdmin/Fees_Management/CollectFees.jsx";
-import HostelManagement from "./pages/SchoolAdmin/Hostel/HostelManagement.jsx";
-import RoomAllocation from "./pages/SchoolAdmin/Hostel/RoomAllocation.jsx";
-import RoutesPage from "./pages/SchoolAdmin/Transport/RoutesPage.jsx";
-import Vehicles from "./pages/SchoolAdmin/Transport/Vehicles.jsx";
-import EmployeeSalaries from "./pages/SchoolAdmin/Payroll/EmployeeSalaries.jsx";
-import GeneratePayslip from "./pages/SchoolAdmin/Payroll/GeneratePayslip.jsx";
-import SendNotification from "./pages/SchoolAdmin/Communication/SendNotification.jsx";
-import SmsEmailHistory from "./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
-import RoleWorkspace from "./pages/RoleWorkspace.jsx";
-import RoleDynamicPortal from "./pages/RoleDynamicPortal.jsx";
-import ModuleOverview from "./pages/modules/ModuleOverview.jsx";
-import ModuleDetail from "./pages/modules/ModuleDetail.jsx";
-import SchoolAdminReport from "./pages/SchoolAdmin/Reports/schoolAdminReport.jsx";
-import StudentList from "./pages/SchoolAdmin/User_Management/StudentList.jsx"
-import NoActiveYear from "./pages/no-active-year.jsx";
-import ExamReports from './pages/SchoolAdmin/Exams_&_Grades/ExamReport.jsx';
-import QuestionBank from './pages/Teacher/Exams/QuestionBank.jsx';
-import CreateExam from './pages/Teacher/Exams/EditExamForm.jsx';
-import ExamLive from './pages/Student/Exams/ExamLive.jsx';
-import AttemptReview from './pages/Student/Exams/AttemptReview.jsx';
-import ClassPage from './pages/SuperAdmin/Master_Settings/ClassPage.jsx';
-import ClassSectionList from './pages/SuperAdmin/Master_Settings/ClassSectionList.jsx';
-import EmployeeForm from './components/forms/EmployeeForm.jsx';
-import EmployeeDetailes from './pages/Teacher/Profile/EmployeeDetailes.jsx';
-import FeeStudent from './pages/Student/Fees/FeeStudent.jsx';
-import Supplies from './pages/SchoolAdmin/Inventory/supplies.jsx';
-import Events from './pages/SchoolAdmin/Events_&_Calendar/events.jsx';
-import Assets from './pages/SchoolAdmin/Inventory/assets.jsx';
-import ExamSchedule from './pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx';
-import SubscriptionPlans from './pages/SuperAdmin/School_Management/SubscriptionPlans.jsx';
-import SchoolReports from './pages/SuperAdmin/School_Management/SchoolReports.jsx';
-import Admins from "./pages/SuperAdmin/Users_Management/Admins.jsx";
-import Staff from './pages/SuperAdmin/Users_Management/Staff.jsx';
-import Teachers from './pages/SuperAdmin/Users_Management/Teachers.jsx';
-import Parents from './pages/SuperAdmin/Users_Management/Parents.jsx';
-import Students from './pages/SuperAdmin/Users_Management/students.jsx';
-import Accountant from './pages/SuperAdmin/Users_Management/Accountant.jsx';
-import Librarian from './pages/SuperAdmin/Users_Management/Librarian.jsx';
-import Transport from './pages/SuperAdmin/Users_Management/Transport.jsx';
-import SchoolWiseReports from './pages/SuperAdmin/Reports/SchoolWiseReports.jsx';
-import AttendanceSummary from './pages/SuperAdmin/Reports/AttendanceSummary.jsx';
-import FinanceSummary from './pages/SuperAdmin/Reports/FinanceSummary.jsx';
-import AcademicReports from './pages/SuperAdmin/Reports/AcademicReports.jsx';
-import ActivityLogs from './pages/SuperAdmin/Reports/ActivityLogs.jsx';
-import SubjectsAdmin from './pages/SuperAdmin/Master_Settings/SubjectsAdmin.jsx';
-import FeeCategories from "./pages/SuperAdmin/Master_Settings/FeeCategories.jsx";
-import SchoolFeeCategories from "./pages/SchoolAdmin/Fees_Management/SchoolFeeCategories.jsx";
-import Designations from './pages/SuperAdmin/Master_Settings/Designations.jsx';
-import Departments from './pages/SuperAdmin/Master_Settings/Departments.jsx';
-import GlobalConfig from './pages/SuperAdmin/System_Settings/GlobalConfig.jsx';
-import AuditLogs from './pages/SuperAdmin/System_Settings/AuditLogs.jsx';
-import Backups from './pages/SuperAdmin/System_Settings/Backups.jsx';
-import FeeStructure from './pages/SchoolAdmin/Fees_Management/FeeStructure.jsx';
-import StudentAssignFees from './pages/SchoolAdmin/Fees_Management/AssignStudentFeeForm.jsx';
-import StudentHomework from './pages/Student/Homework/StudentHomework.jsx';
-import ExamsPage from './pages/SchoolAdmin/Exams_&_Grades/ExamPage.jsx';
-import TeacherExamsPage from './pages/Teacher/Exams/TeacherExamsPage.jsx';
-import LibraryCard from './pages/SchoolAdmin/Library/LibraryCard.jsx';
-import CalendarPage from './pages/SchoolAdmin/Events_&_Calendar/CalendarPage.jsx';
-import MyChildren from './pages/Parent/Children/MyChildren.jsx';
-import ParentDashboard from './pages/Parent/Dashboard/ParentDashboard.jsx';
-import ChildAttendance from './pages/Parent/Attendance/ChildAttendance.jsx';
-import ChildGrades from './pages/Parent/Grades/ChildGrades.jsx';
-import ChildHomework from './pages/Parent/Homework/ChildHomework.jsx';
-import ChildMessages from './pages/Parent/Messages/ChildMessages.jsx';
-import SchoolBoards from './pages/SuperAdmin/Master_Settings/SchoolBoards.jsx';
-import ChaptersTopics from './pages/SuperAdmin/Master_Settings/ChaptersTopics.jsx';
-import ExamCreate from './pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx';
-import EditExam from './pages/Teacher/Exams/EditExamForm.jsx';
-import AssignedClasses from "./pages/Teacher/Classes/AssignedClasses.jsx";
-import Assignments from "./pages/Teacher/Assignments/Assignments.jsx";
-import MyStudents from "./pages/Teacher/My_Students/MyStudents.jsx";
-import StudentAttendance from "./pages/Teacher/Attendance/StudentAttendance.jsx";
-import BoardClassPage from './pages/SuperAdmin/Master_Settings/BoardClassPage.jsx';
-import PaymentsPage from './pages/SuperAdmin/School_Management/PaymentsPage.jsx';
-import RevenuePage from './pages/SuperAdmin/School_Management/RevenuePage.jsx';
-import ParentExamsPage from './pages/Parent/Exams/ParentExamsPage.jsx';
-import StudentExamsPage from './pages/Student/Exams/StudentExamsPage.jsx';
-import SchoolAcadmicYear from './pages/SchoolAdmin/SchoolSetup/SchoolAcadmicYear.jsx';
-import SchoolBoard from './pages/SchoolAdmin/SchoolSetup/SchoolBoard.jsx';
-import SchoolClass from './pages/SchoolAdmin/SchoolSetup/SchoolClass.jsx';
-//import PlanLogs from './pages/SuperAdmin/Schools/PlanLogs.jsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -217,7 +252,7 @@ const router = createBrowserRouter([
               { index: true, element: <SuperAdminDashboard /> },
               { path: "schools", element: <Schools /> },
               { path: "subscriptions", element: <SubscriptionPlans /> },
-              /* { path: "subscriptions/:id/logs", element: <PlanLogs /> }, */
+             // { path: "subscriptions/:id/logs", element: <PlanLogs /> },
               { path: "reports/schools", element: <SchoolReports /> },
               { path: "users/admins", element: <Admins /> },
               { path: "users/teachers", element: <Teachers /> },
@@ -255,9 +290,9 @@ const router = createBrowserRouter([
               { path: "settings/backup", element: <Backups /> },
               { path: "academics/boards", element: <SchoolBoards /> },
               { path: "academics/chapters-topics", element: <ChaptersTopics /> },
-              { path: "academics/boards-class", element:<BoardClassPage/>},
-              { path: "payments", element:<PaymentsPage/>},
-              { path: "revenue", element:<RevenuePage/>},
+              { path: "academics/boards-class", element: <BoardClassPage /> },
+              { path: "payments", element: <PaymentsPage /> },
+              { path: "revenue", element: <RevenuePage /> },
 
 
             ],
@@ -302,8 +337,8 @@ const router = createBrowserRouter([
               { path: "notification", element: <Notification /> },
               { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
-              { path: "exams/exams-create", element: <ExamCreate/> },
-              { path: "exams/edit/:id", element: <ExamCreate/> },
+              { path: "exams/exams-create", element: <ExamCreate /> },
+              { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/exams-list", element: <ExamsPage /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
@@ -316,9 +351,8 @@ const router = createBrowserRouter([
               { path: "inventory/assets", element: <Assets /> },
               { path: "fees/feestructure", element: <FeeStructure /> },
               { path: "fees/assign", element: <StudentAssignFees /> },
-              { path: "add-acadmin-year", element:<SchoolAcadmicYear/>},
-              { path: "add-boards", element:<SchoolBoard/> },
-              { path: "add-class-section", element:<SchoolClass/>  }
+              { path: "school-setup", element: <SchoolSetup /> },
+              
 
             ],
           },
@@ -335,7 +369,7 @@ const router = createBrowserRouter([
               { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
               { path: "attendance", element: <StudentAttendance /> },
-              { path: "exams", element: <ScheduleExams /> },
+             // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
@@ -565,6 +599,7 @@ const router = createBrowserRouter([
 ]);
 
 
+
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PrimeReactProvider
@@ -578,7 +613,9 @@ createRoot(document.getElementById("root")).render(
         },
       }}
     >
-      <RouterProvider router={router} />
+      <Suspense fallback={<Loader/>}>
+        <RouterProvider router={router} />
+      </Suspense>
     </PrimeReactProvider>
   </Provider>
 );
