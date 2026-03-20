@@ -18,7 +18,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUser, deleteUser } from "../../../features/authSlice";
+import { fetchAllUser, deleteUser ,currentUser} from "../../../features/authSlice";
 import RegisterForm from "../../../components/forms/RegisterFrom";
 import { useNavigate } from "react-router-dom";
 
@@ -29,7 +29,7 @@ const UsersPage = () => {
   const navigate = useNavigate();
 
   // Redux state
-  const users = useSelector((state) => state.auth.users) || [];
+  const users = useSelector((state) => state.auth) || [];
   const loggedInUser = useSelector((state) => state.auth.user);
   const hasFetchedUsers = useSelector(state => state.auth.hasFetchedUsers);
   // Local state
@@ -52,6 +52,7 @@ const UsersPage = () => {
  useEffect(() => {
   if (!hasFetchedUsers) {
     dispatch(fetchAllUser());
+    dispatch(currentUser())
   }
 }, [dispatch, hasFetchedUsers]);
 
