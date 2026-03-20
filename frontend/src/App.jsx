@@ -3,11 +3,9 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
-
 import { currentUser } from "./features/authSlice";
 import { fetchMyPermissions } from "./features/roleUiSlice";
 import { setSelectedAcademicYear } from "./features/academicYearSlice";
-
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import Loader from "./components/Loader/Loader";
 
@@ -15,7 +13,7 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  const { profile, user, accessToken, loading } = useSelector(
+  const { profile, accessToken } = useSelector(
     (state) => state.auth
   );
   const { selectedAcademicYear } = useSelector(
@@ -23,18 +21,16 @@ function App() {
   );
 
   // 1. Load current user (only if not loaded)
-  useEffect(() => {
-    if (!user) {
-      dispatch(currentUser());
-    }
-  }, [dispatch, user]);
+useEffect(() => {
+  dispatch(currentUser());
+}, [dispatch]);
 
   // 2. Load permissions
-  useEffect(() => {
-    if (accessToken && user) {
-      dispatch(fetchMyPermissions());
-    }
-  }, [dispatch, accessToken, user]);
+useEffect(() => {
+  if (accessToken) {
+    dispatch(fetchMyPermissions());
+  }
+}, [dispatch, accessToken]);
 
   // 3. Redirect if unauthorized
   useEffect(() => {
@@ -66,11 +62,8 @@ function App() {
     }
   }, [selectedAcademicYear]);
 
-  // ✅ 6. Global Loader (important)
-  if (loading) {
-    return <Loader />;
-  }
-
+ 
+ 
   return (
     <>
       <Outlet />

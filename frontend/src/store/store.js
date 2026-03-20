@@ -27,6 +27,7 @@ import boardsReducer from "../features/boardSlice.js";
 import chapterReducer from "../features/chapterSlice.js";
 import boardClassReducer from "../features/boardClassSlice.js";
 import roleUiReducer from "../features/roleUiSlice.js";
+import schoolClassReducer from "../features/schoolClassSlice.js"
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -56,7 +57,8 @@ const store = configureStore({
     chapters: chapterReducer,
     boards: boardsReducer,
     boardClass : boardClassReducer,
-    roleUi: roleUiReducer
+    roleUi: roleUiReducer,
+    schoolClass:schoolClassReducer,
     },
   // Optional: Add middleware for debugging or logging
   middleware: (getDefaultMiddleware) =>

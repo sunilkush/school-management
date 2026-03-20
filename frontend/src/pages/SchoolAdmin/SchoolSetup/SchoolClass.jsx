@@ -11,68 +11,51 @@ import {
   Tag,
   Popconfirm,
 } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+
+import { fetchAllClasses } from "../../../features/classSlice.js";
+import {
+  fetchSchoolClasses,
+  createSchoolClass,
+  deleteSchoolClass,
+} from "../../../features/schoolClassSlice";
+import {currentUser} from "../../../features/authSlice.js";
+import {
+  fetchSections,
+  createSection,
+  deleteSection,
+} from "../../../features/sectionSlice";
 
 const SchoolClass = () => {
-  const [classes, setClasses] = useState([]);
-  const [schoolClasses, setSchoolClasses] = useState([]);
-  const [sections, setSections] = useState({});
+  const dispatch = useDispatch();
+
+  // 🔥 GLOBAL STATE
+  const { classList, loading } = useSelector((state) => state.class);
+  const { schoolClasses } = useSelector((state) => state.schoolClass);
+  const { sections } = useSelector((state) => state.section);
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+  const { user } = useSelector((state) => state.auth);
+  
+  // 🔥 DYNAMIC IDS
+  const schoolId = user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
+
   const [sectionInputs, setSectionInputs] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  const schoolId = "123";
-
-  // 🔹 Fetch master classes
-  const fetchClasses = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/classes");
-      const data = await res.json();
-      setClasses(data.data || []);
-    } catch {
-      message.error("Failed to load classes");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 🔹 Fetch school classes
-  const fetchSchoolClasses = async () => {
-    try {
-      const res = await fetch(`/api/school-classes/${schoolId}`);
-      const data = await res.json();
-      setSchoolClasses(data.data || []);
-    } catch {
-      message.error("Failed to load school classes");
-    }
-  };
-
-  // 🔹 Fetch sections
-  const fetchSections = async () => {
-    try {
-      const res = await fetch(`/api/sections/${schoolId}`);
-      const data = await res.json();
-
-      // group by schoolClassId
-      const grouped = {};
-      data.data.forEach((sec) => {
-        if (!grouped[sec.schoolClassId]) {
-          grouped[sec.schoolClassId] = [];
-        }
-        grouped[sec.schoolClassId].push(sec);
-      });
-
-      setSections(grouped);
-    } catch {
-      message.error("Failed to load sections");
-    }
-  };
-
+  
+  // =========================
+  // 🔥 LOAD DATA
+  // =========================
   useEffect(() => {
-    fetchClasses();
-    fetchSchoolClasses();
-    fetchSections();
-  }, []);
+    dispatch(currentUser());
+    dispatch(fetchAllClasses());
+    if (!schoolId || !academicYearId) return;
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+    dispatch(fetchSections({ schoolId, academicYearId }));
+  }, [dispatch, schoolId, academicYearId]);
 
+  // =========================
+  // 🔹 HELPERS
+  // =========================
   const isChecked = (classId) => {
     return schoolClasses.some((sc) => sc.classId === classId);
   };
@@ -81,81 +64,92 @@ const SchoolClass = () => {
     return schoolClasses.find((sc) => sc.classId === classId)?._id;
   };
 
-  // 🔹 Toggle class
+  const getSectionsByClass = (schoolClassId) => {
+    return sections.filter(
+      (sec) => sec.schoolClassId === schoolClassId
+    );
+  };
+
+  // =========================
+  // 🔥 TOGGLE CLASS
+  // =========================
   const handleToggle = async (cls) => {
     try {
-      setLoading(true);
-
       const exists = schoolClasses.find(
         (sc) => sc.classId === cls._id
       );
 
       if (exists) {
-        await fetch(`/api/school-classes/${exists._id}`, {
-          method: "DELETE",
-        });
+        await dispatch(deleteSchoolClass(exists._id)).unwrap();
         message.success("Class removed");
       } else {
-        await fetch("/api/school-classes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ schoolId, classId: cls._id }),
-        });
+       
+        await dispatch(
+          createSchoolClass({
+            schoolId,
+            academicYearId,
+            classId: cls._id,
+            boardClassId: cls.boardClassId, // ⚠️ ensure exists
+          })
+        ).unwrap();
         message.success("Class added");
       }
 
-      fetchSchoolClasses();
-    } catch {
-      message.error("Action failed");
-    } finally {
-      setLoading(false);
+      dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+    } catch (err) {
+      message.error(err);
     }
   };
 
-  // 🔹 Add section
+  // =========================
+  // 🔥 ADD SECTION
+  // =========================
   const handleAddSection = async (classId) => {
-    const name = sectionInputs[classId];
+    const input = sectionInputs[classId];
     const schoolClassId = getSchoolClassId(classId);
 
-    if (!name) return message.warning("Enter section name");
+    if (!input) return message.warning("Enter section");
+
+    const names = input.split(",").map((n) => n.trim().toUpperCase());
 
     try {
-      await fetch("/api/sections", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          schoolId,
-          schoolClassId,
-          name,
-        }),
-      });
+      for (const name of names) {
+        await dispatch(
+          createSection({
+            schoolId,
+            academicYearId,
+            schoolClassId,
+            name,
+          })
+        ).unwrap();
+      }
 
-      message.success("Section added ✅");
+      message.success("Sections added");
+      setSectionInputs({ ...sectionInputs, [classId]: "" });
 
-      setSectionInputs((prev) => ({ ...prev, [classId]: "" }));
-      fetchSections();
-    } catch {
-      message.error("Failed to add section");
+      dispatch(fetchSections({ schoolId, academicYearId }));
+    } catch (err) {
+      message.error(err);
     }
   };
 
-  // 🔹 Delete section
+  // =========================
+  // 🔥 DELETE SECTION
+  // =========================
   const handleDeleteSection = async (id) => {
     try {
-      await fetch(`/api/sections/${id}`, {
-        method: "DELETE",
-      });
+      await dispatch(deleteSection(id)).unwrap();
+      message.success("Deleted");
 
-      message.success("Section deleted");
-      fetchSections();
-    } catch {
-      message.error("Delete failed");
+      dispatch(fetchSections({ schoolId, academicYearId }));
+    } catch (err) {
+      message.error(err);
     }
   };
 
-  // 🔹 Table columns
+  // =========================
+  // 🔹 TABLE
+  // =========================
   const columns = [
     {
       title: "Class",
@@ -174,7 +168,7 @@ const SchoolClass = () => {
       title: "Sections",
       render: (_, record) => {
         const schoolClassId = getSchoolClassId(record._id);
-        const classSections = sections[schoolClassId] || [];
+        const classSections = getSectionsByClass(schoolClassId);
 
         if (!isChecked(record._id)) {
           return <span style={{ color: "#999" }}>Assign class first</span>;
@@ -200,7 +194,7 @@ const SchoolClass = () => {
             {/* Add Section */}
             <Space>
               <Input
-                placeholder="Add section (A, B...)"
+                placeholder="A,B,C"
                 value={sectionInputs[record._id] || ""}
                 onChange={(e) =>
                   setSectionInputs({
@@ -208,7 +202,6 @@ const SchoolClass = () => {
                     [record._id]: e.target.value,
                   })
                 }
-                style={{ width: 120 }}
               />
               <Button
                 size="small"
@@ -225,13 +218,10 @@ const SchoolClass = () => {
   ];
 
   return (
-    <Card
-      title="Assign Classes & Manage Sections"
-      style={{  margin: "auto" }}
-    >
+    <Card title="🔥 Dynamic Class & Section Management">
       <Spin spinning={loading}>
         <Table
-          dataSource={classes}
+          dataSource={classList}
           columns={columns}
           rowKey="_id"
           pagination={false}

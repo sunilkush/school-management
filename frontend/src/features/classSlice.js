@@ -37,7 +37,7 @@ export const fetchAllClasses = createAsyncThunk(
         params: { schoolId, academicYearId },
         signal, // ✅ axios v1+ supports signal (for cancellation)
       });
-     
+      
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data?.message || "Failed to fetch classes");
