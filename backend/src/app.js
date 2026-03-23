@@ -76,7 +76,7 @@ app.use("/api/v1/student", studentRoutes);
 app.use("/api/v1/role", RoleRoutes);
 app.use("/api/v1/employee", EmployeeRoutes);
 app.use("/api/v1/academicYear", AcademicYearRoutes);
-app.use("/api/v1/section", SectionRoutes);
+app.use("/api/v1/sections", SectionRoutes);
 app.use("/api/v1/report", ReportsRoutes);
 app.use("/api/v1/dashboard", DashboardRoutes);
 app.use("/api/v1/questions", QuestionRoutes);

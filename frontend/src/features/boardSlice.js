@@ -86,6 +86,24 @@ export const assignSchoolBoards = createAsyncThunk(
   }
 );
 
+/* ============ get school Boards ================== */
+export const getSchoolBoards = createAsyncThunk(
+  "boards/getSchoolBoards",
+  async(schoolId,{rejectWithValue})=>{
+     try {
+       const token = localStorage.getItem("accessToken");
+       const res = await axios.get(`${Api_Base_Url}/boards/school-boards/${schoolId}`,{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+       })
+       return res.data
+     } catch (error) {
+       return rejectWithValue(error?.response?.data)
+     }
+  }
+)
+
 /* ================= REMOVE SCHOOL BOARD ================= */
 export const removeSchoolBoard = createAsyncThunk(
   "boards/removeSchoolBoard",
@@ -113,6 +131,7 @@ const initialState = {
   loading: false,
   error: null,
   assignSchool: [],
+  schoolBoards:[]
 };
 
 const boardSlice = createSlice({
@@ -184,6 +203,19 @@ const boardSlice = createSlice({
       })
       .addCase(assignSchoolBoards.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(getSchoolBoards.pending, (state)=>{
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSchoolBoards.fulfilled, (state, action)=>{
+        state.loading = false;
+        state.schoolBoards = action.payload.data
+      })
+      .addCase(getSchoolBoards.rejected, (state, action)=>{
+       state.loading = false;
         state.error = action.payload;
       })
 

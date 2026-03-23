@@ -1,83 +1,96 @@
 import React, { useEffect, useState } from "react";
-import { Card, DatePicker, Input, Button, Table, Switch, message, Space } from "antd";
+import {
+  Card,
+  DatePicker,
+  Input,
+  Button,
+  Table,
+  Switch,
+  message,
+  Space,
+} from "antd";
 import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
+
+import {
+  createAcademicYear,
+  fetchAllAcademicYears,
+  setActiveAcademicYear,
+  clearAcademicYearMessages,
+} from "../../../features/academicYearSlice";
 
 const { RangePicker } = DatePicker;
 
 const SchoolAcademicYear = () => {
-  const [years, setYears] = useState([]);
+  const dispatch = useDispatch();
+
+  const {
+    academicYears,
+    loading,
+    error,
+    message: successMessage,
+  } = useSelector((state) => state.academicYear);
+
   const [name, setName] = useState("");
   const [dates, setDates] = useState([]);
-  const [loading, setLoading] = useState(false);
 
-  const schoolId = "123"; // 👉 dynamic karna later
+  // ✅ Dynamic schoolId
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const schoolId = user?.school?._id;
 
-  // 🔹 Fetch existing academic years
-  const fetchYears = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/academic-years/${schoolId}`);
-      const data = await res.json();
-      setYears(data.data || []);
-    } catch (err) {
-      message.error("Failed to load academic years",err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  /* ================= FETCH ================= */
   useEffect(() => {
-    fetchYears();
-  }, []);
+    if (schoolId) {
+      dispatch(fetchAllAcademicYears(schoolId));
+    }
+  }, [dispatch, schoolId]);
 
-  // 🔹 Create new academic year
+  /* ================= HANDLE MESSAGES ================= */
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+      dispatch(clearAcademicYearMessages());
+    }
+
+    if (successMessage) {
+      message.success(successMessage);
+      dispatch(clearAcademicYearMessages());
+    }
+  }, [error, successMessage, dispatch]);
+
+  /* ================= CREATE ================= */
   const handleCreate = async () => {
     if (!name || dates.length !== 2) {
       return message.warning("Please fill all fields");
     }
 
+    const payload = {
+      schoolId,
+      name,
+      startDate: dates[0].toISOString(),
+      endDate: dates[1].toISOString(),
+    };
+
     try {
-      setLoading(true);
+      await dispatch(createAcademicYear(payload)).unwrap();
 
-      await fetch("/api/academic-years", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          schoolId,
-          name,
-          startDate: dates[0],
-          endDate: dates[1],
-        }),
-      });
-
-      message.success("Academic Year Created ✅");
       setName("");
       setDates([]);
-      fetchYears();
     } catch (err) {
-      message.error("Failed to create",err);
-    } finally {
-      setLoading(false);
+      console.log(err);
     }
   };
 
-  // 🔹 Set Active Year
+  /* ================= SET ACTIVE ================= */
   const handleActiveChange = async (id) => {
     try {
-      await fetch(`/api/academic-years/set-active/${id}`, {
-        method: "PATCH",
-      });
-
-      message.success("Active year updated ✅");
-      fetchYears();
+      await dispatch(setActiveAcademicYear(id)).unwrap();
     } catch (err) {
-      message.error("Failed to update active year",err);
+      console.log(err);
     }
   };
 
-  // 🔹 Table columns
+  /* ================= TABLE ================= */
   const columns = [
     {
       title: "Year",
@@ -99,6 +112,7 @@ const SchoolAcademicYear = () => {
       render: (val, record) => (
         <Switch
           checked={val}
+          disabled={val} // ✅ already active disable
           onChange={() => handleActiveChange(record._id)}
         />
       ),
@@ -106,11 +120,8 @@ const SchoolAcademicYear = () => {
   ];
 
   return (
-    <Card
-      title="School Academic Year"
-      style={{  margin: "auto" }}
-    >
-      {/* 🔹 Create Form */}
+    <Card title="School Academic Year">
+      {/* 🔹 FORM */}
       <Space direction="vertical" style={{ width: "100%" }}>
         <Input
           placeholder="Academic Year (e.g. 2024-2025)"
@@ -129,10 +140,10 @@ const SchoolAcademicYear = () => {
         </Button>
       </Space>
 
-      {/* 🔹 Table */}
+      {/* 🔹 TABLE */}
       <Table
         style={{ marginTop: 30 }}
-        dataSource={years}
+        dataSource={[...academicYears].reverse()} // latest first
         columns={columns}
         rowKey="_id"
         loading={loading}

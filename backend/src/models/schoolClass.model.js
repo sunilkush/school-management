@@ -20,6 +20,10 @@ const schoolClassSchema = new Schema(
       ref: "BoardClass",
       required: true,
     },
+    sectionId:{
+      type:Schema.Types.ObjectId,
+      ref:"Section",
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],

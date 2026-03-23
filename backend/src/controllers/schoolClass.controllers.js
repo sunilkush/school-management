@@ -6,12 +6,11 @@ export const createSchoolClass = async (req, res) => {
     const {
       schoolId,
       academicYearId,
-      classId,
       boardClassId,
     } = req.body;
 
     // validation
-    if (!schoolId || !academicYearId || !classId || !boardClassId) {
+    if (!schoolId || !academicYearId || !boardClassId) {
       return res.status(400).json({
         message: "All fields are required",
       });
@@ -21,7 +20,6 @@ export const createSchoolClass = async (req, res) => {
     const exists = await SchoolClass.findOne({
       schoolId,
       academicYearId,
-      classId,
       boardClassId,
     });
 
@@ -34,7 +32,6 @@ export const createSchoolClass = async (req, res) => {
     const newClass = await SchoolClass.create({
       schoolId,
       academicYearId,
-      classId,
       boardClassId,
       createdBy: req.user?._id,
     });

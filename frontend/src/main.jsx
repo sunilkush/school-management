@@ -41,7 +41,7 @@ const SubscriptionPlans = lazy(() => import("./pages/Super_Admin/School_Manageme
 const SchoolReports = lazy(() => import("./pages/Super_Admin/School_Management/SchoolReports.jsx"));
 const PaymentsPage = lazy(() => import("./pages/Super_Admin/School_Management/PaymentsPage.jsx"));
 const RevenuePage = lazy(() => import("./pages/Super_Admin/School_Management/RevenuePage.jsx"));
-//const PlanLogs = lazy(() => import("./pages/Super_Admin/Schools/PlanLogs.jsx"));
+//const PlanLogs = lazy(() => import("./pages/SuperAdmin/Schools/PlanLogs.jsx"));
 
 const Roles = lazy(() => import("./pages/Super_Admin/System_Settings/Roles.jsx"));
 const Permissions = lazy(() => import("./pages/Super_Admin/System_Settings/Permissions.jsx"));
@@ -127,7 +127,7 @@ const Events = lazy(() => import("./pages/School_Admin/Events_&_Calendar/events.
 const CalendarPage = lazy(() => import("./pages/School_Admin/Events_&_Calendar/CalendarPage.jsx"));
 
 const SettingsPage = lazy(() => import("./pages/School_Admin/Settings/SettingsPage.jsx"));
-const SchoolAdminReport = lazy(() => import("./pages/School_Admin/Reports/SchoolAdminReport.jsx"));
+const SchoolAdminReport = lazy(() => import("./pages/School_Admin/Reports/schoolAdminReport.jsx"));
 const SchoolSetup = lazy(()=>import("./pages/School_Admin/School_Setup/SchoolSetup.jsx"));
 
 // Teacher
@@ -242,7 +242,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "Super_Admin",
+            path: "superadmin",
             element: (
               <ProtectedRoute allowedRoles={["Super Admin"]}>
                 <SuperAdminDashboard />
@@ -298,7 +298,7 @@ const router = createBrowserRouter([
             ],
           },
           {
-            path: "School_Admin",
+            path: "schooladmin",
             element: (
               <ProtectedRoute allowedRoles={["School Admin"]}>
                 <SchoolAdminDashboard />

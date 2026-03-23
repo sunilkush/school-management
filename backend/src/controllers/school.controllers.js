@@ -8,6 +8,7 @@ import { SubscriptionPlan } from "../models/SubscriptionPlan.model.js";
 import { SchoolSubscription } from '../models/schoolSubscription.model.js';
 import { SchoolBoard } from '../models/School_board.model.js';
 
+
 const registerSchool = asyncHandler(async (req, res) => {
 
   const {
@@ -52,9 +53,9 @@ const registerSchool = asyncHandler(async (req, res) => {
   const schoolId = newSchool._id;
 
   // 2️⃣ Assign Boards
-  if (boards && boards.length > 0) {
+  if (SchoolBoard && SchoolBoard.length > 0) {
 
-    const schoolBoards = boards.map((boardId, index) => ({
+    const schoolBoards = SchoolBoard.map((boardId, index) => ({
       schoolId,
       boardId,
       isPrimary: index === 0,
