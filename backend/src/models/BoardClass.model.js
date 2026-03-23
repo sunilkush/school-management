@@ -8,14 +8,6 @@ const boardClassSchema = new Schema(
       required: true,
       index: true,
     },
-
-    ClassId: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
-      required: true,
-      index: true,
-    },
-
     name: {
       type: String,
       trim: true,
@@ -53,7 +45,7 @@ const boardClassSchema = new Schema(
 /* ================= INDEXES ================= */
 
 boardClassSchema.index(
-  { boardId: 1, schoolClassId: 1 },
+  { boardId: 1 },
   { unique: true }
 );
 

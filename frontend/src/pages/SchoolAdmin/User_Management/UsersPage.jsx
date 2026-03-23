@@ -29,7 +29,7 @@ const UsersPage = () => {
   const navigate = useNavigate();
 
   // Redux state
-  const users = useSelector((state) => state.auth) || [];
+  const {users=[]} = useSelector((state) => state.auth) || [];
   const loggedInUser = useSelector((state) => state.auth.user);
   const hasFetchedUsers = useSelector(state => state.auth.hasFetchedUsers);
   // Local state

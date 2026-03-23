@@ -10,141 +10,96 @@ import {
   Space,
   Tag,
   Popconfirm,
+  Select,
+  Row,
+  Col,
+  Typography,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
+import { getBoards } from "../../../features/boardSlice";
+import { getBoardClass } from "../../../features/boardClassSlice";
 
-import { fetchAllClasses } from "../../../features/classSlice.js";
-import {
-  fetchSchoolClasses,
-  createSchoolClass,
-  deleteSchoolClass,
-} from "../../../features/schoolClassSlice";
-import {currentUser} from "../../../features/authSlice.js";
-import {
-  fetchSections,
-  createSection,
-  deleteSection,
-} from "../../../features/sectionSlice";
+const { Option } = Select;
+const { Title } = Typography;
 
 const SchoolClass = () => {
   const dispatch = useDispatch();
 
-  // 🔥 GLOBAL STATE
-  const { classList, loading } = useSelector((state) => state.class);
-  const { schoolClasses } = useSelector((state) => state.schoolClass);
-  const { sections } = useSelector((state) => state.section);
-  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
-  const { user } = useSelector((state) => state.auth);
-  
-  // 🔥 DYNAMIC IDS
-  const schoolId = user?.school?._id;
-  const academicYearId = selectedAcademicYear?._id;
+  const { boardClass = [], loading } = useSelector(
+    (state) => state.boardClass
+  );
+  const boards = useSelector((state) => state.boards.boards || []);
 
+  const [selectedBoard, setSelectedBoard] = useState(null);
+
+  // Local state
+  const [assignedClasses, setAssignedClasses] = useState([]);
+  const [sections, setSections] = useState([]);
   const [sectionInputs, setSectionInputs] = useState({});
-  
+
   // =========================
-  // 🔥 LOAD DATA
+  // 🔹 LOAD DATA
   // =========================
   useEffect(() => {
-    dispatch(currentUser());
-    dispatch(fetchAllClasses());
-    if (!schoolId || !academicYearId) return;
-    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-    dispatch(fetchSections({ schoolId, academicYearId }));
-  }, [dispatch, schoolId, academicYearId]);
+    dispatch(getBoards());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (selectedBoard) {
+      dispatch(getBoardClass(selectedBoard));
+    }
+  }, [selectedBoard, dispatch]);
 
   // =========================
   // 🔹 HELPERS
   // =========================
-  const isChecked = (classId) => {
-    return schoolClasses.some((sc) => sc.classId === classId);
-  };
+  const isChecked = (classId) =>
+    assignedClasses.some((c) => c === classId);
 
-  const getSchoolClassId = (classId) => {
-    return schoolClasses.find((sc) => sc.classId === classId)?._id;
-  };
-
-  const getSectionsByClass = (schoolClassId) => {
-    return sections.filter(
-      (sec) => sec.schoolClassId === schoolClassId
-    );
-  };
+  const getSectionsByClass = (classId) =>
+    sections.filter((sec) => sec.classId === classId);
 
   // =========================
-  // 🔥 TOGGLE CLASS
+  // 🔹 TOGGLE CLASS
   // =========================
-  const handleToggle = async (cls) => {
-    try {
-      const exists = schoolClasses.find(
-        (sc) => sc.classId === cls._id
+  const handleToggle = (record) => {
+    if (isChecked(record._id)) {
+      setAssignedClasses(
+        assignedClasses.filter((id) => id !== record._id)
       );
-
-      if (exists) {
-        await dispatch(deleteSchoolClass(exists._id)).unwrap();
-        message.success("Class removed");
-      } else {
-       
-        await dispatch(
-          createSchoolClass({
-            schoolId,
-            academicYearId,
-            classId: cls._id,
-            boardClassId: cls.boardClassId, // ⚠️ ensure exists
-          })
-        ).unwrap();
-        message.success("Class added");
-      }
-
-      dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-    } catch (err) {
-      message.error(err);
+    } else {
+      setAssignedClasses([...assignedClasses, record._id]);
     }
   };
 
   // =========================
-  // 🔥 ADD SECTION
+  // 🔹 ADD SECTION
   // =========================
-  const handleAddSection = async (classId) => {
+  const handleAddSection = (classId) => {
     const input = sectionInputs[classId];
-    const schoolClassId = getSchoolClassId(classId);
+    if (!input) return message.warning("Enter section name");
 
-    if (!input) return message.warning("Enter section");
+    const names = input.split(",").map((s) => s.trim());
 
-    const names = input.split(",").map((n) => n.trim().toUpperCase());
+    const newSections = names.map((name) => ({
+      _id: Date.now() + Math.random(),
+      name,
+      classId,
+    }));
 
-    try {
-      for (const name of names) {
-        await dispatch(
-          createSection({
-            schoolId,
-            academicYearId,
-            schoolClassId,
-            name,
-          })
-        ).unwrap();
-      }
+    setSections([...sections, ...newSections]);
 
-      message.success("Sections added");
-      setSectionInputs({ ...sectionInputs, [classId]: "" });
-
-      dispatch(fetchSections({ schoolId, academicYearId }));
-    } catch (err) {
-      message.error(err);
-    }
+    setSectionInputs({
+      ...sectionInputs,
+      [classId]: "",
+    });
   };
 
   // =========================
-  // 🔥 DELETE SECTION
+  // 🔹 DELETE SECTION
   // =========================
-  const handleDeleteSection = async (id) => {
-    try {
-      await dispatch(deleteSection(id)).unwrap();
-      message.success("Deleted");
-
-      dispatch(fetchSections({ schoolId, academicYearId }));
-    } catch (err) {
-      message.error(err);
-    }
+  const handleDeleteSection = (id) => {
+    setSections(sections.filter((s) => s._id !== id));
   };
 
   // =========================
@@ -167,8 +122,7 @@ const SchoolClass = () => {
     {
       title: "Sections",
       render: (_, record) => {
-        const schoolClassId = getSchoolClassId(record._id);
-        const classSections = getSectionsByClass(schoolClassId);
+        const classSections = getSectionsByClass(record._id);
 
         if (!isChecked(record._id)) {
           return <span style={{ color: "#999" }}>Assign class first</span>;
@@ -218,16 +172,42 @@ const SchoolClass = () => {
   ];
 
   return (
-    <Card title="🔥 Dynamic Class & Section Management">
-      <Spin spinning={loading}>
-        <Table
-          dataSource={classList}
-          columns={columns}
-          rowKey="_id"
-          pagination={false}
-        />
-      </Spin>
-    </Card>
+    <div style={{ padding: 20 }}>
+      {/* Header */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Title level={4}>School Class & Section Management</Title>
+        </Col>
+
+        <Col>
+          <Select
+            placeholder="Select Board"
+            style={{ width: 220 }}
+            value={selectedBoard}
+            onChange={setSelectedBoard}
+            allowClear
+          >
+            {boards.map((board) => (
+              <Option key={board._id} value={board._id}>
+                {board.name}
+              </Option>
+            ))}
+          </Select>
+        </Col>
+      </Row>
+
+      {/* Table */}
+      <Card>
+        <Spin spinning={loading}>
+          <Table
+            rowKey="_id"
+            columns={columns}
+            dataSource={boardClass}
+            pagination={false}
+          />
+        </Spin>
+      </Card>
+    </div>
   );
 };
 

@@ -1,35 +1,60 @@
-import { useState } from "react";
-import { Button, Table, Tag } from "antd";
+import { useEffect, useState } from "react";
+import {
+  Button,
+  Table,
+  Tag,
+  Select,
+  Card,
+  Row,
+  Col,
+  Space,
+  Typography,
+  Spin,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import AddBoardClassModal from "../../../components/forms/AddBoardClassModal.jsx";
+import { getBoardClass } from "../../../features/boardClassSlice.js";
+import { getBoards } from "../../../features/boardSlice.js";
+import { useDispatch, useSelector } from "react-redux";
+
+const { Title } = Typography;
+const { Option } = Select;
 
 export default function BoardClassPage() {
+  const dispatch = useDispatch();
 
+  const { boardClass = [], loading } = useSelector(
+    (state) => state.boardClass
+  );
+  const boards = useSelector((state) => state.boards.boards || []);
+
+  const [selectedBoard, setSelectedBoard] = useState(null);
   const [open, setOpen] = useState(false);
-  
 
-  const dataSource = [
-    {
-      key: "1",
-      boardName: "CBSE",
-      className: "10th",
-      status: "active"
-    },
-    {
-      key: "2",
-      boardName: "ICSE",
-      className: "9th",
-      status: "inactive"
+  // ✅ Initial Load
+  useEffect(() => {
+    dispatch(getBoards());
+    dispatch(getBoardClass());
+  }, [dispatch]);
+
+  // ✅ Filter change
+  useEffect(() => {
+    if (selectedBoard) {
+      dispatch(getBoardClass(selectedBoard));
+    } else {
+      dispatch(getBoardClass());
     }
-  ];
+  }, [selectedBoard, dispatch]);
 
+  // ✅ Columns
   const columns = [
     {
       title: "Board",
-      dataIndex: "boardName"
+      dataIndex: "boardName",
     },
     {
       title: "Class",
-      dataIndex: "className"
+      dataIndex: "name",
     },
     {
       title: "Status",
@@ -39,48 +64,63 @@ export default function BoardClassPage() {
           <Tag color="green">Active</Tag>
         ) : (
           <Tag color="red">Inactive</Tag>
-        )
-    }
+        ),
+    },
   ];
 
   return (
-    <div className="p-6">
+    <>
+    <div style={{ padding: 20 }}>
+      {/* Page Title */}
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Title level={4}>Board Classes</Title>
+        </Col>
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+        <Col>
+          <Space>
+            <Select
+              placeholder="Select Board"
+              style={{ width: 220 }}
+              allowClear
+              value={selectedBoard}
+              onChange={(value) => setSelectedBoard(value)}
+            >
+              {boards.map((board) => (
+                <Option key={board._id} value={board._id}>
+                  {board.name}
+                </Option>
+              ))}
+            </Select>
 
-        <h1 className="text-2xl font-semibold">
-          Board Classes
-        </h1>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setOpen(true)}
+            >
+              Add Board Class
+            </Button>
+          </Space>
+        </Col>
+      </Row>
 
-        <Button
-          type="primary"
-          onClick={() => setOpen(true)}
-        >
-          Add Board Class
-        </Button>
-
-      </div>
-
-      {/* Table */}
-
-      <div className="bg-white rounded-xl shadow p-4">
-
-        <Table
-          columns={columns}
-          dataSource={dataSource}
-          pagination={{ pageSize: 10 }}
-        />
-
-      </div>
+      {/* Table Card */}
+      <Card bordered={false} style={{ borderRadius: 12 }}>
+        <Spin spinning={loading}>
+          <Table
+            rowKey="_id"
+            columns={columns}
+            dataSource={boardClass}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+            }}
+          />
+        </Spin>
+      </Card>
 
       {/* Modal */}
-
-      <AddBoardClassModal
-        open={open}
-        setOpen={setOpen}
-      />
-
-    </div>
+      <AddBoardClassModal open={open} setOpen={setOpen} />
+    </div></>
   );
 }

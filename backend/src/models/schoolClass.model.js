@@ -15,17 +15,11 @@ const schoolClassSchema = new Schema(
       required: true,
       index: true,
     },
-    classId:{
-      type: Schema.Types.ObjectId,
-      ref: "Class",
-      required: true,
-    },
     boardClassId: {
       type: Schema.Types.ObjectId,
       ref: "BoardClass",
       required: true,
     },
-
     status: {
       type: String,
       enum: ["active", "inactive"],
@@ -46,7 +40,7 @@ const schoolClassSchema = new Schema(
 );
 
 schoolClassSchema.index(
- { schoolId: 1, academicYearId: 1, boardClassId: 1, classId: 1 },
+ { schoolId: 1, academicYearId: 1, boardClassId: 1,},
   { unique: true }
 );
 

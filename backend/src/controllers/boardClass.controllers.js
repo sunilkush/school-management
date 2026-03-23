@@ -1,14 +1,14 @@
 import { BoardClass } from "../models/BoardClass.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-
+import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 
 const createBoardClass = asyncHandler(async (req, res) => {
     // Implementation for creating a board class
-    const { name, boardId, status, description, createdBy, classId } = req.body;
+    const { name, boardId, status, description, createdBy} = req.body;
 
-    if (!name || !boardId || !schoolClassId) {
+    if (!name || !boardId) {
         throw new ApiError(400, "Name, Board ID and Class ID are required");
     }
 
@@ -18,7 +18,6 @@ const createBoardClass = asyncHandler(async (req, res) => {
         status,
         description,
         createdBy,
-        classId
     });
 
     if (!boardClass) {
@@ -32,20 +31,54 @@ const createBoardClass = asyncHandler(async (req, res) => {
 });
 
 
+
+
 const getBoardClasses = asyncHandler(async (req, res) => {
-    // Implementation for fetching board classes
-    const { boardId } = req.query;
-    if (!boardId) {
-        throw new ApiError(400, "Board ID is required");
-    }
+  const { boardId } = req.query;
 
-    const boardClasses = await BoardClass.find({ boardId });
+  const pipeline = [];
 
-    return res.status(200).json(
-        new ApiResponse(200, boardClasses, "Board classes fetched successfully")
-    );
+  // ✅ Filter
+  if (boardId) {
+    pipeline.push({
+      $match: {
+        boardId: new mongoose.Types.ObjectId(boardId),
+      },
+    });
+  }
+
+  // ✅ Join Board
+  pipeline.push({
+    $lookup: {
+      from: "boards",
+      localField: "boardId",
+      foreignField: "_id",
+      as: "board",
+    },
+  });
+
+  pipeline.push({
+    $unwind: "$board",
+  });
+
+  // ✅ Final Output
+  pipeline.push({
+    $project: {
+      _id: 1,
+      boardId: 1,
+      status: 1,
+      name:1,
+      boardName: "$board.name",
+      boardState: "$board.state",
+    },
+  });
+
+  const boardClasses = await BoardClass.aggregate(pipeline);
+
+  return res.status(200).json(
+    new ApiResponse(200, boardClasses, "Board classes fetched successfully")
+  );
 });
-
 const getBoardClassById = asyncHandler(async (req, res) => {
     // Implementation for fetching a single board class by ID
     const { id } = req.params;

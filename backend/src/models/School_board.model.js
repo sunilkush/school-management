@@ -1,5 +1,3 @@
-// models/SchoolBoard.js
-
 import mongoose, { Schema } from "mongoose";
 
 const schoolBoardSchema = new Schema(
@@ -11,6 +9,7 @@ const schoolBoardSchema = new Schema(
       index: true,
     },
 
+    // ✅ SINGLE board (not array)
     boardId: {
       type: Schema.Types.ObjectId,
       ref: "Board",
@@ -23,7 +22,6 @@ const schoolBoardSchema = new Schema(
       default: false,
     },
 
-    // Who assigned board to school
     assignedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -49,7 +47,7 @@ const schoolBoardSchema = new Schema(
   { timestamps: true }
 );
 
-// Prevent duplicate board for same school
+// ✅ Correct unique constraint
 schoolBoardSchema.index(
   { schoolId: 1, boardId: 1 },
   { unique: true }
@@ -58,5 +56,3 @@ schoolBoardSchema.index(
 export const SchoolBoard =
   mongoose.models.SchoolBoard ||
   mongoose.model("SchoolBoard", schoolBoardSchema);
-
- 

@@ -12,7 +12,7 @@ export const createBoardClass = createAsyncThunk(
             const token = localStorage.getItem("accessToken");
 
             const res = await axios.post(
-                `${ApiUrl}/board-class`,
+                `${ApiUrl}/board-classes`,
                 boardClass,
                 {
                     headers: {
@@ -33,24 +33,28 @@ export const createBoardClass = createAsyncThunk(
 /* ================= GET BOARD CLASS ================= */
 
 export const getBoardClass = createAsyncThunk(
-    "boardClass/getBoardClass",
-    async (_, { rejectWithValue }) => {
-        try {
-            const token = localStorage.getItem("accessToken");
+  "boardClass/getBoardClass",
+  async (id, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
 
-            const res = await axios.get(`${ApiUrl}/board-class`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+      const url = id
+        ? `${ApiUrl}/board-classes?boardId=${id}`
+        : `${ApiUrl}/board-classes`;
 
-            return res.data;
-        } catch (error) {
-            return rejectWithValue(
-                error?.response?.data?.message || "Data Fetch Failed!"
-            );
-        }
+      const res = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || "Data Fetch Failed!"
+      );
     }
+  }
 );
 export const getBoardClassById = createAsyncThunk(
   "boardClass/getBoardClassById",
@@ -59,7 +63,7 @@ export const getBoardClassById = createAsyncThunk(
       const token = localStorage.getItem("accessToken");
 
       const res = await axios.get(
-        `${ApiUrl}/board-class/${id}`,
+        `${ApiUrl}/board-classes/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -83,7 +87,7 @@ export const updateBoardClass = createAsyncThunk(
       const token = localStorage.getItem("accessToken");
 
       const res = await axios.put(
-        `${ApiUrl}/board-class/${id}`,
+        `${ApiUrl}/board-classes/${id}`,
         data,
         {
           headers: {
@@ -107,7 +111,7 @@ export const deleteBoardClass = createAsyncThunk(
     try {
       const token = localStorage.getItem("accessToken");
 
-      await axios.delete(`${ApiUrl}/board-class/${id}`, {
+      await axios.delete(`${ApiUrl}/board-classes/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -149,7 +153,7 @@ const boardClassSlice = createSlice({
 
             .addCase(createBoardClass.fulfilled, (state, action) => {
                 state.loading = false;
-                state.boardClass.push(action.payload);
+                state.boardClass.push(action.payload?.data);
                 state.success = true;
             })
 
@@ -168,7 +172,9 @@ const boardClassSlice = createSlice({
 
             .addCase(getBoardClass.fulfilled, (state, action) => {
                 state.loading = false;
-                state.boardClass = action.payload;
+                state.boardClass = Array.isArray(action.payload?.data)
+                    ? action.payload.data
+                    : [];
                 state.success = true;
             })
 
@@ -205,7 +211,7 @@ const boardClassSlice = createSlice({
                 state.loading = false;
                 state.success = true;
 
-                const updatedClass = action.payload;
+                const updatedClass = action.payload?.data;
 
                 const index = state.boardClass.findIndex(
                     (item) => item._id === updatedClass._id
