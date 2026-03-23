@@ -17,8 +17,8 @@ const Unauthorized = lazy(() => import("./pages/Unauthorized.jsx"));
 const NoActiveYear = lazy(() => import("./pages/no-active-year.jsx"));
 
 // Dashboards
-const SuperAdminDashboard = lazy(() => import("./pages/SuperAdmin/Dashboard/SuperAdminDashboard.jsx"));
-const SchoolAdminDashboard = lazy(() => import("./pages/SchoolAdmin/Dashboard/SchoolAdminDashboard.jsx"));
+const SuperAdminDashboard = lazy(() => import("./pages/Super_Admin/Dashboard/SuperAdminDashboard.jsx"));
+const SchoolAdminDashboard = lazy(() => import("./pages/School_Admin/Dashboard/SchoolAdminDashboard.jsx"));
 const StudentDashboard = lazy(() => import("./pages/Student/Dashboard/StudentDashboard.jsx"));
 const TeacherDashboard = lazy(() => import("./pages/Teacher/Dashboard/TeacherDashboard.jsx"));
 const AccountantDashboard = lazy(() => import("./pages/Accountant/Dashboard/AccountantDashboard.jsx"));
@@ -34,101 +34,101 @@ const Documents = lazy(() => import("./pages/Documents.jsx"));
 const Schedule = lazy(() => import("./pages/Schedule.jsx"));
 const Loader = lazy(()=> import("./components/Loader/Loader.jsx"));
 // Super Admin
-const Reports = lazy(() => import("./pages/SuperAdmin/Reports/Reports.jsx"));
-const Schools = lazy(() => import("./pages/SuperAdmin/School_Management/Schools.jsx"));
-const AddSchool = lazy(() => import("./pages/SuperAdmin/School_Management/AddSchool.jsx"));
-const SubscriptionPlans = lazy(() => import("./pages/SuperAdmin/School_Management/SubscriptionPlans.jsx"));
-const SchoolReports = lazy(() => import("./pages/SuperAdmin/School_Management/SchoolReports.jsx"));
-const PaymentsPage = lazy(() => import("./pages/SuperAdmin/School_Management/PaymentsPage.jsx"));
-const RevenuePage = lazy(() => import("./pages/SuperAdmin/School_Management/RevenuePage.jsx"));
-//const PlanLogs = lazy(() => import("./pages/SuperAdmin/Schools/PlanLogs.jsx"));
+const Reports = lazy(() => import("./pages/Super_Admin/Reports/Reports.jsx"));
+const Schools = lazy(() => import("./pages/Super_Admin/School_Management/Schools.jsx"));
+const AddSchool = lazy(() => import("./pages/Super_Admin/School_Management/AddSchool.jsx"));
+const SubscriptionPlans = lazy(() => import("./pages/Super_Admin/School_Management/SubscriptionPlans.jsx"));
+const SchoolReports = lazy(() => import("./pages/Super_Admin/School_Management/SchoolReports.jsx"));
+const PaymentsPage = lazy(() => import("./pages/Super_Admin/School_Management/PaymentsPage.jsx"));
+const RevenuePage = lazy(() => import("./pages/Super_Admin/School_Management/RevenuePage.jsx"));
+//const PlanLogs = lazy(() => import("./pages/Super_Admin/Schools/PlanLogs.jsx"));
 
-const Roles = lazy(() => import("./pages/SuperAdmin/System_Settings/Roles.jsx"));
-const Permissions = lazy(() => import("./pages/SuperAdmin/System_Settings/Permissions.jsx"));
-const GlobalConfig = lazy(() => import("./pages/SuperAdmin/System_Settings/GlobalConfig.jsx"));
-const AuditLogs = lazy(() => import("./pages/SuperAdmin/System_Settings/AuditLogs.jsx"));
-const Backups = lazy(() => import("./pages/SuperAdmin/System_Settings/Backups.jsx"));
+const Roles = lazy(() => import("./pages/Super_Admin/System_Settings/Roles.jsx"));
+const Permissions = lazy(() => import("./pages/Super_Admin/System_Settings/Permissions.jsx"));
+const GlobalConfig = lazy(() => import("./pages/Super_Admin/System_Settings/GlobalConfig.jsx"));
+const AuditLogs = lazy(() => import("./pages/Super_Admin/System_Settings/AuditLogs.jsx"));
+const Backups = lazy(() => import("./pages/Super_Admin/System_Settings/Backups.jsx"));
 
-const AcademicYears = lazy(() => import("./pages/SuperAdmin/Master_Settings/AcademicYears.jsx"));
-const ClassPage = lazy(() => import("./pages/SuperAdmin/Master_Settings/ClassPage.jsx"));
-const ClassSectionList = lazy(() => import("./pages/SuperAdmin/Master_Settings/ClassSectionList.jsx"));
-const SubjectsAdmin = lazy(() => import("./pages/SuperAdmin/Master_Settings/SubjectsAdmin.jsx"));
-const FeeCategories = lazy(() => import("./pages/SuperAdmin/Master_Settings/FeeCategories.jsx"));
-const Designations = lazy(() => import("./pages/SuperAdmin/Master_Settings/Designations.jsx"));
-const Departments = lazy(() => import("./pages/SuperAdmin/Master_Settings/Departments.jsx"));
-const SchoolBoards = lazy(() => import("./pages/SuperAdmin/Master_Settings/SchoolBoards.jsx"));
-const ChaptersTopics = lazy(() => import("./pages/SuperAdmin/Master_Settings/ChaptersTopics.jsx"));
-const BoardClassPage = lazy(() => import("./pages/SuperAdmin/Master_Settings/BoardClassPage.jsx"));
+const AcademicYears = lazy(() => import("./pages/Super_Admin/Master_Settings/AcademicYears.jsx"));
+const ClassPage = lazy(() => import("./pages/Super_Admin/Master_Settings/ClassPage.jsx"));
+const ClassSectionList = lazy(() => import("./pages/Super_Admin/Master_Settings/ClassSectionList.jsx"));
+const SubjectsAdmin = lazy(() => import("./pages/Super_Admin/Master_Settings/SubjectsAdmin.jsx"));
+const FeeCategories = lazy(() => import("./pages/Super_Admin/Master_Settings/FeeCategories.jsx"));
+const Designations = lazy(() => import("./pages/Super_Admin/Master_Settings/Designations.jsx"));
+const Departments = lazy(() => import("./pages/Super_Admin/Master_Settings/Departments.jsx"));
+const SchoolBoards = lazy(() => import("./pages/Super_Admin/Master_Settings/SchoolBoards.jsx"));
+const ChaptersTopics = lazy(() => import("./pages/Super_Admin/Master_Settings/ChaptersTopics.jsx"));
+const BoardClassPage = lazy(() => import("./pages/Super_Admin/Master_Settings/BoardClassPage.jsx"));
 
-const Modules = lazy(() => import("./pages/SuperAdmin/Modules/Modules.jsx"));
-const SchoolWiseReports = lazy(() => import("./pages/SuperAdmin/Reports/SchoolWiseReports.jsx"));
-const AttendanceSummary = lazy(() => import("./pages/SuperAdmin/Reports/AttendanceSummary.jsx"));
-const FinanceSummary = lazy(() => import("./pages/SuperAdmin/Reports/FinanceSummary.jsx"));
-const AcademicReports = lazy(() => import("./pages/SuperAdmin/Reports/AcademicReports.jsx"));
-const ActivityLogs = lazy(() => import("./pages/SuperAdmin/Reports/ActivityLogs.jsx"));
+const Modules = lazy(() => import("./pages/Super_Admin/Modules/Modules.jsx"));
+const SchoolWiseReports = lazy(() => import("./pages/Super_Admin/Reports/SchoolWiseReports.jsx"));
+const AttendanceSummary = lazy(() => import("./pages/Super_Admin/Reports/AttendanceSummary.jsx"));
+const FinanceSummary = lazy(() => import("./pages/Super_Admin/Reports/FinanceSummary.jsx"));
+const AcademicReports = lazy(() => import("./pages/Super_Admin/Reports/AcademicReports.jsx"));
+const ActivityLogs = lazy(() => import("./pages/Super_Admin/Reports/ActivityLogs.jsx"));
 
 // Super Admin Users
-const Admins = lazy(() => import("./pages/SuperAdmin/Users_Management/Admins.jsx"));
-const Staff = lazy(() => import("./pages/SuperAdmin/Users_Management/Staff.jsx"));
-const Teachers = lazy(() => import("./pages/SuperAdmin/Users_Management/Teachers.jsx"));
-const Parents = lazy(() => import("./pages/SuperAdmin/Users_Management/Parents.jsx"));
-const Students = lazy(() => import("./pages/SuperAdmin/Users_Management/students.jsx"));
-const Accountant = lazy(() => import("./pages/SuperAdmin/Users_Management/Accountant.jsx"));
-const Librarian = lazy(() => import("./pages/SuperAdmin/Users_Management/Librarian.jsx"));
-const Transport = lazy(() => import("./pages/SuperAdmin/Users_Management/Transport.jsx"));
+const Admins = lazy(() => import("./pages/Super_Admin/Users_Management/Admins.jsx"));
+const Staff = lazy(() => import("./pages/Super_Admin/Users_Management/Staff.jsx"));
+const Teachers = lazy(() => import("./pages/Super_Admin/Users_Management/Teachers.jsx"));
+const Parents = lazy(() => import("./pages/Super_Admin/Users_Management/Parents.jsx"));
+const Students = lazy(() => import("./pages/Super_Admin/Users_Management/students.jsx"));
+const Accountant = lazy(() => import("./pages/Super_Admin/Users_Management/Accountant.jsx"));
+const Librarian = lazy(() => import("./pages/Super_Admin/Users_Management/Librarian.jsx"));
+const Transport = lazy(() => import("./pages/Super_Admin/Users_Management/Transport.jsx"));
 
 // School Admin
-const UsersPage = lazy(() => import("./pages/SchoolAdmin/User_Management/UsersPage.jsx"));
-const AddStudent = lazy(() => import("./pages/SchoolAdmin/User_Management/AddStudent.jsx"));
-const AddTeacher = lazy(() => import("./pages/SchoolAdmin/User_Management/AddTeacher.jsx"));
-const AddParent = lazy(() => import("./pages/SchoolAdmin/User_Management/AddParent.jsx"));
-const StudentList = lazy(() => import("./pages/SchoolAdmin/User_Management/StudentList.jsx"));
+const UsersPage = lazy(() => import("./pages/School_Admin/User_Management/UsersPage.jsx"));
+const AddStudent = lazy(() => import("./pages/School_Admin/User_Management/AddStudent.jsx"));
+const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
+const AddParent = lazy(() => import("./pages/School_Admin/User_Management/AddParent.jsx"));
+const StudentList = lazy(() => import("./pages/School_Admin/User_Management/StudentList.jsx"));
 
-const Classes = lazy(() => import("./pages/SchoolAdmin/Academic_Management/Classes.jsx"));
-const Subjects = lazy(() => import("./pages/SchoolAdmin/Academic_Management/Subjects.jsx"));
+const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
+const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
 
-const ExamSchedule = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/ExamSchedule.jsx"));
-const EnterGrades = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/EnterGrades.jsx"));
-const ExamReports = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/ExamReport.jsx"));
-const ExamsPage = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/ExamPage.jsx"));
-const ExamCreate = lazy(() => import("./pages/SchoolAdmin/Exams_&_Grades/CreateExam.jsx"));
+const ExamSchedule = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamSchedule.jsx"));
+const EnterGrades = lazy(() => import("./pages/School_Admin/Exams_&_Grades/EnterGrades.jsx"));
+const ExamReports = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamReport.jsx"));
+const ExamsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamPage.jsx"));
+const ExamCreate = lazy(() => import("./pages/School_Admin/Exams_&_Grades/CreateExam.jsx"));
 
-const AllStudentsAttendance = lazy(() => import("./pages/SchoolAdmin/Attendance/AllStudentsAttendance.jsx"));
-const StaffAttendance = lazy(() => import("./pages/SchoolAdmin/Attendance/StaffAttendance.jsx"));
+const AllStudentsAttendance = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
+const StaffAttendance = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
 
-const Books = lazy(() => import("./pages/SchoolAdmin/Library/Books.jsx"));
-const IssueBook = lazy(() => import("./pages/SchoolAdmin/Library/IssueBook.jsx"));
-const LibraryCard = lazy(() => import("./pages/SchoolAdmin/Library/LibraryCard.jsx"));
+const Books = lazy(() => import("./pages/School_Admin/Library/Books.jsx"));
+const IssueBook = lazy(() => import("./pages/School_Admin/Library/IssueBook.jsx"));
+const LibraryCard = lazy(() => import("./pages/School_Admin/Library/LibraryCard.jsx"));
 
-const ClassTimetable = lazy(() => import("./pages/SchoolAdmin/Timetables/ClassTimetable.jsx"));
-const TeacherTimetable = lazy(() => import("./pages/SchoolAdmin/Timetables/TeacherTimetable.jsx"));
+const ClassTimetable = lazy(() => import("./pages/School_Admin/Timetables/ClassTimetable.jsx"));
+const TeacherTimetable = lazy(() => import("./pages/School_Admin/Timetables/TeacherTimetable.jsx"));
 
-const CollectFees = lazy(() => import("./pages/SchoolAdmin/Fees_Management/CollectFees.jsx"));
-const FeeStructure = lazy(() => import("./pages/SchoolAdmin/Fees_Management/FeeStructure.jsx"));
-const StudentAssignFees = lazy(() => import("./pages/SchoolAdmin/Fees_Management/AssignStudentFeeForm.jsx"));
-const SchoolFeeCategories = lazy(() => import("./pages/SchoolAdmin/Fees_Management/SchoolFeeCategories.jsx"));
+const CollectFees = lazy(() => import("./pages/School_Admin/Fees_Management/CollectFees.jsx"));
+const FeeStructure = lazy(() => import("./pages/School_Admin/Fees_Management/FeeStructure.jsx"));
+const StudentAssignFees = lazy(() => import("./pages/School_Admin/Fees_Management/AssignStudentFeeForm.jsx"));
+const SchoolFeeCategories = lazy(() => import("./pages/School_Admin/Fees_Management/SchoolFeeCategories.jsx"));
 
-const HostelManagement = lazy(() => import("./pages/SchoolAdmin/Hostel/HostelManagement.jsx"));
-const RoomAllocation = lazy(() => import("./pages/SchoolAdmin/Hostel/RoomAllocation.jsx"));
+const HostelManagement = lazy(() => import("./pages/School_Admin/Hostel/HostelManagement.jsx"));
+const RoomAllocation = lazy(() => import("./pages/School_Admin/Hostel/RoomAllocation.jsx"));
 
-const RoutesPage = lazy(() => import("./pages/SchoolAdmin/Transport/RoutesPage.jsx"));
-const Vehicles = lazy(() => import("./pages/SchoolAdmin/Transport/Vehicles.jsx"));
+const RoutesPage = lazy(() => import("./pages/School_Admin/Transport/RoutesPage.jsx"));
+const Vehicles = lazy(() => import("./pages/School_Admin/Transport/Vehicles.jsx"));
 
-const EmployeeSalaries = lazy(() => import("./pages/SchoolAdmin/Payroll/EmployeeSalaries.jsx"));
-const GeneratePayslip = lazy(() => import("./pages/SchoolAdmin/Payroll/GeneratePayslip.jsx"));
+const EmployeeSalaries = lazy(() => import("./pages/School_Admin/Payroll/EmployeeSalaries.jsx"));
+const GeneratePayslip = lazy(() => import("./pages/School_Admin/Payroll/GeneratePayslip.jsx"));
 
-const SendNotification = lazy(() => import("./pages/SchoolAdmin/Communication/SendNotification.jsx"));
-const SmsEmailHistory = lazy(() => import("./pages/SchoolAdmin/Communication/SmsEmailHistory.jsx"));
+const SendNotification = lazy(() => import("./pages/School_Admin/Communication/SendNotification.jsx"));
+const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"));
 
-const Supplies = lazy(() => import("./pages/SchoolAdmin/Inventory/supplies.jsx"));
-const Assets = lazy(() => import("./pages/SchoolAdmin/Inventory/assets.jsx"));
+const Supplies = lazy(() => import("./pages/School_Admin/Inventory/supplies.jsx"));
+const Assets = lazy(() => import("./pages/School_Admin/Inventory/assets.jsx"));
 
-const Events = lazy(() => import("./pages/SchoolAdmin/Events_&_Calendar/events.jsx"));
-const CalendarPage = lazy(() => import("./pages/SchoolAdmin/Events_&_Calendar/CalendarPage.jsx"));
+const Events = lazy(() => import("./pages/School_Admin/Events_&_Calendar/events.jsx"));
+const CalendarPage = lazy(() => import("./pages/School_Admin/Events_&_Calendar/CalendarPage.jsx"));
 
-const SettingsPage = lazy(() => import("./pages/SchoolAdmin/Settings/SettingsPage.jsx"));
-const SchoolAdminReport = lazy(() => import("./pages/SchoolAdmin/Reports/schoolAdminReport.jsx"));
-const SchoolSetup = lazy(()=>import("./pages/SchoolAdmin/SchoolSetup/SchoolSetup.jsx"));
+const SettingsPage = lazy(() => import("./pages/School_Admin/Settings/SettingsPage.jsx"));
+const SchoolAdminReport = lazy(() => import("./pages/School_Admin/Reports/SchoolAdminReport.jsx"));
+const SchoolSetup = lazy(()=>import("./pages/School_Admin/School_Setup/SchoolSetup.jsx"));
 
 // Teacher
 const QuestionBank = lazy(() => import("./pages/Teacher/Exams/QuestionBank.jsx"));
@@ -242,7 +242,7 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "superadmin",
+            path: "Super_Admin",
             element: (
               <ProtectedRoute allowedRoles={["Super Admin"]}>
                 <SuperAdminDashboard />
@@ -298,7 +298,7 @@ const router = createBrowserRouter([
             ],
           },
           {
-            path: "schooladmin",
+            path: "School_Admin",
             element: (
               <ProtectedRoute allowedRoles={["School Admin"]}>
                 <SchoolAdminDashboard />
