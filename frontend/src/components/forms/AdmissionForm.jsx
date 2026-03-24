@@ -18,7 +18,7 @@ import {
   fetchLastRegisteredStudent,
   createStudent,
 } from "../../features/studentSlice";
-import { fetchAllClasses } from "../../features/classSlice";
+import { getClassData } from "../../features/schoolClassSlice";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -45,7 +45,9 @@ const AdmissionForm = () => {
     (state) => state.students
   );
   const { user } = useSelector((state) => state.auth);
-  const { classList = [] } = useSelector((state) => state.class);
+  const { schoolClasses = []} = useSelector(
+        (state) => state.schoolClass || {}
+      );
 
   const schoolId = user?.school?._id;
   const academicYear = JSON.parse(
@@ -58,7 +60,7 @@ const AdmissionForm = () => {
   useEffect(() => {
     if (schoolId && academicYearId) {
       dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
-      dispatch(fetchAllClasses({ schoolId }));
+      dispatch(getClassData({ schoolId,academicYearId }));
     }
   }, [schoolId, academicYearId, dispatch]);
 
@@ -72,7 +74,7 @@ const AdmissionForm = () => {
 
 
   const handleClassChange = (schoolClassId) => {
-    const selectedClass = classList.find((c) => c._id === schoolClassId);
+    const selectedClass = schoolClasses.find((c) => c._id === schoolClassId);
     setSections(selectedClass?.sections || []);
     form.setFieldsValue({ sectionId: undefined });
   };
@@ -127,7 +129,7 @@ const AdmissionForm = () => {
                   <Select
                     placeholder="Select Class"
                     onChange={handleClassChange}
-                    options={classList.map((c) => ({
+                    options={schoolClasses.map((c) => ({
                       label: c.name,
                       value: c._id,
                     }))}

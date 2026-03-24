@@ -25,7 +25,7 @@ const StudentList = () => {
   const [selectedSection, setSelectedSection] = useState("all");
 
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  const academicYearId = JSON.parse(localStorage.getItem("selectedAcademicYear"))._id
 
   // Fetch user if not loaded
   useEffect(() => {
