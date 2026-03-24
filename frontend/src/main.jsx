@@ -10,12 +10,18 @@ import store from "./store/store.js";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { lazy } from "react";
 import React, { Suspense } from "react";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 // Auth & Core
 const LoginPage = lazy(() => import("./pages/Auth/LoginPage.jsx"));
 const Dashboard = lazy(() => import("./components/layout/MainDashboard.jsx"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized.jsx"));
 const NoActiveYear = lazy(() => import("./pages/no-active-year.jsx"));
+const ForgetPasswordPage = lazy(()=>import("./pages/Auth/ForgetPasswordPage.jsx"));
+const ResetPasswordPage = lazy(()=>import("./pages/Auth/ResetPasswordPage.jsx"));
+const VerifyEmailPage = lazy(()=> import("./pages/Auth/VerifyEmailPage.jsx"));
+const ResendVerificationPage = lazy(()=>import("./pages/Auth/ResendVerificationPage.jsx"));
 
+const NotFoundPage = lazy(()=>import("./pages/NotFoundPage.jsx"));
 // Dashboards
 const SuperAdminDashboard = lazy(() => import("./pages/Super_Admin/Dashboard/SuperAdminDashboard.jsx"));
 const SchoolAdminDashboard = lazy(() => import("./pages/School_Admin/Dashboard/SchoolAdminDashboard.jsx"));
@@ -172,9 +178,15 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { path: "/", element: <LoginPage /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/forgot-password", element: <ForgetPasswordPage /> },
+      { path: "/reset-password", element: <ResetPasswordPage /> },
+      { path: "/verify-email", element: <VerifyEmailPage /> },
+      { path: "/resend-verification", element: <ResendVerificationPage /> },
       { path: "/no-active-year", element: <NoActiveYear /> },
       { path: "unauthorized", element: <Unauthorized /> },
       { path: "*", element: <Unauthorized /> },
+      { path: "NotFoundPage", element:<NotFoundPage/> },
       {
         path: "dashboard",
         element: <Dashboard />,
@@ -602,20 +614,22 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <PrimeReactProvider
-      value={{
-        unstyled: true, // ✅ Must be true to apply Tailwind styles
-        pt: Tailwind,    // ✅ Add Tailwind preset
-        ptOptions: {
-          mergeSections: true,
-          mergeProps: true,
-          classNameMergeFunction: twMerge,
-        },
-      }}
-    >
-      <Suspense fallback={<Loader/>}>
-        <RouterProvider router={router} />
-      </Suspense>
-    </PrimeReactProvider>
+    <ThemeProvider>
+      <PrimeReactProvider
+        value={{
+          unstyled: true, // ✅ Must be true to apply Tailwind styles
+          pt: Tailwind,    // ✅ Add Tailwind preset
+          ptOptions: {
+            mergeSections: true,
+            mergeProps: true,
+            classNameMergeFunction: twMerge,
+          },
+        }}
+      >
+        <Suspense fallback={<Loader/>}>
+          <RouterProvider router={router} />
+        </Suspense>
+      </PrimeReactProvider>
+    </ThemeProvider>
   </Provider>
 );

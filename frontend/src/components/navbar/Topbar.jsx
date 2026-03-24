@@ -1,10 +1,12 @@
-import React, { useState, memo, lazy, Suspense } from "react";
+import React, { useState, memo, lazy, Suspense, useEffect } from "react";
 import { Layout, Input, Button, Space, Grid, Drawer, Spin } from "antd";
 import {
   MenuOutlined,
   CloseOutlined,
   SearchOutlined,
   MessageOutlined,
+   MoonOutlined,
+  SunOutlined,
 } from "@ant-design/icons";
 
 const UserDropdown = lazy(() => import("./UserDropdown"));
@@ -12,7 +14,7 @@ const NotificationDropdown = lazy(() => import("./NotificationDropdown"));
 const AcademicYearSwitcher = lazy(() =>
   import("../layout/AcademicYearSwitcher")
 );
-
+import { useTheme } from "../../context/ThemeContext";
 import { useSelector } from "react-redux";
 
 const { Header } = Layout;
@@ -21,14 +23,45 @@ const { useBreakpoint } = Grid;
 const Topbar = ({ toggleSidebar, isOpen }) => {
   const { user } = useSelector((state) => state.auth);
   const screens = useBreakpoint();
-
+  const { isDark, toggleTheme } = useTheme();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const handleSearch = (value) => {
     console.log("Search:", value);
   };
+   useEffect(() => {
+    const checkDarkMode = () => {
+      const root = document.documentElement;
+      const body = document.body;
+      const savedTheme = localStorage.getItem("theme");
 
+      const darkEnabled =
+        savedTheme === "dark" ||
+        root.classList.contains("dark") ||
+        body.classList.contains("dark") ||
+        root.getAttribute("data-theme") === "dark";
+
+      setIsDarkMode(darkEnabled);
+    };
+
+    checkDarkMode();
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    window.addEventListener("storage", checkDarkMode);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("storage", checkDarkMode);
+    };
+  }, []);
   // 🔹 Common Loader
   const loader = <Spin size="small" />;
 
@@ -40,8 +73,9 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 12px",
-          background: "#fff",
-          borderBottom: "1px solid #f0f0f0",
+          color: "var(--text-primary)",
+           background: isDarkMode ? "#141414" : "#fff",
+          borderBottom: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
           position: "sticky",
           top: 0,
           zIndex: 100,
@@ -60,7 +94,9 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               ) : (
                 <CloseOutlined style={{ fontSize: 20 }} />
               )
+                
             }
+            style={{ color: isDarkMode ? "#ffffff" : undefined }}
           />
 
           {/* Desktop Search */}
@@ -86,6 +122,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               aria-label="Open Search"
               icon={<SearchOutlined style={{ fontSize: 18 }} />}
               onClick={() => setMobileSearchOpen(true)}
+               style={{ color: isDarkMode ? "#ffffff" : undefined }}
             />
           )}
 
@@ -101,8 +138,20 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
             type="text"
             aria-label="Messages"
             icon={<MessageOutlined style={{ fontSize: 18 }} />}
+            style={{ color: isDarkMode ? "#ffffff" : undefined }}
           />
-
+            <Button
+            type="text"
+            aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
+            onClick={toggleTheme}
+            icon={
+              isDark ? (
+                <SunOutlined style={{ fontSize: 18 }} />
+              ) : (
+                <MoonOutlined style={{ fontSize: 18 }} />
+              )
+            }
+          />
           {/* Notifications */}
           <Suspense fallback={loader}>
             <NotificationDropdown />

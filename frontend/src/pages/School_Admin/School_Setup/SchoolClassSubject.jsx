@@ -37,13 +37,14 @@ const SchoolClassSubject = () => {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const schoolId = user?.school?._id;
+  const acadmicYearId = JSON.parse(localStorage.getItem("selectedAcademicYear"))._id
 
   // 🔹 Fetch
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(fetchSchoolClasses({ schoolId }));
+    dispatch(fetchSchoolClasses({ schoolId,acadmicYearId }));
     dispatch(fetchAllSubjects({ isGlobal: true }));
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId,acadmicYearId]);
 
   // 🔥 Pre-fill mapping (IMPORTANT)
   useEffect(() => {

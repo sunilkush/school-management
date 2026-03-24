@@ -60,11 +60,18 @@ export const getAllSchoolClasses = async (req, res) => {
     if (schoolId) filter.schoolId = schoolId;
     if (academicYearId) filter.academicYearId = academicYearId;
 
-    const classes = await SchoolClass.find(filter)
-      .populate("boardClassId", "name")
-      .populate("sections.sectionId", "name")
-      .populate("sections.teacherId", "name")
-      .sort({ createdAt: -1 });
+   const classes = await SchoolClass.find(filter)
+  .populate({
+    path: "sections.sectionId",
+    select: "name",
+  })
+  .populate({
+    path: "sections.teacherId",
+    select: "name",
+  })
+  .populate("boardClassId", "name")
+  .sort({ createdAt: -1 })
+  .lean();
 
     return res.status(200).json({
       success: true,

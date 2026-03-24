@@ -1,15 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+:root[data-theme="light"] {
+  --surface-page: #f0f2f5;
+  --surface-header: #ffffff;
+  --surface-sidebar: #ffffff;
+  --text-primary: #111827;
+  --border-color: #f0f0f0;
+}
+
+:root[data-theme="dark"] {
+  --surface-page: #111827;
+  --surface-header: #1f2937;
+  --surface-sidebar: #1f2937;
+  --text-primary: #f9fafb;
+  --border-color: #374151;
+}
 
 body {
   font-family: "Noto Sans", sans-serif;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  transition: background 0.2s ease, color 0.2s ease;
 }
 .fc-direction-ltr .fc-daygrid-event.fc-event-end{
     margin-right: 2px;
     text-align: center!important;
 }
+.ant-layout {
+  background: var(--surface-page) !important;
+}
 
+.ant-drawer-content {
+  background: var(--surface-sidebar) !important;
+}
 /* Show button on mobile/tablet, hide on desktop */
 .sidebar-toggle-btn {
   display: flex;

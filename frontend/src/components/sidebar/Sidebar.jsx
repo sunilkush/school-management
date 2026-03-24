@@ -1,10 +1,11 @@
-import React, { lazy, memo, Suspense } from "react";
+import React, { lazy, memo, Suspense, useEffect, useState } from "react";
 import { Layout, Typography, Spin } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { Loader } from "lucide-react";
-
+import { useTheme } from "../../context/ThemeContext";
 const SidebarMenu = lazy(() => import("./SidebarMenu"));
+
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -12,22 +13,57 @@ const { Text } = Typography;
 const Sidebar = ({ isOpen }) => {
   const token = localStorage.getItem("accessToken");
   const { user } = useSelector((state) => state.auth);
-
+  const [isDarkMode, setIsDarkMode] = useState(false);
+   const { isDark } = useTheme();
   const role = user?.role?.name?.toLowerCase();
-  const schoolName = user?.school?.name || "School";
+  const schoolName = user?.school?.name || "Super Admin";
+   useEffect(() => {
+    const checkDarkMode = () => {
+      const root = document.documentElement;
+      const body = document.body;
+      const savedTheme = localStorage.getItem("theme");
+
+      const darkEnabled =
+        savedTheme === "dark" ||
+        root.classList.contains("dark") ||
+        body.classList.contains("dark") ||
+        root.getAttribute("data-theme") === "dark";
+
+      setIsDarkMode(darkEnabled);
+    };
+
+    checkDarkMode();
+
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    window.addEventListener("storage", checkDarkMode);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("storage", checkDarkMode);
+    };
+  }, []);
 
   // ✅ Loading / unauthenticated state
   if (!token) {
     return (
       <Sider
         width={260}
-        theme="light"
+         theme={isDark ? "dark" : "light"}
         style={{
           height: "100vh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRight: "1px solid #f0f0f0",
+          borderRight: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
+          background: isDarkMode ? "#141414" : "#ffffff",
         }}
       >
         <div style={{ textAlign: "center" }}>
@@ -43,14 +79,15 @@ const Sidebar = ({ isOpen }) => {
   return (
     <Sider
       width={260}
-      theme="light"
+       theme={isDark ? "dark" : "light"}
       trigger={null}
       style={{
         height: "100vh",
         position: "fixed",
         left: 0,
         top: 0,
-        borderRight: "1px solid #f0f0f0",
+        borderRight: "1px solid var(--border-color)",
+        background: "var(--surface-sidebar)",
         zIndex: 1000,
         transform: isOpen ? "translateX(0)" : "translateX(-100%)",
         transition: "all 0.3s ease",
@@ -66,13 +103,13 @@ const Sidebar = ({ isOpen }) => {
           alignItems: "center",
           gap: 12,
           fontWeight: 600,
-          color: "#1677ff",
+           color: isDarkMode ? "#ffffff" : "#1677ff",
           minHeight: 64,
         }}
       >
         <div
           style={{
-            background: "#e6f4ff",
+             background: isDarkMode ? "#303030" : "#e6f4ff",
             padding: 8,
             borderRadius: "50%",
             display: "flex",
@@ -86,14 +123,20 @@ const Sidebar = ({ isOpen }) => {
         </div>
 
         {isOpen && (
-          <Text ellipsis style={{ fontSize: 14 }}>
+           <Text ellipsis style={{ fontSize: 14, color: isDarkMode ? "#ffffff" : "inherit" }}>
             {schoolName}
           </Text>
         )}
       </div>
 
       {/* Divider */}
-      <div style={{ borderBottom: "1px solid #f0f0f0", margin: "0 12px" }} />
+     <div
+        style={{
+          borderBottom: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
+          margin: "0 12px",
+        }}
+      />
+
 
       {/* MENU */}
       <div
@@ -111,7 +154,7 @@ const Sidebar = ({ isOpen }) => {
             </div>
           }
         >
-          <SidebarMenu role={role} />
+          <SidebarMenu role={role}  />
         </Suspense>
       </div>
     </Sider>

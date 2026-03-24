@@ -40,7 +40,7 @@ const SchoolClass = () => {
   const { schoolClasses = [] } = useSelector(
     (state) => state.schoolClass || {}
   );
-
+  console.log(schoolClasses)
   const { selectedAcademicYear } = useSelector(
     (state) => state.academicYear
   );
@@ -59,20 +59,19 @@ const SchoolClass = () => {
     }
   }, [dispatch, schoolId]);
 
-  useEffect(() => {
-    if (selectedBoard) {
-      dispatch(getBoardClass({ boardId: selectedBoard }));
-    } else {
-      dispatch(getBoardClass());
-    }
-  }, [selectedBoard, dispatch]);
+useEffect(() => {
+  if (selectedBoard) {
+    dispatch(getBoardClass({boardId:selectedBoard}));
+  }
+}, [selectedBoard, dispatch]);
 
   /* ================= DEFAULT BOARD ================= */
-  useEffect(() => {
-    if (schoolBoards.length && !selectedBoard) {
-      setSelectedBoard(schoolBoards[0]?.boardId?._id);
-    }
-  }, [schoolBoards, selectedBoard]);
+useEffect(() => {
+  if (schoolBoards.length && !selectedBoard) {
+    const defaultBoard = schoolBoards[0]?.boardId?._id;
+    setSelectedBoard(defaultBoard);
+  }
+}, [schoolBoards,selectedBoard]);
 
   /* ================= HELPERS ================= */
 
@@ -154,73 +153,71 @@ const SchoolClass = () => {
   };
 
   /* ================= TABLE ================= */
-  const columns = [
-    {
-      title: "Class",
-      dataIndex: "name",
-      render: (text) => <Text strong>{text}</Text>,
+ const columns = [
+  {
+    title: "Class",
+    render: (_, record) => (
+      <Text strong>{record.classId?.name}</Text>
+    ),
+  },
+  {
+    title: "Assign",
+    align: "center",
+    render: (_, record) => (
+      <Switch
+        checked={isAssigned(record._id)}
+        onChange={() => handleToggle(record)}
+      />
+    ),
+  },
+  {
+    title: "Sections",
+    render: (_, record) => {
+      const assigned = isAssigned(record._id);
+      const classSections = getSections(record._id);
+
+      if (!assigned) {
+        return <Text type="secondary">Assign class first</Text>;
+      }
+
+      return (
+        <>
+          <Text type="success">Already Assigned ✅</Text>
+
+          <div style={{ marginTop: 8 }}>
+            {classSections?.length ? (
+              classSections.map((sec) => (
+                <Tag key={sec._id} color="blue">
+                  {sec.sectionId?.name}
+                </Tag>
+              ))
+            ) : (
+              <Text type="secondary">No sections</Text>
+            )}
+          </div>
+
+          <Space.Compact style={{ width: "100%", marginTop: 8 }}>
+            <Input
+              placeholder="e.g. A, B, C"
+              value={sectionInputs[record._id] || ""}
+              onChange={(e) =>
+                setSectionInputs({
+                  ...sectionInputs,
+                  [record._id]: e.target.value,
+                })
+              }
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => handleAddSection(record._id)}
+            />
+          </Space.Compact>
+        </>
+      );
     },
-    {
-      title: "Assign",
-      align: "center",
-      render: (_, record) => (
-        <Switch
-          checked={isAssigned(record._id)}
-          onChange={() => handleToggle(record)}
-        />
-      ),
-    },
-    {
-      title: "Sections",
-      render: (_, record) => {
-        const assigned = isAssigned(record._id);
-        const classSections = getSections(record._id);
-
-        if (!assigned) {
-          return <Text type="secondary">Assign class first</Text>;
-        }
-
-        return (
-          <>
-            {/* ✅ Assigned Message */}
-            <Text type="success">Already Assigned ✅</Text>
-
-            {/* ✅ Section list */}
-            <div style={{ marginTop: 8 }}>
-              {classSections.length ? (
-                classSections.map((sec) => (
-                  <Tag key={sec._id} color="blue">
-                    {sec.sectionId?.name}
-                  </Tag>
-                ))
-              ) : (
-                <Text type="secondary">No sections</Text>
-              )}
-            </div>
-
-            {/* ✅ Add section */}
-            <Space.Compact style={{ width: "100%", marginTop: 8 }}>
-              <Input
-                placeholder="e.g. A, B, C"
-                value={sectionInputs[record._id] || ""}
-                onChange={(e) =>
-                  setSectionInputs({
-                    ...sectionInputs,
-                    [record._id]: e.target.value,
-                  })
-                }
-              />
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => handleAddSection(record._id)}
-              />
-            </Space.Compact>
-          </>
-        );
-      },
-    },
-  ];
+  },
+];
 
   return (
     <div style={{ padding: 20 }}>

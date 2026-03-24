@@ -3,6 +3,7 @@ import { Layout, Menu, Typography, Spin } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
+
 const { Sider } = Layout;
 const { Text } = Typography;
 
@@ -12,7 +13,8 @@ const SidebarMenu = ({ role }) => {
   const permissions = useSelector((state) => state.roleUi.permissions);
 
   const [sidebarConfig, setSidebarConfig] = useState(null);
-
+  const [isDarkMode, setIsDarkMode] = useState(false);
+ 
   // 🔥 Lazy load config
   useEffect(() => {
     const loadMenu = async () => {
@@ -22,7 +24,38 @@ const SidebarMenu = ({ role }) => {
 
     loadMenu();
   }, []);
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const root = document.documentElement;
+      const body = document.body;
+      const savedTheme = localStorage.getItem("theme");
 
+      const darkEnabled =
+        savedTheme === "dark" ||
+        root.classList.contains("dark") ||
+        body.classList.contains("dark") ||
+        root.getAttribute("data-theme") === "dark";
+
+      setIsDarkMode(darkEnabled);
+    };
+
+    checkDarkMode();
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    window.addEventListener("storage", checkDarkMode);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("storage", checkDarkMode);
+    };
+  }, []);
   const buildFallbackMenuFromPermissions = (permissions = []) => {
     if (!Array.isArray(permissions) || permissions.length === 0) return [];
 
@@ -98,9 +131,10 @@ const SidebarMenu = ({ role }) => {
   return (
     <Sider
       width={260}
-      theme="light"
+       theme={isDarkMode ? "dark" : "light"}
       style={{
-        borderRight: "1px solid #f0f0f0",
+        borderRight: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
+        background: isDarkMode ? "#141414" : "#ffffff",
         height: "100vh",
         position: "fixed",
         left: 0,
@@ -113,7 +147,9 @@ const SidebarMenu = ({ role }) => {
         </div>
       ) : antMenuItems.length === 0 ? (
         <div className="p-4">
-          <Text type="secondary">No menu configured for this role yet.</Text>
+           <Text type="secondary" style={{ color: isDarkMode ? "#d9d9d9" : undefined }}>
+            No menu configured for this role yet.
+          </Text>
         </div>
       ) : (
         <Menu
@@ -123,7 +159,13 @@ const SidebarMenu = ({ role }) => {
           openKeys={openKeys}
           onOpenChange={onOpenChange}
           onClick={({ key }) => key && navigate(`/dashboard/${key}`)}
-          style={{ height: "100%", borderRight: 0 }}
+           style={{
+            height: "100%",
+            borderRight: 0,
+            background: isDarkMode ? "#141414" : "#ffffff",
+            color: isDarkMode ? "#ffffff" : undefined,
+          }}
+           theme={isDarkMode ? "dark" : "light"}
         />
       )}
     </Sider>

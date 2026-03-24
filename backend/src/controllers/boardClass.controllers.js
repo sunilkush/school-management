@@ -43,18 +43,25 @@ const createBoardClass = asyncHandler(async (req, res) => {
 const getBoardClasses = asyncHandler(async (req, res) => {
   const { boardId } = req.query;
 
-  const filter = {};
-  if (boardId) filter.boardId = boardId;
+  // ❗ Mandatory check
+  if (!boardId) {
+    return res.status(400).json(
+      new ApiResponse(400, null, "boardId is required")
+    );
+  }
 
-  const boardClasses = await BoardClass.find(filter)
+  // ✅ Only board specific data
+  const boardClasses = await BoardClass.find({ boardId })
     .populate("boardId", "name")
-    .populate("classId", "name") // 🔥 IMPORTANT
-    .sort({ createdAt: -1 });
+    .populate("classId", "name")
+    .sort({ createdAt: -1 })
+    .lean();
 
   return res.status(200).json(
     new ApiResponse(200, boardClasses, "Board classes fetched successfully")
   );
 });
+
 
 const getBoardClassById = asyncHandler(async (req, res) => {
   const { id } = req.params;
