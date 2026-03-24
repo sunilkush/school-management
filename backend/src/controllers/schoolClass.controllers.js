@@ -1,5 +1,6 @@
 import { SchoolClass } from "../models/schoolClass.model.js";
-
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { Section } from "../models/section.model.js";
 // 🔹 CREATE
 export const createSchoolClass = async (req, res) => {
   try {
@@ -167,3 +168,84 @@ export const deleteSchoolClass = async (req, res) => {
     });
   }
 };
+
+export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
+  const { schoolId, academicYearId } = req.query;
+
+  // =============================
+  // 🔹 VALIDATION
+  // =============================
+  if (!schoolId) {
+    return res.status(400).json({
+      success: false,
+      message: "schoolId is required",
+    });
+  }
+
+  // =============================
+  // 🔹 FETCH SCHOOL CLASSES
+  // =============================
+  const classes = await SchoolClass.find({
+    schoolId,
+    ...(academicYearId && { academicYearId }),
+  })
+    .populate("boardClassId", "name")
+    .lean();
+
+  // =============================
+  // 🔹 GET ALL SECTION IDS
+  // =============================
+  const sectionIds = classes.flatMap((cls) =>
+    (cls.sections || []).map((s) => s.sectionId)
+  );
+
+  // =============================
+  // 🔹 FETCH SECTIONS WITH SUBJECTS
+  // =============================
+  const sections = await Section.find({
+    _id: { $in: sectionIds },
+  })
+    .populate("subjects.subjectId", "name")
+    .lean();
+
+  // =============================
+  // 🔹 MAP SECTIONS
+  // =============================
+  const sectionMap = {};
+  sections.forEach((sec) => {
+    sectionMap[sec._id] = sec;
+  });
+
+  // =============================
+  // 🔥 FINAL STRUCTURE
+  // =============================
+  const result = classes.map((cls) => ({
+    _id: cls._id,
+    name: cls.name,
+    board: cls.boardClassId?.name,
+
+    sections: (cls.sections || []).map((sec) => {
+      const fullSection = sectionMap[sec.sectionId];
+
+      return {
+        _id: sec.sectionId,
+        name: fullSection?.name,
+
+        subjects: (fullSection?.subjects || []).map((sub) => ({
+          _id: sub.subjectId?._id,
+          name: sub.subjectId?.name,
+          teacherId: sub.teacherId || null,
+        })),
+      };
+    }),
+  }));
+
+  // =============================
+  // 🔹 RESPONSE
+  // =============================
+  return res.status(200).json({
+    success: true,
+    count: result.length,
+    data: result,
+  });
+});

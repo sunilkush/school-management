@@ -16,7 +16,6 @@ import {
   Empty,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-
 import { useDispatch, useSelector } from "react-redux";
 import { getSchoolBoards } from "../../../features/boardSlice";
 import { getBoardClass } from "../../../features/boardClassSlice";
