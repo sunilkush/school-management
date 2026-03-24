@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   fetchAllClasses as fetchClasses,
-  deleteClass,
 } from "../../../features/classSlice.js";
 
 import {
@@ -26,7 +25,7 @@ import {
   ApartmentOutlined,
 } from "@ant-design/icons";
 
-import ClassFormSA from "../../../components/forms/ClassSectionFormSA.jsx";
+
 
 const { Search } = Input;
 const { Title, Text } = Typography;
@@ -39,8 +38,7 @@ const Classes = () => {
   const { classList = [], loading } = useSelector((state) => state.class || {});
   const { user } = useSelector((state) => state.auth || {});
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [editingClass, setEditingClass] = useState(null);
+ 
   const [filterText, setFilterText] = useState("");
 
   const schoolId = user?.school?._id;
@@ -49,34 +47,11 @@ const Classes = () => {
     if (schoolId) dispatch(fetchClasses({ schoolId }));
   }, [dispatch, schoolId]);
 
-  const handleEdit = (cls) => {
-    setEditingClass(cls);
-    setIsOpen(true);
-  };
-
-  const handleDelete = (id) => {
-    Modal.confirm({
-      title: "Delete Class",
-      content: "This action cannot be undone. Are you sure?",
-      okText: "Delete",
-      okType: "danger",
-      onOk: async () => {
-        await dispatch(deleteClass(id));
-        dispatch(fetchClasses({ schoolId }));
-      },
-    });
-  };
-
   /* ================= FILTER ================= */
   const filteredItems = classList
     .filter((item) =>
       (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
-    )
-    .sort((a, b) => {
-      const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
-      const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
-      return numA - numB;
-    });
+    );
 
   /* ================= TABLE ================= */
   const columns = [
@@ -140,14 +115,14 @@ const Classes = () => {
     },
     {
       title: "Actions",
-      render: (_, cls) => (
+      render: () => (
         <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(cls)} />
+          <Button type="link" icon={<EditOutlined />}  />
           <Button
             type="link"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(cls._id)}
+            
           />
         </Space>
       ),
@@ -206,12 +181,12 @@ const Classes = () => {
                 </div>
 
                 <Space>
-                  <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(cls)} />
+                  <Button size="small" icon={<EditOutlined />}  />
                   <Button
                     size="small"
                     danger
                     icon={<DeleteOutlined />}
-                    onClick={() => handleDelete(cls._id)}
+                    
                   />
                 </Space>
               </Space>
@@ -224,23 +199,7 @@ const Classes = () => {
 
   return (
     <>
-      <Modal
-        title={editingClass ? "Edit Class" : "Add Class"}
-        open={isOpen}
-        footer={null}
-        onCancel={() => setIsOpen(false)}
-        destroyOnClose
-        width={screens.lg ? 900 : screens.md ? 700 : "100%"}
-      >
-        <ClassFormSA
-          initialData={editingClass}
-          onClose={() => setIsOpen(false)}
-          onSuccess={() => {
-            dispatch(fetchClasses({ schoolId }));
-            setIsOpen(false);
-          }}
-        />
-      </Modal>
+  
 
       <Card>
         <Row gutter={[16, 16]} justify="space-between">

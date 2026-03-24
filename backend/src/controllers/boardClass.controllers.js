@@ -2,150 +2,123 @@ import { BoardClass } from "../models/BoardClass.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Class } from "../models/classes.model.js";
 import mongoose from "mongoose";
 
 const createBoardClass = asyncHandler(async (req, res) => {
-    // Implementation for creating a board class
-    const { name, boardId, status, description, createdBy} = req.body;
+  const { boardId, classId, status, description } = req.body;
 
-    if (!name || !boardId) {
-        throw new ApiError(400, "Name, Board ID and Class ID are required");
-    }
+  if (!boardId || !classId) {
+    throw new ApiError(400, "Board ID and Class ID are required");
+  }
 
-    const boardClass = await BoardClass.create({
-        name,
-        boardId,
-        status,
-        description,
-        createdBy,
-    });
+  // ✅ Prevent duplicate
+  const exists = await BoardClass.findOne({ boardId, classId });
+  if (exists) {
+    throw new ApiError(400, "This class already exists in this board");
+  }
 
-    if (!boardClass) {
-        throw new ApiError(500, "Failed to create board class");
-    }
+  // ✅ Auto name from Class (BEST PRACTICE)
+  const classData = await Class.findById(classId);
+  if (!classData) {
+    throw new ApiError(404, "Class not found");
+  }
 
-    return res.status(201).json(
-        new ApiResponse(201, boardClass, "Board class created successfully")
-    )
+  const boardClass = await BoardClass.create({
+    boardId,
+    classId,
+    name: classData.name, // 🔥 auto set
+    status,
+    description,
+    createdBy: req.user?._id,
+  });
 
+  return res.status(201).json(
+    new ApiResponse(201, boardClass, "Board class created successfully")
+  );
 });
-
 
 
 
 const getBoardClasses = asyncHandler(async (req, res) => {
   const { boardId } = req.query;
 
-  const pipeline = [];
+  const filter = {};
+  if (boardId) filter.boardId = boardId;
 
-  // ✅ Filter
-  if (boardId) {
-    pipeline.push({
-      $match: {
-        boardId: new mongoose.Types.ObjectId(boardId),
-      },
-    });
-  }
-
-  // ✅ Join Board
-  pipeline.push({
-    $lookup: {
-      from: "boards",
-      localField: "boardId",
-      foreignField: "_id",
-      as: "board",
-    },
-  });
-
-  pipeline.push({
-    $unwind: "$board",
-  });
-
-  // ✅ Final Output
-  pipeline.push({
-    $project: {
-      _id: 1,
-      boardId: 1,
-      status: 1,
-      name:1,
-      boardName: "$board.name",
-      boardState: "$board.state",
-    },
-  });
-
-  const boardClasses = await BoardClass.aggregate(pipeline);
+  const boardClasses = await BoardClass.find(filter)
+    .populate("boardId", "name")
+    .populate("classId", "name") // 🔥 IMPORTANT
+    .sort({ createdAt: -1 });
 
   return res.status(200).json(
     new ApiResponse(200, boardClasses, "Board classes fetched successfully")
   );
 });
+
 const getBoardClassById = asyncHandler(async (req, res) => {
-    // Implementation for fetching a single board class by ID
-    const { id } = req.params;
-    if (!id) {
-        throw new ApiError(400, "Board Class ID is required");
-    }
-    const boardClass = await BoardClass.findById(id);
-    if (!boardClass) {
-        throw new ApiError(404, "Board class not found");
-    }
-    return res.status(200).json(
-        new ApiResponse(200, boardClass, "Board class fetched successfully")
-    );
+  const { id } = req.params;
+
+  if (!id) {
+    throw new ApiError(400, "Board Class ID is required");
+  }
+
+  const boardClass = await BoardClass.findById(id)
+    .populate("boardId", "name")
+    .populate("classId", "name");
+
+  if (!boardClass) {
+    throw new ApiError(404, "Board class not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, boardClass, "Board class fetched successfully")
+  );
 });
 
 const updateBoardClass = asyncHandler(async (req, res) => {
-    // Implementation for updating a board class
-    const { id } = req.params;
-    const { name, status, description, updatedBy } = req.body;
-    
-    if(!id) {
-        throw new ApiError(400, "Board Class ID is required");
-    }
-    if (!name && !status && !description) {
-        throw new ApiError(400, "At least one field (name, status, description) is required to update");
-    }
+  const { id } = req.params;
+  const { status, description } = req.body;
 
-    const boardClass = await BoardClass.findById(id);
-    if (!boardClass) {
-        throw new ApiError(404, "Board class not found");
-    }
+  if (!id) {
+    throw new ApiError(400, "Board Class ID is required");
+  }
 
-    const updateData = await BoardClass.findByIdAndUpdate(
-        id,
-        { name, status, description, updatedBy },
-        { new: true, runValidators: true }
-    );
+  const updated = await BoardClass.findByIdAndUpdate(
+    id,
+    {
+      status,
+      description,
+      updatedBy: req.user?._id,
+    },
+    { new: true, runValidators: true }
+  );
 
-    if (!updateData) {
-        throw new ApiError(500, "Failed to update board class");
-    }
+  if (!updated) {
+    throw new ApiError(404, "Board class not found");
+  }
 
-    return res.status(200).json(
-        new ApiResponse(200, updateData, "Board class updated successfully")    
-    );
-   
-
+  return res.status(200).json(
+    new ApiResponse(200, updated, "Board class updated successfully")
+  );
 });
 
 const deleteBoardClass = asyncHandler(async (req, res) => {
-    // Implementation for deleting a board class
-    const { id } = req.params;
+  const { id } = req.params;
 
-    if (!id) {
-        throw new ApiError(400, "Board Class ID is required");
-    }
+  if (!id) {
+    throw new ApiError(400, "Board Class ID is required");
+  }
 
-    const boardClass = await BoardClass.findById(id);
-    if (!boardClass) {
-        throw new ApiError(404, "Board class not found");
-    }
+  const deleted = await BoardClass.findByIdAndDelete(id);
 
-    await BoardClass.findByIdAndDelete(id);
+  if (!deleted) {
+    throw new ApiError(404, "Board class not found");
+  }
 
-    return res.status(200).json(
-        new ApiResponse(200, null, "Board class deleted successfully")
-    );
+  return res.status(200).json(
+    new ApiResponse(200, null, "Board class deleted successfully")
+  );
 });
 
 

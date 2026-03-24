@@ -8,126 +8,115 @@ import {
   Space,
   message,
   Spin,
-  Form,
   Row,
   Col,
   Divider,
+  Empty,
 } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice.js";
+import { fetchAllSubjects } from "../../../features/subjectSlice.js";
+import { addSubjectToSection } from "../../../features/sectionSlice.js";
 
 const { Option } = Select;
 
 const SchoolClassSubject = () => {
-  const [classes, setClasses] = useState([]);
-  const [sections, setSections] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [mapping, setMapping] = useState({});
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
+  const { schoolClasses = [], loading } = useSelector(
+    (state) => state.schoolClass || {}
+  );
+
+  const { subjects = [] } = useSelector((state) => state.subject || {});
+
+  const [mapping, setMapping] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
 
-  const schoolId = "123";
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const schoolId = user?.school?._id;
 
-  // 🔹 Fetch Data
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-
-      const [clsRes, secRes, subRes, mapRes] = await Promise.all([
-        fetch("/api/classes"),
-        fetch(`/api/sections/${schoolId}`),
-        fetch("/api/subjects"),
-        fetch(`/api/class-subjects/${schoolId}`),
-      ]);
-
-      const clsData = await clsRes.json();
-      const secData = await secRes.json();
-      const subData = await subRes.json();
-      const mapData = await mapRes.json();
-
-      setClasses(clsData.data || []);
-      setSections(secData.data || []);
-      setSubjects(subData.data || []);
-
-      const grouped = {};
-      (mapData.data || []).forEach((m) => {
-        if (!grouped[m.sectionId]) grouped[m.sectionId] = [];
-        grouped[m.sectionId].push(m.subjectId);
-      });
-
-      setMapping(grouped);
-    } catch (err) {
-      message.error("Failed to load data",err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ==============================
+  // 🔹 FETCH DATA
+  // ==============================
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!schoolId) return;
 
-  // 🔹 Handle Subject Change
-  const handleChange = (sectionId, values) => {
-    setMapping({
-      ...mapping,
-      [sectionId]: values,
-    });
+    dispatch(fetchSchoolClasses({ schoolId }));
+    dispatch(fetchAllSubjects({ isGlobal: true }));
+  }, [dispatch, schoolId]);
+
+  // ==============================
+  // 🔥 FLATTEN DATA
+  // ==============================
+  const tableData = (schoolClasses || []).flatMap((cls) =>
+    (cls.sections || []).map((sec) => ({
+      _id: sec._id,
+      schoolClassId: cls._id,
+      className: cls.name,
+      sectionId: sec.sectionId?._id,
+      sectionName: sec.sectionId?.name,
+    }))
+  );
+
+  // ==============================
+  // 🔹 FILTER
+  // ==============================
+  const filteredData = selectedClass
+    ? tableData.filter((item) => item.schoolClassId === selectedClass)
+    : tableData;
+
+  // ==============================
+  // 🔹 UNIQUE CLASSES
+  // ==============================
+  const uniqueClasses = schoolClasses.map((cls) => ({
+    _id: cls._id,
+    name: cls.name,
+  }));
+
+  // ==============================
+  // 🔹 HANDLE CHANGE
+  // ==============================
+  const handleChange = (rowId, values) => {
+    setMapping((prev) => ({
+      ...prev,
+      [rowId]: values,
+    }));
   };
 
-  // 🔹 Save Mapping
-  const handleSave = async (sectionId) => {
+  // ==============================
+  // 🔥 SAVE (FIXED)
+  // ==============================
+  const handleSave = async (record) => {
     try {
-      await fetch("/api/class-subjects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schoolId,
-          sectionId,
-          subjectIds: mapping[sectionId] || [],
-        }),
-      });
+      await dispatch(
+        addSubjectToSection({
+          schoolClassId: record.schoolClassId,
+          sectionId: record.sectionId,
+          subjectIds: mapping[record._id] || [],
+        })
+      ).unwrap();
 
-      message.success("Subjects mapped successfully ✅");
-    } catch {
-      message.error("Failed to save");
+      message.success("Saved ✅");
+
+      // refresh data
+      dispatch(fetchSchoolClasses({ schoolId }));
+    } catch (err) {
+      message.error(err || "Save failed ❌");
     }
   };
 
-  // 🔹 Bulk Save
-  const handleBulkSave = async () => {
-    try {
-      setLoading(true);
-
-      const payload = Object.keys(mapping).map((sectionId) => ({
-        schoolId,
-        sectionId,
-        subjectIds: mapping[sectionId],
-      }));
-
-      await fetch("/api/class-subjects/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      message.success("All mappings saved ✅");
-    } catch {
-      message.error("Bulk save failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 🔹 Filter Sections by Class
-  const filteredSections = selectedClass
-    ? sections.filter((sec) => sec.classId === selectedClass)
-    : sections;
-
-  // 🔹 Table Columns
+  // ==============================
+  // 🔹 COLUMNS
+  // ==============================
   const columns = [
     {
+      title: "Class",
+      dataIndex: "className",
+    },
+    {
       title: "Section",
-      dataIndex: "name",
+      dataIndex: "sectionName",
     },
     {
       title: "Subjects",
@@ -154,8 +143,8 @@ const SchoolClassSubject = () => {
           {(mapping[record._id] || []).map((sid) => {
             const sub = subjects.find((s) => s._id === sid);
             return (
-              <Tag color="blue" key={sid}>
-                {sub?.name}
+              <Tag key={sid} color="blue">
+                {sub?.name || "Unknown"}
               </Tag>
             );
           })}
@@ -166,9 +155,9 @@ const SchoolClassSubject = () => {
       title: "Action",
       render: (_, record) => (
         <Button
+          onClick={() => handleSave(record)}
           type="primary"
           size="small"
-          onClick={() => handleSave(record._id)}
         >
           Save
         </Button>
@@ -179,15 +168,10 @@ const SchoolClassSubject = () => {
   return (
     <Card
       title="📚 Class - Section Subject Mapping"
-      extra={
-        <Button type="primary" onClick={handleBulkSave}>
-          Save All
-        </Button>
-      }
-      style={{margin: "auto" }}
+      style={{ maxWidth: 1200, margin: "auto" }}
     >
-      {/* 🔹 Form Filter */}
-      <Card type="inner" title="Filter & Select" style={{ marginBottom: 20 }}>
+      {/* FILTER */}
+      <Card type="inner" title="Filter" style={{ marginBottom: 20 }}>
         <Row gutter={16}>
           <Col xs={24} md={12}>
             <Select
@@ -197,7 +181,7 @@ const SchoolClassSubject = () => {
               value={selectedClass}
               onChange={setSelectedClass}
             >
-              {classes.map((cls) => (
+              {uniqueClasses.map((cls) => (
                 <Option key={cls._id} value={cls._id}>
                   {cls.name}
                 </Option>
@@ -211,10 +195,13 @@ const SchoolClassSubject = () => {
 
       <Spin spinning={loading}>
         <Table
-          dataSource={filteredSections}
+          dataSource={filteredData}
           columns={columns}
           rowKey="_id"
-          pagination={false}
+          pagination={{ pageSize: 10 }}
+          locale={{
+            emptyText: <Empty description="No Data Found" />,
+          }}
         />
       </Spin>
     </Card>

@@ -1,41 +1,52 @@
-import { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
+import "react-toastify/dist/ReactToastify.css";
+
 import { currentUser } from "./features/authSlice";
 import { fetchMyPermissions } from "./features/roleUiSlice";
 import { setSelectedAcademicYear } from "./features/academicYearSlice";
-import { SpeedInsights } from "@vercel/speed-insights/react";
-import Loader from "./components/Loader/Loader";
+
+// 🔥 Lazy Load Components
+const ToastContainer = lazy(() =>
+  import("react-toastify").then((mod) => ({
+    default: mod.ToastContainer,
+  }))
+);
+
+const SpeedInsights = lazy(() =>
+  import("@vercel/speed-insights/react").then((mod) => ({
+    default: mod.SpeedInsights,
+  }))
+);
+
+const Loader = lazy(() => import("./components/Loader/Loader"));
 
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
-  const { profile, accessToken } = useSelector(
-    (state) => state.auth
-  );
+
+  const { profile, accessToken } = useSelector((state) => state.auth);
   const { selectedAcademicYear } = useSelector(
     (state) => state.academicYear
   );
 
-  // 1. Load current user (only if not loaded)
-useEffect(() => {
-  dispatch(currentUser());
-}, [dispatch]);
+  // 1. Load current user
+  useEffect(() => {
+    dispatch(currentUser());
+  }, [dispatch]);
 
   // 2. Load permissions
-useEffect(() => {
-  if (accessToken) {
-    dispatch(fetchMyPermissions());
-  }
-}, [dispatch, accessToken]);
+  useEffect(() => {
+    if (accessToken) {
+      dispatch(fetchMyPermissions());
+    }
+  }, [dispatch, accessToken]);
 
   // 3. Redirect if unauthorized
   useEffect(() => {
     if (profile?.statusCode === 401) {
-      navigate("/"); // ⚠️ fixed (no /login route)
+      navigate("/");
     }
   }, [profile, navigate]);
 
@@ -48,11 +59,11 @@ useEffect(() => {
         dispatch(setSelectedAcademicYear(JSON.parse(savedYear)));
       }
     } catch (err) {
-      console.error("Invalid academicYear in localStorage",err);
+      console.error("Invalid academicYear in localStorage", err);
     }
   }, [dispatch, selectedAcademicYear]);
 
-  // ✅ 5. Save Academic Year to localStorage
+  // 5. Save Academic Year
   useEffect(() => {
     if (selectedAcademicYear?._id) {
       localStorage.setItem(
@@ -62,25 +73,30 @@ useEffect(() => {
     }
   }, [selectedAcademicYear]);
 
- 
- 
   return (
     <>
-      <Outlet />
+      {/* 🔥 Routes */}
+      <Suspense fallback={Loader}>
+        <Outlet />
+      </Suspense>
 
-      {/* ✅ Toast Config */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        theme="colored"
-      />
+      {/* 🔥 Toast */}
+      <Suspense fallback={null}>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          theme="colored"
+        />
+      </Suspense>
 
-      {/* ✅ Performance Insights */}
-      <SpeedInsights />
+      {/* 🔥 Performance Insights */}
+      <Suspense fallback={null}>
+        <SpeedInsights />
+      </Suspense>
     </>
   );
 }

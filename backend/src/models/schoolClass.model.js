@@ -2,6 +2,10 @@ import mongoose, { Schema } from "mongoose";
 
 const schoolClassSchema = new Schema(
   {
+    name: {
+      type: String,
+      required: true
+    },
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
@@ -20,10 +24,18 @@ const schoolClassSchema = new Schema(
       ref: "BoardClass",
       required: true,
     },
-    sectionId:{
-      type:Schema.Types.ObjectId,
-      ref:"Section",
-    },
+    sections: [
+      {
+        sectionId: {
+          type: Schema.Types.ObjectId,
+          ref: "Section",
+        },
+        teacherId: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
     status: {
       type: String,
       enum: ["active", "inactive"],
@@ -44,7 +56,7 @@ const schoolClassSchema = new Schema(
 );
 
 schoolClassSchema.index(
- { schoolId: 1, academicYearId: 1, boardClassId: 1,},
+  { schoolId: 1, academicYearId: 1, boardClassId: 1, },
   { unique: true }
 );
 

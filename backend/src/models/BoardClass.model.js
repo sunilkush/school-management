@@ -12,7 +12,11 @@ const boardClassSchema = new Schema(
       type: String,
       trim: true,
     },
-
+    classId: { // ✅ ADD THIS (IMPORTANT)
+      type: Schema.Types.ObjectId,
+      ref: "Class",
+      required: true,
+    },
     order: {
       type: Number,
       default: 0,
@@ -43,9 +47,8 @@ const boardClassSchema = new Schema(
 );
 
 /* ================= INDEXES ================= */
-
 boardClassSchema.index(
-  { boardId: 1 },
+  { boardId: 1, classId: 1 },
   { unique: true }
 );
 

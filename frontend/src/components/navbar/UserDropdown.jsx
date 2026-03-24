@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../features/authSlice";
-import { Avatar, Dropdown, Menu, Button, Typography ,Col} from "antd";
+import { Avatar, Dropdown, Menu, Typography ,Col} from "antd";
 import {
   UserOutlined,
   MailOutlined,
@@ -17,7 +17,7 @@ const UserDropdown = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") || "user";
+  const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") ;
 
 const handleLogout = async () => {
     await dispatch(logoutUser());

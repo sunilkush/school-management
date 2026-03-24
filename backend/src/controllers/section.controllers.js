@@ -5,30 +5,38 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 
-
 // ==============================
 // 🔹 CREATE SECTION
 // ==============================
 export const createSection = asyncHandler(async (req, res) => {
-  const {
-    schoolId,
-    schoolClassId,
-    name,
-    capacity,
-    academicYearId,
-  } = req.body;
+  const { schoolId, schoolClassId, name, capacity, academicYearId } = req.body;
 
   if (!schoolId || !schoolClassId || !name) {
     throw new ApiError(400, "Required fields missing");
   }
 
-  // ✅ Check schoolClass exists
+  // ✅ Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
+    throw new ApiError(400, "Invalid schoolClassId");
+  }
+
+  // ✅ Check class exists
   const schoolClass = await SchoolClass.findById(schoolClassId);
   if (!schoolClass) {
     throw new ApiError(404, "SchoolClass not found");
   }
 
-  // ✅ Create
+  // ✅ Prevent duplicate section name in same class
+  const exists = await Section.findOne({
+    schoolClassId,
+    name: { $regex: `^${name}$`, $options: "i" },
+  });
+
+  if (exists) {
+    throw new ApiError(400, "Section already exists in this class");
+  }
+
+  // ✅ Create Section
   const section = await Section.create({
     schoolId,
     schoolClassId,
@@ -36,6 +44,16 @@ export const createSection = asyncHandler(async (req, res) => {
     capacity,
     academicYearId,
     createdBy: req.user?._id,
+  });
+
+  // ✅ Sync with SchoolClass (IMPORTANT)
+  await SchoolClass.findByIdAndUpdate(schoolClassId, {
+    $push: {
+      sections: {
+        sectionId: section._id,
+        teacherId: null,
+      },
+    },
   });
 
   return res
@@ -51,14 +69,13 @@ export const getAllSections = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, schoolClassId } = req.query;
 
   const filter = {};
-
   if (schoolId) filter.schoolId = schoolId;
   if (academicYearId) filter.academicYearId = academicYearId;
   if (schoolClassId) filter.schoolClassId = schoolClassId;
 
   const sections = await Section.find(filter)
     .populate("classTeacherId", "name email")
-    .populate("schoolClassId", "classId")
+    .populate("schoolClassId", "name") // ✅ FIXED
     .sort({ createdAt: -1 });
 
   return res.json(
@@ -123,10 +140,16 @@ export const deleteSection = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const section = await Section.findById(id);
-
   if (!section) {
     throw new ApiError(404, "Section not found");
   }
+
+  // ✅ REMOVE from SchoolClass ALSO (VERY IMPORTANT FIX)
+  await SchoolClass.findByIdAndUpdate(section.schoolClassId, {
+    $pull: {
+      sections: { sectionId: section._id },
+    },
+  });
 
   await section.deleteOne();
 
@@ -155,6 +178,18 @@ export const assignClassTeacher = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Section not found");
   }
 
+  // ✅ ALSO update inside SchoolClass.sections
+  await SchoolClass.findOneAndUpdate(
+    {
+      "sections.sectionId": sectionId,
+    },
+    {
+      $set: {
+        "sections.$.teacherId": teacherId,
+      },
+    }
+  );
+
   return res.json(
     new ApiResponse(200, section, "Class teacher assigned")
   );
@@ -168,7 +203,6 @@ export const addStudentToSection = asyncHandler(async (req, res) => {
   const { sectionId, studentId } = req.body;
 
   const section = await Section.findById(sectionId);
-
   if (!section) {
     throw new ApiError(404, "Section not found");
   }
@@ -201,7 +235,85 @@ export const removeStudentFromSection = asyncHandler(async (req, res) => {
     { new: true }
   );
 
+  if (!section) {
+    throw new ApiError(404, "Section not found");
+  }
+
   return res.json(
     new ApiResponse(200, section, "Student removed")
   );
+});
+
+export const addSubjectToSection = asyncHandler(async (req, res) => {
+  const { schoolClassId, sectionId, subjectIds } = req.body;
+
+  // =============================
+  // 🔹 VALIDATION
+  // =============================
+  if (!schoolClassId || !sectionId || !Array.isArray(subjectIds)) {
+    return res.status(400).json({
+      success: false,
+      message: "schoolClassId, sectionId and subjectIds are required",
+    });
+  }
+
+  // =============================
+  // 🔹 CHECK SCHOOL CLASS
+  // =============================
+  const schoolClass = await SchoolClass.findById(schoolClassId);
+  if (!schoolClass) {
+    return res.status(404).json({
+      success: false,
+      message: "SchoolClass not found",
+    });
+  }
+
+  // =============================
+  // 🔹 CHECK SECTION
+  // =============================
+  const section = await Section.findById(sectionId);
+  if (!section) {
+    return res.status(404).json({
+      success: false,
+      message: "Section not found",
+    });
+  }
+
+  // =============================
+  // 🔹 VERIFY RELATION
+  // =============================
+  if (section.schoolClassId.toString() !== schoolClassId) {
+    return res.status(400).json({
+      success: false,
+      message: "Section does not belong to this class",
+    });
+  }
+
+  // =============================
+  // 🔥 REMOVE DUPLICATES
+  // =============================
+  const uniqueSubjects = [...new Set(subjectIds)];
+
+  // =============================
+  // 🔥 MAP FORMAT
+  // =============================
+  const subjectObjects = uniqueSubjects.map((id) => ({
+    subjectId: id,
+    teacherId: null, // optional (future use)
+  }));
+
+  // =============================
+  // 🔥 UPDATE (REPLACE MODE)
+  // =============================
+  section.subjects = subjectObjects;
+
+  section.updatedBy = req.user?._id; // if auth middleware
+
+  await section.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Subjects assigned to section successfully ✅",
+    data: section,
+  });
 });

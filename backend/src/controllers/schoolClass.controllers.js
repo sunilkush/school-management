@@ -3,20 +3,17 @@ import { SchoolClass } from "../models/schoolClass.model.js";
 // 🔹 CREATE
 export const createSchoolClass = async (req, res) => {
   try {
-    const {
-      schoolId,
-      academicYearId,
-      boardClassId,
-    } = req.body;
+    const { schoolId, academicYearId, boardClassId, name } = req.body;
 
-    // validation
-    if (!schoolId || !academicYearId || !boardClassId) {
+    // ✅ VALIDATION
+    if (!schoolId || !academicYearId || !boardClassId || !name) {
       return res.status(400).json({
+        success: false,
         message: "All fields are required",
       });
     }
 
-    // prevent duplicate (extra safety)
+    // ✅ DUPLICATE CHECK (as per schema unique index)
     const exists = await SchoolClass.findOne({
       schoolId,
       academicYearId,
@@ -25,14 +22,18 @@ export const createSchoolClass = async (req, res) => {
 
     if (exists) {
       return res.status(400).json({
-        message: "Class already mapped!",
+        success: false,
+        message: "Class already mapped for this academic year",
       });
     }
 
+    // ✅ CREATE
     const newClass = await SchoolClass.create({
       schoolId,
       academicYearId,
       boardClassId,
+      name,
+      sections: [], // ✅ always initialize
       createdBy: req.user?._id,
     });
 
@@ -43,23 +44,25 @@ export const createSchoolClass = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
 };
 
-// 🔹 GET ALL (with filters)
+// 🔹 GET ALL
 export const getAllSchoolClasses = async (req, res) => {
   try {
     const { schoolId, academicYearId } = req.query;
-
+  
     const filter = {};
     if (schoolId) filter.schoolId = schoolId;
     if (academicYearId) filter.academicYearId = academicYearId;
 
     const classes = await SchoolClass.find(filter)
-      .populate("classId", "name")
       .populate("boardClassId", "name")
+      .populate("sections.sectionId", "name")
+      .populate("sections.teacherId", "name")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -68,6 +71,7 @@ export const getAllSchoolClasses = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
@@ -79,12 +83,14 @@ export const getSchoolClassById = async (req, res) => {
     const { id } = req.params;
 
     const data = await SchoolClass.findById(id)
-      .populate("classId")
-      .populate("boardClassId");
+      .populate("boardClassId", "name")
+      .populate("sections.sectionId", "name")
+      .populate("sections.teacherId", "name");
 
     if (!data) {
       return res.status(404).json({
-        message: "Not found",
+        success: false,
+        message: "School class not found",
       });
     }
 
@@ -94,6 +100,7 @@ export const getSchoolClassById = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
@@ -110,8 +117,17 @@ export const updateSchoolClass = async (req, res) => {
         ...req.body,
         updatedBy: req.user?._id,
       },
-      { new: true }
-    );
+      { new: true, runValidators: true }
+    )
+      .populate("sections.sectionId", "name")
+      .populate("sections.teacherId", "name");
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "School class not found",
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -120,6 +136,7 @@ export const updateSchoolClass = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
@@ -130,7 +147,14 @@ export const deleteSchoolClass = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await SchoolClass.findByIdAndDelete(id);
+    const deleted = await SchoolClass.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "School class not found",
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -138,6 +162,7 @@ export const deleteSchoolClass = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }

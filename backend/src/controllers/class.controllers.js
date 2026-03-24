@@ -96,12 +96,17 @@ const deleteClass = asyncHandler(async (req, res) => {
    GET ALL CLASSES
 ========================================================= */
 const getAllClasses = asyncHandler(async (req, res) => {
-  let { page , limit, search, status } = req.query;
+  let { page, limit, search, status, schoolId, startDate, endDate } = req.query;
 
   page = parseInt(page);
   limit = parseInt(limit);
 
   const query = {};
+
+  /* ===== SCHOOL FILTER ===== */
+  if (schoolId) {
+    query.schoolId = schoolId;
+  }
 
   /* ===== SEARCH ===== */
   if (search) {
@@ -111,6 +116,19 @@ const getAllClasses = asyncHandler(async (req, res) => {
   /* ===== STATUS FILTER ===== */
   if (status) {
     query.status = status;
+  }
+
+  /* ===== DATE FILTER ===== */
+  if (startDate || endDate) {
+    query.createdAt = {};
+
+    if (startDate) {
+      query.createdAt.$gte = new Date(startDate);
+    }
+
+    if (endDate) {
+      query.createdAt.$lte = new Date(endDate);
+    }
   }
 
   const skip = (page - 1) * limit;
@@ -138,7 +156,6 @@ const getAllClasses = asyncHandler(async (req, res) => {
     )
   );
 });
-
 /* =========================================================
    GET CLASS BY ID
 ========================================================= */

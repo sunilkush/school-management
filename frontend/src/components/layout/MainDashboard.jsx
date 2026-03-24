@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Layout, Drawer } from "antd";
+import React, { useEffect, useState, lazy, Suspense } from "react";
+import { Layout, Drawer, Spin } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate, Outlet } from "react-router-dom";
 
-import Sidebar from "../sidebar/Sidebar";
-import Topbar from "../navbar/Topbar";
+const Sidebar = lazy(() => import("../sidebar/Sidebar"));
+const Topbar = lazy(() => import("../navbar/Topbar"));
 
 const { Header, Content } = Layout;
 
@@ -26,19 +26,13 @@ const Dashboard = () => {
     }
   }, [role, activeYear, navigate]);
 
-  // ✅ Resize Handler (optimized)
+  // ✅ Resize Handler
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
 
       setIsMobile(mobile);
-
-      // 👉 Desktop = open | Mobile = closed
-      if (mobile) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
+      setIsSidebarOpen(!mobile); // cleaner
     };
 
     window.addEventListener("resize", handleResize);
@@ -53,7 +47,11 @@ const Dashboard = () => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {/* ================= DESKTOP SIDEBAR ================= */}
-      {!isMobile && <Sidebar isOpen={isSidebarOpen} />}
+      {!isMobile && (
+        <Suspense fallback={<Spin fullscreen />}>
+          <Sidebar isOpen={isSidebarOpen} />
+        </Suspense>
+      )}
 
       {/* ================= MOBILE SIDEBAR ================= */}
       <Drawer
@@ -64,7 +62,9 @@ const Dashboard = () => {
         width={260}
         styles={{ body: { padding: 0 } }}
       >
-        <Sidebar isOpen />
+        <Suspense fallback={<Spin />}>
+          <Sidebar isOpen />
+        </Suspense>
       </Drawer>
 
       {/* ================= MAIN LAYOUT ================= */}
@@ -84,10 +84,12 @@ const Dashboard = () => {
             zIndex: 999,
           }}
         >
-          <Topbar
-            toggleSidebar={toggleSidebar}
-            isOpen={isSidebarOpen} // ✅ FIXED PROP NAME
-          />
+          <Suspense fallback={<Spin />}>
+            <Topbar
+              toggleSidebar={toggleSidebar}
+              isOpen={isSidebarOpen}
+            />
+          </Suspense>
         </Header>
 
         {/* CONTENT */}
@@ -99,7 +101,10 @@ const Dashboard = () => {
             overflow: "auto",
           }}
         >
-          <Outlet />
+          {/* 🔥 Outlet bhi lazy routes ke liye wrap karo */}
+          <Suspense fallback={<Spin />}>
+            <Outlet />
+          </Suspense>
         </Content>
       </Layout>
     </Layout>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import {
   Tabs,
   Form,
@@ -10,6 +10,7 @@ import {
   Row,
   Col,
   message,
+  Spin,
 } from "antd";
 import {
   User,
@@ -26,10 +27,14 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 
 import { useDispatch, useSelector } from "react-redux";
-import AttendanceCalendar from "../../pages/AttendanceCalendar";
 import { createEmployee } from "../../features/employeeSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import { fetchAllSubjects } from "../../features/subjectSlice";
+
+// 🔥 Lazy Load
+const AttendanceCalendar = lazy(() =>
+  import("../../pages/AttendanceCalendar")
+);
 
 dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrBefore);
@@ -82,12 +87,9 @@ const EmployeeForm = () => {
       ...values,
       schoolId,
       academicYearId,
-
-      // ✅ dayjs → string (FIX)
       dateOfBirth: values.dateOfBirth
         ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
         : null,
-
       joinDate: values.joinDate
         ? dayjs(values.joinDate).format("YYYY-MM-DD")
         : null,
@@ -115,11 +117,7 @@ const EmployeeForm = () => {
             </span>
           }
         >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
             {/* PERSONAL INFO */}
             <Card title="Personal Information" className="mb-4">
               <Row gutter={16}>
@@ -216,11 +214,19 @@ const EmployeeForm = () => {
           </Form>
         </TabPane>
 
+        {/* ================= ATTENDANCE ================= */}
         <TabPane
           key="attendance"
-          tab={<span className="flex items-center gap-1"><CalendarCheck size={16} /> Attendance</span>}
+          tab={
+            <span className="flex items-center gap-1">
+              <CalendarCheck size={16} /> Attendance
+            </span>
+          }
         >
-          <AttendanceCalendar />
+          {/* 🔥 Lazy Loaded Component */}
+          <Suspense fallback={<Spin />}>
+            <AttendanceCalendar />
+          </Suspense>
         </TabPane>
 
         <TabPane key="tasks" tab={<ClipboardList size={16} />}>Coming soon</TabPane>

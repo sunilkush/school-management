@@ -1,8 +1,10 @@
-import React, { memo } from "react";
+import React, { lazy, memo, Suspense } from "react";
 import { Layout, Typography, Spin } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
-import SidebarMenu from "./SidebarMenu";
+import { Loader } from "lucide-react";
+
+const SidebarMenu = lazy(() => import("./SidebarMenu"));
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -14,7 +16,7 @@ const Sidebar = ({ isOpen }) => {
   const role = user?.role?.name?.toLowerCase();
   const schoolName = user?.school?.name || "School";
 
-  // ✅ Loading / unauthenticated state (perfect center fix)
+  // ✅ Loading / unauthenticated state
   if (!token) {
     return (
       <Sider
@@ -40,26 +42,23 @@ const Sidebar = ({ isOpen }) => {
 
   return (
     <Sider
-        width={260}
-        theme="light"
-        trigger={null}
-        style={{
-          height: "100vh",
-          position: "fixed",
-          left: 0,
-          top: 0,
-          borderRight: "1px solid #f0f0f0",
-          zIndex: 1000,
-
-          // ✅ MAIN FIX
-          transform: isOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "all 0.3s ease",
-
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-      {/* 🔹 HEADER */}
+      width={260}
+      theme="light"
+      trigger={null}
+      style={{
+        height: "100vh",
+        position: "fixed",
+        left: 0,
+        top: 0,
+        borderRight: "1px solid #f0f0f0",
+        zIndex: 1000,
+        transform: isOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "all 0.3s ease",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* HEADER */}
       <div
         style={{
           padding: "16px",
@@ -86,18 +85,17 @@ const Sidebar = ({ isOpen }) => {
           <HomeOutlined style={{ fontSize: 16 }} />
         </div>
 
-        {/* Collapse hone par hide text */}
-        {!(!isOpen) && (
+        {isOpen && (
           <Text ellipsis style={{ fontSize: 14 }}>
             {schoolName}
           </Text>
         )}
       </div>
 
-      {/* 🔹 Divider */}
+      {/* Divider */}
       <div style={{ borderBottom: "1px solid #f0f0f0", margin: "0 12px" }} />
 
-      {/* 🔹 MENU (Scrollable Fix) */}
+      {/* MENU */}
       <div
         style={{
           flex: 1,
@@ -106,7 +104,15 @@ const Sidebar = ({ isOpen }) => {
           padding: "8px 0",
         }}
       >
-        <SidebarMenu role={role} />
+        <Suspense
+          fallback={
+            <div style={{ textAlign: "center", padding: 20 }}>
+              <Loader className="animate-spin" />
+            </div>
+          }
+        >
+          <SidebarMenu role={role} />
+        </Suspense>
       </div>
     </Sider>
   );

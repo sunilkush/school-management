@@ -38,7 +38,19 @@ const sectionSchema = new Schema(
         ref: "User",
       },
     ],
-
+    // ✅ ADD SUBJECTS (VERY IMPORTANT)
+    subjects: [
+      {
+        subjectId: {
+          type: Schema.Types.ObjectId,
+          ref: "Subject",
+        },
+        teacherId: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,
@@ -60,9 +72,9 @@ const sectionSchema = new Schema(
       default: "active",
     },
     academicYearId: {
-  type: Schema.Types.ObjectId,
-  ref: "AcademicYear",
-}
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+    }
   },
   { timestamps: true }
 );

@@ -31,16 +31,15 @@ export const createBoardClass = createAsyncThunk(
 );
 
 /* ================= GET BOARD CLASS ================= */
-
 export const getBoardClass = createAsyncThunk(
   "boardClass/getBoardClass",
-  async (id, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      const url = id
-        ? `${ApiUrl}/board-classes?boardId=${id}`
-        : `${ApiUrl}/board-classes`;
+      const query = new URLSearchParams(params).toString();
+
+      const url = `${ApiUrl}/board-classes${query ? `?${query}` : ""}`;
 
       const res = await axios.get(url, {
         headers: {
@@ -48,7 +47,7 @@ export const getBoardClass = createAsyncThunk(
         },
       });
 
-      return res.data;
+      return res.data; // ✅ direct data
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Data Fetch Failed!"

@@ -26,31 +26,31 @@ export default function BoardClassPage() {
   const { boardClass = [], loading } = useSelector(
     (state) => state.boardClass
   );
-  const boards = useSelector((state) => state.boards.boards || []);
+ 
+  const { boards = [] } = useSelector((state) => state.boards);
 
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [open, setOpen] = useState(false);
 
-  // ✅ Initial Load
+  /* ================= LOAD BOARDS ================= */
   useEffect(() => {
     dispatch(getBoards());
-    dispatch(getBoardClass());
   }, [dispatch]);
 
-  // ✅ Filter change
+  /* ================= LOAD BOARD CLASSES ================= */
   useEffect(() => {
-    if (selectedBoard) {
-      dispatch(getBoardClass(selectedBoard));
-    } else {
-      dispatch(getBoardClass());
-    }
+    dispatch(
+      getBoardClass(
+        selectedBoard ? { boardId: selectedBoard } : {}
+      )
+    );
   }, [selectedBoard, dispatch]);
 
-  // ✅ Columns
+  /* ================= TABLE COLUMNS ================= */
   const columns = [
     {
-      title: "Board",
-      dataIndex: "boardName",
+      title: "Board Name",
+     render: (_, record) => record.boardId?.name
     },
     {
       title: "Class",
@@ -69,9 +69,8 @@ export default function BoardClassPage() {
   ];
 
   return (
-    <>
     <div style={{ padding: 20 }}>
-      {/* Page Title */}
+      {/* HEADER */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Title level={4}>Board Classes</Title>
@@ -84,7 +83,9 @@ export default function BoardClassPage() {
               style={{ width: 220 }}
               allowClear
               value={selectedBoard}
-              onChange={(value) => setSelectedBoard(value)}
+              onChange={(value) => setSelectedBoard(value || null)} // ✅ fix clear issue
+              showSearch
+              optionFilterProp="children"
             >
               {boards.map((board) => (
                 <Option key={board._id} value={board._id}>
@@ -104,7 +105,7 @@ export default function BoardClassPage() {
         </Col>
       </Row>
 
-      {/* Table Card */}
+      {/* TABLE */}
       <Card bordered={false} style={{ borderRadius: 12 }}>
         <Spin spinning={loading}>
           <Table
@@ -112,15 +113,26 @@ export default function BoardClassPage() {
             columns={columns}
             dataSource={boardClass}
             pagination={{
-              pageSize: 10,
+              pageSize: 12,
               showSizeChanger: true,
             }}
           />
         </Spin>
       </Card>
 
-      {/* Modal */}
-      <AddBoardClassModal open={open} setOpen={setOpen} />
-    </div></>
+      {/* MODAL */}
+      <AddBoardClassModal
+        open={open}
+        setOpen={setOpen}
+        onSuccess={() => {
+          setOpen(false);
+          dispatch(
+            getBoardClass(
+              selectedBoard ? { boardId: selectedBoard } : {}
+            )
+          ); // ✅ refresh after create
+        }}
+      />
+    </div>
   );
 }

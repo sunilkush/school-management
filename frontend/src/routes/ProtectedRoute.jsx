@@ -3,8 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute = ({ allowedRoles = [] }) => {
   const { user, accessToken} = useSelector((state) => state.auth);
-  
- console.log(user, accessToken)
+
 
   // 🔐 Not logged in
   if (!accessToken || !user) {

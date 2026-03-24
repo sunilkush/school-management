@@ -178,7 +178,32 @@ export const removeStudentFromSection = createAsyncThunk(
     }
   }
 );
+export const addSubjectToSection = createAsyncThunk(
+  "section/addSubjectToSection",
+  async ({ schoolClassId, sectionId, subjectIds }, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(
+        `${API}/sections/add-subjects`,
+        {
+          schoolClassId,
+          sectionId,
+          subjectIds,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
 
+      return res.data.data; // updated section
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to assign subjects"
+      );
+    }
+  }
+);
 
 // ==============================
 // 🔥 SLICE
@@ -191,6 +216,7 @@ const sectionSlice = createSlice({
     sections: [],
     selected: null,
     success: false,
+    sectionSubjects: {},
   },
   reducers: {
     resetSectionState: (state) => {
@@ -257,6 +283,28 @@ const sectionSlice = createSlice({
         state.sections = state.sections.map((sec) =>
           sec._id === updated._id ? updated : sec
         );
+      })
+
+      // 🔹 ADD SUBJECT
+      .addCase(addSubjectToSection.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+
+      .addCase(addSubjectToSection.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+
+        const section = action.payload;
+
+        // 🔥 store subjects by sectionId
+        state.sectionSubjects[section._id] = section.subjects;
+      })
+
+      .addCase(addSubjectToSection.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

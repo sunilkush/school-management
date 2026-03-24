@@ -1,14 +1,18 @@
-import React, { useState, memo } from "react";
-import { Layout, Input, Button, Space, Grid, Drawer } from "antd";
+import React, { useState, memo, lazy, Suspense } from "react";
+import { Layout, Input, Button, Space, Grid, Drawer, Spin } from "antd";
 import {
   MenuOutlined,
   CloseOutlined,
   SearchOutlined,
   MessageOutlined,
 } from "@ant-design/icons";
-import UserDropdown from "./UserDropdown";
-import NotificationDropdown from "./NotificationDropdown";
-import AcademicYearSwitcher from "../layout/AcademicYearSwitcher";
+
+const UserDropdown = lazy(() => import("./UserDropdown"));
+const NotificationDropdown = lazy(() => import("./NotificationDropdown"));
+const AcademicYearSwitcher = lazy(() =>
+  import("../layout/AcademicYearSwitcher")
+);
+
 import { useSelector } from "react-redux";
 
 const { Header } = Layout;
@@ -21,10 +25,12 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  // ✅ Handle Search (future API / filter)
   const handleSearch = (value) => {
     console.log("Search:", value);
   };
+
+  // 🔹 Common Loader
+  const loader = <Spin size="small" />;
 
   return (
     <>
@@ -39,12 +45,11 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           position: "sticky",
           top: 0,
           zIndex: 100,
-          height: 64, // ✅ important
+          height: 64,
         }}
       >
         {/* LEFT */}
-        <Space  align="center" style={{ height: "100%" }}>
-          {/* Sidebar Toggle */}
+        <Space align="center" style={{ height: "100%" }}>
           <Button
             type="text"
             onClick={toggleSidebar}
@@ -54,7 +59,6 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                 <MenuOutlined style={{ fontSize: 20 }} />
               ) : (
                 <CloseOutlined style={{ fontSize: 20 }} />
-                
               )
             }
           />
@@ -68,14 +72,14 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               onChange={(e) => setSearchValue(e.target.value)}
               onSearch={handleSearch}
               prefix={<SearchOutlined />}
-              style={{ width: 260,marginTop:15 }}
+              style={{ width: 260, marginTop: 15 }}
             />
           )}
         </Space>
 
         {/* RIGHT */}
         <Space size={screens.md ? "middle" : "small"} align="center">
-          {/* Mobile Search Icon */}
+          {/* Mobile Search */}
           {!screens.md && (
             <Button
               type="text"
@@ -87,7 +91,9 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
 
           {/* Academic Year */}
           {screens.sm && user?.role?.name !== "Super Admin" && (
-            <AcademicYearSwitcher />
+            <Suspense fallback={loader}>
+              <AcademicYearSwitcher />
+            </Suspense>
           )}
 
           {/* Messages */}
@@ -98,10 +104,14 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           />
 
           {/* Notifications */}
-          <NotificationDropdown />
+          <Suspense fallback={loader}>
+            <NotificationDropdown />
+          </Suspense>
 
           {/* User */}
-          <UserDropdown />
+          <Suspense fallback={loader}>
+            <UserDropdown />
+          </Suspense>
         </Space>
       </Header>
 
@@ -125,10 +135,9 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           onChange={(e) => setSearchValue(e.target.value)}
           onSearch={(value) => {
             handleSearch(value);
-            setMobileSearchOpen(false); // close after search
+            setMobileSearchOpen(false);
           }}
           prefix={<SearchOutlined />}
-          
         />
       </Drawer>
     </>

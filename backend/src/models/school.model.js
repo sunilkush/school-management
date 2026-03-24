@@ -207,3 +207,4 @@ schoolSchema.statics.softDeleteById = function (id, userId) {
 /* ================= MODEL ================= */
 
 export const School = mongoose.model("School", schoolSchema);
+
