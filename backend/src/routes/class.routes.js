@@ -29,12 +29,12 @@ router.get("/all", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
 //router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
 
 // 🔍 Get Class by ID (DYNAMIC ROUTE LAST)
-router.get("/:schoolClassId", auth, roleMiddleware(ADMIN_TEACHER), getClassById);
+router.get("/:classId", auth, roleMiddleware(ADMIN_TEACHER), getClassById);
 
 // ✏️ Update Class
-router.put("/:schoolClassId", auth, roleMiddleware(ADMIN_ONLY), updateClass);
+router.put("/:classId", auth, roleMiddleware(ADMIN_ONLY), updateClass);
 
 // 🗑️ Delete Class
-router.delete("/:schoolClassId", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
+router.delete("/:classId", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
 
 export default router;

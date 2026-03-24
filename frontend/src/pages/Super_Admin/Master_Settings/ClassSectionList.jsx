@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchAllClasses } from "../../../features/classSlice";
-import { fetchSection } from "../../../features/sectionSlice";
+import { fetchSections } from "../../../features/sectionSlice";
 import { Select, Spin, Table } from "antd";
 
 const SchoolClassSectionFilter = () => {
@@ -10,7 +10,7 @@ const SchoolClassSectionFilter = () => {
 
   const { schools, loading: schoolLoading } = useSelector((state) => state.school);
   const { classList, loading: classLoading } = useSelector((state) => state.class);
-  const { sectionList, loading: sectionLoading } = useSelector((state) => state.section);
+  const { sections, loading: sectionLoading } = useSelector((state) => state.section);
 
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
@@ -24,15 +24,15 @@ const SchoolClassSectionFilter = () => {
   useEffect(() => {
     if (selectedSchool) {
       dispatch(fetchAllClasses({ schoolId: selectedSchool }));
-      dispatch(fetchSection({ schoolId: selectedSchool }));
+      dispatch(fetchSections({ schoolId: selectedSchool }));
       setSelectedClass(null); // reset selected class
     }
   }, [selectedSchool, dispatch]);
 
   // Filter sections based on selected class
   const filteredSections = selectedClass
-    ? sectionList.filter((sec) => String(sec.schoolClassId?._id) === String(selectedClass))
-    : sectionList;
+    ? sections.filter((sec) => String(sec.schoolClassId?._id) === String(selectedClass))
+    : sections;
 
   // Table Columns
   const columns = [

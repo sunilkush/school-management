@@ -76,7 +76,7 @@ function App() {
   return (
     <>
       {/* 🔥 Routes */}
-      <Suspense fallback={Loader}>
+      <Suspense fallback={<Loader/>}>
         <Outlet />
       </Suspense>
 

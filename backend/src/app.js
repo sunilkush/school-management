@@ -63,6 +63,7 @@ import chapterRoutes from "./routes/chapters.routes.js";
 import boardClassRoutes from "./routes/boardsClass.routes.js";
 import examReportRoutes from "./routes/exam.report.routes.js";
 import schoolClassRoutes from "./routes/schoolClass.routes.js";
+import { ApiError } from "./utils/ApiError.js";
 // route
 app.use('/', indexRouter);
 app.use("/api/v1/school", schoolRoutes)
@@ -95,5 +96,22 @@ app.use("/api/v1/chapters", chapterRoutes);
 app.use("/api/v1/board-classes", boardClassRoutes);
 app.use("/api/v1/exam-report", examReportRoutes);
 app.use("/api/v1/school-class",schoolClassRoutes)
+
+
+
+app.use((req, _res, next) => {
+  next(new ApiError(404, "Route not found"));
+});
+
+app.use((err, _req, res, _next) => {
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
+    success: false,
+    statusCode,
+    message: err.message || "Internal Server Error",
+    errors: err.errors || [],
+  });
+});
+
 export { app }
 

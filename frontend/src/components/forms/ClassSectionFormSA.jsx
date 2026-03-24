@@ -3,37 +3,29 @@ import {
   Form,
   Input,
   Select,
-  Switch,
-  Button,
+ 
   Card,
   Row,
   Col,
   Divider,
-  Space,
-  InputNumber,
-  Typography,
 } from "antd";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+
 import { useDispatch, useSelector } from "react-redux";
 
 import { createClass, updateClass } from "../../features/classSlice";
-import { fetchSections } from "../../features/sectionSlice.js";
-import { fetchAllSubjects } from "../../features/subjectSlice";
-import { fetchAllUser } from "../../features/authSlice";
+
 
 const { Option } = Select;
-const { Text } = Typography;
+
 
 const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-
-  const { sectionList = [] } = useSelector((s) => s.section);
-  const { subjects = [] } = useSelector((s) => s.subject);
-  const { users = [], user } = useSelector((s) => s.auth);
+   const { user } = useSelector((s) => s.auth);
+ 
 
   const schoolId = user?.school?._id;
-  const role = user?.role?.name;
+  
 
   // 🔥 LocalStorage se academic year
   const [academicYear, setAcademicYear] = useState(null);
@@ -51,14 +43,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
 
 
 
-  /* ================= LOAD DATA ================= */
-  useEffect(() => {
-    if (!schoolId) return;
 
-    dispatch(fetchSections({ schoolId }));
-    dispatch(fetchAllSubjects({ schoolId }));
-    dispatch(fetchAllUser(schoolId));
-  }, [schoolId, dispatch]);
 
   /* ================= PREFILL ================= */
   useEffect(() => {
