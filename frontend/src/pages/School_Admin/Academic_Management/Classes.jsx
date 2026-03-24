@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchAllClasses as fetchClasses,
-} from "../../../features/classSlice.js";
+import { getClassData } from "../../../features/schoolClassSlice";
 
 import {
   Table,
@@ -35,7 +33,9 @@ const Classes = () => {
   const dispatch = useDispatch();
   const screens = useBreakpoint();
 
-  const { classList = [], loading } = useSelector((state) => state.class || {});
+  const { schoolClasses = [],loading } = useSelector(
+      (state) => state.schoolClass || {}
+    );
   const { user } = useSelector((state) => state.auth || {});
 
  
@@ -44,11 +44,11 @@ const Classes = () => {
   const schoolId = user?.school?._id;
 
   useEffect(() => {
-    if (schoolId) dispatch(fetchClasses({ schoolId }));
+    if (schoolId) dispatch(getClassData({ schoolId }));
   }, [dispatch, schoolId]);
 
   /* ================= FILTER ================= */
-  const filteredItems = classList
+  const filteredItems = schoolClasses
     .filter((item) =>
       (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
     );

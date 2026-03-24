@@ -27,7 +27,25 @@ export const createSchoolClass = createAsyncThunk(
   }
 );
 
-
+//================================
+// get Class detailes
+//================================
+export const getClassData = createAsyncThunk(
+  "schoolClass/classes",
+  async(params,{rejectWithValue})=>{
+     try {
+      const res = await axios.get(`${API}/school-class/class-detailes`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+        params, // { schoolId, academicYearId }
+      });
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Fetch failed"
+      );
+    }
+  }
+)
 // ==============================
 // 🔹 GET ALL
 // ==============================
@@ -142,7 +160,18 @@ const schoolClassSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
+      
+        .addCase(getClassData.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getClassData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.schoolClasses = action.payload || [];
+      })
+      .addCase(getClassData.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       // 🔹 CREATE
       .addCase(createSchoolClass.pending, (state) => {
         state.loading = true;

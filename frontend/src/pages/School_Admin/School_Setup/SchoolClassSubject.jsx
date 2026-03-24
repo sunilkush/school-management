@@ -15,9 +15,9 @@ import {
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 
-import { fetchSchoolClasses } from "../../../features/schoolClassSlice.js";
-import { fetchAllSubjects } from "../../../features/subjectSlice.js";
-import { addSubjectToSection } from "../../../features/sectionSlice.js";
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
+import { fetchAllSubjects } from "../../../features/subjectSlice";
+import { addSubjectToSection } from "../../../features/sectionSlice";
 
 const { Option } = Select;
 
@@ -28,7 +28,9 @@ const SchoolClassSubject = () => {
     (state) => state.schoolClass || {}
   );
 
-  const { subjects = [] } = useSelector((state) => state.subject || {});
+  const { subjects = [] } = useSelector(
+    (state) => state.subject || {}
+  );
 
   const [mapping, setMapping] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
@@ -36,20 +38,29 @@ const SchoolClassSubject = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const schoolId = user?.school?._id;
 
-  // ==============================
-  // 🔹 FETCH DATA
-  // ==============================
+  // 🔹 Fetch
   useEffect(() => {
     if (!schoolId) return;
-
     dispatch(fetchSchoolClasses({ schoolId }));
     dispatch(fetchAllSubjects({ isGlobal: true }));
   }, [dispatch, schoolId]);
 
-  // ==============================
-  // 🔥 FLATTEN DATA
-  // ==============================
-  const tableData = (schoolClasses || []).flatMap((cls) =>
+  // 🔥 Pre-fill mapping (IMPORTANT)
+  useEffect(() => {
+    const initial = {};
+
+    schoolClasses.forEach((cls) => {
+      cls.sections?.forEach((sec) => {
+        initial[sec._id] =
+          sec.sectionId?.subjects?.map((s) => s.subjectId) || [];
+      });
+    });
+
+    setMapping(initial);
+  }, [schoolClasses]);
+
+  // 🔥 Flatten
+  const tableData = schoolClasses.flatMap((cls) =>
     (cls.sections || []).map((sec) => ({
       _id: sec._id,
       schoolClassId: cls._id,
@@ -59,24 +70,11 @@ const SchoolClassSubject = () => {
     }))
   );
 
-  // ==============================
-  // 🔹 FILTER
-  // ==============================
   const filteredData = selectedClass
-    ? tableData.filter((item) => item.schoolClassId === selectedClass)
+    ? tableData.filter((i) => i.schoolClassId === selectedClass)
     : tableData;
 
-  // ==============================
-  // 🔹 UNIQUE CLASSES
-  // ==============================
-  const uniqueClasses = schoolClasses.map((cls) => ({
-    _id: cls._id,
-    name: cls.name,
-  }));
-
-  // ==============================
-  // 🔹 HANDLE CHANGE
-  // ==============================
+  // 🔹 Change
   const handleChange = (rowId, values) => {
     setMapping((prev) => ({
       ...prev,
@@ -84,9 +82,7 @@ const SchoolClassSubject = () => {
     }));
   };
 
-  // ==============================
-  // 🔥 SAVE (FIXED)
-  // ==============================
+  // 🔥 Save
   const handleSave = async (record) => {
     try {
       await dispatch(
@@ -98,35 +94,24 @@ const SchoolClassSubject = () => {
       ).unwrap();
 
       message.success("Saved ✅");
-
-      // refresh data
-      dispatch(fetchSchoolClasses({ schoolId }));
     } catch (err) {
-      message.error(err || "Save failed ❌");
+      message.error(err || "Failed ❌");
     }
   };
 
-  // ==============================
-  // 🔹 COLUMNS
-  // ==============================
+  // 🔹 Columns
   const columns = [
-    {
-      title: "Class",
-      dataIndex: "className",
-    },
-    {
-      title: "Section",
-      dataIndex: "sectionName",
-    },
+    { title: "Class", dataIndex: "className" },
+    { title: "Section", dataIndex: "sectionName" },
     {
       title: "Subjects",
       render: (_, record) => (
         <Select
           mode="multiple"
           style={{ width: "100%" }}
-          placeholder="Select Subjects"
           value={mapping[record._id] || []}
           onChange={(val) => handleChange(record._id, val)}
+          placeholder={'Select Subject'}
         >
           {subjects.map((sub) => (
             <Option key={sub._id} value={sub._id}>
@@ -142,11 +127,7 @@ const SchoolClassSubject = () => {
         <Space wrap>
           {(mapping[record._id] || []).map((sid) => {
             const sub = subjects.find((s) => s._id === sid);
-            return (
-              <Tag key={sid} color="blue">
-                {sub?.name || "Unknown"}
-              </Tag>
-            );
+            return <Tag key={sid}>{sub?.name}</Tag>;
           })}
         </Space>
       ),
@@ -155,9 +136,10 @@ const SchoolClassSubject = () => {
       title: "Action",
       render: (_, record) => (
         <Button
-          onClick={() => handleSave(record)}
           type="primary"
           size="small"
+          disabled={!mapping[record._id]?.length}
+          onClick={() => handleSave(record)}
         >
           Save
         </Button>
@@ -166,30 +148,24 @@ const SchoolClassSubject = () => {
   ];
 
   return (
-    <Card
-      title="📚 Class - Section Subject Mapping"
-      style={{ maxWidth: 1200, margin: "auto" }}
-    >
-      {/* FILTER */}
-      <Card type="inner" title="Filter" style={{ marginBottom: 20 }}>
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            <Select
-              placeholder="Select Class"
-              style={{ width: "100%" }}
-              allowClear
-              value={selectedClass}
-              onChange={setSelectedClass}
-            >
-              {uniqueClasses.map((cls) => (
-                <Option key={cls._id} value={cls._id}>
-                  {cls.name}
-                </Option>
-              ))}
-            </Select>
-          </Col>
-        </Row>
-      </Card>
+    <Card title="📚 Class - Section Subject Mapping">
+      {/* Filter */}
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={12}>
+          <Select
+            placeholder="Filter by Class"
+            style={{ width: "100%" }}
+            allowClear
+            onChange={setSelectedClass}
+          >
+            {schoolClasses.map((cls) => (
+              <Option key={cls._id} value={cls._id}>
+                {cls.name}
+              </Option>
+            ))}
+          </Select>
+        </Col>
+      </Row>
 
       <Divider />
 
@@ -200,7 +176,9 @@ const SchoolClassSubject = () => {
           rowKey="_id"
           pagination={{ pageSize: 10 }}
           locale={{
-            emptyText: <Empty description="No Data Found" />,
+            emptyText: (
+              <Empty description="No Sections Found" />
+            ),
           }}
         />
       </Spin>

@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from "react";
-import { Card, Tabs, Spin } from "antd";
+import React, { lazy, Suspense, useState } from "react";
+import { Card, Tabs, Spin, Steps } from "antd";
 import {
   AppstoreOutlined,
   ApartmentOutlined,
@@ -9,90 +9,80 @@ import {
 
 const { TabPane } = Tabs;
 
-// 🔥 Lazy Imports
+// Lazy load
 const SchoolClass = lazy(() => import("./SchoolClass.jsx"));
 const SchoolBoard = lazy(() => import("./SchoolBoard.jsx"));
 const SchoolAcadmicYear = lazy(() => import("./SchoolAcadmicYear.jsx"));
-const SchoolClassSubject = lazy(()=>import("./SchoolClassSubject.jsx"));
+const SchoolClassSubject = lazy(() => import("./SchoolClassSubject.jsx"));
 
-// 🔹 Loader UI
 const Loader = () => (
-  <div style={{ textAlign: "center", padding: "60px 0" }}>
+  <div style={{ textAlign: "center", padding: 60 }}>
     <Spin size="large" />
   </div>
 );
 
 const SchoolSetup = () => {
+  const [activeKey, setActiveKey] = useState("1");
+
+  const steps = [
+    { title: "Academic Year" },
+    { title: "Boards" },
+    { title: "Classes" },
+    { title: "Subjects" },
+  ];
+
   return (
-    <div style={{ padding: 16, margin: "auto" }}>
-      
-      {/* 🔹 Main Card */}
+    <div style={{ padding: 16 }}>
       <Card
-        bordered={false}
         style={{
-          borderRadius: 12,
-          boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+          borderRadius: 16,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
         }}
       >
-        <h2 style={{ marginBottom: 20 }}>🏫 School Setup</h2>
+        <h2>🏫 School Setup</h2>
 
-        {/* 🔹 Tabs */}
-        <Tabs
-          defaultActiveKey="1"
-          size="large"
-          tabBarStyle={{ marginBottom: 24 }}
-        >
-          {/* Academic Year */}
+        {/* ✅ Steps */}
+        <Steps
+          current={parseInt(activeKey) - 1}
+          items={steps}
+          style={{ marginBottom: 24 }}
+        />
+
+        {/* ✅ Tabs */}
+        <Tabs activeKey={activeKey} onChange={setActiveKey}>
           <TabPane
-            tab={
-              <span>
-                <CalendarOutlined /> Academic Year
-              </span>
-            }
+            tab={<span><CalendarOutlined /> Academic Year</span>}
             key="1"
           >
             <Suspense fallback={<Loader />}>
-              <SchoolAcadmicYear />
+              <SchoolAcadmicYear next={() => setActiveKey("2")} />
             </Suspense>
           </TabPane>
 
-          {/* Boards */}
           <TabPane
-            tab={
-              <span>
-                <ApartmentOutlined /> Boards
-              </span>
-            }
+            tab={<span><ApartmentOutlined /> Boards</span>}
             key="2"
           >
             <Suspense fallback={<Loader />}>
-              <SchoolBoard />
+              <SchoolBoard next={() => setActiveKey("3")} />
             </Suspense>
           </TabPane>
 
-          {/* Classes */}
           <TabPane
-            tab={
-              <span>
-                <AppstoreOutlined /> Classes & Sections
-              </span>
-            }
+            tab={<span><AppstoreOutlined /> Classes</span>}
             key="3"
           >
             <Suspense fallback={<Loader />}>
-              <SchoolClass />
+              <SchoolClass next={() => setActiveKey("4")} />
             </Suspense>
           </TabPane>
-          {/* class subject maping */}
+
           <TabPane
-              tab={
-                <span>
-                <PlusOutlined /> Classes & Subjects
-              </span>
-              }
+            tab={<span><PlusOutlined /> Subjects</span>}
+            key="4"
           >
-            <Suspense>
-                <SchoolClassSubject/>
+            <Suspense fallback={<Loader />}>
+              <SchoolClassSubject />
             </Suspense>
           </TabPane>
         </Tabs>
