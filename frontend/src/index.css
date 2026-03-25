@@ -1,12 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 :root[data-theme="light"] {
   --surface-page: #f0f2f5;
   --surface-header: #ffffff;
   --surface-sidebar: #ffffff;
   --text-primary: #111827;
   --border-color: #f0f0f0;
+  --bg:#f0f2f5;
+  --card:#ffffff;
+  --border:#e8eaed;
+  --primary:#1677ff;
+  --success:#52c41a;
+  --warning:#faad14;
+  --danger:#ff4d4f;
+  --purple:#722ed1;
+  --cyan:#13c2c2;
+  --orange:#fa8c16;
+  --text:#1a1a2e;
+  --textMuted:#8c8c8c;
+  --sider:#0d1117;
+  --siderActive:#1677ff;
 }
 
 :root[data-theme="dark"] {
@@ -15,12 +30,26 @@
   --surface-sidebar: #1f2937;
   --text-primary: #f9fafb;
   --border-color: #374151;
+  --bg:#0b0f14;       
+  --card:#111827;     
+  --border:#1f2937;
+  --primary:#3b82f6;   
+  --success:#22c55e;
+  --warning:#f59e0b;
+  --danger:#ef4444;
+  --purple:#8b5cf6;
+  --cyan:#06b6d4;
+  --orange:#f97316;
+  --text:#e5e7eb;   
+  --textMuted:#9ca3af; 
+  --sider:#020617;   
+  --siderActive:#3b82f6;
 }
 
 body {
   font-family: "Noto Sans", sans-serif;
-  background: var(--surface-page);
-  color: var(--text-primary);
+  background: var(--surface-page)!important;
+  color: var(--text-primary)!important;
   transition: background 0.2s ease, color 0.2s ease;
 }
 .fc-direction-ltr .fc-daygrid-event.fc-event-end{
@@ -43,4 +72,45 @@ body {
   .sidebar-toggle-btn {
     display: none;
   }
+}
+/* Cards */
+.ant-card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Table */
+.ant-table {
+  background: var(--card) !important;
+  color: var(--text) !important;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--card) !important;
+  color: var(--textMuted) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* Progress */
+.ant-progress-inner {
+  background-color: var(--border) !important;
+}
+
+/* Drawer */
+.ant-drawer-content {
+  background: var(--card) !important;
+}
+
+/* Buttons */
+.ant-btn {
+  border-color: var(--border);
+}
+
+/* Timeline */
+.ant-timeline-item-tail {
+  border-left: 2px solid var(--border);
 }

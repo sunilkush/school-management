@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Layout, Menu, Typography, Spin } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-
+import { useTheme } from "../../context/ThemeContext";
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -13,7 +13,7 @@ const SidebarMenu = ({ role }) => {
   const permissions = useSelector((state) => state.roleUi.permissions);
 
   const [sidebarConfig, setSidebarConfig] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDark: isDarkMode } = useTheme();
  
   // 🔥 Lazy load config
   useEffect(() => {
@@ -24,38 +24,7 @@ const SidebarMenu = ({ role }) => {
 
     loadMenu();
   }, []);
-  useEffect(() => {
-    const checkDarkMode = () => {
-      const root = document.documentElement;
-      const body = document.body;
-      const savedTheme = localStorage.getItem("theme");
-
-      const darkEnabled =
-        savedTheme === "dark" ||
-        root.classList.contains("dark") ||
-        body.classList.contains("dark") ||
-        root.getAttribute("data-theme") === "dark";
-
-      setIsDarkMode(darkEnabled);
-    };
-
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-
-    window.addEventListener("storage", checkDarkMode);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("storage", checkDarkMode);
-    };
-  }, []);
+ 
   const buildFallbackMenuFromPermissions = (permissions = []) => {
     if (!Array.isArray(permissions) || permissions.length === 0) return [];
 
@@ -134,7 +103,7 @@ const SidebarMenu = ({ role }) => {
        theme={isDarkMode ? "dark" : "light"}
       style={{
         borderRight: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
-        background: isDarkMode ? "#141414" : "#ffffff",
+        background: 'var(--surface-page)',
         height: "100vh",
         position: "fixed",
         left: 0,
@@ -162,7 +131,7 @@ const SidebarMenu = ({ role }) => {
            style={{
             height: "100%",
             borderRight: 0,
-            background: isDarkMode ? "#141414" : "#ffffff",
+            background: "var(--surface-sidebar)",
             color: isDarkMode ? "#ffffff" : undefined,
           }}
            theme={isDarkMode ? "dark" : "light"}

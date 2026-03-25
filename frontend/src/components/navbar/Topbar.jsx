@@ -1,4 +1,4 @@
-import React, { useState, memo, lazy, Suspense, useEffect } from "react";
+import React, { useState, memo, lazy, Suspense} from "react";
 import { Layout, Input, Button, Space, Grid, Drawer, Spin } from "antd";
 import {
   MenuOutlined,
@@ -26,42 +26,11 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
   const { isDark, toggleTheme } = useTheme();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const isDarkMode = isDark;
   const handleSearch = (value) => {
     console.log("Search:", value);
   };
-   useEffect(() => {
-    const checkDarkMode = () => {
-      const root = document.documentElement;
-      const body = document.body;
-      const savedTheme = localStorage.getItem("theme");
-
-      const darkEnabled =
-        savedTheme === "dark" ||
-        root.classList.contains("dark") ||
-        body.classList.contains("dark") ||
-        root.getAttribute("data-theme") === "dark";
-
-      setIsDarkMode(darkEnabled);
-    };
-
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-
-    window.addEventListener("storage", checkDarkMode);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("storage", checkDarkMode);
-    };
-  }, []);
+  
   // 🔹 Common Loader
   const loader = <Spin size="small" />;
 
@@ -74,7 +43,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           justifyContent: "space-between",
           padding: "0 12px",
           color: "var(--text-primary)",
-           background: isDarkMode ? "#141414" : "#fff",
+          background: "var(--surface-sidebar)",
           borderBottom: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
           position: "sticky",
           top: 0,
@@ -138,7 +107,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
             type="text"
             aria-label="Messages"
             icon={<MessageOutlined style={{ fontSize: 18 }} />}
-            style={{ color: isDarkMode ? "#ffffff" : undefined }}
+            style={{ color: "var(--text-primary)" }}
           />
             <Button
             type="text"
@@ -146,9 +115,9 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
             onClick={toggleTheme}
             icon={
               isDark ? (
-                <SunOutlined style={{ fontSize: 18 }} />
+                <SunOutlined style={{ fontSize: 18,color: "var(--text-primary)" }} />
               ) : (
-                <MoonOutlined style={{ fontSize: 18 }} />
+                <MoonOutlined style={{ fontSize: 18,color: "var(--text-primary)" }} />
               )
             }
           />
@@ -159,7 +128,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
 
           {/* User */}
           <Suspense fallback={loader}>
-            <UserDropdown />
+            <UserDropdown  />
           </Suspense>
         </Space>
       </Header>

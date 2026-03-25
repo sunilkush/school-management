@@ -46,14 +46,14 @@ const handleLogout = async () => {
   );
 
   return (
-    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
+    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight" style={{color: "var(--text-primary)",background:"var( --surface-header)"}}>
       <Col type="text" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
         {user?.avatar ? (
-          <Avatar src={user.avatar} size={24} />
+          <Avatar src={user.avatar} size={24} style={{color: "var(--text-primary)"}} />
         ) : (
-          <Avatar icon={<UserOutlined />} size={24} />
+          <Avatar icon={<UserOutlined />} size={24} style={{color: "var(--text-primary)"}} />
         )}
-        <Text style={{textTransform:"capitalize"}}>{user?.name || "User"}</Text>
+        <Text style={{textTransform:"capitalize",color: "var(--text-primary)"}}>{user?.name || "User"}</Text>
       </Col>
     </Dropdown>
   );

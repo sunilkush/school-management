@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { Layout, Drawer, Spin } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate, Outlet } from "react-router-dom";
-
+import { useTheme } from "../../context/ThemeContext";
 const Sidebar = lazy(() => import("../sidebar/Sidebar"));
 const Topbar = lazy(() => import("../navbar/Topbar"));
 
@@ -24,7 +24,7 @@ const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(
     () => getWindowWidth() >= 1024
   );
-  const [isDarkMode, setIsDarkMode] = useState(false);
+   const { isDark: isDarkMode } = useTheme();
   const resizeTimerRef = useRef(null);
 
   // ✅ Redirect if no active year (non-Super Admin)
@@ -51,38 +51,7 @@ const Dashboard = () => {
       clearTimeout(resizeTimerRef.current);
     };
   }, []);
-   useEffect(() => {
-    const checkDarkMode = () => {
-      const root = document.documentElement;
-      const body = document.body;
-      const savedTheme = localStorage.getItem("theme");
-
-      const darkEnabled =
-        savedTheme === "dark" ||
-        root.classList.contains("dark") ||
-        body.classList.contains("dark") ||
-        root.getAttribute("data-theme") === "dark";
-
-      setIsDarkMode(darkEnabled);
-    };
-
-    checkDarkMode();
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-
-    window.addEventListener("storage", checkDarkMode);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("storage", checkDarkMode);
-    };
-  }, []);
+ 
   // ✅ Toggle sidebar open/close
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);

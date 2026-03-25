@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-const THEME_KEY = "app-theme";
+const THEME_KEY = "theme";
+const LEGACY_THEME_KEY = "app-theme";
 const ThemeContext = createContext(null);
 
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem(THEME_KEY);
+
   if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
+  const legacyTheme = localStorage.getItem(LEGACY_THEME_KEY);
+  if (legacyTheme === "light" || legacyTheme === "dark") return legacyTheme;
 
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
@@ -17,7 +21,9 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+
     localStorage.setItem(THEME_KEY, theme);
+     localStorage.setItem(LEGACY_THEME_KEY, theme);
   }, [theme]);
 
   const toggleTheme = () => {

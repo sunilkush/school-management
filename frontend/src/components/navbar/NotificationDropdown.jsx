@@ -73,7 +73,7 @@ const NotificationDropdown = () => {
       arrow
     >
       <Badge dot offset={[-2, 2]}>
-        <BellOutlined style={{ fontSize: 20, cursor: "pointer" }} />
+        <BellOutlined style={{ fontSize: 20, cursor: "pointer",color:"var(--text-primary)" }} />
       </Badge>
     </Dropdown>
   );

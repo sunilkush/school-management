@@ -1,4 +1,4 @@
-import React, { lazy, memo, Suspense, useEffect, useState } from "react";
+import React, { lazy, memo, Suspense, } from "react";
 import { Layout, Typography, Spin } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
@@ -13,43 +13,11 @@ const { Text } = Typography;
 const Sidebar = ({ isOpen }) => {
   const token = localStorage.getItem("accessToken");
   const { user } = useSelector((state) => state.auth);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-   const { isDark } = useTheme();
+ const { isDark } = useTheme();
+  const isDarkMode = isDark;
   const role = user?.role?.name?.toLowerCase();
   const schoolName = user?.school?.name || "Super Admin";
-   useEffect(() => {
-    const checkDarkMode = () => {
-      const root = document.documentElement;
-      const body = document.body;
-      const savedTheme = localStorage.getItem("theme");
-
-      const darkEnabled =
-        savedTheme === "dark" ||
-        root.classList.contains("dark") ||
-        body.classList.contains("dark") ||
-        root.getAttribute("data-theme") === "dark";
-
-      setIsDarkMode(darkEnabled);
-    };
-
-    checkDarkMode();
-
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["class", "data-theme"],
-    });
-
-    window.addEventListener("storage", checkDarkMode);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("storage", checkDarkMode);
-    };
-  }, []);
+  
 
   // ✅ Loading / unauthenticated state
   if (!token) {
@@ -154,7 +122,9 @@ const Sidebar = ({ isOpen }) => {
             </div>
           }
         >
-          <SidebarMenu role={role}  />
+          <SidebarMenu role={role} style={{
+            background:'var(--surface-page)'
+          }}  />
         </Suspense>
       </div>
     </Sider>

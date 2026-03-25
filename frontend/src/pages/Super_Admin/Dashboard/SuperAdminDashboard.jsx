@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+
 import {
   Layout,
   Card,
@@ -42,28 +42,12 @@ import {
   ThunderboltFilled,
   SafetyCertificateOutlined,
   BookOutlined,
+  LinkOutlined
 } from "@ant-design/icons";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
-// ─── Color Tokens ─────────────────────────────────────────────────────────────
-const C = {
-  bg: "#f0f2f5",
-  card: "#ffffff",
-  border: "#e8eaed",
-  primary: "#1677ff",
-  success: "#52c41a",
-  warning: "#faad14",
-  danger: "#ff4d4f",
-  purple: "#722ed1",
-  cyan: "#13c2c2",
-  orange: "#fa8c16",
-  text: "#1a1a2e",
-  textMuted: "#8c8c8c",
-  sider: "#0d1117",
-  siderActive: "#1677ff",
-};
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 const schoolsData = [
@@ -132,7 +116,7 @@ const schoolsData = [
 const activityLog = [
   {
     id: 1,
-    color: C.success,
+    color:'var(--success)',
     icon: <BankOutlined />,
     text: "Green Valley School registered",
     sub: "New school onboarded",
@@ -140,7 +124,7 @@ const activityLog = [
   },
   {
     id: 2,
-    color: C.primary,
+    color: "var(--primary)",
     icon: <DollarOutlined />,
     text: "Subscription renewed — DPS Noida",
     sub: "₹4,20,000 received",
@@ -148,7 +132,7 @@ const activityLog = [
   },
   {
     id: 3,
-    color: C.purple,
+    color: "var(--purple)",
     icon: <UserOutlined />,
     text: "New admin added — Sunrise School",
     sub: "Rahul Sharma assigned",
@@ -156,7 +140,7 @@ const activityLog = [
   },
   {
     id: 4,
-    color: C.cyan,
+    color: "var(--cyan)",
     icon: <ThunderboltFilled />,
     text: "System backup completed",
     sub: "All data secured",
@@ -164,7 +148,7 @@ const activityLog = [
   },
   {
     id: 5,
-    color: C.warning,
+    color: "var(--warning)",
     icon: <WarningOutlined />,
     text: "Subscription expiring — EduStar Chennai",
     sub: "Expires in 7 days",
@@ -207,7 +191,7 @@ const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
     />
     <Space direction="vertical" size={4} style={{ width: "100%" }}>
       <Space align="center" style={{ justifyContent: "space-between", width: "100%" }}>
-        <Text style={{ fontSize: 13, color: C.textMuted, fontWeight: 500 }}>
+        <Text style={{ fontSize: 13, color: "var(--textMuted)", fontWeight: 500 }}>
           {title}
         </Text>
         <div
@@ -233,7 +217,7 @@ const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
         valueStyle={{
           fontSize: 28,
           fontWeight: 700,
-          color: C.text,
+          color: "var(--text)",
           lineHeight: 1.2,
         }}
       />
@@ -241,14 +225,14 @@ const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
       {delta && (
         <Space size={4}>
           {deltaType === "up" ? (
-            <ArrowUpOutlined style={{ color: C.success, fontSize: 12 }} />
+            <ArrowUpOutlined style={{ color: "var(--success)", fontSize: 12 }} />
           ) : (
-            <ArrowDownOutlined style={{ color: C.danger, fontSize: 12 }} />
+            <ArrowDownOutlined style={{ color: "var(--danger)", fontSize: 12 }} />
           )}
-          <Text style={{ fontSize: 12, color: deltaType === "up" ? C.success : C.danger }}>
+          <Text style={{ fontSize: 12, color: deltaType === "up" ? "var(--success)" : "var(--danger)" }}>
             {delta}
           </Text>
-          <Text style={{ fontSize: 12, color: C.textMuted }}>vs last month</Text>
+          <Text style={{ fontSize: 12, color: "var(--textMuted)" }}>vs last month</Text>
         </Space>
       )}
     </Space>
@@ -283,7 +267,7 @@ const columns = [
         </Avatar>
         <Space direction="vertical" size={0}>
           <Text strong style={{ fontSize: 13 }}>{name}</Text>
-          <Text style={{ fontSize: 12, color: C.textMuted }}>{row.city}</Text>
+          <Text style={{ fontSize: 12, color: "var(--textMuted)" }}>{row.city}</Text>
         </Space>
       </Space>
     ),
@@ -317,7 +301,7 @@ const columns = [
         >
           {sub}
         </Tag>
-        <Text style={{ fontSize: 11, color: C.textMuted }}>Exp: {row.subExpiry}</Text>
+        <Text style={{ fontSize: 11, color: "var(--textMuted)" }}>Exp: {row.subExpiry}</Text>
       </Space>
     ),
   },
@@ -331,10 +315,10 @@ const columns = [
           percent={v}
           size="small"
           showInfo={false}
-          strokeColor={v >= 90 ? C.success : v >= 60 ? C.warning : C.danger}
+          strokeColor={v >= 90 ? "var(--success)" : v >= 60 ? "var(--warning)" : "var(--danger)"}
           trailColor="#f0f0f0"
         />
-        <Text style={{ fontSize: 11, color: v >= 90 ? C.success : C.warning }}>
+        <Text style={{ fontSize: 11, color: v >= 90 ?  "var(--success)" : "var(--warning)" }}>
           {v}%
         </Text>
       </Space>
@@ -368,7 +352,7 @@ const columns = [
     dataIndex: "revenue",
     key: "revenue",
     render: (v) => (
-      <Text strong style={{ color: v === "₹0" ? C.textMuted : C.success }}>
+      <Text strong style={{ color: v === "₹0" ? "var(--textMuted)" : "var(--success)" }}>
         {v}
       </Text>
     ),
@@ -376,7 +360,7 @@ const columns = [
   {
     title: "",
     key: "actions",
-    render: (_, row) => (
+    render: () => (
       <Space size={4}>
         <Tooltip title="View Details">
           <Button type="text" size="small" icon={<EyeOutlined />} />
@@ -410,11 +394,11 @@ const SuperAdminDashboard = () => {
  
 
   return (
-    <Layout style={{ minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans', sans-serif" }}>
+    <Layout style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'DM Sans', sans-serif" }}>
     
      
 
-      <Layout style={{ background: C.bg }}>
+      <Layout style={{ background: "var(--bg)" }}>
         {/* ── Topbar ── */}
      
 
@@ -428,9 +412,10 @@ const SuperAdminDashboard = () => {
                 title="Total Schools"
                 value={28}
                 icon={<BankOutlined />}
-                color={C.primary}
+                color="var(--primary)"
                 delta="+3 this term"
                 deltaType="up"
+                
               />
             </Col>
             <Col xs={24} sm={12} lg={4}>
@@ -438,7 +423,7 @@ const SuperAdminDashboard = () => {
                 title="Active Schools"
                 value={24}
                 icon={<CheckCircleFilled />}
-                color={C.success}
+                color="var(--success)"
                 delta="+1 activated"
                 deltaType="up"
               />
@@ -448,7 +433,7 @@ const SuperAdminDashboard = () => {
                 title="Total Students"
                 value={12540}
                 icon={<TeamOutlined />}
-                color={C.purple}
+                color="var(--purple)"
                 delta="+840 enrolled"
                 deltaType="up"
               />
@@ -458,7 +443,7 @@ const SuperAdminDashboard = () => {
                 title="Revenue (YTD)"
                 value="₹4.2Cr"
                 icon={<DollarOutlined />}
-                color={C.orange}
+                color="var(--orange)"
                 delta="+12.4%"
                 deltaType="up"
               />
@@ -468,7 +453,7 @@ const SuperAdminDashboard = () => {
                 title="Expiring Soon"
                 value={6}
                 icon={<WarningOutlined />}
-                color={C.danger}
+                color="var(--denger)"
                 delta="2 critical"
                 deltaType="down"
               />
@@ -479,7 +464,7 @@ const SuperAdminDashboard = () => {
                 value={98}
                 suffix="%"
                 icon={<ThunderboltFilled />}
-                color={C.cyan}
+                color="var(--cyan)"
                 delta="Excellent"
                 deltaType="up"
               />
@@ -494,8 +479,8 @@ const SuperAdminDashboard = () => {
               <Card
                 title={
                   <Space>
-                    <ThunderboltFilled style={{ color: C.cyan }} />
-                    <span>System Health</span>
+                    <ThunderboltFilled style={{ color: "var(--cyan)" }} />
+                    <span style={{color:"var(--text-primary)"}}>System Health</span>
                   </Space>
                 }
                 bordered={false}
@@ -504,14 +489,14 @@ const SuperAdminDashboard = () => {
               >
                 <Space direction="vertical" style={{ width: "100%" }} size={16}>
                   {[
-                    { label: "API Server", val: 99, color: C.success },
-                    { label: "Database", val: 97, color: C.success },
-                    { label: "File Storage", val: 92, color: C.success },
-                    { label: "Email Service", val: 85, color: C.warning },
+                    { label: "API Server", val: 99, color: "var(--success)" },
+                    { label: "Database", val: 97, color: "var(--success)" },
+                    { label: "File Storage", val: 92, color: "var(--success)" },
+                    { label: "Email Service", val: 85, color: "var(--warning)" },
                   ].map((item) => (
-                    <div key={item.label}>
+                    <div key={item.label} >
                       <Space style={{ justifyContent: "space-between", width: "100%", marginBottom: 4 }}>
-                        <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                        <Text style={{ fontSize: 13,color: "var(--text-primary)" }}>{item.label}</Text>
                         <Text style={{ fontSize: 12, color: item.color, fontWeight: 600 }}>
                           {item.val}%
                         </Text>
@@ -534,8 +519,8 @@ const SuperAdminDashboard = () => {
               <Card
                 title={
                   <Space>
-                    <SafetyCertificateOutlined style={{ color: C.primary }} />
-                    <span>Subscription Status</span>
+                    <SafetyCertificateOutlined style={{ color: "var(--primary)" }} />
+                    <span style={{ color: "var(--text-primary)" }}>Subscription Status</span>
                   </Space>
                 }
                 bordered={false}
@@ -560,7 +545,7 @@ const SuperAdminDashboard = () => {
                         borderRadius: 8,
                       }}
                     >
-                      <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                      <Text style={{ fontSize: 13, }}>{item.label}</Text>
                       <Tag color={item.color} style={{ fontWeight: 700, fontSize: 13, margin: 0 }}>
                         {item.count}
                       </Tag>
@@ -575,8 +560,8 @@ const SuperAdminDashboard = () => {
               <Card
                 title={
                   <Space>
-                    <RiseOutlined style={{ color: C.purple }} />
-                    <span>Top Schools by Students</span>
+                    <RiseOutlined style={{ color: "var(--purple)" }} />
+                    <span style={{ color: "var(--text-primary)" }}>Top Schools by Students</span>
                   </Space>
                 }
                 bordered={false}
@@ -604,13 +589,13 @@ const SuperAdminDashboard = () => {
                             {i + 1}
                           </Text>
                           <div>
-                            <Text style={{ fontSize: 13, fontWeight: 500, display: "block" }}>
+                            <Text style={{ fontSize: 13, fontWeight: 500, display: "block",color: "var(--text-primary)" }}>
                               {school.name}
                             </Text>
-                            <Text style={{ fontSize: 11, color: C.textMuted }}>{school.city}</Text>
+                            <Text style={{ fontSize: 11, color: "var(--textMuted)" }}>{school.city}</Text>
                           </div>
                         </Space>
-                        <Text style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                        <Text style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--text-primary)" }}>
                           {school.students.toLocaleString("en-IN")}
                         </Text>
                       </Space>
@@ -634,8 +619,8 @@ const SuperAdminDashboard = () => {
               <Card
                 title={
                   <Space>
-                    <BankOutlined style={{ color: C.primary }} />
-                    <span>All Schools</span>
+                    <BankOutlined style={{ color: "var(--primary)" }} />
+                    <span style={{color: "var(--text-primary)"}}>All Schools</span>
                     <Tag color="blue">{schoolsData.length} total</Tag>
                   </Space>
                 }
@@ -674,8 +659,8 @@ const SuperAdminDashboard = () => {
               <Card
                 title={
                   <Space>
-                    <ClockCircleFilled style={{ color: C.orange }} />
-                    <span>Recent Activity</span>
+                    <ClockCircleFilled style={{ color: "var(--orange)" }} />
+                    <span style={{color: "var(--text-primary)"}}>Recent Activity</span>
                   </Space>
                 }
                 extra={<Button type="link" size="small">View All</Button>}
@@ -703,13 +688,13 @@ const SuperAdminDashboard = () => {
                     ),
                     children: (
                       <div style={{ paddingBottom: 6 }}>
-                        <Text style={{ fontSize: 13, fontWeight: 500, display: "block" }}>
+                        <Text style={{ fontSize: 13, fontWeight: 500, display: "block",color: "var(--text-primary)" }}>
                           {item.text}
                         </Text>
                         <Space size={8}>
-                          <Text style={{ fontSize: 12, color: C.textMuted }}>{item.sub}</Text>
+                          <Text style={{ fontSize: 12, color: "var(--textMuted)" }}>{item.sub}</Text>
                           <Divider type="vertical" style={{ margin: 0 }} />
-                          <Text style={{ fontSize: 11, color: C.textMuted }}>{item.time}</Text>
+                          <Text style={{ fontSize: 11, color: "var(--textMuted)" }}>{item.time}</Text>
                         </Space>
                       </div>
                     ),
@@ -726,8 +711,8 @@ const SuperAdminDashboard = () => {
               <Card
                 title={
                   <Space>
-                    <DollarOutlined style={{ color: C.success }} />
-                    <span>Revenue by School</span>
+                    <DollarOutlined style={{ color: "var(--success)" }} />
+                    <span style={{color: "var(--text-primary)"}}>Revenue by School</span>
                   </Space>
                 }
                 bordered={false}
@@ -750,13 +735,13 @@ const SuperAdminDashboard = () => {
                             {school.name[0]}
                           </Avatar>
                           <div>
-                            <Text style={{ fontSize: 13, fontWeight: 500, display: "block" }}>
+                            <Text style={{ fontSize: 13, fontWeight: 500, display: "block",color: "var(--text-primary)" }}>
                               {school.name}
                             </Text>
-                            <Text style={{ fontSize: 11, color: C.textMuted }}>{school.city}</Text>
+                            <Text style={{ fontSize: 11, color: "var(--textMuted)" }}>{school.city}</Text>
                           </div>
                         </Space>
-                        <Text strong style={{ color: C.success, fontSize: 14 }}>
+                        <Text strong style={{ color: "var(--success)", fontSize: 14 }}>
                           {school.revenue}
                         </Text>
                       </Space>
@@ -769,18 +754,24 @@ const SuperAdminDashboard = () => {
             {/* Quick Actions */}
             <Col xs={24} md={12}>
               <Card
-                title="Quick Actions"
+              title={
+                  <Space>
+                    <LinkOutlined style={{ color: "var(--success)" }} />
+                    <span style={{color: "var(--text-primary)"}}>Quick Actions</span>
+                  </Space>
+                }
+              
                 bordered={false}
-                style={{ borderRadius: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                style={{ borderRadius: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", color:"var(--text-primary)" }}
               >
                 <Row gutter={[10, 10]}>
                   {[
-                    { label: "Add New School", icon: <BankOutlined />, color: C.primary, type: "primary" },
-                    { label: "Manage Subscriptions", icon: <SafetyCertificateOutlined />, color: C.purple },
-                    { label: "View All Users", icon: <TeamOutlined />, color: C.cyan },
-                    { label: "Financial Reports", icon: <DollarOutlined />, color: C.success },
-                    { label: "System Logs", icon: <ThunderboltFilled />, color: C.orange },
-                    { label: "Send Notification", icon: <BellOutlined />, color: C.danger },
+                    { label: "Add New School", icon: <BankOutlined />, color: "var(--primary)", type: "primary" },
+                    { label: "Manage Subscriptions", icon: <SafetyCertificateOutlined />, color: "var(--purple)" },
+                    { label: "View All Users", icon: <TeamOutlined />, color: "var(--cyan)" },
+                    { label: "Financial Reports", icon: <DollarOutlined />, color: "var(--success)" },
+                    { label: "System Logs", icon: <ThunderboltFilled />, color: "var(--orange)" },
+                    { label: "Send Notification", icon: <BellOutlined />, color: "var(--danger)" },
                   ].map((action) => (
                     <Col span={12} key={action.label}>
                       <Button
@@ -796,7 +787,7 @@ const SuperAdminDashboard = () => {
                           gap: 8,
                           textAlign: "left",
                           fontSize: 13,
-                          border: `1px solid ${C.border}`,
+                          border: `1px solid var(--border)`,
                         }}
                       >
                         {action.label}
