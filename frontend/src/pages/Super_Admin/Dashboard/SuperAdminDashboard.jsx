@@ -648,8 +648,9 @@ const SuperAdminDashboard = () => {
                     style: { margin: "12px 16px" },
                   }}
                   size="small"
-                  style={{ borderRadius: 16, overflow: "hidden" }}
+                  style={{ borderRadius: 16, overflow: "hidden", }}
                   scroll={{ x: 900 }}
+                  
                 />
               </Card>
             </Col>
