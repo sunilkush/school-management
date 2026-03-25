@@ -85,14 +85,15 @@ const LoginForm = () => {
                 maxWidth: 420,
                 boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
                 borderRadius: 12,
+                background:"var(--card)"
               }}
               variant="borderless"
             >
               {/* Header */}
-              <Title level={3} style={{ marginBottom: 0 }}>
+              <Title level={3} style={{ marginBottom: 0,color:"var(--text-primary)" }}>
                 Welcome Back 👋
               </Title>
-              <Text type="secondary">
+              <Text type="secondary" style={{color:"var(--text-primary)"}}>
                 Login to continue to your dashboard
               </Text>
 
@@ -105,11 +106,13 @@ const LoginForm = () => {
               >
                 <Form.Item
                   label="Email Address"
+                  style={{color:"var(--text-primary)"}}
                   name="email"
                   rules={[
                     { required: true, message: "Email is required" },
                     { type: "email", message: "Invalid email" },
                   ]}
+                   
                 >
                   <Input
                     size="large"
@@ -122,6 +125,7 @@ const LoginForm = () => {
                   label="Password"
                   name="password"
                   rules={[{ required: true, message: "Password is required" }]}
+                  style={{color:"var(--text-primary)"}}
                 >
                   <Input.Password
                     size="large"
@@ -131,10 +135,10 @@ const LoginForm = () => {
                 </Form.Item>
 
                 <Row justify="space-between" align="middle">
-                  <Form.Item name="remember" valuePropName="checked">
-                    <Checkbox>Remember me</Checkbox>
+                  <Form.Item name="remember" valuePropName="checked" style={{color:"var(--text-primary)"}}>
+                    <Checkbox style={{color:"var(--text-primary)"}}>Remember me</Checkbox>
                   </Form.Item>
-                  <Link to="/forgot-password">Forgot password?</Link>
+                  <Link to="/forgot-password" style={{color:"var(--text-primary)"}}>Forgot password?</Link>
                 </Row>
 
                 {/* ✅ Error (filtered) */}
@@ -159,7 +163,7 @@ const LoginForm = () => {
                 </Button>
 
                 {/* Google */}
-                <Button block size="large" style={{ marginTop: 12 }}>
+                <Button block size="large" style={{ marginTop: 12, }}>
                   Sign in with Google
                 </Button>
               </Form>
@@ -170,6 +174,7 @@ const LoginForm = () => {
                   display: "block",
                   marginTop: 16,
                   textAlign: "center",
+                  color:"var(--text-primary)"
                 }}
               >
                 Don’t have an account? <Link to="/register">Sign up</Link>

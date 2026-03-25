@@ -39,7 +39,7 @@ const ForgetPasswordPage = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "#f5f7fa",
+        background: "var(--surface-page)",
       }}
     >
       <Card
@@ -51,8 +51,8 @@ const ForgetPasswordPage = () => {
       >
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <Title level={3}>Forgot Password</Title>
-          <Text type="secondary">
+          <Title level={3} style={{color:"var(--text-primary)"}}>Forgot Password</Title>
+          <Text type="secondary" style={{color:"var(--text-primary)"}}>
             Enter your email to receive a reset link
           </Text>
         </div>
@@ -89,7 +89,7 @@ const ForgetPasswordPage = () => {
 
         {/* Footer */}
         <div style={{ textAlign: "center", marginTop: 10 }}>
-          <Text type="secondary">
+          <Text type="secondary" style={{color:"var(--text-primary)"}}>
             Remember your password?{" "}
             <a href="/">Back to Login</a>
           </Text>
