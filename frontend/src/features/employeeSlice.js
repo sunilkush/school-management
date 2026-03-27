@@ -1,17 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 const Api_Base_Url = import.meta.env.VITE_API_URL
 export const createEmployee = createAsyncThunk(
     "employee/createEmployee",
     async (formData, { rejectWithValue }) => {
         try {
-           
-            const token = localStorage.getItem("accessToken")
-            const res = await axios.post(
+            const res = await apiClient.post(
                 `${Api_Base_Url}/employee`,
                 formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`
                 }
             }
             );

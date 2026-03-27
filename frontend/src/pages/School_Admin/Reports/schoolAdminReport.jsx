@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Layout, Row, Col, Card, Spin, Empty, Alert } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchDashboardSummary } from "../../../features/dashboardSlice";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Content } = Layout;
 
@@ -13,7 +14,7 @@ const SchoolAdminReport = () => {
     (state) => state.dashboard || {}
   );
 
-  const storedUser = localStorage.getItem("user");
+  const storedUser = memoryStorage.getItem("user");
 
   let parsedRole = "";
   let parsedSchoolId = "";

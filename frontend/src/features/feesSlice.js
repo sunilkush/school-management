@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -10,11 +11,9 @@ export const fetchAllFees = createAsyncThunk(
   "fees/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.get(`${API_BASE_URL}/fees/allFees`, {
+      const res = await apiClient.get(`${API_BASE_URL}/fees/allFees`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
         params,
       });
@@ -37,14 +36,12 @@ export const createFee = createAsyncThunk(
   "fees/create",
   async (payload, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API_BASE_URL}/fees/createFees`,
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -64,11 +61,9 @@ export const deleteFees = createAsyncThunk(
   "fees/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      await axios.delete(`${API_BASE_URL}/fees/${id}`, {
+      await apiClient.delete(`${API_BASE_URL}/fees/${id}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -86,13 +81,11 @@ export const fetchStudentFees = createAsyncThunk(
   "fees/student",
   async (studentId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${API_BASE_URL}/student-fees/${studentId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );

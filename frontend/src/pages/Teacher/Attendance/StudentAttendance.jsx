@@ -22,6 +22,7 @@ import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
 import { activeUser } from "../../../features/authSlice.js";
 import { submitAttendance } from "../../../features/attendanceSlice.js";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -35,7 +36,7 @@ const StudentAttendance = () => {
   const { classAssignTeacher = [] } = useSelector(state => state.class);
 
   const schoolId = user?.school?._id;
-  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
+  const storeAcadmicYear = memoryStorage.getItem("selectedAcademicYear");
   const academicYearId = storeAcadmicYear
     ? JSON.parse(storeAcadmicYear)._id
     : null;

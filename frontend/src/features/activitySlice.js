@@ -1,6 +1,7 @@
 // features/activitySlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 // Base URL (adjust if needed)
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -11,9 +12,8 @@ export const fetchActivityLogs = createAsyncThunk(
   async (filters = {}, { rejectWithValue }) => {
     try {
       const query = new URLSearchParams(filters).toString();
-      const { data } = await axios.get(`${API_BASE_URL}/activity-logs?${query}`, {
+      const { data } = await apiClient.get(`${API_BASE_URL}/activity-logs?${query}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       return data.data; // logs array
@@ -28,9 +28,8 @@ export const createActivityLog = createAsyncThunk(
   "activity/createLog",
   async (logData, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(`${API_BASE_URL}/activity-logs`, logData, {
+      const { data } = await apiClient.post(`${API_BASE_URL}/activity-logs`, logData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       return data.data;
@@ -45,9 +44,8 @@ export const deleteActivityLog = createAsyncThunk(
   "activity/deleteLog",
   async (id, { rejectWithValue }) => {
     try {
-       await axios.delete(`${API_BASE_URL}/activity-logs/${id}`, {
+       await apiClient.delete(`${API_BASE_URL}/activity-logs/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
       return id; // return deleted log id for local state update

@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const API = import.meta.env.VITE_API_URL;
 
 // 🔐 Token helper
-const getToken = () => localStorage.getItem("accessToken");
 
 
 // ==============================
@@ -14,9 +14,7 @@ export const createSection = createAsyncThunk(
   "section/create",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API}/sections`, data, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiClient.post(`${API}/sections`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -34,9 +32,7 @@ export const fetchSections = createAsyncThunk(
   "section/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API}/sections`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        params, // { schoolId, academicYearId, schoolClassId }
+      const res = await apiClient.get(`${API}/sections`, {        params, // { schoolId, academicYearId, schoolClassId }
       });
       return res.data.data;
     } catch (err) {
@@ -55,9 +51,7 @@ export const fetchSectionById = createAsyncThunk(
   "section/fetchOne",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API}/sections/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiClient.get(`${API}/sections/${id}`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -75,9 +69,7 @@ export const updateSection = createAsyncThunk(
   "section/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${API}/sections/${id}`, data, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiClient.put(`${API}/sections/${id}`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -95,9 +87,7 @@ export const deleteSection = createAsyncThunk(
   "section/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API}/sections/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      await apiClient.delete(`${API}/sections/${id}`, {      });
       return id;
     } catch (err) {
       return rejectWithValue(
@@ -115,12 +105,10 @@ export const assignClassTeacher = createAsyncThunk(
   "section/assignTeacher",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API}/sections/assign-teacher`,
         data,
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        }
+        {        }
       );
       return res.data.data;
     } catch (err) {
@@ -139,12 +127,10 @@ export const addStudentToSection = createAsyncThunk(
   "section/addStudent",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API}/sections/add-student`,
         data,
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        }
+        {        }
       );
       return res.data.data;
     } catch (err) {
@@ -163,12 +149,10 @@ export const removeStudentFromSection = createAsyncThunk(
   "section/removeStudent",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API}/sections/remove-student`,
         data,
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        }
+        {        }
       );
       return res.data.data;
     } catch (err) {
@@ -182,17 +166,12 @@ export const addSubjectToSection = createAsyncThunk(
   "section/addSubjectToSection",
   async ({ schoolClassId, sectionId, subjectIds }, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API}/sections/add-subjects`,
         {
           schoolClassId,
           sectionId,
           subjectIds,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
         }
       );
 

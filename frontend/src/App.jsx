@@ -3,9 +3,8 @@ import { Outlet } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 
-import { refreshToken } from "./features/authSlice";
+import { currentUser, forceLogout, initializeAuth } from "./features/authSlice";
 import { fetchMyPermissions } from "./features/roleUiSlice";
-
 
 const ToastContainer = lazy(() =>
   import("react-toastify").then((mod) => ({
@@ -23,19 +22,21 @@ const Loader = lazy(() => import("./components/Loader/Loader"));
 
 function App() {
   const dispatch = useDispatch();
-
-  const { user, isAuthInitialized } = useSelector(
-    (state) => state.auth
-  );
-
-
-  /* ================= AUTH INIT ================= */
+  const navigate = useNavigate();
+  const { profile, accessToken } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(refreshToken());
-  }, [dispatch]);
+    const bootstrapAuth = async () => {
+      try {
+        await dispatch(initializeAuth()).unwrap();
+        await dispatch(currentUser()).unwrap();
+      } catch {
+        dispatch(forceLogout());
+      }
+    };
 
-  /* ================= PERMISSIONS ================= */
+    bootstrapAuth();
+  }, [dispatch]);
 
   useEffect(() => {
     if (user?._id) {
@@ -43,16 +44,12 @@ function App() {
     }
   }, [dispatch, user]);
 
- 
-
-
-  /* ================= WAIT AUTH ================= */
-
-  if (!isAuthInitialized) {
-    return <Loader />;
-  }
-
-  /* ================= UI ================= */
+  useEffect(() => {
+    if (profile?.statusCode === 401) {
+      dispatch(forceLogout());
+      navigate("/login");
+    }
+  }, [dispatch, profile, navigate]);
 
   return (
     <>

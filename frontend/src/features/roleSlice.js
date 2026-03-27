@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -8,16 +9,13 @@ export const fetchRoles = createAsyncThunk(
   "role/fetchRoles",
   async (schoolId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
       const endpoint = schoolId
         ? `${Api_Base_Url}/role/by-school?schoolId=${schoolId}`
         : `${Api_Base_Url}/role/getAllRoles`;
 
-      const res = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiClient.get(endpoint, {      });
 
       return res.data.data;
     } catch (error) {
@@ -31,12 +29,9 @@ export const fetchRoleById = createAsyncThunk(
   "role/fetchRoleById",
   async (roleId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${Api_Base_Url}/role/getRole/${roleId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiClient.get(`${Api_Base_Url}/role/getRole/${roleId}`, {      });
 
       return res.data.data;
     } catch (error) {
@@ -50,13 +45,9 @@ export const createRole = createAsyncThunk(
   "role/createRole",
   async (roleData, { rejectWithValue }) => {
     try {
-     
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.post(`${Api_Base_Url}/role/createRole`, roleData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiClient.post(`${Api_Base_Url}/role/createRole`, roleData, {      });
 
       return res.data; // includes { data, message }
     } catch (error) {
@@ -70,16 +61,12 @@ export const fetchRoleBySchool = createAsyncThunk(
   "role/fetchRoleBySchool",
   async (schoolId, { rejectWithValue }) => {
     try {
-      
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${Api_Base_Url}/role/by-school`,
+      const res = await apiClient.get(`${Api_Base_Url}/role/by-school`,
        
          {
-          params: { schoolId },
-        headers: { Authorization: `Bearer ${token}` }
-      });
+          params: { schoolId },      });
 
       return res.data.data;
     } catch (error) {
@@ -92,10 +79,7 @@ export const searchRoles = createAsyncThunk(
   "role/searchRoles",
   async (query, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${Api_Base_Url}/role/search/${query}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get(`${Api_Base_Url}/role/search/${query}`, {      });
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Role search failed");
@@ -151,7 +135,7 @@ const roleSlice = createSlice({
       .addCase(fetchRoleById.fulfilled, (state, action) => {
         state.loading = false;
         state.role = action.payload || null;
-        localStorage.setItem("role", JSON.stringify(action.payload));
+        memoryStorage.setItem("role", JSON.stringify(action.payload));
       })
       .addCase(fetchRoleById.rejected, (state, action) => {
         state.loading = false;

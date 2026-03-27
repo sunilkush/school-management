@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Card, Col, Empty, Row, Space, Table, Tag, Typography } from "antd";
 import { BarChartOutlined } from "@ant-design/icons";
 import { getExams } from "../../../features/examSlice.js";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title, Text } = Typography;
 
@@ -13,7 +14,7 @@ const ParentExamsPage = () => {
   const { exams = [], loading } = useSelector((state) => state.exams || {});
 
   const selectedAcademicYear = useMemo(() => {
-    const stored = localStorage.getItem("selectedAcademicYear");
+    const stored = memoryStorage.getItem("selectedAcademicYear");
     return stored ? JSON.parse(stored) : null;
   }, []);
 

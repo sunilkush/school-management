@@ -17,6 +17,7 @@ import {
 } from "../../../features/boardSlice";
 
 import { useDispatch, useSelector } from "react-redux";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -31,7 +32,7 @@ const SchoolBoard = () => {
   } = useSelector((state) => state.boards);
 
   const [selectedBoard, setSelectedBoard] = useState(null);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = JSON.parse(memoryStorage.getItem("user") || "{}");
   const schoolId = user?.school?._id;
 
   /* ================= LOAD ================= */

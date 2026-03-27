@@ -26,6 +26,7 @@ import {
 } from "../../../features/examSlice.js";
 
 import { useNavigate, useParams } from "react-router-dom";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -52,12 +53,12 @@ const CreateExam = () => {
   );
 
   /* ================= USER ================= */
-  const storedUser = localStorage.getItem("user");
+  const storedUser = memoryStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
   const userId = user?._id;
 
   const selectedAcademicYear = JSON.parse(
-    localStorage.getItem("selectedAcademicYear") || "{}"
+    memoryStorage.getItem("selectedAcademicYear") || "{}"
   );
 
   const academicYearId = selectedAcademicYear?._id;

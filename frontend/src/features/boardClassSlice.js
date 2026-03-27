@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const ApiUrl = import.meta.env.VITE_API_URL;
 
@@ -9,14 +10,12 @@ export const createBoardClass = createAsyncThunk(
     "boardClass/createBoardClass",
     async (boardClass, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
 
-            const res = await axios.post(
+            const res = await apiClient.post(
                 `${ApiUrl}/board-classes`,
                 boardClass,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
@@ -35,15 +34,13 @@ export const getBoardClass = createAsyncThunk(
   "boardClass/getBoardClass",
   async (params = {}, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
       const query = new URLSearchParams(params).toString();
 
       const url = `${ApiUrl}/board-classes${query ? `?${query}` : ""}`;
 
-      const res = await axios.get(url, {
+      const res = await apiClient.get(url, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -59,13 +56,11 @@ export const getBoardClassById = createAsyncThunk(
   "boardClass/getBoardClassById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${ApiUrl}/board-classes/${id}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -83,14 +78,12 @@ export const updateBoardClass = createAsyncThunk(
   "boardClass/updateBoardClass",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.put(
+      const res = await apiClient.put(
         `${ApiUrl}/board-classes/${id}`,
         data,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -108,11 +101,9 @@ export const deleteBoardClass = createAsyncThunk(
   "boardClass/deleteBoardClass",
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      await axios.delete(`${ApiUrl}/board-classes/${id}`, {
+      await apiClient.delete(`${ApiUrl}/board-classes/${id}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 

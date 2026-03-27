@@ -21,6 +21,7 @@ import { fetchAllClasses } from "../../../features/classSlice.js";
 import { getQuestions } from "../../../features/questionSlice.js";
 
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -74,7 +75,7 @@ const EditExamForm = ({ examId }) => {
   /* ================= USER CONTEXT ================= */
 
   const selectedAcademicYear = useMemo(
-    () => JSON.parse(localStorage.getItem("selectedAcademicYear") || "{}"),
+    () => JSON.parse(memoryStorage.getItem("selectedAcademicYear") || "{}"),
     []
   );
 

@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchAllSubjects } from "../../../features/subjectSlice";
 import { addSubjectToSection } from "../../../features/sectionSlice";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Option } = Select;
 
@@ -35,9 +36,9 @@ const SchoolClassSubject = () => {
   const [mapping, setMapping] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = JSON.parse(memoryStorage.getItem("user") || "{}");
   const schoolId = user?.school?._id;
-  const acadmicYearId = JSON.parse(localStorage.getItem("selectedAcademicYear"))._id
+  const acadmicYearId = JSON.parse(memoryStorage.getItem("selectedAcademicYear"))._id
 
   // 🔹 Fetch
   useEffect(() => {

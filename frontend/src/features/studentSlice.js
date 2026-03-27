@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
 import { toast } from "react-toastify";
+import memoryStorage from "../utils/memoryStorage";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -9,10 +10,9 @@ export const fetchLastRegisteredStudent = createAsyncThunk(
   "students/fetchLastRegisteredStudent",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const response = await axios.get(
+      const response = await apiClient.get(
         `${Api_Base_Url}/student/last-registered`,
         {
           params: { schoolId, academicYearId },
@@ -37,15 +37,13 @@ export const createStudent = createAsyncThunk(
   "student/addStudent",
   async (studentData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const response = await axios.post(
+      const response = await apiClient.post(
         `${Api_Base_Url}/student/register`,
         studentData, // plain object
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -63,16 +61,14 @@ export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
   async ({ schoolId, academicYearId, schoolClassId } = {}, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
       // ✅ Choose URL based on schoolId presence
       const url = `${Api_Base_Url}/student/all`;
 
       // ✅ Fetch data
-      const res = await axios.get(url, {
+      const res = await apiClient.get(url, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         params: { schoolId, academicYearId, schoolClassId },
@@ -97,16 +93,10 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
       }
 
       // ✅ token safety
-      const token = localStorage.getItem("accessToken");
-
-      if (!token) {
-        return rejectWithValue("Authentication token missing");
-      }
 
       // ✅ API Call
-      const res = await axios.get(`${Api_Base_Url}/student/school`, {
+      const res = await apiClient.get(`${Api_Base_Url}/student/school`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
         params: {
           schoolId,
@@ -129,12 +119,10 @@ export const fetchStudentById = createAsyncThunk(
   "student/fetchStudentById",
   async (userId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(`${Api_Base_Url}/student/getStudent/${userId}`, {
+      const res = await apiClient.get(`${Api_Base_Url}/student/getStudent/${userId}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -154,14 +142,12 @@ export const fetchMyStudentEnrollment = createAsyncThunk(
   "student/fetchMyStudentEnrollment",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("No access token found");
 
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${Api_Base_Url}/student/my/enrollment-id`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );

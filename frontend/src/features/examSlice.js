@@ -1,14 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // 🔐 Dynamic auth header (IMPORTANT FIX)
 const getAuthConfig = () => {
-  const token = localStorage.getItem("accessToken");
   return {
     headers: {
-      Authorization: `Bearer ${token}`,
     },
   };
 };
@@ -20,7 +19,7 @@ export const createExam = createAsyncThunk(
   "exams/createExam",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API_BASE_URL}/exams/`,
         payload,
         getAuthConfig()
@@ -40,7 +39,7 @@ export const getExams = createAsyncThunk(
   async (params = {}, { rejectWithValue }) => {
     try {
       const query = new URLSearchParams(params).toString();
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${API_BASE_URL}/exams?${query}`,
         getAuthConfig()
       );
@@ -62,7 +61,7 @@ export const getExamById = createAsyncThunk(
         throw new Error("Invalid exam id");
       }
 
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${API_BASE_URL}/exams/${examId}`,
         getAuthConfig()
       );
@@ -86,7 +85,7 @@ export const updateExam = createAsyncThunk(
         throw new Error("Invalid exam id 3");
       }
 
-      const res = await axios.put(
+      const res = await apiClient.put(
         `${API_BASE_URL}/exams/${Id}`,
         payload,
         getAuthConfig()
@@ -108,7 +107,7 @@ export const deleteExam = createAsyncThunk(
     try {
       if (!examId) throw new Error("Invalid exam id");
 
-      const res = await axios.delete(
+      const res = await apiClient.delete(
         `${API_BASE_URL}/exams/${examId}`,
         getAuthConfig()
       );
@@ -129,7 +128,7 @@ export const publishExam = createAsyncThunk(
     try {
       if (!examId) throw new Error("Invalid exam id");
 
-      const res = await axios.put(
+      const res = await apiClient.put(
         `${API_BASE_URL}/exams/${examId}/publish`,
         {}, // ✅ empty body FIX
         getAuthConfig()
@@ -149,7 +148,7 @@ export const startExamAttempt = createAsyncThunk(
   "exams/startExamAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API_BASE_URL}/exams/attempt/start`,
         payload,
         getAuthConfig()
@@ -167,7 +166,7 @@ export const submitExamAttempt = createAsyncThunk(
   "exams/submitExamAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API_BASE_URL}/exams/attempt/submit`,
         payload,
         getAuthConfig()
@@ -185,7 +184,7 @@ export const evaluateAttempt = createAsyncThunk(
   "exams/evaluateAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${API_BASE_URL}/exams/attempt/evaluate`,
         payload,
         getAuthConfig()

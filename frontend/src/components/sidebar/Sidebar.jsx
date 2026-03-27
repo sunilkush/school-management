@@ -10,9 +10,7 @@ const SidebarMenu = lazy(() => import("./SidebarMenu"));
 const { Sider } = Layout;
 const { Text } = Typography;
 
-const Sidebar = ({ isOpen }) => {
-  const token = localStorage.getItem("accessToken");
-  const { user } = useSelector((state) => state.auth);
+const Sidebar = ({ isOpen }) => {  const { user, accessToken } = useSelector((state) => state.auth);
  const { isDark } = useTheme();
   const isDarkMode = isDark;
   const role = user?.role?.name?.toLowerCase();
@@ -20,7 +18,7 @@ const Sidebar = ({ isOpen }) => {
   
 
   // ✅ Loading / unauthenticated state
-  if (!token) {
+  if (!accessToken) {
     return (
       <Sider
         width={260}

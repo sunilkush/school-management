@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -8,10 +9,7 @@ export const createBoard = createAsyncThunk(
   "boards/createBoard",
   async (boardData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/boards`, boardData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.post(`${Api_Base_Url}/boards`, boardData, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || "Create failed");
@@ -24,10 +22,7 @@ export const getBoards = createAsyncThunk(
   "boards/getBoards",
   async (params, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${Api_Base_Url}/boards`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
+      const res = await apiClient.get(`${Api_Base_Url}/boards`, {        params,
       });
       return res.data;
     } catch (error) {
@@ -41,10 +36,7 @@ export const updateBoard = createAsyncThunk(
   "boards/updateBoard",
   async ({ id, boardData }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/boards/${id}`, boardData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.put(`${Api_Base_Url}/boards/${id}`, boardData, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || "Update failed");
@@ -57,10 +49,7 @@ export const deleteBoard = createAsyncThunk(
   "boards/deleteBoard",
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.delete(`${Api_Base_Url}/boards/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.delete(`${Api_Base_Url}/boards/${id}`, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || "Delete failed");
@@ -73,11 +62,10 @@ export const assignSchoolBoards = createAsyncThunk(
   "boards/assignSchoolBoards",
   async (assignData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(
+      const res = await apiClient.put(
         `${Api_Base_Url}/boards/assignSchool-boards`,
         assignData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       return res.data;
     } catch (error) {
@@ -91,10 +79,8 @@ export const getSchoolBoards = createAsyncThunk(
   "boards/getSchoolBoards",
   async(schoolId,{rejectWithValue})=>{
      try {
-       const token = localStorage.getItem("accessToken");
-       const res = await axios.get(`${Api_Base_Url}/boards/school-boards/${schoolId}`,{
+       const res = await apiClient.get(`${Api_Base_Url}/boards/school-boards/${schoolId}`,{
         headers:{
-          Authorization:`Bearer ${token}`
         }
        })
        return res.data
@@ -109,11 +95,10 @@ export const removeSchoolBoard = createAsyncThunk(
   "boards/removeSchoolBoard",
   async (removeAssign, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(
+      const res = await apiClient.put(
         `${Api_Base_Url}/boards/removeAssignSchool-boards`,
         removeAssign,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       return res.data;
     } catch (error) {

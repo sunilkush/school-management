@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -10,10 +11,7 @@ export const createClass = createAsyncThunk(
     try {
      
       console.log("Creating class with data:", classData);
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/class/create`, classData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.post(`${Api_Base_Url}/class/create`, classData, {      });
 
       console.log("✅ Class created:", res.data);
       return res.data?.data || res.data; // safe return
@@ -30,11 +28,8 @@ export const fetchAllClasses = createAsyncThunk(
   async (payload, { rejectWithValue, signal }) => {
     try {
       const { schoolId, academicYearId } = payload || {}; // ✅ safe destructuring
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.get(`${Api_Base_Url}/class/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { schoolId, academicYearId },
+      const res = await apiClient.get(`${Api_Base_Url}/class/all`, {        params: { schoolId, academicYearId },
         signal, // ✅ axios v1+ supports signal (for cancellation)
       });
       
@@ -51,10 +46,7 @@ export const deleteClass = createAsyncThunk(
   "class/deleteClass",
   async (schoolClassId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      await axios.delete(`${Api_Base_Url}/class/${schoolClassId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiClient.delete(`${Api_Base_Url}/class/${schoolClassId}`, {      });
       return schoolClassId;
     } catch (error) {
       return rejectWithValue(
@@ -69,10 +61,7 @@ export const updateClass = createAsyncThunk(
   "class/updateClass",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/class/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.put(`${Api_Base_Url}/class/${id}`, data, {      });
 
      
       return res.data?.data;
@@ -88,10 +77,7 @@ export const assignsubjects = createAsyncThunk(
   "class/assignsubjects",
       async (data, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/class/assign-subjects`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.post(`${Api_Base_Url}/class/assign-subjects`, data, {      });
       return res.data?.data;
     } catch (error) {
       return rejectWithValue(
@@ -104,13 +90,10 @@ export const fetchAssignedClasses = createAsyncThunk(
   "class/fetchAssignedClasses",
   async (paramsData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${Api_Base_Url}/class/assign-teacher`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: paramsData,
+        {          params: paramsData,
         }
       );
      

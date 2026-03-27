@@ -17,6 +17,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title, Text } = Typography;
 
@@ -29,9 +30,9 @@ const AssignedClasses = () => {
 
   /* ================= LOCAL STORAGE ================= */
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = JSON.parse(memoryStorage.getItem("user") || "{}");
   const academic = JSON.parse(
-    localStorage.getItem("selectedAcademicYear") || "{}"
+    memoryStorage.getItem("selectedAcademicYear") || "{}"
   );
 
   const TeacherId = user?._id;

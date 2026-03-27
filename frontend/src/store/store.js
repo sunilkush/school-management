@@ -28,6 +28,7 @@ import chapterReducer from "../features/chapterSlice.js";
 import boardClassReducer from "../features/boardClassSlice.js";
 import roleUiReducer from "../features/roleUiSlice.js";
 import schoolClassReducer from "../features/schoolClassSlice.js"
+import { attachAuthStore } from "../api/httpClient";
 const store = configureStore({
   reducer: {
     role: roleReducer,
@@ -68,5 +69,7 @@ const store = configureStore({
   // eslint-disable-next-line no-undef
   devTools: process.env.NODE_ENV !== "production", // enable Redux DevTools in dev
 });
+
+attachAuthStore(store);
 
 export default store;
