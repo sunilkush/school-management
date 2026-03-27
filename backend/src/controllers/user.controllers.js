@@ -439,7 +439,7 @@ const logoutUser = asyncHandler(async (req, res) => {
  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
   }
 
   return res
@@ -707,6 +707,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+  
   if (!incomingRefreshToken) throw new ApiError(401, 'Refresh token is required');
 
   let decoded;
@@ -716,7 +717,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Invalid refresh token');
   }
 
-  const user = await User.findById(decoded?._id);
+  const user = await User.findById(decoded?._id).select("+refreshToken");
   if (!user || user.refreshToken !== incomingRefreshToken) {
     throw new ApiError(401, 'Refresh token expired or mismatched');
   }
@@ -725,8 +726,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' })
-    .cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' })
+    .cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' })
+    .cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' })
     .json(new ApiResponse(200, { accessToken, refreshToken }, 'Access token refreshed successfully'));
 });
 
