@@ -164,6 +164,7 @@ const initialState = {
   error: null,
   success: false,
   hasFetchedUsers: false,
+  isAuthInitialized: false
 };
 
 const authSlice = createSlice({

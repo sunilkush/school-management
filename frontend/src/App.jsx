@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -39,10 +39,10 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (accessToken) {
+    if (user?._id) {
       dispatch(fetchMyPermissions());
     }
-  }, [dispatch, accessToken]);
+  }, [dispatch, user]);
 
   useEffect(() => {
     if (profile?.statusCode === 401) {
@@ -58,15 +58,7 @@ function App() {
       </Suspense>
 
       <Suspense fallback={null}>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          pauseOnHover
-          theme="colored"
-        />
+        <ToastContainer position="top-right" autoClose={3000} />
       </Suspense>
 
       <Suspense fallback={null}>
