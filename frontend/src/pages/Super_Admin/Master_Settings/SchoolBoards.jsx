@@ -28,6 +28,7 @@ import {
 } from "../../../features/boardSlice.js";
 
 import { fetchSchools } from "../../../features/schoolSlice.js";
+import memoryStorage from "../../../utils/memoryStorage";
  
 
 const { Option } = Select;
@@ -66,7 +67,7 @@ const SchoolBoards = () => {
   // ==============================
   let createdByRole = null;
   try {
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(memoryStorage.getItem("user"));
     createdByRole = user?.role?.name || null;
   } catch {
     createdByRole = null;

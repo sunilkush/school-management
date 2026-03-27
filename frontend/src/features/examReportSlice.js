@@ -1,6 +1,7 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -12,9 +13,7 @@ export const fetchExamReport = createAsyncThunk(
   async (examId, { rejectWithValue }) => {
     try {
       
-     const res = await axios.get(`${API_BASE_URL}/exam-report/exam/${examId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+     const res = await apiClient.get(`${API_BASE_URL}/exam-report/exam/${examId}`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -27,9 +26,7 @@ export const fetchStudentReport = createAsyncThunk(
   "reports/fetchStudentReport",
   async (studentId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/exam-report/student/${studentId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+      const res = await apiClient.get(`${API_BASE_URL}/exam-report/student/${studentId}`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -42,9 +39,7 @@ export const fetchOverallReport = createAsyncThunk(
   "reports/fetchOverallReport",
   async (_, { rejectWithValue }) => {
     try {
-     const res = await axios.get(`${API_BASE_URL}/exam-report`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+     const res = await apiClient.get(`${API_BASE_URL}/exam-report`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -57,10 +52,8 @@ export const fetchReports = createAsyncThunk(
   "reports/fetchReports",
   async (filters, { rejectWithValue }) => {
     try {
-     const res = await axios.get(`${API_BASE_URL}/exam-report`, {
-        params: filters,
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+     const res = await apiClient.get(`${API_BASE_URL}/exam-report`, {
+        params: filters,      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -73,10 +66,8 @@ export const exportReportExcel = createAsyncThunk(
   "reports/exportExcel",
   async (filters, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/exam-report/export/excel`, {
-        params: filters,
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        responseType: "blob", // required for file
+      const res = await apiClient.get(`${API_BASE_URL}/exam-report/export/excel`, {
+        params: filters,        responseType: "blob", // required for file
       });
 
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -99,10 +90,8 @@ export const exportReportPDF = createAsyncThunk(
   "reports/exportPDF",
   async (filters, { rejectWithValue }) => {
     try {
-       const res = await axios.get(`${API_BASE_URL}/exam-report/export/pdf`, {
-        params: filters,
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        responseType: "blob",
+       const res = await apiClient.get(`${API_BASE_URL}/exam-report/export/pdf`, {
+        params: filters,        responseType: "blob",
       });
 
       const url = window.URL.createObjectURL(new Blob([res.data]));

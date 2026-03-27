@@ -1,4 +1,4 @@
-import axios from "axios";
+import apiClient from "../api/httpClient";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const App_Base_Url = import.meta.env.VITE_API_URL;
@@ -8,17 +8,14 @@ export const fetchDashboardSummary = createAsyncThunk(
   async ({ role, schoolId }, { rejectWithValue }) => {
     try {
 
-      const token = localStorage.getItem("accessToken");
-
       // Build query params conditionally
       let params = { role };
       if (role !== "Super Admin" && schoolId) {
         params.schoolId = schoolId;
       }
 
-      const response = await axios.get(`${App_Base_Url}/dashboard/summary`, {
+      const response = await apiClient.get(`${App_Base_Url}/dashboard/summary`, {
         params, // role + schoolId go here
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       // ✅ Extract inner data so reducer doesn't have to deal with wrapping object

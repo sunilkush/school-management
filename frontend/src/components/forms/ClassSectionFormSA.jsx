@@ -13,6 +13,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 
 import { createClass, updateClass } from "../../features/classSlice";
+import memoryStorage from "../../utils/memoryStorage";
 
 
 const { Option } = Select;
@@ -32,12 +33,12 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
 
   useEffect(() => {
     try {
-      const savedYear = localStorage.getItem("academicYear");
+      const savedYear = memoryStorage.getItem("academicYear");
       if (savedYear) {
         setAcademicYear(JSON.parse(savedYear));
       }
     } catch (err) {
-      console.error("Invalid academicYear in localStorage", err);
+      console.error("Invalid academicYear in memoryStorage", err);
     }
   }, []);
 
@@ -86,7 +87,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
     const payload = {
       ...values,
       schoolId,
-      academicYearId: academicYear?._id, // 🔥 always from localStorage
+      academicYearId: academicYear?._id, // 🔥 always from memoryStorage
       schoolClassId: initialData?._id,
     };
 

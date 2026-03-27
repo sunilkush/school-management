@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS (School Admin)
@@ -8,13 +9,11 @@ export const assignFeesToStudents = createAsyncThunk(
   "studentFee/assign",
   async (payload, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const { data } = await axios.post(
+      const { data } = await apiClient.post(
         `${Api_Base_Url}/student-fees/assign`,
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -32,11 +31,9 @@ export const fetchMyFees = createAsyncThunk(
   "studentFee/fetchMyFees",
   async (studentId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const { data } = await axios.get( `${Api_Base_Url}/student-fees/my/${studentId}`, {
+      const { data } = await apiClient.get( `${Api_Base_Url}/student-fees/my/${studentId}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
       return data.data;
@@ -53,13 +50,11 @@ export const payStudentFee = createAsyncThunk(
   "studentFee/pay",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const { data } = await axios.put(
+      const { data } = await apiClient.put(
         `${Api_Base_Url}/student-fees/pay/${id}`,
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -77,10 +72,8 @@ export const fetchStudentFeeSummary = createAsyncThunk(
   "studentFee/summary",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const { data } = await axios.get(`${Api_Base_Url}/student-fees/summary`, {
+      const { data } = await apiClient.get(`${Api_Base_Url}/student-fees/summary`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
       return data.data;

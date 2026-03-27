@@ -8,6 +8,7 @@ import ReportsChart from "./components/ReportsChart";
 import ExportButtons from "./components/ExportButtons";
 import CreateReportForm from "./components/CreateReportForm";
 import { fetchDashboardSummary } from "../../../features/dashboardSlice";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const Reports = () => {
   const dispatch = useDispatch();
@@ -22,8 +23,8 @@ const Reports = () => {
     status: "",
   });
 
-  // ✅ Correctly parse role from localStorage
-  const storedUser = localStorage.getItem("user");
+  // ✅ Correctly parse role from memoryStorage
+  const storedUser = memoryStorage.getItem("user");
   let parsedRole;
   
   if (storedUser) {
@@ -32,7 +33,7 @@ const Reports = () => {
       parsedRole = userObj?.role?.name;
       
     } catch (e) {
-      console.error("Invalid user object in localStorage", e);
+      console.error("Invalid user object in memoryStorage", e);
     }
   }
   

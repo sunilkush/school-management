@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
-const getToken = () => localStorage.getItem("accessToken");
 
 /* =====================================================
    🚀 THUNKS
@@ -13,10 +13,7 @@ export const fetchVisibleChapters = createAsyncThunk(
   "chapters/fetchVisible",
   async (params, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${Api_Base_Url}/chapters/visible`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params
+      const res = await apiClient.get(`${Api_Base_Url}/chapters/visible`, {        params
       });
       return res.data;
     } catch (error) {
@@ -32,9 +29,7 @@ export const fetchAllChapters = createAsyncThunk(
   "chapters/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${Api_Base_Url}/chapters`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        params,
+      const res = await apiClient.get(`${Api_Base_Url}/chapters`, {        params,
         withCredentials: true,
       });
       return res.data;
@@ -51,9 +46,7 @@ export const fetchChapterById = createAsyncThunk(
   "chapters/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${Api_Base_Url}/chapters/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        withCredentials: true,
+      const res = await apiClient.get(`${Api_Base_Url}/chapters/${id}`, {        withCredentials: true,
       });
       return res.data;
     } catch (error) {
@@ -69,10 +62,7 @@ export const createChapterThunk = createAsyncThunk(
   "chapters/create",
   async (payload, { rejectWithValue }) => {
     try {
-       const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/chapters`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        
+      const res = await apiClient.post(`${Api_Base_Url}/chapters`, payload, {        
       });
       return res.data;
     } catch (error) {
@@ -88,12 +78,10 @@ export const updateChapterThunk = createAsyncThunk(
   "chapters/update",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const res = await axios.patch(
+      const res = await apiClient.patch(
         `${Api_Base_Url}/chapters/${id}`,
         payload,
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-          withCredentials: true,
+        {          withCredentials: true,
         }
       );
       return res.data;
@@ -110,9 +98,7 @@ export const deleteChapterThunk = createAsyncThunk(
   "chapters/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.delete(`${Api_Base_Url}/chapters/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        withCredentials: true,
+      const res = await apiClient.delete(`${Api_Base_Url}/chapters/${id}`, {        withCredentials: true,
       });
       return { id, ...res.data };
     } catch (error) {
@@ -128,12 +114,10 @@ export const assignChapterToSchoolThunk = createAsyncThunk(
   "chapters/assignSchool",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${Api_Base_Url}/chapters/assign-school`,
         payload,
-        {
-          headers: { Authorization: `Bearer ${getToken()}` },
-          withCredentials: true,
+        {          withCredentials: true,
         }
       );
       return res.data;

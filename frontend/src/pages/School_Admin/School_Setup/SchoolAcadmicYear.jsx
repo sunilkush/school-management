@@ -35,7 +35,7 @@ const SchoolAcademicYear = () => {
   const [dates, setDates] = useState([]);
 
   // ✅ Dynamic schoolId
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = useSelector((state) => state.auth.user);
   const schoolId = user?.school?._id;
 
   /* ================= FETCH ================= */

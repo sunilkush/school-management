@@ -54,6 +54,12 @@ const LoginForm = () => {
     dispatch(loginUser(values));
   };
 
+  useEffect(() => {
+    return () => {
+      dispatch(resetState());
+    };
+  }, [dispatch]);
+
   // ✅ Clear error on typing
   const onValuesChange = () => {
     if (error) dispatch(resetState());

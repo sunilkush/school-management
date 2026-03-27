@@ -9,6 +9,7 @@ import {
 } from "../../../features/studentSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
 import { activeUser } from "../../../features/authSlice";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Option } = Select;
 
@@ -25,7 +26,7 @@ const StudentList = () => {
   const [selectedSection, setSelectedSection] = useState("all");
 
   const schoolId = user?.school?._id;
-  const academicYearId = JSON.parse(localStorage.getItem("selectedAcademicYear"))._id
+  const academicYearId = JSON.parse(memoryStorage.getItem("selectedAcademicYear"))._id
 
   // Fetch user if not loaded
   useEffect(() => {

@@ -1,13 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
-const getToken = () => localStorage.getItem("accessToken");
 
-const authHeader = () => ({
-  headers: { Authorization: `Bearer ${getToken()}` },
-});
+const authHeader = () => ({});
 
 /* ================= CREATE ================= */
 
@@ -15,7 +13,7 @@ export const createAcademicYear = createAsyncThunk(
   "academicYear/create",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${Api_Base_Url}/academicYear/create`,
         data,
         authHeader()
@@ -34,7 +32,7 @@ export const fetchAllAcademicYears = createAsyncThunk(
   "academicYear/fetchAll",
   async (schoolId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${Api_Base_Url}/academicYear/school/${schoolId}`,
         authHeader()
       );
@@ -52,7 +50,7 @@ export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
   async (schoolId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(
+      const res = await apiClient.get(
         `${Api_Base_Url}/academicYear/active/${schoolId}`,
         authHeader()
       );
@@ -70,7 +68,7 @@ export const setActiveAcademicYear = createAsyncThunk(
   "academicYear/setActive",
   async (academicYearId, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${Api_Base_Url}/academicYear/activate/${academicYearId}`,
         {},
         authHeader()
@@ -89,7 +87,7 @@ export const archiveAcademicYear = createAsyncThunk(
   "academicYear/archive",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
+      const res = await apiClient.post(
         `${Api_Base_Url}/academicYear/archive/${id}`,
         {},
         authHeader()
@@ -108,7 +106,7 @@ export const deleteAcademicYear = createAsyncThunk(
   "academicYear/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.delete(
+      const res = await apiClient.delete(
         `${Api_Base_Url}/academicYear/${id}`,
         authHeader()
       );
@@ -126,7 +124,7 @@ export const updateAcademicYear = createAsyncThunk(
   "academicYear/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(
+      const res = await apiClient.put(
         `${Api_Base_Url}/academicYear/${id}`,
         data,
         authHeader()
@@ -148,7 +146,7 @@ const academicYearSlice = createSlice({
     academicYears: [],
     activeYear: null,
     selectedAcademicYear:
-      JSON.parse(localStorage.getItem("selectedAcademicYear")) || null,
+      JSON.parse(memoryStorage.getItem("selectedAcademicYear")) || null,
     loading: false,
     error: null,
     message: null,
@@ -163,7 +161,7 @@ const academicYearSlice = createSlice({
     setSelectedAcademicYear: (state, action) => {
       state.selectedAcademicYear = action.payload;
 
-      localStorage.setItem(
+      memoryStorage.setItem(
         "selectedAcademicYear",
         JSON.stringify(action.payload)
       );
@@ -197,7 +195,7 @@ const academicYearSlice = createSlice({
         if (!state.selectedAcademicYear) {
           state.selectedAcademicYear = action.payload;
 
-          localStorage.setItem(
+          memoryStorage.setItem(
             "selectedAcademicYear",
             JSON.stringify(action.payload)
           );
@@ -212,7 +210,7 @@ const academicYearSlice = createSlice({
         state.activeYear = action.payload;
         state.selectedAcademicYear = action.payload;
 
-        localStorage.setItem(
+        memoryStorage.setItem(
           "selectedAcademicYear",
           JSON.stringify(action.payload)
         );

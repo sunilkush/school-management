@@ -18,6 +18,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getExams, deleteExam } from "../../../features/examSlice.js";
 import { useDispatch, useSelector } from "react-redux";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title, Text } = Typography;
 
@@ -29,7 +30,7 @@ const ExamsPage = () => {
   const { exams = [], loading } = useSelector((state) => state.exams || {});
 
   /* ✅ Academic Year + School */
-  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
+  const storeAcadmicYear = memoryStorage.getItem("selectedAcademicYear");
   const selectedAcademicYear = storeAcadmicYear
     ? JSON.parse(storeAcadmicYear)
     : null;

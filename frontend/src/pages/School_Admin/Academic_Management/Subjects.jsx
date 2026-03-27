@@ -4,6 +4,7 @@ import { Table, Tag, Button, Space, Modal, Input, Tooltip } from "antd";
 import { Edit, Trash2 } from "lucide-react";
 import SubjectForm from "../../../components/forms/SubjectForm.jsx";
 import { fetchAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Search } = Input;
 
@@ -17,7 +18,7 @@ const Subjects = () => {
     (state) => state.subject || {}
   );
 
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const storedUser = JSON.parse(memoryStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id;
   const role = storedUser?.role?.name || storedUser?.role;
 

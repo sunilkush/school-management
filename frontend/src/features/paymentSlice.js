@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 /* ============================
    ASYNC THUNKS
@@ -10,13 +11,11 @@ export const createPayment = createAsyncThunk(
     "payment/create",
     async (payload, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.post(
+            const res = await apiClient.post(
                 `${API_BASE_URL}/payments`,
                 payload,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                     }
                 }
             );
@@ -34,10 +33,8 @@ export const fetchPayments = createAsyncThunk(
     "payment/fetchAll",
     async (params = {}, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.get(`${API_BASE_URL}/payments`, {
+            const res = await apiClient.get(`${API_BASE_URL}/payments`, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
                 },
                 params,
             });
@@ -55,12 +52,10 @@ export const fetchPaymentById = createAsyncThunk(
     "payment/fetchById",
     async (id, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.get(
+            const res = await apiClient.get(
                 `${API_BASE_URL}/payments/${id}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
@@ -78,8 +73,7 @@ export const fetchPaymentSummary = createAsyncThunk(
     "payment/summary",
     async (params = {}, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.get(
+            const res = await apiClient.get(
                 `${API_BASE_URL}/payments/summary`,
                 {
 
@@ -87,7 +81,6 @@ export const fetchPaymentSummary = createAsyncThunk(
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                     }
                 }
             );

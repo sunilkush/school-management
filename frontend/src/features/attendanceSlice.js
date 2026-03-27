@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const token = localStorage.getItem("accessToken");
 // ================== Async Thunks ==================
 
 // 📌 Fetch Students for Attendance
@@ -11,10 +11,8 @@ export const fetchStudents = createAsyncThunk(
   async ({ schoolClassId, sectionId, date }, { rejectWithValue }) => {
     try {
       
-      const res = await axios.get(`${API_URL}/attendance/students`, {
-        params: { schoolClassId, sectionId, date },
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      const res = await apiClient.get(`${API_URL}/attendance/students`, {
+        params: { schoolClassId, sectionId, date },      }
     );
       return res.data;
     } catch (err) {
@@ -28,10 +26,8 @@ export const fetchTeachers = createAsyncThunk(
   "attendance/fetchTeachers",
   async ({ departmentId, subjectId, date }, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/attendance/teachers`, {
-        params: { departmentId, subjectId, date },
-        headers: { Authorization: `Bearer ${token}` }
-         
+      const res = await apiClient.get(`${API_URL}/attendance/teachers`, {
+        params: { departmentId, subjectId, date },         
       }      
     );
       return res.data;
@@ -46,7 +42,7 @@ export const submitAttendance = createAsyncThunk(
   "attendance/submit",
   async ({ records, role, date, schoolClassId, sectionId, departmentId, subjectId,schoolId,academicYearId,userId }, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_URL}/attendance/mark`, {
+      const res = await apiClient.post(`${API_URL}/attendance/mark`, {
         records,
         role,
         date,
@@ -59,7 +55,7 @@ export const submitAttendance = createAsyncThunk(
         userId
         
       },
-      {headers: { Authorization: `Bearer ${token}` }}
+      {}
     );
       return res.data;
     } catch (err) {
@@ -73,10 +69,10 @@ export const fetchReports = createAsyncThunk(
   "attendance/fetchReports",
   async ({ reportType, date, schoolClassId, sectionId }, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_URL}/attendance/reports`, {
+      const res = await apiClient.get(`${API_URL}/attendance/reports`, {
         params: { reportType, date, schoolClassId, sectionId },
       }
-      ,{headers: { Authorization: `Bearer ${token}` }});
+      ,{});
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);

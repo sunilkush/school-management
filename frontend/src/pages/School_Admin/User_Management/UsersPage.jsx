@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUser, deleteUser ,currentUser} from "../../../features/authSlice";
 import RegisterForm from "../../../components/forms/RegisterFrom";
 import { useNavigate } from "react-router-dom";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title } = Typography;
 
@@ -45,7 +46,7 @@ const UsersPage = () => {
   // Role
   const role =
     loggedInUser?.role?.name ||
-    JSON.parse(localStorage.getItem("user"))?.role?.name;
+    JSON.parse(memoryStorage.getItem("user"))?.role?.name;
 
 
 

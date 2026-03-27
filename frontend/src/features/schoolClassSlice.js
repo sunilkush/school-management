@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const API = import.meta.env.VITE_API_URL;
 
 // 🔐 Token helper
-const getToken = () => localStorage.getItem("accessToken");
 
 
 // ==============================
@@ -15,9 +15,7 @@ export const createSchoolClass = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       console.log(data)
-      const res = await axios.post(`${API}/school-class`, data, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiClient.post(`${API}/school-class`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -34,9 +32,7 @@ export const getClassData = createAsyncThunk(
   "schoolClass/classes",
   async(params,{rejectWithValue})=>{
      try {
-      const res = await axios.get(`${API}/school-class/class-detailes`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        params, // { schoolId, academicYearId }
+      const res = await apiClient.get(`${API}/school-class/class-detailes`, {        params, // { schoolId, academicYearId }
       });
       return res.data.data;
     } catch (err) {
@@ -53,9 +49,7 @@ export const fetchSchoolClasses = createAsyncThunk(
   "schoolClass/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API}/school-class`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-        params, // { schoolId, academicYearId }
+      const res = await apiClient.get(`${API}/school-class`, {        params, // { schoolId, academicYearId }
       });
       return res.data.data;
     } catch (err) {
@@ -74,9 +68,7 @@ export const fetchSchoolClassById = createAsyncThunk(
   "schoolClass/fetchOne",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API}/school-class/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiClient.get(`${API}/school-class/${id}`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -94,9 +86,7 @@ export const updateSchoolClass = createAsyncThunk(
   "schoolClass/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${API}/school-class/${id}`, data, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await apiClient.put(`${API}/school-class/${id}`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -114,9 +104,7 @@ export const deleteSchoolClass = createAsyncThunk(
   "schoolClass/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API}/school-class/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      await apiClient.delete(`${API}/school-class/${id}`, {      });
       return id;
     } catch (err) {
       return rejectWithValue(

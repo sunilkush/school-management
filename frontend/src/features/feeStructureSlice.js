@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+import memoryStorage from "../utils/memoryStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -8,10 +9,8 @@ export const createFeeStructure = createAsyncThunk(
     "feeStructure/create",
     async (data, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.post(`${API_BASE_URL}/fee-structures`, data, {
+            const res = await apiClient.post(`${API_BASE_URL}/fee-structures`, data, {
                 headers: {
-                    "Authorization": `Bearer ${token}`
                 }
             });
             return res.data.data;
@@ -28,10 +27,8 @@ export const fetchFeeStructures = createAsyncThunk(
     "feeStructure/getAll",
     async (params, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.get(`${API_BASE_URL}/fee-structures`, {
+            const res = await apiClient.get(`${API_BASE_URL}/fee-structures`, {
                 headers: {
-                    "Authorization": `Bearer ${token}`
                 },
                 params
             });
@@ -49,10 +46,8 @@ export const updateFeeStructure = createAsyncThunk(
     "feeStructure/update",
     async ({ id, data }, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const res = await axios.put(`${API_BASE_URL}/fee-structures/${id}`, data, {
+            const res = await apiClient.put(`${API_BASE_URL}/fee-structures/${id}`, data, {
                 headers: {
-                    "Authorization": `Bearer ${token}`
                 }
             });
             return res.data.data;
@@ -69,10 +64,8 @@ export const deleteFeeStructure = createAsyncThunk(
     "feeStructure/delete",
     async (id, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem("accessToken");
-            await axios.delete(`${API_BASE_URL}/fee-structures/${id}`, {
+            await apiClient.delete(`${API_BASE_URL}/fee-structures/${id}`, {
                 headers: {
-                    "Authorization": `Bearer ${token}`
                 }
             });
             return id;

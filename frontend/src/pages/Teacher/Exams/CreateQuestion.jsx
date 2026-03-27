@@ -20,6 +20,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { fetchAllSubjects } from "../../../features/subjectSlice";
 import { fetchAllClasses } from "../../../features/classSlice";
 import { createQuestions } from "../../../features/questionSlice";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -32,7 +33,7 @@ const CreateQuestion = () => {
   const { subjects = [] } = useSelector((state) => state.subject);
   const { classList = [] } = useSelector((state) => state.class);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(memoryStorage.getItem("user"));
   const schoolId = user?.school?._id;
 
   const [options, setOptions] = useState([]);

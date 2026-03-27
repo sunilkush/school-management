@@ -4,6 +4,7 @@ import SubjectForm from "../../../components/forms/SubjectForm.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
 import * as XLSX from "xlsx";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -19,7 +20,7 @@ const SubjectsAdmin = () => {
   const { schools = [] } = useSelector((state) => state.school);
 
   // Get logged-in user info
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const storedUser = JSON.parse(memoryStorage.getItem("user")) || {};
   const schoolId = storedUser?.school?._id || "";
   const role = storedUser?.role?.name || "";
 
