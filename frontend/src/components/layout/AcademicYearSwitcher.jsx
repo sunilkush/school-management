@@ -1,15 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Select, Spin, Typography } from "antd";
-
-// import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 
 const { Option } = Select;
 const { Text } = Typography;
 
 const AcademicYearSwitcher = ({ onChange }) => {
   const dispatch = useDispatch();
-  const hasSentRef = useRef(false); // 🔥 prevent multiple calls
 
   const { user } = useSelector((state) => state.auth);
   const { activeYear, loading, error } = useSelector(
@@ -18,68 +16,61 @@ const AcademicYearSwitcher = ({ onChange }) => {
 
   const schoolId = user?.school?._id;
 
-  /* ================= FETCH ACTIVE YEAR ================= */
+  const hasActiveYear = Boolean(activeYear);
 
+  // 🔥 Fetch only active year
   useEffect(() => {
-    if (schoolId && !activeYear) {
-      // 🔥 enable this if not already loaded globally
-      // dispatch(fetchActiveAcademicYear(schoolId));
+    if (!schoolId) return;
+
+    if (!hasActiveYear) {
+      dispatch(fetchActiveAcademicYear(schoolId));
     }
-  }, [dispatch, schoolId, activeYear]);
+  }, [dispatch, schoolId, hasActiveYear]);
 
-  /* ================= SEND TO PARENT ================= */
+  // 🔥 Format date
+  const formatDate = useMemo(
+    () => (dateStr) =>
+      dateStr
+        ? new Date(dateStr).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : "",
+    []
+  );
 
-  useEffect(() => {
-    if (activeYear && !hasSentRef.current) {
-      hasSentRef.current = true;
+  // 🔥 Handle change (only one active year)
+  const handleChange = () => {
+    if (activeYear) {
       onChange?.(activeYear);
     }
-  }, [activeYear, onChange]);
-
-  /* ================= DATE FORMAT ================= */
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-
-    const date = new Date(dateStr);
-    if (isNaN(date)) return "";
-
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
-  /* ================= LOADING ================= */
-
-  if (loading) {
+  // 🔥 Loading state
+  if (loading && !hasActiveYear) {
     return <Spin size="small" />;
   }
 
-  /* ================= ERROR ================= */
-
+  // 🔥 Error state
   if (error) {
     return <Text type="danger">{error}</Text>;
   }
 
-  /* ================= UI ================= */
-
   return (
     <Select
-      style={{ width: 240 }}
-      value={activeYear?._id || undefined}
-      placeholder="No Active Year"
-      disabled
+      style={{ width: 220 }}
+      placeholder="Academic Year"
+      value={activeYear?._id}
+      onChange={handleChange}
+      loading={loading}
+      disabled={true}
+
     >
-      {activeYear ? (
+      {activeYear && (
         <Option value={activeYear._id}>
           {formatDate(activeYear.startDate)} -{" "}
           {formatDate(activeYear.endDate)}
-        </Option>
-      ) : (
-        <Option value="no-year" disabled>
-          No Active Academic Year
         </Option>
       )}
     </Select>

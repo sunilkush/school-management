@@ -22,7 +22,7 @@ import { fetchAllClasses } from "../../../features/classSlice";
 
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
-import memoryStorage from "../../../utils/memoryStorage";
+
 
 const QuestionBank = () => {
   const dispatch = useDispatch();
@@ -49,7 +49,7 @@ const QuestionBank = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
 
   /* ================= User ================= */
-  const user = JSON.parse(memoryStorage.getItem("user"));
+  const {user} = useSelector((state)=>state.auth)
   const schoolId = user?.school?._id;
 
   /* ================= Effects ================= */

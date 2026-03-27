@@ -1,13 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 const Api_Base_Url = import.meta.env.VITE_API_URL
 export const createEmployee = createAsyncThunk(
     "employee/createEmployee",
     async (formData, { rejectWithValue }) => {
         try {
             const res = await apiClient.post(
-                `${Api_Base_Url}/employee`,
+                `/employee`,
                 formData, {
                 headers: {
                 }

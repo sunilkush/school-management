@@ -1,16 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-// 🔐 Dynamic auth header (IMPORTANT FIX)
-const getAuthConfig = () => {
-  return {
-    headers: {
-    },
-  };
-};
+
 
 // ---------------- Async Thunks ---------------- //
 
@@ -20,9 +14,9 @@ export const createExam = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API_BASE_URL}/exams/`,
+        `/exams/`,
         payload,
-        getAuthConfig()
+       
       );
       return res.data.data;
     } catch (error) {
@@ -40,8 +34,8 @@ export const getExams = createAsyncThunk(
     try {
       const query = new URLSearchParams(params).toString();
       const res = await apiClient.get(
-        `${API_BASE_URL}/exams?${query}`,
-        getAuthConfig()
+        `/exams?${query}`,
+       
       );
       return res.data.data.exams;
     } catch (error) {
@@ -62,8 +56,8 @@ export const getExamById = createAsyncThunk(
       }
 
       const res = await apiClient.get(
-        `${API_BASE_URL}/exams/${examId}`,
-        getAuthConfig()
+        `/exams/${examId}`,
+       
       );
 
       return res.data.data;
@@ -86,9 +80,9 @@ export const updateExam = createAsyncThunk(
       }
 
       const res = await apiClient.put(
-        `${API_BASE_URL}/exams/${Id}`,
+        `/exams/${Id}`,
         payload,
-        getAuthConfig()
+       
       );
 
       return res.data.data;
@@ -108,8 +102,8 @@ export const deleteExam = createAsyncThunk(
       if (!examId) throw new Error("Invalid exam id");
 
       const res = await apiClient.delete(
-        `${API_BASE_URL}/exams/${examId}`,
-        getAuthConfig()
+        `/exams/${examId}`,
+       
       );
 
       return res.data.data;
@@ -129,9 +123,9 @@ export const publishExam = createAsyncThunk(
       if (!examId) throw new Error("Invalid exam id");
 
       const res = await apiClient.put(
-        `${API_BASE_URL}/exams/${examId}/publish`,
+        `/exams/${examId}/publish`,
         {}, // ✅ empty body FIX
-        getAuthConfig()
+       
       );
 
       return res.data.data;
@@ -149,9 +143,9 @@ export const startExamAttempt = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API_BASE_URL}/exams/attempt/start`,
+        `/exams/attempt/start`,
         payload,
-        getAuthConfig()
+       
       );
       return res.data.data;
     } catch (error) {
@@ -167,9 +161,9 @@ export const submitExamAttempt = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API_BASE_URL}/exams/attempt/submit`,
+        `/exams/attempt/submit`,
         payload,
-        getAuthConfig()
+       
       );
       return res.data.data;
     } catch (error) {
@@ -185,9 +179,9 @@ export const evaluateAttempt = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API_BASE_URL}/exams/attempt/evaluate`,
+        `/exams/attempt/evaluate`,
         payload,
-        getAuthConfig()
+       
       );
       return res.data.data;
     } catch (error) {

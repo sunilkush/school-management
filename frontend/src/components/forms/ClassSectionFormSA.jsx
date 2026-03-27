@@ -3,7 +3,7 @@ import {
   Form,
   Input,
   Select,
- 
+
   Card,
   Row,
   Col,
@@ -13,7 +13,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 
 import { createClass, updateClass } from "../../features/classSlice";
-import memoryStorage from "../../utils/memoryStorage";
+
 
 
 const { Option } = Select;
@@ -22,23 +22,22 @@ const { Option } = Select;
 const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-   const { user } = useSelector((s) => s.auth);
- 
-
+  const user = useSelector((state) => state.auth.user);
   const schoolId = user?.school?._id;
-  
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+  const academicYearId = selectedAcademicYear._id
 
-  // 🔥 LocalStorage se academic year
+  // 🔥 Dynamic academic year
   const [academicYear, setAcademicYear] = useState(null);
 
   useEffect(() => {
     try {
-      const savedYear = memoryStorage.getItem("academicYear");
+      const savedYear = academicYearId
       if (savedYear) {
         setAcademicYear(JSON.parse(savedYear));
       }
     } catch (err) {
-      console.error("Invalid academicYear in memoryStorage", err);
+      console.error("Invalid academicYear in dynamic", err);
     }
   }, []);
 
@@ -87,7 +86,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
     const payload = {
       ...values,
       schoolId,
-      academicYearId: academicYear?._id, // 🔥 always from memoryStorage
+      academicYearId: academicYear?._id, // 🔥 always from 
       schoolClassId: initialData?._id,
     };
 

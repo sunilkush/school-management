@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -145,8 +145,7 @@ const academicYearSlice = createSlice({
   initialState: {
     academicYears: [],
     activeYear: null,
-    selectedAcademicYear:
-      JSON.parse(memoryStorage.getItem("selectedAcademicYear")) || null,
+    selectedAcademicYear: null,
     loading: false,
     error: null,
     message: null,
@@ -161,10 +160,7 @@ const academicYearSlice = createSlice({
     setSelectedAcademicYear: (state, action) => {
       state.selectedAcademicYear = action.payload;
 
-      memoryStorage.setItem(
-        "selectedAcademicYear",
-        JSON.stringify(action.payload)
-      );
+     
     },
   },
 
@@ -195,10 +191,7 @@ const academicYearSlice = createSlice({
         if (!state.selectedAcademicYear) {
           state.selectedAcademicYear = action.payload;
 
-          memoryStorage.setItem(
-            "selectedAcademicYear",
-            JSON.stringify(action.payload)
-          );
+         
         }
       })
 
@@ -210,10 +203,7 @@ const academicYearSlice = createSlice({
         state.activeYear = action.payload;
         state.selectedAcademicYear = action.payload;
 
-        memoryStorage.setItem(
-          "selectedAcademicYear",
-          JSON.stringify(action.payload)
-        );
+       
 
         state.message = "Active academic year updated";
 

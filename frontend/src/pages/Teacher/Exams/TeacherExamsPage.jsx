@@ -20,7 +20,7 @@ import { getExams } from "../../../features/examSlice.js";
 import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "antd";
 import EditExamForm from "./EditExamForm";
-import memoryStorage from "../../../utils/memoryStorage";
+
 const { Title, Text } = Typography;
 
 const TeacherExamsPage = () => {
@@ -32,10 +32,7 @@ const [selectedExamId, setSelectedExamId] = useState(null);
   const { exams = [], loading } = useSelector((state) => state.exams || {});
 
   /* ✅ Academic Year + School */
-  const storeAcadmicYear = memoryStorage.getItem("selectedAcademicYear");
-  const selectedAcademicYear = storeAcadmicYear
-    ? JSON.parse(storeAcadmicYear)
-    : null;
+  const {selectedAcademicYear} = useSelector((state) => state.acadmicYear)
 
   const academicYearId = selectedAcademicYear?._id || null;
   const schoolId = selectedAcademicYear?.schoolId || null;

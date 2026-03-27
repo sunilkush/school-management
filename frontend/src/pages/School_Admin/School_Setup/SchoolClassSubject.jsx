@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchAllSubjects } from "../../../features/subjectSlice";
 import { addSubjectToSection } from "../../../features/sectionSlice";
-import memoryStorage from "../../../utils/memoryStorage";
+
 
 const { Option } = Select;
 
@@ -28,7 +28,7 @@ const SchoolClassSubject = () => {
   const { schoolClasses = [], loading } = useSelector(
     (state) => state.schoolClass || {}
   );
-
+   
   const { subjects = [] } = useSelector(
     (state) => state.subject || {}
   );
@@ -36,16 +36,17 @@ const SchoolClassSubject = () => {
   const [mapping, setMapping] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
 
-  const user = JSON.parse(memoryStorage.getItem("user") || "{}");
+  const user = useSelector((state) => state.auth.user);
   const schoolId = user?.school?._id;
-  const acadmicYearId = JSON.parse(memoryStorage.getItem("selectedAcademicYear"))._id
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+  const academicYearId = selectedAcademicYear._id
 
   // 🔹 Fetch
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(fetchSchoolClasses({ schoolId,acadmicYearId }));
+    dispatch(fetchSchoolClasses({ schoolId,academicYearId }));
     dispatch(fetchAllSubjects({ isGlobal: true }));
-  }, [dispatch, schoolId,acadmicYearId]);
+  }, [dispatch, schoolId,academicYearId]);
 
   // 🔥 Pre-fill mapping (IMPORTANT)
   useEffect(() => {

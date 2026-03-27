@@ -19,7 +19,7 @@ import {
   createStudent,
 } from "../../features/studentSlice";
 import { getClassData } from "../../features/schoolClassSlice";
-import memoryStorage from "../../utils/memoryStorage";
+
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -51,10 +51,8 @@ const AdmissionForm = () => {
       );
 
   const schoolId = user?.school?._id;
-  const academicYear = JSON.parse(
-    memoryStorage.getItem("selectedAcademicYear") || "{}"
-  );
-  const academicYearId = academicYear?._id;
+ const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+   const academicYearId = selectedAcademicYear._id
 
   const [sections, setSections] = useState([]);
 

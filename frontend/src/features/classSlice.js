@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -11,7 +11,7 @@ export const createClass = createAsyncThunk(
     try {
      
       console.log("Creating class with data:", classData);
-      const res = await apiClient.post(`${Api_Base_Url}/class/create`, classData, {      });
+      const res = await apiClient.post(`/class/create`, classData, {      });
 
       console.log("✅ Class created:", res.data);
       return res.data?.data || res.data; // safe return
@@ -29,7 +29,7 @@ export const fetchAllClasses = createAsyncThunk(
     try {
       const { schoolId, academicYearId } = payload || {}; // ✅ safe destructuring
 
-      const res = await apiClient.get(`${Api_Base_Url}/class/all`, {        params: { schoolId, academicYearId },
+      const res = await apiClient.get(`/class/all`, {        params: { schoolId, academicYearId },
         signal, // ✅ axios v1+ supports signal (for cancellation)
       });
       
@@ -46,7 +46,7 @@ export const deleteClass = createAsyncThunk(
   "class/deleteClass",
   async (schoolClassId, { rejectWithValue }) => {
     try {
-      await apiClient.delete(`${Api_Base_Url}/class/${schoolClassId}`, {      });
+      await apiClient.delete(`/class/${schoolClassId}`, {      });
       return schoolClassId;
     } catch (error) {
       return rejectWithValue(
@@ -61,7 +61,7 @@ export const updateClass = createAsyncThunk(
   "class/updateClass",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${Api_Base_Url}/class/${id}`, data, {      });
+      const res = await apiClient.put(`/class/${id}`, data, {      });
 
      
       return res.data?.data;
@@ -77,7 +77,7 @@ export const assignsubjects = createAsyncThunk(
   "class/assignsubjects",
       async (data, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${Api_Base_Url}/class/assign-subjects`, data, {      });
+      const res = await apiClient.post(`/class/assign-subjects`, data, {      });
       return res.data?.data;
     } catch (error) {
       return rejectWithValue(
@@ -92,7 +92,7 @@ export const fetchAssignedClasses = createAsyncThunk(
     try {
 
       const res = await apiClient.get(
-        `${Api_Base_Url}/class/assign-teacher`,
+        `/class/assign-teacher`,
         {          params: paramsData,
         }
       );

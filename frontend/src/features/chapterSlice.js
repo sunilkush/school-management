@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
 
-const Api_Base_Url = import.meta.env.VITE_API_URL;
 
 /* =====================================================
    🚀 THUNKS
@@ -13,7 +11,7 @@ export const fetchVisibleChapters = createAsyncThunk(
   "chapters/fetchVisible",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${Api_Base_Url}/chapters/visible`, {        params
+      const res = await apiClient.get(`/chapters/visible`, {        params
       });
       return res.data;
     } catch (error) {
@@ -29,7 +27,7 @@ export const fetchAllChapters = createAsyncThunk(
   "chapters/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${Api_Base_Url}/chapters`, {        params,
+      const res = await apiClient.get(`/chapters`, {        params,
         withCredentials: true,
       });
       return res.data;
@@ -46,7 +44,7 @@ export const fetchChapterById = createAsyncThunk(
   "chapters/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${Api_Base_Url}/chapters/${id}`, {        withCredentials: true,
+      const res = await apiClient.get(`/chapters/${id}`, {        withCredentials: true,
       });
       return res.data;
     } catch (error) {
@@ -62,7 +60,7 @@ export const createChapterThunk = createAsyncThunk(
   "chapters/create",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${Api_Base_Url}/chapters`, payload, {        
+      const res = await apiClient.post(`/chapters`, payload, {        
       });
       return res.data;
     } catch (error) {
@@ -79,7 +77,7 @@ export const updateChapterThunk = createAsyncThunk(
   async ({ id, payload }, { rejectWithValue }) => {
     try {
       const res = await apiClient.patch(
-        `${Api_Base_Url}/chapters/${id}`,
+        `/chapters/${id}`,
         payload,
         {          withCredentials: true,
         }
@@ -98,7 +96,7 @@ export const deleteChapterThunk = createAsyncThunk(
   "chapters/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`${Api_Base_Url}/chapters/${id}`, {        withCredentials: true,
+      const res = await apiClient.delete(`/chapters/${id}`, {        withCredentials: true,
       });
       return { id, ...res.data };
     } catch (error) {
@@ -115,7 +113,7 @@ export const assignChapterToSchoolThunk = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${Api_Base_Url}/chapters/assign-school`,
+        `/chapters/assign-school`,
         payload,
         {          withCredentials: true,
         }

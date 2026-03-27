@@ -24,7 +24,7 @@ import {
   fetchSchoolClasses,
 } from "../../../features/schoolClassSlice";
 import { createSection } from "../../../features/sectionSlice";
-import memoryStorage from "../../../utils/memoryStorage";
+
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -49,9 +49,10 @@ const SchoolClass = () => {
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [sectionInputs, setSectionInputs] = useState({});
 
-  const user = JSON.parse(memoryStorage.getItem("user") || "{}");
+  const user = useSelector((state) => state.auth.user);
   const schoolId = user?.school?._id;
-  const academicYearId = JSON.parse(memoryStorage.getItem("selectedAcademicYear"))._id
+ 
+  const academicYearId = selectedAcademicYear._id
   /* ================= LOAD ================= */
   useEffect(() => {
     if (schoolId) {

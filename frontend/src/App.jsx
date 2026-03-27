@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -23,7 +23,7 @@ const Loader = lazy(() => import("./components/Loader/Loader"));
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { profile, accessToken } = useSelector((state) => state.auth);
+  const { profile,user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const bootstrapAuth = async () => {

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 /* =====================================================
    ✅ CREATE FEE HEAD
@@ -11,7 +11,7 @@ export const createFeeHead = createAsyncThunk(
     try {
 
       const res = await apiClient.post(
-        `${API_BASE_URL}/fee-heads`,
+        `/fee-heads`,
         data, // 👈 normal JSON
         {
           headers: {
@@ -33,7 +33,7 @@ export const fetchFeeHeads = createAsyncThunk(
   "feeHeads/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_BASE_URL}/fee-heads/`, {
+      const res = await apiClient.get(`/fee-heads/`, {
         headers: {
         },
         params,
@@ -52,7 +52,7 @@ export const fetchFeeHeadsBySchool = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.get(`${API_BASE_URL}/fee-heads/by-school/`, {
+      const res = await apiClient.get(`/fee-heads/by-school/`, {
         headers: {
         },
         params, // ✅ yahin aayega

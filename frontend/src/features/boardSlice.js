@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -9,7 +9,7 @@ export const createBoard = createAsyncThunk(
   "boards/createBoard",
   async (boardData, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${Api_Base_Url}/boards`, boardData, {      });
+      const res = await apiClient.post(`/boards`, boardData, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || "Create failed");
@@ -22,7 +22,7 @@ export const getBoards = createAsyncThunk(
   "boards/getBoards",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${Api_Base_Url}/boards`, {        params,
+      const res = await apiClient.get(`/boards`, {        params,
       });
       return res.data;
     } catch (error) {
@@ -36,7 +36,7 @@ export const updateBoard = createAsyncThunk(
   "boards/updateBoard",
   async ({ id, boardData }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${Api_Base_Url}/boards/${id}`, boardData, {      });
+      const res = await apiClient.put(`/boards/${id}`, boardData, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || "Update failed");
@@ -49,7 +49,7 @@ export const deleteBoard = createAsyncThunk(
   "boards/deleteBoard",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`${Api_Base_Url}/boards/${id}`, {      });
+      const res = await apiClient.delete(`/boards/${id}`, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || "Delete failed");
@@ -63,7 +63,7 @@ export const assignSchoolBoards = createAsyncThunk(
   async (assignData, { rejectWithValue }) => {
     try {
       const res = await apiClient.put(
-        `${Api_Base_Url}/boards/assignSchool-boards`,
+        `/boards/assignSchool-boards`,
         assignData,
         {}
       );
@@ -79,7 +79,7 @@ export const getSchoolBoards = createAsyncThunk(
   "boards/getSchoolBoards",
   async(schoolId,{rejectWithValue})=>{
      try {
-       const res = await apiClient.get(`${Api_Base_Url}/boards/school-boards/${schoolId}`,{
+       const res = await apiClient.get(`/boards/school-boards/${schoolId}`,{
         headers:{
         }
        })
@@ -96,7 +96,7 @@ export const removeSchoolBoard = createAsyncThunk(
   async (removeAssign, { rejectWithValue }) => {
     try {
       const res = await apiClient.put(
-        `${Api_Base_Url}/boards/removeAssignSchool-boards`,
+        `/boards/removeAssignSchool-boards`,
         removeAssign,
         {}
       );

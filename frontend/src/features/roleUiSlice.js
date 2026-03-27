@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -8,9 +8,9 @@ export const fetchMyPermissions = createAsyncThunk(
   "roleUi/fetchMyPermissions",
   async (_, { rejectWithValue }) => {
     try {
-      if (!token) return rejectWithValue("Access token missing");
+    
 
-      const res = await apiClient.get(`${API_BASE_URL}/user/my-permissions`, {
+      const res = await apiClient.get(`/user/my-permissions`, {
         headers: {
         },
       });

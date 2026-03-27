@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 import { toast } from "react-toastify"; // ✅ FIX: import toast
-import memoryStorage from "../utils/memoryStorage";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // ---------------- Async Thunks ---------------- //
 
@@ -12,7 +10,7 @@ export const createQuestions = createAsyncThunk(
   "questions/createQuestions",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API_BASE_URL}/questions/create`, payload,{
+      const res = await apiClient.post(`/questions/create`, payload,{
           headers: {
             "Content-Type": "application/json",
           },
@@ -32,7 +30,7 @@ export const bulkCreateQuestions = createAsyncThunk(
   async (questions, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API_BASE_URL}/questions/bulk`,
+        `/questions/bulk`,
         { questions },
         {
           headers: {
@@ -56,7 +54,7 @@ export const getQuestions = createAsyncThunk(
     try {
       const query = new URLSearchParams(params).toString();
       const res = await apiClient.get(
-        `${API_BASE_URL}/questions/getQuestions?${query}`,
+        `/questions/getQuestions?${query}`,
         {
           headers: {
           },
@@ -75,7 +73,7 @@ export const getQuestionById = createAsyncThunk(
   "questions/getQuestionById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_BASE_URL}/questions/${id}`);
+      const res = await apiClient.get(`/questions/${id}`);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -88,7 +86,7 @@ export const updateQuestion = createAsyncThunk(
   "questions/updateQuestion",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${API_BASE_URL}/questions/${id}`, payload);
+      const res = await apiClient.put(`/questions/${id}`, payload);
       toast.success("Question updated successfully!");
       return res.data.data;
     } catch (error) {
@@ -103,7 +101,7 @@ export const deleteQuestion = createAsyncThunk(
   "questions/deleteQuestion",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`${API_BASE_URL}/questions/${id}`);
+      const res = await apiClient.delete(`/questions/${id}`);
       toast.success("Question deleted!");
       return res.data.data;
     } catch (error) {
@@ -118,7 +116,7 @@ export const toggleQuestionStatus = createAsyncThunk(
   "questions/toggleQuestionStatus",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.patch(`${API_BASE_URL}/questions/${id}/toggle`);
+      const res = await apiClient.patch(`/questions/${id}/toggle`);
       toast.success("Question status updated!");
       return res.data.data;
     } catch (error) {

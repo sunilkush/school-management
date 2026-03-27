@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 /* ============================
    ASYNC THUNKS
 ============================ */
@@ -12,7 +11,7 @@ export const createPayment = createAsyncThunk(
     async (payload, { rejectWithValue }) => {
         try {
             const res = await apiClient.post(
-                `${API_BASE_URL}/payments`,
+                `/payments`,
                 payload,
                 {
                     headers: {
@@ -33,7 +32,7 @@ export const fetchPayments = createAsyncThunk(
     "payment/fetchAll",
     async (params = {}, { rejectWithValue }) => {
         try {
-            const res = await apiClient.get(`${API_BASE_URL}/payments`, {
+            const res = await apiClient.get(`/payments`, {
                 headers: {
                 },
                 params,
@@ -53,7 +52,7 @@ export const fetchPaymentById = createAsyncThunk(
     async (id, { rejectWithValue }) => {
         try {
             const res = await apiClient.get(
-                `${API_BASE_URL}/payments/${id}`,
+                `/payments/${id}`,
                 {
                     headers: {
                     },
@@ -74,7 +73,7 @@ export const fetchPaymentSummary = createAsyncThunk(
     async (params = {}, { rejectWithValue }) => {
         try {
             const res = await apiClient.get(
-                `${API_BASE_URL}/payments/summary`,
+                `/payments/summary`,
                 {
 
                     params,
