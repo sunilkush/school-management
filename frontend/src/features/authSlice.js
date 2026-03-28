@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import { clearAccessToken, setAccessToken } from "../api/authToken";
+import { clearAccessToken, getAccessToken, setAccessToken } from "../api/authToken";
 
 export const loginUser = createAsyncThunk("auth/login", async (data, { rejectWithValue }) => {
   try {
@@ -13,18 +13,27 @@ export const loginUser = createAsyncThunk("auth/login", async (data, { rejectWit
   }
 });
 
-export const initializeAuth = createAsyncThunk("auth/initialize", async (_, { rejectWithValue }) => {
-  try {
-    const res = await apiClient.post("/user/refresh-token", {});
-    const payload = res.data?.data || {};
-    if (!payload?.accessToken) throw new Error("Session not found");
-    setAccessToken(payload.accessToken);
-    return payload;
-  } catch (err) {
-    clearAccessToken();
-    return rejectWithValue(err.response?.data?.message || "Session expired");
+export const initializeAuth = createAsyncThunk(
+  "auth/initialize",
+  async (_, { getState, rejectWithValue }) => {
+    const existingToken = getState().auth?.accessToken || getAccessToken();
+
+    if (existingToken) {
+      setAccessToken(existingToken);
+      return { accessToken: existingToken, user: getState().auth?.user ?? null, skipped: true };
+    }
+
+    try {
+      const res = await apiClient.post("/user/refresh-token", {});
+      const payload = res.data?.data || {};
+      if (!payload?.accessToken) throw new Error("Session not found");
+      setAccessToken(payload.accessToken);
+      return payload;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Session expired");
+    }
   }
-});
+);
 
 export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
   try {
@@ -82,14 +91,23 @@ export const registerUser = createAsyncThunk("auth/register", async (data, { rej
   }
 });
 
-export const currentUser = createAsyncThunk("auth/profile", async (_, { rejectWithValue }) => {
-  try {
-    const res = await apiClient.get("/user/profile");
-    return res.data.data;
-  } catch (err) {
-    return rejectWithValue(err.response?.data?.message || err.message || "Something went wrong");
+export const currentUser = createAsyncThunk(
+  "auth/profile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/user/profile");
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message || "Something went wrong");
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const token = getState().auth?.accessToken || getAccessToken();
+      return Boolean(token);
+    },
   }
-});
+);
 
 export const updateUser = createAsyncThunk("auth/updateUser", async (data, { rejectWithValue }) => {
   try {
@@ -207,13 +225,15 @@ const authSlice = createSlice({
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.user = action.payload?.user ?? state.user;
-        state.accessToken = action.payload.accessToken;
+        state.accessToken = action.payload?.accessToken ?? state.accessToken;
         state.profile = action.payload?.user ?? state.profile;
       })
       .addCase(initializeAuth.rejected, (state) => {
-        state.user = null;
-        state.accessToken = null;
-        state.profile = null;
+        if (!state.accessToken) {
+          state.user = null;
+          state.accessToken = null;
+          state.profile = null;
+        }
       })
       .addCase(currentUser.fulfilled, (state, action) => {
         state.user = action.payload;
@@ -260,11 +280,6 @@ const authSlice = createSlice({
   },
 });
 
-export const {
-  forceLogout,
-  resetState,
-  setCredentials,
-  startAuthInitialization,
-  completeAuthInitialization,
-} = authSlice.actions;
+export const { startAuthInitialization, completeAuthInitialization, setCredentials, forceLogout, resetState } =
+  authSlice.actions;
 export default authSlice.reducer;

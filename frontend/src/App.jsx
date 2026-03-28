@@ -11,7 +11,7 @@ import {
   startAuthInitialization,
 } from "./features/authSlice";
 import { fetchMyPermissions } from "./features/roleUiSlice";
-import { setAccessToken } from "./api/authToken";
+import { clearAccessToken, getAccessToken, setAccessToken } from "./api/authToken";
 
 const ToastContainer = lazy(() =>
   import("react-toastify").then((mod) => ({
@@ -33,24 +33,30 @@ function App() {
   const location = useLocation();
   const { profile, user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    if (accessToken) {
-      setAccessToken(accessToken);
+useEffect(() => {
+    const tokenToUse = accessToken || getAccessToken();
+
+    if (tokenToUse) {
+      setAccessToken(tokenToUse);
+      return;
     }
+
+    clearAccessToken();
   }, [accessToken]);
 
-  useEffect(() => {
+useEffect(() => {
     const bootstrapAuth = async () => {
       dispatch(startAuthInitialization());
 
       try {
-        const authData = await dispatch(initializeAuth()).unwrap();
+        await dispatch(initializeAuth()).unwrap();
 
-        if (authData?.accessToken) {
+        const token = getAccessToken();
+        if (token) {
           await dispatch(currentUser()).unwrap();
         }
       } catch {
-        dispatch(forceLogout());
+        // Keep existing persisted/login state. Avoid force-logout on transient init failures.
       } finally {
         dispatch(completeAuthInitialization());
       }
@@ -68,14 +74,14 @@ function App() {
   useEffect(() => {
     if (!isAuthInitialized) return;
 
-    if (profile?.statusCode === 401) {
+     if (profile?.statusCode === 401 && accessToken) {
       dispatch(forceLogout());
 
       if (location.pathname !== "/login") {
         navigate("/login", { replace: true });
       }
     }
-  }, [dispatch, isAuthInitialized, profile, navigate, location.pathname]);
+   }, [dispatch, isAuthInitialized, profile, accessToken, navigate, location.pathname]);
 
   if (!isAuthInitialized) {
     return (
