@@ -3,7 +3,13 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
 
-import { currentUser, forceLogout, initializeAuth } from "./features/authSlice";
+import {
+  completeAuthInitialization,
+  currentUser,
+  forceLogout,
+  initializeAuth,
+  startAuthInitialization,
+} from "./features/authSlice";
 import { fetchMyPermissions } from "./features/roleUiSlice";
 import { setAccessToken } from "./api/authToken";
 
@@ -25,7 +31,7 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile, user, accessToken } = useSelector((state) => state.auth);
+  const { profile, user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (accessToken) {
@@ -35,11 +41,18 @@ function App() {
 
   useEffect(() => {
     const bootstrapAuth = async () => {
+      dispatch(startAuthInitialization());
+
       try {
-        await dispatch(initializeAuth()).unwrap();
-        await dispatch(currentUser()).unwrap();
+        const authData = await dispatch(initializeAuth()).unwrap();
+
+        if (authData?.accessToken) {
+          await dispatch(currentUser()).unwrap();
+        }
       } catch {
         dispatch(forceLogout());
+      } finally {
+        dispatch(completeAuthInitialization());
       }
     };
 
@@ -53,6 +66,8 @@ function App() {
   }, [dispatch, user]);
 
   useEffect(() => {
+    if (!isAuthInitialized) return;
+
     if (profile?.statusCode === 401) {
       dispatch(forceLogout());
 
@@ -60,7 +75,15 @@ function App() {
         navigate("/login", { replace: true });
       }
     }
-  }, [dispatch, profile, navigate, location.pathname]);
+  }, [dispatch, isAuthInitialized, profile, navigate, location.pathname]);
+
+  if (!isAuthInitialized) {
+    return (
+      <Suspense fallback={null}>
+        <Loader />
+      </Suspense>
+    );
+  }
 
   return (
     <>
