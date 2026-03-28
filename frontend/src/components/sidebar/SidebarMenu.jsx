@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Layout, Menu, Typography, Spin } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { useTheme } from "../../context/ThemeContext";
 
 const { Sider } = Layout;
@@ -10,7 +9,7 @@ const { Text } = Typography;
 const SidebarMenu = ({ role }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const permissions = useSelector((state) => state.roleUi.permissions);
+  //const permissions = useSelector((state) => state.roleUi.permissions);
 
   const [sidebarConfig, setSidebarConfig] = useState(null);
   const { isDark: isDarkMode } = useTheme();
@@ -25,7 +24,7 @@ const SidebarMenu = ({ role }) => {
     loadMenu();
   }, []);
  
-  const buildFallbackMenuFromPermissions = (permissions = []) => {
+/*   const buildFallbackMenuFromPermissions = (permissions = []) => {
     if (!Array.isArray(permissions) || permissions.length === 0) return [];
 
     return permissions.map((permission) => {
@@ -43,7 +42,7 @@ const SidebarMenu = ({ role }) => {
         })),
       };
     });
-  };
+  }; */
 
   const menuItems = useMemo(() => {
     if (!sidebarConfig) return [];
@@ -54,8 +53,8 @@ const SidebarMenu = ({ role }) => {
 
     if (roleMenu.length) return roleMenu;
 
-    return buildFallbackMenuFromPermissions(permissions);
-  }, [role, permissions, sidebarConfig]);
+    //return buildFallbackMenuFromPermissions(permissions);
+  }, [role, sidebarConfig]);
 
   const [openKeys, setOpenKeys] = useState([]);
 

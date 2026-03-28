@@ -26,7 +26,7 @@ const sectionCardStyle = {
 
 const SchoolAdminDashboard = () => {
   return (
-    <div style={{ padding: 20 }}>
+    <>
       
       {/* 🔥 HEADER */}
       <Card bordered={false} style={{ ...sectionCardStyle, marginBottom: 20 }}>
@@ -88,7 +88,7 @@ const SchoolAdminDashboard = () => {
           </Suspense>
         </Col>
       </Row>
-    </div>
+    </>
   );
 };
 

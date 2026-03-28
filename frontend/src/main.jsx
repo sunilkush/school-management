@@ -8,7 +8,7 @@ import "./index.css";
 import "antd/dist/reset.css";
 import App from "./App.jsx";
 import store, { persistor } from "./store/store.js";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import {Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { lazy } from "react";
 import React, { Suspense } from "react";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
@@ -258,7 +258,7 @@ const router = createBrowserRouter([
             path: "superadmin",
             element: (
               <ProtectedRoute allowedRoles={["Super Admin"]}>
-                <SuperAdminDashboard />
+               <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -314,7 +314,7 @@ const router = createBrowserRouter([
             path: "schooladmin",
             element: (
               <ProtectedRoute allowedRoles={["School Admin"]}>
-                <SchoolAdminDashboard />
+              <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -373,7 +373,7 @@ const router = createBrowserRouter([
             path: "teacher",
             element: (
               <ProtectedRoute allowedRoles={["Teacher"]}>
-                <TeacherDashboard />
+               <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -404,7 +404,7 @@ const router = createBrowserRouter([
             path: "student",
             element: (
               <ProtectedRoute allowedRoles={["Student"]}>
-                <StudentDashboard />
+                <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -433,7 +433,7 @@ const router = createBrowserRouter([
             path: "parent",
             element: (
               <ProtectedRoute allowedRoles={["Parent"]}>
-                <Profile />
+              <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -457,7 +457,7 @@ const router = createBrowserRouter([
             path: "accountant",
             element: (
               <ProtectedRoute allowedRoles={["Accountant"]}>
-                <AccountantDashboard />
+              <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -590,7 +590,7 @@ const router = createBrowserRouter([
             path: "staff",
             element: (
               <ProtectedRoute allowedRoles={["Staff"]}>
-                <StaffDashboard />
+            <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -613,26 +613,44 @@ const router = createBrowserRouter([
 
 
 
-createRoot(document.getElementById("root")).render(
-  <Provider store={store}>
-    <PersistGate loading={<Loader />} persistor={persistor}>
-      <ThemeProvider>
-      <PrimeReactProvider
-        value={{
-          unstyled: true, // ✅ Must be true to apply Tailwind styles
-          pt: Tailwind, // ✅ Add Tailwind preset
-          ptOptions: {
-            mergeSections: true,
-            mergeProps: true,
-            classNameMergeFunction: twMerge,
-          },
-        }}
-      >
-        <Suspense fallback={<Loader />}>
-          <RouterProvider router={router} />
-        </Suspense>
-      </PrimeReactProvider>
-      </ThemeProvider>
-    </PersistGate>
-  </Provider>
-);
+const mountNode = document.getElementById("root");
+
+if (!mountNode) {
+  throw new Error('Root container "#root" was not found.');
+}
+
+const ROOT_INSTANCE_KEY = "__school_management_react_root__";
+const root = mountNode[ROOT_INSTANCE_KEY] ?? createRoot(mountNode);
+mountNode[ROOT_INSTANCE_KEY] = root;
+
+const renderApp = () => {
+  root.render(
+    <Provider store={store}>
+      <PersistGate loading={<Loader />} persistor={persistor}>
+        <ThemeProvider>
+          <PrimeReactProvider
+            value={{
+              unstyled: true, // ✅ Must be true to apply Tailwind styles
+              pt: Tailwind, // ✅ Add Tailwind preset
+              ptOptions: {
+                mergeSections: true,
+                mergeProps: true,
+                classNameMergeFunction: twMerge,
+              },
+            }}
+          >
+            <Suspense fallback={<Loader />}>
+              <RouterProvider router={router} />
+            </Suspense>
+          </PrimeReactProvider>
+        </ThemeProvider>
+      </PersistGate>
+    </Provider>
+  );
+};
+
+renderApp();
+
+if (import.meta.hot) {
+  import.meta.hot.accept(renderApp);
+}
