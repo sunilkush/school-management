@@ -8,7 +8,7 @@ const resolveRoleName = (user) =>
 const ProtectedRoute = ({ allowedRoles = [], children }) => {
   const location = useLocation();
   const { user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
-
+  console.log("ProtectedRoute - user:", user, "accessToken:", accessToken, "isAuthInitialized:", isAuthInitialized);
   if (!isAuthInitialized) {
     return <Loader />;
   }

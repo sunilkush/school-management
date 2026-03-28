@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, resetState } from "../../features/authSlice";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Layout,
   Row,
@@ -32,37 +32,44 @@ const roleRoutes = {
 const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { loading, error, user } = useSelector((state) => state.auth);
 
-  const roleName =
-    typeof user?.role === "string" ? user.role.toLowerCase() : user?.role?.name?.toLowerCase();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    if (!roleName || location.pathname !== "/login") return;
+  // 🔥 FINAL LOGIN HANDLER
+  const onFinish = async (values) => {
+    try {
+      const res = await dispatch(loginUser(values)).unwrap();
 
-    const from = location.state?.from?.pathname;
-    const target = from && from !== "/login" ? from : roleRoutes[roleName] || "/dashboard";
+      const role =
+        typeof res?.user?.role === "string"
+          ? res.user.role.toLowerCase()
+          : res?.user?.role?.name?.toLowerCase();
 
-    navigate(target, { replace: true });
-  }, [roleName, navigate, location]);
+      const target = roleRoutes[role] || "/dashboard";
 
-  const onFinish = (values) => {
-    dispatch(loginUser(values));
+      navigate(target, { replace: true }); // ✅ direct redirect
+    } catch (err) {
+      console.log("Login failed:", err);
+    }
   };
 
+  // 🔥 Safe error reset (NOT on unmount)
   useEffect(() => {
-    return () => {
-      dispatch(resetState());
-    };
-  }, [dispatch]);
+    if (error) {
+      const timer = setTimeout(() => {
+        dispatch(resetState());
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error, dispatch]);
 
   const onValuesChange = () => {
     if (error) dispatch(resetState());
   };
 
   const showError =
-    error &&
+    typeof error === "string" &&
     !error.toLowerCase().includes("token") &&
     !error.toLowerCase().includes("unauthorized");
 
@@ -90,10 +97,8 @@ const LoginForm = () => {
               }}
               variant="borderless"
             >
-              <Title level={3} style={{ marginBottom: 0, color: "var(--text-primary)" }}>
-                Welcome Back 👋
-              </Title>
-              <Text type="secondary" style={{ color: "var(--text-primary)" }}>
+              <Title level={3}>Welcome Back 👋</Title>
+              <Text type="secondary">
                 Login to continue to your dashboard
               </Text>
 
@@ -105,7 +110,6 @@ const LoginForm = () => {
               >
                 <Form.Item
                   label="Email Address"
-                  style={{ color: "var(--text-primary)" }}
                   name="email"
                   rules={[
                     { required: true, message: "Email is required" },
@@ -123,7 +127,6 @@ const LoginForm = () => {
                   label="Password"
                   name="password"
                   rules={[{ required: true, message: "Password is required" }]}
-                  style={{ color: "var(--text-primary)" }}
                 >
                   <Input.Password
                     size="large"
@@ -133,10 +136,10 @@ const LoginForm = () => {
                 </Form.Item>
 
                 <Row justify="space-between" align="middle">
-                  <Form.Item name="remember" valuePropName="checked" style={{ color: "var(--text-primary)" }}>
-                    <Checkbox style={{ color: "var(--text-primary)" }}>Remember me</Checkbox>
+                  <Form.Item name="remember" valuePropName="checked">
+                    <Checkbox>Remember me</Checkbox>
                   </Form.Item>
-                  <Link to="/forgot-password" style={{ color: "var(--text-primary)" }}>Forgot password?</Link>
+                  <Link to="/forgot-password">Forgot password?</Link>
                 </Row>
 
                 {showError && (
@@ -168,7 +171,6 @@ const LoginForm = () => {
                   display: "block",
                   marginTop: 16,
                   textAlign: "center",
-                  color: "var(--text-primary)",
                 }}
               >
                 Don’t have an account? <Link to="/register">Sign up</Link>
