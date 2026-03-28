@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
+
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -10,7 +10,7 @@ export const fetchSchools = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.get(`${Api_Base_Url}/school/getAllSchool`, {
+      const res = await apiClient.get(`/school/getAllSchool`, {
         headers: {
         },
       });
@@ -30,7 +30,7 @@ export const addSchool = createAsyncThunk(
   async (schoolData, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.post(`${Api_Base_Url}/school/register`, schoolData, {
+      const res = await apiClient.post(`/school/register`, schoolData, {
         headers: {
         },
       });
@@ -52,7 +52,7 @@ export const deactivateSchool = createAsyncThunk(
     try {
 
       const res = await apiClient.put(
-        `${Api_Base_Url}/school/deactivate/${schoolId}`,
+        `/school/deactivate/${schoolId}`,
         {},
         {
           headers: {
@@ -76,7 +76,7 @@ export const deleteSchool = createAsyncThunk(
   async (schoolId, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.delete(`${Api_Base_Url}/school/delete/${schoolId}`, {
+      const res = await apiClient.delete(`/school/delete/${schoolId}`, {
         headers: {
         },
       });

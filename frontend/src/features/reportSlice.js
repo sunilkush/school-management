@@ -16,7 +16,7 @@ export const fetchReports = createAsyncThunk(
 
       const query = qs.stringify(cleaned, { addQueryPrefix: true });
 
-      const res = await apiClient.get(`${App_Base_Url}/report/getReport${query}`);
+      const res = await apiClient.get(`/report/getReport${query}`);
 
       return res.data.data || [];
     } catch (err) {
@@ -30,7 +30,7 @@ export const createReport = createAsyncThunk(
   'reports/createReport',
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${App_Base_Url}/report/create`, payload);
+      const res = await apiClient.post(`/report/create`, payload);
 
       return res.data.data;
     } catch (err) {
@@ -44,7 +44,7 @@ export const deleteReport = createAsyncThunk(
   'reports/deleteReport',
   async (id, { rejectWithValue }) => {
     try {
-      await apiClient.delete(`${App_Base_Url}/report/delete/${id}`);
+      await apiClient.delete(`/report/delete/${id}`);
 
       return id;
     } catch (err) {
@@ -58,7 +58,7 @@ export const reportView = createAsyncThunk(
   'reports/reportView',
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${App_Base_Url}/report/view/${id}`);
+      const res = await apiClient.get(`/report/view/${id}`);
 
       return res.data.data;
     } catch (err) {
@@ -74,7 +74,7 @@ export const fetchSchoolReports = createAsyncThunk(
     try {
 
       const res = await apiClient.get(
-        `${App_Base_Url}/report/school/${schoolId}/academic-year/${academicYearId}`,
+        `/report/school/${schoolId}/academic-year/${academicYearId}`,
       );
        
       return res.data;

@@ -10,7 +10,7 @@ export const startAttempt = createAsyncThunk(
   "attempts/startAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API_BASE_URL}/attempts/start`, payload);
+      const res = await apiClient.post(`/attempts/start`, payload);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -23,7 +23,7 @@ export const submitAttempt = createAsyncThunk(
   "attempts/submitAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API_BASE_URL}/attempts/submit`, payload);
+      const res = await apiClient.post(`/attempts/submit`, payload);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -36,7 +36,7 @@ export const evaluateAttempt = createAsyncThunk(
   "attempts/evaluateAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API_BASE_URL}/attempts/evaluate`, payload);
+      const res = await apiClient.post(`/attempts/evaluate`, payload);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -49,7 +49,7 @@ export const getAttemptById = createAsyncThunk(
   "attempts/getAttemptById",
   async (attemptId, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_BASE_URL}/attempts/${attemptId}`);
+      const res = await apiClient.get(`/attempts/${attemptId}`);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -63,7 +63,7 @@ export const getAttempts = createAsyncThunk(
   async (params = {}, { rejectWithValue }) => {
     try {
       const query = new URLSearchParams(params).toString();
-      const res = await apiClient.get(`${API_BASE_URL}/attempts?${query}`);
+      const res = await apiClient.get(`/attempts?${query}`);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
-const Api_Base_Url = import.meta.env.VITE_API_URL;
+
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS (School Admin)
 ===================================================== */
@@ -10,7 +9,7 @@ export const assignFeesToStudents = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const { data } = await apiClient.post(
-        `${Api_Base_Url}/student-fees/assign`,
+        `/student-fees/assign`,
         payload,
         {
           headers: {
@@ -32,7 +31,7 @@ export const fetchMyFees = createAsyncThunk(
   async (studentId, { rejectWithValue }) => {
     try {
 
-      const { data } = await apiClient.get( `${Api_Base_Url}/student-fees/my/${studentId}`, {
+      const { data } = await apiClient.get( `/student-fees/my/${studentId}`, {
         headers: {
         },
       });
@@ -51,7 +50,7 @@ export const payStudentFee = createAsyncThunk(
   async ({ id, payload }, { rejectWithValue }) => {
     try {
       const { data } = await apiClient.put(
-        `${Api_Base_Url}/student-fees/pay/${id}`,
+        `/student-fees/pay/${id}`,
         payload,
         {
           headers: {
@@ -72,7 +71,7 @@ export const fetchStudentFeeSummary = createAsyncThunk(
   "studentFee/summary",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await apiClient.get(`${Api_Base_Url}/student-fees/summary`, {
+      const { data } = await apiClient.get(`/student-fees/summary`, {
         headers: {
         },
       });

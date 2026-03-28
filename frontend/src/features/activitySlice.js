@@ -12,7 +12,7 @@ export const fetchActivityLogs = createAsyncThunk(
   async (filters = {}, { rejectWithValue }) => {
     try {
       const query = new URLSearchParams(filters).toString();
-      const { data } = await apiClient.get(`${API_BASE_URL}/activity-logs?${query}`, {
+      const { data } = await apiClient.get(`/activity-logs?${query}`, {
         headers: {
         },
       });
@@ -28,7 +28,7 @@ export const createActivityLog = createAsyncThunk(
   "activity/createLog",
   async (logData, { rejectWithValue }) => {
     try {
-      const { data } = await apiClient.post(`${API_BASE_URL}/activity-logs`, logData, {
+      const { data } = await apiClient.post(`/activity-logs`, logData, {
         headers: {
         },
       });
@@ -44,7 +44,7 @@ export const deleteActivityLog = createAsyncThunk(
   "activity/deleteLog",
   async (id, { rejectWithValue }) => {
     try {
-       await apiClient.delete(`${API_BASE_URL}/activity-logs/${id}`, {
+       await apiClient.delete(`/activity-logs/${id}`, {
         headers: {
         },
       });

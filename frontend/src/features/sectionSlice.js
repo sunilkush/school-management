@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -14,7 +13,7 @@ export const createSection = createAsyncThunk(
   "section/create",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API}/sections`, data, {      });
+      const res = await apiClient.post(`/sections`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -32,7 +31,7 @@ export const fetchSections = createAsyncThunk(
   "section/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API}/sections`, {        params, // { schoolId, academicYearId, schoolClassId }
+      const res = await apiClient.get(`/sections`, {        params, // { schoolId, academicYearId, schoolClassId }
       });
       return res.data.data;
     } catch (err) {
@@ -51,7 +50,7 @@ export const fetchSectionById = createAsyncThunk(
   "section/fetchOne",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API}/sections/${id}`, {      });
+      const res = await apiClient.get(`/sections/${id}`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -69,7 +68,7 @@ export const updateSection = createAsyncThunk(
   "section/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${API}/sections/${id}`, data, {      });
+      const res = await apiClient.put(`/sections/${id}`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -87,7 +86,7 @@ export const deleteSection = createAsyncThunk(
   "section/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await apiClient.delete(`${API}/sections/${id}`, {      });
+      await apiClient.delete(`/sections/${id}`, {      });
       return id;
     } catch (err) {
       return rejectWithValue(
@@ -106,7 +105,7 @@ export const assignClassTeacher = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API}/sections/assign-teacher`,
+        `/sections/assign-teacher`,
         data,
         {        }
       );
@@ -128,7 +127,7 @@ export const addStudentToSection = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API}/sections/add-student`,
+        `/sections/add-student`,
         data,
         {        }
       );
@@ -150,7 +149,7 @@ export const removeStudentFromSection = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API}/sections/remove-student`,
+        `/sections/remove-student`,
         data,
         {        }
       );
@@ -167,7 +166,7 @@ export const addSubjectToSection = createAsyncThunk(
   async ({ schoolClassId, sectionId, subjectIds }, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API}/sections/add-subjects`,
+        `/sections/add-subjects`,
         {
           schoolClassId,
           sectionId,

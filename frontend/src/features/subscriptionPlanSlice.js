@@ -1,11 +1,6 @@
 // features/subscriptionPlanSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
-
-const Api_Base_Url = import.meta.env.VITE_API_URL;
-
-
 
 // ==========================================================
 // ✅ 1. Create Subscription Plan
@@ -15,7 +10,7 @@ export const createSubscriptionPlan = createAsyncThunk(
   async (planData, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${Api_Base_Url}/subscription/create`,
+        `/subscription/create`,
         planData,
         {
             headers: {
@@ -39,7 +34,7 @@ export const fetchSubscriptionPlans = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
         const res = await apiClient.get(
-        `${Api_Base_Url}/subscription/allplan`,
+        `/subscription/allplan`,
          {
             headers: {
             },
@@ -64,7 +59,7 @@ export const updateSubscriptionPlan = createAsyncThunk(
   async ({ id, formData }, { rejectWithValue }) => {
     try {
       const res = await apiClient.put(
-        `${Api_Base_Url}/subscription/${id}`,
+        `/subscription/${id}`,
         formData,
        {
             headers: {
@@ -88,7 +83,7 @@ export const deleteSubscriptionPlan = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const res = await apiClient.delete(
-        `${Api_Base_Url}/subscription/${id}`,
+        `/subscription/${id}`,
        {
             headers: {
             },
@@ -112,7 +107,7 @@ export const fetchPlanLogs = createAsyncThunk(
   async (planId, { rejectWithValue }) => {
     try {
       const res = await apiClient.get(
-        `${Api_Base_Url}/subscription/${planId}/logs`,
+        `/subscription/${planId}/logs`,
         {
             headers: {
             },

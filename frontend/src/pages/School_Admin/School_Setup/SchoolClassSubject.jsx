@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Card,
   Select,
@@ -14,11 +14,9 @@ import {
   Empty,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchAllSubjects } from "../../../features/subjectSlice";
 import { addSubjectToSection } from "../../../features/sectionSlice";
-
 
 const { Option } = Select;
 
@@ -28,28 +26,28 @@ const SchoolClassSubject = () => {
   const { schoolClasses = [], loading } = useSelector(
     (state) => state.schoolClass || {}
   );
-   
-  const { subjects = [] } = useSelector(
-    (state) => state.subject || {}
-  );
+  const { subjects = [] } = useSelector((state) => state.subject || {});
+  const { user } = useSelector((state) => state.auth);
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+
+  const schoolId = user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
   const [mapping, setMapping] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
 
-  const user = useSelector((state) => state.auth.user);
-  const schoolId = user?.school?._id;
-  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
-  const academicYearId = selectedAcademicYear._id
-
-  // 🔹 Fetch
+  // 🔥 Fetch (safe)
   useEffect(() => {
-    if (!schoolId) return;
-    dispatch(fetchSchoolClasses({ schoolId,academicYearId }));
+    if (!schoolId || !academicYearId) return;
+
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
     dispatch(fetchAllSubjects({ isGlobal: true }));
-  }, [dispatch, schoolId,academicYearId]);
+  }, [dispatch, schoolId, academicYearId]);
 
-  // 🔥 Pre-fill mapping (IMPORTANT)
+  // 🔥 Pre-fill mapping (optimized)
   useEffect(() => {
+    if (!schoolClasses.length) return;
+
     const initial = {};
 
     schoolClasses.forEach((cls) => {
@@ -62,93 +60,109 @@ const SchoolClassSubject = () => {
     setMapping(initial);
   }, [schoolClasses]);
 
-  // 🔥 Flatten
-  const tableData = schoolClasses.flatMap((cls) =>
-    (cls.sections || []).map((sec) => ({
-      _id: sec._id,
-      schoolClassId: cls._id,
-      className: cls.name,
-      sectionId: sec.sectionId?._id,
-      sectionName: sec.sectionId?.name,
-    }))
-  );
+  // 🔥 Subject Map (O(1) lookup instead of find)
+  const subjectMap = useMemo(() => {
+    const map = {};
+    subjects.forEach((s) => {
+      map[s._id] = s.name;
+    });
+    return map;
+  }, [subjects]);
 
-  const filteredData = selectedClass
-    ? tableData.filter((i) => i.schoolClassId === selectedClass)
-    : tableData;
+  // 🔥 Flatten data (memoized)
+  const tableData = useMemo(() => {
+    return schoolClasses.flatMap((cls) =>
+      (cls.sections || []).map((sec) => ({
+        _id: sec._id,
+        schoolClassId: cls._id,
+        className: cls.name,
+        sectionId: sec.sectionId?._id,
+        sectionName: sec.sectionId?.name,
+      }))
+    );
+  }, [schoolClasses]);
 
-  // 🔹 Change
-  const handleChange = (rowId, values) => {
+  // 🔥 Filtered data (memoized)
+  const filteredData = useMemo(() => {
+    if (!selectedClass) return tableData;
+    return tableData.filter((i) => i.schoolClassId === selectedClass);
+  }, [tableData, selectedClass]);
+
+  // 🔥 Change handler (stable)
+  const handleChange = useCallback((rowId, values) => {
     setMapping((prev) => ({
       ...prev,
       [rowId]: values,
     }));
-  };
+  }, []);
 
-  // 🔥 Save
-  const handleSave = async (record) => {
-    try {
-      await dispatch(
-        addSubjectToSection({
-          schoolClassId: record.schoolClassId,
-          sectionId: record.sectionId,
-          subjectIds: mapping[record._id] || [],
-        })
-      ).unwrap();
+  // 🔥 Save handler (stable)
+  const handleSave = useCallback(
+    async (record) => {
+      try {
+        await dispatch(
+          addSubjectToSection({
+            schoolClassId: record.schoolClassId,
+            sectionId: record.sectionId,
+            subjectIds: mapping[record._id] || [],
+          })
+        ).unwrap();
 
-      message.success("Saved ✅");
-    } catch (err) {
-      message.error(err || "Failed ❌");
-    }
-  };
+        message.success("Saved ✅");
+      } catch (err) {
+        message.error(err || "Failed ❌");
+      }
+    },
+    [dispatch, mapping]
+  );
 
-  // 🔹 Columns
-  const columns = [
-    { title: "Class", dataIndex: "className" },
-    { title: "Section", dataIndex: "sectionName" },
-    {
-      title: "Subjects",
-      render: (_, record) => (
-        <Select
-          mode="multiple"
-          style={{ width: "100%" }}
-          value={mapping[record._id] || []}
-          onChange={(val) => handleChange(record._id, val)}
-          placeholder={'Select Subject'}
-        >
-          {subjects.map((sub) => (
-            <Option key={sub._id} value={sub._id}>
-              {sub.name}
-            </Option>
-          ))}
-        </Select>
-      ),
-    },
-    {
-      title: "Preview",
-      render: (_, record) => (
-        <Space wrap>
-          {(mapping[record._id] || []).map((sid) => {
-            const sub = subjects.find((s) => s._id === sid);
-            return <Tag key={sid}>{sub?.name}</Tag>;
-          })}
-        </Space>
-      ),
-    },
-    {
-      title: "Action",
-      render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          disabled={!mapping[record._id]?.length}
-          onClick={() => handleSave(record)}
-        >
-          Save
-        </Button>
-      ),
-    },
-  ];
+  // 🔥 Columns (memoized)
+  const columns = useMemo(
+    () => [
+      { title: "Class", dataIndex: "className" },
+      { title: "Section", dataIndex: "sectionName" },
+      {
+        title: "Subjects",
+        render: (_, record) => (
+          <Select
+            mode="multiple"
+            style={{ width: "100%" }}
+            value={mapping[record._id] || []}
+            onChange={(val) => handleChange(record._id, val)}
+            placeholder="Select Subject"
+            options={subjects.map((s) => ({
+              label: s.name,
+              value: s._id,
+            }))}
+          />
+        ),
+      },
+      {
+        title: "Preview",
+        render: (_, record) => (
+          <Space wrap>
+            {(mapping[record._id] || []).map((sid) => (
+              <Tag key={sid}>{subjectMap[sid]}</Tag>
+            ))}
+          </Space>
+        ),
+      },
+      {
+        title: "Action",
+        render: (_, record) => (
+          <Button
+            type="primary"
+            size="small"
+            disabled={!mapping[record._id]?.length}
+            onClick={() => handleSave(record)}
+          >
+            Save
+          </Button>
+        ),
+      },
+    ],
+    [mapping, subjects, subjectMap, handleChange, handleSave]
+  );
 
   return (
     <Card title="📚 Class - Section Subject Mapping">
@@ -160,13 +174,11 @@ const SchoolClassSubject = () => {
             style={{ width: "100%" }}
             allowClear
             onChange={setSelectedClass}
-          >
-            {schoolClasses.map((cls) => (
-              <Option key={cls._id} value={cls._id}>
-                {cls.name}
-              </Option>
-            ))}
-          </Select>
+            options={schoolClasses.map((cls) => ({
+              label: cls.name,
+              value: cls._id,
+            }))}
+          />
         </Col>
       </Row>
 
@@ -179,9 +191,7 @@ const SchoolClassSubject = () => {
           rowKey="_id"
           pagination={{ pageSize: 10 }}
           locale={{
-            emptyText: (
-              <Empty description="No Sections Found" />
-            ),
+            emptyText: <Empty description="No Sections Found" />,
           }}
         />
       </Spin>

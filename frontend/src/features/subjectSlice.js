@@ -1,8 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
 
-const Api_Base_Url = import.meta.env.VITE_API_URL;
 
 // ==========================================================
 // ✅ Create Subject
@@ -11,7 +9,7 @@ export const createSubject = createAsyncThunk(
   "subject/createSubject",
   async (subjectData, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${Api_Base_Url}/subject/create`, subjectData, {      });
+      const res = await apiClient.post(`/subject/create`, subjectData, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(
@@ -31,7 +29,7 @@ export const fetchAllSubjects = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get(`${Api_Base_Url}/subject/all`, {        params: { page, limit,  search, isGlobal },
+      const res = await apiClient.get(`/subject/all`, {        params: { page, limit,  search, isGlobal },
       });
      
       return res.data.data;
@@ -50,7 +48,7 @@ export const updateSubject = createAsyncThunk(
   "subject/updateSubject",
   async ({ subjectId, subjectData }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${Api_Base_Url}/subject/${subjectId}/assign-teachers`, subjectData, {      });
+      const res = await apiClient.put(`/subject/${subjectId}/assign-teachers`, subjectData, {      });
       return res.data?.data;
     } catch (error) {
       return rejectWithValue(
@@ -68,7 +66,7 @@ export const assignSchoolsToSubject = createAsyncThunk(
   async ({ subjectId, schoolIds }, { rejectWithValue }) => {
     try {
       const res = await apiClient.put(
-        `${Api_Base_Url}/subject/assign/${subjectId}`,
+        `/subject/assign/${subjectId}`,
         { schoolIds },
         {}
       );
@@ -88,7 +86,7 @@ export const deleteSubject = createAsyncThunk(
   "subject/deleteSubject",
   async (subjectId, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`${Api_Base_Url}/subject/${subjectId}`, {      });
+      const res = await apiClient.delete(`/subject/${subjectId}`, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(

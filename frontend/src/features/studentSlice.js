@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 import { toast } from "react-toastify";
-import memoryStorage from "../utils/memoryStorage";
+
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -10,15 +10,13 @@ export const fetchLastRegisteredStudent = createAsyncThunk(
   "students/fetchLastRegisteredStudent",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
-      if (!token) throw new Error("No access token found");
+    
 
       const response = await apiClient.get(
-        `${Api_Base_Url}/student/last-registered`,
+        `/student/last-registered`,
         {
           params: { schoolId, academicYearId },
-          headers: {
-            Authorization: `Bearer ${token}`, // ✅ add this line
-          },
+         
         }
       );
       console.log("Last registered student response:", response.data.data);
@@ -37,16 +35,12 @@ export const createStudent = createAsyncThunk(
   "student/addStudent",
   async (studentData, { rejectWithValue }) => {
     try {
-      if (!token) throw new Error("No access token found");
+      
 
       const response = await apiClient.post(
-        `${Api_Base_Url}/student/register`,
+        `/student/register`,
         studentData, // plain object
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+       
       );
 
       return response.data.data;
@@ -61,16 +55,14 @@ export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
   async ({ schoolId, academicYearId, schoolClassId } = {}, { rejectWithValue }) => {
     try {
-      if (!token) throw new Error("No access token found");
+    
 
       // ✅ Choose URL based on schoolId presence
-      const url = `${Api_Base_Url}/student/all`;
+      const url = `/student/all`;
 
       // ✅ Fetch data
       const res = await apiClient.get(url, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+       
         params: { schoolId, academicYearId, schoolClassId },
       });
 
@@ -95,7 +87,7 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
       // ✅ token safety
 
       // ✅ API Call
-      const res = await apiClient.get(`${Api_Base_Url}/student/school`, {
+      const res = await apiClient.get(`/student/school`, {
         headers: {
         },
         params: {
@@ -119,9 +111,9 @@ export const fetchStudentById = createAsyncThunk(
   "student/fetchStudentById",
   async (userId, { rejectWithValue }) => {
     try {
-      if (!token) throw new Error("No access token found");
+      
 
-      const res = await apiClient.get(`${Api_Base_Url}/student/getStudent/${userId}`, {
+      const res = await apiClient.get(`/student/getStudent/${userId}`, {
         headers: {
         },
       });
@@ -142,10 +134,10 @@ export const fetchMyStudentEnrollment = createAsyncThunk(
   "student/fetchMyStudentEnrollment",
   async (_, { rejectWithValue }) => {
     try {
-      if (!token) throw new Error("No access token found");
+      
 
       const res = await apiClient.get(
-        `${Api_Base_Url}/student/my/enrollment-id`,
+        `/student/my/enrollment-id`,
         {
           headers: {
           },

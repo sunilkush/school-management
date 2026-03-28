@@ -1,7 +1,7 @@
 import apiClient from "../api/httpClient";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-const App_Base_Url = import.meta.env.VITE_API_URL;
+
 
 export const fetchDashboardSummary = createAsyncThunk(
   "dashboard/fetchDashboardSummary",
@@ -14,7 +14,7 @@ export const fetchDashboardSummary = createAsyncThunk(
         params.schoolId = schoolId;
       }
 
-      const response = await apiClient.get(`${App_Base_Url}/dashboard/summary`, {
+      const response = await apiClient.get(`/dashboard/summary`, {
         params, // role + schoolId go here
       });
 

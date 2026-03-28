@@ -2,8 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
 /* ===============================
    FETCH ALL FEES (ADMIN SIDE)
 ================================ */
@@ -12,7 +10,7 @@ export const fetchAllFees = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.get(`${API_BASE_URL}/fees/allFees`, {
+      const res = await apiClient.get(`/fees/allFees`, {
         headers: {
         },
         params,
@@ -38,7 +36,7 @@ export const createFee = createAsyncThunk(
     try {
 
       const res = await apiClient.post(
-        `${API_BASE_URL}/fees/createFees`,
+        `/fees/createFees`,
         payload,
         {
           headers: {
@@ -62,7 +60,7 @@ export const deleteFees = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
 
-      await apiClient.delete(`${API_BASE_URL}/fees/${id}`, {
+      await apiClient.delete(`/fees/${id}`, {
         headers: {
         },
       });
@@ -83,7 +81,7 @@ export const fetchStudentFees = createAsyncThunk(
     try {
 
       const res = await apiClient.get(
-        `${API_BASE_URL}/student-fees/${studentId}`,
+        `/student-fees/${studentId}`,
         {
           headers: {
           },

@@ -12,7 +12,7 @@ export const createBoardClass = createAsyncThunk(
         try {
 
             const res = await apiClient.post(
-                `${ApiUrl}/board-classes`,
+                `/board-classes`,
                 boardClass,
                 {
                     headers: {
@@ -37,7 +37,7 @@ export const getBoardClass = createAsyncThunk(
 
       const query = new URLSearchParams(params).toString();
 
-      const url = `${ApiUrl}/board-classes${query ? `?${query}` : ""}`;
+      const url = `/board-classes${query ? `?${query}` : ""}`;
 
       const res = await apiClient.get(url, {
         headers: {
@@ -58,7 +58,7 @@ export const getBoardClassById = createAsyncThunk(
     try {
 
       const res = await apiClient.get(
-        `${ApiUrl}/board-classes/${id}`,
+        `/board-classes/${id}`,
         {
           headers: {
           },
@@ -80,7 +80,7 @@ export const updateBoardClass = createAsyncThunk(
     try {
 
       const res = await apiClient.put(
-        `${ApiUrl}/board-classes/${id}`,
+        `/board-classes/${id}`,
         data,
         {
           headers: {
@@ -102,7 +102,7 @@ export const deleteBoardClass = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
 
-      await apiClient.delete(`${ApiUrl}/board-classes/${id}`, {
+      await apiClient.delete(`/board-classes/${id}`, {
         headers: {
         },
       });

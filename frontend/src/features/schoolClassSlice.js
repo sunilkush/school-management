@@ -1,8 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import memoryStorage from "../utils/memoryStorage";
-
-const API = import.meta.env.VITE_API_URL;
 
 // 🔐 Token helper
 
@@ -15,7 +12,7 @@ export const createSchoolClass = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       console.log(data)
-      const res = await apiClient.post(`${API}/school-class`, data, {      });
+      const res = await apiClient.post(`/school-class`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -32,7 +29,7 @@ export const getClassData = createAsyncThunk(
   "schoolClass/classes",
   async(params,{rejectWithValue})=>{
      try {
-      const res = await apiClient.get(`${API}/school-class/class-detailes`, {        params, // { schoolId, academicYearId }
+      const res = await apiClient.get(`/school-class/class-detailes`, {        params, // { schoolId, academicYearId }
       });
       return res.data.data;
     } catch (err) {
@@ -49,7 +46,7 @@ export const fetchSchoolClasses = createAsyncThunk(
   "schoolClass/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API}/school-class`, {        params, // { schoolId, academicYearId }
+      const res = await apiClient.get(`/school-class`, {        params, // { schoolId, academicYearId }
       });
       return res.data.data;
     } catch (err) {
@@ -68,7 +65,7 @@ export const fetchSchoolClassById = createAsyncThunk(
   "schoolClass/fetchOne",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API}/school-class/${id}`, {      });
+      const res = await apiClient.get(`/school-class/${id}`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -86,7 +83,7 @@ export const updateSchoolClass = createAsyncThunk(
   "schoolClass/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${API}/school-class/${id}`, data, {      });
+      const res = await apiClient.put(`/school-class/${id}`, data, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -104,7 +101,7 @@ export const deleteSchoolClass = createAsyncThunk(
   "schoolClass/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await apiClient.delete(`${API}/school-class/${id}`, {      });
+      await apiClient.delete(`/school-class/${id}`, {      });
       return id;
     } catch (err) {
       return rejectWithValue(

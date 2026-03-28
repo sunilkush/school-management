@@ -9,7 +9,7 @@ import {
 } from "../../../features/studentSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
 import { activeUser } from "../../../features/authSlice";
-import memoryStorage from "../../../utils/memoryStorage";
+
 
 const { Option } = Select;
 
@@ -19,15 +19,15 @@ const StudentList = () => {
     (state) => state.students
   );
   const { user } = useSelector((state) => state.auth);
-
+  const {selectedAcademicYear} = useSelector((state) => state.academicYear);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedSection, setSelectedSection] = useState("all");
-
+ 
   const schoolId = user?.school?._id;
-  const academicYearId = JSON.parse(memoryStorage.getItem("selectedAcademicYear"))._id
-
+  const academicYearId = selectedAcademicYear?._id;
+  
   // Fetch user if not loaded
   useEffect(() => {
     if (!user) dispatch(activeUser());

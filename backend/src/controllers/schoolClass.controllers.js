@@ -55,7 +55,7 @@ export const createSchoolClass = async (req, res) => {
 export const getAllSchoolClasses = async (req, res) => {
   try {
     const { schoolId, academicYearId } = req.query;
-  
+   
     const filter = {};
     if (schoolId) filter.schoolId = schoolId;
     if (academicYearId) filter.academicYearId = academicYearId;

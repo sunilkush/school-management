@@ -2,14 +2,12 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
 /* ================= CREATE ================= */
 export const createFeeStructure = createAsyncThunk(
     "feeStructure/create",
     async (data, { rejectWithValue }) => {
         try {
-            const res = await apiClient.post(`${API_BASE_URL}/fee-structures`, data, {
+            const res = await apiClient.post(`/fee-structures`, data, {
                 headers: {
                 }
             });
@@ -27,7 +25,7 @@ export const fetchFeeStructures = createAsyncThunk(
     "feeStructure/getAll",
     async (params, { rejectWithValue }) => {
         try {
-            const res = await apiClient.get(`${API_BASE_URL}/fee-structures`, {
+            const res = await apiClient.get(`/fee-structures`, {
                 headers: {
                 },
                 params
@@ -46,7 +44,7 @@ export const updateFeeStructure = createAsyncThunk(
     "feeStructure/update",
     async ({ id, data }, { rejectWithValue }) => {
         try {
-            const res = await apiClient.put(`${API_BASE_URL}/fee-structures/${id}`, data, {
+            const res = await apiClient.put(`/fee-structures/${id}`, data, {
                 headers: {
                 }
             });
@@ -64,7 +62,7 @@ export const deleteFeeStructure = createAsyncThunk(
     "feeStructure/delete",
     async (id, { rejectWithValue }) => {
         try {
-            await apiClient.delete(`${API_BASE_URL}/fee-structures/${id}`, {
+            await apiClient.delete(`/fee-structures/${id}`, {
                 headers: {
                 }
             });

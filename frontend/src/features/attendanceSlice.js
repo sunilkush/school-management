@@ -11,7 +11,7 @@ export const fetchStudents = createAsyncThunk(
   async ({ schoolClassId, sectionId, date }, { rejectWithValue }) => {
     try {
       
-      const res = await apiClient.get(`${API_URL}/attendance/students`, {
+      const res = await apiClient.get(`/attendance/students`, {
         params: { schoolClassId, sectionId, date },      }
     );
       return res.data;
@@ -26,7 +26,7 @@ export const fetchTeachers = createAsyncThunk(
   "attendance/fetchTeachers",
   async ({ departmentId, subjectId, date }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_URL}/attendance/teachers`, {
+      const res = await apiClient.get(`/attendance/teachers`, {
         params: { departmentId, subjectId, date },         
       }      
     );
@@ -42,7 +42,7 @@ export const submitAttendance = createAsyncThunk(
   "attendance/submit",
   async ({ records, role, date, schoolClassId, sectionId, departmentId, subjectId,schoolId,academicYearId,userId }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API_URL}/attendance/mark`, {
+      const res = await apiClient.post(`/attendance/mark`, {
         records,
         role,
         date,
@@ -69,7 +69,7 @@ export const fetchReports = createAsyncThunk(
   "attendance/fetchReports",
   async ({ reportType, date, schoolClassId, sectionId }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_URL}/attendance/reports`, {
+      const res = await apiClient.get(`/attendance/reports`, {
         params: { reportType, date, schoolClassId, sectionId },
       }
       ,{});

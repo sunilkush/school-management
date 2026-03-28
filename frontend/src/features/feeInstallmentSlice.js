@@ -1,9 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
 /* ============================
    ASYNC THUNKS
 ============================ */
@@ -14,7 +11,7 @@ export const generateInstallments = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${API_BASE_URL}/fee-installments/generate`,
+        `/fee-installments/generate`,
         payload,
         {        }
       );
@@ -32,7 +29,7 @@ export const fetchFeeInstallments = createAsyncThunk(
   "feeInstallment/fetchAll",
   async (params = {}, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_BASE_URL}/fee-installments`, {        params,
+      const res = await apiClient.get(`/fee-installments`, {        params,
       });
       return res.data;
     } catch (error) {
@@ -50,7 +47,7 @@ export const payInstallment = createAsyncThunk(
     try {
 
       const res = await apiClient.post(
-        `${API_BASE_URL}/fee-installments/pay/${installmentId}`,
+        `/fee-installments/pay/${installmentId}`,
         { amount, paymentMode, razorpay },
         {        }
       );

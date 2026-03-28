@@ -14,7 +14,7 @@ export const createAcademicYear = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${Api_Base_Url}/academicYear/create`,
+        `/academicYear/create`,
         data,
         authHeader()
       );
@@ -33,7 +33,7 @@ export const fetchAllAcademicYears = createAsyncThunk(
   async (schoolId, { rejectWithValue }) => {
     try {
       const res = await apiClient.get(
-        `${Api_Base_Url}/academicYear/school/${schoolId}`,
+        `/academicYear/school/${schoolId}`,
         authHeader()
       );
 
@@ -51,7 +51,7 @@ export const fetchActiveAcademicYear = createAsyncThunk(
   async (schoolId, { rejectWithValue }) => {
     try {
       const res = await apiClient.get(
-        `${Api_Base_Url}/academicYear/active/${schoolId}`,
+        `/academicYear/active/${schoolId}`,
         authHeader()
       );
 
@@ -69,7 +69,7 @@ export const setActiveAcademicYear = createAsyncThunk(
   async (academicYearId, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${Api_Base_Url}/academicYear/activate/${academicYearId}`,
+        `/academicYear/activate/${academicYearId}`,
         {},
         authHeader()
       );
@@ -88,7 +88,7 @@ export const archiveAcademicYear = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `${Api_Base_Url}/academicYear/archive/${id}`,
+        `/academicYear/archive/${id}`,
         {},
         authHeader()
       );
@@ -107,7 +107,7 @@ export const deleteAcademicYear = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const res = await apiClient.delete(
-        `${Api_Base_Url}/academicYear/${id}`,
+        `/academicYear/${id}`,
         authHeader()
       );
 
@@ -125,7 +125,7 @@ export const updateAcademicYear = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const res = await apiClient.put(
-        `${Api_Base_Url}/academicYear/${id}`,
+        `/academicYear/${id}`,
         data,
         authHeader()
       );
