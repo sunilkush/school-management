@@ -1,5 +1,6 @@
 import { useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import Loader from "../components/Loader/Loader";
 
 const resolveRoleName = (user) =>
   typeof user?.role === "string" ? user.role : user?.role?.name;
@@ -9,7 +10,7 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   const { user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
 
   if (!isAuthInitialized) {
-    return null;
+    return <Loader />;
   }
 
   if (!accessToken || !user) {

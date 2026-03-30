@@ -171,6 +171,12 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    startAuthInitialization: (state) => {
+      state.isAuthInitialized = false;
+    },
+    completeAuthInitialization: (state) => {
+      state.isAuthInitialized = true;
+    },
     setCredentials: (state, action) => {
       state.user = action.payload?.user ?? null;
       state.accessToken = action.payload?.accessToken ?? null;
@@ -193,9 +199,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(initializeAuth.pending, (state) => {
-        state.isAuthInitialized = false;
-      })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
@@ -203,16 +206,14 @@ const authSlice = createSlice({
         state.isAuthInitialized = true;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
-        state.user = action.payload.user;
+        state.user = action.payload?.user ?? state.user;
         state.accessToken = action.payload.accessToken;
-        state.profile = action.payload.user;
-        state.isAuthInitialized = true;
+        state.profile = action.payload?.user ?? state.profile;
       })
       .addCase(initializeAuth.rejected, (state) => {
         state.user = null;
         state.accessToken = null;
         state.profile = null;
-        state.isAuthInitialized = true;
       })
       .addCase(currentUser.fulfilled, (state, action) => {
         state.user = action.payload;
@@ -259,5 +260,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { forceLogout, resetState, setCredentials } = authSlice.actions;
+export const {
+  forceLogout,
+  resetState,
+  setCredentials,
+  startAuthInitialization,
+  completeAuthInitialization,
+} = authSlice.actions;
 export default authSlice.reducer;
