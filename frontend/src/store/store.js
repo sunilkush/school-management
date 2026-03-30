@@ -1,9 +1,20 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import roleReducer from "../features/roleSlice";
 import schoolReducer from "../features/schoolSlice";
 import authReducer from "../features/authSlice";
 import studentReducer from "../features/studentSlice";
-import subjectReducer from "../features/subjectSlice"
+import subjectReducer from "../features/subjectSlice";
 import classReducer from "../features/classSlice";
 import academicYearReducer from "../features/academicYearSlice";
 import reportReducer from "../features/reportSlice";
@@ -27,48 +38,60 @@ import boardsReducer from "../features/boardSlice.js";
 import chapterReducer from "../features/chapterSlice.js";
 import boardClassReducer from "../features/boardClassSlice.js";
 import roleUiReducer from "../features/roleUiSlice.js";
-import schoolClassReducer from "../features/schoolClassSlice.js"
+import schoolClassReducer from "../features/schoolClassSlice.js";
 import { attachAuthStore } from "../api/httpClient";
+
+const authPersistConfig = {
+  key: "auth",
+  storage,
+  whitelist: ["user", "accessToken", "profile"],
+};
+
+const rootReducer = combineReducers({
+  role: roleReducer,
+  school: schoolReducer,
+  auth: persistReducer(authPersistConfig, authReducer),
+  students: studentReducer,
+  subject: subjectReducer,
+  class: classReducer,
+  academicYear: academicYearReducer,
+  reports: reportReducer,
+  examReports: examReportReducer,
+  dashboard: dashboardReducer,
+  exams: examReducer,
+  questions: questionReducer,
+  attempts: attemptReducer,
+  section: sectionReducer,
+  classSection: classSectionReducer,
+  employee: employeeReducer,
+  subscriptionPlans: subscriptionPlanReducer,
+  fees: feeReducer,
+  feeHead: feeHeadReducer,
+  feeStructure: feeStructureReducer,
+  studentFee: studentFeeReducer,
+  payment: paymentReducer,
+  feeInstallment: feeInstallmentReducer,
+  activity: activityReducer,
+  chapters: chapterReducer,
+  boards: boardsReducer,
+  boardClass: boardClassReducer,
+  roleUi: roleUiReducer,
+  schoolClass: schoolClassReducer,
+});
+
 const store = configureStore({
-  reducer: {
-    role: roleReducer,
-    school: schoolReducer,
-    auth: authReducer,
-    students: studentReducer,
-    subject: subjectReducer,
-    class: classReducer,
-    academicYear: academicYearReducer,
-    reports: reportReducer,
-    examReports: examReportReducer,
-    dashboard: dashboardReducer,
-    exams: examReducer,
-    questions: questionReducer,
-    attempts: attemptReducer,
-    section: sectionReducer,
-    classSection:classSectionReducer,
-    employee: employeeReducer,
-    subscriptionPlans: subscriptionPlanReducer,
-    fees:feeReducer,
-    feeHead:feeHeadReducer,
-    feeStructure:feeStructureReducer,
-    studentFee: studentFeeReducer,
-    payment: paymentReducer,
-    feeInstallment: feeInstallmentReducer,
-    activity: activityReducer,
-    chapters: chapterReducer,
-    boards: boardsReducer,
-    boardClass : boardClassReducer,
-    roleUi: roleUiReducer,
-    schoolClass:schoolClassReducer,
-    },
-  // Optional: Add middleware for debugging or logging
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false, // helps with non-serializable values like Dates
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
     }),
   // eslint-disable-next-line no-undef
-  devTools: process.env.NODE_ENV !== "production", // enable Redux DevTools in dev
+  devTools: process.env.NODE_ENV !== "production",
 });
+
+export const persistor = persistStore(store);
 
 attachAuthStore(store);
 

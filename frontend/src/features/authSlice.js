@@ -164,7 +164,7 @@ const initialState = {
   error: null,
   success: false,
   hasFetchedUsers: false,
-  isAuthInitialized: false
+  isAuthInitialized: false,
 };
 
 const authSlice = createSlice({
@@ -175,6 +175,7 @@ const authSlice = createSlice({
       state.user = action.payload?.user ?? null;
       state.accessToken = action.payload?.accessToken ?? null;
       state.profile = action.payload?.user ?? state.profile;
+      state.isAuthInitialized = true;
     },
     forceLogout: (state) => {
       state.user = null;
@@ -183,6 +184,7 @@ const authSlice = createSlice({
       state.permissions = [];
       state.success = false;
       state.hasFetchedUsers = false;
+      state.isAuthInitialized = true;
     },
     resetState: (state) => {
       state.error = null;
@@ -191,20 +193,26 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(initializeAuth.pending, (state) => {
+        state.isAuthInitialized = false;
+      })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.profile = action.payload.user;
+        state.isAuthInitialized = true;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.profile = action.payload.user;
+        state.isAuthInitialized = true;
       })
       .addCase(initializeAuth.rejected, (state) => {
         state.user = null;
         state.accessToken = null;
         state.profile = null;
+        state.isAuthInitialized = true;
       })
       .addCase(currentUser.fulfilled, (state, action) => {
         state.user = action.payload;
@@ -216,6 +224,7 @@ const authSlice = createSlice({
         state.profile = null;
         state.permissions = [];
         state.success = false;
+        state.isAuthInitialized = true;
       })
       .addCase(logoutUser.rejected, (state) => {
         state.user = null;
@@ -223,6 +232,7 @@ const authSlice = createSlice({
         state.profile = null;
         state.permissions = [];
         state.success = false;
+        state.isAuthInitialized = true;
       })
       .addCase(fetchAllUser.fulfilled, (state, action) => {
         state.users = action.payload.data.data;

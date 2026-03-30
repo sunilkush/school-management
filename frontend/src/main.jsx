@@ -3,11 +3,12 @@ import Tailwind from 'primereact/passthrough/tailwind';
 import { twMerge } from 'tailwind-merge';
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 import "./index.css";
 import "antd/dist/reset.css";
 import App from "./App.jsx";
-import store from "./store/store.js";
-import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
+import store, { persistor } from "./store/store.js";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { lazy } from "react";
 import React, { Suspense } from "react";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
@@ -614,11 +615,12 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <ThemeProvider>
+    <PersistGate loading={<Loader />} persistor={persistor}>
+      <ThemeProvider>
       <PrimeReactProvider
         value={{
           unstyled: true, // ✅ Must be true to apply Tailwind styles
-          pt: Tailwind,    // ✅ Add Tailwind preset
+          pt: Tailwind, // ✅ Add Tailwind preset
           ptOptions: {
             mergeSections: true,
             mergeProps: true,
@@ -626,10 +628,11 @@ createRoot(document.getElementById("root")).render(
           },
         }}
       >
-        <Suspense fallback={<Loader/>}>
+        <Suspense fallback={<Loader />}>
           <RouterProvider router={router} />
         </Suspense>
       </PrimeReactProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </PersistGate>
   </Provider>
 );
