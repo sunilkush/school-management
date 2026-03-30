@@ -19,7 +19,7 @@ export const fetchLastRegisteredStudent = createAsyncThunk(
          
         }
       );
-      console.log("Last registered student response:", response.data.data);
+    
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -84,15 +84,14 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
         return rejectWithValue("schoolId is required");
       }
 
-      // ✅ token safety
-
+    
       // ✅ API Call
       const res = await apiClient.get(`/student/school`, {
         headers: {
         },
         params: {
           schoolId,
-          ...(academicYearId && { academicYearId }), // ✅ send only if exists
+         academicYearId
         },
       });
 

@@ -7,201 +7,225 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import { Section } from "../models/section.model.js";
-
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import mongoose from "mongoose";
 
-// ✅ Register and admit student
+
 const registerStudent = asyncHandler(async (req, res) => {
-  const {
-    studentName,
-    email,
-    password,
-    schoolId,
-    schoolClassId,
-    sectionId,
-    academicYearId,
-    admissionDate,
-    feeDiscount,
-    smsMobile,
-    mobileNumber,
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    // Student personal
-    dateOfBirth,
-    birthFormId,
-    gender,
-    cast,
-    religion,
-    bloodGroup,
-    address,
-    identificationMark,
-    orphan,
-    family,
-    disease,
-    notes,
-    siblings,
-    previousSchool,
-
-    // Father
-    fatherName,
-    fatherNID,
-    fatherOccupation,
-    fatherEducation,
-    fatherMobile,
-    fatherProfession,
-    fatherIncome,
-    fatherEmail,
-
-    // Mother
-    motherName,
-    motherNID,
-    motherOccupation,
-    motherEducation,
-    motherMobile,
-    motherProfession,
-    motherIncome,
-    motherEmail,
-  } = req.body;
-
-  if (!studentName || !email || !password || !schoolId || !schoolClassId || !sectionId || !academicYearId) {
-    throw new ApiError(400, "Required fields missing");
-  }
-
-  /* ===========================
-     1️⃣ STUDENT USER CREATION
-  ============================ */
-  const studentRole = await Role.findOne({ name: /student/i });
-  if (!studentRole) throw new ApiError(400, "Student role not found");
-
-  let studentUser = await User.findOne({ email });
-  if (!studentUser) {
-    studentUser = await User.create({
-      name: studentName,
+  try {
+    const {
+      studentName,
       email,
       password,
-      roleId: studentRole._id,
       schoolId,
-    });
-  }
+      schoolClassId,
+      sectionId,
+      academicYearId,
+      admissionDate,
+      feeDiscount,
+      smsMobile,
+      mobileNumber,
 
-  /* ===========================
-     2️⃣ PARENT USER CREATION
-  ============================ */
-  const parentRole = await Role.findOne({ name: /parent/i });
-  if (!parentRole) throw new ApiError(400, "Parent role not found");
+      dateOfBirth,
+      birthFormId,
+      gender,
+      cast,
+      religion,
+      bloodGroup,
+      address,
+      identificationMark,
+      orphan,
+      family,
+      disease,
+      notes,
+      siblings,
+      previousSchool,
 
-  let parentUser = null;
+      fatherName,
+      fatherNID,
+      fatherOccupation,
+      fatherEducation,
+      fatherMobile,
+      fatherProfession,
+      fatherIncome,
+      fatherEmail,
 
-  if (fatherMobile || fatherEmail) {
-    parentUser = await User.findOne({
-      $or: [
-        fatherEmail ? { email: fatherEmail } : null,
-        fatherMobile ? { mobile: fatherMobile } : null,
-      ].filter(Boolean),
-    });
+      motherName,
+      motherNID,
+      motherOccupation,
+      motherEducation,
+      motherMobile,
+      motherProfession,
+      motherIncome,
+      motherEmail,
+    } = req.body;
 
-    if (!parentUser) {
-      parentUser = await User.create({
-        name: fatherName || "Parent",
-        email: fatherEmail,
-        mobile: fatherMobile,
-        password: fatherMobile || "parent@123",
-        roleId: parentRole._id,
-        schoolId,
-        students: [studentUser._id],
-      });
+    if (!studentName || !email || !password || !schoolId || !schoolClassId || !sectionId || !academicYearId) {
+      throw new ApiError(400, "Required fields missing");
     }
+
+    /* ===========================
+       1️⃣ STUDENT USER
+    ============================ */
+    const studentRole = await Role.findOne({ name: /student/i });
+    if (!studentRole) throw new ApiError(400, "Student role not found");
+
+    let studentUser = await User.findOne({ email }).session(session);
+
+    if (!studentUser) {
+      studentUser = await User.create([{
+        name: studentName,
+        email,
+        password,
+        roleId: studentRole._id,
+        schoolId,
+      }], { session });
+
+      studentUser = studentUser[0];
+    }
+    if (!studentUser._id) {
+      throw new ApiError(500, "Failed to create student user");
+    }
+    /* ===========================
+       2️⃣ PARENT USER
+    ============================ */
+    const parentRole = await Role.findOne({ name: /parent/i });
+    if (!parentRole) throw new ApiError(400, "Parent role not found");
+
+    let parentUser = null;
+
+    if (fatherMobile || fatherEmail) {
+      parentUser = await User.findOne({
+        $or: [
+          fatherEmail ? { email: fatherEmail } : null,
+          fatherMobile ? { mobile: fatherMobile } : null,
+        ].filter(Boolean),
+      }).session(session);
+
+      if (!parentUser) {
+        parentUser = await User.create([{
+          name: fatherName || "Parent",
+          email: fatherEmail,
+          mobile: fatherMobile,
+          password: fatherMobile || "parent@123",
+          roleId: parentRole._id,
+          schoolId,
+          students: [studentUser._id],
+        }], { session });
+
+        parentUser = parentUser[0];
+      }
+    }
+
+    /* ===========================
+       3️⃣ STUDENT PROFILE
+    ============================ */
+    const student = await Student.create([{
+      userId: studentUser._id,
+      dateOfBirth,
+      birthFormId,
+      gender,
+      cast,
+      religion,
+      bloodGroup,
+      address,
+      identificationMark,
+      orphan,
+      family,
+      disease,
+      notes,
+      siblings,
+      previousSchool,
+      parents: parentUser ? [parentUser._id] : [],
+      fatherInfo: {
+        name: fatherName,
+        NID: fatherNID,
+        occupation: fatherOccupation,
+        education: fatherEducation,
+        mobile: fatherMobile,
+        profession: fatherProfession,
+        income: fatherIncome,
+        email: fatherEmail,
+      },
+      motherInfo: {
+        name: motherName,
+        NID: motherNID,
+        occupation: motherOccupation,
+        education: motherEducation,
+        mobile: motherMobile,
+        profession: motherProfession,
+        income: motherIncome,
+        email: motherEmail,
+      },
+    }], { session });
+
+    /* ===========================
+       4️⃣ REG NUMBER
+    ============================ */
+    const lastReg = await StudentEnrollment.find({ schoolId, academicYearId })
+      .session(session)
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .select("registrationNumber");
+
+    const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
+    const yearLabel = academicYearDoc?.code || new Date().getFullYear();
+
+    const registrationNumber = generateNextRegNumber(
+      lastReg?.[0]?.registrationNumber,
+      { prefix: "REG", year: yearLabel, digits: 4 }
+    );
+
+    /* ===========================
+       5️⃣ ENROLLMENT
+    ============================ */
+    const enrollment = await StudentEnrollment.create([{
+      studentId: student[0]._id,
+      schoolId,
+      academicYearId,
+      registrationNumber,
+      schoolClassId,
+      sectionId,
+      admissionDate,
+      feeDiscount,
+      smsMobile,
+      mobileNumber,
+    }], { session });
+
+    /* ===========================
+       6️⃣ SECTION UPDATE
+    ============================ */
+    await Section.findOneAndUpdate(
+      { schoolClassId, sectionId, schoolId, academicYearId },
+      { $addToSet: { students: studentUser._id } },
+      { session }
+    );
+
+    // ✅ COMMIT
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        {
+          student: student[0],
+          enrollment: enrollment[0],
+          parent: parentUser,
+        },
+        "Student & Parent registered successfully"
+      )
+    );
+
+  } catch (error) {
+    // ❌ ROLLBACK
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-
-  /* ===========================
-     3️⃣ STUDENT PROFILE
-  ============================ */
-  const student = await Student.create({
-    userId: studentUser._id,
-    dateOfBirth,
-    birthFormId,
-    gender,
-    cast,
-    religion,
-    bloodGroup,
-    address,
-    identificationMark,
-    orphan,
-    family,
-    disease,
-    notes,
-    siblings,
-    previousSchool,
-    parents: parentUser ? [parentUser._id] : [],
-    fatherInfo: {
-      name: fatherName,
-      NID: fatherNID,
-      occupation: fatherOccupation,
-      education: fatherEducation,
-      mobile: fatherMobile,
-      profession: fatherProfession,
-      income: fatherIncome,
-      email: fatherEmail,
-    },
-    motherInfo: {
-      name: motherName,
-      NID: motherNID,
-      occupation: motherOccupation,
-      education: motherEducation,
-      mobile: motherMobile,
-      profession: motherProfession,
-      income: motherIncome,
-      email: motherEmail,
-    },
-  });
-
-  /* ===========================
-     4️⃣ REGISTRATION NUMBER
-  ============================ */
-  const lastReg = await StudentEnrollment.find({ schoolId, academicYearId })
-    .sort({ createdAt: -1 })
-    .limit(1)
-    .select("registrationNumber");
-
-  const academicYearDoc = await AcademicYear.findById(academicYearId).lean();
-  const yearLabel = academicYearDoc?.code || new Date().getFullYear();
-
-  const registrationNumber = generateNextRegNumber(
-    lastReg?.[0]?.registrationNumber,
-    { prefix: "REG", year: yearLabel, digits: 4 }
-  );
-
-  /* ===========================
-     5️⃣ ENROLLMENT
-  ============================ */
-  const enrollment = await StudentEnrollment.create({
-    studentId: student._id,
-    schoolId,
-    academicYearId,
-    registrationNumber,
-    schoolClassId,
-    sectionId,
-    admissionDate,
-    feeDiscount,
-    smsMobile,
-    mobileNumber,
-  });
-
-  /* ===========================
-     6️⃣ CLASS SECTION MAP
-  ============================ */
-  await Section.findOneAndUpdate(
-    { schoolClassId, sectionId, schoolId, academicYearId },
-    { $addToSet: { students: studentUser._id } }
-  );
-
-  return res.status(201).json(
-    new ApiResponse(
-      201,
-      { student, enrollment, parent: parentUser },
-      "Student & Parent registered successfully"
-    )
-  );
 });
 
 // ✅ Get Students (with aggregation)
@@ -550,22 +574,19 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
 });
 
 const getStudentsBySchoolId = asyncHandler(async (req, res) => {
+  let { schoolId, academicYearId, page = 1, limit = 10 } = req.query;
 
-  // ✅ Use query param properly
-  let { schoolId, academicYearId } = req.query;
-
-  console.log("Received schoolId:", schoolId, "academicYearId:", academicYearId);
-
-  // ✅ Validate schoolId properly
+  // ✅ Validate schoolId
   if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "Valid schoolId is required");
   }
 
-  // ✅ Fetch Active Academic Year if not passed
-  if (!academicYearId) {
+  schoolId = new mongoose.Types.ObjectId(schoolId);
 
+  // ✅ Get Active Academic Year if not provided
+  if (!academicYearId) {
     const activeYear = await AcademicYear.findOne({
-      schoolId: new mongoose.Types.ObjectId(schoolId),
+      schoolId,
       isActive: true,
     }).lean();
 
@@ -576,22 +597,26 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
     academicYearId = activeYear._id;
   }
 
-  // ✅ Also validate academicYearId
   if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
     throw new ApiError(400, "Invalid academicYearId format");
   }
 
-  // ✅ Aggregation Pipeline
-  const students = await StudentEnrollment.aggregate([
+  academicYearId = new mongoose.Types.ObjectId(academicYearId);
 
+  // ✅ Pagination calc
+  page = parseInt(page);
+  limit = parseInt(limit);
+  const skip = (page - 1) * limit;
+
+  /* ===========================
+     🔥 AGGREGATION
+  ============================ */
+  const students = await StudentEnrollment.aggregate([
     {
-      $match: {
-        schoolId: new mongoose.Types.ObjectId(schoolId),
-        academicYearId: new mongoose.Types.ObjectId(academicYearId),
-      },
+      $match: { schoolId, academicYearId },
     },
 
-    // ✅ Student Data
+    /* STUDENT */
     {
       $lookup: {
         from: "students",
@@ -600,9 +625,9 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
         as: "student",
       },
     },
-    { $unwind: { path: "$student", preserveNullAndEmptyArrays: false } },
+    { $unwind: "$student" },
 
-    // ✅ User Data
+    /* USER */
     {
       $lookup: {
         from: "users",
@@ -611,9 +636,9 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
         as: "userDetails",
       },
     },
-    { $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: false } },
+    { $unwind: "$userDetails" },
 
-    // ✅ Class Data
+    /* CLASS */
     {
       $lookup: {
         from: "classes",
@@ -622,9 +647,9 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
         as: "class",
       },
     },
-    { $unwind: { path: "$class", preserveNullAndEmptyArrays: false } },
+    { $unwind: "$class" },
 
-    // ✅ Section Data
+    /* SECTION */
     {
       $lookup: {
         from: "sections",
@@ -633,163 +658,82 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
         as: "section",
       },
     },
-    { $unwind: { path: "$section", preserveNullAndEmptyArrays: false } },
+    { $unwind: "$section" },
 
-    // ✅ School Data
-    {
-      $lookup: {
-        from: "schools",
-        localField: "schoolId",
-        foreignField: "_id",
-        as: "school",
-      },
-    },
-    { $unwind: { path: "$school", preserveNullAndEmptyArrays: false } },
-
-    // ✅ Academic Year Data
-    {
-      $lookup: {
-        from: "academicyears",
-        localField: "academicYearId",
-        foreignField: "_id",
-        as: "academicYear",
-      },
-    },
-    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: false } },
-
+    /* SORT */
     { $sort: { createdAt: -1 } },
 
-    // ✅ Clean Projection for Frontend
+    /* PAGINATION */
+    { $skip: skip },
+    { $limit: limit },
+
+    /* FINAL SHAPE */
     {
-  $project: {
-    _id: 1, // enrollment id
+      $project: {
+        _id: 1,
+        registrationNumber: 1,
+        admissionDate: 1,
+        mobileNumber: 1,
+        feeDiscount: 1,
+        status: 1,
 
-    registrationNumber: 1,
-    admissionDate: 1,
-    mobileNumber: 1,
-    feeDiscount: 1,
-    status: 1,
+        student: {
+          _id: "$student._id",
+          dateOfBirth: "$student.dateOfBirth",
+          gender: "$student.gender",
+          religion: "$student.religion",
+          cast: "$student.cast",
+          bloodGroup: "$student.bloodGroup",
+          address: "$student.address",
+          identificationMark: "$student.identificationMark",
+          fatherInfo: "$student.fatherInfo",
+          motherInfo: "$student.motherInfo",
+        },
 
-    student: {
-      _id: "$student._id",
-      dateOfBirth: "$student.dateOfBirth",
-      gender: "$student.gender",
-      religion: "$student.religion",
-      cast: "$student.cast",
-      bloodGroup: "$student.bloodGroup",
-      address: "$student.address",
-      fatherInfo: "$student.fatherInfo",
-      motherInfo: "$student.motherInfo",
-      identificationMark: "$student.identificationMark",
+        user: {
+          _id: "$userDetails._id",
+          name: "$userDetails.name",
+          email: "$userDetails.email",
+          avatar: "$userDetails.avatar",
+          isActive: "$userDetails.isActive",
+        },
+
+        class: {
+          _id: "$class._id",
+          name: "$class.name",
+        },
+
+        section: {
+          _id: "$section._id",
+          name: "$section.name",
+        },
+      },
     },
-
-    userDetails: {
-      _id: "$userDetails._id",
-      name: "$userDetails.name",
-      email: "$userDetails.email",
-      isActive: "$userDetails.isActive",
-      avatar: "$userDetails.avatar",
-    },
-
-    /* ✅ CLASS ID + NAME */
-    class: {
-      _id: "$class._id",
-      name: "$class.name",
-    },
-
-    /* ✅ SECTION ID + NAME */
-    section: {
-      _id: "$section._id",
-      name: "$section.name",
-    },
-
-    /* ✅ SCHOOL ID + DETAILS */
-    school: {
-      _id: "$school._id",
-      name: "$school.name",
-      address: "$school.address",
-    },
-
-    /* ✅ ACADEMIC YEAR ID + DETAILS */
-    academicYear: {
-      _id: "$academicYear._id",
-      name: "$academicYear.name",
-      startDate: "$academicYear.startDate",
-      endDate: "$academicYear.endDate",
-    },
-  },
-},
-{
-  $project: {
-    _id: 1, // enrollment id
-
-    registrationNumber: 1,
-    admissionDate: 1,
-    mobileNumber: 1,
-    feeDiscount: 1,
-    status: 1,
-
-    student: {
-      _id: "$student._id",
-      dateOfBirth: "$student.dateOfBirth",
-      gender: "$student.gender",
-      religion: "$student.religion",
-      cast: "$student.cast",
-      bloodGroup: "$student.bloodGroup",
-      address: "$student.address",
-      fatherInfo: "$student.fatherInfo",
-      motherInfo: "$student.motherInfo",
-      identificationMark: "$student.identificationMark",
-    },
-
-    userDetails: {
-      _id: "$userDetails._id",
-      name: "$userDetails.name",
-      email: "$userDetails.email",
-      isActive: "$userDetails.isActive",
-      avatar: "$userDetails.avatar",
-    },
-
-    /* ✅ CLASS ID + NAME */
-    class: {
-      _id: "$class._id",
-      name: "$class.name",
-    },
-
-    /* ✅ SECTION ID + NAME */
-    section: {
-      _id: "$section._id",
-      name: "$section.name",
-    },
-
-    /* ✅ SCHOOL ID + DETAILS */
-    school: {
-      _id: "$school._id",
-      name: "$school.name",
-      address: "$school.address",
-    },
-
-    /* ✅ ACADEMIC YEAR ID + DETAILS */
-    academicYear: {
-      _id: "$academicYear._id",
-      name: "$academicYear.name",
-      startDate: "$academicYear.startDate",
-      endDate: "$academicYear.endDate",
-    },
-  },
-}
-,
   ]);
 
-  // ✅ If No Students Found
-  if (students.length === 0) {
-    throw new ApiError(404, "No students found for this school & academic year");
-  }
+  /* ===========================
+     🔢 TOTAL COUNT (for pagination)
+  ============================ */
+  const total = await StudentEnrollment.countDocuments({
+    schoolId,
+    academicYearId,
+  });
 
   return res.status(200).json(
-    new ApiResponse(200, students, "Students Retrieved Successfully")
+    new ApiResponse(
+      200,
+      {
+        data: students,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+      "Students Retrieved Successfully"
+    )
   );
-
 });
 
 const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
