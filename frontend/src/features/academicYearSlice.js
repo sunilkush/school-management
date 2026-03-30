@@ -1,10 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-
-
-const Api_Base_Url = import.meta.env.VITE_API_URL;
-
-
 const authHeader = () => ({});
 
 /* ================= CREATE ================= */
