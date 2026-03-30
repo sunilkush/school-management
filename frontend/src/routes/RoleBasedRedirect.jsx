@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Loader from "../components/Loader/Loader";
 
 const rolePathMap = {
   "Super Admin": "superadmin",
@@ -24,11 +25,13 @@ const rolePathMap = {
 };
 
 const RoleBasedRedirect = () => {
-  const role = useSelector((state) =>
-    typeof state.auth.user?.role === "string"
-      ? state.auth.user?.role
-      : state.auth.user?.role?.name
-  );
+  const { user, isAuthInitialized } = useSelector((state) => state.auth);
+
+  if (!isAuthInitialized) {
+    return <Loader />;
+  }
+
+  const role = typeof user?.role === "string" ? user.role : user?.role?.name;
 
   const path = rolePathMap[role] || "unauthorized";
   return <Navigate to={`/dashboard/${path}`} replace />;
