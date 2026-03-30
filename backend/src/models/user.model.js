@@ -2,7 +2,6 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { type } from "os";
 
 const userSchema = new Schema(
   {
@@ -22,6 +21,7 @@ const userSchema = new Schema(
       required: true,
       lowercase: true,
       trim: true,
+      index: true,
     },
 
     password: {
@@ -83,7 +83,7 @@ const userSchema = new Schema(
         type: String,
     },
     resetPasswordExpire:{
-       type: String,
+       type: Date,
     },
 
     // 🔹 Audit Fields (Enterprise MUST)

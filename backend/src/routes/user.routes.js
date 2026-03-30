@@ -19,6 +19,7 @@ import {
 } from "../controllers/user.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
+import { validateBody } from "../middlewares/validate.middleware.js";
 const router = Router();
 
 // Role-Based Access Control
@@ -29,7 +30,7 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 
 // ✅ Public Routes
 
-router.post("/login", loginUser);
+router.post("/login", validateBody(["email", "password"]), loginUser);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
@@ -40,12 +41,14 @@ router.post("/resend-verification", resendVerificationEmail);
 
 router.post(
   "/register",
+  validateBody(["name", "email", "password", "roleId", "schoolId"]),
   auth,
   roleMiddleware(ADMIN_ROLE),
   upload.fields([{ name: "avatar", maxCount: 1 }]),
   registerUser
 );
 router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
+router.get("/me", auth, roleMiddleware(ALL_USERS), getCurrentUser);
 router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
 router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
