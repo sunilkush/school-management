@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, resetState } from "../../features/authSlice";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Layout,
   Row,
@@ -19,37 +19,34 @@ import { MailOutlined, LockOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
+const roleRoutes = {
+  "super admin": "/dashboard/superadmin",
+  "school admin": "/dashboard/schooladmin",
+  student: "/dashboard/student",
+  parent: "/dashboard/parent",
+  teacher: "/dashboard/teacher",
+  accountant: "/dashboard/accountant",
+  staff: "/dashboard/staff",
+};
+
 const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const location = useLocation();
   const { loading, error, user } = useSelector((state) => state.auth);
 
-  const [navigated, setNavigated] = useState(false);
+  const roleName =
+    typeof user?.role === "string" ? user.role.toLowerCase() : user?.role?.name?.toLowerCase();
 
-  const roleName = user?.role?.name?.toLowerCase();
-
-  // ✅ Role-based redirect (safe)
   useEffect(() => {
-    if (roleName && !navigated) {
-      const roleRoutes = {
-        "super admin": "/dashboard/superadmin",
-        "school admin": "/dashboard/schooladmin",
-        student: "/dashboard/student",
-        parent: "/dashboard/parent",
-        teacher: "/dashboard/teacher",
-        accountant: "/dashboard/accountant",
-        staff: "/dashboard/staff",
-      };
+    if (!roleName || location.pathname !== "/login") return;
 
-      if (roleRoutes[roleName]) {
-        setNavigated(true);
-        navigate(roleRoutes[roleName]);
-      }
-    }
-  }, [roleName, navigate, navigated]);
+    const from = location.state?.from?.pathname;
+    const target = from && from !== "/login" ? from : roleRoutes[roleName] || "/dashboard";
 
-  // ✅ Submit
+    navigate(target, { replace: true });
+  }, [roleName, navigate, location]);
+
   const onFinish = (values) => {
     dispatch(loginUser(values));
   };
@@ -60,12 +57,10 @@ const LoginForm = () => {
     };
   }, [dispatch]);
 
-  // ✅ Clear error on typing
   const onValuesChange = () => {
     if (error) dispatch(resetState());
   };
 
-  // ✅ Hide "No token found" type errors
   const showError =
     error &&
     !error.toLowerCase().includes("token") &&
@@ -91,19 +86,17 @@ const LoginForm = () => {
                 maxWidth: 420,
                 boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
                 borderRadius: 12,
-                background:"var(--card)"
+                background: "var(--card)",
               }}
               variant="borderless"
             >
-              {/* Header */}
-              <Title level={3} style={{ marginBottom: 0,color:"var(--text-primary)" }}>
+              <Title level={3} style={{ marginBottom: 0, color: "var(--text-primary)" }}>
                 Welcome Back 👋
               </Title>
-              <Text type="secondary" style={{color:"var(--text-primary)"}}>
+              <Text type="secondary" style={{ color: "var(--text-primary)" }}>
                 Login to continue to your dashboard
               </Text>
 
-              {/* Form */}
               <Form
                 layout="vertical"
                 style={{ marginTop: 24 }}
@@ -112,13 +105,12 @@ const LoginForm = () => {
               >
                 <Form.Item
                   label="Email Address"
-                  style={{color:"var(--text-primary)"}}
+                  style={{ color: "var(--text-primary)" }}
                   name="email"
                   rules={[
                     { required: true, message: "Email is required" },
                     { type: "email", message: "Invalid email" },
                   ]}
-                   
                 >
                   <Input
                     size="large"
@@ -131,7 +123,7 @@ const LoginForm = () => {
                   label="Password"
                   name="password"
                   rules={[{ required: true, message: "Password is required" }]}
-                  style={{color:"var(--text-primary)"}}
+                  style={{ color: "var(--text-primary)" }}
                 >
                   <Input.Password
                     size="large"
@@ -141,13 +133,12 @@ const LoginForm = () => {
                 </Form.Item>
 
                 <Row justify="space-between" align="middle">
-                  <Form.Item name="remember" valuePropName="checked" style={{color:"var(--text-primary)"}}>
-                    <Checkbox style={{color:"var(--text-primary)"}}>Remember me</Checkbox>
+                  <Form.Item name="remember" valuePropName="checked" style={{ color: "var(--text-primary)" }}>
+                    <Checkbox style={{ color: "var(--text-primary)" }}>Remember me</Checkbox>
                   </Form.Item>
-                  <Link to="/forgot-password" style={{color:"var(--text-primary)"}}>Forgot password?</Link>
+                  <Link to="/forgot-password" style={{ color: "var(--text-primary)" }}>Forgot password?</Link>
                 </Row>
 
-                {/* ✅ Error (filtered) */}
                 {showError && (
                   <Alert
                     message={error}
@@ -157,7 +148,6 @@ const LoginForm = () => {
                   />
                 )}
 
-                {/* Submit */}
                 <Button
                   type="primary"
                   htmlType="submit"
@@ -168,19 +158,17 @@ const LoginForm = () => {
                   Sign In
                 </Button>
 
-                {/* Google */}
-                <Button block size="large" style={{ marginTop: 12, }}>
+                <Button block size="large" style={{ marginTop: 12 }}>
                   Sign in with Google
                 </Button>
               </Form>
 
-              {/* Footer */}
               <Text
                 style={{
                   display: "block",
                   marginTop: 16,
                   textAlign: "center",
-                  color:"var(--text-primary)"
+                  color: "var(--text-primary)",
                 }}
               >
                 Don’t have an account? <Link to="/register">Sign up</Link>

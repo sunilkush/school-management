@@ -1,30 +1,28 @@
 import { useSelector } from "react-redux";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-const ProtectedRoute = ({ allowedRoles = [] }) => {
-  const { user, accessToken} = useSelector((state) => state.auth);
+const resolveRoleName = (user) =>
+  typeof user?.role === "string" ? user.role : user?.role?.name;
 
+const ProtectedRoute = ({ allowedRoles = [], children }) => {
+  const location = useLocation();
+  const { user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
 
-  // 🔐 Not logged in
+  if (!isAuthInitialized) {
+    return null;
+  }
+
   if (!accessToken || !user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  // 🟢 No role restriction
-  if (allowedRoles.length === 0) {
-   return  <Outlet />;
-  }
+  const userRoleName = resolveRoleName(user);
 
-  const userRoleName =
-    typeof user?.role === "string"
-      ? user.role
-      : user?.role?.name;
-
-  if (!allowedRoles.includes(userRoleName)) {
+  if (allowedRoles.length > 0 && !allowedRoles.includes(userRoleName)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  return  <Outlet />;
+  return children ?? <Outlet />;
 };
 
 export default ProtectedRoute;
