@@ -1,33 +1,48 @@
 import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Select, Spin, Typography } from "antd";
-import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
+import {
+  fetchActiveAcademicYear,
+  setSelectedAcademicYear,
+} from "../../features/academicYearSlice";
 
 const { Option } = Select;
 const { Text } = Typography;
 
-const AcademicYearSwitcher = ({ onChange }) => {
+const AcademicYearSwitcher = () => {
   const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
-  const { activeYear, loading, error } = useSelector(
-    (state) => state.academicYear
-  );
+  const {
+    activeYear,
+    selectedAcademicYear,
+    loading,
+    error,
+  } = useSelector((state) => state.academicYear);
 
   const schoolId = user?.school?._id;
 
-  const hasActiveYear = Boolean(activeYear);
-
-  // 🔥 Fetch only active year
+  /* ===========================
+     📡 FETCH ACTIVE YEAR
+  ============================ */
   useEffect(() => {
     if (!schoolId) return;
 
-    if (!hasActiveYear) {
-      dispatch(fetchActiveAcademicYear(schoolId));
-    }
-  }, [dispatch, schoolId, hasActiveYear]);
+    dispatch(fetchActiveAcademicYear(schoolId));
+  }, [dispatch, schoolId]);
 
-  // 🔥 Format date
+  /* ===========================
+     🧠 AUTO SET SELECTED
+  ============================ */
+  useEffect(() => {
+    if (activeYear && !selectedAcademicYear) {
+      dispatch(setSelectedAcademicYear(activeYear));
+    }
+  }, [activeYear, selectedAcademicYear, dispatch]);
+
+  /* ===========================
+     📅 FORMAT DATE
+  ============================ */
   const formatDate = useMemo(
     () => (dateStr) =>
       dateStr
@@ -40,19 +55,26 @@ const AcademicYearSwitcher = ({ onChange }) => {
     []
   );
 
-  // 🔥 Handle change (only one active year)
-  const handleChange = () => {
-    if (activeYear) {
-      onChange?.(activeYear);
-    }
+  /* ===========================
+     🔄 HANDLE CHANGE
+  ============================ */
+  const handleChange = (value) => {
+    if (!value) return;
+
+    // since only active year, just set it
+    dispatch(setSelectedAcademicYear(activeYear));
   };
 
-  // 🔥 Loading state
-  if (loading && !hasActiveYear) {
+  /* ===========================
+     ⏳ LOADING
+  ============================ */
+  if (loading && !activeYear) {
     return <Spin size="small" />;
   }
 
-  // 🔥 Error state
+  /* ===========================
+     ❌ ERROR
+  ============================ */
   if (error) {
     return <Text type="danger">{error}</Text>;
   }
@@ -61,11 +83,10 @@ const AcademicYearSwitcher = ({ onChange }) => {
     <Select
       style={{ width: 220 }}
       placeholder="Academic Year"
-      value={activeYear?._id}
+      value={selectedAcademicYear?._id}
       onChange={handleChange}
       loading={loading}
-      disabled={true}
-
+      disabled // 🔥 because only one active year
     >
       {activeYear && (
         <Option value={activeYear._id}>

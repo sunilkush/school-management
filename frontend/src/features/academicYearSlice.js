@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-const authHeader = () => ({});
 
 /* ================= CREATE ================= */
 
@@ -8,12 +7,7 @@ export const createAcademicYear = createAsyncThunk(
   "academicYear/create",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(
-        `/academicYear/create`,
-        data,
-        authHeader()
-      );
-
+      const res = await apiClient.post(`/academicYear/create`, data);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -27,11 +21,7 @@ export const fetchAllAcademicYears = createAsyncThunk(
   "academicYear/fetchAll",
   async (schoolId, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(
-        `/academicYear/school/${schoolId}`,
-        authHeader()
-      );
-
+      const res = await apiClient.get(`/academicYear/school/${schoolId}`);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -45,11 +35,7 @@ export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
   async (schoolId, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(
-        `/academicYear/active/${schoolId}`,
-        authHeader()
-      );
-
+      const res = await apiClient.get(`/academicYear/active/${schoolId}`);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -64,11 +50,8 @@ export const setActiveAcademicYear = createAsyncThunk(
   async (academicYearId, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `/academicYear/activate/${academicYearId}`,
-        {},
-        authHeader()
+        `/academicYear/activate/${academicYearId}`
       );
-
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -82,12 +65,7 @@ export const archiveAcademicYear = createAsyncThunk(
   "academicYear/archive",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(
-        `/academicYear/archive/${id}`,
-        {},
-        authHeader()
-      );
-
+      const res = await apiClient.post(`/academicYear/archive/${id}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -101,11 +79,7 @@ export const deleteAcademicYear = createAsyncThunk(
   "academicYear/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(
-        `/academicYear/${id}`,
-        authHeader()
-      );
-
+      const res = await apiClient.delete(`/academicYear/${id}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -119,12 +93,7 @@ export const updateAcademicYear = createAsyncThunk(
   "academicYear/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(
-        `/academicYear/${id}`,
-        data,
-        authHeader()
-      );
-
+      const res = await apiClient.put(`/academicYear/${id}`, data);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -154,15 +123,13 @@ const academicYearSlice = createSlice({
 
     setSelectedAcademicYear: (state, action) => {
       state.selectedAcademicYear = action.payload;
-
-     
     },
   },
 
   extraReducers: (builder) => {
     builder
 
-      /* CREATE */
+      /* ================= CREATE ================= */
 
       .addCase(createAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
@@ -170,27 +137,26 @@ const academicYearSlice = createSlice({
         state.message = "Academic year created successfully";
       })
 
-      /* FETCH ALL */
+      /* ================= FETCH ALL ================= */
 
       .addCase(fetchAllAcademicYears.fulfilled, (state, action) => {
         state.loading = false;
         state.academicYears = action.payload;
       })
 
-      /* FETCH ACTIVE */
+      /* ================= FETCH ACTIVE ================= */
 
       .addCase(fetchActiveAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
         state.activeYear = action.payload;
 
+        // 🔥 auto sync
         if (!state.selectedAcademicYear) {
           state.selectedAcademicYear = action.payload;
-
-         
         }
       })
 
-      /* SET ACTIVE */
+      /* ================= SET ACTIVE ================= */
 
       .addCase(setActiveAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
@@ -198,10 +164,9 @@ const academicYearSlice = createSlice({
         state.activeYear = action.payload;
         state.selectedAcademicYear = action.payload;
 
-       
-
         state.message = "Active academic year updated";
 
+        // 🔥 sync list
         state.academicYears = state.academicYears.map((y) =>
           y._id === action.payload._id
             ? { ...y, isActive: true, archived: false }
@@ -209,35 +174,46 @@ const academicYearSlice = createSlice({
         );
       })
 
-      /* ARCHIVE */
+      /* ================= ARCHIVE ================= */
 
       .addCase(archiveAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
 
+        const archivedId = action.payload.data._id;
+
         state.academicYears = state.academicYears.map((y) =>
-          y._id === action.payload.data._id
+          y._id === archivedId
             ? { ...y, isActive: false, archived: true }
             : y
         );
 
-        if (state.activeYear?._id === action.payload.data._id) {
+        // 🔥 reset if active deleted
+        if (state.activeYear?._id === archivedId) {
           state.activeYear = null;
+          state.selectedAcademicYear = null;
         }
       })
 
-      /* DELETE */
+      /* ================= DELETE ================= */
 
       .addCase(deleteAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
 
+        const deletedId = action.payload.data._id;
+
         state.academicYears = state.academicYears.filter(
-          (y) => y._id !== action.payload.data._id
+          (y) => y._id !== deletedId
         );
+
+        if (state.activeYear?._id === deletedId) {
+          state.activeYear = null;
+          state.selectedAcademicYear = null;
+        }
       })
 
-      /* UPDATE */
+      /* ================= UPDATE ================= */
 
       .addCase(updateAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
@@ -246,9 +222,18 @@ const academicYearSlice = createSlice({
         state.academicYears = state.academicYears.map((y) =>
           y._id === action.payload._id ? action.payload : y
         );
+
+        // 🔥 important sync
+        if (state.selectedAcademicYear?._id === action.payload._id) {
+          state.selectedAcademicYear = action.payload;
+        }
+
+        if (state.activeYear?._id === action.payload._id) {
+          state.activeYear = action.payload;
+        }
       })
 
-      /* PENDING */
+      /* ================= PENDING ================= */
 
       .addMatcher(
         (action) => action.type.endsWith("/pending"),
@@ -258,19 +243,21 @@ const academicYearSlice = createSlice({
         }
       )
 
-      /* REJECTED */
+      /* ================= REJECTED ================= */
 
       .addMatcher(
         (action) => action.type.endsWith("/rejected"),
         (state, action) => {
           state.loading = false;
-          state.error = action.payload;
+          state.error = action.payload || "Something went wrong";
         }
       );
   },
 });
 
-export const { clearAcademicYearMessages, setSelectedAcademicYear } =
-  academicYearSlice.actions;
+export const {
+  clearAcademicYearMessages,
+  setSelectedAcademicYear,
+} = academicYearSlice.actions;
 
 export default academicYearSlice.reducer;

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  registerStudent,
+  createStudentAdmission,
   getStudents,
   getStudentById,
   updateStudent,
@@ -29,7 +29,7 @@ router.post(
   "/register",
   auth,
   roleMiddleware(ADMIN_ROLE),
-  registerStudent
+  createStudentAdmission
 );
 
 // ✅ Get All Students (Super Admin, School Admin, Teacher)

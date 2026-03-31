@@ -56,6 +56,8 @@ studentEnrollmentSchema.index(
   { studentId: 1, academicYearId: 1, schoolId: 1 },
   { unique: true }
 );
+studentEnrollmentSchema.index({ schoolId: 1, academicYearId: 1 });
+studentEnrollmentSchema.index({ createdAt: -1 });
 
 export const StudentEnrollment = mongoose.model(
   "StudentEnrollment",

@@ -2,60 +2,134 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
+    /* ===========================
+       👤 STUDENT USER LINK
+    ============================ */
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // Ek hi user ek hi student hoga
+      unique: true, // one user = one student
+      index: true,
     },
+
+    /* ===========================
+       📸 BASIC INFO
+    ============================ */
     picture: {
-      type: String, // URL ya file path
+      type: String,
+      default: null,
     },
-    dateOfBirth: Date,
+
+    dateOfBirth: {
+      type: Date,
+      index: true,
+    },
+
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
     },
-    religion: String,
-    cast: String,
-    bloodGroup: String,
-    address: String,
-    identificationMark: String,
 
-    // 🟢 Father Info
-    fatherInfo: {
-      name: String,
-      NID: String,
-      occupation: String,
-      education: String,
-      mobile: String,
-      profession: String,
-      income: String,
+    religion: {
+      type: String,
+      trim: true,
     },
 
-    // 🔵 Mother Info
-    motherInfo: {
-      name: String,
-      NID: String,
-      occupation: String,
-      education: String,
-      mobile: String,
-      profession: String,
-      income: String,
+    cast: {
+      type: String,
+      trim: true,
     },
 
-    // 🟣 Other Info
+    bloodGroup: {
+      type: String,
+      trim: true,
+    },
+
+    address: {
+      type: String,
+      trim: true,
+    },
+
+    identificationMark: {
+      type: String,
+      trim: true,
+    },
+
+    /* ===========================
+       👨‍👩‍👧 PARENTS (REFERENCE BASED)
+    ============================ */
+
+    fatherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+      default: null,
+    },
+
+    motherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+      default: null,
+    },
+
+    // Optional (future proof)
+    guardianId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    /* ===========================
+       🟣 OTHER INFO
+    ============================ */
+
     orphan: {
       type: String,
       enum: ["Yes", "No"],
+      default: "No",
     },
-    family: String,
-    disease: String,
-    notes: String,
-    siblings: String,
-    previousSchool: String,
+
+    family: {
+      type: String,
+      trim: true,
+    },
+
+    disease: {
+      type: String,
+      trim: true,
+    },
+
+    notes: {
+      type: String,
+      trim: true,
+    },
+
+    siblings: {
+      type: String,
+      trim: true,
+    },
+
+    previousSchool: {
+      type: String,
+      trim: true,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
+
+/* ===========================
+   🔥 INDEXES (PERFORMANCE)
+=========================== */
+
+// fast lookup
+studentSchema.index({ fatherId: 1 });
+studentSchema.index({ motherId: 1 });
+
+// optional search
+studentSchema.index({ dateOfBirth: 1 });
 
 export const Student = mongoose.model("Student", studentSchema);

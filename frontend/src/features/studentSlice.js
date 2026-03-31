@@ -94,8 +94,8 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
          academicYearId
         },
       });
-
-      return res.data.data;
+     
+      return res.data?.data?.students;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||

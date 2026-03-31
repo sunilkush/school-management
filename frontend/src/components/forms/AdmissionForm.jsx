@@ -78,24 +78,51 @@ const AdmissionForm = () => {
     form.setFieldsValue({ sectionId: undefined });
   };
 
-  const onFinish = async (values) => {
+ const onFinish = async (values) => {
+  try {
     const payload = {
-      ...values,
+      studentData: {
+        name: values.studentName,
+        email: values.email,
+      
+        dateOfBirth: values.dateOfBirth?.format("YYYY-MM-DD"),
+        gender: values.gender,
+        address: values.address,
+        bloodGroup: values.bloodGroup,
+      },
+
+      fatherData: {
+        name: values.fatherName,
+        email: values.fatherEmail,
+        mobile: values.fatherMobile,
+      },
+
+      motherData: {
+        name: values.motherName,
+        email: values.motherEmail,
+        mobile: values.motherMobile,
+      },
+
       schoolId,
       academicYearId,
-      admissionDate: values.admissionDate?.format("YYYY-MM-DD"),
-      dateOfBirth: values.dateOfBirth?.format("YYYY-MM-DD"),
+      schoolClassId: values.schoolClassId,
+      sectionId: values.sectionId,
     };
 
     const res = await dispatch(createStudent(payload));
-    if (res?.payload?.success) {
+
+    if (res?.meta?.requestStatus === "fulfilled") {
       message.success("Student admitted successfully");
       form.resetFields();
+
       dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
     } else {
-      message.error("Admission failed");
+      message.error(res?.payload || "Admission failed");
     }
-  };
+  } catch (err) {
+    message.error("Something went wrong", err.message);
+  }
+};
 
   return (
     <Card >
@@ -116,13 +143,6 @@ const AdmissionForm = () => {
                   <Input />
                 </Form.Item>
               </Col>
-
-              <Col md={8}>
-                <Form.Item name="password" label="Password" rules={[{ required: true }]}>
-                  <Input.Password maxLength={6} />
-                </Form.Item>
-              </Col>
-
               <Col md={8}>
                 <Form.Item name="schoolClassId" label="Class" rules={[{ required: true }]}>
                   <Select
@@ -203,7 +223,7 @@ const AdmissionForm = () => {
 
               <Col md={8}>
                 <Form.Item name="orphan" label="Orphan">
-                  <Select options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
+                  <Select options={[{ value: "Yes" }, { value: "No" }]} />
                 </Form.Item>
               </Col>
 
