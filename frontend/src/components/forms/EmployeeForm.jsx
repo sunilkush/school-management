@@ -29,7 +29,7 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import { useDispatch, useSelector } from "react-redux";
 import { createEmployee } from "../../features/employeeSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
-import { fetchAllSubjects } from "../../features/subjectSlice";
+import { getAllSubjects } from "../../features/subjectSlice";
 
 // 🔥 Lazy Load
 const AttendanceCalendar = lazy(() =>
@@ -78,7 +78,7 @@ const EmployeeForm = () => {
 
   useEffect(() => {
     if (schoolId && academicYearId) {
-      dispatch(fetchAllSubjects({ schoolId, academicYearId }));
+      dispatch(getAllSubjects({ schoolId, academicYearId }));
     }
   }, [schoolId, academicYearId, dispatch]);
 

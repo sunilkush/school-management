@@ -136,10 +136,10 @@ export const getMyPermissions = createAsyncThunk("auth/permissions", async (_, {
   }
 });
 
-export const fetchAllUser = createAsyncThunk("auth/allUsers", async (_, { rejectWithValue }) => {
+export const fetchAllUser = createAsyncThunk("auth/allUsers", async (params = {}, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get("/user/all");
-    return res.data;
+    const res = await apiClient.get("/user/all", { params });
+    return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
   }
@@ -147,8 +147,8 @@ export const fetchAllUser = createAsyncThunk("auth/allUsers", async (_, { reject
 
 export const deleteUser = createAsyncThunk("auth/deleteUser", async (id, { rejectWithValue }) => {
   try {
-    const res = await apiClient.patch(`/user/delete/${id}`, {});
-    return res.data.data;
+    await apiClient.patch(`/user/delete/${id}`);
+    return id;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
   }
@@ -256,12 +256,21 @@ const authSlice = createSlice({
         state.isAuthInitialized = true;
       })
       .addCase(fetchAllUser.fulfilled, (state, action) => {
-        state.users = action.payload.data.data;
+        state.users = action.payload;
         state.hasFetchedUsers = true;
       })
+      .addCase(registerUser.fulfilled, (state) => {
+        state.success = true;
+        state.isLoading = false;
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.error = action.payload;
+        state.isLoading = false;
+      })
       .addCase(deleteUser.fulfilled, (state, action) => {
-        const id = action.meta.arg.id;
-        state.users = state.users.map((u) => (u._id === id ? { ...u, isActive: false } : u));
+        state.users = state.users.filter(
+          (u) => u._id !== action.payload
+        ).map((u) => (u._id === action.payload._id ? { ...u, isActive: false } : u));
       })
       .addCase(activeUser.fulfilled, (state, action) => {
         state.users = state.users.map((u) => (u._id === action.payload._id ? action.payload : u));

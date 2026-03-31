@@ -23,15 +23,20 @@ import {
   ReloadOutlined,
   UserOutlined,
   TeamOutlined,
+  EditOutlined,
+  EyeOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 
-import { EditOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUser, deleteUser, currentUser } from "../../../features/authSlice";
+import {
+  fetchAllUser,
+  deleteUser,
+  currentUser,
+} from "../../../features/authSlice";
+
 import RegisterForm from "../../../components/forms/RegisterFrom";
 import { useNavigate } from "react-router-dom";
-
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -40,54 +45,85 @@ const TeacherList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { users = [], hasFetchedUsers } = useSelector((state) => state.auth);
+  const { users = [], hasFetchedUsers, isLoading } = useSelector(
+    (state) => state.auth
+  );
+  
   const loggedInUser = useSelector((state) => state.auth.user);
-
+ 
   const [searchText, setSearchText] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [deletingId, setDeletingId] = useState(null);
+  
+  // ✅ AntD v5 Modal fix
+  const [modal, contextHolder] = Modal.useModal();
+ 
   const schoolId = loggedInUser?.school?._id;
-
-
 
   /* ── Fetch ── */
   useEffect(() => {
     if (!hasFetchedUsers) {
-      dispatch(fetchAllUser());
+         dispatch(fetchAllUser({
+        roleName: ["Teacher", "Staff"],
+        isActive: true
+      }));
       dispatch(currentUser());
     }
-  }, [dispatch, hasFetchedUsers]);
+  }, [dispatch, hasFetchedUsers, schoolId]);
+
+  /* ── Delete Handler ── */
+  const handleDelete = (id) => {
+    modal.confirm({
+      title: "Are you sure?",
+      content: "This user will be permanently deleted",
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "Cancel",
+
+      onOk: async () => {
+        setDeletingId(id);
+
+        try {
+          await dispatch(deleteUser(id)).unwrap();
+          await dispatch(fetchAllUser());
+        } catch (error) {
+          console.error("Delete failed:", error);
+        } finally {
+          setDeletingId(null);
+        }
+      },
+    });
+  };
 
   /* ── Filter Users ── */
-const filteredUsers = useMemo(() => {
-  return users.filter((u) => {
-    if (!u.isActive) return false;
-    if (u.school?._id !== schoolId) return false;
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      if (!u?.isActive) return false;
+      if (u?.school?._id !== schoolId) return false;
 
-    const userRole = u.role?.name?.toLowerCase();
+      const role = u?.role?.name?.toLowerCase();
 
-    // ✅ Only allow teacher & staff
-    if (!["teacher", "staff"].includes(userRole)) return false;
+      if (!["teacher", "staff"].includes(role)) return false;
 
-    const matchSearch =
-      u.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchText.toLowerCase());
+      const matchSearch =
+        u?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+        u?.email?.toLowerCase().includes(searchText.toLowerCase());
 
-    const matchRole =
-      selectedRole === "all" || userRole === selectedRole;
+      const matchRole =
+        selectedRole === "all" || role === selectedRole;
 
-    return matchSearch && matchRole;
-  });
-}, [users, schoolId, searchText, selectedRole]);
+      return matchSearch && matchRole;
+    });
+  }, [users, schoolId, searchText, selectedRole]);
 
   /* ── Stats ── */
   const stats = useMemo(() => {
-    const total = users.length;
-    const active = users.filter((u) => u.isActive).length;
-    const roles = new Set(users.map((u) => u.role?.name)).size;
-
-    return { total, active, roles };
+    return {
+      total: users.length,
+      active: users.filter((u) => u?.isActive).length,
+      roles: new Set(users.map((u) => u?.role?.name)).size,
+    };
   }, [users]);
 
   /* ── Columns ── */
@@ -109,13 +145,13 @@ const filteredUsers = useMemo(() => {
               fontWeight: 600,
             }}
           >
-            {record.name?.charAt(0)}
+            {record?.name?.charAt(0)}
           </div>
           <div>
-            <Text strong>{record.name}</Text>
+            <Text strong>{record?.name}</Text>
             <br />
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {record.email}
+              {record?.email}
             </Text>
           </div>
         </Space>
@@ -123,14 +159,14 @@ const filteredUsers = useMemo(() => {
     },
     {
       title: "Role",
-      render: (_, r) => <Tag color="blue">{r.role?.name}</Tag>,
+      render: (_, r) => <Tag color="blue">{r?.role?.name}</Tag>,
     },
     {
       title: "Status",
       render: (_, r) => (
         <Badge
-          status={r.isActive ? "success" : "error"}
-          text={r.isActive ? "Active" : "Inactive"}
+          status={r?.isActive ? "success" : "error"}
+          text={r?.isActive ? "Active" : "Inactive"}
         />
       ),
     },
@@ -143,7 +179,9 @@ const filteredUsers = useMemo(() => {
               icon={<EditOutlined />}
               type="text"
               onClick={() =>
-                navigate(`/dashboard/schooladmin/users/employee-from?id=${record._id}`)
+                navigate(
+                  `/dashboard/schooladmin/users/employee-from?id=${record._id}`
+                )
               }
             />
           </Tooltip>
@@ -153,7 +191,9 @@ const filteredUsers = useMemo(() => {
               icon={<EyeOutlined />}
               type="text"
               onClick={() =>
-                navigate(`/dashboard/schooladmin/users/employee-detailes?id=${record._id}`)
+                navigate(
+                  `/dashboard/schooladmin/users/employee-detailes?id=${record._id}`
+                )
               }
             />
           </Tooltip>
@@ -162,7 +202,8 @@ const filteredUsers = useMemo(() => {
             danger
             icon={<DeleteOutlined />}
             type="text"
-            onClick={() => dispatch(deleteUser(record._id))}
+            loading={deletingId === record._id}
+            onClick={() => handleDelete(record._id)}
           />
         </Space>
       ),
@@ -178,65 +219,31 @@ const filteredUsers = useMemo(() => {
         },
       }}
     >
-      <div style={{ padding: 24 }}>
+      {contextHolder} {/* ✅ IMPORTANT */}
 
+      <div style={{ padding: 24 }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Users Management
-          </Title>
-          <Text type="secondary">
-            Manage staff & teachers
-          </Text>
+          <Title level={4}>Users Management</Title>
+          <Text type="secondary">Manage staff & teachers</Text>
         </div>
 
         {/* Stats */}
         <Row gutter={16} style={{ marginBottom: 20 }}>
           {[
-            { title: "Total Users", 
-              value: stats.total, 
-              icon: <TeamOutlined style={{ fontSize: 20, color: "#6366f1" }}/>, 
-              bg: "#f5f3ff",
-              color: "#6366f1", 
-            },
-            { title: "Active",
-               value: stats.active, 
-               icon: <UserOutlined style={{ fontSize: 20, color: "#16a34a" }} /> ,
-                bg: "#f0fdf4",
-              color: "#16a34a",
-              },
-            { title: "Roles", 
-              value: stats.roles, 
-              icon: <UserOutlined style={{ fontSize: 20, color: "#0ea5e9" }}/>, 
-              bg: "#f0f9ff",
-              color: "#0ea5e9", 
-            },
-            { title: "Showing", 
-              value: filteredUsers.length, 
-              icon: <UserOutlined style={{ fontSize: 20, color: "#f59e0b" }}/>, 
-              bg: "#fffbeb",
-              color: "#f59e0b", 
-            },
+            { title: "Total Users", value: stats.total, icon: <TeamOutlined /> },
+            { title: "Active", value: stats.active, icon: <UserOutlined /> },
+            { title: "Roles", value: stats.roles, icon: <UserOutlined /> },
+            { title: "Showing", value: filteredUsers.length, icon: <UserOutlined /> },
           ].map((s) => (
             <Col xs={12} sm={6} key={s.title}>
               <Card>
                 <Space>
-                 <div style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 10,
-                      background: s.bg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}>{s.icon}</div> 
+                  {s.icon}
                   <div>
                     <Text type="secondary">{s.title}</Text>
                     <br />
-                    <Text strong style={{ fontSize: 18 }}>
-                      {s.value}
-                    </Text>
+                    <Text strong>{s.value}</Text>
                   </div>
                 </Space>
               </Card>
@@ -244,10 +251,8 @@ const filteredUsers = useMemo(() => {
           ))}
         </Row>
 
-        {/* Main Card */}
+        {/* Main */}
         <Card>
-
-          {/* Toolbar */}
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
             <Space>
               <Input
@@ -257,11 +262,7 @@ const filteredUsers = useMemo(() => {
                 onChange={(e) => setSearchText(e.target.value)}
               />
 
-              <Select
-                value={selectedRole}
-                onChange={setSelectedRole}
-                style={{ width: 160 }}
-              >
+              <Select value={selectedRole} onChange={setSelectedRole} style={{ width: 160 }}>
                 <Option value="all">All Roles</Option>
                 <Option value="teacher">Teacher</Option>
                 <Option value="staff">Staff</Option>
@@ -269,6 +270,7 @@ const filteredUsers = useMemo(() => {
 
               <Button
                 icon={<ReloadOutlined />}
+                loading={isLoading}
                 onClick={() => dispatch(fetchAllUser())}
               />
             </Space>
@@ -282,19 +284,17 @@ const filteredUsers = useMemo(() => {
             </Button>
           </div>
 
-          {/* Table */}
           <Table
             columns={columns}
             dataSource={filteredUsers}
             rowKey="_id"
+            loading={isLoading}
             pagination={{ pageSize: 10 }}
-            locale={{
-              emptyText: <Empty description="No users found" />,
-            }}
+            locale={{ emptyText: <Empty description="No users found" /> }}
           />
         </Card>
 
-        {/* Modal */}
+        {/* Add User Modal */}
         <Modal
           open={isModalOpen}
           footer={null}

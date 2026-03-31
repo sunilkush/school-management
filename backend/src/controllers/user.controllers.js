@@ -75,8 +75,8 @@ export const generateNextRegId = async (schoolId) => {
  */
 // ✅ Register User Controller
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, roleId, schoolId, schoolClassId, parentId,isActive } = req.body;
-  
+  const { name, email, password, roleId, schoolId, schoolClassId, parentId, isActive } = req.body;
+
   if (!name || !email || !password || !roleId || !schoolId) {
     throw new ApiError(400, "All required fields must be provided");
   }
@@ -94,9 +94,27 @@ const registerUser = asyncHandler(async (req, res) => {
   // ✅ Email exists check
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new ApiError(400, "User already registered with this email");
-  }
+    if (!existingUser.isActive) {
+      // ✅ Reactivate user
+      existingUser.isActive = true;
 
+      // optional: update other fields
+      existingUser.name = req.body.name || existingUser.name;
+      existingUser.role = req.body.role || existingUser.role;
+
+      await existingUser.save();
+
+      return res.status(200).json({
+        message: "User re-activated successfully",
+        user: existingUser,
+      });
+    }
+
+    // ❌ Already active
+    return res.status(400).json({
+      message: "User already exists",
+    });
+  }
   // ✅ Handle avatar
   let avatarUrl = "";
   if (
@@ -436,7 +454,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
  */
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } })
- const cookieOptions = {
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -444,7 +462,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-     .clearCookie('accessToken', cookieOptions)
+    .clearCookie('accessToken', cookieOptions)
     .clearCookie('refreshToken', cookieOptions)
     .json(new ApiResponse(200, {}, 'User logged out successfully'))
 })
@@ -455,7 +473,6 @@ const logoutUser = asyncHandler(async (req, res) => {
  */
 const getAllUsers = asyncHandler(async (req, res) => {
   let schoolId;
-
   const requesterRole = await getRequesterRoleName(req);
 
   if (requesterRole === "Super Admin") {
@@ -464,63 +481,124 @@ const getAllUsers = asyncHandler(async (req, res) => {
     schoolId = req.user?.schoolId;
   }
 
-  const { page = 1, limit = 20, sort = '-createdAt', search = '', isActive } = req.query;
-  const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
-  const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
-  const skip = (parsedPage - 1) * parsedLimit;
+  const {
+    sort = "-createdAt",
+    search = "",
+    isActive,
+    roleName,
+    academicYearId,
+    schoolClassId,
+  } = req.query;
 
+  /* -------------------- MATCH (BASE) -------------------- */
   const matchStage = {};
+
+  // ✅ School filter
   if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
     matchStage.schoolId = new mongoose.Types.ObjectId(schoolId);
   }
-  if (typeof isActive !== 'undefined') {
-    matchStage.isActive = isActive === 'true';
+
+  // ✅ Academic Year filter
+  if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
+    matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
   }
+
+  // ✅ Class filter
+  if (schoolClassId && mongoose.Types.ObjectId.isValid(schoolClassId)) {
+    matchStage.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
+  }
+
+  // ✅ Active filter
+  if (typeof isActive !== "undefined") {
+    matchStage.isActive = isActive === "true";
+  }
+
+  // ✅ Search filter
   if (search) {
     matchStage.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
-      { regId: { $regex: search, $options: 'i' } },
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { regId: { $regex: search, $options: "i" } },
     ];
   }
 
+  /* -------------------- SORT -------------------- */
   const sortStage = {};
-  sort.split(',').filter(Boolean).forEach((field) => {
-    const key = field.startsWith('-') ? field.slice(1) : field;
-    sortStage[key] = field.startsWith('-') ? -1 : 1;
+  sort.split(",").forEach((field) => {
+    if (!field) return;
+    const key = field.startsWith("-") ? field.slice(1) : field;
+    sortStage[key] = field.startsWith("-") ? -1 : 1;
   });
 
-  if (!Object.keys(sortStage).length) sortStage.createdAt = -1;
+  if (!Object.keys(sortStage).length) {
+    sortStage.createdAt = -1;
+  }
 
-  const users = await User.aggregate([
+  /* -------------------- PIPELINE -------------------- */
+  const pipeline = [
     { $match: matchStage },
+
+    // ================= ROLE =================
     {
       $lookup: {
-        from: 'roles',
-        localField: 'roleId',
-        foreignField: '_id',
-        as: 'role',
+        from: "roles",
+        localField: "roleId",
+        foreignField: "_id",
+        as: "role",
       },
     },
-    { $unwind: { path: '$role', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+
+    // ✅ ROLE FILTER (case-insensitive)
+    ...(roleName
+      ? [
+          {
+            $match: {
+              "role.name": {
+                $in: (Array.isArray(roleName)
+                  ? roleName
+                  : [roleName]
+                ).map((r) => new RegExp(`^${r}$`, "i")), // 🔥 case-insensitive exact match
+              },
+            },
+          },
+        ]
+      : []),
+
+    // ================= SCHOOL =================
     {
       $lookup: {
-        from: 'schools',
-        localField: 'schoolId',
-        foreignField: '_id',
-        as: 'school',
+        from: "schools",
+        localField: "schoolId",
+        foreignField: "_id",
+        as: "school",
       },
     },
-    { $unwind: { path: '$school', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
+
+    // ================= ACADEMIC YEAR =================
     {
       $lookup: {
-        from: 'academicyears',
-        localField: 'academicYearId',
-        foreignField: '_id',
-        as: 'academicYear',
+        from: "academicyears",
+        localField: "academicYearId",
+        foreignField: "_id",
+        as: "academicYear",
       },
     },
-    { $unwind: { path: '$academicYear', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
+
+    // ================= CLASS =================
+    {
+      $lookup: {
+        from: "schoolclasses",
+        localField: "schoolClassId",
+        foreignField: "_id",
+        as: "class",
+      },
+    },
+    { $unwind: { path: "$class", preserveNullAndEmptyArrays: true } },
+
+    // ================= FINAL DATA =================
     {
       $project: {
         _id: 1,
@@ -529,43 +607,41 @@ const getAllUsers = asyncHandler(async (req, res) => {
         avatar: 1,
         isActive: 1,
         regId: 1,
-        role: { _id: '$role._id', name: '$role.name', permissions: '$role.permissions' },
-        school: { _id: '$school._id', name: '$school.name' },
+
+        role: {
+          _id: "$role._id",
+          name: "$role.name",
+          permissions: "$role.permissions",
+        },
+
+        school: {
+          _id: "$school._id",
+          name: "$school.name",
+        },
+
         academicYear: {
-          _id: '$academicYear._id',
-          name: '$academicYear.name',
-          startDate: '$academicYear.startDate',
-          endDate: '$academicYear.endDate',
-          isActive: '$academicYear.isActive',
+          _id: "$academicYear._id",
+          name: "$academicYear.name",
+        },
+
+        class: {
+          _id: "$class._id",
+          name: "$class.name",
         },
       },
     },
+
     { $sort: sortStage },
-    {
-      $facet: {
-        data: [{ $skip: skip }, { $limit: parsedLimit }],
-        totalCount: [{ $count: 'count' }],
-      },
-    },
-  ]);
+  ];
 
-  const data = users[0]?.data || [];
-  const total = users[0]?.totalCount?.[0]?.count || 0;
+  const data = await User.aggregate(pipeline);
 
-  return res.status(200).json(
-    new ApiResponse(200, {
-      data,
-      pagination: {
-        page: parsedPage,
-        limit: parsedLimit,
-        total,
-        totalPages: Math.ceil(total / parsedLimit) || 1,
-      },
-    }, 'Users fetched successfully')
-  );
+  return res.status(200).json({
+    success: true,
+    total: data.length,
+    data,
+  });
 });
-
-
 
 /**
  * @desc Deactivate user
@@ -611,7 +687,7 @@ const activeUser = asyncHandler(async (req, res) => {
 })
 
 const getUserById = asyncHandler(async (req, res) => {
-    const { id } = req.params // using query ?id=
+  const { id } = req.params // using query ?id=
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
     throw new ApiError(400, "Valid User ID is required");
@@ -707,7 +783,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
-  
+
   if (!incomingRefreshToken) throw new ApiError(401, 'Refresh token is required');
 
   let decoded;

@@ -16,7 +16,8 @@ import {
   Typography,
   Space,
   message,
-  Card, Flex
+  Card,
+  Flex,
 } from "antd";
 
 import {
@@ -33,16 +34,25 @@ const { Text } = Typography;
 
 const Admins = () => {
   const dispatch = useDispatch();
-  const { users = [], loading, error, user: currentUser } = useSelector(
-  (state) => state.auth || {}
-);
+
+  const {
+    users = [],
+    isLoading,
+    error,
+    user: currentUser,
+  } = useSelector((state) => state.auth || {});
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  /* ================= FETCH USERS ================= */
   useEffect(() => {
-    dispatch(fetchAllUser());
+    dispatch(fetchAllUser({
+  roleName: ["School Admin"],
+  isActive: true
+}));
   }, [dispatch]);
 
-  /* ================= TOGGLE USER STATUS ================= */
+  /* ================= TOGGLE STATUS ================= */
   const handleToggleStatus = (user) => {
     if (user._id === currentUser?._id) {
       message.warning("You cannot change your own status");
@@ -51,35 +61,46 @@ const Admins = () => {
 
     Modal.confirm({
       title: user.isActive ? "Deactivate User?" : "Activate User?",
-      content: `Are you sure you want to ${user.isActive ? "deactivate" : "activate"
-        } this user?`,
+      content: `Are you sure you want to ${
+        user.isActive ? "deactivate" : "activate"
+      } this user?`,
       okText: "Yes",
       cancelText: "No",
-      onOk: () => {
-        dispatch(
-          user.isActive
-            ? deleteUser({ id: user._id, isActive: false })
-            : activeUser({ id: user._id, isActive: true })
-        ).then(() => dispatch(fetchAllUser()));
+
+      onOk: async () => {
+        try {
+          if (user.isActive) {
+            await dispatch(deleteUser(user._id)).unwrap(); // ✅ deactivate
+          } else {
+            await dispatch(activeUser(user._id)).unwrap(); // ✅ activate
+          }
+
+          // ✅ refresh list
+          dispatch(
+            fetchAllUser({
+              roleName: ["School Admin"],
+              isActive: true,
+            })
+          );
+        } catch (err) {
+          message.error("Operation failed");
+          console.error(err);
+        }
       },
     });
   };
 
-  /* ================= FILTER ONLY SCHOOL ADMINS ================= */
-const filteredUsers = useMemo(() => {
-  if (!Array.isArray(users)) return [];
-
-  return users.filter(
-    (u) => u?.role?.name === "School Admin"
-  );
-}, [users]);
+  /* ================= SAFE FILTER ================= */
+  const filteredUsers = useMemo(() => {
+    if (!Array.isArray(users)) return [];
+    return users;
+  }, [users]);
  
   /* ================= TABLE COLUMNS ================= */
   const columns = [
     {
       title: "User",
-      dataIndex: "name",
-      key: "name",
+      key: "user",
       render: (_, record) => (
         <Space>
           <Avatar
@@ -99,19 +120,16 @@ const filteredUsers = useMemo(() => {
     {
       title: "Role",
       dataIndex: ["role", "name"],
-      key: "role",
       render: (role) => <Tag color="blue">{role}</Tag>,
     },
     {
       title: "School",
       dataIndex: ["school", "name"],
-      key: "school",
       render: (school) => school || "-",
     },
     {
       title: "Status",
       dataIndex: "isActive",
-      key: "status",
       render: (isActive) =>
         isActive ? (
           <Tag color="green" icon={<CheckCircleOutlined />}>
@@ -125,7 +143,6 @@ const filteredUsers = useMemo(() => {
     },
     {
       title: "Action",
-      key: "action",
       align: "right",
       render: (_, record) => (
         <Button
@@ -142,18 +159,15 @@ const filteredUsers = useMemo(() => {
   return (
     <Layout style={{ padding: 24, background: "#f5f7fa", minHeight: "100vh" }}>
       <Content>
-        {/* ================= HEADER ================= */}
-        <Card
-          style={{ marginBottom: 16 }}
-          bordered={false}
-        >
+        {/* HEADER */}
+        <Card style={{ marginBottom: 16 }} bordered={false}>
           <Flex justify="space-between" align="center" wrap="wrap">
             <div>
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
                 School Admin Management
               </Typography.Title>
               <Typography.Text type="secondary">
-                Manage school administrators across all schools
+                Manage school administrators
               </Typography.Text>
             </div>
 
@@ -167,18 +181,17 @@ const filteredUsers = useMemo(() => {
           </Flex>
         </Card>
 
-
-        {/* ================= ERROR ================= */}
+        {/* ERROR */}
         {error && (
           <Text type="danger" style={{ marginBottom: 12, display: "block" }}>
             {error}
           </Text>
         )}
 
-        {/* ================= TABLE ================= */}
+        {/* TABLE */}
         <Table
           rowKey="_id"
-          loading={loading}
+          loading={isLoading}
           columns={columns}
           dataSource={filteredUsers}
           pagination={{ pageSize: 10 }}
@@ -186,7 +199,7 @@ const filteredUsers = useMemo(() => {
           style={{ background: "#fff", borderRadius: 8 }}
         />
 
-        {/* ================= MODAL ================= */}
+        {/* MODAL */}
         <Modal
           title="Register New School Admin"
           open={isModalOpen}

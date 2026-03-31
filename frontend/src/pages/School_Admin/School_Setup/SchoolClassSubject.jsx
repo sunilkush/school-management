@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
-import { fetchAllSubjects } from "../../../features/subjectSlice";
+import { getAllSubjects } from "../../../features/subjectSlice";
 import { addSubjectToSection } from "../../../features/sectionSlice";
 import { useTheme } from "../../../context/ThemeContext";
 
@@ -53,7 +53,7 @@ const SchoolClassSubject = () => {
   useEffect(() => {
     if (!schoolId || !academicYearId) return;
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-    dispatch(fetchAllSubjects({ isGlobal: true }));
+    dispatch(getAllSubjects({ isGlobal: true }));
   }, [dispatch, schoolId, academicYearId]);
 
   useEffect(() => {

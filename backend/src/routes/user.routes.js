@@ -41,7 +41,6 @@ router.post("/resend-verification", resendVerificationEmail);
 
 router.post(
   "/register",
-  validateBody(["name", "email", "password", "roleId", "schoolId"]),
   auth,
   roleMiddleware(ADMIN_ROLE),
   upload.fields([{ name: "avatar", maxCount: 1 }]),

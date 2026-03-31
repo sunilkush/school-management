@@ -39,7 +39,10 @@ const ParentsList = () => {
   /* ── Fetch ── */
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchAllUser(schoolId));
+         dispatch(fetchAllUser({
+        roleName: ["Parent"],
+        isActive: true
+      }));
     }
   }, [dispatch, schoolId]);
 
@@ -63,7 +66,7 @@ const ParentsList = () => {
       );
     });
   }, [users, schoolId, searchText]);
-
+  
   /* ── Stats ── */
   const stats = useMemo(() => {
     const active = parentsList.length;
