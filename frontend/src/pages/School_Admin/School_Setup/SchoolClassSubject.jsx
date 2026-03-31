@@ -67,6 +67,7 @@ const SchoolClassSubject = () => {
     setMapping(initial);
   }, [schoolClasses]);
 
+  // eslint-disable-next-line no-unused-vars
   const subjectMap = useMemo(() => {
     const map = {};
     subjects.forEach((s) => { map[s._id] = s; });
@@ -203,6 +204,7 @@ const SchoolClassSubject = () => {
                   const isHov     = hovered === i;
                   const isSaved   = saved[record._id];
                   const isSaving  = saving[record._id];
+                  // eslint-disable-next-line no-unused-vars
                   const isDirty   = selected.length > 0 && !isSaved;
 
                   return (

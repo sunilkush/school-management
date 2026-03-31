@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from "react";
+import React, { useEffect, useState, lazy, Suspense, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { getClassData } from "../../../features/schoolClassSlice";
 
@@ -15,19 +15,20 @@ import {
   Grid,
   Empty,
   Spin,
+  ConfigProvider,
 } from "antd";
 
 import {
   EditOutlined,
   DeleteOutlined,
   ApartmentOutlined,
+  SearchOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 
-const { Search } = Input;
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
 
-// 🔥 FIX: Lazy import add karo
 const MobileCards = lazy(() => import("./MobileCards"));
 
 const Classes = () => {
@@ -47,24 +48,44 @@ const Classes = () => {
     if (schoolId) dispatch(getClassData({ schoolId }));
   }, [dispatch, schoolId]);
 
-  /* ================= FILTER ================= */
-  const filteredItems = schoolClasses.filter((item) =>
-    (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
-  );
+  /* ── Filter ── */
+  const filteredItems = useMemo(() => {
+    return schoolClasses.filter((item) =>
+      (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
+    );
+  }, [schoolClasses, filterText]);
 
-  /* ================= TABLE ================= */
+  /* ── Stats ── */
+  const stats = useMemo(() => {
+    return {
+      total: schoolClasses.length,
+      sections: schoolClasses.reduce(
+        (acc, c) => acc + (c.sections?.length || 0),
+        0
+      ),
+    };
+  }, [schoolClasses]);
+
+  /* ── Columns ── */
   const columns = [
-    {
-      title: "S.No",
-      render: (_, __, index) => index + 1,
-      width: 70,
-    },
     {
       title: "Class",
       dataIndex: "name",
       render: (name) => (
         <Space>
-          <ApartmentOutlined />
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 10,
+              background: "#f1f5f9",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ApartmentOutlined style={{ color: "#6366f1" }} />
+          </div>
           <Text strong>{name}</Text>
         </Space>
       ),
@@ -75,7 +96,15 @@ const Classes = () => {
       render: (sections = []) => (
         <Space wrap>
           {sections.map((sec) => (
-            <Tag key={sec._id} color="blue">
+            <Tag
+              key={sec._id}
+              style={{
+                borderRadius: 20,
+                background: "#f0f9ff",
+                color: "#0284c7",
+                border: "1px solid #bae6fd",
+              }}
+            >
               {sec.name}
             </Tag>
           ))}
@@ -83,13 +112,13 @@ const Classes = () => {
       ),
     },
     {
-      title: "Subjects (Section Wise)",
+      title: "Subjects",
       dataIndex: "sections",
       render: (sections = []) => (
-        <div>
+        <div style={{ fontSize: 12, color: "#64748b" }}>
           {sections.map((sec) => (
             <div key={sec._id}>
-              <b>{sec.name}:</b>{" "}
+              <b style={{ color: "#1e293b" }}>{sec.name}:</b>{" "}
               {sec.subjects?.length
                 ? sec.subjects.map((s) => s.name).join(", ")
                 : "—"}
@@ -99,59 +128,115 @@ const Classes = () => {
       ),
     },
     {
-      title: "Actions",
+      title: "",
+      align: "right",
       render: () => (
         <Space>
-          <Button type="link" icon={<EditOutlined />} />
-          <Button type="link" danger icon={<DeleteOutlined />} />
+          <Button type="text" icon={<EditOutlined />} />
+          <Button type="text" danger icon={<DeleteOutlined />} />
         </Space>
       ),
     },
   ];
 
-  /* ================= UI ================= */
   return (
-    <Card>
-      <Row gutter={[16, 16]} justify="space-between">
-        <Col xs={24} md={12}>
-          <Title level={4}>Class Management</Title>
-        </Col>
+    <ConfigProvider
+      theme={{
+        token: {
+          borderRadius: 12,
+          fontFamily: "'Inter', sans-serif",
+          colorBorder: "#e2e8f0",
+        },
+      }}
+    >
+      <div style={{ padding: 24 }}>
+        {/* ── Header ── */}
+        <div style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ margin: 0 }}>
+            Classes
+          </Title>
+          <Text type="secondary">
+            Manage classes, sections & subjects
+          </Text>
+        </div>
 
-        <Col xs={24} md={8}>
-          <Search
-            placeholder="Search class"
-            allowClear
-            onChange={(e) => setFilterText(e.target.value)}
-          />
-        </Col>
-      </Row>
+        {/* ── Stats ── */}
+        <Row gutter={16} style={{ marginBottom: 20 }}>
+          <Col xs={12} md={6}>
+            <Card>
+              <Text type="secondary">Total Classes</Text>
+              <Title level={3}>{stats.total}</Title>
+            </Card>
+          </Col>
 
-      <div style={{ marginTop: 16 }}>
-        {screens.md ? (
-          <Table
-            columns={columns}
-            dataSource={filteredItems}
-            rowKey="_id"
-            loading={loading}
-            bordered
-            scroll={{ x: 900 }}
-            pagination={{ pageSize: 10 }}
-            locale={{ emptyText: <Empty /> }}
-          />
-        ) : (
-          // 🔥 FIX: Mobile view add karo
-          <Suspense
-            fallback={
-              <div style={{ textAlign: "center", padding: 20 }}>
-                <Spin />
-              </div>
-            }
+          <Col xs={12} md={6}>
+            <Card>
+              <Text type="secondary">Total Sections</Text>
+              <Title level={3}>{stats.sections}</Title>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* ── Main Card ── */}
+        <Card
+          bodyStyle={{ padding: 0 }}
+          style={{
+            borderRadius: 16,
+            border: "1px solid #e2e8f0",
+            overflow: "hidden",
+          }}
+        >
+          {/* Toolbar */}
+          <div
+            style={{
+              padding: 16,
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+              borderBottom: "1px solid #f1f5f9",
+              background: "#fff",
+            }}
           >
-            <MobileCards data={filteredItems} />
-          </Suspense>
-        )}
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder="Search classes..."
+              allowClear
+              onChange={(e) => setFilterText(e.target.value)}
+              style={{ width: 260, borderRadius: 8 }}
+            />
+
+            <Button type="primary" icon={<PlusOutlined />}>
+              Add Class
+            </Button>
+          </div>
+
+          {/* Content */}
+          <div style={{ padding: 16 }}>
+            {screens.md ? (
+              <Table
+                columns={columns}
+                dataSource={filteredItems}
+                rowKey="_id"
+                loading={loading}
+                pagination={{ pageSize: 8 }}
+                showHeader={true}
+                style={{ borderRadius: 12 }}
+                locale={{
+                  emptyText: (
+                    <Empty description="No classes found" />
+                  ),
+                }}
+              />
+            ) : (
+              <Suspense fallback={<Spin />}>
+                <MobileCards data={filteredItems} />
+              </Suspense>
+            )}
+          </div>
+        </Card>
       </div>
-    </Card>
+    </ConfigProvider>
   );
 };
 

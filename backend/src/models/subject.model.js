@@ -83,7 +83,35 @@ const subjectSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    /* ================= OWNERSHIP ================= */
+
+    isGlobal: {
+      type: Boolean,
+      default: false,
+    },
+
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      default: null,
+    },
+
+    /* ================= TEACHERS ================= */
+
+    assignedTeachers: [
+      {
+        teacherId: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+        schoolId: {
+          type: Schema.Types.ObjectId,
+          ref: "School",
+        },
+      },
+    ],
   },
+
   { timestamps: true }
 );
 

@@ -276,51 +276,7 @@ const StudentList = () => {
         },
       }}
     >
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
-        .student-table .ant-table-thead > tr > th {
-          background: #f8fafc !important;
-          font-weight: 600 !important;
-          font-size: 12px !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.5px !important;
-          color: #64748b !important;
-          border-bottom: 2px solid #e2e8f0 !important;
-        }
-        .student-table .ant-table-row:hover > td {
-          background: #f5f3ff !important;
-        }
-        .student-table .ant-table-row > td {
-          transition: background 0.15s;
-        }
-        .stat-card {
-          border-radius: 14px !important;
-          border: 1.5px solid #e2e8f0 !important;
-          transition: box-shadow 0.2s, transform 0.2s;
-        }
-        .stat-card:hover {
-          box-shadow: 0 8px 24px rgba(99,102,241,0.10) !important;
-          transform: translateY(-2px);
-        }
-        .add-btn {
-          background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
-          border: none !important;
-          font-weight: 600 !important;
-          height: 36px !important;
-          padding: 0 18px !important;
-          box-shadow: 0 2px 8px rgba(99,102,241,0.25) !important;
-        }
-        .add-btn:hover {
-          opacity: 0.9 !important;
-        }
-        .filter-select .ant-select-selector {
-          border-radius: 8px !important;
-          border-color: #e2e8f0 !important;
-        }
-        .search-input .ant-input {
-          border-radius: 8px !important;
-        }
-      `}</style>
+     
 
       <div style={{ padding: "24px", fontFamily: "'DM Sans', sans-serif" }}>
 

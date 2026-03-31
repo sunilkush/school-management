@@ -85,10 +85,10 @@ const Librarian = lazy(() => import("./pages/Super_Admin/Users_Management/Librar
 const Transport = lazy(() => import("./pages/Super_Admin/Users_Management/Transport.jsx"));
 
 // School Admin
-const UsersPage = lazy(() => import("./pages/School_Admin/User_Management/UsersPage.jsx"));
-const AddStudent = lazy(() => import("./pages/School_Admin/User_Management/AddStudent.jsx"));
-const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
-const AddParent = lazy(() => import("./pages/School_Admin/User_Management/AddParent.jsx"));
+const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
+//const AddStudent = lazy(() => import("./pages/School_Admin/User_Management/AddStudent.jsx"));
+//const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
+const ParentList = lazy(() => import("./pages/School_Admin/User_Management/parentsList.jsx"));
 const StudentList = lazy(() => import("./pages/School_Admin/User_Management/StudentList.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
@@ -319,10 +319,10 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <SchoolAdminDashboard /> },
-              { path: "users/student/add", element: <AddStudent /> },
-              { path: "users/teacher/add", element: <AddTeacher /> },
-              { path: "parents-register", element: <AddParent /> },
-              { path: "users", element: <UsersPage /> },
+              //{ path: "users/student/add", element: <AddStudent /> },
+              //{ path: "users/teacher/add", element: <AddTeacher /> },
+              { path: "parents-register", element: <ParentList /> },
+              { path: "teacher", element: <TeacherList /> },
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
@@ -348,7 +348,7 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "admission", element: <AddStudent /> },
+             // { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },

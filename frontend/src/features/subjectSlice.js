@@ -22,16 +22,17 @@ export const createSubject = createAsyncThunk(
 // ==========================================================
 // ✅ Fetch All Subjects
 // ==========================================================
-export const fetchAllSubjects = createAsyncThunk(
-  "subject/fetchAllSubjects",
+export const getAllSubjects = createAsyncThunk(
+  "subject/getAllSubjects",
   async (
-    { page, limit, search = "", isGlobal } = {},
+    { page, limit, search = "", isGlobal },
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get(`/subject/all`, {        params: { page, limit,  search, isGlobal },
+      const res = await apiClient.get(`/subject/all`, {
+        params: { page, limit, search, isGlobal },
       });
-     
+
       return res.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -144,11 +145,11 @@ const subjectSlice = createSlice({
       })
 
       // ✅ Fetch All
-      .addCase(fetchAllSubjects.pending, (state) => {
+      .addCase(getAllSubjects.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAllSubjects.fulfilled, (state, action) => {
+      .addCase(getAllSubjects.fulfilled, (state, action) => {
         state.loading = false;
         state.subjects = action.payload?.subjects || [];
         state.pagination = {
@@ -157,7 +158,7 @@ const subjectSlice = createSlice({
           totalPages: action.payload?.totalPages || 1,
         };
       })
-      .addCase(fetchAllSubjects.rejected, (state, action) => {
+      .addCase(getAllSubjects.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

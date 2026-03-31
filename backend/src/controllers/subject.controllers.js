@@ -96,56 +96,50 @@ const assignTeachersToSubject = asyncHandler(async (req, res) => {
 
 // ✅ GET ALL SUBJECTS
 const getAllSubjects = asyncHandler(async (req, res) => {
-  const { page,limit, search,  isGlobal } = req.query;
+  let { page, limit, search, isGlobal } = req.query;
+
+  page = Number(page);
+  limit = Number(limit);
   const skip = (page - 1) * limit;
 
-  const role = req.user.role;
+  const roleId = req.user?.roleId;
+  const role = await Role.findById(roleId).select("name");
+  const roleName = role?.name;
+
   const query = {};
 
-  /* ================= ROLE BASED QUERY ================= */
+  /* ================= ROLE BASED ================= */
 
-  if (role === "Super Admin") {
-    if (isGlobal !== undefined) query.isGlobal = isGlobal === "true";
-    
+  if (roleName === "Super Admin") {
+    if (isGlobal !== undefined) {
+      query.isGlobal = isGlobal === "true";
+    }
   }
 
-  if (role === "School Admin") {
-    if (!req.user.school?._id) {
+  if (roleName === "School Admin") {
+    const schoolId =
+      req.user.schoolId || req.user.school?._id;
+
+    if (!schoolId) {
       throw new ApiError(403, "School not assigned");
     }
 
+    const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+
     query.$or = [
-      { schoolId: req.user.school._id },
+      { schoolId: schoolObjectId },
       { isGlobal: true },
     ];
   }
 
-  /* ================= SEARCH ================= */
-  if (search) {
-    query.name = { $regex: search, $options: "i" };
-  }
 
   /* ================= FETCH ================= */
-  const subjects = await Subject.find(query)
+
+  const subjects = await Subject.find()
     .skip(skip)
-    .limit(Number(limit))
-    .sort({ createdAt: -1 });
-
-  /* ================= FILTER TEACHERS (Schema Correct) ================= */
-  const resultSubjects = subjects.map((subject) => {
-    const obj = subject.toObject();
-
-    if (role === "School Admin") {
-      obj.schoolByAssignedTeachers =
-        obj.schoolByAssignedTeachers?.filter(
-          (t) =>
-            t.schoolId &&
-            t.schoolId.toString() === req.user.school._id.toString()
-        ) || [];
-    }
-
-    return obj;
-  });
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .lean();
 
   const total = await Subject.countDocuments(query);
 
@@ -153,11 +147,11 @@ const getAllSubjects = asyncHandler(async (req, res) => {
     new ApiResponse(
       200,
       {
-        subjects: resultSubjects,
+        subjects,
         pagination: {
           total,
-          page: Number(page),
-          limit: Number(limit),
+          page,
+          limit,
           totalPages: Math.ceil(total / limit),
         },
       },
