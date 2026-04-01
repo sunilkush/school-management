@@ -12,7 +12,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
-import { fetchAllClasses } from "../../../features/classSlice";
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import { currentUser } from "../../../features/authSlice";
 import { fetchFeeStructures } from "../../../features/feeStructureSlice";
@@ -24,18 +24,19 @@ const AssignStudentFee = () => {
   const [form] = Form.useForm();
   const [mode, setMode] = useState("bulk");
   const [selectedFeeIds, setSelectedFeeIds] = useState([]);
+  const [customAmounts, setCustomAmounts] = useState({});
 
   const dispatch = useDispatch();
 
   const { schoolStudents = [] } = useSelector((s) => s.students);
-  const { classList = [] } = useSelector((s) => s.class || {});
-  const { academicYears = [] } = useSelector((s) => s.academicYear);
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear);
   const { user } = useSelector((s) => s.auth);
   const { feeStructures = [] } = useSelector((s) => s.feeStructure);
 
   const schoolId = user?.school?._id;
 
-  /* 🔹 Load logged-in user */
+  /* 🔹 Load user */
   useEffect(() => {
     dispatch(currentUser());
   }, [dispatch]);
@@ -45,18 +46,27 @@ const AssignStudentFee = () => {
     if (!schoolId) return;
 
     dispatch(fetchStudentsBySchoolId({ schoolId }));
-    dispatch(fetchAllClasses({ schoolId }));
+    dispatch(fetchSchoolClasses({ schoolId }));
     dispatch(fetchActiveAcademicYear(schoolId));
     dispatch(fetchFeeStructures({ schoolId }));
   }, [dispatch, schoolId]);
 
-  /* 🔹 Fee table selection */
+  /* 🔹 Auto-fill Academic Year */
+  useEffect(() => {
+    if (selectedAcademicYear?._id) {
+      form.setFieldsValue({
+        academicYearId: selectedAcademicYear._id,
+      });
+    }
+  }, [selectedAcademicYear, form]);
+
+  /* 🔹 Fee selection */
   const rowSelection = {
     selectedRowKeys: selectedFeeIds,
     onChange: (keys) => setSelectedFeeIds(keys),
   };
 
-  /* 🔹 Fee Table Columns */
+  /* 🔹 Table Columns */
   const columns = [
     {
       title: "Fee Head",
@@ -72,13 +82,24 @@ const AssignStudentFee = () => {
     },
     {
       title: "Custom Amount",
-      render: () => (
-        <InputNumber min={0} placeholder="Optional" style={{ width: "100%" }} />
+      render: (_, record) => (
+        <InputNumber
+          min={0}
+          placeholder="Optional"
+          style={{ width: "100%" }}
+          value={customAmounts[record._id]}
+          onChange={(val) =>
+            setCustomAmounts((prev) => ({
+              ...prev,
+              [record._id]: val,
+            }))
+          }
+        />
       ),
     },
   ];
 
-  /* 🔥 FINAL SUBMIT (Single + Bulk API aligned) */
+  /* 🔥 FINAL SUBMIT */
   const onFinish = async (values) => {
     try {
       if (!selectedFeeIds.length) {
@@ -90,15 +111,17 @@ const AssignStudentFee = () => {
         schoolId,
       };
 
-      // 🔹 SINGLE STUDENT
+      // 🔹 SINGLE MODE
       if (mode === "single") {
         payloadBase.studentId = values.studentId;
       }
 
-      // 🔹 BULK (Class-wise)
+      // 🔹 BULK MODE
       if (mode === "bulk") {
         const studentIds = schoolStudents
-          .filter((s) => s.class?._id === values.schoolClassId)
+          .filter(
+            (s) => (s.class?._id || s.classId) === values.schoolClassId
+          )
           .map((s) => s._id);
 
         if (!studentIds.length) {
@@ -108,12 +131,13 @@ const AssignStudentFee = () => {
         payloadBase.studentIds = studentIds;
       }
 
-      // 🔹 Assign each selected FeeStructure
+      // 🔹 Assign fees
       for (const feeStructureId of selectedFeeIds) {
         await dispatch(
           assignFeesToStudents({
             ...payloadBase,
             feeStructureId,
+            customAmount: customAmounts[feeStructureId] || null,
           })
         ).unwrap();
       }
@@ -121,6 +145,7 @@ const AssignStudentFee = () => {
       message.success("Fees assigned successfully");
       form.resetFields();
       setSelectedFeeIds([]);
+      setCustomAmounts({});
     } catch (err) {
       message.error(err?.message || "Failed to assign fee");
     }
@@ -142,12 +167,12 @@ const AssignStudentFee = () => {
           <Form.Item
             name="studentId"
             label="Student"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Please select student" }]}
           >
             <Select placeholder="Select Student">
               {schoolStudents.map((s) => (
                 <Option key={s._id} value={s._id}>
-                  {s.userDetails?.name} ({s.class?.name}-{s.section?.name})
+                  {s.user?.name} ({s.class?.name}-{s.section?.name})
                 </Option>
               ))}
             </Select>
@@ -159,10 +184,10 @@ const AssignStudentFee = () => {
           <Form.Item
             name="schoolClassId"
             label="Class"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Please select class" }]}
           >
             <Select placeholder="Select Class">
-              {classList.map((c) => (
+              {schoolClasses.map((c) => (
                 <Option key={c._id} value={c._id}>
                   {c.name}
                 </Option>
@@ -175,14 +200,17 @@ const AssignStudentFee = () => {
         <Form.Item
           name="academicYearId"
           label="Academic Year"
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: "Please select academic year" }]}
         >
           <Select placeholder="Select Academic Year">
-            {academicYears.map((y) => (
-              <Option key={y._id} value={y._id}>
-                {y.name}
+            {selectedAcademicYear?._id && (
+              <Option
+                key={selectedAcademicYear._id}
+                value={selectedAcademicYear._id}
+              >
+                {selectedAcademicYear.name || selectedAcademicYear.year}
               </Option>
-            ))}
+            )}
           </Select>
         </Form.Item>
 

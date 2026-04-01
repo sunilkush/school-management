@@ -17,9 +17,8 @@ import {
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
-import { activeUser } from "../../../features/authSlice";
 import { markAttendance } from "../../../features/attendanceSlice";
-import { fetchAllClasses } from "../../../features/classSlice";
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -31,10 +30,11 @@ const AllStudentsAttendance = () => {
     (state) => state.students
   );
   const { user: currentUser } = useSelector((state) => state.auth);
-  const { classList = [] } = useSelector((state) => state.class);
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
 
   const schoolId = currentUser?.school?._id;
-  const academicYearId = currentUser?.academicYear?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -46,9 +46,9 @@ const AllStudentsAttendance = () => {
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchStudentsBySchoolId({ schoolId }));
-      dispatch(fetchAllClasses({ schoolId }));
+      dispatch(fetchSchoolClasses({ schoolId }));
     }
-    dispatch(activeUser());
+
   }, [dispatch, schoolId]);
 
   // 🔹 Default Attendance = Present
@@ -128,14 +128,14 @@ const AllStudentsAttendance = () => {
   const columns = [
     {
       title: "Student Name",
-      dataIndex: ["userDetails", "name"],
+      dataIndex: ["user", "name"],
     },
     {
       title: "Class",
       render: (_, record) =>
         `${record.class?.name} - ${record.section?.name || ""}`,
     },
-   {
+    {
       title: "Attendance",
       key: "attendance",
       render: (_, record) => (
@@ -192,17 +192,17 @@ const AllStudentsAttendance = () => {
             style={{ width: "100%" }}
             onChange={handleClassChange}
           >
-           {[...classList] // spread operator se naya array banaya
-            .sort((a, b) => {
-              const numA = parseInt(a.name.replace(/\D/g, ""), 10);
-              const numB = parseInt(b.name.replace(/\D/g, ""), 10);
-              return numA - numB;
-            })
-            .map((cls) => (
-              <Option key={cls._id} value={cls.name}>
-                {cls.name}
-              </Option>
-            ))}
+            {[...schoolClasses] // spread operator se naya array banaya
+              .sort((a, b) => {
+                const numA = parseInt(a.name.replace(/\D/g, ""), 10);
+                const numB = parseInt(b.name.replace(/\D/g, ""), 10);
+                return numA - numB;
+              })
+              .map((cls) => (
+                <Option key={cls._id} value={cls.name}>
+                  {cls.name}
+                </Option>
+              ))}
 
           </Select>
         </Col>

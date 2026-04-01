@@ -84,7 +84,7 @@ const SchoolClass = ({ next }) => {
       message.success("Class assigned");
       dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
     } catch (err) {
-      message.error("Failed to assign class");
+      message.error("Failed to assign class",err.message || "");
     } finally {
       setSaving((p) => ({ ...p, [record._id]: false }));
     }
