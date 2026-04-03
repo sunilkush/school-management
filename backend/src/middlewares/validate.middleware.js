@@ -1,25 +1,13 @@
 import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 
-/**
- * -----------------------------
- * BASIC HELPERS
- * -----------------------------
- */
-const isNonEmptyString = (value) =>
-  typeof value === "string" && value.trim().length > 0;
+const nonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
 
-const isValidObjectId = (value) =>
-  typeof value === "string" && mongoose.Types.ObjectId.isValid(value);
+const validators = {
+  objectId: (value) => typeof value === "string" && mongoose.Types.ObjectId.isValid(value),
+  positiveInt: (value) => Number.isInteger(Number(value)) && Number(value) > 0,
+};
 
-const isPositiveInt = (value) =>
-  Number.isInteger(Number(value)) && Number(value) > 0;
-
-/**
- * -----------------------------
- * MAIN VALIDATOR FUNCTION
- * -----------------------------
- */
 const validate = ({ body = {}, params = {}, query = {} }) => {
   return (req, _res, next) => {
     const errors = [];
@@ -97,18 +85,23 @@ const validate = ({ body = {}, params = {}, query = {} }) => {
   };
 };
 
-/**
- * -----------------------------
- * QUICK SHORTCUT (BODY ONLY)
- * -----------------------------
- */
-const validateBody = (schema) => validate({ body: schema });
+const validateBody = (requiredFields = []) => (req, _res, next) => {
+  const errors = [];
 
-/**
- * -----------------------------
- * ZOD BASED VALIDATION (ADVANCED)
- * -----------------------------
- */
+  requiredFields.forEach((field) => {
+    const value = req.body?.[field];
+    if (value === undefined || value === null || value === "") {
+      errors.push(`body.${field} is required`);
+    }
+  });
+
+  if (errors.length) {
+    return next(new ApiError(400, "Validation failed", errors));
+  }
+
+  next();
+};
+
 const validateRequest = (schema) => (req, _res, next) => {
   const parsed = schema.safeParse({
     body: req.body,
@@ -133,13 +126,4 @@ const validateRequest = (schema) => (req, _res, next) => {
   next();
 };
 
-/**
- * -----------------------------
- * EXPORTS
- * -----------------------------
- */
-export {
-  validate,
-  validateBody,
-  validateRequest,
-};
+export { validate, validateBody, validateRequest };

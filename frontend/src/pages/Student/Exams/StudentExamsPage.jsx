@@ -1,156 +1,55 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { Button, Card, Col, Empty, Row, Space, Table, Tag, Typography } from "antd";
-import { PlayCircleOutlined, EyeOutlined } from "@ant-design/icons";
-import { getExams } from "../../../features/examSlice.js";
-import memoryStorage from "../../../utils/memoryStorage";
+import { Card, Collapse, Empty, Space, Table, Tag, Typography } from "antd";
+import { getExams, getStudentResults } from "../../../features/examSlice";
 
 const { Title, Text } = Typography;
 
 const StudentExamsPage = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { exams = [], loading } = useSelector((state) => state.exams || {});
-
-  const selectedAcademicYear = useMemo(() => {
-    const stored = memoryStorage.getItem("selectedAcademicYear");
-    return stored ? JSON.parse(stored) : null;
-  }, []);
-
-  const academicYearId = selectedAcademicYear?._id || null;
-  const schoolId = selectedAcademicYear?.schoolId || null;
+  const { exams = [], results = [], loading } = useSelector((state) => state.exams || {});
 
   useEffect(() => {
-    if (schoolId) {
-      dispatch(getExams({ schoolId, academicYearId }));
-    }
-  }, [dispatch, schoolId, academicYearId]);
+    dispatch(getExams({ sortBy: "examDate", sortOrder: "asc" }));
+    dispatch(getStudentResults());
+  }, [dispatch]);
 
-  const publishedExams = useMemo(
-    () => exams.filter((exam) => ["published", "completed"].includes(exam?.status)),
-    [exams]
-  );
-
-  const stats = useMemo(
-    () => ({
-      total: publishedExams.length,
-      live: publishedExams.filter((exam) => exam?.status === "published").length,
-      completed: publishedExams.filter((exam) => exam?.status === "completed").length,
-    }),
-    [publishedExams]
-  );
-
-  const formatDate = (value) => (value ? new Date(value).toLocaleString() : "-");
-
-  const columns = [
-    {
-      title: "Exam",
-      dataIndex: "title",
-      render: (title, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{title}</Text>
-          <Text type="secondary">{record?.subjectId?.name || "Subject not assigned"}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: "Schedule",
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text>{formatDate(record?.startTime)}</Text>
-          <Text type="secondary">Ends: {formatDate(record?.endTime)}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: "Marks",
-      render: (_, record) => (
-        <Text>
-          {record?.passingMarks ?? 0}/{record?.totalMarks ?? 0}
-        </Text>
-      ),
-    },
+  const resultColumns = [
+    { title: "Subject", dataIndex: "subjectName" },
+    { title: "Obtained", dataIndex: "obtainedMarks" },
+    { title: "Total", dataIndex: "totalMarks" },
+    { title: "Passing", dataIndex: "passingMarks" },
     {
       title: "Status",
-      dataIndex: "status",
-      render: (status) => {
-        const color = status === "completed" ? "purple" : "green";
-        return <Tag color={color}>{status?.toUpperCase()}</Tag>;
-      },
-    },
-    {
-      title: "Actions",
-      align: "center",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<PlayCircleOutlined />}
-            disabled={record?.status !== "published"}
-            onClick={() => navigate("/dashboard/student/exams/exam-live")}
-          >
-            Start
-          </Button>
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => navigate("/dashboard/student/exams/attempt-review")}
-          >
-            Review
-          </Button>
-        </Space>
-      ),
+      render: (_, row) => <Tag color={row.isPassed ? "green" : "red"}>{row.isPassed ? "PASS" : "FAIL"}</Tag>,
     },
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" style={{ width: "100%" }}>
       <Card>
-        <Title level={4} style={{ marginBottom: 8 }}>
-          📝 Student Exam Module
-        </Title>
-        <Text type="secondary">
-          Apne published exams dekho, live attempt start karo, aur review page se performance check karo.
-        </Text>
+        <Title level={4}>Exam Schedule</Title>
+        {exams.length ? exams.map((exam) => <Text key={exam._id} style={{ display: "block" }}>{exam.title} - {new Date(exam.examDate).toLocaleDateString()}</Text>) : <Empty description="No exams scheduled" />}
       </Card>
 
-      <Row gutter={16}>
-        <Col xs={24} md={8}>
-          <Card>
-            <Text type="secondary">Available Exams</Text>
-            <Title level={3} style={{ margin: 0 }}>{stats.total}</Title>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card>
-            <Text type="secondary">Live Now</Text>
-            <Title level={3} style={{ margin: 0 }}>{stats.live}</Title>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card>
-            <Text type="secondary">Completed</Text>
-            <Title level={3} style={{ margin: 0 }}>{stats.completed}</Title>
-          </Card>
-        </Col>
-      </Row>
-
-      <Card bordered={false}>
-        <Table
-          rowKey="_id"
-          loading={loading}
-          columns={columns}
-          dataSource={publishedExams}
-          pagination={{ pageSize: 5 }}
-          locale={{
-            emptyText: (
-              <Empty
-                description="No published exams found"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            ),
-          }}
-        />
+      <Card loading={loading}>
+        <Title level={4}>Published Results</Title>
+        {!results.length ? (
+          <Empty description="No published results" />
+        ) : (
+          <Collapse
+            items={results.map((result) => ({
+              key: result._id,
+              label: `${result.examId?.title || "Exam"} | Total ${result.totalObtainedMarks}/${result.totalMaximumMarks} | ${result.percentage}% | ${result.grade}`,
+              children: (
+                <>
+                  <Table rowKey={(row) => `${row.subjectId}-${row.subjectName}`} pagination={false} columns={resultColumns} dataSource={result.subjects || []} />
+                  <Text strong>Status: <Tag color={result.resultStatus === "PASS" ? "green" : "red"}>{result.resultStatus}</Tag></Text>
+                </>
+              ),
+            }))}
+          />
+        )}
       </Card>
     </Space>
   );

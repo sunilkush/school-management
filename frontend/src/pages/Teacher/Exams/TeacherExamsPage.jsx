@@ -1,167 +1,116 @@
-import React, { useEffect ,useState} from "react";
-import {
-  Table,
-  Button,
-  Space,
-  Popconfirm,
-  message,
-  Card,
-  Tag,
-  Typography,
-  Empty,
-} from "antd";
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
-
-import { getExams } from "../../../features/examSlice.js";
+import React, { useEffect, useMemo, useState } from "react";
+import { Button, Card, Empty, InputNumber, message, Space, Table, Tag, Typography, Upload } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { Modal } from "antd";
-import EditExamForm from "./EditExamForm";
+import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
 
 const { Title, Text } = Typography;
 
 const TeacherExamsPage = () => {
   const dispatch = useDispatch();
- 
-const [editModalOpen, setEditModalOpen] = useState(false);
-const [selectedExamId, setSelectedExamId] = useState(null);
-  /* ✅ Redux State */
   const { exams = [], loading } = useSelector((state) => state.exams || {});
+  const [selectedExamId, setSelectedExamId] = useState(null);
+  const [rows, setRows] = useState([]);
 
-  /* ✅ Academic Year + School */
-  const {selectedAcademicYear} = useSelector((state) => state.acadmicYear)
-
-  const academicYearId = selectedAcademicYear?._id || null;
-  const schoolId = selectedAcademicYear?.schoolId || null;
-
-  /* ✅ Fetch Exams */
   useEffect(() => {
-    if (schoolId) {
-      dispatch(getExams({ schoolId, academicYearId }));
-    }
-  }, [schoolId, academicYearId, dispatch]);
+    dispatch(getExams({ sortBy: "examDate", sortOrder: "desc" }));
+  }, [dispatch]);
 
-  /* ✅ Delete Handler (Frontend Only Example) */
-  const handleDelete = () => {
-    message.success("Exam deleted");
-    // ⭐ If backend delete API hai to dispatch(deleteExam(id))
+  const selectedExam = useMemo(() => exams.find((exam) => exam._id === selectedExamId), [exams, selectedExamId]);
+
+  const onMarkChange = (index, value) => {
+    setRows((prev) => prev.map((item, idx) => (idx === index ? { ...item, obtainedMarks: value ?? 0 } : item)));
   };
-  const handleEdit = (examId) => {
-  setSelectedExamId(examId);
-  setEditModalOpen(true);
-};
-  /* ✅ Table Columns */
+
+  const addMockRows = () => {
+    setRows([
+      { studentId: "", studentName: "Student 1", obtainedMarks: 0, totalMarks: selectedExam?.totalMarks || 100, passingMarks: selectedExam?.passingMarks || 33 },
+      { studentId: "", studentName: "Student 2", obtainedMarks: 0, totalMarks: selectedExam?.totalMarks || 100, passingMarks: selectedExam?.passingMarks || 33 },
+    ]);
+  };
+
+  const saveBulk = async () => {
+    if (!selectedExamId) return message.error("Select exam first");
+    const payloadRows = rows.filter((r) => r.studentId).map((row) => ({ ...row, schoolClassId: selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId, sectionId: selectedExam?.sectionId?._id || selectedExam?.sectionId }));
+    if (!payloadRows.length) return message.warning("Please provide valid student IDs before save");
+
+    await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payloadRows })).unwrap();
+    message.success("Marks saved");
+  };
+
+  const submitFinal = async () => {
+    if (!selectedExam) return;
+    await dispatch(
+      submitFinalMarks({ examId: selectedExam._id, schoolClassId: selectedExam.schoolClassId?._id || selectedExam.schoolClassId, sectionId: selectedExam.sectionId?._id || selectedExam.sectionId })
+    ).unwrap();
+    message.success("Final marks submitted");
+  };
+
   const columns = [
+    { title: "Student", dataIndex: "studentName" },
+    { title: "Student ID", dataIndex: "studentId" },
+    { title: "Total", dataIndex: "totalMarks" },
+    { title: "Passing", dataIndex: "passingMarks" },
     {
-      title: "Exam Title",
-      dataIndex: "title",
-      render: (text) => <Text strong>{text}</Text>,
-    },
-    {
-      title: "Type",
-      dataIndex: "examType",
-      render: (type) => (
-        <Tag color="blue">{type?.toUpperCase()}</Tag>
-      ),
-    },
-    {
-      title: "Start Time",
-      dataIndex: "startTime",
-      render: (time) => new Date(time).toLocaleString(),
-    },
-    {
-      title: "End Time",
-      dataIndex: "endTime",
-      render: (time) => new Date(time).toLocaleString(),
-    },
-    {
-      title: "Total Marks",
-      dataIndex: "totalMarks",
-    },
-    {
-      title: "Passing Marks",
-      dataIndex: "passingMarks",
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => {
-        const color =
-          status === "published"
-            ? "green"
-            : status === "completed"
-            ? "purple"
-            : "orange";
-        return <Tag color={color}>{status?.toUpperCase()}</Tag>;
-      },
-    },
-    {
-      title: "Actions",
-      align: "center",
-      render: (_, record) => (
-        <Space>
-        <Button
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record._id)}
-            />
-          <Popconfirm
-            title="Delete this exam?"
-            onConfirm={() => handleDelete(record._id)}
-          >
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
+      title: "Obtained",
+      render: (_, record, index) => (
+        <InputNumber min={0} max={record.totalMarks} value={record.obtainedMarks} onChange={(value) => onMarkChange(index, value)} />
       ),
     },
   ];
 
+  const uploadProps = {
+    accept: ".json",
+    showUploadList: false,
+    beforeUpload: async (file) => {
+      const text = await file.text();
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          setRows(parsed);
+          message.success("Bulk marks loaded from JSON");
+        } else {
+          message.error("Invalid JSON format. Expected array.");
+        }
+      } catch {
+        message.error("Unable to parse JSON file");
+      }
+      return false;
+    },
+  };
+
   return (
-    <Card bordered={false} style={{ borderRadius: 12 }}>
-      <Space
-        style={{
-          width: "100%",
-          justifyContent: "space-between",
-          marginBottom: 16,
-        }}
-      >
-        <Title level={4} style={{ margin: 0 }}>
-          📘 Exams Management
-        </Title>
-      </Space>
+    <Space direction="vertical" style={{ width: "100%" }}>
+      <Card>
+        <Title level={4}>Teacher Exam & Marks Entry</Title>
+        <Text type="secondary">Select assigned exam, enter marks in editable grid, or bulk upload using JSON.</Text>
+      </Card>
 
-      <Table
-        loading={loading}
-        columns={columns}
-        dataSource={exams}
-        rowKey="_id"
-        bordered
-        pagination={{ pageSize: 5 }}
-        locale={{
-          emptyText: (
-            <Empty
-              description="No exams found"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          ),
-        }}
-      />
-          <Modal
-  title="Edit Exam"
-  open={editModalOpen}
-  onCancel={() => setEditModalOpen(false)}
-  footer={null}
-  width={900}
-  destroyOnClose
->
-  {selectedExamId && (
-    <EditExamForm examId={selectedExamId} />
-  )}
-</Modal>
-    </Card>
+      <Card>
+        <Space wrap>
+          {exams.map((exam) => (
+            <Button key={exam._id} type={selectedExamId === exam._id ? "primary" : "default"} onClick={() => setSelectedExamId(exam._id)}>
+              {exam.title} <Tag style={{ marginLeft: 8 }}>{exam.schoolClassId?.name || "Class"}</Tag>
+            </Button>
+          ))}
+          {!exams.length && <Empty description="No assigned exams found" />}
+        </Space>
+      </Card>
 
+      {selectedExamId && (
+        <Card loading={loading} title="Marks Entry Table">
+          <Space style={{ marginBottom: 12 }}>
+            <Button onClick={addMockRows}>Load Grid Template</Button>
+            <Upload {...uploadProps}>
+              <Button icon={<UploadOutlined />}>Bulk Upload (JSON)</Button>
+            </Upload>
+            <Button type="primary" onClick={saveBulk}>Save Marks</Button>
+            <Button onClick={submitFinal}>Submit Final Marks</Button>
+          </Space>
+          <Table rowKey={(row, i) => `${row.studentId || "row"}-${i}`} dataSource={rows} columns={columns} pagination={false} locale={{ emptyText: "Load template or upload file" }} />
+        </Card>
+      )}
+    </Space>
   );
 };
 
