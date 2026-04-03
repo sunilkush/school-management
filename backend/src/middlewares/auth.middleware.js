@@ -59,6 +59,7 @@ export const allowPublic = (req, _res, next) => {
 };
 
 export const enforceApiAuthByDefault = (req, _res, next) => {
+  if (req.method === "OPTIONS") return next();
   if (req.isPublicRoute) return next();
   return auth(req, _res, next);
 };
