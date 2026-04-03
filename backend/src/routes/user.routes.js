@@ -46,7 +46,7 @@ router.post(
   upload.fields([{ name: "avatar", maxCount: 1 }]),
   registerUser
 );
-router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
+
 router.get("/me", auth, roleMiddleware(ALL_USERS), getCurrentUser);
 router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);

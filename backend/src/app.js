@@ -74,6 +74,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 
 app.use("/api/auth", authRateLimiter, authRoutes);
+
 app.use("/api/v1/auth", authRateLimiter, authRoutes);
 
 app.use("/api/v1", enforceApiAuthByDefault);

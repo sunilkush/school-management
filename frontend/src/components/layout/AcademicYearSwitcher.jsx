@@ -81,11 +81,12 @@ const AcademicYearSwitcher = () => {
 
   return (
     <Select
-      style={{ width: 220 }}
+      style={{ width: 220,color:"var(--text-muted)" }}
       placeholder="Academic Year"
       value={selectedAcademicYear?._id}
       onChange={handleChange}
       loading={loading}
+
       disabled // 🔥 because only one active year
     >
       {activeYear && (
