@@ -39,6 +39,7 @@ import chapterReducer from "../features/chapterSlice.js";
 import boardClassReducer from "../features/boardClassSlice.js";
 import roleUiReducer from "../features/roleUiSlice.js";
 import schoolClassReducer from "../features/schoolClassSlice.js";
+import attendanceReducer from "../features/attendanceSlice.js";
 import { attachAuthStore } from "../api/httpClient";
 import { baseApi } from "../services/baseApi";
 
@@ -78,6 +79,7 @@ const rootReducer = combineReducers({
   boardClass: boardClassReducer,
   roleUi: roleUiReducer,
   schoolClass: schoolClassReducer,
+  attendance: attendanceReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
