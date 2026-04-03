@@ -2,195 +2,94 @@ import mongoose from "mongoose";
 import { User } from "../models/user.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { Report } from "../models/Report.model.js";
+import APIFeatures from "../utils/apiFeatures.js";
+import { ApiError } from "../utils/ApiError.js";
+import { sendSuccess } from "../utils/response.js";
 
+const ensureSchoolAccess = (req, schoolId) => {
+  if (req.userRole?.name === "Super Admin") return;
+  if (req.user.schoolId?.toString() !== schoolId.toString()) {
+    throw new ApiError(403, "Unauthorized school access");
+  }
+};
 
-export const getSchoolOverviewReport = async (req, res) => {
+export const getSchoolOverviewReport = async (req, res, next) => {
   try {
     const { schoolId, academicYearId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-      return res.status(400).json({ success: false, message: "Invalid School ID" });
-    }
+    if (!mongoose.Types.ObjectId.isValid(schoolId)) throw new ApiError(400, "Invalid School ID");
+    if (!mongoose.Types.ObjectId.isValid(academicYearId)) throw new ApiError(400, "Invalid Academic Year ID");
 
-    if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
-      return res.status(400).json({ success: false, message: "Invalid Academic Year ID" });
-    }
+    ensureSchoolAccess(req, schoolId);
 
     const schoolObjId = new mongoose.Types.ObjectId(schoolId);
     const academicObjId = new mongoose.Types.ObjectId(academicYearId);
 
-    // ----------------------------
-    // 1️⃣ ROLE WISE USER COUNTS
-    // ----------------------------
     const roleWise = await User.aggregate([
       { $match: { schoolId: schoolObjId } },
-
-      {
-        $lookup: {
-          from: "roles",
-          localField: "roleId",
-          foreignField: "_id",
-          as: "roleData",
-        },
-      },
+      { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleData" } },
       { $unwind: "$roleData" },
-
-      {
-        $group: {
-          _id: "$roleData.name", // School Admin/Teacher/Parent/Student
-          count: { $sum: 1 },
-        },
-      },
+      { $group: { _id: "$roleData.name", count: { $sum: 1 } } },
     ]);
 
-    const adminCount = roleWise.find((x) => x._id === "School Admin")?.count || 0;
-    const teacherCount = roleWise.find((x) => x._id === "Teacher")?.count || 0;
-    const parentCount = roleWise.find((x) => x._id === "Parent")?.count || 0;
-    const studentCount = roleWise.find((x) => x._id === "Student")?.count || 0;
-
-    // ----------------------------
-    // 2️⃣ TOTAL STUDENT COUNT (ENROLLMENT)
-    // ----------------------------
     const totalStudents = await StudentEnrollment.countDocuments({
       schoolId: schoolObjId,
       academicYearId: academicObjId,
       status: "Active",
     });
 
-    // ----------------------------
-    // 3️⃣ CLASS WISE STUDENT COUNTS
-    // ----------------------------
     const classWise = await StudentEnrollment.aggregate([
-      {
-        $match: {
-          schoolId: schoolObjId,
-          academicYearId: academicObjId,
-        },
-      },
-
-      {
-        $lookup: {
-          from: "classes",
-          localField: "schoolClassId",
-          foreignField: "_id",
-          as: "classData",
-        },
-      },
+      { $match: { schoolId: schoolObjId, academicYearId: academicObjId } },
+      { $lookup: { from: "classes", localField: "schoolClassId", foreignField: "_id", as: "classData" } },
       { $unwind: "$classData" },
-
-      {
-        $group: {
-          _id: "$classData.name",
-          count: { $sum: 1 },
-        },
-      },
-
+      { $group: { _id: "$classData.name", count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
     ]);
 
-    // ----------------------------
-    // 4️⃣ SECTION WISE STUDENT COUNTS
-    // ----------------------------
     const sectionWise = await StudentEnrollment.aggregate([
-      {
-        $match: {
-          schoolId: schoolObjId,
-          academicYearId: academicObjId,
-        },
-      },
-
-      {
-        $lookup: {
-          from: "sections",
-          localField: "sectionId",
-          foreignField: "_id",
-          as: "sectionData",
-        },
-      },
+      { $match: { schoolId: schoolObjId, academicYearId: academicObjId } },
+      { $lookup: { from: "sections", localField: "sectionId", foreignField: "_id", as: "sectionData" } },
       { $unwind: "$sectionData" },
-
-      {
-        $group: {
-          _id: "$sectionData.name",
-          count: { $sum: 1 },
-        },
-      },
-
+      { $group: { _id: "$sectionData.name", count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
     ]);
 
-    // ----------------------------
-    // 5️⃣ GENDER ANALYSIS
-    // ----------------------------
     const genderStats = await Student.aggregate([
-      {
-        $lookup: {
-          from: "studentenrollments", // FIXED COLLECTION NAME
-          localField: "_id",
-          foreignField: "studentId",
-          as: "enroll",
-        },
-      },
-
+      { $lookup: { from: "studentenrollments", localField: "_id", foreignField: "studentId", as: "enroll" } },
       { $unwind: "$enroll" },
-
-      {
-        $match: {
-          "enroll.schoolId": schoolObjId,
-          "enroll.academicYearId": academicObjId,
-        },
-      },
-
-      {
-        $group: {
-          _id: "$gender", // Male/Female/Other
-          count: { $sum: 1 },
-        },
-      },
+      { $match: { "enroll.schoolId": schoolObjId, "enroll.academicYearId": academicObjId } },
+      { $group: { _id: "$gender", count: { $sum: 1 } } },
     ]);
 
-    // ----------------------------
-    // 6️⃣ FINAL RESPONSE
-    // ----------------------------
-    return res.status(200).json({
-      success: true,
-      schoolId,
-      academicYearId,
-
-      summary: {
-        adminCount,
-        teacherCount,
-        parentCount,
-        studentCount: totalStudents,
+    return sendSuccess(res, {
+      message: "School overview report fetched",
+      data: {
+        schoolId,
+        academicYearId,
+        summary: {
+          adminCount: roleWise.find((x) => x._id === "School Admin")?.count || 0,
+          teacherCount: roleWise.find((x) => x._id === "Teacher")?.count || 0,
+          parentCount: roleWise.find((x) => x._id === "Parent")?.count || 0,
+          studentCount: totalStudents,
+        },
+        roleWise,
+        classWise,
+        sectionWise,
+        genderStats,
       },
-
-      roleWise,
-      classWise,
-      sectionWise,
-      genderStats,
     });
   } catch (error) {
-   
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-
-import { Report } from "../models/Report.model.js";
-import APIFeatures from "../utils/apiFeatures.js";
-
-// @desc Get all reports with filtering, sorting, field limiting, pagination
-export const getReport = async (req, res) => {
+export const getReport = async (req, res, next) => {
   try {
-    // Build query using APIFeatures
+    const reportQuery = req.userRole?.name === "Super Admin" ? Report.find() : Report.find({ school: req.user.schoolId });
+
     const features = new APIFeatures(
-      Report.find()
-        .populate("school", "name")
-        .populate("generatedBy", "name"),
+      reportQuery.populate("school", "name").populate("generatedBy", "name"),
       req.query
     )
       .filter()
@@ -200,62 +99,57 @@ export const getReport = async (req, res) => {
 
     const reports = await features.query;
 
-    res.status(200).json({
-      status: "success",
-      results: reports.length,
+    return sendSuccess(res, {
+      message: "Reports fetched",
       data: reports,
+      meta: {
+        page: Number(req.query.page || 1),
+        total: reports.length,
+      },
     });
   } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
+    return next(err);
   }
 };
 
-// @desc Create report
-export const createReport = async (req, res) => {
+export const createReport = async (req, res, next) => {
   try {
-    const newReport = await Report.create({
-      ...req.body,
-      generatedBy: req.user._id, // from auth middleware
-    });
+    if (req.userRole?.name !== "Super Admin") {
+      req.body.school = req.user.schoolId;
+    }
 
-    res.status(201).json({
-      status: "success",
+    const newReport = await Report.create({ ...req.body, generatedBy: req.user._id });
+
+    return sendSuccess(res, {
+      statusCode: 201,
+      message: "Report created",
       data: newReport,
     });
   } catch (err) {
-    res.status(400).json({ status: "error", message: err.message });
+    return next(err);
   }
 };
 
-// @desc Delete report
-export const deleteReport = async (req, res) => {
+export const deleteReport = async (req, res, next) => {
   try {
     const deleted = await Report.findByIdAndDelete(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ status: "error", message: "Report not found" });
-    }
+    if (!deleted) throw new ApiError(404, "Report not found");
 
-    res.status(204).json({ status: "success", data: null });
+    return sendSuccess(res, { message: "Report deleted", data: null });
   } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
+    return next(err);
   }
 };
 
-export const viewReport = async (req, res) => {
+export const viewReport = async (req, res, next) => {
   try {
-    const report = await Report.findById(req.params.id)
-      .populate("school", "name")
-      .populate("generatedBy", "name");
+    const report = await Report.findById(req.params.id).populate("school", "name").populate("generatedBy", "name");
 
-    if (!report) {
-      return res.status(404).json({ status: "error", message: "Report not found" });
-    }
+    if (!report) throw new ApiError(404, "Report not found");
+    if (req.userRole?.name !== "Super Admin") ensureSchoolAccess(req, report.school);
 
-    res.status(200).json({
-      status: "success",
-      data: report,
-    });
+    return sendSuccess(res, { message: "Report fetched", data: report });
   } catch (err) {
-    res.status(500).json({ status: "error", message: err.message });
+    return next(err);
   }
-}
+};
