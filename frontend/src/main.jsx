@@ -41,7 +41,7 @@ const Documents = lazy(() => import("./pages/Documents.jsx"));
 const Schedule = lazy(() => import("./pages/Schedule.jsx"));
 const Loader = lazy(()=> import("./components/Loader/Loader.jsx"));
 // Super Admin
-const Reports = lazy(() => import("./pages/Super_Admin/Reports/Reports.jsx"));
+const Reports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/Reports.jsx"));
 const Schools = lazy(() => import("./pages/Super_Admin/School_Management/Schools.jsx"));
 const AddSchool = lazy(() => import("./pages/Super_Admin/School_Management/AddSchool.jsx"));
 const SubscriptionPlans = lazy(() => import("./pages/Super_Admin/School_Management/SubscriptionPlans.jsx"));
@@ -68,11 +68,11 @@ const ChaptersTopics = lazy(() => import("./pages/Super_Admin/Master_Settings/Ch
 const BoardClassPage = lazy(() => import("./pages/Super_Admin/Master_Settings/BoardClassPage.jsx"));
 
 const Modules = lazy(() => import("./pages/Super_Admin/Modules/Modules.jsx"));
-const SchoolWiseReports = lazy(() => import("./pages/Super_Admin/Reports/SchoolWiseReports.jsx"));
-const AttendanceSummary = lazy(() => import("./pages/Super_Admin/Reports/AttendanceSummary.jsx"));
-const FinanceSummary = lazy(() => import("./pages/Super_Admin/Reports/FinanceSummary.jsx"));
-const AcademicReports = lazy(() => import("./pages/Super_Admin/Reports/AcademicReports.jsx"));
-const ActivityLogs = lazy(() => import("./pages/Super_Admin/Reports/ActivityLogs.jsx"));
+const SchoolWiseReports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/SchoolWiseReports.jsx"));
+const AttendanceSummary = lazy(() => import("./pages/School_Admin/Reports_&_Analytics/schoolAdminReport.jsx"));
+const FinanceSummary = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/FinanceSummary.js"));
+const AcademicReports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/AcademicReports.js"));
+const ActivityLogs = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/ActivityLogs.js"));
 
 // Super Admin Users
 const Admins = lazy(() => import("./pages/Super_Admin/Users_Management/Admins.jsx"));
