@@ -5,194 +5,171 @@ import mongoose from "mongoose";
 import { Payment } from "../models/payment.model.js";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { School } from "../models/school.model.js";
-import { payInstallment } from "./feeInstallment.controllers.js";
 
 import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { sendSuccess } from "../utils/response.js";
 
-/* =====================================================
-   🔹 RAZORPAY INSTANCE (PER SCHOOL)
-===================================================== */
 const getRazorpayInstance = async (schoolId) => {
-  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-    throw new ApiError(400, "Invalid school ID");
-  }
+  if (!mongoose.Types.ObjectId.isValid(schoolId)) throw new ApiError(400, "Invalid school ID");
 
   const school = await School.findById(schoolId).select("razorpay");
-
   if (!school || !school.razorpay?.keyId || !school.razorpay?.keySecret) {
     throw new ApiError(400, "Razorpay not configured for this school");
   }
 
   return {
-    razorpay: new Razorpay({
-      key_id: school.razorpay.keyId,
-      key_secret: school.razorpay.keySecret,
-    }),
+    razorpay: new Razorpay({ key_id: school.razorpay.keyId, key_secret: school.razorpay.keySecret }),
     keySecret: school.razorpay.keySecret,
   };
 };
 
-/* =====================================================
-   🔹 CREATE PAYMENT (MANUAL / CASH / UPI / ADMIN)
-===================================================== */
+const ensureInstallmentAccess = async ({ installmentId, schoolId }) => {
+  const installment = await FeeInstallment.findById(installmentId);
+  if (!installment) throw new ApiError(404, "Installment not found");
+  if (installment.schoolId.toString() !== schoolId.toString()) throw new ApiError(403, "Unauthorized access");
+  return installment;
+};
+
 export const createPayment = asyncHandler(async (req, res) => {
   const { studentId, installmentId, amount, paymentMethod } = req.body;
   const schoolId = req.user.schoolId;
 
-  if (!mongoose.Types.ObjectId.isValid(installmentId)) {
-    throw new ApiError(400, "Invalid installment ID");
-  }
+  const installment = await ensureInstallmentAccess({ installmentId, schoolId });
 
-  const installment = await FeeInstallment.findById(installmentId);
-
-  if (!installment) {
-    throw new ApiError(404, "Installment not found");
-  }
-
-  if (installment.schoolId.toString() !== schoolId) {
-    throw new ApiError(403, "Unauthorized access");
-  }
-
-  if (amount <= 0) {
-    throw new ApiError(400, "Invalid amount");
+  if (amount > installment.amount - installment.paidAmount) {
+    throw new ApiError(400, "Amount exceeds remaining due");
   }
 
   const payment = await Payment.create({
     schoolId,
     studentId,
     installmentId,
-    amount,
-    paymentMethod,
-    status: "SUCCESS",
+    amountPaid: amount,
+    paymentMode: String(paymentMethod || "cash").toLowerCase(),
+    status: "success",
+    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random()*1000)}`,
   });
 
   installment.paidAmount += amount;
-  installment.status =
-    installment.paidAmount >= installment.amount ? "PAID" : "PARTIAL";
-
+  installment.status = installment.paidAmount >= installment.amount ? "PAID" : "PARTIAL";
   await installment.save();
 
-  return res.status(201).json(
-    new ApiResponse(201, payment, "Payment created successfully")
-  );
+  return sendSuccess(res, {
+    statusCode: 201,
+    message: "Payment created successfully",
+    data: payment,
+  });
 });
 
-/* =====================================================
-   🔹 CREATE RAZORPAY ORDER
-===================================================== */
 export const createRazorpayOrder = asyncHandler(async (req, res) => {
   const { installmentId } = req.body;
   const schoolId = req.user.schoolId;
 
-  const installment = await FeeInstallment.findById(installmentId);
-
-  if (!installment) {
-    throw new ApiError(404, "Installment not found");
-  }
-
+  const installment = await ensureInstallmentAccess({ installmentId, schoolId });
   const payableAmount = installment.amount - installment.paidAmount;
 
-  if (payableAmount <= 0) {
-    throw new ApiError(400, "Installment already paid");
-  }
+  if (payableAmount <= 0) throw new ApiError(400, "Installment already paid");
 
   const { razorpay } = await getRazorpayInstance(schoolId);
-
   const order = await razorpay.orders.create({
     amount: payableAmount * 100,
     currency: "INR",
     receipt: `INST-${installmentId}`,
+    notes: {
+      schoolId: schoolId.toString(),
+      installmentId,
+      requestId: req.requestId,
+    },
   });
 
-  return res.status(200).json(
-    new ApiResponse(200, order, "Razorpay order created")
-  );
+  return sendSuccess(res, { message: "Razorpay order created", data: order });
 });
 
-/* =====================================================
-   🔹 VERIFY RAZORPAY PAYMENT
-===================================================== */
 export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    installmentId,
-  } = req.body;
-
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, installmentId } = req.body;
   const schoolId = req.user.schoolId;
 
   const { keySecret } = await getRazorpayInstance(schoolId);
-
   const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+  const expectedSignature = crypto.createHmac("sha256", keySecret).update(body).digest("hex");
 
-  const expectedSignature = crypto
-    .createHmac("sha256", keySecret)
-    .update(body)
-    .digest("hex");
+  if (expectedSignature !== razorpay_signature) throw new ApiError(400, "Payment verification failed");
 
-  if (expectedSignature !== razorpay_signature) {
-    throw new ApiError(400, "Payment verification failed");
-  }
+  const installment = await ensureInstallmentAccess({ installmentId, schoolId });
+  const amount = installment.amount - installment.paidAmount;
 
-  const installment = await FeeInstallment.findById(installmentId);
-  if (!installment) {
-    throw new ApiError(404, "Installment not found");
-  }
+  if (amount <= 0) throw new ApiError(400, "Installment already paid");
 
-  req.params.installmentId = installmentId;
-  req.body.amount = installment.amount - installment.paidAmount;
+  const payment = await Payment.create({
+    schoolId,
+    studentId: installment.studentId,
+    installmentId,
+    amountPaid: amount,
+    paymentMode: "razorpay",
+    status: "success",
+    razorpay: { razorpay_order_id, razorpay_payment_id },
+    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+  });
 
-  return payInstallment(req, res);
+  installment.paidAmount += amount;
+  installment.status = "PAID";
+  await installment.save();
+
+  return sendSuccess(res, { message: "Payment verified and captured", data: payment });
 });
 
-/* =====================================================
-   🔹 GET PAYMENTS (ALL / SINGLE)
-===================================================== */
 export const getPayments = asyncHandler(async (req, res) => {
   const schoolId = req.user.schoolId;
   const { id } = req.params;
+  const { page = 1, limit = 20 } = req.query;
 
   const filter = { schoolId };
-
-  if (id && mongoose.Types.ObjectId.isValid(id)) {
-    filter._id = id;
+  if (id) filter._id = id;
+  if (["Student", "Parent"].includes(req.userRole?.name)) {
+    filter.studentId = req.user._id;
   }
 
-  const payments = await Payment.find(filter)
-    .populate("studentId", "name admissionNo")
-    .populate("installmentId", "amount dueDate")
-    .sort({ createdAt: -1 });
+  const skip = (Number(page) - 1) * Number(limit);
 
-  return res.status(200).json(
-    new ApiResponse(200, payments, "Payments fetched successfully")
-  );
+  const [payments, total] = await Promise.all([
+    Payment.find(filter)
+      .select("studentId installmentId amountPaid paymentMode status paymentDate receiptNo createdAt")
+      .populate("studentId", "name regId")
+      .populate("installmentId", "amount dueDate")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Payment.countDocuments(filter),
+  ]);
+
+  return sendSuccess(res, {
+    message: "Payments fetched successfully",
+    data: payments,
+    meta: {
+      page: Number(page),
+      total,
+    },
+  });
 });
 
-/* =====================================================
-   🔹 PAYMENT SUMMARY
-===================================================== */
 export const paymentSummary = asyncHandler(async (req, res) => {
   const schoolId = req.user.schoolId;
 
-  const summary = await Payment.aggregate([
+  const [summary] = await Payment.aggregate([
     { $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } },
     {
       $group: {
         _id: null,
-        totalAmount: { $sum: "$amount" },
+        totalAmount: { $sum: "$amountPaid" },
         totalTransactions: { $sum: 1 },
       },
     },
   ]);
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      summary[0] || { totalAmount: 0, totalTransactions: 0 },
-      "Payment summary fetched"
-    )
-  );
+  return sendSuccess(res, {
+    message: "Payment summary fetched",
+    data: summary || { totalAmount: 0, totalTransactions: 0 },
+  });
 });

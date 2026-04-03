@@ -1,137 +1,155 @@
-import mongoose from "mongoose";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { Attempt } from "../models/ExamAttempts.model.js";
 import { Exam } from "../models/Exam.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { sendSuccess } from "../utils/response.js";
+
+const assertObjectId = (id, label) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, `Invalid ${label}`);
+};
+
+const enforceAttemptReadAccess = (attempt, req) => {
+  const role = req.userRole?.name;
+  const isPrivileged = ["Super Admin", "School Admin", "Teacher"].includes(role);
+  if (isPrivileged) return;
+
+  if (attempt.studentId?.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Forbidden access to this attempt");
+  }
+};
 
 export const startAttempt = asyncHandler(async (req, res) => {
-  const { examId, studentId, examSubjectId } = req.body;
+  const { examId } = req.body;
+  const studentId = req.user._id;
 
-  if (![examId, studentId, examSubjectId].every((id) => mongoose.Types.ObjectId.isValid(id))) {
-    throw new ApiError(400, "Invalid IDs provided");
-  }
+  assertObjectId(examId, "examId");
 
   const exam = await Exam.findById(examId).populate("questions.questionId");
   if (!exam) throw new ApiError(404, "Exam not found");
 
-  const existing = await Attempt.findOne({ examId, studentId, examSubjectId, status: "in_progress" });
+  const existing = await Attempt.findOne({ examId, studentId, status: "in_progress" });
   if (existing) throw new ApiError(400, "You already have an active attempt");
 
-  const answers = (exam.questions || []).map((q) => ({
-    questionId: q.questionId?._id,
-    questionSnapshot: {
-      statement: q.questionId?.statement,
-      questionType: q.questionId?.questionType,
-      options: q.questionId?.options,
-      marks: q.questionId?.marks,
-      negativeMarks: q.questionId?.negativeMarks,
-    },
+  const answers = exam.questions.map((q) => ({
+    questionRef: q.questionId._id,
+    snapshot: q.questionId.toObject(),
     answer: null,
     marksObtained: 0,
     isCorrect: null,
     flagged: false,
   }));
 
-  const attempt = await Attempt.create({
-    schoolId: req.user.schoolId,
-    examId,
-    examSubjectId,
-    studentId,
-    answers,
-  });
+  const attempt = await Attempt.create({ examId, studentId, answers });
 
-  return res.status(201).json(new ApiResponse(201, attempt, "Exam attempt started"));
+  return sendSuccess(res, {
+    statusCode: 201,
+    message: "Exam attempt started",
+    data: attempt,
+  });
 });
 
 export const submitAttempt = asyncHandler(async (req, res) => {
   const { attemptId, answers = [] } = req.body;
-
-  if (!mongoose.Types.ObjectId.isValid(attemptId)) {
-    throw new ApiError(400, "Invalid attempt ID");
-  }
+  assertObjectId(attemptId, "attemptId");
 
   const attempt = await Attempt.findById(attemptId);
   if (!attempt) throw new ApiError(404, "Attempt not found");
+  if (attempt.studentId.toString() !== req.user._id.toString()) throw new ApiError(403, "Forbidden");
   if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt already submitted");
 
-  attempt.answers = (attempt.answers || []).map((ans) => {
-    const submitted = answers.find((a) => a.questionId === ans.questionId.toString());
+  attempt.answers = attempt.answers.map((ans) => {
+    const submitted = answers.find((a) => a.questionRef === ans.questionRef.toString());
     if (!submitted) return ans;
 
     ans.answer = submitted.answer;
     ans.flagged = submitted.flagged ?? ans.flagged;
 
-    const qType = ans.questionSnapshot?.questionType;
+    const qType = ans.snapshot.questionType;
     if (["mcq_single", "mcq_multi", "true_false"].includes(qType)) {
-      const expected = Array.isArray(ans.questionSnapshot?.correctAnswers)
-        ? [...ans.questionSnapshot.correctAnswers].sort().toString()
-        : ans.questionSnapshot?.correctAnswers;
-      const actual = Array.isArray(ans.answer) ? [...ans.answer].sort().toString() : ans.answer;
-      ans.isCorrect = expected === actual;
-      ans.marksObtained = ans.isCorrect
-        ? Number(ans.questionSnapshot?.marks || 0)
-        : Math.max(0, Number(ans.questionSnapshot?.negativeMarks || 0));
+      const correct = Array.isArray(ans.snapshot.correctAnswers)
+        ? [...ans.snapshot.correctAnswers].sort().toString()
+        : ans.snapshot.correctAnswers;
+      const userAns = Array.isArray(ans.answer) ? [...ans.answer].sort().toString() : ans.answer;
+      ans.isCorrect = correct === userAns;
+      ans.marksObtained = ans.isCorrect ? ans.snapshot.marks : -(ans.snapshot.negativeMarks || 0);
     }
 
     return ans;
   });
 
-  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
+  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (a.marksObtained || 0), 0);
   attempt.status = "submitted";
   attempt.submittedAt = new Date();
 
   await attempt.save();
-  return res.status(200).json(new ApiResponse(200, attempt, "Attempt submitted successfully"));
+
+  return sendSuccess(res, { message: "Attempt submitted successfully", data: attempt });
 });
 
 export const evaluateAttempt = asyncHandler(async (req, res) => {
-  const { attemptId, evaluations = [], grade } = req.body;
-  if (!mongoose.Types.ObjectId.isValid(attemptId)) throw new ApiError(400, "Invalid attempt ID");
+  const { attemptId, evaluations = [] } = req.body;
+  assertObjectId(attemptId, "attemptId");
 
   const attempt = await Attempt.findById(attemptId);
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
-  attempt.answers = (attempt.answers || []).map((ans) => {
-    const evaluation = evaluations.find((e) => e.questionId === ans.questionId.toString());
-    if (!evaluation) return ans;
-    ans.marksObtained = Number(evaluation.marksObtained ?? ans.marksObtained);
-    ans.isCorrect = evaluation.isCorrect ?? ans.isCorrect;
+  attempt.answers = attempt.answers.map((ans) => {
+    const evalData = evaluations.find((e) => e.questionRef === ans.questionRef.toString());
+    if (!evalData) return ans;
+
+    ans.marksObtained = evalData.marksObtained ?? ans.marksObtained;
+    ans.isCorrect = evalData.isCorrect ?? ans.isCorrect;
+    ans.reviewComments = evalData.reviewComments ?? ans.reviewComments;
     return ans;
   });
 
-  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
+  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (a.marksObtained || 0), 0);
   attempt.status = "evaluated";
-  attempt.grade = grade ?? attempt.grade;
+  attempt.grade = req.body.grade ?? attempt.grade;
 
   await attempt.save();
-  return res.status(200).json(new ApiResponse(200, attempt, "Attempt evaluated successfully"));
+  return sendSuccess(res, { message: "Attempt evaluated successfully", data: attempt });
 });
 
 export const getAttemptById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid attempt ID");
+  assertObjectId(id, "id");
 
-  const attempt = await Attempt.findById(id).populate("examId studentId answers.questionId");
+  const attempt = await Attempt.findById(id).populate("examId studentId answers.questionRef");
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
-  return res.status(200).json(new ApiResponse(200, attempt, "Attempt fetched successfully"));
+  enforceAttemptReadAccess(attempt, req);
+
+  return sendSuccess(res, { message: "Attempt fetched successfully", data: attempt });
 });
 
 export const getAttempts = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page || 1);
-  const limit = Number(req.query.limit || 10);
-  const skip = (page - 1) * limit;
+  const { page = 1, limit = 10, studentId, examId, status, sort = "-createdAt" } = req.query;
 
   const filters = {};
-  if (req.query.studentId) filters.studentId = req.query.studentId;
-  if (req.query.examId) filters.examId = req.query.examId;
-  if (req.query.status) filters.status = req.query.status;
+  if (studentId) filters.studentId = studentId;
+  if (examId) filters.examId = examId;
+  if (status) filters.status = status;
+
+  if (["Student", "Parent"].includes(req.userRole?.name)) {
+    filters.studentId = req.user._id;
+  }
+
+  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
   const [attempts, total] = await Promise.all([
-    Attempt.find(filters).populate("examId studentId answers.questionId").skip(skip).limit(limit).sort({ createdAt: -1 }),
+    Attempt.find(filters)
+      .populate("examId studentId answers.questionRef")
+      .skip(skip)
+      .limit(parseInt(limit, 10))
+      .sort(sort),
     Attempt.countDocuments(filters),
   ]);
 
-  return res.status(200).json(new ApiResponse(200, attempts, "Attempts fetched successfully", { page, total, limit }));
+  return sendSuccess(res, {
+    message: "Attempts fetched successfully",
+    data: attempts,
+    meta: { page: Number(page), total },
+  });
 });

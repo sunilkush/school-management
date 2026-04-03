@@ -6,52 +6,21 @@ import {
   getAllClasses,
   getClassById,
 } from "../controllers/class.controllers.js";
-import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
-import { validate } from "../middlewares/validate.middleware.js";
+import { requireRoles } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
 const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
 
-router.post(
-  "/create",
-  auth,
-  roleMiddleware(ADMIN_ONLY),
-  validate({ body: { name: { required: true, type: "string" } } }),
-  createClass
-);
+router.post("/", requireRoles(ADMIN_ONLY), createClass);
+router.get("/", requireRoles(ADMIN_TEACHER), getAllClasses);
+router.get("/:schoolClassId", requireRoles(ADMIN_TEACHER), getClassById);
+router.put("/:schoolClassId", requireRoles(ADMIN_ONLY), updateClass);
+router.delete("/:schoolClassId", requireRoles(ADMIN_ONLY), deleteClass);
 
-router.get(
-  "/all",
-  auth,
-  roleMiddleware(ADMIN_TEACHER),
-  validate({ query: { page: { type: "positiveInt" }, limit: { type: "positiveInt" } } }),
-  getAllClasses
-);
-
-router.get(
-  "/:schoolClassId",
-  auth,
-  roleMiddleware(ADMIN_TEACHER),
-  validate({ params: { schoolClassId: { required: true, type: "objectId" } } }),
-  getClassById
-);
-
-router.put(
-  "/:schoolClassId",
-  auth,
-  roleMiddleware(ADMIN_ONLY),
-  validate({ params: { schoolClassId: { required: true, type: "objectId" } } }),
-  updateClass
-);
-
-router.delete(
-  "/:schoolClassId",
-  auth,
-  roleMiddleware(ADMIN_ONLY),
-  validate({ params: { schoolClassId: { required: true, type: "objectId" } } }),
-  deleteClass
-);
+// backward compatibility
+router.post("/create", requireRoles(ADMIN_ONLY), createClass);
+router.get("/all", requireRoles(ADMIN_TEACHER), getAllClasses);
 
 export default router;

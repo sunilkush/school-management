@@ -6,52 +6,14 @@ import {
   getAttemptById,
   getAttempts,
 } from "../controllers/attempt.controllers.js";
-import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
-import { validate } from "../middlewares/validate.middleware.js";
+import { requireRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-const READ_ROLES = ["Super Admin", "School Admin", "Teacher"];
-const STUDENT_ROLES = ["Student"];
-
-router.post(
-  "/start",
-  auth,
-  roleMiddleware(STUDENT_ROLES),
-  validate({
-    body: {
-      examId: { required: true, type: "objectId" },
-      studentId: { required: true, type: "objectId" },
-      examSubjectId: { required: true, type: "objectId" },
-    },
-  }),
-  startAttempt
-);
-
-router.post(
-  "/submit",
-  auth,
-  roleMiddleware(STUDENT_ROLES),
-  validate({ body: { attemptId: { required: true, type: "objectId" } } }),
-  submitAttempt
-);
-
-router.post(
-  "/evaluate",
-  auth,
-  roleMiddleware(READ_ROLES),
-  validate({ body: { attemptId: { required: true, type: "objectId" } } }),
-  evaluateAttempt
-);
-
-router.get(
-  "/:id",
-  auth,
-  roleMiddleware([...READ_ROLES, ...STUDENT_ROLES]),
-  validate({ params: { id: { required: true, type: "objectId" } } }),
-  getAttemptById
-);
-
-router.get("/", auth, roleMiddleware([...READ_ROLES, ...STUDENT_ROLES]), getAttempts);
+router.post("/start", requireRoles(["Student"]), startAttempt);
+router.post("/submit", requireRoles(["Student"]), submitAttempt);
+router.post("/evaluate", requireRoles(["Super Admin", "School Admin", "Teacher"]), evaluateAttempt);
+router.get("/:id", requireRoles(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttemptById);
+router.get("/", requireRoles(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttempts);
 
 export default router;

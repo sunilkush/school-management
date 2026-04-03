@@ -1,46 +1,25 @@
 import mongoose from "mongoose";
 import { StudentFee } from "../models/studentFee.model.js";
 import { FeeStructure } from "../models/feeStructure.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { sendSuccess } from "../utils/response.js";
 
-/* =====================================================
-   ✅ ASSIGN FEES TO STUDENTS (Single / Bulk)
-   (School Admin)
-=====================================================*/
 export const assignFeesToStudents = asyncHandler(async (req, res) => {
-  const {
-    feeStructureId,
-    studentId,
-    studentIds,
-    academicYearId,
-    schoolId,
-    customAmount,
-  } = req.body;
+  const { feeStructureId, studentId, studentIds, academicYearId, customAmount } = req.body;
+  const schoolId = req.user.schoolId;
 
-  if (!feeStructureId || !academicYearId || !schoolId) {
-    throw new ApiError(
-      400,
-      "feeStructureId, academicYearId and schoolId are required"
-    );
+  if (!feeStructureId || !academicYearId) {
+    throw new ApiError(400, "feeStructureId and academicYearId are required");
   }
 
-  // 🎯 Normalize students (single → array)
   let students = [];
+  if (Array.isArray(studentIds) && studentIds.length) students = studentIds;
+  else if (studentId) students = [studentId];
+  if (!students.length) throw new ApiError(400, "studentId or studentIds required");
 
-  if (Array.isArray(studentIds) && studentIds.length) {
-    students = studentIds;
-  } else if (studentId) {
-    students = [studentId];
-  }
-
-  if (!students.length) {
-    throw new ApiError(400, "studentId or studentIds required");
-  }
-
-  const feeStructure = await FeeStructure.findById(feeStructureId);
-  if (!feeStructure) throw new ApiError(404, "Fee structure not found");
+  const feeStructure = await FeeStructure.findOne({ _id: feeStructureId, schoolId });
+  if (!feeStructure) throw new ApiError(404, "Fee structure not found for this school");
 
   const totalAmount = customAmount ?? feeStructure.amount;
 
@@ -57,81 +36,74 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     assignedBy: req.user._id,
   }));
 
-  // 🔒 ordered:false → duplicates skip, baki insert ho jayenge
   await StudentFee.insertMany(records, { ordered: false });
 
-  return res.json(
-    new ApiResponse(
-      201,
-      { assignedCount: records.length },
-      "Fees assigned successfully"
-    )
-  );
+  return sendSuccess(res, {
+    statusCode: 201,
+    message: "Fees assigned successfully",
+    data: { assignedCount: records.length },
+  });
 });
 
-
-/* =====================================================
-   ✅ STUDENT FEES LIST (Student + Parent)
-=====================================================*/ 
 export const getMyFees = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
+  const { page = 1, limit = 20 } = req.query;
 
-  // ✅ ObjectId validation
-  if (!mongoose.Types.ObjectId.isValid(studentId)) {
-    throw new ApiError(400, "Invalid student ID");
+  if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid student ID");
+
+  const role = req.userRole?.name;
+  if (["Student", "Parent"].includes(role) && req.user._id.toString() !== studentId) {
+    throw new ApiError(403, "Forbidden");
   }
 
-  const fees = await StudentFee.find({ studentId }) // ✅ FIX HERE
-    .populate({
-  path: "feeStructureId",
-  select: "name amount feeHeadId",
-  populate: {
-    path: "feeHeadId",
-    select: "name",
-  },
-})
-    .populate("academicYearId", "name")
-    .sort({ createdAt: -1 });
+  const filter = {
+    studentId,
+    schoolId: req.user.schoolId,
+  };
 
- 
+  const skip = (Number(page) - 1) * Number(limit);
 
-  return res.status(200).json(
-    new ApiResponse(200, fees, "Fees fetched successfully")
-  );
+  const [fees, total] = await Promise.all([
+    StudentFee.find(filter)
+      .populate({
+        path: "feeStructureId",
+        select: "name amount feeHeadId",
+        populate: { path: "feeHeadId", select: "name" },
+      })
+      .populate("academicYearId", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit)),
+    StudentFee.countDocuments(filter),
+  ]);
+
+  return sendSuccess(res, {
+    message: "Fees fetched successfully",
+    data: fees,
+    meta: { page: Number(page), total },
+  });
 });
 
-/* =====================================================
-   ✅ PAY FEES (Partial / Full)
-=====================================================*/
 export const payStudentFee = asyncHandler(async (req, res) => {
   const { paidAmount } = req.body;
 
-  if (!paidAmount || paidAmount <= 0) {
-    throw new ApiError(400, "Valid paidAmount required");
-  }
+  if (!paidAmount || paidAmount <= 0) throw new ApiError(400, "Valid paidAmount required");
 
-  const feeRecord = await StudentFee.findById(req.params.id);
+  const feeRecord = await StudentFee.findOne({ _id: req.params.id, schoolId: req.user.schoolId });
   if (!feeRecord) throw new ApiError(404, "Fee record not found");
 
   feeRecord.paidAmount += paidAmount;
+  await feeRecord.save();
 
-  await feeRecord.save(); // status & due auto handled by schema middleware
-
-  return res.json(
-    new ApiResponse(200, feeRecord, "Fee payment successful")
-  );
+  return sendSuccess(res, {
+    message: "Fee payment successful",
+    data: feeRecord,
+  });
 });
 
-/* =====================================================
-   ✅ FEES SUMMARY DASHBOARD (School Admin)
-=====================================================*/
 export const studentFeeSummary = asyncHandler(async (req, res) => {
   const summary = await StudentFee.aggregate([
-    {
-      $match: {
-        schoolId: new mongoose.Types.ObjectId(req.user.schoolId),
-      },
-    },
+    { $match: { schoolId: new mongoose.Types.ObjectId(req.user.schoolId) } },
     {
       $group: {
         _id: "$status",
@@ -142,5 +114,5 @@ export const studentFeeSummary = asyncHandler(async (req, res) => {
     },
   ]);
 
-  return res.json(new ApiResponse(200, summary));
+  return sendSuccess(res, { data: summary, message: "Student fee summary fetched" });
 });

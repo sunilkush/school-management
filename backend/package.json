@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "jest --runInBand",
+    "test": "node --test tests/*.test.js",
     "start": "nodemon src/index.js",
     "dev": "nodemon src/index.js",
     "verify:api": "jest tests/api --json --outputFile=tests/api/report.json"
@@ -37,10 +37,12 @@
     "razorpay": "^2.9.6",
     "twilio": "^5.4.4",
     "xlsx": "^0.18.5",
-    "helmet": "^8.1.0",
-    "express-rate-limit": "^7.5.0",
-    "zod": "^3.24.1",
-    "mongo-sanitize": "^1.1.0"
+    "dotenv-safe": "^9.1.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "xss-clean": "^0.1.4",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
