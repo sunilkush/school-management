@@ -4,24 +4,54 @@ import {
   submitAttempt,
   evaluateAttempt,
   getAttemptById,
-  getAttempts
+  getAttempts,
 } from "../controllers/attempt.controllers.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
 
 const router = express.Router();
 
-// Start a new attempt
-router.post("/start", startAttempt);
+const READ_ROLES = ["Super Admin", "School Admin", "Teacher"];
+const STUDENT_ROLES = ["Student"];
 
-// Submit attempt
-router.post("/submit", submitAttempt);
+router.post(
+  "/start",
+  auth,
+  roleMiddleware(STUDENT_ROLES),
+  validate({
+    body: {
+      examId: { required: true, type: "objectId" },
+      studentId: { required: true, type: "objectId" },
+      examSubjectId: { required: true, type: "objectId" },
+    },
+  }),
+  startAttempt
+);
 
-// Evaluate subjective answers
-router.post("/evaluate", evaluateAttempt);
+router.post(
+  "/submit",
+  auth,
+  roleMiddleware(STUDENT_ROLES),
+  validate({ body: { attemptId: { required: true, type: "objectId" } } }),
+  submitAttempt
+);
 
-// Fetch single attempt
-router.get("/:id", getAttemptById);
+router.post(
+  "/evaluate",
+  auth,
+  roleMiddleware(READ_ROLES),
+  validate({ body: { attemptId: { required: true, type: "objectId" } } }),
+  evaluateAttempt
+);
 
-// Fetch all attempts (filters + pagination)
-router.get("/", getAttempts);
+router.get(
+  "/:id",
+  auth,
+  roleMiddleware([...READ_ROLES, ...STUDENT_ROLES]),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  getAttemptById
+);
+
+router.get("/", auth, roleMiddleware([...READ_ROLES, ...STUDENT_ROLES]), getAttempts);
 
 export default router;

@@ -6,41 +6,71 @@ import {
   updateSubject,
   deleteSubject,
   assignSchoolsToSubject,
-  assignTeachersToSubject, // ✅ Add this
+  assignTeachersToSubject,
 } from "../controllers/subject.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
 
 const router = Router();
 
-// ✅ Define roles
-const SUPER_ADMIN = "Super Admin";
-const SCHOOL_ADMIN = "School Admin";
-const TEACHER = "Teacher";
-const STUDENT = "Student";
+const ADMIN_ROLES = ["Super Admin", "School Admin"];
+const TEACHER_ROLES = ["Super Admin", "School Admin", "Teacher"];
+const ALL_ROLES = ["Super Admin", "School Admin", "Teacher", "Student"];
 
-const ADMIN_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN];
-const TEACHER_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER];
-const ALL_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STUDENT];
+router.post(
+  "/create",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({ body: { name: { required: true, type: "string" } } }),
+  createSubject
+);
 
-// ✅ Create Subject (Super Admin & School Admin)
-router.post("/create", auth, roleMiddleware(ADMIN_ROLES), createSubject);
+router.get(
+  "/all",
+  auth,
+  roleMiddleware(TEACHER_ROLES),
+  validate({ query: { page: { type: "positiveInt" }, limit: { type: "positiveInt" } } }),
+  getAllSubjects
+);
 
-// ✅ Get All Subjects (Super Admin, School Admin, Teacher)
-router.get("/all", auth, roleMiddleware(TEACHER_ROLES), getAllSubjects);
+router.get(
+  "/:id",
+  auth,
+  roleMiddleware(ALL_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  getSubject
+);
 
-// ✅ Get Subject by ID (All Roles)
-router.get("/:id", auth, roleMiddleware(ALL_ROLES), getSubject);
+router.put(
+  "/:id",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  updateSubject
+);
 
-// ✅ Update Subject (Super Admin & School Admin)
-router.put("/:id/assign-teachers", auth, roleMiddleware(ADMIN_ROLES), updateSubject);
+router.put(
+  "/assign-schools/:id",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  assignSchoolsToSubject
+);
 
-// ✅ Assign Schools to Subject (Super Admin & School Admin)
-router.put("/assign-schools/:id", auth, roleMiddleware(ADMIN_ROLES), assignSchoolsToSubject);
+router.put(
+  "/assign-teachers/:id",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  assignTeachersToSubject
+);
 
-// ✅ Assign Teachers to Subject (Super Admin & School Admin)
-router.put("/assign-teachers/:id", auth, roleMiddleware(ADMIN_ROLES), assignTeachersToSubject);
-
-// ✅ Delete Subject (Super Admin & School Admin)
-router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), deleteSubject);
+router.delete(
+  "/:id",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  deleteSubject
+);
 
 export default router;

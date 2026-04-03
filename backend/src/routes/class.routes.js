@@ -1,40 +1,57 @@
 import { Router } from "express";
 import {
   createClass,
-   updateClass,
-   deleteClass,
-   getAllClasses,
-   getClassById,
-  
+  updateClass,
+  deleteClass,
+  getAllClasses,
+  getClassById,
 } from "../controllers/class.controllers.js";
-
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
 
 const router = Router();
 
-// Role groups
 const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
 
-// ➕ Create Class
-router.post("/create", auth, roleMiddleware(ADMIN_ONLY), createClass);
+router.post(
+  "/create",
+  auth,
+  roleMiddleware(ADMIN_ONLY),
+  validate({ body: { name: { required: true, type: "string" } } }),
+  createClass
+);
 
-// 📋 Get All Classes
-router.get("/all", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
+router.get(
+  "/all",
+  auth,
+  roleMiddleware(ADMIN_TEACHER),
+  validate({ query: { page: { type: "positiveInt" }, limit: { type: "positiveInt" } } }),
+  getAllClasses
+);
 
-// ✅ Assign Teacher (STATIC ROUTE FIRST)
-//router.get("/assign-teacher", auth, roleMiddleware(ADMIN_TEACHER), classAssignTeacher);
+router.get(
+  "/:schoolClassId",
+  auth,
+  roleMiddleware(ADMIN_TEACHER),
+  validate({ params: { schoolClassId: { required: true, type: "objectId" } } }),
+  getClassById
+);
 
-// ✅ Assign Subjects (STATIC ROUTE FIRST)
-//router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
+router.put(
+  "/:schoolClassId",
+  auth,
+  roleMiddleware(ADMIN_ONLY),
+  validate({ params: { schoolClassId: { required: true, type: "objectId" } } }),
+  updateClass
+);
 
-// 🔍 Get Class by ID (DYNAMIC ROUTE LAST)
-router.get("/:schoolClassId", auth, roleMiddleware(ADMIN_TEACHER), getClassById);
-
-// ✏️ Update Class
-router.put("/:schoolClassId", auth, roleMiddleware(ADMIN_ONLY), updateClass);
-
-// 🗑️ Delete Class
-router.delete("/:schoolClassId", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
+router.delete(
+  "/:schoolClassId",
+  auth,
+  roleMiddleware(ADMIN_ONLY),
+  validate({ params: { schoolClassId: { required: true, type: "objectId" } } }),
+  deleteClass
+);
 
 export default router;

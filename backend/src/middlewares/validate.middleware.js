@@ -1,20 +1,57 @@
+import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 
-const validateBody = (requiredFields = []) => {
-  return (req, _res, next) => {
-    const missingFields = requiredFields.filter((field) => {
-      const value = req.body?.[field];
-      return value === undefined || value === null || value === "";
-    });
+const nonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
 
-    if (missingFields.length) {
-      return next(
-        new ApiError(400, `Missing required field(s): ${missingFields.join(", ")}`)
-      );
+const validators = {
+  objectId: (value) => typeof value === "string" && mongoose.Types.ObjectId.isValid(value),
+  positiveInt: (value) => Number.isInteger(Number(value)) && Number(value) > 0,
+  boolOptional: (value) => value === undefined || typeof value === "boolean",
+  stringOptional: (value) => value === undefined || typeof value === "string",
+};
+
+const validate = ({ body = {}, params = {}, query = {} }) => {
+  return (req, _res, next) => {
+    const errors = [];
+
+    const checkTarget = (targetName, schema, source) => {
+      Object.entries(schema).forEach(([key, rule]) => {
+        const value = source[key];
+        if (rule.required && (value === undefined || value === null || value === "")) {
+          errors.push(`${targetName}.${key} is required`);
+          return;
+        }
+
+        if (value === undefined || value === null || value === "") return;
+
+        if (rule.type === "string" && !nonEmptyString(value)) {
+          errors.push(`${targetName}.${key} must be a non-empty string`);
+        }
+
+        if (rule.type === "objectId" && !validators.objectId(value)) {
+          errors.push(`${targetName}.${key} must be a valid ObjectId`);
+        }
+
+        if (rule.type === "positiveInt" && !validators.positiveInt(value)) {
+          errors.push(`${targetName}.${key} must be a positive integer`);
+        }
+
+        if (rule.type === "boolean" && typeof value !== "boolean") {
+          errors.push(`${targetName}.${key} must be a boolean`);
+        }
+      });
+    };
+
+    checkTarget("body", body, req.body || {});
+    checkTarget("params", params, req.params || {});
+    checkTarget("query", query, req.query || {});
+
+    if (errors.length) {
+      return next(new ApiError(400, "Validation failed", errors));
     }
 
     next();
   };
 };
 
-export { validateBody };
+export { validate };

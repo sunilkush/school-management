@@ -1,173 +1,137 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 import { Attempt } from "../models/ExamAttempts.model.js";
 import { Exam } from "../models/Exam.model.js";
-import { Question } from "../models/Questions.model.js";
-import mongoose from "mongoose";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
-// =============================
-// Start Exam Attempt
-// =============================
 export const startAttempt = asyncHandler(async (req, res) => {
-  try {
-    const { examId, studentId } = req.body;
+  const { examId, studentId, examSubjectId } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(examId) || !mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json(new ApiResponse(400, null, "Invalid IDs"));
+  if (![examId, studentId, examSubjectId].every((id) => mongoose.Types.ObjectId.isValid(id))) {
+    throw new ApiError(400, "Invalid IDs provided");
+  }
+
+  const exam = await Exam.findById(examId).populate("questions.questionId");
+  if (!exam) throw new ApiError(404, "Exam not found");
+
+  const existing = await Attempt.findOne({ examId, studentId, examSubjectId, status: "in_progress" });
+  if (existing) throw new ApiError(400, "You already have an active attempt");
+
+  const answers = (exam.questions || []).map((q) => ({
+    questionId: q.questionId?._id,
+    questionSnapshot: {
+      statement: q.questionId?.statement,
+      questionType: q.questionId?.questionType,
+      options: q.questionId?.options,
+      marks: q.questionId?.marks,
+      negativeMarks: q.questionId?.negativeMarks,
+    },
+    answer: null,
+    marksObtained: 0,
+    isCorrect: null,
+    flagged: false,
+  }));
+
+  const attempt = await Attempt.create({
+    schoolId: req.user.schoolId,
+    examId,
+    examSubjectId,
+    studentId,
+    answers,
+  });
+
+  return res.status(201).json(new ApiResponse(201, attempt, "Exam attempt started"));
+});
+
+export const submitAttempt = asyncHandler(async (req, res) => {
+  const { attemptId, answers = [] } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(attemptId)) {
+    throw new ApiError(400, "Invalid attempt ID");
+  }
+
+  const attempt = await Attempt.findById(attemptId);
+  if (!attempt) throw new ApiError(404, "Attempt not found");
+  if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt already submitted");
+
+  attempt.answers = (attempt.answers || []).map((ans) => {
+    const submitted = answers.find((a) => a.questionId === ans.questionId.toString());
+    if (!submitted) return ans;
+
+    ans.answer = submitted.answer;
+    ans.flagged = submitted.flagged ?? ans.flagged;
+
+    const qType = ans.questionSnapshot?.questionType;
+    if (["mcq_single", "mcq_multi", "true_false"].includes(qType)) {
+      const expected = Array.isArray(ans.questionSnapshot?.correctAnswers)
+        ? [...ans.questionSnapshot.correctAnswers].sort().toString()
+        : ans.questionSnapshot?.correctAnswers;
+      const actual = Array.isArray(ans.answer) ? [...ans.answer].sort().toString() : ans.answer;
+      ans.isCorrect = expected === actual;
+      ans.marksObtained = ans.isCorrect
+        ? Number(ans.questionSnapshot?.marks || 0)
+        : Math.max(0, Number(ans.questionSnapshot?.negativeMarks || 0));
     }
 
-    const exam = await Exam.findById(examId).populate("questions.questionId");
-    if (!exam) return res.status(404).json(new ApiResponse(404, null, "Exam not found"));
+    return ans;
+  });
 
-    // Check if student already has a running attempt
-    const existing = await Attempt.findOne({ examId, studentId, status: "in_progress" });
-    if (existing) return res.status(400).json(new ApiResponse(400, existing, "You already have an active attempt"));
+  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
+  attempt.status = "submitted";
+  attempt.submittedAt = new Date();
 
-    // Snapshot all questions
-    const answers = exam.questions.map(q => ({
-      questionRef: q.questionId._id,
-      snapshot: q.questionId.toObject(),
-      answer: null,
-      marksObtained: 0,
-      isCorrect: null,
-      flagged: false
-    }));
-
-    const attempt = await Attempt.create({
-      examId,
-      studentId,
-      answers
-    });
-
-    return res.status(201).json(new ApiResponse(201, attempt, "Exam attempt started"));
-  } catch (error) {
-    return res.status(500).json(new ApiResponse(500, null, error.message));
-  }
+  await attempt.save();
+  return res.status(200).json(new ApiResponse(200, attempt, "Attempt submitted successfully"));
 });
 
-// =============================
-// Submit Exam Attempt
-// =============================
-export const submitAttempt = asyncHandler(async (req, res) => {
-  try {
-    const { attemptId, answers } = req.body;
-
-    const attempt = await Attempt.findById(attemptId);
-    if (!attempt) return res.status(404).json(new ApiResponse(404, null, "Attempt not found"));
-    if (attempt.status !== "in_progress") return res.status(400).json(new ApiResponse(400, null, "Attempt already submitted"));
-
-    // Update answers
-    attempt.answers = attempt.answers.map((ans) => {
-      const submitted = answers.find(a => a.questionRef === ans.questionRef.toString());
-      if (submitted) {
-        ans.answer = submitted.answer;
-        ans.flagged = submitted.flagged ?? ans.flagged;
-
-        // Auto-evaluate objective questions
-        const qType = ans.snapshot.questionType;
-        if (["mcq_single", "mcq_multi", "true_false"].includes(qType)) {
-          const correct = ans.snapshot.correctAnswers.sort().toString();
-          const userAns = Array.isArray(ans.answer) ? ans.answer.sort().toString() : ans.answer;
-          ans.isCorrect = correct === userAns;
-          ans.marksObtained = ans.isCorrect ? ans.snapshot.marks : -ans.snapshot.negativeMarks || 0;
-        }
-      }
-      return ans;
-    });
-
-    // Calculate total marks
-    attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (a.marksObtained || 0), 0);
-    attempt.status = "submitted";
-    attempt.submittedAt = new Date();
-
-    await attempt.save();
-    return res.status(200).json(new ApiResponse(200, attempt, "Attempt submitted successfully"));
-  } catch (error) {
-    return res.status(500).json(new ApiResponse(500, null, error.message));
-  }
-});
-
-// =============================
-// Evaluate Attempt (for subjective questions)
-// =============================
 export const evaluateAttempt = asyncHandler(async (req, res) => {
-  try {
-    const { attemptId, evaluations, evaluatorId } = req.body;
-    const attempt = await Attempt.findById(attemptId);
-    if (!attempt) return res.status(404).json(new ApiResponse(404, null, "Attempt not found"));
+  const { attemptId, evaluations = [], grade } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(attemptId)) throw new ApiError(400, "Invalid attempt ID");
 
-    // Update answers with evaluation
-    attempt.answers = attempt.answers.map(ans => {
-      const evalData = evaluations.find(e => e.questionRef === ans.questionRef.toString());
-      if (evalData) {
-        ans.marksObtained = evalData.marksObtained ?? ans.marksObtained;
-        ans.isCorrect = evalData.isCorrect ?? ans.isCorrect;
-        ans.reviewComments = evalData.reviewComments ?? ans.reviewComments;
-      }
-      return ans;
-    });
+  const attempt = await Attempt.findById(attemptId);
+  if (!attempt) throw new ApiError(404, "Attempt not found");
 
-    attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (a.marksObtained || 0), 0);
-    attempt.status = "evaluated";
-    attempt.grade = req.body.grade ?? attempt.grade;
+  attempt.answers = (attempt.answers || []).map((ans) => {
+    const evaluation = evaluations.find((e) => e.questionId === ans.questionId.toString());
+    if (!evaluation) return ans;
+    ans.marksObtained = Number(evaluation.marksObtained ?? ans.marksObtained);
+    ans.isCorrect = evaluation.isCorrect ?? ans.isCorrect;
+    return ans;
+  });
 
-    await attempt.save();
-    return res.status(200).json(new ApiResponse(200, attempt, "Attempt evaluated successfully"));
-  } catch (error) {
-    return res.status(500).json(new ApiResponse(500, null, error.message));
-  }
+  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
+  attempt.status = "evaluated";
+  attempt.grade = grade ?? attempt.grade;
+
+  await attempt.save();
+  return res.status(200).json(new ApiResponse(200, attempt, "Attempt evaluated successfully"));
 });
 
-// =============================
-// Get Attempt By ID
-// =============================
 export const getAttemptById = asyncHandler(async (req, res) => {
-  try {
-    const { id } = req.params;
-    const attempt = await Attempt.findById(id)
-      .populate("examId studentId answers.questionRef");
-    if (!attempt) return res.status(404).json(new ApiResponse(404, null, "Attempt not found"));
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid attempt ID");
 
-    return res.status(200).json(new ApiResponse(200, attempt, "Attempt fetched successfully"));
-  } catch (error) {
-    return res.status(500).json(new ApiResponse(500, null, error.message));
-  }
+  const attempt = await Attempt.findById(id).populate("examId studentId answers.questionId");
+  if (!attempt) throw new ApiError(404, "Attempt not found");
+
+  return res.status(200).json(new ApiResponse(200, attempt, "Attempt fetched successfully"));
 });
 
-// =============================
-// Get All Attempts (with filters + pagination)
-// =============================
 export const getAttempts = asyncHandler(async (req, res) => {
-  try {
-    const {
-      page = 1,
-      limit = 10,
-      studentId,
-      examId,
-      status,
-      sort = "-createdAt"
-    } = req.query;
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
+  const skip = (page - 1) * limit;
 
-    const filters = {};
-    if (studentId) filters.studentId = studentId;
-    if (examId) filters.examId = examId;
-    if (status) filters.status = status;
+  const filters = {};
+  if (req.query.studentId) filters.studentId = req.query.studentId;
+  if (req.query.examId) filters.examId = req.query.examId;
+  if (req.query.status) filters.status = req.query.status;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const [attempts, total] = await Promise.all([
-      Attempt.find(filters)
-        .populate("examId studentId answers.questionRef")
-        .skip(skip)
-        .limit(parseInt(limit))
-        .sort(sort),
-      Attempt.countDocuments(filters)
-    ]);
+  const [attempts, total] = await Promise.all([
+    Attempt.find(filters).populate("examId studentId answers.questionId").skip(skip).limit(limit).sort({ createdAt: -1 }),
+    Attempt.countDocuments(filters),
+  ]);
 
-    return res.status(200).json(new ApiResponse(200, {
-      attempts,
-      pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) }
-    }, "Attempts fetched successfully"));
-  } catch (error) {
-    return res.status(500).json(new ApiResponse(500, null, error.message));
-  }
+  return res.status(200).json(new ApiResponse(200, attempts, "Attempts fetched successfully", { page, total, limit }));
 });
