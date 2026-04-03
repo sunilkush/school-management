@@ -162,7 +162,7 @@ const registerUser = asyncHandler(async (req, res) => {
  */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-
+   console.log("Login attempt:", { email }); // Debug log
   if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }
@@ -282,12 +282,12 @@ const loginUser = asyncHandler(async (req, res) => {
     .cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
     })
     .cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
     })
     .json(
       new ApiResponse(

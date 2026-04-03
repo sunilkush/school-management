@@ -7,8 +7,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "start": "nodemon src/index.js",
-    "dev": "nodemon src/index.js",
-    "verify:api": "jest tests/api --json --outputFile=tests/api/report.json"
+    "dev": "nodemon src/index.js"
+    
   },
   "keywords": [
     "node.js",

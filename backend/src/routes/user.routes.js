@@ -30,7 +30,7 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 
 // ✅ Public Routes
 
-router.post("/login", validateBody(["email", "password"]), loginUser);
+router.post("/login", loginUser);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);

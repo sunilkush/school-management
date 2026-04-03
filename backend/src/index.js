@@ -1,8 +1,8 @@
-import dotenvSafe from "dotenv-safe";
+
 import dbConnection from "./db/index.js";
 import { app } from "./app.js";
 
-dotenvSafe.config({ allowEmptyValues: false });
+
 
 dbConnection()
   .then(() => {

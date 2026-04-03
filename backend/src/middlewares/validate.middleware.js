@@ -12,37 +12,70 @@ const validate = ({ body = {}, params = {}, query = {} }) => {
   return (req, _res, next) => {
     const errors = [];
 
-    const checkTarget = (targetName, schema, source) => {
-      Object.entries(schema).forEach(([key, rule]) => {
-        const value = source[key];
-        if (rule.required && (value === undefined || value === null || value === "")) {
-          errors.push(`${targetName}.${key} is required`);
+    const check = (targetName, schema, data) => {
+      Object.entries(schema).forEach(([field, rules]) => {
+        const value = data[field];
+
+        // Required check
+        if (rules.required && (value === undefined || value === null || value === "")) {
+          errors.push(`${targetName}.${field} is required`);
           return;
         }
 
+        // Skip if not provided
         if (value === undefined || value === null || value === "") return;
 
-        if (rule.type === "string" && !nonEmptyString(value)) {
-          errors.push(`${targetName}.${key} must be a non-empty string`);
+        // Type validation
+        switch (rules.type) {
+          case "string":
+            if (!isNonEmptyString(value)) {
+              errors.push(`${targetName}.${field} must be a non-empty string`);
+            }
+            break;
+
+          case "objectId":
+            if (!isValidObjectId(value)) {
+              errors.push(`${targetName}.${field} must be a valid ObjectId`);
+            }
+            break;
+
+          case "positiveInt":
+            if (!isPositiveInt(value)) {
+              errors.push(`${targetName}.${field} must be a positive integer`);
+            }
+            break;
+
+          case "boolean":
+            if (typeof value !== "boolean") {
+              errors.push(`${targetName}.${field} must be a boolean`);
+            }
+            break;
+
+          case "array":
+            if (!Array.isArray(value)) {
+              errors.push(`${targetName}.${field} must be an array`);
+            }
+            break;
+
+          default:
+            break;
         }
 
-        if (rule.type === "objectId" && !validators.objectId(value)) {
-          errors.push(`${targetName}.${key} must be a valid ObjectId`);
-        }
-
-        if (rule.type === "positiveInt" && !validators.positiveInt(value)) {
-          errors.push(`${targetName}.${key} must be a positive integer`);
-        }
-
-        if (rule.type === "boolean" && typeof value !== "boolean") {
-          errors.push(`${targetName}.${key} must be a boolean`);
+        // Custom validator (optional)
+        if (rules.validate && typeof rules.validate === "function") {
+          const isValid = rules.validate(value);
+          if (!isValid) {
+            errors.push(
+              rules.message || `${targetName}.${field} is invalid`
+            );
+          }
         }
       });
     };
 
-    checkTarget("body", body, req.body || {});
-    checkTarget("params", params, req.params || {});
-    checkTarget("query", query, req.query || {});
+    check("body", body, req.body || {});
+    check("params", params, req.params || {});
+    check("query", query, req.query || {});
 
     if (errors.length) {
       return next(new ApiError(400, "Validation failed", errors));
@@ -85,9 +118,11 @@ const validateRequest = (schema) => (req, _res, next) => {
     return next(new ApiError(400, "Validation failed", errors));
   }
 
+  // Assign sanitized values
   req.body = parsed.data.body;
   req.query = parsed.data.query;
   req.params = parsed.data.params;
+
   next();
 };
 

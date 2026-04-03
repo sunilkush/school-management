@@ -8,7 +8,8 @@ import {
   assignSchoolsToSubject,
   assignTeachersToSubject,
 } from "../controllers/subject.controllers.js";
-import { requireRoles } from "../middlewares/auth.middleware.js";
+import { requireRoles,auth,roleMiddleware } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
 
 const router = Router();
 
@@ -16,6 +17,9 @@ const SUPER_ADMIN = "Super Admin";
 const SCHOOL_ADMIN = "School Admin";
 const TEACHER = "Teacher";
 const STUDENT = "Student";
+const ALL_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STUDENT];
+const ADMIN_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN];
+const TEACHER_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER];
 
 router.post(
   "/create",
