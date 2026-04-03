@@ -1,38 +1,11 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import dotenv from "dotenv"
-import path from 'path';
-import { fileURLToPath } from 'url';
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
-
-const app = express()
-
-const corsOptions = {
-  origin: "http://localhost:5173", // must be exact
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
-app.use(cookieParser());
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// Set EJS as view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
-// file import 
-import indexRouter from './routes/index.js';
+import indexRouter from "./routes/index.js";
 import schoolRoutes from "./routes/school.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import classRoutes from "./routes/class.routes.js";
@@ -41,16 +14,16 @@ import subjectRoutes from "./routes/subject.routes.js";
 import booksRoutes from "./routes/book.routes.js";
 import issuedBookRoutes from "./routes/issuedBooks.routes.js";
 import studentRoutes from "./routes/student.routes.js";
-import RoleRoutes from "./routes/role.routes.js";
-import EmployeeRoutes from "./routes/employee.routes.js";
-import AcademicYearRoutes from "./routes/academicYear.routes.js";
-import SectionRoutes from "./routes/section.routes.js";
-import ReportsRoutes from "./routes/report.routes.js";
-import DashboardRoutes from "./routes/dashboard.routes.js";
-import QuestionRoutes from "./routes/question.routes.js";
-import ExamRoutes from "./routes/exam.routes.js";
-import AttemptRoutes from "./routes/attempt.routes.js";
-import SubscriptionPlans from "./routes/subscriptionPlan.routes.js";
+import roleRoutes from "./routes/role.routes.js";
+import employeeRoutes from "./routes/employee.routes.js";
+import academicYearRoutes from "./routes/academicYear.routes.js";
+import sectionRoutes from "./routes/section.routes.js";
+import reportsRoutes from "./routes/report.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import questionRoutes from "./routes/question.routes.js";
+import examRoutes from "./routes/exam.routes.js";
+import attemptRoutes from "./routes/attempt.routes.js";
+import subscriptionPlans from "./routes/subscriptionPlan.routes.js";
 import feeHeadRoutes from "./routes/feeHead.routes.js";
 import feeStructureRoutes from "./routes/feeStructure.routes.js";
 import studentFeeRoutes from "./routes/studentFee.routes.js";
@@ -65,29 +38,64 @@ import examReportRoutes from "./routes/exam.report.routes.js";
 import schoolClassRoutes from "./routes/schoolClass.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import moduleRoutes from "./routes/module.routes.js";
+
 import { ApiError } from "./utils/ApiError.js";
-// route
-app.use('/', indexRouter);
-app.use("/api/auth", authRoutes);
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/school", schoolRoutes)
-app.use("/api/v1/user", userRoutes)
-app.use("/api/v1/class", classRoutes)
-app.use("/api/v1/attendance", attendanceRoutes)
-app.use("/api/v1/subject", subjectRoutes)
-app.use("/api/v1/books", booksRoutes)
+import { sendError } from "./utils/response.js";
+import { applySecurityMiddleware, authRateLimiter } from "./middlewares/security.middleware.js";
+import { enforceApiAuthByDefault } from "./middlewares/auth.middleware.js";
+import { logError, requestContext } from "./middlewares/requestContext.middleware.js";
+
+dotenv.config();
+
+const app = express();
+
+const corsOptions = {
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-request-id"],
+};
+
+applySecurityMiddleware(app);
+app.use(requestContext);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use("/", indexRouter);
+
+app.use("/api/auth", authRateLimiter, authRoutes);
+app.use("/api/v1/auth", authRateLimiter, authRoutes);
+
+app.use("/api/v1", enforceApiAuthByDefault);
+
+app.use("/api/v1/school", schoolRoutes);
+app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/class", classRoutes);
+app.use("/api/v1/attendance", attendanceRoutes);
+app.use("/api/v1/subject", subjectRoutes);
+app.use("/api/v1/books", booksRoutes);
 app.use("/api/v1/issuedBooks", issuedBookRoutes);
 app.use("/api/v1/student", studentRoutes);
-app.use("/api/v1/role", RoleRoutes);
-app.use("/api/v1/employee", EmployeeRoutes);
-app.use("/api/v1/academicYear", AcademicYearRoutes);
-app.use("/api/v1/sections", SectionRoutes);
-app.use("/api/v1/report", ReportsRoutes);
-app.use("/api/v1/dashboard", DashboardRoutes);
-app.use("/api/v1/questions", QuestionRoutes);
-app.use("/api/v1/exams", ExamRoutes);
-app.use("/api/v1/attempt", AttemptRoutes);
-app.use("/api/v1/subscription", SubscriptionPlans)
+app.use("/api/v1/role", roleRoutes);
+app.use("/api/v1/employee", employeeRoutes);
+app.use("/api/v1/academicYear", academicYearRoutes);
+app.use("/api/v1/sections", sectionRoutes);
+app.use("/api/v1/report", reportsRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1/questions", questionRoutes);
+app.use("/api/v1/exams", examRoutes);
+app.use("/api/v1/attempt", attemptRoutes);
+app.use("/api/v1/subscription", subscriptionPlans);
 app.use("/api/v1/fee-heads", feeHeadRoutes);
 app.use("/api/v1/fee-structures", feeStructureRoutes);
 app.use("/api/v1/student-fees", studentFeeRoutes);
@@ -99,24 +107,24 @@ app.use("/api/v1/boards", boardRoutes);
 app.use("/api/v1/chapters", chapterRoutes);
 app.use("/api/v1/board-classes", boardClassRoutes);
 app.use("/api/v1/exam-report", examReportRoutes);
-app.use("/api/v1/school-class",schoolClassRoutes)
-app.use("/api/modules", moduleRoutes);
+app.use("/api/v1/school-class", schoolClassRoutes);
 app.use("/api/v1/modules", moduleRoutes);
 
 app.use((req, _res, next) => {
   next(new ApiError(404, "Route not found"));
 });
 
-app.use((err, _req, res, _next) => {
+app.use((err, req, res, _next) => {
+  logError(err, req);
   const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
-    success: false,
+  return sendError(res, {
+    statusCode,
     message: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV !== "production" && err.errors?.length
-      ? { errors: err.errors }
-      : {}),
+    data:
+      process.env.NODE_ENV !== "production" && err.errors?.length
+        ? { errors: err.errors }
+        : null,
   });
 });
 
-export { app }
-
+export { app };
