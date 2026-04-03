@@ -1,29 +1,20 @@
+import mongoose from "mongoose";
+import { Class } from "../models/classes.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { Class } from "../models/classes.model.js";
-import mongoose from "mongoose";
 
-/* =========================================================
-   CREATE CLASS
-========================================================= */
 const createClass = asyncHandler(async (req, res) => {
   const { name, code, description, isGlobal, status } = req.body;
+  const normalizedName = name.trim().toUpperCase();
 
-  if (!name) {
-    throw new ApiError(400, "Class name is required");
-  }
-
-  const formattedName = name.trim().toUpperCase();
-
-  const existingClass = await Class.findOne({ name: formattedName });
-
+  const existingClass = await Class.findOne({ name: normalizedName });
   if (existingClass) {
     throw new ApiError(400, "Class already exists");
   }
 
   const newClass = await Class.create({
-    name: formattedName,
+    name: normalizedName,
     code,
     description,
     isGlobal,
@@ -31,158 +22,80 @@ const createClass = asyncHandler(async (req, res) => {
     createdBy: req.user?._id,
   });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, newClass, "Class created successfully"));
+  return res.status(201).json(new ApiResponse(201, newClass, "Class created successfully"));
 });
 
-/* =========================================================
-   UPDATE CLASS
-========================================================= */
 const updateClass = asyncHandler(async (req, res) => {
-  const { classId } = req.params;
+  const { schoolClassId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(classId)) {
+  if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
     throw new ApiError(400, "Invalid Class ID");
   }
 
-  const classDoc = await Class.findById(classId);
-
+  const classDoc = await Class.findById(schoolClassId);
   if (!classDoc) {
     throw new ApiError(404, "Class not found");
   }
 
-  const { name, code, description, isGlobal, isActive, status } = req.body;
-
+  const { name, code, description, isGlobal, status } = req.body;
   if (name) classDoc.name = name.trim().toUpperCase();
   if (code) classDoc.code = code.trim();
   if (description) classDoc.description = description.trim();
-
   if (typeof isGlobal === "boolean") classDoc.isGlobal = isGlobal;
-  if (typeof isActive === "boolean") classDoc.isActive = isActive;
   if (status) classDoc.status = status;
 
   classDoc.updatedBy = req.user?._id;
-
   await classDoc.save();
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, classDoc, "Class updated successfully"));
+  return res.status(200).json(new ApiResponse(200, classDoc, "Class updated successfully"));
 });
 
-/* =========================================================
-   DELETE CLASS
-========================================================= */
 const deleteClass = asyncHandler(async (req, res) => {
-  const { classId } = req.params;
+  const { schoolClassId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(classId)) {
+  if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
     throw new ApiError(400, "Invalid Class ID");
   }
 
-  const deleted = await Class.findByIdAndDelete(classId);
-
+  const deleted = await Class.findByIdAndDelete(schoolClassId);
   if (!deleted) {
     throw new ApiError(404, "Class not found");
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, deleted, "Class deleted successfully"));
+  return res.status(200).json(new ApiResponse(200, deleted, "Class deleted successfully"));
 });
 
-/* =========================================================
-   GET ALL CLASSES
-========================================================= */
 const getAllClasses = asyncHandler(async (req, res) => {
-  let { page, limit, search, status, schoolId, startDate, endDate } = req.query;
-
-  page = parseInt(page);
-  limit = parseInt(limit);
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
+  const search = req.query.search || "";
 
   const query = {};
-
-  /* ===== SCHOOL FILTER ===== */
-  if (schoolId) {
-    query.schoolId = schoolId;
-  }
-
-  /* ===== SEARCH ===== */
-  if (search) {
-    query.name = { $regex: search, $options: "i" };
-  }
-
-  /* ===== STATUS FILTER ===== */
-  if (status) {
-    query.status = status;
-  }
-
-  /* ===== DATE FILTER ===== */
-  if (startDate || endDate) {
-    query.createdAt = {};
-
-    if (startDate) {
-      query.createdAt.$gte = new Date(startDate);
-    }
-
-    if (endDate) {
-      query.createdAt.$lte = new Date(endDate);
-    }
-  }
+  if (search) query.name = { $regex: search, $options: "i" };
 
   const skip = (page - 1) * limit;
 
-  const total = await Class.countDocuments(query);
+  const [classes, total] = await Promise.all([
+    Class.find(query).skip(skip).limit(limit).sort({ createdAt: -1 }),
+    Class.countDocuments(query),
+  ]);
 
-  const classes = await Class.find(query)
-    .populate("createdBy", "name email")
-    .populate("updatedBy", "name email")
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 });
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        data: classes,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-      "Classes fetched successfully"
-    )
-  );
+  return res.status(200).json(new ApiResponse(200, classes, "Classes fetched successfully", { page, total, limit }));
 });
-/* =========================================================
-   GET CLASS BY ID
-========================================================= */
-const getClassById = asyncHandler(async (req, res) => {
-  const { classId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(classId)) {
+const getClassById = asyncHandler(async (req, res) => {
+  const { schoolClassId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
     throw new ApiError(400, "Invalid Class ID");
   }
 
-  const classData = await Class.findById(classId)
-    .populate("createdBy", "name email")
-    .populate("updatedBy", "name email");
-
+  const classData = await Class.findById(schoolClassId);
   if (!classData) {
     throw new ApiError(404, "Class not found");
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, classData, "Class fetched successfully"));
+  return res.status(200).json(new ApiResponse(200, classData, "Class fetched successfully"));
 });
 
-export {
-  createClass,
-  updateClass,
-  deleteClass,
-  getAllClasses,
-  getClassById,
-};
+export { createClass, updateClass, deleteClass, getAllClasses, getClassById };

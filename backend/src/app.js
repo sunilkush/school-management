@@ -110,9 +110,7 @@ app.use("/api/v1/exam-report", examReportRoutes);
 app.use("/api/v1/school-class", schoolClassRoutes);
 app.use("/api/v1/modules", moduleRoutes);
 
-app.use((req, _res, next) => {
-  next(new ApiError(404, "Route not found"));
-});
+app.use((req, _res, next) => next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`)));
 
 app.use((err, req, res, _next) => {
   logError(err, req);

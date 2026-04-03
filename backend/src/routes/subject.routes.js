@@ -17,9 +17,13 @@ const SCHOOL_ADMIN = "School Admin";
 const TEACHER = "Teacher";
 const STUDENT = "Student";
 
-const ADMIN_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN];
-const TEACHER_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER];
-const ALL_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STUDENT];
+router.post(
+  "/create",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({ body: { name: { required: true, type: "string" } } }),
+  createSubject
+);
 
 router.post("/", requireRoles(ADMIN_ROLES), createSubject);
 router.get("/", requireRoles(TEACHER_ROLES), getAllSubjects);

@@ -7,7 +7,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "start": "nodemon src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "verify:api": "jest tests/api --json --outputFile=tests/api/report.json"
   },
   "keywords": [
     "node.js",
@@ -45,6 +46,9 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "jest": "^29.7.0",
+    "supertest": "^7.1.1",
+    "mongodb-memory-server": "^10.1.4"
   }
 }
