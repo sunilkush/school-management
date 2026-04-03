@@ -1,134 +1,428 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
   Typography,
   Select,
   Table,
   Space,
   Button,
+  Input,
+  Tag,
+  Avatar,
 } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined, SearchOutlined, DownloadOutlined } from "@ant-design/icons";
 import { fetchSchools } from "../../../features/schoolSlice";
-import { fetchActivityLogs } from "../../../features/activitySlice"; // you need an API for logs
+import { fetchActivityLogs } from "../../../features/activitySlice";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
+// ── Design tokens ───────────────────────────────────────────────────────────
+const TOKEN = {
+  bg: "#F5F4F1",
+  surface: "#FFFFFF",
+  border: "#E4E2DC",
+  borderLight: "#F1EFE8",
+  text: "#1A1A18",
+  textMuted: "#888780",
+  textFaint: "#B4B2A9",
+};
+
+const AVATAR_PALETTES = [
+  { bg: "#EEEDFE", color: "#534AB7" },
+  { bg: "#E1F5EE", color: "#0F6E56" },
+  { bg: "#FAECE7", color: "#993C1D" },
+  { bg: "#E6F1FB", color: "#185FA5" },
+  { bg: "#FAEEDA", color: "#854F0B" },
+];
+
+const ROLE_STYLES = {
+  Admin:   { bg: "#EEEDFE", color: "#534AB7" },
+  Teacher: { bg: "#E1F5EE", color: "#0F6E56" },
+  Student: { bg: "#E6F1FB", color: "#185FA5" },
+};
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function getInitials(name = "") {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
+}
+
+function getPalette(name = "") {
+  return AVATAR_PALETTES[(name.charCodeAt(0) || 0) % AVATAR_PALETTES.length];
+}
+
+function formatDate(d) {
+  if (!d) return "—";
+  const dt = new Date(d);
+  return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    + " " + dt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+function isToday(d) {
+  return new Date(d).toDateString() === new Date().toDateString();
+}
+
+// ── Sub-components ───────────────────────────────────────────────────────────
+const StatCard = ({ label, value, sub }) => (
+  <div
+    style={{
+      background: TOKEN.surface,
+      border: `0.5px solid ${TOKEN.border}`,
+      borderRadius: 10,
+      padding: "14px 18px",
+      flex: "1 1 130px",
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 500,
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+        color: TOKEN.textFaint,
+        marginBottom: 6,
+      }}
+    >
+      {label}
+    </div>
+    <div
+      style={{
+        fontSize: 22,
+        fontWeight: 600,
+        color: TOKEN.text,
+        letterSpacing: "-0.02em",
+        fontVariantNumeric: "tabular-nums",
+      }}
+    >
+      {value}
+    </div>
+    {sub && (
+      <div style={{ fontSize: 12, color: TOKEN.textMuted, marginTop: 2 }}>{sub}</div>
+    )}
+  </div>
+);
+
+// ── Main Component ───────────────────────────────────────────────────────────
 const ActivityLogs = () => {
   const dispatch = useDispatch();
   const { schools = [] } = useSelector((state) => state.school);
-  const { logs = [], loading, error } = useSelector(
-    (state) => state.activity
-  );
+  const { logs = [], loading, error } = useSelector((state) => state.activity);
 
   const [selectedSchool, setSelectedSchool] = useState("All");
+  const [selectedRole, setSelectedRole] = useState("All");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     dispatch(fetchSchools());
-    dispatch(fetchActivityLogs()); // fetch all logs initially
+    dispatch(fetchActivityLogs());
   }, [dispatch]);
 
-  // ✅ Filter logs by selected school
+  // ── Derived stats ─────────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const todayCount = logs.filter((l) => l.date && isToday(l.date)).length;
+    const uniqueUsers = new Set(logs.map((l) => l.user?.name).filter(Boolean)).size;
+    const uniqueSchools = new Set(logs.map((l) => l.school?.name).filter(Boolean)).size;
+    return { total: logs.length, today: todayCount, users: uniqueUsers, schools: uniqueSchools };
+  }, [logs]);
+
+  // ── Filtered + searched logs ──────────────────────────────────────────────
   const filteredLogs = useMemo(() => {
-    if (selectedSchool === "All") return logs;
-    return logs.filter((log) => log.school?.name === selectedSchool);
-  }, [logs, selectedSchool]);
+    const q = search.toLowerCase();
+    return logs.filter((log) => {
+      const matchSchool = selectedSchool === "All" || log.school?.name === selectedSchool;
+      const matchRole   = selectedRole === "All"   || log.role?.name === selectedRole;
+      const matchSearch = !q
+        || (log.user?.name || "").toLowerCase().includes(q)
+        || (log.action || "").toLowerCase().includes(q);
+      return matchSchool && matchRole && matchSearch;
+    });
+  }, [logs, selectedSchool, selectedRole, search]);
 
   const schoolOptions = ["All", ...schools.map((s) => s.name).filter(Boolean)];
 
-  // ✅ Table columns
+  // ── Table columns ─────────────────────────────────────────────────────────
   const columns = [
     {
       title: "#",
-      dataIndex: "index",
       key: "index",
-      render: (_, __, index) => index + 1,
-      width: 60,
+      width: 52,
+      render: (_, __, i) => (
+        <span style={{ fontFamily: "monospace", fontSize: 12, color: TOKEN.textFaint }}>
+          {String(i + 1).padStart(2, "0")}
+        </span>
+      ),
     },
     {
       title: "User",
       dataIndex: "user",
       key: "user",
-      render: (user) => user?.name || "—",
+      sorter: (a, b) => (a.user?.name || "").localeCompare(b.user?.name || ""),
+      render: (user) => {
+        const name = user?.name || "—";
+        const { bg, color } = getPalette(name);
+        return (
+          <Space size={8}>
+            <Avatar size={26} style={{ background: bg, color, fontSize: 10, fontWeight: 600 }}>
+              {getInitials(name)}
+            </Avatar>
+            <span style={{ fontWeight: 500, color: TOKEN.text, fontSize: 13 }}>{name}</span>
+          </Space>
+        );
+      },
     },
     {
       title: "Role",
       dataIndex: "role",
       key: "role",
-      render: (role) => role?.name || "—",
+      render: (role) => {
+        const name = role?.name || "—";
+        const style = ROLE_STYLES[name] || { bg: TOKEN.borderLight, color: TOKEN.textMuted };
+        return (
+          <Tag
+            style={{
+              background: style.bg,
+              color: style.color,
+              border: "none",
+              borderRadius: 5,
+              fontSize: 11,
+              fontWeight: 500,
+              padding: "2px 8px",
+            }}
+          >
+            {name}
+          </Tag>
+        );
+      },
     },
     {
       title: "Action",
       dataIndex: "action",
       key: "action",
+      render: (action) => (
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            background: "#FAEEDA",
+            color: "#854F0B",
+            borderRadius: 5,
+            fontSize: 11,
+            fontWeight: 500,
+            padding: "3px 8px",
+          }}
+        >
+          <span
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: "#854F0B",
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          />
+          {action || "—"}
+        </span>
+      ),
     },
     {
       title: "School",
       dataIndex: "school",
       key: "school",
-      render: (school) => school?.name || "—",
+      render: (school) => (
+        <span style={{ color: "#5F5E5A", fontSize: 13 }}>{school?.name || "—"}</span>
+      ),
     },
     {
       title: "Date",
       dataIndex: "date",
       key: "date",
-      render: (date) => new Date(date).toLocaleString(),
+      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      defaultSortOrder: "descend",
+      render: (date) => (
+        <span style={{ fontFamily: "monospace", fontSize: 12, color: TOKEN.textMuted }}>
+          {formatDate(date)}
+        </span>
+      ),
     },
   ];
 
-  return (
-    <div style={{ padding: 16 }}>
-      {/* 🔹 Header */}
-      <Card bordered={false} style={{ marginBottom: 16 }}>
-        <Space
-          style={{ width: "100%", justifyContent: "space-between" }}
-          align="center"
-        >
-          <div>
-            <Title level={4} style={{ marginBottom: 0 }}>
-              Activity Logs
-            </Title>
-            <Text type="secondary">
-              Track user and system activities within the school management system
-            </Text>
-          </div>
+  // ── Shared input style ────────────────────────────────────────────────────
+  const inputStyle = {
+    borderRadius: 7,
+    fontSize: 13,
+    height: 34,
+    border: `0.5px solid ${TOKEN.border}`,
+    background: "#FAFAF8",
+  };
 
-          <Space>
+  return (
+    <div style={{ padding: "28px 24px", background: TOKEN.bg, minHeight: "100vh" }}>
+
+      {/* ── Page header ──────────────────────────────────────────────────── */}
+      <div style={{ marginBottom: 24 }}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: TOKEN.textFaint,
+            marginBottom: 4,
+          }}
+        >
+          System Overview
+        </div>
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 600,
+            color: TOKEN.text,
+            letterSpacing: "-0.02em",
+            marginBottom: 2,
+          }}
+        >
+          Activity Logs
+        </div>
+        <div style={{ fontSize: 13, color: TOKEN.textMuted }}>
+          Track user and system activities across schools
+        </div>
+      </div>
+
+      {/* ── Stats bar ────────────────────────────────────────────────────── */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+        <StatCard label="Total Events" value={stats.total} sub="all time" />
+        <StatCard label="Today"        value={stats.today} sub="last 24 hrs" />
+        <StatCard label="Unique Users" value={stats.users} sub="active" />
+        <StatCard label="Schools"      value={stats.schools} sub="monitored" />
+      </div>
+
+      {/* ── Table card ───────────────────────────────────────────────────── */}
+      <div
+        style={{
+          background: TOKEN.surface,
+          border: `0.5px solid ${TOKEN.border}`,
+          borderRadius: 12,
+          overflow: "hidden",
+        }}
+      >
+        {/* Toolbar */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "14px 20px",
+            borderBottom: `0.5px solid ${TOKEN.border}`,
+            flexWrap: "wrap",
+            gap: 10,
+          }}
+        >
+          <Space wrap size={8}>
+            <Input
+              placeholder="Search user or action…"
+              prefix={<SearchOutlined style={{ color: TOKEN.textFaint, fontSize: 13 }} />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ ...inputStyle, width: 210 }}
+              allowClear
+            />
             <Select
               value={selectedSchool}
               onChange={setSelectedSchool}
-              style={{ width: 220 }}
+              style={{ width: 180, fontSize: 13 }}
+              dropdownStyle={{ fontSize: 13, borderRadius: 8 }}
             >
               {schoolOptions.map((name) => (
-                <Option key={name} value={name}>
-                  {name}
-                </Option>
+                <Option key={name} value={name}>{name}</Option>
               ))}
             </Select>
+            <Select
+              value={selectedRole}
+              onChange={setSelectedRole}
+              style={{ width: 140, fontSize: 13 }}
+              dropdownStyle={{ fontSize: 13, borderRadius: 8 }}
+            >
+              {["All", "Admin", "Teacher", "Student"].map((r) => (
+                <Option key={r} value={r}>{r === "All" ? "All roles" : r}</Option>
+              ))}
+            </Select>
+          </Space>
 
+          <Space size={8}>
             <Button
               icon={<ReloadOutlined />}
               onClick={() => dispatch(fetchActivityLogs())}
+              style={{
+                borderRadius: 7,
+                fontSize: 13,
+                height: 34,
+                border: `0.5px solid ${TOKEN.border}`,
+                background: "#FAFAF8",
+                color: "#444441",
+              }}
             >
               Refresh
             </Button>
+            <Button
+              icon={<DownloadOutlined />}
+              type="primary"
+              style={{
+                borderRadius: 7,
+                fontSize: 13,
+                height: 34,
+                background: TOKEN.text,
+                border: "none",
+              }}
+            >
+              Export
+            </Button>
           </Space>
-        </Space>
-      </Card>
+        </div>
 
-      {/* 🔹 Table */}
-      <Card bordered={false}>
+        {/* Table */}
         <Table
           columns={columns}
           dataSource={filteredLogs}
           loading={loading}
           rowKey={(record) => record._id}
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            pageSize: 8,
+            showSizeChanger: false,
+            style: { padding: "12px 20px", margin: 0 },
+          }}
           scroll={{ x: "max-content" }}
+          style={{ fontFamily: "'DM Sans', sans-serif" }}
+          rowClassName={() => "log-row"}
+          onHeaderRow={() => ({
+            style: {
+              background: TOKEN.surface,
+              fontSize: 11,
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              color: TOKEN.textFaint,
+            },
+          })}
         />
-        {error && <Text type="danger">{error}</Text>}
-      </Card>
+
+        {error && (
+          <div style={{ padding: "12px 20px" }}>
+            <Text type="danger" style={{ fontSize: 13 }}>{error}</Text>
+          </div>
+        )}
+      </div>
+
+      {/* Row hover style */}
+      <style>{`
+        .log-row td { border-bottom: 0.5px solid #F1EFE8 !important; }
+        .log-row:hover td { background: #FAFAF8 !important; }
+        .ant-table-thead > tr > th {
+          background: #fff !important;
+          border-bottom: 0.5px solid #E4E2DC !important;
+        }
+      `}</style>
     </div>
   );
 };

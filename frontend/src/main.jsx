@@ -69,11 +69,12 @@ const BoardClassPage = lazy(() => import("./pages/Super_Admin/Master_Settings/Bo
 
 const Modules = lazy(() => import("./pages/Super_Admin/Modules/Modules.jsx"));
 const SchoolWiseReports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/SchoolWiseReports.jsx"));
-const AttendanceSummary = lazy(() => import("./pages/School_Admin/Reports_&_Analytics/schoolAdminReport.jsx"));
-const FinanceSummary = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/FinanceSummary.js"));
-const AcademicReports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/AcademicReports.js"));
-const ActivityLogs = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/ActivityLogs.js"));
-
+const AttendanceSummary = lazy(() => import("./pages/School_Admin/Reports/schoolAdminReport.jsx"));
+const FinanceSummary = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/FinanceSummary.jsx"));
+const AcademicReports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/AcademicReports.jsx"));
+const ActivityLogs = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/ActivityLogs.jsx"));
+const PlatformUsage = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/PlatfromUsage.jsx"));
+const RevenueAnalytics = lazy(()=> import("./pages/Super_Admin/Reports_&_Analytics/RevenueAnalytics.jsx"));
 // Super Admin Users
 const Admins = lazy(() => import("./pages/Super_Admin/Users_Management/Admins.jsx"));
 const Staff = lazy(() => import("./pages/Super_Admin/Users_Management/Staff.jsx"));
@@ -83,7 +84,11 @@ const Students = lazy(() => import("./pages/Super_Admin/Users_Management/student
 const Accountant = lazy(() => import("./pages/Super_Admin/Users_Management/Accountant.jsx"));
 const Librarian = lazy(() => import("./pages/Super_Admin/Users_Management/Librarian.jsx"));
 const Transport = lazy(() => import("./pages/Super_Admin/Users_Management/Transport.jsx"));
-
+// Super Admin Support
+const TicketPage = lazy(() => import("./pages/Super_Admin/Support/TicketPage.jsx"));
+const Faqs = lazy(() => import("./pages/Super_Admin/Support/Faqs.jsx"));
+const ContactSupport = lazy(() => import("./pages/Super_Admin/Support/ContactSupport.jsx"));
+const Documentation = lazy(() => import("./pages/Super_Admin/Support/Documentation.jsx"));
 // School Admin
 const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
 //const AddStudent = lazy(() => import("./pages/School_Admin/User_Management/AddStudent.jsx"));
@@ -173,6 +178,7 @@ const EmployeeForm = lazy(() => import("./components/forms/EmployeeForm.jsx"));
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -306,6 +312,14 @@ const router = createBrowserRouter([
               { path: "academics/boards-class", element: <BoardClassPage /> },
               { path: "payments", element: <PaymentsPage /> },
               { path: "revenue", element: <RevenuePage /> },
+              { path: "reports/usage", element: <PlatformUsage /> },
+              { path: "reports/revenue", element: <RevenueAnalytics/> },
+              { path: "support/tickets", element: <TicketPage/> },
+              { path: "support/contact", element: <ContactSupport/> },
+              { path: "support/documentation", element: <Documentation/> },
+              { path: "support/faqs", element: <Faqs/> },
+             
+              
 
 
             ],

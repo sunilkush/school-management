@@ -12,17 +12,26 @@ import {
   message,
   InputNumber,
   Spin,
+  Tag,
+  Typography,
+  Divider,
+  Avatar,
+  Badge,
+  Tooltip,
 } from "antd";
-
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  BookOutlined,
+  SearchOutlined,
+  GlobalOutlined,
+  AppstoreOutlined,
+  FolderOpenOutlined,
+  ReadOutlined,
 } from "@ant-design/icons";
-
 import { useDispatch, useSelector } from "react-redux";
 
-// Redux
 import { getBoards } from "../../../features/boardSlice.js";
 import { getBoardClass } from "../../../features/boardClassSlice.js";
 import { getAllSubjects } from "../../../features/subjectSlice.js";
@@ -34,6 +43,20 @@ import {
 } from "../../../features/chapterSlice.js";
 
 const { Search } = Input;
+const { Text, Title } = Typography;
+
+// ─── Color palette per tree depth ───────────────────────────────────────────
+const DEPTH_COLORS = {
+  board: { bg: "#e8f4ff", border: "#91caff", text: "#0958d9", icon: <AppstoreOutlined /> },
+  class: { bg: "#f6ffed", border: "#b7eb8f", text: "#389e0d", icon: <FolderOpenOutlined /> },
+  subject: { bg: "#fff7e6", border: "#ffd591", text: "#d46b08", icon: <ReadOutlined /> },
+  chapter: { bg: "#fff", border: "#f0f0f0", text: "#595959", icon: <BookOutlined /> },
+};
+
+const rowStyle = (type) => {
+  const c = DEPTH_COLORS[type] || DEPTH_COLORS.chapter;
+  return { background: c.bg };
+};
 
 const ChaptersTopics = () => {
   const dispatch = useDispatch();
@@ -43,73 +66,40 @@ const ChaptersTopics = () => {
   const searchTimeout = useRef();
 
   const { user } = useSelector((state) => state.auth);
-  const { chapters, loading: chapterLoading } = useSelector(
-    (state) => state.chapters
-  );
+  const { chapters, loading: chapterLoading } = useSelector((state) => state.chapters);
 
   const boards = useSelector((state) => state.boards?.boards || []);
   const boardLoading = useSelector((state) => state.boards?.loading);
   const boardClass = useSelector((state) => state.boardClass?.boardClass || []);
   const subjects = useSelector((state) => state.subject?.subjects || []);
+
   const [chapterModalVisible, setChapterModalVisible] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const isSuperAdmin = user?.role?.name === "Super Admin";
 
-  // ================= MASTER DATA =================
-  useEffect(() => {
-    dispatch(getBoards());
-    dispatch(getAllSubjects({}));
-  }, [dispatch]);
-
-  // ================= FETCH CLASSES BY BOARD =================
-  useEffect(() => {
-    if (selectedBoard) {
-      dispatch(getBoardClass({ boardId: selectedBoard }));
-    }
-  }, [dispatch, selectedBoard]);
-
-  // ================= FETCH CHAPTERS =================
+  useEffect(() => { dispatch(getBoards()); dispatch(getAllSubjects({})); }, [dispatch]);
+  useEffect(() => { if (selectedBoard) dispatch(getBoardClass({ boardId: selectedBoard })); }, [dispatch, selectedBoard]);
   useEffect(() => {
     if (!user || hasFetchedRef.current) return;
-
     hasFetchedRef.current = true;
-
-    dispatch(
-      fetchVisibleChapters({
-        schoolId: isSuperAdmin ? undefined : user?.schoolId,
-      })
-    );
+    dispatch(fetchVisibleChapters({ schoolId: isSuperAdmin ? undefined : user?.schoolId }));
   }, [dispatch, user, isSuperAdmin]);
 
-  // ================= FILTERED =================
   const filteredClasses = useMemo(() => {
     if (!selectedBoard) return boardClass;
-
-    return boardClass.filter(
-      (c) =>
-        String(c.boardId?._id || c.boardId) === String(selectedBoard)
-    );
+    return boardClass.filter((c) => String(c.boardId?._id || c.boardId) === String(selectedBoard));
   }, [selectedBoard, boardClass]);
 
- 
-
-  // ================= SEARCH =================
   const handleSearch = (value) => {
     clearTimeout(searchTimeout.current);
-
-    searchTimeout.current = setTimeout(() => {
-      dispatch(fetchVisibleChapters({ search: value }));
-    }, 400);
+    searchTimeout.current = setTimeout(() => dispatch(fetchVisibleChapters({ search: value })), 400);
   };
+  useEffect(() => () => clearTimeout(searchTimeout.current), []);
 
-  useEffect(() => {
-    return () => clearTimeout(searchTimeout.current);
-  }, []);
-
-  // ================= HANDLERS =================
   const handleAddChapter = () => {
     setEditingChapter(null);
     form.resetFields();
@@ -120,243 +110,354 @@ const ChaptersTopics = () => {
 
   const handleEdit = (record) => {
     setEditingChapter(record);
-
     setSelectedBoard(record?.board?._id);
     setSelectedClass(record?.class?._id);
-
     form.setFieldsValue({
-      name: record?.name,
-      chapterNo: record?.chapterNo,
-      description: record?.description,
-      isGlobal: record?.isGlobal,
-      boardId: record?.board?._id,
-      schoolClassId: record?.class?._id,
+      name: record?.name, chapterNo: record?.chapterNo,
+      description: record?.description, isGlobal: record?.isGlobal,
+      boardId: record?.board?._id, schoolClassId: record?.class?._id,
       subjectId: record?.subject?._id,
     });
-
     setChapterModalVisible(true);
   };
 
   const handleDelete = async (id) => {
     const res = await dispatch(deleteChapterThunk(id));
-    if (!res.error) message.success("Chapter deleted");
+    if (!res.error) { message.success("Chapter deleted successfully"); setDeleteConfirmId(null); }
     else message.error(res.payload);
   };
 
   const handleSubmit = async (values) => {
     if (!user) return message.error("User not loaded");
-
-    const payload = {
-      ...values,
-      schoolId: values.isGlobal ? null : user?.schoolId,
-    };
-
+    const payload = { ...values, schoolId: values.isGlobal ? null : user?.schoolId };
     let res;
-
-    if (editingChapter) {
-      res = await dispatch(
-        updateChapterThunk({
-          id: editingChapter._id,
-          payload,
-        })
-      );
-    } else {
-      res = await dispatch(createChapterThunk(payload));
-    }
-
-    if (!res.error) {
-      message.success(editingChapter ? "Updated" : "Created");
-      setChapterModalVisible(false);
-      form.resetFields();
-    } else {
-      message.error(res.payload);
-    }
+    if (editingChapter) res = await dispatch(updateChapterThunk({ id: editingChapter._id, payload }));
+    else res = await dispatch(createChapterThunk(payload));
+    if (!res.error) { message.success(editingChapter ? "Chapter updated!" : "Chapter created!"); setChapterModalVisible(false); form.resetFields(); }
+    else message.error(res.payload);
   };
 
-  // ================= TREE =================
+  // ─── Tree builder ─────────────────────────────────────────────────────────
   const treeData = useMemo(() => {
     if (!chapters?.length) return [];
-
     const map = {};
-
     chapters.forEach((ch) => {
       const b = ch?.board?.name || "Unknown Board";
       const c = ch?.class?.name || "Unknown Class";
       const s = ch?.subject?.name || "Unknown Subject";
-
-      if (!map[b]) map[b] = { key: b, title: b, children: [] };
-
+      if (!map[b]) map[b] = { key: b, title: b, _type: "board", children: [] };
       let classNode = map[b].children.find((x) => x.title === c);
-      if (!classNode) {
-        classNode = { key: b + c, title: c, children: [] };
-        map[b].children.push(classNode);
-      }
-
+      if (!classNode) { classNode = { key: b + c, title: c, _type: "class", children: [] }; map[b].children.push(classNode); }
       let subjectNode = classNode.children.find((x) => x.title === s);
-      if (!subjectNode) {
-        subjectNode = { key: b + c + s, title: s, children: [] };
-        classNode.children.push(subjectNode);
-      }
-
-      subjectNode.children.push({
-        key: ch._id,
-        title: ch.name,
-        type: "chapter",
-        ...ch,
-      });
+      if (!subjectNode) { subjectNode = { key: b + c + s, title: s, _type: "subject", children: [] }; classNode.children.push(subjectNode); }
+      subjectNode.children.push({ key: ch._id, title: ch.name, _type: "chapter", type: "chapter", ...ch });
     });
-
     return Object.values(map);
   }, [chapters]);
 
-  // ================= TABLE =================
+  // ─── Column definitions ───────────────────────────────────────────────────
   const columns = [
     {
-      title: "Structure",
+      title: "Name",
       dataIndex: "title",
       render: (text, r) => {
-        if (!r.type) return <b>{text}</b>;
-        return <span style={{ paddingLeft: 40 }}>📖 {text}</span>;
+        const type = r._type || "chapter";
+        const cfg = DEPTH_COLORS[type];
+        const indentMap = { board: 0, class: 8, subject: 16, chapter: 24 };
+        const indent = indentMap[type] ?? 0;
+        return (
+          <Space style={{ paddingLeft: indent }}>
+            <Avatar
+              size={28}
+              icon={cfg.icon}
+              style={{ background: cfg.bg, color: cfg.text, border: `1.5px solid ${cfg.border}`, flexShrink: 0 }}
+            />
+            <Text strong={type !== "chapter"} style={{ color: cfg.text, fontSize: type === "board" ? 15 : 14 }}>
+              {text}
+            </Text>
+          </Space>
+        );
       },
     },
     {
-      title: "No",
-      render: (_, r) => (r.type === "chapter" ? r.chapterNo : "-"),
+      title: "Ch. No",
+      width: 90,
+      align: "center",
+      render: (_, r) =>
+        r._type === "chapter" ? (
+          <Tag color="blue" style={{ fontWeight: 600, minWidth: 36, textAlign: "center" }}>
+            #{r.chapterNo}
+          </Tag>
+        ) : "—",
     },
     {
       title: "Subject",
+      width: 160,
       render: (_, r) =>
-        r.type === "chapter" ? r?.subject?.name : "-",
+        r._type === "chapter" ? (
+          <Tag icon={<ReadOutlined />} color="orange" style={{ fontWeight: 500 }}>
+            {r?.subject?.name}
+          </Tag>
+        ) : "—",
     },
     {
-      title: "Global",
+      title: "Scope",
+      width: 110,
+      align: "center",
       render: (_, r) =>
-        r.type === "chapter" ? (r.isGlobal ? "Yes" : "No") : "-",
+        r._type === "chapter" ? (
+          r.isGlobal ? (
+            <Badge
+              count={<GlobalOutlined style={{ color: "#1677ff" }} />}
+              style={{ background: "transparent" }}
+            >
+              <Tag color="geekblue">Global</Tag>
+            </Badge>
+          ) : (
+            <Tag color="default">School</Tag>
+          )
+        ) : "—",
     },
     {
-      title: "Action",
+      title: "Actions",
+      width: 100,
+      align: "center",
       render: (_, r) =>
-        r.type === "chapter" && (
-          <Space>
-            <Button
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => handleEdit(r)}
-            />
-            <Button
-              icon={<DeleteOutlined />}
-              danger
-              size="small"
-              onClick={() => handleDelete(r._id)}
-            />
+        r._type === "chapter" ? (
+          <Space size={6}>
+            <Tooltip title="Edit chapter">
+              <Button
+                icon={<EditOutlined />}
+                size="small"
+                type="text"
+                style={{ color: "#1677ff" }}
+                onClick={() => handleEdit(r)}
+              />
+            </Tooltip>
+            <Tooltip title="Delete chapter">
+              <Button
+                icon={<DeleteOutlined />}
+                size="small"
+                type="text"
+                danger
+                onClick={() => setDeleteConfirmId(r._id)}
+              />
+            </Tooltip>
           </Space>
-        ),
+        ) : null,
     },
   ];
 
+  // ─── Stats bar ────────────────────────────────────────────────────────────
+  const totalChapters = chapters?.length || 0;
+  const globalCount = chapters?.filter((c) => c.isGlobal).length || 0;
+  const boardCount = treeData.length;
+
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: "24px 28px", background: "#f5f6fa", minHeight: "100vh" }}>
+      {/* ── Header ── */}
+      <div style={{ marginBottom: 24 }}>
+        <Title level={3} style={{ margin: 0, color: "#1a1a2e", fontWeight: 700, letterSpacing: -0.5 }}>
+          <BookOutlined style={{ marginRight: 10, color: "#1677ff" }} />
+          Chapters & Topics
+        </Title>
+        <Text type="secondary" style={{ fontSize: 14 }}>
+          Manage your curriculum structure — boards, classes, subjects, and chapters.
+        </Text>
+      </div>
+
+      {/* ── Stat pills ── */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        {[
+          { label: "Boards", value: boardCount, color: "#0958d9", bg: "#e8f4ff" },
+          { label: "Chapters", value: totalChapters, color: "#389e0d", bg: "#f6ffed" },
+          { label: "Global", value: globalCount, color: "#d46b08", bg: "#fff7e6" },
+        ].map((s) => (
+          <div
+            key={s.label}
+            style={{
+              background: s.bg,
+              border: `1px solid ${s.color}30`,
+              borderRadius: 10,
+              padding: "8px 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <Text style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</Text>
+            <Text style={{ color: s.color, fontSize: 13, opacity: 0.85 }}>{s.label}</Text>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Main card ── */}
       <Card
-        title="Chapters"
-        extra={
+        bordered={false}
+        style={{ borderRadius: 14, boxShadow: "0 2px 16px #0001" }}
+        bodyStyle={{ padding: 0 }}
+      >
+        {/* toolbar */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "16px 20px",
+            borderBottom: "1px solid #f0f0f0",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <Search
+            placeholder="Search chapters…"
+            prefix={<SearchOutlined style={{ color: "#bbb" }} />}
+            allowClear
+            style={{ width: 280, borderRadius: 8 }}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
           <Button
             type="primary"
             icon={<PlusOutlined />}
+            size="middle"
+            style={{ borderRadius: 8, fontWeight: 600, paddingInline: 20 }}
             onClick={handleAddChapter}
           >
-            Add
+            Add Chapter
           </Button>
-        }
-      >
-        <Search
-          placeholder="Search..."
-          style={{ width: 300, marginBottom: 20 }}
-          onChange={(e) => handleSearch(e.target.value)}
-        />
+        </div>
 
+        {/* table */}
         <Spin spinning={chapterLoading}>
           <Table
             columns={columns}
             dataSource={treeData}
             pagination={false}
-            expandable={{ childrenColumnName: "children" }}
+            expandable={{ childrenColumnName: "children", defaultExpandAllRows: true }}
             rowKey="key"
+            rowClassName={(r) => `chapter-row-${r._type || "chapter"}`}
+            onRow={(r) => ({ style: rowStyle(r._type || "chapter") })}
+            style={{ borderRadius: "0 0 14px 14px", overflow: "hidden" }}
+            locale={{
+              emptyText: (
+                <div style={{ padding: "48px 0", textAlign: "center" }}>
+                  <BookOutlined style={{ fontSize: 40, color: "#d9d9d9", marginBottom: 12 }} />
+                  <br />
+                  <Text type="secondary">No chapters yet. Click "Add Chapter" to get started.</Text>
+                </div>
+              ),
+            }}
           />
         </Spin>
       </Card>
 
+      {/* ══ Add / Edit Modal ══ */}
       <Modal
-        title={editingChapter ? "Edit Chapter" : "Add Chapter"}
+        title={
+          <Space>
+            <Avatar
+              size={32}
+              icon={editingChapter ? <EditOutlined /> : <PlusOutlined />}
+              style={{ background: editingChapter ? "#fff7e6" : "#e8f4ff", color: editingChapter ? "#d46b08" : "#1677ff" }}
+            />
+            <span style={{ fontWeight: 700, fontSize: 16 }}>
+              {editingChapter ? "Edit Chapter" : "Add New Chapter"}
+            </span>
+          </Space>
+        }
         open={chapterModalVisible}
-        onCancel={() => setChapterModalVisible(false)}
+        onCancel={() => { setChapterModalVisible(false); form.resetFields(); }}
         onOk={() => form.submit()}
+        okText={editingChapter ? "Save Changes" : "Create Chapter"}
+        okButtonProps={{ style: { borderRadius: 8, fontWeight: 600 } }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
+        width={520}
         destroyOnClose
+        styles={{ body: { paddingTop: 8 } }}
       >
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="boardId" label="Board" rules={[{ required: true }]}>
-            <Select
-              loading={boardLoading}
-              onChange={(v) => {
-                setSelectedBoard(v);
-                setSelectedClass(null);
-                form.setFieldsValue({
-                  schoolClassId: null,
-                  subjectId: null,
-                });
-              }}
-            >
-              {boards.map((b) => (
-                <Select.Option key={b._id} value={b._id}>
-                  {b.name}
-                </Select.Option>
-              ))}
+        <Divider style={{ margin: "12px 0 20px" }} />
+        <Form form={form} layout="vertical" onFinish={handleSubmit} requiredMark="optional">
+         
+            <Form.Item name="boardId" label="Board" rules={[{ required: true, message: "Select a board" }]} style={{ gridColumn: "1 / 2" }}>
+              <Select
+                placeholder="Choose board"
+                loading={boardLoading}
+                style={{ borderRadius: 8 }}
+                onChange={(v) => {
+                  setSelectedBoard(v);
+                  setSelectedClass(null);
+                  form.setFieldsValue({ schoolClassId: null, subjectId: null });
+                }}
+              >
+                {boards.map((b) => <Select.Option key={b._id} value={b._id}>{b.name}</Select.Option>)}
+              </Select>
+            </Form.Item>
+
+           
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Select a class" }]} >
+              <Select
+                placeholder="Choose class"
+                disabled={!selectedBoard}
+                onChange={(v) => { setSelectedClass(v); form.setFieldsValue({ subjectId: null }); }}
+              >
+                {filteredClasses.map((c) => <Select.Option key={c._id} value={c._id}>{c.name}</Select.Option>)}
+              </Select>
+            </Form.Item>
+            
+          <Form.Item name="subjectId" label="Subject" rules={[{ required: true, message: "Select a subject" }]} >
+            <Select placeholder="Choose subject" disabled={!selectedClass}>
+              {subjects.map((s) => <Select.Option key={s._id} value={s._id}>{s.name}</Select.Option>)}
             </Select>
           </Form.Item>
 
-          <Form.Item name="schoolClassId" label="Class" rules={[{ required: true }]}>
-            <Select
-              disabled={!selectedBoard}
-              onChange={(v) => {
-                setSelectedClass(v);
-                form.setFieldsValue({ subjectId: null });
-              }}
-            >
-              {filteredClasses?.map((c) => (
-                <Select.Option key={c._id} value={c._id}>
-                  {c.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+         </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+             <Form.Item name="chapterNo" label="Chapter No." rules={[{ required: true, message: "Required" }]}>
+              <InputNumber min={1} style={{ width: "100%" }} placeholder="1" />
+            </Form.Item>
+            <Form.Item name="name" label="Chapter Name" rules={[{ required: true, message: "Enter chapter name" }]}>
+              <Input placeholder="e.g. Introduction to Algebra" />
+            </Form.Item>
+           
+          </div>
 
-          <Form.Item name="subjectId" label="Subject" rules={[{ required: true }]}>
-            <Select disabled={!selectedClass}>
-              {subjects?.map((s) => (
-                <Select.Option key={s._id} value={s._id}>
-                  {s.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="name" label="Chapter Name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="chapterNo" label="Chapter No" rules={[{ required: true }]}>
-            <InputNumber min={1} style={{ width: "100%" }} />
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={3} placeholder="Optional notes about this chapter…" style={{ resize: "none" }} />
           </Form.Item>
 
           {isSuperAdmin && (
             <Form.Item name="isGlobal" valuePropName="checked">
-              <Checkbox>Global</Checkbox>
+              <Checkbox>
+                <Space>
+                  <GlobalOutlined style={{ color: "#1677ff" }} />
+                  <span>Mark as <b>Global</b> (visible to all schools)</span>
+                </Space>
+              </Checkbox>
             </Form.Item>
           )}
-
-          <Form.Item name="description" label="Description">
-            <Input.TextArea />
-          </Form.Item>
         </Form>
+      </Modal>
+
+      {/* ══ Delete confirmation modal ══ */}
+      <Modal
+        open={!!deleteConfirmId}
+        title={
+          <Space>
+            <Avatar size={32} icon={<DeleteOutlined />} style={{ background: "#fff1f0", color: "#cf1322" }} />
+            <span style={{ fontWeight: 700 }}>Delete Chapter?</span>
+          </Space>
+        }
+        onCancel={() => setDeleteConfirmId(null)}
+        onOk={() => handleDelete(deleteConfirmId)}
+        okText="Yes, Delete"
+        okButtonProps={{ danger: true, style: { borderRadius: 8 } }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
+        width={400}
+      >
+        <Text type="secondary">
+          This action cannot be undone. Are you sure you want to permanently delete this chapter?
+        </Text>
       </Modal>
     </div>
   );
