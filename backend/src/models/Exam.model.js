@@ -164,6 +164,9 @@ examSchema.index({
   subjectId: 1
 });
 
+examSchema.index({ schoolId: 1, title: 1 });
+examSchema.index({ schoolId: 1, examDate: -1, totalMarks: -1 });
+
 export const Exam =
   mongoose.models.Exam || mongoose.model("Exam", examSchema);
 

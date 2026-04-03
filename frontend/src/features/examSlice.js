@@ -1,204 +1,119 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-
-
-// ---------------- Async Thunks ---------------- //
-
-// --- Create Exam --- //
-export const createExam = createAsyncThunk(
-  "exams/createExam",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.post(
-        `/exams/`,
-        payload,
-       
-      );
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const createExam = createAsyncThunk("exams/createExam", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.post(`/exams/`, payload);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-// --- Get Exams --- //
-export const getExams = createAsyncThunk(
-  "exams/getExams",
-  async (params = {}, { rejectWithValue }) => {
-    try {
-      const query = new URLSearchParams(params).toString();
-      const res = await apiClient.get(
-        `/exams?${query}`,
-       
-      );
-      return res.data.data.exams;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const getExams = createAsyncThunk("exams/getExams", async (params = {}, { rejectWithValue }) => {
+  try {
+    const query = new URLSearchParams(params).toString();
+    const res = await apiClient.get(`/exams?${query}`);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-// --- Get Exam by ID --- //
-export const getExamById = createAsyncThunk(
-  "exams/getExamById",
-  async (examId, { rejectWithValue }) => {
-    try {
-      if (!examId || examId === "undefined" || examId === "null") {
-        throw new Error("Invalid exam id");
-      }
-
-      const res = await apiClient.get(
-        `/exams/${examId}`,
-       
-      );
-
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const getExamById = createAsyncThunk("exams/getExamById", async (examId, { rejectWithValue }) => {
+  try {
+    if (!examId || examId === "undefined" || examId === "null") throw new Error("Invalid exam id");
+    const res = await apiClient.get(`/exams/${examId}`);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-// --- Update Exam --- //
-export const updateExam = createAsyncThunk(
-  "exams/updateExam",
-  async ({ Id, payload }, { rejectWithValue }) => {
-    try {
-     
-      if (!Id || Id === "undefined" || Id === "null") {
-        throw new Error("Invalid exam id 3");
-      }
-
-      const res = await apiClient.put(
-        `/exams/${Id}`,
-        payload,
-       
-      );
-
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const updateExam = createAsyncThunk("exams/updateExam", async ({ Id, payload }, { rejectWithValue }) => {
+  try {
+    if (!Id || Id === "undefined" || Id === "null") throw new Error("Invalid exam id");
+    const res = await apiClient.put(`/exams/${Id}`, payload);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-// --- Delete Exam --- //
-export const deleteExam = createAsyncThunk(
-  "exams/deleteExam",
-  async (examId, { rejectWithValue }) => {
-    try {
-      if (!examId) throw new Error("Invalid exam id");
-
-      const res = await apiClient.delete(
-        `/exams/${examId}`,
-       
-      );
-
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const deleteExam = createAsyncThunk("exams/deleteExam", async (examId, { rejectWithValue }) => {
+  try {
+    if (!examId) throw new Error("Invalid exam id");
+    const res = await apiClient.delete(`/exams/${examId}`);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-// --- Publish Exam --- //
-export const publishExam = createAsyncThunk(
-  "exams/publishExam",
-  async (examId, { rejectWithValue }) => {
-    try {
-      if (!examId) throw new Error("Invalid exam id");
-
-      const res = await apiClient.put(
-        `/exams/${examId}/publish`,
-        {}, // ✅ empty body FIX
-       
-      );
-
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const publishExam = createAsyncThunk("exams/publishExam", async ({ examId, status = "published" }, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.put(`/exams/${examId}/publish`, { status });
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-// --- Exam Attempts --- //
-export const startExamAttempt = createAsyncThunk(
-  "exams/startExamAttempt",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.post(
-        `/exams/attempt/start`,
-        payload,
-       
-      );
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const enterMarksBulk = createAsyncThunk("exams/enterMarksBulk", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.post(`/exams/marks/bulk`, payload);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-export const submitExamAttempt = createAsyncThunk(
-  "exams/submitExamAttempt",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.post(
-        `/exams/attempt/submit`,
-        payload,
-       
-      );
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const submitFinalMarks = createAsyncThunk("exams/submitFinalMarks", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.post(`/exams/marks/submit`, payload);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-export const evaluateAttempt = createAsyncThunk(
-  "exams/evaluateAttempt",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.post(
-        `/exams/attempt/evaluate`,
-        payload,
-       
-      );
-      return res.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message
-      );
-    }
+export const publishResults = createAsyncThunk("exams/publishResults", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.post(`/exams/results/publish`, payload);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
   }
-);
+});
 
-// ---------------- Slice ---------------- //
+export const getStudentResults = createAsyncThunk("exams/getStudentResults", async (params = {}, { rejectWithValue }) => {
+  try {
+    const query = new URLSearchParams(params).toString();
+    const res = await apiClient.get(`/exams/results/student?${query}`);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
+export const getParentResults = createAsyncThunk("exams/getParentResults", async (params = {}, { rejectWithValue }) => {
+  try {
+    const query = new URLSearchParams(params).toString();
+    const res = await apiClient.get(`/exams/results/parent?${query}`);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
 const examSlice = createSlice({
   name: "exams",
   initialState: {
     exams: [],
+    pagination: null,
     currentExam: null,
-    currentAttempt: null,
+    results: [],
+    classSummary: null,
     loading: false,
     error: null,
   },
@@ -207,90 +122,59 @@ const examSlice = createSlice({
       state.currentExam = null;
       state.error = null;
     },
-    clearCurrentAttempt: (state) => {
-      state.currentAttempt = null;
-      state.error = null;
-    },
     clearExamsError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Create
       .addCase(createExam.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(createExam.fulfilled, (state, action) => {
         state.loading = false;
-        state.exams.push(action.payload);
+        state.exams.unshift(action.payload);
       })
       .addCase(createExam.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      // Get All
       .addCase(getExams.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(getExams.fulfilled, (state, action) => {
         state.loading = false;
-        state.exams = action.payload;
+        state.exams = action.payload.exams || [];
+        state.pagination = action.payload.pagination || null;
       })
       .addCase(getExams.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      // Get By ID
-      .addCase(getExamById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(getExamById.fulfilled, (state, action) => {
-        state.loading = false;
         state.currentExam = action.payload;
       })
-      .addCase(getExamById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // Update
-      .addCase(updateExam.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(updateExam.fulfilled, (state, action) => {
-        state.loading = false;
-        const index = state.exams.findIndex(
-          (e) => e._id === action.payload._id
-        );
+        const index = state.exams.findIndex((e) => e._id === action.payload._id);
         if (index !== -1) state.exams[index] = action.payload;
-        if (state.currentExam?._id === action.payload._id)
-          state.currentExam = action.payload;
+        if (state.currentExam?._id === action.payload._id) state.currentExam = action.payload;
       })
-      .addCase(updateExam.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // Delete
       .addCase(deleteExam.fulfilled, (state, action) => {
-        state.exams = state.exams.filter(
-          (e) => e._id !== action.payload._id
-        );
+        state.exams = state.exams.filter((e) => e._id !== action.payload._id);
+      })
+      .addCase(publishExam.fulfilled, (state, action) => {
+        const index = state.exams.findIndex((e) => e._id === action.payload._id);
+        if (index !== -1) state.exams[index] = action.payload;
+      })
+      .addCase(getStudentResults.fulfilled, (state, action) => {
+        state.results = action.payload;
+      })
+      .addCase(getParentResults.fulfilled, (state, action) => {
+        state.results = action.payload;
       });
   },
 });
 
-export const {
-  clearCurrentExam,
-  clearCurrentAttempt,
-  clearExamsError,
-} = examSlice.actions;
+export const { clearCurrentExam, clearExamsError } = examSlice.actions;
 
 export default examSlice.reducer;

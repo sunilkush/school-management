@@ -6,8 +6,6 @@ const nonEmptyString = (value) => typeof value === "string" && value.trim().leng
 const validators = {
   objectId: (value) => typeof value === "string" && mongoose.Types.ObjectId.isValid(value),
   positiveInt: (value) => Number.isInteger(Number(value)) && Number(value) > 0,
-  boolOptional: (value) => value === undefined || typeof value === "boolean",
-  stringOptional: (value) => value === undefined || typeof value === "string",
 };
 
 const validate = ({ body = {}, params = {}, query = {} }) => {
@@ -54,6 +52,23 @@ const validate = ({ body = {}, params = {}, query = {} }) => {
   };
 };
 
+const validateBody = (requiredFields = []) => (req, _res, next) => {
+  const errors = [];
+
+  requiredFields.forEach((field) => {
+    const value = req.body?.[field];
+    if (value === undefined || value === null || value === "") {
+      errors.push(`body.${field} is required`);
+    }
+  });
+
+  if (errors.length) {
+    return next(new ApiError(400, "Validation failed", errors));
+  }
+
+  next();
+};
+
 const validateRequest = (schema) => (req, _res, next) => {
   const parsed = schema.safeParse({
     body: req.body,
@@ -76,4 +91,4 @@ const validateRequest = (schema) => (req, _res, next) => {
   next();
 };
 
-export { validateBody, validateRequest };
+export { validate, validateBody, validateRequest };
