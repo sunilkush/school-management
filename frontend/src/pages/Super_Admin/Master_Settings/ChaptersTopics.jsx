@@ -25,7 +25,7 @@ import { useDispatch, useSelector } from "react-redux";
 // Redux
 import { getBoards } from "../../../features/boardSlice.js";
 import { fetchAllClasses } from "../../../features/classSlice.js";
-import { fetchAllSubjects } from "../../../features/subjectSlice.js";
+import { getAllSubjects } from "../../../features/subjectSlice.js";
 import {
   fetchVisibleChapters,
   createChapterThunk,
@@ -68,7 +68,7 @@ const ChaptersTopics = () => {
   useEffect(() => {
     dispatch(getBoards());
     dispatch(fetchAllClasses());
-    dispatch(fetchAllSubjects());
+    dispatch(getAllSubjects());
   }, [dispatch]);
 
   // ================= CHAPTERS =================

@@ -24,16 +24,21 @@ export const createSubject = createAsyncThunk(
 // ==========================================================
 export const getAllSubjects = createAsyncThunk(
   "subject/getAllSubjects",
-  async (
-    { page, limit, search = "", isGlobal },
-    { rejectWithValue }
-  ) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/subject/all`, {
-        params: { page, limit, search, isGlobal },
-      });
+      const {
+        page = 1,
+        limit = 100,
+        search = "",
+        isGlobal,
+        schoolId,
+      } = params;
 
-      return res.data.data;
+      const res = await apiClient.get(`/subject/all`, {
+        params: { page, limit, search, isGlobal, schoolId },
+      });
+      console.log("Fetched Subjects:", res.data);
+      return res.data; // ✅ return full response
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Failed to fetch subjects!"
@@ -149,15 +154,19 @@ const subjectSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(getAllSubjects.fulfilled, (state, action) => {
-        state.loading = false;
-        state.subjects = action.payload?.subjects || [];
-        state.pagination = {
-          total: action.payload?.total || 0,
-          page: action.payload?.page || 1,
-          totalPages: action.payload?.totalPages || 1,
-        };
-      })
+    .addCase(getAllSubjects.fulfilled, (state, action) => {
+          state.loading = false;
+
+          const payload = action.payload?.data || {};
+
+          state.subjects = payload.subjects || [];
+
+          state.pagination = {
+            total: payload.total || 0,
+            page: payload.page || 1,
+            totalPages: payload.totalPages || 1,
+          };
+        })
       .addCase(getAllSubjects.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
@@ -205,10 +214,13 @@ const subjectSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteSubject.fulfilled, (state, action) => {
-        const deletedId = action.payload?.data?._id;
-        if (deletedId) {
-          state.subjects = state.subjects.filter((s) => s._id !== deletedId);
-        }
+        const deletedId =
+          action.payload?.data?._id || action.meta.arg;
+
+        state.subjects = state.subjects.filter(
+          (s) => s._id !== deletedId
+        );
+
         state.loading = false;
         state.success = true;
         state.successMessage =
