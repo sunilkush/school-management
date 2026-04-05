@@ -36,7 +36,7 @@ import chapterRoutes from "./routes/chapters.routes.js";
 import boardClassRoutes from "./routes/boardsClass.routes.js";
 import examReportRoutes from "./routes/exam.report.routes.js";
 import schoolClassRoutes from "./routes/schoolClass.routes.js";
-import authRoutes from "./routes/auth.routes.js";
+
 import moduleRoutes from "./routes/module.routes.js";
 
 import { ApiError } from "./utils/ApiError.js";
@@ -72,13 +72,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-
-app.use("/api/auth", authRateLimiter, authRoutes);
-
-app.use("/api/v1/auth", authRateLimiter, authRoutes);
-
 app.use("/api/v1", enforceApiAuthByDefault);
-
 app.use("/api/v1/school", schoolRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/class", classRoutes);

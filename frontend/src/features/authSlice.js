@@ -4,7 +4,7 @@ import { clearAccessToken, getAccessToken, setAccessToken } from "../api/authTok
 
 export const loginUser = createAsyncThunk("auth/login", async (data, { rejectWithValue }) => {
   try {
-    const res = await apiClient.post("/auth/login", data);
+    const res = await apiClient.post("/user/login", data);
     const payload = res.data?.data || {};
     setAccessToken(payload.accessToken);
     return payload;
@@ -24,7 +24,7 @@ export const initializeAuth = createAsyncThunk(
     }
 
     try {
-      const res = await apiClient.post("/auth/refresh-token", {});
+      const res = await apiClient.post("/user/refresh-token", {});
       const payload = res.data?.data || {};
       if (!payload?.accessToken) throw new Error("Session not found");
       setAccessToken(payload.accessToken);
@@ -37,7 +37,7 @@ export const initializeAuth = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
   try {
-    await apiClient.post("/auth/logout", {});
+    await apiClient.post("/user/logout", {});
     clearAccessToken();
     return true;
   } catch (err) {
@@ -48,7 +48,7 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWith
 
 export const forgotPassword = createAsyncThunk("auth/forgotPassword", async (email, { rejectWithValue }) => {
   try {
-    const res = await apiClient.post("/auth/forgot-password", { email });
+    const res = await apiClient.post("/user/forgot-password", { email });
     return res.data.message;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -57,7 +57,7 @@ export const forgotPassword = createAsyncThunk("auth/forgotPassword", async (ema
 
 export const resetPassword = createAsyncThunk("auth/resetPassword", async ({ token, password }, { rejectWithValue }) => {
   try {
-    const res = await apiClient.post(`/auth/reset-password/${token}`, { password });
+    const res = await apiClient.post(`/user/reset-password/${token}`, { password });
     return res.data.message;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -66,7 +66,7 @@ export const resetPassword = createAsyncThunk("auth/resetPassword", async ({ tok
 
 export const verifyEmail = createAsyncThunk("auth/verifyEmail", async (token, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get(`/auth/verify-email/${token}`);
+    const res = await apiClient.get(`/user/verify-email/${token}`);
     return res.data.message;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -75,7 +75,7 @@ export const verifyEmail = createAsyncThunk("auth/verifyEmail", async (token, { 
 
 export const resendVerification = createAsyncThunk("auth/resendVerification", async (email, { rejectWithValue }) => {
   try {
-    const res = await apiClient.post("/auth/resend-verification", { email });
+    const res = await apiClient.post("/user/resend-verification", { email });
     return res.data.message;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -84,7 +84,7 @@ export const resendVerification = createAsyncThunk("auth/resendVerification", as
 
 export const registerUser = createAsyncThunk("auth/register", async (data, { rejectWithValue }) => {
   try {
-    const res = await apiClient.post("/auth/register", data);
+    const res = await apiClient.post("/user/register", data);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -95,7 +95,7 @@ export const currentUser = createAsyncThunk(
   "auth/profile",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/auth/me");
+      const res = await apiClient.get("/user/me");
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message || "Something went wrong");
@@ -111,7 +111,7 @@ export const currentUser = createAsyncThunk(
 
 export const updateUser = createAsyncThunk("auth/updateUser", async (data, { rejectWithValue }) => {
   try {
-    const res = await apiClient.put("/auth/update", data);
+    const res = await apiClient.put("/user/update", data);
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -120,7 +120,7 @@ export const updateUser = createAsyncThunk("auth/updateUser", async (data, { rej
 
 export const changePassword = createAsyncThunk("auth/changePassword", async (data, { rejectWithValue }) => {
   try {
-    const res = await apiClient.put("/auth/change-password", data);
+    const res = await apiClient.put("/user/change-password", data);
     return res.data.message;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -129,7 +129,7 @@ export const changePassword = createAsyncThunk("auth/changePassword", async (dat
 
 export const getMyPermissions = createAsyncThunk("auth/permissions", async (_, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get("/auth/my-permissions");
+    const res = await apiClient.get("/user/my-permissions");
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -138,7 +138,7 @@ export const getMyPermissions = createAsyncThunk("auth/permissions", async (_, {
 
 export const fetchAllUser = createAsyncThunk("auth/allUsers", async (params = {}, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get("/auth/all", { params });
+    const res = await apiClient.get("/user/all", { params });
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -147,7 +147,7 @@ export const fetchAllUser = createAsyncThunk("auth/allUsers", async (params = {}
 
 export const deleteUser = createAsyncThunk("auth/deleteUser", async (id, { rejectWithValue }) => {
   try {
-    await apiClient.patch(`/auth/delete/${id}`);
+    await apiClient.patch(`/user/delete/${id}`);
     return id;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -156,7 +156,7 @@ export const deleteUser = createAsyncThunk("auth/deleteUser", async (id, { rejec
 
 export const activeUser = createAsyncThunk("auth/activeUser", async (id, { rejectWithValue }) => {
   try {
-    const res = await apiClient.patch(`/auth/active/${id}`, {});
+    const res = await apiClient.patch(`/user/active/${id}`, {});
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -165,7 +165,7 @@ export const activeUser = createAsyncThunk("auth/activeUser", async (id, { rejec
 
 export const getUserById = createAsyncThunk("auth/getUserById", async (id, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get(`/auth/single/${id}`);
+    const res = await apiClient.get(`/user/single/${id}`);
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);

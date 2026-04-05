@@ -38,14 +38,14 @@ httpClient.interceptors.response.use(
     }
 
     const endpoint = originalRequest.url || "";
-    if (endpoint.includes("/auth/login") || endpoint.includes("/auth/refresh-token")) {
+    if (endpoint.includes("/user/login") || endpoint.includes("/user/refresh-token")) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
     try {
-      refreshPromise = refreshPromise || axios.post(`${API_URL}/auth/refresh-token`, {}, { withCredentials: true });
+      refreshPromise = refreshPromise || axios.post(`${API_URL}/user/refresh-token`, {}, { withCredentials: true });
       const refreshResponse = await refreshPromise;
       const payload = refreshResponse.data?.data || {};
       const refreshedToken = payload.accessToken;

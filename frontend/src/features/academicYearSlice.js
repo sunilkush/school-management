@@ -113,6 +113,7 @@ const academicYearSlice = createSlice({
     loading: false,
     error: null,
     message: null,
+    isFetched: false, 
   },
 
   reducers: {
@@ -149,7 +150,7 @@ const academicYearSlice = createSlice({
       .addCase(fetchActiveAcademicYear.fulfilled, (state, action) => {
         state.loading = false;
         state.activeYear = action.payload;
-
+        state.isFetched = true; 
         // 🔥 auto sync
         if (!state.selectedAcademicYear) {
           state.selectedAcademicYear = action.payload;
