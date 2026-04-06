@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 
-const nonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
+const isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
+const isValidObjectId = (value) =>
+  typeof value === "string" && mongoose.Types.ObjectId.isValid(value);
+const isPositiveInt = (value) => Number.isInteger(Number(value)) && Number(value) > 0;
 
-const validators = {
-  objectId: (value) => typeof value === "string" && mongoose.Types.ObjectId.isValid(value),
-  positiveInt: (value) => Number.isInteger(Number(value)) && Number(value) > 0,
-};
+
 
 const validate = ({ body = {}, params = {}, query = {} }) => {
   return (req, _res, next) => {
