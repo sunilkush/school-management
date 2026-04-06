@@ -74,7 +74,7 @@ const LoginForm = () => {
     !error.toLowerCase().includes("unauthorized");
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ minHeight: "100vh",color: "var(--text-primary)" }}>
       <Content>
         <Row style={{ minHeight: "100vh", margin: "0 auto" }}>
           <Col
@@ -94,11 +94,12 @@ const LoginForm = () => {
                 boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
                 borderRadius: 12,
                 background: "var(--card)",
+               
               }}
               variant="borderless"
             >
-              <Title level={3}>Welcome Back 👋</Title>
-              <Text type="secondary">
+              <Title level={3} style={{color: "var(--text-primary)"}}>Welcome Back 👋</Title>
+              <Text type="secondary" style={{color: "var(--text-primary)"}}>
                 Login to continue to your dashboard
               </Text>
 
@@ -136,10 +137,12 @@ const LoginForm = () => {
                 </Form.Item>
 
                 <Row justify="space-between" align="middle">
-                  <Form.Item name="remember" valuePropName="checked">
-                    <Checkbox>Remember me</Checkbox>
+                  <Form.Item name="remember" valuePropName="checked" style={{color: "var(--text-primary)"}}>
+                    <Checkbox style={{color: "var(--text-primary)"}}>Remember me</Checkbox>
                   </Form.Item>
-                  <Link to="/forgot-password">Forgot password?</Link>
+                  <Link to="/forgot-password" style={{color: "var(--text-primary)"}}>
+                    Forgot password?
+                  </Link>
                 </Row>
 
                 {showError && (
@@ -171,6 +174,7 @@ const LoginForm = () => {
                   display: "block",
                   marginTop: 16,
                   textAlign: "center",
+                  color: "var(--text-primary)"
                 }}
               >
                 Don’t have an account? <Link to="/register">Sign up</Link>

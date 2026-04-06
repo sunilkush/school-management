@@ -83,6 +83,7 @@ const TopbarFallback = ({ isDark }) => (
   </div>
 );
 
+// eslint-disable-next-line no-unused-vars
 const ContentFallback = ({ isDark }) => (
   <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
     <Skeleton.Input active style={{ width: 240, height: 28, borderRadius: 8 }} />
