@@ -169,9 +169,15 @@ body {
 
 .filter-select .ant-select-selector {
   border-radius: 8px !important;
-  border-color: #e2e8f0 !important;
+  border-color:var(--textMuted) !important;
 }
 
 .search-input .ant-input {
   border-radius: 8px !important;
+}
+.ant-select-selection-item {
+  color: var(--text-primary) !important;
+}
+.ant-input::placeholder{
+  color: var(--textMuted) !important;
 }

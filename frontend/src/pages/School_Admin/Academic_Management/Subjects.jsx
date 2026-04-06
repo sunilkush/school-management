@@ -45,15 +45,15 @@ const Subjects = () => {
   const { subjects = [], loading = false } = useSelector(
     (state) => state.subject || {}
   );
-  console.log("Subjects data:", subjects); // Debugging log
+// Debugging log
   const page = "";
-  const limit = "";
+  const limit = 50;
   const schoolId = user?.school?._id;
 
   /* ── FETCH ── */
   useEffect(() => {
     if (schoolId) {
-      dispatch(getAllSubjects({ page, limit, search: searchText || undefined }));
+      dispatch(getAllSubjects({ page, limit, schoolId }));
     }
   }, [dispatch, schoolId, searchText]);
 

@@ -172,7 +172,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               prefix={
                 <SearchOutlined
                   style={{
-                    color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.3)",
+                    color:"var(--text-primary)",
                     fontSize: 14,
                   }}
                 />
@@ -181,7 +181,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               styles={{
                 input: {
                   background: "transparent",
-                  color: isDark ? "rgba(255,255,255,0.85)" : "inherit",
+                  color:"var(--text-primary)",
                 },
               }}
             />
@@ -213,7 +213,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
 
           {/* Messages */}
           <IconBtn
-            icon={<MessageOutlined style={{ fontSize: 16 }} />}
+            icon={<MessageOutlined style={{ fontSize: 16,color:"var(--text-primary)" }} />}
             tooltip="Messages"
             badge={3}
             isDark={isDark}

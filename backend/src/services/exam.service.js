@@ -51,6 +51,7 @@ export const createExamService = async ({ body, user }) => {
   }
 
   const exam = await Exam.create(payload);
+ 
   return exam;
 };
 

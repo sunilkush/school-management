@@ -82,16 +82,18 @@ useEffect(() => {
 
   return (
     <Select
-      style={{ width: 220,color:"var(--text-muted)" }}
+      style={{ width: 220,color:"var(--text-primary)" }}
       placeholder="Academic Year"
       value={selectedAcademicYear?._id}
       onChange={handleChange}
       loading={loading}
-
-      disabled // 🔥 because only one active year
+      disabled // Disable if no active year
+      
+     // 🔥 because only one active year
+      
     >
       {activeYear && (
-        <Option value={activeYear._id}>
+        <Option value={activeYear._id} >
           {formatDate(activeYear.startDate)} -{" "}
           {formatDate(activeYear.endDate)}
         </Option>
