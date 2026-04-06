@@ -55,32 +55,57 @@ export const createSchoolClass = async (req, res) => {
 export const getAllSchoolClasses = async (req, res) => {
   try {
     const { schoolId, academicYearId } = req.query;
-   
+
     const filter = {};
     if (schoolId) filter.schoolId = schoolId;
     if (academicYearId) filter.academicYearId = academicYearId;
 
-   const classes = await SchoolClass.find(filter)
-  .populate({
-    path: "sections.sectionId",
-    select: "name",
-  })
-  .populate({
-    path: "sections.teacherId",
-    select: "name",
-  })
-  .populate("boardClassId", "name")
-  .sort({ createdAt: -1 })
-  .lean();
+    const classes = await SchoolClass.find(filter)
+      .select("name") // ✅ only class name
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const classIds = classes.map((cls) => cls._id);
+
+    const sections = await Section.find({
+      schoolClassId: { $in: classIds },
+    })
+      .select("name schoolClassId subjects") // ✅ only needed fields
+      .populate("subjects.subjectId", "name")
+      .lean();
+
+    // ✅ FINAL STRUCTURE
+    const finalData = classes.map((cls) => {
+      const classSections = sections
+        .filter(
+          (sec) =>
+            sec.schoolClassId.toString() === cls._id.toString()
+        )
+        .map((sec) => ({
+          _id: sec._id,
+          name: sec.name,
+          subjects: sec.subjects.map((sub) => ({
+            _id: sub.subjectId?._id,
+            name: sub.subjectId?.name,
+          })),
+        }));
+
+      return {
+        _id: cls._id,
+        name: cls.name,
+        sections: classSections,
+      };
+    });
 
     return res.status(200).json({
       success: true,
-      data: classes,
+      data: finalData,
     });
   } catch (error) {
+    console.error("Get Classes Error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Server Error",
     });
   }
 };

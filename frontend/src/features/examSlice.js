@@ -3,6 +3,7 @@ import apiClient from "../api/httpClient";
 
 export const createExam = createAsyncThunk("exams/createExam", async (payload, { rejectWithValue }) => {
   try {
+    console.log(payload)
     const res = await apiClient.post(`/exams/`, payload);
     return res.data.data;
   } catch (error) {
