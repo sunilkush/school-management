@@ -1,186 +1,225 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
+const initialFilters = {
+  schoolId: null,
+  classId: null,
+  sectionId: null,
+  subjectId: null,
+  date: null,
+  role: null,
+  userId: null,
+  search: "",
+  page: 1,
+  limit: 20,
+};
 
-const API_URL = import.meta.env.VITE_API_URL;
-// ================== Async Thunks ==================
-
-// 📌 Fetch Students for Attendance
-export const fetchStudents = createAsyncThunk(
-  "attendance/fetchStudents",
-  async ({ schoolClassId, sectionId, date }, { rejectWithValue }) => {
+export const markBulkAttendance = createAsyncThunk(
+  "attendance/markBulkAttendance",
+  async (payload, { rejectWithValue }) => {
     try {
-      
-      const res = await apiClient.get(`/attendance/students`, {
-        params: { schoolClassId, sectionId, date },      }
-    );
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      const res = await apiClient.post("/attendance/mark-bulk", payload);
+      return res.data?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to mark attendance");
     }
   }
 );
 
-// 📌 Fetch Teachers for Attendance
-export const fetchTeachers = createAsyncThunk(
-  "attendance/fetchTeachers",
-  async ({ departmentId, subjectId, date }, { rejectWithValue }) => {
+
+export const submitAttendance = markBulkAttendance;
+
+export const fetchAttendance = createAsyncThunk(
+  "attendance/fetchAttendance",
+  async (params = {}, { getState, rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/attendance/teachers`, {
-        params: { departmentId, subjectId, date },         
-      }      
-    );
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      const stateFilters = getState().attendance.filters;
+      const merged = { ...stateFilters, ...params };
+      const cleaned = Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== null && v !== ""));
+      const res = await apiClient.get("/attendance", { params: cleaned });
+      return res.data?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch attendance");
     }
   }
 );
 
-// 📌 Submit Attendance
-export const submitAttendance = createAsyncThunk(
-  "attendance/submit",
-  async ({ records, role, date, schoolClassId, sectionId, departmentId, subjectId,schoolId,academicYearId,userId }, { rejectWithValue }) => {
+export const fetchMonthlyReport = createAsyncThunk(
+  "attendance/fetchMonthlyReport",
+  async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/attendance/mark`, {
-        records,
-        role,
-        date,
-        schoolClassId,
-        sectionId,
-        departmentId,
-        subjectId,
-        schoolId,
-        academicYearId,
-        userId
-        
-      },
-      {}
-    );
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      const res = await apiClient.get("/attendance/report/monthly", { params });
+      return res.data?.data || [];
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch monthly report");
     }
   }
 );
 
-// 📌 Fetch Reports (Daily, Monthly, Class-Monthly)
-export const fetchReports = createAsyncThunk(
-  "attendance/fetchReports",
-  async ({ reportType, date, schoolClassId, sectionId }, { rejectWithValue }) => {
+
+export const fetchMonthlyAttendance = createAsyncThunk(
+  "attendance/fetchMonthlyAttendance",
+  async (params, { dispatch, rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/attendance/reports`, {
-        params: { reportType, date, schoolClassId, sectionId },
-      }
-      ,{});
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      const result = await dispatch(fetchMonthlyReport(params)).unwrap();
+      return result;
+    } catch (error) {
+      return rejectWithValue(error || "Failed to fetch monthly attendance");
     }
   }
 );
 
-// ================== Slice ==================
+export const fetchMyAttendance = createAsyncThunk(
+  "attendance/fetchMyAttendance",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/attendance/my", { params });
+      return res.data?.data || [];
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch my attendance");
+    }
+  }
+);
+
+export const updateAttendanceRecord = createAsyncThunk(
+  "attendance/updateAttendanceRecord",
+  async ({ id, payload }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/attendance/${id}`, payload);
+      return res.data?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to update attendance");
+    }
+  }
+);
+
+export const deleteAttendanceRecord = createAsyncThunk(
+  "attendance/deleteAttendanceRecord",
+  async (id, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/attendance/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to delete attendance");
+    }
+  }
+);
+
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
-    filters: {
-      schoolClassId: null,
-      sectionId: null,
-      departmentId: null,
-      subjectId: null,
-      date: new Date().toISOString().split("T")[0],
-      reportType: null,
-    },
-    students: [],
-    teachers: [],
-    records: {}, // { userId: "Present" }
-    reports: [],
+    filters: initialFilters,
+    list: [],
+    pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
+    monthlyReport: [],
+    monthlyAttendance: [],
+    myAttendance: [],
+    draftRecords: {},
     loading: false,
+    reportLoading: false,
     error: null,
+    successMessage: null,
   },
   reducers: {
-    // 📌 Set Filters
-    setFilter: (state, action) => {
+    setAttendanceFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
     },
-    // 📌 Mark single attendance
-    markAttendance: (state, action) => {
-      const { id, status } = action.payload;
-      state.records[id] = status;
+    resetAttendanceFilters: (state) => {
+      state.filters = initialFilters;
     },
-    // 📌 Bulk Mark
-    bulkMark: (state, action) => {
-      const { ids, status } = action.payload;
-      ids.forEach((id) => {
-        state.records[id] = status;
+    setDraftAttendanceStatus: (state, action) => {
+      const { userId, status } = action.payload;
+      state.draftRecords[userId] = status;
+    },
+    setBulkDraftStatus: (state, action) => {
+      const { userIds, status } = action.payload;
+      userIds.forEach((id) => {
+        state.draftRecords[id] = status;
       });
     },
-    // 📌 Reset State
-    resetAttendance: (state) => {
-      state.records = {};
+    resetDraftAttendance: (state) => {
+      state.draftRecords = {};
+    },
+    clearAttendanceFeedback: (state) => {
+      state.error = null;
+      state.successMessage = null;
+    },
+    markAttendance: (state, action) => {
+      state.successMessage = action.payload?.message || "Attendance action queued";
     },
   },
   extraReducers: (builder) => {
-    // ===== Students =====
     builder
-      .addCase(fetchStudents.pending, (state) => {
+      .addCase(markBulkAttendance.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(fetchStudents.fulfilled, (state, action) => {
+      .addCase(markBulkAttendance.fulfilled, (state) => {
         state.loading = false;
-        state.students = action.payload || [];
+        state.successMessage = "Attendance saved successfully";
       })
-      .addCase(fetchStudents.rejected, (state, action) => {
+      .addCase(markBulkAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
-
-    // ===== Teachers =====
-    builder
-      .addCase(fetchTeachers.pending, (state) => {
+      })
+      .addCase(fetchAttendance.pending, (state) => {
         state.loading = true;
       })
-      .addCase(fetchTeachers.fulfilled, (state, action) => {
+      .addCase(fetchAttendance.fulfilled, (state, action) => {
         state.loading = false;
-        state.teachers = action.payload || [];
+        state.list = action.payload?.items || [];
+        state.pagination = action.payload?.pagination || state.pagination;
       })
-      .addCase(fetchTeachers.rejected, (state, action) => {
+      .addCase(fetchAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
-
-    // ===== Submit =====
-    builder
-      .addCase(submitAttendance.pending, (state) => {
+      })
+      .addCase(fetchMonthlyReport.pending, (state) => {
+        state.reportLoading = true;
+      })
+      .addCase(fetchMonthlyReport.fulfilled, (state, action) => {
+        state.reportLoading = false;
+        state.monthlyReport = action.payload;
+      })
+      .addCase(fetchMonthlyReport.rejected, (state, action) => {
+        state.reportLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchMonthlyAttendance.fulfilled, (state, action) => {
+        state.monthlyAttendance = (action.payload || []).map((item) => ({
+          student: { name: item.name },
+          present: item.presentDays || item.statusBreakdown?.present || 0,
+          absent: item.statusBreakdown?.absent || 0,
+        }));
+      })
+      .addCase(fetchMyAttendance.pending, (state) => {
         state.loading = true;
       })
-      .addCase(submitAttendance.fulfilled, (state) => {
+      .addCase(fetchMyAttendance.fulfilled, (state, action) => {
         state.loading = false;
+        state.myAttendance = action.payload;
       })
-      .addCase(submitAttendance.rejected, (state, action) => {
+      .addCase(fetchMyAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
-
-    // ===== Reports =====
-    builder
-      .addCase(fetchReports.pending, (state) => {
-        state.loading = true;
       })
-      .addCase(fetchReports.fulfilled, (state, action) => {
-        state.loading = false;
-        state.reports = action.payload || [];
+      .addCase(updateAttendanceRecord.fulfilled, (state, action) => {
+        state.list = state.list.map((item) => (item._id === action.payload._id ? action.payload : item));
       })
-      .addCase(fetchReports.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
+      .addCase(deleteAttendanceRecord.fulfilled, (state, action) => {
+        state.list = state.list.filter((item) => item._id !== action.payload);
       });
   },
 });
 
-// ================== Exports ==================
-export const { setFilter, markAttendance, bulkMark, resetAttendance } =
-  attendanceSlice.actions;
+export const {
+  setAttendanceFilters,
+  resetAttendanceFilters,
+  setDraftAttendanceStatus,
+  setBulkDraftStatus,
+  resetDraftAttendance,
+  clearAttendanceFeedback,
+  markAttendance,
+} = attendanceSlice.actions;
 
 export default attendanceSlice.reducer;

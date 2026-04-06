@@ -30,7 +30,7 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 
 // ✅ Public Routes
 
-router.post("/login", validateBody(["email", "password"]), loginUser);
+router.post("/login", loginUser);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
@@ -46,7 +46,7 @@ router.post(
   upload.fields([{ name: "avatar", maxCount: 1 }]),
   registerUser
 );
-router.get("/profile", auth, roleMiddleware(ALL_USERS), getCurrentUser);
+
 router.get("/me", auth, roleMiddleware(ALL_USERS), getCurrentUser);
 router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions);
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);

@@ -1,6 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
+const normalizeSubjectId = (subjectId) => {
+  if (!subjectId) return "";
+  if (typeof subjectId === "string") return subjectId;
+  return subjectId?._id || subjectId?.id || "";
+};
 
 // ==========================================================
 // ✅ Create Subject
@@ -30,14 +35,13 @@ export const getAllSubjects = createAsyncThunk(
         page = 1,
         limit = 100,
         search = "",
-        isGlobal,
-        schoolId,
+        isGlobal
       } = params;
 
       const res = await apiClient.get(`/subject/all`, {
-        params: { page, limit, search, isGlobal, schoolId },
+        params: { page, limit, search, isGlobal },
       });
-      console.log("Fetched Subjects:", res.data);
+      
       return res.data; // ✅ return full response
     } catch (error) {
       return rejectWithValue(
@@ -54,7 +58,16 @@ export const updateSubject = createAsyncThunk(
   "subject/updateSubject",
   async ({ subjectId, subjectData }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`/subject/${subjectId}/assign-teachers`, subjectData, {      });
+     const validSubjectId = normalizeSubjectId(subjectId);
+      if (!validSubjectId) {
+        return rejectWithValue("Invalid subject ID");
+      }
+
+      const res = await apiClient.put(
+        `/subject/${validSubjectId}/assign-teachers`,
+        subjectData,
+        {}
+      );
       return res.data?.data;
     } catch (error) {
       return rejectWithValue(
@@ -71,8 +84,12 @@ export const assignSchoolsToSubject = createAsyncThunk(
   "subject/assignSchoolsToSubject",
   async ({ subjectId, schoolIds }, { rejectWithValue }) => {
     try {
+        const validSubjectId = normalizeSubjectId(subjectId);
+      if (!validSubjectId) {
+        return rejectWithValue("Invalid subject ID");
+      }
       const res = await apiClient.put(
-        `/subject/assign/${subjectId}`,
+        `/subject/assign-schools/${validSubjectId}`,
         { schoolIds },
         {}
       );
@@ -92,7 +109,12 @@ export const deleteSubject = createAsyncThunk(
   "subject/deleteSubject",
   async (subjectId, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`/subject/${subjectId}`, {      });
+       const validSubjectId = normalizeSubjectId(subjectId);
+      if (!validSubjectId) {
+        return rejectWithValue("Invalid subject ID");
+      }
+
+      const res = await apiClient.delete(`/subject/${validSubjectId}`, {});
       return res.data;
     } catch (error) {
       return rejectWithValue(
@@ -110,7 +132,6 @@ const initialState = {
   error: null,
   subjects: [], // ✅ unified key for subject data
   pagination: { total: 0, page: 1, totalPages: 1 },
-  
   success: false,
   successMessage: null,
 };
@@ -157,9 +178,9 @@ const subjectSlice = createSlice({
     .addCase(getAllSubjects.fulfilled, (state, action) => {
           state.loading = false;
 
-          const payload = action.payload?.data || {};
+          const payload = action.payload || {};
 
-          state.subjects = payload.subjects || [];
+          state.subjects = payload?.data || [];
 
           state.pagination = {
             total: payload.total || 0,

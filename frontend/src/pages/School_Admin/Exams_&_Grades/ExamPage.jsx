@@ -16,7 +16,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getExams, deleteExam } from "../../../features/examSlice.js";
+import { getExams, deleteExam, publishResults } from "../../../features/examSlice.js";
 import { useDispatch, useSelector } from "react-redux";
 import memoryStorage from "../../../utils/memoryStorage";
 
@@ -58,7 +58,25 @@ const ExamsPage = () => {
 
  
 
-  /* ✅ Safe Date Formatter */
+
+
+  const handlePublishResult = async (record, publish = true) => {
+    try {
+      await dispatch(
+        publishResults({
+          examId: record._id,
+          schoolClassId: record.schoolClassId?._id || record.schoolClassId,
+          sectionId: record.sectionId?._id || record.sectionId,
+          publish,
+        })
+      ).unwrap();
+      message.success(publish ? "Results published" : "Results unpublished");
+    } catch (error) {
+      message.error(error || "Failed to update result status");
+    }
+  };
+
+    /* ✅ Safe Date Formatter */
   const formatDate = (date) => {
     if (!date) return "-";
     return new Date(date).toLocaleString();
@@ -125,6 +143,9 @@ const ExamsPage = () => {
           <Popconfirm title="Delete Exam?" onConfirm={() => handleDelete(record._id)}>
             <Button danger icon={<DeleteOutlined />} />
           </Popconfirm>
+
+          <Button onClick={() => handlePublishResult(record, true)}>Publish Result</Button>
+          <Button onClick={() => handlePublishResult(record, false)}>Unpublish</Button>
         </Space>
       ),
     },

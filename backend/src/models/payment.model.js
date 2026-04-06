@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema(
   {
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true,
+    },
+
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",

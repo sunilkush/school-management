@@ -93,7 +93,7 @@ const Documentation = lazy(() => import("./pages/Super_Admin/Support/Documentati
 const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
 //const AddStudent = lazy(() => import("./pages/School_Admin/User_Management/AddStudent.jsx"));
 //const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
-const ParentList = lazy(() => import("./pages/School_Admin/User_Management/parentsList.jsx"));
+const ParentList = lazy(() => import("./pages/School_Admin/User_Management/ParentsList.jsx"));
 const StudentList = lazy(() => import("./pages/School_Admin/User_Management/StudentList.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
@@ -174,6 +174,13 @@ const RoleDynamicPortal = lazy(() => import("./pages/RoleDynamicPortal.jsx"));
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
 const EmployeeForm = lazy(() => import("./components/forms/EmployeeForm.jsx"));
+
+const AttendanceDashboardPage = lazy(() => import("./pages/Attendance/AttendanceDashboard.jsx"));
+const MarkAttendancePage = lazy(() => import("./pages/Attendance/MarkAttendancePage.jsx"));
+const AttendanceTablePage = lazy(() => import("./pages/Attendance/AttendanceTablePage.jsx"));
+const MonthlyReportPage = lazy(() => import("./pages/Attendance/MonthlyReportPage.jsx"));
+const MyAttendancePage = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
+const ChildAttendancePage = lazy(() => import("./pages/Attendance/ChildAttendancePage.jsx"));
 
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
@@ -297,7 +304,9 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports/school-wise", element: <SchoolWiseReports /> },
-              { path: "reports/attendance", element: <AttendanceSummary /> },
+              { path: "reports/attendance", element: <AttendanceDashboardPage /> },
+              { path: "attendance/table", element: <AttendanceTablePage /> },
+              { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "reports/finance", element: <FinanceSummary /> },
               { path: "reports/academic", element: <AcademicReports /> },
               { path: "reports/activity", element: <ActivityLogs /> },
@@ -340,8 +349,11 @@ const router = createBrowserRouter([
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
-              { path: "attendance/students", element: <AllStudentsAttendance /> },
+              { path: "attendance/students", element: <MarkAttendancePage /> },
               { path: "attendance/staff", element: <StaffAttendance /> },
+              { path: "attendance/table", element: <AttendanceTablePage /> },
+              { path: "attendance/dashboard", element: <AttendanceDashboardPage /> },
+              { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
               { path: "library/card", element: <LibraryCard /> },
@@ -395,7 +407,8 @@ const router = createBrowserRouter([
               { path: "classes", element: <AssignedClasses /> },
               { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
-              { path: "attendance", element: <StudentAttendance /> },
+              { path: "attendance", element: <MarkAttendancePage /> },
+              { path: "attendance/my", element: <MyAttendancePage /> },
              // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
@@ -425,7 +438,7 @@ const router = createBrowserRouter([
               { index: true, element: <StudentDashboard /> },
               { path: "profile", element: <Profile /> },
               { path: "homework", element: <StudentHomework /> },
-              { path: "attendance", element: <AllStudentsAttendance /> },
+              { path: "attendance", element: <MyAttendancePage /> },
               { path: "grades", element: <EnterGrades /> },
               { path: "timetable", element: <ClassTimetable /> },
               { path: "library", element: <Books /> },
@@ -453,7 +466,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <ParentDashboard /> },
               { path: "children", element: <MyChildren /> },
-              { path: "attendance", element: <ChildAttendance /> },
+              { path: "attendance", element: <ChildAttendancePage /> },
               { path: "grades", element: <ChildGrades /> },
               { path: "homework", element: <ChildHomework /> },
               { path: "fees", element: <FeeStudent /> },
@@ -610,7 +623,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <StaffDashboard /> },
               { path: "tasks", element: <Schedule /> },
-              { path: "attendance", element: <AllStudentsAttendance /> },
+              { path: "attendance", element: <MyAttendancePage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },

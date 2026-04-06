@@ -7,76 +7,32 @@ import {
   deleteChapter,
   getVisibleChapters,
 } from "../controllers/chapter.controllers.js";
-
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
 
 const router = express.Router();
 
-// ✅ Roles
 const ADMIN_ROLES = ["Super Admin", "School Admin"];
+const READ_ROLES = ["Super Admin", "School Admin", "Teacher"];
 
-/* =====================================================
-   🌍 CHAPTER CORE ROUTES
-===================================================== */
-
-// ✅ Create Chapter (Super Admin + School Admin)
 router.post(
   "/",
   auth,
   roleMiddleware(ADMIN_ROLES),
+  validate({
+    body: {
+      name: { required: true, type: "string" },
+      schoolClassId: { required: true, type: "objectId" },
+      subjectId: { required: true, type: "objectId" },
+    },
+  }),
   createChapter
 );
 
-// ⭐ Visible Chapters (MOST IMPORTANT — RBAC)
-router.get(
-  "/visible",
-  auth,
-  roleMiddleware(ADMIN_ROLES),
-  getVisibleChapters
-);
+router.get("/visible", auth, roleMiddleware(READ_ROLES), getVisibleChapters);
+router.get("/", auth, roleMiddleware(READ_ROLES), getAllChapters);
+router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getChapterById);
+router.patch("/:id", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), updateChapter);
+router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), deleteChapter);
 
-// ✅ Get All Chapters (Super Admin only)
-router.get(
-  "/",
-  auth,
-  roleMiddleware(["Super Admin"]),
-  getAllChapters
-);
-
-// ✅ Get Single Chapter
-router.get(
-  "/:id",
-  auth,
-  roleMiddleware(ADMIN_ROLES),
-  getChapterById
-);
-
-// ✅ Update Chapter
-router.patch(
-  "/:id",
-  auth,
-  roleMiddleware(ADMIN_ROLES),
-  updateChapter
-);
-
-// ✅ Soft Delete Chapter
-router.delete(
-  "/:id",
-  auth,
-  roleMiddleware(ADMIN_ROLES),
-  deleteChapter
-);
-
-/* =====================================================
-   🏫 CHAPTER → SCHOOL ASSIGN
-===================================================== */
-
-// ⭐ Assign Global Chapter to School (Super Admin only)
-/* router.post(
-  "/assign-school",
-  auth,
-  roleMiddleware(["Super Admin"]),
-  assignChapterToSchool
-);
- */
 export default router;

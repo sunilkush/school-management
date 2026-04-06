@@ -1,40 +1,26 @@
 import { Router } from "express";
 import {
   createClass,
-   updateClass,
-   deleteClass,
-   getAllClasses,
-   getClassById,
-  
+  updateClass,
+  deleteClass,
+  getAllClasses,
+  getClassById,
 } from "../controllers/class.controllers.js";
-
-import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { requireRoles } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Role groups
 const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
 
-// ➕ Create Class
-router.post("/create", auth, roleMiddleware(ADMIN_ONLY), createClass);
+router.post("/", requireRoles(ADMIN_ONLY), createClass);
+router.get("/", requireRoles(ADMIN_TEACHER), getAllClasses);
+router.get("/:schoolClassId", requireRoles(ADMIN_TEACHER), getClassById);
+router.put("/:schoolClassId", requireRoles(ADMIN_ONLY), updateClass);
+router.delete("/:schoolClassId", requireRoles(ADMIN_ONLY), deleteClass);
 
-// 📋 Get All Classes
-router.get("/all", auth, roleMiddleware(ADMIN_TEACHER), getAllClasses);
-
-// ✅ Assign Teacher (STATIC ROUTE FIRST)
-//router.get("/assign-teacher", auth, roleMiddleware(ADMIN_TEACHER), classAssignTeacher);
-
-// ✅ Assign Subjects (STATIC ROUTE FIRST)
-//router.post("/assign-subjects", auth, roleMiddleware(ADMIN_ONLY), assignSubjectsToClass);
-
-// 🔍 Get Class by ID (DYNAMIC ROUTE LAST)
-router.get("/:schoolClassId", auth, roleMiddleware(ADMIN_TEACHER), getClassById);
-
-// ✏️ Update Class
-router.put("/:schoolClassId", auth, roleMiddleware(ADMIN_ONLY), updateClass);
-
-// 🗑️ Delete Class
-router.delete("/:schoolClassId", auth, roleMiddleware(ADMIN_ONLY), deleteClass);
+// backward compatibility
+router.post("/create", requireRoles(ADMIN_ONLY), createClass);
+router.get("/all", requireRoles(ADMIN_TEACHER), getAllClasses);
 
 export default router;

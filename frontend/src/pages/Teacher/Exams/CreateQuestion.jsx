@@ -17,7 +17,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 
-import { fetchAllSubjects } from "../../../features/subjectSlice";
+import { getAllSubjects } from "../../../features/subjectSlice";
 import { fetchAllClasses } from "../../../features/classSlice";
 import { createQuestions } from "../../../features/questionSlice";
 import memoryStorage from "../../../utils/memoryStorage";
@@ -49,7 +49,7 @@ const CreateQuestion = () => {
   .sort((a, b) => a.name.localeCompare(b.name))
 
   useEffect(() => {
-    dispatch(fetchAllSubjects({schoolId}));
+    dispatch(getAllSubjects({schoolId}));
     dispatch(fetchAllClasses({schoolId}));
   }, [dispatch, schoolId]);
 

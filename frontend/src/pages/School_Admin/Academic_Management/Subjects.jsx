@@ -45,6 +45,7 @@ const Subjects = () => {
   const { subjects = [], loading = false } = useSelector(
     (state) => state.subject || {}
   );
+  console.log("Subjects data:", subjects); // Debugging log
   const page = "";
   const limit = "";
   const schoolId = user?.school?._id;

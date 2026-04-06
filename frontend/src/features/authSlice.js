@@ -95,7 +95,7 @@ export const currentUser = createAsyncThunk(
   "auth/profile",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/user/profile");
+      const res = await apiClient.get("/user/me");
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message || "Something went wrong");
