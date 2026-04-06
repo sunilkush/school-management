@@ -17,7 +17,7 @@ import {
             resendVerificationEmail,
             getMyPermissions
 } from "../controllers/user.controllers.js";
-import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { allowPublic,auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
 import { validateBody } from "../middlewares/validate.middleware.js";
 const router = Router();
@@ -30,12 +30,12 @@ const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"
 
 // ✅ Public Routes
 
-router.post("/login", loginUser);
-router.post("/refresh-token", refreshAccessToken);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
-router.get("/verify-email/:token", verifyEmail);
-router.post("/resend-verification", resendVerificationEmail);
+router.post("/login",allowPublic,validateBody(['email', 'password']), loginUser);
+router.post("/refresh-token", allowPublic, refreshAccessToken);
+router.post("/forgot-password", allowPublic, forgotPassword);
+router.post("/reset-password/:token", allowPublic, resetPassword);
+router.get("/verify-email/:token", allowPublic, verifyEmail);
+router.post("/resend-verification", allowPublic, resendVerificationEmail);
 
 // ✅ Protected Routes
 

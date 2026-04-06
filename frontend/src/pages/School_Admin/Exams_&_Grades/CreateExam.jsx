@@ -18,7 +18,7 @@ import {
 } from "antd";
 
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllClasses } from "../../../features/classSlice.js";
+import { getClassData} from "../../../features/schoolClassSlice.js";
 import {
   createExam,
   updateExam,
@@ -26,7 +26,7 @@ import {
 } from "../../../features/examSlice.js";
 
 import { useNavigate, useParams } from "react-router-dom";
-import memoryStorage from "../../../utils/memoryStorage";
+
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -41,35 +41,26 @@ const CreateExam = () => {
 
   // ✅ HARD SAFE EDIT MODE
   const isEditMode = id && id !== "undefined" && id !== "null";
-  console.log("Is Edit Mode:", isEditMode);
+  
   /* ================= LOCAL STATE ================= */
   const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
   const [examData, setExamData] = useState(null); // ⭐ important
-
+  const {user=[],loading} = useSelector((state) => state.auth || {});
+  const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
   /* ================= REDUX ================= */
-  const { classList = [], loading } = useSelector(
-    (state) => state.class || {}
-  );
-
-  /* ================= USER ================= */
-  const storedUser = memoryStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const userId = user?._id;
-
-  const selectedAcademicYear = JSON.parse(
-    memoryStorage.getItem("selectedAcademicYear") || "{}"
-  );
+  const { schoolClasses } = useSelector((state) => state.schoolClass || {});
+  
 
   const academicYearId = selectedAcademicYear?._id;
-  const schoolId = selectedAcademicYear?.schoolId;
-
+  const schoolId = user?.school?._id;
+  const userId = user?._id;
   /* ================= FETCH CLASSES ================= */
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchAllClasses({ schoolId }));
+      dispatch(getClassData({ schoolId,academicYearId }));
     }
-  }, [schoolId, dispatch]);
+  }, [schoolId, dispatch,academicYearId]);
 
   /* ================= LOAD EXAM ================= */
   useEffect(() => {
@@ -97,7 +88,7 @@ const CreateExam = () => {
   /* ================= AFTER CLASSES + EXAM READY ================= */
   useEffect(() => {
     if (!examData) return;
-    if (!classList.length) return;
+    if (!schoolClasses.length) return;
 
     const schoolClassIdValue = examData.schoolClassId?._id || examData.schoolClassId;
 
@@ -116,27 +107,42 @@ const CreateExam = () => {
       passingMarks: examData.passingMarks,
       status: examData.status,
     });
-  }, [examData, classList]);
+  }, [examData, schoolClasses]);
 
   /* ================= CLASS CHANGE ================= */
-  const handleClassChange = (schoolClassId, subjectIdFromEdit = null) => {
-    setSelectedClass(schoolClassId);
+ const handleClassChange = (schoolClassId, subjectIdFromEdit = null) => {
+  setSelectedClass(schoolClassId);
 
-    const selected = classList.find((c) => c._id === schoolClassId);
+  const selected = schoolClasses.find((c) => c._id === schoolClassId);
 
-    const subjects =
-      selected?.subjects?.map((s) => ({
-        _id: s.subjectId?._id,
-        name: s.subjectId?.name,
-      })) || [];
+  // ✅ sections ke andar se subjects nikaalo
+  let subjects = [];
 
-    setSubjectList(subjects);
+  if (selected?.sections?.length) {
+    selected.sections.forEach((section) => {
+      if (section.subjects?.length) {
+        section.subjects.forEach((sub) => {
+          subjects.push({
+            _id: sub._id,
+            name: sub.name,
+          });
+        });
+      }
+    });
+  }
 
-    // ✅ only reset when NOT edit
-    if (!subjectIdFromEdit) {
-      form.setFieldsValue({ subjectId: undefined });
-    }
-  };
+  // ✅ duplicate remove (important)
+  const uniqueSubjects = Array.from(
+    new Map(subjects.map((item) => [item._id, item])).values()
+  );
+
+  setSubjectList(uniqueSubjects);
+
+  // edit mode me reset na ho
+  if (!subjectIdFromEdit) {
+    form.setFieldsValue({ subjectId: undefined });
+  }
+};
 
   /* ================= AUTO DURATION ================= */
   const calculateDuration = () => {
@@ -233,7 +239,7 @@ const CreateExam = () => {
                 rules={[{ required: true, message: "Select class" }]}
               >
                 <Select onChange={handleClassChange}>
-                  {classList.map((cls) => (
+                  {schoolClasses.map((cls) => (
                     <Option key={cls._id} value={cls._id}>
                       {cls.name}
                     </Option>

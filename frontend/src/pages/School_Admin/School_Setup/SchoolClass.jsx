@@ -53,9 +53,9 @@ const SchoolClass = ({ next }) => {
   useEffect(() => {
     if (schoolId) {
       dispatch(getSchoolBoards(schoolId));
-      dispatch(fetchSchoolClasses({ schoolId }));
+      dispatch(fetchSchoolClasses({ schoolId,academicYearId }));
     }
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId,academicYearId]);
 
   useEffect(() => {
     if (selectedBoard) dispatch(getBoardClass({ boardId: selectedBoard }));
@@ -67,9 +67,15 @@ const SchoolClass = ({ next }) => {
     }
   }, [schoolBoards, selectedBoard]);
 
-  const isAssigned  = (id) => schoolClasses.some((c) => c.boardClassId?._id === id);
-  const getClass    = (id) => schoolClasses.find((c) => c.boardClassId?._id === id);
-  const getSections = (id) => getClass(id)?.sections || [];
+  const isAssigned = (record) =>
+  schoolClasses.some((c) => c.name === record.classId?.name);
+
+const getClass = (record) =>
+  schoolClasses.find((c) => c.name === record.classId?.name);
+ const getSections = (record) => {
+  const cls = getClass(record);
+  return cls?.sections || [];
+};
 
   const handleToggle = async (record) => {
     if (isAssigned(record._id)) return message.warning("Already assigned");
@@ -209,8 +215,8 @@ const SchoolClass = ({ next }) => {
                 </tr>
               )
               : boardClass.map((record, i) => {
-                  const assigned = isAssigned(record._id);
-                  const sections = getSections(record._id);
+                 const assigned = isAssigned(record);
+                 const sections = getSections(record);
                   const isHov = hovered === i;
 
                   return (
@@ -257,22 +263,28 @@ const SchoolClass = ({ next }) => {
                           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             {/* Existing section tags */}
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 5, minHeight: 24 }}>
-                              {sections.length
-                                ? sections.map((sec) => (
-                                    <span
-                                      key={sec._id}
-                                      style={{
-                                        fontSize: 11, fontWeight: 600,
-                                        color: t.accent, background: t.accentBg,
-                                        border: `1px solid rgba(22,119,255,0.15)`,
-                                        padding: "2px 8px", borderRadius: 99,
-                                      }}
-                                    >
-                                      {sec.sectionId?.name}
-                                    </span>
-                                  ))
-                                : <Text style={{ fontSize: 11.5, color: t.textSec }}>No sections yet</Text>
-                              }
+                              {Array.isArray(sections) && sections.length > 0 ? (
+                                sections.map((sec) => (
+                                  <span
+                                    key={sec._id}
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 600,
+                                      color: t.accent,
+                                      background: t.accentBg,
+                                      border: `1px solid rgba(22,119,255,0.15)`,
+                                      padding: "2px 8px",
+                                      borderRadius: 99,
+                                    }}
+                                  >
+                                    {sec.name}
+                                  </span>
+                                ))
+                              ) : (
+                                <Text style={{ fontSize: 11.5, color: t.textSec }}>
+                                  No sections yet
+                                </Text>
+                              )}
                             </div>
 
                             {/* Add section input */}

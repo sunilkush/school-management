@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 import { clearAccessToken, getAccessToken, setAccessToken } from "../api/authToken";
 
-export const loginUser = createAsyncThunk("auth/login", async (data, { rejectWithValue }) => {
+export const loginUser = createAsyncThunk("user/login", async (data, { rejectWithValue }) => {
   try {
     const res = await apiClient.post("/user/login", data);
     const payload = res.data?.data || {};
@@ -14,7 +14,7 @@ export const loginUser = createAsyncThunk("auth/login", async (data, { rejectWit
 });
 
 export const initializeAuth = createAsyncThunk(
-  "auth/initialize",
+  "user/initialize",
   async (_, { getState, rejectWithValue }) => {
     const existingToken = getState().auth?.accessToken || getAccessToken();
 
@@ -35,7 +35,7 @@ export const initializeAuth = createAsyncThunk(
   }
 );
 
-export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
+export const logoutUser = createAsyncThunk("user/logout", async (_, { rejectWithValue }) => {
   try {
     await apiClient.post("/user/logout", {});
     clearAccessToken();
@@ -46,7 +46,7 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWith
   }
 });
 
-export const forgotPassword = createAsyncThunk("auth/forgotPassword", async (email, { rejectWithValue }) => {
+export const forgotPassword = createAsyncThunk("user/forgotPassword", async (email, { rejectWithValue }) => {
   try {
     const res = await apiClient.post("/user/forgot-password", { email });
     return res.data.message;
@@ -55,7 +55,7 @@ export const forgotPassword = createAsyncThunk("auth/forgotPassword", async (ema
   }
 });
 
-export const resetPassword = createAsyncThunk("auth/resetPassword", async ({ token, password }, { rejectWithValue }) => {
+export const resetPassword = createAsyncThunk("user/resetPassword", async ({ token, password }, { rejectWithValue }) => {
   try {
     const res = await apiClient.post(`/user/reset-password/${token}`, { password });
     return res.data.message;
@@ -64,7 +64,7 @@ export const resetPassword = createAsyncThunk("auth/resetPassword", async ({ tok
   }
 });
 
-export const verifyEmail = createAsyncThunk("auth/verifyEmail", async (token, { rejectWithValue }) => {
+export const verifyEmail = createAsyncThunk("user/verifyEmail", async (token, { rejectWithValue }) => {
   try {
     const res = await apiClient.get(`/user/verify-email/${token}`);
     return res.data.message;
@@ -73,7 +73,7 @@ export const verifyEmail = createAsyncThunk("auth/verifyEmail", async (token, { 
   }
 });
 
-export const resendVerification = createAsyncThunk("auth/resendVerification", async (email, { rejectWithValue }) => {
+export const resendVerification = createAsyncThunk("user/resendVerification", async (email, { rejectWithValue }) => {
   try {
     const res = await apiClient.post("/user/resend-verification", { email });
     return res.data.message;
@@ -82,7 +82,7 @@ export const resendVerification = createAsyncThunk("auth/resendVerification", as
   }
 });
 
-export const registerUser = createAsyncThunk("auth/register", async (data, { rejectWithValue }) => {
+export const registerUser = createAsyncThunk("user/register", async (data, { rejectWithValue }) => {
   try {
     const res = await apiClient.post("/user/register", data);
     return res.data;
@@ -92,7 +92,7 @@ export const registerUser = createAsyncThunk("auth/register", async (data, { rej
 });
 
 export const currentUser = createAsyncThunk(
-  "auth/profile",
+  "user/profile",
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/user/me");
@@ -109,7 +109,7 @@ export const currentUser = createAsyncThunk(
   }
 );
 
-export const updateUser = createAsyncThunk("auth/updateUser", async (data, { rejectWithValue }) => {
+export const updateUser = createAsyncThunk("user/updateUser", async (data, { rejectWithValue }) => {
   try {
     const res = await apiClient.put("/user/update", data);
     return res.data.data;
@@ -118,7 +118,7 @@ export const updateUser = createAsyncThunk("auth/updateUser", async (data, { rej
   }
 });
 
-export const changePassword = createAsyncThunk("auth/changePassword", async (data, { rejectWithValue }) => {
+export const changePassword = createAsyncThunk("user/changePassword", async (data, { rejectWithValue }) => {
   try {
     const res = await apiClient.put("/user/change-password", data);
     return res.data.message;
@@ -127,7 +127,7 @@ export const changePassword = createAsyncThunk("auth/changePassword", async (dat
   }
 });
 
-export const getMyPermissions = createAsyncThunk("auth/permissions", async (_, { rejectWithValue }) => {
+export const getMyPermissions = createAsyncThunk("user/permissions", async (_, { rejectWithValue }) => {
   try {
     const res = await apiClient.get("/user/my-permissions");
     return res.data.data;
@@ -136,7 +136,7 @@ export const getMyPermissions = createAsyncThunk("auth/permissions", async (_, {
   }
 });
 
-export const fetchAllUser = createAsyncThunk("auth/allUsers", async (params = {}, { rejectWithValue }) => {
+export const fetchAllUser = createAsyncThunk("user/allUsers", async (params = {}, { rejectWithValue }) => {
   try {
     const res = await apiClient.get("/user/all", { params });
     return res.data.data;
@@ -145,7 +145,7 @@ export const fetchAllUser = createAsyncThunk("auth/allUsers", async (params = {}
   }
 });
 
-export const deleteUser = createAsyncThunk("auth/deleteUser", async (id, { rejectWithValue }) => {
+export const deleteUser = createAsyncThunk("user/deleteUser", async (id, { rejectWithValue }) => {
   try {
     await apiClient.patch(`/user/delete/${id}`);
     return id;
@@ -154,7 +154,7 @@ export const deleteUser = createAsyncThunk("auth/deleteUser", async (id, { rejec
   }
 });
 
-export const activeUser = createAsyncThunk("auth/activeUser", async (id, { rejectWithValue }) => {
+export const activeUser = createAsyncThunk("user/activeUser", async (id, { rejectWithValue }) => {
   try {
     const res = await apiClient.patch(`/user/active/${id}`, {});
     return res.data.data;
@@ -163,7 +163,7 @@ export const activeUser = createAsyncThunk("auth/activeUser", async (id, { rejec
   }
 });
 
-export const getUserById = createAsyncThunk("auth/getUserById", async (id, { rejectWithValue }) => {
+export const getUserById = createAsyncThunk("user/getUserById", async (id, { rejectWithValue }) => {
   try {
     const res = await apiClient.get(`/user/single/${id}`);
     return res.data.data;

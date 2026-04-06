@@ -57,10 +57,23 @@ export const allowPublic = (req, _res, next) => {
   req.isPublicRoute = true;
   next();
 };
+   const PUBLIC_API_ROUTE_PATTERNS = [
+  /^\/user\/login$/,
+  /^\/user\/refresh-token$/,
+  /^\/user\/forgot-password$/,
+  /^\/user\/reset-password\/[^/]+$/,
+  /^\/user\/verify-email\/[^/]+$/,
+  /^\/user\/resend-verification$/,
+];
 
+const isPublicApiRoute = (req) => {
+  const normalizedPath = (req.path || "").replace(/\/+$/, "") || "/";
+  return PUBLIC_API_ROUTE_PATTERNS.some((pattern) => pattern.test(normalizedPath));
+};
 export const enforceApiAuthByDefault = (req, _res, next) => {
   if (req.method === "OPTIONS") return next();
   if (req.isPublicRoute) return next();
+  if (isPublicApiRoute(req)) return next();
   return auth(req, _res, next);
 };
 
