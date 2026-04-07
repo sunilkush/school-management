@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from "../api/httpClient";
 import qs from 'qs';
 
-const App_Base_Url = import.meta.env.VITE_API_URL;
+
 
 // Get all reports with filters
 export const fetchReports = createAsyncThunk(
@@ -77,7 +77,7 @@ export const fetchSchoolReports = createAsyncThunk(
         `/report/school/${schoolId}/academic-year/${academicYearId}`,
       );
        
-      return res.data;
+      return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: error.message });
     }

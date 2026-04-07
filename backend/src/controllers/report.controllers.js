@@ -6,7 +6,7 @@ import { Report } from "../models/Report.model.js";
 import APIFeatures from "../utils/apiFeatures.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
-
+import { AcademicYear } from "../models/AcademicYear.model.js";
 const ensureSchoolAccess = (req, schoolId) => {
   if (req.userRole?.name === "Super Admin") return;
   if (req.user.schoolId?.toString() !== schoolId.toString()) {
@@ -22,17 +22,19 @@ export const getSchoolOverviewReport = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(academicYearId)) throw new ApiError(400, "Invalid Academic Year ID");
 
     ensureSchoolAccess(req, schoolId);
-
+    
     const schoolObjId = new mongoose.Types.ObjectId(schoolId);
     const academicObjId = new mongoose.Types.ObjectId(academicYearId);
-
+    const academicYear = await AcademicYear.findById(academicObjId);
+    if (!academicYear) throw new ApiError(404, "Academic Year not found");
     const roleWise = await User.aggregate([
       { $match: { schoolId: schoolObjId } },
       { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleData" } },
       { $unwind: "$roleData" },
       { $group: { _id: "$roleData.name", count: { $sum: 1 } } },
     ]);
-
+    
+    
     const totalStudents = await StudentEnrollment.countDocuments({
       schoolId: schoolObjId,
       academicYearId: academicObjId,
@@ -61,12 +63,18 @@ export const getSchoolOverviewReport = async (req, res, next) => {
       { $match: { "enroll.schoolId": schoolObjId, "enroll.academicYearId": academicObjId } },
       { $group: { _id: "$gender", count: { $sum: 1 } } },
     ]);
+    const genderMap = { Male: "Male", Female: "Female", Other: "Other" };
+    const genderStatsFormatted = genderStats.map((g) => ({
+      ...g,
+      _id: genderMap[g._id] || g._id,
+    }));
+    
 
     return sendSuccess(res, {
       message: "School overview report fetched",
       data: {
         schoolId,
-        academicYearId,
+        academicYear: academicYear.name,
         summary: {
           adminCount: roleWise.find((x) => x._id === "School Admin")?.count || 0,
           teacherCount: roleWise.find((x) => x._id === "Teacher")?.count || 0,
@@ -76,7 +84,7 @@ export const getSchoolOverviewReport = async (req, res, next) => {
         roleWise,
         classWise,
         sectionWise,
-        genderStats,
+        genderStats: genderStatsFormatted,
       },
     });
   } catch (error) {
