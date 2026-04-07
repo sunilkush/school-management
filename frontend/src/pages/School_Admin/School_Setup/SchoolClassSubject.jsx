@@ -22,7 +22,7 @@ const tokens = (isDark) => ({
   thBg: isDark ? "#0f0f0f" : "#f9fafb",
 });
 
-const SchoolClassSubject = () => {
+const SchoolClassSubject = ({next}) => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
   const t = tokens(isDark);
@@ -282,6 +282,18 @@ const SchoolClassSubject = () => {
           },
         })}
       />
+       {next && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  type="primary"
+                  onClick={next}
+                  disabled={!(SchoolClassSubject?.length > 0)}
+                  style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
+                >
+                  Next: Teachers →
+                </Button>
+              </div>
+            )}
     </div>
   );
 };

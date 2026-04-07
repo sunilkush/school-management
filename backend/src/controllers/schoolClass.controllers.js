@@ -84,6 +84,13 @@ export const getAllSchoolClasses = async (req, res) => {
         .map((sec) => ({
           _id: sec._id,
           name: sec.name,
+          teacher: sec.classTeacherId
+            ? {
+                _id: sec.classTeacherId._id,
+                name: sec.classTeacherId.name,
+                email: sec.classTeacherId.email,
+              }
+            : null,
           subjects: sec.subjects.map((sub) => ({
             _id: sub.subjectId?._id,
             name: sub.subjectId?.name,

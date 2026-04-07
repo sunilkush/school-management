@@ -6,8 +6,10 @@ import {
   CalendarOutlined,
   PlusOutlined,
   CheckCircleFilled,
+  UserOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../../context/ThemeContext.jsx";
+import { User } from "lucide-react";
 
 const { Text } = Typography;
 
@@ -16,7 +18,7 @@ const SchoolClass        = lazy(() => import("./SchoolClass.jsx"));
 const SchoolBoard        = lazy(() => import("./SchoolBoard.jsx"));
 const SchoolAcadmicYear  = lazy(() => import("./SchoolAcadmicYear.jsx"));
 const SchoolClassSubject = lazy(() => import("./SchoolClassSubject.jsx"));
-
+const SchoolClassSectionTeacher = lazy(() => import("./SchoolClassSectionTeacher.jsx"));
 /* ─────────────────────────────────────────
    Design tokens
 ───────────────────────────────────────── */
@@ -68,12 +70,20 @@ const STEPS = [
     icon: PlusOutlined,
     color: "#0ea472",
   },
+  {
+    key: "5",
+    title: "Teachers",
+    desc: "Add teachers to classes",
+    icon: UserOutlined,
+    color: "#0ea472",
+  },
 ];
 
 /* ─────────────────────────────────────────
    Skeleton fallback
 ───────────────────────────────────────── */
 const StepSkeleton = ({ isDark }) => {
+  // eslint-disable-next-line no-unused-vars
   const t = tokens(isDark);
   return (
     <div style={{ padding: "8px 0", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -428,7 +438,10 @@ const SchoolSetup = () => {
               {activeKey === "1" && <SchoolAcadmicYear  next={() => advance("1")} />}
               {activeKey === "2" && <SchoolBoard         next={() => advance("2")} />}
               {activeKey === "3" && <SchoolClass         next={() => advance("3")} />}
-              {activeKey === "4" && <SchoolClassSubject />}
+              {activeKey === "4" && <SchoolClassSubject next={() => advance("4")} />}
+              {activeKey === "5" && (
+                <SchoolClassSectionTeacher next={() => advance("5")} />
+              )}
             </Suspense>
           </div>
         </div>

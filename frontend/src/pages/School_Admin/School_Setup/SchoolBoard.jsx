@@ -73,6 +73,7 @@ const SchoolBoard = ({ next }) => {
   const available   = boards.filter((b) => !assignedIds.has(b._id));
 
   return (
+    <>
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* ── Assign form ── */}
       <div style={{
@@ -270,6 +271,7 @@ const SchoolBoard = ({ next }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

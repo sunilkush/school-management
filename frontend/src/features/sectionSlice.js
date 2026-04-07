@@ -106,8 +106,7 @@ export const assignClassTeacher = createAsyncThunk(
     try {
       const res = await apiClient.post(
         `/sections/assign-teacher`,
-        data,
-        {        }
+        data
       );
       return res.data.data;
     } catch (err) {

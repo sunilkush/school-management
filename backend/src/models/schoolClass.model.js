@@ -29,11 +29,7 @@ const schoolClassSchema = new Schema(
         sectionId: {
           type: Schema.Types.ObjectId,
           ref: "Section",
-        },
-        teacherId: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-        },
+        }
       },
     ],
     status: {

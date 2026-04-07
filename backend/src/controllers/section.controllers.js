@@ -164,7 +164,7 @@ export const deleteSection = asyncHandler(async (req, res) => {
 // ==============================
 export const assignClassTeacher = asyncHandler(async (req, res) => {
   const { sectionId, teacherId } = req.body;
-
+  console.log("Assigning teacher", { sectionId, teacherId });
   const section = await Section.findByIdAndUpdate(
     sectionId,
     {
@@ -178,20 +178,24 @@ export const assignClassTeacher = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Section not found");
   }
 
+
   // ✅ ALSO update inside SchoolClass.sections
-  await SchoolClass.findOneAndUpdate(
+  const teacher =  await SchoolClass.updateOne(
     {
       "sections.sectionId": sectionId,
     },
     {
       $set: {
-        "sections.$.teacherId": teacherId,
+        "sections.$[elem].teacherId": teacherId,
       },
+    },
+    {
+      arrayFilters: [{ "elem.sectionId": sectionId }],
     }
   );
 
   return res.json(
-    new ApiResponse(200, section, "Class teacher assigned")
+    new ApiResponse(200, section,teacher, "Class teacher assigned")
   );
 });
 
