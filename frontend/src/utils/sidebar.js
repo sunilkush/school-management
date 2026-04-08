@@ -221,8 +221,9 @@ export const sidebarMenu = {
     { title: "Dashboard", path: "teacher", icon: LayoutDashboard },
     { title: "Assigned Classes", path: "teacher/classes", icon: Book },
     { title: "My Students", path: "teacher/students", icon: Users },
-    { title: "Assignments", path: "teacher/assignments", icon: ClipboardList },
     { title: "Attendance", path: "teacher/attendance", icon: UserCheck },
+    { title: "Assignments", path: "teacher/assignments", icon: ClipboardList },
+   
     {
       title: "Examinations",
       icon: GraduationCap,
@@ -233,8 +234,17 @@ export const sidebarMenu = {
        
       ],
     },
+    
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
     { title: "Reports", path: "teacher/reports", icon: FileBarChart2 },
+    {
+      title: "Profile",
+      icon: User,
+      subMenu: [
+        { title: "My Profile", path: "teacher/profile" },
+        { title: "My Attendance", path: "teacher/attendance/my" },
+        { title: "Change Password", path: "teacher/profile/change-password" }, ]
+    },
   ],
 
   /* ================= STUDENT ================= */

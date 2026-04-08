@@ -29,11 +29,9 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
-
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import { submitAttendance } from "../../../features/attendanceSlice";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
-
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -45,20 +43,14 @@ const MyStudents = () => {
   const { classAssignTeacher = [] } = useSelector((state) => state.class);
   const { schoolStudents = [], loading } = useSelector((state) => state.students);
   const { loading: attendanceLoading } = useSelector((state) => state.attendance);
-
   const schoolId = user?.school?._id || user?.schoolId;
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   
-    const { selectedAcademicYear } = useSelector(
-      (state) => state.academicYear || {}
-    );
-  
-    const academicYearId = selectedAcademicYear?._id;
+  const academicYearId = selectedAcademicYear?._id;
   const [selectedClassSectionKey, setSelectedClassSectionKey] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
   const [attendanceMap, setAttendanceMap] = useState({});
-
- 
 
   useEffect(() => {
     if (!schoolId || !academicYearId || !user?._id) return;

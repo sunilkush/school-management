@@ -137,17 +137,19 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
         role: [],
       };
     }
-
+     const isClassTeacher = sec.classTeacherId?.toString() === teacherId.toString();
     // section add
     classMap[classId].sections.push({
       sectionId: {
         _id: sec._id,
         name: sec.name,
       },
+       isClassTeacher,
+      studentCount: sec.StudentEnrollmentId?.length || 0,
     });
 
     // role detect
-    if (sec.classTeacherId?.toString() === teacherId.toString()) {
+    if (isClassTeacher) {
       classMap[classId].role.push("class_teacher");
     }
 

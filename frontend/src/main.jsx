@@ -152,7 +152,7 @@ const Assignments = lazy(() => import("./pages/Teacher/Assignments/Assignments.j
 const MyStudents = lazy(() => import("./pages/Teacher/My_Students/MyStudents.jsx"));
 const StudentAttendance = lazy(() => import("./pages/Teacher/Attendance/StudentAttendance.jsx"));
 const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDetailes.jsx"));
-
+const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
 const StudentHomework = lazy(() => import("./pages/Student/Homework/StudentHomework.jsx"));
@@ -409,7 +409,7 @@ const router = createBrowserRouter([
               { path: "classes/:classId", element: <ClassDetails /> },
               { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
-              { path: "attendance", element: <MarkAttendancePage /> },
+              { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
              // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/reports", element: <ExamReports /> },
