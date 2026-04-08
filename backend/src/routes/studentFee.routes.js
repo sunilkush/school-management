@@ -15,6 +15,7 @@ const router = Router();
 router.use(auth);
 const ADMIN_ONLY = ["School Admin"];
 const STUDENT_PARENT = ["Student", "Parent"];
+const FEE_PAY_ROLES = ["School Admin", "Student", "Parent"];
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS
    Role: School Admin
@@ -38,7 +39,7 @@ router.get("/my/:studentId", auth, getMyFees);
    Role: Student / Parent
    PUT /api/v1/student-fees/pay/:id
 ===================================================== */
-router.put("/pay/:id", auth, roleMiddleware(STUDENT_PARENT), payStudentFee);
+router.put("/pay/:id", auth, roleMiddleware(FEE_PAY_ROLES), payStudentFee);
 
 /* =====================================================
    ✅ FEES SUMMARY DASHBOARD

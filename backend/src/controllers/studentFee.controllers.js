@@ -6,8 +6,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 
 export const assignFeesToStudents = asyncHandler(async (req, res) => {
-  const { feeStructureId, studentId, studentIds, academicYearId, customAmount } = req.body;
-  const schoolId = req.user.schoolId;
+  const { feeStructureId, studentId, studentIds, academicYearId, customAmount,schoolId
+ } = req.body;
+ 
 
   if (!feeStructureId || !academicYearId) {
     throw new ApiError(400, "feeStructureId and academicYearId are required");
@@ -18,9 +19,10 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
   else if (studentId) students = [studentId];
   if (!students.length) throw new ApiError(400, "studentId or studentIds required");
 
-  const feeStructure = await FeeStructure.findOne({ _id: feeStructureId, schoolId });
+  const feeStructure = await FeeStructure.findOne({feeStructureId, schoolId });
+  console.log("feeStructure", feeStructure);
   if (!feeStructure) throw new ApiError(404, "Fee structure not found for this school");
-
+   
   const totalAmount = customAmount ?? feeStructure.amount;
 
   const records = students.map((sid) => ({

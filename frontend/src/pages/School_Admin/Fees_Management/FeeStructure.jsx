@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -9,11 +9,12 @@ import {
   Form,
   InputNumber,
   message,
+  Space,
 } from "antd";
 import { Plus } from "lucide-react";
 
-import { fetchAllClasses } from "../../../features/classSlice.js";
-import { fetchActiveAcademicYear } from "../../../features/academicYearSlice.js";
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
+
 import { fetchFeeHeads } from "../../../features/headSlice.js";
 import { currentUser } from "../../../features/authSlice.js";
 import {
@@ -27,75 +28,117 @@ const FeeStructure = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-   const { classList = [] } = useSelector((state) => state.class || {});
-  const { academicYears } = useSelector((s) => s.academicYear);
- const { feeHeads = []} = useSelector((s) => s.feeHead);
-  const { feeStructures, loading } = useSelector(
-    (s) => s.feeStructure
-  ); 
-   const {user} = useSelector((s) => s.auth);
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
+  
+  const { feeHeads = [] } = useSelector((s) => s.feeHead);
+  const { feeStructures, loading } = useSelector((s) => s.feeStructure);
+  const { user } = useSelector((s) => s.auth);
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear);
+  const academicYearId = selectedAcademicYear?._id;
+  const schoolId = user?.school?._id;
   const [open, setOpen] = useState(false);
-  const schoolId = user?.school?._id ;
-  /* ================= LOAD DATA ================= */
-  useEffect(() => {
-    dispatch(fetchAllClasses());
-    dispatch(fetchActiveAcademicYear(schoolId));
-    dispatch(fetchFeeHeads({ schoolId }));
-    dispatch(fetchFeeStructures());
-    dispatch(currentUser());
-  }, [dispatch,schoolId]);
+  const [filters, setFilters] = useState({
+    schoolClassId: undefined,
+    academicYearId: undefined,
+  });
 
-  /* ================= SUBMIT ================= */
+  const feeStructureQuery = useMemo(
+    () => ({
+      schoolId,
+      ...(filters.schoolClassId ? { schoolClassId: filters.schoolClassId } : {}),
+      ...(filters.academicYearId ? { academicYearId: filters.academicYearId } : {}),
+    }),
+    [schoolId, filters.schoolClassId, filters.academicYearId]
+  );
+
+  useEffect(() => {
+    dispatch(currentUser());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!schoolId) return;
+
+    dispatch(fetchSchoolClasses({ schoolId }));
+   
+    dispatch(fetchFeeHeads({ schoolId }));
+  }, [dispatch, schoolId]);
+
+  useEffect(() => {
+    if (!schoolId) return;
+    dispatch(fetchFeeStructures(feeStructureQuery));
+  }, [dispatch, schoolId, feeStructureQuery]);
+
   const handleSubmit = async (values) => {
     try {
-      await dispatch(createFeeStructure({ ...values, schoolId })).unwrap();
+      await dispatch(createFeeStructure({ ...values, schoolId, academicYearId})).unwrap();
 
       message.success("Fee Structure Created");
       setOpen(false);
       form.resetFields();
 
-      dispatch(fetchFeeStructures());
+      dispatch(fetchFeeStructures(feeStructureQuery));
     } catch (err) {
       message.error(err || "Duplicate fee structure already exists");
     }
   };
 
-  /* ================= TABLE ================= */
   const columns = [
     {
       title: "Class",
-      render: (r) => r.schoolClassId?.name,
+      render: (r) => r.schoolClassId?.name || "-",
     },
     {
       title: "Academic Year",
-      render: (r) => r.academicYearId?.name,
+      render: (r) => r.academicYearId?.name || "-",
     },
     {
       title: "Fee Head",
-      render: (r) => r.feeHeadId?.name,
+      render: (r) => r.feeHeadId?.name || "-",
     },
     {
       title: "Amount",
       dataIndex: "amount",
+      render: (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`,
     },
     {
       title: "Frequency",
       dataIndex: "frequency",
-      render: (v) => v.toUpperCase(),
+      render: (v) => (v ? v.toUpperCase() : "-"),
     },
   ];
 
-  /* ================= UI ================= */
   return (
     <div className="p-6 bg-gray-50 space-y-5">
       <Card>
-        <Button
-          type="primary"
-          icon={<Plus size={18} />}
-          onClick={() => setOpen(true)}
-        >
-          Add Fee Structure
-        </Button>
+        <Space wrap className="w-full justify-between">
+          <Space wrap>
+            <Select
+              allowClear
+              style={{ minWidth: 220 }}
+              placeholder="Filter by class"
+              value={filters.schoolClassId}
+              onChange={(value) =>
+                setFilters((prev) => ({ ...prev, schoolClassId: value }))
+              }
+            >
+              {schoolClasses?.map((c) => (
+                <Option key={c._id} value={c._id}>
+                  {c.name}
+                </Option>
+              ))}
+            </Select>
+
+            
+          </Space>
+
+          <Button
+            type="primary"
+            icon={<Plus size={18} />}
+            onClick={() => setOpen(true)}
+          >
+            Add Fee Structure
+          </Button>
+        </Space>
       </Card>
 
       <Card title="Fee Structure List">
@@ -107,7 +150,6 @@ const FeeStructure = () => {
         />
       </Card>
 
-      {/* ================= MODAL ================= */}
       <Modal
         title="Create Fee Structure"
         open={open}
@@ -115,18 +157,14 @@ const FeeStructure = () => {
         onOk={() => form.submit()}
         okText="Save"
       >
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={handleSubmit}
-        >
+        <Form layout="vertical" form={form} onFinish={handleSubmit}>
           <Form.Item
             name="schoolClassId"
             label="Class"
             rules={[{ required: true }]}
           >
             <Select placeholder="Select Class">
-              {classList?.map((c) => (
+              {schoolClasses?.map((c) => (
                 <Option key={c._id} value={c._id}>
                   {c.name}
                 </Option>
@@ -134,19 +172,7 @@ const FeeStructure = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="academicYearId"
-            label="Academic Year"
-            rules={[{ required: true }]}
-          >
-            <Select placeholder="Select Academic Year">
-              {academicYears?.map((y) => (
-                <Option key={y._id} value={y._id}>
-                  {y.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+         
 
           <Form.Item
             name="feeHeadId"
@@ -167,11 +193,7 @@ const FeeStructure = () => {
             label="Amount"
             rules={[{ required: true }]}
           >
-            <InputNumber
-              className="w-full"
-              min={0}
-              placeholder="Enter amount"
-            />
+            <InputNumber className="w-full" min={0} placeholder="Enter amount" />
           </Form.Item>
 
           <Form.Item

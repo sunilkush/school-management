@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   Form,
@@ -8,6 +8,7 @@ import {
   Table,
   InputNumber,
   message,
+  Typography,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -19,6 +20,7 @@ import { fetchFeeStructures } from "../../../features/feeStructureSlice";
 import { assignFeesToStudents } from "../../../features/studentFeeSlice";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 const AssignStudentFee = () => {
   const [form] = Form.useForm();
@@ -32,26 +34,22 @@ const AssignStudentFee = () => {
   const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
   const { selectedAcademicYear } = useSelector((s) => s.academicYear);
   const { user } = useSelector((s) => s.auth);
-  const { feeStructures = [] } = useSelector((s) => s.feeStructure);
+  const { feeStructures = [], loading } = useSelector((s) => s.feeStructure);
 
   const schoolId = user?.school?._id;
 
-  /* 🔹 Load user */
   useEffect(() => {
     dispatch(currentUser());
   }, [dispatch]);
 
-  /* 🔹 Load required data */
   useEffect(() => {
     if (!schoolId) return;
 
     dispatch(fetchStudentsBySchoolId({ schoolId }));
     dispatch(fetchSchoolClasses({ schoolId }));
     dispatch(fetchActiveAcademicYear(schoolId));
-    dispatch(fetchFeeStructures({ schoolId }));
   }, [dispatch, schoolId]);
 
-  /* 🔹 Auto-fill Academic Year */
   useEffect(() => {
     if (selectedAcademicYear?._id) {
       form.setFieldsValue({
@@ -60,13 +58,45 @@ const AssignStudentFee = () => {
     }
   }, [selectedAcademicYear, form]);
 
-  /* 🔹 Fee selection */
+  const selectedStudentId = Form.useWatch("studentId", form);
+  const selectedClassId = Form.useWatch("schoolClassId", form);
+  const academicYearId = Form.useWatch("academicYearId", form);
+
+  const selectedStudent = useMemo(
+    () => schoolStudents.find((s) => s._id === selectedStudentId),
+    [schoolStudents, selectedStudentId]
+  );
+
+  const effectiveClassId =
+    mode === "single"
+      ? selectedStudent?.class?._id || selectedStudent?.classId
+      : selectedClassId;
+
+  useEffect(() => {
+    if (!schoolId || !academicYearId || !effectiveClassId) {
+      return;
+    }
+
+    dispatch(
+      fetchFeeStructures({
+        schoolId,
+        academicYearId,
+        schoolClassId: effectiveClassId,
+      })
+    );
+  }, [dispatch, schoolId, academicYearId, effectiveClassId]);
+
+  useEffect(() => {
+    setSelectedFeeIds((prev) =>
+      prev.filter((id) => feeStructures.some((fee) => fee._id === id))
+    );
+  }, [feeStructures]);
+
   const rowSelection = {
     selectedRowKeys: selectedFeeIds,
     onChange: (keys) => setSelectedFeeIds(keys),
   };
 
-  /* 🔹 Table Columns */
   const columns = [
     {
       title: "Fee Head",
@@ -75,10 +105,12 @@ const AssignStudentFee = () => {
     {
       title: "Frequency",
       dataIndex: "frequency",
+      render: (value) => value?.toUpperCase(),
     },
     {
       title: "Amount",
       dataIndex: "amount",
+      render: (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`,
     },
     {
       title: "Custom Amount",
@@ -99,29 +131,23 @@ const AssignStudentFee = () => {
     },
   ];
 
-  /* 🔥 FINAL SUBMIT */
   const onFinish = async (values) => {
     try {
       if (!selectedFeeIds.length) {
         return message.warning("Please select at least one fee structure");
       }
 
-      let payloadBase = {
+      const payloadBase = {
         academicYearId: values.academicYearId,
-        schoolId,
       };
 
-      // 🔹 SINGLE MODE
       if (mode === "single") {
         payloadBase.studentId = values.studentId;
       }
 
-      // 🔹 BULK MODE
       if (mode === "bulk") {
         const studentIds = schoolStudents
-          .filter(
-            (s) => (s.class?._id || s.classId) === values.schoolClassId
-          )
+          .filter((s) => (s.class?._id || s.classId) === values.schoolClassId)
           .map((s) => s._id);
 
         if (!studentIds.length) {
@@ -131,7 +157,6 @@ const AssignStudentFee = () => {
         payloadBase.studentIds = studentIds;
       }
 
-      // 🔹 Assign fees
       for (const feeStructureId of selectedFeeIds) {
         await dispatch(
           assignFeesToStudents({
@@ -146,6 +171,7 @@ const AssignStudentFee = () => {
       form.resetFields();
       setSelectedFeeIds([]);
       setCustomAmounts({});
+      setMode("bulk");
     } catch (err) {
       message.error(err?.message || "Failed to assign fee");
     }
@@ -154,7 +180,6 @@ const AssignStudentFee = () => {
   return (
     <Card title="Assign Fees to Student">
       <Form form={form} layout="vertical" onFinish={onFinish}>
-        {/* MODE */}
         <Form.Item label="Assignment Mode">
           <Radio.Group value={mode} onChange={(e) => setMode(e.target.value)}>
             <Radio value="bulk">Bulk (Class Wise)</Radio>
@@ -162,24 +187,22 @@ const AssignStudentFee = () => {
           </Radio.Group>
         </Form.Item>
 
-        {/* SINGLE */}
         {mode === "single" && (
           <Form.Item
             name="studentId"
             label="Student"
             rules={[{ required: true, message: "Please select student" }]}
           >
-            <Select placeholder="Select Student">
+            <Select placeholder="Select Student" showSearch optionFilterProp="children">
               {schoolStudents.map((s) => (
                 <Option key={s._id} value={s._id}>
-                  {s.user?.name} ({s.class?.name}-{s.section?.name})
+                  {s.user?.name} ({s.class?.name || "-"}-{s.section?.name || "-"})
                 </Option>
               ))}
             </Select>
           </Form.Item>
         )}
 
-        {/* BULK */}
         {mode === "bulk" && (
           <Form.Item
             name="schoolClassId"
@@ -196,7 +219,6 @@ const AssignStudentFee = () => {
           </Form.Item>
         )}
 
-        {/* ACADEMIC YEAR */}
         <Form.Item
           name="academicYearId"
           label="Academic Year"
@@ -204,23 +226,25 @@ const AssignStudentFee = () => {
         >
           <Select placeholder="Select Academic Year">
             {selectedAcademicYear?._id && (
-              <Option
-                key={selectedAcademicYear._id}
-                value={selectedAcademicYear._id}
-              >
+              <Option key={selectedAcademicYear._id} value={selectedAcademicYear._id}>
                 {selectedAcademicYear.name || selectedAcademicYear.year}
               </Option>
             )}
           </Select>
         </Form.Item>
 
-        {/* FEES TABLE */}
+        {!effectiveClassId && (
+          <Text type="secondary">Select class/student to load fee structures.</Text>
+        )}
+
         <Table
           rowKey="_id"
           columns={columns}
           dataSource={feeStructures}
           rowSelection={rowSelection}
           pagination={false}
+          loading={loading}
+          locale={{ emptyText: "No fee structure found for selected class and academic year" }}
         />
 
         <Button

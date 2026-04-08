@@ -174,7 +174,9 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Fee Categories", path: "schooladmin/fees/categories" },
         { title: "Fee Collection", path: "schooladmin/fees/collect" },
+        { title: "Fee Structures", path: "schooladmin/fees/feestructure" },
         { title: "Assign Fees", path: "schooladmin/fees/assign" },
+       
       ],
     },
 

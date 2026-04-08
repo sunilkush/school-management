@@ -11,10 +11,6 @@ export const assignFeesToStudents = createAsyncThunk(
       const { data } = await apiClient.post(
         `/student-fees/assign`,
         payload,
-        {
-          headers: {
-          },
-        }
       );
       return data;
     } catch (err) {

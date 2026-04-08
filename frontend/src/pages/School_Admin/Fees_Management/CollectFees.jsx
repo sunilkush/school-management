@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Breadcrumb,
@@ -11,50 +11,116 @@ import {
   InputNumber,
   Space,
   message,
+   Tag,
 } from "antd";
-import { SearchOutlined, PlusOutlined, DollarOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  DollarOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
+import { fetchMyFees, payStudentFee } from "../../../features/studentFeeSlice";
 
 const { Content } = Layout;
 const { Option } = Select;
 
 const CollectFees = () => {
-  const [students, setStudents] = useState([
-    { key: 1, name: "John Doe", className: "10", section: "A", feeStatus: "Pending" },
-    { key: 2, name: "Jane Smith", className: "9", section: "B", feeStatus: "Paid" },
-    { key: 3, name: "Michael Brown", className: "10", section: "A", feeStatus: "Pending" },
-  ]);
-
+  
+   const dispatch = useDispatch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [form] = Form.useForm();
   const [searchName, setSearchName] = useState("");
   const [filterClass, setFilterClass] = useState("");
+  const [loadingFees, setLoadingFees] = useState(false);
+  const [studentFees, setStudentFees] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleCollectFee = () => {
-    setStudents(
-      students.map((student) =>
-        student.key === selectedStudent.key
-          ? { ...student, feeStatus: "Paid" }
-          : student
-      )
-    );
-    message.success(`Fee collected for ${selectedStudent.name}!`);
+  const { user } = useSelector((s) => s.auth);
+  const { schoolStudents = [] } = useSelector((s) => s.students);
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
+
+  const schoolId = user?.school?._id;
+
+  useEffect(() => {
+    if (!schoolId) return;
+    dispatch(fetchStudentsBySchoolId({ schoolId }));
+    dispatch(fetchSchoolClasses({ schoolId }));
+  }, [dispatch, schoolId]);
+
+  const students = useMemo(
+    () =>
+      schoolStudents.map((s) => ({
+        key: s._id,
+        studentId: s.student?._id,
+        name: s.user?.name || "-",
+        className: s.class?.name || "-",
+        classId: s.class?._id,
+        section: s.section?.name || "-",
+      })),
+    [schoolStudents]
+  );
+
+  const handleOpenCollectModal = async (record) => {
+    if (!record?.studentId) {
+      message.warning("Student id not found");
+      return;
+    }
+     setSelectedStudent(record);
+    setModalVisible(true);
+    setLoadingFees(true);
     form.resetFields();
-    setModalVisible(false);
-    setSelectedStudent(null);
+     try {
+      const fees = await dispatch(fetchMyFees(record.studentId)).unwrap();
+      const unpaidFees = (fees || []).filter(
+        (fee) => fee.status !== "paid" && Number(fee.dueAmount || 0) > 0
+      );
+      setStudentFees(unpaidFees);
+      if (!unpaidFees.length) {
+        message.info("No pending fee found for this student");
+      }
+    } catch (err) {
+      message.error(err?.message || "Unable to fetch student fees");
+      setStudentFees([]);
+    } finally {
+      setLoadingFees(false);
+    }
+  };
+
+  const handleCollectFee = async (values) => {
+    try {
+      setSubmitting(true);
+      await dispatch(
+        payStudentFee({
+          id: values.studentFeeId,
+          payload: { paidAmount: Number(values.amount) },
+        })
+      ).unwrap();
+      message.success(`Fee collected for ${selectedStudent?.name}`);
+      setModalVisible(false);
+      setSelectedStudent(null);
+      setStudentFees([]);
+      form.resetFields();
+    } catch (err) {
+      message.error(err?.message || "Fee collection failed");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const filteredStudents = students.filter(
     (student) =>
       student.name.toLowerCase().includes(searchName.toLowerCase()) &&
-      (filterClass ? student.className === filterClass : true)
+       (filterClass ? student.classId === filterClass : true)
   );
 
   const columns = [
     { title: "Name", dataIndex: "name", key: "name" },
     { title: "Class", dataIndex: "className", key: "className" },
     { title: "Section", dataIndex: "section", key: "section" },
-    { title: "Fee Status", dataIndex: "feeStatus", key: "feeStatus" },
+   
     {
       title: "Actions",
       key: "actions",
@@ -62,11 +128,7 @@ const CollectFees = () => {
         <Button
           type="primary"
           icon={<DollarOutlined />}
-          disabled={record.feeStatus === "Paid"}
-          onClick={() => {
-            setSelectedStudent(record);
-            setModalVisible(true);
-          }}
+          onClick={() => handleOpenCollectModal(record)}
         >
           Collect Fee
         </Button>
@@ -96,13 +158,14 @@ const CollectFees = () => {
             placeholder="Filter by class"
             style={{ width: 150 }}
             allowClear
-            value={filterClass}
+             value={filterClass || undefined}
             onChange={(value) => setFilterClass(value)}
           >
-            <Option value="9">9</Option>
-            <Option value="10">10</Option>
-            <Option value="11">11</Option>
-            <Option value="12">12</Option>
+            {schoolClasses.map((schoolClass) => (
+              <Option key={schoolClass._id} value={schoolClass._id}>
+                {schoolClass.name}
+              </Option>
+            ))}
           </Select>
         </div>
 
@@ -117,15 +180,40 @@ const CollectFees = () => {
         {/* Collect Fee Modal */}
         <Modal
           title={`Collect Fee for ${selectedStudent?.name}`}
-          visible={modalVisible}
+           open={modalVisible}
           onCancel={() => {
             setModalVisible(false);
             setSelectedStudent(null);
+             setStudentFees([]);
             form.resetFields();
           }}
           footer={null}
+             destroyOnHidden
         >
-          <Form form={form} layout="vertical" onFinish={handleCollectFee}>
+           {loadingFees ? (
+            <div className="py-8 text-center">
+              <LoadingOutlined spin /> Loading fees...
+            </div>
+          ) : (
+            <Form form={form} layout="vertical" onFinish={handleCollectFee}>
+              <Form.Item
+                label="Pending Fee"
+                name="studentFeeId"
+                rules={[{ required: true, message: "Select pending fee" }]}
+              >
+                <Select placeholder="Select pending fee">
+                  {studentFees.map((fee) => (
+                    <Option key={fee._id} value={fee._id}>
+                      {fee.feeStructureId?.feeHeadId?.name || "Fee"} | Due ₹
+                      {fee.dueAmount} |{" "}
+                      <Tag color={fee.status === "partial" ? "orange" : "red"}>
+                        {fee.status}
+                      </Tag>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
             <Form.Item
               label="Amount"
               name="amount"
@@ -144,17 +232,25 @@ const CollectFees = () => {
                   onClick={() => {
                     setModalVisible(false);
                     setSelectedStudent(null);
+                     setStudentFees([]);
                     form.resetFields();
                   }}
                 >
                   Cancel
                 </Button>
-                <Button type="primary" htmlType="submit" icon={<PlusOutlined />}>
+                 <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<DollarOutlined />}
+                  loading={submitting}
+                  disabled={!studentFees.length}
+                >
                   Collect
                 </Button>
               </Space>
             </Form.Item>
-          </Form>
+           </Form>
+          )}
         </Modal>
       </Content>
     </Layout>
