@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { toastify} from "../../../utils/toastify";
+
 import {
   Card,
   Table,
@@ -43,7 +43,7 @@ const SchoolClassSectionTeacher = ({ next }) => {
   const academicYearId = selectedAcademicYear?._id;
 
   const [savingKey, setSavingKey] = useState(null);
-  const isAllAssigned = tableData.every(item => item.teacherId);
+ 
   /* ───────── FETCH ───────── */
   useEffect(() => {
     if (schoolId && academicYearId) {
@@ -69,7 +69,7 @@ const SchoolClassSectionTeacher = ({ next }) => {
       teacherId: sec.classTeacherId?._id || null,
     }));
   }, [sections]);
-
+ const isAllAssigned = tableData.every(item => item.teacherId);
   /* ───────── SAVE ───────── */
   const handleTeacherChange = async (value, record) => {
     try {
@@ -142,7 +142,7 @@ const SchoolClassSectionTeacher = ({ next }) => {
     },
   ];
      const handleFinish = () => {
-      toastify.success("🎉 School setup completed successfully!");
+      message.success("🎉 School setup completed successfully!");
  
 
   // optional delay for UX

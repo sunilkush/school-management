@@ -37,7 +37,7 @@ const RegisterForm = ({ onClose }) => {
 
   const { roles } = useSelector((state) => state.role);
   const { schools } = useSelector((state) => state.school);
-  const { isLoading, error, user, success } = useSelector(
+  const { Loading, error, user, success } = useSelector(
     (state) => state.auth
   );
 
@@ -273,7 +273,7 @@ const initialValues = {
         <Button
           type="primary"
           htmlType="submit"
-          loading={isLoading}
+          loading={Loading}
           block
         >
           Register User
