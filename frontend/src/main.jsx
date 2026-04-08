@@ -153,6 +153,7 @@ const MyStudents = lazy(() => import("./pages/Teacher/My_Students/MyStudents.jsx
 const StudentAttendance = lazy(() => import("./pages/Teacher/Attendance/StudentAttendance.jsx"));
 const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDetailes.jsx"));
 const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
+const MyAttendancePage = lazy(() => import("./pages/Teacher/Profile/MyAttendancePage.jsx"));
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
 const StudentHomework = lazy(() => import("./pages/Student/Homework/StudentHomework.jsx"));
@@ -175,12 +176,12 @@ const RoleDynamicPortal = lazy(() => import("./pages/RoleDynamicPortal.jsx"));
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
 const EmployeeForm = lazy(() => import("./components/forms/EmployeeForm.jsx"));
-
+const ChangePassword = lazy(()=> import("./pages/Auth/ResetPasswordPage.jsx"));
 const AttendanceDashboardPage = lazy(() => import("./pages/Attendance/AttendanceDashboard.jsx"));
 const MarkAttendancePage = lazy(() => import("./pages/Attendance/MarkAttendancePage.jsx"));
 const AttendanceTablePage = lazy(() => import("./pages/Attendance/AttendanceTablePage.jsx"));
 const MonthlyReportPage = lazy(() => import("./pages/Attendance/MonthlyReportPage.jsx"));
-const MyAttendancePage = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
+
 const ChildAttendancePage = lazy(() => import("./pages/Attendance/ChildAttendancePage.jsx"));
 
 // Routes helpers (NO lazy)
@@ -411,6 +412,7 @@ const router = createBrowserRouter([
               { path: "assignments", element: <Assignments /> },
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
+              { path: "attendance/my/monthly", element: <MyAttendancePage /> },
              // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
@@ -426,6 +428,7 @@ const router = createBrowserRouter([
               { path: "reports", element: <SchoolAdminReport /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
+              { path: "profile/change-password", element: <ChangePassword /> },
 
             ],
           },

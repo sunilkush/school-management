@@ -187,9 +187,11 @@ const attendanceSlice = createSlice({
       })
       .addCase(fetchMonthlyAttendance.fulfilled, (state, action) => {
         state.monthlyAttendance = (action.payload || []).map((item) => ({
+          userId: item.userId,
           student: { name: item.name },
           present: item.presentDays || item.statusBreakdown?.present || 0,
           absent: item.statusBreakdown?.absent || 0,
+          dailyStatus: item.dailyStatus || {},
         }));
       })
       .addCase(fetchMyAttendance.pending, (state) => {

@@ -20,7 +20,7 @@ import {
 
 const router = Router();
 
-const REPORT_ROLES = ["Super Admin", "School Admin"];
+const REPORT_ROLES = ["Super Admin", "School Admin", "Teacher"];
 const MANAGE_ROLES = ["Super Admin", "School Admin", "Teacher", "Staff"];
 const VIEW_ROLES = ["Super Admin", "School Admin", "Teacher", "Staff", "Student", "Parent"];
 

@@ -58,7 +58,7 @@ const assertTeacherScope = (req, payload = {}) => {
 };
 
 export const markBulkAttendance = asyncHandler(async (req, res) => {
-  const { schoolId, date, role, classId, sectionId, subjectId, remarks, records } = req.body;
+  const { schoolId, date, role, schoolClassId, sectionId, subjectId, remarks, records } = req.body;
 
   const allowedRoles = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STAFF];
   if (!allowedRoles.includes(req.userRole?.name)) {
@@ -69,8 +69,8 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Staff can only mark self attendance");
   }
 
-  if (req.userRole?.name === TEACHER && role !== "student") {
-    throw new ApiError(403, "Teacher can only mark student attendance");
+    if (req.userRole?.name === TEACHER && !["student", "teacher"].includes(role)) {
+    throw new ApiError(403, "Teacher can only mark student or self attendance");
   }
 
   const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
@@ -80,7 +80,7 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
     schoolId: resolvedSchoolId,
     userId: record.userId,
     role,
-    classId: classId || null,
+    schoolClassId: schoolClassId || null,
     sectionId: sectionId || null,
     subjectId: subjectId || null,
     date: normalizedDate,
@@ -98,7 +98,13 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
       }
     });
   }
-
+   if (req.userRole?.name === TEACHER && role === "teacher") {
+    docs.forEach((doc) => {
+      if (doc.userId.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "Teacher can mark only their own attendance");
+      }
+    });
+  }
   try {
     const result = await Attendance.bulkWrite(
       docs.map((doc) => ({
@@ -122,13 +128,13 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
 });
 
 export const getAttendance = asyncHandler(async (req, res) => {
-  const { schoolId, classId, sectionId, subjectId, date, role, userId, search, page, limit } = req.query;
+  const { schoolId, schoolClassId, sectionId, subjectId, date, role, userId, search, page, limit } = req.query;
 
   const filter = {
     schoolId: ensureSchoolAccess(req, schoolId),
   };
 
-  if (classId) filter.classId = classId;
+  if (schoolClassId) filter.schoolClassId = schoolClassId;
   if (sectionId) filter.sectionId = sectionId;
   if (subjectId) filter.subjectId = subjectId;
   if (role) filter.role = role;
@@ -146,7 +152,7 @@ export const getAttendance = asyncHandler(async (req, res) => {
 
   const query = Attendance.find(filter)
     .populate("userId", "name email")
-    .populate("classId", "name")
+    .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("subjectId", "name")
     .populate("markedBy", "name")
@@ -174,7 +180,7 @@ export const getAttendance = asyncHandler(async (req, res) => {
 });
 
 export const getMonthlyReport = asyncHandler(async (req, res) => {
-  const { schoolId, month, year, classId, sectionId, role } = req.query;
+  const { schoolId, month, year, schoolClassId, sectionId, role } = req.query;
   const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
 
   const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
@@ -184,7 +190,7 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
     schoolId: new mongoose.Types.ObjectId(resolvedSchoolId),
     date: { $gte: start, $lte: end },
   };
-  if (classId) match.classId = new mongoose.Types.ObjectId(classId);
+  if (schoolClassId) match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   if (sectionId) match.sectionId = new mongoose.Types.ObjectId(sectionId);
   if (role) match.role = role;
 
@@ -194,9 +200,24 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
       $group: {
         _id: {
           userId: "$userId",
+          date: "$date",
+        },
+        status: { $last: "$status" },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          userId: "$_id.userId",
           status: "$status",
         },
         count: { $sum: 1 },
+        dailyEntries: {
+          $push: {
+            day: { $dayOfMonth: "$_id.date" },
+            status: "$status",
+          },
+        },
       },
     },
     {
@@ -209,12 +230,20 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
             v: "$count",
           },
         },
+        dailyEntriesByStatus: { $push: "$dailyEntries" },
       },
     },
     {
       $project: {
         totalDays: 1,
         statusBreakdown: { $arrayToObject: "$statuses" },
+        dailyStatusEntries: {
+          $reduce: {
+            input: "$dailyEntriesByStatus",
+            initialValue: [],
+            in: { $concatArrays: ["$$value", "$$this"] },
+          },
+        },
         presentDays: { $ifNull: [{ $getField: { field: "present", input: { $arrayToObject: "$statuses" } } }, 0] },
         attendancePercentage: {
           $cond: [
@@ -253,10 +282,23 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
         presentDays: 1,
         attendancePercentage: 1,
         statusBreakdown: 1,
+        dailyStatus: {
+          $arrayToObject: {
+            $map: {
+              input: "$dailyStatusEntries",
+              as: "entry",
+              in: {
+                k: { $toString: "$$entry.day" },
+                v: "$$entry.status",
+              },
+            },
+          },
+        },
       },
     },
     { $sort: { attendancePercentage: -1 } },
   ];
+
 
   const report = await Attendance.aggregate(pipeline);
 

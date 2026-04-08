@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  Alert,
   Card,
   Table,
   Select,
@@ -15,11 +16,8 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 
-// 👉 You can replace with your API slice
-import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { fetchMonthlyAttendance } from "../../../features/attendanceSlice";
-import { fetchAllClasses } from "../../../features/classSlice";
-import { activeUser } from "../../../features/authSlice";
+import { fetchAssignedClasses } from "../../../features/classSlice";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -27,86 +25,91 @@ const { Option } = Select;
 const MonthlyAttendanceReport = () => {
   const dispatch = useDispatch();
 
-  // 🔹 Redux Data
-  const { schoolStudents = [], loading: studentLoading } = useSelector(
-    (state) => state.students
-  );
-
   const { monthlyAttendance = [], loading: attendanceLoading } = useSelector(
     (state) => state.attendance
   );
 
-  const { classList = [] } = useSelector((state) => state.class);
+  const { classAssignTeacher = [], loading: classLoading } = useSelector((state) => state.class);
   const { user: currentUser } = useSelector((state) => state.auth);
-
+  const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
   const schoolId = currentUser?.school?._id;
-  const academicYearId = currentUser?.academicYear?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
-  // 🔹 Local State
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
+  const [selectedClassSectionKey, setSelectedClassSectionKey] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
 
-  // 🔹 Initial Load
   useEffect(() => {
-    dispatch(activeUser());
+    if (!schoolId || !academicYearId || !currentUser?._id) return;
+    dispatch(fetchAssignedClasses({ schoolId, academicYearId, teacherId: currentUser._id }));
+  }, [dispatch, schoolId, academicYearId, currentUser?._id]);
 
-    if (schoolId) {
-      dispatch(fetchStudentsBySchoolId({ schoolId }));
-      dispatch(fetchAllClasses({ schoolId }));
-    }
-  }, [dispatch, schoolId]);
+  const classTeacherSections = useMemo(() => {
+    if (!Array.isArray(classAssignTeacher)) return [];
 
-  // 🔹 Fetch Monthly Attendance
+    return classAssignTeacher
+      .flatMap((cls) =>
+        (cls.sections || [])
+          .filter((sec) => sec?.isClassTeacher)
+          .map((sec) => ({
+            key: `${cls._id}_${sec.sectionId?._id}`,
+            classId: cls._id,
+            className: cls.name,
+            sectionId: sec.sectionId?._id,
+            sectionName: sec.sectionId?.name,
+          }))
+      )
+      .filter((item) => item.classId && item.sectionId);
+  }, [classAssignTeacher]);
+
   useEffect(() => {
-    if (selectedClass && selectedSection && selectedMonth) {
-      dispatch(
-        fetchMonthlyAttendance({
-          schoolId,
-          className: selectedClass,
-          sectionName: selectedSection,
-          month: selectedMonth.format("MM"),
-          year: selectedMonth.format("YYYY"),
-          academicYearId,
-        })
-      );
+    if (!selectedClassSectionKey && classTeacherSections.length) {
+      setSelectedClassSectionKey(classTeacherSections[0].key);
     }
-  }, [
-    dispatch,
-    selectedClass,
-    selectedSection,
-    selectedMonth,
-    schoolId,
-    academicYearId,
-  ]);
+  }, [selectedClassSectionKey, classTeacherSections]);
 
-  // 🔹 Section List
-  const sectionList = useMemo(() => {
-    if (!selectedClass) return [];
+  const selectedClassSection = useMemo(
+    () => classTeacherSections.find((item) => item.key === selectedClassSectionKey) || null,
+    [classTeacherSections, selectedClassSectionKey]
+  );
 
-    const sections = schoolStudents
-      .filter((s) => s.class?.name === selectedClass)
-      .map((s) => s.section?.name)
-      .filter(Boolean);
+  useEffect(() => {
+    if (!selectedClassSection || !selectedMonth || !schoolId) return;
 
-    return [...new Set(sections)];
-  }, [schoolStudents, selectedClass]);
+    dispatch(
+      fetchMonthlyAttendance({
+        schoolId,
+        classId: selectedClassSection.classId,
+        sectionId: selectedClassSection.sectionId,
+        role: "student",
+        month: selectedMonth.format("MM"),
+        year: selectedMonth.format("YYYY"),
+      })
+    );
+  }, [dispatch, selectedClassSection, selectedMonth, schoolId]);
 
-  // 🔹 Table Data Mapping
+  const totalDaysInMonth = useMemo(() => selectedMonth.daysInMonth(), [selectedMonth]);
+
   const tableData = useMemo(() => {
-    return monthlyAttendance.map((item) => {
+    return monthlyAttendance.map((item, index) => {
       const totalDays = item.present + item.absent;
       const percentage = totalDays
         ? ((item.present / totalDays) * 100).toFixed(1)
         : 0;
-
-      return {
+      const row = {
         ...item,
+        key: item.userId || item._id || `${item.student?.name || "student"}-${index}`,
         totalDays,
         percentage,
       };
+
+      for (let day = 1; day <= totalDaysInMonth; day += 1) {
+        const status = item.dailyStatus?.[String(day)];
+        row[`day_${day}`] = status || "-";
+      }
+
+      return row;
     });
-  }, [monthlyAttendance]);
+  }, [monthlyAttendance, totalDaysInMonth]);
 
   // 🔹 Summary Stats
   const summary = useMemo(() => {
@@ -132,29 +135,65 @@ const MonthlyAttendanceReport = () => {
     };
   }, [tableData]);
 
-  // 🔹 Table Columns
+  const dateColumns = useMemo(
+    () =>
+      Array.from({ length: totalDaysInMonth }, (_, idx) => {
+        const day = idx + 1;
+        return {
+          title: day,
+          dataIndex: `day_${day}`,
+          width: 72,
+          align: "center",
+          render: (val) => {
+            if (val === "present") return <Tag color="green">P</Tag>;
+            if (val === "absent") return <Tag color="red">A</Tag>;
+            if (val === "late") return <Tag color="orange">L</Tag>;
+            if (val === "halfday") return <Tag color="gold">H</Tag>;
+            if (val === "leave") return <Tag color="blue">Lv</Tag>;
+            return <Tag>-</Tag>;
+          },
+        };
+      }),
+    [totalDaysInMonth]
+  );
+
   const columns = [
     {
       title: "Student Name",
       dataIndex: ["student", "name"],
+      fixed: "left",
+      width: 220,
+    },
+    ...dateColumns,
+    {
+      title: "Total Days",
+      dataIndex: "totalDays",
+      fixed: "right",
+      width: 100,
+      align: "center",
     },
     {
       title: "Present",
       dataIndex: "present",
+      fixed: "right",
+      width: 90,
+      align: "center",
       render: (val) => <Tag color="green">{val}</Tag>,
     },
     {
       title: "Absent",
       dataIndex: "absent",
+      fixed: "right",
+      width: 90,
+      align: "center",
       render: (val) => <Tag color="red">{val}</Tag>,
-    },
-    {
-      title: "Total Days",
-      dataIndex: "totalDays",
     },
     {
       title: "Attendance %",
       dataIndex: "percentage",
+      fixed: "right",
+      width: 120,
+      align: "center",
       render: (val) => (
         <Tag color={val >= 75 ? "green" : val >= 50 ? "orange" : "red"}>
           {val}%
@@ -163,48 +202,27 @@ const MonthlyAttendanceReport = () => {
     },
   ];
 
-  const loading = studentLoading || attendanceLoading;
+  const loading = classLoading || attendanceLoading;
 
   return (
     <Card bordered={false} style={{ borderRadius: 12 }}>
       <Title level={4}>Monthly Attendance Report</Title>
 
-      {/* 🔹 Filters */}
       <Row gutter={16} style={{ marginBottom: 20 }}>
-        <Col xs={24} md={6}>
+        <Col xs={24} md={10}>
           <Select
-            placeholder="Select Class"
+            placeholder="Select Assigned Class & Section"
             style={{ width: "100%" }}
-            onChange={(val) => {
-              setSelectedClass(val);
-              setSelectedSection(null);
-            }}
+            value={selectedClassSectionKey}
+            onChange={setSelectedClassSectionKey}
+            options={classTeacherSections.map((item) => ({
+              label: `${item.className} - ${item.sectionName}`,
+              value: item.key,
+            }))}
           >
-            {[...classList]
-              .sort((a, b) => {
-                const numA = parseInt(a.name.replace(/\D/g, ""), 10);
-                const numB = parseInt(b.name.replace(/\D/g, ""), 10);
-                return numA - numB;
-              })
-              .map((cls) => (
-                <Option key={cls._id} value={cls.name}>
-                  {cls.name}
-                </Option>
-              ))}
-          </Select>
-        </Col>
-
-        <Col xs={24} md={6}>
-          <Select
-            placeholder="Select Section"
-            style={{ width: "100%" }}
-            disabled={!selectedClass}
-            value={selectedSection}
-            onChange={setSelectedSection}
-          >
-            {sectionList.map((sec) => (
-              <Option key={sec} value={sec}>
-                {sec}
+            {classTeacherSections.map((item) => (
+              <Option key={item.key} value={item.key}>
+                {item.className} - {item.sectionName}
               </Option>
             ))}
           </Select>
@@ -219,6 +237,16 @@ const MonthlyAttendanceReport = () => {
           />
         </Col>
       </Row>
+
+      {!classTeacherSections.length && !loading && (
+        <Alert
+          style={{ marginBottom: 20 }}
+          type="warning"
+          message="Class teacher assignment not found"
+          description="Aapko class teacher ke roop mein koi section assign nahi hai. Report dekhne ke liye admin se assignment karwayein."
+          showIcon
+        />
+      )}
 
       {/* 🔹 Summary Cards */}
       <Row gutter={16} style={{ marginBottom: 20 }}>
@@ -254,14 +282,17 @@ const MonthlyAttendanceReport = () => {
       {/* 🔹 Table */}
       {loading ? (
         <Spin />
+      ) : !selectedClassSection ? (
+        <Empty description="Assigned class-section select karein" />
       ) : tableData.length === 0 ? (
         <Empty description="No Attendance Data" />
       ) : (
         <Table
-          rowKey="_id"
+          rowKey="key"
           columns={columns}
           dataSource={tableData}
           pagination={{ pageSize: 10 }}
+          scroll={{ x: 1600 }}
         />
       )}
     </Card>

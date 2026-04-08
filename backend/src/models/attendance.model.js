@@ -22,7 +22,7 @@ const attendanceSchema = new Schema(
       enum: ATTENDANCE_ROLES,
       required: true,
     },
-    classId: {
+    schoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "SchoolClass",
       default: null,
@@ -71,7 +71,7 @@ const attendanceSchema = new Schema(
 );
 
 attendanceSchema.index({ schoolId: 1, userId: 1, date: 1 }, { unique: true });
-attendanceSchema.index({ schoolId: 1, classId: 1, sectionId: 1, date: 1 });
+attendanceSchema.index({ schoolId: 1, schoolClassId: 1, sectionId: 1, date: 1 });
 attendanceSchema.index({ schoolId: 1, role: 1, date: 1 });
 
 attendanceSchema.pre("save", function normalizeDate(next) {

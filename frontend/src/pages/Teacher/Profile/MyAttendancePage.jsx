@@ -3,8 +3,8 @@ import { Alert, Button, Card, Col, DatePicker, Row, Select, Space, Statistic, Ta
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import StatusTag from "../../components/attendance/StatusTag";
-import { fetchMyAttendance, markBulkAttendance } from "../../features/attendanceSlice";
+import StatusTag from "../../../components/attendance/StatusTag";
+import { fetchMyAttendance, markBulkAttendance } from "../../../features/attendanceSlice";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
