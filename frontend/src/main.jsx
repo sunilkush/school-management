@@ -162,11 +162,12 @@ const StudentHomework = lazy(() => import("./pages/Student/Homework/StudentHomew
 const ExamLive = lazy(() => import("./pages/Student/Exams/ExamLive.jsx"));
 const AttemptReview = lazy(() => import("./pages/Student/Exams/AttemptReview.jsx"));
 const StudentExamsPage = lazy(() => import("./pages/Student/Exams/StudentExamsPage.jsx"));
-const Library = lazy(() => import("./pages/Student/Library/Library.jsx"));
+const StudentAllowedBook = lazy(() => import("./pages/Student/Library/StudentAllowedBook.jsx"));
 const StudentTimetable = lazy(() => import("./pages/Student/Timetable/StudentTimeTable.jsx"));
-const StudentAttendancePage = lazy(() => import("./pages/Student/Attendance/StudentAttendancePage.jsx"));
+const StudentAttendancePage = lazy(() => import("./pages/Student/Attendance/MyAttendancePage.jsx"));
 const StudentTransport = lazy(() => import("./pages/Student/Transport/StudentTransport.jsx"));
 const StudentGrades = lazy(() => import("./pages/Student/Grades/StudentGrades.jsx"));
+const StudentProfile = lazy(()=>import("./pages/Student/Profile/Profile.jsx"))
 
 // Parent
 const MyChildren = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
@@ -436,6 +437,7 @@ const router = createBrowserRouter([
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "profile/change-password", element: <ChangePassword /> },
               { path: "reports", element: <TeacherReports /> },
+             
 
             ],
           },
@@ -448,14 +450,14 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <StudentDashboard /> },
-              { path: "profile", element: <Profile /> },
+              { path: "profile", element: <StudentProfile /> },
               { path: "homework", element: <StudentHomework /> },
-              { path: "attendance", element: <MyAttendancePage /> },
-              { path: "grades", element: <EnterGrades /> },
-              { path: "timetable", element: <ClassTimetable /> },
-              { path: "library", element: <Books /> },
+              { path: "attendance", element: <StudentAttendancePage /> },
+              { path: "grades", element: <StudentGrades /> },
+              { path: "timetable", element: <StudentTimetable /> },
+              { path: "library", element: <StudentAllowedBook /> },
               { path: "hostel", element: <HostelManagement /> },
-              { path: "transport", element: <RoutesPage /> },
+              { path: "transport", element: <StudentTransport /> },
               { path: "fees", element: <FeeStudent /> },
               { path: "exams/attempt-review", element: <AttemptReview /> },
               { path: "exams/exam-live", element: <ExamLive /> },
@@ -465,7 +467,7 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "notification", element: <Notification /> },
-
+ 
             ],
           },
           {

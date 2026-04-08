@@ -49,19 +49,16 @@ const RegisterForm = ({ onClose }) => {
   const [successMessage, setSuccessMessage] = useState("");
 
   // ✅ FIX: avatar must be array
-  const initialValues = useMemo(
-    () => ({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      roleId: undefined,
-      schoolId: isSchoolAdmin ? currentSchoolId : undefined,
-      isActive: false,
-      avatar: [], // ✅ IMPORTANT FIX
-    }),
-    []
-  );
+const initialValues = {
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    roleId: undefined,
+    schoolId: isSchoolAdmin ? currentSchoolId : undefined,
+    isActive: false,
+    avatar: [], // ✅ IMPORTANT FIX
+  };
 
   useEffect(() => {
     if (!schools?.length) dispatch(fetchSchools());
@@ -139,11 +136,6 @@ const RegisterForm = ({ onClose }) => {
       };
 
       delete payload.confirmPassword;
-
-      // ✅ convert fileList → string
-      if (Array.isArray(payload.avatar)) {
-        payload.avatar = payload.avatar[0]?.name || "";
-      }
 
       dispatch(registerUser(payload));
       
