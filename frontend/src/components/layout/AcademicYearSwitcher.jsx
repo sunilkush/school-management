@@ -18,7 +18,7 @@ const AcademicYearSwitcher = () => {
     selectedAcademicYear,
     loading,
     error,
-    isFetched 
+    
   } = useSelector((state) => state.academicYear);
 
   const schoolId = user?.school?._id;
@@ -26,12 +26,14 @@ const AcademicYearSwitcher = () => {
   /* ===========================
      📡 FETCH ACTIVE YEAR
   ============================ */
-useEffect(() => {
-  if (!schoolId || isFetched) return; // ✅ BEST FIX
+  const activeYearSchoolId = activeYear?.schoolId?._id || activeYear?.schoolId;
+   useEffect(() => {
+    if (!schoolId) return;
 
-  dispatch(fetchActiveAcademicYear(schoolId));
-}, [dispatch, schoolId, isFetched]);
-
+    if (!activeYear || activeYearSchoolId !== schoolId) {
+      dispatch(fetchActiveAcademicYear(schoolId));
+    }
+  }, [dispatch, schoolId, activeYear, activeYearSchoolId]);
   /* ===========================
      🧠 AUTO SET SELECTED
   ============================ */
@@ -60,7 +62,7 @@ useEffect(() => {
      🔄 HANDLE CHANGE
   ============================ */
   const handleChange = (value) => {
-    if (!value) return;
+    if (!value || !activeYear) return;
 
     // since only active year, just set it
     dispatch(setSelectedAcademicYear(activeYear));
