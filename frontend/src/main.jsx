@@ -155,12 +155,18 @@ const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDeta
 const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
 const MyAttendancePage = lazy(() => import("./pages/Teacher/Profile/MyAttendancePage.jsx"));
 const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports.jsx"));
+
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
 const StudentHomework = lazy(() => import("./pages/Student/Homework/StudentHomework.jsx"));
 const ExamLive = lazy(() => import("./pages/Student/Exams/ExamLive.jsx"));
 const AttemptReview = lazy(() => import("./pages/Student/Exams/AttemptReview.jsx"));
 const StudentExamsPage = lazy(() => import("./pages/Student/Exams/StudentExamsPage.jsx"));
+const Library = lazy(() => import("./pages/Student/Library/Library.jsx"));
+const StudentTimetable = lazy(() => import("./pages/Student/Timetable/StudentTimeTable.jsx"));
+const StudentAttendancePage = lazy(() => import("./pages/Student/Attendance/StudentAttendancePage.jsx"));
+const StudentTransport = lazy(() => import("./pages/Student/Transport/StudentTransport.jsx"));
+const StudentGrades = lazy(() => import("./pages/Student/Grades/StudentGrades.jsx"));
 
 // Parent
 const MyChildren = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
