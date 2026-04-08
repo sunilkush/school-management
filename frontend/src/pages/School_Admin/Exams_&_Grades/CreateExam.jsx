@@ -107,7 +107,7 @@ const CreateExam = () => {
       passingMarks: examData.passingMarks,
       status: examData.status,
     });
-  }, [examData, schoolClasses]);
+  }, [examData, schoolClasses,handleClassChange]);
 
   /* ================= CLASS CHANGE ================= */
  const handleClassChange = (schoolClassId, subjectIdFromEdit = null) => {

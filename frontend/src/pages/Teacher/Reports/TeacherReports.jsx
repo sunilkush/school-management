@@ -61,7 +61,7 @@ const TeacherReports = () => {
       console.error("Unable to parse user from storage", error);
       return null;
     }
-  }, []);
+  }, [user?._id]);
 
   const { role, schoolId, teacherName } = useMemo(
     () => normalizeUserContext(rawUser),
