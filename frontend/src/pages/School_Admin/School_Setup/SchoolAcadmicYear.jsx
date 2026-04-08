@@ -138,115 +138,215 @@ const SchoolAcademicYear = ({ next }) => {
 
       {/* ── Table ── */}
       <div style={{
-        background: t.cardBg,
-        border: `1px solid ${t.border}`,
-        borderRadius: 12,
-        overflow: "hidden",
-      }}>
-        {/* Table header */}
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: t.thBg, borderBottom: `1px solid ${t.thBorder}` }}>
-              {["Year", "Duration", "Dates", "Status", "Active"].map((h) => (
-                <th key={h} style={{
-                  padding: "10px 16px", textAlign: "left",
-                  fontSize: 11, fontWeight: 600, color: t.textSec,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                }}>{h}</th>
-              ))}
+  background: t.cardBg,
+  border: `1px solid ${t.border}`,
+  borderRadius: 12,
+  overflow: "hidden",
+}}>
+
+  {/* Desktop Table */}
+  <div className="table-desktop">
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
+        <thead>
+          <tr style={{ background: t.thBg, borderBottom: `1px solid ${t.thBorder}` }}>
+            {["Year", "Duration", "Dates", "Status", "Active"].map((h) => (
+              <th key={h} style={{
+                padding: "10px 16px",
+                textAlign: "left",
+                fontSize: 11,
+                fontWeight: 600,
+                color: t.textSec,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+              }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {loading && !sorted.length ? (
+            [1, 2, 3].map((i) => (
+              <tr key={i}>
+                <td colSpan={5} style={{ padding: "12px 16px" }}>
+                  <Skeleton active title={false} paragraph={{ rows: 1 }} />
+                </td>
+              </tr>
+            ))
+          ) : sorted.length === 0 ? (
+            <tr>
+              <td colSpan={5} style={{ padding: 40, textAlign: "center" }}>
+                <Text style={{ color: t.textSec, fontSize: 13 }}>
+                  No academic years yet — create one above.
+                </Text>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {loading && !sorted.length
-              ? [1, 2, 3].map((i) => (
-                  <tr key={i}>
-                    <td colSpan={5} style={{ padding: "12px 16px" }}>
-                      <Skeleton active title={false} paragraph={{ rows: 1 }} />
-                    </td>
-                  </tr>
-                ))
-              : sorted.length === 0
-              ? (
-                <tr>
-                  <td colSpan={5} style={{ padding: 40, textAlign: "center" }}>
-                    <Text style={{ color: t.textSec, fontSize: 13 }}>
-                      No academic years yet — create one above.
+          ) : (
+            sorted.map((yr, i) => {
+              const start = dayjs(yr.startDate);
+              const end = dayjs(yr.endDate);
+              const months = end.diff(start, "month");
+              const isHov = hovered === i;
+
+              return (
+                <tr
+                  key={yr._id}
+                  onMouseEnter={() => setHovered(i)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{
+                    background: isHov ? t.rowHover : "transparent",
+                    borderBottom: `1px solid ${t.thBorder}`,
+                  }}
+                >
+                  <td style={{ padding: "12px 16px" }}>
+                    <Text style={{ fontWeight: 600 }}>{yr.name}</Text>
+                  </td>
+
+                  <td style={{ padding: "12px 16px" }}>
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: t.accent,
+                      background: t.accentBg,
+                      padding: "2px 8px",
+                      borderRadius: 99,
+                    }}>
+                      {months} months
+                    </span>
+                  </td>
+
+                  <td style={{ padding: "12px 16px" }}>
+                    <Text style={{ fontSize: 12, color: t.textSec }}>
+                      {start.format("DD MMM YYYY")} → {end.format("DD MMM YYYY")}
                     </Text>
                   </td>
-                </tr>
-              )
-              : sorted.map((yr, i) => {
-                  const start = dayjs(yr.startDate);
-                  const end   = dayjs(yr.endDate);
-                  const months = end.diff(start, "month");
-                  const isHov = hovered === i;
 
-                  return (
-                    <tr
-                      key={yr._id}
-                      onMouseEnter={() => setHovered(i)}
-                      onMouseLeave={() => setHovered(null)}
-                      style={{
-                        background: isHov ? t.rowHover : "transparent",
-                        borderBottom: `1px solid ${t.thBorder}`,
-                        transition: "background 0.15s ease",
-                      }}
-                    >
-                      <td style={{ padding: "12px 16px" }}>
-                        <Text style={{ fontSize: 13, fontWeight: 600, color: t.textPri }}>
-                          {yr.name}
-                        </Text>
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <span style={{
-                          fontSize: 11, fontWeight: 600,
-                          color: t.accent, background: t.accentBg,
-                          padding: "2px 8px", borderRadius: 99,
-                        }}>
-                          {months} months
-                        </span>
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <Text style={{ fontSize: 12, color: t.textSec }}>
-                          {start.format("DD MMM YYYY")} → {end.format("DD MMM YYYY")}
-                        </Text>
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        {yr.isActive ? (
-                          <span style={{
-                            display: "inline-flex", alignItems: "center", gap: 5,
-                            fontSize: 11, fontWeight: 600,
-                            color: t.success, background: t.successBg,
-                            padding: "2px 8px", borderRadius: 99,
-                          }}>
-                            <CheckCircleFilled style={{ fontSize: 10 }} /> Active
-                          </span>
-                        ) : (
-                          <span style={{
-                            display: "inline-flex", alignItems: "center", gap: 5,
-                            fontSize: 11, color: t.textSec,
-                            background: isDark ? "#1a1a1a" : "#f3f4f6",
-                            padding: "2px 8px", borderRadius: 99,
-                          }}>
-                            <ClockCircleOutlined style={{ fontSize: 10 }} /> Inactive
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <Switch
-                          checked={yr.isActive}
-                          disabled={yr.isActive}
-                          size="small"
-                          onChange={() => handleActiveChange(yr._id)}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
-            }
-          </tbody>
-        </table>
+                  <td style={{ padding: "12px 16px" }}>
+                    {yr.isActive ? (
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: t.success,
+                        background: t.successBg,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}>
+                        <CheckCircleFilled style={{ fontSize: 10 }} /> Active
+                      </span>
+                    ) : (
+                      <span style={{
+                        fontSize: 11,
+                        color: t.textSec,
+                        background: "#f3f4f6",
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}>
+                        Inactive
+                      </span>
+                    )}
+                  </td>
+
+                  <td style={{ padding: "12px 16px" }}>
+                    <Switch
+                      checked={yr.isActive}
+                      disabled={yr.isActive}
+                      size="small"
+                      onChange={() => handleActiveChange(yr._id)}
+                    />
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {/* Mobile Card View */}
+  <div className="table-mobile">
+    {loading && !sorted.length ? (
+      [1, 2, 3].map((i) => (
+        <div key={i} style={{ padding: 16 }}>
+          <Skeleton active paragraph={{ rows: 2 }} />
+        </div>
+      ))
+    ) : sorted.length === 0 ? (
+      <div style={{ padding: 30, textAlign: "center" }}>
+        <Text>No academic years yet</Text>
       </div>
+    ) : (
+      sorted.map((yr) => {
+        const start = dayjs(yr.startDate);
+        const end = dayjs(yr.endDate);
+        const months = end.diff(start, "month");
+
+        return (
+          <div key={yr._id} style={{
+            padding: 14,
+            borderBottom: `1px solid ${t.border}`,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}>
+            <Text style={{ fontWeight: 600 }}>{yr.name}</Text>
+
+            <Text style={{ fontSize: 12, color: t.textSec }}>
+              {start.format("DD MMM")} → {end.format("DD MMM YYYY")}
+            </Text>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{
+                fontSize: 11,
+                background: t.accentBg,
+                color: t.accent,
+                padding: "2px 8px",
+                borderRadius: 99,
+              }}>
+                {months} months
+              </span>
+
+              <Switch
+                checked={yr.isActive}
+                size="small"
+                onChange={() => handleActiveChange(yr._id)}
+              />
+            </div>
+
+            <div>
+              {yr.isActive ? (
+                <span style={{ fontSize: 11, color: t.success }}>Active</span>
+              ) : (
+                <span style={{ fontSize: 11, color: t.textSec }}>Inactive</span>
+              )}
+            </div>
+          </div>
+        );
+      })
+    )}
+  </div>
+</div>
+
+{/* Responsive CSS */}
+<style>{`
+  .table-mobile { display: none; }
+
+  @media (max-width: 768px) {
+    .table-desktop { display: none; }
+    .table-mobile { display: block; }
+  }
+
+  @media (min-width: 769px) {
+    .table-desktop { display: block; }
+    .table-mobile { display: none; }
+  }
+`}</style>
 
       {/* Next step */}
       {next && (

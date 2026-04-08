@@ -182,6 +182,22 @@ export const addSubjectToSection = createAsyncThunk(
   }
 );
 
+export const assignSubjectTeacher = createAsyncThunk(
+  "section/assignSubjectTeacher",
+  async ({ sectionId, subjectId, teacherId }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(
+        `/sections/assign-subject-teacher`,
+        {sectionId, subjectId, teacherId}
+      );
+      return res.data.data; // updated section
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to assign subject teacher"
+        );
+      }
+    }
+    );
 // ==============================
 // 🔥 SLICE
 // ==============================
@@ -278,11 +294,32 @@ const sectionSlice = createSlice({
         // 🔥 store subjects by sectionId
         state.sectionSubjects[section._id] = section.subjects;
       })
-
+  
       .addCase(addSubjectToSection.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // 🔹 ASSIGN SUBJECT TEACHER
+      .addCase(assignSubjectTeacher.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+
+      .addCase(assignSubjectTeacher.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.sections = state.sections.map((sec) =>
+          sec._id === action.payload._id ? action.payload : sec
+        );
+      })
+
+      .addCase(assignSubjectTeacher.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
+
   },
 });
 

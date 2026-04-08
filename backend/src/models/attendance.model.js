@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const ATTENDANCE_STATUSES = ["present", "absent", "late", "halfday"];
+const ATTENDANCE_STATUSES = ["present", "absent", "late", "halfday", "leave"];
 const ATTENDANCE_ROLES = ["student", "teacher", "staff"];
 
 const attendanceSchema = new Schema(

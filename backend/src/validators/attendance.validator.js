@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId");
-const attendanceStatus = z.enum(["present", "absent", "late", "halfday"]);
+const attendanceStatus = z.enum(["present", "absent", "late", "halfday", "leave"]);
 const attendanceRole = z.enum(["student", "teacher", "staff"]);
 
 const optionalObjectId = objectId.nullish().transform((val) => val ?? null);

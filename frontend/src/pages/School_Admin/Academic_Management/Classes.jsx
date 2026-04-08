@@ -1,6 +1,7 @@
-import React, { useEffect, useState, lazy, Suspense, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { getClassData } from "../../../features/schoolClassSlice";
+import { fetchAllUser } from "../../../features/authSlice";
 import {
   Table,
   Tag,
@@ -9,10 +10,14 @@ import {
   Space,
   Typography,
   Empty,
-  Spin,
   Tooltip,
   Badge,
+  Modal,
+  Select,
+  Grid,
+  Spin,
 } from "antd";
+
 import {
   EditOutlined,
   DeleteOutlined,
@@ -20,11 +25,12 @@ import {
   SearchOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
+
 import { useTheme } from "../../../context/ThemeContext";
-
+import { assignSubjectTeacher } from "../../../features/sectionSlice";
 const { Text } = Typography;
-
-const MobileCards = lazy(() => import("./MobileCards"));
+const { Option } = Select;
+const { useBreakpoint } = Grid;
 
 const CLASS_COLORS = [
   { bg: "#EAF3DE", color: "#3B6D11" },
@@ -38,353 +44,361 @@ const CLASS_COLORS = [
 const Classes = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
 
   const { schoolClasses = [], loading } = useSelector(
     (state) => state.schoolClass || {}
   );
-  const { user } = useSelector((state) => state.auth || {});
 
-  const [filterText, setFilterText] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
-
+  const { user, users = [] } = useSelector((state) => state.auth || {});
   const schoolId = user?.school?._id;
 
   useEffect(() => {
+    dispatch(fetchAllUser({ roleName: ["Teacher"], isActive: true }));
+  }, [dispatch]);
+  const [filterText, setFilterText] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+
+  const resetForm = () => {
+    setSelectedSection(null);
+    setSelectedSubject(null);
+    setSelectedTeacher(null);
+  };
+
+  useEffect(() => {
     if (schoolId) dispatch(getClassData({ schoolId }));
+
   }, [dispatch, schoolId]);
 
-  const stats = useMemo(() => {
-    const sections = schoolClasses.reduce(
-      (acc, c) => acc + (c.sections?.length || 0),
-      0
-    );
-    const mapped = schoolClasses.reduce((acc, c) => {
-      return (
-        acc +
-        (c.sections?.filter((s) => s.subjects?.length > 0).length || 0)
-      );
-    }, 0);
-    return { total: schoolClasses.length, sections, mapped };
-  }, [schoolClasses]);
-
   const filteredItems = useMemo(() => {
-    let data = schoolClasses.filter((item) =>
-      (item?.name ?? "").toLowerCase().includes(filterText.toLowerCase())
+    return schoolClasses.filter((item) =>
+      item.name?.toLowerCase().includes(filterText.toLowerCase())
     );
-    if (activeFilter === "with-sections") {
-      data = data.filter((c) => c.sections?.length > 0);
-    } else if (activeFilter === "unmapped") {
-      data = data.filter((c) =>
-        c.sections?.every((s) => !s.subjects?.length)
-      );
-    }
-    return data;
-  }, [schoolClasses, filterText, activeFilter]);
+  }, [schoolClasses, filterText]);
 
+
+  const handleFinish = async () => {
+    if (!selectedSection || !selectedSubject || !selectedTeacher) {
+      // eslint-disable-next-line no-undef
+      return message.error("Please select all fields");
+    }
+
+    try {
+      await dispatch(
+        assignSubjectTeacher({
+          sectionId: selectedSection,
+          subjectId: selectedSubject,
+          teacherId: selectedTeacher,
+        })
+      ).unwrap();
+      dispatch(getClassData({ schoolId }));
+      // eslint-disable-next-line no-undef
+      message.success("Teacher Assigned Successfully ✅");
+
+      handleClose(); // close + reset
+    } catch (err) {
+      // eslint-disable-next-line no-undef
+      message.error("Failed to assign teacher", err);
+    }
+  };
+
+  /* ------------------ TABLE COLUMNS ------------------ */
   const columns = [
     {
       title: "Class",
       dataIndex: "name",
-      key: "name",
-      width: 220,
-      render: (name, _, index) => {
+      render: (name, record, index) => {
         const palette = CLASS_COLORS[index % CLASS_COLORS.length];
-        const sectionCount = schoolClasses[index]?.sections?.length || 0;
-        const subjectCount = schoolClasses[index]?.sections?.reduce(
-          (acc, s) => acc + (s.subjects?.length || 0),
-          0
-        );
+
         return (
-          <Space align="center" size={10}>
+          <Space>
             <div
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 9,
+                width: 38,
+                height: 38,
+                borderRadius: 10,
                 background: palette.bg,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 13,
                 fontWeight: 600,
                 color: palette.color,
-                flexShrink: 0,
               }}
             >
-              {name?.replace(/\D/g, "") || <ApartmentOutlined />}
+              {name?.replace(/\D/g, "") || "C"}
             </div>
-            <div>
-              <Text strong style={{ fontSize: 14 }}>
-                {name}
-              </Text>
-              <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
-                {sectionCount} section{sectionCount !== 1 ? "s" : ""} &nbsp;·&nbsp;{" "}
-                {subjectCount} subject{subjectCount !== 1 ? "s" : ""}
+
+            <div style={{ width:'150px' }}>
+              <Text strong>{name}</Text>
+              <div style={{ fontSize: 12, color: "#9ca3af" }}>
+                {record.sections?.length || 0} sections
               </div>
             </div>
           </Space>
         );
       },
     },
+
     {
       title: "Sections",
-      dataIndex: "sections",
-      key: "sections",
-      width: 180,
-      render: (sections = []) =>
-        sections.length ? (
-          <Space wrap size={4}>
-            {sections.map((sec) => (
-              <Tag
-                key={sec._id}
-                style={{
-                  borderRadius: 20,
-                  background: isDark ? "#0c1a2e" : "#E6F1FB",
-                  color: isDark ? "#60a5fa" : "#185FA5",
-                  border: "none",
-                  fontWeight: 500,
-                  fontSize: 12,
-                  padding: "2px 10px",
-                  margin: 0,
-                }}
-              >
-                {sec.name}
-              </Tag>
-            ))}
-          </Space>
-        ) : (
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            No sections
-          </Text>
-        ),
+      render: (_, record) => (
+        <Space wrap>
+          {record.sections?.map((sec) => (
+            <Tag key={sec._id} color="blue">
+              {sec.name}
+            </Tag>
+          ))}
+        </Space>
+      ),
     },
-    {
-      title: "Subjects",
-      dataIndex: "sections",
-      key: "subjects",
-      render: (sections = []) =>
-        sections.length ? (
-          <div>
-            {sections.map((sec) => (
-              <div
-                key={sec._id}
-                style={{ fontSize: 12, color: "#6b7280", marginBottom: 3 }}
-              >
-                <span
+
+   {
+  title: "Subjects",
+  render: (_, record) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {record.sections?.map((sec) => (
+        <div
+          key={sec._id}
+          style={{
+            padding: "8px 10px",
+            borderRadius: 10,
+            background: isDark ? "#1a1a1a" : "#f8fafc",
+            border: `1px solid ${isDark ? "#2a2a2a" : "#eef2f7"}`,
+          }}
+        >
+          {/* Section Title */}
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              marginBottom: 6,
+              color: isDark ? "#d1d5db" : "#374151",
+            }}
+          >
+            {sec.name}
+          </div>
+
+          {/* Subjects List */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {sec.subjects?.length ? (
+              sec.subjects.map((s) => (
+                <div
+                  key={s._id}
                   style={{
-                    fontWeight: 600,
-                    color: isDark ? "#d1d5db" : "#1e293b",
-                    marginRight: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 8px",
+                    borderRadius: 20,
+                    background: isDark ? "#0f172a" : "#eef4ff",
+                    border: `1px solid ${isDark ? "#1e293b" : "#dbeafe"}`,
+                    fontSize: 11.5,
                   }}
                 >
-                  {sec.name}:
-                </span>
-                {sec.subjects?.length
-                  ? sec.subjects.map((s) => s.name).join(", ")
-                  : "—"}
-              </div>
-            ))}
+                  {/* Subject */}
+                  <span style={{ fontWeight: 500 }}>
+                    {s.name}
+                  </span>
+
+                  {/* Divider */}
+                  <span style={{ opacity: 0.4 }}>•</span>
+
+                  {/* Teacher */}
+                  <span style={{ color: "#1677ff", fontWeight: 500 }}>
+                    {s.teacherName || "Not Assigned"}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                No subjects
+              </Text>
+            )}
           </div>
-        ) : (
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            —
-          </Text>
-        ),
-    },
+        </div>
+      ))}
+    </div>
+  ),
+},
+
     {
-      title: "",
-      key: "actions",
+      title: "Action",
       align: "right",
-      width: 100,
-      render: () => (
-        <Space size={6}>
-          <Tooltip title="Edit">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              size="small"
-              style={{ borderRadius: 7 }}
-            />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              size="small"
-              style={{ borderRadius: 7 }}
-            />
-          </Tooltip>
-        </Space>
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          onClick={() => {
+            setSelectedClass(record);
+            setSelectedSection(null);
+            setSelectedSubject(null);
+            setSelectedTeacher(null);
+            setOpenModal(true);
+          }}
+        >
+          Assign Teacher
+        </Button>
       ),
     },
   ];
 
-  const filterTabs = [
-    { key: "all", label: "All" },
-    { key: "with-sections", label: "With Sections" },
-    { key: "unmapped", label: "Unmapped" },
-  ];
+  /* ------------------ MOBILE VIEW ------------------ */
+  const MobileView = () => {
+    if (loading) return <Spin />;
 
-  const statCards = [
-    {
-      label: "Total Classes",
-      value: stats.total,
-      dot: "#1677ff",
-      sub: "This academic year",
-    },
-    {
-      label: "Total Sections",
-      value: stats.sections,
-      dot: "#0ea472",
-      sub: "Across all classes",
-    },
-    {
-      label: "Mapped Sections",
-      value: stats.mapped,
-      dot: "#f59e0b",
-      sub: "Subjects assigned",
-    },
-  ];
+    if (!filteredItems.length) return <Empty />;
 
-  return (
-    <div style={{ padding: "0px", display: "flex", flexDirection: "column", gap: 24 }}>
-
-      {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 500, color: isDark ? "#e8e8e8" : "#111827" }}>
-            Classes
-          </div>
-          <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 3 }}>
-            Manage classes, sections &amp; subjects
-          </div>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} style={{ borderRadius: 8, fontWeight: 500 }}>
-          Add Class
-        </Button>
-      </div>
-
-      {/* STATS */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
-        {statCards.map((s) => (
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {filteredItems.map((item) => (
           <div
-            key={s.label}
+            key={item._id}
             style={{
-              background: isDark ? "#111111" : "#f8faff",
-              borderRadius: 10,
-              padding: "14px 16px",
-              border: `0.5px solid ${isDark ? "#1f1f1f" : "#f0f0f0"}`,
+              border: "1px solid #eee",
+              borderRadius: 12,
+              padding: 12,
+              background: isDark ? "#141414" : "#fff",
+            
             }}
           >
-            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: s.dot, display: "inline-block" }} />
-              {s.label}
+            <b>{item.name}</b>
+
+            <div style={{ marginTop: 6 }}>
+              {item.sections?.map((s) => (
+                <Tag key={s._id}>{s.name}</Tag>
+              ))}
             </div>
-            <div style={{ fontSize: 26, fontWeight: 500, color: isDark ? "#e8e8e8" : "#111827" }}>
-              {s.value}
-            </div>
-            <div style={{ fontSize: 11, color: isDark ? "#4b5563" : "#c0c0c0", marginTop: 2 }}>
-              {s.sub}
-            </div>
+
+            <Button
+              type="primary"
+              block
+              size="small"
+              style={{ marginTop: 10 }}
+              onClick={() => {
+                setSelectedClass(item);
+                setOpenModal(true);
+              }}
+            >
+              Assign Teacher
+            </Button>
           </div>
         ))}
       </div>
+    );
+  };
+  const handleClose = () => {
+    setOpenModal(false);
+    resetForm();
+    setSelectedClass(null);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+    setSelectedTeacher(null);
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      {/* MAIN TABLE CARD */}
-      <div
-        style={{
-          border: `0.5px solid ${isDark ? "#1f1f1f" : "#e9edf3"}`,
-          borderRadius: 14,
-          overflow: "hidden",
-          background: isDark ? "#141414" : "#ffffff",
-        }}
-      >
-        {/* TOOLBAR */}
-        <div
-          style={{
-            padding: "14px 18px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 10,
-            borderBottom: `0.5px solid ${isDark ? "#1f1f1f" : "#f0f0f0"}`,
-          }}
-        >
-          <Input
-            prefix={<SearchOutlined style={{ color: "#9ca3af" }} />}
-            placeholder="Search classes..."
-            allowClear
-            onChange={(e) => setFilterText(e.target.value)}
-            style={{ width: 260, borderRadius: 8 }}
-          />
-
-          <Space size={6}>
-            {filterTabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveFilter(tab.key)}
-                style={{
-                  fontSize: 12,
-                  padding: "5px 13px",
-                  borderRadius: 20,
-                  border: activeFilter === tab.key
-                    ? "none"
-                    : `0.5px solid ${isDark ? "#333" : "#e2e8f0"}`,
-                  background: activeFilter === tab.key
-                    ? "#1677ff"
-                    : "transparent",
-                  color: activeFilter === tab.key
-                    ? "#fff"
-                    : isDark ? "#9ca3af" : "#6b7280",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                }}
-              >
-                {tab.label}
-                {tab.key === "unmapped" && (
-                  <Badge
-                    count={schoolClasses.filter((c) =>
-                      c.sections?.every((s) => !s.subjects?.length)
-                    ).length}
-                    size="small"
-                    style={{ marginLeft: 6, fontSize: 10 }}
-                  />
-                )}
-              </button>
-            ))}
-          </Space>
+      {/* HEADER */}
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div>
+          <Text strong style={{ fontSize: 20 }}>
+            Classes
+          </Text>
+          <div style={{ fontSize: 12, color: "#9ca3af" }}>
+            Manage classes & teachers
+          </div>
         </div>
+      </div>
 
-        {/* TABLE */}
+      {/* SEARCH */}
+      <Input
+        prefix={<SearchOutlined />}
+        placeholder="Search class..."
+        onChange={(e) => setFilterText(e.target.value)}
+        style={{ maxWidth: 250 }}
+      />
+
+      {/* TABLE / MOBILE */}
+      {isMobile ? (
+        <MobileView />
+      ) : (
         <Table
           columns={columns}
           dataSource={filteredItems}
           rowKey="_id"
           loading={loading}
-          pagination={{ pageSize: 8, size: "small" }}
-          size="middle"
-          style={{ borderRadius: 0 }}
-          locale={{
-            emptyText: (
-              <Empty
-                description="No classes found"
-                style={{ padding: "32px 0" }}
-              />
-            ),
-          }}
-          onRow={() => ({
-            style: { cursor: "default" },
-            onMouseEnter: (e) => {
-              e.currentTarget.style.background = isDark ? "#1a1a1a" : "#f8faff";
-            },
-            onMouseLeave: (e) => {
-              e.currentTarget.style.background = "";
-            },
-          })}
+          pagination={{ pageSize: 8 }}
+          scroll={{ x: 800 }}
         />
-      </div>
+      )}
+
+      {/* MODAL */}
+      <Modal
+        title="Assign Teacher"
+        open={openModal}
+        onCancel={handleClose}
+        onOk={handleFinish}   // ✅ IMPORTANT FIX
+        destroyOnClose
+      >
+        <div style={{ marginBottom: 10 }}>
+          <Text strong>Class</Text>
+          <div>{selectedClass?.name}</div>
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <Text strong>Section</Text>
+          <Select
+            style={{ width: "100%" }}
+            value={selectedSection}
+            onChange={(val) => {
+              setSelectedSection(val);
+              setSelectedSubject(null); // reset subject when section changes
+            }}
+          >
+            {selectedClass?.sections?.map((s) => (
+              <Option key={s._id} value={s._id}>
+                {s.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <Text strong>Subject</Text>
+          <Select
+            style={{ width: "100%" }}
+            value={selectedSubject}
+            onChange={setSelectedSubject}
+          >
+            {selectedClass?.sections
+              ?.find((s) => s._id === selectedSection)
+              ?.subjects?.map((sub) => (
+                <Option key={sub._id} value={sub._id}>
+                  {sub.name}
+                </Option>
+              ))}
+          </Select>
+        </div>
+
+        <div>
+          <Text strong>Teacher</Text>
+          <Select
+            style={{ width: "100%" }}
+            value={selectedTeacher}
+            onChange={setSelectedTeacher}
+          >
+            {users.map((t) => (   // ✅ FIXED HERE
+              <Option key={t._id} value={t._id}>
+                {t.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+      </Modal>
     </div>
   );
 };

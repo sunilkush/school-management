@@ -15,6 +15,8 @@ import {
   Avatar,
   Empty,
   ConfigProvider,
+  Grid,
+  Spin,
 } from "antd";
 
 import {
@@ -28,34 +30,45 @@ import {
 
 import SubjectForm from "../../../components/forms/SubjectForm.jsx";
 import {
-  getAllSubjects,
-  deleteSubject,
+  getAllSubjects
 } from "../../../features/subjectSlice.js";
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const Subjects = () => {
   const dispatch = useDispatch();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [searchText, setSearchText] = useState("");
- 
+
   const { user } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
+  const academicYearId = selectedAcademicYear?._id;
   const { subjects = [], loading = false } = useSelector(
     (state) => state.subject || {}
   );
-// Debugging log
-  const page = "";
+
+  const page = 1;
   const limit = 50;
   const schoolId = user?.school?._id;
 
   /* ── FETCH ── */
   useEffect(() => {
     if (schoolId) {
-      dispatch(getAllSubjects({ page, limit, schoolId }));
+      dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
     }
-  }, [dispatch, schoolId, searchText]);
+  }, [dispatch, schoolId, academicYearId]);
+
+  /* ── FILTER ── */
+  const filteredSubjects = useMemo(() => {
+    return subjects.filter((s) =>
+      s.name?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [subjects, searchText]);
 
   /* ── STATS ── */
   const stats = useMemo(() => {
@@ -66,17 +79,7 @@ const Subjects = () => {
     };
   }, [subjects]);
 
-  /* ── ACTIONS ── */
-  const handleDelete = (id) => {
-    Modal.confirm({
-      title: "Delete Subject",
-      content: "Are you sure?",
-      onOk: async () => {
-        await dispatch(deleteSubject(id)).unwrap();
-        dispatch(getAllSubjects({ page, limit }));
-      },
-    });
-  };
+ 
 
   /* ── TABLE ── */
   const columns = [
@@ -119,23 +122,7 @@ const Subjects = () => {
           <Tag color="purple">{r.schoolId?.name || "School"}</Tag>
         ),
     },
-    {
-      title: "Teachers",
-      render: (_, r) =>
-        r.assignedTeachers?.length ? (
-          <Avatar.Group maxCount={3}>
-            {r.assignedTeachers.map((t, i) => (
-              <Tooltip key={i} title={t.teacherId?.name}>
-                <Avatar>
-                  {t.teacherId?.name?.charAt(0)}
-                </Avatar>
-              </Tooltip>
-            ))}
-          </Avatar.Group>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
-    },
+    
     {
       title: "Status",
       render: (_, r) => (
@@ -144,44 +131,63 @@ const Subjects = () => {
         </Tag>
       ),
     },
-    {
-      title: "",
-      align: "right",
-      render: (_, r) => (
-        <Space>
-          <Button type="text" icon={<Edit size={16} />} />
-          <Button
-            type="text"
-            danger
-            icon={<Trash2 size={16} />}
-            onClick={() => handleDelete(r._id)}
-          />
-        </Space>
-      ),
-    },
+    
   ];
+
+  /* ── MOBILE VIEW ── */
+  const MobileView = () => {
+    if (loading) return <Spin />;
+
+    if (!filteredSubjects.length) {
+      return <Empty description="No subjects found" />;
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {filteredSubjects.map((item) => (
+          <Card key={item._id} style={{ borderRadius: 12 }}>
+            <Space align="start">
+              <Avatar>{item.name?.charAt(0)}</Avatar>
+              <div>
+                <Text strong>{item.name}</Text>
+                <div style={{ fontSize: 12, color: "#888" }}>
+                  {item.category} • {item.type}
+                </div>
+
+                <div style={{ marginTop: 6 }}>
+                  <Tag color="blue">
+                    {item.passMarks}/{item.maxMarks}
+                  </Tag>
+                  <Tag color={item.isActive ? "green" : "red"}>
+                    {item.isActive ? "Active" : "Inactive"}
+                  </Tag>
+                </div>
+              </div>
+            </Space>
+
+            
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <ConfigProvider
       theme={{
         token: {
           borderRadius: 12,
-          fontFamily: "'Inter', sans-serif",
         },
       }}
     >
-      <div style={{ padding: 0 }}>
-        {/* ── HEADER ── */}
-        <div style={{ marginBottom: 24 }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Subjects
-          </Title>
-          <Text type="secondary">
-            Manage curriculum subjects
-          </Text>
+      <div>
+        {/* HEADER */}
+        <div style={{ marginBottom: 20 }}>
+          <Title level={4}>Subjects</Title>
+          <Text type="secondary">Manage curriculum subjects</Text>
         </div>
 
-        {/* ── STATS ── */}
+        {/* STATS */}
         <Row gutter={16} style={{ marginBottom: 20 }}>
           {[
             { title: "Total", value: stats.total, icon: <BookOpen /> },
@@ -195,9 +201,7 @@ const Subjects = () => {
                   <div>
                     <Text type="secondary">{s.title}</Text>
                     <br />
-                    <Text strong style={{ fontSize: 18 }}>
-                      {s.value}
-                    </Text>
+                    <Text strong>{s.value}</Text>
                   </div>
                 </Space>
               </Card>
@@ -205,67 +209,44 @@ const Subjects = () => {
           ))}
         </Row>
 
-        {/* ── MAIN CARD ── */}
-        <Card
-          bodyStyle={{ padding: 0 }}
-          style={{
-            borderRadius: 16,
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          {/* Toolbar */}
-          <div
-            style={{
-              padding: 16,
-              display: "flex",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 10,
-              borderBottom: "1px solid #f1f5f9",
-            }}
-          >
+        {/* MAIN */}
+        <Card>
+          <div style={{ marginBottom: 12, display: "flex", justifyContent: "space-between" }}>
             <Input
               prefix={<Search size={14} />}
               placeholder="Search subjects..."
-              allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 260 }}
+              style={{ width: 250 }}
             />
 
-            <Button
-              type="primary"
-              icon={<Plus size={16} />}
-              onClick={() => setIsModalOpen(true)}
-            >
-              Add Subject
-            </Button>
+          
           </div>
 
-          {/* Table */}
-          <Table
-            rowKey="_id"
-            columns={columns}
-            dataSource={subjects}
-            loading={loading}
-            pagination={{ pageSize: 10 }}
-            locale={{
-              emptyText: <Empty description="No subjects found" />,
-            }}
-          />
+          {isMobile ? (
+            <MobileView />
+          ) : (
+            <Table
+              rowKey="_id"
+              columns={columns}
+              dataSource={filteredSubjects}
+              loading={loading}
+              pagination={{ pageSize: 10 }}
+            />
+          )}
         </Card>
-      </div>
 
-      {/* Modal */}
-      <SubjectForm
-        isOpen={isModalOpen}
-        editData={selectedSubject}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedSubject(null);
-          dispatch(getAllSubjects({ page, limit }));
-        }}
-      />
+        {/* MODAL */}
+        <SubjectForm
+          isOpen={isModalOpen}
+          editData={selectedSubject}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedSubject(null);
+            dispatch(getAllSubjects({ page, limit, schoolId }));
+          }}
+        />
+      </div>
     </ConfigProvider>
   );
 };

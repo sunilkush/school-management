@@ -123,7 +123,6 @@ const Admins = () => {
 
   const {
     users = [],
-    isLoading,
     error,
     user: currentUser,
   } = useSelector((state) => state.auth || {});
@@ -328,7 +327,7 @@ const Admins = () => {
           </Button>
         </div>
 
-        <Content style={{ padding: "24px 32px" }}>
+        <Content style={{ padding: "20px 0px" }}>
 
           {/* ── Stats Row ── */}
           <div style={{
@@ -396,7 +395,7 @@ const Admins = () => {
             {/* Table */}
             <Table
               rowKey="_id"
-              loading={isLoading}
+             
               columns={columns}
               dataSource={filteredUsers}
               pagination={{

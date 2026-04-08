@@ -32,7 +32,12 @@ router.post(
   markBulkAttendance
 );
 
-router.get("/", auth, roleMiddleware(MANAGE_ROLES), validateRequest(attendanceListQuerySchema), getAttendance);
+router.get("/", 
+  auth, 
+  roleMiddleware(MANAGE_ROLES), 
+  validateRequest(attendanceListQuerySchema), 
+  getAttendance);
+
 router.get(
   "/report/monthly",
   auth,
@@ -41,9 +46,20 @@ router.get(
   getMonthlyReport
 );
 
-router.get("/my", auth, roleMiddleware(VIEW_ROLES), validateRequest(myAttendanceQuerySchema), getMyAttendance);
+router.get("/my", 
+  auth, 
+  roleMiddleware(VIEW_ROLES), 
+  validateRequest(myAttendanceQuerySchema), 
+  getMyAttendance
+);
 
-router.put("/:id", auth, roleMiddleware(MANAGE_ROLES), validateRequest(updateAttendanceSchema), updateAttendance);
+router.put("/:id", 
+  auth, 
+  roleMiddleware(MANAGE_ROLES), 
+  validateRequest(updateAttendanceSchema), 
+  updateAttendance
+);
+
 router.delete(
   "/:id",
   auth,

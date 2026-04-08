@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Card,
   Table,
@@ -19,25 +19,70 @@ import {
 } from "antd";
 import { SaveOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import {fetchAllUser} from "../../../features/authSlice";
-import { useEffect } from "react";
+import { fetchAllUser } from "../../../features/authSlice";
+import { submitAttendance } from "../../../features/attendanceSlice";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const StaffAttendance = () => {
-   const dispatch = useDispatch();
-   const { users = [] } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  const { users = [], user: currentUser } = useSelector(
+    (state) => state.auth || {}
+  );
+
   const [attendance, setAttendance] = useState({});
   const [timings, setTimings] = useState({});
   const [filterDept, setFilterDept] = useState();
   const [filterRole, setFilterRole] = useState();
-  const [selectedDate, setSelectedDate] = useState();
-  useEffect(() =>{
-    dispatch(fetchAllUser());
-  },[dispatch])
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+
+  const schoolId = currentUser?.school?._id;
+
+  useEffect(() => {
+    dispatch(fetchAllUser({schoolId,roleName: ["Teacher","Staff","Super Admin"], isActive: true }));
+  }, [dispatch,schoolId]);
+
+  /* ------------------ HELPERS ------------------ */
+  const getRoleName = (staff) =>
+    staff?.role?.name ||
+    staff?.roleId?.name ||
+    staff?.role?.title ||
+    staff?.roleId?.title ||
+    "";
+
+  const normalizeTimestamp = (dateValue, timeValue) => {
+    if (!dateValue || !timeValue) return undefined;
+
+    return dateValue
+      .hour(timeValue.hour())
+      .minute(timeValue.minute())
+      .second(0)
+      .millisecond(0)
+      .toISOString();
+  };
+
+  /* ------------------ FILTER ------------------ */
+  const filteredStaff = useMemo(() => {
+    const excludedRoles = ["Student", "Parent"];
+
+    return users.filter((s) => {
+      const roleName = getRoleName(s);
+      if (excludedRoles.includes(roleName)) return false;
+
+      return (
+        (!filterDept || s.department === filterDept) &&
+        (!filterRole || roleName === filterRole)
+      );
+    });
+  }, [users, filterDept, filterRole]);
+
+  /* ------------------ ACTIONS ------------------ */
   const handleAttendanceChange = (id, status) => {
     setAttendance((p) => ({ ...p, [id]: status }));
+
     if (status !== "present") {
       setTimings((p) => ({ ...p, [id]: {} }));
     }
@@ -49,41 +94,60 @@ const StaffAttendance = () => {
     return diff > 0 ? `${(diff / 60).toFixed(2)} hrs` : "—";
   };
 
-  const filteredStaff = useMemo(() => {
-    return users.filter(
-      (s) =>
-        (!filterDept || s.department === filterDept) &&
-        (!filterRole || s.role === filterRole)
-    );
-  }, [filterDept, filterRole, users]);
-
-  const summary = useMemo(() => {
-    return {
-      present: Object.values(attendance).filter((a) => a === "present").length,
-      absent: Object.values(attendance).filter((a) => a === "absent").length,
-      leave: Object.values(attendance).filter((a) => a === "leave").length,
-    };
-  }, [attendance]);
-
-  const handleSubmit = () => {
+  /* ------------------ SUBMIT ------------------ */
+  const handleSubmit = async () => {
     if (!selectedDate) {
-      return message.warning("Please select attendance date");
+      return message.warning("Please select date");
     }
-    message.success("Attendance saved successfully");
+
+    if (!schoolId) {
+      return message.error("School not found");
+    }
+
+    const records = Object.entries(attendance)
+      .filter(([, status]) => status)
+      .map(([userId, status]) => ({
+        userId,
+        status,
+        checkInAt: normalizeTimestamp(selectedDate, timings[userId]?.in),
+        checkOutAt: normalizeTimestamp(selectedDate, timings[userId]?.out),
+      }));
+
+    if (!records.length) {
+      return message.warning("Mark at least one attendance");
+    }
+
+    try {
+      await dispatch(
+        submitAttendance({
+          schoolId,
+          date: selectedDate.toISOString(),
+          role: "staff",
+          records,
+        })
+      ).unwrap();
+
+      message.success("Attendance saved ✅");
+    } catch (err) {
+      message.error(err || "Error saving attendance");
+    }
   };
 
+  /* ------------------ COLUMNS ------------------ */
   const columns = [
     {
       title: "Staff",
       dataIndex: "name",
       render: (t) => <Text strong>{t}</Text>,
     },
-   {
-    title: "Role",
-    render: (_, r) => r.role?.name || "—", // use populated role name
-  },
-    { title: "Department", dataIndex: "department" },
-
+    {
+      title: "Role",
+      render: (_, r) => getRoleName(r) || "—",
+    },
+    {
+      title: "Department",
+      dataIndex: "department",
+    },
     {
       title: "Attendance",
       align: "center",
@@ -101,31 +165,30 @@ const StaffAttendance = () => {
         </Radio.Group>
       ),
     },
-
     {
       title: "Timing",
       render: (_, r) =>
         attendance[r._id] === "present" ? (
-          <Space size={6}>
+          <Space>
             <TimePicker
-              format="HH:mm"
               size="small"
-              placeholder="In"
-              onChange={(t) =>
+              format="HH:mm"
+              value={timings[r._id]?.in}
+              onChange={(time) =>
                 setTimings((p) => ({
                   ...p,
-                  [r._id]: { ...p[r._id], in: t },
+                  [r._id]: { ...p[r._id], in: time },
                 }))
               }
             />
             <TimePicker
-              format="HH:mm"
               size="small"
-              placeholder="Out"
-              onChange={(t) =>
+              format="HH:mm"
+              value={timings[r._id]?.out}
+              onChange={(time) =>
                 setTimings((p) => ({
                   ...p,
-                  [r._id]: { ...p[r._id], out: t },
+                  [r._id]: { ...p[r._id], out: time },
                 }))
               }
             />
@@ -134,40 +197,36 @@ const StaffAttendance = () => {
           <Text type="secondary">—</Text>
         ),
     },
-
     {
       title: "Hours",
-      align: "center",
       render: (_, r) => (
         <Tag color="blue">
-          {calculateHours(timings[r._id]?.in, timings[r._id]?.out)}
+          {calculateHours(
+            timings[r._id]?.in,
+            timings[r._id]?.out
+          )}
         </Tag>
       ),
     },
   ];
 
   return (
-    <Card bordered={false}>
-      {/* Header */}
-      <Row justify="space-between" align="middle">
-        <Title level={4}>Staff Attendance</Title>
-
-        <Space>
-          <Badge status="success" text={`Present: ${summary.present}`} />
-          <Badge status="error" text={`Absent: ${summary.absent}`} />
-          <Badge status="warning" text={`Leave: ${summary.leave}`} />
-        </Space>
-      </Row>
+    <Card>
+      {/* HEADER */}
+      <Title level={4}>Staff Attendance</Title>
+      <Text type="secondary">
+        Mark daily attendance for staff
+      </Text>
 
       <Divider />
 
-      {/* Filters */}
-      <Row gutter={12}>
-        <Col md={5}>
+      {/* FILTERS */}
+      <Row gutter={16}>
+        <Col md={4}>
           <DatePicker
-            style={{ width: "100%" }}
-            placeholder="Attendance Date"
+            value={selectedDate}
             onChange={setSelectedDate}
+            style={{ width: "100%" }}
           />
         </Col>
 
@@ -178,9 +237,8 @@ const StaffAttendance = () => {
             style={{ width: "100%" }}
             onChange={setFilterDept}
           >
-            <Option value="Math">Math</Option>
-            <Option value="Accounts">Accounts</Option>
             <Option value="Admin">Admin</Option>
+            <Option value="Accounts">Accounts</Option>
           </Select>
         </Col>
 
@@ -191,30 +249,29 @@ const StaffAttendance = () => {
             style={{ width: "100%" }}
             onChange={setFilterRole}
           >
+            <Option value="Staff">Staff</Option>
             <Option value="Teacher">Teacher</Option>
-            <Option value="Accountant">Accountant</Option>
-            <Option value="Peon">Peon</Option>
           </Select>
         </Col>
 
-        <Col md={11} style={{ textAlign: "right" }}>
+        <Col md={12} style={{ textAlign: "right" }}>
           <Space>
-            <Tooltip title="Clear attendance">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => setAttendance({})}
-              >
-                Reset
-              </Button>
-            </Tooltip>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => {
+                setAttendance({});
+                setTimings({});
+              }}
+            >
+              Reset
+            </Button>
 
             <Button
               type="primary"
-              size="large"
               icon={<SaveOutlined />}
               onClick={handleSubmit}
             >
-              Save Attendance
+              Save
             </Button>
           </Space>
         </Col>
@@ -222,14 +279,12 @@ const StaffAttendance = () => {
 
       <Divider />
 
-      {/* Table */}
+      {/* TABLE */}
       <Table
         rowKey="_id"
-        size="middle"
         columns={columns}
         dataSource={filteredStaff}
         pagination={{ pageSize: 8 }}
-        locale={{ emptyText: "No staff found" }}
       />
     </Card>
   );

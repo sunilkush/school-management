@@ -219,6 +219,7 @@ const TabBar = ({ steps, activeKey, completedKeys, onTab, isDark }) => {
       borderRadius: 10,
       padding: 4,
       marginBottom: 24,
+      overflowX: "auto",
     }}>
       {steps.map((step) => {
         const isActive = step.key === activeKey;
@@ -394,6 +395,7 @@ const SchoolSetup = () => {
               completedKeys={completed}
               onTab={goTo}
               isDark={isDark}
+              style={{ overflow: "auto" }}
             />
           </div>
 
@@ -405,6 +407,7 @@ const SchoolSetup = () => {
             marginBottom: 20,
             paddingBottom: 16,
             borderBottom: `1px solid ${t.border}`,
+            
           }}>
             <div style={{
               width: 30, height: 30, borderRadius: 8,

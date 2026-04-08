@@ -245,6 +245,7 @@ export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
     _id: { $in: sectionIds },
   })
     .populate("subjects.subjectId", "name")
+    .populate("subjects.teacherId", "name")
     .lean();
 
   // =============================
@@ -273,7 +274,8 @@ export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
         subjects: (fullSection?.subjects || []).map((sub) => ({
           _id: sub.subjectId?._id,
           name: sub.subjectId?.name,
-          teacherId: sub.teacherId || null,
+          teacherId: sub.teacherId?._id ,
+          teacherName : sub.teacherId?.name || "Unassigned",
         })),
       };
     }),

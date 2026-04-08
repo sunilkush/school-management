@@ -8,7 +8,8 @@ import {
   assignClassTeacher,
   addStudentToSection,
   removeStudentFromSection,
-  addSubjectToSection
+  addSubjectToSection,
+  assignSubjectTeacher
 } from "../controllers/section.controllers.js";
 
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
@@ -114,4 +115,16 @@ router.post(
   roleMiddleware(ADMIN_ONLY),
   addSubjectToSection
 );
+
+//============================
+// Assign Subject Teacher
+//============================
+router.post(
+  "/assign-subject-teacher",
+  auth,
+  roleMiddleware(ADMIN_ONLY),
+  assignSubjectTeacher
+);
+
+
 export default router;

@@ -349,7 +349,7 @@ const router = createBrowserRouter([
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
-              { path: "attendance/students", element: <MarkAttendancePage /> },
+              { path: "attendance/students", element: <AllStudentsAttendance /> },
               { path: "attendance/staff", element: <StaffAttendance /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "attendance/dashboard", element: <AttendanceDashboardPage /> },

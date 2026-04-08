@@ -17,7 +17,7 @@ import {
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
-import { markAttendance } from "../../../features/attendanceSlice";
+import { markBulkAttendance } from "../../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 
 const { Title, Text } = Typography;
@@ -26,15 +26,14 @@ const { Option } = Select;
 const AllStudentsAttendance = () => {
   const dispatch = useDispatch();
 
-  const { schoolStudents = [], loading } = useSelector(
-    (state) => state.students
-  );
+   const { schoolStudents = [], loading } = useSelector((state) => state.students);
+  const { loading: attendanceLoading } = useSelector((state) => state.attendance);
   const { user: currentUser } = useSelector((state) => state.auth);
-  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+
   const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
 
   const schoolId = currentUser?.school?._id;
-  const academicYearId = selectedAcademicYear?._id;
+
 
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -159,27 +158,42 @@ const AllStudentsAttendance = () => {
   ];
 
   // 🔹 Submit Attendance
-  const handleSubmit = () => {
+const handleSubmit = async () => {
     if (!selectedClass || !selectedSection) {
       message.warning("Please select class and section");
       return;
     }
 
-    const attendanceData = filteredData.map((student) => ({
+    if (!filteredData.length) {
+      message.warning("No students found for selected class and section");
+      return;
+    }
+
+    const selectedClassDetails =
+      schoolClasses.find((cls) => cls.name === selectedClass) || null;
+    const selectedSectionDetails =
+      filteredData.find((student) => student.section?.name === selectedSection)?.section || null;
+
+    const payload = {
       schoolId,
-      studentId: student._id,
-      schoolClassId: student.class?._id,
-      sectionId: student.section?._id,
+      role: "student",
+      classId: selectedClassDetails?._id || filteredData[0]?.class?._id || null,
+      sectionId: selectedSectionDetails?._id || filteredData[0]?.section?._id || null,
       date: attendanceDate.toISOString(),
-      status: attendance[student._id],
-      recordedBy: currentUser?._id,
-      academicYearId,
-    }));
+      records: filteredData.map((student) => ({
+        userId: student.user?._id || student._id,
+        status: attendance[student._id] || "present",
+      })),
+    };
 
-    dispatch(markAttendance({ attendanceData }));
-    message.success("Attendance saved successfully");
+    const result = await dispatch(markBulkAttendance(payload));
+
+    if (result.meta.requestStatus === "fulfilled") {
+      message.success("Attendance saved successfully");
+    } else {
+      message.error(result.payload || "Failed to save attendance");
+    }
   };
-
   return (
     <Card>
       <Title level={4}>Student Attendance</Title>
@@ -257,7 +271,8 @@ const AllStudentsAttendance = () => {
         <Button
           type="primary"
           onClick={handleSubmit}
-          disabled={!selectedClass || !selectedSection}
+          loading={attendanceLoading}
+          disabled={!selectedClass || !selectedSection || attendanceLoading}
         >
           Save Attendance
         </Button>

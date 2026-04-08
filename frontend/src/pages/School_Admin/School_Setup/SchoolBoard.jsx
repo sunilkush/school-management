@@ -161,101 +161,233 @@ const SchoolBoard = ({ next }) => {
           </span>
         </div>
 
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: t.thBg }}>
-              {["Board", "Primary", "Status"].map((h) => (
-                <th key={h} style={{
-                  padding: "9px 16px", textAlign: "left",
-                  fontSize: 11, fontWeight: 600, color: t.textSec,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                  borderBottom: `1px solid ${t.thBorder}`,
-                }}>{h}</th>
-              ))}
+       <div style={{
+  background: t.cardBg,
+  border: `1px solid ${t.border}`,
+  borderRadius: 12,
+  overflow: "hidden",
+}}>
+
+  {/* Desktop Table */}
+  <div className="board-table-desktop">
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
+        <thead>
+          <tr style={{ background: t.thBg }}>
+            {["Board", "Primary", "Status"].map((h) => (
+              <th key={h} style={{
+                padding: "9px 16px",
+                textAlign: "left",
+                fontSize: 11,
+                fontWeight: 600,
+                color: t.textSec,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                borderBottom: `1px solid ${t.thBorder}`,
+                whiteSpace: "nowrap",
+              }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {loading && !schoolBoards.length ? (
+            [1, 2].map((i) => (
+              <tr key={i}>
+                <td colSpan={3} style={{ padding: "12px 16px" }}>
+                  <Skeleton active title={false} paragraph={{ rows: 1 }} />
+                </td>
+              </tr>
+            ))
+          ) : schoolBoards.length === 0 ? (
+            <tr>
+              <td colSpan={3} style={{ padding: 32, textAlign: "center" }}>
+                <Text style={{ color: t.textSec }}>No boards assigned yet.</Text>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {loading && !schoolBoards.length
-              ? [1, 2].map((i) => (
-                  <tr key={i}>
-                    <td colSpan={3} style={{ padding: "12px 16px" }}>
-                      <Skeleton active title={false} paragraph={{ rows: 1, width: ["80%"] }} />
-                    </td>
-                  </tr>
-                ))
-              : schoolBoards.length === 0
-              ? (
-                <tr>
-                  <td colSpan={3} style={{ padding: 32, textAlign: "center" }}>
-                    <Text style={{ color: t.textSec, fontSize: 12 }}>
-                      No boards assigned yet.
-                    </Text>
+          ) : (
+            schoolBoards.map((item, i) => {
+              const isHov = hovered === i;
+
+              return (
+                <tr
+                  key={item._id}
+                  onMouseEnter={() => setHovered(i)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{
+                    background: isHov ? t.rowHover : "transparent",
+                    borderBottom: `1px solid ${t.thBorder}`,
+                  }}
+                >
+                  {/* Board */}
+                  <td style={{ padding: "12px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 8,
+                        background: t.accentBg,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}>
+                        <ApartmentOutlined style={{ fontSize: 13, color: t.accent }} />
+                      </div>
+                      <Text style={{ fontWeight: 600 }}>
+                        {item.boardId?.name || "—"}
+                      </Text>
+                    </div>
+                  </td>
+
+                  {/* Primary */}
+                  <td style={{ padding: "12px 16px" }}>
+                    {item.isPrimary ? (
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: t.accent,
+                        background: t.accentBg,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}>
+                        Primary
+                      </span>
+                    ) : (
+                      <Text style={{ color: t.textSec }}>—</Text>
+                    )}
+                  </td>
+
+                  {/* Status */}
+                  <td style={{ padding: "12px 16px" }}>
+                    {item.isActive ? (
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: t.success,
+                        background: t.successBg,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}>
+                        <CheckCircleFilled style={{ fontSize: 9 }} /> Active
+                      </span>
+                    ) : (
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontSize: 11,
+                        color: t.warning,
+                        background: t.warnBg,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}>
+                        <MinusCircleOutlined style={{ fontSize: 9 }} /> Inactive
+                      </span>
+                    )}
                   </td>
                 </tr>
-              )
-              : schoolBoards.map((item, i) => {
-                  const isHov = hovered === i;
-                  return (
-                    <tr
-                      key={item._id}
-                      onMouseEnter={() => setHovered(i)}
-                      onMouseLeave={() => setHovered(null)}
-                      style={{
-                        background: isHov ? t.rowHover : "transparent",
-                        borderBottom: `1px solid ${t.thBorder}`,
-                        transition: "background 0.15s ease",
-                      }}
-                    >
-                      <td style={{ padding: "12px 16px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{
-                            width: 30, height: 30, borderRadius: 8,
-                            background: t.accentBg,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            flexShrink: 0,
-                          }}>
-                            <ApartmentOutlined style={{ fontSize: 13, color: t.accent }} />
-                          </div>
-                          <Text style={{ fontSize: 13, fontWeight: 600, color: t.textPri }}>
-                            {item.boardId?.name || "—"}
-                          </Text>
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        {item.isPrimary
-                          ? <span style={{
-                              fontSize: 11, fontWeight: 600,
-                              color: t.accent, background: t.accentBg,
-                              padding: "2px 8px", borderRadius: 99,
-                            }}>Primary</span>
-                          : <Text style={{ fontSize: 12, color: t.textSec }}>—</Text>
-                        }
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        {item.isActive
-                          ? <span style={{
-                              display: "inline-flex", alignItems: "center", gap: 5,
-                              fontSize: 11, fontWeight: 600,
-                              color: t.success, background: t.successBg,
-                              padding: "2px 8px", borderRadius: 99,
-                            }}>
-                              <CheckCircleFilled style={{ fontSize: 9 }} /> Active
-                            </span>
-                          : <span style={{
-                              display: "inline-flex", alignItems: "center", gap: 5,
-                              fontSize: 11, color: t.warning, background: t.warnBg,
-                              padding: "2px 8px", borderRadius: 99,
-                            }}>
-                              <MinusCircleOutlined style={{ fontSize: 9 }} /> Inactive
-                            </span>
-                        }
-                      </td>
-                    </tr>
-                  );
-                })
-            }
-          </tbody>
-        </table>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {/* Mobile Card View */}
+  <div className="board-table-mobile">
+    {loading && !schoolBoards.length ? (
+      [1, 2].map((i) => (
+        <div key={i} style={{ padding: 14 }}>
+          <Skeleton active paragraph={{ rows: 2 }} />
+        </div>
+      ))
+    ) : schoolBoards.length === 0 ? (
+      <div style={{ padding: 24, textAlign: "center" }}>
+        <Text>No boards assigned yet</Text>
+      </div>
+    ) : (
+      schoolBoards.map((item) => (
+        <div key={item._id} style={{
+          padding: 14,
+          borderBottom: `1px solid ${t.border}`,
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+        }}>
+          {/* Board */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              background: t.accentBg,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <ApartmentOutlined style={{ fontSize: 12, color: t.accent }} />
+            </div>
+            <Text style={{ fontWeight: 600 }}>
+              {item.boardId?.name || "—"}
+            </Text>
+          </div>
+
+          {/* Primary + Status Row */}
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}>
+            {item.isPrimary ? (
+              <span style={{
+                fontSize: 11,
+                color: t.accent,
+                background: t.accentBg,
+                padding: "2px 8px",
+                borderRadius: 99,
+              }}>
+                Primary
+              </span>
+            ) : (
+              <span style={{ fontSize: 11, color: t.textSec }}>—</span>
+            )}
+
+            {item.isActive ? (
+              <span style={{ fontSize: 11, color: t.success }}>
+                Active
+              </span>
+            ) : (
+              <span style={{ fontSize: 11, color: t.warning }}>
+                Inactive
+              </span>
+            )}
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+</div>
+
+{/* Responsive CSS */}
+<style>{`
+  .board-table-mobile { display: none; }
+
+  @media (max-width: 768px) {
+    .board-table-desktop { display: none; }
+    .board-table-mobile { display: block; }
+  }
+
+  @media (min-width: 769px) {
+    .board-table-desktop { display: block; }
+    .board-table-mobile { display: none; }
+  }
+`}</style>
       </div>
 
       {next && (

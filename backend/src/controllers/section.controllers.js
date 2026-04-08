@@ -321,3 +321,53 @@ export const addSubjectToSection = asyncHandler(async (req, res) => {
     data: section,
   });
 });
+
+export const assignSubjectTeacher = asyncHandler(async (req, res) => {
+  const { sectionId, subjectId, teacherId } = req.body;
+
+  /* =============================
+     ✅ VALIDATION
+  ============================= */
+  if (!sectionId || !subjectId || !teacherId) {
+    return res.status(400).json({
+      success: false,
+      message: "sectionId, subjectId and teacherId are required",
+    });
+  }
+
+  /* =============================
+     ✅ UPDATE DIRECTLY (OPTIMIZED)
+  ============================= */
+  const updatedSection = await Section.findOneAndUpdate(
+    {
+      _id: sectionId,
+      "subjects.subjectId": subjectId, // 🔥 match subject inside array
+    },
+    {
+      $set: {
+        "subjects.$.teacherId": teacherId, // 🔥 update matched subject
+        updatedBy: req.user?._id,
+      },
+    },
+    { new: true }
+  );
+
+  /* =============================
+     ❌ NOT FOUND CASE
+  ============================= */
+  if (!updatedSection) {
+    return res.status(404).json({
+      success: false,
+      message: "Section or Subject not found",
+    });
+  }
+
+  /* =============================
+     ✅ SUCCESS
+  ============================= */
+  return res.status(200).json({
+    success: true,
+    message: "Teacher assigned successfully ✅",
+    data: updatedSection,
+  });
+});

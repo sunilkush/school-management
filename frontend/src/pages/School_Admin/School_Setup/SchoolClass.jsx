@@ -170,154 +170,258 @@ const getClass = (record) =>
 
       {/* ── Class table ── */}
       <div style={{
-        background: t.cardBg,
-        border: `1px solid ${t.border}`,
-        borderRadius: 12,
-        overflow: "hidden",
-      }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: t.thBg, borderBottom: `1px solid ${t.thBorder}` }}>
-              {["Class", "Assign", "Sections"].map((h, i) => (
-                <th key={h} style={{
-                  padding: "10px 16px",
-                  textAlign: i === 1 ? "center" : "left",
-                  fontSize: 11, fontWeight: 600, color: t.textSec,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                  width: i === 1 ? 90 : "auto",
-                }}>{h}</th>
-              ))}
+  background: t.cardBg,
+  border: `1px solid ${t.border}`,
+  borderRadius: 12,
+  overflow: "hidden",
+}}>
+
+  {/* ================= DESKTOP TABLE ================= */}
+  <div className="class-table-desktop">
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
+        <thead>
+          <tr style={{ background: t.thBg, borderBottom: `1px solid ${t.thBorder}` }}>
+            {["Class", "Assign", "Sections"].map((h, i) => (
+              <th key={h} style={{
+                padding: "10px 16px",
+                textAlign: i === 1 ? "center" : "left",
+                fontSize: 11,
+                fontWeight: 600,
+                color: t.textSec,
+                textTransform: "uppercase",
+                width: i === 1 ? 90 : "auto",
+              }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {loading && !boardClass.length ? (
+            [1, 2, 3].map((i) => (
+              <tr key={i}>
+                <td colSpan={3} style={{ padding: 16 }}>
+                  <Skeleton active paragraph={{ rows: 1 }} />
+                </td>
+              </tr>
+            ))
+          ) : boardClass.length === 0 ? (
+            <tr>
+              <td colSpan={3} style={{ padding: 40, textAlign: "center" }}>
+                <Text>No classes available</Text>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {loading && !boardClass.length
-              ? [1, 2, 3].map((i) => (
-                  <tr key={i} style={{ borderBottom: `1px solid ${t.thBorder}` }}>
-                    <td style={{ padding: "14px 16px" }}>
-                      <Skeleton active title={{ width: 100 }} paragraph={false} />
-                    </td>
-                    <td style={{ padding: "14px 16px", textAlign: "center" }}>
-                      <Skeleton.Button active size="small" style={{ width: 40 }} />
-                    </td>
-                    <td style={{ padding: "14px 16px" }}>
-                      <Skeleton active title={false} paragraph={{ rows: 1, width: "60%" }} />
-                    </td>
-                  </tr>
-                ))
-              : boardClass.length === 0
-              ? (
-                <tr>
-                  <td colSpan={3} style={{ padding: 40, textAlign: "center" }}>
-                    <Text style={{ color: t.textSec, fontSize: 13 }}>
-                      No classes available for this board.
+          ) : (
+            boardClass.map((record, i) => {
+              const assigned = isAssigned(record);
+              const sections = getSections(record);
+              const isHov = hovered === i;
+
+              return (
+                <tr
+                  key={record._id}
+                  onMouseEnter={() => setHovered(i)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{
+                    background: isHov ? t.rowHover : "transparent",
+                    borderBottom: `1px solid ${t.thBorder}`,
+                  }}
+                >
+                  {/* Class */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <Text style={{ fontWeight: 600 }}>
+                      {record.classId?.name}
                     </Text>
                   </td>
+
+                  {/* Toggle */}
+                  <td style={{ textAlign: "center" }}>
+                    <Switch
+                      checked={assigned}
+                      loading={saving[record._id]}
+                      onChange={() => handleToggle(record)}
+                      size="small"
+                    />
+                  </td>
+
+                  {/* Sections */}
+                  <td style={{ padding: "14px 16px" }}>
+                    {!assigned ? (
+                      <span style={{
+                        fontSize: 11,
+                        color: t.textSec,
+                        background: "#f3f4f6",
+                        padding: "3px 8px",
+                        borderRadius: 99,
+                      }}>
+                        Assign class first
+                      </span>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {/* Tags */}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                          {sections?.length ? (
+                            sections.map((sec) => (
+                              <span key={sec._id} style={{
+                                fontSize: 11,
+                                color: t.accent,
+                                background: t.accentBg,
+                                padding: "2px 8px",
+                                borderRadius: 99,
+                              }}>
+                                {sec.name}
+                              </span>
+                            ))
+                          ) : (
+                            <Text style={{ fontSize: 11, color: t.textSec }}>
+                              No sections
+                            </Text>
+                          )}
+                        </div>
+
+                        {/* Input */}
+                        <div style={{ display: "flex", gap: 6, maxWidth: 260 }}>
+                          <Input
+                            size="small"
+                            placeholder="A, B, C"
+                            value={sectionInputs[record._id] || ""}
+                            onChange={(e) =>
+                              setSectionInputs((p) => ({ ...p, [record._id]: e.target.value }))
+                            }
+                            onPressEnter={() => handleAddSection(record._id)}
+                          />
+                          <Button
+                            size="small"
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            loading={saving[`sec_${record._id}`]}
+                            onClick={() => handleAddSection(record._id)}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </td>
                 </tr>
-              )
-              : boardClass.map((record, i) => {
-                 const assigned = isAssigned(record);
-                 const sections = getSections(record);
-                  const isHov = hovered === i;
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-                  return (
-                    <tr
-                      key={record._id}
-                      onMouseEnter={() => setHovered(i)}
-                      onMouseLeave={() => setHovered(null)}
-                      style={{
-                        background: isHov ? t.rowHover : i % 2 === 0 ? t.rowBg : t.rowAlt,
-                        borderBottom: `1px solid ${t.thBorder}`,
-                        transition: "background 0.15s ease",
-                        verticalAlign: "top",
-                      }}
-                    >
-                      {/* Class name */}
-                      <td style={{ padding: "14px 16px" }}>
-                        <Text style={{ fontSize: 13, fontWeight: 600, color: t.textPri }}>
-                          {record.classId?.name}
-                        </Text>
-                      </td>
-
-                      {/* Toggle */}
-                      <td style={{ padding: "14px 16px", textAlign: "center" }}>
-                        <Switch
-                          checked={assigned}
-                          loading={saving[record._id]}
-                          onChange={() => handleToggle(record)}
-                          size="small"
-                        />
-                      </td>
-
-                      {/* Sections */}
-                      <td style={{ padding: "14px 16px" }}>
-                        {!assigned ? (
-                          <span style={{
-                            display: "inline-flex", alignItems: "center", gap: 5,
-                            fontSize: 11.5, color: t.textSec,
-                            background: isDark ? "#1a1a1a" : "#f3f4f6",
-                            padding: "3px 8px", borderRadius: 99,
-                          }}>
-                            <LockOutlined style={{ fontSize: 10 }} /> Assign class first
-                          </span>
-                        ) : (
-                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {/* Existing section tags */}
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, minHeight: 24 }}>
-                              {Array.isArray(sections) && sections.length > 0 ? (
-                                sections.map((sec) => (
-                                  <span
-                                    key={sec._id}
-                                    style={{
-                                      fontSize: 11,
-                                      fontWeight: 600,
-                                      color: t.accent,
-                                      background: t.accentBg,
-                                      border: `1px solid rgba(22,119,255,0.15)`,
-                                      padding: "2px 8px",
-                                      borderRadius: 99,
-                                    }}
-                                  >
-                                    {sec.name}
-                                  </span>
-                                ))
-                              ) : (
-                                <Text style={{ fontSize: 11.5, color: t.textSec }}>
-                                  No sections yet
-                                </Text>
-                              )}
-                            </div>
-
-                            {/* Add section input */}
-                            <div style={{ display: "flex", gap: 6, maxWidth: 280 }}>
-                              <Input
-                                size="small"
-                                placeholder="A, B, C …"
-                                value={sectionInputs[record._id] || ""}
-                                onChange={(e) =>
-                                  setSectionInputs((p) => ({ ...p, [record._id]: e.target.value }))
-                                }
-                                onPressEnter={() => handleAddSection(record._id)}
-                                style={{ borderRadius: 7, fontSize: 12 }}
-                              />
-                              <Button
-                                size="small"
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                loading={saving[`sec_${record._id}`]}
-                                onClick={() => handleAddSection(record._id)}
-                                style={{ borderRadius: 7, fontWeight: 600 }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-            }
-          </tbody>
-        </table>
+  {/* ================= MOBILE CARD ================= */}
+  <div className="class-table-mobile">
+    {loading && !boardClass.length ? (
+      [1, 2].map((i) => (
+        <div key={i} style={{ padding: 14 }}>
+          <Skeleton active paragraph={{ rows: 2 }} />
+        </div>
+      ))
+    ) : boardClass.length === 0 ? (
+      <div style={{ padding: 30, textAlign: "center" }}>
+        <Text>No classes available</Text>
       </div>
+    ) : (
+      boardClass.map((record) => {
+        const assigned = isAssigned(record);
+        const sections = getSections(record);
+
+        return (
+          <div key={record._id} style={{
+            padding: 14,
+            borderBottom: `1px solid ${t.border}`,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}>
+
+            {/* Top Row */}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}>
+              <Text style={{ fontWeight: 600 }}>
+                {record.classId?.name}
+              </Text>
+
+              <Switch
+                checked={assigned}
+                size="small"
+                onChange={() => handleToggle(record)}
+              />
+            </div>
+
+            {/* Sections */}
+            {!assigned ? (
+              <Text style={{ fontSize: 11, color: t.textSec }}>
+                Assign class first
+              </Text>
+            ) : (
+              <>
+                {/* Tags */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                  {sections?.length ? (
+                    sections.map((sec) => (
+                      <span key={sec._id} style={{
+                        fontSize: 11,
+                        background: t.accentBg,
+                        color: t.accent,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}>
+                        {sec.name}
+                      </span>
+                    ))
+                  ) : (
+                    <Text style={{ fontSize: 11 }}>No sections</Text>
+                  )}
+                </div>
+
+                {/* Input */}
+                <div style={{ display: "flex", gap: 6 }}>
+                  <Input
+                    size="small"
+                    placeholder="Add section"
+                    value={sectionInputs[record._id] || ""}
+                    onChange={(e) =>
+                      setSectionInputs((p) => ({ ...p, [record._id]: e.target.value }))
+                    }
+                    onPressEnter={() => handleAddSection(record._id)}
+                  />
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => handleAddSection(record._id)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })
+    )}
+  </div>
+</div>
+
+{/* ================= RESPONSIVE CSS ================= */}
+<style>{`
+  .class-table-mobile { display: none; }
+
+  @media (max-width: 768px) {
+    .class-table-desktop { display: none; }
+    .class-table-mobile { display: block; }
+  }
+
+  @media (min-width: 769px) {
+    .class-table-desktop { display: block; }
+    .class-table-mobile { display: none; }
+  }
+`}</style>
 
       {next && (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
