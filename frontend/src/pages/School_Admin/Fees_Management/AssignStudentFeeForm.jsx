@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
-import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
+
 import { currentUser } from "../../../features/authSlice";
 import { fetchFeeStructures } from "../../../features/feeStructureSlice";
 import { assignFeesToStudents } from "../../../features/studentFeeSlice";
@@ -47,7 +47,7 @@ const AssignStudentFee = () => {
 
     dispatch(fetchStudentsBySchoolId({ schoolId }));
     dispatch(fetchSchoolClasses({ schoolId }));
-    dispatch(fetchActiveAcademicYear(schoolId));
+  
   }, [dispatch, schoolId]);
 
   useEffect(() => {
@@ -139,6 +139,7 @@ const AssignStudentFee = () => {
 
       const payloadBase = {
         academicYearId: values.academicYearId,
+        schoolId: schoolId,
       };
 
       if (mode === "single") {

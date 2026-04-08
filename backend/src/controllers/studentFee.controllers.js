@@ -6,26 +6,77 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 
 export const assignFeesToStudents = asyncHandler(async (req, res) => {
-  const { feeStructureId, studentId, studentIds, academicYearId, customAmount,schoolId
- } = req.body;
- 
+  const {
+    feeStructureId,
+    studentId,
+    studentIds,
+    academicYearId,
+    customAmount,
+    schoolId,
+  } = req.body;
 
-  if (!feeStructureId || !academicYearId) {
-    throw new ApiError(400, "feeStructureId and academicYearId are required");
+  // ✅ Required validation
+  if (!feeStructureId || !academicYearId || !schoolId) {
+    throw new ApiError(400, "feeStructureId, academicYearId and schoolId are required");
   }
 
+  // ✅ Normalize students array
   let students = [];
-  if (Array.isArray(studentIds) && studentIds.length) students = studentIds;
-  else if (studentId) students = [studentId];
-  if (!students.length) throw new ApiError(400, "studentId or studentIds required");
+  if (Array.isArray(studentIds) && studentIds.length > 0) {
+    students = studentIds;
+  } else if (studentId) {
+    students = [studentId];
+  }
 
-  const feeStructure = await FeeStructure.findOne({feeStructureId, schoolId });
-  console.log("feeStructure", feeStructure);
-  if (!feeStructure) throw new ApiError(404, "Fee structure not found for this school");
-   
-  const totalAmount = customAmount ?? feeStructure.amount;
+  if (!students.length) {
+    throw new ApiError(400, "studentId or studentIds required");
+  }
 
-  const records = students.map((sid) => ({
+  // ✅ Remove duplicate studentIds
+  students = [...new Set(students)];
+
+  // ✅ Validate Fee Structure
+  const feeStructure = await FeeStructure.findOne({
+    _id: feeStructureId,
+    schoolId,
+  });
+
+  if (!feeStructure) {
+    throw new ApiError(404, "Fee structure not found for this school");
+  }
+
+  // ✅ Amount validation
+  const totalAmount =
+    customAmount !== undefined && customAmount !== null
+      ? Number(customAmount)
+      : Number(feeStructure.amount);
+
+  if (isNaN(totalAmount) || totalAmount < 0) {
+    throw new ApiError(400, "Invalid amount");
+  }
+
+  // ✅ Prevent duplicate assignment (IMPORTANT)
+  const existingFees = await StudentFee.find({
+    studentId: { $in: students },
+    feeStructureId,
+    academicYearId,
+    schoolId,
+  }).select("studentId");
+
+  const alreadyAssignedIds = new Set(
+    existingFees.map((f) => f.studentId.toString())
+  );
+
+  const newStudents = students.filter(
+    (sid) => !alreadyAssignedIds.has(sid.toString())
+  );
+
+  if (!newStudents.length) {
+    throw new ApiError(400, "Fees already assigned to all selected students");
+  }
+
+  // ✅ Prepare records
+  const records = newStudents.map((sid) => ({
     schoolId,
     academicYearId,
     studentId: sid,
@@ -35,15 +86,19 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     paidAmount: 0,
     dueAmount: totalAmount,
     status: "pending",
-    assignedBy: req.user._id,
+    assignedBy: req.user?._id || null,
   }));
 
+  // ✅ Insert safely
   await StudentFee.insertMany(records, { ordered: false });
 
   return sendSuccess(res, {
     statusCode: 201,
     message: "Fees assigned successfully",
-    data: { assignedCount: records.length },
+    data: {
+      assignedCount: records.length,
+      skipped: students.length - records.length,
+    },
   });
 });
 
