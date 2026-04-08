@@ -84,7 +84,23 @@ export const resendVerification = createAsyncThunk("user/resendVerification", as
 
 export const registerUser = createAsyncThunk("user/register", async (data, { rejectWithValue }) => {
   try {
-    const res = await apiClient.post("/user/register", data);
+    const formData = new FormData();
+
+    Object.entries(data || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") return;
+
+      if (key === "avatar") {
+        const avatarFile = Array.isArray(value) ? value[0]?.originFileObj : null;
+        if (avatarFile) {
+          formData.append("avatar", avatarFile);
+        }
+        return;
+      }
+
+      formData.append(key, value);
+    });
+
+    const res = await apiClient.post("/user/register", formData);
     return res.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
