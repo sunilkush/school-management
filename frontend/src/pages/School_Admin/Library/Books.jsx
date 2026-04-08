@@ -58,14 +58,14 @@ const Books = () => {
   const [categoryFilter, setCategoryFilter] = useState();
   const [statusFilter, setStatusFilter] = useState();
   const [form] = Form.useForm();
-
+    const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
   const { user } = useSelector((state) => state.auth || {});
   const { books: rawBooks = [], booksLoading, actionLoading } = useSelector(
     (state) => state.library || {}
   );
 
   const schoolId = user?.school?._id || user?.schoolId;
-
+  const academicYearId = selectedAcademicYear?._id;
   const books = useMemo(() => rawBooks.map(normalizeBook), [rawBooks]);
 
   const fetchBooks = useCallback(async () => {
@@ -96,6 +96,7 @@ const Books = () => {
       availableCopies: Number(values.availableCopies),
       shelfLocation: values.shelfLocation,
       schoolId: editingBook?.schoolId || schoolId,
+      academicYearId: editingBook?.academicYearId || academicYearId || null,
     };
 
     try {

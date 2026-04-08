@@ -45,7 +45,7 @@ const TeacherList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { users = [], hasFetchedUsers, isLoading } = useSelector(
+  const { users = [], hasFetchedUsers, Loading } = useSelector(
     (state) => state.auth
   );
   
@@ -270,7 +270,7 @@ const TeacherList = () => {
 
               <Button
                 icon={<ReloadOutlined />}
-                loading={isLoading}
+                loading={Loading}
                 onClick={() => dispatch(fetchAllUser())}
               />
             </Space>
@@ -288,7 +288,7 @@ const TeacherList = () => {
             columns={columns}
             dataSource={filteredUsers}
             rowKey="_id"
-            loading={isLoading}
+            loading={Loading}
             pagination={{ pageSize: 10 }}
             locale={{ emptyText: <Empty description="No users found" /> }}
           />

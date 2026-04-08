@@ -200,8 +200,8 @@ export const sidebarMenu = {
       title: "Hostel Management",
       icon: ClipboardList,
       subMenu: [
-        { title: "Hostel Rooms", path: "schooladmin/hostel" },
-        { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
+        { title: "Hostel Rooms & Allocation", path: "schooladmin/hostel" },
+       // { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
       ],
     },
     {

@@ -3,6 +3,8 @@ import { Class } from "../models/classes.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
 
 const createClass = asyncHandler(async (req, res) => {
   const { name, code, description, isGlobal, status } = req.body;
@@ -98,4 +100,91 @@ const getClassById = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, classData, "Class fetched successfully"));
 });
 
-export { createClass, updateClass, deleteClass, getAllClasses, getClassById };
+const fetchAssignedClasses = asyncHandler(async (req, res) => {
+  const teacherId = req.user._id;
+  const schoolId = req.user.schoolId;
+  const academicYearId = req.query.academicYearId;
+
+  if (!academicYearId) {
+    throw new ApiError(400, "Academic year ID is required");
+  }
+
+  const sections = await Section.find({
+    schoolId,
+    academicYearId,
+    $or: [
+      { classTeacherId: teacherId },
+      { "subjects.teacherId": teacherId },
+    ],
+  })
+    .populate("schoolClassId", "name")
+    .populate("subjects.subjectId", "name")
+    .lean();
+
+  // 🔥 Group by class (IMPORTANT for your UI)
+  const classMap = {};
+
+  sections.forEach((sec) => {
+    const classId = sec.schoolClassId?._id?.toString();
+
+    if (!classMap[classId]) {
+      classMap[classId] = {
+        _id: classId,
+        name: sec.schoolClassId?.name,
+        sections: [],
+        subjects: [],
+        studentCount: sec.StudentEnrollmentId?.length || 0,
+        role: [],
+      };
+    }
+
+    // section add
+    classMap[classId].sections.push({
+      sectionId: {
+        _id: sec._id,
+        name: sec.name,
+      },
+    });
+
+    // role detect
+    if (sec.classTeacherId?.toString() === teacherId.toString()) {
+      classMap[classId].role.push("class_teacher");
+    }
+
+    // subject filter
+    const teacherSubjects = sec.subjects.filter(
+      (s) => s.teacherId?.toString() === teacherId.toString()
+    );
+
+    teacherSubjects.forEach((sub) => {
+      classMap[classId].subjects.push({
+        subjectId: {
+          _id: sub.subjectId?._id,
+          name: sub.subjectId?.name,
+        },
+      });
+
+      classMap[classId].role.push("subject_teacher");
+    });
+
+    // 🔥 remove duplicates
+    classMap[classId].subjects = [
+      ...new Map(
+        classMap[classId].subjects.map((s) => [
+          s.subjectId._id.toString(),
+          s,
+        ])
+      ).values(),
+    ];
+
+    classMap[classId].role = [...new Set(classMap[classId].role)];
+  });
+
+  const result = Object.values(classMap);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "Assigned classes fetched successfully"));
+});
+
+export { createClass, updateClass, deleteClass, getAllClasses, getClassById, fetchAssignedClasses };

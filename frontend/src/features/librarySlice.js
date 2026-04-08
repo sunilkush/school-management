@@ -11,7 +11,7 @@ export const fetchLibraryBooks = createAsyncThunk(
   "library/fetchBooks",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_PREFIX}/books`);
+      const res = await apiClient.get(`/books`);
       return Array.isArray(res?.data?.data) ? res.data.data : [];
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch books"));
@@ -23,7 +23,7 @@ export const createLibraryBook = createAsyncThunk(
   "library/createBook",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API_PREFIX}/books`, payload);
+      const res = await apiClient.post(`/books`, payload);
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to create book"));
@@ -35,7 +35,7 @@ export const updateLibraryBook = createAsyncThunk(
   "library/updateBook",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${API_PREFIX}/books/${id}`, payload);
+      const res = await apiClient.put(`/books/${id}`, payload);
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to update book"));
@@ -47,7 +47,7 @@ export const deleteLibraryBook = createAsyncThunk(
   "library/deleteBook",
   async (id, { rejectWithValue }) => {
     try {
-      await apiClient.delete(`${API_PREFIX}/books/${id}`);
+      await apiClient.delete(`/books/${id}`);
       return id;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to delete book"));
@@ -59,7 +59,7 @@ export const fetchIssuedBooks = createAsyncThunk(
   "library/fetchIssuedBooks",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`${API_PREFIX}/issuedBooks`);
+      const res = await apiClient.get(`/issuedBooks`);
       return Array.isArray(res?.data?.data) ? res.data.data : [];
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch issued books"));
@@ -71,7 +71,7 @@ export const issueLibraryBook = createAsyncThunk(
   "library/issueBook",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`${API_PREFIX}/issuedBooks/issue`, payload);
+      const res = await apiClient.post(`/issuedBooks/issue`, payload);
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to issue book"));
@@ -83,7 +83,7 @@ export const returnLibraryBook = createAsyncThunk(
   "library/returnBook",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`${API_PREFIX}/issuedBooks/return/${id}`);
+      const res = await apiClient.put(`/issuedBooks/return/${id}`);
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to return book"));
@@ -95,7 +95,7 @@ export const deleteIssuedBook = createAsyncThunk(
   "library/deleteIssuedBook",
   async (id, { rejectWithValue }) => {
     try {
-      await apiClient.delete(`${API_PREFIX}/issuedBooks/${id}`);
+      await apiClient.delete(`/issuedBooks/${id}`);
       return id;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to delete issued record"));
@@ -108,7 +108,7 @@ export const fetchLibraryStudents = createAsyncThunk(
   async ({ schoolId, limit = 100 }, { rejectWithValue }) => {
     try {
       if (!schoolId) return [];
-      const res = await apiClient.get(`${API_PREFIX}/student/school`, {
+      const res = await apiClient.get(`/student/school`, {
         params: { schoolId, limit },
       });
       return res?.data?.data?.students || [];

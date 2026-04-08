@@ -147,6 +147,7 @@ const QuestionBank = lazy(() => import("./pages/Teacher/Exams/QuestionBank.jsx")
 const CreateExam = lazy(() => import("./pages/Teacher/Exams/EditExamForm.jsx"));
 const TeacherExamsPage = lazy(() => import("./pages/Teacher/Exams/TeacherExamsPage.jsx"));
 const AssignedClasses = lazy(() => import("./pages/Teacher/Classes/AssignedClasses.jsx"));
+const ClassDetails = lazy(() => import("./pages/Teacher/Classes/ClassDetails.jsx"));
 const Assignments = lazy(() => import("./pages/Teacher/Assignments/Assignments.jsx"));
 const MyStudents = lazy(() => import("./pages/Teacher/My_Students/MyStudents.jsx"));
 const StudentAttendance = lazy(() => import("./pages/Teacher/Attendance/StudentAttendance.jsx"));
@@ -405,6 +406,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <TeacherDashboard /> },
               { path: "classes", element: <AssignedClasses /> },
+              { path: "classes/:classId", element: <ClassDetails /> },
               { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
               { path: "attendance", element: <MarkAttendancePage /> },

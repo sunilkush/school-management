@@ -21,7 +21,7 @@ router.get("/", auth, roleMiddleware(["School Admin", "Teacher"]), getAllIssuedB
 router.get("/student", auth, roleMiddleware(["Student"]), getIssuedBooksForStudent);
 
 // ✅ Return a book (Only Student)
-router.put("/return/:id", auth, roleMiddleware(["Student"]), returnBook);
+router.put("/return/:id", auth, roleMiddleware(["Student","School Admin","Teacher"]), returnBook);
 
 // ✅ Delete issued book record (Only Admin)
 router.delete("/:id", auth, roleMiddleware(["School Admin"]), deleteIssuedBook);

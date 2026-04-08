@@ -41,13 +41,13 @@ const bookSchema = new Schema({
     },
     schoolId: {
         type: Schema.Types.ObjectId,
-        ref: "Schools",
+        ref: "School",
         required: true,
     },
     academicYearId: {
         type: Schema.Types.ObjectId,
-        ref: "AcademicYears",
+        ref: "AcademicYear",
     },
 }, { timestamps: true });
 
-export const Book = mongoose.model("Books", bookSchema);
+export const Book = mongoose.model("Book", bookSchema);

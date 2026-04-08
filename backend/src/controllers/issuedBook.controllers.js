@@ -6,7 +6,9 @@ import { Book } from "../models/Books.model.js";
 
 // ✅ Issue a book (Only Admin & Teacher)
 export const issueBook = asyncHandler(async (req, res) => {
-    const { schoolId, bookId, studentId, issueDate } = req.body;
+    const { schoolId, bookId, studentId, issueDate, dueDate } = req.body;
+
+    if (!studentId) throw new ApiError(400, "studentId is required");
 
     // Check if the book exists and is available
     const book = await Book.findById(bookId);
@@ -19,7 +21,8 @@ export const issueBook = asyncHandler(async (req, res) => {
         bookId,
         studentId,
         issueDate,
-        status: "issued",
+         dueDate,
+        status: "Issued",
     });
 
     // Reduce available copies
@@ -33,17 +36,33 @@ export const issueBook = asyncHandler(async (req, res) => {
 export const getAllIssuedBooks = asyncHandler(async (req, res) => {
     const issuedBooks = await IssuedBook.find()
         .populate("bookId", "title author")
-        .populate("studentId", "name email")
+        .populate({
+            path: "studentId",
+            select: "userId",
+            populate: {
+                path: "userId",
+                select: "name email",
+            },
+        })
         .populate("schoolId", "name");
 
-    res.status(200).json(new ApiResponse(200, issuedBooks, "Issued books retrieved successfully"));
+    const issuedBooksWithStudentDetails = issuedBooks.map((issuedBook) => {
+        const issuedBookObject = issuedBook.toObject();
+        issuedBookObject.studentName = issuedBookObject.studentId?.userId?.name || null;
+        issuedBookObject.studentEmail = issuedBookObject.studentId?.userId?.email || null;
+
+        return issuedBookObject;
+    });
+
+    res.status(200).json(new ApiResponse(200, issuedBooksWithStudentDetails, "Issued books retrieved successfully"));
 });
 
 // ✅ Get issued books for a student (Only Student)
 export const getIssuedBooksForStudent = asyncHandler(async (req, res) => {
     const issuedBooks = await IssuedBook.find({ studentId: req.user._id })
         .populate("bookId", "title author")
-        .populate("schoolId", "name");
+        .populate("schoolId", "name")
+         .populate("studentId", "name email")
 
     res.status(200).json(new ApiResponse(200, issuedBooks, "Issued books retrieved successfully"));
 });
@@ -54,12 +73,9 @@ export const returnBook = asyncHandler(async (req, res) => {
     const issuedBook = await IssuedBook.findById(id);
 
     if (!issuedBook) throw new ApiError(404, "Issued book record not found");
-    if (issuedBook.status === "returned") throw new ApiError(400, "Book is already returned");
-    if (issuedBook.studentId.toString() !== req.user._id.toString())
-        throw new ApiError(403, "You are not authorized to return this book");
-
-    // Update book status
-    issuedBook.status = "returned";
+    if (issuedBook.status === "Returned") throw new ApiError(400, "Book is already returned");
+     // Update book status
+    issuedBook.status = "Returned";
     issuedBook.returnDate = new Date();
     await issuedBook.save();
 

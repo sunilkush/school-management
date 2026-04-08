@@ -36,7 +36,7 @@ const normalizeIssuedRecord = (entry) => ({
   key: entry._id,
   _id: entry._id,
   studentId: entry.studentId?._id || entry.studentId,
-  studentName: entry.studentId?.name || entry.studentId?.email || "Unknown",
+  studentName: entry.studentName || entry.studentEmail || "Unknown",
   bookId: entry.bookId?._id || entry.bookId,
   bookTitle: entry.bookId?.title || "Unknown",
   issueDate: entry.issueDate ? dayjs(entry.issueDate).format("DD-MM-YYYY") : "-",
@@ -192,14 +192,20 @@ const IssueBook = () => {
                     loading={studentsLoading}
                   >
                     {students.map((student) => {
+                      const resolvedStudentId =
+                        student?.studentId ||
+                        student?.student?._id ||
+                        student?._id;
                       const label =
                         student?.userDetails?.name ||
+                        student?.user?.name ||
                         student?.studentName ||
                         student?.registrationNumber;
+
                       return (
                         <Option
-                          key={student.studentId || student._id}
-                          value={student.studentId || student._id}
+                          key={resolvedStudentId}
+                          value={resolvedStudentId}
                         >
                           {label}
                         </Option>
