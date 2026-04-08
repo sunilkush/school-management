@@ -10,13 +10,13 @@ import { requireRoles } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get("/", requireRoles(["Super Admin", "School Admin"]), getReports);
-router.post("/", requireRoles(["Super Admin", "School Admin"]), createReport);
+router.get("/", requireRoles(["Super Admin", "School Admin","Teacher"]), getReports);
+router.post("/", requireRoles(["Super Admin", "School Admin","Teacher"]), createReport);
 router.delete("/:id", requireRoles(["Super Admin"]), deleteReport);
-router.get("/:id", requireRoles(["Super Admin", "School Admin"]), viewReport);
+router.get("/:id", requireRoles(["Super Admin", "School Admin","Teacher"]), viewReport);
 router.get(
   "/school/:schoolId/academic-year/:academicYearId",
-  requireRoles(["Super Admin", "School Admin"]),
+  requireRoles(["Super Admin", "School Admin","Teacher"]),
   getSchoolOverviewReport
 );
 
