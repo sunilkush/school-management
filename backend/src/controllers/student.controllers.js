@@ -7,6 +7,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
+import { Section } from "../models/section.model.js";
 import mongoose from "mongoose";
 import crypto from "crypto";
 /* ================= ROLE FETCH ================= */
@@ -189,6 +190,24 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
         { session }
       )
     )[0];
+    
+    // ✅ Save student enrollment reference inside selected section
+    const updatedSection = await Section.findOneAndUpdate(
+      {
+        _id: sectionId,
+        schoolId,
+        schoolClassId,
+      },
+      {
+        $addToSet: { StudentEnrollmentId: enrollment._id },
+      },
+      { new: true, session }
+    );
+
+    if (!updatedSection) {
+      throw new ApiError(404, "Section not found for selected class");
+    }
+
 
     await session.commitTransaction();
     session.endSession();

@@ -33,28 +33,22 @@ const AssignedClasses = () => {
     (state) => state.class || {}
   );
 
-  const { user } = useSelector((state) => state.auth || {});
   const { selectedAcademicYear } = useSelector(
     (state) => state.academicYear || {}
   );
 
-  const teacherId = user?._id;
-  const schoolId = user?.schoolId;
+
   const academicYearId = selectedAcademicYear?._id;
 
 
 
   useEffect(() => {
-    if (teacherId && schoolId && academicYearId) {
-      dispatch(
+   dispatch(
         fetchAssignedClasses({
-          teacherId,
-          schoolId,
           academicYearId,
         })
       );
-    }
-  }, [dispatch, teacherId, schoolId, academicYearId]);
+  }, [dispatch,academicYearId]);
 
 
   return (
@@ -114,6 +108,10 @@ const AssignedClasses = () => {
                                   .join(", ")
                               : "N/A"}
                           </Text>
+                          <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                            Roles:{" "}
+                            {cls?.role?.[0]  }
+                            </Text>
                         </div>
                       </Space>
 

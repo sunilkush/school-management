@@ -16,10 +16,11 @@ const ADMIN_ONLY = ["Super Admin", "School Admin"];
 
 router.post("/", auth,requireRoles(ADMIN_ONLY), createClass);
 router.get("/", auth,requireRoles(ADMIN_TEACHER), getAllClasses);
+router.get("/assign-teacher",auth, requireRoles(ADMIN_TEACHER), fetchAssignedClasses);
 router.get("/:schoolClassId", auth,requireRoles(ADMIN_TEACHER), getClassById);
 router.put("/:schoolClassId", auth,requireRoles(ADMIN_ONLY), updateClass);
 router.delete("/:schoolClassId", auth,requireRoles(ADMIN_ONLY), deleteClass);
-router.get("/assign-teacher",auth, requireRoles(ADMIN_TEACHER), fetchAssignedClasses);
+
 // backward compatibility
 router.post("/create", auth,requireRoles(ADMIN_ONLY), createClass);
 router.get("/all", auth,requireRoles(ADMIN_TEACHER), getAllClasses);
