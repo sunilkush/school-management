@@ -39,7 +39,7 @@ import schoolClassRoutes from "./routes/schoolClass.routes.js";
 import transportRoutes from "./routes/transport.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
 import hostelRoutes from "./routes/hostel.routes.js";
-
+import auditLogRoutes from "./routes/auditLog.routes.js";
 import moduleRoutes from "./routes/module.routes.js";
 import payrollRoutes from "./routes/payroll.routes.js";
 
@@ -112,7 +112,7 @@ app.use("/api/v1/inventory", inventoryRoutes);
 app.use("/api/v1/hostel", hostelRoutes);
 app.use("/api/v1/modules", moduleRoutes);
 app.use("/api/v1/payroll", payrollRoutes);
-
+app.use("/api/v1/audit-logs", auditLogRoutes);
 app.use((req, _res, next) => next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`)));
 
 app.use((err, req, res, _next) => {
