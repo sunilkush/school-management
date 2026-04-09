@@ -1,166 +1,346 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Layout,
+  Alert,
   Breadcrumb,
-  Table,
   Button,
-  Space,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  message,
   Card,
-  Row,
   Col,
   DatePicker,
+  Form,
+  InputNumber,
+  Layout,
+  Modal,
+  Row,
+  Space,
+  Select,
+  Table,
+  Tag,
+  Typography,
+  message,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons";
+import { CheckOutlined, LockOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import httpClient from "../../../api/httpClient";
+
 const { Content } = Layout;
+const { Text } = Typography;
+
+const money = (value = 0) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 const EmployeeSalaries = () => {
-  const [salaries, setSalaries] = useState([
-    { key: 1, name: "John Doe", role: "Teacher", salary: 30000, paid: 15000, pending: 15000, paymentDate: null },
-    { key: 2, name: "Jane Smith", role: "Admin", salary: 25000, paid: 25000, pending: 0, paymentDate: "2026-01-01" },
-  ]);
+  const [loading, setLoading] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [entries, setEntries] = useState([]);
+  const [cycle, setCycle] = useState(null);
+  const [filters, setFilters] = useState({ month: dayjs().month() + 1, year: dayjs().year() });
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState(null);
+  const [structureModalOpen, setStructureModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  // Add/Edit salary
-  const handleSaveSalary = (values) => {
-    const newRecord = {
-      key: editingRecord ? editingRecord.key : salaries.length + 1,
-      name: values.name,
-      role: values.role,
-      salary: values.salary,
-      paid: values.paid,
-      pending: values.salary - values.paid,
-      paymentDate: values.paymentDate ? values.paymentDate.format("YYYY-MM-DD") : null,
-    };
+  const loadEmployees = async () => {
+    const response = await httpClient.get("/employee");
+    const rows = response?.data?.data || [];
+    setEmployees(rows);
+  };
 
-    if (editingRecord) {
-      setSalaries(salaries.map((r) => (r.key === editingRecord.key ? newRecord : r)));
-      message.success("Salary record updated successfully!");
-    } else {
-      setSalaries([...salaries, newRecord]);
-      message.success("Salary record added successfully!");
+  const fetchCycle = async (month = filters.month, year = filters.year) => {
+    setLoading(true);
+    try {
+      const response = await httpClient.get(`/payroll/cycle/${month}/${year}`);
+      const payload = response?.data?.data || {};
+      setCycle(payload.cycle || null);
+      setEntries(payload.entries || []);
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        setCycle(null);
+        setEntries([]);
+        return;
+      }
+      message.error(error?.response?.data?.message || "Payroll cycle fetch failed");
+    } finally {
+      setLoading(false);
     }
-
-    setModalVisible(false);
-    setEditingRecord(null);
-    form.resetFields();
   };
 
-  const handleEditSalary = (record) => {
-    setEditingRecord(record);
-    form.setFieldsValue({
-      ...record,
-      paymentDate: record.paymentDate ? dayjs(record.paymentDate) : null,
-    });
-    setModalVisible(true);
-  };
+  useEffect(() => {
+    loadEmployees().catch(() => message.error("Employees load failed"));
+  }, []);
 
-  const handleDeleteSalary = (record) => {
-    Modal.confirm({
-      title: "Are you sure?",
-      content: `Do you want to delete salary record for ${record.name}?`,
-      okText: "Yes",
-      cancelText: "No",
-      onOk: () => {
-        setSalaries(salaries.filter((r) => r.key !== record.key));
-        message.success("Salary record deleted successfully!");
+  useEffect(() => {
+    fetchCycle().catch(() => {});
+  }, [filters.month, filters.year]);
+
+  const summary = useMemo(() => {
+    return entries.reduce(
+      (acc, row) => {
+        acc.totalEmployees += 1;
+        acc.totalGross += row.grossEarnings || 0;
+        acc.totalDeductions += row.totalDeductions || 0;
+        acc.totalNet += row.netPay || 0;
+        if (row.paymentStatus === "pending") acc.unpaid += 1;
+        return acc;
       },
-    });
+      { totalEmployees: 0, totalGross: 0, totalDeductions: 0, totalNet: 0, unpaid: 0 }
+    );
+  }, [entries]);
+
+  const selectedMonth = dayjs(`${filters.year}-${String(filters.month).padStart(2, "0")}-01`);
+
+  const handleMonthChange = (value) => {
+    if (!value) return;
+    setFilters({ month: value.month() + 1, year: value.year() });
   };
 
-  const handleMarkPaid = (record) => {
-    const updatedRecord = { ...record, paid: record.salary, pending: 0, paymentDate: new Date().toISOString().split("T")[0] };
-    setSalaries(salaries.map((r) => (r.key === record.key ? updatedRecord : r)));
-    message.success(`Salary for ${record.name} marked as paid!`);
+  const handleCreateStructure = async (values) => {
+    try {
+      await httpClient.post("/payroll/structure", {
+        ...values,
+        effectiveFrom: values.effectiveFrom.toISOString(),
+        effectiveTo: values.effectiveTo ? values.effectiveTo.toISOString() : null,
+      });
+      message.success("Salary structure saved");
+      setStructureModalOpen(false);
+      form.resetFields();
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Salary structure save failed");
+    }
   };
 
-  // Summary
-  const totalEmployees = salaries.length;
-  const totalPaid = salaries.reduce((acc, r) => acc + r.paid, 0);
-  const totalPending = salaries.reduce((acc, r) => acc + r.pending, 0);
+  const handleGenerateCycle = async () => {
+    try {
+      await httpClient.post("/payroll/cycle/generate", {
+        month: filters.month,
+        year: filters.year,
+      });
+      message.success("Payroll cycle generated");
+      await fetchCycle(filters.month, filters.year);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Cycle generation failed");
+    }
+  };
+
+  const handleLockCycle = async () => {
+    if (!cycle?._id) return;
+    try {
+      await httpClient.post(`/payroll/cycle/${cycle._id}/lock`, {});
+      message.success("Payroll cycle locked");
+      await fetchCycle(filters.month, filters.year);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Unable to lock cycle");
+    }
+  };
+
+  const handlePayCycle = async () => {
+    if (!cycle?._id) return;
+    try {
+      await httpClient.post(`/payroll/cycle/${cycle._id}/pay`, {
+        transactionRefPrefix: `SAL-${filters.year}${String(filters.month).padStart(2, "0")}`,
+      });
+      message.success("Payroll marked as paid");
+      await fetchCycle(filters.month, filters.year);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Unable to mark paid");
+    }
+  };
 
   const columns = [
-    { title: "Employee Name", dataIndex: "name", key: "name" },
-    { title: "Role", dataIndex: "role", key: "role" },
-    { title: "Salary", dataIndex: "salary", key: "salary" },
-    { title: "Paid", dataIndex: "paid", key: "paid" },
-    { title: "Pending", dataIndex: "pending", key: "pending" },
-    { title: "Payment Date", dataIndex: "paymentDate", key: "paymentDate" },
     {
-      title: "Actions",
-      key: "actions",
+      title: "Employee",
+      render: (_, record) => record.employeeId?.userId?.name || "-",
+    },
+    {
+      title: "Department",
+      render: (_, record) => record.employeeId?.department || "-",
+    },
+    {
+      title: "Attendance",
       render: (_, record) => (
-        <Space>
-          <Button icon={<CheckOutlined />} type="primary" disabled={record.pending === 0} onClick={() => handleMarkPaid(record)}>
-            Mark Paid
-          </Button>
-          <Button icon={<EditOutlined />} onClick={() => handleEditSalary(record)}>Edit</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteSalary(record)}>Delete</Button>
-        </Space>
+        <Text>
+          {record.presentDays}/{record.workingDays} ({record.lopDays} LOP)
+        </Text>
       ),
+    },
+    {
+      title: "Gross",
+      dataIndex: "grossEarnings",
+      render: (value) => money(value),
+    },
+    {
+      title: "Deductions",
+      dataIndex: "totalDeductions",
+      render: (value) => money(value),
+    },
+    {
+      title: "Net Pay",
+      dataIndex: "netPay",
+      render: (value) => <Text strong>{money(value)}</Text>,
+    },
+    {
+      title: "Status",
+      dataIndex: "paymentStatus",
+      render: (value) => <Tag color={value === "paid" ? "green" : "orange"}>{value?.toUpperCase()}</Tag>,
+    },
+    {
+      title: "Warnings",
+      dataIndex: "warnings",
+      render: (warnings = []) =>
+        warnings.length ? (
+          <Space direction="vertical" size={4}>
+            {warnings.map((warning) => (
+              <Tag key={warning} color="gold">
+                {warning}
+              </Tag>
+            ))}
+          </Space>
+        ) : (
+          <Text type="secondary">-</Text>
+        ),
     },
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
+    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
+      <Breadcrumb style={{ marginBottom: 20 }}>
         <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>HR</Breadcrumb.Item>
-        <Breadcrumb.Item>Employee Salaries</Breadcrumb.Item>
+        <Breadcrumb.Item>Payroll</Breadcrumb.Item>
+        <Breadcrumb.Item>Monthly Run</Breadcrumb.Item>
       </Breadcrumb>
 
       <Content>
-        {/* Summary Cards */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}><Card title="Total Employees">{totalEmployees}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Total Paid">{totalPaid}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Total Pending">{totalPending}</Card></Col>
+        <Card style={{ marginBottom: 16 }}>
+          <Space wrap>
+            <DatePicker picker="month" value={selectedMonth} onChange={handleMonthChange} />
+            <Button icon={<ReloadOutlined />} onClick={() => fetchCycle(filters.month, filters.year)} loading={loading}>
+              Refresh
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setStructureModalOpen(true)}>
+              Add Salary Structure
+            </Button>
+            <Button type="primary" onClick={handleGenerateCycle} disabled={Boolean(cycle)}>
+              Generate Cycle
+            </Button>
+            <Button icon={<LockOutlined />} onClick={handleLockCycle} disabled={!cycle || cycle.status !== "draft"}>
+              Lock Cycle
+            </Button>
+            <Button icon={<CheckOutlined />} onClick={handlePayCycle} disabled={!cycle || cycle.status !== "locked"}>
+              Mark Paid
+            </Button>
+            {cycle && <Tag color="blue">Cycle Status: {cycle.status.toUpperCase()}</Tag>}
+          </Space>
+        </Card>
+
+        {!cycle && (
+          <Alert
+            style={{ marginBottom: 16 }}
+            type="info"
+            showIcon
+            message="No payroll cycle found"
+            description="Is month ke liye cycle generate karo, then review/lock/pay flow use karo."
+          />
+        )}
+
+        <Row gutter={16} style={{ marginBottom: 16 }}>
+          <Col xs={24} sm={12} md={6}>
+            <Card title="Employees">{summary.totalEmployees}</Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card title="Gross">{money(summary.totalGross)}</Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card title="Deductions">{money(summary.totalDeductions)}</Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card title="Unpaid">{summary.unpaid}</Card>
+          </Col>
         </Row>
 
-        <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2>Employee Salaries</h2>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>Add Salary</Button>
-        </div>
+        <Table
+          loading={loading}
+          columns={columns}
+          dataSource={entries}
+          rowKey="_id"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 900 }}
+        />
 
-        <Table columns={columns} dataSource={salaries} pagination={{ pageSize: 5 }} rowKey="key" />
-
-        {/* Add/Edit Modal */}
         <Modal
-          title={editingRecord ? "Edit Salary" : "Add Salary"}
-          visible={modalVisible}
-          onCancel={() => { setModalVisible(false); setEditingRecord(null); form.resetFields(); }}
+          title="Create Salary Structure"
+          open={structureModalOpen}
+          onCancel={() => {
+            setStructureModalOpen(false);
+            form.resetFields();
+          }}
           footer={null}
+          destroyOnClose
         >
-          <Form form={form} layout="vertical" onFinish={handleSaveSalary}>
-            <Form.Item label="Employee Name" name="name" rules={[{ required: true, message: "Enter employee name" }]}>
-              <Input placeholder="Enter employee name" />
+          <Form form={form} layout="vertical" onFinish={handleCreateStructure}>
+            <Form.Item label="Employee" name="employeeId" rules={[{ required: true, message: "Employee select karo" }]}>
+              <Select
+                showSearch
+                placeholder="Select employee"
+                optionFilterProp="label"
+                options={employees.map((emp) => ({
+                  value: emp._id,
+                  label: `${emp.userId?.name || "Employee"} (${emp.designation || "Staff"})`,
+                }))}
+              />
             </Form.Item>
-            <Form.Item label="Role" name="role" rules={[{ required: true, message: "Enter role" }]}>
-              <Input placeholder="Enter role" />
+
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item label="Basic" name="basic" rules={[{ required: true }]}>
+                  <InputNumber min={0} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="HRA" name="hra" initialValue={0}>
+                  <InputNumber min={0} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item label="DA" name="da" initialValue={0}>
+                  <InputNumber min={0} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Special Allowance" name="specialAllowance" initialValue={0}>
+                  <InputNumber min={0} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item label="Gross Monthly" name="grossMonthly" rules={[{ required: true }]}>
+              <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item label="Salary" name="salary" rules={[{ required: true, message: "Enter salary" }]}>
-              <InputNumber min={0} style={{ width: "100%" }} placeholder="Enter salary" />
+
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item label="Effective From" name="effectiveFrom" rules={[{ required: true }]}>
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Effective To" name="effectiveTo">
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item label="Status" name="status" initialValue="active" rules={[{ required: true }]}>
+              <Select options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
             </Form.Item>
-            <Form.Item label="Paid" name="paid" rules={[{ required: true, message: "Enter paid amount" }]}>
-              <InputNumber min={0} style={{ width: "100%" }} placeholder="Enter paid amount" />
-            </Form.Item>
-            <Form.Item label="Payment Date" name="paymentDate">
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item style={{ textAlign: "right" }}>
+
+            <div style={{ textAlign: "right" }}>
               <Space>
-                <Button onClick={() => { setModalVisible(false); setEditingRecord(null); form.resetFields(); }}>Cancel</Button>
-                <Button type="primary" htmlType="submit">{editingRecord ? "Update" : "Add"}</Button>
+                <Button onClick={() => setStructureModalOpen(false)}>Cancel</Button>
+                <Button type="primary" htmlType="submit">
+                  Save Structure
+                </Button>
               </Space>
-            </Form.Item>
+            </div>
           </Form>
         </Modal>
       </Content>
