@@ -243,7 +243,7 @@ const Dashboard = () => {
               padding: isMobile ? 12 : 20,
               background: t.contentBg,
               color: "var(--text-primary)",
-              minHeight: "calc(100vh - 58px)",
+              minHeight: "calc(100vh - 64px)",
             }}
           >
             <div className="dashboard-outlet">
