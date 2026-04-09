@@ -42,6 +42,8 @@ import schoolClassReducer from "../features/schoolClassSlice.js";
 import attendanceReducer from "../features/attendanceSlice.js";
 import libraryReducer from "../features/librarySlice.js";
 import transportReducer from "../features/transportSlice.js";
+import inventoryReducer from "../features/inventorySlice.js";
+import hostelReducer from "../features/hostelSlice.js";
 import { attachAuthStore } from "../api/httpClient";
 import { baseApi } from "../services/baseApi";
 
@@ -84,6 +86,8 @@ const rootReducer = combineReducers({
   attendance: attendanceReducer,
   library: libraryReducer,
   transport: transportReducer,
+  inventory: inventoryReducer,
+  hostel: hostelReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Layout,
   Breadcrumb,
@@ -14,128 +15,130 @@ import {
   Card,
   Row,
   Col,
+  Typography,
 } from "antd";
+import { PlusOutlined, EditOutlined, DeleteOutlined, UserAddOutlined } from "@ant-design/icons";
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserAddOutlined,
-} from "@ant-design/icons";
+  assignHostelStudent,
+  createHostelRoom,
+  deleteHostelRoom,
+  fetchHostelRooms,
+  updateHostelRoom,
+} from "../../../features/hostelSlice";
 
 const { Content } = Layout;
+const { Title, Text } = Typography;
 
 const HostelManagement = () => {
-  const [rooms, setRooms] = useState([
-    { key: 1, roomNumber: "101", capacity: 2, occupied: 1, students: ["John Doe"] },
-    { key: 2, roomNumber: "102", capacity: 3, occupied: 0, students: [] },
-    { key: 3, roomNumber: "103", capacity: 2, occupied: 2, students: ["Jane Smith", "Michael Brown"] },
-  ]);
+  const dispatch = useDispatch();
+  const { rooms, loading, actionLoading } = useSelector((state) => state.hostel);
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
   const [form] = Form.useForm();
   const [assignForm] = Form.useForm();
 
-  // Add/Edit Room
-  const handleSaveRoom = (values) => {
-    const newRoom = {
-      key: editingRoom ? editingRoom.key : rooms.length + 1,
-      roomNumber: values.roomNumber,
-      capacity: values.capacity,
-      occupied: editingRoom ? editingRoom.occupied : 0,
-      students: editingRoom ? editingRoom.students : [],
-    };
+  useEffect(() => {
+    dispatch(fetchHostelRooms());
+  }, [dispatch]);
 
-    if (editingRoom) {
-      setRooms(rooms.map((r) => (r.key === editingRoom.key ? newRoom : r)));
-      message.success("Room updated successfully!");
-    } else {
-      setRooms([...rooms, newRoom]);
-      message.success("Room added successfully!");
-    }
+  const stats = useMemo(() => {
+    const totalRooms = rooms.length;
+    const totalCapacity = rooms.reduce((acc, room) => acc + Number(room.capacity || 0), 0);
+    const totalOccupied = rooms.reduce((acc, room) => acc + (room.students?.length || 0), 0);
+    const totalAvailable = Math.max(totalCapacity - totalOccupied, 0);
 
-    setModalVisible(false);
+    return { totalRooms, totalOccupied, totalAvailable };
+  }, [rooms]);
+
+  const closeRoomModal = () => {
+    setModalOpen(false);
     setEditingRoom(null);
     form.resetFields();
   };
 
-  // Assign Student
-  const handleAssignStudent = (values) => {
-    const room = rooms.find((r) => r.key === selectedRoom.key);
-    if (room.students.length >= room.capacity) {
-      message.error("Room is full!");
-      return;
+  const handleSaveRoom = async (values) => {
+    try {
+      if (editingRoom?._id) {
+        await dispatch(updateHostelRoom({ id: editingRoom._id, payload: values })).unwrap();
+        message.success("Room updated successfully");
+      } else {
+        await dispatch(createHostelRoom(values)).unwrap();
+        message.success("Room added successfully");
+      }
+      closeRoomModal();
+    } catch (error) {
+      message.error(error || "Unable to save room");
     }
-    room.students.push(values.studentName);
-    room.occupied = room.students.length;
-    setRooms([...rooms]);
-    message.success(`${values.studentName} assigned to Room ${room.roomNumber}`);
-    setAssignModalVisible(false);
-    assignForm.resetFields();
-    setSelectedRoom(null);
   };
 
-  // Edit Room
   const handleEditRoom = (room) => {
     setEditingRoom(room);
     form.setFieldsValue({ roomNumber: room.roomNumber, capacity: room.capacity });
-    setModalVisible(true);
+    setModalOpen(true);
   };
 
-  // Delete Room
   const handleDeleteRoom = (room) => {
     Modal.confirm({
-      title: "Are you sure?",
-      content: `Do you want to delete Room ${room.roomNumber}?`,
-      okText: "Yes",
-      cancelText: "No",
-      onOk: () => {
-        setRooms(rooms.filter((r) => r.key !== room.key));
-        message.success("Room deleted successfully!");
+      title: `Delete room ${room.roomNumber}?`,
+      content: "This action cannot be undone.",
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await dispatch(deleteHostelRoom(room._id)).unwrap();
+          message.success("Room deleted successfully");
+        } catch (error) {
+          message.error(error || "Unable to delete room");
+        }
       },
     });
   };
 
-  // Open Assign Modal
   const handleOpenAssignModal = (room) => {
     setSelectedRoom(room);
     assignForm.resetFields();
-    setAssignModalVisible(true);
+    setAssignModalOpen(true);
   };
 
-  // Summary
-  const totalRooms = rooms.length;
-  const totalOccupied = rooms.reduce((acc, r) => acc + r.occupied, 0);
-  const totalAvailable = rooms.reduce((acc, r) => acc + (r.capacity - r.occupied), 0);
+  const handleAssignStudent = async (values) => {
+    if (!selectedRoom?._id) return;
 
-  // Table Columns
+    try {
+      await dispatch(assignHostelStudent({ id: selectedRoom._id, studentName: values.studentName })).unwrap();
+      message.success(`${values.studentName} assigned to Room ${selectedRoom.roomNumber}`);
+      setAssignModalOpen(false);
+      setSelectedRoom(null);
+      assignForm.resetFields();
+    } catch (error) {
+      message.error(error || "Unable to assign student");
+    }
+  };
+
   const columns = [
     { title: "Room Number", dataIndex: "roomNumber", key: "roomNumber" },
     { title: "Capacity", dataIndex: "capacity", key: "capacity" },
     {
       title: "Occupied",
-      dataIndex: "occupied",
       key: "occupied",
-      render: (occupied, record) => (
-        <Tag color={occupied === record.capacity ? "red" : "green"}>
-          {occupied}/{record.capacity}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const occupied = record.students?.length || 0;
+        return <Tag color={occupied === Number(record.capacity) ? "red" : "green"}>{occupied}/{record.capacity}</Tag>;
+      },
     },
     {
       title: "Students",
-      dataIndex: "students",
       key: "students",
-      render: (students) => (students.length > 0 ? students.join(", ") : "-"),
+      render: (_, record) => (record.students?.length ? record.students.map((student) => student.name).join(", ") : "-"),
     },
     {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small" wrap>
           <Button type="primary" icon={<UserAddOutlined />} onClick={() => handleOpenAssignModal(record)}>
             Assign Student
           </Button>
@@ -148,73 +151,69 @@ const HostelManagement = () => {
 
   return (
     <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
+      <Breadcrumb style={{ marginBottom: 16 }}>
         <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
         <Breadcrumb.Item>Hostel</Breadcrumb.Item>
         <Breadcrumb.Item>Hostel Management</Breadcrumb.Item>
       </Breadcrumb>
 
       <Content>
-        {/* Summary Cards */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}>
-            <Card title="Total Rooms" bordered={false}>{totalRooms}</Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="Total Occupied" bordered={false}>{totalOccupied}</Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="Total Available" bordered={false}>{totalAvailable}</Card>
-          </Col>
+        <Title level={4} style={{ marginBottom: 4 }}>Hostel Room Management</Title>
+        <Text type="secondary">Add rooms, monitor occupancy, and assign students quickly.</Text>
+
+        <Row gutter={16} style={{ marginTop: 20, marginBottom: 20 }}>
+          <Col xs={24} sm={8}><Card title="Total Rooms">{stats.totalRooms}</Card></Col>
+          <Col xs={24} sm={8}><Card title="Total Occupied">{stats.totalOccupied}</Card></Col>
+          <Col xs={24} sm={8}><Card title="Total Available">{stats.totalAvailable}</Card></Col>
         </Row>
 
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2>Hostel Rooms</h2>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
+          <Title level={5} style={{ margin: 0 }}>Hostel Rooms</Title>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
             Add Room
           </Button>
         </div>
 
-        <Table columns={columns} dataSource={rooms} pagination={{ pageSize: 5 }} rowKey="key" />
+        <Table columns={columns} dataSource={rooms} loading={loading} pagination={{ pageSize: 8 }} rowKey="_id" />
 
-        {/* Add/Edit Room Modal */}
-        <Modal
-          title={editingRoom ? "Edit Room" : "Add Room"}
-          visible={modalVisible}
-          onCancel={() => { setModalVisible(false); setEditingRoom(null); form.resetFields(); }}
-          footer={null}
-        >
+        <Modal title={editingRoom ? "Edit Room" : "Add Room"} open={modalOpen} onCancel={closeRoomModal} footer={null} destroyOnClose>
           <Form form={form} layout="vertical" onFinish={handleSaveRoom}>
             <Form.Item label="Room Number" name="roomNumber" rules={[{ required: true, message: "Enter room number" }]}>
-              <Input placeholder="Enter room number" />
+              <Input placeholder="e.g., H-101" />
             </Form.Item>
-            <Form.Item label="Capacity" name="capacity" rules={[{ required: true, message: "Enter capacity" }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="Enter room capacity" />
+            <Form.Item label="Capacity" name="capacity" rules={[{ required: true, message: "Enter room capacity" }]}>
+              <InputNumber min={1} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item style={{ textAlign: "right" }}>
+            <Form.Item style={{ textAlign: "right", marginBottom: 0 }}>
               <Space>
-                <Button onClick={() => { setModalVisible(false); form.resetFields(); }}>Cancel</Button>
-                <Button type="primary" htmlType="submit">{editingRoom ? "Update" : "Add"}</Button>
+                <Button onClick={closeRoomModal}>Cancel</Button>
+                <Button type="primary" htmlType="submit" loading={actionLoading}>
+                  {editingRoom ? "Update" : "Add"}
+                </Button>
               </Space>
             </Form.Item>
           </Form>
         </Modal>
 
-        {/* Assign Student Modal */}
         <Modal
-          title={`Assign Student to Room ${selectedRoom?.roomNumber}`}
-          visible={assignModalVisible}
-          onCancel={() => { setAssignModalVisible(false); assignForm.resetFields(); setSelectedRoom(null); }}
+          title={`Assign Student${selectedRoom ? ` • Room ${selectedRoom.roomNumber}` : ""}`}
+          open={assignModalOpen}
+          onCancel={() => {
+            setAssignModalOpen(false);
+            setSelectedRoom(null);
+            assignForm.resetFields();
+          }}
           footer={null}
+          destroyOnClose
         >
           <Form form={assignForm} layout="vertical" onFinish={handleAssignStudent}>
             <Form.Item label="Student Name" name="studentName" rules={[{ required: true, message: "Enter student name" }]}>
-              <Input placeholder="Enter student name" />
+              <Input placeholder="Enter student full name" />
             </Form.Item>
-            <Form.Item style={{ textAlign: "right" }}>
+            <Form.Item style={{ textAlign: "right", marginBottom: 0 }}>
               <Space>
-                <Button onClick={() => { setAssignModalVisible(false); assignForm.resetFields(); setSelectedRoom(null); }}>Cancel</Button>
-                <Button type="primary" htmlType="submit">Assign</Button>
+                <Button onClick={() => setAssignModalOpen(false)}>Cancel</Button>
+                <Button type="primary" htmlType="submit" loading={actionLoading}>Assign</Button>
               </Space>
             </Form.Item>
           </Form>

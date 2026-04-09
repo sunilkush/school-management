@@ -196,7 +196,22 @@ export const sidebarMenu = {
         { title: "Vehicles", path: "schooladmin/transport/vehicles" },
       ],
     },
-
+{
+      title: "Hostel Management",
+      icon: ClipboardList,
+      subMenu: [
+        { title: "Hostel Rooms", path: "schooladmin/hostel" },
+        { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
+      ],
+    },
+    {
+      title: "Inventory Management",
+      icon: Briefcase,
+      subMenu: [
+        { title: "Supplies", path: "schooladmin/inventory/supplies" },
+        { title: "Assets", path: "schooladmin/inventory/assets" },
+      ],
+    },
     { title: "Reports", path: "schooladmin/reports", icon: FileBarChart2 },
     { title: "School Settings", path: "schooladmin/settings", icon: Settings },
   ],
