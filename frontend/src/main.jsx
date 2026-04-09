@@ -127,7 +127,9 @@ const RoutesPage = lazy(() => import("./pages/School_Admin/Transport/RoutesPage.
 const Vehicles = lazy(() => import("./pages/School_Admin/Transport/Vehicles.jsx"));
 
 const EmployeeSalaries = lazy(() => import("./pages/School_Admin/Payroll/EmployeeSalaries.jsx"));
+const SalaryStructures = lazy(() => import("./pages/School_Admin/Payroll/SalaryStructures.jsx"));
 const GeneratePayslip = lazy(() => import("./pages/School_Admin/Payroll/GeneratePayslip.jsx"));
+const MonthlyPayrollReport = lazy(() => import("./pages/School_Admin/Payroll/MonthlyPayrollReport.jsx"));
 
 const SendNotification = lazy(() => import("./pages/School_Admin/Communication/SendNotification.jsx"));
 const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"));
@@ -375,8 +377,10 @@ const router = createBrowserRouter([
               { path: "hostel/allocation", element: <RoomAllocation /> },
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
-              { path: "payroll", element: <EmployeeSalaries /> },
-              { path: "payroll/payslip", element: <GeneratePayslip /> },
+              { path: "payroll/monthly-run", element: <EmployeeSalaries /> },
+              { path: "payroll/salary-structures", element: <SalaryStructures /> },
+              { path: "payroll/payslips", element: <GeneratePayslip /> },
+              { path: "payroll/reports/monthly", element: <MonthlyPayrollReport /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports", element: <SchoolAdminReport /> },
@@ -506,6 +510,9 @@ const router = createBrowserRouter([
               { path: "fees/categories", element: <FeeCategories /> },
               { path: "fees/collect", element: <CollectFees /> },
               { path: "salary", element: <EmployeeSalaries /> },
+              { path: "salary/structures", element: <SalaryStructures /> },
+              { path: "salary/payslips", element: <GeneratePayslip /> },
+              { path: "salary/reports/monthly", element: <MonthlyPayrollReport /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },

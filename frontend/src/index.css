@@ -195,3 +195,23 @@ body {
 .ant-input::placeholder{
   color: var(--textMuted) !important;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .payslip-printable,
+  .payslip-printable * {
+    visibility: visible;
+  }
+
+  .payslip-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 12px;
+    background: white;
+  }
+}
