@@ -18,12 +18,12 @@ const getWindowWidth = () =>
 /* ─────────────────────────────────────────
    Design tokens
 ───────────────────────────────────────── */
-const tokens = (isDark) => ({
-  layoutBg: isDark ? "#0d0d0d" : "#f5f6fa",
-  headerBg: isDark ? "#0d0d0d" : "#ffffff",
-  headerBorder: isDark ? "#1f1f1f" : "#f0f0f0",
+const tokens = () => ({
+  layoutBg: "var(--surface-page)",
+  headerBg: "var(--surface-header)",
+  headerBorder: "var(--border-color)",
   contentBg: "var(--surface-page)",
-  drawerBg: isDark ? "#0d0d0d" : "#ffffff",
+  drawerBg: "var(--surface-sidebar)",
   sidebarWidth: 260,
 });
 
@@ -108,7 +108,7 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
   const { isDark: isDarkMode } = useTheme();
-  const t = tokens(isDarkMode);
+  const t = tokens();
 
   const role = user?.role?.name;
   const resizeTimerRef = useRef(null);
