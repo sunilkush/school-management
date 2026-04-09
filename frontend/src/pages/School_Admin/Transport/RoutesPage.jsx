@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Breadcrumb,
@@ -14,46 +14,62 @@ import {
   Row,
   Col,
 } from "antd";
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CarOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { createRoute, deleteRoute, fetchRoutes, updateRoute } from "../../../features/transportSlice";
 
 const { Content } = Layout;
 
 const RoutesPage = () => {
-  const [routes, setRoutes] = useState([
-    { key: 1, name: "Route A", bus: "Bus 1", stops: ["Stop 1", "Stop 2"], students: 12 },
-    { key: 2, name: "Route B", bus: "Bus 2", stops: ["Stop 3", "Stop 4"], students: 8 },
-  ]);
+  const dispatch = useDispatch();
+  const { routes, loading } = useSelector((state) => state.transport);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRoute, setEditingRoute] = useState(null);
   const [form] = Form.useForm();
 
-  // Add/Edit Route
-  const handleSaveRoute = (values) => {
-    const newRoute = {
-      key: editingRoute ? editingRoute.key : routes.length + 1,
+  useEffect(() => {
+    dispatch(fetchRoutes());
+  }, [dispatch]);
+
+  const dataSource = useMemo(
+    () =>
+      routes.map((route) => ({
+        key: route._id,
+        _id: route._id,
+        name: route.name,
+        bus: route.bus,
+        stops: route.stops || [],
+        students: route.students || 0,
+      })),
+    [routes]
+  );
+
+  const handleSaveRoute = async (values) => {
+    const payload = {
       name: values.name,
       bus: values.bus,
-      stops: values.stops.split(",").map((s) => s.trim()),
+      stops: values.stops
+        .split(",")
+        .map((stop) => stop.trim())
+        .filter(Boolean),
       students: values.students,
     };
 
-    if (editingRoute) {
-      setRoutes(routes.map((r) => (r.key === editingRoute.key ? newRoute : r)));
-      message.success("Route updated successfully!");
-    } else {
-      setRoutes([...routes, newRoute]);
-      message.success("Route added successfully!");
+    try {
+      if (editingRoute?._id) {
+        await dispatch(updateRoute({ id: editingRoute._id, payload })).unwrap();
+        message.success("Route updated successfully!");
+      } else {
+        await dispatch(createRoute(payload)).unwrap();
+        message.success("Route added successfully!");
+      }
+      setModalVisible(false);
+      setEditingRoute(null);
+      form.resetFields();
+    } catch (error) {
+      message.error(error || "Unable to save route");
     }
-
-    setModalVisible(false);
-    setEditingRoute(null);
-    form.resetFields();
   };
 
   const handleEditRoute = (route) => {
@@ -73,17 +89,20 @@ const RoutesPage = () => {
       content: `Do you want to delete ${route.name}?`,
       okText: "Yes",
       cancelText: "No",
-      onOk: () => {
-        setRoutes(routes.filter((r) => r.key !== route.key));
-        message.success("Route deleted successfully!");
+      onOk: async () => {
+        try {
+          await dispatch(deleteRoute(route._id)).unwrap();
+          message.success("Route deleted successfully!");
+        } catch (error) {
+          message.error(error || "Unable to delete route");
+        }
       },
     });
   };
 
-  // Summary
-  const totalRoutes = routes.length;
-  const totalBuses = new Set(routes.map((r) => r.bus)).size;
-  const totalStudents = routes.reduce((acc, r) => acc + r.students, 0);
+  const totalRoutes = dataSource.length;
+  const totalBuses = new Set(dataSource.map((route) => route.bus)).size;
+  const totalStudents = dataSource.reduce((acc, route) => acc + route.students, 0);
 
   const columns = [
     { title: "Route Name", dataIndex: "name", key: "name" },
@@ -95,8 +114,12 @@ const RoutesPage = () => {
       key: "actions",
       render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleEditRoute(record)}>Edit</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteRoute(record)}>Delete</Button>
+          <Button icon={<EditOutlined />} onClick={() => handleEditRoute(record)}>
+            Edit
+          </Button>
+          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteRoute(record)}>
+            Delete
+          </Button>
         </Space>
       ),
     },
@@ -111,16 +134,21 @@ const RoutesPage = () => {
       </Breadcrumb>
 
       <Content>
-        {/* Summary Cards */}
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={8}>
-            <Card title="Total Routes" bordered={false}>{totalRoutes}</Card>
+            <Card title="Total Routes" bordered={false}>
+              {totalRoutes}
+            </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card title="Total Buses" bordered={false}>{totalBuses}</Card>
+            <Card title="Total Buses" bordered={false}>
+              {totalBuses}
+            </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card title="Total Students" bordered={false}>{totalStudents}</Card>
+            <Card title="Total Students" bordered={false}>
+              {totalStudents}
+            </Card>
           </Col>
         </Row>
 
@@ -131,13 +159,16 @@ const RoutesPage = () => {
           </Button>
         </div>
 
-        <Table columns={columns} dataSource={routes} pagination={{ pageSize: 5 }} rowKey="key" />
+        <Table columns={columns} dataSource={dataSource} loading={loading} pagination={{ pageSize: 5 }} rowKey="key" />
 
-        {/* Add/Edit Route Modal */}
         <Modal
           title={editingRoute ? "Edit Route" : "Add Route"}
-          visible={modalVisible}
-          onCancel={() => { setModalVisible(false); setEditingRoute(null); form.resetFields(); }}
+          open={modalVisible}
+          onCancel={() => {
+            setModalVisible(false);
+            setEditingRoute(null);
+            form.resetFields();
+          }}
           footer={null}
         >
           <Form form={form} layout="vertical" onFinish={handleSaveRoute}>
@@ -150,13 +181,27 @@ const RoutesPage = () => {
             <Form.Item label="Stops (comma separated)" name="stops" rules={[{ required: true, message: "Enter stops" }]}>
               <Input placeholder="e.g., Stop 1, Stop 2, Stop 3" />
             </Form.Item>
-            <Form.Item label="Number of Students" name="students" rules={[{ required: true, message: "Enter number of students" }]}>
+            <Form.Item
+              label="Number of Students"
+              name="students"
+              rules={[{ required: true, message: "Enter number of students" }]}
+            >
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item style={{ textAlign: "right" }}>
               <Space>
-                <Button onClick={() => { setModalVisible(false); form.resetFields(); setEditingRoute(null); }}>Cancel</Button>
-                <Button type="primary" htmlType="submit">{editingRoute ? "Update" : "Add"}</Button>
+                <Button
+                  onClick={() => {
+                    setModalVisible(false);
+                    form.resetFields();
+                    setEditingRoute(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit">
+                  {editingRoute ? "Update" : "Add"}
+                </Button>
               </Space>
             </Form.Item>
           </Form>

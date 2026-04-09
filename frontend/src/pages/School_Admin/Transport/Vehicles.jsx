@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Breadcrumb,
@@ -16,44 +16,68 @@ import {
   Col,
   Select,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined, CarOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { createVehicle, deleteVehicle, fetchVehicles, updateVehicle } from "../../../features/transportSlice";
 
 const { Content } = Layout;
 const { Option } = Select;
 
 const Vehicles = () => {
-  const [vehicles, setVehicles] = useState([
-    { key: 1, type: "Bus", number: "MH01AB1234", driver: "John Doe", capacity: 40, status: "In Use", route: "Route A" },
-    { key: 2, type: "Van", number: "MH01XY5678", driver: "Jane Smith", capacity: 15, status: "Available", route: "Route B" },
-  ]);
+  const dispatch = useDispatch();
+  const { vehicles, loading } = useSelector((state) => state.transport);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [form] = Form.useForm();
 
-  // Add/Edit Vehicle
-  const handleSaveVehicle = (values) => {
-    const newVehicle = {
-      key: editingVehicle ? editingVehicle.key : vehicles.length + 1,
+  useEffect(() => {
+    dispatch(fetchVehicles());
+  }, [dispatch]);
+
+  const dataSource = useMemo(
+    () =>
+      vehicles.map((vehicle) => ({
+        key: vehicle._id,
+        _id: vehicle._id,
+        type: vehicle.vehicleType,
+        number: vehicle.busNumber,
+        driver: vehicle.driverName,
+        driverContact: vehicle.driverContact,
+        drivingLicense: vehicle.drivingLicense,
+        capacity: vehicle.capacity,
+        status: vehicle.status,
+        route: vehicle.route,
+      })),
+    [vehicles]
+  );
+
+  const handleSaveVehicle = async (values) => {
+    const payload = {
       type: values.type,
       number: values.number,
       driver: values.driver,
+      driverContact: values.driverContact,
+      drivingLicense: values.drivingLicense,
       capacity: values.capacity,
       status: values.status,
       route: values.route,
     };
 
-    if (editingVehicle) {
-      setVehicles(vehicles.map((v) => (v.key === editingVehicle.key ? newVehicle : v)));
-      message.success("Vehicle updated successfully!");
-    } else {
-      setVehicles([...vehicles, newVehicle]);
-      message.success("Vehicle added successfully!");
+    try {
+      if (editingVehicle?._id) {
+        await dispatch(updateVehicle({ id: editingVehicle._id, payload })).unwrap();
+        message.success("Vehicle updated successfully!");
+      } else {
+        await dispatch(createVehicle(payload)).unwrap();
+        message.success("Vehicle added successfully!");
+      }
+      setModalVisible(false);
+      setEditingVehicle(null);
+      form.resetFields();
+    } catch (error) {
+      message.error(error || "Unable to save vehicle");
     }
-
-    setModalVisible(false);
-    setEditingVehicle(null);
-    form.resetFields();
   };
 
   const handleEditVehicle = (vehicle) => {
@@ -68,17 +92,20 @@ const Vehicles = () => {
       content: `Do you want to delete vehicle ${vehicle.number}?`,
       okText: "Yes",
       cancelText: "No",
-      onOk: () => {
-        setVehicles(vehicles.filter((v) => v.key !== vehicle.key));
-        message.success("Vehicle deleted successfully!");
+      onOk: async () => {
+        try {
+          await dispatch(deleteVehicle(vehicle._id)).unwrap();
+          message.success("Vehicle deleted successfully!");
+        } catch (error) {
+          message.error(error || "Unable to delete vehicle");
+        }
       },
     });
   };
 
-  // Summary
-  const totalVehicles = vehicles.length;
-  const totalInUse = vehicles.filter((v) => v.status === "In Use").length;
-  const totalAvailable = vehicles.filter((v) => v.status === "Available").length;
+  const totalVehicles = dataSource.length;
+  const totalInUse = dataSource.filter((vehicle) => vehicle.status === "In Use").length;
+  const totalAvailable = dataSource.filter((vehicle) => vehicle.status === "Available").length;
 
   const columns = [
     { title: "Type", dataIndex: "type", key: "type" },
@@ -89,9 +116,7 @@ const Vehicles = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag color={status === "In Use" ? "red" : "green"}>{status}</Tag>
-      ),
+      render: (status) => <Tag color={status === "In Use" ? "red" : "green"}>{status}</Tag>,
     },
     { title: "Route Assigned", dataIndex: "route", key: "route" },
     {
@@ -99,8 +124,12 @@ const Vehicles = () => {
       key: "actions",
       render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleEditVehicle(record)}>Edit</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteVehicle(record)}>Delete</Button>
+          <Button icon={<EditOutlined />} onClick={() => handleEditVehicle(record)}>
+            Edit
+          </Button>
+          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteVehicle(record)}>
+            Delete
+          </Button>
         </Space>
       ),
     },
@@ -115,11 +144,16 @@ const Vehicles = () => {
       </Breadcrumb>
 
       <Content>
-        {/* Summary Cards */}
         <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}><Card title="Total Vehicles">{totalVehicles}</Card></Col>
-          <Col xs={24} sm={8}><Card title="In Use">{totalInUse}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Available">{totalAvailable}</Card></Col>
+          <Col xs={24} sm={8}>
+            <Card title="Total Vehicles">{totalVehicles}</Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card title="In Use">{totalInUse}</Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card title="Available">{totalAvailable}</Card>
+          </Col>
         </Row>
 
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -129,13 +163,16 @@ const Vehicles = () => {
           </Button>
         </div>
 
-        <Table columns={columns} dataSource={vehicles} pagination={{ pageSize: 5 }} rowKey="key" />
+        <Table columns={columns} dataSource={dataSource} loading={loading} pagination={{ pageSize: 5 }} rowKey="key" />
 
-        {/* Add/Edit Vehicle Modal */}
         <Modal
           title={editingVehicle ? "Edit Vehicle" : "Add Vehicle"}
-          visible={modalVisible}
-          onCancel={() => { setModalVisible(false); setEditingVehicle(null); form.resetFields(); }}
+          open={modalVisible}
+          onCancel={() => {
+            setModalVisible(false);
+            setEditingVehicle(null);
+            form.resetFields();
+          }}
           footer={null}
         >
           <Form form={form} layout="vertical" onFinish={handleSaveVehicle}>
@@ -152,8 +189,11 @@ const Vehicles = () => {
             <Form.Item label="Driver Name" name="driver" rules={[{ required: true, message: "Enter driver name" }]}>
               <Input placeholder="Enter driver name" />
             </Form.Item>
-             <Form.Item label="Driveing Licance" name="driver" rules={[{ required: true, message: "Enter Driveing Licance" }]}>
-              <Input placeholder="Enter driver name" />
+            <Form.Item label="Driver Contact" name="driverContact">
+              <Input placeholder="Enter driver contact" />
+            </Form.Item>
+            <Form.Item label="Driving License" name="drivingLicense">
+              <Input placeholder="Enter driving license" />
             </Form.Item>
             <Form.Item label="Capacity" name="capacity" rules={[{ required: true, message: "Enter capacity" }]}>
               <InputNumber min={1} style={{ width: "100%" }} />
@@ -162,6 +202,7 @@ const Vehicles = () => {
               <Select placeholder="Select status">
                 <Option value="In Use">In Use</Option>
                 <Option value="Available">Available</Option>
+                <Option value="Maintenance">Maintenance</Option>
               </Select>
             </Form.Item>
             <Form.Item label="Route Assigned" name="route">
@@ -169,8 +210,18 @@ const Vehicles = () => {
             </Form.Item>
             <Form.Item style={{ textAlign: "right" }}>
               <Space>
-                <Button onClick={() => { setModalVisible(false); setEditingVehicle(null); form.resetFields(); }}>Cancel</Button>
-                <Button type="primary" htmlType="submit">{editingVehicle ? "Update" : "Add"}</Button>
+                <Button
+                  onClick={() => {
+                    setModalVisible(false);
+                    setEditingVehicle(null);
+                    form.resetFields();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit">
+                  {editingVehicle ? "Update" : "Add"}
+                </Button>
               </Space>
             </Form.Item>
           </Form>

@@ -41,6 +41,7 @@ import roleUiReducer from "../features/roleUiSlice.js";
 import schoolClassReducer from "../features/schoolClassSlice.js";
 import attendanceReducer from "../features/attendanceSlice.js";
 import libraryReducer from "../features/librarySlice.js";
+import transportReducer from "../features/transportSlice.js";
 import { attachAuthStore } from "../api/httpClient";
 import { baseApi } from "../services/baseApi";
 
@@ -82,6 +83,7 @@ const rootReducer = combineReducers({
   schoolClass: schoolClassReducer,
   attendance: attendanceReducer,
   library: libraryReducer,
+  transport: transportReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
