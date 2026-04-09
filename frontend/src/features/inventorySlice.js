@@ -1,112 +1,120 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-
 
 const getError = (err, fallback) => err?.response?.data?.message || err?.message || fallback;
 
-export const fetchHostelRooms = createAsyncThunk("hostel/fetchRooms", async (_, { rejectWithValue }) => {
-  try {
-    const res = await apiClient.get("/hostel/rooms");
-    return Array.isArray(res?.data?.data) ? res.data.data : [];
-  } catch (err) {
-    return rejectWithValue(getError(err, "Failed to fetch hostel rooms"));
+export const fetchInventoryItems = createAsyncThunk(
+  "inventory/fetchItems",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/inventory", { params });
+      return Array.isArray(res?.data?.data) ? res.data.data : [];
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch inventory items"));
+    }
   }
-});
+);
 
-export const createHostelRoom = createAsyncThunk("hostel/createRoom", async (payload, { rejectWithValue }) => {
-  try {
-    const res = await apiClient.post("/hostel/rooms", payload);
-    return res?.data?.data;
-  } catch (err) {
-    return rejectWithValue(getError(err, "Failed to create room"));
+export const createInventoryItem = createAsyncThunk(
+  "inventory/createItem",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/inventory", payload);
+      return res?.data?.data;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to create inventory item"));
+    }
   }
-});
+);
 
-export const updateHostelRoom = createAsyncThunk(
-  "hostel/updateRoom",
+export const updateInventoryItem = createAsyncThunk(
+  "inventory/updateItem",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`/hostel/rooms/${id}`, payload);
+      const res = await apiClient.put(`/inventory/${id}`, payload);
       return res?.data?.data;
     } catch (err) {
-      return rejectWithValue(getError(err, "Failed to update room"));
+      return rejectWithValue(getError(err, "Failed to update inventory item"));
     }
   }
 );
 
-export const deleteHostelRoom = createAsyncThunk("hostel/deleteRoom", async (id, { rejectWithValue }) => {
-  try {
-    await apiClient.delete(`/hostel/rooms/${id}`);
-    return id;
-  } catch (err) {
-    return rejectWithValue(getError(err, "Failed to delete room"));
-  }
-});
-
-export const assignHostelStudent = createAsyncThunk(
-  "hostel/assignStudent",
-  async ({ id, studentName }, { rejectWithValue }) => {
+export const deleteInventoryItem = createAsyncThunk(
+  "inventory/deleteItem",
+  async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/hostel/rooms/${id}/assign`, { studentName });
-      return res?.data?.data;
+      await apiClient.delete(`/inventory/${id}`);
+      return id;
     } catch (err) {
-      return rejectWithValue(getError(err, "Failed to assign student"));
+      return rejectWithValue(getError(err, "Failed to delete inventory item"));
     }
   }
 );
 
-const hostelSlice = createSlice({
-  name: "hostel",
+const inventorySlice = createSlice({
+  name: "inventory",
   initialState: {
-    rooms: [],
+    items: [],
     loading: false,
     actionLoading: false,
     error: null,
   },
   reducers: {
-    clearHostelError: (state) => {
+    clearInventoryError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchHostelRooms.pending, (state) => {
+      .addCase(fetchInventoryItems.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchHostelRooms.fulfilled, (state, action) => {
+      .addCase(fetchInventoryItems.fulfilled, (state, action) => {
         state.loading = false;
-        state.rooms = action.payload;
+        state.items = action.payload;
       })
-      .addCase(fetchHostelRooms.rejected, (state, action) => {
+      .addCase(fetchInventoryItems.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
       .addMatcher(
-        (action) => action.type.startsWith("hostel/") && action.type.endsWith("/pending") && action.type !== "hostel/fetchRooms/pending",
+        (action) =>
+          action.type.startsWith("inventory/") &&
+          action.type.endsWith("/pending") &&
+          action.type !== "inventory/fetchItems/pending",
         (state) => {
           state.actionLoading = true;
           state.error = null;
         }
       )
       .addMatcher(
-        (action) => action.type.startsWith("hostel/") && action.type.endsWith("/fulfilled") && action.type !== "hostel/fetchRooms/fulfilled",
+        (action) =>
+          action.type.startsWith("inventory/") &&
+          action.type.endsWith("/fulfilled") &&
+          action.type !== "inventory/fetchItems/fulfilled",
         (state, action) => {
           state.actionLoading = false;
-          if (action.type === "hostel/createRoom/fulfilled") {
-            state.rooms.unshift(action.payload);
+
+          if (action.type === "inventory/createItem/fulfilled") {
+            state.items.unshift(action.payload);
           }
-          if (["hostel/updateRoom/fulfilled", "hostel/assignStudent/fulfilled"].includes(action.type)) {
-            const idx = state.rooms.findIndex((room) => room._id === action.payload?._id);
-            if (idx !== -1) state.rooms[idx] = action.payload;
+
+          if (action.type === "inventory/updateItem/fulfilled") {
+            const index = state.items.findIndex((item) => item._id === action.payload?._id);
+            if (index !== -1) state.items[index] = action.payload;
           }
-          if (action.type === "hostel/deleteRoom/fulfilled") {
-            state.rooms = state.rooms.filter((room) => room._id !== action.payload);
+
+          if (action.type === "inventory/deleteItem/fulfilled") {
+            state.items = state.items.filter((item) => item._id !== action.payload);
           }
         }
       )
       .addMatcher(
-        (action) => action.type.startsWith("hostel/") && action.type.endsWith("/rejected") && action.type !== "hostel/fetchRooms/rejected",
+        (action) =>
+          action.type.startsWith("inventory/") &&
+          action.type.endsWith("/rejected") &&
+          action.type !== "inventory/fetchItems/rejected",
         (state, action) => {
           state.actionLoading = false;
           state.error = action.payload;
@@ -115,5 +123,5 @@ const hostelSlice = createSlice({
   },
 });
 
-export const { clearHostelError } = hostelSlice.actions;
-export default hostelSlice.reducer;
+export const { clearInventoryError } = inventorySlice.actions;
+export default inventorySlice.reducer;
