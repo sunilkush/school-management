@@ -10,6 +10,7 @@ import {
   enterMarksBulkService,
   getClassResultSummaryService,
   getExamsService,
+  getExamAnalyticsService,
   getStudentResultService,
   publishResultService,
   submitFinalMarksService,
@@ -36,6 +37,11 @@ export const getExamById = asyncHandler(async (req, res) => {
 
   if (!exam) throw new ApiError(404, "Exam not found");
   return res.status(200).json(new ApiResponse(200, exam, "Exam fetched successfully"));
+});
+
+export const getExamAnalytics = asyncHandler(async (req, res) => {
+  const data = await getExamAnalyticsService({ examId: req.params.id, user: req.user });
+  return res.status(200).json(new ApiResponse(200, data, "Exam analytics fetched successfully"));
 });
 
 export const updateExam = asyncHandler(async (req, res) => {

@@ -7,6 +7,7 @@ import {
   evaluateAttempt,
   getClassResultSummary,
   getExamById,
+  getExamAnalytics,
   getExams,
   getParentViewResult,
   getStudentResult,
@@ -47,6 +48,7 @@ router.post(
 
 router.get("/", auth, roleMiddleware(READ_ROLES), getExams);
 router.get("/:id", auth, roleMiddleware(READ_ROLES), getExamById);
+router.get("/:id/analytics", auth, roleMiddleware(READ_ROLES), getExamAnalytics);
 router.put("/:id", auth, roleMiddleware(ADMIN_ROLES), updateExam);
 router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), deleteExam);
 router.put("/:id/publish", auth, roleMiddleware(ADMIN_ROLES), publishExam);

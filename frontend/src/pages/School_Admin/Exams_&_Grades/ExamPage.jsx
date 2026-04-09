@@ -9,6 +9,12 @@ import {
   Tag,
   Typography,
   Empty,
+  Select,
+  Drawer,
+  Descriptions,
+  Statistic,
+  Row,
+  Col,
 } from "antd";
 import {
   PlusOutlined,
@@ -16,7 +22,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getExams, deleteExam, publishResults } from "../../../features/examSlice.js";
+import { getExams, deleteExam, publishResults, getExamAnalytics } from "../../../features/examSlice.js";
 import { useDispatch, useSelector } from "react-redux";
 import memoryStorage from "../../../utils/memoryStorage";
 
@@ -27,7 +33,9 @@ const ExamsPage = () => {
   const navigate = useNavigate();
 
   /* ✅ Redux State */
-  const { exams = [], loading } = useSelector((state) => state.exams || {});
+  const { exams = [], loading, analytics } = useSelector((state) => state.exams || {});
+  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [analyticsOpen, setAnalyticsOpen] = React.useState(false);
 
   /* ✅ Academic Year + School */
   const storeAcadmicYear = memoryStorage.getItem("selectedAcademicYear");
@@ -76,6 +84,15 @@ const ExamsPage = () => {
     }
   };
 
+  const handleViewAnalytics = async (record) => {
+    try {
+      await dispatch(getExamAnalytics(record?._id)).unwrap();
+      setAnalyticsOpen(true);
+    } catch (error) {
+      message.error(error || "Failed to fetch analytics");
+    }
+  };
+
     /* ✅ Safe Date Formatter */
   const formatDate = (date) => {
     if (!date) return "-";
@@ -88,6 +105,11 @@ const ExamsPage = () => {
       title: "Exam Title",
       dataIndex: "title",
       render: (text) => <Text strong>{text}</Text>,
+    },
+    {
+      title: "Code",
+      dataIndex: "examCode",
+      render: (code) => code || "-",
     },
     {
       title: "Type",
@@ -146,10 +168,15 @@ const ExamsPage = () => {
 
           <Button onClick={() => handlePublishResult(record, true)}>Publish Result</Button>
           <Button onClick={() => handlePublishResult(record, false)}>Unpublish</Button>
+          <Button onClick={() => handleViewAnalytics(record)}>Analytics</Button>
         </Space>
       ),
     },
   ];
+
+  const filteredExams = statusFilter === "all"
+    ? exams
+    : exams.filter((exam) => exam?.status === statusFilter);
 
   return (
     <Card bordered={false} style={{ borderRadius: 12 }}>
@@ -175,10 +202,25 @@ const ExamsPage = () => {
         </Button>
       </Space>
 
+      <Space style={{ marginBottom: 16 }}>
+        <Text type="secondary">Filter by status:</Text>
+        <Select
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { label: "All", value: "all" },
+            { label: "Draft", value: "draft" },
+            { label: "Published", value: "published" },
+            { label: "Completed", value: "completed" },
+          ]}
+          style={{ width: 220 }}
+        />
+      </Space>
+
       <Table
         loading={loading}
         columns={columns}
-        dataSource={exams}
+        dataSource={filteredExams}
         rowKey="_id"
         bordered
         pagination={{ pageSize: 5 }}
@@ -191,6 +233,40 @@ const ExamsPage = () => {
           ),
         }}
       />
+
+      <Drawer
+        title="Enterprise Exam Analytics"
+        open={analyticsOpen}
+        onClose={() => setAnalyticsOpen(false)}
+        width={680}
+      >
+        {analytics ? (
+          <>
+            <Descriptions bordered column={1} size="small">
+              <Descriptions.Item label="Exam">{analytics.exam?.title}</Descriptions.Item>
+              <Descriptions.Item label="Class">{analytics.exam?.schoolClassId?.name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Subject">{analytics.exam?.subjectId?.name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Risk Level">{analytics.enterpriseInsights?.riskLevel?.toUpperCase()}</Descriptions.Item>
+              <Descriptions.Item label="Recommendation">
+                {analytics.enterpriseInsights?.recommendation}
+              </Descriptions.Item>
+            </Descriptions>
+            <Row gutter={16} style={{ marginTop: 16 }}>
+              <Col span={8}>
+                <Statistic title="Students Evaluated" value={analytics.evaluation?.studentsEvaluated || 0} />
+              </Col>
+              <Col span={8}>
+                <Statistic title="Avg Marks" value={analytics.evaluation?.averageObtainedMarks || 0} />
+              </Col>
+              <Col span={8}>
+                <Statistic title="Pass %" value={analytics.evaluation?.passPercentage || 0} suffix="%" />
+              </Col>
+            </Row>
+          </>
+        ) : (
+          <Empty description="No analytics available" />
+        )}
+      </Drawer>
     </Card>
   );
 };
