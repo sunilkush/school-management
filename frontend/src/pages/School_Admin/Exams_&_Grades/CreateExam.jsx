@@ -96,6 +96,7 @@ const CreateExam = () => {
 
     form.setFieldsValue({
       title: examData.title,
+      examCode: examData.examCode,
       schoolClassId: schoolClassIdValue,
       subjectId: examData.subjectId?._id || examData.subjectId,
       examType: examData.examType,
@@ -105,6 +106,9 @@ const CreateExam = () => {
       durationMinutes: examData.durationMinutes,
       totalMarks: examData.totalMarks,
       passingMarks: examData.passingMarks,
+      maxAttempts: examData.settings?.maxAttempts ?? 1,
+      negativeMarking: examData.settings?.negativeMarking ?? 0,
+      allowPartialScoring: examData.settings?.allowPartialScoring ?? false,
       status: examData.status,
     });
   }, [examData, schoolClasses,handleClassChange]);
@@ -163,6 +167,9 @@ const CreateExam = () => {
       if (dayjs(values.endTime).isBefore(dayjs(values.startTime))) {
         return message.error("End time must be after start time");
       }
+      if (Number(values.passingMarks) > Number(values.totalMarks)) {
+        return message.error("Passing marks cannot be greater than total marks");
+      }
 
       const startDateTime = dayjs(values.examDate)
         .hour(dayjs(values.startTime).hour())
@@ -177,6 +184,7 @@ const CreateExam = () => {
         schoolId,
         userId,
         title: values.title,
+        examCode: values.examCode,
         schoolClassId: values.schoolClassId,
         subjectId: values.subjectId,
         examType: values.examType,
@@ -186,6 +194,11 @@ const CreateExam = () => {
         durationMinutes: values.durationMinutes,
         totalMarks: values.totalMarks,
         passingMarks: values.passingMarks,
+        settings: {
+          maxAttempts: values.maxAttempts ?? 1,
+          negativeMarking: values.negativeMarking ?? 0,
+          allowPartialScoring: values.allowPartialScoring ?? false,
+        },
         status: values.status || "draft",
       };
       
@@ -234,6 +247,16 @@ const CreateExam = () => {
 
             <Col md={12}>
               <Form.Item
+                name="examCode"
+                label="Exam Code"
+                rules={[{ required: true, message: "Enter exam code" }]}
+              >
+                <Input placeholder="e.g. TERM1-MATH-2026" />
+              </Form.Item>
+            </Col>
+
+            <Col md={12}>
+              <Form.Item
                 name="schoolClassId"
                 label="Class"
                 rules={[{ required: true, message: "Select class" }]}
@@ -260,6 +283,32 @@ const CreateExam = () => {
                       {sub.name}
                     </Option>
                   ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left">Enterprise Controls</Divider>
+          <Row gutter={16}>
+            <Col md={8}>
+              <Form.Item name="maxAttempts" label="Maximum Attempts" initialValue={1}>
+                <InputNumber min={1} max={10} style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            <Col md={8}>
+              <Form.Item name="negativeMarking" label="Negative Marking" initialValue={0}>
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            <Col md={8}>
+              <Form.Item
+                name="allowPartialScoring"
+                label="Partial Scoring"
+                initialValue={false}
+              >
+                <Select>
+                  <Option value={false}>Disabled</Option>
+                  <Option value={true}>Enabled</Option>
                 </Select>
               </Form.Item>
             </Col>

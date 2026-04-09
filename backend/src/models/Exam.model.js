@@ -26,6 +26,13 @@ const examSchema = new Schema(
       trim: true
     },
 
+    examCode: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      index: true
+    },
+
     schoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "SchoolClass",
