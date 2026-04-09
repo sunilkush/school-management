@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   Table,
@@ -24,41 +24,129 @@ import {
   BookOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  createLibraryBook,
+  deleteLibraryBook,
+  fetchLibraryBooks,
+  updateLibraryBook,
+} from "../../../features/librarySlice";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
+const normalizeBook = (book) => ({
+  key: book._id,
+  _id: book._id,
+  title: book.title || "",
+  author: book.author || "",
+  category: book.category || "General",
+  quantity: Number(book.availableCopies ?? 0),
+  totalCopies: Number(book.totalCopies ?? 0),
+  isbn: book.isbn || "",
+  publisher: book.publisher || "",
+  shelfLocation: book.shelfLocation || "",
+  status: Number(book.availableCopies ?? 0) > 0 ? "Available" : "Issued",
+  schoolId: book.schoolId?._id || book.schoolId,
+});
+
 const Books = () => {
-  const [books, setBooks] = useState([]);
+  const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState();
+  const [statusFilter, setStatusFilter] = useState();
   const [form] = Form.useForm();
 
-  // 📌 Save / Update Book
-  const handleSave = (values) => {
-    if (editingBook) {
-      setBooks((prev) =>
-        prev.map((b) =>
-          b.key === editingBook.key ? { ...values, key: b.key } : b
-        )
-      );
-      message.success("Book updated successfully");
-    } else {
-      setBooks((prev) => [...prev, { ...values, key: Date.now() }]);
-      message.success("Book added successfully");
+  const { user } = useSelector((state) => state.auth || {});
+  const { books: rawBooks = [], booksLoading, actionLoading } = useSelector(
+    (state) => state.library || {}
+  );
+
+  const schoolId = user?.school?._id || user?.schoolId;
+
+  const books = useMemo(() => rawBooks.map(normalizeBook), [rawBooks]);
+
+  const fetchBooks = useCallback(async () => {
+    try {
+      await dispatch(fetchLibraryBooks()).unwrap();
+    } catch (error) {
+      message.error(error || "Failed to fetch books");
     }
-    setIsModalOpen(false);
-    setEditingBook(null);
-    form.resetFields();
+  }, [dispatch]);
+
+  useEffect(() => {
+    fetchBooks();
+  }, [fetchBooks]);
+
+  const handleSave = async (values) => {
+    if (!schoolId && !editingBook?.schoolId) {
+      message.error("School context not found. Please re-login.");
+      return;
+    }
+
+    const payload = {
+      title: values.title,
+      author: values.author,
+      category: values.category,
+      publisher: values.publisher,
+      isbn: values.isbn,
+      totalCopies: Number(values.totalCopies),
+      availableCopies: Number(values.availableCopies),
+      shelfLocation: values.shelfLocation,
+      schoolId: editingBook?.schoolId || schoolId,
+    };
+
+    try {
+      if (editingBook?._id) {
+        await dispatch(updateLibraryBook({ id: editingBook._id, payload })).unwrap();
+        message.success("Book updated successfully");
+      } else {
+        await dispatch(createLibraryBook(payload)).unwrap();
+        message.success("Book added successfully");
+      }
+
+      setIsModalOpen(false);
+      setEditingBook(null);
+      form.resetFields();
+      fetchBooks();
+    } catch (error) {
+      message.error(error || "Unable to save book");
+    }
   };
 
-  // 📌 Delete Book
-  const handleDelete = (key) => {
-    setBooks((prev) => prev.filter((b) => b.key !== key));
-    message.success("Book deleted");
+  const handleDelete = async (bookId) => {
+    try {
+      await dispatch(deleteLibraryBook(bookId)).unwrap();
+      message.success("Book deleted");
+      fetchBooks();
+    } catch (error) {
+      message.error(error || "Unable to delete book");
+    }
   };
 
-  // 📊 Table Columns
+  const filteredBooks = useMemo(() => {
+    return books.filter((book) => {
+      const search = searchText.trim().toLowerCase();
+      const bySearch =
+        !search ||
+        book.title.toLowerCase().includes(search) ||
+        book.author.toLowerCase().includes(search) ||
+        book.isbn.toLowerCase().includes(search);
+
+      const byCategory = !categoryFilter || book.category === categoryFilter;
+      const byStatus = !statusFilter || book.status === statusFilter;
+
+      return bySearch && byCategory && byStatus;
+    });
+  }, [books, searchText, categoryFilter, statusFilter]);
+
+  const categories = useMemo(
+    () => [...new Set(books.map((book) => book.category).filter(Boolean))],
+    [books]
+  );
+
   const columns = [
     {
       title: "Book Name",
@@ -96,7 +184,16 @@ const Books = () => {
               icon={<EditOutlined />}
               onClick={() => {
                 setEditingBook(record);
-                form.setFieldsValue(record);
+                form.setFieldsValue({
+                  title: record.title,
+                  author: record.author,
+                  category: record.category,
+                  publisher: record.publisher,
+                  isbn: record.isbn,
+                  totalCopies: record.totalCopies,
+                  availableCopies: record.quantity,
+                  shelfLocation: record.shelfLocation,
+                });
                 setIsModalOpen(true);
               }}
             />
@@ -104,7 +201,7 @@ const Books = () => {
 
           <Popconfirm
             title="Delete this book?"
-            onConfirm={() => handleDelete(record.key)}
+            onConfirm={() => handleDelete(record._id)}
           >
             <Tooltip title="Delete Book">
               <Button danger icon={<DeleteOutlined />} />
@@ -117,7 +214,6 @@ const Books = () => {
 
   return (
     <Card>
-      {/* 🔹 Header */}
       <Row justify="space-between" align="middle">
         <Title level={3}>
           <BookOutlined /> Library Books
@@ -131,7 +227,6 @@ const Books = () => {
         </Button>
       </Row>
 
-      {/* 🔹 Statistics */}
       <Row gutter={16} style={{ marginTop: 16 }}>
         <Col span={6}>
           <Statistic title="Total Books" value={books.length} />
@@ -145,48 +240,63 @@ const Books = () => {
         <Col span={6}>
           <Statistic
             title="Issued"
-            value={books.filter((b) => b.status === "Issued").length}
+            value={books.filter((b) => b.quantity === 0).length}
           />
         </Col>
       </Row>
 
-      {/* 🔹 Filters */}
       <Row gutter={16} style={{ margin: "16px 0" }}>
         <Col span={8}>
           <Input
             prefix={<SearchOutlined />}
-            placeholder="Search book / author"
+            placeholder="Search book / author / ISBN"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
         </Col>
         <Col span={6}>
-          <Select placeholder="Category" style={{ width: "100%" }}>
-            <Option value="Academic">Academic</Option>
-            <Option value="Novel">Novel</Option>
-            <Option value="Science">Science</Option>
+          <Select
+            allowClear
+            placeholder="Category"
+            style={{ width: "100%" }}
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+          >
+            {categories.map((category) => (
+              <Option key={category} value={category}>
+                {category}
+              </Option>
+            ))}
           </Select>
         </Col>
         <Col span={6}>
-          <Select placeholder="Status" style={{ width: "100%" }}>
+          <Select
+            allowClear
+            placeholder="Status"
+            style={{ width: "100%" }}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          >
             <Option value="Available">Available</Option>
             <Option value="Issued">Issued</Option>
           </Select>
         </Col>
       </Row>
 
-      {/* 🔹 Table */}
       <Table
         columns={columns}
-        dataSource={books}
-        rowKey="key"
+        dataSource={filteredBooks}
+        rowKey="_id"
         bordered
+        loading={booksLoading || actionLoading}
         pagination={{ pageSize: 5 }}
         locale={{ emptyText: "No books found" }}
       />
 
-      {/* 🔹 Modal */}
       <Modal
         title={editingBook ? "Edit Book" : "Add Book"}
         open={isModalOpen}
+        confirmLoading={actionLoading}
         onCancel={() => {
           setIsModalOpen(false);
           setEditingBook(null);
@@ -196,47 +306,44 @@ const Books = () => {
         okText="Save"
       >
         <Form form={form} layout="vertical" onFinish={handleSave}>
-          <Form.Item
-            name="title"
-            label="Book Title"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="title" label="Book Title" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
 
-          <Form.Item
-            name="author"
-            label="Author"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="author" label="Author" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
 
-          <Form.Item name="category" label="Category">
-            <Select>
-              <Option value="Academic">Academic</Option>
-              <Option value="Novel">Novel</Option>
-              <Option value="Science">Science</Option>
-            </Select>
+          <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="publisher" label="Publisher" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="isbn" label="ISBN" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="totalCopies" label="Total Copies" rules={[{ required: true }]}>
+            <Input type="number" min={1} />
           </Form.Item>
 
           <Form.Item
-            name="quantity"
-            label="Quantity"
+            name="availableCopies"
+            label="Available Copies"
             rules={[{ required: true }]}
           >
             <Input type="number" min={0} />
           </Form.Item>
 
           <Form.Item
-            name="status"
-            label="Status"
+            name="shelfLocation"
+            label="Shelf Location"
             rules={[{ required: true }]}
           >
-            <Select>
-              <Option value="Available">Available</Option>
-              <Option value="Issued">Issued</Option>
-            </Select>
+            <Input />
           </Form.Item>
         </Form>
       </Modal>

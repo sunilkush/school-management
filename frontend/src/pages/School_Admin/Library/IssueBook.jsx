@@ -1,14 +1,12 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import {
   Layout,
   Breadcrumb,
   Form,
-  Input,
-  Button,
   DatePicker,
   Select,
   Table,
-  Space,
+  Button,
   message,
   Row,
   Col,
@@ -20,46 +18,118 @@ import {
   RollbackOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  deleteIssuedBook,
+  fetchIssuedBooks,
+  fetchLibraryBooks,
+  fetchLibraryStudents,
+  issueLibraryBook,
+  returnLibraryBook,
+} from "../../../features/librarySlice";
 
 const { Content } = Layout;
 const { Option } = Select;
 
+const normalizeIssuedRecord = (entry) => ({
+  key: entry._id,
+  _id: entry._id,
+  studentId: entry.studentId?._id || entry.studentId,
+  studentName: entry.studentId?.name || entry.studentId?.email || "Unknown",
+  bookId: entry.bookId?._id || entry.bookId,
+  bookTitle: entry.bookId?.title || "Unknown",
+  issueDate: entry.issueDate ? dayjs(entry.issueDate).format("DD-MM-YYYY") : "-",
+  returnDate: entry.returnDate ? dayjs(entry.returnDate).format("DD-MM-YYYY") : "-",
+  status: entry.status || "Issued",
+});
+
 const IssueBook = () => {
+  const dispatch = useDispatch();
   const [issueForm] = Form.useForm();
   const [returnForm] = Form.useForm();
 
-  const [issuedBooks, setIssuedBooks] = useState([]);
+  const { user } = useSelector((state) => state.auth || {});
+  const {
+    books = [],
+    issuedBooks: rawIssuedBooks = [],
+    students = [],
+    booksLoading,
+    issuedLoading,
+    studentsLoading,
+    actionLoading,
+  } = useSelector((state) => state.library || {});
 
-  /* ================= ISSUE BOOK ================= */
-  const handleIssueBook = (values) => {
-    const newEntry = {
-      key: Date.now(),
-      studentName: values.studentName,
-      bookTitle: values.bookTitle,
-      issueDate: values.issueDate.format("DD-MM-YYYY"),
-      returnDate: values.returnDate.format("DD-MM-YYYY"),
-      status: "Issued",
+  const schoolId = user?.school?._id || user?.schoolId;
+
+  const issuedBooks = useMemo(
+    () => rawIssuedBooks.map(normalizeIssuedRecord),
+    [rawIssuedBooks]
+  );
+
+  const fetchSeedData = useCallback(async () => {
+    try {
+      await Promise.all([
+        dispatch(fetchLibraryBooks()).unwrap(),
+        dispatch(fetchIssuedBooks()).unwrap(),
+        schoolId
+          ? dispatch(fetchLibraryStudents({ schoolId, limit: 100 })).unwrap()
+          : Promise.resolve(),
+      ]);
+    } catch (error) {
+      message.error(error || "Failed to load issue/return data");
+    }
+  }, [dispatch, schoolId]);
+
+  useEffect(() => {
+    fetchSeedData();
+  }, [fetchSeedData]);
+
+  const handleIssueBook = async (values) => {
+    if (!schoolId) {
+      message.error("School context not found. Please re-login.");
+      return;
+    }
+
+    const payload = {
+      schoolId,
+      studentId: values.studentId,
+      bookId: values.bookId,
+      issueDate: values.issueDate?.toISOString(),
+      dueDate: values.returnDate?.toISOString(),
     };
 
-    setIssuedBooks([...issuedBooks, newEntry]);
-    message.success("Book issued successfully");
-    issueForm.resetFields();
+    try {
+      await dispatch(issueLibraryBook(payload)).unwrap();
+      message.success("Book issued successfully");
+      issueForm.resetFields();
+      fetchSeedData();
+    } catch (error) {
+      message.error(error || "Unable to issue book");
+    }
   };
 
-  /* ================= RETURN BOOK ================= */
-  const handleReturnBook = (values) => {
-    setIssuedBooks((prev) =>
-      prev.map((book) =>
-        book.key === values.issueId
-          ? { ...book, status: "Returned" }
-          : book
-      )
-    );
-    message.success("Book returned successfully");
-    returnForm.resetFields();
+  const handleReturnBook = async (values) => {
+    try {
+      await dispatch(returnLibraryBook(values.issueId)).unwrap();
+      message.success("Book returned successfully");
+      returnForm.resetFields();
+      fetchSeedData();
+    } catch (error) {
+      message.error(error || "Unable to return book");
+    }
   };
 
-  /* ================= TABLE ================= */
+  const handleDelete = async (issueId) => {
+    try {
+      await dispatch(deleteIssuedBook(issueId)).unwrap();
+      message.success("Record deleted");
+      fetchSeedData();
+    } catch (error) {
+      message.error(error || "Unable to delete record");
+    }
+  };
+
   const columns = [
     { title: "Student", dataIndex: "studentName" },
     { title: "Book", dataIndex: "bookTitle" },
@@ -68,12 +138,14 @@ const IssueBook = () => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) =>
-        status === "Issued" ? (
+      render: (status) => {
+        const normalized = String(status || "").toLowerCase();
+        return normalized === "issued" ? (
           <Tag color="orange">Issued</Tag>
         ) : (
           <Tag color="green">Returned</Tag>
-        ),
+        );
+      },
     },
     {
       title: "Action",
@@ -82,16 +154,18 @@ const IssueBook = () => {
           danger
           type="link"
           icon={<DeleteOutlined />}
-          onClick={() => {
-            setIssuedBooks(issuedBooks.filter((b) => b.key !== record.key));
-            message.success("Record deleted");
-          }}
+          onClick={() => handleDelete(record._id)}
         >
           Delete
         </Button>
       ),
     },
   ];
+
+  const issuedOnlyRecords = useMemo(
+    () => issuedBooks.filter((book) => String(book.status || "").toLowerCase() === "issued"),
+    [issuedBooks]
+  );
 
   return (
     <Layout style={{ padding: 24, minHeight: "100vh", background: "#f5f7fa" }}>
@@ -103,36 +177,53 @@ const IssueBook = () => {
 
       <Content>
         <Row gutter={[24, 24]}>
-          {/* ================= ISSUE BOOK ================= */}
           <Col xs={24} md={12}>
-            <Card
-              title="📘 Issue Book"
-              bordered={false}
-              style={{ borderRadius: 12 }}
-            >
-              <Form
-                form={issueForm}
-                layout="vertical"
-                onFinish={handleIssueBook}
-              >
+            <Card title="📘 Issue Book" bordered={false} style={{ borderRadius: 12 }}>
+              <Form form={issueForm} layout="vertical" onFinish={handleIssueBook}>
                 <Form.Item
-                  label="Student Name"
-                  name="studentName"
-                  rules={[{ required: true }]}
+                  label="Student"
+                  name="studentId"
+                  rules={[{ required: true, message: "Please select student" }]}
                 >
-                  <Input placeholder="Enter student name" />
+                  <Select
+                    placeholder="Select student"
+                    showSearch
+                    optionFilterProp="children"
+                    loading={studentsLoading}
+                  >
+                    {students.map((student) => {
+                      const label =
+                        student?.userDetails?.name ||
+                        student?.studentName ||
+                        student?.registrationNumber;
+                      return (
+                        <Option
+                          key={student.studentId || student._id}
+                          value={student.studentId || student._id}
+                        >
+                          {label}
+                        </Option>
+                      );
+                    })}
+                  </Select>
                 </Form.Item>
 
                 <Form.Item
                   label="Book Title"
-                  name="bookTitle"
-                  rules={[{ required: true }]}
+                  name="bookId"
+                  rules={[{ required: true, message: "Please select book" }]}
                 >
-                  <Select placeholder="Select book">
-                    <Option value="Mathematics">Mathematics</Option>
-                    <Option value="Science">Science</Option>
-                    <Option value="English">English</Option>
-                    <Option value="History">History</Option>
+                  <Select
+                    placeholder="Select book"
+                    showSearch
+                    optionFilterProp="children"
+                    loading={booksLoading}
+                  >
+                    {books.map((book) => (
+                      <Option key={book._id} value={book._id}>
+                        {book.title}
+                      </Option>
+                    ))}
                   </Select>
                 </Form.Item>
 
@@ -163,6 +254,7 @@ const IssueBook = () => {
                   htmlType="submit"
                   icon={<PlusOutlined />}
                   block
+                  loading={actionLoading}
                 >
                   Issue Book
                 </Button>
@@ -170,36 +262,21 @@ const IssueBook = () => {
             </Card>
           </Col>
 
-          {/* ================= RETURN BOOK ================= */}
           <Col xs={24} md={12}>
-            <Card
-              title="📗 Return Book"
-              bordered={false}
-              style={{ borderRadius: 12 }}
-            >
-              <Form
-                form={returnForm}
-                layout="vertical"
-                onFinish={handleReturnBook}
-              >
+            <Card title="📗 Return Book" bordered={false} style={{ borderRadius: 12 }}>
+              <Form form={returnForm} layout="vertical" onFinish={handleReturnBook}>
                 <Form.Item
                   label="Issued Book Record"
                   name="issueId"
                   rules={[{ required: true }]}
                 >
-                  <Select placeholder="Select issued book">
-                    {issuedBooks
-                      .filter((b) => b.status === "Issued")
-                      .map((book) => (
-                        <Option key={book.key} value={book.key}>
-                          {book.studentName} - {book.bookTitle}
-                        </Option>
-                      ))}
+                  <Select placeholder="Select issued book" showSearch optionFilterProp="children">
+                    {issuedOnlyRecords.map((book) => (
+                      <Option key={book._id} value={book._id}>
+                        {book.studentName} - {book.bookTitle}
+                      </Option>
+                    ))}
                   </Select>
-                </Form.Item>
-
-                <Form.Item label="Return Date" name="actualReturnDate">
-                  <DatePicker style={{ width: "100%" }} />
                 </Form.Item>
 
                 <Button
@@ -208,6 +285,7 @@ const IssueBook = () => {
                   htmlType="submit"
                   icon={<RollbackOutlined />}
                   block
+                  loading={actionLoading}
                 >
                   Return Book
                 </Button>
@@ -216,17 +294,13 @@ const IssueBook = () => {
           </Col>
         </Row>
 
-        {/* ================= TABLE ================= */}
-        <Card
-          title="📋 Issued Book Records"
-          style={{ marginTop: 24, borderRadius: 12 }}
-          bordered={false}
-        >
+        <Card title="📋 Issued Book Records" style={{ marginTop: 24, borderRadius: 12 }} bordered={false}>
           <Table
             columns={columns}
             dataSource={issuedBooks}
             pagination={{ pageSize: 5 }}
-            rowKey="key"
+            rowKey="_id"
+            loading={issuedLoading || actionLoading}
           />
         </Card>
       </Content>
