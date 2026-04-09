@@ -204,6 +204,17 @@ export const sidebarMenu = {
        // { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
       ],
     },
+
+    {
+      title: "Payroll",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
+        { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
+        { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
+        { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
+      ],
+    },
     {
       title: "Inventory Management",
       icon: Briefcase,
@@ -303,7 +314,16 @@ export const sidebarMenu = {
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
     { title: "Fee Collection", path: "accountant/fees/collect", icon: IndianRupee },
-    { title: "Payroll Management", path: "accountant/salary", icon: IndianRupee },
+        {
+      title: "Payroll Management",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Monthly Run", path: "accountant/salary" },
+        { title: "Salary Structures", path: "accountant/salary/structures" },
+        { title: "Payslips", path: "accountant/salary/payslips" },
+        { title: "Monthly Reports", path: "accountant/salary/reports/monthly" },
+      ],
+    },
     { title: "Financial Reports", path: "accountant/reports", icon: FileBarChart2 },
   ],
 

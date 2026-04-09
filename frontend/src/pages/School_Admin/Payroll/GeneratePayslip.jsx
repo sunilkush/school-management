@@ -1,74 +1,39 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Breadcrumb,
-  Button,
-  Card,
-  Col,
-  DatePicker,
-  Descriptions,
-  Empty,
-  Form,
-  Layout,
-  Row,
-  Select,
-  Space,
-  Spin,
-  Table,
-  Tag,
-  Typography,
-  message,
-} from "antd";
-import { DownloadOutlined, FileSearchOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Alert, Breadcrumb, Button, Card, Col, Empty, Layout, Row, Space, Table, message } from "antd";
 import dayjs from "dayjs";
 import httpClient from "../../../api/httpClient";
+import { usePayrollCycle, usePayslip } from "../../../hooks/payrollHooks";
+import PayslipFilters from "../../../components/payroll/PayslipFilters";
+import PayslipPreview from "../../../components/payroll/PayslipPreview";
+import { formatCurrencyINR } from "../../../utils/payroll";
 
 const { Content } = Layout;
-const { Text, Title } = Typography;
-
-const money = (value = 0) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 const GeneratePayslip = () => {
   const [employees, setEmployees] = useState([]);
-  const [cycleEntries, setCycleEntries] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
-  const [payslip, setPayslip] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [fetchingPayslip, setFetchingPayslip] = useState(false);
 
   const month = selectedMonth.month() + 1;
   const year = selectedMonth.year();
 
-  const loadEmployees = async () => {
-    const response = await httpClient.get("/employee");
-    setEmployees(response?.data?.data || []);
-  };
-
-  const loadCycle = async () => {
-    setLoading(true);
-    try {
-      const response = await httpClient.get(`/payroll/cycle/${month}/${year}`);
-      setCycleEntries(response?.data?.data?.entries || []);
-    } catch (error) {
-      if (error?.response?.status === 404) {
-        setCycleEntries([]);
-        return;
-      }
-      message.error(error?.response?.data?.message || "Cycle load failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { entries, loading, isCycleMissing, refreshCycle } = usePayrollCycle(month, year);
+  const { loading: payslipLoading, payslip, notFound, fetchPayslip, setPayslip } = usePayslip({
+    month,
+    year,
+    employeeId: selectedEmployeeId,
+  });
 
   useEffect(() => {
-    loadEmployees().catch(() => message.error("Employees load failed"));
+    httpClient
+      .get("/employee")
+      .then((res) => setEmployees(res?.data?.data || []))
+      .catch(() => message.error("Employees load failed"));
   }, []);
 
   useEffect(() => {
-    loadCycle().catch(() => {});
     setPayslip(null);
-  }, [month, year]);
+  }, [month, year, setPayslip]);
 
   const employeeOptions = useMemo(
     () =>
@@ -79,57 +44,21 @@ const GeneratePayslip = () => {
     [employees]
   );
 
-  const handleFetchPayslip = async (employeeIdOverride) => {
-    const employeeId = employeeIdOverride || selectedEmployeeId;
-    if (!employeeId) {
-      message.warning("Employee select karo");
-      return;
-    }
-
-    setFetchingPayslip(true);
-    try {
-      const response = await httpClient.get(`/payroll/payslip/${employeeId}/${month}/${year}`);
-      setPayslip(response?.data?.data || null);
-      message.success("Payslip loaded");
-    } catch (error) {
-      setPayslip(null);
-      message.error(error?.response?.data?.message || "Payslip fetch failed");
-    } finally {
-      setFetchingPayslip(false);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
   const entriesColumns = [
-    {
-      title: "Employee",
-      render: (_, record) => record.employeeId?.userId?.name || "-",
-    },
-    {
-      title: "Net Pay",
-      dataIndex: "netPay",
-      render: (value) => <Text strong>{money(value)}</Text>,
-    },
-    {
-      title: "Payment",
-      dataIndex: "paymentStatus",
-      render: (status) => <Tag color={status === "paid" ? "green" : "orange"}>{status?.toUpperCase()}</Tag>,
-    },
+    { title: "Employee", render: (_, r) => r.employeeId?.userId?.name || "-" },
+    { title: "Net Pay", dataIndex: "netPay", render: (v) => formatCurrencyINR(v) },
+    { title: "Status", dataIndex: "paymentStatus" },
     {
       title: "Action",
-      render: (_, record) => (
+      render: (_, r) => (
         <Button
-          icon={<FileSearchOutlined />}
           onClick={() => {
-            const employeeId = record.employeeId?._id;
-            setSelectedEmployeeId(employeeId);
-            handleFetchPayslip(employeeId);
+            const id = r.employeeId?._id;
+            setSelectedEmployeeId(id);
+            fetchPayslip(id);
           }}
         >
-          View Payslip
+          Preview
         </Button>
       ),
     },
@@ -142,84 +71,40 @@ const GeneratePayslip = () => {
         <Breadcrumb.Item>Payroll</Breadcrumb.Item>
         <Breadcrumb.Item>Payslip Center</Breadcrumb.Item>
       </Breadcrumb>
-
       <Content>
         <Card style={{ marginBottom: 16 }}>
-          <Form layout="inline">
-            <Form.Item label="Month">
-              <DatePicker picker="month" value={selectedMonth} onChange={(value) => value && setSelectedMonth(value)} />
-            </Form.Item>
-            <Form.Item label="Employee">
-              <Select
-                style={{ minWidth: 320 }}
-                showSearch
-                optionFilterProp="label"
-                placeholder="Employee select karo"
-                value={selectedEmployeeId}
-                onChange={setSelectedEmployeeId}
-                options={employeeOptions}
-              />
-            </Form.Item>
-            <Form.Item>
-              <Space>
-                <Button icon={<ReloadOutlined />} onClick={loadCycle} loading={loading}>
-                  Refresh
-                </Button>
-                <Button type="primary" icon={<FileSearchOutlined />} onClick={handleFetchPayslip} loading={fetchingPayslip}>
-                  Fetch Payslip
-                </Button>
-                <Button icon={<DownloadOutlined />} onClick={handlePrint} disabled={!payslip}>
-                  Print / Download PDF
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
+          <PayslipFilters
+            monthValue={selectedMonth}
+            onMonthChange={(v) => v && setSelectedMonth(v)}
+            employeeOptions={employeeOptions}
+            employeeId={selectedEmployeeId}
+            setEmployeeId={setSelectedEmployeeId}
+            onRefresh={refreshCycle}
+            onFetch={() => fetchPayslip()}
+            onPrint={() => window.print()}
+            loading={payslipLoading}
+          />
         </Card>
 
         <Row gutter={16}>
           <Col xs={24} lg={12}>
-            <Card title={`Payroll Entries - ${selectedMonth.format("MMMM YYYY")}`}>
-              {cycleEntries.length === 0 ? (
-                <Alert type="info" showIcon message="No cycle entries" description="Pehle payroll cycle generate karo." />
+            <Card title={`Cycle Entries - ${selectedMonth.format("MMMM YYYY")}`}>
+              {isCycleMissing ? (
+                <Alert type="info" showIcon message="Cycle not found" description="Generate cycle first for this month." />
+              ) : entries.length ? (
+                <Table rowKey="_id" columns={entriesColumns} dataSource={entries} loading={loading} pagination={{ pageSize: 6 }} />
               ) : (
-                <Table rowKey="_id" columns={entriesColumns} dataSource={cycleEntries} pagination={{ pageSize: 6 }} loading={loading} />
+                <Empty description="No payroll entries" />
               )}
             </Card>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title="Payslip Preview">
-              <Spin spinning={fetchingPayslip}>
-                {!payslip?.entry ? (
-                  <Empty description="Employee and month select karke payslip fetch karo" />
-                ) : (
-                  <>
-                    <Title level={5} style={{ marginTop: 0 }}>
-                      {payslip.entry.employeeId?.userId?.name}
-                    </Title>
-                    <Text type="secondary">
-                      {selectedMonth.format("MMMM YYYY")} • {payslip.entry.employeeId?.designation || "Staff"}
-                    </Text>
-
-                    <Descriptions column={1} bordered size="small" style={{ marginTop: 12 }}>
-                      <Descriptions.Item label="Working Days">{payslip.entry.workingDays}</Descriptions.Item>
-                      <Descriptions.Item label="Present Days">{payslip.entry.presentDays}</Descriptions.Item>
-                      <Descriptions.Item label="Paid Leaves">{payslip.entry.paidLeaves}</Descriptions.Item>
-                      <Descriptions.Item label="LOP Days">{payslip.entry.lopDays}</Descriptions.Item>
-                      <Descriptions.Item label="Gross Earnings">{money(payslip.entry.grossEarnings)}</Descriptions.Item>
-                      <Descriptions.Item label="Total Deductions">{money(payslip.entry.totalDeductions)}</Descriptions.Item>
-                      <Descriptions.Item label="Net Pay">
-                        <Text strong>{money(payslip.entry.netPay)}</Text>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Payment Status">
-                        <Tag color={payslip.entry.paymentStatus === "paid" ? "green" : "orange"}>
-                          {payslip.entry.paymentStatus?.toUpperCase()}
-                        </Tag>
-                      </Descriptions.Item>
-                    </Descriptions>
-                  </>
-                )}
-              </Spin>
+            <Card
+              title="Payslip Preview"
+              extra={<Space>{notFound && <Alert type="warning" message="Payslip not found for selected employee/month" showIcon />}</Space>}
+            >
+              <PayslipPreview payslip={payslip} monthLabel={selectedMonth.format("MMMM YYYY")} />
             </Card>
           </Col>
         </Row>
