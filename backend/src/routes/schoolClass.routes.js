@@ -11,7 +11,7 @@ import {
 import { auth,roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
-const ADMIN_ONLY = ["Super Admin", "School Admin"];
+const ADMIN_ONLY = ["Super Admin", "School Admin","Accountant"];
 // 🔹 Create
 router.post("/",auth, roleMiddleware(ADMIN_ONLY), createSchoolClass);
 

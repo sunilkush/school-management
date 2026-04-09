@@ -16,7 +16,7 @@ const router = Router();
 // ✅ Role Groups
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
-const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent"];
+const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent","Accountant"];
 
 // 💡 Routes
 

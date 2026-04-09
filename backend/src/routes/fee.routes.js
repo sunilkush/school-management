@@ -17,7 +17,7 @@ const router = express.Router();
 router.post(
   "/createFees",
   auth,
-  roleMiddleware("Super Admin", "School Admin"),
+  roleMiddleware("Super Admin", "School Admin","Accountant"),
   createFees
 );
 
@@ -28,7 +28,7 @@ router.post(
 router.get(
   "/allFees",
   auth,
-  roleMiddleware("Super Admin", "School Admin"),
+  roleMiddleware("Super Admin", "School Admin","Accountant"),
   getAllFees
 );
 
@@ -39,7 +39,7 @@ router.get(
 router.put(
   "/:id",
   auth,
-  roleMiddleware("School Admin"),
+  roleMiddleware("School Admin","Accountant"),
   updateFee
 );
 
@@ -50,7 +50,7 @@ router.put(
 router.delete(
   "/:id",
   auth,
-  roleMiddleware("School Admin"),
+  roleMiddleware("School Admin","Accountant"),
   deleteFee
 );
 
