@@ -31,6 +31,16 @@ export const getExamById = createAsyncThunk("exams/getExamById", async (examId, 
   }
 });
 
+export const getExamAnalytics = createAsyncThunk("exams/getExamAnalytics", async (examId, { rejectWithValue }) => {
+  try {
+    if (!examId || examId === "undefined" || examId === "null") throw new Error("Invalid exam id");
+    const res = await apiClient.get(`/exams/${examId}/analytics`);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
 export const updateExam = createAsyncThunk("exams/updateExam", async ({ Id, payload }, { rejectWithValue }) => {
   try {
     if (!Id || Id === "undefined" || Id === "null") throw new Error("Invalid exam id");
@@ -115,6 +125,7 @@ const examSlice = createSlice({
     currentExam: null,
     results: [],
     classSummary: null,
+    analytics: null,
     loading: false,
     error: null,
   },
@@ -154,6 +165,17 @@ const examSlice = createSlice({
       })
       .addCase(getExamById.fulfilled, (state, action) => {
         state.currentExam = action.payload;
+      })
+      .addCase(getExamAnalytics.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getExamAnalytics.fulfilled, (state, action) => {
+        state.loading = false;
+        state.analytics = action.payload;
+      })
+      .addCase(getExamAnalytics.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       .addCase(updateExam.fulfilled, (state, action) => {
         const index = state.exams.findIndex((e) => e._id === action.payload._id);

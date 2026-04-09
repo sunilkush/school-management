@@ -6,8 +6,36 @@ import { Marks } from "../models/Marks.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { Attempt } from "../models/ExamAttempts.model.js";
 
 const OBJECT_ID = mongoose.Types.ObjectId;
+
+const validateExamPayload = (payload) => {
+  if (!payload.title || !payload.schoolClassId || !payload.subjectId || !payload.examDate) {
+    throw new ApiError(400, "name/title, schoolClassId, subjectId and examDate are required");
+  }
+
+  if (!payload.totalMarks || payload.passingMarks === undefined) {
+    throw new ApiError(400, "totalMarks and passingMarks are required");
+  }
+
+  if (!payload.startTime || !payload.endTime || !payload.durationMinutes) {
+    throw new ApiError(400, "startTime, endTime and durationMinutes are required");
+  }
+
+  const startTime = new Date(payload.startTime);
+  const endTime = new Date(payload.endTime);
+  if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime())) {
+    throw new ApiError(400, "Invalid startTime or endTime");
+  }
+  if (endTime <= startTime) {
+    throw new ApiError(400, "End time must be after start time");
+  }
+
+  if (Number(payload.passingMarks) > Number(payload.totalMarks)) {
+    throw new ApiError(400, "Passing marks cannot exceed total marks");
+  }
+};
 
 const getGradeFromPercentage = (percentage) => {
   if (percentage >= 85) return "A";
@@ -35,20 +63,16 @@ const resolveScope = async ({ user, studentId }) => {
 };
 
 export const createExamService = async ({ body, user }) => {
+  const generatedCode = body.examCode || `EX-${Date.now().toString().slice(-8)}`;
   const payload = {
     ...body,
     title: body.name || body.title,
+    examCode: generatedCode,
     createdBy: user._id,
     schoolId: user.roleId?.name === "Super Admin" ? body.schoolId : user.schoolId,
   };
 
-  if (!payload.title || !payload.schoolClassId || !payload.subjectId || !payload.examDate) {
-    throw new ApiError(400, "name/title, schoolClassId, subjectId and examDate are required");
-  }
-
-  if (!payload.totalMarks || payload.passingMarks === undefined) {
-    throw new ApiError(400, "totalMarks and passingMarks are required");
-  }
+  validateExamPayload(payload);
 
   const exam = await Exam.create(payload);
  
@@ -197,6 +221,93 @@ export const submitFinalMarksService = async ({ body, user }) => {
 
   const update = await Marks.updateMany(filter, { $set: { isFinalSubmitted: true, updatedBy: user._id } });
   return update;
+};
+
+export const getExamAnalyticsService = async ({ examId, user }) => {
+  const exam = await Exam.findById(examId)
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name")
+    .lean();
+
+  if (!exam) throw new ApiError(404, "Exam not found");
+  if (user.roleId?.name !== "Super Admin" && `${exam.schoolId}` !== `${user.schoolId}`) {
+    throw new ApiError(403, "Forbidden for this school exam");
+  }
+
+  const [attemptStats, marksStats, resultStats] = await Promise.all([
+    Attempt.aggregate([
+      { $match: { examId: new OBJECT_ID(examId) } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          averageScore: { $avg: "$totalMarksObtained" },
+        },
+      },
+    ]),
+    Marks.aggregate([
+      { $match: { examId: new OBJECT_ID(examId) } },
+      {
+        $group: {
+          _id: null,
+          studentsEvaluated: { $sum: 1 },
+          averageObtainedMarks: { $avg: "$obtainedMarks" },
+          highestScore: { $max: "$obtainedMarks" },
+          lowestScore: { $min: "$obtainedMarks" },
+          passCount: {
+            $sum: {
+              $cond: [{ $gte: ["$obtainedMarks", "$passingMarks"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]),
+    ExamResult.aggregate([
+      { $match: { examId: new OBJECT_ID(examId) } },
+      {
+        $group: {
+          _id: "$isPublished",
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+  ]);
+
+  const marksSummary = marksStats[0] || {
+    studentsEvaluated: 0,
+    averageObtainedMarks: 0,
+    highestScore: 0,
+    lowestScore: 0,
+    passCount: 0,
+  };
+  const attempted = attemptStats.reduce((acc, row) => acc + row.count, 0);
+  const passPercentage = marksSummary.studentsEvaluated
+    ? Number(((marksSummary.passCount / marksSummary.studentsEvaluated) * 100).toFixed(2))
+    : 0;
+
+  return {
+    exam,
+    attempts: {
+      total: attempted,
+      statusBreakdown: attemptStats,
+    },
+    evaluation: {
+      ...marksSummary,
+      averageObtainedMarks: Number((marksSummary.averageObtainedMarks || 0).toFixed(2)),
+      passPercentage,
+    },
+    resultPublication: resultStats,
+    enterpriseInsights: {
+      riskLevel: passPercentage < 40 ? "high" : passPercentage < 70 ? "medium" : "low",
+      recommendation:
+        passPercentage < 40
+          ? "Launch remediation batches, difficulty audit, and teacher review."
+          : passPercentage < 70
+          ? "Run targeted intervention groups and topic-wise re-tests."
+          : "Maintain current strategy and scale best practices.",
+    },
+  };
 };
 
 const studentResultPipeline = ({ match }) => [
