@@ -21,7 +21,7 @@ const { useBreakpoint } = Grid;
 
 /* ─── Inline styles (no extra CSS file needed) ─────────────────────── */
 const styles = {
-  header: (isDark) => ({
+  header: () => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -30,21 +30,15 @@ const styles = {
     position: "sticky",
     top: 0,
     zIndex: 100,
-    background: isDark
-      ? "rgba(17, 19, 28, 0.85)"
-      : "rgba(255, 255, 255, 0.85)",
+    background: "var(--surface-elevated)",
     backdropFilter: "blur(14px)",
     WebkitBackdropFilter: "blur(14px)",
-    borderBottom: isDark
-      ? "1px solid rgba(255,255,255,0.06)"
-      : "1px solid rgba(0,0,0,0.07)",
-    boxShadow: isDark
-      ? "0 1px 12px rgba(0,0,0,0.4)"
-      : "0 1px 10px rgba(0,0,0,0.06)",
+    borderBottom: "1px solid var(--border-muted)",
+    boxShadow: "var(--header-shadow)",
     transition: "background 0.3s, border-color 0.3s",
   }),
 
-  iconBtn: (isDark) => ({
+  iconBtn: () => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -52,24 +46,24 @@ const styles = {
     height: 36,
     borderRadius: 10,
     border: "none",
-    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-    color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.6)",
+    background: "var(--surface-soft)",
+    color: "var(--text-secondary)",
     transition: "background 0.2s, color 0.2s, transform 0.15s",
     cursor: "pointer",
   }),
 
-  searchInput: (isDark) => ({
+  searchInput: () => ({
     width: 260,
     borderRadius: 10,
-    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-    border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.09)",
+    background: "var(--surface-soft)",
+    border: "1px solid var(--border-muted)",
     boxShadow: "none",
   }),
 
-  divider: (isDark) => ({
+  divider: () => ({
     width: 1,
     height: 22,
-    background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+    background: "var(--divider)",
     margin: "0 4px",
     borderRadius: 1,
   }),
@@ -92,7 +86,7 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, isDark, ariaLabel }) => {
       style={{
         ...styles.iconBtn(isDark),
         background: hovered
-          ? isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"
+          ? "var(--surface-soft-hover)"
           : styles.iconBtn(isDark).background,
         transform: hovered ? "scale(1.08)" : "scale(1)",
         fontSize: 16,
@@ -155,8 +149,8 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.6)",
-                background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                color: "var(--text-secondary)",
+                background: "var(--surface-soft)",
               }}
             />
           </Tooltip>
