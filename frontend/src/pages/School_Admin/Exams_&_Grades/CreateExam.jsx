@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import {
   Card,
@@ -37,9 +37,6 @@ const CreateExam = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  console.log("Exam ID from URL:", id);
-
-  // ✅ HARD SAFE EDIT MODE
   const isEditMode = id && id !== "undefined" && id !== "null";
   
   /* ================= LOCAL STATE ================= */
@@ -87,7 +84,7 @@ const CreateExam = () => {
 
   /* ================= AFTER CLASSES + EXAM READY ================= */
     /* ================= CLASS CHANGE ================= */
- const handleClassChange = (schoolClassId, subjectIdFromEdit = null) => {
+ const handleClassChange = useCallback((schoolClassId, subjectIdFromEdit = null) => {
   setSelectedClass(schoolClassId);
 
   const selected = schoolClasses.find((c) => c._id === schoolClassId);
@@ -119,7 +116,7 @@ const CreateExam = () => {
   if (!subjectIdFromEdit) {
     form.setFieldsValue({ subjectId: undefined });
   }
-};
+}, [form, schoolClasses]);
   useEffect(() => {
     if (!examData) return;
     if (!schoolClasses.length) return;
@@ -141,7 +138,7 @@ const CreateExam = () => {
       passingMarks: examData.passingMarks,
       status: examData.status,
     });
-  }, [examData,schoolClasses,handleClassChange]);
+  }, [examData, schoolClasses, handleClassChange, form]);
 
 
 
