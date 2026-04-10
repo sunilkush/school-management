@@ -423,6 +423,7 @@ const router = createBrowserRouter([
               { path: "classes/:classId", element: <ClassDetails /> },
               { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
+              { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
               { path: "attendance/my/monthly", element: <MyAttendancePage /> },

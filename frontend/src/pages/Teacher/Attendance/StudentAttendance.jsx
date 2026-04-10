@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import {
   Card,
   Table,
@@ -30,6 +31,7 @@ const { Option } = Select;
 const StudentAttendance = () => {
 
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const { schoolStudents = [], loading } = useSelector(state => state.students);
   const { user } = useSelector(state => state.auth);
@@ -42,9 +44,10 @@ const StudentAttendance = () => {
     : null;
 
   const [selectedClassObj, setSelectedClassObj] = useState(null);
-  const [selectedSubject] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
   const [attendance, setAttendance] = useState({});
+  const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const prefilledClassId = query.get("classId");
 
   /* ================= INIT ================= */
 
@@ -114,9 +117,12 @@ const StudentAttendance = () => {
 
   useEffect(() => {
     if (assignedClassSections.length && !selectedClassObj) {
-      setSelectedClassObj(assignedClassSections[0]);
+      const prefilledClass = prefilledClassId
+        ? assignedClassSections.find((item) => item.schoolClassId === prefilledClassId)
+        : null;
+      setSelectedClassObj(prefilledClass || assignedClassSections[0]);
     }
-  }, [assignedClassSections,selectedClassObj]);
+  }, [assignedClassSections, selectedClassObj, prefilledClassId]);
 
   /* ================= FILTER STUDENTS ================= */
 
