@@ -211,6 +211,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
         { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
+        { title: "Create Employee", path: "schooladmin/payroll/create-employee" },
         { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
         { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
       ],
@@ -320,6 +321,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Monthly Run", path: "accountant/salary" },
         { title: "Salary Structures", path: "accountant/salary/structures" },
+        { title: "Create Employee", path: "accountant/salary/create-employee" },
         { title: "Payslips", path: "accountant/salary/payslips" },
         { title: "Monthly Reports", path: "accountant/salary/reports/monthly" },
       ],
