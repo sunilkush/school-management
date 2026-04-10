@@ -183,6 +183,24 @@ const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.
 const UserRegister = lazy(() => import("./pages/UserRegister.jsx"));
 const RoleWorkspace = lazy(() => import("./pages/RoleWorkspace.jsx"));
 const RoleDynamicPortal = lazy(() => import("./pages/RoleDynamicPortal.jsx"));
+const ITSupportDashboard = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportDashboard }))
+);
+const SystemMaintenance = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemMaintenance }))
+);
+const UserSupportTickets = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.UserSupportTickets }))
+);
+const NetworkStatus = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.NetworkStatus }))
+);
+const SystemLogs = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemLogs }))
+);
+const ITSupportProfile = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportProfile }))
+);
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
 const EmployeeForm = lazy(() => import("./components/forms/EmployeeForm.jsx"));
@@ -593,9 +611,17 @@ const router = createBrowserRouter([
             path: "itsupport/*",
             element: (
               <ProtectedRoute allowedRoles={["IT Support"]}>
-                <RoleDynamicPortal />
+                <Outlet />
               </ProtectedRoute>
             ),
+            children: [
+              { index: true, element: <ITSupportDashboard /> },
+              { path: "maintenance", element: <SystemMaintenance /> },
+              { path: "tickets", element: <UserSupportTickets /> },
+              { path: "network", element: <NetworkStatus /> },
+              { path: "logs", element: <SystemLogs /> },
+              { path: "profile", element: <ITSupportProfile /> },
+            ],
           },
           {
             path: "counselor/*",
