@@ -50,6 +50,33 @@ export const fetchStudentLibraryBooks = createAsyncThunk(
     }
   }
 );
+export const fetchStudentProfile = createAsyncThunk(
+  "studentPortal/fetchStudentProfile",
+  async (userId, { rejectWithValue }) => {
+    try {
+      if (!userId) {
+        throw new Error("User id is required");
+      }
+
+      const res = await apiClient.get(`/student/getStudent/${userId}`);
+      return res.data?.data || null;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch student profile"));
+    }
+  }
+);
+
+export const fetchStudentEnrollment = createAsyncThunk(
+  "studentPortal/fetchStudentEnrollment",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/student/my/enrollment-id");
+      return res.data?.data || null;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch student enrollment"));
+    }
+  }
+);
 
 export const fetchMyChildren = createAsyncThunk(
   "studentPortal/fetchMyChildren",
@@ -65,6 +92,8 @@ export const fetchMyChildren = createAsyncThunk(
 
 const initialState = {
   children: [],
+  profile: null,
+  enrollment: null,
   grades: [],
   timetable: [],
   transportAssignment: null,
@@ -125,7 +154,22 @@ const studentPortalSlice = createSlice({
         state.loading = false;
         state.children = action.payload;
       })
-      .addCase(fetchMyChildren.rejected, setRejected);
+     
+      .addCase(fetchMyChildren.rejected, setRejected)
+
+      .addCase(fetchStudentProfile.pending, setPending)
+      .addCase(fetchStudentProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+      })
+      .addCase(fetchStudentProfile.rejected, setRejected)
+
+      .addCase(fetchStudentEnrollment.pending, setPending)
+      .addCase(fetchStudentEnrollment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.enrollment = action.payload;
+      })
+      .addCase(fetchStudentEnrollment.rejected, setRejected);
   },
 });
 

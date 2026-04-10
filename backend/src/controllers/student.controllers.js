@@ -64,7 +64,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
           {
             name: studentData.name,
             email: studentData.email,
-            password: studentPassword,
+            password: "784512",
             roleId: studentRole._id,
             schoolId,
             isEmailVerified: true,
@@ -92,7 +92,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
               {
                 name: fatherData.name,
                 email: fatherData.email,
-                password: fatherPassword,
+                password: "784512",
                 roleId: parentRole._id,
                 schoolId,
                 isEmailVerified: true,
@@ -417,8 +417,11 @@ const getStudentById = asyncHandler(async (req, res) => {
   // ✅ Student can access ONLY his own profile
   const student = await Student.findOne({
     userId: req.user._id,
-  }).populate("userId", "-password -refreshToken");
+  }).populate("userId", "-password -refreshToken")
+    .populate("fatherId", "name email")
+    .populate("motherId", "name email");
 
+  
   if (!student) {
     throw new ApiError(403, "You are not authorized to view this student");
   }
@@ -969,7 +972,10 @@ const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
     studentId: student._id,
     schoolId: req.user.schoolId,
     academicYearId: academicYear._id,
-  }).select("_id registrationNumber schoolClassId sectionId");
+  }).select("_id registrationNumber schoolClassId sectionId")
+  .populate("schoolClassId", "name")
+  .populate("sectionId", "name")
+  .populate("academicYearId", "name");
 
   if (!enrollment) {
     throw new ApiError(404, "Student enrollment not found");
