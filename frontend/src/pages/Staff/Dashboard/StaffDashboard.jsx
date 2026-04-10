@@ -1,9 +1,8 @@
-import React from 'react'
+import React from "react";
+import RoleDashboardOverview from "../../../components/dashboard/RoleDashboardOverview";
 
 const StaffDashboard = () => {
-  return (
-    <div>StaffDashboard</div>
-  )
-}
+  return <RoleDashboardOverview titlePrefix="Staff Dashboard" />;
+};
 
-export default StaffDashboard
+export default StaffDashboard;
