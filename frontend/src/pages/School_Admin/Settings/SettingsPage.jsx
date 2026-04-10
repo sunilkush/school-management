@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useMemo, useState } from "react";
+import { useTheme } from "../../../context/ThemeContext";
 import { useDispatch, useSelector } from "react-redux";
 import { changePassword, updateUser } from "../../../features/authSlice";
 import { fetchRoles } from "../../../features/roleSlice";
@@ -38,7 +39,7 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 
 const DEFAULT_SETTINGS = {
-  theme: "light",
+  theme: "system",
   language: "english",
   timezone: "UTC",
   notifications: true,
@@ -57,6 +58,7 @@ const Settings = () => {
 
   const [form] = Form.useForm();
   const [isSaving, setIsSaving] = useState(false);
+  const { themeMode, setThemeMode } = useTheme();
 
   const localStorageKey = useMemo(() => {
     const userId = user?._id || user?.id;
@@ -92,11 +94,17 @@ const Settings = () => {
       academicYear: storedSettings?.academicYear || availableYears[0],
       ...DEFAULT_SETTINGS,
       ...storedSettings,
+      theme: storedSettings?.theme || themeMode,
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     });
   }, [user, form, schools, localStorageKey]);
+
+
+  useEffect(() => {
+    form.setFieldValue("theme", themeMode);
+  }, [themeMode, form]);
 
   const availableRoles = useMemo(
     () => (roles || []).filter((r) => r?.name).map((r) => r.name),
@@ -157,6 +165,7 @@ const Settings = () => {
       } = values;
 
       localStorage.setItem(localStorageKey, JSON.stringify(settingsToPersist));
+      setThemeMode(values.theme);
       form.setFieldsValue({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
       message.success("Settings updated successfully!");
@@ -178,6 +187,7 @@ const Settings = () => {
       phone: user?.phone || "",
       defaultRole: user?.role?.name || "",
       ...DEFAULT_SETTINGS,
+      theme: themeMode,
       academicYear: availableAcademicYears[0],
     });
 
@@ -250,6 +260,7 @@ const Settings = () => {
                       <Select>
                         <Option value="light">Light</Option>
                         <Option value="dark">Dark</Option>
+                        <Option value="system">System Default</Option>
                       </Select>
                     </Form.Item>
                   </Col>

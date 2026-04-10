@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useTheme } from "../../../context/ThemeContext";
 import { Card } from "antd";
 import { Input, Select, Upload, Button, Form } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
@@ -6,19 +7,30 @@ import { UploadOutlined } from "@ant-design/icons";
 const { Option } = Select;
 
 const GlobalConfig = () => {
+  const { themeMode, setThemeMode } = useTheme();
+
   const [formData, setFormData] = useState({
     schoolName: "",
     defaultAcademicYear: "",
     currency: "INR",
     timezone: "Asia/Kolkata",
     dateFormat: "DD/MM/YYYY",
-    theme: "light",
+    theme: themeMode,
     logo: null,
   });
 
   const handleChange = (value, name) => {
     setFormData({ ...formData, [name]: value });
+
+    if (name === "theme") {
+      setThemeMode(value);
+    }
   };
+
+  useEffect(() => {
+    setFormData((prev) => ({ ...prev, theme: themeMode }));
+  }, [themeMode]);
+
 
   const handleFileChange = ({ file }) => {
     setFormData({ ...formData, logo: file });
@@ -98,7 +110,7 @@ const GlobalConfig = () => {
             >
               <Option value="light">Light</Option>
               <Option value="dark">Dark</Option>
-              <Option value="auto">Auto</Option>
+              <Option value="system">System Default</Option>
             </Select>
           </Form.Item>
 
