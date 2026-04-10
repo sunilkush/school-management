@@ -159,6 +159,11 @@ export const registerEmployee = async (req, res) => {
       );
   } catch (error) {
     console.error("❌ Error in registerEmployee:", error.message);
+
+    if (error.name === "ValidationError" || error.name === "CastError") {
+      return res.status(400).json(new ApiError(400, error.message));
+    }
+
     return res
       .status(500)
       .json(new ApiError(500, error.message || "Internal Server Error"));
