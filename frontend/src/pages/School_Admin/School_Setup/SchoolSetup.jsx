@@ -16,7 +16,7 @@ const { Text } = Typography;
 // ── Lazy components ──
 const SchoolClass        = lazy(() => import("./SchoolClass.jsx"));
 const SchoolBoard        = lazy(() => import("./SchoolBoard.jsx"));
-const SchoolAcadmicYear  = lazy(() => import("./SchoolAcadmicYear.jsx"));
+const SchoolAcademicYear  = lazy(() => import("./SchoolAcademicYear.jsx"));
 const SchoolClassSubject = lazy(() => import("./SchoolClassSubject.jsx"));
 const SchoolClassSectionTeacher = lazy(() => import("./SchoolClassSectionTeacher.jsx"));
 /* ─────────────────────────────────────────
@@ -438,7 +438,7 @@ const SchoolSetup = () => {
           {/* Content panel */}
           <div className="setup-panel" key={activeKey}>
             <Suspense fallback={<StepSkeleton isDark={isDark} />}>
-              {activeKey === "1" && <SchoolAcadmicYear  next={() => advance("1")} />}
+              {activeKey === "1" && <SchoolAcademicYear  next={() => advance("1")} />}
               {activeKey === "2" && <SchoolBoard         next={() => advance("2")} />}
               {activeKey === "3" && <SchoolClass         next={() => advance("3")} />}
               {activeKey === "4" && <SchoolClassSubject next={() => advance("4")} />}

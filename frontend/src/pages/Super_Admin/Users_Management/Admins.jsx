@@ -35,7 +35,7 @@ import {
   BankOutlined,
 } from "@ant-design/icons";
 
-import RegisterFrom from "../../../components/forms/RegisterFrom";
+import RegisterForm from "../../../components/forms/RegisterForm";
 
 const { Content } = Layout;
 const { Text } = Typography;
@@ -441,7 +441,7 @@ const Admins = () => {
           destroyOnClose
           styles={{ header: { borderBottom: "1px solid #f5f5f5", paddingBottom: 16 } }}
         >
-          <RegisterFrom onClose={() => setIsModalOpen(false)} />
+          <RegisterForm onClose={() => setIsModalOpen(false)} />
         </Modal>
 
       </Layout>

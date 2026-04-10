@@ -35,7 +35,7 @@ import {
   currentUser,
 } from "../../../features/authSlice";
 
-import RegisterForm from "../../../components/forms/RegisterFrom";
+import RegisterForm from "../../../components/forms/RegisterForm";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
