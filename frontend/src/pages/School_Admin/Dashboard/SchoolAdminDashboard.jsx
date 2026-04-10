@@ -1,4 +1,6 @@
 import React, { lazy, Suspense } from "react";
+import { useSelector } from "react-redux";
+import { useGetSchoolAdminDashboardAnalyticsQuery } from "../../../services/schoolDashboardApi";
 import {
   Card,
   Row,
@@ -143,6 +145,8 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue", isDark }) => {
 const SchoolAdminDashboard = () => {
   const { isDark } = useTheme();
   const t = tokens(isDark);
+  const schoolId = useSelector((state) => state?.auth?.user?.schoolId?._id || state?.auth?.user?.schoolId);
+  const { data: analytics } = useGetSchoolAdminDashboardAnalyticsQuery(schoolId);
 
   return (
     <>
@@ -239,7 +243,7 @@ const SchoolAdminDashboard = () => {
             </Row>
           }
         >
-          <SummaryCards />
+          <SummaryCards summary={analytics?.summary} />
         </Suspense>
       </div>
 
@@ -256,12 +260,12 @@ const SchoolAdminDashboard = () => {
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}>
             <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
-              <SalaryStatistics />
+              <SalaryStatistics stats={analytics?.salaryStatistics} />
             </Suspense>
           </Col>
           <Col xs={24} lg={12}>
             <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
-              <IncomeAnalysis />
+              <IncomeAnalysis data={analytics?.incomeAnalysis} />
             </Suspense>
           </Col>
         </Row>
@@ -269,7 +273,7 @@ const SchoolAdminDashboard = () => {
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
           <Col span={24}>
             <Suspense fallback={<ChartSkeleton height={180} isDark={isDark} />}>
-              <TotalSalaryByUnit />
+              <TotalSalaryByUnit data={analytics?.salaryByUnit} />
             </Suspense>
           </Col>
         </Row>
@@ -288,12 +292,12 @@ const SchoolAdminDashboard = () => {
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={8}>
             <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
-              <EmployeeStructure />
+              <EmployeeStructure data={analytics?.employeeStructure} />
             </Suspense>
           </Col>
           <Col xs={24} lg={16}>
             <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
-              <EmployeePerformance />
+              <EmployeePerformance employees={analytics?.employeePerformance} />
             </Suspense>
           </Col>
         </Row>
