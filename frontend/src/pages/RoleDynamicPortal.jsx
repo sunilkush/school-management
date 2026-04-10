@@ -1,8 +1,12 @@
 import React, { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty } from "antd";
 import { useSelector } from "react-redux";
 import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
+import Books from "./School_Admin/Library/Books";
+import IssueBook from "./School_Admin/Library/IssueBook";
+import LibraryMembers from "./Librarian/LibraryMembers";
+import LibraryReports from "./Librarian/LibraryReports";
 
 const { Title, Text } = Typography;
 
@@ -75,6 +79,22 @@ const RoleDynamicPortal = () => {
     if (Array.isArray(config.modules) && config.modules.length > 0) return config.modules;
     return [];
   }, [config.modules]);
+
+  if (roleKey === "librarian") {
+    const librarianViews = {
+      dashboard: <RoleDashboardOverview titlePrefix="Librarian Dashboard" />,
+      books: <Books />,
+      records: <IssueBook />,
+      members: <LibraryMembers />,
+      reports: <LibraryReports />,
+    };
+
+    if (section === "librarian") {
+      return <Navigate to="/librarian/books" replace />;
+    }
+
+    return librarianViews[section] || <Navigate to="/librarian/books" replace />;
+  }
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>
