@@ -132,6 +132,7 @@ export const sidebarMenu = {
       title: "User Management",
       icon: Users,
       subMenu: [
+        { title: "Student Admission", path: "schooladmin/admission" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Students", path: "schooladmin/studentList" },
         { title: "Parents", path: "schooladmin/parents-register" },
