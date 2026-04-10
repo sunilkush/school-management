@@ -32,7 +32,9 @@ import {
   HistoryOutlined,
   BarChartOutlined,
   CheckOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 import PlanForm from "../../../components/forms/PlanForm.jsx";
 import PlanLogs from "./PlanLogs.jsx";
@@ -246,6 +248,7 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
 // ─── Main Component ───────────────────────────────────────────
 const SubscriptionPlans = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { plans, loading } = useSelector((state) => state.subscriptionPlans);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -531,23 +534,31 @@ const SubscriptionPlans = () => {
           </Text>
         </div>
 
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={openAddModal}
-          size="large"
-          style={{
-            background: C.primary,
-            borderColor: C.primary,
-            borderRadius: 10,
-            fontWeight: 600,
-            height: 40,
-            paddingInline: 20,
-            boxShadow: "0 2px 8px rgba(15,110,86,0.25)",
-          }}
-        >
-          Add Plan
-        </Button>
+        <Space wrap>
+          <Button icon={<WalletOutlined />} onClick={() => navigate("/dashboard/superadmin/payments")}>
+            Payments
+          </Button>
+          <Button icon={<BarChartOutlined />} onClick={() => navigate("/dashboard/superadmin/revenue")}>
+            Revenue
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openAddModal}
+            size="large"
+            style={{
+              background: C.primary,
+              borderColor: C.primary,
+              borderRadius: 10,
+              fontWeight: 600,
+              height: 40,
+              paddingInline: 20,
+              boxShadow: "0 2px 8px rgba(15,110,86,0.25)",
+            }}
+          >
+            Add Plan
+          </Button>
+        </Space>
       </div>
 
       {/* ══ STATS STRIP ══ */}
