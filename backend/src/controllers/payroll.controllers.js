@@ -84,7 +84,18 @@ export const createPayrollStructure = asyncHandler(async (req, res) => {
     data: structure,
   });
 });
+export const getPayrollStructures = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  const structures = await PayrollStructure.find({ schoolId })
+    .populate({ path: "employeeId", select: "department designation userId", populate: { path: "userId", select: "name email" } })
+    .sort({ effectiveFrom: -1, createdAt: -1 })
+    .lean();
 
+  return sendSuccess(res, {
+    message: "Payroll structures fetched",
+    data: structures,
+  });
+});
 export const updatePayrollStructure = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
   const structure = await PayrollStructure.findOneAndUpdate(

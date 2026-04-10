@@ -65,7 +65,7 @@ const EmployeeForm = () => {
   const [form] = Form.useForm();
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
-
+   const selectedUserId = Form.useWatch("userId", form);
   const { profile, users = [] } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
   const { subjects = [] } = useSelector((state) => state.subject);
@@ -362,7 +362,7 @@ const EmployeeForm = () => {
         >
           {/* 🔥 Lazy Loaded Component */}
           <Suspense fallback={<Spin />}>
-            <AttendanceCalendar />
+            <AttendanceCalendar userId={selectedUserId} schoolId={schoolId} />
           </Suspense>
         </TabPane>
 

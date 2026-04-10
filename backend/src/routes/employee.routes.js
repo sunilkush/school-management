@@ -12,6 +12,7 @@ const EMPLOYEE_ROLES = ["School Admin", "Super Admin", "Teacher", "Accountant"];
 router.post("/", auth, roleMiddleware(ADMIN_ROLES), registerEmployee);
 
 // ✅ Get All Employees (Admins & Employees Can View)
+router.get("/", auth, roleMiddleware(EMPLOYEE_ROLES), getAllEmployees);
 router.get("/allEmployee", auth, roleMiddleware(EMPLOYEE_ROLES), getAllEmployees);
 
 // ✅ Get Employee by ID (Admins & Employees Can View)

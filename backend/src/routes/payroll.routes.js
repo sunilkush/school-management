@@ -3,6 +3,7 @@ import { requireRoles } from "../middlewares/auth.middleware.js";
 import { validateRequest } from "../middlewares/validate.middleware.js";
 import {
   createPayrollStructure,
+  getPayrollStructures,
   generatePayrollCycle,
   getMonthlyPayrollReport,
   getPayrollCycle,
@@ -28,6 +29,7 @@ const REVIEW_ROLES = ["Super Admin", "School Admin", "Accountant", "Principal", 
 const PAYSLIP_SELF_ROLES = ["Super Admin", "School Admin", "Accountant", "Principal", "Admin", "Teacher", "Employee"];
 
 router.post("/structure", requireRoles(FULL_ACCESS_ROLES), validateRequest(payrollStructureCreateSchema), createPayrollStructure);
+router.get("/structure", requireRoles(REVIEW_ROLES), getPayrollStructures);
 router.put("/structure/:id", requireRoles(FULL_ACCESS_ROLES), validateRequest(payrollStructureUpdateSchema), updatePayrollStructure);
 
 router.post("/cycle/generate", requireRoles(FULL_ACCESS_ROLES), validateRequest(payrollCycleGenerateSchema), generatePayrollCycle);
