@@ -130,14 +130,11 @@ const allActions = [
   };
   const ROLE_LEVEL_MAP = {
     "Super Admin": 1,
-
     "School Admin": 2,
     "Principal": 2,
     "Vice Principal": 2,
-
     "Teacher": 3,
     "Subject Coordinator": 3,
-
     "Student": 4,
     "Parent": 4,
     "Accountant": 4,

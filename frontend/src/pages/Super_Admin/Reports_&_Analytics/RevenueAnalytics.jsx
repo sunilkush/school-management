@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
   Row,
@@ -21,8 +22,6 @@ import {
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -34,11 +33,35 @@ import {
   AreaChart,
   Legend,
 } from "recharts";
+import { fetchSchools } from "../../../features/schoolSlice";
 
 const { Text, Title } = Typography;
-const { Option } = Select;
 
-// ─── Custom Tooltip ──────────────────────────────────────────────────────────
+const formatCurrency = (amount = 0) => `₹${Number(amount || 0).toLocaleString("en-IN")}`;
+
+const getPeriodKey = (date, mode) => {
+  const d = new Date(date);
+
+  if (Number.isNaN(d.getTime())) {
+    return null;
+  }
+
+  const monthShort = d.toLocaleString("en-US", { month: "short" });
+  const monthLong = d.toLocaleString("en-US", { month: "long" });
+  const year = d.getFullYear();
+
+  if (mode === "yearly") {
+    return { key: `${year}`, name: `${year}` };
+  }
+
+  if (mode === "quarterly") {
+    const quarter = Math.floor(d.getMonth() / 3) + 1;
+    return { key: `${year}-Q${quarter}`, name: `Q${quarter} ${year}` };
+  }
+
+  return { key: `${year}-${d.getMonth() + 1}`, name: `${monthShort} ${year}`, longName: `${monthLong} ${year}` };
+};
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
     return (
@@ -54,7 +77,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         <Text style={{ fontSize: 12, color: "#888" }}>{label}</Text>
         <br />
         <Text strong style={{ fontSize: 15, color: "#1a1a2e" }}>
-          ₹{payload[0].value?.toLocaleString()}
+          {formatCurrency(payload[0].value)}
         </Text>
       </div>
     );
@@ -62,8 +85,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-// ─── KPI Card ────────────────────────────────────────────────────────────────
-const KpiCard = ({ icon, label, value, sub, accent, trend }) => (
+const KpiCard = ({ icon, label, value, sub, accent }) => (
   <Card
     bordered={false}
     style={{
@@ -74,7 +96,6 @@ const KpiCard = ({ icon, label, value, sub, accent, trend }) => (
     }}
     bodyStyle={{ padding: "20px 24px" }}
   >
-    {/* accent bar */}
     <div
       style={{
         position: "absolute",
@@ -101,46 +122,91 @@ const KpiCard = ({ icon, label, value, sub, accent, trend }) => (
           </Space>
         )}
       </div>
-      <Avatar
-        size={48}
-        icon={icon}
-        style={{ background: `${accent}18`, color: accent, flexShrink: 0 }}
-      />
+      <Avatar size={48} icon={icon} style={{ background: `${accent}18`, color: accent, flexShrink: 0 }} />
     </Space>
   </Card>
 );
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 const RevenueAnalytics = () => {
+  const dispatch = useDispatch();
+  const { schools = [], loading } = useSelector((state) => state.school);
   const [filter, setFilter] = useState("monthly");
 
-  const stats = {
-    totalRevenue: 125000,
-    monthlyRevenue: 25000,
-    growth: 18,
-  };
+  useEffect(() => {
+    dispatch(fetchSchools());
+  }, [dispatch]);
 
-  const chartData = [
-    { name: "Jan", revenue: 10000, target: 12000 },
-    { name: "Feb", revenue: 15000, target: 14000 },
-    { name: "Mar", revenue: 20000, target: 18000 },
-    { name: "Apr", revenue: 25000, target: 22000 },
-    { name: "May", revenue: 30000, target: 28000 },
-  ];
+  const schoolRevenue = useMemo(() => {
+    return (schools || []).map((school, index) => {
+      const plan = school.subscriptionPlan || {};
+      const amount = Number(plan.price || 0);
 
-  const schoolRevenue = [
-    { key: 1, school: "ABC Public School", plan: "Premium", revenue: 20000, status: "Paid", growth: "+12%" },
-    { key: 2, school: "XYZ Academy", plan: "Basic", revenue: 8000, status: "Pending", growth: "+5%" },
-    { key: 3, school: "Green Valley School", plan: "Premium", revenue: 18500, status: "Paid", growth: "+22%" },
-    { key: 4, school: "Sunrise International", plan: "Enterprise", revenue: 45000, status: "Paid", growth: "+8%" },
-    { key: 5, school: "Bright Future Academy", plan: "Basic", revenue: 6000, status: "Pending", growth: "+3%" },
-  ];
+      return {
+        key: school._id || index,
+        school: school.name || "Unknown School",
+        plan: plan.name || "Unassigned",
+        revenue: amount,
+        status: school.isActive ? "Paid" : "Pending",
+        growth: "+0%",
+        createdAt: school.createdAt,
+      };
+    });
+  }, [schools]);
 
-  const planColors = { Premium: "purple", Basic: "blue", Enterprise: "gold" };
+  const chartData = useMemo(() => {
+    const grouped = schoolRevenue.reduce((acc, row) => {
+      const period = getPeriodKey(row.createdAt, filter);
+
+      if (!period) {
+        return acc;
+      }
+
+      if (!acc[period.key]) {
+        acc[period.key] = {
+          key: period.key,
+          name: period.name,
+          revenue: 0,
+        };
+      }
+
+      acc[period.key].revenue += row.revenue;
+      return acc;
+    }, {});
+
+    const sorted = Object.values(grouped).sort((a, b) => a.key.localeCompare(b.key));
+
+    return sorted.map((item, index) => {
+      const prevRevenue = sorted[index - 1]?.revenue || item.revenue;
+      const growth = prevRevenue > 0 ? ((item.revenue - prevRevenue) / prevRevenue) * 100 : 0;
+
+      return {
+        ...item,
+        target: Math.round(item.revenue * 1.1),
+        growth,
+      };
+    });
+  }, [schoolRevenue, filter]);
+
+  const stats = useMemo(() => {
+    const totalRevenue = schoolRevenue.reduce((sum, row) => sum + row.revenue, 0);
+    const currentPeriodRevenue = chartData[chartData.length - 1]?.revenue || 0;
+    const growth = chartData[chartData.length - 1]?.growth || 0;
+
+    return {
+      totalRevenue,
+      currentPeriodRevenue,
+      growth,
+    };
+  }, [schoolRevenue, chartData]);
+
+  const periodLabel = filter === "yearly" ? "This Year" : filter === "quarterly" ? "This Quarter" : "This Month";
+
+  const planColors = { Premium: "purple", Basic: "blue", Enterprise: "gold", Unassigned: "default" };
   const planIcons = {
     Premium: <TrophyOutlined />,
     Basic: <ThunderboltOutlined />,
     Enterprise: <BankOutlined />,
+    Unassigned: <BankOutlined />,
   };
 
   const columns = [
@@ -158,7 +224,7 @@ const RevenueAnalytics = () => {
       title: "Plan",
       dataIndex: "plan",
       render: (plan) => (
-        <Tag icon={planIcons[plan]} color={planColors[plan]} style={{ fontWeight: 600, borderRadius: 6 }}>
+        <Tag icon={planIcons[plan] || <BankOutlined />} color={planColors[plan] || "default"} style={{ fontWeight: 600, borderRadius: 6 }}>
           {plan}
         </Tag>
       ),
@@ -169,7 +235,7 @@ const RevenueAnalytics = () => {
       sorter: (a, b) => a.revenue - b.revenue,
       render: (v) => (
         <Text strong style={{ color: "#1a1a2e", fontSize: 14 }}>
-          ₹{v.toLocaleString()}
+          {formatCurrency(v)}
         </Text>
       ),
     },
@@ -192,10 +258,7 @@ const RevenueAnalytics = () => {
         <Badge
           status={status === "Paid" ? "success" : "warning"}
           text={
-            <Tag
-              color={status === "Paid" ? "green" : "orange"}
-              style={{ borderRadius: 20, fontWeight: 600, padding: "0 12px" }}
-            >
+            <Tag color={status === "Paid" ? "green" : "orange"} style={{ borderRadius: 20, fontWeight: 600, padding: "0 12px" }}>
               {status}
             </Tag>
           }
@@ -206,7 +269,6 @@ const RevenueAnalytics = () => {
 
   return (
     <div style={{ padding: "24px 28px", background: "#f5f6fa", minHeight: "100vh" }}>
-      {/* ── Header ── */}
       <div
         style={{
           display: "flex",
@@ -223,7 +285,7 @@ const RevenueAnalytics = () => {
             Revenue Analytics
           </Title>
           <Text type="secondary" style={{ fontSize: 14 }}>
-            Track earnings, school plans, and growth in real time.
+            Dynamic data from school subscriptions.
           </Text>
         </div>
 
@@ -239,44 +301,24 @@ const RevenueAnalytics = () => {
         />
       </div>
 
-      {/* ── KPI Cards ── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
-          <KpiCard
-            icon={<DollarOutlined />}
-            label="Total Revenue"
-            value={`₹${stats.totalRevenue.toLocaleString()}`}
-            sub="vs last period"
-            accent="#1677ff"
-          />
+          <KpiCard icon={<DollarOutlined />} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub="from all schools" accent="#1677ff" />
         </Col>
         <Col xs={24} sm={8}>
-          <KpiCard
-            icon={<FundOutlined />}
-            label="This Month"
-            value={`₹${stats.monthlyRevenue.toLocaleString()}`}
-            sub="on track"
-            accent="#722ed1"
-          />
+          <KpiCard icon={<FundOutlined />} label={periodLabel} value={formatCurrency(stats.currentPeriodRevenue)} sub="latest period" accent="#722ed1" />
         </Col>
         <Col xs={24} sm={8}>
-          <KpiCard
-            icon={<RiseOutlined />}
-            label="Growth Rate"
-            value={`${stats.growth}%`}
-            sub="month-over-month"
-            accent="#52c41a"
-          />
+          <KpiCard icon={<RiseOutlined />} label="Growth Rate" value={`${stats.growth.toFixed(1)}%`} sub="period-over-period" accent="#52c41a" />
         </Col>
       </Row>
 
-      {/* ── Charts ── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {/* Area / Line Chart */}
         <Col xs={24} lg={14}>
           <Card
             bordered={false}
             style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
+            loading={loading}
             title={
               <Space>
                 <span style={{ fontWeight: 700, color: "#1a1a2e" }}>Revenue Trend</span>
@@ -308,12 +350,12 @@ const RevenueAnalytics = () => {
           </Card>
         </Col>
 
-        {/* Bar Chart */}
         <Col xs={24} lg={10}>
           <Card
             bordered={false}
             style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
-            title={<span style={{ fontWeight: 700, color: "#1a1a2e" }}>Monthly Breakdown</span>}
+            loading={loading}
+            title={<span style={{ fontWeight: 700, color: "#1a1a2e" }}>Period Breakdown</span>}
           >
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={chartData} barSize={28} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -328,10 +370,10 @@ const RevenueAnalytics = () => {
         </Col>
       </Row>
 
-      {/* ── Table ── */}
       <Card
         bordered={false}
         style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
+        loading={loading}
         title={
           <Space>
             <BankOutlined style={{ color: "#1677ff" }} />
@@ -344,6 +386,7 @@ const RevenueAnalytics = () => {
         <Table
           columns={columns}
           dataSource={schoolRevenue}
+          loading={loading}
           pagination={{ pageSize: 5, style: { padding: "12px 20px" } }}
           style={{ borderRadius: "0 0 16px 16px", overflow: "hidden" }}
           rowClassName={() => "revenue-row"}
