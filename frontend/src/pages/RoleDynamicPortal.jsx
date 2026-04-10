@@ -10,6 +10,14 @@ import AllStudentsAttendance from "./School_Admin/Attendance/AllStudentsAttendan
 import StaffAttendance from "./School_Admin/Attendance/StaffAttendance";
 import Profile from "./Profile";
 import VicePrincipalReports from "./Vice_Principal/VicePrincipalReports";
+import { Navigate, useLocation } from "react-router-dom";
+import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty } from "antd";
+import { useSelector } from "react-redux";
+import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
+import Books from "./School_Admin/Library/Books";
+import IssueBook from "./School_Admin/Library/IssueBook";
+import LibraryMembers from "./Librarian/LibraryMembers";
+import LibraryReports from "./Librarian/LibraryReports";
 
 const { Title, Text } = Typography;
 
@@ -144,6 +152,22 @@ const RoleDynamicPortal = () => {
         return null;
     }
   }, [relativePath, roleKey]);
+
+  if (roleKey === "librarian") {
+    const librarianViews = {
+      dashboard: <RoleDashboardOverview titlePrefix="Librarian Dashboard" />,
+      books: <Books />,
+      records: <IssueBook />,
+      members: <LibraryMembers />,
+      reports: <LibraryReports />,
+    };
+
+    if (section === "librarian") {
+      return <Navigate to="/librarian/books" replace />;
+    }
+
+    return librarianViews[section] || <Navigate to="/librarian/books" replace />;
+  }
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>

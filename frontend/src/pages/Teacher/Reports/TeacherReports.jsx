@@ -33,6 +33,7 @@ const normalizeUserContext = (rawUser) => {
 
   return {
     role: roleName,
+    teacherId: rawUser?._id || "",
     schoolId: rawUser?.school?._id || rawUser?.schoolId || "",
     teacherName: rawUser?.name || "Teacher",
   };
@@ -51,28 +52,16 @@ const TeacherReports = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedType, setSelectedType] = useState("all");
 
-  const rawUser = useMemo(() => {
-    const userFromStorage = user?._id
-    if (!userFromStorage) return null;
-
-    try {
-      return JSON.parse(userFromStorage);
-    } catch (error) {
-      console.error("Unable to parse user from storage", error);
-      return null;
-    }
-  }, [user?._id]);
-
-  const { role, schoolId, teacherName } = useMemo(
-    () => normalizeUserContext(rawUser),
-    [rawUser]
+  const { role, teacherId, schoolId, teacherName } = useMemo(
+    () => normalizeUserContext(user),
+    [user]
   );
 
   const refreshAll = () => {
     if (role) {
       dispatch(fetchDashboardSummary({ role, schoolId }));
     }
-    dispatch(fetchReports({ sort: "-createdAt" }));
+    dispatch(fetchReports({ sort: "-createdAt", school: schoolId, generatedBy: teacherId }));
   };
 
   useEffect(() => {

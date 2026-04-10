@@ -132,6 +132,7 @@ export const sidebarMenu = {
       title: "User Management",
       icon: Users,
       subMenu: [
+        { title: "Student Admission", path: "schooladmin/admission" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Students", path: "schooladmin/studentList" },
         { title: "Parents", path: "schooladmin/parents-register" },
@@ -194,6 +195,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Routes", path: "schooladmin/transport/routes" },
         { title: "Vehicles", path: "schooladmin/transport/vehicles" },
+        { title: "Assignments", path: "schooladmin/transport/assignments" },
       ],
     },
 {
@@ -237,7 +239,7 @@ export const sidebarMenu = {
       title: "Attendance",
       icon: UserCheck,
       subMenu: [
-          { title: "Student Attendance", path: "teacher/students" },
+          { title: "Student Attendance", path: "teacher/attendance/students" },
         { title: "Student Monthly Attendance", path: "teacher/attendance" },
         { title: "My Daily Attendance", path: "teacher/attendance/my" },
         { title: "My Monthly Report", path: "teacher/attendance/my/monthly" },
@@ -314,8 +316,17 @@ export const sidebarMenu = {
   /* ================= ACCOUNTANT ================= */
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
-    { title: "Fee Collection", path: "accountant/fees/collect", icon: IndianRupee },
-        {
+    {
+      title: "Fee Management",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Fee Categories", path: "accountant/fees/categories" },
+        { title: "Fee Structure", path: "accountant/fees/feestructure" },
+        { title: "Assign Fees", path: "accountant/fees/assign" },
+        { title: "Fee Collection", path: "accountant/fees/collect" },
+      ],
+    },
+    {
       title: "Payroll Management",
       icon: IndianRupee,
       subMenu: [

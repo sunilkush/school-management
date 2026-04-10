@@ -51,7 +51,20 @@ export const fetchStudentLibraryBooks = createAsyncThunk(
   }
 );
 
+export const fetchMyChildren = createAsyncThunk(
+  "studentPortal/fetchMyChildren",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/student/my-children");
+      return res.data?.data || [];
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch children"));
+    }
+  }
+);
+
 const initialState = {
+  children: [],
   grades: [],
   timetable: [],
   transportAssignment: null,
@@ -105,7 +118,14 @@ const studentPortalSlice = createSlice({
         state.loading = false;
         state.libraryBooks = action.payload;
       })
-      .addCase(fetchStudentLibraryBooks.rejected, setRejected);
+      .addCase(fetchStudentLibraryBooks.rejected, setRejected)
+
+      .addCase(fetchMyChildren.pending, setPending)
+      .addCase(fetchMyChildren.fulfilled, (state, action) => {
+        state.loading = false;
+        state.children = action.payload;
+      })
+      .addCase(fetchMyChildren.rejected, setRejected);
   },
 });
 

@@ -205,7 +205,7 @@ const { users = [], loading } = useSelector((state) => state.auth);
               type="text"
               onClick={() =>
                 navigate(
-                  `/dashboard/schooladmin/users/employee-from?id=${record._id}`
+                  `/dashboard/schooladmin/users/employee-form?id=${record._id}`
                 )
               }
             />
@@ -217,7 +217,7 @@ const { users = [], loading } = useSelector((state) => state.auth);
               type="text"
               onClick={() =>
                 navigate(
-                  `/dashboard/schooladmin/users/employee-detailes?id=${record._id}`
+                  `/dashboard/schooladmin/users/employee-details?id=${record._id}`
                 )
               }
             />

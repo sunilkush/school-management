@@ -174,7 +174,7 @@ const AssignedClasses = () => {
                         onClick={() =>
                           cls?._id &&
                           navigate(
-                            `/dashboard/teacher/attendance?classId=${cls._id}&className=${encodeURIComponent(
+                            `/dashboard/teacher/attendance/students?classId=${cls._id}&className=${encodeURIComponent(
                               cls?.name || ""
                             )}`
                           )
