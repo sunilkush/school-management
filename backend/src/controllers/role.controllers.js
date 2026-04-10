@@ -122,6 +122,11 @@ const allActions = [
       { module: "Subjects", actions: ["create", "read", "update"] },
       { module: "Teachers", actions: ["read"] },
     ],
+    Security: [
+      { module: "Attendance", actions: ["create", "read"] },
+      { module: "Transport", actions: ["read"] },
+      { module: "Notifications", actions: ["read"] },
+    ],
   };
   const ROLE_LEVEL_MAP = {
     "Super Admin": 1,

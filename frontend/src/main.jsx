@@ -526,12 +526,27 @@ const router = createBrowserRouter([
           },
 
           {
-            path: "principal/*",
+            path: "principal",
             element: (
               <ProtectedRoute allowedRoles={["Principal"]}>
-                <RoleDynamicPortal />
+                <Outlet />
               </ProtectedRoute>
             ),
+            children: [
+              { index: true, element: <SchoolAdminDashboard /> },
+              { path: "overview", element: <SchoolAdminDashboard /> },
+              { path: "staff", element: <TeacherList /> },
+              { path: "students", element: <StudentList /> },
+              { path: "reports/academic", element: <ExamReports /> },
+              { path: "reports/attendance", element: <SchoolAdminReport /> },
+              { path: "exams", element: <ExamsPage /> },
+              { path: "library", element: <LibraryCard /> },
+              { path: "transport", element: <RoutesPage /> },
+              { path: "settings", element: <SettingsPage /> },
+              { path: "message", element: <Message /> },
+              { path: "profile", element: <Profile /> },
+              { path: "notification", element: <Notification /> },
+            ],
           },
           {
             path: "viceprincipal/*",
@@ -573,13 +588,28 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-          {
-            path: "examcoordinator/*",
+           {
+            path: "examcoordinator",
             element: (
               <ProtectedRoute allowedRoles={["Exam Coordinator"]}>
-                <RoleDynamicPortal />
+                <Outlet />
               </ProtectedRoute>
             ),
+            children: [
+              { index: true, element: <RoleDynamicPortal /> },
+              { path: "exams/create", element: <ExamCreate /> },
+              { path: "exams/edit/:id", element: <ExamCreate /> },
+              { path: "exams/question-bank", element: <QuestionBank /> },
+              { path: "exams/schedule", element: <ExamSchedule /> },
+              { path: "exams/grades", element: <EnterGrades /> },
+              { path: "reports", element: <ExamReports /> },
+              { path: "profile", element: <Profile /> },
+              { path: "message", element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "settings", element: <SettingsPage /> },
+              { path: "communication/send", element: <SendNotification /> },
+              { path: "communication/history", element: <SmsEmailHistory /> },
+            ],
           },
           {
             path: "receptionist/*",
