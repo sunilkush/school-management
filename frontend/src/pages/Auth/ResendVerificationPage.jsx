@@ -1,36 +1,37 @@
-import React, { useState } from "react";
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Typography,
-  message,
-} from "antd";
+import React, { useEffect } from "react";
+import { Card, Form, Input, Button, Typography, message } from "antd";
 import { MailOutlined, ReloadOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  clearRecoveryState,
+  resendVerificationRequest,
+} from "../../features/accountRecoverySlice";
 
 const { Title, Text } = Typography;
 
 const ResendVerificationPage = () => {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const { loading, success, error, message: successMessage } = useSelector(
+    (state) => state.accountRecovery.resendVerification
+  );
 
   const onFinish = async (values) => {
-    try {
-      setLoading(true);
-
-      // 🔥 API call yaha lagegi
-      console.log("Resend verification to:", values.email);
-
-      // simulate API
-      await new Promise((res) => setTimeout(res, 1500));
-
-      message.success("Verification email sent successfully 📩");
-    } catch (error) {
-      message.error("Failed to send verification email ❌",error);
-    } finally {
-      setLoading(false);
-    }
+    dispatch(resendVerificationRequest(values.email));
   };
+
+  useEffect(() => {
+    if (success && successMessage) {
+      message.success(successMessage);
+      dispatch(clearRecoveryState("resendVerification"));
+    }
+  }, [dispatch, success, successMessage]);
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+      dispatch(clearRecoveryState("resendVerification"));
+    }
+  }, [dispatch, error]);
 
   return (
     <div
@@ -49,15 +50,11 @@ const ResendVerificationPage = () => {
           boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <Title level={3}>Resend Verification</Title>
-          <Text type="secondary">
-            Didn’t receive the email? Enter your email again
-          </Text>
+          <Text type="secondary">Didn’t receive the email? Enter your email again</Text>
         </div>
 
-        {/* Form */}
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
             label="Email Address"
@@ -67,11 +64,7 @@ const ResendVerificationPage = () => {
               { type: "email", message: "Enter a valid email" },
             ]}
           >
-            <Input
-              prefix={<MailOutlined />}
-              placeholder="Enter your email"
-              size="large"
-            />
+            <Input prefix={<MailOutlined />} placeholder="Enter your email" size="large" />
           </Form.Item>
 
           <Form.Item>
@@ -88,11 +81,9 @@ const ResendVerificationPage = () => {
           </Form.Item>
         </Form>
 
-        {/* Footer */}
         <div style={{ textAlign: "center", marginTop: 10 }}>
           <Text type="secondary">
-            Already verified?{" "}
-            <a href="/login">Go to Login</a>
+            Already verified? <a href="/login">Go to Login</a>
           </Text>
         </div>
       </Card>
