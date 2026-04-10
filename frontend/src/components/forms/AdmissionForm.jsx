@@ -11,6 +11,7 @@ import {
   Col,
   InputNumber,
   message,
+  Modal,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -23,6 +24,18 @@ import { getClassData } from "../../features/schoolClassSlice";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
+
+const renderCredentialLine = (label, creds) => {
+  if (!creds) return null;
+
+  return (
+    <div key={label} style={{ marginBottom: 12 }}>
+      <strong>{label}</strong>
+      <div>Login ID: {creds.loginId || "-"}</div>
+      <div>Password: {creds.password || "Already exists (unchanged)"}</div>
+    </div>
+  );
+};
 
 const AdmissionForm = () => {
   const [form] = Form.useForm();
@@ -113,8 +126,23 @@ const AdmissionForm = () => {
 
     if (res?.meta?.requestStatus === "fulfilled") {
       message.success("Student admitted successfully");
-      form.resetFields();
 
+      const credentials = res?.payload?.credentials;
+      if (credentials) {
+        Modal.success({
+          title: "Login Credentials",
+          width: 560,
+          content: (
+            <div style={{ marginTop: 12 }}>
+              {renderCredentialLine("Student", credentials.student)}
+              {renderCredentialLine("Father", credentials.father)}
+              {renderCredentialLine("Mother", credentials.mother)}
+            </div>
+          ),
+        });
+      }
+
+      form.resetFields();
       dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
     } else {
       message.error(res?.payload || "Admission failed");
