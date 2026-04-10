@@ -11,7 +11,7 @@ export const fetchReports = createAsyncThunk(
     try {
       // Remove empty values
       const cleaned = Object.fromEntries(
-        Object.entries(filters).filter(([v]) => v !== '' && v != null)
+        Object.entries(filters).filter(([, value]) => value !== "" && value != null)
       );
 
       const query = qs.stringify(cleaned, { addQueryPrefix: true });

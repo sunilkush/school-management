@@ -237,7 +237,7 @@ export const sidebarMenu = {
       title: "Attendance",
       icon: UserCheck,
       subMenu: [
-          { title: "Student Attendance", path: "teacher/students" },
+          { title: "Student Attendance", path: "teacher/attendance/students" },
         { title: "Student Monthly Attendance", path: "teacher/attendance" },
         { title: "My Daily Attendance", path: "teacher/attendance/my" },
         { title: "My Monthly Report", path: "teacher/attendance/my/monthly" },
