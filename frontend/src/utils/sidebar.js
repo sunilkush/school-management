@@ -502,3 +502,14 @@ export const sidebarMenu = {
   ],
 
 };
+
+
+const SUPPORT_CENTER_ITEM = { title: "Support Center", path: "support/tickets", icon: MessageSquare };
+
+Object.keys(sidebarMenu).forEach((roleKey) => {
+  const items = sidebarMenu[roleKey];
+  if (!Array.isArray(items)) return;
+
+  const hasSupport = items.some((item) => item?.path === "support/tickets");
+  if (!hasSupport) items.push(SUPPORT_CENTER_ITEM);
+});

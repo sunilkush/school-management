@@ -212,6 +212,7 @@ const AttendanceTablePage = lazy(() => import("./pages/Attendance/AttendanceTabl
 const MonthlyReportPage = lazy(() => import("./pages/Attendance/MonthlyReportPage.jsx"));
 
 const ChildAttendancePage = lazy(() => import("./pages/Attendance/ChildAttendancePage.jsx"));
+const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage.jsx"));
 
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
@@ -295,6 +296,36 @@ const router = createBrowserRouter([
                 ]}
               >
                 <ModuleDetail />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "support/tickets",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <SupportTicketsPage />
               </ProtectedRoute>
             ),
           },
