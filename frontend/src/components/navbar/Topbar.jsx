@@ -1,5 +1,5 @@
 import React, { useState, memo, lazy, Suspense } from "react";
-import { Layout, Input, Button, Space, Grid, Drawer, Spin, Badge, Tooltip, Avatar } from "antd";
+import { Layout, Input, Button, Space, Grid, Drawer, Spin, Badge, Tooltip, Dropdown } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -7,7 +7,7 @@ import {
   MessageOutlined,
   MoonOutlined,
   SunOutlined,
-  BellOutlined,
+  LaptopOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../context/ThemeContext";
 import { useSelector } from "react-redux";
@@ -113,7 +113,7 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, isDark, ariaLabel }) => {
 const Topbar = ({ toggleSidebar, isOpen }) => {
   const { user } = useSelector((state) => state.auth);
   const screens = useBreakpoint();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, themeMode, setThemeMode } = useTheme();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
@@ -215,17 +215,34 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           />
 
           {/* Theme toggle */}
-          <IconBtn
-            icon={
-              isDark
-                ? <SunOutlined style={{ fontSize: 16, color: "#facc15" }} />
-                : <MoonOutlined style={{ fontSize: 16 }} />
-            }
-            tooltip={`Switch to ${isDark ? "light" : "dark"} mode`}
-            onClick={toggleTheme}
-            isDark={isDark}
-            ariaLabel={`Switch to ${isDark ? "light" : "dark"} theme`}
-          />
+          <Dropdown
+            trigger={["click"]}
+            menu={{
+              selectedKeys: [themeMode],
+              onClick: ({ key }) => setThemeMode(key),
+              items: [
+                { key: "light", label: "☀️ Light" },
+                { key: "dark", label: "🌙 Dark" },
+                { key: "system", label: "💻 System" },
+              ],
+            }}
+          >
+            <span>
+              <IconBtn
+                icon={
+                  themeMode === "system"
+                    ? <LaptopOutlined style={{ fontSize: 16 }} />
+                    : isDark
+                      ? <SunOutlined style={{ fontSize: 16, color: "#facc15" }} />
+                      : <MoonOutlined style={{ fontSize: 16 }} />
+                }
+                tooltip={`Theme: ${themeMode} (click for options)`}
+                onClick={toggleTheme}
+                isDark={isDark}
+                ariaLabel="Theme controls"
+              />
+            </span>
+          </Dropdown>
 
           {/* Notifications */}
           <Suspense fallback={loader}>
