@@ -9,7 +9,7 @@ const router = Router();
 
 router.use(auth);
 
-router.post("/generate",auth, roleMiddleware(["School Admin","Super Admin","Student","Parent"]), generateInstallments);
-router.get("/",auth, roleMiddleware(["School Admin","Super Admin","Student","Parent"]), getFeeInstallmentsByStudent);
+router.post("/generate",auth, roleMiddleware(["School Admin","Super Admin","Accountant","Student","Parent"]), generateInstallments);
+router.get("/",auth, roleMiddleware(["School Admin","Super Admin","Accountant","Student","Parent"]), getFeeInstallmentsByStudent);
 
 export default router;

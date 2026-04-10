@@ -11,7 +11,7 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 router.use(auth);
-const ADMIN_ONLY = ["Super Admin", "School Admin"];
+const ADMIN_ONLY = ["Super Admin", "School Admin", "Accountant"];
 router.post("/", auth, roleMiddleware(ADMIN_ONLY), createFeeHead);
 router.get("/",auth,roleMiddleware(ADMIN_ONLY), getFeeHeads);
 router.get(

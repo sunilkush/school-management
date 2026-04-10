@@ -315,8 +315,17 @@ export const sidebarMenu = {
   /* ================= ACCOUNTANT ================= */
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
-    { title: "Fee Collection", path: "accountant/fees/collect", icon: IndianRupee },
-        {
+    {
+      title: "Fee Management",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Fee Categories", path: "accountant/fees/categories" },
+        { title: "Fee Structure", path: "accountant/fees/feestructure" },
+        { title: "Assign Fees", path: "accountant/fees/assign" },
+        { title: "Fee Collection", path: "accountant/fees/collect" },
+      ],
+    },
+    {
       title: "Payroll Management",
       icon: IndianRupee,
       subMenu: [

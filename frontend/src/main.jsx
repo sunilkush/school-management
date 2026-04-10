@@ -512,7 +512,9 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <AccountantDashboard /> },
-              { path: "fees/categories", element: <FeeCategories /> },
+              { path: "fees/categories", element: <SchoolFeeCategories /> },
+              { path: "fees/feestructure", element: <FeeStructure /> },
+              { path: "fees/assign", element: <StudentAssignFees /> },
               { path: "fees/collect", element: <CollectFees /> },
               { path: "salary", element: <EmployeeSalaries /> },
               { path: "salary/structures", element: <SalaryStructures /> },
