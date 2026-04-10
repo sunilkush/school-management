@@ -91,7 +91,7 @@ const ContactSupport = lazy(() => import("./pages/Super_Admin/Support/ContactSup
 const Documentation = lazy(() => import("./pages/Super_Admin/Support/Documentation.jsx"));
 // School Admin
 const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
-//const AddStudent = lazy(() => import("./pages/School_Admin/User_Management/AddStudent.jsx"));
+const AddStudent = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AddStudent.jsx"));
 //const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
 const ParentList = lazy(() => import("./pages/School_Admin/User_Management/ParentsList.jsx"));
 const StudentList = lazy(() => import("./pages/School_Admin/User_Management/StudentList.jsx"));
@@ -389,7 +389,7 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-             // { path: "admission", element: <AddStudent /> },
+              { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
@@ -397,6 +397,9 @@ const router = createBrowserRouter([
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
               { path: "exams/reports", element: <ExamReports /> },
+              { path: "users/employee-form", element: <EmployeeForm /> },
+              { path: "users/employee-details", element: <EmployeeDetailes /> },
+              // Backward-compatible routes (legacy typos)
               { path: "users/employee-from", element: <EmployeeForm /> },
               { path: "users/employee-detailes", element: <EmployeeDetailes /> },
               { path: "calendar", element: <CalendarPage /> },
