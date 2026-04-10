@@ -15,7 +15,25 @@ export const schoolDashboardApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response) => response.data,
     }),
+    getSuperAdminDashboardSummary: builder.query({
+      query: () => ({
+        url: "/dashboard/summary",
+      }),
+      transformResponse: (response) => response.data,
+    }),
+    getSuperAdminSchools: builder.query({
+      query: ({ page = 1, limit = 50, search = "" } = {}) => ({
+        url: "/school/getAllSchool",
+        params: { page, limit, search },
+      }),
+      transformResponse: (response) => response.data,
+    }),
   }),
 });
 
-export const { useGetRoleDashboardOverviewQuery, useGetSchoolAdminDashboardAnalyticsQuery } = schoolDashboardApi;
+export const {
+  useGetRoleDashboardOverviewQuery,
+  useGetSchoolAdminDashboardAnalyticsQuery,
+  useGetSuperAdminDashboardSummaryQuery,
+  useGetSuperAdminSchoolsQuery,
+} = schoolDashboardApi;

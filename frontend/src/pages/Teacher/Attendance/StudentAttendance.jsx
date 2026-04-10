@@ -20,10 +20,9 @@ import {
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
-import { activeUser } from "../../../features/authSlice.js";
 import { submitAttendance } from "../../../features/attendanceSlice.js";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
-import memoryStorage from "../../../utils/memoryStorage";
+
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -36,12 +35,10 @@ const StudentAttendance = () => {
   const { schoolStudents = [], loading } = useSelector(state => state.students);
   const { user } = useSelector(state => state.auth);
   const { classAssignTeacher = [] } = useSelector(state => state.class);
-
+  const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
   const schoolId = user?.school?._id;
-  const storeAcadmicYear = memoryStorage.getItem("selectedAcademicYear");
-  const academicYearId = storeAcadmicYear
-    ? JSON.parse(storeAcadmicYear)._id
-    : null;
+  const academicYearId = selectedAcademicYear?._id;
+ 
 
   const [selectedClassObj, setSelectedClassObj] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
@@ -52,7 +49,7 @@ const StudentAttendance = () => {
   /* ================= INIT ================= */
 
   useEffect(() => {
-    dispatch(activeUser());
+   
 
     if (schoolId && academicYearId && user?._id) {
       dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
