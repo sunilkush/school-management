@@ -14,3 +14,7 @@ dbConnection()
     console.error("Connection DB not working", error);
     process.exit(1);
   });
+/* SMTP_HOST
+SMTP_PORT
+SMTP_USER
+SMTP_PASS */
