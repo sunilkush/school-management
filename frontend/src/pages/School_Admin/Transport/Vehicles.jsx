@@ -18,23 +18,46 @@ import {
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { createVehicle, deleteVehicle, fetchVehicles, updateVehicle } from "../../../features/transportSlice";
+import { createVehicle, deleteVehicle, fetchRoutes, fetchVehicles, updateVehicle } from "../../../features/transportSlice";
+import { fetchAllUser } from "../../../features/authSlice";
 
 const { Content } = Layout;
 const { Option } = Select;
 
 const Vehicles = () => {
   const dispatch = useDispatch();
-  const { vehicles, loading } = useSelector((state) => state.transport);
+   const { vehicles, routes, loading } = useSelector((state) => state.transport);
+  const { users = [] } = useSelector((state) => state.auth);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
-    dispatch(fetchVehicles());
+      dispatch(fetchVehicles());
+    dispatch(fetchRoutes());
+    dispatch(fetchAllUser());
   }, [dispatch]);
+  const driverOptions = useMemo(
+    () =>
+      users
+        .filter((user) => user?.role?.name === "Driver")
+        .map((user) => ({
+          value: user.name,
+          label: user.name,
+          contact: user.phone || user.mobile || user.contactNumber || user.email || "",
+        })),
+    [users]
+  );
 
+  const routeOptions = useMemo(
+    () =>
+      routes.map((route) => ({
+        value: route.name,
+        label: route.name,
+      })),
+    [routes]
+  );
   const dataSource = useMemo(
     () =>
       vehicles.map((vehicle) => ({
@@ -85,7 +108,14 @@ const Vehicles = () => {
     form.setFieldsValue(vehicle);
     setModalVisible(true);
   };
+  const handleDriverChange = (selectedDriver) => {
+    const selectedDriverInfo = driverOptions.find((driver) => driver.value === selectedDriver);
 
+    form.setFieldsValue({
+      driver: selectedDriver,
+      driverContact: selectedDriverInfo?.contact || "",
+    });
+  };
   const handleDeleteVehicle = (vehicle) => {
     Modal.confirm({
       title: "Are you sure?",
@@ -186,11 +216,17 @@ const Vehicles = () => {
             <Form.Item label="Vehicle Number" name="number" rules={[{ required: true, message: "Enter vehicle number" }]}>
               <Input placeholder="Enter vehicle number" />
             </Form.Item>
-            <Form.Item label="Driver Name" name="driver" rules={[{ required: true, message: "Enter driver name" }]}>
-              <Input placeholder="Enter driver name" />
+           <Form.Item label="Driver Name" name="driver" rules={[{ required: true, message: "Select driver" }]}>
+              <Select
+                placeholder="Select driver"
+                showSearch
+                optionFilterProp="label"
+                options={driverOptions}
+                onChange={handleDriverChange}
+              />
             </Form.Item>
             <Form.Item label="Driver Contact" name="driverContact">
-              <Input placeholder="Enter driver contact" />
+               <Input placeholder="Auto-fetched from driver profile" readOnly />
             </Form.Item>
             <Form.Item label="Driving License" name="drivingLicense">
               <Input placeholder="Enter driving license" />
@@ -205,8 +241,14 @@ const Vehicles = () => {
                 <Option value="Maintenance">Maintenance</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Route Assigned" name="route">
-              <Input placeholder="Enter assigned route" />
+             <Form.Item label="Route Assigned" name="route">
+              <Select
+                placeholder="Select route"
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                options={routeOptions}
+              />
             </Form.Item>
             <Form.Item style={{ textAlign: "right" }}>
               <Space>
