@@ -57,8 +57,9 @@ const qualifications = [
 ];
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const maritalStatuses = ["Single", "Married", "Divorced", "Widowed", "Separated"];
+const maritalStatuses = ["Single", "Married", "Divorced", "Widowed"];
 const religions = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
+const employeeStatuses = ["Full-Time", "Part-Time", "Contract"];
 
 const EmployeeForm = () => {
   const [form] = Form.useForm();
@@ -199,6 +200,32 @@ const EmployeeForm = () => {
                   </Form.Item>
                 </Col>
 
+                <Col md={8}>
+                  <Form.Item
+                    name="phoneNo"
+                    label="Phone Number"
+                    rules={[
+                      { required: true, message: "Phone number is required" },
+                      {
+                        pattern: /^\+?[0-9]{10,13}$/,
+                        message: "Enter valid 10-13 digit phone number",
+                      },
+                    ]}
+                  >
+                    <Input placeholder="e.g. +919999999999" />
+                  </Form.Item>
+                </Col>
+
+                <Col md={16}>
+                  <Form.Item
+                    name="citizenAddress"
+                    label="Citizen Address"
+                    rules={[{ required: true, message: "Citizen address is required" }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+
                 <Col md={12}>
                   <Form.Item name="qualification" label="Qualification" rules={[{ required: true }]}>
                     <Select mode="multiple" options={qualifications.map(q => ({ value: q }))} />
@@ -207,7 +234,7 @@ const EmployeeForm = () => {
 
                 <Col md={12}>
                   <Form.Item name="experience" label="Experience" rules={[{ required: true }]}>
-                    <Input placeholder="e.g. 5 Years" />
+                    <Input type="number" min={0} placeholder="e.g. 5" />
                   </Form.Item>
                 </Col>
 
@@ -242,6 +269,68 @@ const EmployeeForm = () => {
 
                 <Col md={8}>
                   <Form.Item name="designation" label="Designation" rules={[{ required: true }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item
+                    name="employeeStatus"
+                    label="Employment Status"
+                    rules={[{ required: true, message: "Please select employment status" }]}
+                  >
+                    <Select options={employeeStatuses.map((status) => ({ value: status }))} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+
+            <Card title="Bank Details" className="mt-4">
+              <Row gutter={16}>
+                <Col md={12}>
+                  <Form.Item name="accountHolder" label="Account Holder Name">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={12}>
+                  <Form.Item name="accountNumber" label="Account Number">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="ifscCode" label="IFSC Code">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="bankName" label="Bank Name">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="branch" label="Branch">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="panNumber" label="PAN Number">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="pfNumber" label="PF Number">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="esiNumber" label="ESI Number">
                     <Input />
                   </Form.Item>
                 </Col>
