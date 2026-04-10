@@ -1,63 +1,57 @@
 import { BellOutlined } from "@ant-design/icons";
-import { Badge, Dropdown, List, Avatar, Typography } from "antd";
+import { Avatar, Badge, Dropdown, List, Typography } from "antd";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getNotifications, getVisibleNotificationsForUser } from "../../utils/notifications";
 
 const { Text } = Typography;
 
-const notifications = [
-  {
-    id: 1,
-    avatar: "https://i.pravatar.cc/40?img=3",
-    message: "Dr sultads Send you Photo",
-    time: "29 July 2020 – 02:26 PM",
-  },
-  {
-    id: 2,
-    avatar: null,
-    iconText: "KG",
-    message: "Report created successfully",
-    time: "29 July 2020 – 02:26 PM",
-  },
-  {
-    id: 3,
-    avatar: null,
-    iconText: "🏠",
-    message: "Reminder: Treatment Time!",
-    time: "29 July 2020 – 02:26 PM",
-  },
-  {
-    id: 4,
-    avatar: "https://i.pravatar.cc/40?img=3",
-    message: "Dr sultads Send you Photo",
-    time: "29 July 2020 – 02:26 PM",
-  },
-];
+const getRolePath = (roleName) =>
+  (roleName || "")
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/_/g, "-");
 
 const NotificationDropdown = () => {
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+
+  const notifications = useMemo(() => {
+    const allNotifications = getNotifications();
+    return getVisibleNotificationsForUser(allNotifications, user).slice(0, 5);
+  }, [user]);
+
   const notificationMenu = (
-    <div style={{ width: 300, maxHeight: 400, overflowY: "auto" ,backgroundColor: "#fff", borderRadius: 4, boxShadow: "0 4px 12px rgba(0,0,0,0.15)"}}>
+    <div
+      style={{
+        width: 340,
+        maxHeight: 420,
+        overflowY: "auto",
+        backgroundColor: "#fff",
+        borderRadius: 4,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      }}
+    >
       <List
         itemLayout="horizontal"
         dataSource={notifications}
-        header={<Text strong style={{padding:"10px"}}>Notifications</Text>}
+        locale={{ emptyText: "No notifications" }}
+        header={<Text strong style={{ padding: "10px" }}>Notifications</Text>}
         footer={
-          <div style={{ textAlign: "center", cursor: "pointer", color: "#1890ff" }}>
+          <div
+            style={{ textAlign: "center", cursor: "pointer", color: "#1890ff" }}
+            onClick={() => navigate(`/dashboard/${getRolePath(user?.role?.name)}/notification`)}
+          >
             See all notifications
           </div>
         }
         renderItem={(item) => (
           <List.Item style={{ padding: "10px 16px", cursor: "pointer" }}>
             <List.Item.Meta
-              avatar={
-                item.avatar ? (
-                  <Avatar src={item.avatar} />
-                ) : (
-                  <Avatar style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}>
-                    {item.iconText}
-                  </Avatar>
-                )
-              }
-              title={<Text>{item.message}</Text>}
-              description={<Text type="secondary" style={{ fontSize: 12 }}>{item.time}</Text>}
+              avatar={<Avatar style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}>🔔</Avatar>}
+              title={<Text>{item.title}</Text>}
+              description={<Text type="secondary" style={{ fontSize: 12 }}>{item.message}</Text>}
             />
           </List.Item>
         )}
@@ -66,14 +60,9 @@ const NotificationDropdown = () => {
   );
 
   return (
-    <Dropdown
-      overlay={notificationMenu}
-      trigger={["click"]}
-      placement="bottomRight"
-      arrow
-    >
-      <Badge dot offset={[-2, 2]}>
-        <BellOutlined style={{ fontSize: 20, cursor: "pointer",color:"var(--text-primary)" }} />
+    <Dropdown overlay={notificationMenu} trigger={["click"]} placement="bottomRight" arrow>
+      <Badge count={notifications.length} offset={[-2, 2]}>
+        <BellOutlined style={{ fontSize: 20, cursor: "pointer", color: "var(--text-primary)" }} />
       </Badge>
     </Dropdown>
   );

@@ -57,13 +57,14 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
     }
 
     /* 👤 STUDENT USER */
+    const studentPassword = generatePassword();
     const studentUser = (
       await User.create(
         [
           {
             name: studentData.name,
             email: studentData.email,
-            password: generatePassword(),
+            password: studentPassword,
             roleId: studentRole._id,
             schoolId,
             isEmailVerified: true,
@@ -75,6 +76,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
 
     /* 👨 FATHER */
     let fatherUser = null;
+    let fatherPassword = null;
 
     if (fatherData?.email) {
       fatherUser = await User.findOne({
@@ -83,13 +85,14 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       }).session(session);
 
       if (!fatherUser) {
+        fatherPassword = generatePassword();
         fatherUser = (
           await User.create(
             [
               {
                 name: fatherData.name,
                 email: fatherData.email,
-                password: generatePassword(),
+                password: fatherPassword,
                 roleId: parentRole._id,
                 schoolId,
                 isEmailVerified: true,
@@ -103,6 +106,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
 
     /* 👩 MOTHER */
     let motherUser = null;
+    let motherPassword = null;
 
     if (motherData?.email) {
       motherUser = await User.findOne({
@@ -111,13 +115,14 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       }).session(session);
 
       if (!motherUser) {
+        motherPassword = generatePassword();
         motherUser = (
           await User.create(
             [
               {
                 name: motherData.name,
                 email: motherData.email,
-                password: generatePassword(),
+                password: motherPassword,
                 roleId: parentRole._id,
                 schoolId,
                 isEmailVerified: true,
@@ -221,6 +226,30 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
           father: fatherUser,
           mother: motherUser,
           enrollment,
+          credentials: {
+            student: {
+              userId: studentUser._id,
+              loginId: studentUser.email,
+              password: studentPassword,
+              isNew: true,
+            },
+            father: fatherUser
+              ? {
+                  userId: fatherUser._id,
+                  loginId: fatherUser.email,
+                  password: fatherPassword,
+                  isNew: Boolean(fatherPassword),
+                }
+              : null,
+            mother: motherUser
+              ? {
+                  userId: motherUser._id,
+                  loginId: motherUser.email,
+                  password: motherPassword,
+                  isNew: Boolean(motherPassword),
+                }
+              : null,
+          },
         },
         "Student admission successful"
       )
@@ -545,6 +574,30 @@ const updateStudent = asyncHandler(async (req, res) => {
         {
           student,
           enrollment,
+          credentials: {
+            student: {
+              userId: studentUser._id,
+              loginId: studentUser.email,
+              password: studentPassword,
+              isNew: true,
+            },
+            father: fatherUser
+              ? {
+                  userId: fatherUser._id,
+                  loginId: fatherUser.email,
+                  password: fatherPassword,
+                  isNew: Boolean(fatherPassword),
+                }
+              : null,
+            mother: motherUser
+              ? {
+                  userId: motherUser._id,
+                  loginId: motherUser.email,
+                  password: motherPassword,
+                  isNew: Boolean(motherPassword),
+                }
+              : null,
+          },
         },
         "Student updated successfully!"
       )
