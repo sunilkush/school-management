@@ -69,9 +69,10 @@ const Subjects = () => {
     [subjects]
   );
 
-  const filteredSubjects = useMemo(() => {
+const filteredSubjects = useMemo(() => {
+    const normalizedSearch = searchText.toLowerCase();
     return safeSubjects.filter((s) =>
-      s.name?.toLowerCase().includes(searchText.toLowerCase())
+      s.name?.toLowerCase()?.includes(normalizedSearch) ?? false
     );
   }, [safeSubjects, searchText]);
 
