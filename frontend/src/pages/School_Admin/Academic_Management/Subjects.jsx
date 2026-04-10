@@ -64,22 +64,25 @@ const Subjects = () => {
   }, [dispatch, schoolId, academicYearId]);
 
   /* ── FILTER ── */
+  const safeSubjects = useMemo(
+    () => (Array.isArray(subjects) ? subjects : []),
+    [subjects]
+  );
+
   const filteredSubjects = useMemo(() => {
-    return subjects.filter((s) =>
+    return safeSubjects.filter((s) =>
       s.name?.toLowerCase().includes(searchText.toLowerCase())
     );
-  }, [subjects, searchText]);
+  }, [safeSubjects, searchText]);
 
   /* ── STATS ── */
   const stats = useMemo(() => {
     return {
-      total: subjects.length,
-      active: subjects.filter((s) => s.isActive).length,
-      global: subjects.filter((s) => s.isGlobal).length,
+      total: safeSubjects.length,
+      active: safeSubjects.filter((s) => s.isActive).length,
+      global: safeSubjects.filter((s) => s.isGlobal).length,
     };
-  }, [subjects]);
-
- 
+  }, [safeSubjects]);
 
   /* ── TABLE ── */
   const columns = [

@@ -22,7 +22,13 @@ const SalaryStructures = () => {
       .then((res) => setEmployees(res?.data?.data || []))
       .catch(() => message.error("Employee list load failed"));
   }, []);
-
+    useEffect(() => {
+    if (editingId) return;
+    const selectedEmployee = form.getFieldValue("employeeId");
+    if (!selectedEmployee && employees.length) {
+      form.setFieldValue("employeeId", employees[0]._id);
+    }
+  }, [editingId, employees, form]);
   const validateOverlap = (values) => {
     const targetEmployee = values.employeeId;
     const from = dayjs(values.effectiveFrom);
@@ -63,6 +69,9 @@ const SalaryStructures = () => {
       }
       setEditingId(null);
       form.resetFields();
+       if (employees.length) {
+        form.setFieldValue("employeeId", employees[0]._id);
+      }
       refreshStructures();
     } catch (error) {
       message.error(error?.response?.data?.message || "Salary structure save failed");

@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { sidebarMenu } from "../../../utils/sidebar";
 import { Link } from "react-router-dom";
-import * as LucideIcons from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import {
   Row,
   Col,
@@ -28,10 +28,9 @@ const COLORS = [
 
 // ⭐ Safe icon resolver
 const getLucideIcon = (icon) => {
-  if (!icon) return LucideIcons.LayoutDashboard;
+  if (!icon) return LayoutDashboard;
   if (typeof icon === "function") return icon;
-  if (typeof icon === "string" && LucideIcons[icon]) return LucideIcons[icon];
-  return LucideIcons.LayoutDashboard;
+  return LayoutDashboard;
 };
 
 // ⭐ Module Card

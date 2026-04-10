@@ -28,6 +28,20 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId 
     if (professionalTaxEnabled) deduction += 200;
     return deduction;
   }, [grossPreview, pfEnabled, esiEnabled, professionalTaxEnabled]);
+  
+
+  const employeeOptions = useMemo(
+    () =>
+      employees.map((employee) => {
+        const displayName = employee.userId?.name || employee.name || employee.fullName || employee.email || "Employee";
+        const role = employee.designation || employee.department || "Staff";
+        return {
+          value: employee._id,
+          label: `${displayName} (${role})`,
+        };
+      }),
+    [employees]
+  );
 
   return (
     <Card title={editingId ? "Edit Salary Structure" : "Create Salary Structure"}>
@@ -37,10 +51,7 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId 
             showSearch
             optionFilterProp="label"
             placeholder="Select employee"
-            options={employees.map((employee) => ({
-              value: employee._id,
-              label: `${employee.userId?.name || "Employee"} (${employee.designation || "Staff"})`,
-            }))}
+            options={employeeOptions}
           />
         </Form.Item>
 
