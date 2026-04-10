@@ -41,10 +41,11 @@ export const getExamAnalytics = createAsyncThunk("exams/getExamAnalytics", async
   }
 });
 
-export const updateExam = createAsyncThunk("exams/updateExam", async ({ Id, payload }, { rejectWithValue }) => {
+export const updateExam = createAsyncThunk("exams/updateExam", async ({ Id, id, examId, payload }, { rejectWithValue }) => {
   try {
-    if (!Id || Id === "undefined" || Id === "null") throw new Error("Invalid exam id");
-    const res = await apiClient.put(`/exams/${Id}`, payload);
+    const resolvedExamId = Id || id || examId;
+    if (!resolvedExamId || resolvedExamId === "undefined" || resolvedExamId === "null") throw new Error("Invalid exam id");
+    const res = await apiClient.put(`/exams/${resolvedExamId}`, payload);
     return res.data.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || error.message);

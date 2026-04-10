@@ -1,60 +1,134 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Card, Empty, InputNumber, message, Space, Table, Tag, Typography, Upload } from "antd";
+import {
+  Button,
+  Card,
+  Empty,
+  InputNumber,
+  message,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  Typography,
+  Upload,
+} from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
+import { fetchAllStudent } from "../../../features/studentSlice";
 
 const { Title, Text } = Typography;
 
 const TeacherExamsPage = () => {
   const dispatch = useDispatch();
   const { exams = [], loading } = useSelector((state) => state.exams || {});
+  const { studentList = [], loading: studentLoading } = useSelector((state) => state.students || {});
+  const { user = {} } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
+
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [rows, setRows] = useState([]);
+
+  const selectedExam = useMemo(() => exams.find((exam) => exam._id === selectedExamId), [exams, selectedExamId]);
+  const schoolId = user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
   useEffect(() => {
     dispatch(getExams({ sortBy: "examDate", sortOrder: "desc" }));
   }, [dispatch]);
 
-  const selectedExam = useMemo(() => exams.find((exam) => exam._id === selectedExamId), [exams, selectedExamId]);
+  useEffect(() => {
+    const schoolClassId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
+    if (!selectedExamId || !schoolClassId || !schoolId || !academicYearId) {
+      setRows([]);
+      return;
+    }
 
-  const onMarkChange = (index, value) => {
-    setRows((prev) => prev.map((item, idx) => (idx === index ? { ...item, obtainedMarks: value ?? 0 } : item)));
-  };
+    dispatch(fetchAllStudent({ schoolId, academicYearId, schoolClassId }));
+  }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
 
-  const addMockRows = () => {
-    setRows([
-      { studentId: "", studentName: "Student 1", obtainedMarks: 0, totalMarks: selectedExam?.totalMarks || 100, passingMarks: selectedExam?.passingMarks || 33 },
-      { studentId: "", studentName: "Student 2", obtainedMarks: 0, totalMarks: selectedExam?.totalMarks || 100, passingMarks: selectedExam?.passingMarks || 33 },
-    ]);
+  useEffect(() => {
+    if (!selectedExamId || !studentList.length) return;
+
+    setRows(
+      studentList.map((student, index) => ({
+        studentId: student?.studentInfo?._id,
+        studentName: student?.userDetails?.name || `Student ${index + 1}`,
+        sectionId: student?.sectionDetails?._id,
+        obtainedMarks: 0,
+        totalMarks: selectedExam?.totalMarks || 100,
+        passingMarks: selectedExam?.passingMarks || 33,
+      }))
+    );
+  }, [selectedExamId, selectedExam, studentList]);
+
+  const onMarkChange = (studentId, value) => {
+    setRows((prev) =>
+      prev.map((item) => (item.studentId === studentId ? { ...item, obtainedMarks: value ?? 0 } : item))
+    );
   };
 
   const saveBulk = async () => {
     if (!selectedExamId) return message.error("Select exam first");
-    const payloadRows = rows.filter((r) => r.studentId).map((row) => ({ ...row, schoolClassId: selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId, sectionId: selectedExam?.sectionId?._id || selectedExam?.sectionId }));
-    if (!payloadRows.length) return message.warning("Please provide valid student IDs before save");
 
-    await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payloadRows })).unwrap();
-    message.success("Marks saved");
+    const payloadRows = rows
+      .filter((row) => row.studentId)
+      .map((row) => ({
+        ...row,
+        schoolClassId: selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId,
+        sectionId: row.sectionId || selectedExam?.sectionId?._id || selectedExam?.sectionId,
+      }));
+
+    if (!payloadRows.length) return message.warning("No valid students found for this class");
+
+    try {
+      await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payloadRows })).unwrap();
+      message.success("Marks saved");
+    } catch (error) {
+      message.error(error || "Failed to save marks");
+    }
   };
 
   const submitFinal = async () => {
     if (!selectedExam) return;
-    await dispatch(
-      submitFinalMarks({ examId: selectedExam._id, schoolClassId: selectedExam.schoolClassId?._id || selectedExam.schoolClassId, sectionId: selectedExam.sectionId?._id || selectedExam.sectionId })
-    ).unwrap();
-    message.success("Final marks submitted");
+    try {
+      await dispatch(
+        submitFinalMarks({
+          examId: selectedExam._id,
+          schoolClassId: selectedExam.schoolClassId?._id || selectedExam.schoolClassId,
+          sectionId: selectedExam.sectionId?._id || selectedExam.sectionId,
+        })
+      ).unwrap();
+      message.success("Final marks submitted");
+    } catch (error) {
+      message.error(error || "Failed to submit final marks");
+    }
   };
 
   const columns = [
     { title: "Student", dataIndex: "studentName" },
     { title: "Student ID", dataIndex: "studentId" },
-    { title: "Total", dataIndex: "totalMarks" },
-    { title: "Passing", dataIndex: "passingMarks" },
+    { title: "Total", dataIndex: "totalMarks", width: 90 },
+    { title: "Passing", dataIndex: "passingMarks", width: 90 },
     {
       title: "Obtained",
-      render: (_, record, index) => (
-        <InputNumber min={0} max={record.totalMarks} value={record.obtainedMarks} onChange={(value) => onMarkChange(index, value)} />
+      width: 170,
+      render: (_, record) => (
+        <InputNumber
+          min={0}
+          max={record.totalMarks}
+          value={record.obtainedMarks}
+          onChange={(value) => onMarkChange(record.studentId, value)}
+        />
+      ),
+    },
+    {
+      title: "Status",
+      width: 120,
+      render: (_, record) => (
+        <Tag color={record.obtainedMarks >= record.passingMarks ? "green" : "red"}>
+          {record.obtainedMarks >= record.passingMarks ? "PASS" : "FAIL"}
+        </Tag>
       ),
     },
   ];
@@ -79,11 +153,22 @@ const TeacherExamsPage = () => {
     },
   };
 
+  const summary = useMemo(() => {
+    if (!rows.length) return null;
+    const entered = rows.filter((row) => row.obtainedMarks !== undefined).length;
+    const passCount = rows.filter((row) => row.obtainedMarks >= row.passingMarks).length;
+    return {
+      entered,
+      passCount,
+      total: rows.length,
+    };
+  }, [rows]);
+
   return (
-    <Space direction="vertical" style={{ width: "100%" }}>
+    <Space direction="vertical" style={{ width: "100%" }} size="middle">
       <Card>
         <Title level={4}>Teacher Exam & Marks Entry</Title>
-        <Text type="secondary">Select assigned exam, enter marks in editable grid, or bulk upload using JSON.</Text>
+        <Text type="secondary">Exam select karo, class students auto-load honge, marks enter karke direct save/final submit karo.</Text>
       </Card>
 
       <Card>
@@ -98,16 +183,30 @@ const TeacherExamsPage = () => {
       </Card>
 
       {selectedExamId && (
-        <Card loading={loading} title="Marks Entry Table">
-          <Space style={{ marginBottom: 12 }}>
-            <Button onClick={addMockRows}>Load Grid Template</Button>
+        <Card loading={loading || studentLoading} title="Marks Entry Table">
+          <Space wrap style={{ marginBottom: 12 }}>
             <Upload {...uploadProps}>
               <Button icon={<UploadOutlined />}>Bulk Upload (JSON)</Button>
             </Upload>
             <Button type="primary" onClick={saveBulk}>Save Marks</Button>
             <Button onClick={submitFinal}>Submit Final Marks</Button>
           </Space>
-          <Table rowKey={(row, i) => `${row.studentId || "row"}-${i}`} dataSource={rows} columns={columns} pagination={false} locale={{ emptyText: "Load template or upload file" }} />
+
+          {summary && (
+            <Space wrap size="large" style={{ marginBottom: 12 }}>
+              <Statistic title="Students" value={summary.total} />
+              <Statistic title="Marks Entered" value={summary.entered} />
+              <Statistic title="Pass Count" value={summary.passCount} />
+            </Space>
+          )}
+
+          <Table
+            rowKey={(row, i) => `${row.studentId || "row"}-${i}`}
+            dataSource={rows}
+            columns={columns}
+            pagination={false}
+            locale={{ emptyText: "No students found for selected exam class" }}
+          />
         </Card>
       )}
     </Space>
