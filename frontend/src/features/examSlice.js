@@ -110,8 +110,10 @@ export const getStudentResults = createAsyncThunk("exams/getStudentResults", asy
 
 export const getParentResults = createAsyncThunk("exams/getParentResults", async (params = {}, { rejectWithValue }) => {
   try {
-    const query = new URLSearchParams(params).toString();
-    const res = await apiClient.get(`/exams/results/parent?${query}`);
+    const { studentId, ...rest } = params || {};
+    const query = new URLSearchParams(rest).toString();
+    const endpoint = studentId ? `/exams/results/parent/${studentId}` : "/exams/results/parent";
+    const res = await apiClient.get(query ? `${endpoint}?${query}` : endpoint);
     return res.data.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || error.message);
