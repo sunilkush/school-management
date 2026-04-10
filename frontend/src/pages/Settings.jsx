@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeContext";
 import {  useDispatch, useSelector } from "react-redux";
 import { updateUser } from "../features/authSlice";
 import { fetchRoles } from "../features/roleSlice";
@@ -7,6 +8,7 @@ import { fetchSchools } from "../features/schoolSlice";
 const Settings = () => {
   useSelector
   const dispatch = useDispatch();
+  const { themeMode, setThemeMode } = useTheme();
   const { user } = useSelector((state) => state.auth);
   const { roles } = useSelector((state) => state.role);
   const { schools } = useSelector((state) => state.school);
@@ -15,7 +17,7 @@ const Settings = () => {
     fullName: "",
     email: "",
     phone: "",
-    theme: "light",
+    theme: themeMode,
     language: "english",
     notifications: true,
     timezone: "Asia/Kolkata",
@@ -54,9 +56,18 @@ const Settings = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, theme: themeMode }));
+  }, [themeMode]);
+
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
-    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    const nextValue = type === "checkbox" ? checked : value;
+    setForm({ ...form, [name]: nextValue });
+
+    if (name === "theme") {
+      setThemeMode(nextValue);
+    }
   };
 
   const handleSave = () => {
@@ -86,6 +97,7 @@ const Settings = () => {
           <select name="theme" value={form.theme} onChange={handleChange} className="border p-2 rounded">
             <option value="light">Light Theme</option>
             <option value="dark">Dark Theme</option>
+            <option value="system">System Default</option>
           </select>
           <select name="language" value={form.language} onChange={handleChange} className="border p-2 rounded">
             <option value="english">English</option>
