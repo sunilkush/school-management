@@ -1,37 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Card, Typography, Spin, Result, Button } from "antd";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
+import {
+  clearRecoveryState,
+  verifyEmailRequest,
+} from "../../features/accountRecoverySlice";
 
 const { Title, Text } = Typography;
 
 const VerifyEmailPage = () => {
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("loading"); // success | error
+  const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const { loading, success, error } = useSelector((state) => state.accountRecovery.verifyEmail);
+  const token = searchParams.get("token");
 
   useEffect(() => {
-    const verifyEmail = async () => {
-      try {
-        // 🔥 token get from URL
-        const token = new URLSearchParams(window.location.search).get("token");
+    if (!token) {
+      dispatch(clearRecoveryState("verifyEmail"));
+      return;
+    }
 
-        if (!token) throw new Error("Invalid token");
+    dispatch(verifyEmailRequest(token));
+  }, [dispatch, token]);
 
-        // 🔥 API call
-        console.log("Verifying token:", token);
-
-        // simulate API
-        await new Promise((res) => setTimeout(res, 1500));
-
-        setStatus("success");
-      } catch (error) {
-        setStatus("error",error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    verifyEmail();
-  }, []);
+  const status = !token ? "error" : success ? "success" : error ? "error" : "loading";
 
   return (
     <div
@@ -51,14 +45,12 @@ const VerifyEmailPage = () => {
           textAlign: "center",
         }}
       >
-        {loading ? (
+        {loading || status === "loading" ? (
           <>
             <Spin size="large" />
             <div style={{ marginTop: 16 }}>
               <Title level={4}>Verifying your email...</Title>
-              <Text type="secondary">
-                Please wait while we verify your account
-              </Text>
+              <Text type="secondary">Please wait while we verify your account</Text>
             </div>
           </>
         ) : status === "success" ? (
@@ -77,7 +69,7 @@ const VerifyEmailPage = () => {
             status="error"
             icon={<CloseCircleOutlined />}
             title="Verification Failed"
-            subTitle="The link is invalid or expired"
+            subTitle={error || "The link is invalid, missing, or expired"}
             extra={[
               <Button type="primary" href="/resend-verification" key="resend">
                 Resend Verification

@@ -1,36 +1,46 @@
-import React, { useState } from "react";
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Typography,
-  message,
-} from "antd";
+import React, { useEffect } from "react";
+import { Card, Form, Input, Button, Typography, message } from "antd";
 import { LockOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
+import {
+  clearRecoveryState,
+  resetPasswordRequest,
+} from "../../features/accountRecoverySlice";
 
 const { Title, Text } = Typography;
 
 const ResetPasswordPage = () => {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const { loading, success, error, message: successMessage } = useSelector(
+    (state) => state.accountRecovery.resetPassword
+  );
 
   const onFinish = async (values) => {
-    try {
-      setLoading(true);
+    const token = searchParams.get("token");
 
-      // 🔥 API call (token + password)
-      console.log("New Password:", values.password);
-
-      // simulate API
-      await new Promise((res) => setTimeout(res, 1500));
-
-      message.success("Password reset successfully ✅");
-    } catch (error) {
-      message.error("Failed to reset password ❌",error);
-    } finally {
-      setLoading(false);
+    if (!token) {
+      message.error("Reset token is missing or invalid");
+      return;
     }
+
+    dispatch(resetPasswordRequest({ token, password: values.password }));
   };
+
+  useEffect(() => {
+    if (success && successMessage) {
+      message.success(successMessage);
+      dispatch(clearRecoveryState("resetPassword"));
+    }
+  }, [dispatch, success, successMessage]);
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+      dispatch(clearRecoveryState("resetPassword"));
+    }
+  }, [dispatch, error]);
 
   return (
     <div
@@ -49,17 +59,12 @@ const ResetPasswordPage = () => {
           boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <Title level={3}>Reset Password</Title>
-          <Text type="secondary">
-            Enter your new password below
-          </Text>
+          <Text type="secondary">Enter your new password below</Text>
         </div>
 
-        {/* Form */}
         <Form layout="vertical" onFinish={onFinish}>
-          {/* New Password */}
           <Form.Item
             label="New Password"
             name="password"
@@ -68,14 +73,9 @@ const ResetPasswordPage = () => {
               { min: 6, message: "Minimum 6 characters required" },
             ]}
           >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Enter new password"
-              size="large"
-            />
+            <Input.Password prefix={<LockOutlined />} placeholder="Enter new password" size="large" />
           </Form.Item>
 
-          {/* Confirm Password */}
           <Form.Item
             label="Confirm Password"
             name="confirmPassword"
@@ -87,37 +87,24 @@ const ResetPasswordPage = () => {
                   if (!value || getFieldValue("password") === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject("Passwords do not match");
+                  return Promise.reject(new Error("Passwords do not match"));
                 },
               }),
             ]}
           >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Confirm password"
-              size="large"
-            />
+            <Input.Password prefix={<LockOutlined />} placeholder="Confirm password" size="large" />
           </Form.Item>
 
-          {/* Submit */}
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
-              size="large"
-            >
+            <Button type="primary" htmlType="submit" loading={loading} block size="large">
               Reset Password
             </Button>
           </Form.Item>
         </Form>
 
-        {/* Footer */}
         <div style={{ textAlign: "center", marginTop: 10 }}>
           <Text type="secondary">
-            Back to{" "}
-            <a href="/login">Login</a>
+            Back to <a href="/login">Login</a>
           </Text>
         </div>
       </Card>

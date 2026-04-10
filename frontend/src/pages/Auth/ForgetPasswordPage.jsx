@@ -1,36 +1,37 @@
-import React, { useState } from "react";
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Typography,
-  message,
-} from "antd";
+import React, { useEffect } from "react";
+import { Card, Form, Input, Button, Typography, message } from "antd";
 import { MailOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  clearRecoveryState,
+  forgotPasswordRequest,
+} from "../../features/accountRecoverySlice";
 
 const { Title, Text } = Typography;
 
 const ForgetPasswordPage = () => {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const { loading, success, error, message: successMessage } = useSelector(
+    (state) => state.accountRecovery.forgotPassword
+  );
 
   const onFinish = async (values) => {
-    try {
-      setLoading(true);
-
-      // 🔥 API call yaha lagegi
-      console.log("Email:", values.email);
-
-      // simulate API
-      await new Promise((res) => setTimeout(res, 1500));
-
-      message.success("Reset link sent to your email ✅");
-    } catch (error) {
-      message.error("Something went wrong ❌",error);
-    } finally {
-      setLoading(false);
-    }
+    dispatch(forgotPasswordRequest(values.email));
   };
+
+  useEffect(() => {
+    if (success && successMessage) {
+      message.success(successMessage);
+      dispatch(clearRecoveryState("forgotPassword"));
+    }
+  }, [dispatch, success, successMessage]);
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+      dispatch(clearRecoveryState("forgotPassword"));
+    }
+  }, [dispatch, error]);
 
   return (
     <div
@@ -49,15 +50,15 @@ const ForgetPasswordPage = () => {
           boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <Title level={3} style={{color:"var(--text-primary)"}}>Forgot Password</Title>
-          <Text type="secondary" style={{color:"var(--text-primary)"}}>
+          <Title level={3} style={{ color: "var(--text-primary)" }}>
+            Forgot Password
+          </Title>
+          <Text type="secondary" style={{ color: "var(--text-primary)" }}>
             Enter your email to receive a reset link
           </Text>
         </div>
 
-        {/* Form */}
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
             label="Email Address"
@@ -75,23 +76,15 @@ const ForgetPasswordPage = () => {
           </Form.Item>
 
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
-              size="large"
-            >
+            <Button type="primary" htmlType="submit" loading={loading} block size="large">
               Send Reset Link
             </Button>
           </Form.Item>
         </Form>
 
-        {/* Footer */}
         <div style={{ textAlign: "center", marginTop: 10 }}>
-          <Text type="secondary" style={{color:"var(--text-primary)"}}>
-            Remember your password?{" "}
-            <a href="/">Back to Login</a>
+          <Text type="secondary" style={{ color: "var(--text-primary)" }}>
+            Remember your password? <a href="/">Back to Login</a>
           </Text>
         </div>
       </Card>
