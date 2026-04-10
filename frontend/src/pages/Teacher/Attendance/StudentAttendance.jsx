@@ -192,6 +192,7 @@ const StudentAttendance = () => {
       date: attendanceDate.toISOString(),
       schoolClassId: selectedClassObj.schoolClassId,
       sectionId: selectedClassObj.sectionId,
+      // eslint-disable-next-line no-undef
       subjectId: selectedClassObj.subjectId || selectedSubject,
       
       userId: filteredStudents[0]?.userId || user?._id
