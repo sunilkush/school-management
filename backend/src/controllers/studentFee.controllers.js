@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { StudentFee } from "../models/studentFee.model.js";
 import { FeeStructure } from "../models/feeStructure.model.js";
+import { Student } from "../models/student.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
@@ -109,8 +110,19 @@ export const getMyFees = asyncHandler(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid student ID");
 
   const role = req.userRole?.name;
-  if (["Student", "Parent"].includes(role) && req.user._id.toString() !== studentId) {
+  if (role === "Student" && req.user._id.toString() !== studentId) {
     throw new ApiError(403, "Forbidden");
+  }
+
+  if (role === "Parent") {
+    const child = await Student.findOne({
+      _id: studentId,
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    }).select("_id");
+
+    if (!child) {
+      throw new ApiError(403, "Forbidden");
+    }
   }
 
   const filter = {

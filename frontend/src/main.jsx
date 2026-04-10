@@ -91,7 +91,7 @@ const ContactSupport = lazy(() => import("./pages/Super_Admin/Support/ContactSup
 const Documentation = lazy(() => import("./pages/Super_Admin/Support/Documentation.jsx"));
 // School Admin
 const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
-//const AddStudent = lazy(() => import("./pages/School_Admin/User_Management/AddStudent.jsx"));
+const AddStudent = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AddStudent.jsx"));
 //const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
 const ParentList = lazy(() => import("./pages/School_Admin/User_Management/ParentsList.jsx"));
 const StudentList = lazy(() => import("./pages/School_Admin/User_Management/StudentList.jsx"));
@@ -125,6 +125,7 @@ const RoomAllocation = lazy(() => import("./pages/School_Admin/Hostel/RoomAlloca
 
 const RoutesPage = lazy(() => import("./pages/School_Admin/Transport/RoutesPage.jsx"));
 const Vehicles = lazy(() => import("./pages/School_Admin/Transport/Vehicles.jsx"));
+const TransportAssignments = lazy(() => import("./pages/School_Admin/Transport/Assignments.jsx"));
 
 const EmployeeSalaries = lazy(() => import("./pages/School_Admin/Payroll/EmployeeSalaries.jsx"));
 const SalaryStructures = lazy(() => import("./pages/School_Admin/Payroll/SalaryStructures.jsx"));
@@ -183,6 +184,24 @@ const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.
 const UserRegister = lazy(() => import("./pages/UserRegister.jsx"));
 const RoleWorkspace = lazy(() => import("./pages/RoleWorkspace.jsx"));
 const RoleDynamicPortal = lazy(() => import("./pages/RoleDynamicPortal.jsx"));
+const ITSupportDashboard = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportDashboard }))
+);
+const SystemMaintenance = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemMaintenance }))
+);
+const UserSupportTickets = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.UserSupportTickets }))
+);
+const NetworkStatus = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.NetworkStatus }))
+);
+const SystemLogs = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemLogs }))
+);
+const ITSupportProfile = lazy(() =>
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportProfile }))
+);
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
 const EmployeeForm = lazy(() => import("./components/forms/EmployeeForm.jsx"));
@@ -377,6 +396,7 @@ const router = createBrowserRouter([
               { path: "hostel/allocation", element: <RoomAllocation /> },
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
+              { path: "transport/assignments", element: <TransportAssignments /> },
               { path: "payroll/monthly-run", element: <EmployeeSalaries /> },
               { path: "payroll/salary-structures", element: <SalaryStructures /> },
               { path: "payroll/create-employee", element: <EmployeeForm /> },
@@ -389,7 +409,7 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-             // { path: "admission", element: <AddStudent /> },
+              { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
@@ -397,6 +417,9 @@ const router = createBrowserRouter([
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
               { path: "exams/reports", element: <ExamReports /> },
+              { path: "users/employee-form", element: <EmployeeForm /> },
+              { path: "users/employee-details", element: <EmployeeDetailes /> },
+              // Backward-compatible routes (legacy typos)
               { path: "users/employee-from", element: <EmployeeForm /> },
               { path: "users/employee-detailes", element: <EmployeeDetailes /> },
               { path: "calendar", element: <CalendarPage /> },
@@ -423,6 +446,7 @@ const router = createBrowserRouter([
               { path: "classes/:classId", element: <ClassDetails /> },
               { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
+              { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
               { path: "attendance/my/monthly", element: <MyAttendancePage /> },
@@ -508,7 +532,9 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <AccountantDashboard /> },
-              { path: "fees/categories", element: <FeeCategories /> },
+              { path: "fees/categories", element: <SchoolFeeCategories /> },
+              { path: "fees/feestructure", element: <FeeStructure /> },
+              { path: "fees/assign", element: <StudentAssignFees /> },
               { path: "fees/collect", element: <CollectFees /> },
               { path: "salary", element: <EmployeeSalaries /> },
               { path: "salary/structures", element: <SalaryStructures /> },
@@ -623,9 +649,17 @@ const router = createBrowserRouter([
             path: "itsupport/*",
             element: (
               <ProtectedRoute allowedRoles={["IT Support"]}>
-                <RoleDynamicPortal />
+                <Outlet />
               </ProtectedRoute>
             ),
+            children: [
+              { index: true, element: <ITSupportDashboard /> },
+              { path: "maintenance", element: <SystemMaintenance /> },
+              { path: "tickets", element: <UserSupportTickets /> },
+              { path: "network", element: <NetworkStatus /> },
+              { path: "logs", element: <SystemLogs /> },
+              { path: "profile", element: <ITSupportProfile /> },
+            ],
           },
           {
             path: "counselor/*",

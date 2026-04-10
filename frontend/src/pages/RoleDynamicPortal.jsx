@@ -1,8 +1,23 @@
 import React, { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty, Tabs } from "antd";
+import { useSelector } from "react-redux";
+import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
+import Classes from "./School_Admin/Academic_Management/Classes";
+import Subjects from "./School_Admin/Academic_Management/Subjects";
+import ExamSchedule from "./School_Admin/Exams_&_Grades/ExamSchedule";
+import AllStudentsAttendance from "./School_Admin/Attendance/AllStudentsAttendance";
+import StaffAttendance from "./School_Admin/Attendance/StaffAttendance";
+import Profile from "./Profile";
+import VicePrincipalReports from "./Vice_Principal/VicePrincipalReports";
+import { Navigate, useLocation } from "react-router-dom";
 import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty } from "antd";
 import { useSelector } from "react-redux";
 import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
+import Books from "./School_Admin/Library/Books";
+import IssueBook from "./School_Admin/Library/IssueBook";
+import LibraryMembers from "./Librarian/LibraryMembers";
+import LibraryReports from "./Librarian/LibraryReports";
 
 const { Title, Text } = Typography;
 
@@ -13,7 +28,14 @@ const roleConfig = {
   },
   viceprincipal: {
     title: "Vice Principal Portal",
-    modules: ["Academic Management", "Exam Monitoring", "Attendance Oversight", "Reports"],
+    modules: [
+      { title: "Academic Management", path: "viceprincipal/academics" },
+      { title: "Exams & Grades", path: "viceprincipal/exams" },
+      { title: "Student Attendance", path: "viceprincipal/attendance/students" },
+      { title: "Teacher Attendance", path: "viceprincipal/attendance/staff" },
+      { title: "Reports", path: "viceprincipal/reports" },
+      { title: "Profile", path: "viceprincipal/profile" },
+    ],
   },
   subjectcoordinator: {
     title: "Subject Coordinator Portal",
@@ -57,6 +79,7 @@ const toRoleKey = (roleName = "") => roleName.toLowerCase().replace(/\s+/g, "");
 
 const RoleDynamicPortal = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const permissions = useSelector((state) => state.roleUi.permissions || []);
 
@@ -64,7 +87,10 @@ const RoleDynamicPortal = () => {
   const roleKey = toRoleKey(roleName);
 
   const routeParts = location.pathname.split("/").filter(Boolean);
-  const section = routeParts[routeParts.length - 1] || "dashboard";
+  const rolePathIndex = routeParts.findIndex((part) => part === roleKey);
+  const relativePath =
+    rolePathIndex >= 0 ? routeParts.slice(rolePathIndex + 1).join("/") : "";
+  const section = relativePath || "dashboard";
 
   const config = roleConfig[roleKey] || {
     title: `${roleName} Workspace`,
@@ -72,9 +98,76 @@ const RoleDynamicPortal = () => {
   };
 
   const visibleModules = useMemo(() => {
-    if (Array.isArray(config.modules) && config.modules.length > 0) return config.modules;
+    if (Array.isArray(config.modules) && config.modules.length > 0) {
+      return config.modules.map((module) =>
+        typeof module === "string" ? { title: module, path: `${roleKey}/${module.toLowerCase()}` } : module
+      );
+    }
     return [];
-  }, [config.modules]);
+  }, [config.modules, roleKey]);
+
+  const vicePrincipalContent = useMemo(() => {
+    if (roleKey !== "viceprincipal") return null;
+
+    switch (relativePath) {
+      case "academics":
+        return (
+          <Card title="Academic Management">
+            <Tabs
+              defaultActiveKey="classes"
+              items={[
+                { key: "classes", label: "Classes", children: <Classes /> },
+                { key: "subjects", label: "Subjects", children: <Subjects /> },
+              ]}
+            />
+          </Card>
+        );
+      case "exams":
+        return (
+          <Card title="Exams & Grades">
+            <ExamSchedule />
+          </Card>
+        );
+      case "attendance/students":
+        return (
+          <Card title="Student Attendance">
+            <AllStudentsAttendance />
+          </Card>
+        );
+      case "attendance/staff":
+        return (
+          <Card title="Teacher Attendance">
+            <StaffAttendance />
+          </Card>
+        );
+      case "reports":
+        return (
+          <Card title="Vice Principal Reports">
+            <VicePrincipalReports />
+          </Card>
+        );
+      case "profile":
+        return <Profile />;
+      default:
+        return null;
+    }
+  }, [relativePath, roleKey]);
+
+  if (roleKey === "librarian") {
+    const librarianViews = {
+      dashboard: <RoleDashboardOverview titlePrefix="Librarian Dashboard" />,
+      books: <Books />,
+      records: <IssueBook />,
+      members: <LibraryMembers />,
+      reports: <LibraryReports />,
+    };
+
+    if (section === "librarian") {
+      return <Navigate to="/librarian/books" replace />;
+    }
+
+    return librarianViews[section] || <Navigate to="/librarian/books" replace />;
+  }
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>
@@ -87,32 +180,46 @@ const RoleDynamicPortal = () => {
         </div>
       </Card>
 
-      <Row gutter={[16, 16]}>
-        {visibleModules.length ? (
-          visibleModules.map((module) => (
-            <Col xs={24} md={12} xl={8} key={module}>
+      {!vicePrincipalContent ? (
+        <Row gutter={[16, 16]}>
+          {visibleModules.length ? (
+            visibleModules.map((module) => (
+              <Col xs={24} md={12} xl={8} key={module.title}>
+                <Card
+                  title={module.title}
+                  extra={<Tag color="green">Active</Tag>}
+                  actions={[
+                    <Button type="link" key="open" onClick={() => navigate(`/dashboard/${module.path}`)}>
+                      Open
+                    </Button>,
+                    <Button
+                      type="link"
+                      key="report"
+                      onClick={() => navigate(`/dashboard/${roleKey}/reports?module=${encodeURIComponent(module.title)}`)}
+                    >
+                      Report
+                    </Button>,
+                  ]}
+                >
+                  <Text type="secondary">
+                    Manage {module.title.toLowerCase()} operations through this module.
+                  </Text>
+                </Card>
+              </Col>
+            ))
+          ) : (
+            <Col span={24}>
               <Card
-                title={module}
-                extra={<Tag color="green">Active</Tag>}
-                actions={[
-                  <Button type="link" key="open">Open</Button>,
-                  <Button type="link" key="report">Report</Button>,
-                ]}
+                title="Module Setup Pending"
               >
-                <Text type="secondary">
-                  Manage {module.toLowerCase()} operations through this module.
-                </Text>
+                <Empty description="No modules configured yet for this role" />
               </Card>
             </Col>
-          ))
-        ) : (
-          <Col span={24}>
-            <Card>
-              <Empty description="No modules configured yet for this role" />
-            </Card>
-          </Col>
-        )}
-      </Row>
+          )}
+        </Row>
+      ) : (
+        vicePrincipalContent
+      )}
 
       <RoleDashboardOverview titlePrefix={`${roleName} Dashboard`} />
 

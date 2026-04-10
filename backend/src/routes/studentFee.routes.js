@@ -13,9 +13,9 @@ const router = Router();
    🔐 PROTECTED ROUTES
 ===================================================== */
 router.use(auth);
-const ADMIN_ONLY = ["School Admin"];
+const ADMIN_ONLY = ["School Admin", "Accountant"];
 const STUDENT_PARENT = ["Student", "Parent"];
-const FEE_PAY_ROLES = ["School Admin", "Student", "Parent"];
+const FEE_PAY_ROLES = ["School Admin", "Accountant", "Student", "Parent"];
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS
    Role: School Admin

@@ -938,6 +938,91 @@ const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
   );
 });
 
+const getMyChildren = asyncHandler(async (req, res) => {
+  const parentId = req.user?._id;
+  const schoolId = req.user?.schoolId;
+
+  const children = await Student.aggregate([
+    {
+      $match: {
+        $or: [
+          { fatherId: new mongoose.Types.ObjectId(parentId) },
+          { motherId: new mongoose.Types.ObjectId(parentId) },
+          { guardianId: new mongoose.Types.ObjectId(parentId) },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "studentenrollments",
+        let: { studentRef: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$studentId", "$$studentRef"] },
+              schoolId: new mongoose.Types.ObjectId(schoolId),
+              status: "Active",
+            },
+          },
+          { $sort: { createdAt: -1 } },
+          { $limit: 1 },
+        ],
+        as: "enrollment",
+      },
+    },
+    { $unwind: { path: "$enrollment", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "classes",
+        localField: "enrollment.schoolClassId",
+        foreignField: "_id",
+        as: "schoolClass",
+      },
+    },
+    { $unwind: { path: "$schoolClass", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "sections",
+        localField: "enrollment.sectionId",
+        foreignField: "_id",
+        as: "section",
+      },
+    },
+    { $unwind: { path: "$section", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        _id: 1,
+        userId: "$user._id",
+        name: "$user.name",
+        email: "$user.email",
+        gender: 1,
+        dateOfBirth: 1,
+        bloodGroup: 1,
+        enrollmentId: "$enrollment._id",
+        registrationNumber: "$enrollment.registrationNumber",
+        classId: "$schoolClass._id",
+        className: "$schoolClass.name",
+        sectionId: "$section._id",
+        sectionName: "$section.name",
+      },
+    },
+    { $sort: { name: 1 } },
+  ]);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, children, "Parent children fetched successfully"));
+});
+
 export {
   createStudentAdmission,
   getStudents,
@@ -946,5 +1031,6 @@ export {
   deleteStudent,
   getLastRegisteredStudent,
   getStudentsBySchoolId,
-  getMyStudentEnrollmentId
+  getMyStudentEnrollmentId,
+  getMyChildren,
 };
