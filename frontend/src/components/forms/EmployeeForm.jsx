@@ -67,23 +67,29 @@ const EmployeeForm = () => {
 
   const { profile, users = [] } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
-  const { subjectList = [] } = useSelector((state) => state.subject);
+  const { subjects = [] } = useSelector((state) => state.subject);
   const { loading } = useSelector((state) => state.employee);
-
+  
   const schoolId = profile?.school?._id;
   const academicYearId = activeYear?._id;
-
+  
+    const page = 1;
+    const limit = 50;
+    
+  
+    /* ── FETCH ── */
+    useEffect(() => {
+      if (schoolId) {
+        dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
+      }
+    }, [dispatch, schoolId, academicYearId]);
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
   }, [schoolId, dispatch]);
 
-  useEffect(() => {
-    if (schoolId && academicYearId) {
-      dispatch(getAllSubjects({ schoolId, academicYearId }));
-    }
-  }, [schoolId, academicYearId, dispatch]);
+ 
 
   useEffect(() => {
     if (schoolId) {
@@ -215,7 +221,7 @@ const EmployeeForm = () => {
                   <Form.Item name="subjects" label="Subjects" rules={[{ required: true }]}>
                     <Select
                       mode="multiple"
-                      options={subjectList.map(s => ({
+                      options={subjects.map(s => ({
                         label: s.name,
                         value: s._id,
                       }))}
