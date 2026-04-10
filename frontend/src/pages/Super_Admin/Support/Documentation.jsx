@@ -81,6 +81,7 @@ const Documentation = () => {
 
   // ===== FILTER MENU =====
   const filteredMenu = useMemo(() => {
+    // eslint-disable-next-line no-unused-vars
     return Object.entries(docs).filter(([key, value]) =>
       value.title.toLowerCase().includes(search.toLowerCase())
     );
