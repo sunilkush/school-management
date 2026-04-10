@@ -45,9 +45,7 @@ const TeacherList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { users = [], hasFetchedUsers, Loading } = useSelector(
-    (state) => state.auth
-  );
+const { users = [], loading } = useSelector((state) => state.auth);
   
   const loggedInUser = useSelector((state) => state.auth.user);
  
@@ -63,14 +61,19 @@ const TeacherList = () => {
 
   /* ── Fetch ── */
   useEffect(() => {
-    if (!hasFetchedUsers) {
-         dispatch(fetchAllUser({
-        roleName: ["Teacher", "Staff"],
-        isActive: true
-      }));
-      dispatch(currentUser());
-    }
-  }, [dispatch, hasFetchedUsers, schoolId]);
+    dispatch(currentUser());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!schoolId) return;
+
+    dispatch(
+      fetchAllUser({
+        isActive: true,
+      })
+    );
+  }, [dispatch, schoolId]);
+
 
   /* ── Delete Handler ── */
   const handleDelete = (id) => {
@@ -104,7 +107,8 @@ const TeacherList = () => {
 
       const role = u?.role?.name?.toLowerCase();
 
-      if (!["teacher", "staff"].includes(role)) return false;
+     // Student records are intentionally excluded from this page
+      if (role === "student") return false;
 
       const matchSearch =
         u?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -117,14 +121,35 @@ const TeacherList = () => {
     });
   }, [users, schoolId, searchText, selectedRole]);
 
+   const roleOptions = useMemo(() => {
+    const roleMap = new Map();
+
+    users.forEach((u) => {
+      if (!u?.isActive) return;
+      if (u?.school?._id !== schoolId) return;
+
+      const roleName = u?.role?.name?.trim();
+      if (!roleName || roleName.toLowerCase() === "student") return;
+
+      const roleValue = roleName.toLowerCase();
+      if (!roleMap.has(roleValue)) {
+        roleMap.set(roleValue, roleName);
+      }
+    });
+
+    return [...roleMap.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [users, schoolId]);
+
   /* ── Stats ── */
-  const stats = useMemo(() => {
+   const stats = useMemo(() => {
     return {
-      total: users.length,
-      active: users.filter((u) => u?.isActive).length,
-      roles: new Set(users.map((u) => u?.role?.name)).size,
+      total: filteredUsers.length,
+      active: filteredUsers.length,
+      roles: roleOptions.length,
     };
-  }, [users]);
+  }, [filteredUsers, roleOptions]);
 
   /* ── Columns ── */
   const columns = [
@@ -262,16 +287,19 @@ const TeacherList = () => {
                 onChange={(e) => setSearchText(e.target.value)}
               />
 
-              <Select value={selectedRole} onChange={setSelectedRole} style={{ width: 160 }}>
+              <Select value={selectedRole} onChange={setSelectedRole} style={{ width: 180 }}>
                 <Option value="all">All Roles</Option>
-                <Option value="teacher">Teacher</Option>
-                <Option value="staff">Staff</Option>
+                {roleOptions.map((role) => (
+                  <Option key={role.value} value={role.value}>
+                    {role.label}
+                  </Option>
+                ))}
               </Select>
 
-              <Button
+               <Button
                 icon={<ReloadOutlined />}
-                loading={Loading}
-                onClick={() => dispatch(fetchAllUser())}
+                loading={loading}
+                onClick={() => dispatch(fetchAllUser({ isActive: true }))}
               />
             </Space>
 
@@ -288,7 +316,7 @@ const TeacherList = () => {
             columns={columns}
             dataSource={filteredUsers}
             rowKey="_id"
-            loading={Loading}
+             loading={loading}
             pagination={{ pageSize: 10 }}
             locale={{ emptyText: <Empty description="No users found" /> }}
           />
