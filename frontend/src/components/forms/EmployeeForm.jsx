@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, lazy, Suspense } from "react";
 import {
   Tabs,
   Form,
@@ -30,6 +30,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { createEmployee } from "../../features/employeeSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import { getAllSubjects } from "../../features/subjectSlice";
+import { fetchAllUser } from "../../features/authSlice";
+import { useSearchParams } from "react-router-dom";
 
 // 🔥 Lazy Load
 const AttendanceCalendar = lazy(() =>
@@ -60,9 +62,10 @@ const religions = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "
 
 const EmployeeForm = () => {
   const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
 
-  const { profile } = useSelector((state) => state.auth);
+  const { profile, users = [] } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
   const { subjectList = [] } = useSelector((state) => state.subject);
   const { loading } = useSelector((state) => state.employee);
@@ -81,6 +84,31 @@ const EmployeeForm = () => {
       dispatch(getAllSubjects({ schoolId, academicYearId }));
     }
   }, [schoolId, academicYearId, dispatch]);
+
+  useEffect(() => {
+    if (schoolId) {
+      dispatch(fetchAllUser({ schoolId, isActive: true }));
+    }
+  }, [schoolId, dispatch]);
+
+  useEffect(() => {
+    const userIdFromQuery = searchParams.get("id");
+    if (userIdFromQuery) {
+      form.setFieldValue("userId", userIdFromQuery);
+    }
+  }, [form, searchParams]);
+
+  const userOptions = useMemo(() => {
+    const userList = Array.isArray(users) ? users : [];
+
+    return userList
+      .filter((user) => user?.isActive)
+      .filter((user) => user?.role?.name?.toLowerCase() !== "student")
+      .map((user) => ({
+        value: user._id,
+        label: `${user?.name || "User"} (${user?.role?.name || "No Role"})`,
+      }));
+  }, [users]);
 
   const handleSubmit = async (values) => {
     const payload = {
@@ -121,6 +149,20 @@ const EmployeeForm = () => {
             {/* PERSONAL INFO */}
             <Card title="Personal Information" className="mb-4">
               <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item
+                    name="userId"
+                    label="Select User (Student excluded)"
+                    rules={[{ required: true, message: "Please select a user" }]}
+                  >
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Select existing user"
+                      options={userOptions}
+                    />
+                  </Form.Item>
+                </Col>
                 <Col md={8}>
                   <Form.Item name="gender" label="Gender" rules={[{ required: true }]}>
                     <Select options={[{ value: "Male" }, { value: "Female" }]} />

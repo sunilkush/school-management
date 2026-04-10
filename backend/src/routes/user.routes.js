@@ -24,6 +24,7 @@ const router = Router();
 
 // Role-Based Access Control
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
+const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant"];
 
 const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent", "Accountant", "Librarian"];
 //
@@ -52,7 +53,7 @@ router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions)
 router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
 router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
 router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);
-router.get("/all", auth, roleMiddleware(ADMIN_ROLE), getAllUsers);
+router.get("/all", auth, roleMiddleware(ADMIN_AND_ACCOUNTANT_ROLE), getAllUsers);
 router.patch("/delete/:id", auth, roleMiddleware(ADMIN_ROLE), deleteUser);
 router.patch("/active/:id",auth,roleMiddleware(ADMIN_ROLE),activeUser);
 router.get("/single/:id", auth, roleMiddleware(ALL_USERS),getUserById)

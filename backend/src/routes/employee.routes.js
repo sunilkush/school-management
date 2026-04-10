@@ -5,8 +5,8 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 // Define allowed roles
-const ADMIN_ROLES = ["School Admin", "Super Admin"];
-const EMPLOYEE_ROLES = ["School Admin", "Super Admin", "Teacher"];
+const ADMIN_ROLES = ["School Admin", "Super Admin", "Accountant"];
+const EMPLOYEE_ROLES = ["School Admin", "Super Admin", "Teacher", "Accountant"];
 
 // ✅ Create Employee (Only Admins & Superadmins)
 router.post("/", auth, roleMiddleware(ADMIN_ROLES), registerEmployee);
