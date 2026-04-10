@@ -6,11 +6,29 @@ import { Fees } from "../models/fees.model.js";
 import { Role } from "../models/Roles.model.js";
 import { Attendance } from "../models/attendance.model.js";
 import { School } from "../models/school.model.js";
+import { Payment } from "../models/payment.model.js";
+import { Employee } from "../models/Employee.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { PayrollEntry } from "../models/payrollEntry.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const ObjectId = mongoose.Types.ObjectId;
+
+const getMonthRange = (shift = 0) => {
+  const now = new Date();
+  return {
+    start: new Date(now.getFullYear(), now.getMonth() + shift, 1),
+    end: new Date(now.getFullYear(), now.getMonth() + shift + 1, 1),
+  };
+};
+
+const safeGrowth = (current, previous) => {
+  if (!previous && !current) return 0;
+  if (!previous) return 100;
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+};
 
 export const getDashboardSummary = asyncHandler(async (req, res) => {
   const roleName = req.userRole?.name || req.query.role;
@@ -101,4 +119,281 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, response, `${roleName} dashboard summary fetched successfully`));
+});
+
+export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) => {
+  const schoolId = req.query.schoolId || req.user?.schoolId?._id || req.user?.schoolId;
+
+  if (!schoolId || !ObjectId.isValid(schoolId)) {
+    throw new ApiError(400, "Valid schoolId is required for School Admin analytics dashboard");
+  }
+
+  const schoolObjectId = new ObjectId(schoolId);
+  const teacherRole = await Role.findOne({ name: { $regex: /^teacher$/i } }).select("_id");
+
+  const { start: currentMonthStart, end: currentMonthEnd } = getMonthRange(0);
+  const { start: prevMonthStart, end: prevMonthEnd } = getMonthRange(-1);
+
+  const [
+    totalStudents,
+    newAdmissionsCurrent,
+    newAdmissionsPrevious,
+    totalTeachers,
+    totalStaff,
+    currentIncomeAgg,
+    previousIncomeAgg,
+    incomeModeBreakdown,
+    salaryStats,
+    salaryByUnit,
+    employeePerformance,
+  ] = await Promise.all([
+    StudentEnrollment.countDocuments({ schoolId: schoolObjectId }),
+    StudentEnrollment.countDocuments({
+      schoolId: schoolObjectId,
+      createdAt: { $gte: currentMonthStart, $lt: currentMonthEnd },
+    }),
+    StudentEnrollment.countDocuments({
+      schoolId: schoolObjectId,
+      createdAt: { $gte: prevMonthStart, $lt: prevMonthEnd },
+    }),
+    teacherRole?._id
+      ? User.countDocuments({ schoolId: schoolObjectId, roleId: teacherRole._id })
+      : 0,
+    Employee.countDocuments({ schoolId: schoolObjectId, isActive: true }),
+    Payment.aggregate([
+      {
+        $match: {
+          schoolId: schoolObjectId,
+          paymentDate: { $gte: currentMonthStart, $lt: currentMonthEnd },
+          status: "success",
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+    ]),
+    Payment.aggregate([
+      {
+        $match: {
+          schoolId: schoolObjectId,
+          paymentDate: { $gte: prevMonthStart, $lt: prevMonthEnd },
+          status: "success",
+        },
+      },
+      { $group: { _id: "$paymentMode", value: { $sum: "$amountPaid" } } },
+    ]),
+    Payment.aggregate([
+      {
+        $match: {
+          schoolId: schoolObjectId,
+          paymentDate: { $gte: currentMonthStart, $lt: currentMonthEnd },
+          status: "success",
+        },
+      },
+      { $group: { _id: "$paymentMode", value: { $sum: "$amountPaid" } } },
+      { $sort: { value: -1 } },
+    ]),
+    PayrollEntry.aggregate([
+      {
+        $match: {
+          schoolId: schoolObjectId,
+          createdAt: { $gte: currentMonthStart, $lt: currentMonthEnd },
+        },
+      },
+      {
+        $lookup: {
+          from: "employees",
+          localField: "employeeId",
+          foreignField: "_id",
+          as: "employee",
+        },
+      },
+      { $unwind: "$employee" },
+      {
+        $group: {
+          _id: { $ifNull: ["$employee.department", "General"] },
+          value: { $sum: "$netPay" },
+        },
+      },
+      { $sort: { value: -1 } },
+      { $limit: 5 },
+    ]),
+    PayrollEntry.aggregate([
+      {
+        $match: {
+          schoolId: schoolObjectId,
+          createdAt: {
+            $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1),
+            $lt: currentMonthEnd,
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "employees",
+          localField: "employeeId",
+          foreignField: "_id",
+          as: "employee",
+        },
+      },
+      { $unwind: "$employee" },
+      {
+        $group: {
+          _id: {
+            month: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+            department: { $ifNull: ["$employee.department", "General"] },
+          },
+          value: { $sum: "$netPay" },
+        },
+      },
+      { $sort: { "_id.month": 1 } },
+    ]),
+    PayrollEntry.aggregate([
+      {
+        $match: {
+          schoolId: schoolObjectId,
+          createdAt: { $gte: currentMonthStart, $lt: currentMonthEnd },
+        },
+      },
+      {
+        $lookup: {
+          from: "employees",
+          localField: "employeeId",
+          foreignField: "_id",
+          as: "employee",
+        },
+      },
+      { $unwind: "$employee" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "employee.userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          performanceScore: {
+            $cond: [
+              { $gt: ["$workingDays", 0] },
+              { $multiply: [{ $divide: ["$presentDays", "$workingDays"] }, 100] },
+              0,
+            ],
+          },
+        },
+      },
+      { $sort: { performanceScore: -1 } },
+      { $limit: 5 },
+      {
+        $project: {
+          _id: 0,
+          name: { $ifNull: ["$user.name", "Employee"] },
+          email: { $ifNull: ["$user.email", "-"] },
+          designation: { $ifNull: ["$employee.designation", "Staff"] },
+          dept: { $ifNull: ["$employee.department", "General"] },
+          score: { $round: ["$performanceScore", 0] },
+        },
+      },
+    ]),
+  ]);
+
+  const previousIncomeTotal = previousIncomeAgg.reduce((sum, item) => sum + (item.value || 0), 0);
+  const currentIncome = currentIncomeAgg[0]?.total || 0;
+  const activeStaff = Math.max(totalStaff, totalTeachers);
+
+  const monthlyLabel = new Intl.DateTimeFormat("en-US", { month: "short" });
+  const monthKeys = Array.from({ length: 12 }, (_, index) => {
+    const d = new Date(new Date().getFullYear(), new Date().getMonth() - (11 - index), 1);
+    return {
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      label: monthlyLabel.format(d),
+    };
+  });
+
+  const topDepartments = salaryStats.slice(0, 2).map((item) => item._id);
+  const fallbackDepartments = ["Teaching", "Administration"];
+  const selectedDepartments =
+    topDepartments.length === 2 ? topDepartments : [...topDepartments, ...fallbackDepartments].slice(0, 2);
+
+  const salaryByMonthMap = monthKeys.map((month) => {
+    const item = { month: month.label };
+    selectedDepartments.forEach((dept) => {
+      item[dept] = 0;
+    });
+
+    salaryByUnit
+      .filter((row) => row._id.month === month.key && selectedDepartments.includes(row._id.department))
+      .forEach((row) => {
+        item[row._id.department] = Number((row.value || 0).toFixed(0));
+      });
+
+    return item;
+  });
+
+  const incomeAnalysisTotal = incomeModeBreakdown.reduce((sum, item) => sum + (item.value || 0), 0);
+  const incomeAnalysis = (incomeModeBreakdown.length ? incomeModeBreakdown : [
+    { _id: "cash", value: 0 },
+    { _id: "online", value: 0 },
+  ]).map((item, index) => {
+    const palette = ["#1677ff", "#0891b2", "#0ea472", "#7c3aed"];
+    return {
+      label: String(item._id || "other").toUpperCase(),
+      value: incomeAnalysisTotal ? Number(((item.value / incomeAnalysisTotal) * 100).toFixed(0)) : 0,
+      color: palette[index % palette.length],
+    };
+  });
+
+  const analytics = {
+    summary: {
+      newAdmissions: {
+        value: newAdmissionsCurrent,
+        growth: safeGrowth(newAdmissionsCurrent, newAdmissionsPrevious),
+      },
+      totalStudents: {
+        value: totalStudents,
+        growth: safeGrowth(totalStudents, Math.max(totalStudents - newAdmissionsCurrent, 0)),
+      },
+      totalTeachers: {
+        value: totalTeachers,
+        growth: 0,
+      },
+      totalIncome: {
+        value: currentIncome,
+        growth: safeGrowth(currentIncome, previousIncomeTotal),
+      },
+    },
+    salaryStatistics: salaryStats.map((item, index) => ({
+      title: item._id,
+      value: Number((item.value || 0).toFixed(0)),
+      color: ["#1677ff", "#7c3aed", "#0ea472", "#ea580c", "#0891b2"][index % 5],
+    })),
+    incomeAnalysis,
+    salaryByUnit: {
+      units: selectedDepartments.map((dept, index) => ({
+        key: dept,
+        color: index === 0 ? "#1677ff" : "#7c3aed",
+        label: dept,
+      })),
+      chartData: salaryByMonthMap,
+    },
+    employeeStructure: [
+      { label: "Students", count: totalStudents, color: "#1677ff" },
+      { label: "Teachers", count: totalTeachers, color: "#7c3aed" },
+      { label: "Staff", count: Math.max(activeStaff - totalTeachers, 0), color: "#0ea472" },
+    ],
+    employeePerformance: employeePerformance.map((employee) => {
+      const score = Number(employee.score || 0);
+      const performance =
+        score >= 90 ? "EXCELLENT" : score >= 75 ? "GOOD" : score >= 60 ? "AVERAGE" : "POOR";
+      return {
+        ...employee,
+        performance,
+        avatar: null,
+      };
+    }),
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, analytics, "School admin analytics fetched successfully"));
 });
