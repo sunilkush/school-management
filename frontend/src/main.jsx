@@ -125,6 +125,7 @@ const RoomAllocation = lazy(() => import("./pages/School_Admin/Hostel/RoomAlloca
 
 const RoutesPage = lazy(() => import("./pages/School_Admin/Transport/RoutesPage.jsx"));
 const Vehicles = lazy(() => import("./pages/School_Admin/Transport/Vehicles.jsx"));
+const TransportAssignments = lazy(() => import("./pages/School_Admin/Transport/Assignments.jsx"));
 
 const EmployeeSalaries = lazy(() => import("./pages/School_Admin/Payroll/EmployeeSalaries.jsx"));
 const SalaryStructures = lazy(() => import("./pages/School_Admin/Payroll/SalaryStructures.jsx"));
@@ -377,6 +378,7 @@ const router = createBrowserRouter([
               { path: "hostel/allocation", element: <RoomAllocation /> },
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
+              { path: "transport/assignments", element: <TransportAssignments /> },
               { path: "payroll/monthly-run", element: <EmployeeSalaries /> },
               { path: "payroll/salary-structures", element: <SalaryStructures /> },
               { path: "payroll/create-employee", element: <EmployeeForm /> },

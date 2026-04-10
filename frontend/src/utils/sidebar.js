@@ -194,6 +194,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Routes", path: "schooladmin/transport/routes" },
         { title: "Vehicles", path: "schooladmin/transport/vehicles" },
+        { title: "Assignments", path: "schooladmin/transport/assignments" },
       ],
     },
 {
