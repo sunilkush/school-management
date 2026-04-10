@@ -111,10 +111,10 @@ export const sidebarMenu = {
   ],
 },
 {
-  title:"Support & Help",
+  title:"Help",
   icon: MessageSquare,
   subMenu:[
-    {title:"Submit a Ticket",path:"superadmin/support/tickets"},
+   
     {title:"Documentation",path:"superadmin/support/documentation"},
     {title:"Contact Support",path:"superadmin/support/contact"},
     {title:"FAQs",path:"superadmin/support/faqs"},
