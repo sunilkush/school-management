@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty } from "antd";
 import { useSelector } from "react-redux";
+import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
 
 const { Title, Text } = Typography;
 
@@ -112,6 +113,8 @@ const RoleDynamicPortal = () => {
           </Col>
         )}
       </Row>
+
+      <RoleDashboardOverview titlePrefix={`${roleName} Dashboard`} />
 
       <Card title="Permission Snapshot">
         <List

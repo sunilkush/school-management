@@ -1,9 +1,8 @@
-import React from 'react'
+import React from "react";
+import RoleDashboardOverview from "../../../components/dashboard/RoleDashboardOverview";
 
 const AccountantDashboard = () => {
-  return (
-    <div>AccountantDashboard</div>
-  )
-}
+  return <RoleDashboardOverview titlePrefix="Accountant Dashboard" />;
+};
 
-export default AccountantDashboard
+export default AccountantDashboard;

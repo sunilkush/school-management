@@ -10,6 +10,8 @@ import { Payment } from "../models/payment.model.js";
 import { Employee } from "../models/Employee.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { PayrollEntry } from "../models/payrollEntry.model.js";
+import { StudentFee } from "../models/studentFee.model.js";
+import { ExamClass } from "../models/ExamClass.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -28,6 +30,16 @@ const safeGrowth = (current, previous) => {
   if (!previous && !current) return 0;
   if (!previous) return 100;
   return Number((((current - previous) / previous) * 100).toFixed(1));
+};
+
+const normalizeRoleName = (role = "") => String(role).trim().toLowerCase();
+
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  return {
+    startDate: new Date(now.getFullYear(), now.getMonth(), 1),
+    endDate: new Date(now.getFullYear(), now.getMonth() + 1, 1),
+  };
 };
 
 export const getDashboardSummary = asyncHandler(async (req, res) => {
@@ -396,4 +408,229 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
   return res
     .status(200)
     .json(new ApiResponse(200, analytics, "School admin analytics fetched successfully"));
+});
+
+export const getRoleDashboardOverview = asyncHandler(async (req, res) => {
+  const roleName = req.userRole?.name || req.query.role || "User";
+  const normalizedRole = normalizeRoleName(roleName);
+  const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  const userId = req.user?._id;
+  const { startDate, endDate } = getCurrentMonthRange();
+
+  const baseContext = {
+    roleName,
+    generatedAt: new Date().toISOString(),
+  };
+
+  if (normalizedRole === "student") {
+    const student = await Student.findOne({ userId }).select("_id");
+    if (!student) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, { ...baseContext, metrics: [], lists: {} }, "Student profile not linked"));
+    }
+
+    const [attendance, fees, upcomingExams] = await Promise.all([
+      Attendance.aggregate([
+        { $match: { userId: student.userId, role: "student" } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            present: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "present"] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]),
+      StudentFee.aggregate([
+        { $match: { studentId: student._id } },
+        {
+          $group: {
+            _id: null,
+            totalPending: { $sum: "$dueAmount" },
+          },
+        },
+      ]),
+      ExamClass.aggregate([
+        { $match: { schoolId: schoolId || null, examDate: { $gte: new Date() } } },
+        { $sort: { examDate: 1 } },
+        { $limit: 5 },
+        { $project: { _id: 0, title: "$name", examDate: 1 } },
+      ]),
+    ]);
+
+    const attendanceStat = attendance[0] || { total: 0, present: 0 };
+    const attendancePercent = attendanceStat.total
+      ? Math.round((attendanceStat.present / attendanceStat.total) * 100)
+      : 0;
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          ...baseContext,
+          metrics: [
+            { key: "attendance", label: "Attendance", value: attendancePercent, suffix: "%" },
+            { key: "classes_attended", label: "Classes Marked", value: attendanceStat.total },
+            { key: "pending_fees", label: "Pending Fees", value: fees[0]?.totalPending || 0, format: "currency" },
+          ],
+          lists: {
+            upcomingExams: upcomingExams.map((exam) => ({
+              title: exam.title || "Exam",
+              date: exam.examDate,
+            })),
+          },
+        },
+        "Student dashboard overview fetched successfully"
+      )
+    );
+  }
+
+  if (normalizedRole === "parent") {
+    const linkedStudents = await Student.find({
+      $or: [{ fatherId: userId }, { motherId: userId }, { guardianId: userId }],
+    }).select("_id userId");
+
+    const linkedStudentIds = linkedStudents.map((student) => student._id);
+    const linkedUserIds = linkedStudents.map((student) => student.userId).filter(Boolean);
+
+    const [attendance, feeSummary] = await Promise.all([
+      Attendance.aggregate([
+        {
+          $match: {
+            userId: { $in: linkedUserIds },
+            role: "student",
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            present: {
+              $sum: {
+                $cond: [{ $eq: ["$status", "present"] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]),
+      StudentFee.aggregate([
+        { $match: { studentId: { $in: linkedStudentIds } } },
+        {
+          $group: {
+            _id: null,
+            totalPending: { $sum: "$dueAmount" },
+          },
+        },
+      ]),
+    ]);
+
+    const attendanceStat = attendance[0] || { total: 0, present: 0 };
+    const attendancePercent = attendanceStat.total
+      ? Math.round((attendanceStat.present / attendanceStat.total) * 100)
+      : 0;
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          ...baseContext,
+          metrics: [
+            { key: "children", label: "Children", value: linkedStudents.length },
+            { key: "attendance", label: "Average Attendance", value: attendancePercent, suffix: "%" },
+            {
+              key: "pending_fees",
+              label: "Pending Fees",
+              value: feeSummary[0]?.totalPending || 0,
+              format: "currency",
+            },
+          ],
+          lists: {},
+        },
+        "Parent dashboard overview fetched successfully"
+      )
+    );
+  }
+
+  if (normalizedRole === "accountant") {
+    const schoolFilter = schoolId ? { schoolId } : {};
+    const [thisMonthPayments, totalPendingFees, successfulPayments] = await Promise.all([
+      Payment.aggregate([
+        {
+          $match: {
+            ...schoolFilter,
+            paymentDate: { $gte: startDate, $lt: endDate },
+            status: "success",
+          },
+        },
+        { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+      ]),
+      StudentFee.aggregate([
+        { $match: schoolFilter },
+        { $group: { _id: null, totalPending: { $sum: "$dueAmount" } } },
+      ]),
+      Payment.countDocuments({ ...schoolFilter, status: "success" }),
+    ]);
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          ...baseContext,
+          metrics: [
+            {
+              key: "month_collection",
+              label: "This Month Collection",
+              value: thisMonthPayments[0]?.total || 0,
+              format: "currency",
+            },
+            {
+              key: "pending_dues",
+              label: "Pending Dues",
+              value: totalPendingFees[0]?.totalPending || 0,
+              format: "currency",
+            },
+            { key: "successful_transactions", label: "Successful Transactions", value: successfulPayments || 0 },
+          ],
+          lists: {},
+        },
+        "Accountant dashboard overview fetched successfully"
+      )
+    );
+  }
+
+  const schoolFilter = schoolId ? { schoolId } : {};
+  const [presentDays, activeEmployees, latestAdmissions] = await Promise.all([
+    Attendance.countDocuments({
+      ...schoolFilter,
+      userId,
+      role: { $in: ["staff", "teacher"] },
+      status: "present",
+      date: { $gte: startDate, $lt: endDate },
+    }),
+    Employee.countDocuments({ ...schoolFilter, isActive: true }),
+    StudentEnrollment.countDocuments({
+      ...schoolFilter,
+      createdAt: { $gte: startDate, $lt: endDate },
+    }),
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        ...baseContext,
+        metrics: [
+          { key: "present_days", label: "Present Days (Month)", value: presentDays || 0 },
+          { key: "active_staff", label: "Active Staff", value: activeEmployees || 0 },
+          { key: "new_admissions", label: "New Admissions", value: latestAdmissions || 0 },
+        ],
+        lists: {},
+      },
+      `${roleName} dashboard overview fetched successfully`
+    )
+  );
 });
