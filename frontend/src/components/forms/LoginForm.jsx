@@ -176,21 +176,10 @@ const LoginForm = () => {
                   Sign In
                 </Button>
 
-                <Button block size="large" style={{ marginTop: 12 }}>
-                  Sign in with Google
-                </Button>
+              
               </Form>
 
-              <Text
-                style={{
-                  display: "block",
-                  marginTop: 16,
-                  textAlign: "center",
-                  color: "var(--text-primary)"
-                }}
-              >
-                Don’t have an account? <Link to="/register">Sign up</Link>
-              </Text>
+              
             </Card>
           </Col>
         </Row>
