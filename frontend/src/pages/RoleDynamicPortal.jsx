@@ -1,33 +1,15 @@
 import React, { useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty, Tabs } from "antd";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty, Alert } from "antd";
 import { useSelector } from "react-redux";
 import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
-import Classes from "./School_Admin/Academic_Management/Classes";
-import Subjects from "./School_Admin/Academic_Management/Subjects";
-import ExamSchedule from "./School_Admin/Exams_&_Grades/ExamSchedule";
-import AllStudentsAttendance from "./School_Admin/Attendance/AllStudentsAttendance";
-import StaffAttendance from "./School_Admin/Attendance/StaffAttendance";
-import Profile from "./Profile";
-import VicePrincipalReports from "./Vice_Principal/VicePrincipalReports";
-import { Navigate, useLocation } from "react-router-dom";
-import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty } from "antd";
-import { useSelector } from "react-redux";
-import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
-import Books from "./School_Admin/Library/Books";
-import IssueBook from "./School_Admin/Library/IssueBook";
-import LibraryMembers from "./Librarian/LibraryMembers";
-import LibraryReports from "./Librarian/LibraryReports";
 
 const { Title, Text } = Typography;
 
 const roleConfig = {
-  principal: {
-    title: "Principal Portal",
-    modules: ["School Overview", "Staff Management", "Student Management", "Academic Reports"],
-  },
   viceprincipal: {
     title: "Vice Principal Portal",
+    subtitle: "Academic quality, attendance discipline, and operational coordination.",
     modules: [
       { title: "Academic Management", path: "viceprincipal/academics" },
       { title: "Exams & Grades", path: "viceprincipal/exams" },
@@ -39,39 +21,73 @@ const roleConfig = {
   },
   subjectcoordinator: {
     title: "Subject Coordinator Portal",
-    modules: ["Subjects", "Teacher Assignment", "Class Assignment", "Exams & Grades"],
+    subtitle: "Subject planning, syllabus health, and teacher alignment.",
+    modules: [
+      { title: "Subjects", path: "subjectcoordinator/subjects" },
+      { title: "Teacher Allocation", path: "subjectcoordinator/teacher-allocation" },
+      { title: "Class Mapping", path: "subjectcoordinator/class-mapping" },
+      { title: "Assessments", path: "subjectcoordinator/assessments" },
+    ],
   },
   librarian: {
     title: "Librarian Portal",
-    modules: ["Book Catalog", "Issue / Return", "Fine Management", "Library Reports"],
+    subtitle: "Catalog operations, circulation tracking, and member activity.",
+    modules: [
+      { title: "Book Catalog", path: "librarian/book-catalog" },
+      { title: "Issue / Return", path: "librarian/issue-return" },
+      { title: "Members", path: "librarian/members" },
+      { title: "Reports", path: "librarian/reports" },
+    ],
   },
   hostelwarden: {
     title: "Hostel Warden Portal",
-    modules: ["Hostel Rooms", "Student Allocation", "Attendance", "Visitor Log"],
+    subtitle: "Room occupancy, hostel discipline, and student safety.",
+    modules: [
+      { title: "Rooms", path: "hostelwarden/rooms" },
+      { title: "Allocations", path: "hostelwarden/allocations" },
+      { title: "Attendance", path: "hostelwarden/attendance" },
+      { title: "Visitors", path: "hostelwarden/visitors" },
+    ],
   },
   transportmanager: {
     title: "Transport Manager Portal",
-    modules: ["Routes", "Vehicles", "Drivers", "Fuel & Maintenance"],
-  },
-  examcoordinator: {
-    title: "Exam Coordinator Portal",
-    modules: ["Exam Creation", "Question Bank", "Scheduling", "Result Reports"],
+    subtitle: "Route planning, fleet usage, and trip monitoring.",
+    modules: [
+      { title: "Routes", path: "transportmanager/routes" },
+      { title: "Vehicles", path: "transportmanager/vehicles" },
+      { title: "Drivers", path: "transportmanager/drivers" },
+      { title: "Fuel & Maintenance", path: "transportmanager/maintenance" },
+    ],
   },
   receptionist: {
     title: "Receptionist Portal",
-    modules: ["Visitor Management", "Enquiries", "Call Logs", "Notifications"],
-  },
-  itsupport: {
-    title: "IT Support Portal",
-    modules: ["System Maintenance", "Support Tickets", "Network Status", "System Logs"],
+    subtitle: "Front-office activity, inquiry response, and visitor handling.",
+    modules: [
+      { title: "Visitors", path: "receptionist/visitors" },
+      { title: "Enquiries", path: "receptionist/enquiries" },
+      { title: "Call Logs", path: "receptionist/calls" },
+      { title: "Broadcasts", path: "receptionist/broadcasts" },
+    ],
   },
   counselor: {
     title: "Counselor Portal",
-    modules: ["Student Profiles", "Counseling Sessions", "Appointments", "Reports"],
+    subtitle: "Wellness tracking, counseling history, and intervention planning.",
+    modules: [
+      { title: "Student Profiles", path: "counselor/students" },
+      { title: "Sessions", path: "counselor/sessions" },
+      { title: "Appointments", path: "counselor/appointments" },
+      { title: "Reports", path: "counselor/reports" },
+    ],
   },
   security: {
     title: "Security Portal",
-    modules: ["Visitor Entry", "Gate Logs", "Shift Attendance", "Emergency Alerts"],
+    subtitle: "Gate controls, shift logs, and incident readiness.",
+    modules: [
+      { title: "Entry Register", path: "security/entry-register" },
+      { title: "Gate Logs", path: "security/gate-logs" },
+      { title: "Shift Attendance", path: "security/shift-attendance" },
+      { title: "Emergency Alerts", path: "security/alerts" },
+    ],
   },
 };
 
@@ -88,138 +104,66 @@ const RoleDynamicPortal = () => {
 
   const routeParts = location.pathname.split("/").filter(Boolean);
   const rolePathIndex = routeParts.findIndex((part) => part === roleKey);
-  const relativePath =
-    rolePathIndex >= 0 ? routeParts.slice(rolePathIndex + 1).join("/") : "";
-  const section = relativePath || "dashboard";
+  const relativePath = rolePathIndex >= 0 ? routeParts.slice(rolePathIndex + 1).join("/") : "";
+  const activeSection = relativePath || "dashboard";
 
   const config = roleConfig[roleKey] || {
-    title: `${roleName} Workspace`,
-    modules: permissions.map((perm) => perm.module),
+    title: `${roleName} Portal`,
+    subtitle: "Role specific workspace.",
+    modules: [],
   };
 
-  const visibleModules = useMemo(() => {
-    if (Array.isArray(config.modules) && config.modules.length > 0) {
-      return config.modules.map((module) =>
-        typeof module === "string" ? { title: module, path: `${roleKey}/${module.toLowerCase()}` } : module
-      );
-    }
-    return [];
-  }, [config.modules, roleKey]);
+  const modules = useMemo(() => config.modules || [], [config.modules]);
 
-  const vicePrincipalContent = useMemo(() => {
-    if (roleKey !== "viceprincipal") return null;
-
-    switch (relativePath) {
-      case "academics":
-        return (
-          <Card title="Academic Management">
-            <Tabs
-              defaultActiveKey="classes"
-              items={[
-                { key: "classes", label: "Classes", children: <Classes /> },
-                { key: "subjects", label: "Subjects", children: <Subjects /> },
-              ]}
-            />
-          </Card>
-        );
-      case "exams":
-        return (
-          <Card title="Exams & Grades">
-            <ExamSchedule />
-          </Card>
-        );
-      case "attendance/students":
-        return (
-          <Card title="Student Attendance">
-            <AllStudentsAttendance />
-          </Card>
-        );
-      case "attendance/staff":
-        return (
-          <Card title="Teacher Attendance">
-            <StaffAttendance />
-          </Card>
-        );
-      case "reports":
-        return (
-          <Card title="Vice Principal Reports">
-            <VicePrincipalReports />
-          </Card>
-        );
-      case "profile":
-        return <Profile />;
-      default:
-        return null;
-    }
-  }, [relativePath, roleKey]);
-
-  if (roleKey === "librarian") {
-    const librarianViews = {
-      dashboard: <RoleDashboardOverview titlePrefix="Librarian Dashboard" />,
-      books: <Books />,
-      records: <IssueBook />,
-      members: <LibraryMembers />,
-      reports: <LibraryReports />,
-    };
-
-    if (section === "librarian") {
-      return <Navigate to="/librarian/books" replace />;
-    }
-
-    return librarianViews[section] || <Navigate to="/librarian/books" replace />;
+  if (!roleConfig[roleKey]) {
+    return <Navigate to="/dashboard/workspace" replace />;
   }
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>
       <Card>
         <Title level={3} style={{ marginBottom: 4 }}>{config.title}</Title>
-        <Text type="secondary">Active section: {section}</Text>
+        <Text type="secondary">{config.subtitle}</Text>
         <div style={{ marginTop: 12 }}>
           <Tag color="blue">Role: {roleName}</Tag>
-          <Tag color="purple">Section: {section}</Tag>
+          <Tag color="purple">Section: {activeSection}</Tag>
         </div>
       </Card>
 
-      {!vicePrincipalContent ? (
-        <Row gutter={[16, 16]}>
-          {visibleModules.length ? (
-            visibleModules.map((module) => (
-              <Col xs={24} md={12} xl={8} key={module.title}>
-                <Card
-                  title={module.title}
-                  extra={<Tag color="green">Active</Tag>}
-                  actions={[
-                    <Button type="link" key="open" onClick={() => navigate(`/dashboard/${module.path}`)}>
-                      Open
-                    </Button>,
-                    <Button
-                      type="link"
-                      key="report"
-                      onClick={() => navigate(`/dashboard/${roleKey}/reports?module=${encodeURIComponent(module.title)}`)}
-                    >
-                      Report
-                    </Button>,
-                  ]}
-                >
-                  <Text type="secondary">
-                    Manage {module.title.toLowerCase()} operations through this module.
-                  </Text>
-                </Card>
-              </Col>
-            ))
-          ) : (
-            <Col span={24}>
+      {activeSection !== "dashboard" && (
+        <Alert
+          type="info"
+          showIcon
+          message="Dedicated module pages are being enabled role-wise."
+          description="For now, use module shortcuts below to navigate within your role scope."
+        />
+      )}
+
+      <Row gutter={[16, 16]}>
+        {modules.length ? (
+          modules.map((module) => (
+            <Col xs={24} md={12} xl={8} key={module.title}>
               <Card
-                title="Module Setup Pending"
+                title={module.title}
+                extra={<Tag color="green">Role Specific</Tag>}
+                actions={[
+                  <Button type="link" key="open" onClick={() => navigate(`/dashboard/${module.path}`)}>
+                    Open
+                  </Button>,
+                ]}
               >
-                <Empty description="No modules configured yet for this role" />
+                <Text type="secondary">Access only {roleName} workflows for {module.title.toLowerCase()}.</Text>
               </Card>
             </Col>
-          )}
-        </Row>
-      ) : (
-        vicePrincipalContent
-      )}
+          ))
+        ) : (
+          <Col span={24}>
+            <Card title="No modules configured">
+              <Empty description="Module setup pending for this role." />
+            </Card>
+          </Col>
+        )}
+      </Row>
 
       <RoleDashboardOverview titlePrefix={`${roleName} Dashboard`} />
 
