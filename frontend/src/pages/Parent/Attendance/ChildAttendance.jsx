@@ -14,7 +14,7 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
-import { fetchMyAttendance } from "../../features/attendanceSlice";
+import { fetchMyAttendance } from "../../../features/attendanceSlice.js";
 import { fetchMyChildren } from "../../features/studentPortalSlice";
 
 const { Title, Text } = Typography;
