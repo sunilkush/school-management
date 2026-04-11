@@ -179,7 +179,7 @@ const ChildGrades = lazy(() => import("./pages/Parent/Grades/ChildGrades.jsx"));
 const ChildHomework = lazy(() => import("./pages/Parent/Homework/ChildHomework.jsx"));
 const ChildMessages = lazy(() => import("./pages/Parent/Messages/ChildMessages.jsx"));
 const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.jsx"));
-
+const ParentFees = lazy(() => import("./pages/Parent/Fee/ParentFees.jsx"));
 // Other
 const UserRegister = lazy(() => import("./pages/UserRegister.jsx"));
 const RoleWorkspace = lazy(() => import("./pages/RoleWorkspace.jsx"));
@@ -543,7 +543,7 @@ const router = createBrowserRouter([
               { path: "attendance", element: <ChildAttendancePage /> },
               { path: "grades", element: <ChildGrades /> },
               { path: "homework", element: <ChildHomework /> },
-              { path: "fees", element: <FeeStudent /> },
+               { path: "fees", element: <ParentFees /> },
               { path: "exams", element: <ParentExamsPage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <ChildMessages /> },

@@ -950,14 +950,14 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
 });
 
 const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
-  // 🔐 Step 1: Find student by logged-in user
+  // 🔐 Step 1: Find student
   const student = await Student.findOne({ userId: req.user._id }).select("_id");
 
   if (!student) {
     throw new ApiError(404, "Student profile not found");
   }
 
-  // 🔐 Step 2: Get active academic year
+  // 🔐 Step 2: Active academic year
   const academicYear = await AcademicYear.findOne({
     schoolId: req.user.schoolId,
     isActive: true,
@@ -967,15 +967,16 @@ const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Active academic year not found");
   }
 
-  // 🔐 Step 3: Find enrollment
+  // 🔐 Step 3: Enrollment
   const enrollment = await StudentEnrollment.findOne({
     studentId: student._id,
     schoolId: req.user.schoolId,
     academicYearId: academicYear._id,
-  }).select("_id registrationNumber schoolClassId sectionId")
-  .populate("schoolClassId", "name")
-  .populate("sectionId", "name")
-  .populate("academicYearId", "name");
+  })
+    .select("_id registrationNumber schoolClassId sectionId academicYearId")
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .populate("academicYearId", "name"); // ✅ already populated
 
   if (!enrollment) {
     throw new ApiError(404, "Student enrollment not found");
@@ -988,9 +989,11 @@ const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
         studentId: student._id,
         enrollmentId: enrollment._id,
         registrationNumber: enrollment.registrationNumber,
-        schoolClassId: enrollment.schoolClassId,
-        sectionId: enrollment.sectionId,
-        academicYearId: academicYear._id,
+
+        schoolClass: enrollment.schoolClassId, // { _id, name }
+        section: enrollment.sectionId,         // { _id, name }
+
+        academicYear: enrollment.academicYearId, // ✅ FIXED (name bhi aayega)
       },
       "Student enrollment fetched successfully"
     )

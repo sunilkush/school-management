@@ -28,7 +28,13 @@ const defaultStudentInfo = {
   motherName: "",
   motherMobile: "",
 };
-
+const getDisplayValue = (value) => {
+  if (!value) return "-";
+  if (typeof value === "object") {
+    return value?.name || value?.title || value?._id || "-";
+  }
+  return value;
+};
 const Profile = () => {
   const dispatch = useDispatch();
   const { user, loading: authLoading } = useSelector((state) => state.auth);
@@ -168,8 +174,16 @@ const Profile = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
             <InfoBadge icon={<GraduationCap className="h-4 w-4" />} label="Registration" value={enrollment?.registrationNumber || "-"} />
-            <InfoBadge icon={<BookOpen className="h-4 w-4" />} label="Class" value={enrollment?.schoolClassId || "-"} />
-            <InfoBadge icon={<CalendarDays className="h-4 w-4" />} label="Academic Year" value={enrollment?.academicYearId || "-"} />
+             <InfoBadge
+    icon={<BookOpen className="h-4 w-4" />}
+    label="Class"
+    value={
+      enrollment?.schoolClass?.name
+        ? `${enrollment.schoolClass.name} - ${enrollment?.section?.name || ""}`
+        : "-"
+    }
+  />
+            <InfoBadge icon={<CalendarDays className="h-4 w-4" />} label="Academic Year" value={getDisplayValue(enrollment?.academicYear.name) || "-"} />
           </div>
         </div>
       </div>
@@ -204,23 +218,23 @@ const Profile = () => {
           )}
         </form>
 
-        <div className="space-y-5">
-          <ProfileCard
-            title="Father Details"
-            rows={[
-              { label: "Name", value: studentInfo.fatherName },
-              { label: "Mobile", value: studentInfo.fatherMobile },
-            ]}
-          />
+       <div className="space-y-5">
+  <ProfileCard
+    title="Father Details"
+    rows={[
+      { label: "Name", value: studentInfo?.fatherId?.name || "-" },
+      { label: "Mobile", value: studentInfo?.fatherId?.phone || "-" },
+    ]}
+  />
 
-          <ProfileCard
-            title="Mother Details"
-            rows={[
-              { label: "Name", value: studentInfo.motherName },
-              { label: "Mobile", value: studentInfo.motherMobile },
-            ]}
-          />
-        </div>
+  <ProfileCard
+    title="Mother Details"
+    rows={[
+      { label: "Name", value: studentInfo?.motherId?.name || "-" },
+      { label: "Mobile", value: studentInfo?.motherId?.phone || "-" },
+    ]}
+  />
+</div>
       </div>
     </div>
   );

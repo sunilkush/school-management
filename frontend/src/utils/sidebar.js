@@ -289,7 +289,7 @@ export const sidebarMenu = {
     { title: "Timetable", path: "student/timetable", icon: CalendarClock },
     { title: "Library", path: "student/library", icon: BookOpen },
     { title: "Transport", path: "student/transport", icon: Bus },
-    { title: "Fees", path: "student/fees", icon: CreditCard },
+    //{ title: "Fees", path: "student/fees", icon: CreditCard },
   ],
 
   /* ================= PARENT ================= */
@@ -302,11 +302,10 @@ export const sidebarMenu = {
     {
       title: "Examinations",
       icon: GraduationCap,
-      subMenu: [
-        { title: "Exam Hub", path: "student/exams" },
-        { title: "Live Exams", path: "student/exams/exam-live" },
-        { title: "Exam Review", path: "student/exams/attempt-review" },
+       subMenu: [
+        { title: "Exam Hub", path: "parent/exams" },
       ],
+
     },
     { title: "Fees", path: "parent/fees", icon: CreditCard },
     { title: "Messages", path: "parent/message", icon: MessageCircle },
