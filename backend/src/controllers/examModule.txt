@@ -127,7 +127,7 @@ Store a snapshot of questions when exam is published to prevent later edits affe
 const ExamSchema = new mongoose.Schema({
   schoolId: { type: mongoose.Schema.Types.ObjectId, ref: 'School', required: true },
   title: String,
-  classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class' },
+  schoolClassId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class' },
   sectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section' },
   subjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject' },
   examType: { type: String, enum: ['objective','subjective','mixed'], default: 'objective' },

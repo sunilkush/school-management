@@ -9,9 +9,9 @@ const feeStructureSchema = new mongoose.Schema(
             index: true,
         },
 
-        classId: {
+        schoolClassId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Class",
+            ref: "SchoolClass",
             required: true,
             index: true,
         },
@@ -20,18 +20,20 @@ const feeStructureSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "AcademicYear",
             required: true,
+            index: true,
         },
 
         feeHeadId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "FeeHead",
             required: true,
+            index: true,
         },
 
         amount: {
             type: Number,
             required: true,
-            min: 0,
+            min: [0, "Amount cannot be negative"],
         },
 
         frequency: {
@@ -39,6 +41,27 @@ const feeStructureSchema = new mongoose.Schema(
             enum: ["monthly", "quarterly", "yearly"],
             required: true,
         },
+
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+
+        updatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+        installments: [
+            {
+                month: String,
+                amount: Number,
+            }
+        ],
     },
     {
         timestamps: true,
@@ -46,16 +69,23 @@ const feeStructureSchema = new mongoose.Schema(
     }
 );
 
-/**
- * Prevent duplicate fee structure entries
- * Same school + class + session + feeHead should exist only once
- */
+/* ================= INDEX ================= */
+
+// ✅ Prevent duplicate entry
 feeStructureSchema.index(
-    { schoolId: 1, classId: 1, sessionId: 1, feeHeadId: 1 },
-    { unique: true }
+    {
+        schoolId: 1,
+        schoolClassId: 1,
+        academicYearId: 1,
+        feeHeadId: 1,
+    },
+    {
+        unique: true,
+    }
 );
 
-export const FeeStructure = mongoose.model(
-    "FeeStructure",
-    feeStructureSchema
-);
+/* ================= SAFE EXPORT ================= */
+
+export const FeeStructure =
+    mongoose.models.FeeStructure ||
+    mongoose.model("FeeStructure", feeStructureSchema);

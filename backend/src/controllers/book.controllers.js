@@ -3,114 +3,142 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Book } from "../models/Books.model.js";
 
-const createBook = asyncHandler(async (req, res) => {
-    try {
-        const { schoolId, title, author, ISBN, availableCopies } = req.body;
+// helper
+const resolveSchoolId = (req) =>
+  req.user?.schoolId || req.body?.schoolId || req.query?.schoolId;
 
-        if ([schoolId, title, author, ISBN].some((field) => typeof field === "string" && field.trim() === "") || availableCopies == null) {
-            throw new ApiError(400, "All fields are required.");
-        }
+// ✅ CREATE
+export const createBook = asyncHandler(async (req, res) => {
+  const schoolId = resolveSchoolId(req);
 
-        const bookExists = await Book.findOne({ ISBN });
-        if (bookExists) {
-            throw new ApiError(400, "Book with this ISBN already exists.");
-        }
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
 
-        const book = new Book({ schoolId, title, author, ISBN, availableCopies });
-        const createBook = await book.save();
+  const {
+    title,
+    author,
+    publisher,
+    isbn,
+    category,
+    totalCopies,
+    availableCopies,
+    shelfLocation,
+    academicYearId,
+  } = req.body;
 
-        if (!createBook) {
-            throw new ApiError(400, "Book not found!");
-        }
+  // 🔹 validation
+  if (!title || !author || !publisher || !category || !shelfLocation) {
+    throw new ApiError(400, "Required fields missing");
+  }
 
-        return res.status(201).json(
-            new ApiResponse(200, createBook, "Book added successfully!")
-        );
+  // 🔹 ISBN unique check
+  if (isbn) {
+    const exists = await Book.findOne({ isbn });
+    if (exists) throw new ApiError(400, "Book with this ISBN already exists");
+  }
 
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
-    }
+  const book = await Book.create({
+    schoolId,
+    academicYearId: academicYearId || null,
+    title,
+    author,
+    publisher,
+    isbn,
+    category,
+    totalCopies: Number(totalCopies) || 1,
+    availableCopies:
+      availableCopies !== undefined
+        ? Number(availableCopies)
+        : Number(totalCopies) || 1,
+    shelfLocation,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, book, "Book created successfully"));
 });
 
-const getAllBooks = asyncHandler(async (req, res) => {
-    try {
-        const books = await Book.find().populate("schoolId", "name");
+// ✅ GET ALL
+export const getAllBooks = asyncHandler(async (req, res) => {
+  const schoolId = resolveSchoolId(req);
 
-        return res.status(200).json(
-            new ApiResponse(200, books, "Books retrieved successfully!")
-        );
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
-    }
+  const filter = schoolId ? { schoolId } : {};
+
+  const books = await Book.find(filter)
+    .populate("schoolId", "name")
+    .sort({ createdAt: -1 });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, books, "Books fetched successfully"));
 });
 
-const getBookById = asyncHandler(async (req, res) => {
-    try {
-        const { bookId } = req.params;
-        const book = await Book.findById(bookId).populate("schoolId", "name");
+// ✅ GET SINGLE
+export const getBookById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-        if (!book) {
-            throw new ApiError(400, "Book not found");
-        }
+  const book = await Book.findById(id).populate("schoolId", "name");
 
-        return res.status(200).json(
-            new ApiResponse(200, book, "Book found successfully!")
-        );
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
-    }
+  if (!book) throw new ApiError(404, "Book not found");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, book, "Book fetched successfully"));
 });
 
-const updateBook = asyncHandler(async (req, res) => {
-    try {
-        const { bookId } = req.params;
-        const { schoolId, title, author, ISBN, availableCopies } = req.body;
+// ✅ UPDATE
+export const updateBook = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-        if ([schoolId, title, author, ISBN].some((field) => typeof field === "string" && field.trim() === "") || availableCopies == null) {
-            throw new ApiError(400, "All fields are required.");
-        }
+  const updates = {};
 
-        const updatedBook = await Book.findByIdAndUpdate(
-            bookId, 
-            { schoolId, title, author, ISBN, availableCopies }, 
-            { new: true }
-        );
+  const fields = [
+    "title",
+    "author",
+    "publisher",
+    "isbn",
+    "category",
+    "totalCopies",
+    "availableCopies",
+    "shelfLocation",
+    "academicYearId",
+  ];
 
-        if (!updatedBook) {
-            throw new ApiError(400, "Book not found!");
-        }
-
-        return res.status(200).json(
-            new ApiResponse(200, updatedBook, "Book updated successfully!")
-        );
-
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
+  fields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      updates[field] = req.body[field];
     }
+  });
+
+  // 🔹 ISBN duplicate check
+  if (updates.isbn) {
+    const exists = await Book.findOne({
+      isbn: updates.isbn,
+      _id: { $ne: id },
+    });
+    if (exists) throw new ApiError(400, "ISBN already exists");
+  }
+
+  const updatedBook = await Book.findByIdAndUpdate(id, updates, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updatedBook) throw new ApiError(404, "Book not found");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedBook, "Book updated successfully"));
 });
 
-const deleteBook = asyncHandler(async (req, res) => {
-    try {
-        const { bookId } = req.params;
-        const bookDelete = await Book.findByIdAndDelete(bookId);
+// ✅ DELETE
+export const deleteBook = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-        if (!bookDelete) {
-            throw new ApiError(400, "Book not found!");
-        }
+  const deletedBook = await Book.findByIdAndDelete(id);
 
-        return res.status(200).json(
-            new ApiResponse(200, bookDelete, "Book deleted successfully!")
-        );
+  if (!deletedBook) throw new ApiError(404, "Book not found");
 
-    } catch (error) {
-        throw new ApiError(500, error.message || "Internal server error");
-    }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Book deleted successfully"));
 });
-
-export {
-    createBook,
-    getAllBooks,
-    getBookById,
-    updateBook,
-    deleteBook
-};

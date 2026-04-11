@@ -1,5 +1,5 @@
 // controllers/activityController.js
-import ActivityLog from "../models/ActivityLog.js";
+import ActivityLog from "../models/ActivityLog.model.js";
 import { User } from "../models/user.model.js";
 
 // Create a new activity log

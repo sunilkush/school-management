@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import {
   Card,
   Table,
@@ -19,9 +20,9 @@ import {
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
-import { activeUser } from "../../../features/authSlice.js";
 import { submitAttendance } from "../../../features/attendanceSlice.js";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
+
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -29,26 +30,26 @@ const { Option } = Select;
 const StudentAttendance = () => {
 
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const { schoolStudents = [], loading } = useSelector(state => state.students);
   const { user } = useSelector(state => state.auth);
   const { classAssignTeacher = [] } = useSelector(state => state.class);
-
+  const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
   const schoolId = user?.school?._id;
-  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
-  const academicYearId = storeAcadmicYear
-    ? JSON.parse(storeAcadmicYear)._id
-    : null;
+  const academicYearId = selectedAcademicYear?._id;
+ 
 
   const [selectedClassObj, setSelectedClassObj] = useState(null);
-  const [selectedSubject, setSelectedSubject] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
   const [attendance, setAttendance] = useState({});
+  const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const prefilledClassId = query.get("classId");
 
   /* ================= INIT ================= */
 
   useEffect(() => {
-    dispatch(activeUser());
+   
 
     if (schoolId && academicYearId && user?._id) {
       dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
@@ -76,7 +77,7 @@ const StudentAttendance = () => {
         if (sec.teacherId?._id === user._id) {
           result.push({
             key: `${cls._id}_${sec.sectionId?._id}`,
-            classId: cls._id,
+            schoolClassId: cls._id,
             className: cls.name,
             sectionId: sec.sectionId?._id,
             sectionName: sec.sectionId?.name,
@@ -91,7 +92,7 @@ const StudentAttendance = () => {
           cls.sections?.forEach(sec => {
             result.push({
               key: `${cls._id}_${sec.sectionId?._id}_${sub.subjectId?._id}`,
-              classId: cls._id,
+              schoolClassId: cls._id,
               className: cls.name,
               sectionId: sec.sectionId?._id,
               sectionName: sec.sectionId?.name,
@@ -113,9 +114,12 @@ const StudentAttendance = () => {
 
   useEffect(() => {
     if (assignedClassSections.length && !selectedClassObj) {
-      setSelectedClassObj(assignedClassSections[0]);
+      const prefilledClass = prefilledClassId
+        ? assignedClassSections.find((item) => item.schoolClassId === prefilledClassId)
+        : null;
+      setSelectedClassObj(prefilledClass || assignedClassSections[0]);
     }
-  }, [assignedClassSections,selectedClassObj]);
+  }, [assignedClassSections, selectedClassObj, prefilledClassId]);
 
   /* ================= FILTER STUDENTS ================= */
 
@@ -124,7 +128,7 @@ const StudentAttendance = () => {
     if (!selectedClassObj) return [];
 
     return schoolStudents.filter(s =>
-      s.class?._id === selectedClassObj.classId &&
+      s.class?._id === selectedClassObj.schoolClassId &&
       s.section?._id === selectedClassObj.sectionId
     );
 
@@ -186,8 +190,9 @@ const StudentAttendance = () => {
       records,
       role: "teacher",
       date: attendanceDate.toISOString(),
-      classId: selectedClassObj.classId,
+      schoolClassId: selectedClassObj.schoolClassId,
       sectionId: selectedClassObj.sectionId,
+      // eslint-disable-next-line no-undef
       subjectId: selectedClassObj.subjectId || selectedSubject,
       
       userId: filteredStudents[0]?.userId || user?._id

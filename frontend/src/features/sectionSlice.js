@@ -1,171 +1,327 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import apiClient from "../api/httpClient";
 
-const Api_Base_Url = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL;
 
-// ======================= SECTION THUNKS ======================= //
+// 🔐 Token helper
 
-// 🔹 Fetch Sections
-export const fetchSection = createAsyncThunk(
-  "section/fetchSection",
-  async ({ schoolId, classId, academicYearId }, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const params = new URLSearchParams();
-      if (schoolId) params.append("schoolId", schoolId);
-      if (classId) params.append("classId", classId);
-      if (academicYearId) params.append("academicYearId", academicYearId);
 
-      const res = await axios.get(`${Api_Base_Url}/section?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      return res.data.data || res.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-// 🔹 Create Section
+// ==============================
+// 🔹 CREATE SECTION
+// ==============================
 export const createSection = createAsyncThunk(
-  "section/createSection",
-  async (sectionData, { rejectWithValue }) => {
+  "section/create",
+  async (data, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/section`, sectionData, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      return res.data.data || res.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      const res = await apiClient.post(`/sections`, data, {      });
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Create section failed"
+      );
     }
   }
 );
 
-// ======================= SUBJECT THUNKS ======================= //
 
-// 🔹 Fetch Subjects
-export const fetchSubjects = createAsyncThunk(
-  "subject/fetchSubjects",
-  async ({ page = 1, limit = 10, search = "", schoolId, isGlobal } = {}, { rejectWithValue }) => {
+// ==============================
+// 🔹 FETCH ALL SECTIONS
+// ==============================
+export const fetchSections = createAsyncThunk(
+  "section/fetchAll",
+  async (params, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const params = new URLSearchParams({ page, limit, search });
-      if (schoolId) params.append("schoolId", schoolId);
-      if (isGlobal !== undefined) params.append("isGlobal", isGlobal);
-
-      const res = await axios.get(`${Api_Base_Url}/subject/all?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await apiClient.get(`/sections`, {        params, // { schoolId, academicYearId, schoolClassId }
       });
-
-      return res.data.data || res.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Fetch sections failed"
+      );
     }
   }
 );
 
-// 🔹 Create Subject
-export const createSubject = createAsyncThunk(
-  "subject/createSubject",
-  async (subjectData, { rejectWithValue }) => {
+
+// ==============================
+// 🔹 FETCH SINGLE
+// ==============================
+export const fetchSectionById = createAsyncThunk(
+  "section/fetchOne",
+  async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/subject/create`, subjectData, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      return res.data.data || res.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      const res = await apiClient.get(`/sections/${id}`, {      });
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Fetch section failed"
+      );
     }
   }
 );
 
-// 🔹 Assign Teachers to Subject
-export const assignTeachersToSubject = createAsyncThunk(
-  "subject/assignTeachers",
-  async ({ subjectId, assignments }, { rejectWithValue }) => {
+
+// ==============================
+// 🔹 UPDATE SECTION
+// ==============================
+export const updateSection = createAsyncThunk(
+  "section/update",
+  async ({ id, data }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/subject/assign-teachers/${subjectId}`, { assignments }, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      return res.data.data || res.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      const res = await apiClient.put(`/sections/${id}`, data, {      });
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Update failed"
+      );
     }
   }
 );
 
-// 🔹 Assign Schools to Subject
-export const assignSchoolsToSubject = createAsyncThunk(
-  "subject/assignSchools",
-  async ({ subjectId, schoolIds }, { rejectWithValue }) => {
+
+// ==============================
+// 🔹 DELETE SECTION
+// ==============================
+export const deleteSection = createAsyncThunk(
+  "section/delete",
+  async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/subject/assign-schools/${subjectId}`, { schoolIds }, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      return res.data.data || res.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      await apiClient.delete(`/sections/${id}`, {      });
+      return id;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Delete failed"
+      );
     }
   }
 );
 
-// ======================= SLICE ======================= //
 
-const slice = createSlice({
-  name: "school",
+// ==============================
+// 🔥 ASSIGN TEACHER
+// ==============================
+export const assignClassTeacher = createAsyncThunk(
+  "section/assignTeacher",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(
+        `/sections/assign-teacher`,
+        data
+      );
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Assign teacher failed"
+      );
+    }
+  }
+);
+
+
+// ==============================
+// 🔥 ADD STUDENT
+// ==============================
+export const addStudentToSection = createAsyncThunk(
+  "section/addStudent",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(
+        `/sections/add-student`,
+        data,
+        {        }
+      );
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Add student failed"
+      );
+    }
+  }
+);
+
+
+// ==============================
+// 🔥 REMOVE STUDENT
+// ==============================
+export const removeStudentFromSection = createAsyncThunk(
+  "section/removeStudent",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(
+        `/sections/remove-student`,
+        data,
+        {        }
+      );
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Remove student failed"
+      );
+    }
+  }
+);
+export const addSubjectToSection = createAsyncThunk(
+  "section/addSubjectToSection",
+  async ({ schoolClassId, sectionId, subjectIds }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(
+        `/sections/add-subjects`,
+        {
+          schoolClassId,
+          sectionId,
+          subjectIds,
+        }
+      );
+
+      return res.data.data; // updated section
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to assign subjects"
+      );
+    }
+  }
+);
+
+export const assignSubjectTeacher = createAsyncThunk(
+  "section/assignSubjectTeacher",
+  async ({ sectionId, subjectId, teacherId }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(
+        `/sections/assign-subject-teacher`,
+        {sectionId, subjectId, teacherId}
+      );
+      return res.data.data; // updated section
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to assign subject teacher"
+        );
+      }
+    }
+    );
+// ==============================
+// 🔥 SLICE
+// ==============================
+const sectionSlice = createSlice({
+  name: "section",
   initialState: {
     loading: false,
     error: null,
-    sectionList: [],
-    subjects: [],
-    pagination: {},
+    sections: [],
+    selected: null,
+    success: false,
+    sectionSubjects: {},
   },
-  reducers: {},
+  reducers: {
+    resetSectionState: (state) => {
+      state.error = null;
+      state.success = false;
+    },
+  },
   extraReducers: (builder) => {
-    // ---------- SECTION ----------
     builder
-      .addCase(fetchSection.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchSection.fulfilled, (state, action) => { state.loading = false; state.sectionList = action.payload || []; })
-      .addCase(fetchSection.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
-      .addCase(createSection.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(createSection.fulfilled, (state, action) => { state.loading = false; state.sectionList.push(action.payload); })
-      .addCase(createSection.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-
-      // ---------- SUBJECT ----------
-      .addCase(fetchSubjects.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchSubjects.fulfilled, (state, action) => {
-        state.loading = false;
-        state.subjects = action.payload.subjects || [];
-        state.pagination = action.payload.pagination || {};
+      // 🔹 FETCH ALL
+      .addCase(fetchSections.pending, (state) => {
+        state.loading = true;
       })
-      .addCase(fetchSubjects.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-
-      .addCase(createSubject.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(createSubject.fulfilled, (state, action) => { state.loading = false; state.subjects.unshift(action.payload); })
-      .addCase(createSubject.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-
-      .addCase(assignTeachersToSubject.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(assignTeachersToSubject.fulfilled, (state, action) => {
+      .addCase(fetchSections.fulfilled, (state, action) => {
         state.loading = false;
-        const idx = state.subjects.findIndex(s => s._id === action.payload._id);
-        if (idx !== -1) state.subjects[idx] = action.payload;
+        state.sections = action.payload || [];
       })
-      .addCase(assignTeachersToSubject.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-
-      .addCase(assignSchoolsToSubject.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(assignSchoolsToSubject.fulfilled, (state, action) => {
+      .addCase(fetchSections.rejected, (state, action) => {
         state.loading = false;
-        const idx = state.subjects.findIndex(s => s._id === action.payload._id);
-        if (idx !== -1) state.subjects[idx] = action.payload;
+        state.error = action.payload;
       })
-      .addCase(assignSchoolsToSubject.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
+
+      // 🔹 CREATE
+      .addCase(createSection.fulfilled, (state, action) => {
+        state.sections.push(action.payload);
+        state.success = true;
+      })
+
+      // 🔹 UPDATE
+      .addCase(updateSection.fulfilled, (state, action) => {
+        const updated = action.payload;
+        state.sections = state.sections.map((sec) =>
+          sec._id === updated._id ? updated : sec
+        );
+        state.success = true;
+      })
+
+      // 🔹 DELETE
+      .addCase(deleteSection.fulfilled, (state, action) => {
+        state.sections = state.sections.filter(
+          (sec) => sec._id !== action.payload
+        );
+        state.success = true;
+      })
+
+      // 🔥 ASSIGN TEACHER / STUDENT
+      .addCase(assignClassTeacher.fulfilled, (state, action) => {
+        const updated = action.payload;
+        state.sections = state.sections.map((sec) =>
+          sec._id === updated._id ? updated : sec
+        );
+      })
+
+      .addCase(addStudentToSection.fulfilled, (state, action) => {
+        const updated = action.payload;
+        state.sections = state.sections.map((sec) =>
+          sec._id === updated._id ? updated : sec
+        );
+      })
+
+      .addCase(removeStudentFromSection.fulfilled, (state, action) => {
+        const updated = action.payload;
+        state.sections = state.sections.map((sec) =>
+          sec._id === updated._id ? updated : sec
+        );
+      })
+
+      // 🔹 ADD SUBJECT
+      .addCase(addSubjectToSection.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+
+      .addCase(addSubjectToSection.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+
+        const section = action.payload;
+
+        // 🔥 store subjects by sectionId
+        state.sectionSubjects[section._id] = section.subjects;
+      })
+  
+      .addCase(addSubjectToSection.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // 🔹 ASSIGN SUBJECT TEACHER
+      .addCase(assignSubjectTeacher.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+
+      .addCase(assignSubjectTeacher.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+        state.sections = state.sections.map((sec) =>
+          sec._id === action.payload._id ? action.payload : sec
+        );
+      })
+
+      .addCase(assignSubjectTeacher.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
   },
 });
 
-export default slice.reducer;
+export const { resetSectionState } = sectionSlice.actions;
+export default sectionSlice.reducer;

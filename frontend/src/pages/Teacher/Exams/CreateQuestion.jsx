@@ -17,9 +17,10 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 
-import { fetchAllSubjects } from "../../../features/subjectSlice";
+import { getAllSubjects } from "../../../features/subjectSlice";
 import { fetchAllClasses } from "../../../features/classSlice";
 import { createQuestions } from "../../../features/questionSlice";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -32,7 +33,7 @@ const CreateQuestion = () => {
   const { subjects = [] } = useSelector((state) => state.subject);
   const { classList = [] } = useSelector((state) => state.class);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(memoryStorage.getItem("user"));
   const schoolId = user?.school?._id;
 
   const [options, setOptions] = useState([]);
@@ -48,7 +49,7 @@ const CreateQuestion = () => {
   .sort((a, b) => a.name.localeCompare(b.name))
 
   useEffect(() => {
-    dispatch(fetchAllSubjects({schoolId}));
+    dispatch(getAllSubjects({schoolId}));
     dispatch(fetchAllClasses({schoolId}));
   }, [dispatch, schoolId]);
 
@@ -100,7 +101,7 @@ const CreateQuestion = () => {
         <Row gutter={16}>
           <Col md={12} xs={24}>
             <Form.Item
-              name="classId"
+              name="schoolClassId"
               label="Class"
               rules={[{ required: true }]}
             >

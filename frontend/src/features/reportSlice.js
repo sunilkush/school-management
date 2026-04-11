@@ -1,9 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import apiClient from "../api/httpClient";
 import qs from 'qs';
 
-const App_Base_Url = import.meta.env.VITE_API_URL;
-const token = localStorage.getItem('accessToken');
+
 
 // Get all reports with filters
 export const fetchReports = createAsyncThunk(
@@ -12,14 +11,12 @@ export const fetchReports = createAsyncThunk(
     try {
       // Remove empty values
       const cleaned = Object.fromEntries(
-        Object.entries(filters).filter(([v]) => v !== '' && v != null)
+        Object.entries(filters).filter(([, value]) => value !== "" && value != null)
       );
 
       const query = qs.stringify(cleaned, { addQueryPrefix: true });
 
-      const res = await axios.get(`${App_Base_Url}/report/getReport${query}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get(`/report/getReport${query}`);
 
       return res.data.data || [];
     } catch (err) {
@@ -33,9 +30,7 @@ export const createReport = createAsyncThunk(
   'reports/createReport',
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${App_Base_Url}/report/create`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.post(`/report/create`, payload);
 
       return res.data.data;
     } catch (err) {
@@ -49,9 +44,7 @@ export const deleteReport = createAsyncThunk(
   'reports/deleteReport',
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${App_Base_Url}/report/delete/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiClient.delete(`/report/delete/${id}`);
 
       return id;
     } catch (err) {
@@ -65,9 +58,7 @@ export const reportView = createAsyncThunk(
   'reports/reportView',
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${App_Base_Url}/report/view/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get(`/report/view/${id}`);
 
       return res.data.data;
     } catch (err) {
@@ -81,16 +72,12 @@ export const fetchSchoolReports = createAsyncThunk(
   "reports/fetchSchoolReports",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.get(
-        `${App_Base_Url}/report/school/${schoolId}/academic-year/${academicYearId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+      const res = await apiClient.get(
+        `/report/school/${schoolId}/academic-year/${academicYearId}`,
       );
        
-      return res.data;
+      return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: error.message });
     }

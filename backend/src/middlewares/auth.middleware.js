@@ -1,110 +1,110 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import {Role} from "../models/Roles.model.js";
+import { Role } from "../models/Roles.model.js";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv"
-dotenv.config()
 
-const auth = asyncHandler(async (req, res, next) => {
+const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
+
+const resolveRoleId = (user) => {
+  if (!user) return null;
+  if (typeof user.roleId === "string") return user.roleId;
+  if (user.roleId?._id) return user.roleId._id.toString();
+  if (typeof user.role === "string") return user.role;
+  if (user.role?._id) return user.role._id.toString();
+  return null;
+};
+
+const fetchRole = async (user) => {
+  const roleId = resolveRoleId(user);
+  if (!roleId) throw new ApiError(401, "Unauthorized. No role assigned.");
+
+  const userRole = await Role.findById(roleId).lean();
+  if (!userRole) throw new ApiError(403, "Forbidden. Role not found.");
+
+  return userRole;
+};
+
+export const auth = asyncHandler(async (req, _res, next) => {
+  if (!ACCESS_SECRET) throw new ApiError(500, "Access token secret is not configured");
+
+  const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+  if (!token) throw new ApiError(401, "Unauthorized. Access token missing.");
+
+  let decodedToken;
   try {
-    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
-   
-    if (!token) {
-     
-      return res.status(401).json(
-       new ApiError(401, "Unauthorized Token !")
-      )
-    }
-
-    const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-    console.log(decodeToken)
-    const user = await User.findById(decodeToken?._id).select("-password -refreshToken");
-
-    if (!user) {
-      
-       return res.status(401).json(
-       new ApiError(401, "Invalid Access Request")
-      )
-      
-    }
-    req.user = user
-    next()
-
-  } catch (error) {
-     
-     return res.status(401).json(
-      new ApiError(401, error?.message || "Invalid access token")
-      )
+    decodedToken = jwt.verify(token, ACCESS_SECRET);
+  } catch {
+    throw new ApiError(401, "Unauthorized. Invalid access token.");
   }
 
-})
+  const user = await User.findById(decodedToken?._id)
+    .select("-password -refreshToken")
+    .populate("roleId", "name permissions");
 
-const roleMiddleware = (allowedRoles) => {
-  return async (req, res, next) => {
+  if (!user || user.isDeleted || !user.isActive) {
+    throw new ApiError(401, "Unauthorized. User is invalid or inactive.");
+  }
 
-    let roleId = req?.user?.roleId?._id; // ✅ Extract _id
-    
+  req.user = user;
+  req.userRole = user.roleId;
+  next();
+});
 
-    try {
-      if (!roleId) {
-         return res.status(401).json(
-       new ApiError(401, "Unauthorized. No role assigned.")
-      )
-      }
+export const requireAuth = auth;
 
-      // Fetch role details using only _id
-      const userRole = await Role.findById(roleId).lean(); // ✅ Use lean() for performance
-      
-       
-      if (!userRole) {
-       
-          return res.status(403).json(
-       new ApiError(401, "Access denied. Role not found."));
-      }
-
-      if (!allowedRoles.includes(userRole.name)) {
-
-      
-        return res.status(403).json(
-          new ApiError(401, "Access denied. You do not have the necessary permissions."));
-      }
-
-      next();
-    } catch (error) {
-      return res.status(500).json({ 
-        message: "An error occurred during role validation.", 
-        error: error.message 
-      });
-    }
-  };
+export const allowPublic = (req, _res, next) => {
+  req.isPublicRoute = true;
+  next();
 };
-const authorize = (moduleName, action) => {
-  return async (req, res, next) => {
-    try {
-      const roleId = req?.user?.roleId?._id || req?.user?.role;
+   const PUBLIC_API_ROUTE_PATTERNS = [
+  /^\/user\/login$/,
+  /^\/user\/refresh-token$/,
+  /^\/user\/forgot-password$/,
+  /^\/user\/reset-password\/[^/]+$/,
+  /^\/user\/verify-email\/[^/]+$/,
+  /^\/user\/resend-verification$/,
+];
 
-      if (!roleId) {
-        return res.status(403).json({ message: "No role assigned" });
-      }
-
-      const roleData = await Role.findById(roleId).lean();
-      if (!roleData) return res.status(403).json({ message: "Role not found" });
-
-      const hasPermission = roleData.permissions.some(
-        (perm) => perm.module === moduleName && perm.actions.includes(action)
-      );
-
-      if (!hasPermission) {
-        return res.status(403).json({ message: `Permission denied for ${action} on ${moduleName}` });
-      }
-
-      next();
-    } catch (error) {
-      console.error("Authorization error:", error);
-      res.status(500).json({ message: "Internal Server Error", error: error.message });
-    }
-  };
+const isPublicApiRoute = (req) => {
+  const normalizedPath = (req.path || "").replace(/\/+$/, "") || "/";
+  return PUBLIC_API_ROUTE_PATTERNS.some((pattern) => pattern.test(normalizedPath));
+};
+export const enforceApiAuthByDefault = (req, _res, next) => {
+  if (req.method === "OPTIONS") return next();
+  if (req.isPublicRoute) return next();
+  if (isPublicApiRoute(req)) return next();
+  return auth(req, _res, next);
 };
 
-export { auth, roleMiddleware,authorize }
+export const requireRoles = (allowedRoles = []) =>
+  asyncHandler(async (req, _res, next) => {
+    const role = req.userRole?.name ? req.userRole : await fetchRole(req.user);
+
+    if (!allowedRoles.includes(role.name)) {
+      throw new ApiError(403, "Forbidden. Insufficient role access.");
+    }
+
+    req.userRole = role;
+    next();
+  });
+
+export const roleMiddleware = requireRoles;
+
+export const authorize = (moduleName, action) =>
+  asyncHandler(async (req, _res, next) => {
+    const role = req.userRole?.permissions ? req.userRole : await fetchRole(req.user);
+    const hasPermission = (role.permissions || []).some(
+      (permission) =>
+        permission.module === moduleName &&
+        Array.isArray(permission.actions) &&
+        permission.actions.includes(action)
+    );
+
+    if (!hasPermission) {
+      throw new ApiError(403, `Forbidden. Permission denied for ${action} on ${moduleName}`);
+    }
+
+    req.userRole = role;
+    next();
+  });

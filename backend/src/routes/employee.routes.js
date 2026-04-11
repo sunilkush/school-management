@@ -5,13 +5,14 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 // Define allowed roles
-const ADMIN_ROLES = ["School Admin", "Super Admin"];
-const EMPLOYEE_ROLES = ["School Admin", "Super Admin", "Teacher"];
+const ADMIN_ROLES = ["School Admin", "Super Admin", "Accountant"];
+const EMPLOYEE_ROLES = ["School Admin", "Super Admin", "Teacher", "Accountant"];
 
 // ✅ Create Employee (Only Admins & Superadmins)
 router.post("/", auth, roleMiddleware(ADMIN_ROLES), registerEmployee);
 
 // ✅ Get All Employees (Admins & Employees Can View)
+router.get("/", auth, roleMiddleware(EMPLOYEE_ROLES), getAllEmployees);
 router.get("/allEmployee", auth, roleMiddleware(EMPLOYEE_ROLES), getAllEmployees);
 
 // ✅ Get Employee by ID (Admins & Employees Can View)

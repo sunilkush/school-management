@@ -1,53 +1,149 @@
-import React from "react";
-import { Calendar, Badge } from "antd";
-import "antd/dist/reset.css";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Badge, Calendar, Card, DatePicker, Empty, Row, Spin, Statistic } from "antd";
+import dayjs from "dayjs";
+import apiClient from "../api/httpClient";
 
-// Example attendance data
-const attendanceData = {
-  "2025-09-01": "Present",
-  "2025-09-02": "Absent",
-  "2025-09-03": "Leave",
-  "2025-09-04": "Present",
-  "2025-09-05": "Present",
-  "2025-09-06": "Absent",
-};
+const ATTENDANCE_STATUSES = ["present", "absent", "leave", "late", "halfday"];
 
-// Map status to badge color
 const getBadgeStatus = (status) => {
   switch (status) {
-    case "Present":
+    case "present":
       return "success";
-    case "Absent":
+    case "absent":
       return "error";
-    case "Leave":
+    case "leave":
       return "warning";
+    case "late":
+      return "processing";
+    case "halfday":
+      return "default";
     default:
       return "default";
   }
 };
 
-// Map status to text
-const getBadgeText = (status) => status || "No Data";
+const AttendanceCalendar = ({ userId, schoolId }) => {
+  const [selectedMonth, setSelectedMonth] = useState(dayjs());
+  const [attendanceByDay, setAttendanceByDay] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-const AttendanceCalendar = () => {
+  useEffect(() => {
+    const fetchEmployeeAttendance = async () => {
+      if (!userId || !schoolId) {
+        setAttendanceByDay({});
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiClient.get("/attendance/report/monthly", {
+          params: {
+            schoolId,
+            month: selectedMonth.month() + 1,
+            year: selectedMonth.year(),
+          },
+        });
+
+        const monthlyReport = response?.data?.data || [];
+        const currentEmployeeReport = monthlyReport.find((item) => item?.userId === userId);
+        setAttendanceByDay(currentEmployeeReport?.dailyStatus || {});
+      } catch (err) {
+        setError(err?.response?.data?.message || "Attendance fetch failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployeeAttendance();
+  }, [userId, schoolId, selectedMonth]);
+
+  const summary = useMemo(() => {
+    const initial = {
+      totalDays: 0,
+      present: 0,
+      absent: 0,
+      leave: 0,
+      late: 0,
+      halfday: 0,
+    };
+
+    Object.values(attendanceByDay).forEach((status) => {
+      initial.totalDays += 1;
+      if (ATTENDANCE_STATUSES.includes(status)) {
+        initial[status] += 1;
+      }
+    });
+
+    const attendancePercent = initial.totalDays
+      ? ((initial.present / initial.totalDays) * 100).toFixed(1)
+      : "0.0";
+
+    return { ...initial, attendancePercent };
+  }, [attendanceByDay]);
+
   const dateCellRender = (value) => {
-    const dateStr = value.format("YYYY-MM-DD");
-    const status = attendanceData[dateStr];
+    const status = attendanceByDay[String(value.date())];
+
+    if (!status) {
+      return null;
+    }
 
     return (
-      <ul className="events">
-        <li>
-          <Badge status={getBadgeStatus(status)} text={getBadgeText(status)} />
-        </li>
-      </ul>
+      <Badge
+        status={getBadgeStatus(status)}
+        text={status.charAt(0).toUpperCase() + status.slice(1)}
+      />
     );
   };
 
   return (
-    <div>
-      <h3 className="text-lg font-medium mb-4">Daily Attendance</h3>
-      <Calendar dateCellRender={dateCellRender} />
-    </div>
+    <Card bordered={false}>
+      <Row justify="space-between" align="middle" className="mb-4 gap-2">
+        <h3 className="text-lg font-medium m-0">Employee Attendance</h3>
+        <DatePicker
+          picker="month"
+          value={selectedMonth}
+          onChange={(value) => setSelectedMonth(value || dayjs())}
+        />
+      </Row>
+
+      {!userId ? (
+        <Empty description="Attendance dekhne ke liye Profile tab me employee select karein." />
+      ) : (
+        <>
+          {error ? <Alert type="error" showIcon message={error} className="mb-3" /> : null}
+
+          <Row gutter={[12, 12]} className="mb-4">
+            <Card size="small" className="min-w-[120px]">
+              <Statistic title="Total Days" value={summary.totalDays} />
+            </Card>
+            <Card size="small" className="min-w-[120px]">
+              <Statistic title="Present" value={summary.present} />
+            </Card>
+            <Card size="small" className="min-w-[120px]">
+              <Statistic title="Absent" value={summary.absent} />
+            </Card>
+            <Card size="small" className="min-w-[120px]">
+              <Statistic title="Leave" value={summary.leave} />
+            </Card>
+            <Card size="small" className="min-w-[120px]">
+              <Statistic title="Attendance %" value={summary.attendancePercent} suffix="%" />
+            </Card>
+          </Row>
+
+          {loading ? (
+            <div className="py-10 text-center">
+              <Spin />
+            </div>
+          ) : (
+            <Calendar value={selectedMonth} dateCellRender={dateCellRender} />
+          )}
+        </>
+      )}
+    </Card>
   );
 };
 

@@ -21,6 +21,7 @@ import { fetchAllClasses } from "../../../features/classSlice.js";
 import { getQuestions } from "../../../features/questionSlice.js";
 
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import memoryStorage from "../../../utils/memoryStorage";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -38,7 +39,6 @@ const EditExamForm = ({ examId }) => {
   const isLoadedRef = useRef(false);
 
   const [examQuestions, setExamQuestions] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
 
   /* ================= REDUX ================= */
@@ -57,7 +57,7 @@ const EditExamForm = ({ examId }) => {
     (state) => state.exams || {},
     shallowEqual
   );
-  console.log("questionBank", questionBank);
+  
   /* ================= SAFE QUESTION ARRAY ================= */
 
   const questionBankArray = useMemo(() => {
@@ -69,13 +69,13 @@ const EditExamForm = ({ examId }) => {
  
   /* ================= WATCH FORM VALUES ================= */
 
-  const watchClassId = Form.useWatch("classId", form);
+  const watchschoolClassId = Form.useWatch("schoolClassId", form);
   const watchSubjectId = Form.useWatch("subjectId", form);
 
   /* ================= USER CONTEXT ================= */
 
   const selectedAcademicYear = useMemo(
-    () => JSON.parse(localStorage.getItem("selectedAcademicYear") || "{}"),
+    () => JSON.parse(memoryStorage.getItem("selectedAcademicYear") || "{}"),
     []
   );
 
@@ -109,13 +109,13 @@ const EditExamForm = ({ examId }) => {
 
     isLoadedRef.current = true;
 
-    const classId = getId(currentExam.classId);
+    const schoolClassId = getId(currentExam.schoolClassId);
     const subjectId = getId(currentExam.subjectId);
 
-    setSelectedClass(classId);
+    
 
     const selectedClassObj = classList.find(
-      (c) => String(c._id) === String(classId)
+      (c) => String(c._id) === String(schoolClassId)
     );
 
     const subjects =
@@ -135,7 +135,7 @@ const EditExamForm = ({ examId }) => {
 
     form.setFieldsValue({
       title: currentExam.title,
-      classId,
+      schoolClassId,
       subjectId,
       examType: currentExam.examType,
       durationMinutes: currentExam.durationMinutes,
@@ -148,31 +148,31 @@ const EditExamForm = ({ examId }) => {
   /* ================= FILTER QUESTIONS ================= */
 
   const filteredQuestions = useMemo(() => {
-    const classId = watchClassId || getId(currentExam?.classId);
+    const schoolClassId = watchschoolClassId || getId(currentExam?.schoolClassId);
     const subjectId = watchSubjectId || getId(currentExam?.subjectId);
 
-    if (!classId || !subjectId) return [];
+    if (!schoolClassId || !subjectId) return [];
 
     return questionBankArray.filter((q) => {
       return (
-        String(getId(q.classId)) === String(classId) &&
+        String(getId(q.schoolClassId)) === String(schoolClassId) &&
         String(getId(q.subjectId)) === String(subjectId)
       );
     });
   }, [
     questionBankArray,
-    watchClassId,
+    watchschoolClassId,
     watchSubjectId,
     currentExam,
   ]);
-  console.log("filteredQuestions", filteredQuestions);
+  
   /* ================= CLASS CHANGE ================= */
 
-  const handleClassChange = (classId) => {
-    setSelectedClass(classId);
+  const handleClassChange = (schoolClassId) => {
+   
 
     const selected = classList.find(
-      (c) => String(c._id) === String(classId)
+      (c) => String(c._id) === String(schoolClassId)
     );
 
     const subjects =
@@ -263,7 +263,7 @@ const handleSubmit = async () => {
 
             <Col md={12}>
               <Form.Item
-                name="classId"
+                name="schoolClassId"
                 label="Class"
                 rules={[{ required: true }]}
                 disabled

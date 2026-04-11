@@ -2,23 +2,27 @@ import { FeeStructure } from "../models/feeStructure.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import mongoose from "mongoose";
 /* ================= CREATE ================= */
 export const createFeeStructure = asyncHandler(async (req, res) => {
-  const { schoolId, classId,  academicYearId, feeHeadId, amount, frequency } = req.body;
+  const { schoolId, schoolClassId,  academicYearId, feeHeadId, amount, frequency } = req.body;
 
-  const exists = await FeeStructure.findOne({
-    schoolId,
-    classId,
-    academicYearId,
-    feeHeadId,
-  });
+  const existing = await FeeStructure.findOne({
+  schoolId,
+  schoolClassId,
+  academicYearId,
+  feeHeadId,
+});
 
-  if (exists) throw new ApiError(409, "FeeStructure already exists");
+if (existing) {
+  throw new Error("Fee structure already exists for this class");
+}
+
+  
 
   const fee = await FeeStructure.create({
     schoolId,
-    classId,
+    schoolClassId,
     academicYearId,
     feeHeadId,
     amount,
@@ -32,13 +36,19 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
 export const getFeeStructures = asyncHandler(async (req, res) => {
   const filter = {};
 
-  ["schoolId", "classId", "academicYearId"].forEach((k) => {
-    if (req.query[k]) filter[k] = req.query[k];
+  ["schoolId", "schoolClassId", "academicYearId"].forEach((k) => {
+   if (!req.query[k]) return;
+
+    if (!mongoose.isValidObjectId(req.query[k])) {
+      throw new ApiError(400, `Invalid ${k}`);
+    }
+
+    filter[k] = req.query[k];
   });
 
   const data = await FeeStructure.find(filter)
     .populate("feeHeadId", "name")
-    .populate("classId", "name")
+    .populate("schoolClassId", "name")
     .populate("academicYearId", "name");
 
   res.status(200).json(new ApiResponse(200, data, "Fetched"));

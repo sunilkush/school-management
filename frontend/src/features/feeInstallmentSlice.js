@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import apiClient from "../api/httpClient";
 
 /* ============================
    ASYNC THUNKS
@@ -12,13 +10,10 @@ export const generateInstallments = createAsyncThunk(
   "feeInstallment/generate",
   async (payload, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(
-        `${API_BASE_URL}/fee-installments/generate`,
+      const res = await apiClient.post(
+        `/fee-installments/generate`,
         payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        {        }
       );
       return res.data;
     } catch (error) {
@@ -34,10 +29,7 @@ export const fetchFeeInstallments = createAsyncThunk(
   "feeInstallment/fetchAll",
   async (params = {}, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${API_BASE_URL}/fee-installments`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
+      const res = await apiClient.get(`/fee-installments`, {        params,
       });
       return res.data;
     } catch (error) {
@@ -53,14 +45,11 @@ export const payInstallment = createAsyncThunk(
   "feeInstallment/pay",
   async ({ installmentId, amount, paymentMode, razorpay }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.post(
-        `${API_BASE_URL}/fee-installments/pay/${installmentId}`,
+      const res = await apiClient.post(
+        `/fee-installments/pay/${installmentId}`,
         { amount, paymentMode, razorpay },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        {        }
       );
 
       return res.data;

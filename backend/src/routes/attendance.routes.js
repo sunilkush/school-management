@@ -1,29 +1,71 @@
 import { Router } from "express";
-import { createAttendance, getAttendances, updateAttendance, deleteAttendance, getDailyReport, 
-  getMonthlyReport, 
-  getClassMonthlyReport,
-  exportAttendanceExcel,
-  exportAttendancePDF } from "../controllers/attendance.controllers.js";
+import {
+  deleteAttendance,
+  getAttendance,
+  getMonthlyReport,
+  getMyAttendance,
+  markBulkAttendance,
+  updateAttendance,
+} from "../controllers/attendance.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { validateRequest } from "../middlewares/validate.middleware.js";
+import {
+  attendanceIdParamSchema,
+  attendanceListQuerySchema,
+  markBulkAttendanceSchema,
+  monthlyReportQuerySchema,
+  myAttendanceQuerySchema,
+  updateAttendanceSchema,
+} from "../validators/attendance.validator.js";
 
 const router = Router();
 
-// 🔑 Role Groups
-const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
-const ADMIN_ONLY = ["Super Admin", "School Admin"];
+const REPORT_ROLES = ["Super Admin", "School Admin", "Teacher"];
+const MANAGE_ROLES = ["Super Admin", "School Admin", "Teacher", "Staff"];
+const VIEW_ROLES = ["Super Admin", "School Admin", "Teacher", "Staff", "Student", "Parent"];
 
-// ✅ Protected Routes
-router.post("/mark",auth, roleMiddleware(ADMIN_TEACHER), createAttendance);      // Mark attendance
-router.get("/",auth, roleMiddleware(ADMIN_TEACHER), getAttendances);         // Get list (filterable)
+router.post(
+  "/mark-bulk",
+  auth,
+  roleMiddleware(MANAGE_ROLES),
+  validateRequest(markBulkAttendanceSchema),
+  markBulkAttendance
+);
 
+router.get("/", 
+  auth, 
+  roleMiddleware(MANAGE_ROLES), 
+  validateRequest(attendanceListQuerySchema), 
+  getAttendance);
 
-router.get("/daily",auth, roleMiddleware(ADMIN_ONLY), getDailyReport);
-router.get("/monthly",auth, roleMiddleware(ADMIN_ONLY), getMonthlyReport);
-router.get("/class-monthly",auth, roleMiddleware(ADMIN_ONLY), getClassMonthlyReport);
+router.get(
+  "/report/monthly",
+  auth,
+  roleMiddleware(REPORT_ROLES),
+  validateRequest(monthlyReportQuerySchema),
+  getMonthlyReport
+);
 
-router.get("/export/excel",auth, roleMiddleware(ADMIN_ONLY), exportAttendanceExcel);
-router.get("/export/pdf",auth, roleMiddleware(ADMIN_ONLY), exportAttendancePDF);
+router.get("/my", 
+  auth, 
+  roleMiddleware(VIEW_ROLES), 
+  validateRequest(myAttendanceQuerySchema), 
+  getMyAttendance
+);
 
-router.put("/:id",auth, roleMiddleware(ADMIN_TEACHER), updateAttendance);    // Update attendance
-router.delete("/:id",auth, roleMiddleware(ADMIN_TEACHER), deleteAttendance); // Delete attendance
+router.put("/:id", 
+  auth, 
+  roleMiddleware(MANAGE_ROLES), 
+  validateRequest(updateAttendanceSchema), 
+  updateAttendance
+);
+
+router.delete(
+  "/:id",
+  auth,
+  roleMiddleware(MANAGE_ROLES),
+  validateRequest(attendanceIdParamSchema),
+  deleteAttendance
+);
+
 export default router;

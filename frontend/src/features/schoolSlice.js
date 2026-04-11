@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+
 
 const Api_Base_Url = import.meta.env.VITE_API_URL;
 
@@ -8,14 +9,9 @@ export const fetchSchools = createAsyncThunk(
   "school/fetchSchools",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        return rejectWithValue("No access token found. Please login again.");
-      }
 
-      const res = await axios.get(`${Api_Base_Url}/school/getAllSchool`, {
+      const res = await apiClient.get(`/school/getAllSchool`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -33,14 +29,9 @@ export const addSchool = createAsyncThunk(
   "school/create",
   async (schoolData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        return rejectWithValue("No access token found. Please login again.");
-      }
 
-      const res = await axios.post(`${Api_Base_Url}/school/register`, schoolData, {
+      const res = await apiClient.post(`/school/register`, schoolData, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -59,17 +50,12 @@ export const deactivateSchool = createAsyncThunk(
   "school/deactivate",
   async (schoolId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        return rejectWithValue("No access token found. Please login again.");
-      }
 
-      const res = await axios.put(
-        `${Api_Base_Url}/school/deactivate/${schoolId}`,
+      const res = await apiClient.put(
+        `/school/deactivate/${schoolId}`,
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -89,14 +75,9 @@ export const deleteSchool = createAsyncThunk(
   "school/delete",
   async (schoolId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        return rejectWithValue("No access token found. Please login again.");
-      }
 
-      const res = await axios.delete(`${Api_Base_Url}/school/delete/${schoolId}`, {
+      const res = await apiClient.delete(`/school/delete/${schoolId}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 

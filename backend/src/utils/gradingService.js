@@ -1,5 +1,5 @@
 // services/grading.service.js
-import { Attempt } from "../models/Attempt.model.js";
+import { Attempt } from "../models/ExamAttempts.model.js";
 import { Question } from "../models/Questions.model.js";
 
 /**
@@ -18,7 +18,8 @@ export const autoGradeAttempt = async (attempt) => {
 
     // Auto-grade only objective questions
     if (["mcq", "true_false"].includes(question.type)) {
-      const isCorrect = JSON.stringify(ans.response) === JSON.stringify(question.correctAnswer);
+      const isCorrect =
+        JSON.stringify(ans.response) === JSON.stringify(question.correctAnswer);
       gradedAnswers.push({
         ...ans,
         isCorrect,
@@ -54,7 +55,9 @@ export const manualGrade = async (attemptId, evaluations) => {
   let totalScore = attempt.score || 0;
 
   attempt.answers = attempt.answers.map((ans) => {
-    const evalData = evaluations.find((e) => e.questionId.toString() === ans.questionId.toString());
+    const evalData = evaluations.find(
+      (e) => e.questionId.toString() === ans.questionId.toString()
+    );
     if (evalData) {
       ans.isCorrect = evalData.isCorrect;
       ans.marksObtained = evalData.marksObtained;
@@ -69,3 +72,64 @@ export const manualGrade = async (attemptId, evaluations) => {
 
   return attempt;
 };
+
+const toDisplayStatus = (attempt, exam) => {
+  const marks = attempt.totalMarksObtained ?? attempt.score ?? 0;
+  if (typeof exam?.passingMarks === "number") {
+    return marks >= exam.passingMarks ? "Pass" : "Fail";
+  }
+
+  return attempt.status || "Pending";
+};
+
+export const generateGradingReport = async ({ examId, schoolId, type } = {}) => {
+  const filter = {};
+
+  if (examId) {
+    filter.examId = examId;
+  }
+
+  if (schoolId) {
+    filter.schoolId = schoolId;
+  }
+
+  const attempts = await Attempt.find(filter)
+    .populate("examId", "title totalMarks passingMarks examDate")
+    .populate("studentId", "name email")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  let reports = attempts.map((attempt) => {
+    const score = attempt.totalMarksObtained ?? attempt.score ?? 0;
+    const totalMarks = attempt.examId?.totalMarks ?? 0;
+    const percentage = totalMarks > 0 ? Number(((score / totalMarks) * 100).toFixed(2)) : 0;
+
+    return {
+      _id: attempt._id,
+      examId: attempt.examId?._id ?? null,
+      studentId: attempt.studentId?._id ?? null,
+      examTitle: attempt.examId?.title ?? "-",
+      studentName: attempt.studentId?.name ?? "-",
+      studentEmail: attempt.studentId?.email ?? "-",
+      score,
+      totalMarks,
+      passingMarks: attempt.examId?.passingMarks ?? null,
+      percentage,
+      status: toDisplayStatus(attempt, attempt.examId),
+      attemptStatus: attempt.status ?? "Pending",
+      examDate: attempt.examId?.examDate ?? null,
+      submittedAt: attempt.submittedAt ?? null,
+      createdAt: attempt.createdAt,
+    };
+  });
+
+  if (type === "pass" || type === "passed") {
+    reports = reports.filter((report) => report.status === "Pass");
+  }
+
+  if (type === "fail" || type === "failed") {
+    reports = reports.filter((report) => report.status === "Fail");
+  }
+
+  return reports
+}

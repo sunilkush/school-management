@@ -1,7 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
 
-const Api_Base_Url = import.meta.env.VITE_API_URL;
+const normalizeSubjectId = (subjectId) => {
+  if (!subjectId) return "";
+  if (typeof subjectId === "string") return subjectId;
+  return subjectId?._id || subjectId?.id || "";
+};
 
 // ==========================================================
 // ✅ Create Subject
@@ -10,10 +14,7 @@ export const createSubject = createAsyncThunk(
   "subject/createSubject",
   async (subjectData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/subject/create`, subjectData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.post(`/subject/create`, subjectData, {      });
       return res.data;
     } catch (error) {
       return rejectWithValue(
@@ -26,20 +27,22 @@ export const createSubject = createAsyncThunk(
 // ==========================================================
 // ✅ Fetch All Subjects
 // ==========================================================
-export const fetchAllSubjects = createAsyncThunk(
-  "subject/fetchAllSubjects",
-  async (
-    { page = 1, limit = 10, schoolId, search = "", isGlobal } = {},
-    { rejectWithValue }
-  ) => {
+export const getAllSubjects = createAsyncThunk(
+  "subject/getAllSubjects",
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${Api_Base_Url}/subject/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { page, limit, schoolId, search, isGlobal },
+      const {
+        page = 1,
+        limit = 100,
+        search = "",
+        isGlobal
+      } = params;
+
+      const res = await apiClient.get(`/subject/all`, {
+        params: { page, limit, search, isGlobal },
       });
-     
-      return res.data.data;
+      
+      return res.data; // ✅ return full response
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Failed to fetch subjects!"
@@ -55,10 +58,16 @@ export const updateSubject = createAsyncThunk(
   "subject/updateSubject",
   async ({ subjectId, subjectData }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/subject/${subjectId}/assign-teachers`, subjectData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+     const validSubjectId = normalizeSubjectId(subjectId);
+      if (!validSubjectId) {
+        return rejectWithValue("Invalid subject ID");
+      }
+
+      const res = await apiClient.put(
+        `/subject/${validSubjectId}/assign-teachers`,
+        subjectData,
+        {}
+      );
       return res.data?.data;
     } catch (error) {
       return rejectWithValue(
@@ -75,11 +84,14 @@ export const assignSchoolsToSubject = createAsyncThunk(
   "subject/assignSchoolsToSubject",
   async ({ subjectId, schoolIds }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(
-        `${Api_Base_Url}/subject/assign/${subjectId}`,
+        const validSubjectId = normalizeSubjectId(subjectId);
+      if (!validSubjectId) {
+        return rejectWithValue("Invalid subject ID");
+      }
+      const res = await apiClient.put(
+        `/subject/assign-schools/${validSubjectId}`,
         { schoolIds },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {}
       );
       return res.data;
     } catch (error) {
@@ -97,10 +109,12 @@ export const deleteSubject = createAsyncThunk(
   "subject/deleteSubject",
   async (subjectId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.delete(`${Api_Base_Url}/subject/${subjectId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+       const validSubjectId = normalizeSubjectId(subjectId);
+      if (!validSubjectId) {
+        return rejectWithValue("Invalid subject ID");
+      }
+
+      const res = await apiClient.delete(`/subject/${validSubjectId}`, {});
       return res.data;
     } catch (error) {
       return rejectWithValue(
@@ -118,7 +132,6 @@ const initialState = {
   error: null,
   subjects: [], // ✅ unified key for subject data
   pagination: { total: 0, page: 1, totalPages: 1 },
-  
   success: false,
   successMessage: null,
 };
@@ -158,20 +171,24 @@ const subjectSlice = createSlice({
       })
 
       // ✅ Fetch All
-      .addCase(fetchAllSubjects.pending, (state) => {
+      .addCase(getAllSubjects.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAllSubjects.fulfilled, (state, action) => {
-        state.loading = false;
-        state.subjects = action.payload?.subjects || [];
-        state.pagination = {
-          total: action.payload?.total || 0,
-          page: action.payload?.page || 1,
-          totalPages: action.payload?.totalPages || 1,
-        };
-      })
-      .addCase(fetchAllSubjects.rejected, (state, action) => {
+    .addCase(getAllSubjects.fulfilled, (state, action) => {
+          state.loading = false;
+
+          const payload = action.payload || {};
+
+          state.subjects = payload?.data || [];
+
+          state.pagination = {
+            total: payload.total || 0,
+            page: payload.page || 1,
+            totalPages: payload.totalPages || 1,
+          };
+        })
+      .addCase(getAllSubjects.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -218,10 +235,13 @@ const subjectSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteSubject.fulfilled, (state, action) => {
-        const deletedId = action.payload?.data?._id;
-        if (deletedId) {
-          state.subjects = state.subjects.filter((s) => s._id !== deletedId);
-        }
+        const deletedId =
+          action.payload?.data?._id || action.meta.arg;
+
+        state.subjects = state.subjects.filter(
+          (s) => s._id !== deletedId
+        );
+
         state.loading = false;
         state.success = true;
         state.successMessage =

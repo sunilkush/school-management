@@ -6,7 +6,7 @@ import fs from "fs";
 /**
  * Export attempts report to Excel
  */
-export const exportToExcel = async (attempts, filePath) => {
+export const exportToExcel = async (attempts) => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Attempts Report");
 
@@ -24,33 +24,42 @@ export const exportToExcel = async (attempts, filePath) => {
       exam: a.examTitle,
       score: a.score,
       status: a.status,
-      date: new Date(a.createdAt).toLocaleString(),
+      date: a.createdAt ? new Date(a.createdAt).toLocaleString() : "-",
     });
   });
 
-  await workbook.xlsx.writeFile(filePath);
-  return filePath;
+const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 };
 
 /**
  * Export attempts report to PDF
  */
-export const exportToPDF = async (attempts, filePath) => {
-  const doc = new PDFDocument();
-  doc.pipe(fs.createWriteStream(filePath));
+export const exportToPDF = async (attempts) =>
+  new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40 });
+    const chunks = [];
 
-  doc.fontSize(18).text("Attempts Report", { align: "center" });
-  doc.moveDown();
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
 
-  attempts.forEach((a, i) => {
-    doc.fontSize(12).text(`${i + 1}. Student: ${a.studentName}`);
-    doc.text(`   Exam: ${a.examTitle}`);
-    doc.text(`   Score: ${a.score}`);
-    doc.text(`   Status: ${a.status}`);
-    doc.text(`   Date: ${new Date(a.createdAt).toLocaleString()}`);
+    doc.fontSize(18).text("Attempts Report", { align: "center" });
     doc.moveDown();
-  });
+    if (!attempts.length) {
+      doc.fontSize(12).text("No records found.");
+    }
 
-  doc.end();
-  return filePath;
-};
+    attempts.forEach((a, i) => {
+      doc.fontSize(12).text(`${i + 1}. Student: ${a.studentName}`);
+      doc.text(`   Exam: ${a.examTitle}`);
+      doc.text(`   Score: ${a.score}`);
+      doc.text(`   Status: ${a.status}`);
+      doc.text(
+        `   Date: ${a.createdAt ? new Date(a.createdAt).toLocaleString() : "-"}`
+      );
+      doc.moveDown();
+    });
+
+    doc.end();
+  });

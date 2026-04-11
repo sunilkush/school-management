@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, lazy, Suspense } from "react";
 import {
   Tabs,
   Form,
@@ -10,6 +10,7 @@ import {
   Row,
   Col,
   message,
+  Spin,
 } from "antd";
 import {
   User,
@@ -26,10 +27,16 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 
 import { useDispatch, useSelector } from "react-redux";
-import AttendanceCalendar from "../../pages/AttendanceCalendar";
 import { createEmployee } from "../../features/employeeSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
-import { fetchAllSubjects } from "../../features/subjectSlice";
+import { getAllSubjects } from "../../features/subjectSlice";
+import { fetchAllUser } from "../../features/authSlice";
+import { useSearchParams } from "react-router-dom";
+
+// 🔥 Lazy Load
+const AttendanceCalendar = lazy(() =>
+  import("../../pages/AttendanceCalendar")
+);
 
 dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrBefore);
@@ -50,44 +57,74 @@ const qualifications = [
 ];
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const maritalStatuses = ["Single", "Married", "Divorced", "Widowed", "Separated"];
+const maritalStatuses = ["Single", "Married", "Divorced", "Widowed"];
 const religions = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
+const employeeStatuses = ["Full-Time", "Part-Time", "Contract"];
 
 const EmployeeForm = () => {
   const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
-
-  const { profile } = useSelector((state) => state.auth);
+   const selectedUserId = Form.useWatch("userId", form);
+  const { profile, users = [] } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
-  const { subjectList = [] } = useSelector((state) => state.subject);
+  const { subjects = [] } = useSelector((state) => state.subject);
   const { loading } = useSelector((state) => state.employee);
-
+  
   const schoolId = profile?.school?._id;
   const academicYearId = activeYear?._id;
-
+  
+    const page = 1;
+    const limit = 50;
+    
+  
+    /* ── FETCH ── */
+    useEffect(() => {
+      if (schoolId) {
+        dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
+      }
+    }, [dispatch, schoolId, academicYearId]);
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
   }, [schoolId, dispatch]);
 
+ 
+
   useEffect(() => {
-    if (schoolId && academicYearId) {
-      dispatch(fetchAllSubjects({ schoolId, academicYearId }));
+    if (schoolId) {
+      dispatch(fetchAllUser({ schoolId, isActive: true }));
     }
-  }, [schoolId, academicYearId, dispatch]);
+  }, [schoolId, dispatch]);
+
+  useEffect(() => {
+    const userIdFromQuery = searchParams.get("id");
+    if (userIdFromQuery) {
+      form.setFieldValue("userId", userIdFromQuery);
+    }
+  }, [form, searchParams]);
+
+  const userOptions = useMemo(() => {
+    const userList = Array.isArray(users) ? users : [];
+
+    return userList
+      .filter((user) => user?.isActive)
+      .filter((user) => user?.role?.name?.toLowerCase() !== "student")
+      .map((user) => ({
+        value: user._id,
+        label: `${user?.name || "User"} (${user?.role?.name || "No Role"})`,
+      }));
+  }, [users]);
 
   const handleSubmit = async (values) => {
     const payload = {
       ...values,
       schoolId,
       academicYearId,
-
-      // ✅ dayjs → string (FIX)
       dateOfBirth: values.dateOfBirth
         ? dayjs(values.dateOfBirth).format("YYYY-MM-DD")
         : null,
-
       joinDate: values.joinDate
         ? dayjs(values.joinDate).format("YYYY-MM-DD")
         : null,
@@ -115,14 +152,24 @@ const EmployeeForm = () => {
             </span>
           }
         >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
             {/* PERSONAL INFO */}
             <Card title="Personal Information" className="mb-4">
               <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item
+                    name="userId"
+                    label="Select User (Student excluded)"
+                    rules={[{ required: true, message: "Please select a user" }]}
+                  >
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Select existing user"
+                      options={userOptions}
+                    />
+                  </Form.Item>
+                </Col>
                 <Col md={8}>
                   <Form.Item name="gender" label="Gender" rules={[{ required: true }]}>
                     <Select options={[{ value: "Male" }, { value: "Female" }]} />
@@ -159,6 +206,32 @@ const EmployeeForm = () => {
                   </Form.Item>
                 </Col>
 
+                <Col md={8}>
+                  <Form.Item
+                    name="phoneNo"
+                    label="Phone Number"
+                    rules={[
+                      { required: true, message: "Phone number is required" },
+                      {
+                        pattern: /^\+?[0-9]{10,13}$/,
+                        message: "Enter valid 10-13 digit phone number",
+                      },
+                    ]}
+                  >
+                    <Input placeholder="e.g. +919999999999" />
+                  </Form.Item>
+                </Col>
+
+                <Col md={16}>
+                  <Form.Item
+                    name="citizenAddress"
+                    label="Citizen Address"
+                    rules={[{ required: true, message: "Citizen address is required" }]}
+                  >
+                    <Input />
+                  </Form.Item>
+                </Col>
+
                 <Col md={12}>
                   <Form.Item name="qualification" label="Qualification" rules={[{ required: true }]}>
                     <Select mode="multiple" options={qualifications.map(q => ({ value: q }))} />
@@ -167,7 +240,7 @@ const EmployeeForm = () => {
 
                 <Col md={12}>
                   <Form.Item name="experience" label="Experience" rules={[{ required: true }]}>
-                    <Input placeholder="e.g. 5 Years" />
+                    <Input type="number" min={0} placeholder="e.g. 5" />
                   </Form.Item>
                 </Col>
 
@@ -175,7 +248,7 @@ const EmployeeForm = () => {
                   <Form.Item name="subjects" label="Subjects" rules={[{ required: true }]}>
                     <Select
                       mode="multiple"
-                      options={subjectList.map(s => ({
+                      options={subjects.map(s => ({
                         label: s.name,
                         value: s._id,
                       }))}
@@ -205,6 +278,68 @@ const EmployeeForm = () => {
                     <Input />
                   </Form.Item>
                 </Col>
+
+                <Col md={8}>
+                  <Form.Item
+                    name="employeeStatus"
+                    label="Employment Status"
+                    rules={[{ required: true, message: "Please select employment status" }]}
+                  >
+                    <Select options={employeeStatuses.map((status) => ({ value: status }))} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+
+            <Card title="Bank Details" className="mt-4">
+              <Row gutter={16}>
+                <Col md={12}>
+                  <Form.Item name="accountHolder" label="Account Holder Name">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={12}>
+                  <Form.Item name="accountNumber" label="Account Number">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="ifscCode" label="IFSC Code">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="bankName" label="Bank Name">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="branch" label="Branch">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="panNumber" label="PAN Number">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="pfNumber" label="PF Number">
+                    <Input />
+                  </Form.Item>
+                </Col>
+
+                <Col md={8}>
+                  <Form.Item name="esiNumber" label="ESI Number">
+                    <Input />
+                  </Form.Item>
+                </Col>
               </Row>
             </Card>
 
@@ -216,11 +351,19 @@ const EmployeeForm = () => {
           </Form>
         </TabPane>
 
+        {/* ================= ATTENDANCE ================= */}
         <TabPane
           key="attendance"
-          tab={<span className="flex items-center gap-1"><CalendarCheck size={16} /> Attendance</span>}
+          tab={
+            <span className="flex items-center gap-1">
+              <CalendarCheck size={16} /> Attendance
+            </span>
+          }
         >
-          <AttendanceCalendar />
+          {/* 🔥 Lazy Loaded Component */}
+          <Suspense fallback={<Spin />}>
+            <AttendanceCalendar userId={selectedUserId} schoolId={schoolId} />
+          </Suspense>
         </TabPane>
 
         <TabPane key="tasks" tab={<ClipboardList size={16} />}>Coming soon</TabPane>

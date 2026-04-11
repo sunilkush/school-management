@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema(
   {
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true,
+    },
+
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
@@ -39,7 +46,10 @@ const paymentSchema = new mongoose.Schema(
       default: Date.now,
     },
    razorpay: Object,
-  status: String,
+  status: {
+  type: String,
+  enum: ["success", "failed", "pending"]
+},
     receiptNo: {
       type: String,
       required: true,

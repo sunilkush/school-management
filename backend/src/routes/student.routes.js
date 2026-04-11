@@ -1,13 +1,14 @@
 import { Router } from "express";
 import {
-  registerStudent,
+  createStudentAdmission,
   getStudents,
   getStudentById,
   updateStudent,
   deleteStudent,
   getLastRegisteredStudent,
   getStudentsBySchoolId,
-  getMyStudentEnrollmentId
+  getMyStudentEnrollmentId,
+  getMyChildren,
 } from "../controllers/student.controllers.js";
 
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
@@ -17,7 +18,7 @@ const router = Router();
 
 // ✅ Role constants
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
-const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
+const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher","Accountant"];
 const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];
 
 /* =========================================================
@@ -29,7 +30,7 @@ router.post(
   "/register",
   auth,
   roleMiddleware(ADMIN_ROLE),
-  registerStudent
+  createStudentAdmission
 );
 
 // ✅ Get All Students (Super Admin, School Admin, Teacher)
@@ -60,8 +61,15 @@ router.get(
 router.get(
   "/my/enrollment-id",
   auth,
-  roleMiddleware(["Student"]),
+  roleMiddleware(["Student","Parent"]),
   getMyStudentEnrollmentId
+);
+
+router.get(
+  "/my-children",
+  auth,
+  roleMiddleware(["Parent"]),
+  getMyChildren
 );
 // ✅ Get Student by ID (Student can access ONLY own profile — controller handles security)
 router.get(

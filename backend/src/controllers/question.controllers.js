@@ -17,7 +17,7 @@ export const createQuestion = asyncHandler(async (req, res) => {
   }
 
   const {
-    classId,
+    schoolClassId,
     subjectId,
     chapter,
     topic,
@@ -33,31 +33,31 @@ export const createQuestion = asyncHandler(async (req, res) => {
   } = req.body;
 
   // 🔐 Basic required checks
-  if (!classId || !subjectId || !questionType || !statement) {
+  if (!schoolClassId || !subjectId || !questionType || !statement) {
     return res
       .status(400)
       .json(
         new ApiResponse(
           400,
           null,
-          "classId, subjectId, questionType and statement are required"
+          "schoolClassId, subjectId, questionType and statement are required"
         )
       );
   }
 
   // 🔍 ObjectId validation
   if (
-    !mongoose.Types.ObjectId.isValid(classId) ||
+    !mongoose.Types.ObjectId.isValid(schoolClassId) ||
     !mongoose.Types.ObjectId.isValid(subjectId)
   ) {
     return res
       .status(400)
-      .json(new ApiResponse(400, null, "Invalid classId or subjectId"));
+      .json(new ApiResponse(400, null, "Invalid schoolClassId or subjectId"));
   }
 
   const payload = {
     schoolId: user.schoolId._id,
-    classId,
+    schoolClassId,
     subjectId,
     chapter,
     topic,

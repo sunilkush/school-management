@@ -8,6 +8,7 @@ import {
     updateBoard,
     deleteBoard,
     assignSchoolBoards,
+    getSchoolBoards,
     removeSchoolBoard
 } from "../controllers/board.controllers.js";
 
@@ -21,12 +22,16 @@ router.post("/",auth,roleMiddleware(ADMIN_ROLE), createBoard);
 
 // Get All Boards
 router.get("/",auth,roleMiddleware(ADMIN_ROLE), getBoards);
-// Get Board by ID
-router.get("/:id",auth,roleMiddleware(ADMIN_ROLE), getBoardById);
+
 // Assign school boards
 router.put("/assignSchool-boards",auth,roleMiddleware(ADMIN_ROLE), assignSchoolBoards);
+
 // Remove Assign Boards
 router.put("/removeAssignSchool-boards", auth, roleMiddleware(ADMIN_ROLE), removeSchoolBoard);
+// Get School Boards
+router.get("/school-boards/:schoolId",auth,roleMiddleware(ADMIN_ROLE), getSchoolBoards);
+// Get Board by ID
+router.get("/:id",auth,roleMiddleware(ADMIN_ROLE), getBoardById);
 // Update Board
 router.put("/:id",auth,roleMiddleware(ADMIN_ROLE), updateBoard);
 // Delete Board

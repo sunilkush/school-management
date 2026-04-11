@@ -11,6 +11,7 @@ import {
   Col,
   InputNumber,
   message,
+  Modal,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -18,10 +19,23 @@ import {
   fetchLastRegisteredStudent,
   createStudent,
 } from "../../features/studentSlice";
-import { fetchAllClasses } from "../../features/classSlice";
+import { getClassData } from "../../features/schoolClassSlice";
+
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
+
+const renderCredentialLine = (label, creds) => {
+  if (!creds) return null;
+
+  return (
+    <div key={label} style={{ marginBottom: 12 }}>
+      <strong>{label}</strong>
+      <div>Login ID: {creds.loginId || "-"}</div>
+      <div>Password: {creds.password || "Already exists (unchanged)"}</div>
+    </div>
+  );
+};
 
 const AdmissionForm = () => {
   const [form] = Form.useForm();
@@ -45,20 +59,20 @@ const AdmissionForm = () => {
     (state) => state.students
   );
   const { user } = useSelector((state) => state.auth);
-  const { classList = [] } = useSelector((state) => state.class);
+  const { schoolClasses = []} = useSelector(
+        (state) => state.schoolClass || {}
+      );
 
   const schoolId = user?.school?._id;
-  const academicYear = JSON.parse(
-    localStorage.getItem("selectedAcademicYear") || "{}"
-  );
-  const academicYearId = academicYear?._id;
+ const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+   const academicYearId = selectedAcademicYear._id
 
   const [sections, setSections] = useState([]);
 
   useEffect(() => {
     if (schoolId && academicYearId) {
       dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
-      dispatch(fetchAllClasses({ schoolId }));
+      dispatch(getClassData({ schoolId,academicYearId }));
     }
   }, [schoolId, academicYearId, dispatch]);
 
@@ -71,30 +85,72 @@ const AdmissionForm = () => {
   }, [registrationNumber, form]);
 
 
-  const handleClassChange = (classId) => {
-    const selectedClass = classList.find((c) => c._id === classId);
+  const handleClassChange = (schoolClassId) => {
+    const selectedClass = schoolClasses.find((c) => c._id === schoolClassId);
     setSections(selectedClass?.sections || []);
     form.setFieldsValue({ sectionId: undefined });
   };
 
-  const onFinish = async (values) => {
+ const onFinish = async (values) => {
+  try {
     const payload = {
-      ...values,
+      studentData: {
+        name: values.studentName,
+        email: values.email,
+      
+        dateOfBirth: values.dateOfBirth?.format("YYYY-MM-DD"),
+        gender: values.gender,
+        address: values.address,
+        bloodGroup: values.bloodGroup,
+      },
+
+      fatherData: {
+        name: values.fatherName,
+        email: values.fatherEmail,
+        mobile: values.fatherMobile,
+      },
+
+      motherData: {
+        name: values.motherName,
+        email: values.motherEmail,
+        mobile: values.motherMobile,
+      },
+
       schoolId,
       academicYearId,
-      admissionDate: values.admissionDate?.format("YYYY-MM-DD"),
-      dateOfBirth: values.dateOfBirth?.format("YYYY-MM-DD"),
+      schoolClassId: values.schoolClassId,
+      sectionId: values.sectionId,
     };
 
     const res = await dispatch(createStudent(payload));
-    if (res?.payload?.success) {
+
+    if (res?.meta?.requestStatus === "fulfilled") {
       message.success("Student admitted successfully");
+
+      const credentials = res?.payload?.credentials;
+      if (credentials) {
+        Modal.success({
+          title: "Login Credentials",
+          width: 560,
+          content: (
+            <div style={{ marginTop: 12 }}>
+              {renderCredentialLine("Student", credentials.student)}
+              {renderCredentialLine("Father", credentials.father)}
+              {renderCredentialLine("Mother", credentials.mother)}
+            </div>
+          ),
+        });
+      }
+
       form.resetFields();
       dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
     } else {
-      message.error("Admission failed");
+      message.error(res?.payload || "Admission failed");
     }
-  };
+  } catch (err) {
+    message.error("Something went wrong", err.message);
+  }
+};
 
   return (
     <Card >
@@ -115,19 +171,12 @@ const AdmissionForm = () => {
                   <Input />
                 </Form.Item>
               </Col>
-
               <Col md={8}>
-                <Form.Item name="password" label="Password" rules={[{ required: true }]}>
-                  <Input.Password maxLength={6} />
-                </Form.Item>
-              </Col>
-
-              <Col md={8}>
-                <Form.Item name="classId" label="Class" rules={[{ required: true }]}>
+                <Form.Item name="schoolClassId" label="Class" rules={[{ required: true }]}>
                   <Select
                     placeholder="Select Class"
                     onChange={handleClassChange}
-                    options={classList.map((c) => ({
+                    options={schoolClasses.map((c) => ({
                       label: c.name,
                       value: c._id,
                     }))}
@@ -202,7 +251,7 @@ const AdmissionForm = () => {
 
               <Col md={8}>
                 <Form.Item name="orphan" label="Orphan">
-                  <Select options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
+                  <Select options={[{ value: "Yes" }, { value: "No" }]} />
                 </Form.Item>
               </Col>
 

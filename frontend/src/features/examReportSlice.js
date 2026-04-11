@@ -1,10 +1,21 @@
-// src/features/reports/reportSlice.js
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-// ----------------- Async thunks -----------------
+const getErrorMessage = (err, fallback) =>
+  err?.response?.data?.message || err?.response?.data || err?.message || fallback;
+
+const triggerBlobDownload = (blobData, filename) => {
+  const url = window.URL.createObjectURL(new Blob([blobData]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
 
 // Exam report
 export const fetchExamReport = createAsyncThunk(
@@ -12,12 +23,10 @@ export const fetchExamReport = createAsyncThunk(
   async (examId, { rejectWithValue }) => {
     try {
       
-      const res = await axios.get(`${API_BASE_URL}/reports/exam/${examId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+    const res = await apiClient.get(`/exam-report/exam/${examId}`);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+        return rejectWithValue(getErrorMessage(err, "Failed to fetch exam report"));
     }
   }
 );
@@ -27,12 +36,10 @@ export const fetchStudentReport = createAsyncThunk(
   "reports/fetchStudentReport",
   async (studentId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/student/${studentId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+       const res = await apiClient.get(`/exam-report/student/${studentId}`);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      return rejectWithValue(getErrorMessage(err, "Failed to fetch student report"));
     }
   }
 );
@@ -42,12 +49,10 @@ export const fetchOverallReport = createAsyncThunk(
   "reports/fetchOverallReport",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/overall`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-      });
+      const res = await apiClient.get(`/exam-report`);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+       return rejectWithValue(getErrorMessage(err, "Failed to fetch overall report"));
     }
   }
 );
@@ -55,15 +60,14 @@ export const fetchOverallReport = createAsyncThunk(
 // Reports (list with filters)
 export const fetchReports = createAsyncThunk(
   "reports/fetchReports",
-  async (filters, { rejectWithValue }) => {
+   async (filters = {}, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports`, {
+      const res = await apiClient.get(`/exam-report`, {
         params: filters,
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       });
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+       return rejectWithValue(getErrorMessage(err, "Failed to fetch reports"));
     }
   }
 );
@@ -71,25 +75,18 @@ export const fetchReports = createAsyncThunk(
 // Export Excel
 export const exportReportExcel = createAsyncThunk(
   "reports/exportExcel",
-  async (filters, { rejectWithValue }) => {
+ async (filters = {}, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/export/excel`, {
+      const res = await apiClient.get(`/exam-report/export/excel`, {
         params: filters,
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-        responseType: "blob", // required for file
+        responseType: "blob",
       });
 
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "report.xlsx");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      return true;
+       triggerBlobDownload(res.data, "exam-report.xlsx");
+       return true;
+      
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      return rejectWithValue(getErrorMessage(err, "Failed to export Excel report"));
     }
   }
 );
@@ -97,25 +94,18 @@ export const exportReportExcel = createAsyncThunk(
 // Export PDF
 export const exportReportPDF = createAsyncThunk(
   "reports/exportPDF",
-  async (filters, { rejectWithValue }) => {
+  async (filters = {}, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/reports/export/pdf`, {
+        const res = await apiClient.get(`/exam-report/export/pdf`, {
         params: filters,
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
         responseType: "blob",
       });
 
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "report.pdf");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+        triggerBlobDownload(res.data, "exam-report.pdf");
 
       return true;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+     return rejectWithValue(getErrorMessage(err, "Failed to export PDF report"));
     }
   }
 );
@@ -124,7 +114,7 @@ export const exportReportPDF = createAsyncThunk(
 const reportSlice = createSlice({
   name: "reports",
   initialState: {
-    reports: [],          // <-- added to fix missing state
+    reports: [],    // <-- added to fix missing state
     examReport: null,
     studentReport: null,
     overallReport: null,
@@ -149,6 +139,7 @@ const reportSlice = createSlice({
       .addCase(fetchExamReport.fulfilled, (state, action) => {
         state.loading = false;
         state.examReport = action.payload;
+        state.error = null;
       })
       .addCase(fetchExamReport.rejected, (state, action) => {
         state.loading = false;
@@ -162,6 +153,7 @@ const reportSlice = createSlice({
       .addCase(fetchStudentReport.fulfilled, (state, action) => {
         state.loading = false;
         state.studentReport = action.payload;
+        state.error = null;
       })
       .addCase(fetchStudentReport.rejected, (state, action) => {
         state.loading = false;
@@ -175,6 +167,7 @@ const reportSlice = createSlice({
       .addCase(fetchOverallReport.fulfilled, (state, action) => {
         state.loading = false;
         state.overallReport = action.payload;
+        state.error = null;
       })
       .addCase(fetchOverallReport.rejected, (state, action) => {
         state.loading = false;
@@ -201,6 +194,7 @@ const reportSlice = createSlice({
       })
       .addCase(exportReportExcel.fulfilled, (state) => {
         state.loading = false;
+        state.error = null;
       })
       .addCase(exportReportExcel.rejected, (state, action) => {
         state.loading = false;
@@ -213,6 +207,7 @@ const reportSlice = createSlice({
       })
       .addCase(exportReportPDF.fulfilled, (state) => {
         state.loading = false;
+         state.error = null;
       })
       .addCase(exportReportPDF.rejected, (state, action) => {
         state.loading = false;

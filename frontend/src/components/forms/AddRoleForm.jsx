@@ -21,7 +21,7 @@ import { fetchSchools } from "../../features/schoolSlice";
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-/* ================= MODULES & ACTIONS ================= */
+/* ================= MODULES ================= */
 const moduleOptions = [
   "Schools","Users","Teachers","Students","Parents","Classes","Subjects","Exams",
   "Attendance","Finance","Settings","Fees","Reports","Hostel","Transport","Assignments",
@@ -35,7 +35,7 @@ const actionOptions = [
 const roleOptions = [
   "School Admin","Principal","Vice Principal","Teacher","Student","Parent",
   "Accountant","Staff","Librarian","Hostel Warden","Transport Manager",
-  "Exam Coordinator","Receptionist","IT Support","Counselor","Subject Coordinator", "support staff","security"
+  "Exam Coordinator","Receptionist","IT Support","Counselor","Subject Coordinator","Support Staff","Security","Driver"
 ];
 
 const AddRoleForm = () => {
@@ -65,7 +65,7 @@ const AddRoleForm = () => {
 
   /* ================= SUBMIT ================= */
   const onFinish = async (values) => {
-    if (values.name !== "Super Admin" && !values.schoolId) {
+    if (values.type !== "system" && !values.schoolId) {
       return message.warning("Please select a school");
     }
 
@@ -74,8 +74,7 @@ const AddRoleForm = () => {
       code:
         values.code ||
         values.name.toUpperCase().replace(/\s+/g, "_"),
-      schoolId:
-        values.name !== "Super Admin" ? values.schoolId : null,
+      schoolId: values.type === "system" ? null : values.schoolId,
     };
 
     try {
@@ -83,25 +82,18 @@ const AddRoleForm = () => {
       message.success("Role created successfully");
       form.resetFields();
     } catch (err) {
-      message.error(err,"Failed to create role");
+      message.error("Failed to create role",err);
     }
   };
 
   return (
-    <Card
-      className="rounded-2xl shadow-sm"
-      style={{ maxWidth: 1000, margin: "0 auto" }}
-    >
-      {/* ================= HEADER ================= */}
-      <Space align="center" className="mb-2">
+    <Card style={{ maxWidth: 1000, margin: "0 auto" }}>
+      {/* HEADER */}
+      <Space align="center">
         <SafetyOutlined style={{ fontSize: 28, color: "#1677ff" }} />
         <div>
-          <Title level={4} className="!mb-0">
-            Create Role & Permissions
-          </Title>
-          <Text type="secondary">
-            Define access control and responsibilities
-          </Text>
+          <Title level={4}>Create Role & Permissions</Title>
+          <Text type="secondary">Define access control</Text>
         </div>
       </Space>
 
@@ -118,7 +110,7 @@ const AddRoleForm = () => {
         }}
         onFinish={onFinish}
       >
-        {/* ================= BASIC INFO ================= */}
+        {/* ROLE INFO */}
         <Title level={5}>Role Information</Title>
 
         <Row gutter={16}>
@@ -126,12 +118,9 @@ const AddRoleForm = () => {
             <Form.Item
               label="Role Name"
               name="name"
-              rules={[{ required: true, message: "Select a role" }]}
+              rules={[{ required: true, message: "Select role" }]}
             >
-              <Select
-                placeholder="Select role"
-                onChange={handleRoleChange}
-              >
+              <Select onChange={handleRoleChange}>
                 {roleOptions.map((r) => (
                   <Option key={r} value={r}>{r}</Option>
                 ))}
@@ -152,7 +141,7 @@ const AddRoleForm = () => {
           </Col>
         </Row>
 
-        {/* ================= META ================= */}
+        {/* META */}
         <Row gutter={16}>
           <Col md={8}>
             <Form.Item label="Type" name="type">
@@ -170,24 +159,23 @@ const AddRoleForm = () => {
           </Col>
 
           <Col md={8}>
-            <Form.Item
-              label="Active"
-              name="isActive"
-              valuePropName="checked"
-            >
+            <Form.Item label="Active" name="isActive" valuePropName="checked">
               <Checkbox>Enabled</Checkbox>
             </Form.Item>
           </Col>
         </Row>
 
-        {/* ================= SCHOOL ================= */}
+        {/* ✅ SCHOOL FIELD (FIXED) */}
         <Form.Item
-          shouldUpdate={(p, c) => p.name !== c.name}
+          shouldUpdate={(prev, curr) => prev.type !== curr.type}
           noStyle
         >
-          {({ getFieldValue }) =>
-            getFieldValue("name") &&
-            getFieldValue("name") !== "Super Admin" && (
+          {({ getFieldValue }) => {
+            const type = getFieldValue("type");
+
+            if (type === "system") return null;
+
+            return (
               <Form.Item
                 label="School"
                 name="schoolId"
@@ -201,13 +189,13 @@ const AddRoleForm = () => {
                   ))}
                 </Select>
               </Form.Item>
-            )
-          }
+            );
+          }}
         </Form.Item>
 
         <Divider />
 
-        {/* ================= PERMISSIONS ================= */}
+        {/* PERMISSIONS */}
         <Title level={5}>Module Permissions</Title>
 
         <Form.List name="permissions">
@@ -217,12 +205,12 @@ const AddRoleForm = () => {
                 <Card
                   key={key}
                   size="small"
-                  className="mb-3"
+                  style={{ marginBottom: 10 }}
                   title={`Permission ${name + 1}`}
                   extra={
                     <Button
-                      type="text"
                       danger
+                      type="text"
                       icon={<DeleteOutlined />}
                       onClick={() => remove(name)}
                     />
@@ -274,13 +262,11 @@ const AddRoleForm = () => {
 
         <Divider />
 
-        {/* ================= ACTION ================= */}
         <Button
           type="primary"
           htmlType="submit"
-          size="large"
           loading={loading}
-          className="w-full"
+          block
         >
           Create Role
         </Button>

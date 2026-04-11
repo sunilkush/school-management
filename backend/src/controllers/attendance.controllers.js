@@ -1,276 +1,368 @@
+import mongoose from "mongoose";
 import { Attendance } from "../models/attendance.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import ExcelJS from "exceljs";
-import PDFDocument from "pdfkit";
-import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
-// ✅ Create Attendance
-export const createAttendance = asyncHandler(async (req, res) => {
-  const {
-    schoolId,
-    academicYearId,
-    date,
-    session = "FullDay",
+
+const SUPER_ADMIN = "Super Admin";
+const SCHOOL_ADMIN = "School Admin";
+const TEACHER = "Teacher";
+const STAFF = "Staff";
+const STUDENT = "Student";
+const PARENT = "Parent";
+
+const normalizeDateStart = (value) => {
+  const date = new Date(value);
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+};
+
+const normalizeDateEnd = (value) => {
+  const date = new Date(value);
+  date.setUTCHours(23, 59, 59, 999);
+  return date;
+};
+
+const ensureSchoolAccess = (req, requestedSchoolId) => {
+  const userRole = req.userRole?.name;
+  const mySchoolId = req.user?.schoolId?.toString();
+
+  if (userRole === SUPER_ADMIN) {
+    if (!requestedSchoolId) {
+      throw new ApiError(400, "schoolId is required for Super Admin requests");
+    }
+    return requestedSchoolId;
+  }
+
+  if (!mySchoolId) {
+    throw new ApiError(403, "User is not mapped to a school");
+  }
+
+  if (requestedSchoolId && requestedSchoolId !== mySchoolId) {
+    throw new ApiError(403, "You can only access attendance in your own school");
+  }
+
+  return mySchoolId;
+};
+
+const assertTeacherScope = (req, payload = {}) => {
+  const userRole = req.userRole?.name;
+  if (userRole !== TEACHER) return;
+
+  const teacherId = req.user?._id?.toString();
+  if (!teacherId) throw new ApiError(403, "Invalid teacher identity");
+
+  if (payload.markedBy && payload.markedBy.toString() !== teacherId) {
+    throw new ApiError(403, "Teachers can only manage attendance marked by themselves");
+  }
+};
+
+export const markBulkAttendance = asyncHandler(async (req, res) => {
+  const { schoolId, date, role, schoolClassId, sectionId, subjectId, remarks, records } = req.body;
+
+  const allowedRoles = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STAFF];
+  if (!allowedRoles.includes(req.userRole?.name)) {
+    throw new ApiError(403, "You are not allowed to mark attendance");
+  }
+
+  if (req.userRole?.name === STAFF && role !== "staff") {
+    throw new ApiError(403, "Staff can only mark self attendance");
+  }
+
+    if (req.userRole?.name === TEACHER && !["student", "teacher"].includes(role)) {
+    throw new ApiError(403, "Teacher can only mark student or self attendance");
+  }
+
+  const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
+  const normalizedDate = normalizeDateStart(date);
+
+  const docs = records.map((record) => ({
+    schoolId: resolvedSchoolId,
+    userId: record.userId,
     role,
-    remarks,
-    classId,
-    sectionId,
-    departmentId,
-    subjectId,
-    records
-  } = req.body;
+    schoolClassId: schoolClassId || null,
+    sectionId: sectionId || null,
+    subjectId: subjectId || null,
+    date: normalizedDate,
+    status: record.status,
+    markedBy: req.user._id,
+    remarks: record.remarks ?? remarks ?? "",
+    checkInAt: record.checkInAt || null,
+    checkOutAt: record.checkOutAt || null,
+  }));
 
-  if (!schoolId || !academicYearId || !date || !role) {
-    throw new ApiError(400, "Required fields missing!");
+  if (req.userRole?.name === STAFF) {
+    docs.forEach((doc) => {
+      if (doc.userId.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "Staff can mark only their own attendance");
+      }
+    });
   }
-
-
-
-  let attendanceDocs = [];
-
-  // ✅ MULTIPLE STUDENT RECORDS
-  if (records && records.length > 0) {
-    attendanceDocs = records.map((rec) => ({
-      schoolId,
-      academicYearId,
-      date,
-      session,
-      userId: rec.studentId,
-      role: "Student",
-      status:
-        rec.status.charAt(0).toUpperCase() +
-        rec.status.slice(1).toLowerCase(),
-      classId,
-      sectionId,
-      subjectId,
-      remarks,
-      markedBy: req.user._id,
-      markedAt: new Date(),
-    }));
+   if (req.userRole?.name === TEACHER && role === "teacher") {
+    docs.forEach((doc) => {
+      if (doc.userId.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "Teacher can mark only their own attendance");
+      }
+    });
   }
+  try {
+    const result = await Attendance.bulkWrite(
+      docs.map((doc) => ({
+        updateOne: {
+          filter: { schoolId: doc.schoolId, userId: doc.userId, date: doc.date },
+          update: { $set: doc },
+          upsert: true,
+        },
+      }))
+    );
 
-  // ✅ INSERT MANY
-  const attendance = await Attendance.insertMany(attendanceDocs, {
-    ordered: false,
-  });
-
-  return res
-    .status(201)
-    .json(new ApiResponse(201, attendance, "Attendance created successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Bulk attendance marked successfully"));
+  } catch (error) {
+    if (error?.code === 11000) {
+      throw new ApiError(409, "Duplicate attendance detected for the same user and date");
+    }
+    throw error;
+  }
 });
 
+export const getAttendance = asyncHandler(async (req, res) => {
+  const { schoolId, schoolClassId, sectionId, subjectId, date, role, userId, search, page, limit } = req.query;
 
-// ✅ Get Attendance (Filterable)
-export const getAttendances = asyncHandler(async (req, res) => {
-  const { academicYearId, classId, sectionId, role, date } = req.query;
-
-  let filter = {};
-  if (academicYearId) filter.academicYearId = academicYearId;
-  if (classId) filter.classId = classId;
-  if (sectionId) filter.sectionId = sectionId;
-  if (role) filter.role = role;
-  if (date) filter.date = new Date(date);
-
-  filter = buildSchoolAccessFilter(req, filter);
-
-  const attendances = await Attendance.find(filter)
-    .populate("userId", "fullName email role")
-    .populate("classId", "name")
-    .populate("sectionId", "name")
-    .populate("departmentId", "name")
-    .populate("subjectId", "name")
-    .populate("markedBy", "fullName role");
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, attendances, "Attendance list fetched"));
-});
-
-
-// ✅ Update Attendance
-export const updateAttendance = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const attendance = await Attendance.findById(id);
-  if (!attendance) throw new ApiError(404, "Attendance not found");
-
-  // 🔐 Teacher can update only own marked records
-  if (
-    req.user.role === "TEACHER" &&
-    attendance.markedBy.toString() !== req.user._id.toString()
-  ) {
-    throw new ApiError(403, "Not allowed to update this record");
-  }
-
-  const updated = await Attendance.findByIdAndUpdate(
-    id,
-    { ...req.body, updatedBy: req.user._id, updatedAt: new Date() },
-    { new: true }
-  );
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, updated, "Attendance updated"));
-});
-
-
-// ✅ Delete Attendance
-export const deleteAttendance = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const attendance = await Attendance.findById(id);
-  if (!attendance) throw new ApiError(404, "Attendance not found");
-
-  if (
-    req.user.role === "TEACHER" &&
-    attendance.markedBy.toString() !== req.user._id.toString()
-  ) {
-    throw new ApiError(403, "Not allowed to delete this record");
-  }
-
-  await attendance.deleteOne();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, null, "Attendance deleted"));
-});
-
-
-// ✅ Daily Report (By Date)
-export const getDailyReport = asyncHandler(async (req, res) => {
-  const { academicYearId, date } = req.query;
-  if (!academicYearId || !date)
-    throw new ApiError(400, "academicYearId and date required");
-
-  let filter = {
-    academicYearId,
-    date: new Date(date),
+  const filter = {
+    schoolId: ensureSchoolAccess(req, schoolId),
   };
 
-  filter = buildSchoolAccessFilter(req, filter);
+  if (schoolClassId) filter.schoolClassId = schoolClassId;
+  if (sectionId) filter.sectionId = sectionId;
+  if (subjectId) filter.subjectId = subjectId;
+  if (role) filter.role = role;
+  if (userId) filter.userId = userId;
+  if (date) {
+    filter.date = {
+      $gte: normalizeDateStart(date),
+      $lte: normalizeDateEnd(date),
+    };
+  }
 
-  const records = await Attendance.find(filter).populate(
-    "userId",
-    "fullName role"
-  );
+  assertTeacherScope(req, filter);
 
-  res.status(200).json(new ApiResponse(200, records, "Daily report"));
+  const skip = (page - 1) * limit;
+
+  const query = Attendance.find(filter)
+    .populate("userId", "name email")
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name")
+    .populate("markedBy", "name")
+    .sort({ date: -1, createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  if (search) {
+    query.where({ remarks: { $regex: search, $options: "i" } });
+  }
+
+  const [items, total] = await Promise.all([query, Attendance.countDocuments(filter)]);
+
+  const data = {
+    items,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+
+  return res.status(200).json(new ApiResponse(200, data, "Attendance fetched successfully"));
 });
 
-
-// ✅ Monthly Report (By Month)
 export const getMonthlyReport = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, month, year } = req.query;
+  const { schoolId, month, year, schoolClassId, sectionId, role } = req.query;
+  const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
 
-  if (!schoolId || !academicYearId || !month || !year) {
-    throw new ApiError(400, "schoolId, academicYearId, month and year are required!");
-  }
+  const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59);
-
-  const records = await Attendance.find({
-    schoolId,
-    academicYearId,
+  const match = {
+    schoolId: new mongoose.Types.ObjectId(resolvedSchoolId),
     date: { $gte: start, $lte: end },
-  }).populate("userId", "fullName email role");
+  };
+  if (schoolClassId) match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
+  if (sectionId) match.sectionId = new mongoose.Types.ObjectId(sectionId);
+  if (role) match.role = role;
 
-  return res.status(200).json(new ApiResponse(200, records, "Monthly Report fetched"));
-});
-
-// ✅ Class-wise Monthly Report
-export const getClassMonthlyReport = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, classId, sectionId, month, year } = req.query;
-
-  if (!schoolId || !academicYearId || !classId || !month || !year) {
-    throw new ApiError(400, "schoolId, academicYearId, classId, month and year are required!");
-  }
-
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59);
-
-  const records = await Attendance.find({
-    schoolId,
-    academicYearId,
-    classId,
-    ...(sectionId && { sectionId }),
-    date: { $gte: start, $lte: end },
-  }).populate("userId", "fullName email role");
-
-  return res.status(200).json(new ApiResponse(200, records, "Class Monthly Report fetched"));
-});
-
-
-// ✅ Export to Excel
-export const exportAttendanceExcel = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, month, year } = req.query;
-
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59);
-
-  const records = await Attendance.find({
-    schoolId,
-    academicYearId,
-    date: { $gte: start, $lte: end },
-  }).populate("userId", "fullName email role");
-
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("Attendance");
-
-  worksheet.columns = [
-    { header: "Name", key: "name", width: 20 },
-    { header: "Role", key: "role", width: 15 },
-    { header: "Date", key: "date", width: 15 },
-    { header: "Status", key: "status", width: 15 },
-    { header: "Remarks", key: "remarks", width: 25 },
+  const pipeline = [
+    { $match: match },
+    {
+      $group: {
+        _id: {
+          userId: "$userId",
+          date: "$date",
+        },
+        status: { $last: "$status" },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          userId: "$_id.userId",
+          status: "$status",
+        },
+        count: { $sum: 1 },
+        dailyEntries: {
+          $push: {
+            day: { $dayOfMonth: "$_id.date" },
+            status: "$status",
+          },
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$_id.userId",
+        totalDays: { $sum: "$count" },
+        statuses: {
+          $push: {
+            k: "$_id.status",
+            v: "$count",
+          },
+        },
+        dailyEntriesByStatus: { $push: "$dailyEntries" },
+      },
+    },
+    {
+      $project: {
+        totalDays: 1,
+        statusBreakdown: { $arrayToObject: "$statuses" },
+        dailyStatusEntries: {
+          $reduce: {
+            input: "$dailyEntriesByStatus",
+            initialValue: [],
+            in: { $concatArrays: ["$$value", "$$this"] },
+          },
+        },
+        presentDays: { $ifNull: [{ $getField: { field: "present", input: { $arrayToObject: "$statuses" } } }, 0] },
+        attendancePercentage: {
+          $cond: [
+            { $gt: ["$totalDays", 0] },
+            {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: [{ $ifNull: [{ $getField: { field: "present", input: { $arrayToObject: "$statuses" } } }, 0] }, "$totalDays"] },
+                    100,
+                  ],
+                },
+                2,
+              ],
+            },
+            0,
+          ],
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "_id",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    {
+      $project: {
+        userId: "$_id",
+        name: "$user.name",
+        email: "$user.email",
+        totalDays: 1,
+        presentDays: 1,
+        attendancePercentage: 1,
+        statusBreakdown: 1,
+        dailyStatus: {
+          $arrayToObject: {
+            $map: {
+              input: "$dailyStatusEntries",
+              as: "entry",
+              in: {
+                k: { $toString: "$$entry.day" },
+                v: "$$entry.status",
+              },
+            },
+          },
+        },
+      },
+    },
+    { $sort: { attendancePercentage: -1 } },
   ];
 
-  records.forEach((rec) => {
-    worksheet.addRow({
-      name: rec.userId?.fullName,
-      role: rec.role,
-      date: rec.date.toISOString().split("T")[0],
-      status: rec.status,
-      remarks: rec.remarks || "",
-    });
-  });
 
-  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("Content-Disposition", "attachment; filename=attendance.xlsx");
+  const report = await Attendance.aggregate(pipeline);
 
-  await workbook.xlsx.write(res);
-  res.end();
+  return res.status(200).json(new ApiResponse(200, report, "Monthly report generated"));
 });
 
-// ✅ Export to PDF
-export const exportAttendancePDF = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, month, year } = req.query;
+export const updateAttendance = asyncHandler(async (req, res) => {
+  const attendance = await Attendance.findById(req.params.id);
+  if (!attendance) throw new ApiError(404, "Attendance record not found");
 
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59);
+  const resolvedSchoolId = ensureSchoolAccess(req, attendance.schoolId.toString());
+  if (attendance.schoolId.toString() !== resolvedSchoolId.toString()) {
+    throw new ApiError(403, "Not allowed to edit this attendance record");
+  }
 
-  const records = await Attendance.find({
-    schoolId,
-    academicYearId,
-    date: { $gte: start, $lte: end },
-  }).populate("userId", "fullName email role");
+  assertTeacherScope(req, { markedBy: attendance.markedBy });
 
-  const doc = new PDFDocument({ margin: 30, size: "A4" });
+  const updated = await Attendance.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+  return res.status(200).json(new ApiResponse(200, updated, "Attendance updated"));
+});
 
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "attachment; filename=attendance.pdf");
+export const deleteAttendance = asyncHandler(async (req, res) => {
+  const attendance = await Attendance.findById(req.params.id);
+  if (!attendance) throw new ApiError(404, "Attendance record not found");
 
-  doc.pipe(res);
+  const resolvedSchoolId = ensureSchoolAccess(req, attendance.schoolId.toString());
+  if (attendance.schoolId.toString() !== resolvedSchoolId.toString()) {
+    throw new ApiError(403, "Not allowed to delete this attendance record");
+  }
 
-  doc.fontSize(16).text("Attendance Report", { align: "center" }).moveDown();
+  assertTeacherScope(req, { markedBy: attendance.markedBy });
 
-  records.forEach((rec) => {
-    doc
-      .fontSize(12)
-      .text(`Name: ${rec.userId?.fullName} | Role: ${rec.role} | Date: ${rec.date.toISOString().split("T")[0]} | Status: ${rec.status}`)
-      .moveDown(0.5);
-  });
+  await attendance.deleteOne();
+  return res.status(200).json(new ApiResponse(200, null, "Attendance deleted"));
+});
 
-  doc.end();
+export const getMyAttendance = asyncHandler(async (req, res) => {
+  const { month, year, childId } = req.query;
+
+  let targetUserId = req.user._id;
+  if (req.userRole?.name === PARENT) {
+    if (!childId) {
+      throw new ApiError(400, "childId is required for parent attendance view");
+    }
+    targetUserId = childId;
+  }
+
+  if (![STUDENT, TEACHER, STAFF, PARENT].includes(req.userRole?.name)) {
+    throw new ApiError(403, "Not allowed to access this endpoint");
+  }
+
+  const filter = {
+    schoolId: ensureSchoolAccess(req, req.user?.schoolId?.toString()),
+    userId: targetUserId,
+  };
+
+  if (month && year) {
+    filter.date = {
+      $gte: new Date(Date.UTC(year, month - 1, 1, 0, 0, 0)),
+      $lte: new Date(Date.UTC(year, month, 0, 23, 59, 59, 999)),
+    };
+  }
+
+  const data = await Attendance.find(filter).sort({ date: -1 });
+
+  return res.status(200).json(new ApiResponse(200, data, "My attendance fetched"));
 });

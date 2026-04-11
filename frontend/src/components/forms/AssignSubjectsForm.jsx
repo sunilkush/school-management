@@ -25,7 +25,7 @@ import {
 import {
   fetchAllUser,
 } from "../../features/authSlice";
-import axios from "axios";
+import apiClient from "../../api/httpClient";
 
 const { Title, Text } = Typography;
 
@@ -88,8 +88,8 @@ const AssignSubjectsForm = () => {
 
     setLoading(true);
     try {
-      await axios.post("/api/class/assign-subjects", {
-        classId: selectedClass,
+      await apiClient.post("/class/assign-subjects", {
+        schoolClassId: selectedClass,
         assignments: payload,
       });
       message.success("Subjects assigned successfully");

@@ -9,95 +9,121 @@ import {
   Space,
   Empty,
   Spin,
+  Avatar,
+  Divider,
 } from "antd";
 import {
   BookOutlined,
   TeamOutlined,
   EyeOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
+
 
 const { Title, Text } = Typography;
 
 const AssignedClasses = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const { classAssignTeacher = [], loading } = useSelector(
+  const { classAssignTeacher = [], loading = false } = useSelector(
     (state) => state.class || {}
   );
 
-  /* ================= LOCAL STORAGE ================= */
-
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const academic = JSON.parse(
-    localStorage.getItem("selectedAcademicYear") || "{}"
+  const { selectedAcademicYear } = useSelector(
+    (state) => state.academicYear || {}
   );
 
-  const TeacherId = user?._id;
-  const schoolId = academic?.schoolId;
-  const academicYearId = academic?._id;
 
-  /* ================= FETCH ================= */
+  const academicYearId = selectedAcademicYear?._id;
+
+
 
   useEffect(() => {
-    if (TeacherId && schoolId && academicYearId) {
-      dispatch(
+   dispatch(
         fetchAssignedClasses({
-          teacherId: TeacherId,
-          schoolId,
           academicYearId,
         })
       );
-    }
-  }, [dispatch, TeacherId, schoolId, academicYearId]);
+  }, [dispatch,academicYearId]);
 
-  /* ================= UI ================= */
 
   return (
-    <div style={{ padding: 20 }}>
-      <Title level={3} style={{ marginBottom: 20 }}>
-        My Assigned Classes
-      </Title>
+    <div style={{ padding: "10px", background: "#f6f8fb", minHeight: "100vh" }}>
+      
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <Title level={3} style={{ marginBottom: 4 }}>
+          📚 My Assigned Classes
+        </Title>
+        <Text type="secondary">
+          Manage your classes, subjects & students easily
+        </Text>
+      </div>
 
       <Spin spinning={loading}>
-        {!classAssignTeacher?.length ? (
-          <Empty description="No Classes Assigned Yet" />
+        {!loading && (!classAssignTeacher || classAssignTeacher.length === 0) ? (
+          <Card style={{ borderRadius: 16 }}>
+            <Empty description="No Classes Assigned Yet" />
+          </Card>
         ) : (
           <Row gutter={[20, 20]}>
-            {classAssignTeacher.map((cls) => (
-              <Col xs={24} sm={12} lg={8} key={cls._id}>
+            {classAssignTeacher?.map((cls) => (
+              <Col xs={24} sm={12} lg={8} key={cls?._id}>
                 <Card
                   hoverable
-                  style={{
-                    borderRadius: 16,
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
-                  }}
+                  style={{ borderRadius: 18 }}
+                  bodyStyle={{ padding: 20 }}
                 >
                   <Space direction="vertical" style={{ width: "100%" }}>
-                    
-                    {/* ===== Class Name ===== */}
-                    <Space align="center">
-                      <BookOutlined style={{ fontSize: 20 }} />
-                      <Title level={4} style={{ margin: 0 }}>
-                        {cls?.name || "Class"}
-                      </Title>
+
+                    {/* Header */}
+                    <Space
+                      align="center"
+                      style={{
+                        width: "100%",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Space>
+                        <Avatar
+                          size={48}
+                          style={{ background: "#1677ff" }}
+                          icon={<BookOutlined />}
+                        />
+                        <div>
+                          <Title level={5} style={{ margin: 0 }}>
+                            {cls?.name || "Class"}
+                          </Title>
+
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            Sections:{" "}
+                            {cls?.sections?.length
+                              ? cls.sections
+                                  .map((sec) => sec?.sectionId?.name)
+                                  .filter(Boolean)
+                                  .join(", ")
+                              : "N/A"}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                            Roles:{" "}
+                            {cls?.role?.[0]  }
+                            </Text>
+                        </div>
+                      </Space>
+
+                      <Tag color="green">Active</Tag>
                     </Space>
 
-                    {/* ===== Sections ===== */}
-                    <Text type="secondary">
-                      Section :{" "}
-                      {cls?.sections?.length
-                        ? cls.sections
-                            .map((sec) => sec.sectionId?.name)
-                            .join(", ")
-                        : "N/A"}
-                    </Text>
+                    <Divider style={{ margin: "10px 0" }} />
 
-                    {/* ===== Subjects ===== */}
+                    {/* Subjects */}
                     <div>
-                      <Text strong>Subjects :</Text>
-                      <div style={{ marginTop: 6 }}>
+                      <Text strong>Subjects</Text>
+                      <div style={{ marginTop: 8 }}>
                         {cls?.subjects?.length ? (
                           cls.subjects.map((sub, i) => (
                             <Tag color="blue" key={i}>
@@ -110,21 +136,50 @@ const AssignedClasses = () => {
                       </div>
                     </div>
 
-                    {/* ===== Students ===== */}
-                    <Space>
-                      <TeamOutlined />
-                      <Text>
-                        {cls?.studentCount || 0} Students
-                      </Text>
-                    </Space>
+                    {/* Students */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginTop: 8,
+                      }}
+                    >
+                      <Space>
+                        <TeamOutlined />
+                        <Text strong>
+                          {cls?.studentCount ?? 0} Students
+                        </Text>
+                      </Space>
 
-                    {/* ===== Actions ===== */}
+                      <Tag icon={<CheckCircleOutlined />} color="processing">
+                        Running
+                      </Tag>
+                    </div>
+
+                    {/* Actions */}
                     <Space style={{ marginTop: 12 }}>
-                      <Button type="primary" icon={<EyeOutlined />}>
+                      <Button
+                        type="primary"
+                        icon={<EyeOutlined />}
+                        onClick={() =>
+                          cls?._id &&
+                          navigate(`/dashboard/teacher/classes/${cls._id}`)
+                        }
+                      >
                         View Class
                       </Button>
 
-                      <Button>
+                      <Button
+                        onClick={() =>
+                          cls?._id &&
+                          navigate(
+                            `/dashboard/teacher/attendance/students?classId=${cls._id}&className=${encodeURIComponent(
+                              cls?.name || ""
+                            )}`
+                          )
+                        }
+                      >
                         Take Attendance
                       </Button>
                     </Space>

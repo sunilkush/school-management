@@ -4,24 +4,16 @@ import {
   submitAttempt,
   evaluateAttempt,
   getAttemptById,
-  getAttempts
+  getAttempts,
 } from "../controllers/attempt.controllers.js";
+import { requireRoles } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// Start a new attempt
-router.post("/start", startAttempt);
-
-// Submit attempt
-router.post("/submit", submitAttempt);
-
-// Evaluate subjective answers
-router.post("/evaluate", evaluateAttempt);
-
-// Fetch single attempt
-router.get("/:id", getAttemptById);
-
-// Fetch all attempts (filters + pagination)
-router.get("/", getAttempts);
+router.post("/start", requireRoles(["Student"]), startAttempt);
+router.post("/submit", requireRoles(["Student"]), submitAttempt);
+router.post("/evaluate", requireRoles(["Super Admin", "School Admin", "Teacher"]), evaluateAttempt);
+router.get("/:id", requireRoles(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttemptById);
+router.get("/", requireRoles(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttempts);
 
 export default router;

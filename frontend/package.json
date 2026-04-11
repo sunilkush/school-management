@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start":"vite"
   },
   "dependencies": {
+    "@ant-design/plots": "^2.6.8",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@fontsource/jost": "^5.2.6",
     "@fullcalendar/daygrid": "^6.1.18",

@@ -2,7 +2,7 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Subject } from "../models/subject.model.js";
 import { Role } from "../models/Roles.model.js";
 import { User } from "../models/user.model.js";
-import { ClassSection } from "../models/classSection.model.js";
+
 
 /**
  * Initialize default setup for a new school
@@ -49,14 +49,8 @@ export const initializeNewSchool = async (schoolId) => {
       schoolId,
     });
 
-    // 5️⃣ Create default class structure
-    const classes = [
-      { className: "Nursery", section: "A", schoolId },
-      { className: "KG", section: "A", schoolId },
-      { className: "1st", section: "A", schoolId },
-    ];
-    await ClassSection.insertMany(classes);
-
+   
+    
     console.log(`✅ School setup completed for schoolId: ${schoolId}`);
   } catch (error) {
     console.error("❌ Error initializing school setup:", error);

@@ -10,37 +10,66 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { profile, user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
 
-  const { profile } = useSelector(state => state.auth);
-  const { selectedAcademicYear } = useSelector(state => state.academicYear);
+useEffect(() => {
+    const tokenToUse = accessToken || getAccessToken();
 
-  // 1. Load current user
-  useEffect(() => {
-    dispatch(currentUser());
+    if (tokenToUse) {
+      setAccessToken(tokenToUse);
+      return;
+    }
+
+    clearAccessToken();
+  }, [accessToken]);
+
+useEffect(() => {
+    const bootstrapAuth = async () => {
+      dispatch(startAuthInitialization());
+
+      try {
+        await dispatch(initializeAuth()).unwrap();
+
+        const token = getAccessToken();
+        if (token) {
+          await dispatch(currentUser()).unwrap();
+        }
+      } catch {
+        // Keep existing persisted/login state. Avoid force-logout on transient init failures.
+      } finally {
+        dispatch(completeAuthInitialization());
+      }
+    };
+
+    bootstrapAuth();
   }, [dispatch]);
 
-  // 2. Redirect to login if not authenticated
   useEffect(() => {
-    if (profile?.statusCode === 401) {
-      navigate('/login');
+    if (user?._id) {
+      dispatch(fetchMyPermissions());
     }
-  }, [profile, navigate]);
+  }, [dispatch, user]);
 
-  // 3. Persist and Sync Academic Year on App Load
   useEffect(() => {
-    const savedYear = localStorage.getItem('academicYear');
-    if (savedYear && !selectedAcademicYear?._id) {
-      // sync from localStorage to redux
-      dispatch(setSelectedAcademicYear(JSON.parse(savedYear)));
-    }
-  }, [dispatch, selectedAcademicYear]);
+    if (!isAuthInitialized) return;
 
-  // 4. Optional: Keep Redux changes in sync with localStorage
-  useEffect(() => {
-    if (selectedAcademicYear?._id) {
-      localStorage.setItem('academicYear', JSON.stringify(selectedAcademicYear));
+     if (profile?.statusCode === 401 && accessToken) {
+      dispatch(forceLogout());
+
+      if (location.pathname !== "/login") {
+        navigate("/login", { replace: true });
+      }
     }
-  }, [selectedAcademicYear]);
+   }, [dispatch, isAuthInitialized, profile, accessToken, navigate, location.pathname]);
+
+  if (!isAuthInitialized) {
+    return (
+      <Suspense fallback={null}>
+        <Loader />
+      </Suspense>
+    );
+  }
 
   return (
     <>

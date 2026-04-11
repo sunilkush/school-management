@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import apiClient from "../api/httpClient";
+
 /* =====================================================
    ✅ CREATE FEE HEAD
 ===================================================== */
@@ -8,14 +8,12 @@ export const createFeeHead = createAsyncThunk(
   "feeHeads/create",
   async (data, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.post(
-        `${API_BASE_URL}/fee-heads`,
+      const res = await apiClient.post(
+        `/fee-heads`,
         data, // 👈 normal JSON
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -34,10 +32,8 @@ export const fetchFeeHeads = createAsyncThunk(
   "feeHeads/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(`${API_BASE_URL}/fee-heads/`, {
+      const res = await apiClient.get(`/fee-heads/`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
         params,
       });
@@ -54,11 +50,9 @@ export const fetchFeeHeadsBySchool = createAsyncThunk(
   "feeHeads/fetchBySchool",
   async (params, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
 
-      const res = await axios.get(`${API_BASE_URL}/fee-heads/by-school/`, {
+      const res = await apiClient.get(`/fee-heads/by-school/`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
         params, // ✅ yahin aayega
       });

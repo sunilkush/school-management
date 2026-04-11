@@ -1,0 +1,58 @@
+import mongoose, { Schema } from "mongoose";
+
+const schoolBoardSchema = new Schema(
+  {
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+      index: true,
+    },
+
+    // ✅ SINGLE board (not array)
+    boardId: {
+      type: Schema.Types.ObjectId,
+      ref: "Board",
+      required: true,
+      index: true,
+    },
+
+    isPrimary: {
+      type: Boolean,
+      default: false,
+    },
+
+    assignedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    assignedByRole: {
+      type: String,
+      enum: ["Super Admin", "School Admin"],
+      default: "Super Admin",
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    remarks: {
+      type: String,
+      trim: true,
+    },
+  },
+  { timestamps: true }
+);
+
+// ✅ Correct unique constraint
+schoolBoardSchema.index(
+  { schoolId: 1, boardId: 1 },
+  { unique: true }
+);
+
+export const SchoolBoard =
+  mongoose.models.SchoolBoard ||
+  mongoose.model("SchoolBoard", schoolBoardSchema);

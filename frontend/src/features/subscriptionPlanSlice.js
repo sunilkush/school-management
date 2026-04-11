@@ -1,10 +1,6 @@
 // features/subscriptionPlanSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const Api_Base_Url = import.meta.env.VITE_API_URL;
-
-
+import apiClient from "../api/httpClient";
 
 // ==========================================================
 // ✅ 1. Create Subscription Plan
@@ -13,13 +9,11 @@ export const createSubscriptionPlan = createAsyncThunk(
   "subscriptionPlans/createSubscriptionPlan",
   async (planData, { rejectWithValue }) => {
     try {
-         const token = localStorage.getItem("accessToken");
-      const res = await axios.post(
-        `${Api_Base_Url}/subscription/create`,
+      const res = await apiClient.post(
+        `/subscription/create`,
         planData,
         {
-            headers: { 
-                Authorization: `Bearer ${token}`
+            headers: {
             },
          }
       );
@@ -39,12 +33,10 @@ export const fetchSubscriptionPlans = createAsyncThunk(
   "subscriptionPlans/fetchSubscriptionPlans",
   async (_, { rejectWithValue }) => {
     try {
-        const token = localStorage.getItem("accessToken");
-        const res = await axios.get(
-        `${Api_Base_Url}/subscription/allplan`,
+        const res = await apiClient.get(
+        `/subscription/allplan`,
          {
-            headers: { 
-                Authorization: `Bearer ${token}`
+            headers: {
             },
          }
       );
@@ -66,13 +58,11 @@ export const updateSubscriptionPlan = createAsyncThunk(
   "subscriptionPlans/updateSubscriptionPlan",
   async ({ id, formData }, { rejectWithValue }) => {
     try {
-        const token = localStorage.getItem("accessToken");
-      const res = await axios.put(
-        `${Api_Base_Url}/subscription/${id}`,
+      const res = await apiClient.put(
+        `/subscription/${id}`,
         formData,
        {
-            headers: { 
-                Authorization: `Bearer ${token}`
+            headers: {
             },
          }
       );
@@ -92,12 +82,10 @@ export const deleteSubscriptionPlan = createAsyncThunk(
   "subscriptionPlans/deleteSubscriptionPlan",
   async (id, { rejectWithValue }) => {
     try {
-        const token = localStorage.getItem("accessToken");
-      const res = await axios.delete(
-        `${Api_Base_Url}/subscription/${id}`,
+      const res = await apiClient.delete(
+        `/subscription/${id}`,
        {
-            headers: { 
-                Authorization: `Bearer ${token}`
+            headers: {
             },
          }
       );
@@ -118,12 +106,10 @@ export const fetchPlanLogs = createAsyncThunk(
   "subscriptionPlans/fetchPlanLogs",
   async (planId, { rejectWithValue }) => {
     try {
-        const token = localStorage.getItem("accessToken");
-      const res = await axios.get(
-        `${Api_Base_Url}/subscription/${planId}/logs`,
+      const res = await apiClient.get(
+        `/subscription/${planId}/logs`,
         {
-            headers: { 
-                Authorization: `Bearer ${token}`
+            headers: {
             },
          }
       );

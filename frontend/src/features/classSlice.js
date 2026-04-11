@@ -1,22 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
 
-const Api_Base_Url = import.meta.env.VITE_API_URL;
-
-// CREATE class
+// ================= CREATE =================
 export const createClass = createAsyncThunk(
   "class/createClass",
   async (classData, { rejectWithValue }) => {
     try {
-     
-      console.log("Creating class with data:", classData);
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/class/create`, classData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      console.log("✅ Class created:", res.data);
-      return res.data?.data || res.data; // safe return
+      const res = await apiClient.post(`/class/create`, classData);
+      return res.data?.data || res.data;
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Class creation failed!"
@@ -25,37 +16,34 @@ export const createClass = createAsyncThunk(
   }
 );
 
+// ================= FETCH =================
 export const fetchAllClasses = createAsyncThunk(
   "class/fetchAllClasses",
-  async (payload, { rejectWithValue, signal }) => {
+  async (params = {}, { rejectWithValue, signal }) => {
     try {
-      const { schoolId, academicYearId } = payload || {}; // ✅ safe destructuring
-      const token = localStorage.getItem("accessToken");
+      const { schoolId, academicYearId, page = 1, limit = 100 } = params;
 
-      const res = await axios.get(`${Api_Base_Url}/class/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { schoolId, academicYearId },
-        signal, // ✅ axios v1+ supports signal (for cancellation)
+      const res = await apiClient.get(`/class/all`, {
+        params: { schoolId, academicYearId, page, limit },
+        signal,
       });
-     
-      return res.data;
+
+      return res.data; // ✅ full response
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message || "Failed to fetch classes");
+      return rejectWithValue(
+        error?.response?.data?.message || "Failed to fetch classes"
+      );
     }
   }
 );
 
-
-// DELETE class
+// ================= DELETE =================
 export const deleteClass = createAsyncThunk(
   "class/deleteClass",
-  async (classId, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      await axios.delete(`${Api_Base_Url}/class/${classId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return classId;
+      await apiClient.delete(`/class/${id}`);
+      return id; // ✅ always return id
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || "Class deletion failed!"
@@ -64,17 +52,12 @@ export const deleteClass = createAsyncThunk(
   }
 );
 
-// UPDATE class
+// ================= UPDATE =================
 export const updateClass = createAsyncThunk(
   "class/updateClass",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${Api_Base_Url}/class/${id}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-     
+      const res = await apiClient.put(`/class/${id}`, data);
       return res.data?.data;
     } catch (error) {
       return rejectWithValue(
@@ -84,48 +67,40 @@ export const updateClass = createAsyncThunk(
   }
 );
 
-export const assignsubjects = createAsyncThunk(
-  "class/assignsubjects",
-      async (data, { rejectWithValue }) => {
+// ================= ASSIGN SUBJECTS =================
+export const assignSubjects = createAsyncThunk(
+  "class/assignSubjects",
+  async (data, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${Api_Base_Url}/class/assign-subjects`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.post(`/class/assign-subjects`, data);
       return res.data?.data;
     } catch (error) {
       return rejectWithValue(
-        error?.response?.data?.message || "Assigning subjects failed!"
-      );
-    }});
-
-
-export const fetchAssignedClasses = createAsyncThunk(
-  "class/fetchAssignedClasses",
-  async (paramsData, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-
-      const res = await axios.get(
-        `${Api_Base_Url}/class/assign-teacher`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params: paramsData,
-        }
-      );
-     
-      return res.data?.data;
-    } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message ||
-        "Fetching assigned classes failed!"
+        error?.response?.data?.message || "Assign subjects failed!"
       );
     }
   }
 );
 
+// ================= FETCH ASSIGNED =================
+export const fetchAssignedClasses = createAsyncThunk(
+  "class/fetchAssignedClasses",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/class/assign-teacher`, {
+        params,
+      });
+      return res.data?.data || [];
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message ||
+          "Fetching assigned classes failed!"
+      );
+    }
+  }
+);
 
-
+// ================= SLICE =================
 const classSlice = createSlice({
   name: "class",
   initialState: {
@@ -134,10 +109,9 @@ const classSlice = createSlice({
     classList: [],
     total: 0,
     page: 1,
-    limit: 10,
     totalPages: 0,
     success: false,
-    classAssignTeacher:[]
+    classAssignTeacher: [],
   },
   reducers: {
     resetClassState: (state) => {
@@ -147,6 +121,8 @@ const classSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      // FETCH
       .addCase(fetchAllClasses.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -154,12 +130,12 @@ const classSlice = createSlice({
       .addCase(fetchAllClasses.fulfilled, (state, action) => {
         state.loading = false;
 
-        // backend se pura object aata hai
-        state.classList = action.payload?.data?.data || [];
-        state.total = action.payload?.data?.total || 0;
-        state.page = action.payload?.data?.page || 1;
-        state.limit = action.payload?.data?.limit || 10;
-        state.totalPages = action.payload?.data?.totalPages || 0;
+        const payload = action.payload?.data || {};
+
+        state.classList = payload.classes || payload.data || [];
+        state.total = payload.total || 0;
+        state.page = payload.page || 1;
+        state.totalPages = payload.totalPages || 0;
       })
       .addCase(fetchAllClasses.rejected, (state, action) => {
         state.loading = false;
@@ -167,25 +143,15 @@ const classSlice = createSlice({
       })
 
       // CREATE
-      .addCase(createClass.pending, (state) => {
-        state.loading = true;
-      })
       .addCase(createClass.fulfilled, (state, action) => {
         state.loading = false;
         if (action.payload) {
-          state.classList.push(action.payload);
+          state.classList.unshift(action.payload);
         }
         state.success = true;
       })
-      .addCase(createClass.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
 
       // DELETE
-      .addCase(deleteClass.pending, (state) => {
-        state.loading = true;
-      })
       .addCase(deleteClass.fulfilled, (state, action) => {
         state.loading = false;
         state.classList = state.classList.filter(
@@ -193,42 +159,30 @@ const classSlice = createSlice({
         );
         state.success = true;
       })
-      .addCase(deleteClass.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
 
       // UPDATE
-      .addCase(updateClass.pending, (state) => {
-        state.loading = true;
-      })
       .addCase(updateClass.fulfilled, (state, action) => {
         state.loading = false;
+
         const updated = action.payload;
-        console.log(updated)
-        state.classList = state.classList.map((cls) =>
-          cls._id === updated._id ? updated : cls
+        if (!updated) return;
+
+        const index = state.classList.findIndex(
+          (c) => c._id === updated._id
         );
+
+        if (index !== -1) {
+          state.classList[index] = updated;
+        }
+
         state.success = true;
       })
-      .addCase(updateClass.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
 
-      //class assign teacher
-      .addCase(fetchAssignedClasses.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      // ASSIGNED TEACHERS
       .addCase(fetchAssignedClasses.fulfilled, (state, action) => {
-          state.loading = false;
-          state.classAssignTeacher = action.payload || [];
-        })
-      .addCase(fetchAssignedClasses.rejected, (state, action) => {
-           state.loading = false;
-           state.error = action.payload;
-      })
+        state.loading = false;
+        state.classAssignTeacher = action.payload;
+      });
   },
 });
 

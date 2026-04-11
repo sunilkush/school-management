@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-const Api_Base_Url = import.meta.env.VITE_API_URL;
+import apiClient from "../api/httpClient";
+
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS (School Admin)
 ===================================================== */
@@ -8,15 +8,9 @@ export const assignFeesToStudents = createAsyncThunk(
   "studentFee/assign",
   async (payload, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const { data } = await axios.post(
-        `${Api_Base_Url}/student-fees/assign`,
+      const { data } = await apiClient.post(
+        `/student-fees/assign`,
         payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
       );
       return data;
     } catch (err) {
@@ -32,19 +26,21 @@ export const fetchMyFees = createAsyncThunk(
   "studentFee/fetchMyFees",
   async (studentId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const { data } = await apiClient.get(`/student-fees/my/${studentId}`);
 
-      const { data } = await axios.get( `${Api_Base_Url}/student-fees/my/${studentId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return data.data;
+      const normalizedFees = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.data?.data)
+        ? data.data.data
+        : [];
+
+      return normalizedFees;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
+
 
 /* =====================================================
    ✅ PAY STUDENT FEE
@@ -53,13 +49,11 @@ export const payStudentFee = createAsyncThunk(
   "studentFee/pay",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const { data } = await axios.put(
-        `${Api_Base_Url}/student-fees/pay/${id}`,
+      const { data } = await apiClient.put(
+        `/student-fees/pay/${id}`,
         payload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -77,10 +71,8 @@ export const fetchStudentFeeSummary = createAsyncThunk(
   "studentFee/summary",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const { data } = await axios.get(`${Api_Base_Url}/student-fees/summary`, {
+      const { data } = await apiClient.get(`/student-fees/summary`, {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
       return data.data;
@@ -133,7 +125,7 @@ const studentFeeSlice = createSlice({
       })
       .addCase(fetchMyFees.fulfilled, (state, action) => {
         state.loading = false;
-        state.myFees = action.payload;
+        state.myFees = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchMyFees.rejected, (state, action) => {
         state.loading = false;

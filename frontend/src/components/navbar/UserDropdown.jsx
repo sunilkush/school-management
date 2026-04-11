@@ -1,8 +1,8 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../../features/authSlice";
-import { Avatar, Dropdown, Menu, Button, Typography ,Col} from "antd";
+import { logoutUser } from "../../features/authSlice";
+import { Avatar, Dropdown, Menu, Typography ,Col} from "antd";
 import {
   UserOutlined,
   MailOutlined,
@@ -17,11 +17,11 @@ const UserDropdown = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") || "user";
+  const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") ;
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
+const handleLogout = async () => {
+    await dispatch(logoutUser());
+    navigate("/", { replace: true });
   };
 
   const menu = (
@@ -46,14 +46,14 @@ const UserDropdown = () => {
   );
 
   return (
-    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
+    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight" style={{color: "var(--text-primary)",background:"var( --surface-header)"}}>
       <Col type="text" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
         {user?.avatar ? (
-          <Avatar src={user.avatar} size={24} />
+          <Avatar src={user.avatar} size={24} style={{color: "var(--text-primary)"}} />
         ) : (
-          <Avatar icon={<UserOutlined />} size={24} />
+          <Avatar icon={<UserOutlined />} size={24} style={{color: "var(--text-primary)"}} />
         )}
-        <Text style={{textTransform:"capitalize"}}>{user?.name || "User"}</Text>
+        <Text style={{textTransform:"capitalize",color: "var(--text-primary)"}}>{user?.name || "User"}</Text>
       </Col>
     </Dropdown>
   );

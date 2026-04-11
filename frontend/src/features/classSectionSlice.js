@@ -1,23 +1,21 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../api/httpClient";
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Fetch all class-section mappings (optionally filtered by classId)
+// Fetch all class-section mappings (optionally filtered by schoolClassId)
 export const fetchClassSections = createAsyncThunk(
   "classSection/fetch",
-  async ({ classId, schoolId, academicYearId } = {}, { rejectWithValue }) => {
+  async ({ schoolClassId, schoolId, academicYearId } = {}, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
       const params = {};
-      if (classId) params.classId = classId;
+      if (schoolClassId) params.schoolClassId = schoolClassId;
       if (schoolId) params.schoolId = schoolId;
       if (academicYearId) params.academicYearId = academicYearId;
 
       const query = new URLSearchParams(params).toString();
-      const res = await axios.get(`${API_URL}/classSection?${query}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get(`/classSection?${query}`, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -30,10 +28,7 @@ export const createClassSection = createAsyncThunk(
   "classSection/create",
   async (payload, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.post(`${API_URL}/classSection`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.post(`/classSection`, payload, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -46,10 +41,7 @@ export const updateClassSection = createAsyncThunk(
   "classSection/update",
   async ({ id, payload }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.put(`${API_URL}/classSection/${id}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.put(`/classSection/${id}`, payload, {      });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -62,10 +54,7 @@ export const deleteClassSection = createAsyncThunk(
   "classSection/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      await axios.delete(`${API_URL}/classSection/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiClient.delete(`/classSection/${id}`, {      });
       return id; // return deleted id to remove from state
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

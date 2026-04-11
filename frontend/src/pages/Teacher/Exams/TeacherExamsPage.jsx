@@ -1,169 +1,215 @@
-import React, { useEffect ,useState} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Table,
   Button,
-  Space,
-  Popconfirm,
-  message,
   Card,
+  Empty,
+  InputNumber,
+  message,
+  Space,
+  Statistic,
+  Table,
   Tag,
   Typography,
-  Empty,
+  Upload,
 } from "antd";
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
-
-import { getExams } from "../../../features/examSlice.js";
+import { UploadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { Modal } from "antd";
-import EditExamForm from "./EditExamForm";
+import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
+import { fetchAllStudent } from "../../../features/studentSlice";
+
 const { Title, Text } = Typography;
 
 const TeacherExamsPage = () => {
   const dispatch = useDispatch();
- 
-const [editModalOpen, setEditModalOpen] = useState(false);
-const [selectedExamId, setSelectedExamId] = useState(null);
-  /* ✅ Redux State */
   const { exams = [], loading } = useSelector((state) => state.exams || {});
+  const { studentList = [], loading: studentLoading } = useSelector((state) => state.students || {});
+  const { user = {} } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
 
-  /* ✅ Academic Year + School */
-  const storeAcadmicYear = localStorage.getItem("selectedAcademicYear");
-  const selectedAcademicYear = storeAcadmicYear
-    ? JSON.parse(storeAcadmicYear)
-    : null;
+  const [selectedExamId, setSelectedExamId] = useState(null);
+  const [rows, setRows] = useState([]);
 
-  const academicYearId = selectedAcademicYear?._id || null;
-  const schoolId = selectedAcademicYear?.schoolId || null;
+  const selectedExam = useMemo(() => exams.find((exam) => exam._id === selectedExamId), [exams, selectedExamId]);
+  const schoolId = user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
-  /* ✅ Fetch Exams */
   useEffect(() => {
-    if (schoolId) {
-      dispatch(getExams({ schoolId, academicYearId }));
-    }
-  }, [schoolId, academicYearId, dispatch]);
+    dispatch(getExams({ sortBy: "examDate", sortOrder: "desc" }));
+  }, [dispatch]);
 
-  /* ✅ Delete Handler (Frontend Only Example) */
-  const handleDelete = () => {
-    message.success("Exam deleted");
-    // ⭐ If backend delete API hai to dispatch(deleteExam(id))
+  useEffect(() => {
+    const schoolClassId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
+    if (!selectedExamId || !schoolClassId || !schoolId || !academicYearId) {
+      setRows([]);
+      return;
+    }
+
+    dispatch(fetchAllStudent({ schoolId, academicYearId, schoolClassId }));
+  }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
+
+  useEffect(() => {
+    if (!selectedExamId || !studentList.length) return;
+
+    setRows(
+      studentList.map((student, index) => ({
+        studentId: student?.studentInfo?._id,
+        studentName: student?.userDetails?.name || `Student ${index + 1}`,
+        sectionId: student?.sectionDetails?._id,
+        obtainedMarks: 0,
+        totalMarks: selectedExam?.totalMarks || 100,
+        passingMarks: selectedExam?.passingMarks || 33,
+      }))
+    );
+  }, [selectedExamId, selectedExam, studentList]);
+
+  const onMarkChange = (studentId, value) => {
+    setRows((prev) =>
+      prev.map((item) => (item.studentId === studentId ? { ...item, obtainedMarks: value ?? 0 } : item))
+    );
   };
-  const handleEdit = (examId) => {
-  setSelectedExamId(examId);
-  setEditModalOpen(true);
-};
-  /* ✅ Table Columns */
+
+  const saveBulk = async () => {
+    if (!selectedExamId) return message.error("Select exam first");
+
+    const payloadRows = rows
+      .filter((row) => row.studentId)
+      .map((row) => ({
+        ...row,
+        schoolClassId: selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId,
+        sectionId: row.sectionId || selectedExam?.sectionId?._id || selectedExam?.sectionId,
+      }));
+
+    if (!payloadRows.length) return message.warning("No valid students found for this class");
+
+    try {
+      await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payloadRows })).unwrap();
+      message.success("Marks saved");
+    } catch (error) {
+      message.error(error || "Failed to save marks");
+    }
+  };
+
+  const submitFinal = async () => {
+    if (!selectedExam) return;
+    try {
+      await dispatch(
+        submitFinalMarks({
+          examId: selectedExam._id,
+          schoolClassId: selectedExam.schoolClassId?._id || selectedExam.schoolClassId,
+          sectionId: selectedExam.sectionId?._id || selectedExam.sectionId,
+        })
+      ).unwrap();
+      message.success("Final marks submitted");
+    } catch (error) {
+      message.error(error || "Failed to submit final marks");
+    }
+  };
+
   const columns = [
+    { title: "Student", dataIndex: "studentName" },
+    { title: "Student ID", dataIndex: "studentId" },
+    { title: "Total", dataIndex: "totalMarks", width: 90 },
+    { title: "Passing", dataIndex: "passingMarks", width: 90 },
     {
-      title: "Exam Title",
-      dataIndex: "title",
-      render: (text) => <Text strong>{text}</Text>,
-    },
-    {
-      title: "Type",
-      dataIndex: "examType",
-      render: (type) => (
-        <Tag color="blue">{type?.toUpperCase()}</Tag>
+      title: "Obtained",
+      width: 170,
+      render: (_, record) => (
+        <InputNumber
+          min={0}
+          max={record.totalMarks}
+          value={record.obtainedMarks}
+          onChange={(value) => onMarkChange(record.studentId, value)}
+        />
       ),
     },
     {
-      title: "Start Time",
-      dataIndex: "startTime",
-      render: (time) => new Date(time).toLocaleString(),
-    },
-    {
-      title: "End Time",
-      dataIndex: "endTime",
-      render: (time) => new Date(time).toLocaleString(),
-    },
-    {
-      title: "Total Marks",
-      dataIndex: "totalMarks",
-    },
-    {
-      title: "Passing Marks",
-      dataIndex: "passingMarks",
-    },
-    {
       title: "Status",
-      dataIndex: "status",
-      render: (status) => {
-        const color =
-          status === "published"
-            ? "green"
-            : status === "completed"
-            ? "purple"
-            : "orange";
-        return <Tag color={color}>{status?.toUpperCase()}</Tag>;
-      },
-    },
-    {
-      title: "Actions",
-      align: "center",
+      width: 120,
       render: (_, record) => (
-        <Space>
-        <Button
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record._id)}
-            />
-          <Popconfirm
-            title="Delete this exam?"
-            onConfirm={() => handleDelete(record._id)}
-          >
-            <Button danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
+        <Tag color={record.obtainedMarks >= record.passingMarks ? "green" : "red"}>
+          {record.obtainedMarks >= record.passingMarks ? "PASS" : "FAIL"}
+        </Tag>
       ),
     },
   ];
 
+  const uploadProps = {
+    accept: ".json",
+    showUploadList: false,
+    beforeUpload: async (file) => {
+      const text = await file.text();
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          setRows(parsed);
+          message.success("Bulk marks loaded from JSON");
+        } else {
+          message.error("Invalid JSON format. Expected array.");
+        }
+      } catch {
+        message.error("Unable to parse JSON file");
+      }
+      return false;
+    },
+  };
+
+  const summary = useMemo(() => {
+    if (!rows.length) return null;
+    const entered = rows.filter((row) => row.obtainedMarks !== undefined).length;
+    const passCount = rows.filter((row) => row.obtainedMarks >= row.passingMarks).length;
+    return {
+      entered,
+      passCount,
+      total: rows.length,
+    };
+  }, [rows]);
+
   return (
-    <Card bordered={false} style={{ borderRadius: 12 }}>
-      <Space
-        style={{
-          width: "100%",
-          justifyContent: "space-between",
-          marginBottom: 16,
-        }}
-      >
-        <Title level={4} style={{ margin: 0 }}>
-          📘 Exams Management
-        </Title>
-      </Space>
+    <Space direction="vertical" style={{ width: "100%" }} size="middle">
+      <Card>
+        <Title level={4}>Teacher Exam & Marks Entry</Title>
+        <Text type="secondary">Exam select karo, class students auto-load honge, marks enter karke direct save/final submit karo.</Text>
+      </Card>
 
-      <Table
-        loading={loading}
-        columns={columns}
-        dataSource={exams}
-        rowKey="_id"
-        bordered
-        pagination={{ pageSize: 5 }}
-        locale={{
-          emptyText: (
-            <Empty
-              description="No exams found"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          ),
-        }}
-      />
-          <Modal
-  title="Edit Exam"
-  open={editModalOpen}
-  onCancel={() => setEditModalOpen(false)}
-  footer={null}
-  width={900}
-  destroyOnClose
->
-  {selectedExamId && (
-    <EditExamForm examId={selectedExamId} />
-  )}
-</Modal>
-    </Card>
+      <Card>
+        <Space wrap>
+          {exams.map((exam) => (
+            <Button key={exam._id} type={selectedExamId === exam._id ? "primary" : "default"} onClick={() => setSelectedExamId(exam._id)}>
+              {exam.title} <Tag style={{ marginLeft: 8 }}>{exam.schoolClassId?.name || "Class"}</Tag>
+            </Button>
+          ))}
+          {!exams.length && <Empty description="No assigned exams found" />}
+        </Space>
+      </Card>
 
+      {selectedExamId && (
+        <Card loading={loading || studentLoading} title="Marks Entry Table">
+          <Space wrap style={{ marginBottom: 12 }}>
+            <Upload {...uploadProps}>
+              <Button icon={<UploadOutlined />}>Bulk Upload (JSON)</Button>
+            </Upload>
+            <Button type="primary" onClick={saveBulk}>Save Marks</Button>
+            <Button onClick={submitFinal}>Submit Final Marks</Button>
+          </Space>
+
+          {summary && (
+            <Space wrap size="large" style={{ marginBottom: 12 }}>
+              <Statistic title="Students" value={summary.total} />
+              <Statistic title="Marks Entered" value={summary.entered} />
+              <Statistic title="Pass Count" value={summary.passCount} />
+            </Space>
+          )}
+
+          <Table
+            rowKey={(row, i) => `${row.studentId || "row"}-${i}`}
+            dataSource={rows}
+            columns={columns}
+            pagination={false}
+            locale={{ emptyText: "No students found for selected exam class" }}
+          />
+        </Card>
+      )}
+    </Space>
   );
 };
 

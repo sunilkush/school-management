@@ -23,6 +23,7 @@ import { fetchAllClasses } from "../../../features/classSlice";
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
 
+
 const QuestionBank = () => {
   const dispatch = useDispatch();
 
@@ -37,7 +38,7 @@ const QuestionBank = () => {
   const [deletingId, setDeletingId] = useState(null);
 
   const [filters, setFilters] = useState({
-    classId: "",
+    schoolClassId: "",
     subjectId: "",
     chapter: "",
     search: "",
@@ -48,7 +49,7 @@ const QuestionBank = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
 
   /* ================= User ================= */
-  const user = JSON.parse(localStorage.getItem("user"));
+  const {user} = useSelector((state)=>state.auth)
   const schoolId = user?.school?._id;
 
   /* ================= Effects ================= */
@@ -96,7 +97,7 @@ const QuestionBank = () => {
         allowClear
         loading={classLoading}
         style={{ width: "100%" }}
-        value={filters.classId || undefined}
+        value={filters.schoolClassId || undefined}
         onChange={(value) => {
           const cls = classList.find((c) => c._id === value);
 
@@ -105,7 +106,7 @@ const QuestionBank = () => {
 
           setFilters({
             ...filters,
-            classId: value || "",
+            schoolClassId: value || "",
             subjectId: "",
             chapter: "",
           });

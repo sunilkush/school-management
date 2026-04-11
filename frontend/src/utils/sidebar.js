@@ -38,85 +38,102 @@ export const sidebarMenu = {
 
   /* ================= SUPER ADMIN ================= */
   "super admin": [
-    { title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
 
-    {
-      title: "School Management",
-      icon: School,
-      subMenu: [
-        { title: "School List", path: "superadmin/schools" },
-        { title: "Subscription Plans", path: "superadmin/subscriptions" },
-        { title: "School Reports", path: "superadmin/reports/schools" },
-      ],
-    },
+{ title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
 
-    {
-      title: "User Management",
-      icon: Users,
-      subMenu: [
-        { title: "School Admins", path: "superadmin/users/admins" },
-        { title: "Teachers", path: "superadmin/users/teachers" },
-        { title: "Students", path: "superadmin/users/students" },
-        { title: "Parents", path: "superadmin/users/parents" },
-        { title: "Staff Members", path: "superadmin/users/staff" },
-        { title: "Accountants", path: "superadmin/users/accountant" },
-        { title: "Librarians", path: "superadmin/users/librarian" },
-        { title: "Transport Staff", path: "superadmin/users/transport" },
-      ],
-    },
-
-    {
-      title: "Module Management",
-      icon: Puzzle,
-      subMenu: [{ title: "All Modules", path: "superadmin/modules" }],
-    },
-
-    {
-      title: "Reports & Analytics",
-      icon: FileText,
-      subMenu: [
-        { title: "Academic Reports", path: "superadmin/reports/academic" },
-        { title: "Attendance Reports", path: "superadmin/reports/attendance" },
-        { title: "Finance Reports", path: "superadmin/reports/finance" },
-        { title: "Activity Logs", path: "superadmin/reports/activity" },
-      ],
-    },
-
-    {
-      title: "Academic Setup",
-      icon: Settings,
-      subMenu: [
-        { title: "Academic Years", path: "superadmin/academic-years" },
-        { title: "School Board", path: "superadmin/boards" },
-        { title: "Classes & Sections", path: "superadmin/classes" },
-        { title: "Subjects", path: "superadmin/subjects" },
-        { title: "Chapters & Topics", path: "superadmin/chapters-topics" },
-        { title: "Departments", path: "superadmin/departments" },
-        { title: "Designations", path: "superadmin/designations" },
-      ],
-    },
-     
-    {
-      title: "System Administration",
-      icon: Cog,
-      subMenu: [
-        { title: "Role Management", path: "superadmin/settings/roles" },
-        { title: "Permission Management", path: "superadmin/settings/permissions" },
-        { title: "System Backup", path: "superadmin/settings/backup" },
-        { title: "Audit Logs", path: "superadmin/settings/audit" },
-      ],
-    },
+{
+  title: "School Management",
+  icon: School,
+  subMenu: [
+    { title: "School List", path: "superadmin/schools" },
+    { title: "School Reports", path: "superadmin/reports/schools" },
   ],
+},
+
+{
+  title: "Subscription & Billing",
+  icon: CreditCard,
+  subMenu: [
+    { title: "Subscription Plans", path: "superadmin/subscriptions" },
+    { title: "Payment History", path: "superadmin/payments" },
+    { title: "Revenue Reports", path: "superadmin/revenue" },
+  ],
+},
+
+{
+  title: "User Management",
+  icon: Users,
+  subMenu: [
+    { title: "School Admins", path: "superadmin/users/admins" },
+  ],
+},
+{
+  title: "Acadmic Management",
+  icon: BookOpen,
+  subMenu: [
+    { title: "Academic Years", path:"superadmin/academics/academic-years"},
+    { title: "Board Management", path:"superadmin/academics/boards"},
+    { title: "Board Clasess", path:"superadmin/academics/boards-class"},
+    { title: "Chapter & Topic Management", path: "superadmin/academics/chapters-topics" },
+  /*   { title: "Class Management", path: "superadmin/academics/classes" }, */
+    { title: "Subject Management", path: "superadmin/academics/subjects" },
+    
+
+  ],
+
+},
+{
+  title: "Module Management",
+  icon: Puzzle,
+  subMenu: [
+    { title: "All Modules", path: "superadmin/modules" },
+  ],
+},
+
+{
+  title: "Reports & Analytics",
+  icon: FileText,
+  subMenu: [
+    { title: "Platform Usage", path: "superadmin/reports/usage" },
+    { title: "Revenue Analytics", path: "superadmin/reports/revenue" },
+    { title: "Activity Logs", path: "superadmin/reports/activity" },
+  ],
+},
+
+{
+  title: "System Administration",
+  icon: Cog,
+  subMenu: [
+    { title: "Role Management", path: "superadmin/settings/roles" },
+    { title: "Permission Management", path: "superadmin/settings/permissions" },
+    { title: "System Backup", path: "superadmin/settings/backup" },
+    { title: "Audit Logs", path: "superadmin/settings/audit" },
+  ],
+},
+{
+  title:"Help",
+  icon: MessageSquare,
+  subMenu:[
+   
+    {title:"Documentation",path:"superadmin/support/documentation"},
+    {title:"Contact Support",path:"superadmin/support/contact"},
+    {title:"FAQs",path:"superadmin/support/faqs"},
+  ]
+}
+
+],
 
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
     { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
-    { title: "My Self", path: "schooladmin/profile", icon: User, },
+    { title:"School Setup", icon: School, path:"schooladmin/school-setup"},
+   /*  { title: "My Self", path: "schooladmin/profile", icon: User, }, */
     {
       title: "User Management",
       icon: Users,
       subMenu: [
-        { title: "Teachers & Staff", path: "schooladmin/users" },
+        { title: "Student Admission", path: "schooladmin/admission" },
+        { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Students", path: "schooladmin/studentList" },
         { title: "Parents", path: "schooladmin/parents-register" },
       ],
@@ -157,8 +174,9 @@ export const sidebarMenu = {
       icon: CreditCard,
       subMenu: [
         { title: "Fee Categories", path: "schooladmin/fees/categories" },
-        { title: "Fee Collection", path: "schooladmin/fees/collect" },
+        { title: "Fee Structures", path: "schooladmin/fees/feestructure" },
         { title: "Assign Fees", path: "schooladmin/fees/assign" },
+        { title: "Fee Collection", path: "schooladmin/fees/collect" },
       ],
     },
 
@@ -177,9 +195,37 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Routes", path: "schooladmin/transport/routes" },
         { title: "Vehicles", path: "schooladmin/transport/vehicles" },
+        { title: "Assignments", path: "schooladmin/transport/assignments" },
+      ],
+    },
+{
+      title: "Hostel Management",
+      icon: ClipboardList,
+      subMenu: [
+        { title: "Hostel Rooms & Allocation", path: "schooladmin/hostel" },
+       // { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
       ],
     },
 
+    {
+      title: "Payroll",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
+        { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
+        { title: "Create Employee", path: "schooladmin/payroll/create-employee" },
+        { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
+        { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
+      ],
+    },
+    {
+      title: "Inventory Management",
+      icon: Briefcase,
+      subMenu: [
+        { title: "Supplies", path: "schooladmin/inventory/supplies" },
+        { title: "Assets", path: "schooladmin/inventory/assets" },
+      ],
+    },
     { title: "Reports", path: "schooladmin/reports", icon: FileBarChart2 },
     { title: "School Settings", path: "schooladmin/settings", icon: Settings },
   ],
@@ -188,9 +234,19 @@ export const sidebarMenu = {
   teacher: [
     { title: "Dashboard", path: "teacher", icon: LayoutDashboard },
     { title: "Assigned Classes", path: "teacher/classes", icon: Book },
-    { title: "My Students", path: "teacher/students", icon: Users },
+  
+    {
+      title: "Attendance",
+      icon: UserCheck,
+      subMenu: [
+          { title: "Student Attendance", path: "teacher/attendance/students" },
+        { title: "Student Monthly Attendance", path: "teacher/attendance" },
+        { title: "My Daily Attendance", path: "teacher/attendance/my" },
+        { title: "My Monthly Report", path: "teacher/attendance/my/monthly" },
+      ],
+    },
     { title: "Assignments", path: "teacher/assignments", icon: ClipboardList },
-    { title: "Attendance", path: "teacher/attendance", icon: UserCheck },
+   
     {
       title: "Examinations",
       icon: GraduationCap,
@@ -201,23 +257,39 @@ export const sidebarMenu = {
        
       ],
     },
+    
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
     { title: "Reports", path: "teacher/reports", icon: FileBarChart2 },
+    {
+      title: "Profile",
+      icon: User,
+      subMenu: [
+        { title: "My Profile", path: "teacher/profile" },
+      
+        { title: "Change Password", path: "teacher/profile/change-password" }, ]
+    },
   ],
 
   /* ================= STUDENT ================= */
   student: [
     { title: "Dashboard", path: "student", icon: LayoutDashboard },
     { title: "Profile", path: "student/profile", icon: User },
-    { title: "Live Exams", path: "student/exams/exam-live", icon: MessageCircle },
-    { title: "Exam Review", path: "student/exams/attempt-review", icon: Clipboard },
+    {
+      title: "Examinations",
+      icon: GraduationCap,
+      subMenu: [
+        { title: "Exam Hub", path: "student/exams" },
+        { title: "Live Exams", path: "student/exams/exam-live" },
+        { title: "Exam Review", path: "student/exams/attempt-review" },
+      ],
+    },
     { title: "Homework", path: "student/homework", icon: ClipboardList },
     { title: "Attendance", path: "student/attendance", icon: UserCheck },
     { title: "Grades", path: "student/grades", icon: ClipboardSignature },
     { title: "Timetable", path: "student/timetable", icon: CalendarClock },
     { title: "Library", path: "student/library", icon: BookOpen },
     { title: "Transport", path: "student/transport", icon: Bus },
-    { title: "Fees", path: "student/fees", icon: CreditCard },
+    //{ title: "Fees", path: "student/fees", icon: CreditCard },
   ],
 
   /* ================= PARENT ================= */
@@ -227,6 +299,14 @@ export const sidebarMenu = {
     { title: "Attendance", path: "parent/attendance", icon: UserCheck },
     { title: "Grades", path: "parent/grades", icon: Clipboard },
     { title: "Homework", path: "parent/homework", icon: ClipboardList },
+    {
+      title: "Examinations",
+      icon: GraduationCap,
+       subMenu: [
+        { title: "Exam Hub", path: "parent/exams" },
+      ],
+
+    },
     { title: "Fees", path: "parent/fees", icon: CreditCard },
     { title: "Messages", path: "parent/message", icon: MessageCircle },
     { title: "Reports", path: "parent/reports", icon: FileBarChart2 },
@@ -235,8 +315,27 @@ export const sidebarMenu = {
   /* ================= ACCOUNTANT ================= */
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
-    { title: "Fee Collection", path: "accountant/fees/collect", icon: IndianRupee },
-    { title: "Payroll Management", path: "accountant/salary", icon: IndianRupee },
+    {
+      title: "Fee Management",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Fee Categories", path: "accountant/fees/categories" },
+        { title: "Fee Structure", path: "accountant/fees/feestructure" },
+        { title: "Assign Fees", path: "accountant/fees/assign" },
+        { title: "Fee Collection", path: "accountant/fees/collect" },
+      ],
+    },
+    {
+      title: "Payroll Management",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Monthly Run", path: "accountant/salary" },
+        { title: "Salary Structures", path: "accountant/salary/structures" },
+        { title: "Create Employee", path: "accountant/salary/create-employee" },
+        { title: "Payslips", path: "accountant/salary/payslips" },
+        { title: "Monthly Reports", path: "accountant/salary/reports/monthly" },
+      ],
+    },
     { title: "Financial Reports", path: "accountant/reports", icon: FileBarChart2 },
   ],
 
@@ -286,12 +385,12 @@ export const sidebarMenu = {
   ],
   /* ================= SUPPORT STAFF ================= */
   "support staff": [
-    { title: "Dashboard", path: "support", icon: LayoutDashboard },
-    { title: "Assigned Tasks", path: "support/tasks", icon: ClipboardList },
-    { title: "Attendance", path: "support/attendance", icon: Clock },
-    { title: "Notices", path: "support/notices", icon: Bell },
-    { title: "Messages", path: "support/messages", icon: MessageSquare, },
-    {title: "Profile",path: "support/profile",icon: User,},
+    { title: "Dashboard", path: "staff", icon: LayoutDashboard },
+    { title: "Assigned Tasks", path: "staff/tasks", icon: ClipboardList },
+    { title: "Attendance", path: "staff/attendance", icon: Clock },
+    { title: "Notifications", path: "staff/notification", icon: Bell },
+    { title: "Messages", path: "staff/message", icon: MessageSquare, },
+    {title: "Profile",path: "staff/profile",icon: User,},
   ],
   /* ================= SECURITY ================= */
   security: [
@@ -390,4 +489,26 @@ export const sidebarMenu = {
     { title: "Profile", path: "hostelwarden/profile", icon: User },
   ],
 
+
+
+  /* ================= TRANSPORT MANAGER ================= */
+  "transport manager": [
+    { title: "Dashboard", path: "transportmanager", icon: LayoutDashboard },
+    { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
+    { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
+    { title: "Drivers", path: "transportmanager/drivers", icon: Users },
+    { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
+  ],
+
 };
+
+
+const SUPPORT_CENTER_ITEM = { title: "Support Center", path: "support/tickets", icon: MessageSquare };
+
+Object.keys(sidebarMenu).forEach((roleKey) => {
+  const items = sidebarMenu[roleKey];
+  if (!Array.isArray(items)) return;
+
+  const hasSupport = items.some((item) => item?.path === "support/tickets");
+  if (!hasSupport) items.push(SUPPORT_CENTER_ITEM);
+});

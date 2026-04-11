@@ -23,7 +23,7 @@ const FeesSchema = new Schema(
       type: Date,
     },
 
-    classId: {
+    schoolClassId: {
       type: Schema.Types.ObjectId,
       ref: "Class",
       required: true,
