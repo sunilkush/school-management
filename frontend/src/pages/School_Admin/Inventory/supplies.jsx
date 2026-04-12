@@ -17,6 +17,7 @@ import {
   Col,
   Typography,
   Tag,
+  Alert,
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
@@ -32,16 +33,13 @@ const { Title, Text } = Typography;
 
 const Supplies = () => {
   const dispatch = useDispatch();
-  const { items, loading, actionLoading } = useSelector((state) => state.inventory);
+  const { items, loading, actionLoading, error } = useSelector((state) => state.inventory);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [editingSupply, setEditingSupply] = useState(null);
   const [form] = Form.useForm();
 
-  const supplies = useMemo(
-    () => items.filter((item) => item.itemType === "supply"),
-    [items]
-  );
+  const supplies = useMemo(() => items.filter((item) => item.itemType === "supply"), [items]);
 
   const filteredSupplies = useMemo(() => {
     if (!searchText.trim()) return supplies;
@@ -55,7 +53,7 @@ const Supplies = () => {
   }, [searchText, supplies]);
 
   useEffect(() => {
-    dispatch(fetchInventoryItems());
+    dispatch(fetchInventoryItems({ itemType: "supply" }));
   }, [dispatch]);
 
   const openModal = (supply = null) => {
@@ -63,7 +61,7 @@ const Supplies = () => {
     if (supply) {
       form.setFieldsValue(supply);
     } else {
-      form.resetFields();
+      form.setFieldsValue({ quantity: 0, allocated: 0, minThreshold: 10, unit: "pcs" });
     }
     setModalOpen(true);
   };
@@ -90,8 +88,8 @@ const Supplies = () => {
       }
 
       closeModal();
-    } catch (error) {
-      message.error(error || "Unable to save supply");
+    } catch (submitError) {
+      message.error(submitError || "Unable to save supply");
     }
   };
 
@@ -105,28 +103,38 @@ const Supplies = () => {
         try {
           await dispatch(deleteInventoryItem(supply._id)).unwrap();
           message.success("Supply deleted successfully");
-        } catch (error) {
-          message.error(error || "Unable to delete supply");
+        } catch (deleteError) {
+          message.error(deleteError || "Unable to delete supply");
         }
       },
     });
   };
 
   const totalSupplies = supplies.length;
-  const lowStock = supplies.filter((s) => Number(s.quantity || 0) <= Number(s.minThreshold || 10)).length;
-  const totalAvailable = supplies.reduce((acc, s) => acc + Number(s.quantity || 0), 0);
+  const lowStock = supplies.filter((s) => s.lowStock ?? Number(s.quantity || 0) <= Number(s.minThreshold || 10)).length;
+  const totalQuantity = supplies.reduce((acc, s) => acc + Number(s.quantity || 0), 0);
+  const totalAvailable = supplies.reduce(
+    (acc, s) => acc + Number(s.available ?? Math.max(Number(s.quantity || 0) - Number(s.allocated || 0), 0)),
+    0
+  );
 
   const columns = [
     { title: "Supply Name", dataIndex: "name", key: "name" },
     { title: "Category", dataIndex: "category", key: "category" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
+    { title: "Allocated", dataIndex: "allocated", key: "allocated" },
+    {
+      title: "Available",
+      key: "available",
+      render: (_, record) => Number(record.available ?? Math.max(Number(record.quantity || 0) - Number(record.allocated || 0), 0)),
+    },
     { title: "Unit", dataIndex: "unit", key: "unit" },
     {
       title: "Status",
       key: "status",
       render: (_, record) => {
-        const isLow = Number(record.quantity || 0) <= Number(record.minThreshold || 10);
-        return <Tag color={isLow ? "red" : "green"}>{isLow ? "Low Stock" : "Available"}</Tag>;
+        const isLow = record.lowStock ?? Number(record.quantity || 0) <= Number(record.minThreshold || 10);
+        return <Tag color={isLow ? "red" : "green"}>{isLow ? "Low Stock" : "Healthy"}</Tag>;
       },
     },
     {
@@ -157,10 +165,12 @@ const Supplies = () => {
         <Title level={4} style={{ marginBottom: 4 }}>Supplies Management</Title>
         <Text type="secondary">Track stock levels and keep essentials available for staff and students.</Text>
 
+        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={error} /> : null}
+
         <Row gutter={16} style={{ marginTop: 20, marginBottom: 20 }}>
           <Col xs={24} sm={8}><Card title="Total Supplies">{totalSupplies}</Card></Col>
           <Col xs={24} sm={8}><Card title="Low Stock">{lowStock}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Total Available">{totalAvailable}</Card></Col>
+          <Col xs={24} sm={8}><Card title="Available Units">{totalAvailable} / {totalQuantity}</Card></Col>
         </Row>
 
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -170,12 +180,19 @@ const Supplies = () => {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 320 }}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()} loading={actionLoading}>
             Add Supply
           </Button>
         </div>
 
-        <Table columns={columns} dataSource={filteredSupplies} rowKey="_id" loading={loading} pagination={{ pageSize: 8 }} />
+        <Table
+          columns={columns}
+          dataSource={filteredSupplies}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ pageSize: 8 }}
+          locale={{ emptyText: "No supplies found. Add your first supply item." }}
+        />
 
         <Modal
           title={editingSupply ? "Edit Supply" : "Add Supply"}
@@ -185,10 +202,10 @@ const Supplies = () => {
           destroyOnClose
         >
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
-            <Form.Item label="Supply Name" name="name" rules={[{ required: true, message: "Enter supply name" }]}>
+            <Form.Item label="Supply Name" name="name" rules={[{ required: true, message: "Enter supply name" }]}> 
               <Input placeholder="e.g., Notebook" />
             </Form.Item>
-            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}>
+            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}> 
               <Select placeholder="Select category">
                 <Option value="Stationery">Stationery</Option>
                 <Option value="Hygiene">Hygiene</Option>
@@ -196,10 +213,20 @@ const Supplies = () => {
                 <Option value="Furniture">Furniture</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}>
+            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}> 
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}>
+            <Form.Item label="Allocated" name="allocated" initialValue={0} dependencies={["quantity"]}
+              rules={[({ getFieldValue }) => ({ validator(_, value) {
+                const quantity = Number(getFieldValue("quantity") || 0);
+                const allocated = Number(value || 0);
+                if (allocated <= quantity) return Promise.resolve();
+                return Promise.reject(new Error("Allocated cannot be greater than quantity"));
+              } })]}
+            >
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}> 
               <Input placeholder="pcs / box / bottle" />
             </Form.Item>
             <Form.Item label="Low Stock Alert" name="minThreshold" initialValue={10}>

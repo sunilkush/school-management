@@ -17,6 +17,7 @@ import {
   Col,
   Typography,
   Tag,
+  Alert,
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
@@ -32,7 +33,7 @@ const { Title, Text } = Typography;
 
 const Assets = () => {
   const dispatch = useDispatch();
-  const { items, loading, actionLoading } = useSelector((state) => state.inventory);
+  const { items, loading, actionLoading, error } = useSelector((state) => state.inventory);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -53,7 +54,7 @@ const Assets = () => {
   }, [assets, searchText]);
 
   useEffect(() => {
-    dispatch(fetchInventoryItems());
+    dispatch(fetchInventoryItems({ itemType: "asset" }));
   }, [dispatch]);
 
   const openModal = (asset = null) => {
@@ -61,7 +62,7 @@ const Assets = () => {
     if (asset) {
       form.setFieldsValue(asset);
     } else {
-      form.resetFields();
+      form.setFieldsValue({ quantity: 1, allocated: 0, unit: "pcs" });
     }
     setModalOpen(true);
   };
@@ -88,8 +89,8 @@ const Assets = () => {
       }
 
       closeModal();
-    } catch (error) {
-      message.error(error || "Unable to save asset");
+    } catch (submitError) {
+      message.error(submitError || "Unable to save asset");
     }
   };
 
@@ -103,8 +104,8 @@ const Assets = () => {
         try {
           await dispatch(deleteInventoryItem(asset._id)).unwrap();
           message.success("Asset deleted successfully");
-        } catch (error) {
-          message.error(error || "Unable to delete asset");
+        } catch (deleteError) {
+          message.error(deleteError || "Unable to delete asset");
         }
       },
     });
@@ -113,7 +114,10 @@ const Assets = () => {
   const totalAssets = assets.length;
   const totalQuantity = assets.reduce((acc, a) => acc + Number(a.quantity || 0), 0);
   const totalAllocated = assets.reduce((acc, a) => acc + Number(a.allocated || 0), 0);
-  const totalAvailable = Math.max(totalQuantity - totalAllocated, 0);
+  const totalAvailable = assets.reduce(
+    (acc, a) => acc + Number(a.available ?? Math.max(Number(a.quantity || 0) - Number(a.allocated || 0), 0)),
+    0
+  );
 
   const columns = [
     { title: "Asset Name", dataIndex: "name", key: "name" },
@@ -123,14 +127,14 @@ const Assets = () => {
     {
       title: "Available",
       key: "available",
-      render: (_, record) => Math.max(Number(record.quantity || 0) - Number(record.allocated || 0), 0),
+      render: (_, record) => Number(record.available ?? Math.max(Number(record.quantity || 0) - Number(record.allocated || 0), 0)),
     },
     { title: "Location", dataIndex: "location", key: "location" },
     {
       title: "Status",
       key: "status",
       render: (_, record) => {
-        const available = Math.max(Number(record.quantity || 0) - Number(record.allocated || 0), 0);
+        const available = Number(record.available ?? Math.max(Number(record.quantity || 0) - Number(record.allocated || 0), 0));
         return <Tag color={available === 0 ? "volcano" : "green"}>{available === 0 ? "Fully Allocated" : "Available"}</Tag>;
       },
     },
@@ -162,10 +166,12 @@ const Assets = () => {
         <Title level={4} style={{ marginBottom: 4 }}>Assets Management</Title>
         <Text type="secondary">Manage high-value assets and keep allocation transparent.</Text>
 
+        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={error} /> : null}
+
         <Row gutter={16} style={{ marginTop: 20, marginBottom: 20 }}>
           <Col xs={24} sm={8}><Card title="Total Assets">{totalAssets}</Card></Col>
           <Col xs={24} sm={8}><Card title="Total Available">{totalAvailable}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Total Allocated">{totalAllocated}</Card></Col>
+          <Col xs={24} sm={8}><Card title="Total Allocated">{totalAllocated} / {totalQuantity}</Card></Col>
         </Row>
 
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -175,33 +181,58 @@ const Assets = () => {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 320 }}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()} loading={actionLoading}>
             Add Asset
           </Button>
         </div>
 
-        <Table columns={columns} dataSource={filteredAssets} rowKey="_id" loading={loading} pagination={{ pageSize: 8 }} />
+        <Table
+          columns={columns}
+          dataSource={filteredAssets}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ pageSize: 8 }}
+          locale={{ emptyText: "No assets found. Add your first asset." }}
+        />
 
         <Modal title={editingAsset ? "Edit Asset" : "Add Asset"} open={modalOpen} onCancel={closeModal} footer={null} destroyOnClose>
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
-            <Form.Item label="Asset Name" name="name" rules={[{ required: true, message: "Enter asset name" }]}>
+            <Form.Item label="Asset Name" name="name" rules={[{ required: true, message: "Enter asset name" }]}> 
               <Input placeholder="e.g., Projector" />
             </Form.Item>
-            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}>
+            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}> 
               <Select placeholder="Select category">
                 <Option value="Electronics">Electronics</Option>
                 <Option value="Furniture">Furniture</Option>
                 <Option value="Stationery">Stationery</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}>
+            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}> 
               <InputNumber min={1} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item label="Allocated" name="allocated" initialValue={0}>
+            <Form.Item
+              label="Allocated"
+              name="allocated"
+              initialValue={0}
+              dependencies={["quantity"]}
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    const quantity = Number(getFieldValue("quantity") || 0);
+                    const allocated = Number(value || 0);
+                    if (allocated <= quantity) return Promise.resolve();
+                    return Promise.reject(new Error("Allocated cannot be greater than quantity"));
+                  },
+                }),
+              ]}
+            >
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item label="Location" name="location" rules={[{ required: true, message: "Enter location" }]}>
+            <Form.Item label="Location" name="location" rules={[{ required: true, message: "Enter location" }]}> 
               <Input placeholder="e.g., Physics Lab" />
+            </Form.Item>
+            <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}> 
+              <Input placeholder="pcs / set" />
             </Form.Item>
             <Form.Item style={{ textAlign: "right", marginBottom: 0 }}>
               <Space>
