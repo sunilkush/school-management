@@ -18,7 +18,7 @@ const GeneratePayslip = () => {
   const year = selectedMonth.year();
 
   const { entries, loading, isCycleMissing, refreshCycle } = usePayrollCycle(month, year);
-  const { loading: payslipLoading, payslip, notFound, fetchPayslip, setPayslip } = usePayslip({
+ const { loading: payslipLoading, payslip, notFound, fetchPayslip, clearPayslip } = usePayslip({
     month,
     year,
     employeeId: selectedEmployeeId,
@@ -31,9 +31,9 @@ const GeneratePayslip = () => {
       .catch(() => message.error("Employees load failed"));
   }, []);
 
-  useEffect(() => {
-    setPayslip(null);
-  }, [month, year, setPayslip]);
+ useEffect(() => {
+    clearPayslip();
+  }, [month, year, selectedEmployeeId, clearPayslip]);
 
   const employeeOptions = useMemo(
     () =>

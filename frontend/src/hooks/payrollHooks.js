@@ -25,6 +25,9 @@ export const usePayrollCycle = (month, year) => {
         setIsCycleMissing(true);
         return;
       }
+      setCycle(null);
+      setEntries([]);
+      setIsCycleMissing(false);
       message.error(normalizeApiError(error, "Payroll cycle load failed"));
     } finally {
       setLoading(false);
@@ -160,7 +163,12 @@ export const usePayslip = ({ month, year, employeeId }) => {
     [employeeId, month, year]
   );
 
-  return { loading, payslip, notFound, fetchPayslip, setPayslip };
+  const clearPayslip = useCallback(() => {
+    setPayslip(null);
+    setNotFound(false);
+  }, []);
+
+  return { loading, payslip, notFound, fetchPayslip, clearPayslip };
 };
 
 export const useMonthlyPayrollReport = (month, year) => {
@@ -180,6 +188,8 @@ export const useMonthlyPayrollReport = (month, year) => {
         setReport(null);
         return;
       }
+       setReport(null);
+      setIsEmpty(false);
       message.error(normalizeApiError(error, "Monthly report fetch failed"));
     } finally {
       setLoading(false);
