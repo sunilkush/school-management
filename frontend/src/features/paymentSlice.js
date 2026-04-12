@@ -123,7 +123,10 @@ const paymentSlice = createSlice({
             .addCase(createPayment.fulfilled, (state, action) => {
                 state.loading = false;
                 state.success = true;
-                state.payments.unshift(action.payload?.data);
+                const createdPayment = action.payload?.data;
+                if (createdPayment?._id) {
+                    state.payments.unshift(createdPayment);
+                }
             })
             .addCase(createPayment.rejected, (state, action) => {
                 state.loading = false;

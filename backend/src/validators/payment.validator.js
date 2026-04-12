@@ -1,14 +1,28 @@
 import { z } from "zod";
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId");
+const paymentModeEnum = z.enum(["cash", "online", "cheque", "razorpay"]);
 
 export const createPaymentSchema = z.object({
-  body: z.object({
-    studentId: objectId,
-    installmentId: objectId,
-    amount: z.number().positive(),
-    paymentMethod: z.enum(["cash", "online", "cheque", "razorpay"]),
-  }),
+  body: z
+    .object({
+      studentId: objectId.optional(),
+      installmentId: objectId,
+      amount: z.coerce.number().positive().optional(),
+      paymentMethod: paymentModeEnum.optional(),
+      paymentMode: paymentModeEnum.optional(),
+      razorpay: z
+        .object({
+          razorpay_order_id: z.string().min(1),
+          razorpay_payment_id: z.string().min(1),
+          razorpay_signature: z.string().min(1),
+        })
+        .optional(),
+    })
+    .refine((data) => data.paymentMethod || data.paymentMode, {
+      message: "paymentMethod or paymentMode is required",
+      path: ["paymentMode"],
+    }),
   params: z.object({}).optional().default({}),
   query: z.object({}).optional().default({}),
 });

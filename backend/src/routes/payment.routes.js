@@ -19,21 +19,22 @@ const router = Router();
 
 const PAYMENT_ADMIN_ROLES = ["Super Admin", "School Admin"];
 const PAYMENT_READ_ROLES = ["Super Admin", "School Admin", "Student", "Parent"];
+const PAYMENT_CREATE_ROLES = ["Super Admin", "School Admin", "Student", "Parent"];
 
-router.post("/", requireRoles(PAYMENT_ADMIN_ROLES), validateRequest(createPaymentSchema), createPayment);
+router.post("/", requireRoles(PAYMENT_CREATE_ROLES), validateRequest(createPaymentSchema), createPayment);
 router.get("/", requireRoles(PAYMENT_READ_ROLES), validateRequest(paymentListQuerySchema), getPayments);
 router.get("/summary", requireRoles(PAYMENT_ADMIN_ROLES), paymentSummary);
 router.get("/:id", requireRoles(PAYMENT_READ_ROLES), validateRequest(paymentListQuerySchema), getPayments);
 
 router.post(
   "/razorpay/verify",
-  requireRoles(PAYMENT_ADMIN_ROLES),
+  requireRoles(PAYMENT_CREATE_ROLES),
   validateRequest(verifyRazorpayPaymentSchema),
   verifyRazorpayPayment
 );
 router.post(
   "/razorpay/create-order",
-  requireRoles(PAYMENT_ADMIN_ROLES),
+  requireRoles(PAYMENT_CREATE_ROLES),
   validateRequest(createRazorpayOrderSchema),
   createRazorpayOrder
 );
