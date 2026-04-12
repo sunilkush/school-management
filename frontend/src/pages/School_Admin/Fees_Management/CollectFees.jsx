@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Breadcrumb,
@@ -11,7 +11,7 @@ import {
   InputNumber,
   Space,
   message,
-   Tag,
+  Tag,
 } from "antd";
 import {
   SearchOutlined,
@@ -27,16 +27,22 @@ const { Content } = Layout;
 const { Option } = Select;
 
 const CollectFees = () => {
-  
-   const dispatch = useDispatch();
+  const dispatch = useDispatch();
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [form] = Form.useForm();
+
   const [searchName, setSearchName] = useState("");
   const [filterClass, setFilterClass] = useState("");
+
   const [loadingFees, setLoadingFees] = useState(false);
   const [studentFees, setStudentFees] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const [pendingFeesByStudent, setPendingFeesByStudent] = useState({});
+  const [loadingPendingByStudent, setLoadingPendingByStudent] = useState({});
+  const [selectedFeeDueAmount, setSelectedFeeDueAmount] = useState(0);
 
   const { user } = useSelector((s) => s.auth);
   const { schoolStudents = [] } = useSelector((s) => s.students);
@@ -63,26 +69,81 @@ const CollectFees = () => {
     [schoolStudents]
   );
 
+  const fetchPendingTotalForStudent = useCallback(
+    async (studentId) => {
+      if (!studentId) return 0;
+
+      setLoadingPendingByStudent((prev) => ({
+        ...prev,
+        [studentId]: true,
+      }));
+
+      try {
+        const fees = await dispatch(fetchMyFees({ studentId })).unwrap();
+
+        const totalPending = (fees || []).reduce((sum, fee) => {
+          if (fee.status === "paid") return sum;
+          return sum + Number(fee.dueAmount || 0);
+        }, 0);
+
+        setPendingFeesByStudent((prev) => ({
+          ...prev,
+          [studentId]: totalPending,
+        }));
+
+        return totalPending;
+      } catch {
+        setPendingFeesByStudent((prev) => ({
+          ...prev,
+          [studentId]: 0,
+        }));
+        return 0;
+      } finally {
+        setLoadingPendingByStudent((prev) => ({
+          ...prev,
+          [studentId]: false,
+        }));
+      }
+    },
+    [dispatch]
+  );
+
+  useEffect(() => {
+    if (!students.length) return;
+
+    const ids = students.map((s) => s.studentId).filter(Boolean);
+
+    Promise.all(ids.map(fetchPendingTotalForStudent));
+  }, [students, fetchPendingTotalForStudent]);
+
   const handleOpenCollectModal = async (record) => {
     if (!record?.studentId) {
       message.warning("Student id not found");
       return;
     }
-     setSelectedStudent(record);
+
+    setSelectedStudent(record);
     setModalVisible(true);
     setLoadingFees(true);
+    setSelectedFeeDueAmount(0);
     form.resetFields();
-     try {
-      const fees = await dispatch(fetchMyFees(record.studentId)).unwrap();
+
+    try {
+      const fees = await dispatch(
+        fetchMyFees({ studentId: record.studentId })
+      ).unwrap();
+
       const unpaidFees = (fees || []).filter(
-        (fee) => fee.status !== "paid" && Number(fee.dueAmount || 0) > 0
+        (f) => f.status !== "paid" && Number(f.dueAmount || 0) > 0
       );
+
       setStudentFees(unpaidFees);
+
       if (!unpaidFees.length) {
-        message.info("No pending fee found for this student");
+        message.info("No pending fee found");
       }
     } catch (err) {
-      message.error(err?.message || "Unable to fetch student fees");
+      message.error(err?.message || "Failed to fetch fees");
       setStudentFees([]);
     } finally {
       setLoadingFees(false);
@@ -92,16 +153,24 @@ const CollectFees = () => {
   const handleCollectFee = async (values) => {
     try {
       setSubmitting(true);
+
       await dispatch(
         payStudentFee({
           id: values.studentFeeId,
           payload: { paidAmount: Number(values.amount) },
         })
       ).unwrap();
+
       message.success(`Fee collected for ${selectedStudent?.name}`);
+
+      if (selectedStudent?.studentId) {
+        await fetchPendingTotalForStudent(selectedStudent.studentId);
+      }
+
       setModalVisible(false);
       setSelectedStudent(null);
       setStudentFees([]);
+      setSelectedFeeDueAmount(0);
       form.resetFields();
     } catch (err) {
       message.error(err?.message || "Fee collection failed");
@@ -111,19 +180,35 @@ const CollectFees = () => {
   };
 
   const filteredStudents = students.filter(
-    (student) =>
-      student.name.toLowerCase().includes(searchName.toLowerCase()) &&
-       (filterClass ? student.classId === filterClass : true)
+    (s) =>
+      (s.name || "").toLowerCase().includes(searchName.toLowerCase()) &&
+      (filterClass ? s.classId === filterClass : true)
   );
 
   const columns = [
-    { title: "Name", dataIndex: "name", key: "name" },
-    { title: "Class", dataIndex: "className", key: "className" },
-    { title: "Section", dataIndex: "section", key: "section" },
-   
+    { title: "Name", dataIndex: "name" },
+    { title: "Class", dataIndex: "className" },
+    { title: "Section", dataIndex: "section" },
+    {
+      title: "Pending Fee",
+      render: (_, record) => {
+        const id = record.studentId;
+
+        if (loadingPendingByStudent[id]) {
+          return <LoadingOutlined spin />;
+        }
+
+        const due = Number(pendingFeesByStudent[id] || 0);
+
+        return due > 0 ? (
+          <Tag color="red">₹{due}</Tag>
+        ) : (
+          <Tag color="green">No Due</Tag>
+        );
+      },
+    },
     {
       title: "Actions",
-      key: "actions",
       render: (_, record) => (
         <Button
           type="primary"
@@ -137,7 +222,7 @@ const CollectFees = () => {
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
+    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
       <Breadcrumb style={{ marginBottom: 24 }}>
         <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
         <Breadcrumb.Item>Finance</Breadcrumb.Item>
@@ -145,31 +230,27 @@ const CollectFees = () => {
       </Breadcrumb>
 
       <Content>
-        {/* Filters */}
-        <div style={{ marginBottom: 16, display: "flex", gap: "16px", flexWrap: "wrap" }}>
+        <Space style={{ marginBottom: 16 }}>
           <Input
-            placeholder="Search by student name"
+            placeholder="Search student"
             prefix={<SearchOutlined />}
-            value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
-            style={{ width: 200 }}
           />
+
           <Select
             placeholder="Filter by class"
-            style={{ width: 150 }}
             allowClear
-             value={filterClass || undefined}
-            onChange={(value) => setFilterClass(value)}
+            style={{ width: 200 }}
+            onChange={setFilterClass}
           >
-            {schoolClasses.map((schoolClass) => (
-              <Option key={schoolClass._id} value={schoolClass._id}>
-                {schoolClass.name}
+            {schoolClasses.map((c) => (
+              <Option key={c._id} value={c._id}>
+                {c.name}
               </Option>
             ))}
           </Select>
-        </div>
+        </Space>
 
-        {/* Students Table */}
         <Table
           columns={columns}
           dataSource={filteredStudents}
@@ -177,79 +258,77 @@ const CollectFees = () => {
           rowKey="key"
         />
 
-        {/* Collect Fee Modal */}
         <Modal
           title={`Collect Fee for ${selectedStudent?.name}`}
-           open={modalVisible}
+          open={modalVisible}
           onCancel={() => {
             setModalVisible(false);
             setSelectedStudent(null);
-             setStudentFees([]);
+            setStudentFees([]);
+            setSelectedFeeDueAmount(0);
             form.resetFields();
           }}
           footer={null}
-             destroyOnHidden
+          destroyOnClose
         >
-           {loadingFees ? (
-            <div className="py-8 text-center">
-              <LoadingOutlined spin /> Loading fees...
+          {loadingFees ? (
+            <div className="text-center py-6">
+              <LoadingOutlined spin /> Loading...
             </div>
           ) : (
             <Form form={form} layout="vertical" onFinish={handleCollectFee}>
               <Form.Item
                 label="Pending Fee"
                 name="studentFeeId"
-                rules={[{ required: true, message: "Select pending fee" }]}
+                rules={[{ required: true }]}
               >
-                <Select placeholder="Select pending fee">
+                <Select
+                  placeholder="Select fee"
+                  onChange={(value) => {
+                    const fee = studentFees.find((f) => f._id === value);
+                    const due = Number(fee?.dueAmount || 0);
+
+                    setSelectedFeeDueAmount(due);
+                    form.setFieldsValue({ amount: due });
+                  }}
+                >
                   {studentFees.map((fee) => (
                     <Option key={fee._id} value={fee._id}>
-                      {fee.feeStructureId?.feeHeadId?.name || "Fee"} | Due ₹
-                      {fee.dueAmount} |{" "}
-                      <Tag color={fee.status === "partial" ? "orange" : "red"}>
-                        {fee.status}
-                      </Tag>
+                      {fee.feeStructureId?.feeHeadId?.name || "Fee"} | ₹
+                      {fee.dueAmount}
                     </Option>
                   ))}
                 </Select>
               </Form.Item>
 
-            <Form.Item
-              label="Amount"
-              name="amount"
-              rules={[{ required: true, message: "Enter fee amount" }]}
-            >
-              <InputNumber
-                style={{ width: "100%" }}
-                placeholder="Enter amount"
-                min={0}
-                prefix="₹"
-              />
-            </Form.Item>
-            <Form.Item style={{ textAlign: "right" }}>
-              <Space>
-                <Button
-                  onClick={() => {
-                    setModalVisible(false);
-                    setSelectedStudent(null);
-                     setStudentFees([]);
-                    form.resetFields();
-                  }}
-                >
-                  Cancel
-                </Button>
-                 <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<DollarOutlined />}
-                  loading={submitting}
-                  disabled={!studentFees.length}
-                >
-                  Collect
-                </Button>
-              </Space>
-            </Form.Item>
-           </Form>
+              <Form.Item
+                label="Amount"
+                name="amount"
+                rules={[{ required: true }]}
+              >
+                <InputNumber
+                  style={{ width: "100%" }}
+                  min={0}
+                  max={selectedFeeDueAmount || undefined}
+                />
+              </Form.Item>
+
+              <Form.Item style={{ textAlign: "right" }}>
+                <Space>
+                  <Button onClick={() => setModalVisible(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={submitting}
+                    disabled={!studentFees.length}
+                  >
+                    Collect
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
           )}
         </Modal>
       </Content>

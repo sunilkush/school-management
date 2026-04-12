@@ -109,9 +109,13 @@ export const getMyFees = asyncHandler(async (req, res) => {
 
   if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid student ID");
 
-  const role = req.userRole?.name;
-  if (role === "Student" && req.user._id.toString() !== studentId) {
-    throw new ApiError(403, "Forbidden");
+  const role = req.Role?.name;
+  
+  if (role === "Student") {
+    const myStudentProfile = await Student.findOne({ userId: req.user._id }).select("_id");
+    if (!myStudentProfile || myStudentProfile._id.toString() !== studentId) {
+      throw new ApiError(403, "Forbidden");
+    }
   }
 
   if (role === "Parent") {

@@ -22,11 +22,23 @@ const { Content } = Layout;
 const roleRoutes = {
   "super admin": "/dashboard/superadmin",
   "school admin": "/dashboard/schooladmin",
+  principal: "/dashboard/principal",
+  "vice principal": "/dashboard/viceprincipal",
+  "subject coordinator": "/dashboard/subjectcoordinator",
   student: "/dashboard/student",
   parent: "/dashboard/parent",
   teacher: "/dashboard/teacher",
   accountant: "/dashboard/accountant",
   staff: "/dashboard/staff",
+  "support staff": "/dashboard/staff",
+  librarian: "/dashboard/librarian",
+  "hostel warden": "/dashboard/hostelwarden",
+  "transport manager": "/dashboard/transportmanager",
+  "exam coordinator": "/dashboard/examcoordinator",
+  receptionist: "/dashboard/receptionist",
+  "it support": "/dashboard/itsupport",
+  counselor: "/dashboard/counselor",
+  security: "/dashboard/security",
 };
 
 const LoginForm = () => {
@@ -164,21 +176,10 @@ const LoginForm = () => {
                   Sign In
                 </Button>
 
-                <Button block size="large" style={{ marginTop: 12 }}>
-                  Sign in with Google
-                </Button>
+              
               </Form>
 
-              <Text
-                style={{
-                  display: "block",
-                  marginTop: 16,
-                  textAlign: "center",
-                  color: "var(--text-primary)"
-                }}
-              >
-                Don’t have an account? <Link to="/register">Sign up</Link>
-              </Text>
+              
             </Card>
           </Col>
         </Row>

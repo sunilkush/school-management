@@ -26,17 +26,21 @@ export const fetchMyFees = createAsyncThunk(
   "studentFee/fetchMyFees",
   async (studentId, { rejectWithValue }) => {
     try {
+      const { data } = await apiClient.get(`/student-fees/my/${studentId}`);
 
-      const { data } = await apiClient.get( `/student-fees/my/${studentId}`, {
-        headers: {
-        },
-      });
-      return data.data;
+      const normalizedFees = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.data?.data)
+        ? data.data.data
+        : [];
+
+      return normalizedFees;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
+
 
 /* =====================================================
    ✅ PAY STUDENT FEE
@@ -121,7 +125,7 @@ const studentFeeSlice = createSlice({
       })
       .addCase(fetchMyFees.fulfilled, (state, action) => {
         state.loading = false;
-        state.myFees = action.payload;
+        state.myFees = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchMyFees.rejected, (state, action) => {
         state.loading = false;

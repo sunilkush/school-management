@@ -61,7 +61,7 @@ router.get(
 router.get(
   "/my/enrollment-id",
   auth,
-  roleMiddleware(["Student"]),
+  roleMiddleware(["Student","Parent"]),
   getMyStudentEnrollmentId
 );
 
