@@ -69,7 +69,8 @@ const SchoolClassSectionTeacher = ({ next }) => {
       teacherId: sec.classTeacherId?._id || null,
     }));
   }, [sections]);
- const isAllAssigned = tableData.every(item => item.teacherId);
+  const isAllAssigned =
+    tableData.length > 0 && tableData.every((item) => item.teacherId);
   /* ───────── SAVE ───────── */
   const handleTeacherChange = async (value, record) => {
     try {
@@ -82,11 +83,11 @@ const SchoolClassSectionTeacher = ({ next }) => {
         })
       ).unwrap();
 
-      message.success(
-        `${record.className} - ${record.sectionName} updated`
-      );
+       message.success(`${record.className} - ${record.sectionName} updated`);
     } catch (err) {
-      message.error("Failed to assign teacher", err.message);
+       const errorMessage =
+        err?.message || err?.response?.data?.message || "Failed to assign teacher";
+      message.error(errorMessage);
     } finally {
       setSavingKey(null);
     }
@@ -123,12 +124,12 @@ const SchoolClassSectionTeacher = ({ next }) => {
 
             <Select
               placeholder="Select Teacher"
-              value={record.teacherId}
-              onChange={(val) =>
-                handleTeacherChange(val, record)
-              }
+              value={record.teacherId || undefined}
+              onChange={(val) => handleTeacherChange(val, record)}
               style={{ width: isMobile ? "100%" : 200 }}
               size="small"
+               loading={savingKey === record.key}
+              disabled={savingKey === record.key}
             >
               {users.map((u) => (
                 <Option key={u._id} value={u._id}>

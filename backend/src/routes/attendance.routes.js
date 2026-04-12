@@ -56,7 +56,7 @@ router.get("/my",
 router.put("/:id", 
   auth, 
   roleMiddleware(MANAGE_ROLES), 
-  validateRequest(updateAttendanceSchema), 
+ validateRequest(updateAttendanceSchema), 
   updateAttendance
 );
 
@@ -64,7 +64,7 @@ router.delete(
   "/:id",
   auth,
   roleMiddleware(MANAGE_ROLES),
-  validateRequest(attendanceIdParamSchema),
+ validateRequest(attendanceIdParamSchema),
   deleteAttendance
 );
 

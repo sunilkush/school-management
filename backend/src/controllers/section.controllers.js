@@ -194,8 +194,14 @@ export const assignClassTeacher = asyncHandler(async (req, res) => {
     }
   );
 
+const populatedSection = await Section.findById(section._id)
+    .populate("schoolClassId", "name")
+    .populate("classTeacherId", "name email");
+
   return res.json(
-    new ApiResponse(200, section,teacher, "Class teacher assigned")
+    new ApiResponse(200, populatedSection, "Class teacher assigned", {
+      schoolClassUpdate: teacher,
+    })
   );
 });
 

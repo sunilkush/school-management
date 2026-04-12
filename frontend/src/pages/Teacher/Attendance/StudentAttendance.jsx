@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import {
@@ -15,262 +15,399 @@ import {
   Space,
   Radio,
   Statistic,
-  Divider
+  Divider,
+  Input,
+  Progress,
+  Empty,
 } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
-import { submitAttendance } from "../../../features/attendanceSlice.js";
+import {
+  submitAttendance,
+  fetchAttendance,
+} from "../../../features/attendanceSlice.js";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
 
-
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 const StudentAttendance = () => {
-
   const dispatch = useDispatch();
   const location = useLocation();
 
-  const { schoolStudents = [], loading } = useSelector(state => state.students);
-  const { user } = useSelector(state => state.auth);
-  const { classAssignTeacher = [] } = useSelector(state => state.class);
-  const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
+  const studentState = useSelector((state) => state.students || {});
+  const attendanceState = useSelector((state) => state.attendance || {});
+  const classState = useSelector((state) => state.class || {});
+  const { user } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector(
+    (state) => state.academicYear || {}
+  );
+
+  const studentsLoading = studentState?.loading || false;
+  const attendanceLoading = attendanceState?.loading || false;
+  const attendanceList = attendanceState?.list || [];
+  const classAssignTeacher = classState?.classAssignTeacher || [];
+
+  // ✅ handle both possible shapes
+  const schoolStudents = Array.isArray(studentState?.schoolStudents)
+    ? studentState.schoolStudents
+    : Array.isArray(studentState?.schoolStudents?.students)
+    ? studentState.schoolStudents.students
+    : Array.isArray(studentState?.students)
+    ? studentState.students
+    : [];
+
   const schoolId = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id;
- 
 
   const [selectedClassObj, setSelectedClassObj] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
   const [attendance, setAttendance] = useState({});
-  const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+
+  const query = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
   const prefilledClassId = query.get("classId");
 
-  /* ================= INIT ================= */
-
   useEffect(() => {
-   
-
     if (schoolId && academicYearId && user?._id) {
       dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
-      dispatch(fetchAssignedClasses({
-        schoolId,
-        academicYearId,
-        teacherId: user?._id
-      }));
+      dispatch(
+        fetchAssignedClasses({
+          schoolId,
+          academicYearId,
+          teacherId: user?._id,
+        })
+      );
     }
+  }, [dispatch, schoolId, academicYearId, user?._id]);
 
-  }, [schoolId, academicYearId, user?._id, dispatch]);
-
-  /* ================= FLATTEN ASSIGNED DATA ================= */
-
+  // ✅ fixed as per your actual classAssignTeacher data
   const assignedClassSections = useMemo(() => {
+    if (!Array.isArray(classAssignTeacher)) return [];
 
-    if (!classAssignTeacher?.length || !user?._id) return [];
+    const result = [];
 
-    let result = [];
+    classAssignTeacher.forEach((item) => {
+      const classId = item?._id;
+      const className = item?.name;
+      const sections = Array.isArray(item?.sections) ? item.sections : [];
+      const subjects = Array.isArray(item?.subjects) ? item.subjects : [];
 
-    classAssignTeacher.forEach(cls => {
+      sections.forEach((section) => {
+        const sectionId = section?.sectionId?._id || section?.sectionId;
+        const sectionName = section?.sectionId?.name || section?.name;
 
-      // Section Teacher / Class Teacher
-      cls.sections?.forEach(sec => {
-        if (sec.teacherId?._id === user._id) {
+        if (!classId || !sectionId) return;
+
+        result.push({
+          key: `${classId}-${sectionId}`,
+          schoolClassId: classId,
+          sectionId,
+          className: className || "Class",
+          sectionName: sectionName || "Section",
+          isClassTeacher: section?.isClassTeacher || false,
+          type: "class",
+        });
+
+        // optional subject rows if future me subjects aaye
+        subjects.forEach((sub) => {
+          const subjectId = sub?.subjectId?._id || sub?.subjectId;
+          const subjectName = sub?.subjectId?.name || sub?.name;
+
+          if (!subjectId) return;
+
           result.push({
-            key: `${cls._id}_${sec.sectionId?._id}`,
-            schoolClassId: cls._id,
-            className: cls.name,
-            sectionId: sec.sectionId?._id,
-            sectionName: sec.sectionId?.name,
-            type: "section"
+            key: `${classId}-${sectionId}-${subjectId}`,
+            schoolClassId: classId,
+            sectionId,
+            className: className || "Class",
+            sectionName: sectionName || "Section",
+            subjectId,
+            subjectName,
+            isClassTeacher: section?.isClassTeacher || false,
+            type: "subject",
           });
-        }
+        });
       });
-
-      // Subject Teacher
-      cls.subjects?.forEach(sub => {
-        if (sub.teacherId?._id === user._id) {
-          cls.sections?.forEach(sec => {
-            result.push({
-              key: `${cls._id}_${sec.sectionId?._id}_${sub.subjectId?._id}`,
-              schoolClassId: cls._id,
-              className: cls.name,
-              sectionId: sec.sectionId?._id,
-              sectionName: sec.sectionId?.name,
-              subjectId: sub.subjectId?._id,
-              subjectName: sub.subjectId?.name,
-              type: "subject"
-            });
-          });
-        }
-      });
-
     });
 
-    return result;
+    const uniqueMap = new Map();
+    result.forEach((item) => {
+      if (!uniqueMap.has(item.key)) {
+        uniqueMap.set(item.key, item);
+      }
+    });
 
-  }, [classAssignTeacher, user]);
-
-  /* ================= AUTO SELECT FIRST ================= */
+    return Array.from(uniqueMap.values());
+  }, [classAssignTeacher]);
 
   useEffect(() => {
-    if (assignedClassSections.length && !selectedClassObj) {
-      const prefilledClass = prefilledClassId
-        ? assignedClassSections.find((item) => item.schoolClassId === prefilledClassId)
-        : null;
+    if (!assignedClassSections.length) return;
+
+    const prefilledClass = prefilledClassId
+      ? assignedClassSections.find(
+          (item) => item.schoolClassId === prefilledClassId
+        )
+      : null;
+
+    if (!selectedClassObj) {
+      setSelectedClassObj(prefilledClass || assignedClassSections[0]);
+      return;
+    }
+
+    const stillExists = assignedClassSections.find(
+      (item) => item.key === selectedClassObj?.key
+    );
+
+    if (!stillExists) {
       setSelectedClassObj(prefilledClass || assignedClassSections[0]);
     }
   }, [assignedClassSections, selectedClassObj, prefilledClassId]);
 
-  /* ================= FILTER STUDENTS ================= */
+  useEffect(() => {
+    if (!schoolId || !selectedClassObj || !academicYearId || !attendanceDate) {
+      return;
+    }
 
-  const filteredStudents = useMemo(() => {
-
-    if (!selectedClassObj) return [];
-
-    return schoolStudents.filter(s =>
-      s.class?._id === selectedClassObj.schoolClassId &&
-      s.section?._id === selectedClassObj.sectionId
+    dispatch(
+      fetchAttendance({
+        schoolId,
+        academicYearId,
+        classId: selectedClassObj.schoolClassId,
+        sectionId: selectedClassObj.sectionId,
+        subjectId: selectedClassObj.subjectId || undefined,
+        role: "teacher",
+        date: attendanceDate.startOf("day").toISOString(),
+        page: 1,
+        limit: 500,
+      })
     );
+  }, [dispatch, schoolId, academicYearId, selectedClassObj, attendanceDate]);
 
+  // ✅ fixed student filtering
+  const classStudents = useMemo(() => {
+    if (!selectedClassObj || !Array.isArray(schoolStudents)) return [];
+
+    return schoolStudents.filter(
+      (student) =>
+        student?.class?._id === selectedClassObj.schoolClassId &&
+        student?.section?._id === selectedClassObj.sectionId
+    );
   }, [schoolStudents, selectedClassObj]);
 
-  /* ================= DEFAULT ATTENDANCE ================= */
+  const existingAttendanceMap = useMemo(() => {
+    const map = {};
+
+    attendanceList.forEach((record) => {
+      const linkedId =
+        record?.studentId?._id ||
+        record?.studentId ||
+        record?.userId?._id ||
+        record?.userId ||
+        record?.student?._id;
+
+      if (linkedId && record?.status) {
+        map[linkedId] = record.status;
+      }
+    });
+
+    return map;
+  }, [attendanceList]);
 
   useEffect(() => {
-    const obj = {};
-    filteredStudents.forEach(s => {
-      obj[s._id] = "present";
-    });
-    setAttendance(obj);
-  }, [filteredStudents]);
+    const nextAttendance = {};
 
-  /* ================= SUMMARY ================= */
+    classStudents.forEach((student) => {
+      nextAttendance[student._id] =
+        existingAttendanceMap[student._id] || "present";
+    });
+
+    setAttendance(nextAttendance);
+  }, [classStudents, existingAttendanceMap]);
+
+  const filteredStudents = useMemo(() => {
+    if (!selectedClassObj) return [];
+
+    const queryText = searchText.trim().toLowerCase();
+
+    return classStudents.filter((student) => {
+      const currentStatus = attendance[student._id];
+      const statusMatch = statusFilter ? currentStatus === statusFilter : true;
+
+      const name = student?.user?.name?.toLowerCase() || "";
+      const regNo = student?.registrationNumber?.toLowerCase() || "";
+      const mobile = String(student?.mobileNumber || "").toLowerCase();
+
+      const textMatch =
+        !queryText ||
+        name.includes(queryText) ||
+        regNo.includes(queryText) ||
+        mobile.includes(queryText);
+
+      return statusMatch && textMatch;
+    });
+  }, [selectedClassObj, classStudents, searchText, statusFilter, attendance]);
 
   const summary = useMemo(() => {
-
     let present = 0;
     let absent = 0;
 
-    filteredStudents.forEach(s => {
-      attendance[s._id] === "absent" ? absent++ : present++;
+    filteredStudents.forEach((student) => {
+      if (attendance[student._id] === "absent") {
+        absent += 1;
+      } else {
+        present += 1;
+      }
     });
 
-    return { present, absent };
+    const total = filteredStudents.length;
+    const presentRate = total ? Math.round((present / total) * 100) : 0;
 
+    return { present, absent, total, presentRate };
   }, [filteredStudents, attendance]);
 
-  /* ================= ACTIONS ================= */
-
-  const handleAttendanceChange = (id, value) => {
-    setAttendance(prev => ({ ...prev, [id]: value }));
+  const handleAttendanceChange = (studentId, value) => {
+    setAttendance((prev) => ({
+      ...prev,
+      [studentId]: value,
+    }));
   };
 
-  const markAll = status => {
-    const obj = {};
-    filteredStudents.forEach(s => obj[s._id] = status);
-    setAttendance(prev => ({ ...prev, ...obj }));
+  const markAll = (status) => {
+    const updated = {};
+    filteredStudents.forEach((student) => {
+      updated[student._id] = status;
+    });
+
+    setAttendance((prev) => ({
+      ...prev,
+      ...updated,
+    }));
   };
 
-  /* ================= SUBMIT ================= */
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
 
     if (!selectedClassObj) {
       return message.warning("Please select class");
     }
 
-    const records = filteredStudents.map(s => ({
-      studentId: s._id,
-      status: attendance[s._id]
+    const records = filteredStudents.map((s) => ({
+      userId: s?.user?._id,
+      status: attendance[s._id] || "present",
     }));
 
-    dispatch(submitAttendance({
-      schoolId,
-      academicYearId,
-      records,
-      role: "teacher",
-      date: attendanceDate.toISOString(),
-      schoolClassId: selectedClassObj.schoolClassId,
-      sectionId: selectedClassObj.sectionId,
-      // eslint-disable-next-line no-undef
-      subjectId: selectedClassObj.subjectId || selectedSubject,
-      
-      userId: filteredStudents[0]?.userId || user?._id
-    }));
+    if (records.some((record) => !record.userId)) {
+      message.error("Some students are missing user mapping. Please contact admin.");
+      return;
+    }
 
-    message.success("Attendance Saved");
+    try {
+      await dispatch(submitAttendance({
+        schoolId,
+        records,
+        role: "student",
+        date: attendanceDate.toISOString(),
+        classId: selectedClassObj.schoolClassId,
+        sectionId: selectedClassObj.sectionId,
+        subjectId: selectedClassObj.subjectId,
+      })).unwrap();
+      message.success("Attendance Saved");
+    } catch (error) {
+      message.error(error || "Failed to save attendance.");
+    }
   };
-
-  /* ================= TABLE ================= */
 
   const columns = [
     {
       title: "Student",
-      render: (_, record) => record?.userDetails?.name
+      key: "student",
+      render: (_, record) => (
+        <div>
+          <div style={{ fontWeight: 600 }}>{record?.user?.name || "-"}</div>
+          <Text type="secondary">
+            Reg No: {record?.registrationNumber || "-"}
+          </Text>
+          <br />
+          <Text type="secondary">Mobile: {record?.mobileNumber || "-"}</Text>
+        </div>
+      ),
     },
     {
       title: "Attendance",
+      key: "attendance",
       render: (_, record) => (
         <Radio.Group
           value={attendance[record._id]}
-          onChange={e =>
-            handleAttendanceChange(record._id, e.target.value)
-          }
+          onChange={(e) => handleAttendanceChange(record._id, e.target.value)}
         >
-          <Radio value="present">
-            <Tag color="green">Present</Tag>
-          </Radio>
-          <Radio value="absent">
-            <Tag color="red">Absent</Tag>
-          </Radio>
+          <Space>
+            <Radio value="present">
+              <Tag color="green">Present</Tag>
+            </Radio>
+            <Radio value="absent">
+              <Tag color="red">Absent</Tag>
+            </Radio>
+          </Space>
         </Radio.Group>
-      )
-    }
+      ),
+    },
   ];
-
-  /* ================= UI ================= */
 
   return (
     <Card bordered={false}>
+      <Title level={4} style={{ marginBottom: 20 }}>
+        Student Attendance
+      </Title>
 
-      <Title level={4}>Student Attendance</Title>
-
-      {/* Stats */}
       <Row gutter={16} style={{ marginBottom: 20 }}>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Statistic title="Present" value={summary.present} />
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
           <Statistic title="Absent" value={summary.absent} />
         </Col>
-        <Col span={6}>
+        <Col xs={24} sm={12} md={6}>
+          <Card size="small">
+            <Text type="secondary">Present Rate</Text>
+            <Progress percent={summary.presentRate} size="small" />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
           <DatePicker
             value={attendanceDate}
-            onChange={setAttendanceDate}
+            onChange={(date) => setAttendanceDate(date || dayjs())}
             style={{ width: "100%" }}
+            disabledDate={(current) =>
+              current && current > dayjs().endOf("day")
+            }
           />
         </Col>
       </Row>
 
       <Divider />
 
-      {/* Filters */}
       <Row gutter={16} style={{ marginBottom: 20 }}>
-
-        {/* Class Section */}
-        <Col span={8}>
+        <Col xs={24} md={8}>
           <Select
             placeholder="Select Class & Section"
             style={{ width: "100%" }}
             value={selectedClassObj?.key}
-            onChange={val => {
+            onChange={(value) => {
               const selected = assignedClassSections.find(
-                c => c.key === val
+                (item) => item.key === value
               );
-              setSelectedClassObj(selected);
+              setSelectedClassObj(selected || null);
             }}
+            showSearch
+            optionFilterProp="children"
           >
-            {assignedClassSections.map(cls => (
+            {assignedClassSections.map((cls) => (
               <Option key={cls.key} value={cls.key}>
                 {cls.className} - {cls.sectionName}
                 {cls.subjectName ? ` (${cls.subjectName})` : ""}
@@ -279,33 +416,57 @@ const StudentAttendance = () => {
           </Select>
         </Col>
 
+        <Col xs={24} md={8}>
+          <Select
+            placeholder="Filter by status"
+            allowClear
+            value={statusFilter}
+            onChange={setStatusFilter}
+            style={{ width: "100%" }}
+            options={[
+              { value: "present", label: "Present" },
+              { value: "absent", label: "Absent" },
+            ]}
+          />
+        </Col>
+
+        <Col xs={24} md={8}>
+          <Input
+            placeholder="Search by student / reg no. / mobile"
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </Col>
       </Row>
 
-      {/* Actions */}
       <Row justify="space-between" style={{ marginBottom: 16 }}>
-        <Space>
-          <Button onClick={() => markAll("present")}>
-            Mark All Present
-          </Button>
+        <Space wrap>
+          <Button onClick={() => markAll("present")}>Mark All Present</Button>
           <Button danger onClick={() => markAll("absent")}>
             Mark All Absent
           </Button>
         </Space>
 
-        <Button type="primary" onClick={handleSubmit}>
+        <Button
+          type="primary"
+          onClick={handleSubmit}
+          loading={attendanceLoading}
+        >
           Save Attendance
         </Button>
       </Row>
 
-      {/* Table */}
       <Table
         rowKey="_id"
         columns={columns}
         dataSource={filteredStudents}
-        loading={loading}
+        loading={studentsLoading || attendanceLoading}
         pagination={{ pageSize: 10 }}
+        locale={{
+          emptyText: <Empty description="No students found" />,
+        }}
       />
-
     </Card>
   );
 };
