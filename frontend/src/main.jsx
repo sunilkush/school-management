@@ -11,7 +11,28 @@ import store, { persistor } from "./store/store.js";
 import {Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { lazy } from "react";
 import React, { Suspense } from "react";
-import { ThemeProvider } from "./context/ThemeContext.jsx";
+import { ConfigProvider, App as AntdApp, theme as antdTheme } from "antd";
+import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
+
+const ThemedAntWrapper = ({ children }) => {
+  const { isDark } = useTheme();
+
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        token: {
+          borderRadius: 10,
+          colorPrimary: "#1677ff",
+          fontFamily: '"Noto Sans", sans-serif',
+        },
+      }}
+    >
+      <AntdApp>{children}</AntdApp>
+    </ConfigProvider>
+  );
+};
+
 // Auth & Core
 const LoginPage = lazy(() => import("./pages/Auth/LoginPage.jsx"));
 const Dashboard = lazy(() => import("./components/layout/MainDashboard.jsx"));
@@ -773,21 +794,23 @@ const renderApp = () => {
     <Provider store={store}>
       <PersistGate loading={<Loader />} persistor={persistor}>
         <ThemeProvider>
-          <PrimeReactProvider
-            value={{
-              unstyled: true, // ✅ Must be true to apply Tailwind styles
-              pt: Tailwind, // ✅ Add Tailwind preset
-              ptOptions: {
-                mergeSections: true,
-                mergeProps: true,
-                classNameMergeFunction: twMerge,
-              },
-            }}
-          >
-            <Suspense fallback={<Loader />}>
-              <RouterProvider router={router} />
-            </Suspense>
-          </PrimeReactProvider>
+          <ThemedAntWrapper>
+            <PrimeReactProvider
+              value={{
+                unstyled: true, // ✅ Must be true to apply Tailwind styles
+                pt: Tailwind, // ✅ Add Tailwind preset
+                ptOptions: {
+                  mergeSections: true,
+                  mergeProps: true,
+                  classNameMergeFunction: twMerge,
+                },
+              }}
+            >
+              <Suspense fallback={<Loader />}>
+                <RouterProvider router={router} />
+              </Suspense>
+            </PrimeReactProvider>
+          </ThemedAntWrapper>
         </ThemeProvider>
       </PersistGate>
     </Provider>

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Card, Col, Row, Tag, Typography, Empty, Spin } from "antd";
+import { Card, Col, Row, Tag, Typography, Empty, Spin, Flex } from "antd";
 import { useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
@@ -21,14 +21,14 @@ const RoleWorkspace = () => {
 
   if (loading) {
     return (
-      <div className="h-[60vh] flex items-center justify-center">
+      <Flex style={{ minHeight: "60vh" }} align="center" justify="center">
         <Spin size="large" tip="Loading role workspace..." />
-      </div>
+      </Flex>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <Flex vertical gap={16}>
       <Card>
         <Title level={3} style={{ marginBottom: 8 }}>Role Workspace</Title>
         <Text type="secondary">
@@ -45,7 +45,7 @@ const RoleWorkspace = () => {
           {grouped.map((group) => (
             <Col xs={24} md={12} lg={8} key={group.module}>
               <Card title={group.module}>
-                <div className="flex flex-wrap gap-2">
+                <Flex wrap gap={8}>
                   {group.actions.length ? (
                     group.actions.map((action) => (
                       <Tag color="blue" key={`${group.module}-${action}`}>
@@ -55,13 +55,13 @@ const RoleWorkspace = () => {
                   ) : (
                     <Text type="secondary">No actions mapped</Text>
                   )}
-                </div>
+                </Flex>
               </Card>
             </Col>
           ))}
         </Row>
       )}
-    </div>
+    </Flex>
   );
 };
 

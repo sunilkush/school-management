@@ -1,17 +1,12 @@
-
-import RegisterForm from '../components/forms/RegisterForm';
-
+import { Card } from "antd";
+import RegisterForm from "../components/forms/RegisterForm";
 
 const UserRegister = () => {
-  
   return (
-    <div>
-      <div className="w-full flex gap-4">
-        <div className="w-full md:w-1/3 bg-white p-5 mx-auto border rounded-lg">
-          <RegisterForm />
-        </div>
-        
-      </div>
+    <div style={{ padding: 16, display: "flex", justifyContent: "center" }}>
+      <Card style={{ width: "100%", maxWidth: 520 }}>
+        <RegisterForm />
+      </Card>
     </div>
   );
 };

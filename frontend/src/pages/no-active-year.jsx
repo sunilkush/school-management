@@ -1,44 +1,42 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '../features/authSlice'; // ✅ Make sure this path is correct
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { Button, Card, Space, Typography } from "antd";
+import { WarningOutlined } from "@ant-design/icons";
+import { logoutUser } from "../features/authSlice";
+
+const { Title, Text } = Typography;
 
 const NoActiveYear = () => {
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const { user } = useSelector((state) => state.auth); // ✅ logoutUser removed from here
-    const role = user?.role?.name;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const role = user?.role?.name;
 
-    const handleGoToSettings = async () => {
-        // If the user is not a Super Admin, log them out and redirect to the home page
-        if (role !== 'Super Admin') {
-            await dispatch(logoutUser()); // ✅ Correctly dispatch the logoutUser action
-            navigate('/', { replace: true }); // Clear local storage
-           
-        } else {
-            navigate('/settings'); // ✅ Add this if you want to go to settings for Super Admin
-        }
-    };
+  const handleGoToSettings = async () => {
+    if (role !== "Super Admin") {
+      await dispatch(logoutUser());
+      navigate("/", { replace: true });
+    } else {
+      navigate("/settings");
+    }
+  };
 
-    return (
-        <div className="flex items-center justify-center h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md text-center">
-                <h1 className="text-3xl font-bold mb-4">No Active Academic Year</h1>
-                <p className="text-gray-600 mb-6">
-                    Please select or create an academic year to continue.
-                </p>
-                <p className="text-gray-600 mb-6">
-                    If you are a Super Admin, you can create an academic year in the settings.
-                </p>
-                <button
-                    onClick={handleGoToSettings}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-200"
-                >
-                    Go to Settings
-                </button>
-            </div>
-        </div>
-    );
+  return (
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 16 }}>
+      <Card style={{ maxWidth: 560, width: "100%", textAlign: "center", borderRadius: 16 }}>
+        <Space direction="vertical" size={8}>
+          <WarningOutlined style={{ fontSize: 40, color: "#faad14" }} />
+          <Title level={3} style={{ margin: 0 }}>No Active Academic Year</Title>
+          <Text type="secondary">Please select or create an academic year to continue.</Text>
+          <Text type="secondary">If you are a Super Admin, you can create it from Settings.</Text>
+          <Button type="primary" onClick={handleGoToSettings} style={{ marginTop: 12 }}>
+            Go to Settings
+          </Button>
+        </Space>
+      </Card>
+    </div>
+  );
 };
 
 export default NoActiveYear;
