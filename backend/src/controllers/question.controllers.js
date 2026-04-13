@@ -157,6 +157,8 @@ export const getQuestions = asyncHandler(async (req, res) => {
       questionType,
       tags,
       search,
+      schoolClassId,
+      chapterId,
       sort = "-createdAt",
     } = req.query;
 
@@ -172,6 +174,8 @@ export const getQuestions = asyncHandler(async (req, res) => {
     if (difficulty) filters.difficulty = difficulty;
     if (subjectId) filters.subjectId = subjectId;
     if (questionType) filters.questionType = questionType;
+    if (schoolClassId) filters.schoolClassId = schoolClassId;
+    if (chapterId) filters.chapterId = chapterId;
     if (tags) filters.tags = { $in: tags.split(",").map((t) => t.trim().toLowerCase()) };
     if (search) filters.statement = { $regex: search, $options: "i" };
 
@@ -179,7 +183,7 @@ export const getQuestions = asyncHandler(async (req, res) => {
 
     const [questions, total] = await Promise.all([
       Question.find(filters)
-        .populate("subjectId schoolId createdBy", "name")
+        .populate("subjectId schoolId schoolClassId chapterId createdBy", "name")
         .skip(skip)
         .limit(parseInt(limit))
         .sort(sort),
@@ -211,7 +215,7 @@ export const getQuestionById = asyncHandler(async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id))
       return res.status(400).json(new ApiResponse(400, null, "Invalid ID"));
 
-    const question = await Question.findById(id).populate("subjectId schoolId createdBy", "name");
+    const question = await Question.findById(id).populate("subjectId schoolId schoolClassId chapterId createdBy", "name");
     if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
     return res.status(200).json(new ApiResponse(200, question, "Question fetched successfully"));
