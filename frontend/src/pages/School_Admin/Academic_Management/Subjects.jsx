@@ -3,11 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Table,
   Tag,
-  Button,
   Space,
-  Modal,
   Input,
-  Tooltip,
   Card,
   Typography,
   Row,
@@ -17,24 +14,22 @@ import {
   ConfigProvider,
   Grid,
   Spin,
+  Alert,
 } from "antd";
 
-import {
-  Edit,
-  Trash2,
-  Plus,
-  Search,
-  BookOpen,
-  Users,
-} from "lucide-react";
+import { Search, BookOpen, Users } from "lucide-react";
 
 import SubjectForm from "../../../components/forms/SubjectForm.jsx";
-import {
-  getAllSubjects
-} from "../../../features/subjectSlice.js";
+import { getAllSubjects } from "../../../features/subjectSlice.js";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
+
+const toDisplayText = (value, fallback = "-") => {
+  if (value === null || value === undefined) return fallback;
+  const text = String(value).trim();
+  return text.length ? text : fallback;
+};
 
 const Subjects = () => {
   const dispatch = useDispatch();
@@ -48,7 +43,7 @@ const Subjects = () => {
   const { user } = useSelector((state) => state.auth || {});
   const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   const academicYearId = selectedAcademicYear?._id;
-  const { subjects = [], loading = false } = useSelector(
+  const { subjects = [] } = useSelector(
     (state) => state.subject || {}
   );
 
@@ -56,91 +51,91 @@ const Subjects = () => {
   const limit = 50;
   const schoolId = user?.school?._id;
 
-  /* ── FETCH ── */
   useEffect(() => {
-    if (schoolId) {
-      dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
-    }
+    if (!schoolId) return;
+    dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
   }, [dispatch, schoolId, academicYearId]);
 
-  /* ── FILTER ── */
   const safeSubjects = useMemo(
     () => (Array.isArray(subjects) ? subjects : []),
     [subjects]
   );
 
-const filteredSubjects = useMemo(() => {
-    const normalizedSearch = searchText.toLowerCase();
+  const filteredSubjects = useMemo(() => {
+    const normalizedSearch = searchText.toLowerCase().trim();
+    if (!normalizedSearch) return safeSubjects;
+
     return safeSubjects.filter((s) =>
-      s.name?.toLowerCase()?.includes(normalizedSearch) ?? false
+      toDisplayText(s?.name, "").toLowerCase().includes(normalizedSearch)
     );
   }, [safeSubjects, searchText]);
 
-  /* ── STATS ── */
-  const stats = useMemo(() => {
-    return {
+  const stats = useMemo(
+    () => ({
       total: safeSubjects.length,
-      active: safeSubjects.filter((s) => s.isActive).length,
-      global: safeSubjects.filter((s) => s.isGlobal).length,
-    };
-  }, [safeSubjects]);
+      active: safeSubjects.filter((s) => s?.isActive).length,
+      global: safeSubjects.filter((s) => s?.isGlobal).length,
+    }),
+    [safeSubjects]
+  );
 
-  /* ── TABLE ── */
   const columns = [
     {
       title: "Subject",
-      render: (_, record) => (
-        <Space>
-          <Avatar
-            size={36}
-            style={{
-              background: "#eef2ff",
-              color: "#6366f1",
-              fontWeight: 600,
-            }}
-          >
-            {record.name?.charAt(0)}
-          </Avatar>
-          <div>
-            <Text strong>{record.name}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {record.category} • {record.type}
-            </Text>
-          </div>
-        </Space>
-      ),
+      render: (_, record) => {
+        const subjectName = toDisplayText(record?.name, "Unnamed");
+        return (
+          <Space>
+            <Avatar
+              size={36}
+              style={{
+                background: "#eef2ff",
+                color: "#6366f1",
+                fontWeight: 600,
+              }}
+            >
+              {subjectName.charAt(0).toUpperCase()}
+            </Avatar>
+            <div>
+              <Text strong>{subjectName}</Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {toDisplayText(record?.category)} • {toDisplayText(record?.type)}
+              </Text>
+            </div>
+          </Space>
+        );
+      },
     },
     {
       title: "Marks",
       render: (_, r) => (
-        <Text>{r.passMarks}/{r.maxMarks}</Text>
+        <Text>
+          {toDisplayText(r?.passMarks, "0")}/{toDisplayText(r?.maxMarks, "0")}
+        </Text>
       ),
     },
     {
       title: "Scope",
       render: (_, r) =>
-        r.isGlobal ? (
+        r?.isGlobal ? (
           <Tag color="blue">Global</Tag>
         ) : (
-          <Tag color="purple">{r.schoolId?.name || "School"}</Tag>
+          <Tag color="purple">{toDisplayText(r?.schoolId?.name, "School")}</Tag>
         ),
     },
-    
     {
       title: "Status",
       render: (_, r) => (
-        <Tag color={r.isActive ? "green" : "red"}>
-          {r.isActive ? "Active" : "Inactive"}
+        <Tag color={r?.isActive ? "green" : "red"}>
+          {r?.isActive ? "Active" : "Inactive"}
         </Tag>
       ),
     },
-    
   ];
 
-  /* ── MOBILE VIEW ── */
   const MobileView = () => {
-    if (loading) return <Spin />;
+    
 
     if (!filteredSubjects.length) {
       return <Empty description="No subjects found" />;
@@ -148,30 +143,31 @@ const filteredSubjects = useMemo(() => {
 
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {filteredSubjects.map((item) => (
-          <Card key={item._id} style={{ borderRadius: 12 }}>
-            <Space align="start">
-              <Avatar>{item.name?.charAt(0)}</Avatar>
-              <div>
-                <Text strong>{item.name}</Text>
-                <div style={{ fontSize: 12, color: "#888" }}>
-                  {item.category} • {item.type}
-                </div>
+        {filteredSubjects.map((item) => {
+          const subjectName = toDisplayText(item?.name, "Unnamed");
+          return (
+            <Card key={item?._id || subjectName} style={{ borderRadius: 12 }}>
+              <Space align="start">
+                <Avatar>{subjectName.charAt(0).toUpperCase()}</Avatar>
+                <div>
+                  <Text strong>{subjectName}</Text>
+                  <div style={{ fontSize: 12, color: "#888" }}>
+                    {toDisplayText(item?.category)} • {toDisplayText(item?.type)}
+                  </div>
 
-                <div style={{ marginTop: 6 }}>
-                  <Tag color="blue">
-                    {item.passMarks}/{item.maxMarks}
-                  </Tag>
-                  <Tag color={item.isActive ? "green" : "red"}>
-                    {item.isActive ? "Active" : "Inactive"}
-                  </Tag>
+                  <div style={{ marginTop: 6 }}>
+                    <Tag color="blue">
+                      {toDisplayText(item?.passMarks, "0")}/{toDisplayText(item?.maxMarks, "0")}
+                    </Tag>
+                    <Tag color={item?.isActive ? "green" : "red"}>
+                      {item?.isActive ? "Active" : "Inactive"}
+                    </Tag>
+                  </div>
                 </div>
-              </div>
-            </Space>
-
-            
-          </Card>
-        ))}
+              </Space>
+            </Card>
+          );
+        })}
       </div>
     );
   };
@@ -185,13 +181,13 @@ const filteredSubjects = useMemo(() => {
       }}
     >
       <div>
-        {/* HEADER */}
         <div style={{ marginBottom: 20 }}>
           <Title level={4}>Subjects</Title>
           <Text type="secondary">Manage curriculum subjects</Text>
         </div>
 
-        {/* STATS */}
+        
+
         <Row gutter={16} style={{ marginBottom: 20 }}>
           {[
             { title: "Total", value: stats.total, icon: <BookOpen /> },
@@ -213,7 +209,6 @@ const filteredSubjects = useMemo(() => {
           ))}
         </Row>
 
-        {/* MAIN */}
         <Card>
           <div style={{ marginBottom: 12, display: "flex", justifyContent: "space-between" }}>
             <Input
@@ -223,8 +218,6 @@ const filteredSubjects = useMemo(() => {
               onChange={(e) => setSearchText(e.target.value)}
               style={{ width: 250 }}
             />
-
-          
           </div>
 
           {isMobile ? (
@@ -234,20 +227,19 @@ const filteredSubjects = useMemo(() => {
               rowKey="_id"
               columns={columns}
               dataSource={filteredSubjects}
-              loading={loading}
+              
               pagination={{ pageSize: 10 }}
             />
           )}
         </Card>
 
-        {/* MODAL */}
         <SubjectForm
           isOpen={isModalOpen}
           editData={selectedSubject}
           onClose={() => {
             setIsModalOpen(false);
             setSelectedSubject(null);
-            dispatch(getAllSubjects({ page, limit, schoolId }));
+              dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
           }}
         />
       </div>

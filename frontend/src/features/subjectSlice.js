@@ -35,11 +35,22 @@ export const getAllSubjects = createAsyncThunk(
         page = 1,
         limit = 100,
         search = "",
-        isGlobal
+          isGlobal,
+        schoolId,
+        academicYearId,
+        ...restParams
       } = params;
 
       const res = await apiClient.get(`/subject/all`, {
-        params: { page, limit, search, isGlobal },
+         params: {
+          page,
+          limit,
+          search,
+          isGlobal,
+          schoolId,
+          academicYearId,
+          ...restParams,
+        },
       });
       
       return res.data; // ✅ return full response
