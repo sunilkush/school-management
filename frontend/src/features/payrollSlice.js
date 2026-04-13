@@ -5,11 +5,12 @@ const getErrorPayload = (error, fallback) => ({
   message: error?.response?.data?.message || fallback,
   status: error?.response?.status || null,
 });
+const toArray = (value) => (Array.isArray(value) ? value : []);
 
 export const fetchPayrollStructures = createAsyncThunk("payroll/fetchStructures", async (_, { rejectWithValue }) => {
   try {
     const response = await httpClient.get("/payroll/structure");
-    return response?.data?.data || [];
+    return toArray(response?.data?.data);
   } catch (error) {
     return rejectWithValue(getErrorPayload(error, "Structure listing failed"));
   }
@@ -18,7 +19,7 @@ export const fetchPayrollStructures = createAsyncThunk("payroll/fetchStructures"
 export const fetchPayrollEmployees = createAsyncThunk("payroll/fetchEmployees", async (_, { rejectWithValue }) => {
   try {
     const response = await httpClient.get("/employee");
-    return response?.data?.data || [];
+    return toArray(response?.data?.data);
   } catch (error) {
     return rejectWithValue(getErrorPayload(error, "Employee list load failed"));
   }

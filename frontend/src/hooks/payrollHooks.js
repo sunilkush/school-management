@@ -3,6 +3,7 @@ import { message } from "antd";
 import httpClient from "../api/httpClient";
 
 const normalizeApiError = (error, fallback) => error?.response?.data?.message || fallback;
+const toArray = (value) => (Array.isArray(value) ? value : []);
 
 export const usePayrollCycle = (month, year) => {
   const [loading, setLoading] = useState(false);
@@ -16,7 +17,7 @@ export const usePayrollCycle = (month, year) => {
       const response = await httpClient.get(`/payroll/cycle/${month}/${year}`);
       const data = response?.data?.data || {};
       setCycle(data.cycle || null);
-      setEntries(data.entries || []);
+      setEntries(toArray(data.entries));
       setIsCycleMissing(false);
     } catch (error) {
       if (error?.response?.status === 404) {
@@ -40,7 +41,7 @@ export const usePayrollCycle = (month, year) => {
 
   const summary = useMemo(
     () =>
-      entries.reduce(
+      toArray(entries).reduce(
         (acc, entry) => {
           acc.totalEmployees += 1;
           acc.totalGross += Number(entry.grossEarnings || 0);
@@ -117,7 +118,7 @@ export const usePayrollStructures = () => {
     setLoading(true);
     try {
       const response = await httpClient.get("/payroll/structure");
-      setStructures(response?.data?.data || []);
+      setStructures(toArray(response?.data?.data));
     } catch (error) {
       if (error?.response?.status !== 404) {
         message.warning("Structure listing endpoint unavailable, form workflow still works.");
