@@ -32,26 +32,89 @@ const ensureInstallmentAccess = async ({ installmentId, schoolId }) => {
 };
 
 export const createPayment = asyncHandler(async (req, res) => {
-  const { studentId, installmentId, amount, paymentMethod } = req.body;
+  const { studentId, installmentId, amount, paymentMethod, paymentMode, razorpay } = req.body;
   const schoolId = req.user.schoolId;
 
   const installment = await ensureInstallmentAccess({ installmentId, schoolId });
+  const mode = String(paymentMethod || paymentMode || "cash").toLowerCase();
 
-  if (amount > installment.amount - installment.paidAmount) {
+  if (mode === "razorpay") {
+    const dueAmount = installment.amount - installment.paidAmount;
+    if (dueAmount <= 0) throw new ApiError(400, "Installment already paid");
+
+    if (razorpay?.razorpay_order_id && razorpay?.razorpay_payment_id && razorpay?.razorpay_signature) {
+      const { keySecret } = await getRazorpayInstance(schoolId);
+      const body = `${razorpay.razorpay_order_id}|${razorpay.razorpay_payment_id}`;
+      const expectedSignature = crypto.createHmac("sha256", keySecret).update(body).digest("hex");
+
+      if (expectedSignature !== razorpay.razorpay_signature) {
+        throw new ApiError(400, "Payment verification failed");
+      }
+
+      const payment = await Payment.create({
+        schoolId,
+        studentId: installment.studentId,
+        installmentId,
+        amountPaid: dueAmount,
+        paymentMode: "razorpay",
+        status: "success",
+        razorpay,
+        receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      });
+
+      installment.paidAmount += dueAmount;
+      installment.status = "PAID";
+      await installment.save();
+
+      return sendSuccess(res, {
+        statusCode: 201,
+        message: "Payment verified and captured",
+        data: payment,
+      });
+    }
+
+    const { razorpay: razorpayClient } = await getRazorpayInstance(schoolId);
+    const order = await razorpayClient.orders.create({
+      amount: Math.round(dueAmount * 100),
+      currency: "INR",
+      receipt: `INST-${installmentId}`,
+      notes: {
+        schoolId: schoolId.toString(),
+        installmentId,
+        requestId: req.requestId,
+      },
+    });
+
+    return sendSuccess(res, {
+      message: "Razorpay order created",
+      data: {
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      },
+    });
+  }
+
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    throw new ApiError(400, "Valid amount is required");
+  }
+
+  if (numericAmount > installment.amount - installment.paidAmount) {
     throw new ApiError(400, "Amount exceeds remaining due");
   }
 
   const payment = await Payment.create({
     schoolId,
-    studentId,
+    studentId: studentId || installment.studentId,
     installmentId,
-    amountPaid: amount,
-    paymentMode: String(paymentMethod || "cash").toLowerCase(),
+    amountPaid: numericAmount,
+    paymentMode: mode,
     status: "success",
-    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
   });
 
-  installment.paidAmount += amount;
+  installment.paidAmount += numericAmount;
   installment.status = installment.paidAmount >= installment.amount ? "PAID" : "PARTIAL";
   await installment.save();
 
