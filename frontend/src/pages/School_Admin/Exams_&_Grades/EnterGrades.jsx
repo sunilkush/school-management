@@ -15,7 +15,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getClassData } from "../../../features/schoolClassSlice";
 import { getExams, enterMarksBulk } from "../../../features/examSlice";
-import { fetchAllStudent } from "../../../features/studentSlice";
+import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 
 
 const { Title, Text } = Typography;
@@ -38,11 +38,11 @@ const EnterGrades = () => {
   const { exams = [], loading: examsLoading = false } = useSelector(
     (state) => state.exams || {}
   );
-  const { studentList = [], loading: studentsLoading = false } = useSelector(
+  const { schoolStudents = [], loading: studentsLoading = false } = useSelector(
     (state) => state.students || {}
   );
 
-  
+  console.log(schoolStudents)
 
   const schoolId = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id ;
@@ -59,7 +59,7 @@ const EnterGrades = () => {
       return;
     }
 
-    dispatch(fetchAllStudent({ schoolId, academicYearId, schoolClassId: selectedClass }));
+    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: selectedClass }));
   }, [dispatch, selectedClass, schoolId, academicYearId]);
 
   useEffect(() => {
@@ -97,13 +97,13 @@ const EnterGrades = () => {
 
   const tableData = useMemo(
     () =>
-      studentList.map((student, index) => ({
-        id: student?.studentInfo?._id,
+      schoolStudents.map((student, index) => ({
+        id: student?.student?._id,
         rollNo: student?.registrationNumber || index + 1,
-        name: student?.userDetails?.name || "N/A",
-        sectionId: student?.sectionDetails?._id,
+        name: student?.user?.name || "N/A",
+        sectionId: student?.section?._id,
       })),
-    [studentList]
+    [schoolStudents]
   );
 
   const handleGradeChange = (studentId, value) => {

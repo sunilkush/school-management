@@ -24,14 +24,17 @@ import { SearchOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
-import { fetchAllStudentByRole } from "../../../features/studentSlice";
+import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 
 const { Title, Text } = Typography;
 
 const TeacherExamsPage = () => {
   const dispatch = useDispatch();
   const { exams = [], loading } = useSelector((state) => state.exams || {});
-  const { studentList = [], loading: studentLoading } = useSelector((state) => state.students || {});
+   const { schoolStudents = [] } = useSelector(
+      (state) => state.students || {}
+    );
+  
   const { user = {} } = useSelector((state) => state.auth || {});
   const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   
@@ -61,19 +64,19 @@ const TeacherExamsPage = () => {
       return;
     }
 
-    dispatch(fetchAllStudentByRole({ schoolId, academicYearId, schoolClassId }));
+    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId }));
   }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
 
   useEffect(() => {
     if (!selectedExamId) return;
 
     const selectedClassId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
-    if (!studentList.length || !selectedClassId) {
+    if (!schoolStudents.length || !selectedClassId) {
       setRows([]);
       return;
     }
 
-    const classMatchedStudents = studentList.filter((student) => {
+    const classMatchedStudents = schoolStudents.filter((student) => {
       const studentClassId =
         student?.schoolClassId?._id ||
         student?.schoolClass?._id ||
@@ -102,7 +105,7 @@ const TeacherExamsPage = () => {
         passingMarks: selectedExam?.passingMarks || 33,
       }))
     );
-  }, [selectedExamId, selectedExam, studentList]);
+  }, [selectedExamId, selectedExam, schoolStudents]);
 
   const onMarkChange = (studentId, value) => {
     setRows((prev) =>
@@ -307,7 +310,7 @@ const TeacherExamsPage = () => {
 
       {selectedExamId && (
         <Card
-          loading={loading || studentLoading}
+        
           title="Marks Entry Table"
           style={{ borderRadius: 16 }}
           extra={
