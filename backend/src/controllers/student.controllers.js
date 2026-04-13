@@ -269,13 +269,11 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
   const roleName = user?.roleId?.name || user?.role?.name;
   const schoolId = user?.schoolId || user?.school?._id;
 
-  const allowedRoles = ["Super Admin", "School Admin", "Teacher", "Accountant"];
-
-  if (!allowedRoles.includes(roleName)) {
-    throw new ApiError(403, "Access denied");
-  }
-
-  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
+  console.log(roleName);
+  console.log(schoolId);
+  console.log(schoolClassId);
+ 
+  if (!academicYearId ) {
     throw new ApiError(400, "Valid academic year is required!");
   }
 
@@ -283,25 +281,12 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
   const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
   const skip = (pageNumber - 1) * limitNumber;
 
-  const match = {
-    academicYearId: new mongoose.Types.ObjectId(academicYearId),
-  };
+  
 
   // School filter except Super Admin
-  if (roleName !== "Super Admin") {
-    if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
-      throw new ApiError(400, "Valid schoolId required");
-    }
 
-    match.schoolId = new mongoose.Types.ObjectId(schoolId);
-  }
-
-  if (schoolClassId) {
-    if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
-      throw new ApiError(400, "Invalid schoolClassId");
-    }
-
-    match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
+  if (!schoolClassId) {
+      throw new ApiError(400, "Valid SchoolID is required!");
   }
 
   const result = await StudentEnrollment.aggregate([
@@ -332,7 +317,7 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
     // schoolClass
     {
       $lookup: {
-        from: "classes",
+        from: "schoolclasses", // check collection name in DB
         localField: "schoolClassId",
         foreignField: "_id",
         as: "schoolClass",
@@ -365,7 +350,7 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
     // academic year
     {
       $lookup: {
-        from: "academicyears",
+        from: "academicyears", // check collection name in DB
         localField: "academicYearId",
         foreignField: "_id",
         as: "academicYear",
@@ -378,6 +363,7 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
         _id: 1,
         registrationNumber: 1,
         feeDiscount: { $ifNull: ["$feeDiscount", 0] },
+        smsMobile: 1,
         mobileNumber: 1,
         status: 1,
         admissionDate: 1,
@@ -446,7 +432,6 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
     )
   );
 });
-
 
 export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
   const { schoolClassId, page = 1, limit = 10 } = req.query;

@@ -49,13 +49,25 @@ const TeacherExamsPage = () => {
 
   useEffect(() => {
     if (!selectedExamId) return;
-    if (!studentList.length) {
+
+    const selectedClassId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
+    if (!studentList.length || !selectedClassId) {
       setRows([]);
       return;
     }
 
+    const classMatchedStudents = studentList.filter((student) => {
+      const studentClassId =
+        student?.schoolClassId?._id ||
+        student?.schoolClass?._id ||
+        student?.studentInfo?.schoolClassId ||
+        student?.enrollment?.schoolClassId;
+
+      return `${studentClassId || ""}` === `${selectedClassId}`;
+    });
+
     setRows(
-      studentList.map((student, index) => ({
+      classMatchedStudents.map((student, index) => ({
         studentId: student?.student?._id || student?.studentInfo?._id,
         studentName: student?.user?.name || student?.userDetails?.name || `Student ${index + 1}`,
         sectionId: student?.section?._id || student?.sectionDetails?._id,
