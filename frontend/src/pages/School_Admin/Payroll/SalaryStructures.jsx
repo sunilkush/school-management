@@ -15,6 +15,8 @@ const SalaryStructures = () => {
   const [search, setSearch] = useState("");
 
   const { employees, structures, loadingStructures, savingStructure } = useSelector((state) => state.payroll);
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const safeStructures = Array.isArray(structures) ? structures : [];
 
 
   useEffect(() => {
@@ -38,17 +40,17 @@ const SalaryStructures = () => {
   useEffect(() => {
     if (editingId) return;
     const selectedEmployee = form.getFieldValue("employeeId");
-    if (!selectedEmployee && employees.length) {
-      form.setFieldValue("employeeId", employees[0]._id);
+    if (!selectedEmployee && safeEmployees.length) {
+      form.setFieldValue("employeeId", safeEmployees[0]._id);
     }
-  }, [editingId, employees, form]);
+  }, [editingId, safeEmployees, form]);
 
   const validateOverlap = (values) => {
     const targetEmployee = values.employeeId;
     const from = dayjs(values.effectiveFrom);
     const to = values.effectiveTo ? dayjs(values.effectiveTo) : null;
 
-    return !structures.some((s) => {
+    return !safeStructures.some((s) => {
       if (editingId && s._id === editingId) return false;
       const empId = s.employeeId?._id || s.employeeId;
       if (empId !== targetEmployee || s.status !== "active") return false;
@@ -77,8 +79,8 @@ const SalaryStructures = () => {
       message.success(response?.message || "Salary structure saved");
       setEditingId(null);
       form.resetFields();
-      if (employees.length) {
-        form.setFieldValue("employeeId", employees[0]._id);
+      if (safeEmployees.length) {
+        form.setFieldValue("employeeId", safeEmployees[0]._id);
       }
       await dispatch(fetchPayrollStructures()).unwrap();
     } catch (error) {
@@ -97,9 +99,9 @@ const SalaryStructures = () => {
   };
 
   const filteredStructures = useMemo(() => {
-    if (!search) return structures;
-    return structures.filter((s) => (s.employeeId?.userId?.name || "").toLowerCase().includes(search.toLowerCase()));
-  }, [search, structures]);
+    if (!search) return safeStructures;
+    return safeStructures.filter((s) => (s.employeeId?.userId?.name || "").toLowerCase().includes(search.toLowerCase()));
+  }, [safeStructures, search]);
 
   return (
     <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
@@ -109,7 +111,7 @@ const SalaryStructures = () => {
         <Breadcrumb.Item>Salary Structures</Breadcrumb.Item>
       </Breadcrumb>
       <Content>
-        {!structures.length && (
+        {!safeStructures.length && (
           <Alert
             showIcon
             style={{ marginBottom: 16 }}
@@ -123,7 +125,7 @@ const SalaryStructures = () => {
           <Col xs={24} lg={10}>
             <SalaryStructureForm
               form={form}
-              employees={employees}
+              employees={safeEmployees}
               onSubmit={handleSubmit}
               submitting={savingStructure}
               editingId={editingId}
