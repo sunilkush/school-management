@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { changePassword, updateUser } from "../../../features/authSlice";
 import { fetchRoles } from "../../../features/roleSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
+import apiClient from "../../../api/httpClient";
 
 import {
   Form,
@@ -57,7 +58,9 @@ const Settings = () => {
   const { schools, loading: schoolLoading } = useSelector((state) => state.school);
 
   const [form] = Form.useForm();
+  const [razorpayForm] = Form.useForm();
   const [isSaving, setIsSaving] = useState(false);
+  const [isRazorpaySaving, setIsRazorpaySaving] = useState(false);
   const { themeMode, setThemeMode } = useTheme();
 
   const localStorageKey = useMemo(() => {
@@ -69,6 +72,24 @@ const Settings = () => {
     dispatch(fetchRoles());
     dispatch(fetchSchools());
   }, [dispatch]);
+
+  useEffect(() => {
+    const loadRazorpayConfig = async () => {
+      try {
+        const res = await apiClient.get("/payments/razorpay/config");
+        const config = res?.data?.data || {};
+        razorpayForm.setFieldsValue({
+          keyId: config.keyId || "",
+          keySecret: "",
+          accountId: config.accountId || "",
+          isEnabled: Boolean(config.isEnabled),
+        });
+      } catch {
+        // ignore for roles that don't have access
+      }
+    };
+    loadRazorpayConfig();
+  }, [razorpayForm]);
 
   useEffect(() => {
     if (!user) return;
@@ -195,6 +216,19 @@ const Settings = () => {
   };
 
   const isLoading = roleLoading || schoolLoading;
+
+  const handleRazorpaySave = async (values) => {
+    setIsRazorpaySaving(true);
+    try {
+      await apiClient.put("/payments/razorpay/config", values);
+      message.success("Razorpay settings saved successfully.");
+      razorpayForm.setFieldValue("keySecret", "");
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Unable to save Razorpay settings.");
+    } finally {
+      setIsRazorpaySaving(false);
+    }
+  };
 
   return (
     <div style={{ padding: 20, margin: "0 auto" }}>
@@ -337,6 +371,48 @@ const Settings = () => {
                     <Form.Item label="Max Schools" name="maxSchools">
                       <InputNumber min={1} style={{ width: "100%" }} />
                     </Form.Item>
+                  </Col>
+
+                  <Col span={24}>
+                    <Card title="Razorpay Integration" size="small">
+                      <Form form={razorpayForm} layout="vertical" onFinish={handleRazorpaySave} component={false}>
+                        <Row gutter={16}>
+                          <Col xs={24} md={8}>
+                            <Form.Item
+                              label="Razorpay Key ID"
+                              name="keyId"
+                              rules={[{ required: true, message: "Key ID is required" }]}
+                            >
+                              <Input placeholder="rzp_live_xxxxxxxx" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Form.Item
+                              label="Razorpay Key Secret"
+                              name="keySecret"
+                              extra="Leave blank to keep existing secret."
+                            >
+                              <Input.Password placeholder="Enter new key secret (optional)" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <Form.Item label="Razorpay Account ID" name="accountId">
+                              <Input placeholder="acc_xxxxxxxx" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item name="isEnabled" valuePropName="checked">
+                              <Switch /> Enable Razorpay payment for this school
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12} style={{ display: "flex", justifyContent: "flex-end" }}>
+                            <Button type="primary" onClick={() => razorpayForm.submit()} loading={isRazorpaySaving}>
+                              Save Razorpay Settings
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Form>
+                    </Card>
                   </Col>
                 </Row>
               </Tabs.TabPane>

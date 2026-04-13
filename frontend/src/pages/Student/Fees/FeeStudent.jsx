@@ -122,7 +122,7 @@ const FeeStudent = () => {
     }
 
     try {
-      const { payload } = await dispatch(
+      const paymentInit = await dispatch(
         createPayment({
           installmentId: selectedInstallment._id,
           paymentMode: "razorpay",
@@ -130,10 +130,10 @@ const FeeStudent = () => {
       ).unwrap();
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: payload.amount,
+        key: paymentInit?.data?.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: paymentInit?.data?.amount,
         currency: "INR",
-        order_id: payload.orderId,
+        order_id: paymentInit?.data?.orderId,
         name: "School Fee Payment",
         description: selectedInstallment.installmentName,
         handler: async (response) => {

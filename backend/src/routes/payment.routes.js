@@ -5,6 +5,8 @@ import {
   paymentSummary,
   verifyRazorpayPayment,
   createRazorpayOrder,
+  getRazorpayConfig,
+  updateRazorpayConfig,
 } from "../controllers/payment.controllers.js";
 import { requireRoles } from "../middlewares/auth.middleware.js";
 import { validateRequest } from "../middlewares/validate.middleware.js";
@@ -12,6 +14,7 @@ import {
   createPaymentSchema,
   createRazorpayOrderSchema,
   paymentListQuerySchema,
+  razorpayConfigUpdateSchema,
   verifyRazorpayPaymentSchema,
 } from "../validators/payment.validator.js";
 
@@ -37,6 +40,13 @@ router.post(
   requireRoles(PAYMENT_CREATE_ROLES),
   validateRequest(createRazorpayOrderSchema),
   createRazorpayOrder
+);
+router.get("/razorpay/config", requireRoles(PAYMENT_ADMIN_ROLES), getRazorpayConfig);
+router.put(
+  "/razorpay/config",
+  requireRoles(PAYMENT_ADMIN_ROLES),
+  validateRequest(razorpayConfigUpdateSchema),
+  updateRazorpayConfig
 );
 
 export default router;

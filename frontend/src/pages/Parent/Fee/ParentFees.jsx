@@ -142,7 +142,7 @@ const ParentFees = () => {
       ).unwrap();
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: paymentInit?.data?.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: paymentInit?.data?.amount,
         currency: "INR",
         order_id: paymentInit?.data?.orderId,
