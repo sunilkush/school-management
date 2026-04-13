@@ -28,8 +28,11 @@ const createSubject = asyncHandler(async (req, res) => {
 });
 
 const getAllSubjects = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page || 1);
-  const limit = Number(req.query.limit || 10);
+    const parsedPage = Number.parseInt(req.query.page, 10);
+  const parsedLimit = Number.parseInt(req.query.limit, 10);
+
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 10;
   const skip = (page - 1) * limit;
 
   const [subjects, total] = await Promise.all([
@@ -42,6 +45,7 @@ const getAllSubjects = asyncHandler(async (req, res) => {
       page,
       total,
       limit,
+       totalPages: Math.ceil(total / limit),
     })
   );
 });

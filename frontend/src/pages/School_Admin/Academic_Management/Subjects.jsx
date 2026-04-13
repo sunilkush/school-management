@@ -19,7 +19,7 @@ import {
 
 import { Search, BookOpen, Users } from "lucide-react";
 
-import SubjectForm from "../../../components/forms/SubjectForm.jsx";
+
 import { getAllSubjects } from "../../../features/subjectSlice.js";
 
 const { Title, Text } = Typography;
@@ -36,8 +36,6 @@ const Subjects = () => {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSubject, setSelectedSubject] = useState(null);
   const [searchText, setSearchText] = useState("");
 
   const { user } = useSelector((state) => state.auth || {});
@@ -233,15 +231,7 @@ const Subjects = () => {
           )}
         </Card>
 
-        <SubjectForm
-          isOpen={isModalOpen}
-          editData={selectedSubject}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedSubject(null);
-              dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
-          }}
-        />
+        
       </div>
     </ConfigProvider>
   );

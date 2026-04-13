@@ -54,7 +54,7 @@ export const attendanceListQuerySchema = z.object({
       userId: objectId.optional(),
       search: z.string().trim().optional(),
       page: z.coerce.number().int().min(1).default(1),
-      limit: z.coerce.number().int().min(1).max(200).default(20),
+     limit: z.coerce.number().int().min(1).max(500).default(20),
     })
     .transform((data) => ({
       ...data,
