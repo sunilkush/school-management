@@ -261,131 +261,174 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
   }
 });
 // ✅ Get Students (with aggregation)
-const getStudents = asyncHandler(async (req, res) => {
+export const getStudentsByRole = asyncHandler(async (req, res) => {
   const user = req.user;
   const { schoolClassId, page = 1, limit = 10 } = req.query;
   const academicYearId = req.academicYearId;
-  console.log(user)
-  // 🔹 Common validation
-  if (!academicYearId) {
-    throw new ApiError(400, "Academic year is required!");
-  }
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-  const match = { academicYearId: new mongoose.Types.ObjectId(academicYearId) };
+  const roleName = user?.roleId?.name || user?.role?.name;
+  const schoolId = user?.schoolId || user?.school?._id;
 
-  if (user?.role?.name === "Super Admin") {
-    // no filter
-  } else if (user?.role?.name === "School Admin") {
-    if (!user.schoolId) {
-      throw new ApiError(400, "School ID not found");
-    }
-    match.schoolId = new mongoose.Types.ObjectId(user.schoolId);
-  } else {
+  const allowedRoles = ["Super Admin", "School Admin", "Teacher", "Accountant"];
+
+  if (!allowedRoles.includes(roleName)) {
     throw new ApiError(403, "Access denied");
   }
 
+  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
+    throw new ApiError(400, "Valid academic year is required!");
+  }
+
+  const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const match = {
+    academicYearId: new mongoose.Types.ObjectId(academicYearId),
+  };
+
+  // School filter except Super Admin
+  if (roleName !== "Super Admin") {
+    if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
+      throw new ApiError(400, "Valid schoolId required");
+    }
+
+    match.schoolId = new mongoose.Types.ObjectId(schoolId);
+  }
+
   if (schoolClassId) {
+    if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
+      throw new ApiError(400, "Invalid schoolClassId");
+    }
+
     match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   }
 
-  // 🔹 Aggregate pipeline
   const result = await StudentEnrollment.aggregate([
     { $match: match },
 
-    // Join with Student Info
+    // student
     {
       $lookup: {
         from: "students",
         localField: "studentId",
         foreignField: "_id",
-        as: "studentInfo",
+        as: "student",
       },
     },
-    { $unwind: "$studentInfo" },
+    { $unwind: { path: "$student", preserveNullAndEmptyArrays: true } },
 
-    // Join with User Info
+    // user
     {
       $lookup: {
         from: "users",
-        localField: "studentInfo.userId",
+        localField: "student.userId",
         foreignField: "_id",
-        as: "userDetails",
+        as: "user",
       },
     },
-    { $unwind: "$userDetails" },
+    { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
 
-    // Join with Class Info
+    // schoolClass
     {
       $lookup: {
         from: "classes",
         localField: "schoolClassId",
         foreignField: "_id",
-        as: "classDetails",
+        as: "schoolClass",
       },
     },
-    { $unwind: "$classDetails" },
+    { $unwind: { path: "$schoolClass", preserveNullAndEmptyArrays: true } },
 
-    // Join with Section Info
+    // section
     {
       $lookup: {
         from: "sections",
         localField: "sectionId",
         foreignField: "_id",
-        as: "sectionDetails",
+        as: "section",
       },
     },
-    { $unwind: { path: "$sectionDetails", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$section", preserveNullAndEmptyArrays: true } },
 
-    // Join with Teacher
-    {
-      $lookup: {
-        from: "users",
-        localField: "classDetails.teacherId",
-        foreignField: "_id",
-        as: "teacherDetails",
-      },
-    },
-    { $unwind: { path: "$teacherDetails", preserveNullAndEmptyArrays: true } },
-
-    // Join with School
+    // school
     {
       $lookup: {
         from: "schools",
         localField: "schoolId",
         foreignField: "_id",
-        as: "schoolDetails",
+        as: "school",
       },
     },
-    { $unwind: { path: "$schoolDetails", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
 
-    // Projection
+    // academic year
+    {
+      $lookup: {
+        from: "academicyears",
+        localField: "academicYearId",
+        foreignField: "_id",
+        as: "academicYear",
+      },
+    },
+    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
+
     {
       $project: {
         _id: 1,
         registrationNumber: 1,
-        admissionDate: 1,
-        feeDiscount: 1,
-        smsMobile: 1,
+        feeDiscount: { $ifNull: ["$feeDiscount", 0] },
         mobileNumber: 1,
         status: 1,
+        admissionDate: 1,
         createdAt: 1,
         updatedAt: 1,
-        studentInfo: 1,
-        userDetails: { _id: 1, name: 1, email: 1, role: 1, isActive: 1 },
-        classDetails: { _id: 1, name: 1 },
-        sectionDetails: { _id: 1, name: 1 },
-        teacherDetails: { _id: 1, name: 1, email: 1 },
-        schoolDetails: { _id: 1, name: 1 },
+
+        school: {
+          _id: "$school._id",
+          name: "$school.name",
+        },
+
+        academicYear: {
+          _id: "$academicYear._id",
+          name: "$academicYear.name",
+          isActive: "$academicYear.isActive",
+        },
+
+        student: {
+          _id: "$student._id",
+          dateOfBirth: "$student.dateOfBirth",
+          gender: "$student.gender",
+          bloodGroup: "$student.bloodGroup",
+          address: "$student.address",
+        },
+
+        schoolClass: {
+          _id: "$schoolClass._id",
+          name: "$schoolClass.name",
+        },
+
+        section: {
+          _id: "$section._id",
+          name: "$section.name",
+        },
+
+        user: {
+          _id: "$user._id",
+          name: "$user.name",
+          email: "$user.email",
+          avatar: "$user.avatar",
+          isActive: "$user.isActive",
+        },
       },
     },
 
+    { $sort: { createdAt: -1 } },
     { $skip: skip },
-    { $limit: parseInt(limit, 10) },
+    { $limit: limitNumber },
   ]);
 
   const total = await StudentEnrollment.countDocuments(match);
-  const totalPages = Math.ceil(total / limit);
 
   return res.status(200).json(
     new ApiResponse(
@@ -394,16 +437,99 @@ const getStudents = asyncHandler(async (req, res) => {
         students: result,
         pagination: {
           total,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          totalPages,
+          page: pageNumber,
+          limit: limitNumber,
+          totalPages: Math.ceil(total / limitNumber),
         },
       },
-      "Students retrieved successfully"
+      "Students fetched successfully"
     )
   );
 });
 
+
+export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
+  const { schoolClassId, page = 1, limit = 10 } = req.query;
+  const academicYearId = req.academicYearId;
+
+  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
+    throw new ApiError(400, "Valid academic year is required!");
+  }
+
+  const pageNumber = Math.max(parseInt(page) || 1, 1);
+  const limitNumber = Math.max(parseInt(limit) || 10, 1);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const match = {
+    academicYearId: new mongoose.Types.ObjectId(academicYearId),
+  };
+
+  if (schoolClassId && mongoose.Types.ObjectId.isValid(schoolClassId)) {
+    match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
+  }
+
+  const result = await StudentEnrollment.aggregate([
+    { $match: match },
+
+    {
+      $lookup: {
+        from: "students",
+        localField: "studentId",
+        foreignField: "_id",
+        as: "studentInfo",
+      },
+    },
+    { $unwind: { path: "$studentInfo", preserveNullAndEmptyArrays: true } },
+
+    {
+      $lookup: {
+        from: "users",
+        localField: "studentInfo.userId",
+        foreignField: "_id",
+        as: "userDetails",
+      },
+    },
+    { $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } },
+
+    {
+      $lookup: {
+        from: "classes",
+        localField: "schoolClassId",
+        foreignField: "_id",
+        as: "classDetails",
+      },
+    },
+    { $unwind: { path: "$classDetails", preserveNullAndEmptyArrays: true } },
+
+    {
+      $project: {
+        registrationNumber: 1,
+        admissionDate: 1,
+        studentName: "$userDetails.name",
+        className: "$classDetails.name",
+        mobile: "$userDetails.mobile",
+      },
+    },
+
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limitNumber },
+  ]);
+
+  const total = await StudentEnrollment.countDocuments(match);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      students: result,
+      pagination: {
+        total,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: Math.ceil(total / limitNumber),
+      },
+    })
+  );
+});
 
 // ✅ Get Student by ID
 const getStudentById = asyncHandler(async (req, res) => {
@@ -836,12 +962,12 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
               from: "schoolclasses",
               localField: "schoolClassId",
               foreignField: "_id",
-              as: "class",
+              as: "schoolClass",
             },
           },
           {
             $unwind: {
-              path: "$class",
+              path: "$schoolClass",
               preserveNullAndEmptyArrays: true,
             },
           },
@@ -911,9 +1037,9 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
                 isActive: "$userDetails.isActive",
               },
 
-              class: {
-                _id: "$class._id",
-                name: "$class.name",
+              schoolClass: {
+                _id: "$schoolClass._id",
+                name: "$schoolClass.name",
               },
 
               section: {
@@ -1087,7 +1213,6 @@ const getMyChildren = asyncHandler(async (req, res) => {
 
 export {
   createStudentAdmission,
-  getStudents,
   getStudentById,
   updateStudent,
   deleteStudent,

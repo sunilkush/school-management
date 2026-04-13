@@ -53,18 +53,13 @@ export const createStudent = createAsyncThunk(
 // fetch all students
 export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
-  async ({ schoolId, academicYearId, schoolClassId } = {}, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-    
-
       // ✅ Choose URL based on schoolId presence
       const url = `/student/all`;
 
       // ✅ Fetch data
-      const res = await apiClient.get(url, {
-       
-        params: { schoolId, academicYearId, schoolClassId },
-      });
+      const res = await apiClient.get(url);
 
       return res.data;
     } catch (error) {
@@ -75,6 +70,26 @@ export const fetchAllStudent = createAsyncThunk(
   }
 );
 
+export const fetchAllStudentByRole = createAsyncThunk(
+  "student/fetchAllStudentByRole",
+  async ({ schoolId, academicYearId ,schoolClassId}, { rejectWithValue }) => {
+    try {
+      // ✅ Choose URL based on schoolId presence
+      const url = `/student/by-role`;
+
+      // ✅ Fetch data
+      const res = await apiClient.get(url,{
+         schoolId, academicYearId,schoolClassId 
+      });
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch students"
+      );
+    }
+  }
+);
 export const fetchStudentsBySchoolId = createAsyncThunk(
   "student/fetchBySchoolId",
   async ({ schoolId, academicYearId }, { rejectWithValue }) => {
@@ -87,11 +102,11 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
     
       // ✅ API Call
       const res = await apiClient.get(`/student/school`, {
-        headers: {
-        },
+        
         params: {
           schoolId,
          academicYearId
+        
         },
       });
      
@@ -232,7 +247,24 @@ const studentSlice = createSlice({
         state.error = action.payload;
         state.success = false;
       })
-
+      // fetch all students by role
+        .addCase(fetchAllStudentByRole.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      }
+      )
+      .addCase(fetchAllStudentByRole.fulfilled, (state, action) => {
+        state.loading = false;
+        state.studentList = action.payload.data?.students || [];
+        state.success = true;
+      }
+      )
+      .addCase(fetchAllStudentByRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
+      } )
       .addCase(fetchStudentsBySchoolId.pending, (state) => {
         state.loading = true;
         state.error = null;

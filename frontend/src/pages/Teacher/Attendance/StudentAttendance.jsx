@@ -26,7 +26,7 @@ import dayjs from "dayjs";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
 import {
   submitAttendance,
-  fetchAttendance,
+ // fetchAttendance,
 } from "../../../features/attendanceSlice.js";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
 
@@ -170,7 +170,7 @@ const StudentAttendance = () => {
     }
   }, [assignedClassSections, selectedClassObj, prefilledClassId]);
 
-  useEffect(() => {
+ /*  useEffect(() => {
     if (!schoolId || !selectedClassObj || !academicYearId || !attendanceDate) {
       return;
     }
@@ -188,7 +188,7 @@ const StudentAttendance = () => {
         limit: 500,
       })
     );
-  }, [dispatch, schoolId, academicYearId, selectedClassObj, attendanceDate]);
+  }, [dispatch, schoolId, academicYearId, selectedClassObj, attendanceDate]); */
 
   // ✅ fixed student filtering
   const classStudents = useMemo(() => {

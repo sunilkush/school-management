@@ -1,12 +1,25 @@
 import { z } from "zod";
 
-const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId");
+const sanitizeStringInput = (val) => (typeof val === "string" ? val.trim() : val);
+const objectId = z.preprocess(
+  sanitizeStringInput,
+  z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId")
+);
 const attendanceStatus = z.enum(["present", "absent", "late", "halfday", "leave"]);
-const attendanceRole = z.enum(["student", "teacher", "staff"]);
+const attendanceRole = z.preprocess(
+  (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
+  z.enum(["student", "teacher", "staff"])
+);
 
 const optionalObjectId = objectId.nullish().transform((val) => val ?? null);
 const optionalDate = z
-  .preprocess((val) => (val === null || val === "" ? undefined : val), z.coerce.date().optional());
+  .preprocess(
+    (val) => {
+      const sanitized = sanitizeStringInput(val);
+      return sanitized === null || sanitized === "" ? undefined : sanitized;
+    },
+    z.coerce.date().optional()
+  );
 
 export const markBulkAttendanceSchema = z.object({
   body: z
@@ -49,7 +62,13 @@ export const attendanceListQuerySchema = z.object({
       schoolClassId: objectId.optional(),
       sectionId: objectId.optional(),
       subjectId: objectId.optional(),
-      date: z.coerce.date().optional(),
+        date: z.preprocess(
+        (val) => {
+          const sanitized = sanitizeStringInput(val);
+          return sanitized === "" ? undefined : sanitized;
+        },
+        z.coerce.date().optional()
+      ),
       role: attendanceRole.optional(),
       userId: objectId.optional(),
       search: z.string().trim().optional(),

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import {
   createStudentAdmission,
-  getStudents,
+  getStudentsByRole,
+  getStudentsSuperAdmin,
   getStudentById,
   updateStudent,
   deleteStudent,
@@ -33,14 +34,23 @@ router.post(
   createStudentAdmission
 );
 
-// ✅ Get All Students (Super Admin, School Admin, Teacher)
+// ✅ Get All Students (Super Admin, School Admin, Teacher, Accountant)
 router.get(
   "/all",
   auth,
+  roleMiddleware(["Super Admin"]),
+  checkActiveAcademicYear,
+  getStudentsSuperAdmin
+);
+
+router.get(
+  "/by-role",
+  auth,
   roleMiddleware(TEACHER_ROLE),
   checkActiveAcademicYear,
-  getStudents
+  getStudentsByRole
 );
+
 
 // ✅ Get last registered student (Admin only)
 router.get(

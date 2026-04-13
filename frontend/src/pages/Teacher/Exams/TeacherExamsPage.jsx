@@ -15,7 +15,7 @@ import {
 import { UploadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
-import { fetchAllStudent } from "../../../features/studentSlice";
+import { fetchAllStudentByRole } from "../../../features/studentSlice";
 
 const { Title, Text } = Typography;
 
@@ -25,7 +25,7 @@ const TeacherExamsPage = () => {
   const { studentList = [], loading: studentLoading } = useSelector((state) => state.students || {});
   const { user = {} } = useSelector((state) => state.auth || {});
   const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
-
+  
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [rows, setRows] = useState([]);
 
@@ -44,7 +44,7 @@ const TeacherExamsPage = () => {
       return;
     }
 
-    dispatch(fetchAllStudent({ schoolId, academicYearId, schoolClassId }));
+    dispatch(fetchAllStudentByRole({ schoolId, academicYearId, schoolClassId }));
   }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
 
   useEffect(() => {
