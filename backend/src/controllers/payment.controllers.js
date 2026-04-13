@@ -31,9 +31,14 @@ const ensureInstallmentAccess = async ({ installmentId, schoolId }) => {
   return installment;
 };
 
+const resolveSchoolIdFromUser = (user) => {
+  if (!user) return null;
+  return user.schoolId?._id || user.schoolId || user.school?._id || null;
+};
+
 export const createPayment = asyncHandler(async (req, res) => {
   const { studentId, installmentId, amount, paymentMethod, paymentMode, razorpay } = req.body;
-  const schoolId = req.user.schoolId;
+  const schoolId = resolveSchoolIdFromUser(req.user);
 
   const installment = await ensureInstallmentAccess({ installmentId, schoolId });
   const mode = String(paymentMethod || paymentMode || "cash").toLowerCase();
@@ -85,12 +90,15 @@ export const createPayment = asyncHandler(async (req, res) => {
       },
     });
 
+    const school = await School.findById(schoolId).select("+razorpay.keyId");
+
     return sendSuccess(res, {
       message: "Razorpay order created",
       data: {
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
+        keyId: school?.razorpay?.keyId || null,
       },
     });
   }
@@ -127,7 +135,7 @@ export const createPayment = asyncHandler(async (req, res) => {
 
 export const createRazorpayOrder = asyncHandler(async (req, res) => {
   const { installmentId } = req.body;
-  const schoolId = req.user.schoolId;
+  const schoolId = resolveSchoolIdFromUser(req.user);
 
   const installment = await ensureInstallmentAccess({ installmentId, schoolId });
   const payableAmount = installment.amount - installment.paidAmount;
@@ -146,12 +154,16 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
     },
   });
 
-  return sendSuccess(res, { message: "Razorpay order created", data: order });
+  const school = await School.findById(schoolId).select("+razorpay.keyId");
+  return sendSuccess(res, {
+    message: "Razorpay order created",
+    data: { ...order, keyId: school?.razorpay?.keyId || null },
+  });
 });
 
 export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, installmentId } = req.body;
-  const schoolId = req.user.schoolId;
+  const schoolId = resolveSchoolIdFromUser(req.user);
 
   const { keySecret } = await getRazorpayInstance(schoolId);
   const body = `${razorpay_order_id}|${razorpay_payment_id}`;
@@ -183,7 +195,7 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 });
 
 export const getPayments = asyncHandler(async (req, res) => {
-  const schoolId = req.user.schoolId;
+  const schoolId = resolveSchoolIdFromUser(req.user);
   const { id } = req.params;
   const { page = 1, limit = 20 } = req.query;
 
@@ -218,7 +230,7 @@ export const getPayments = asyncHandler(async (req, res) => {
 });
 
 export const paymentSummary = asyncHandler(async (req, res) => {
-  const schoolId = req.user.schoolId;
+  const schoolId = resolveSchoolIdFromUser(req.user);
 
   const [summary] = await Payment.aggregate([
     { $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } },
@@ -234,5 +246,57 @@ export const paymentSummary = asyncHandler(async (req, res) => {
   return sendSuccess(res, {
     message: "Payment summary fetched",
     data: summary || { totalAmount: 0, totalTransactions: 0 },
+  });
+});
+
+export const getRazorpayConfig = asyncHandler(async (req, res) => {
+  const schoolId = resolveSchoolIdFromUser(req.user);
+  if (!schoolId) throw new ApiError(400, "School not found for this user");
+
+  const school = await School.findById(schoolId).select("+razorpay.keyId razorpay.accountId razorpay.isEnabled");
+  if (!school) throw new ApiError(404, "School not found");
+
+  return sendSuccess(res, {
+    message: "Razorpay config fetched",
+    data: {
+      keyId: school.razorpay?.keyId || "",
+      accountId: school.razorpay?.accountId || "",
+      isEnabled: Boolean(school.razorpay?.isEnabled),
+      hasKeySecret: Boolean(school.razorpay?.keySecret),
+    },
+  });
+});
+
+export const updateRazorpayConfig = asyncHandler(async (req, res) => {
+  const schoolId = resolveSchoolIdFromUser(req.user);
+  if (!schoolId) throw new ApiError(400, "School not found for this user");
+
+  const { keyId, keySecret, accountId, isEnabled } = req.body;
+  const school = await School.findById(schoolId).select("+razorpay.keyId +razorpay.keySecret razorpay.accountId razorpay.isEnabled");
+  if (!school) throw new ApiError(404, "School not found");
+
+  school.razorpay = school.razorpay || {};
+  school.razorpay.keyId = keyId?.trim();
+  school.razorpay.accountId = accountId?.trim() || "";
+  school.razorpay.isEnabled = Boolean(isEnabled);
+
+  if (keySecret?.trim()) {
+    school.razorpay.keySecret = keySecret.trim();
+  }
+
+  if (school.razorpay.isEnabled && (!school.razorpay.keyId || !school.razorpay.keySecret)) {
+    throw new ApiError(400, "Key ID and Key Secret are required to enable Razorpay");
+  }
+
+  await school.save();
+
+  return sendSuccess(res, {
+    message: "Razorpay config updated successfully",
+    data: {
+      keyId: school.razorpay?.keyId || "",
+      accountId: school.razorpay?.accountId || "",
+      isEnabled: Boolean(school.razorpay?.isEnabled),
+      hasKeySecret: Boolean(school.razorpay?.keySecret),
+    },
   });
 });
