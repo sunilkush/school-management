@@ -1,34 +1,48 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Breadcrumb, Col, Form, Input, Layout, Row, message } from "antd";
 import dayjs from "dayjs";
-import httpClient from "../../../api/httpClient";
+import { useDispatch, useSelector } from "react-redux";
 import SalaryStructureForm from "../../../components/payroll/SalaryStructureForm";
 import SalaryStructureTable from "../../../components/payroll/SalaryStructureTable";
-import { usePayrollStructures } from "../../../hooks/payrollHooks";
+import { fetchPayrollEmployees, fetchPayrollStructures, savePayrollStructure } from "../../../features/payrollSlice";
 
 const { Content } = Layout;
 
 const SalaryStructures = () => {
+  const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const [employees, setEmployees] = useState([]);
-  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
-  const { loading, structures, refreshStructures } = usePayrollStructures();
+
+  const { employees, structures, loadingStructures, savingStructure } = useSelector((state) => state.payroll);
+
 
   useEffect(() => {
-    httpClient
-      .get("/employee")
-      .then((res) => setEmployees(res?.data?.data || []))
-      .catch(() => message.error("Employee list load failed"));
-  }, []);
-    useEffect(() => {
+    dispatch(fetchPayrollEmployees())
+      .unwrap()
+      .catch((error) => {
+        message.error(error?.message || "Employee list load failed");
+      });
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchPayrollStructures())
+      .unwrap()
+      .catch((error) => {
+        if (error?.status !== 404) {
+          message.warning(error?.message || "Structure listing endpoint unavailable, form workflow still works.");
+        }
+      });
+  }, [dispatch]);
+
+  useEffect(() => {
     if (editingId) return;
     const selectedEmployee = form.getFieldValue("employeeId");
     if (!selectedEmployee && employees.length) {
       form.setFieldValue("employeeId", employees[0]._id);
     }
   }, [editingId, employees, form]);
+
   const validateOverlap = (values) => {
     const targetEmployee = values.employeeId;
     const from = dayjs(values.effectiveFrom);
@@ -52,7 +66,6 @@ const SalaryStructures = () => {
       return;
     }
 
-    setSaving(true);
     const payload = {
       ...values,
       effectiveFrom: values.effectiveFrom.toISOString(),
@@ -60,23 +73,16 @@ const SalaryStructures = () => {
     };
 
     try {
-      if (editingId) {
-        await httpClient.put(`/payroll/structure/${editingId}`, payload);
-        message.success("Salary structure updated");
-      } else {
-        await httpClient.post("/payroll/structure", payload);
-        message.success("Salary structure created");
-      }
+      const response = await dispatch(savePayrollStructure({ editingId, payload })).unwrap();
+      message.success(response?.message || "Salary structure saved");
       setEditingId(null);
       form.resetFields();
-       if (employees.length) {
+      if (employees.length) {
         form.setFieldValue("employeeId", employees[0]._id);
       }
-      refreshStructures();
+      await dispatch(fetchPayrollStructures()).unwrap();
     } catch (error) {
-      message.error(error?.response?.data?.message || "Salary structure save failed");
-    } finally {
-      setSaving(false);
+      message.error(error?.message || "Salary structure save failed");
     }
   };
 
@@ -115,11 +121,17 @@ const SalaryStructures = () => {
 
         <Row gutter={16}>
           <Col xs={24} lg={10}>
-            <SalaryStructureForm form={form} employees={employees} onSubmit={handleSubmit} submitting={saving} editingId={editingId} />
+            <SalaryStructureForm
+              form={form}
+              employees={employees}
+              onSubmit={handleSubmit}
+              submitting={savingStructure}
+              editingId={editingId}
+            />
           </Col>
           <Col xs={24} lg={14}>
             <Input.Search placeholder="Search employee" onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: 12 }} />
-            <SalaryStructureTable data={filteredStructures} loading={loading} onEdit={onEdit} />
+            <SalaryStructureTable data={filteredStructures} loading={loadingStructures} onEdit={onEdit} />
           </Col>
         </Row>
       </Content>

@@ -48,6 +48,7 @@ import studentPortalReducer from "../features/studentPortalSlice.js";
 import { attachAuthStore } from "../api/httpClient";
 import { baseApi } from "../services/baseApi";
 import accountRecoveryReducer from "../features/accountRecoverySlice";
+import payrollReducer from "../features/payrollSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -92,6 +93,7 @@ const rootReducer = combineReducers({
   hostel: hostelReducer,
   studentPortal: studentPortalReducer,
   accountRecovery: accountRecoveryReducer,
+  payroll: payrollReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
