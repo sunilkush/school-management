@@ -38,6 +38,12 @@ const TeacherExamsPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    if (!selectedExamId && exams.length) {
+      setSelectedExamId(exams[0]._id);
+    }
+  }, [exams, selectedExamId]);
+
+  useEffect(() => {
     const schoolClassId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
     if (!selectedExamId || !schoolClassId || !schoolId || !academicYearId) {
       setRows([]);
@@ -60,6 +66,7 @@ const TeacherExamsPage = () => {
       const studentClassId =
         student?.schoolClassId?._id ||
         student?.schoolClass?._id ||
+        student?.schoolClassId ||
         student?.studentInfo?.schoolClassId ||
         student?.enrollment?.schoolClassId;
 
@@ -68,8 +75,16 @@ const TeacherExamsPage = () => {
 
     setRows(
       classMatchedStudents.map((student, index) => ({
-        studentId: student?.student?._id || student?.studentInfo?._id,
-        studentName: student?.user?.name || student?.userDetails?.name || `Student ${index + 1}`,
+        studentId:
+          student?.student?._id ||
+          student?.studentInfo?._id ||
+          student?.studentId ||
+          student?._id,
+        studentName:
+          student?.user?.name ||
+          student?.userDetails?.name ||
+          student?.studentName ||
+          `Student ${index + 1}`,
         sectionId: student?.section?._id || student?.sectionDetails?._id,
         obtainedMarks: 0,
         totalMarks: selectedExam?.totalMarks || 100,
@@ -85,7 +100,10 @@ const TeacherExamsPage = () => {
   };
 
   const saveBulk = async () => {
-    if (!selectedExamId) return message.error("Select exam first");
+    if (!selectedExamId) {
+      message.error("Select exam first");
+      return false;
+    }
 
     const payloadRows = rows
       .filter((row) => row.studentId)
@@ -95,18 +113,34 @@ const TeacherExamsPage = () => {
         sectionId: row.sectionId || selectedExam?.sectionId?._id || selectedExam?.sectionId,
       }));
 
-    if (!payloadRows.length) return message.warning("No valid students found for this class");
+    if (!payloadRows.length) {
+      message.warning("No valid students found for this class");
+      return false;
+    }
 
     try {
       await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payloadRows })).unwrap();
       message.success("Marks saved");
+      return true;
     } catch (error) {
       message.error(error || "Failed to save marks");
+      return false;
     }
   };
 
+  const saveAndSubmitFinal = async () => {
+    if (!selectedExamId) {
+      message.error("Select exam first");
+      return;
+    }
+
+    const saved = await saveBulk();
+    if (!saved) return;
+    await submitFinal();
+  };
+
   const submitFinal = async () => {
-    if (!selectedExam) return;
+    if (!selectedExam) return false;
     try {
       await dispatch(
         submitFinalMarks({
@@ -116,8 +150,10 @@ const TeacherExamsPage = () => {
         })
       ).unwrap();
       message.success("Final marks submitted");
+      return true;
     } catch (error) {
       message.error(error || "Failed to submit final marks");
+      return false;
     }
   };
 
@@ -206,6 +242,9 @@ const TeacherExamsPage = () => {
             </Upload>
             <Button type="primary" onClick={saveBulk}>Save Marks</Button>
             <Button onClick={submitFinal}>Submit Final Marks</Button>
+            <Button type="dashed" onClick={saveAndSubmitFinal}>
+              Save & Final Submit
+            </Button>
           </Space>
 
           {summary && (

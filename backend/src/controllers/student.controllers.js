@@ -266,14 +266,9 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
   const { schoolClassId, page = 1, limit = 10 } = req.query;
   const academicYearId = req.academicYearId;
 
-  const roleName = user?.roleId?.name || user?.role?.name;
   const schoolId = user?.schoolId || user?.school?._id;
-
-  console.log(roleName);
-  console.log(schoolId);
-  console.log(schoolClassId);
  
-  if (!academicYearId ) {
+  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
     throw new ApiError(400, "Valid academic year is required!");
   }
 
@@ -281,12 +276,17 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
   const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
   const skip = (pageNumber - 1) * limitNumber;
 
-  
+  if (!schoolClassId || !mongoose.Types.ObjectId.isValid(schoolClassId)) {
+    throw new ApiError(400, "Valid schoolClassId is required!");
+  }
 
-  // School filter except Super Admin
+  const match = {
+    academicYearId: new mongoose.Types.ObjectId(academicYearId),
+    schoolClassId: new mongoose.Types.ObjectId(schoolClassId),
+  };
 
-  if (!schoolClassId) {
-      throw new ApiError(400, "Valid SchoolID is required!");
+  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
+    match.schoolId = new mongoose.Types.ObjectId(schoolId);
   }
 
   const result = await StudentEnrollment.aggregate([
