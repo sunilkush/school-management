@@ -1,18 +1,27 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Badge,
   Button,
   Card,
+  Col,
   Empty,
+  Input,
   InputNumber,
   message,
+  Progress,
+  Row,
+  Segmented,
+  Select,
   Space,
   Statistic,
   Table,
   Tag,
+  Tooltip,
   Typography,
   Upload,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { SearchOutlined, UploadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
 import { fetchAllStudentByRole } from "../../../features/studentSlice";
@@ -28,6 +37,8 @@ const TeacherExamsPage = () => {
   
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [rows, setRows] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [examFilter, setExamFilter] = useState("all");
 
   const selectedExam = useMemo(() => exams.find((exam) => exam._id === selectedExamId), [exams, selectedExamId]);
   const schoolId = user?.school?._id;
@@ -185,6 +196,18 @@ const TeacherExamsPage = () => {
     },
   ];
 
+  const visibleRows = useMemo(() => {
+    const normalizedSearch = searchText.trim().toLowerCase();
+    return rows.filter((row) => {
+      const status = row.obtainedMarks >= row.passingMarks ? "pass" : "fail";
+      const matchesFilter = examFilter === "all" ? true : status === examFilter;
+      const matchesSearch = normalizedSearch
+        ? `${row.studentName || ""} ${row.studentId || ""}`.toLowerCase().includes(normalizedSearch)
+        : true;
+      return matchesFilter && matchesSearch;
+    });
+  }, [rows, searchText, examFilter]);
+
   const uploadProps = {
     accept: ".json",
     showUploadList: false,
@@ -207,36 +230,99 @@ const TeacherExamsPage = () => {
 
   const summary = useMemo(() => {
     if (!rows.length) return null;
-    const entered = rows.filter((row) => row.obtainedMarks !== undefined).length;
     const passCount = rows.filter((row) => row.obtainedMarks >= row.passingMarks).length;
+    const failCount = rows.length - passCount;
+    const passPercentage = rows.length ? Math.round((passCount / rows.length) * 100) : 0;
     return {
-      entered,
       passCount,
+      failCount,
+      passPercentage,
       total: rows.length,
     };
   }, [rows]);
 
+  const examOptions = useMemo(
+    () =>
+      exams.map((exam) => {
+        const examDate = exam?.examDate ? dayjs(exam.examDate).format("DD MMM YYYY") : "No date";
+        return {
+          label: `${exam?.title || "Untitled Exam"} • ${exam?.schoolClassId?.name || "Class"} • ${examDate}`,
+          value: exam?._id,
+        };
+      }),
+    [exams]
+  );
+
+  const selectedExamStatus = useMemo(() => {
+    if (!selectedExam?.examDate) return { color: "default", text: "Date N/A" };
+    const examDay = dayjs(selectedExam.examDate);
+    if (examDay.isBefore(dayjs(), "day")) return { color: "green", text: "Completed" };
+    if (examDay.isSame(dayjs(), "day")) return { color: "blue", text: "Today" };
+    return { color: "gold", text: "Upcoming" };
+  }, [selectedExam]);
+
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Card>
-        <Title level={4}>Teacher Exam & Marks Entry</Title>
-        <Text type="secondary">Exam select karo, class students auto-load honge, marks enter karke direct save/final submit karo.</Text>
+      <Card style={{ borderRadius: 16 }}>
+        <Row gutter={[16, 16]} align="middle" justify="space-between">
+          <Col>
+            <Title level={4} style={{ marginBottom: 2 }}>Teacher Exam & Marks Entry</Title>
+            <Text type="secondary">Dynamic exam selector, searchable marks table, and quick pass/fail analytics.</Text>
+          </Col>
+          <Col>
+            <Badge status="processing" text={selectedAcademicYear?.name || "Academic year not selected"} />
+          </Col>
+        </Row>
       </Card>
 
-      <Card>
-        <Space wrap>
-          {exams.map((exam) => (
-            <Button key={exam._id} type={selectedExamId === exam._id ? "primary" : "default"} onClick={() => setSelectedExamId(exam._id)}>
-              {exam.title} <Tag style={{ marginLeft: 8 }}>{exam.schoolClassId?.name || "Class"}</Tag>
-            </Button>
-          ))}
-          {!exams.length && <Empty description="No assigned exams found" />}
-        </Space>
+      <Card style={{ borderRadius: 16 }}>
+        <Row gutter={[12, 12]}>
+          <Col xs={24} md={16}>
+            <Text strong>Select Exam</Text>
+            <Select
+              style={{ width: "100%", marginTop: 8 }}
+              placeholder="Choose an exam"
+              options={examOptions}
+              value={selectedExamId}
+              onChange={setSelectedExamId}
+              showSearch
+              optionFilterProp="label"
+            />
+          </Col>
+          <Col xs={24} md={8}>
+            {selectedExam ? (
+              <Card size="small" style={{ borderRadius: 12, background: "#fafafa" }}>
+                <Space direction="vertical" size={2}>
+                  <Text strong>{selectedExam?.subjectId?.name || "Subject not assigned"}</Text>
+                  <Text type="secondary">{selectedExam?.examType || "Exam type N/A"}</Text>
+                  <Tag color={selectedExamStatus.color}>{selectedExamStatus.text}</Tag>
+                </Space>
+              </Card>
+            ) : (
+              <Empty description="No assigned exams found" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            )}
+          </Col>
+        </Row>
       </Card>
 
       {selectedExamId && (
-        <Card loading={loading || studentLoading} title="Marks Entry Table">
-          <Space wrap style={{ marginBottom: 12 }}>
+        <Card
+          loading={loading || studentLoading}
+          title="Marks Entry Table"
+          style={{ borderRadius: 16 }}
+          extra={
+            <Segmented
+              value={examFilter}
+              onChange={setExamFilter}
+              options={[
+                { label: "All", value: "all" },
+                { label: "Pass", value: "pass" },
+                { label: "Fail", value: "fail" },
+              ]}
+            />
+          }
+        >
+          <Space wrap style={{ marginBottom: 12, width: "100%", justifyContent: "space-between" }}>
             <Upload {...uploadProps}>
               <Button icon={<UploadOutlined />}>Bulk Upload (JSON)</Button>
             </Upload>
@@ -247,17 +333,27 @@ const TeacherExamsPage = () => {
             </Button>
           </Space>
 
-          {summary && (
-            <Space wrap size="large" style={{ marginBottom: 12 }}>
-              <Statistic title="Students" value={summary.total} />
-              <Statistic title="Marks Entered" value={summary.entered} />
-              <Statistic title="Pass Count" value={summary.passCount} />
-            </Space>
-          )}
+          <Input
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search student by name or ID"
+            prefix={<SearchOutlined />}
+            style={{ maxWidth: 360, marginBottom: 16 }}
+          />
+
+          <Space wrap size="large" style={{ marginBottom: 12 }}>
+            <Statistic title="Total Students" value={summary?.total || 0} />
+            <Statistic title="Pass" value={summary?.passCount || 0} valueStyle={{ color: "#3f8600" }} />
+            <Statistic title="Fail" value={summary?.failCount || 0} valueStyle={{ color: "#cf1322" }} />
+            <Tooltip title={`${summary?.passPercentage || 0}% students passed`}>
+              <Progress type="circle" size={64} percent={summary?.passPercentage || 0} />
+            </Tooltip>
+          </Space>
 
           <Table
             rowKey={(row, i) => `${row.studentId || "row"}-${i}`}
-            dataSource={rows}
+            dataSource={visibleRows}
             columns={columns}
             pagination={false}
             locale={{ emptyText: "No students found for selected exam class" }}
