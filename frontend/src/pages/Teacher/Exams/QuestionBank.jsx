@@ -18,7 +18,7 @@ import {
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 
 import { getQuestions, deleteQuestion } from "../../../features/questionSlice";
-import { fetchAllClasses } from "../../../features/classSlice";
+import { fetchAssignedClasses } from "../../../features/classSlice";
 
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
@@ -28,9 +28,10 @@ const QuestionBank = () => {
 
   /* ================= Redux ================= */
   const { questions = [], loading } = useSelector((s) => s.questions);
-  const { classList = [], loading: classLoading } = useSelector(
+  const { classAssignTeacher = [], loading: classLoading } = useSelector(
     (s) => s.class || {}
   );
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
   /* ================= Local State ================= */
   const [modalType, setModalType] = useState(null);
@@ -51,8 +52,9 @@ const QuestionBank = () => {
 
   /* ================= Effects ================= */
   useEffect(() => {
-    if (schoolId) dispatch(fetchAllClasses({ schoolId }));
-  }, [dispatch, schoolId]);
+    if (!selectedAcademicYear?._id) return;
+    dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
+  }, [dispatch, selectedAcademicYear?._id]);
 
   useEffect(() => {
     if (schoolId) dispatch(getQuestions({ schoolId, limit: 1000 }));
@@ -64,17 +66,48 @@ const QuestionBank = () => {
       return;
     }
 
-    const cls = classList.find((c) => c._id === filters.schoolClassId);
+    const cls = classAssignTeacher.find((c) => c._id === filters.schoolClassId);
     setSelectedClass(cls || null);
-  }, [classList, filters.schoolClassId]);
+  }, [classAssignTeacher, filters.schoolClassId]);
+
+  const getId = (value) => (value && typeof value === "object" ? value._id : value);
+
+  const permissionMap = useMemo(() => {
+    const classIds = new Set();
+    const subjectIdsByClass = new Map();
+
+    classAssignTeacher.forEach((cls) => {
+      const classId = String(getId(cls?._id) || "");
+      if (!classId) return;
+
+      classIds.add(classId);
+
+      const subjectIds = new Set(
+        (cls?.subjects || [])
+          .map((sub) => String(getId(sub?.subjectId) || ""))
+          .filter(Boolean)
+      );
+      subjectIdsByClass.set(classId, subjectIds);
+    });
+
+    return { classIds, subjectIdsByClass };
+  }, [classAssignTeacher]);
 
   /* ================= Derived Filters ================= */
   const chapterOptions = useMemo(() => {
     const chapterMap = new Map();
 
     questions.forEach((q) => {
-      if (filters.schoolClassId && q.schoolClassId !== filters.schoolClassId) return;
-      if (filters.subjectId && q.subjectId?._id !== filters.subjectId) return;
+      const questionClassId = String(getId(q.schoolClassId) || "");
+      const questionSubjectId = String(getId(q.subjectId) || "");
+
+      if (!permissionMap.classIds.has(questionClassId)) return;
+
+      const allowedSubjects = permissionMap.subjectIdsByClass.get(questionClassId);
+      if (allowedSubjects?.size && !allowedSubjects.has(questionSubjectId)) return;
+
+      if (filters.schoolClassId && questionClassId !== filters.schoolClassId) return;
+      if (filters.subjectId && questionSubjectId !== filters.subjectId) return;
 
       const chapterId = q.chapterId?._id;
       const chapterName = q.chapterId?.name;
@@ -85,24 +118,33 @@ const QuestionBank = () => {
     });
 
     return Array.from(chapterMap.values());
-  }, [questions, filters.schoolClassId, filters.subjectId]);
+  }, [questions, filters.schoolClassId, filters.subjectId, permissionMap]);
 
   const filteredQuestions = useMemo(() => {
     const searchText = filters.search.trim().toLowerCase();
 
     return questions.filter((q) => {
+      const questionClassId = String(getId(q.schoolClassId) || "");
+      const questionSubjectId = String(getId(q.subjectId) || "");
+      const questionChapterId = String(getId(q.chapterId) || "");
+
+      if (!permissionMap.classIds.has(questionClassId)) return false;
+
+      const allowedSubjects = permissionMap.subjectIdsByClass.get(questionClassId);
+      if (allowedSubjects?.size && !allowedSubjects.has(questionSubjectId)) return false;
+
       const matchesClass =
-        !filters.schoolClassId || q.schoolClassId === filters.schoolClassId;
+        !filters.schoolClassId || questionClassId === filters.schoolClassId;
       const matchesSubject =
-        !filters.subjectId || q.subjectId?._id === filters.subjectId;
+        !filters.subjectId || questionSubjectId === filters.subjectId;
       const matchesChapter =
-        !filters.chapterId || q.chapterId?._id === filters.chapterId;
+        !filters.chapterId || questionChapterId === filters.chapterId;
       const matchesSearch =
         !searchText || q.statement?.toLowerCase().includes(searchText);
 
       return matchesClass && matchesSubject && matchesChapter && matchesSearch;
     });
-  }, [questions, filters]);
+  }, [questions, filters, permissionMap]);
 
   /* ================= Delete ================= */
   const handleDelete = (id) => {
@@ -149,7 +191,7 @@ const QuestionBank = () => {
                 }));
               }}
             >
-              {classList.map((cls) => (
+              {classAssignTeacher.map((cls) => (
                 <Select.Option key={cls._id} value={cls._id}>
                   {cls.name}
                 </Select.Option>
