@@ -15,6 +15,7 @@ import {
   Statistic,
   Row,
   Col,
+  Input,
 } from "antd";
 import {
   PlusOutlined,
@@ -22,9 +23,10 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getExams, deleteExam, publishResults, getExamAnalytics } from "../../../features/examSlice.js";
+import { getExams, deleteExam, publishResults, getExamAnalytics, publishExam } from "../../../features/examSlice.js";
 import { useDispatch, useSelector } from "react-redux";
 import memoryStorage from "../../../utils/memoryStorage";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
@@ -33,8 +35,11 @@ const ExamsPage = () => {
   const navigate = useNavigate();
 
   /* ✅ Redux State */
-  const { exams = [], loading, analytics } = useSelector((state) => state.exams || {});
+  const { exams = [], loading, analytics, pagination } = useSelector((state) => state.exams || {});
   const [statusFilter, setStatusFilter] = React.useState("all");
+  const [search, setSearch] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
   const [analyticsOpen, setAnalyticsOpen] = React.useState(false);
 
   /* ✅ Academic Year + School */
@@ -48,10 +53,18 @@ const ExamsPage = () => {
 
   /* ✅ Fetch Exams */
   useEffect(() => {
-    if (schoolId) {
-      dispatch(getExams({ schoolId, academicYearId }));
+    if (schoolId && academicYearId) {
+      const params = {
+        schoolId,
+        academicYearId,
+        page,
+        limit: pageSize,
+      };
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (search.trim()) params.search = search.trim();
+      dispatch(getExams(params));
     }
-  }, [schoolId, academicYearId, dispatch]);
+  }, [schoolId, academicYearId, dispatch, statusFilter, search, page, pageSize]);
 
   /* ✅ Delete Handler */
   const handleDelete = async (id) => {
@@ -93,10 +106,20 @@ const ExamsPage = () => {
     }
   };
 
+  const handleExamStatusChange = async (record, status) => {
+    try {
+      await dispatch(publishExam({ examId: record._id, status })).unwrap();
+      message.success(`Exam moved to ${status}`);
+      dispatch(getExams({ schoolId, academicYearId, page, limit: pageSize }));
+    } catch (error) {
+      message.error(error || "Failed to update exam status");
+    }
+  };
+
     /* ✅ Safe Date Formatter */
   const formatDate = (date) => {
     if (!date) return "-";
-    return new Date(date).toLocaleString();
+    return dayjs(date).format("DD MMM YYYY hh:mm A");
   };
 
   /* ✅ Table Columns */
@@ -166,6 +189,15 @@ const ExamsPage = () => {
             <Button danger icon={<DeleteOutlined />} />
           </Popconfirm>
 
+          <Select
+            value={record?.status}
+            style={{ width: 130 }}
+            onChange={(value) => handleExamStatusChange(record, value)}
+            options={[
+              { label: "Draft", value: "draft" },
+              { label: "Published", value: "published" },
+            ]}
+          />
           <Button onClick={() => handlePublishResult(record, true)}>Publish Result</Button>
           <Button onClick={() => handlePublishResult(record, false)}>Unpublish</Button>
           <Button onClick={() => handleViewAnalytics(record)}>Analytics</Button>
@@ -173,10 +205,6 @@ const ExamsPage = () => {
       ),
     },
   ];
-
-  const filteredExams = statusFilter === "all"
-    ? exams
-    : exams.filter((exam) => exam?.status === statusFilter);
 
   return (
     <Card bordered={false} style={{ borderRadius: 12 }}>
@@ -203,10 +231,22 @@ const ExamsPage = () => {
       </Space>
 
       <Space style={{ marginBottom: 16 }}>
+        <Input.Search
+          allowClear
+          placeholder="Search by exam title/code"
+          onSearch={(value) => {
+            setPage(1);
+            setSearch(value);
+          }}
+          style={{ width: 300 }}
+        />
         <Text type="secondary">Filter by status:</Text>
         <Select
           value={statusFilter}
-          onChange={setStatusFilter}
+          onChange={(value) => {
+            setPage(1);
+            setStatusFilter(value);
+          }}
           options={[
             { label: "All", value: "all" },
             { label: "Draft", value: "draft" },
@@ -220,10 +260,18 @@ const ExamsPage = () => {
       <Table
         loading={loading}
         columns={columns}
-        dataSource={filteredExams}
+        dataSource={exams}
         rowKey="_id"
         bordered
-        pagination={{ pageSize: 5 }}
+        pagination={{
+          current: page,
+          pageSize,
+          total: pagination?.total || exams.length,
+          onChange: (nextPage, nextPageSize) => {
+            setPage(nextPage);
+            setPageSize(nextPageSize);
+          },
+        }}
         locale={{
           emptyText: (
             <Empty

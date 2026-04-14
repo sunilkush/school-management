@@ -17,6 +17,13 @@ import {
   updateMarksService,
 } from "../services/exam.service.js";
 
+const ensureExamAccess = (exam, user) => {
+  if (!exam) throw new ApiError(404, "Exam not found");
+  if (user.roleId?.name !== "Super Admin" && `${exam.schoolId}` !== `${user.schoolId}`) {
+    throw new ApiError(403, "Forbidden for this school exam");
+  }
+};
+
 export const createExam = asyncHandler(async (req, res) => {
   const exam = await createExamService({ body: req.body, user: req.user });
   return res.status(201).json(new ApiResponse(201, exam, "Exam created successfully"));
@@ -35,7 +42,7 @@ export const getExamById = asyncHandler(async (req, res) => {
     .populate("createdBy", "name email")
     .lean();
 
-  if (!exam) throw new ApiError(404, "Exam not found");
+  ensureExamAccess(exam, req.user);
   return res.status(200).json(new ApiResponse(200, exam, "Exam fetched successfully"));
 });
 
@@ -45,7 +52,24 @@ export const getExamAnalytics = asyncHandler(async (req, res) => {
 });
 
 export const updateExam = asyncHandler(async (req, res) => {
-  const exam = await Exam.findByIdAndUpdate(req.params.id, req.body, {
+  const existing = await Exam.findById(req.params.id).select("schoolId totalMarks passingMarks").lean();
+  ensureExamAccess(existing, req.user);
+
+  const payload = {
+    ...req.body,
+    title: req.body.name || req.body.title,
+    totalMarks: req.body.totalMarks !== undefined ? Number(req.body.totalMarks) : undefined,
+    passingMarks: req.body.passingMarks !== undefined ? Number(req.body.passingMarks) : undefined,
+  };
+
+  const effectiveTotal = payload.totalMarks !== undefined ? payload.totalMarks : existing?.totalMarks;
+  const effectivePassing = payload.passingMarks !== undefined ? payload.passingMarks : existing?.passingMarks;
+
+  if (effectiveTotal !== undefined && effectivePassing !== undefined && effectivePassing > effectiveTotal) {
+    throw new ApiError(400, "Passing marks cannot exceed total marks");
+  }
+
+  const exam = await Exam.findByIdAndUpdate(req.params.id, payload, {
     new: true,
     runValidators: true,
   }).lean();
@@ -55,8 +79,10 @@ export const updateExam = asyncHandler(async (req, res) => {
 });
 
 export const deleteExam = asyncHandler(async (req, res) => {
+  const existing = await Exam.findById(req.params.id).select("schoolId").lean();
+  ensureExamAccess(existing, req.user);
+
   const exam = await Exam.findByIdAndDelete(req.params.id).lean();
-  if (!exam) throw new ApiError(404, "Exam not found");
   return res.status(200).json(new ApiResponse(200, exam, "Exam deleted successfully"));
 });
 
@@ -66,8 +92,10 @@ export const publishExam = asyncHandler(async (req, res) => {
     throw new ApiError(400, "status must be published or draft");
   }
 
+  const existing = await Exam.findById(req.params.id).select("schoolId").lean();
+  ensureExamAccess(existing, req.user);
+
   const exam = await Exam.findByIdAndUpdate(req.params.id, { status }, { new: true }).lean();
-  if (!exam) throw new ApiError(404, "Exam not found");
 
   return res.status(200).json(new ApiResponse(200, exam, `Exam ${status} successfully`));
 });
