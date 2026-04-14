@@ -517,12 +517,12 @@ const CreateExam = () => {
             <>
               <Divider orientation="left">Questions</Divider>
 
-              <Button type="dashed" onClick={addQuestion} block icon={<PlusOutlined />}>
+              <Button type="dashed" onClick={addQuestion} styles={{marginBottom:10}} block icon={<PlusOutlined />}>
                 Add Question
               </Button>
 
               {examQuestions.map((question, index) => (
-                <Row gutter={12} key={index} style={{ marginTop: 10 }}>
+                <Row gutter={12} key={index} style={{ marginTop: 10,marginBottom:10 }}>
                   <Col span={16}>
                     <Select
                       value={question.questionId}

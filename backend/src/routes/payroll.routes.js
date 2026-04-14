@@ -36,7 +36,6 @@ router.post("/cycle/generate", requireRoles(FULL_ACCESS_ROLES), validateRequest(
 router.get("/cycle/:month/:year", requireRoles(REVIEW_ROLES), validateRequest(payrollCycleQuerySchema), getPayrollCycle);
 router.post("/cycle/:id/lock", requireRoles(REVIEW_ROLES), validateRequest(payrollCycleActionSchema), lockPayrollCycle);
 router.post("/cycle/:id/pay", requireRoles(FULL_ACCESS_ROLES), validateRequest(payrollCycleActionSchema), payPayrollCycle);
-
 router.get("/payslip/:employeeId/:month/:year", requireRoles(PAYSLIP_SELF_ROLES), validateRequest(payslipQuerySchema), getPayslip);
 router.get("/reports/monthly", requireRoles(REVIEW_ROLES), validateRequest(payrollReportQuerySchema), getMonthlyPayrollReport);
 
