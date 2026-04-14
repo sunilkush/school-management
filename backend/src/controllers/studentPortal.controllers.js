@@ -16,23 +16,39 @@ const getMyActiveEnrollment = async (user) => {
     throw new ApiError(404, "Student profile not found");
   }
 
-  const academicYear = await AcademicYear.findOne({
+  const activeAcademicYear = await AcademicYear.findOne({
     schoolId: user.schoolId,
     isActive: true,
   }).select("_id name");
 
-  if (!academicYear) {
-    throw new ApiError(404, "Active academic year not found");
-  }
-
-  const enrollment = await StudentEnrollment.findOne({
+  let enrollment = await StudentEnrollment.findOne({
     studentId: student._id,
     schoolId: user.schoolId,
-    academicYearId: academicYear._id,
-  }).select("_id schoolClassId sectionId registrationNumber");
+    ...(activeAcademicYear ? { academicYearId: activeAcademicYear._id } : {}),
+  })
+    .select("_id schoolClassId sectionId registrationNumber academicYearId")
+    .sort({ createdAt: -1 });
+
+  // Fallback: active year set nahi hai, ya active year me enrollment missing hai.
+  if (!enrollment) {
+    enrollment = await StudentEnrollment.findOne({
+      studentId: student._id,
+      schoolId: user.schoolId,
+    })
+      .select("_id schoolClassId sectionId registrationNumber academicYearId")
+      .sort({ createdAt: -1 });
+  }
 
   if (!enrollment) {
     throw new ApiError(404, "Student enrollment not found");
+  }
+
+  const academicYear =
+    activeAcademicYear ||
+    (await AcademicYear.findById(enrollment.academicYearId).select("_id name"));
+
+  if (!academicYear) {
+    throw new ApiError(404, "Academic year not found for student enrollment");
   }
 
   return { student, academicYear, enrollment };

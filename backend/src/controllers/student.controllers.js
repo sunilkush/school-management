@@ -1068,26 +1068,36 @@ const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Student profile not found");
   }
 
-  // 🔐 Step 2: Active academic year
-  const academicYear = await AcademicYear.findOne({
+  // 🔐 Step 2: Active academic year (optional fallback below)
+  const activeAcademicYear = await AcademicYear.findOne({
     schoolId: req.user.schoolId,
     isActive: true,
   }).select("_id");
 
-  if (!academicYear) {
-    throw new ApiError(404, "Active academic year not found");
-  }
-
   // 🔐 Step 3: Enrollment
-  const enrollment = await StudentEnrollment.findOne({
+  let enrollment = await StudentEnrollment.findOne({
     studentId: student._id,
     schoolId: req.user.schoolId,
-    academicYearId: academicYear._id,
+    ...(activeAcademicYear ? { academicYearId: activeAcademicYear._id } : {}),
   })
     .select("_id registrationNumber schoolClassId sectionId academicYearId")
+    .sort({ createdAt: -1 })
     .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("academicYearId", "name"); // ✅ already populated
+
+  // Fallback: student ka enrollment data hai but active year mismatch ho to latest enrollment do.
+  if (!enrollment) {
+    enrollment = await StudentEnrollment.findOne({
+      studentId: student._id,
+      schoolId: req.user.schoolId,
+    })
+      .select("_id registrationNumber schoolClassId sectionId academicYearId")
+      .sort({ createdAt: -1 })
+      .populate("schoolClassId", "name")
+      .populate("sectionId", "name")
+      .populate("academicYearId", "name");
+  }
 
   if (!enrollment) {
     throw new ApiError(404, "Student enrollment not found");
