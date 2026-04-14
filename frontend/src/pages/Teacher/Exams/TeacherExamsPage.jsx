@@ -48,13 +48,17 @@ const TeacherExamsPage = () => {
   }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
 
   useEffect(() => {
-    if (!selectedExamId || !studentList.length) return;
+    if (!selectedExamId) return;
+    if (!studentList.length) {
+      setRows([]);
+      return;
+    }
 
     setRows(
       studentList.map((student, index) => ({
-        studentId: student?.studentInfo?._id,
-        studentName: student?.userDetails?.name || `Student ${index + 1}`,
-        sectionId: student?.sectionDetails?._id,
+        studentId: student?.student?._id || student?.studentInfo?._id,
+        studentName: student?.user?.name || student?.userDetails?.name || `Student ${index + 1}`,
+        sectionId: student?.section?._id || student?.sectionDetails?._id,
         obtainedMarks: 0,
         totalMarks: selectedExam?.totalMarks || 100,
         passingMarks: selectedExam?.passingMarks || 33,
