@@ -20,9 +20,32 @@ import {
 
 const router = Router();
 
-const REPORT_ROLES = ["Super Admin", "School Admin", "Teacher"];
-const MANAGE_ROLES = ["Super Admin", "School Admin", "Teacher", "Staff"];
-const VIEW_ROLES = ["Super Admin", "School Admin", "Teacher", "Staff", "Student", "Parent"];
+const REPORT_ROLES = [
+  "Super Admin",
+  "School Admin",
+  "Admin",
+  "Principal",
+  "Vice Principal",
+  "Teacher",
+];
+
+const MANAGE_ROLES = [
+  ...REPORT_ROLES,
+  "Staff",
+  "Support Staff",
+];
+
+const VIEW_ROLES = [
+  ...MANAGE_ROLES,
+  "Accountant",
+];
+
+const MY_ATTENDANCE_ROLES = [
+  ...MANAGE_ROLES,
+  "Student",
+  "Parent",
+  "Accountant",
+];
 
 router.post(
   "/mark-bulk",
@@ -32,11 +55,13 @@ router.post(
   markBulkAttendance
 );
 
-router.get("/", 
-  auth, 
-  roleMiddleware(MANAGE_ROLES), 
-  validateRequest(attendanceListQuerySchema), 
-  getAttendance);
+router.get(
+  "/",
+  auth,
+  roleMiddleware(VIEW_ROLES),
+  validateRequest(attendanceListQuerySchema),
+  getAttendance
+);
 
 router.get(
   "/report/monthly",
@@ -46,17 +71,19 @@ router.get(
   getMonthlyReport
 );
 
-router.get("/my", 
-  auth, 
-  roleMiddleware(VIEW_ROLES), 
-  validateRequest(myAttendanceQuerySchema), 
+router.get(
+  "/my",
+  auth,
+  roleMiddleware(MY_ATTENDANCE_ROLES),
+  validateRequest(myAttendanceQuerySchema),
   getMyAttendance
 );
 
-router.put("/:id", 
-  auth, 
-  roleMiddleware(MANAGE_ROLES), 
- validateRequest(updateAttendanceSchema), 
+router.put(
+  "/:id",
+  auth,
+  roleMiddleware(MANAGE_ROLES),
+  validateRequest(updateAttendanceSchema),
   updateAttendance
 );
 
@@ -64,7 +91,7 @@ router.delete(
   "/:id",
   auth,
   roleMiddleware(MANAGE_ROLES),
- validateRequest(attendanceIdParamSchema),
+  validateRequest(attendanceIdParamSchema),
   deleteAttendance
 );
 
