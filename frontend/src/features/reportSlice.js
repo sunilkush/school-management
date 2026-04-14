@@ -103,7 +103,11 @@ const reportSlice = createSlice({
       })
       .addCase(fetchReports.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.reports = Array.isArray(action.payload)
+          ? action.payload
+          : Array.isArray(action.payload?.reports)
+          ? action.payload.reports
+          : [];
       })
       .addCase(fetchReports.rejected, (state, action) => {
         state.loading = false;

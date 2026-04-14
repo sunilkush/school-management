@@ -269,7 +269,7 @@ const TeacherExamsPage = () => {
   }, [selectedExam]);
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="middle">
+    <Space direction="vertical" style={{ width: "100%" }} size="middle" onLoad={loading}>
       <Card style={{ borderRadius: 16 }}>
         <Row gutter={[16, 16]} align="middle" justify="space-between">
           <Col>

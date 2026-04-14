@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Button,
@@ -43,20 +43,32 @@ const ExamsPage = () => {
 
   /* ✅ Redux State */
   const { exams = [], loading, analytics, pagination } = useSelector((state) => state.exams || {});
-  const [statusFilter, setStatusFilter] = React.useState("all");
-  const [search, setSearch] = React.useState("");
-  const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
-  const [analyticsOpen, setAnalyticsOpen] = React.useState(false);
+  const { selectedAcademicYear: selectedAcademicYearFromState } = useSelector((state) => state.academicYear || {});
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   /* ✅ Academic Year + School */
-  const storeAcadmicYear = memoryStorage.getItem("selectedAcademicYear");
-  const selectedAcademicYear = storeAcadmicYear
-    ? JSON.parse(storeAcadmicYear)
-    : null;
+  const selectedAcademicYear = useMemo(() => {
+    if (selectedAcademicYearFromState?._id) return selectedAcademicYearFromState;
+    const storeAcadmicYear = memoryStorage.getItem("selectedAcademicYear");
+    return storeAcadmicYear ? JSON.parse(storeAcadmicYear) : null;
+  }, [selectedAcademicYearFromState]);
 
   const academicYearId = selectedAcademicYear?._id || null;
   const schoolId = selectedAcademicYear?.schoolId || null;
+
+useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
 
   /* ✅ Fetch Exams */
   useEffect(() => {
@@ -217,7 +229,7 @@ const ExamsPage = () => {
     },
   ];
 
-  const summary = React.useMemo(() => {
+  const summary = useMemo(() => {
     const total = exams.length;
     const published = exams.filter((exam) => exam.status === "published").length;
     const draft = exams.filter((exam) => exam.status === "draft").length;
@@ -280,10 +292,8 @@ const ExamsPage = () => {
         <Input.Search
           allowClear
           placeholder="Search by exam title/code"
-          onSearch={(value) => {
-            setPage(1);
-            setSearch(value);
-          }}
+           value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
           style={{ width: 300 }}
         />
         <Text type="secondary">Filter by status:</Text>

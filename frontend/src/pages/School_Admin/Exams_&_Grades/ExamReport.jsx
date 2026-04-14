@@ -30,7 +30,8 @@ const ExamReports = () => {
     (state) => state.examReports || {}
   );
   const { exams = [] } = useSelector((state) => state.exams || {});
-
+   const safeReports = Array.isArray(reports) ? reports : [];
+  const safeExams = Array.isArray(exams) ? exams : [];
   const [filters, setFilters] = useState({
     examId: undefined,
     type: "",
@@ -50,11 +51,11 @@ const ExamReports = () => {
     );
   }, [dispatch, filters.examId, filters.type]);
 
-  const filteredReports = useMemo(() => {
+ const filteredReports = useMemo(() => {
     const searchTerm = filters.search.trim().toLowerCase();
-    if (!searchTerm) return reports;
+    if (!searchTerm) return safeReports;
 
-    return reports.filter((item) => {
+    return safeReports.filter((item) => {
       const examName = item?.examTitle?.toLowerCase() || "";
       const studentName = item?.studentName?.toLowerCase() || "";
       const studentEmail = item?.studentEmail?.toLowerCase() || "";
@@ -64,7 +65,7 @@ const ExamReports = () => {
         studentEmail.includes(searchTerm)
       );
     });
-  }, [reports, filters.search]);
+  }, [safeReports, filters.search]);
 
   const handleExport = (format) => {
     const payload = {
@@ -152,7 +153,7 @@ const ExamReports = () => {
             placeholder="Select exam"
             value={filters.examId}
             onChange={(value) => setFilters((prev) => ({ ...prev, examId: value }))}
-            options={exams.map((exam) => ({
+             options={safeExams.map((exam) => ({
               label: exam?.title || "Untitled Exam",
               value: exam?._id,
             }))}

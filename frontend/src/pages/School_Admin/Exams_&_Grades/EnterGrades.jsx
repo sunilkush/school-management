@@ -17,7 +17,6 @@ import { getClassData } from "../../../features/schoolClassSlice";
 import { getExams, enterMarksBulk } from "../../../features/examSlice";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 
-
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -43,7 +42,7 @@ const EnterGrades = () => {
   );
 
   const schoolId = user?.school?._id;
-  const academicYearId = selectedAcademicYear?._id ;
+  const academicYearId = selectedAcademicYear?._id;
 
   useEffect(() => {
     if (!schoolId || !academicYearId) return;
@@ -53,10 +52,15 @@ const EnterGrades = () => {
   }, [dispatch, schoolId, academicYearId]);
 
   useEffect(() => {
-    if (!selectedClass) {
-      return;
-    }
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: selectedClass }));
+    if (!selectedClass || !schoolId || !academicYearId) return;
+
+    dispatch(
+      fetchStudentsBySchoolId({
+        schoolId,
+        academicYearId,
+        schoolClassId: selectedClass,
+      })
+    );
   }, [dispatch, selectedClass, schoolId, academicYearId]);
 
   useEffect(() => {
@@ -71,44 +75,82 @@ const EnterGrades = () => {
     setGrades({});
   }, [selectedExam, exams]);
 
-  const filteredExams = useMemo(
-    () => exams.filter((item) => (item?.schoolClassId?._id || item?.schoolClassId) === selectedClass),
-    [exams, selectedClass]
-  );
+  const filteredExams = useMemo(() => {
+    if (!selectedClass) return [];
+    return exams.filter(
+      (item) =>
+        (item?.schoolClassId?._id || item?.schoolClassId) === selectedClass
+    );
+  }, [exams, selectedClass]);
 
-  const selectedExamRecord = useMemo(
-    () => exams.find((item) => item._id === selectedExam),
-    [exams, selectedExam]
-  );
+  const selectedExamRecord = useMemo(() => {
+    return exams.find((item) => item?._id === selectedExam);
+  }, [exams, selectedExam]);
 
   const subjectOptions = useMemo(() => {
     if (!selectedClass) return [];
 
-    const selectedClassData = schoolClasses.find((item) => item._id === selectedClass);
+    const selectedClassData = schoolClasses.find(
+      (item) => item?._id === selectedClass
+    );
+
     const allSubjects = (selectedClassData?.sections || []).flatMap(
       (section) => section?.subjects || []
     );
 
-    return Array.from(new Map(allSubjects.map((item) => [item._id, item])).values());
+    return Array.from(
+      new Map(
+        allSubjects.map((subject) => [
+          subject?._id || subject?.subjectId?._id || subject?.subjectId,
+          {
+            _id:
+              subject?._id || subject?.subjectId?._id || subject?.subjectId,
+            name: subject?.name || subject?.subjectId?.name || "Unknown Subject",
+          },
+        ])
+      ).values()
+    );
   }, [selectedClass, schoolClasses]);
 
-  const tableData = useMemo(
-    () =>
-      schoolStudents.map((student, index) => ({
-        id: student?.student?._id,
-        rollNo: student?.registrationNumber || index + 1,
-        name: student?.user?.name || "N/A",
-        sectionId: student?.section?._id,
-      })),
-    [schoolStudents]
-  );
+  const filteredStudents = useMemo(() => {
+    if (!selectedClass) return [];
+
+    return schoolStudents.filter(
+      (item) =>
+        (item?.schoolClass?._id || item?.schoolClassId || item?.schoolClass) ===
+        selectedClass
+    );
+  }, [schoolStudents, selectedClass]);
+
+  const tableData = useMemo(() => {
+    return filteredStudents.map((student, index) => ({
+      id: student?.student?._id || student?._id,
+      rollNo: student?.registrationNumber || index + 1,
+      name:
+        student?.user?.name ||
+        student?.student?.name ||
+        student?.studentName ||
+        "N/A",
+      sectionId:
+        student?.section?._id ||
+        student?.sectionId?._id ||
+        student?.sectionId ||
+        null,
+    }));
+  }, [filteredStudents]);
 
   const handleGradeChange = (studentId, value) => {
-    setGrades((prev) => ({ ...prev, [studentId]: value }));
+    setGrades((prev) => ({
+      ...prev,
+      [studentId]: value,
+    }));
   };
 
   const summary = useMemo(() => {
-    const values = Object.values(grades).filter((value) => value !== undefined);
+    const values = Object.values(grades).filter(
+      (value) => value !== undefined && value !== null
+    );
+
     if (!values.length) return null;
 
     const avg = values.reduce((a, b) => a + b, 0) / values.length;
@@ -146,7 +188,7 @@ const EnterGrades = () => {
       title: "Grade",
       render: (_, record) => {
         const mark = grades[record.id];
-        if (mark === undefined) return "-";
+        if (mark === undefined || mark === null) return "-";
 
         if (mark >= 90) return <Tag color="green">A+</Tag>;
         if (mark >= 75) return <Tag color="blue">A</Tag>;
@@ -195,7 +237,9 @@ const EnterGrades = () => {
   return (
     <Card bordered={false}>
       <Title level={4}>📝 Enter Student Grades</Title>
-      <Text type="secondary">Select class, exam & subject to enter marks</Text>
+      <Text type="secondary">
+        Select class, exam & subject to enter marks
+      </Text>
 
       <Row gutter={16} style={{ marginTop: 16 }}>
         <Col xs={24} md={6}>
@@ -206,6 +250,7 @@ const EnterGrades = () => {
             onChange={setSelectedClass}
             showSearch
             optionFilterProp="children"
+            allowClear
           >
             {schoolClasses.map((schoolClass) => (
               <Option key={schoolClass._id} value={schoolClass._id}>
@@ -223,6 +268,7 @@ const EnterGrades = () => {
             onChange={setSelectedExam}
             disabled={!selectedClass}
             loading={examsLoading}
+            allowClear
           >
             {filteredExams.map((exam) => (
               <Option key={exam._id} value={exam._id}>
@@ -239,6 +285,7 @@ const EnterGrades = () => {
             value={selectedSubject}
             onChange={setSelectedSubject}
             disabled={!selectedClass}
+            allowClear
           >
             {subjectOptions.map((subject) => (
               <Option key={subject._id} value={subject._id}>
@@ -269,7 +316,12 @@ const EnterGrades = () => {
       />
 
       <Row justify="end" style={{ marginTop: 16 }}>
-        <Button type="primary" onClick={handleSubmit} disabled={!isReady} loading={saving}>
+        <Button
+          type="primary"
+          onClick={handleSubmit}
+          disabled={!isReady}
+          loading={saving}
+        >
           Save Grades
         </Button>
       </Row>
