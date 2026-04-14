@@ -16,10 +16,13 @@ import {
   TimePicker,
   Spin,
   Switch,
+  Alert,
 } from "antd";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
 import { useDispatch, useSelector } from "react-redux";
 import { getClassData} from "../../../features/schoolClassSlice.js";
+import { getQuestions } from "../../../features/questionSlice.js";
 import {
   createExam,
   updateExam,
@@ -44,11 +47,13 @@ const CreateExam = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
   const [sectionList, setSectionList] = useState([]);
+  const [examQuestions, setExamQuestions] = useState([]);
   const [examData, setExamData] = useState(null); // ⭐ important
   const {user=[],loading} = useSelector((state) => state.auth || {});
   const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
   /* ================= REDUX ================= */
   const { schoolClasses } = useSelector((state) => state.schoolClass || {});
+  const { questions = [] } = useSelector((state) => state.questions || {});
   
 
   const academicYearId = selectedAcademicYear?._id;
@@ -58,6 +63,7 @@ const CreateExam = () => {
   useEffect(() => {
     if (schoolId) {
       dispatch(getClassData({ schoolId,academicYearId }));
+      dispatch(getQuestions({ schoolId }));
     }
   }, [schoolId, dispatch,academicYearId]);
 
@@ -156,7 +162,21 @@ const CreateExam = () => {
       questionOrder: examData.questionOrder || "random",
       shuffleOptions: examData.shuffleOptions ?? true,
     });
+
+    setExamQuestions(
+      (examData.questions || []).map((question) => ({
+        questionId: question.questionId?._id || question.questionId,
+        marks: Number(question.marks || 0),
+      }))
+    );
   }, [examData, schoolClasses, handleClassChange, form]);
+
+  const filteredQuestions = questions.filter((question) => {
+    const classId = question.schoolClassId?._id || question.schoolClassId;
+    const subjectId = question.subjectId?._id || question.subjectId;
+    const selectedSubject = form.getFieldValue("subjectId");
+    return String(classId) === String(selectedClass) && String(subjectId) === String(selectedSubject);
+  });
 
 
 
@@ -211,12 +231,18 @@ const CreateExam = () => {
       };
       
       if (isEditMode) {
+        const formattedQuestions = examQuestions
+          .filter((question) => question.questionId)
+          .map((question) => ({
+            questionId: question.questionId,
+            marks: Number(question.marks || 0),
+          }));
       
         if (!id || id === "undefined" || id === "null") {
           return message.error("Invalid exam id 2");
         }
 
-        await dispatch(updateExam({ Id: id, payload })).unwrap();
+        await dispatch(updateExam({ Id: id, payload: { ...payload, questions: formattedQuestions } })).unwrap();
         message.success("Exam Updated Successfully");
       } else {
         await dispatch(createExam(payload)).unwrap();
@@ -228,6 +254,25 @@ const CreateExam = () => {
       console.error(err);
       message.error("Failed to save exam");
     }
+  };
+
+  const addQuestion = () => {
+    setExamQuestions((prev) => [...prev, { questionId: "", marks: 0 }]);
+  };
+
+  const removeQuestion = (index) => {
+    setExamQuestions((prev) => prev.filter((_, questionIndex) => questionIndex !== index));
+  };
+
+  const handleQuestionSelect = (index, questionId) => {
+    const selectedQuestion = filteredQuestions.find((question) => String(question._id) === String(questionId));
+    setExamQuestions((prev) =>
+      prev.map((question, questionIndex) =>
+        questionIndex === index
+          ? { questionId, marks: Number(selectedQuestion?.marks || 0) }
+          : question
+      )
+    );
   };
 
   /* ================= UI ================= */
@@ -452,6 +497,14 @@ const CreateExam = () => {
 
           {/* STATUS */}
           <Divider />
+          {!isEditMode && (
+            <Alert
+              type="info"
+              showIcon
+              message="पहले exam save करें। उसके बाद Edit Exam स्क्रीन से questions add किए जा सकते हैं।"
+              style={{ marginBottom: 16 }}
+            />
+          )}
           <Form.Item name="status" label="Status">
             <Select>
               <Option value="draft">Draft</Option>
@@ -459,6 +512,45 @@ const CreateExam = () => {
               <Option value="completed">Completed</Option>
             </Select>
           </Form.Item>
+
+          {isEditMode && (
+            <>
+              <Divider orientation="left">Questions</Divider>
+
+              <Button type="dashed" onClick={addQuestion} block icon={<PlusOutlined />}>
+                Add Question
+              </Button>
+
+              {examQuestions.map((question, index) => (
+                <Row gutter={12} key={index} style={{ marginTop: 10 }}>
+                  <Col span={16}>
+                    <Select
+                      value={question.questionId}
+                      onChange={(value) => handleQuestionSelect(index, value)}
+                      style={{ width: "100%" }}
+                      showSearch
+                      optionFilterProp="children"
+                      placeholder="Select question"
+                    >
+                      {filteredQuestions.map((availableQuestion) => (
+                        <Option key={availableQuestion._id} value={availableQuestion._id}>
+                          {availableQuestion.statement}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Col>
+
+                  <Col span={4}>
+                    <InputNumber value={question.marks} disabled style={{ width: "100%" }} />
+                  </Col>
+
+                  <Col span={4}>
+                    <Button danger icon={<DeleteOutlined />} onClick={() => removeQuestion(index)} block />
+                  </Col>
+                </Row>
+              ))}
+            </>
+          )}
 
           <Button type="primary" htmlType="submit" block>
             Save Exam
