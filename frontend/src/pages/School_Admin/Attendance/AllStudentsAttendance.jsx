@@ -37,37 +37,50 @@ const AllStudentsAttendance = () => {
   const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
 
   const schoolId = currentUser?.school?._id;
+  const academicYearId = currentUser?.school?.academicYear;
 
 
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
-   const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [attendance, setAttendance] = useState({});
+
+  const normalizedStudents = useMemo(() => {
+    if (Array.isArray(schoolStudents)) return schoolStudents;
+    if (Array.isArray(schoolStudents?.students)) return schoolStudents.students;
+    return [];
+  }, [schoolStudents]);
+
+  const normalizedClasses = useMemo(() => {
+    if (Array.isArray(schoolClasses)) return schoolClasses;
+    if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
+    return [];
+  }, [schoolClasses]);
 
   // 🔹 Initial Load
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchStudentsBySchoolId({ schoolId }));
-      dispatch(fetchSchoolClasses({ schoolId }));
+      dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+      dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
     }
 
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId, academicYearId]);
 
   // 🔹 Default Attendance = Present
   useEffect(() => {
     const defaultAttendance = {};
-    schoolStudents.forEach((s) => {
+    normalizedStudents.forEach((s) => {
       defaultAttendance[s._id] = attendance[s._id] || "present";
     });
     setAttendance(defaultAttendance);
      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolStudents]);
+  }, [normalizedStudents]);
 
  const sortedClasses = useMemo(
     () =>
-      [...schoolClasses].sort((a, b) => {
+      [...normalizedClasses].sort((a, b) => {
         const numA = parseInt((a.name || "").replace(/\D/g, ""), 10);
         const numB = parseInt((b.name || "").replace(/\D/g, ""), 10);
 
@@ -76,36 +89,36 @@ const AllStudentsAttendance = () => {
         }
         return numA - numB;
       }),
-    [schoolClasses]
+    [normalizedClasses]
   );
 
   // 🔹 Section list based on class
   const sectionList = useMemo(() => {
     if (!selectedClass) return [];
 
-    const sections = schoolStudents
+    const sections = normalizedStudents
       .filter((s) => s.class?.name === selectedClass)
       .map((s) => s.section?.name)
       .filter(Boolean);
 
     return [...new Set(sections)];
-  }, [schoolStudents, selectedClass]);
+  }, [normalizedStudents, selectedClass]);
 
   // 🔹 Filter Students
   const filteredData = useMemo(() => {
-    return schoolStudents.filter((item) => {
+    return normalizedStudents.filter((item) => {
        const fullName = item?.user?.name?.toLowerCase() || "";
       const rollNo = `${item?.rollNumber || ""}`.toLowerCase();
       const query = searchText.trim().toLowerCase();
 
       return (
-        (selectedClass ? item.class?.name === selectedClass : false) &&
+        (selectedClass ? item.class?.name === selectedClass : true) &&
         (selectedSection ? item.section?.name === selectedSection : true) &&
        (filterStatus ? attendance[item._id] === filterStatus : true) &&
         (!query || fullName.includes(query) || rollNo.includes(query))
       );
     });
-   }, [schoolStudents, selectedClass, selectedSection, filterStatus, attendance, searchText]);
+   }, [normalizedStudents, selectedClass, selectedSection, filterStatus, attendance, searchText]);
 
   // 🔹 Attendance Summary
   const summary = useMemo(() => {
@@ -160,7 +173,12 @@ const AllStudentsAttendance = () => {
       return;
     }
 
-   const selectedClassDetails = schoolClasses.find((cls) => cls.name === selectedClass) || null;
+    if (!attendanceDate) {
+      message.warning("Please select attendance date");
+      return;
+    }
+
+   const selectedClassDetails = normalizedClasses.find((cls) => cls.name === selectedClass) || null;
     const selectedSectionDetails =
       filteredData.find((student) => student.section?.name === selectedSection)?.section || null;
 
@@ -169,7 +187,7 @@ const AllStudentsAttendance = () => {
       role: "student",
       classId: selectedClassDetails?._id || filteredData[0]?.class?._id || null,
       sectionId: selectedSectionDetails?._id || filteredData[0]?.section?._id || null,
-      date: attendanceDate.toISOString(),
+      date: attendanceDate.startOf("day").toISOString(),
       records: filteredData.map((student) => ({
         userId: student.user?._id || student._id,
         status: attendance[student._id] || "present",
