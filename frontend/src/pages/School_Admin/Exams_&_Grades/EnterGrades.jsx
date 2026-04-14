@@ -42,8 +42,6 @@ const EnterGrades = () => {
     (state) => state.students || {}
   );
 
-  console.log(schoolStudents)
-
   const schoolId = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id ;
 
@@ -58,7 +56,6 @@ const EnterGrades = () => {
     if (!selectedClass) {
       return;
     }
-
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: selectedClass }));
   }, [dispatch, selectedClass, schoolId, academicYearId]);
 
