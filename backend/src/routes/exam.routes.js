@@ -41,6 +41,11 @@ router.post(
       subjectId: { required: true, type: "objectId" },
       title: { required: false, type: "string" },
       name: { required: false, type: "string" },
+      examDate: { required: true, validate: (value) => !Number.isNaN(new Date(value).getTime()), message: "body.examDate must be a valid date" },
+      startTime: { required: true, validate: (value) => !Number.isNaN(new Date(value).getTime()), message: "body.startTime must be a valid date" },
+      endTime: { required: true, validate: (value) => !Number.isNaN(new Date(value).getTime()), message: "body.endTime must be a valid date" },
+      totalMarks: { required: true, validate: (value) => Number(value) > 0, message: "body.totalMarks must be greater than 0" },
+      passingMarks: { required: true, validate: (value) => Number(value) >= 0, message: "body.passingMarks must be zero or positive" },
     },
   }),
   createExam
@@ -49,7 +54,23 @@ router.post(
 router.get("/", auth, roleMiddleware(READ_ROLES), getExams);
 router.get("/:id", auth, roleMiddleware(READ_ROLES), getExamById);
 router.get("/:id/analytics", auth, roleMiddleware(READ_ROLES), getExamAnalytics);
-router.put("/:id", auth, roleMiddleware(ADMIN_ROLES), updateExam);
+router.put(
+  "/:id",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({
+    params: {
+      id: { required: true, type: "objectId" },
+    },
+    body: {
+      title: { required: false, type: "string" },
+      name: { required: false, type: "string" },
+      totalMarks: { required: false, validate: (value) => Number(value) > 0, message: "body.totalMarks must be greater than 0" },
+      passingMarks: { required: false, validate: (value) => Number(value) >= 0, message: "body.passingMarks must be zero or positive" },
+    },
+  }),
+  updateExam
+);
 router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), deleteExam);
 router.put("/:id/publish", auth, roleMiddleware(ADMIN_ROLES), publishExam);
 

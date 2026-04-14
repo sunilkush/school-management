@@ -15,6 +15,7 @@ import {
   Typography,
   TimePicker,
   Spin,
+  Switch,
 } from "antd";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -42,6 +43,7 @@ const CreateExam = () => {
   /* ================= LOCAL STATE ================= */
   const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
+  const [sectionList, setSectionList] = useState([]);
   const [examData, setExamData] = useState(null); // ⭐ important
   const {user=[],loading} = useSelector((state) => state.auth || {});
   const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
@@ -84,10 +86,11 @@ const CreateExam = () => {
 
   /* ================= AFTER CLASSES + EXAM READY ================= */
     /* ================= CLASS CHANGE ================= */
- const handleClassChange = useCallback((schoolClassId, subjectIdFromEdit = null) => {
+ const handleClassChange = useCallback((schoolClassId, subjectIdFromEdit = null, sectionIdFromEdit = null) => {
   setSelectedClass(schoolClassId);
 
   const selected = schoolClasses.find((c) => c._id === schoolClassId);
+  setSectionList(selected?.sections || []);
 
   // ✅ sections ke andar se subjects nikaalo
   let subjects = [];
@@ -114,7 +117,9 @@ const CreateExam = () => {
 
   // edit mode me reset na ho
   if (!subjectIdFromEdit) {
-    form.setFieldsValue({ subjectId: undefined });
+    form.setFieldsValue({ subjectId: undefined, sectionId: undefined });
+  } else if (sectionIdFromEdit) {
+    form.setFieldsValue({ sectionId: sectionIdFromEdit });
   }
 }, [form, schoolClasses]);
   useEffect(() => {
@@ -123,12 +128,17 @@ const CreateExam = () => {
 
     const schoolClassIdValue = examData.schoolClassId?._id || examData.schoolClassId;
 
-    handleClassChange(schoolClassIdValue, examData.subjectId?._id || examData.subjectId);
+    handleClassChange(
+      schoolClassIdValue,
+      examData.subjectId?._id || examData.subjectId,
+      examData.sectionId?._id || examData.sectionId
+    );
 
     form.setFieldsValue({
       title: examData.title,
       schoolClassId: schoolClassIdValue,
       subjectId: examData.subjectId?._id || examData.subjectId,
+      sectionId: examData.sectionId?._id || examData.sectionId,
       examType: examData.examType,
       examDate: examData.examDate ? dayjs(examData.examDate) : null,
       startTime: examData.startTime ? dayjs(examData.startTime) : null,
@@ -137,6 +147,14 @@ const CreateExam = () => {
       totalMarks: examData.totalMarks,
       passingMarks: examData.passingMarks,
       status: examData.status,
+      examCode: examData.examCode,
+      settings: {
+        negativeMarking: examData.settings?.negativeMarking || 0,
+        maxAttempts: examData.settings?.maxAttempts || 1,
+        allowPartialScoring: Boolean(examData.settings?.allowPartialScoring),
+      },
+      questionOrder: examData.questionOrder || "random",
+      shuffleOptions: examData.shuffleOptions ?? true,
     });
   }, [examData, schoolClasses, handleClassChange, form]);
 
@@ -175,8 +193,10 @@ const CreateExam = () => {
         schoolId,
         userId,
         title: values.title,
+        examCode: values.examCode,
         schoolClassId: values.schoolClassId,
         subjectId: values.subjectId,
+        sectionId: values.sectionId || null,
         examType: values.examType,
         examDate: values.examDate.toISOString(),
         startTime: startDateTime.toISOString(),
@@ -185,6 +205,9 @@ const CreateExam = () => {
         totalMarks: values.totalMarks,
         passingMarks: values.passingMarks,
         status: values.status || "draft",
+        questionOrder: values.questionOrder,
+        shuffleOptions: values.shuffleOptions,
+        settings: values.settings,
       };
       
       if (isEditMode) {
@@ -232,6 +255,19 @@ const CreateExam = () => {
 
             <Col md={12}>
               <Form.Item
+                name="examCode"
+                label="Exam Code"
+                rules={[
+                  { required: true, message: "Enter exam code" },
+                  { pattern: /^[A-Za-z0-9-_]+$/, message: "Use only letters, numbers, - or _" },
+                ]}
+              >
+                <Input placeholder="e.g. MIDTERM-10A-MATH" />
+              </Form.Item>
+            </Col>
+
+            <Col md={12}>
+              <Form.Item
                 name="schoolClassId"
                 label="Class"
                 rules={[{ required: true, message: "Select class" }]}
@@ -243,6 +279,20 @@ const CreateExam = () => {
                     </Option>
                   ))}
                 </Select>
+              </Form.Item>
+            </Col>
+
+            <Col md={12}>
+              <Form.Item
+                name="sectionId"
+                label="Section (Optional)"
+              >
+                <Select
+                  allowClear
+                  disabled={!selectedClass}
+                  placeholder="All sections"
+                  options={sectionList.map((sec) => ({ label: sec.name, value: sec._id }))}
+                />
               </Form.Item>
             </Col>
 
@@ -331,6 +381,40 @@ const CreateExam = () => {
             </Col>
           </Row>
 
+          <Divider orientation="left">Exam Experience</Divider>
+          <Row gutter={16}>
+            <Col md={8}>
+              <Form.Item name="questionOrder" label="Question Order" initialValue="random">
+                <Select
+                  options={[
+                    { label: "Random", value: "random" },
+                    { label: "Fixed", value: "fixed" },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col md={8}>
+              <Form.Item label="Shuffle Options" name="shuffleOptions" valuePropName="checked" initialValue>
+                <Switch checkedChildren="On" unCheckedChildren="Off" />
+              </Form.Item>
+            </Col>
+            <Col md={8}>
+              <Form.Item name={["settings", "negativeMarking"]} label="Negative Marking">
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            <Col md={8}>
+              <Form.Item name={["settings", "maxAttempts"]} label="Max Attempts" initialValue={1}>
+                <InputNumber min={1} style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            <Col md={8}>
+              <Form.Item label="Allow Partial Scoring" name={["settings", "allowPartialScoring"]} valuePropName="checked">
+                <Switch checkedChildren="Yes" unCheckedChildren="No" />
+              </Form.Item>
+            </Col>
+          </Row>
+
           {/* MARKS */}
           <Divider orientation="left">Marks</Divider>
 
@@ -349,7 +433,17 @@ const CreateExam = () => {
               <Form.Item
                 name="passingMarks"
                 label="Passing Marks"
-                rules={[{ required: true }]}
+                dependencies={["totalMarks"]}
+                rules={[
+                  { required: true },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const total = Number(getFieldValue("totalMarks") || 0);
+                      if (value === undefined || Number(value) <= total) return Promise.resolve();
+                      return Promise.reject(new Error("Passing marks cannot exceed total marks"));
+                    },
+                  }),
+                ]}
               >
                 <InputNumber min={0} style={{ width: "100%" }} />
               </Form.Item>

@@ -10,6 +10,21 @@ import { Attempt } from "../models/ExamAttempts.model.js";
 
 const OBJECT_ID = mongoose.Types.ObjectId;
 
+const normalizeExamPayload = (payload = {}) => ({
+  ...payload,
+  title: payload.name || payload.title,
+  examCode: payload.examCode ? String(payload.examCode).trim().toUpperCase() : undefined,
+  totalMarks: payload.totalMarks !== undefined ? Number(payload.totalMarks) : payload.totalMarks,
+  passingMarks: payload.passingMarks !== undefined ? Number(payload.passingMarks) : payload.passingMarks,
+  durationMinutes:
+    payload.durationMinutes !== undefined ? Number(payload.durationMinutes) : payload.durationMinutes,
+  settings: {
+    negativeMarking: Number(payload?.settings?.negativeMarking || 0),
+    allowPartialScoring: Boolean(payload?.settings?.allowPartialScoring || false),
+    maxAttempts: Math.max(Number(payload?.settings?.maxAttempts || 1), 1),
+  },
+});
+
 const validateExamPayload = (payload) => {
   if (!payload.title || !payload.schoolClassId || !payload.subjectId || !payload.examDate) {
     throw new ApiError(400, "name/title, schoolClassId, subjectId and examDate are required");
@@ -64,15 +79,29 @@ const resolveScope = async ({ user, studentId }) => {
 
 export const createExamService = async ({ body, user }) => {
   const generatedCode = body.examCode || `EX-${Date.now().toString().slice(-8)}`;
-  const payload = {
+  const payload = normalizeExamPayload({
     ...body,
-    title: body.name || body.title,
     examCode: generatedCode,
     createdBy: user._id,
     schoolId: user.roleId?.name === "Super Admin" ? body.schoolId : user.schoolId,
-  };
+  });
 
   validateExamPayload(payload);
+
+  const duplicateExam = await Exam.findOne({
+    schoolId: payload.schoolId,
+    academicYearId: payload.academicYearId,
+    schoolClassId: payload.schoolClassId,
+    subjectId: payload.subjectId,
+    examDate: new Date(payload.examDate),
+    title: payload.title,
+  })
+    .select("_id")
+    .lean();
+
+  if (duplicateExam) {
+    throw new ApiError(409, "An exam with the same title, class, subject, and examDate already exists");
+  }
 
   const exam = await Exam.create(payload);
  
