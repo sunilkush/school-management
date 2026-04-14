@@ -8,8 +8,12 @@ const SUPER_ADMIN = "Super Admin";
 const SCHOOL_ADMIN = "School Admin";
 const TEACHER = "Teacher";
 const STAFF = "Staff";
+const SUPPORT_STAFF = "Support Staff";
 const STUDENT = "Student";
 const PARENT = "Parent";
+const ADMIN = "Admin";
+const PRINCIPAL = "Principal";
+const VICE_PRINCIPAL = "Vice Principal";
 
 const normalizeDateStart = (value) => {
   const date = new Date(value);
@@ -60,12 +64,12 @@ const assertTeacherScope = (req, payload = {}) => {
 export const markBulkAttendance = asyncHandler(async (req, res) => {
   const { schoolId, date, role, schoolClassId, sectionId, subjectId, remarks, records } = req.body;
 
-  const allowedRoles = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STAFF];
+  const allowedRoles = [SUPER_ADMIN, SCHOOL_ADMIN, ADMIN, PRINCIPAL, VICE_PRINCIPAL, TEACHER, STAFF, SUPPORT_STAFF];
   if (!allowedRoles.includes(req.userRole?.name)) {
     throw new ApiError(403, "You are not allowed to mark attendance");
   }
 
-  if (req.userRole?.name === STAFF && role !== "staff") {
+  if ([STAFF, SUPPORT_STAFF].includes(req.userRole?.name) && role !== "staff") {
     throw new ApiError(403, "Staff can only mark self attendance");
   }
 
@@ -91,7 +95,7 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
     checkOutAt: record.checkOutAt || null,
   }));
 
-  if (req.userRole?.name === STAFF) {
+  if ([STAFF, SUPPORT_STAFF].includes(req.userRole?.name)) {
     docs.forEach((doc) => {
       if (doc.userId.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "Staff can mark only their own attendance");
@@ -346,7 +350,7 @@ export const getMyAttendance = asyncHandler(async (req, res) => {
     targetUserId = childId;
   }
 
-  if (![STUDENT, TEACHER, STAFF, PARENT].includes(req.userRole?.name)) {
+  if (![STUDENT, TEACHER, STAFF, SUPPORT_STAFF, PARENT, SUPER_ADMIN, SCHOOL_ADMIN, ADMIN, PRINCIPAL, VICE_PRINCIPAL].includes(req.userRole?.name)) {
     throw new ApiError(403, "Not allowed to access this endpoint");
   }
 
