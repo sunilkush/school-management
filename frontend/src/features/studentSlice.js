@@ -72,14 +72,14 @@ export const fetchAllStudent = createAsyncThunk(
 
 export const fetchAllStudentByRole = createAsyncThunk(
   "student/fetchAllStudentByRole",
-  async ({ schoolId, academicYearId ,schoolClassId}, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId, schoolClassId, page = 1, limit = 500 }, { rejectWithValue }) => {
     try {
       // ✅ Choose URL based on schoolId presence
       const url = `/student/by-role`;
 
       // ✅ Fetch data
-      const res = await apiClient.get(url,{
-         schoolId, academicYearId,schoolClassId 
+      const res = await apiClient.get(url, {
+        params: { schoolId, academicYearId, schoolClassId, page, limit },
       });
 
       return res.data;
