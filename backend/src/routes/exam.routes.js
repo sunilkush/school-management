@@ -52,28 +52,8 @@ router.post(
 );
 
 router.get("/", auth, roleMiddleware(READ_ROLES), getExams);
-router.get("/:id", auth, roleMiddleware(READ_ROLES), getExamById);
-router.get("/:id/analytics", auth, roleMiddleware(READ_ROLES), getExamAnalytics);
-router.put(
-  "/:id",
-  auth,
-  roleMiddleware(ADMIN_ROLES),
-  validate({
-    params: {
-      id: { required: true, type: "objectId" },
-    },
-    body: {
-      title: { required: false, type: "string" },
-      name: { required: false, type: "string" },
-      totalMarks: { required: false, validate: (value) => Number(value) > 0, message: "body.totalMarks must be greater than 0" },
-      passingMarks: { required: false, validate: (value) => Number(value) >= 0, message: "body.passingMarks must be zero or positive" },
-    },
-  }),
-  updateExam
-);
-router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), deleteExam);
-router.put("/:id/publish", auth, roleMiddleware(ADMIN_ROLES), publishExam);
 
+// Keep all static and nested endpoints before `/:id` routes.
 router.post(
   "/assign-class",
   auth,
@@ -130,5 +110,33 @@ router.get(
 router.post("/attempt/start", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin", "Student"]), startExamAttempt);
 router.post("/attempt/submit", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin", "Student"]), submitExamAttempt);
 router.post("/attempt/evaluate", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin"]), evaluateAttempt);
+
+router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamById);
+router.get(
+  "/:id/analytics",
+  auth,
+  roleMiddleware(READ_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  getExamAnalytics
+);
+router.put(
+  "/:id",
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({
+    params: {
+      id: { required: true, type: "objectId" },
+    },
+    body: {
+      title: { required: false, type: "string" },
+      name: { required: false, type: "string" },
+      totalMarks: { required: false, validate: (value) => Number(value) > 0, message: "body.totalMarks must be greater than 0" },
+      passingMarks: { required: false, validate: (value) => Number(value) >= 0, message: "body.passingMarks must be zero or positive" },
+    },
+  }),
+  updateExam
+);
+router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), deleteExam);
+router.put("/:id/publish", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), publishExam);
 
 export default router;
