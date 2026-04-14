@@ -16,11 +16,18 @@ import {
   Row,
   Col,
   Input,
+  Segmented,
+  Tooltip,
+  Divider,
 } from "antd";
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  BarChartOutlined,
+  CheckCircleOutlined,
+  FileDoneOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { getExams, deleteExam, publishResults, getExamAnalytics, publishExam } from "../../../features/examSlice.js";
@@ -174,7 +181,7 @@ const ExamsPage = () => {
       title: "Actions",
       align: "center",
       render: (_, record) => (
-        <Space>
+        <Space wrap>
           <Popconfirm title="Edit Exam?" onClick={() => {
   if (!record?._id) {
     message.error("Invalid exam id");
@@ -191,23 +198,62 @@ const ExamsPage = () => {
 
           <Select
             value={record?.status}
-            style={{ width: 130 }}
+            style={{ width: 120 }}
             onChange={(value) => handleExamStatusChange(record, value)}
             options={[
               { label: "Draft", value: "draft" },
               { label: "Published", value: "published" },
             ]}
           />
-          <Button onClick={() => handlePublishResult(record, true)}>Publish Result</Button>
-          <Button onClick={() => handlePublishResult(record, false)}>Unpublish</Button>
-          <Button onClick={() => handleViewAnalytics(record)}>Analytics</Button>
+          <Button size="small" onClick={() => handlePublishResult(record, true)}>Publish Result</Button>
+          <Button size="small" onClick={() => handlePublishResult(record, false)}>Unpublish</Button>
+          <Tooltip title="Class performance analytics">
+            <Button size="small" icon={<BarChartOutlined />} onClick={() => handleViewAnalytics(record)}>
+              Analytics
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },
   ];
 
+  const summary = React.useMemo(() => {
+    const total = exams.length;
+    const published = exams.filter((exam) => exam.status === "published").length;
+    const draft = exams.filter((exam) => exam.status === "draft").length;
+    const completed = exams.filter((exam) => exam.status === "completed").length;
+
+    return { total, published, draft, completed };
+  }, [exams]);
+
   return (
-    <Card bordered={false} style={{ borderRadius: 12 }}>
+    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Card bordered={false} style={{ borderRadius: 12 }}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card size="small">
+              <Statistic title="Total Exams" prefix={<FileDoneOutlined />} value={summary.total} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card size="small">
+              <Statistic title="Published" prefix={<CheckCircleOutlined />} value={summary.published} valueStyle={{ color: "#389e0d" }} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card size="small">
+              <Statistic title="Draft" prefix={<ClockCircleOutlined />} value={summary.draft} valueStyle={{ color: "#d48806" }} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card size="small">
+              <Statistic title="Completed" prefix={<BarChartOutlined />} value={summary.completed} valueStyle={{ color: "#531dab" }} />
+            </Card>
+          </Col>
+        </Row>
+      </Card>
+
+      <Card bordered={false} style={{ borderRadius: 12 }}>
       <Space
         style={{
           width: "100%",
@@ -241,21 +287,19 @@ const ExamsPage = () => {
           style={{ width: 300 }}
         />
         <Text type="secondary">Filter by status:</Text>
-        <Select
+        <Segmented
           value={statusFilter}
           onChange={(value) => {
             setPage(1);
             setStatusFilter(value);
           }}
-          options={[
-            { label: "All", value: "all" },
-            { label: "Draft", value: "draft" },
-            { label: "Published", value: "published" },
-            { label: "Completed", value: "completed" },
-          ]}
-          style={{ width: 220 }}
+          options={["all", "draft", "published", "completed"].map((status) => ({
+            label: status.charAt(0).toUpperCase() + status.slice(1),
+            value: status,
+          }))}
         />
       </Space>
+      <Divider style={{ marginTop: 0 }} />
 
       <Table
         loading={loading}
@@ -315,7 +359,8 @@ const ExamsPage = () => {
           <Empty description="No analytics available" />
         )}
       </Drawer>
-    </Card>
+      </Card>
+    </Space>
   );
 };
 

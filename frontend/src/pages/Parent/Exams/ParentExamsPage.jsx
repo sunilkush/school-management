@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Empty, Select, Space, Table, Tag, Typography } from "antd";
+import { Card, Col, Empty, Row, Select, Space, Statistic, Table, Tag, Typography } from "antd";
 import { getParentResults } from "../../../features/examSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 
@@ -43,6 +43,23 @@ const ParentExamsPage = () => {
     },
   ];
 
+  const summary = results.reduce(
+    (acc, result) => {
+      acc.total += 1;
+      if (result.resultStatus === "PASS") acc.passed += 1;
+      acc.avgPercentage += Number(result.percentage || 0);
+      return acc;
+    },
+    { total: 0, passed: 0, avgPercentage: 0 }
+  );
+
+  if (summary.total) {
+    summary.failed = summary.total - summary.passed;
+    summary.avgPercentage = Math.round(summary.avgPercentage / summary.total);
+  } else {
+    summary.failed = 0;
+  }
+
   return (
     <Space direction="vertical" style={{ width: "100%" }}>
       <Card>
@@ -57,6 +74,16 @@ const ParentExamsPage = () => {
           />
         </Space>
       </Card>
+
+      {!!selectedChildId && (
+        <Card>
+          <Row gutter={[12, 12]}>
+            <Col xs={24} sm={8}><Card size="small"><Statistic title="Results Published" value={summary.total} /></Card></Col>
+            <Col xs={24} sm={8}><Card size="small"><Statistic title="Pass Count" value={summary.passed} valueStyle={{ color: "#389e0d" }} /></Card></Col>
+            <Col xs={24} sm={8}><Card size="small"><Statistic title="Avg Percentage" value={summary.avgPercentage || 0} suffix="%" /></Card></Col>
+          </Row>
+        </Card>
+      )}
 
       <Card loading={loading}>
         {!selectedChildId ? (
