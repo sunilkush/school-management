@@ -233,10 +233,14 @@ const TeacherExamsPage = () => {
 
   const summary = useMemo(() => {
     if (!rows.length) return null;
+    const averageMarks = Math.round(
+      rows.reduce((acc, row) => acc + Number(row.obtainedMarks || 0), 0) / rows.length
+    );
     const passCount = rows.filter((row) => row.obtainedMarks >= row.passingMarks).length;
     const failCount = rows.length - passCount;
     const passPercentage = rows.length ? Math.round((passCount / rows.length) * 100) : 0;
     return {
+      averageMarks,
       passCount,
       failCount,
       passPercentage,
@@ -347,6 +351,7 @@ const TeacherExamsPage = () => {
 
           <Space wrap size="large" style={{ marginBottom: 12 }}>
             <Statistic title="Total Students" value={summary?.total || 0} />
+            <Statistic title="Class Avg Marks" value={summary?.averageMarks || 0} suffix={`/${selectedExam?.totalMarks || 100}`} />
             <Statistic title="Pass" value={summary?.passCount || 0} valueStyle={{ color: "#3f8600" }} />
             <Statistic title="Fail" value={summary?.failCount || 0} valueStyle={{ color: "#cf1322" }} />
             <Tooltip title={`${summary?.passPercentage || 0}% students passed`}>
