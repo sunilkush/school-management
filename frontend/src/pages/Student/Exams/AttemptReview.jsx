@@ -24,11 +24,9 @@ const AttemptReview = () => {
   const location = useLocation();
   const attemptId = useMemo(() => new URLSearchParams(location.search).get("attemptId"), [location.search]);
   const { currentAttempt: attempt, loading } = useSelector((state) => state.attempts || {});
-  const {user} = useSelector((state) => state.auth || {});
-  const schoolId = user?.schoolId || user?.school?._id;
   useEffect(() => {
-    if (attemptId) dispatch(getAttemptById({attemptId,schoolId}));
-  }, [attemptId, dispatch,schoolId]);
+    if (attemptId) dispatch(getAttemptById(attemptId));
+  }, [attemptId, dispatch]);
  
   if (!attemptId) {
     return <Empty description="Attempt ID missing. Open review from Exam Hub." />;

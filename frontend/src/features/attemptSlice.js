@@ -8,9 +8,9 @@ import apiClient from "../api/httpClient";
 // Start a new attempt
 export const startAttempt = createAsyncThunk(
   "attempts/startAttempt",
-  async ({ examId }, { rejectWithValue }) => {
+  async ({ examId, schoolId }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/attempt/start`, { examId });
+      const res = await apiClient.post(`/attempt/start`, { examId, schoolId });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -47,8 +47,13 @@ export const evaluateAttempt = createAsyncThunk(
 // Get single attempt
 export const getAttemptById = createAsyncThunk(
   "attempts/getAttemptById",
-  async (attemptId, { rejectWithValue }) => {
+  async (attemptIdInput, { rejectWithValue }) => {
     try {
+      const attemptId =
+        typeof attemptIdInput === "object" && attemptIdInput !== null
+          ? attemptIdInput.attemptId || attemptIdInput.id
+          : attemptIdInput;
+      if (!attemptId) throw new Error("Invalid attempt id");
       const res = await apiClient.get(`/attempt/${attemptId}`);
       return res.data.data;
     } catch (error) {
