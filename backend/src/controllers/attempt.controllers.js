@@ -22,8 +22,9 @@ const enforceAttemptReadAccess = (attempt, req) => {
 export const startAttempt = asyncHandler(async (req, res) => {
   const { examId } = req.body;
   const studentId = req.user._id;
-  console.log(studentId) 
-  console.log(examId) 
+  
+
+
   assertObjectId(examId, "examId");
 
   const exam = await Exam.findById(examId).populate("questions.questionId");
@@ -41,7 +42,7 @@ export const startAttempt = asyncHandler(async (req, res) => {
     flagged: false,
   }));
 
-  const schoolId = exam.schoolId || req.user?.schoolId || req.user?.school?._id;
+  const schoolId = exam.schoolId 
   if (!schoolId) throw new ApiError(400, "schoolId could not be resolved for this attempt");
 
   const attempt = await Attempt.create({ examId, studentId, schoolId, answers });

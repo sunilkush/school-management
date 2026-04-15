@@ -1,16 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 
 // --- Async Thunks --- //
 
 // Start a new attempt
 export const startAttempt = createAsyncThunk(
   "attempts/startAttempt",
-  async (payload, { rejectWithValue }) => {
+  async ({examId,schoolId}, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/attempt/start`, payload);
+      const res = await apiClient.post(`/attempt/start`, { examId, schoolId });
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

@@ -31,12 +31,13 @@ const StudentExamsPage = () => {
   const { exams = [], results = [], loading } = useSelector((state) => state.exams || {});
   const { attempts = [], loading: attemptsLoading } = useSelector((state) => state.attempts || {});
   const [scheduleFilter, setScheduleFilter] = useState("upcoming");
-
+  const {user} = useSelector((state) => state.auth || {});
+  const schoolId = user?.school?._id || user?.schoolId || user?.school || null;
   useEffect(() => {
     dispatch(getExams({ sortBy: "examDate", sortOrder: "asc" }));
     dispatch(getStudentResults());
-    dispatch(getAttempts({ status: "in_progress", limit: 100 }));
-  }, [dispatch]);
+    dispatch(getAttempts({ status: "in_progress", limit: 100, schoolId }));
+  }, [dispatch, schoolId]);
 
   const inProgressByExam = useMemo(() => {
     const map = new Map();
@@ -91,8 +92,13 @@ const StudentExamsPage = () => {
   }, [exams]);
 
   const handleStartAttempt = async (examId) => {
+    if (!schoolId) {
+      message.error("School context missing. Please re-login and try again.");
+      return;
+    }
+
     try {
-      const attempt = await dispatch(startAttempt({ examId })).unwrap();
+      const attempt = await dispatch(startAttempt({ examId, schoolId })).unwrap();
       navigate(`/dashboard/student/exams/exam-live?attemptId=${attempt._id}`);
       message.success("Exam started successfully");
     } catch (error) {
