@@ -20,7 +20,7 @@ const AnswerSchema = new Schema(
       negativeMarks: Number
     },
 
-    answer: Schema.Types.Mixed, // ['A'], ['A','B'], "true", "text"
+    response: Schema.Types.Mixed, // ['A'], ['A','B'], "true", "text"
 
     marksObtained: {
       type: Number,
@@ -59,7 +59,6 @@ const AttemptSchema = new Schema(
     examSubjectId: {
       type: Schema.Types.ObjectId,
       ref: "ExamSubject",
-      required: true,
       index: true
     },
 
@@ -76,6 +75,10 @@ const AttemptSchema = new Schema(
     },
 
     submittedAt: {
+      type: Date
+    },
+
+    endedAt: {
       type: Date
     },
 
@@ -101,6 +104,11 @@ const AttemptSchema = new Schema(
       min: 0
     },
 
+    totalObtainedMarks: {
+      type: Number,
+      default: 0
+    },
+
     grade: {
       type: String,
       trim: true
@@ -118,6 +126,16 @@ const AttemptSchema = new Schema(
    HOOKS
 ================================ */
 AttemptSchema.pre("save", function (next) {
+  if (this.endedAt && !this.submittedAt) {
+    this.submittedAt = this.endedAt;
+  }
+
+  if (typeof this.totalObtainedMarks === "number") {
+    this.totalMarksObtained = this.totalObtainedMarks;
+  } else if (typeof this.totalMarksObtained === "number") {
+    this.totalObtainedMarks = this.totalMarksObtained;
+  }
+
   if (this.submittedAt && this.startedAt) {
     this.durationSeconds = Math.floor(
       (this.submittedAt.getTime() - this.startedAt.getTime()) / 1000
@@ -129,9 +147,9 @@ AttemptSchema.pre("save", function (next) {
 /* ===============================
    INDEXES (CRITICAL)
 ================================ */
-// One attempt per student per subject
+// One attempt number per student in an exam
 AttemptSchema.index(
-  { schoolId: 1, examSubjectId: 1, studentId: 1 },
+  { schoolId: 1, examId: 1, studentId: 1, attemptNumber: 1 },
   { unique: true }
 );
 
