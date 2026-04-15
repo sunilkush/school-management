@@ -168,7 +168,14 @@ export const sidebarMenu = {
         { title: "Staff Attendance", path: "schooladmin/attendance/staff" },
       ],
     },
-
+    {
+      title:"timetable management",
+      icon: CalendarClock,
+      subMenu:[
+        {title:"Create Timetable",path:"schooladmin/timetable/class"},
+        {title:"View Timetable",path:"schooladmin/timetable/teacher"},
+      ]
+    },
     {
       title: "Fee Management",
       icon: CreditCard,
