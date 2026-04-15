@@ -30,6 +30,8 @@ const ExamReports = () => {
     (state) => state.examReports || {}
   );
   const { exams = [] } = useSelector((state) => state.exams || {});
+  const { user = {} } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
    const safeReports = Array.isArray(reports) ? reports : [];
   const safeExams = Array.isArray(exams) ? exams : [];
   const [filters, setFilters] = useState({
@@ -38,9 +40,13 @@ const ExamReports = () => {
     search: "",
   });
 
+  const schoolId = user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
+
   useEffect(() => {
-    dispatch(getExams({ limit: 100 }));
-  }, [dispatch]);
+    if (!schoolId || !academicYearId) return;
+    dispatch(getExams({ schoolId, academicYearId, limit: 100 }));
+  }, [dispatch, schoolId, academicYearId]);
 
   useEffect(() => {
     dispatch(
