@@ -1,6 +1,7 @@
 import { SchoolClass } from "../models/schoolClass.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Section } from "../models/section.model.js";
+import mongoose from "mongoose";
 // 🔹 CREATE
 export const createSchoolClass = async (req, res) => {
   try {
@@ -212,7 +213,7 @@ export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId } = req.query;
 
   // =============================
-  // 🔹 VALIDATION
+  // VALIDATION
   // =============================
   if (!schoolId) {
     return res.status(400).json({
@@ -221,25 +222,62 @@ export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
     });
   }
 
+  if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid schoolId",
+    });
+  }
+
+  if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid academicYearId",
+    });
+  }
+
   // =============================
-  // 🔹 FETCH SCHOOL CLASSES
+  // FETCH SCHOOL CLASSES
   // =============================
-  const classes = await SchoolClass.find({
-    schoolId,
-    ...(academicYearId && { academicYearId }),
-  })
+  const classFilter = {
+    schoolId: new mongoose.Types.ObjectId(schoolId),
+    ...(academicYearId && {
+      academicYearId: new mongoose.Types.ObjectId(academicYearId),
+    }),
+  };
+
+  const classes = await SchoolClass.find(classFilter)
     .populate("boardClassId", "name")
     .lean();
 
-  // =============================
-  // 🔹 GET ALL SECTION IDS
-  // =============================
-  const sectionIds = classes.flatMap((cls) =>
-    (cls.sections || []).map((s) => s.sectionId)
-  );
+  if (!classes.length) {
+    return res.status(200).json({
+      success: true,
+      count: 0,
+      data: [],
+      message: "No classes found",
+    });
+  }
 
   // =============================
-  // 🔹 FETCH SECTIONS WITH SUBJECTS
+  // GET ALL SECTION IDS
+  // =============================
+  const sectionIds = [
+    ...new Set(
+      classes.flatMap((cls) =>
+        (cls.sections || [])
+          .map((sec) => {
+            const sectionId =
+              sec?.sectionId?._id || sec?.sectionId || sec?._id || null;
+            return sectionId ? String(sectionId) : null;
+          })
+          .filter(Boolean)
+      )
+    ),
+  ];
+
+  // =============================
+  // FETCH SECTIONS WITH SUBJECTS
   // =============================
   const sections = await Section.find({
     _id: { $in: sectionIds },
@@ -249,40 +287,39 @@ export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
     .lean();
 
   // =============================
-  // 🔹 MAP SECTIONS
+  // MAP SECTIONS
   // =============================
-  const sectionMap = {};
+  const sectionMap = new Map();
   sections.forEach((sec) => {
-    sectionMap[sec._id] = sec;
+    sectionMap.set(String(sec._id), sec);
   });
 
   // =============================
-  // 🔥 FINAL STRUCTURE
+  // FINAL STRUCTURE
   // =============================
   const result = classes.map((cls) => ({
     _id: cls._id,
     name: cls.name,
-    board: cls.boardClassId?.name,
-
+    boardClass: cls.boardClassId || null,
     sections: (cls.sections || []).map((sec) => {
-      const fullSection = sectionMap[sec.sectionId];
+      const sectionId = sec?.sectionId?._id || sec?.sectionId || sec?._id || null;
+      const fullSection = sectionMap.get(String(sectionId));
 
       return {
-        _id: sec.sectionId,
-        name: fullSection?.name,
-
+        _id: sectionId,
+        name: fullSection?.name || sec?.name || null,
         subjects: (fullSection?.subjects || []).map((sub) => ({
-          _id: sub.subjectId?._id,
-          name: sub.subjectId?.name,
-          teacherId: sub.teacherId?._id ,
-          teacherName : sub.teacherId?.name || "Unassigned",
+          _id: sub?.subjectId?._id || null,
+          name: sub?.subjectId?.name || null,
+          teacherId: sub?.teacherId?._id || null,
+          teacherName: sub?.teacherId?.name || "Unassigned",
         })),
       };
     }),
   }));
 
   // =============================
-  // 🔹 RESPONSE
+  // RESPONSE
   // =============================
   return res.status(200).json({
     success: true,

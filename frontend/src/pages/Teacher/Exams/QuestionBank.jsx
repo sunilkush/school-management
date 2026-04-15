@@ -28,14 +28,14 @@ import BulkUploadQuestions from "./BulkUploadQuestions";
 const QuestionBank = () => {
   const dispatch = useDispatch();
 
-  /* ================= Redux ================= */
-  const { questions = [], loading } = useSelector((s) => s.questions);
+  const { questions = [], loading } = useSelector((s) => s.questions || {});
   const { classAssignTeacher = [], loading: classLoading } = useSelector(
     (s) => s.class || {}
   );
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+  const { user } = useSelector((state) => state.auth || {});
+  const schoolId = user?.school?._id;
 
-  /* ================= Local State ================= */
   const [modalType, setModalType] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
@@ -45,27 +45,28 @@ const QuestionBank = () => {
     chapterId: "",
     search: "",
   });
+
   const [chapterOptions, setChapterOptions] = useState([]);
   const [chapterLoading, setChapterLoading] = useState(false);
 
-  /* ================= User ================= */
-  const { user } = useSelector((state) => state.auth);
-  const schoolId = user?.school?._id;
-
-  /* ================= Effects ================= */
   useEffect(() => {
     if (!selectedAcademicYear?._id) return;
     dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
   }, [dispatch, selectedAcademicYear?._id]);
 
   useEffect(() => {
-    if (schoolId) dispatch(getQuestions({ schoolId, limit: 1000 }));
+    if (!schoolId) return;
+    dispatch(getQuestions({ schoolId, limit: 1000 }));
   }, [dispatch, schoolId]);
 
-  const getId = (value) => (value && typeof value === "object" ? value._id : value);
+  const getId = (value) => {
+    if (!value) return "";
+    return typeof value === "object" ? value._id : value;
+  };
 
   const selectedClass = useMemo(() => {
     if (!filters.schoolClassId) return null;
+
     return (
       classAssignTeacher.find(
         (cls) => String(getId(cls?._id)) === String(filters.schoolClassId)
@@ -77,24 +78,67 @@ const QuestionBank = () => {
     if (!selectedClass) return [];
 
     const subjectMap = new Map();
+
     const addSubject = (subjectLike) => {
       const subjectId = String(
         getId(subjectLike?.subjectId || subjectLike?._id || subjectLike?.id) || ""
       );
-      const subjectName =
-        subjectLike?.subjectId?.name || subjectLike?.name || subjectLike?.subjectName;
 
-      if (!subjectId || !subjectName || subjectMap.has(subjectId)) return;
-      subjectMap.set(subjectId, { value: subjectId, label: subjectName });
+      const subjectName =
+        subjectLike?.subjectId?.name ||
+        subjectLike?.name ||
+        subjectLike?.subjectName ||
+        "";
+
+      if (!subjectId || !subjectName) return;
+      if (subjectMap.has(subjectId)) return;
+
+      subjectMap.set(subjectId, {
+        value: subjectId,
+        label: subjectName,
+      });
     };
 
     (selectedClass?.subjects || []).forEach(addSubject);
+
     (selectedClass?.sections || []).forEach((section) => {
       (section?.subjects || []).forEach(addSubject);
     });
 
     return Array.from(subjectMap.values());
   }, [selectedClass]);
+
+  useEffect(() => {
+    if (!filters.schoolClassId) {
+      setFilters((prev) => ({
+        ...prev,
+        subjectId: "",
+        chapterId: "",
+      }));
+      return;
+    }
+
+    if (!subjectOptions.length) {
+      setFilters((prev) => ({
+        ...prev,
+        subjectId: "",
+        chapterId: "",
+      }));
+      return;
+    }
+
+    const currentSubjectStillValid = subjectOptions.some(
+      (subject) => String(subject.value) === String(filters.subjectId)
+    );
+
+    if (!currentSubjectStillValid) {
+      setFilters((prev) => ({
+        ...prev,
+        subjectId: subjectOptions[0]?.value || "",
+        chapterId: "",
+      }));
+    }
+  }, [filters.schoolClassId, subjectOptions, filters.subjectId]);
 
   useEffect(() => {
     const fetchChaptersBySubject = async () => {
@@ -105,6 +149,7 @@ const QuestionBank = () => {
 
       try {
         setChapterLoading(true);
+
         const res = await apiClient.get("/chapters", {
           params: {
             schoolClassId: filters.schoolClassId,
@@ -115,6 +160,7 @@ const QuestionBank = () => {
         });
 
         const chapters = res?.data?.data || [];
+
         setChapterOptions(
           chapters.map((chapter) => ({
             value: chapter?._id,
@@ -178,14 +224,19 @@ const QuestionBank = () => {
       if (!permissionMap.classIds.has(questionClassId)) return false;
 
       const allowedSubjects = permissionMap.subjectIdsByClass.get(questionClassId);
-      if (allowedSubjects?.size && !allowedSubjects.has(questionSubjectId)) return false;
+      if (allowedSubjects?.size && !allowedSubjects.has(questionSubjectId)) {
+        return false;
+      }
 
       const matchesClass =
         !filters.schoolClassId || questionClassId === filters.schoolClassId;
+
       const matchesSubject =
         !filters.subjectId || questionSubjectId === filters.subjectId;
+
       const matchesChapter =
         !filters.chapterId || questionChapterId === filters.chapterId;
+
       const matchesSearch =
         !searchText || q.statement?.toLowerCase().includes(searchText);
 
@@ -193,7 +244,6 @@ const QuestionBank = () => {
     });
   }, [questions, filters, permissionMap]);
 
-  /* ================= Delete ================= */
   const handleDelete = (id) => {
     Modal.confirm({
       title: "Delete Question?",
@@ -208,7 +258,6 @@ const QuestionBank = () => {
     });
   };
 
-  /* ================= Stats ================= */
   const stats = {
     total: filteredQuestions.length,
     mcq: filteredQuestions.filter((q) => q.questionType?.includes("mcq")).length,
@@ -217,11 +266,9 @@ const QuestionBank = () => {
   };
 
   return (
-    <div style={{ background: "#f5f7fa", minHeight: "100vh" }}>
-      {/* ================= Filters ================= */}
+    <div style={{ background: "#f5f7fa", minHeight: "70dvh" }}>
       <Card className="sticky top-0 z-30" bodyStyle={{ padding: 16 }}>
         <Row gutter={[16, 16]}>
-          {/* ================= Class ================= */}
           <Col xs={24} md={6}>
             <Select
               placeholder="Select Class"
@@ -246,7 +293,6 @@ const QuestionBank = () => {
             </Select>
           </Col>
 
-          {/* ================= Subject ================= */}
           <Col xs={24} md={6}>
             <Select
               placeholder="Select Subject"
@@ -270,7 +316,6 @@ const QuestionBank = () => {
             </Select>
           </Col>
 
-          {/* ================= Chapter ================= */}
           <Col xs={24} md={6}>
             <Select
               placeholder="Select Chapter"
@@ -280,27 +325,31 @@ const QuestionBank = () => {
               style={{ width: "100%" }}
               value={filters.chapterId || undefined}
               onChange={(value) => {
-                setFilters((prev) => ({ ...prev, chapterId: value || "" }));
+                setFilters((prev) => ({
+                  ...prev,
+                  chapterId: value || "",
+                }));
               }}
               options={chapterOptions}
             />
           </Col>
 
-          {/* ================= Search ================= */}
           <Col xs={24} md={6}>
             <Input
               placeholder="Search question..."
               allowClear
               value={filters.search}
               onChange={(e) =>
-                setFilters((prev) => ({ ...prev, search: e.target.value || "" }))
+                setFilters((prev) => ({
+                  ...prev,
+                  search: e.target.value || "",
+                }))
               }
             />
           </Col>
         </Row>
       </Card>
 
-      {/* ================= Content ================= */}
       <div style={{ padding: 24 }}>
         <div style={{ marginBottom: 16 }}>
           <h2 style={{ fontSize: 22, fontWeight: 600 }}>Question Bank</h2>
@@ -357,7 +406,9 @@ const QuestionBank = () => {
                       <Tag color="blue">{q.questionType}</Tag>
                       <Tag color="green">{q.difficulty}</Tag>
                       <Tag>Marks: {q.marks}</Tag>
-                      {q.chapterId?.name ? <Tag color="purple">{q.chapterId.name}</Tag> : null}
+                      {q.chapterId?.name ? (
+                        <Tag color="purple">{q.chapterId.name}</Tag>
+                      ) : null}
                     </div>
                   }
                 />
@@ -373,7 +424,7 @@ const QuestionBank = () => {
           tooltip="Add Question"
           onClick={() => setModalType("single")}
         />
-        <FloatButton tooltip="Bulk Upload" onClick={() => setModalType("bulk")}> 
+        <FloatButton tooltip="Bulk Upload" onClick={() => setModalType("bulk")}>
           Bulk
         </FloatButton>
       </FloatButton.Group>

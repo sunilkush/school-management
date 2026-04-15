@@ -81,7 +81,7 @@ const rootReducer = combineReducers({
   payment: paymentReducer,
   feeInstallment: feeInstallmentReducer,
   activity: activityReducer,
-  chapters: chapterReducer,
+  chapter: chapterReducer,
   boards: boardsReducer,
   boardClass: boardClassReducer,
   roleUi: roleUiReducer,

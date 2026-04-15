@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -12,17 +12,14 @@ import {
   Space,
   InputNumber,
   Switch,
-  Typography,
   message,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 
-import { getAllSubjects } from "../../../features/subjectSlice";
 import { getClassData } from "../../../features/schoolClassSlice";
 import { createQuestions } from "../../../features/questionSlice";
+import { fetchAllChapters } from "../../../features/chapterSlice";
 
-
-const { Title } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -30,59 +27,135 @@ const CreateQuestion = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-  const { subjects = [] } = useSelector((state) => state.subject);
-  const { schoolClasses } = useSelector((state) => state.schoolClass || {});
-
-  const {user} = useSelector((state) => state.auth || {});
+  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
+  const { chapters = [] } = useSelector((state) => state.chapter || {});
+  const { user = {} } = useSelector((state) => state.auth || {});
   const schoolId = user?.school?._id;
 
   const [options, setOptions] = useState([]);
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [questionType, setQuestionType] = useState("mcq_single");
-   const shortClass = [...schoolClasses]
-  .sort((a, b) => {
-    const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
-    const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
-    return numA - numB;
-  })
-  const shortsubjects = [...subjects]
-  .sort((a, b) => a.name.localeCompare(b.name))
+  const [selectedClassId, setSelectedClassId] = useState(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
 
   useEffect(() => {
-    dispatch(getAllSubjects({schoolId}));
-    dispatch(getClassData({schoolId}));
+    if (!schoolId) return;
+    dispatch(getClassData({ schoolId }));
+    dispatch(fetchAllChapters());
   }, [dispatch, schoolId]);
 
-  /* -------------------- HANDLERS -------------------- */
+  const shortClass = useMemo(() => {
+    return [...schoolClasses].sort((a, b) => {
+      const numA = parseInt(String(a?.name || "").replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(String(b?.name || "").replace(/\D/g, ""), 10) || 0;
+      return numA - numB;
+    });
+  }, [schoolClasses]);
 
-  const addOption = () =>
+  const selectedClassData = useMemo(() => {
+    if (!selectedClassId) return null;
+    return (
+      schoolClasses.find((cls) => String(cls?._id) === String(selectedClassId)) || null
+    );
+  }, [schoolClasses, selectedClassId]);
+
+  const selectedBoardClassId = useMemo(() => {
+    return selectedClassData?.boardClass?._id || null;
+  }, [selectedClassData]);
+
+  const subjectOptions = useMemo(() => {
+    if (!selectedClassData?.sections?.length) return [];
+
+    const subjects = selectedClassData.sections.flatMap((section) =>
+      (section?.subjects || []).map((subject) => ({
+        _id: subject?._id,
+        name: subject?.name,
+      }))
+    );
+
+    return Array.from(
+      new Map(
+        subjects
+          .filter((subject) => subject?._id && subject?.name)
+          .map((subject) => [String(subject._id), subject])
+      ).values()
+    );
+  }, [selectedClassData]);
+
+  const filteredChapters = useMemo(() => {
+    if (!selectedBoardClassId || !selectedSubjectId) return [];
+
+    return chapters.filter((chapter) => {
+      const chapterBoardClassId =
+        chapter?.boardClassId?._id || chapter?.boardClassId || null;
+      const chapterSubjectId =
+        chapter?.subjectId?._id || chapter?.subjectId || null;
+
+      return (
+        String(chapterBoardClassId) === String(selectedBoardClassId) &&
+        String(chapterSubjectId) === String(selectedSubjectId)
+      );
+    });
+  }, [chapters, selectedBoardClassId, selectedSubjectId]);
+
+  const addOption = () => {
     setOptions((prev) => [...prev, { key: "", text: "" }]);
+  };
 
-  const addCorrectAnswer = () =>
+  const addCorrectAnswer = () => {
     setCorrectAnswers((prev) => [...prev, ""]);
+  };
 
-  const onFinish = (values) => {
-    const payload = {
-      ...values,
-      schoolId,
-      options,
-      correctAnswers,
-      tags: values.tags
-        ? values.tags.split(",").map((t) => t.trim().toLowerCase())
-        : [],
-    };
+  const handleClassChange = (classId) => {
+    setSelectedClassId(classId || null);
+    setSelectedSubjectId(null);
 
-    dispatch(createQuestions(payload));
-    message.success("Question created successfully");
-    form.resetFields();
-    setOptions([]);
-    setCorrectAnswers([]);
+    form.setFieldsValue({
+      subjectId: undefined,
+      chapterId: undefined,
+    });
+  };
+
+  const handleSubjectChange = (subjectId) => {
+    setSelectedSubjectId(subjectId || null);
+
+    form.setFieldsValue({
+      chapterId: undefined,
+    });
+  };
+
+  const onFinish = async (values) => {
+    try {
+      const payload = {
+        ...values,
+        schoolId,
+        chapterId: values.chapterId || null,
+        options,
+        correctAnswers,
+        tags: values.tags
+          ? values.tags
+              .split(",")
+              .map((t) => t.trim().toLowerCase())
+              .filter(Boolean)
+          : [],
+      };
+
+      await dispatch(createQuestions(payload)).unwrap();
+      message.success("Question created successfully");
+
+      form.resetFields();
+      setOptions([]);
+      setCorrectAnswers([]);
+      setQuestionType("mcq_single");
+      setSelectedClassId(null);
+      setSelectedSubjectId(null);
+    } catch (error) {
+      message.error(error?.message || error || "Failed to create question");
+    }
   };
 
   return (
     <Card bordered={false} style={{ borderRadius: 12 }}>
-     
-
       <Form
         form={form}
         layout="vertical"
@@ -95,7 +168,6 @@ const CreateQuestion = () => {
         }}
         onFinish={onFinish}
       >
-        {/* 🔹 CLASS & SUBJECT */}
         <Divider orientation="left">Class & Subject</Divider>
 
         <Row gutter={16}>
@@ -103,9 +175,13 @@ const CreateQuestion = () => {
             <Form.Item
               name="schoolClassId"
               label="Class"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: "Please select class" }]}
             >
-              <Select placeholder="Select Class">
+              <Select
+                placeholder="Select Class"
+                onChange={handleClassChange}
+                allowClear
+              >
                 {shortClass.map((cls) => (
                   <Option key={cls._id} value={cls._id}>
                     {cls.name}
@@ -119,12 +195,17 @@ const CreateQuestion = () => {
             <Form.Item
               name="subjectId"
               label="Subject"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: "Please select subject" }]}
             >
-              <Select placeholder="Select Subject">
-                {shortsubjects.map((subj) => (
-                  <Option key={subj._id} value={subj._id}>
-                    {subj.name}
+              <Select
+                placeholder="Select Subject"
+                disabled={!selectedClassId}
+                allowClear
+                onChange={handleSubjectChange}
+              >
+                {subjectOptions.map((subject) => (
+                  <Option key={subject._id} value={subject._id}>
+                    {subject.name}
                   </Option>
                 ))}
               </Select>
@@ -132,13 +213,23 @@ const CreateQuestion = () => {
           </Col>
         </Row>
 
-        {/* 🔹 CHAPTER / TOPIC */}
         <Row gutter={16}>
           <Col md={12} xs={24}>
-            <Form.Item name="chapter" label="Chapter">
-              <Input placeholder="Chapter name" />
+            <Form.Item name="chapterId" label="Chapter">
+              <Select
+                placeholder="Select Chapter"
+                allowClear
+                disabled={!selectedClassId || !selectedSubjectId}
+              >
+                {filteredChapters.map((ch) => (
+                  <Option key={ch._id} value={ch._id}>
+                    {ch.chapterNo ? `${ch.chapterNo}. ${ch.name}` : ch.name}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
           </Col>
+
           <Col md={12} xs={24}>
             <Form.Item name="topic" label="Topic">
               <Input placeholder="Topic name" />
@@ -146,7 +237,6 @@ const CreateQuestion = () => {
           </Col>
         </Row>
 
-        {/* 🔹 QUESTION TYPE */}
         <Form.Item name="questionType" label="Question Type">
           <Select
             onChange={(val) => {
@@ -163,16 +253,14 @@ const CreateQuestion = () => {
           </Select>
         </Form.Item>
 
-        {/* 🔹 STATEMENT */}
         <Form.Item
           name="statement"
           label="Question Statement"
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: "Please enter question statement" }]}
         >
           <TextArea rows={4} placeholder="Enter question statement" />
         </Form.Item>
 
-        {/* 🔹 OPTIONS */}
         {(questionType === "mcq_single" ||
           questionType === "mcq_multi" ||
           questionType === "match") && (
@@ -219,7 +307,6 @@ const CreateQuestion = () => {
           </>
         )}
 
-        {/* 🔹 CORRECT ANSWERS */}
         <Divider orientation="left">Correct Answers</Divider>
 
         <Button type="dashed" onClick={addCorrectAnswer} block>
@@ -241,7 +328,6 @@ const CreateQuestion = () => {
           ))}
         </Space>
 
-        {/* 🔹 MARKS & DIFFICULTY */}
         <Divider orientation="left">Evaluation</Divider>
 
         <Row gutter={16}>
@@ -268,17 +354,14 @@ const CreateQuestion = () => {
           </Col>
         </Row>
 
-        {/* 🔹 TAGS */}
         <Form.Item name="tags" label="Tags (comma separated)">
           <Input placeholder="mcq, algebra, class-10" />
         </Form.Item>
 
-        {/* 🔹 STATUS */}
         <Form.Item name="isActive" label="Active" valuePropName="checked">
           <Switch />
         </Form.Item>
 
-        {/* 🔹 SUBMIT */}
         <Button type="primary" htmlType="submit" block size="large">
           Save Question
         </Button>

@@ -139,10 +139,11 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
     }
      const isClassTeacher = sec.classTeacherId?.toString() === teacherId.toString();
 
-    // subject filter
+   // subject filter (for subject-teacher role)
     const teacherSubjects = sec.subjects.filter(
       (s) => s.teacherId?.toString() === teacherId.toString()
     );
+    const sectionSubjects = isClassTeacher ? sec.subjects : teacherSubjects;
 
     // section add
     classMap[classId].sections.push({
@@ -150,7 +151,7 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
         _id: sec._id,
         name: sec.name,
       },
-      subjects: teacherSubjects.map((sub) => ({
+      subjects: sectionSubjects.map((sub) => ({
         subjectId: {
           _id: sub.subjectId?._id,
           name: sub.subjectId?.name,
@@ -165,7 +166,7 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
       classMap[classId].role.push("class_teacher");
     }
 
-    teacherSubjects.forEach((sub) => {
+    sectionSubjects.forEach((sub) => {
       classMap[classId].subjects.push({
         subjectId: {
           _id: sub.subjectId?._id,
@@ -179,10 +180,9 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
     // 🔥 remove duplicates
     classMap[classId].subjects = [
       ...new Map(
-        classMap[classId].subjects.map((s) => [
-          s.subjectId._id.toString(),
-          s,
-        ])
+        classMap[classId].subjects
+          .filter((s) => s?.subjectId?._id)
+          .map((s) => [s.subjectId._id.toString(), s])
       ).values(),
     ];
 
