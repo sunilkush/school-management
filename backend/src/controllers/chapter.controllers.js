@@ -3,7 +3,22 @@ import { Chapter } from "../models/Chapter.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+const chapterPopulate = [
+  { path: "boardClassId", populate: [{ path: "boardId", select: "name" }, { path: "classId", select: "name" }] },
+  { path: "subjectId", select: "name shortName" },
+];
 
+const formatChapter = (chapterDoc) => {
+  const chapter = chapterDoc?.toObject ? chapterDoc.toObject() : chapterDoc;
+  const boardClass = chapter?.boardClassId;
+
+  return {
+    ...chapter,
+    board: boardClass?.boardId || null,
+    class: boardClass?.classId || null,
+    subject: chapter?.subjectId || null,
+  };
+};
 const createChapter = asyncHandler(async (req, res) => {
   const {
     name,
@@ -33,7 +48,9 @@ const createChapter = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
   });
 
-  return res.status(201).json(new ApiResponse(201, chapter, "Chapter created successfully"));
+  const populatedChapter = await Chapter.findById(chapter._id).populate(chapterPopulate);
+
+  return res.status(201).json(new ApiResponse(201, formatChapter(populatedChapter), "Chapter created successfully"));
 });
 
 const getAllChapters = asyncHandler(async (req, res) => {
@@ -48,31 +65,33 @@ const getAllChapters = asyncHandler(async (req, res) => {
 
   const skip = (page - 1) * limit;
   const [chapters, total] = await Promise.all([
-    Chapter.find(filter).sort({ chapterNo: 1 }).skip(skip).limit(limit),
-    Chapter.countDocuments(filter),
+     Chapter.find(filter).sort({ chapterNo: 1 }).skip(skip).limit(limit).populate(chapterPopulate),
+      Chapter.countDocuments(filter),
   ]);
 
-  return res.status(200).json(new ApiResponse(200, chapters, "Chapters fetched successfully", { page, total, limit }));
+    return res
+    .status(200)
+    .json(new ApiResponse(200, chapters.map(formatChapter), "Chapters fetched successfully", { page, total, limit }));
 });
 
 const getChapterById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid chapter id");
 
-  const chapter = await Chapter.findById(id);
+   const chapter = await Chapter.findById(id).populate(chapterPopulate);
   if (!chapter) throw new ApiError(404, "Chapter not found");
 
-  return res.status(200).json(new ApiResponse(200, chapter, "Chapter fetched"));
+  return res.status(200).json(new ApiResponse(200, formatChapter(chapter), "Chapter fetched"));
 });
 
 const updateChapter = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid chapter id");
 
-  const chapter = await Chapter.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+  const chapter = await Chapter.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }).populate(chapterPopulate);
   if (!chapter) throw new ApiError(404, "Chapter not found");
 
-  return res.status(200).json(new ApiResponse(200, chapter, "Chapter updated"));
+  return res.status(200).json(new ApiResponse(200, formatChapter(chapter), "Chapter updated"));
 });
 
 const deleteChapter = asyncHandler(async (req, res) => {
@@ -92,13 +111,15 @@ const getVisibleChapters = asyncHandler(async (req, res) => {
 
   const filter = { isActive: true };
   const [chapters, total] = await Promise.all([
-    Chapter.find(filter).skip(skip).limit(limit).sort({ chapterNo: 1 }),
+    Chapter.find(filter).skip(skip).limit(limit).sort({ chapterNo: 1 }).populate(chapterPopulate),
     Chapter.countDocuments(filter),
   ]);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, chapters, "Visible chapters fetched successfully", { page, total, limit }));
+     .json(
+      new ApiResponse(200, chapters.map(formatChapter), "Visible chapters fetched successfully", { page, total, limit })
+    );
 });
 
 export { createChapter, getAllChapters, getChapterById, updateChapter, deleteChapter, getVisibleChapters };

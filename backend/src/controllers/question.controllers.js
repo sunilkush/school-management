@@ -104,21 +104,31 @@ export const createQuestion = asyncHandler(async (req, res) => {
 // =============================
 export const bulkCreateQuestionsFromExcel = asyncHandler(async (req, res) => {
   try {
-    if (!req.file)
-      return res.status(400).json(new ApiResponse(400, null, "Excel file required"));
-
-    const workbook = XLSX.readFile(req.file.path);
-    const sheetName = workbook.SheetNames[0];
-    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    if (!sheetData.length)
-      return res.status(400).json(new ApiResponse(400, null, "Excel sheet is empty"));
-
     const user = req.user;
+    let rows = [];
 
-    const questions = sheetData.map((row) => ({
+    if (req.file) {
+      const workbook = XLSX.readFile(req.file.path);
+      const sheetName = workbook.SheetNames[0];
+      rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    } else if (Array.isArray(req.body?.questions)) {
+      rows = req.body.questions;
+    } else {
+      return res.status(400).json(
+        new ApiResponse(400, null, "Provide excel file or questions array")
+      );
+    }
+
+    if (!rows.length) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, null, "Questions payload is empty"));
+    }
+
+    const questions = rows.map((row) => ({
       schoolId: user?.school?._id,
       subjectId: row.subjectId,
+      schoolClassId: row.schoolClassId,
       chapter: row.chapter || "",
       topic: row.topic || "",
       questionType: row.questionType || "mcq_single",
@@ -258,7 +268,7 @@ export const deleteQuestion = asyncHandler(async (req, res) => {
 
     if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
-    return res.status(200).json(new ApiResponse(200, null, "Question deleted successfully"));
+    return res.status(200).json(new ApiResponse(200, question, "Question deleted successfully"));
   } catch (error) {
     return res.status(500).json(new ApiResponse(500, null, error.message));
   }

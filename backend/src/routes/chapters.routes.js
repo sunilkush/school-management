@@ -19,14 +19,14 @@ router.post(
   "/",
   auth,
   roleMiddleware(ADMIN_ROLES),
-  validate({
+  /* validate({
     body: {
       name: { required: true, type: "string" },
       schoolClassId: { required: false, type: "objectId" },
       boardClassId: { required: false, type: "objectId" },
       subjectId: { required: true, type: "objectId" },
     },
-  }),
+  }), */
   createChapter
 );
 

@@ -29,9 +29,10 @@ export const bulkCreateQuestions = createAsyncThunk(
   "questions/bulkCreate",
   async (questions, { rejectWithValue }) => {
     try {
+      const payload = Array.isArray(questions) ? questions : questions?.questions || [];
       const res = await apiClient.post(
         `/questions/bulk`,
-        { questions },
+        { questions: payload },
         {
           headers: {
             "Content-Type": "application/json",
@@ -224,7 +225,8 @@ const questionSlice = createSlice({
       // --- Delete Question ---
       .addCase(deleteQuestion.fulfilled, (state, action) => {
         state.loading = false;
-        state.questions = state.questions.filter((q) => q._id !== action.payload._id);
+       const deletedId = action.payload?._id || action.meta.arg;
+        state.questions = state.questions.filter((q) => q._id !== deletedId);
       })
 
       // --- Toggle Status ---

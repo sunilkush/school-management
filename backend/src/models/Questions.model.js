@@ -24,13 +24,13 @@ const QuestionSchema = new Schema(
     boardId: { 
       type: Schema.Types.ObjectId,
        ref: "Board", 
-       required: true, 
+       required: false, 
        index: true 
       },
     academicYearId: { 
       type: Schema.Types.ObjectId, 
       ref: "AcademicYear", 
-      required: true, 
+      required: false, 
       index: true 
     },
     schoolId: {
@@ -57,14 +57,14 @@ const QuestionSchema = new Schema(
     chapterId: {
       type: Schema.Types.ObjectId,
       ref: "Chapter",
-      required: true,
+      required: false,
       index: true
     },
 
     topicId: {
       type: Schema.Types.ObjectId,
       ref: "Topic",
-      required: true,
+      required: false,
       index: true
     },
 

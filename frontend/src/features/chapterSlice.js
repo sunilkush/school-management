@@ -44,7 +44,8 @@ export const fetchChapterById = createAsyncThunk(
   "chapters/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/chapters/${id}`, {        withCredentials: true,
+      const res = await apiClient.get(`/chapters/${id}`, {        
+        withCredentials: true,
       });
       return res.data;
     } catch (error) {
@@ -157,8 +158,8 @@ const chapterSlice = createSlice({
       })
       .addCase(fetchVisibleChapters.fulfilled, (state, action) => {
         state.loading = false;
-        state.chapters = action.payload?.data?.data || [];
-        state.pagination = action.payload?.data?.pagination || {};
+         state.chapters = action.payload?.data || [];
+        state.pagination = action.payload?.meta || {};
       })
       .addCase(fetchVisibleChapters.rejected, (state, action) => {
         state.loading = false;
@@ -167,8 +168,8 @@ const chapterSlice = createSlice({
 
       /* ================= FETCH ALL ================= */
       .addCase(fetchAllChapters.fulfilled, (state, action) => {
-        state.chapters = action.payload?.data?.data || [];
-        state.pagination = action.payload?.data?.pagination || {};
+        state.chapters = action.payload?.data || [];
+        state.pagination = action.payload?.meta || {};
       })
 
       /* ================= FETCH BY ID ================= */
