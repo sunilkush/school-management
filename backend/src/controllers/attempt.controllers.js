@@ -41,14 +41,33 @@ export const startAttempt = asyncHandler(async (req, res) => {
 
   const exam = await Exam.findById(examId).populate("questions.questionId");
   if (!exam) throw new ApiError(404, "Exam not found");
+  if (exam.status !== "published") throw new ApiError(400, "This exam is not published yet");
+
+  const now = new Date();
+  if (exam.startTime && now < exam.startTime) {
+    throw new ApiError(400, "Exam has not started yet");
+  }
+  if (exam.endTime && now > exam.endTime) {
+    throw new ApiError(400, "Exam window is closed");
+  }
 
   const existing = await Attempt.findOne({ examId, studentId, status: "in_progress" });
   if (existing) throw new ApiError(400, "You already have an active attempt");
 
+  const maxAttempts = Number(exam?.settings?.maxAttempts || 1);
+  const usedAttempts = await Attempt.countDocuments({
+    examId,
+    studentId,
+    status: { $in: ["submitted", "evaluated"] },
+  });
+  if (usedAttempts >= maxAttempts) {
+    throw new ApiError(400, "Maximum attempts reached for this exam");
+  }
+
   const answers = exam.questions.map((q) => ({
-    questionRef: q.questionId._id,
-    snapshot: q.questionId.toObject(),
-    answer: null,
+    questionId: q.questionId?._id,
+    questionSnapshot: q.questionId?.toObject?.(),
+    response: null,
     marksObtained: 0,
     isCorrect: null,
     flagged: false,
@@ -76,20 +95,25 @@ export const submitAttempt = asyncHandler(async (req, res) => {
   if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt already submitted");
 
   attempt.answers = attempt.answers.map((ans) => {
-    const submitted = answers.find((a) => a.questionRef === ans.questionRef.toString());
+    const questionId = ans.questionId?.toString?.();
+    const submitted = answers.find((a) => {
+      const submittedQuestionId = a.questionRef || a.questionId;
+      return `${submittedQuestionId}` === `${questionId}`;
+    });
     if (!submitted) return ans;
 
-    ans.answer = submitted.answer;
+    ans.response = submitted.answer ?? submitted.response ?? null;
     ans.flagged = submitted.flagged ?? ans.flagged;
 
-    const qType = ans.snapshot.questionType;
+    const snapshot = ans.questionSnapshot || ans.snapshot || {};
+    const qType = snapshot.questionType;
     if (["mcq_single", "mcq_multi", "true_false"].includes(qType)) {
-      const correct = Array.isArray(ans.snapshot.correctAnswers)
-        ? [...ans.snapshot.correctAnswers].sort().toString()
-        : ans.snapshot.correctAnswers;
-      const userAns = Array.isArray(ans.answer) ? [...ans.answer].sort().toString() : ans.answer;
+      const correct = Array.isArray(snapshot.correctAnswers)
+        ? [...snapshot.correctAnswers].sort().toString()
+        : snapshot.correctAnswers;
+      const userAns = Array.isArray(ans.response) ? [...ans.response].sort().toString() : ans.response;
       ans.isCorrect = correct === userAns;
-      ans.marksObtained = ans.isCorrect ? ans.snapshot.marks : -(ans.snapshot.negativeMarks || 0);
+      ans.marksObtained = ans.isCorrect ? snapshot.marks : -(snapshot.negativeMarks || 0);
     }
 
     return ans;
@@ -112,7 +136,11 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
   attempt.answers = attempt.answers.map((ans) => {
-    const evalData = evaluations.find((e) => e.questionRef === ans.questionRef.toString());
+    const questionId = ans.questionId?.toString?.() || ans.questionRef?.toString?.();
+    const evalData = evaluations.find((e) => {
+      const evaluationQuestionId = e.questionRef || e.questionId;
+      return `${evaluationQuestionId}` === `${questionId}`;
+    });
     if (!evalData) return ans;
 
     ans.marksObtained = evalData.marksObtained ?? ans.marksObtained;
@@ -133,7 +161,7 @@ export const getAttemptById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   assertObjectId(id, "id");
 
-  const attempt = await Attempt.findById(id).populate("examId studentId answers.questionRef");
+  const attempt = await Attempt.findById(id).populate("examId studentId answers.questionId");
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
   await enforceAttemptReadAccess(attempt, req);
@@ -168,7 +196,7 @@ export const getAttempts = asyncHandler(async (req, res) => {
 
   const [attempts, total] = await Promise.all([
     Attempt.find(filters)
-      .populate("examId studentId answers.questionRef")
+      .populate("examId studentId answers.questionId")
       .skip(skip)
       .limit(parseInt(limit, 10))
       .sort(sort),
