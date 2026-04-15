@@ -34,7 +34,7 @@ const QuestionBank = () => {
   );
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
   const { user } = useSelector((state) => state.auth || {});
-  const schoolId = user?.school?._id;
+  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
 
   const [modalType, setModalType] = useState(null);
   const [deletingId, setDeletingId] = useState(null);

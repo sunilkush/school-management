@@ -9,8 +9,8 @@ import mongoose from "mongoose";
 // =============================
 export const createQuestion = asyncHandler(async (req, res) => {
   const user = req.user;
-  console.log("User creating question:", user);
-  if (!user || !user.schoolId?._id) {
+  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+  if (!user || !schoolId) {
     return res
       .status(401)
       .json(new ApiResponse(401, null, "Unauthorized user"));
@@ -19,6 +19,7 @@ export const createQuestion = asyncHandler(async (req, res) => {
   const {
     schoolClassId,
     subjectId,
+    chapterId,
     chapter,
     topic,
     questionType,
@@ -56,10 +57,10 @@ export const createQuestion = asyncHandler(async (req, res) => {
   }
 
   const payload = {
-    schoolId: user.schoolId._id,
+    schoolId,
     schoolClassId,
     subjectId,
-    chapter,
+    chapterId: chapterId || chapter || null,
     topic,
     questionType,
     statement,
@@ -105,6 +106,10 @@ export const createQuestion = asyncHandler(async (req, res) => {
 export const bulkCreateQuestionsFromExcel = asyncHandler(async (req, res) => {
   try {
     const user = req.user;
+    const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+    if (!schoolId) {
+      return res.status(401).json(new ApiResponse(401, null, "Unauthorized user"));
+    }
     let rows = [];
 
     if (req.file) {
@@ -126,10 +131,10 @@ export const bulkCreateQuestionsFromExcel = asyncHandler(async (req, res) => {
     }
 
     const questions = rows.map((row) => ({
-      schoolId: user?.school?._id,
+      schoolId,
       subjectId: row.subjectId,
       schoolClassId: row.schoolClassId,
-      chapter: row.chapter || "",
+      chapterId: row.chapterId || row.chapter || null,
       topic: row.topic || "",
       questionType: row.questionType || "mcq_single",
       statement: row.statement,
@@ -175,8 +180,8 @@ export const getQuestions = asyncHandler(async (req, res) => {
     const filters = {};
 
     // Multi-tenant
-    if (user.role !== "Super Admin") {
-      filters.schoolId = user.schoolId;
+    if (user?.roleId?.name !== "Super Admin") {
+      filters.schoolId = user?.schoolId?._id || user?.schoolId;
     } else if (req.query.schoolId) {
       filters.schoolId = req.query.schoolId;
     }
@@ -227,6 +232,12 @@ export const getQuestionById = asyncHandler(async (req, res) => {
 
     const question = await Question.findById(id).populate("subjectId schoolId schoolClassId chapterId createdBy", "name");
     if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
+    if (req.user?.roleId?.name !== "Super Admin") {
+      const requesterSchoolId = req.user?.schoolId?._id || req.user?.schoolId;
+      if (`${question.schoolId?._id || question.schoolId}` !== `${requesterSchoolId}`) {
+        return res.status(403).json(new ApiResponse(403, null, "Forbidden"));
+      }
+    }
 
     return res.status(200).json(new ApiResponse(200, question, "Question fetched successfully"));
   } catch (error) {
@@ -240,13 +251,19 @@ export const getQuestionById = asyncHandler(async (req, res) => {
 export const updateQuestion = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    const existing = await Question.findById(id).select("schoolId");
+    if (!existing) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
+    if (req.user?.roleId?.name !== "Super Admin") {
+      const requesterSchoolId = req.user?.schoolId?._id || req.user?.schoolId;
+      if (`${existing.schoolId}` !== `${requesterSchoolId}`) {
+        return res.status(403).json(new ApiResponse(403, null, "Forbidden"));
+      }
+    }
 
     const question = await Question.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
-
-    if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
     return res.status(200).json(new ApiResponse(200, question, "Question updated successfully"));
   } catch (error) {
@@ -264,9 +281,15 @@ export const updateQuestion = asyncHandler(async (req, res) => {
 export const deleteQuestion = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+    const existing = await Question.findById(id).select("schoolId");
+    if (!existing) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
+    if (req.user?.roleId?.name !== "Super Admin") {
+      const requesterSchoolId = req.user?.schoolId?._id || req.user?.schoolId;
+      if (`${existing.schoolId}` !== `${requesterSchoolId}`) {
+        return res.status(403).json(new ApiResponse(403, null, "Forbidden"));
+      }
+    }
     const question = await Question.findByIdAndDelete(id);
-
-    if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
 
     return res.status(200).json(new ApiResponse(200, question, "Question deleted successfully"));
   } catch (error) {
@@ -283,6 +306,12 @@ export const toggleQuestionStatus = asyncHandler(async (req, res) => {
     const question = await Question.findById(id);
 
     if (!question) return res.status(404).json(new ApiResponse(404, null, "Question not found"));
+    if (req.user?.roleId?.name !== "Super Admin") {
+      const requesterSchoolId = req.user?.schoolId?._id || req.user?.schoolId;
+      if (`${question.schoolId}` !== `${requesterSchoolId}`) {
+        return res.status(403).json(new ApiResponse(403, null, "Forbidden"));
+      }
+    }
 
     question.isActive = !question.isActive;
     await question.save();

@@ -44,7 +44,7 @@ const TeacherExamsPage = () => {
   const [examFilter, setExamFilter] = useState("all");
 
   const selectedExam = useMemo(() => exams.find((exam) => exam._id === selectedExamId), [exams, selectedExamId]);
-  const schoolId = user?.school?._id;
+  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
   const academicYearId = selectedAcademicYear?._id;
 
   useEffect(() => {
