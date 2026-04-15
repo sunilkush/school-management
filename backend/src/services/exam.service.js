@@ -68,9 +68,15 @@ const resolveScope = async ({ user, studentId }) => {
     const query = { $or: [{ fatherId: user._id }, { motherId: user._id }, { guardianId: user._id }] };
     if (studentId) query.userId = new OBJECT_ID(studentId);
 
-    const child = await Student.findOne(query).select("userId").lean();
+    const child = await Student.findOne(query)
+      .populate({ path: "userId", select: "schoolId" })
+      .select("userId")
+      .lean();
     if (!child) throw new ApiError(404, "Child not found for this parent");
-    return { studentId: child.userId };
+    if (`${child.userId?.schoolId}` !== `${user.schoolId}`) {
+      throw new ApiError(403, "Forbidden to access child outside your school");
+    }
+    return { studentId: child.userId?._id || child.userId };
   }
 
   if (!studentId) throw new ApiError(400, "studentId is required");
@@ -127,10 +133,13 @@ export const getExamsService = async ({ query, user }) => {
   }
 
   if (user.roleId?.name === "Student") {
-    const enrollment = await StudentEnrollment.findOne({ studentId: user._id, status: "Active" })
+    const student = await Student.findOne({ userId: user._id }).select("_id").lean();
+    const enrollment = student
+      ? await StudentEnrollment.findOne({ studentId: student._id, status: "Active" })
       .sort({ createdAt: -1 })
       .select("schoolClassId sectionId")
-      .lean();
+      .lean()
+      : null;
 
     if (enrollment) {
       filters.schoolClassId = enrollment.schoolClassId;
@@ -191,8 +200,37 @@ export const enterMarksBulkService = async ({ body, user }) => {
     throw new ApiError(400, "examId and non-empty marks array are required");
   }
 
-  const exam = await Exam.findById(examId).select("schoolId academicYearId subjectId").lean();
+  const exam = await Exam.findById(examId)
+    .select("schoolId academicYearId subjectId schoolClassId sectionId")
+    .lean();
   if (!exam) throw new ApiError(404, "Exam not found");
+  if (user.roleId?.name !== "Super Admin" && `${exam.schoolId}` !== `${user.schoolId}`) {
+    throw new ApiError(403, "Forbidden for this school exam");
+  }
+
+  const studentUserIds = [...new Set(marks.map((entry) => `${entry.studentId}`))];
+  const students = await Student.find({ userId: { $in: studentUserIds } }).select("_id userId").lean();
+  const userToStudent = new Map(students.map((row) => [`${row.userId}`, `${row._id}`]));
+  const studentObjectIds = students.map((row) => row._id);
+
+  const enrollments = await StudentEnrollment.find({
+    studentId: { $in: studentObjectIds },
+    schoolId: exam.schoolId,
+    academicYearId: exam.academicYearId,
+    schoolClassId: exam.schoolClassId,
+    ...(exam.sectionId ? { sectionId: exam.sectionId } : {}),
+    status: "Active",
+  })
+    .select("studentId")
+    .lean();
+  const allowedStudentIds = new Set(enrollments.map((row) => `${row.studentId}`));
+
+  for (const entry of marks) {
+    const mappedStudentId = userToStudent.get(`${entry.studentId}`);
+    if (!mappedStudentId || !allowedStudentIds.has(mappedStudentId)) {
+      throw new ApiError(400, `Student ${entry.studentId} is not enrolled in this exam's class/section`);
+    }
+  }
 
   const bulkOps = marks.map((entry) => ({
     updateOne: {

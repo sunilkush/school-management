@@ -4,15 +4,27 @@ import { Exam } from "../models/Exam.model.js";
 import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
+import { Student } from "../models/student.model.js";
 
 const assertObjectId = (id, label) => {
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, `Invalid ${label}`);
 };
 
-const enforceAttemptReadAccess = (attempt, req) => {
+const enforceAttemptReadAccess = async (attempt, req) => {
   const role = req.userRole?.name;
   const isPrivileged = ["Super Admin", "School Admin", "Teacher"].includes(role);
   if (isPrivileged) return;
+
+  if (role === "Parent") {
+    const child = await Student.findOne({
+      userId: attempt.studentId,
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    })
+      .select("_id")
+      .lean();
+    if (!child) throw new ApiError(403, "Forbidden access to this attempt");
+    return;
+  }
 
   if (attempt.studentId?.toString() !== req.user._id.toString()) {
     throw new ApiError(403, "Forbidden access to this attempt");
@@ -124,7 +136,7 @@ export const getAttemptById = asyncHandler(async (req, res) => {
   const attempt = await Attempt.findById(id).populate("examId studentId answers.questionRef");
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
-  enforceAttemptReadAccess(attempt, req);
+  await enforceAttemptReadAccess(attempt, req);
 
   return sendSuccess(res, { message: "Attempt fetched successfully", data: attempt });
 });
@@ -137,8 +149,19 @@ export const getAttempts = asyncHandler(async (req, res) => {
   if (examId) filters.examId = examId;
   if (status) filters.status = status;
 
-  if (["Student", "Parent"].includes(req.userRole?.name)) {
+  if (req.userRole?.name === "Student") {
     filters.studentId = req.user._id;
+  }
+  if (req.userRole?.name === "Parent") {
+    const childQuery = {
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    };
+    if (studentId) childQuery.userId = studentId;
+    const child = await Student.findOne(childQuery).select("userId").populate("userId", "schoolId").lean();
+    if (!child || `${child.userId?.schoolId}` !== `${req.user.schoolId}`) {
+      throw new ApiError(403, "Forbidden child scope");
+    }
+    filters.studentId = child.userId?._id || child.userId;
   }
 
   const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);

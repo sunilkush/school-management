@@ -1,6 +1,8 @@
 // services/grading.service.js
 import { Attempt } from "../models/ExamAttempts.model.js";
 import { Question } from "../models/Questions.model.js";
+import { Exam } from "../models/Exam.model.js";
+import { ApiError } from "./ApiError.js";
 
 /**
  * Auto-grade objective (MCQ/True-False) questions
@@ -86,10 +88,16 @@ export const generateGradingReport = async ({ examId, schoolId, type } = {}) => 
   const filter = {};
 
   if (examId) {
+    const exam = await Exam.findById(examId).select("schoolId").lean();
+    if (!exam) throw new ApiError(404, "Exam not found");
+    if (schoolId && `${exam.schoolId}` !== `${schoolId}`) {
+      throw new ApiError(403, "Exam does not belong to requested school");
+    }
     filter.examId = examId;
+    filter.schoolId = exam.schoolId;
   }
 
-  if (schoolId) {
+  if (schoolId && !filter.schoolId) {
     filter.schoolId = schoolId;
   }
 
@@ -131,5 +139,5 @@ export const generateGradingReport = async ({ examId, schoolId, type } = {}) => 
     reports = reports.filter((report) => report.status === "Fail");
   }
 
-  return reports
+  return reports;
 }
