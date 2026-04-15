@@ -1,68 +1,149 @@
-import React, { useState } from "react";
-import { Layout, Typography, Button, Space, Affix, Card } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Button, Card, Col, Empty, Row, Space, Tag, Typography, message } from "antd";
 
 import QuestionCard from "./components/QuestionCard";
 import ExamTimer from "./components/ExamTimer";
 import AutosaveIndicator from "./components/AutosaveIndicator";
+import { getAttemptById, submitAttempt } from "../../../features/attemptSlice";
 
-const { Content } = Layout;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
-const ExamLive = ({ questions, duration }) => {
+const resolveQuestionId = (question) => question?.questionRef?._id || question?.questionRef || question?.questionId;
+
+const normalizeQuestion = (answerItem) => {
+  const snapshot = answerItem?.snapshot || answerItem?.questionSnapshot || answerItem?.questionRef || {};
+  return {
+    ...answerItem,
+    _id: resolveQuestionId(answerItem),
+    text: snapshot?.statement || snapshot?.questionText || snapshot?.title || "Untitled Question",
+    type: snapshot?.questionType || snapshot?.type || "subjective",
+    options: snapshot?.options || [],
+    marks: snapshot?.marks ?? 0,
+  };
+};
+
+const ExamLive = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const attemptId = useMemo(() => new URLSearchParams(location.search).get("attemptId"), [location.search]);
+  const { currentAttempt, loading } = useSelector((state) => state.attempts || {});
+
   const [answers, setAnswers] = useState({});
   const [autosaveStatus, setAutosaveStatus] = useState("idle");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!attemptId) return;
+    dispatch(getAttemptById(attemptId));
+  }, [attemptId, dispatch]);
+
+  useEffect(() => {
+    if (!currentAttempt?.answers?.length) return;
+
+    const mapped = currentAttempt.answers.reduce((acc, answerRow) => {
+      const key = resolveQuestionId(answerRow);
+      if (!key) return acc;
+      acc[key] = answerRow.answer ?? answerRow.response ?? null;
+      return acc;
+    }, {});
+
+    setAnswers(mapped);
+  }, [currentAttempt]);
+
+  const questions = useMemo(() => {
+    if (!currentAttempt?.answers?.length) return [];
+    return currentAttempt.answers.map(normalizeQuestion);
+  }, [currentAttempt]);
 
   const handleAnswerChange = (qid, answer) => {
     setAnswers((prev) => ({ ...prev, [qid]: answer }));
     setAutosaveStatus("saving");
 
-    // simulate autosave
-    setTimeout(() => setAutosaveStatus("saved"), 1000);
+    setTimeout(() => setAutosaveStatus("saved"), 400);
   };
 
-  const handleSubmit = () => {
-    console.log("Submitted:", answers);
+  const buildSubmitPayload = () => {
+    return questions.map((question) => ({
+      questionRef: `${question._id}`,
+      answer: answers[question._id] ?? null,
+      flagged: false,
+    }));
   };
+
+  const handleSubmit = async () => {
+    if (!attemptId) {
+      message.error("Attempt ID missing");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const payload = buildSubmitPayload();
+      await dispatch(submitAttempt({ attemptId, answers: payload })).unwrap();
+      message.success("Exam submitted successfully");
+      navigate(`/dashboard/student/exams/attempt-review?attemptId=${attemptId}`);
+    } catch (error) {
+      message.error(error || "Submission failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!attemptId) {
+    return <Empty description="No attempt selected. Start exam from Exam Hub." />;
+  }
 
   return (
-    <Layout>
-      {/* Timer Fixed Top Right */}
-      <Affix offsetTop={16} style={{ position: "absolute", right: 24 }}>
-        <ExamTimer
-          duration={duration * 60}
-          onTimeUp={handleSubmit}
-        />
-      </Affix>
+    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+      <Card loading={loading}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} md={16}>
+            <Space direction="vertical" size={4}>
+              <Title level={4} style={{ marginBottom: 0 }}>Live Exam</Title>
+              <Text type="secondary">Attempt ID: {attemptId}</Text>
+              <Tag color="blue">Status: {currentAttempt?.status || "in_progress"}</Tag>
+            </Space>
+          </Col>
+          <Col xs={24} md={8}>
+            <ExamTimer duration={(currentAttempt?.examId?.durationMinutes || 30) * 60} onTimeUp={handleSubmit} />
+          </Col>
+        </Row>
+      </Card>
 
-      <Content style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-        <Title level={3}>🚀 Exam Live</Title>
-
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          {questions?.map((q, i) => (
+      {!questions.length ? (
+        <Card loading={loading}>
+          <Empty description="No question snapshot available in this attempt" />
+        </Card>
+      ) : (
+        <>
+          {questions.map((question, i) => (
             <QuestionCard
-              key={q._id}
+              key={question._id}
               index={i}
-              question={q}
-              userAnswer={answers[q._id]}
+              question={question}
+              userAnswer={answers[question._id]}
               onAnswerChange={handleAnswerChange}
             />
           ))}
 
           <Card>
-            <AutosaveIndicator status={autosaveStatus} />
+            <Row justify="space-between" align="middle" gutter={[12, 12]}>
+              <Col xs={24} md={12}>
+                <AutosaveIndicator status={autosaveStatus} />
+              </Col>
+              <Col xs={24} md={12}>
+                <Button type="primary" size="large" onClick={handleSubmit} block loading={submitting}>
+                  Submit Exam
+                </Button>
+              </Col>
+            </Row>
           </Card>
-
-          <Button
-            type="primary"
-            size="large"
-            onClick={handleSubmit}
-            block
-          >
-            Submit Exam
-          </Button>
-        </Space>
-      </Content>
-    </Layout>
+        </>
+      )}
+    </Space>
   );
 };
 
