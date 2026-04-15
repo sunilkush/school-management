@@ -262,177 +262,18 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
 });
 // ✅ Get Students (with aggregation)
 export const getStudentsByRole = asyncHandler(async (req, res) => {
-  const user = req.user;
-  const { schoolClassId, page = 1, limit = 10 } = req.query;
-  const academicYearId = req.academicYearId;
-
-  const schoolId = user?.schoolId || user?.school?._id;
- 
-  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
-    throw new ApiError(400, "Valid academic year is required!");
+  const { schoolId, academicYearId, schoolClassId } = req.query;
+  if (!schoolId || !academicYearId) {
+    throw new ApiError(400, "schoolId and academicYearId are required");
   }
 
-  const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
-  const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
-  const skip = (pageNumber - 1) * limitNumber;
-
-  if (!schoolClassId || !mongoose.Types.ObjectId.isValid(schoolClassId)) {
-    throw new ApiError(400, "Valid schoolClassId is required!");
-  }
-
-  const match = {
-    academicYearId: new mongoose.Types.ObjectId(academicYearId),
-    schoolClassId: new mongoose.Types.ObjectId(schoolClassId),
-  };
-
-  if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
-    match.schoolId = new mongoose.Types.ObjectId(schoolId);
-  }
-
-  const result = await StudentEnrollment.aggregate([
-    { $match: match },
-
-    // student
-    {
-      $lookup: {
-        from: "students",
-        localField: "studentId",
-        foreignField: "_id",
-        as: "student",
-      },
-    },
-    { $unwind: { path: "$student", preserveNullAndEmptyArrays: true } },
-
-    // user
-    {
-      $lookup: {
-        from: "users",
-        localField: "student.userId",
-        foreignField: "_id",
-        as: "user",
-      },
-    },
-    { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-
-    // schoolClass
-    {
-      $lookup: {
-        from: "schoolclasses", // check collection name in DB
-        localField: "schoolClassId",
-        foreignField: "_id",
-        as: "schoolClass",
-      },
-    },
-    { $unwind: { path: "$schoolClass", preserveNullAndEmptyArrays: true } },
-
-    // section
-    {
-      $lookup: {
-        from: "sections",
-        localField: "sectionId",
-        foreignField: "_id",
-        as: "section",
-      },
-    },
-    { $unwind: { path: "$section", preserveNullAndEmptyArrays: true } },
-
-    // school
-    {
-      $lookup: {
-        from: "schools",
-        localField: "schoolId",
-        foreignField: "_id",
-        as: "school",
-      },
-    },
-    { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
-
-    // academic year
-    {
-      $lookup: {
-        from: "academicyears", // check collection name in DB
-        localField: "academicYearId",
-        foreignField: "_id",
-        as: "academicYear",
-      },
-    },
-    { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
-
-    {
-      $project: {
-        _id: 1,
-        registrationNumber: 1,
-        feeDiscount: { $ifNull: ["$feeDiscount", 0] },
-        smsMobile: 1,
-        mobileNumber: 1,
-        status: 1,
-        admissionDate: 1,
-        createdAt: 1,
-        updatedAt: 1,
-
-        school: {
-          _id: "$school._id",
-          name: "$school.name",
-        },
-
-        academicYear: {
-          _id: "$academicYear._id",
-          name: "$academicYear.name",
-          isActive: "$academicYear.isActive",
-        },
-
-        student: {
-          _id: "$student._id",
-          dateOfBirth: "$student.dateOfBirth",
-          gender: "$student.gender",
-          bloodGroup: "$student.bloodGroup",
-          address: "$student.address",
-        },
-
-        schoolClass: {
-          _id: "$schoolClass._id",
-          name: "$schoolClass.name",
-        },
-
-        section: {
-          _id: "$section._id",
-          name: "$section.name",
-        },
-
-        user: {
-          _id: "$user._id",
-          name: "$user.name",
-          email: "$user.email",
-          avatar: "$user.avatar",
-          isActive: "$user.isActive",
-        },
-      },
-    },
-
-    { $sort: { createdAt: -1 } },
-    { $skip: skip },
-    { $limit: limitNumber },
-  ]);
-
-  const total = await StudentEnrollment.countDocuments(match);
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
+    const result = await Student.find({ schoolId,academicYearId })
+    
+    return res.status(200).json(
+      new ApiResponse(200, {
         students: result,
-        pagination: {
-          total,
-          page: pageNumber,
-          limit: limitNumber,
-          totalPages: Math.ceil(total / limitNumber),
-        },
-      },
-      "Students fetched successfully"
-    )
-  );
+      }, "Students Retrieved Successfully"));
 });
-
 export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
   const { schoolClassId, page = 1, limit = 10 } = req.query;
   const academicYearId = req.academicYearId;
@@ -453,7 +294,7 @@ export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
     match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   }
 
-  const result = await StudentEnrollment.aggregate([
+  const result = await Student.aggregate([
     { $match: match },
 
     {
