@@ -41,7 +41,10 @@ export const startAttempt = asyncHandler(async (req, res) => {
     flagged: false,
   }));
 
-  const attempt = await Attempt.create({ examId, studentId, answers });
+  const schoolId = exam.schoolId || req.user?.schoolId || req.user?.school?._id;
+  if (!schoolId) throw new ApiError(400, "schoolId could not be resolved for this attempt");
+
+  const attempt = await Attempt.create({ examId, studentId, schoolId, answers });
 
   return sendSuccess(res, {
     statusCode: 201,
