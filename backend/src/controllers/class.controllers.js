@@ -138,12 +138,24 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
       };
     }
      const isClassTeacher = sec.classTeacherId?.toString() === teacherId.toString();
+
+    // subject filter
+    const teacherSubjects = sec.subjects.filter(
+      (s) => s.teacherId?.toString() === teacherId.toString()
+    );
+
     // section add
     classMap[classId].sections.push({
       sectionId: {
         _id: sec._id,
         name: sec.name,
       },
+      subjects: teacherSubjects.map((sub) => ({
+        subjectId: {
+          _id: sub.subjectId?._id,
+          name: sub.subjectId?.name,
+        },
+      })),
        isClassTeacher,
       studentCount: sec.StudentEnrollmentId?.length || 0,
     });
@@ -152,11 +164,6 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
     if (isClassTeacher) {
       classMap[classId].role.push("class_teacher");
     }
-
-    // subject filter
-    const teacherSubjects = sec.subjects.filter(
-      (s) => s.teacherId?.toString() === teacherId.toString()
-    );
 
     teacherSubjects.forEach((sub) => {
       classMap[classId].subjects.push({
