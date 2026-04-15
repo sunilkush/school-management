@@ -19,8 +19,11 @@ export const getExamReport = asyncHandler(async (req, res) => {
   if (!exam) {
     return res.status(404).json(new ApiResponse(404, null, "Exam not found"));
   }
+  if (req.userRole?.name !== "Super Admin" && `${exam.schoolId}` !== `${req.user.schoolId}`) {
+    return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school exam"));
+  }
 
-    const attempts = await Attempt.find({ examId }).populate("studentId", "name email");
+  const attempts = await Attempt.find({ examId, schoolId: exam.schoolId }).populate("studentId", "name email");
 
   return res.status(200).json(
     new ApiResponse(200, { exam, attempts }, "Exam report fetched successfully")
@@ -40,8 +43,14 @@ export const getStudentReport = asyncHandler(async (req, res) => {
   if (!student) {
     return res.status(404).json(new ApiResponse(404, null, "Student not found"));
   }
+  if (req.userRole?.name !== "Super Admin" && `${student.schoolId}` !== `${req.user.schoolId}`) {
+    return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school student"));
+  }
 
-  const attempts = await Attempt.find({ studentId }).populate("examId", "title subjectId");
+  const attempts = await Attempt.find({ studentId, schoolId: student.schoolId }).populate(
+    "examId",
+    "title subjectId"
+  );
 
   return res.status(200).json(
     new ApiResponse(200, { student, attempts }, "Student report fetched successfully")
@@ -57,7 +66,15 @@ export const getPerformanceSummary = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, "Exam ID is required"));
   }
 
-  const attempts = await Attempt.find({ examId });
+  const exam = await Exam.findById(examId).select("schoolId");
+  if (!exam) {
+    return res.status(404).json(new ApiResponse(404, null, "Exam not found"));
+  }
+  if (req.userRole?.name !== "Super Admin" && `${exam.schoolId}` !== `${req.user.schoolId}`) {
+    return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school exam"));
+  }
+
+  const attempts = await Attempt.find({ examId, schoolId: exam.schoolId });
   if (!attempts.length) {
     return res.status(404).json(new ApiResponse(404, null, "No attempts found for this exam"));
   }
@@ -82,8 +99,9 @@ export const getPerformanceSummary = asyncHandler(async (req, res) => {
 // Get Reports (JSON)
 // =========================
 export const getReports = asyncHandler(async (req, res) => {
-  const { examId, schoolId, type } = req.query;
-  const reportData = await generateGradingReport({ examId, schoolId, type });
+  const { examId, type } = req.query;
+  const enforcedSchoolId = req.userRole?.name === "Super Admin" ? req.query.schoolId : req.user.schoolId;
+  const reportData = await generateGradingReport({ examId, schoolId: enforcedSchoolId, type });
   return res.status(200).json(new ApiResponse(200, reportData, "Reports generated successfully"));
 });
 
@@ -91,8 +109,9 @@ export const getReports = asyncHandler(async (req, res) => {
 // Export to Excel
 // =========================
 export const exportReportsExcel = asyncHandler(async (req, res) => {
-  const { examId, schoolId, type } = req.query;
-  const reportData = await generateGradingReport({ examId, schoolId, type });
+  const { examId, type } = req.query;
+  const enforcedSchoolId = req.userRole?.name === "Super Admin" ? req.query.schoolId : req.user.schoolId;
+  const reportData = await generateGradingReport({ examId, schoolId: enforcedSchoolId, type });
   const fileBuffer = await exportToExcel(reportData);
 
   res.setHeader("Content-Disposition", "attachment; filename=exam_report.xlsx");
@@ -108,8 +127,9 @@ export const exportReportsExcel = asyncHandler(async (req, res) => {
 // Export to PDF
 // =========================
 export const exportReportsPDF = asyncHandler(async (req, res) => {
-  const { examId, schoolId, type } = req.query;
-  const reportData = await generateGradingReport({ examId, schoolId, type });
+  const { examId, type } = req.query;
+  const enforcedSchoolId = req.userRole?.name === "Super Admin" ? req.query.schoolId : req.user.schoolId;
+  const reportData = await generateGradingReport({ examId, schoolId: enforcedSchoolId, type });
   const fileBuffer = await exportToPDF(reportData);
 
   res.setHeader("Content-Disposition", "attachment; filename=exam_report.pdf");
