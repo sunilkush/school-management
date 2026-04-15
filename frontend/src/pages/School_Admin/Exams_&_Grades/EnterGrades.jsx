@@ -221,8 +221,8 @@ const EnterGrades = () => {
       }
 
       setGradeConfig(normalizeGradeConfig(parsed));
-    } catch (error) {
-      setGradeConfig(DEFAULT_GRADE_CONFIG,error);
+    } catch {
+      setGradeConfig(DEFAULT_GRADE_CONFIG);
     }
   }, [gradeConfigStorageKey]);
 
@@ -283,7 +283,7 @@ const EnterGrades = () => {
 
   const tableData = useMemo(() => {
     return filteredStudents.map((student, index) => ({
-      id: student?.student?._id || student?._id,
+      id: student?.user?._id || student?.student?.userId || student?.student?._id || student?._id,
       rollNo: student?.registrationNumber || index + 1,
       name:
         student?.user?.name ||
@@ -463,7 +463,7 @@ const EnterGrades = () => {
       },
     },
   ];
-  console.log(filteredExams)
+
   return (
     <Card bordered={false}>
       <Title level={4}>📝 Enter Student Grades</Title>
@@ -604,9 +604,8 @@ const EnterGrades = () => {
             allowClear
           >
             {filteredExams.map((exam) => (
-              
               <Option key={exam._id} value={exam._id}>
-                {exam?.name || exam?.examCode || "Unnamed Exam"}
+                {exam?.title || exam?.name || exam?.examCode || "Unnamed Exam"}
               </Option>
             ))}
           </Select>

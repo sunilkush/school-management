@@ -666,7 +666,7 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
 });
 
 const getStudentsBySchoolId = asyncHandler(async (req, res) => {
-  let { schoolId, academicYearId, page = 1, limit = 10 } = req.query;
+  let { schoolId, academicYearId, schoolClassId, page = 1, limit = 10 } = req.query;
 
   // ✅ Validate schoolId
   if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
@@ -695,6 +695,16 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
 
   academicYearId = new mongoose.Types.ObjectId(academicYearId);
 
+
+  if (schoolClassId && !mongoose.Types.ObjectId.isValid(schoolClassId)) {
+    throw new ApiError(400, "Invalid schoolClassId format");
+  }
+
+  const matchFilter = { schoolId, academicYearId };
+  if (schoolClassId) {
+    matchFilter.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
+  }
+
   // ✅ Pagination
   page = Math.max(1, parseInt(page) || 1);
   limit = Math.max(1, Math.min(100, parseInt(limit) || 10));
@@ -702,7 +712,7 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
 
   const result = await StudentEnrollment.aggregate([
     {
-      $match: { schoolId, academicYearId },
+      $match: matchFilter,
     },
 
     {

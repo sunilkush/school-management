@@ -92,7 +92,7 @@ export const fetchAllStudentByRole = createAsyncThunk(
 );
 export const fetchStudentsBySchoolId = createAsyncThunk(
   "student/fetchBySchoolId",
-  async ({ schoolId, academicYearId }, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId, schoolClassId }, { rejectWithValue }) => {
     try {
       // ✅ check valid schoolId
       if (!schoolId) {
@@ -105,8 +105,8 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
         
         params: {
           schoolId,
-         academicYearId
-        
+          academicYearId,
+          schoolClassId,
         },
       });
      

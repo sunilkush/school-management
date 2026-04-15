@@ -194,15 +194,19 @@ useEffect(() => {
       align: "center",
       render: (_, record) => (
         <Space wrap>
-          <Popconfirm title="Edit Exam?" onClick={() => {
-  if (!record?._id) {
-    message.error("Invalid exam id");
-    return;
-  }
-  navigate(`/dashboard/schooladmin/exams/edit/${record._id}`);
-}}>
-            <Button type="primary" icon={<EditOutlined />} />
-          </Popconfirm>
+          <Tooltip title="Edit Exam">
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => {
+                if (!record?._id) {
+                  message.error("Invalid exam id");
+                  return;
+                }
+                navigate(`/dashboard/schooladmin/exams/edit/${record._id}`);
+              }}
+            />
+          </Tooltip>
 
           <Popconfirm title="Delete Exam?" onConfirm={() => handleDelete(record._id)}>
             <Button danger icon={<DeleteOutlined />} />
