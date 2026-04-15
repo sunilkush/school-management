@@ -14,11 +14,13 @@ import {
   FloatButton,
   Spin,
   Empty,
+  message,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 
 import { getQuestions, deleteQuestion } from "../../../features/questionSlice";
 import { fetchAssignedClasses } from "../../../features/classSlice";
+import apiClient from "../../../api/httpClient";
 
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
@@ -43,6 +45,8 @@ const QuestionBank = () => {
     chapterId: "",
     search: "",
   });
+  const [chapterOptions, setChapterOptions] = useState([]);
+  const [chapterLoading, setChapterLoading] = useState(false);
 
   /* ================= User ================= */
   const { user } = useSelector((state) => state.auth);
@@ -92,6 +96,47 @@ const QuestionBank = () => {
     return Array.from(subjectMap.values());
   }, [selectedClass]);
 
+  useEffect(() => {
+    const fetchChaptersBySubject = async () => {
+      if (!filters.schoolClassId || !filters.subjectId) {
+        setChapterOptions([]);
+        return;
+      }
+
+      try {
+        setChapterLoading(true);
+        const res = await apiClient.get("/chapters", {
+          params: {
+            schoolClassId: filters.schoolClassId,
+            subjectId: filters.subjectId,
+            page: 1,
+            limit: 1000,
+          },
+        });
+
+        const chapters = res?.data?.data || [];
+        setChapterOptions(
+          chapters.map((chapter) => ({
+            value: chapter?._id,
+            label:
+              chapter?.chapterNo && chapter?.name
+                ? `${chapter.chapterNo}. ${chapter.name}`
+                : chapter?.name,
+          }))
+        );
+      } catch (error) {
+        setChapterOptions([]);
+        message.error(
+          error?.response?.data?.message || "Failed to fetch chapters"
+        );
+      } finally {
+        setChapterLoading(false);
+      }
+    };
+
+    fetchChaptersBySubject();
+  }, [filters.schoolClassId, filters.subjectId]);
+
   const permissionMap = useMemo(() => {
     const classIds = new Set();
     const subjectIdsByClass = new Map();
@@ -102,43 +147,25 @@ const QuestionBank = () => {
 
       classIds.add(classId);
 
-      const subjectIds = new Set(
-        (cls?.subjects || [])
-          .map((sub) => String(getId(sub?.subjectId) || ""))
-          .filter(Boolean)
-      );
+      const subjectIds = new Set();
+
+      (cls?.subjects || []).forEach((sub) => {
+        const subjectId = String(getId(sub?.subjectId) || "");
+        if (subjectId) subjectIds.add(subjectId);
+      });
+
+      (cls?.sections || []).forEach((section) => {
+        (section?.subjects || []).forEach((sub) => {
+          const subjectId = String(getId(sub?.subjectId) || "");
+          if (subjectId) subjectIds.add(subjectId);
+        });
+      });
+
       subjectIdsByClass.set(classId, subjectIds);
     });
 
     return { classIds, subjectIdsByClass };
   }, [classAssignTeacher]);
-
-  /* ================= Derived Filters ================= */
-  const chapterOptions = useMemo(() => {
-    const chapterMap = new Map();
-
-    questions.forEach((q) => {
-      const questionClassId = String(getId(q.schoolClassId) || "");
-      const questionSubjectId = String(getId(q.subjectId) || "");
-
-      if (!permissionMap.classIds.has(questionClassId)) return;
-
-      const allowedSubjects = permissionMap.subjectIdsByClass.get(questionClassId);
-      if (allowedSubjects?.size && !allowedSubjects.has(questionSubjectId)) return;
-
-      if (filters.schoolClassId && questionClassId !== filters.schoolClassId) return;
-      if (filters.subjectId && questionSubjectId !== filters.subjectId) return;
-
-      const chapterId = q.chapterId?._id;
-      const chapterName = q.chapterId?.name;
-
-      if (chapterId && chapterName && !chapterMap.has(chapterId)) {
-        chapterMap.set(chapterId, { value: chapterId, label: chapterName });
-      }
-    });
-
-    return Array.from(chapterMap.values());
-  }, [questions, filters.schoolClassId, filters.subjectId, permissionMap]);
 
   const filteredQuestions = useMemo(() => {
     const searchText = filters.search.trim().toLowerCase();
@@ -249,6 +276,7 @@ const QuestionBank = () => {
               placeholder="Select Chapter"
               allowClear
               disabled={!filters.subjectId}
+              loading={chapterLoading}
               style={{ width: "100%" }}
               value={filters.chapterId || undefined}
               onChange={(value) => {
