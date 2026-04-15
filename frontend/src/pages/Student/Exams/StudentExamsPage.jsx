@@ -174,8 +174,9 @@ const StudentExamsPage = () => {
                         <Text type="secondary">{dayjs(exam.examDate).format("DD MMM YYYY")}</Text>
                         <Text>{exam.subjectId?.name || "Subject N/A"}</Text>
                         <Text>Total: {exam.totalMarks ?? 0} • Passing: {exam.passingMarks ?? 0}</Text>
+                        <Text type="secondary">Start Time: {exam.startTime ? dayjs(exam.startTime).format(" HH:mm") : "N/A"} | End Time: {exam.endTime ? dayjs(exam.endTime).format(" HH:mm") : "N/A"}</Text>
                         <Text type="secondary">Duration: {exam.durationMinutes ?? 0} minutes</Text>
-
+ 
                         <Space wrap>
                           {attempt ? (
                             <Button icon={<ReloadOutlined />} type="primary" onClick={() => openExistingAttempt(attempt._id)}>
