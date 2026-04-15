@@ -1006,7 +1006,7 @@ const getMyChildren = asyncHandler(async (req, res) => {
     { $unwind: { path: "$enrollment", preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
-        from: "classes",
+        from: "schoolclasses",
         localField: "enrollment.schoolClassId",
         foreignField: "_id",
         as: "schoolClass",

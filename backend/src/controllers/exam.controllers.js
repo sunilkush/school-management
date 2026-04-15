@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
+import mongoose from "mongoose";
 import { Exam } from "../models/Exam.model.js";
 import { Attempt } from "../models/ExamAttempts.model.js";
 import { Question } from "../models/Questions.model.js";
@@ -149,23 +150,49 @@ export const getClassResultSummary = asyncHandler(async (req, res) => {
 });
 
 export const startExamAttempt = asyncHandler(async (req, res) => {
-  const { examId, studentId, schoolId } = req.body;
-  const exam = await Exam.findById(examId).select("settings").lean();
+  const { examId, studentId: requestedStudentId } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(examId)) throw new ApiError(400, "Invalid examId");
+
+  const exam = await Exam.findById(examId).select("settings schoolId").lean();
   if (!exam) throw new ApiError(404, "Exam not found");
 
-  const attempts = await Attempt.countDocuments({ examId, studentId });
+  const role = req.userRole?.name;
+  const isStudent = role === "Student";
+  const resolvedStudentId = isStudent ? req.user._id : requestedStudentId;
+
+  if (!resolvedStudentId || !mongoose.Types.ObjectId.isValid(resolvedStudentId)) {
+    throw new ApiError(400, "Valid studentId is required");
+  }
+
+  if (role !== "Super Admin" && `${exam.schoolId}` !== `${req.user.schoolId}`) {
+    throw new ApiError(403, "Forbidden for this school exam");
+  }
+
+  const attempts = await Attempt.countDocuments({ examId, studentId: resolvedStudentId });
   if (attempts >= (exam.settings?.maxAttempts || 1)) {
     throw new ApiError(400, "Max attempts reached");
   }
 
-  const attempt = await Attempt.create({ examId, studentId, schoolId });
+  const attempt = await Attempt.create({
+    examId,
+    studentId: resolvedStudentId,
+    schoolId: exam.schoolId,
+  });
   return res.status(201).json(new ApiResponse(201, attempt, "Exam attempt started"));
 });
 
 export const submitExamAttempt = asyncHandler(async (req, res) => {
   const { attemptId, answers = [] } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(attemptId)) throw new ApiError(400, "Invalid attemptId");
   const attempt = await Attempt.findById(attemptId).populate("examId", "examType settings");
   if (!attempt) throw new ApiError(404, "Attempt not found");
+  const role = req.userRole?.name;
+  if (role === "Student" && `${attempt.studentId}` !== `${req.user._id}`) {
+    throw new ApiError(403, "Forbidden to submit another student's attempt");
+  }
+  if (role !== "Super Admin" && `${attempt.schoolId}` !== `${req.user.schoolId}`) {
+    throw new ApiError(403, "Forbidden for this school attempt");
+  }
 
   const questionIds = answers.map((item) => item.questionId);
   const questions = await Question.find({ _id: { $in: questionIds } })
@@ -208,9 +235,13 @@ export const submitExamAttempt = asyncHandler(async (req, res) => {
 });
 
 export const evaluateAttempt = asyncHandler(async (req, res) => {
-  const { attemptId, evaluations, evaluatorId } = req.body;
+  const { attemptId, evaluations = [] } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(attemptId)) throw new ApiError(400, "Invalid attemptId");
   const attempt = await Attempt.findById(attemptId);
   if (!attempt) throw new ApiError(404, "Attempt not found");
+  if (req.userRole?.name !== "Super Admin" && `${attempt.schoolId}` !== `${req.user.schoolId}`) {
+    throw new ApiError(403, "Forbidden for this school attempt");
+  }
 
   let totalMarks = 0;
   attempt.answers = attempt.answers.map((ans) => {
@@ -225,7 +256,7 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
 
   attempt.totalObtainedMarks = totalMarks;
   attempt.status = "evaluated";
-  attempt.evaluatedBy = evaluatorId;
+  attempt.evaluatedBy = req.user._id;
   await attempt.save();
 
   return res.status(200).json(new ApiResponse(200, attempt, "Attempt evaluated successfully"));

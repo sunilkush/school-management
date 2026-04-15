@@ -44,8 +44,6 @@ const QuestionBank = () => {
     search: "",
   });
 
-  const [selectedClass, setSelectedClass] = useState(null);
-
   /* ================= User ================= */
   const { user } = useSelector((state) => state.auth);
   const schoolId = user?.school?._id;
@@ -60,17 +58,39 @@ const QuestionBank = () => {
     if (schoolId) dispatch(getQuestions({ schoolId, limit: 1000 }));
   }, [dispatch, schoolId]);
 
-  useEffect(() => {
-    if (!filters.schoolClassId) {
-      setSelectedClass(null);
-      return;
-    }
+  const getId = (value) => (value && typeof value === "object" ? value._id : value);
 
-    const cls = classAssignTeacher.find((c) => c._id === filters.schoolClassId);
-    setSelectedClass(cls || null);
+  const selectedClass = useMemo(() => {
+    if (!filters.schoolClassId) return null;
+    return (
+      classAssignTeacher.find(
+        (cls) => String(getId(cls?._id)) === String(filters.schoolClassId)
+      ) || null
+    );
   }, [classAssignTeacher, filters.schoolClassId]);
 
-  const getId = (value) => (value && typeof value === "object" ? value._id : value);
+  const subjectOptions = useMemo(() => {
+    if (!selectedClass) return [];
+
+    const subjectMap = new Map();
+    const addSubject = (subjectLike) => {
+      const subjectId = String(
+        getId(subjectLike?.subjectId || subjectLike?._id || subjectLike?.id) || ""
+      );
+      const subjectName =
+        subjectLike?.subjectId?.name || subjectLike?.name || subjectLike?.subjectName;
+
+      if (!subjectId || !subjectName || subjectMap.has(subjectId)) return;
+      subjectMap.set(subjectId, { value: subjectId, label: subjectName });
+    };
+
+    (selectedClass?.subjects || []).forEach(addSubject);
+    (selectedClass?.sections || []).forEach((section) => {
+      (section?.subjects || []).forEach(addSubject);
+    });
+
+    return Array.from(subjectMap.values());
+  }, [selectedClass]);
 
   const permissionMap = useMemo(() => {
     const classIds = new Set();
@@ -215,13 +235,11 @@ const QuestionBank = () => {
                 }));
               }}
             >
-              {selectedClass?.subjects
-                ?.filter((s) => s.subjectId)
-                .map((sub) => (
-                  <Select.Option key={sub.subjectId._id} value={sub.subjectId._id}>
-                    {sub.subjectId.name}
-                  </Select.Option>
-                ))}
+              {subjectOptions.map((subject) => (
+                <Select.Option key={subject.value} value={subject.value}>
+                  {subject.label}
+                </Select.Option>
+              ))}
             </Select>
           </Col>
 
