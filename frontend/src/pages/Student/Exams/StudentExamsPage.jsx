@@ -30,34 +30,35 @@ const StudentExamsPage = () => {
   const navigate = useNavigate();
   const { exams = [], results = [], loading } = useSelector((state) => state.exams || {});
   const { attempts = [], loading: attemptsLoading } = useSelector((state) => state.attempts || {});
+  const safeExams = Array.isArray(exams) ? exams : [];
+  const safeResults = Array.isArray(results) ? results : [];
+  const safeAttempts = Array.isArray(attempts) ? attempts : [];
   const [scheduleFilter, setScheduleFilter] = useState("upcoming");
-  const {user} = useSelector((state) => state.auth || {});
-  const schoolId = user?.school?._id || user?.schoolId || user?.school || null;
   useEffect(() => {
     dispatch(getExams({ sortBy: "examDate", sortOrder: "asc" }));
     dispatch(getStudentResults());
-    dispatch(getAttempts({ status: "in_progress", limit: 100, schoolId }));
-  }, [dispatch, schoolId]);
+    dispatch(getAttempts({ status: "in_progress", limit: 100 }));
+  }, [dispatch]);
 
   const inProgressByExam = useMemo(() => {
     const map = new Map();
-    attempts.forEach((attempt) => {
+    safeAttempts.forEach((attempt) => {
       const examId = attempt?.examId?._id || attempt?.examId;
       if (!examId) return;
       map.set(`${examId}`, attempt);
     });
     return map;
-  }, [attempts]);
+  }, [safeAttempts]);
 
   const filteredExams = useMemo(() => {
     const now = dayjs();
-    if (scheduleFilter === "all") return exams;
-    return exams.filter((exam) => {
+    if (scheduleFilter === "all") return safeExams;
+    return safeExams.filter((exam) => {
       const examDate = dayjs(exam.examDate);
       if (scheduleFilter === "upcoming") return examDate.isAfter(now, "day") || examDate.isSame(now, "day");
       return examDate.isBefore(now, "day");
     });
-  }, [exams, scheduleFilter]);
+  }, [safeExams, scheduleFilter]);
 
   const resultColumns = [
     { title: "Subject", dataIndex: "subjectName" },
@@ -71,34 +72,29 @@ const StudentExamsPage = () => {
   ];
 
   const summary = useMemo(() => {
-    if (!results.length) return null;
-    const passed = results.filter((result) => result.resultStatus === "PASS").length;
+    if (!safeResults.length) return null;
+    const passed = safeResults.filter((result) => result.resultStatus === "PASS").length;
     const avgPercentage = Math.round(
-      results.reduce((acc, result) => acc + Number(result.percentage || 0), 0) / results.length
+      safeResults.reduce((acc, result) => acc + Number(result.percentage || 0), 0) / safeResults.length
     );
     return {
-      total: results.length,
+      total: safeResults.length,
       passed,
-      failed: results.length - passed,
+      failed: safeResults.length - passed,
       avgPercentage,
     };
-  }, [results]);
+  }, [safeResults]);
 
   const nextExam = useMemo(() => {
     const now = dayjs();
-    return exams
+    return safeExams
       .filter((exam) => dayjs(exam.examDate).isAfter(now, "day") || dayjs(exam.examDate).isSame(now, "day"))
       .sort((a, b) => dayjs(a.examDate).valueOf() - dayjs(b.examDate).valueOf())[0];
-  }, [exams]);
+  }, [safeExams]);
 
   const handleStartAttempt = async (examId) => {
-    if (!schoolId) {
-      message.error("School context missing. Please re-login and try again.");
-      return;
-    }
-
     try {
-      const attempt = await dispatch(startAttempt({ examId, schoolId })).unwrap();
+      const attempt = await dispatch(startAttempt({ examId })).unwrap();
       navigate(`/dashboard/student/exams/exam-live?attemptId=${attempt._id}`);
       message.success("Exam started successfully");
     } catch (error) {
@@ -222,11 +218,11 @@ const StudentExamsPage = () => {
           </Row>
         )}
 
-        {!results.length ? (
+        {!safeResults.length ? (
           <Empty description="No published results" />
         ) : (
           <Collapse
-            items={results.map((result) => ({
+            items={safeResults.map((result) => ({
               key: result._id,
               label: `${result.examId?.title || "Exam"} | ${result.percentage}% | Grade ${result.grade}`,
               children: (
