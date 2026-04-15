@@ -129,7 +129,13 @@ const ChaptersTopics = () => {
 
   const handleSubmit = async (values) => {
     if (!user) return message.error("User not loaded");
-    const payload = { ...values, schoolId: values.isGlobal ? null : user?.schoolId };
+    const classId = values.schoolClassId || values.boardClassId;
+    const payload = {
+      ...values,
+      schoolClassId: classId,
+      boardClassId: classId,
+      schoolId: values.isGlobal ? null : user?.schoolId,
+    };
     let res;
     if (editingChapter) res = await dispatch(updateChapterThunk({ id: editingChapter._id, payload }));
     else res = await dispatch(createChapterThunk(payload));
