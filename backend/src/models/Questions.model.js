@@ -99,6 +99,12 @@ const QuestionSchema = new Schema(
       default: []
     },
 
+    // Backward compatibility for old API consumers using `correctAnswer`
+    correctAnswer: {
+      type: Schema.Types.Mixed,
+      default: undefined
+    },
+
     difficulty: {
       type: String,
       enum: ["easy", "medium", "hard"],
@@ -142,6 +148,22 @@ const QuestionSchema = new Schema(
 ================================ */
 QuestionSchema.pre("validate", function (next) {
   const q = this;
+
+  if ((q.correctAnswer === undefined || q.correctAnswer === null) && Array.isArray(q.correctAnswers)) {
+    if (q.questionType === "mcq_multi" || q.questionType === "match") {
+      q.correctAnswer = q.correctAnswers;
+    } else {
+      q.correctAnswer = q.correctAnswers[0];
+    }
+  }
+
+  if ((!Array.isArray(q.correctAnswers) || q.correctAnswers.length === 0) && q.correctAnswer !== undefined) {
+    if (Array.isArray(q.correctAnswer)) {
+      q.correctAnswers = q.correctAnswer.map((value) => String(value));
+    } else {
+      q.correctAnswers = [String(q.correctAnswer)];
+    }
+  }
 
   // MCQ Single
   if (q.questionType === "mcq_single") {
