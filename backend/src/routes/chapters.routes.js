@@ -22,7 +22,8 @@ router.post(
   validate({
     body: {
       name: { required: true, type: "string" },
-      schoolClassId: { required: true, type: "objectId" },
+      schoolClassId: { required: false, type: "objectId" },
+      boardClassId: { required: false, type: "objectId" },
       subjectId: { required: true, type: "objectId" },
     },
   }),

@@ -5,13 +5,27 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const createChapter = asyncHandler(async (req, res) => {
-  const { name, chapterNo, description, schoolClassId, subjectId, isGlobal = false, schoolId } = req.body;
+  const {
+    name,
+    chapterNo,
+    description,
+    schoolClassId,
+    boardClassId: incomingBoardClassId,
+    subjectId,
+    isGlobal = false,
+    schoolId,
+  } = req.body;
+  const boardClassId = incomingBoardClassId || schoolClassId;
+
+  if (!boardClassId) {
+    throw new ApiError(400, "boardClassId or schoolClassId is required");
+  }
 
   const chapter = await Chapter.create({
     name: name.trim(),
     chapterNo,
     description,
-    schoolClassId,
+    boardClassId,
     subjectId,
     isGlobal,
     schoolId: isGlobal ? null : schoolId || req.user.schoolId || null,
@@ -27,7 +41,9 @@ const getAllChapters = asyncHandler(async (req, res) => {
   const limit = Number(req.query.limit || 10);
   const filter = {};
 
-  if (req.query.schoolClassId) filter.schoolClassId = req.query.schoolClassId;
+  if (req.query.boardClassId || req.query.schoolClassId) {
+    filter.boardClassId = req.query.boardClassId || req.query.schoolClassId;
+  }
   if (req.query.subjectId) filter.subjectId = req.query.subjectId;
 
   const skip = (page - 1) * limit;
