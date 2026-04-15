@@ -59,6 +59,7 @@ const safeText = (value) => (typeof value === "string" ? value.trim() : "");
 
 export const getMyProfile = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ userId: req.user._id })
+    .populate("userId", "name email phone")
     .populate("fatherId", "name email phone")
     .populate("motherId", "name email phone")
     .lean();
