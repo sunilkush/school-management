@@ -252,8 +252,12 @@ export const sidebarMenu = {
       icon: GraduationCap,
       subMenu: [
         { title: "Exams List", path: "teacher/exams/list" },
+        { title: "Create Question", path: "teacher/exams/create-question" },
+        { title: "Bulk Upload Questions", path: "teacher/exams/bulk-upload-questions" },
+        { title: "Exams List", path: "teacher/exams/list" },
         { title: "Question Bank", path: "teacher/exams/question-bank" },
         { title: "Exam Reports", path: "teacher/exams/reports" },
+        
        
       ],
     },

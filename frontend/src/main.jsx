@@ -168,7 +168,8 @@ const SchoolSetup = lazy(()=>import("./pages/School_Admin/School_Setup/SchoolSet
 
 // Teacher
 const QuestionBank = lazy(() => import("./pages/Teacher/Exams/QuestionBank.jsx"));
-const CreateExam = lazy(() => import("./pages/Teacher/Exams/EditExamForm.jsx"));
+const CreateQuestion = lazy(() => import("./pages/Teacher/Exams/CreateQuestion.jsx"));
+const BulkUploadQuestions = lazy(() => import("./pages/Teacher/Exams/BulkUploadQuestions.jsx"));
 const TeacherExamsPage = lazy(() => import("./pages/Teacher/Exams/TeacherExamsPage.jsx"));
 const AssignedClasses = lazy(() => import("./pages/Teacher/Classes/AssignedClasses.jsx"));
 const ClassDetails = lazy(() => import("./pages/Teacher/Classes/ClassDetails.jsx"));
@@ -503,6 +504,8 @@ const router = createBrowserRouter([
               { path: "attendance/my", element: <MyAttendancePage /> },
               { path: "attendance/my/monthly", element: <MyAttendancePage /> },
              // { path: "exams", element: <ScheduleExams /> },
+              { path: "exams/create-question", element: <CreateQuestion /> },
+              { path: "exams/bulk-upload-questions", element: <BulkUploadQuestions /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },

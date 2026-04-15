@@ -18,9 +18,9 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 
 import { getAllSubjects } from "../../../features/subjectSlice";
-import { fetchAllClasses } from "../../../features/classSlice";
+import { getClassData } from "../../../features/schoolClassSlice";
 import { createQuestions } from "../../../features/questionSlice";
-import memoryStorage from "../../../utils/memoryStorage";
+
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -31,15 +31,15 @@ const CreateQuestion = () => {
   const [form] = Form.useForm();
 
   const { subjects = [] } = useSelector((state) => state.subject);
-  const { classList = [] } = useSelector((state) => state.class);
+  const { schoolClasses } = useSelector((state) => state.schoolClass || {});
 
-  const user = JSON.parse(memoryStorage.getItem("user"));
+  const {user} = useSelector((state) => state.auth || {});
   const schoolId = user?.school?._id;
 
   const [options, setOptions] = useState([]);
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [questionType, setQuestionType] = useState("mcq_single");
-   const shortClass = [...classList]
+   const shortClass = [...schoolClasses]
   .sort((a, b) => {
     const numA = parseInt(a.name.replace(/\D/g, ""), 10) || 0;
     const numB = parseInt(b.name.replace(/\D/g, ""), 10) || 0;
@@ -50,7 +50,7 @@ const CreateQuestion = () => {
 
   useEffect(() => {
     dispatch(getAllSubjects({schoolId}));
-    dispatch(fetchAllClasses({schoolId}));
+    dispatch(getClassData({schoolId}));
   }, [dispatch, schoolId]);
 
   /* -------------------- HANDLERS -------------------- */

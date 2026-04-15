@@ -49,7 +49,7 @@ const BulkUploadQuestions = () => {
       return;
     }
 
-    dispatch(bulkCreateQuestions({ questions: preview }));
+   dispatch(bulkCreateQuestions(preview));
     message.success("Questions uploaded successfully");
     setPreview([]);
   };
@@ -64,7 +64,7 @@ const BulkUploadQuestions = () => {
       : [];
 
   return (
-    <Card style={{ maxWidth: 900, margin: "auto" }}>
+    <Card style={{  margin: "auto" }}>
       <Title level={3}>📥 Bulk Upload Questions</Title>
 
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
