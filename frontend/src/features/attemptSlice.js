@@ -10,7 +10,7 @@ export const startAttempt = createAsyncThunk(
   "attempts/startAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/attempts/start`, payload);
+      const res = await apiClient.post(`/attempt/start`, payload);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -23,7 +23,7 @@ export const submitAttempt = createAsyncThunk(
   "attempts/submitAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/attempts/submit`, payload);
+      const res = await apiClient.post(`/attempt/submit`, payload);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -36,7 +36,7 @@ export const evaluateAttempt = createAsyncThunk(
   "attempts/evaluateAttempt",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/attempts/evaluate`, payload);
+      const res = await apiClient.post(`/attempt/evaluate`, payload);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -49,7 +49,7 @@ export const getAttemptById = createAsyncThunk(
   "attempts/getAttemptById",
   async (attemptId, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/attempts/${attemptId}`);
+      const res = await apiClient.get(`/attempt/${attemptId}`);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -63,7 +63,7 @@ export const getAttempts = createAsyncThunk(
   async (params = {}, { rejectWithValue }) => {
     try {
       const query = new URLSearchParams(params).toString();
-      const res = await apiClient.get(`/attempts?${query}`);
+      const res = await apiClient.get(`/attempt?${query}`);
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

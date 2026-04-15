@@ -22,7 +22,8 @@ const enforceAttemptReadAccess = (attempt, req) => {
 export const startAttempt = asyncHandler(async (req, res) => {
   const { examId } = req.body;
   const studentId = req.user._id;
-
+  console.log(studentId) 
+  console.log(examId) 
   assertObjectId(examId, "examId");
 
   const exam = await Exam.findById(examId).populate("questions.questionId");

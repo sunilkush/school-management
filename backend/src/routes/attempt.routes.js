@@ -13,7 +13,8 @@ const router = express.Router();
 router.post("/start", requireRoles(["Student"]), startAttempt);
 router.post("/submit", requireRoles(["Student"]), submitAttempt);
 router.post("/evaluate", requireRoles(["Super Admin", "School Admin", "Teacher"]), evaluateAttempt);
-router.get("/:id", requireRoles(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttemptById);
 router.get("/", requireRoles(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttempts);
+router.get("/:id", requireRoles(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttemptById);
+
 
 export default router;
