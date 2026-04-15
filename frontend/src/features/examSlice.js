@@ -192,10 +192,24 @@ const examSlice = createSlice({
         if (index !== -1) state.exams[index] = action.payload;
       })
       .addCase(getStudentResults.fulfilled, (state, action) => {
-        state.results = action.payload;
+        const payload = action.payload;
+        state.results = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.results)
+            ? payload.results
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : [];
       })
       .addCase(getParentResults.fulfilled, (state, action) => {
-        state.results = action.payload;
+        const payload = action.payload;
+        state.results = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.results)
+            ? payload.results
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : [];
       });
   },
 });

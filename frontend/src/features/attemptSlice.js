@@ -132,7 +132,16 @@ const attemptSlice = createSlice({
       .addCase(getAttempts.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(getAttempts.fulfilled, (state, action) => {
         state.loading = false;
-        state.attempts = action.payload;
+        const payload = action.payload;
+        if (Array.isArray(payload)) {
+          state.attempts = payload;
+        } else if (Array.isArray(payload?.attempts)) {
+          state.attempts = payload.attempts;
+        } else if (Array.isArray(payload?.data)) {
+          state.attempts = payload.data;
+        } else {
+          state.attempts = [];
+        }
       })
       .addCase(getAttempts.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
   },
