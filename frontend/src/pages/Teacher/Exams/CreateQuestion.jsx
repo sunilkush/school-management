@@ -30,7 +30,7 @@ const CreateQuestion = () => {
   const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
   const { chapters = [] } = useSelector((state) => state.chapter || {});
   const { user = {} } = useSelector((state) => state.auth || {});
-  const schoolId = user?.school?._id;
+  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
 
   const [options, setOptions] = useState([]);
   const [correctAnswers, setCorrectAnswers] = useState([]);

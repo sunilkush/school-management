@@ -26,6 +26,7 @@ const router = express.Router();
 
 const ADMIN_ROLES = ["Super Admin", "School Admin"];
 const TEACHER_ROLES = ["Super Admin", "School Admin", "Teacher"];
+const EXAM_MANAGE_ROLES = ["Super Admin", "School Admin", "Teacher"];
 const READ_ROLES = [...TEACHER_ROLES, "Student", "Parent"];
 const STUDENT_RESULT_ROLES = ["Super Admin", "School Admin", "Teacher", "Student"];
 const PARENT_RESULT_ROLES = ["Super Admin", "School Admin", "Teacher", "Parent"];
@@ -33,7 +34,7 @@ const PARENT_RESULT_ROLES = ["Super Admin", "School Admin", "Teacher", "Parent"]
 router.post(
   "/",
   auth,
-  roleMiddleware(ADMIN_ROLES),
+  roleMiddleware(EXAM_MANAGE_ROLES),
   validate({
     body: {
       academicYearId: { required: true, type: "objectId" },
@@ -57,7 +58,7 @@ router.get("/", auth, roleMiddleware(READ_ROLES), getExams);
 router.post(
   "/assign-class",
   auth,
-  roleMiddleware(ADMIN_ROLES),
+  roleMiddleware(EXAM_MANAGE_ROLES),
   validate({
     body: {
       examId: { required: true, type: "objectId" },
@@ -85,7 +86,7 @@ router.post(
 router.post(
   "/results/publish",
   auth,
-  roleMiddleware(ADMIN_ROLES),
+  roleMiddleware(EXAM_MANAGE_ROLES),
   validate({
     body: {
       examId: { required: true, type: "objectId" },
@@ -122,7 +123,7 @@ router.get(
 router.put(
   "/:id",
   auth,
-  roleMiddleware(ADMIN_ROLES),
+  roleMiddleware(EXAM_MANAGE_ROLES),
   validate({
     params: {
       id: { required: true, type: "objectId" },
@@ -136,7 +137,7 @@ router.put(
   }),
   updateExam
 );
-router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), deleteExam);
-router.put("/:id/publish", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), publishExam);
+router.delete("/:id", auth, roleMiddleware(EXAM_MANAGE_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), deleteExam);
+router.put("/:id/publish", auth, roleMiddleware(EXAM_MANAGE_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), publishExam);
 
 export default router;
