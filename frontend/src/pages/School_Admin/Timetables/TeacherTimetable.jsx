@@ -1,69 +1,104 @@
-import React, { useMemo, useState } from "react";
-import { Alert, Card, Col, Empty, Layout, Row, Segmented, Space, Table, Tag, Typography } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Card,
+  Col,
+  Empty,
+  Layout,
+  Row,
+  Segmented,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import { BookOutlined, ClockCircleOutlined, TeamOutlined } from "@ant-design/icons";
+import apiClient from "../../../api/httpClient";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
 const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const sampleTeacherSchedule = [
-  {
-    key: 1,
-    day: "Monday",
-    subject: "Mathematics",
-    className: "8",
-    section: "A",
-    startTime: "09:00",
-    endTime: "09:45",
-    room: "Room 204",
-  },
-  {
-    key: 2,
-    day: "Monday",
-    subject: "Mathematics",
-    className: "9",
-    section: "B",
-    startTime: "11:00",
-    endTime: "11:45",
-    room: "Room 112",
-  },
-  {
-    key: 3,
-    day: "Tuesday",
-    subject: "Algebra",
-    className: "10",
-    section: "A",
-    startTime: "08:30",
-    endTime: "09:15",
-    room: "Room 119",
-  },
-];
-
 const TeacherTimetable = () => {
   const [activeDay, setActiveDay] = useState("Monday");
-  const [timetable] = useState(sampleTeacherSchedule);
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
+  const [teachers, setTeachers] = useState([]);
+  const [timetable, setTimetable] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [academicYearId, setAcademicYearId] = useState("");
 
-  const daySchedule = useMemo(
-    () => timetable.filter((item) => item.day === activeDay).sort((a, b) => a.startTime.localeCompare(b.startTime)),
-    [activeDay, timetable]
-  );
+  const fetchTeachers = async () => {
+    const [teacherRes, academicYearRes] = await Promise.all([
+      apiClient.get("/employee", { params: { employeeType: "Teacher", isActive: true } }),
+      apiClient.get("/academicYear"),
+    ]);
+
+    const teacherRows = teacherRes.data?.data || [];
+    const activeYear = (academicYearRes.data?.data || []).find((year) => year.isActive) || academicYearRes.data?.data?.[0];
+
+    setTeachers(teacherRows);
+    setAcademicYearId(activeYear?._id || "");
+
+    const firstTeacherId = teacherRows?.[0]?.userId?._id || "";
+    setSelectedTeacherId(firstTeacherId);
+
+    if (firstTeacherId) {
+      await fetchTimetable(firstTeacherId, activeDay, activeYear?._id || "");
+    }
+  };
+
+  const fetchTimetable = async (teacherId, day, yearId = academicYearId) => {
+    if (!teacherId) {
+      setTimetable([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await apiClient.get("/timetables/teacher", {
+        params: {
+          teacherId,
+          day,
+          academicYearId: yearId,
+        },
+      });
+      setTimetable(res.data?.data || []);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Failed to fetch teacher timetable");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeachers().catch((error) => message.error(error?.response?.data?.message || "Failed to load teachers"));
+  }, []);
+
+  useEffect(() => {
+    if (selectedTeacherId) {
+      fetchTimetable(selectedTeacherId, activeDay);
+    }
+  }, [selectedTeacherId, activeDay]);
 
   const stats = useMemo(() => {
-    const classCount = new Set(timetable.map((item) => `${item.className}-${item.section}`)).size;
+    const classCount = new Set(timetable.map((item) => `${item.schoolClassId?._id}-${item.sectionId?._id}`)).size;
     return {
       periods: timetable.length,
       classes: classCount,
-      subjects: new Set(timetable.map((item) => item.subject)).size,
+      subjects: new Set(timetable.map((item) => item.subjectId?._id)).size,
     };
   }, [timetable]);
 
   const columns = [
     { title: "Period", key: "period", render: (_, row, idx) => `P${idx + 1}` },
     { title: "Time", key: "time", render: (_, row) => `${row.startTime} - ${row.endTime}` },
-    { title: "Subject", dataIndex: "subject", key: "subject", render: (value) => <Tag color="blue">{value}</Tag> },
-    { title: "Class", key: "class", render: (_, row) => `Class ${row.className} - ${row.section}` },
-    { title: "Room", dataIndex: "room", key: "room" },
+    { title: "Subject", key: "subject", render: (_, row) => <Tag color="blue">{row.subjectId?.name || "-"}</Tag> },
+    { title: "Class", key: "class", render: (_, row) => `${row.schoolClassId?.name || "-"} - ${row.sectionId?.name || "-"}` },
+    { title: "Room", dataIndex: "room", key: "room", render: (value) => value || "-" },
   ];
 
   return (
@@ -75,7 +110,7 @@ const TeacherTimetable = () => {
               <Space>
                 <ClockCircleOutlined style={{ color: "#1677ff" }} />
                 <div>
-                  <Text type="secondary">Weekly Periods</Text>
+                  <Text type="secondary">Daily Periods</Text>
                   <Title level={4} style={{ margin: 0 }}>{stats.periods}</Title>
                 </div>
               </Space>
@@ -109,23 +144,38 @@ const TeacherTimetable = () => {
           <Space direction="vertical" size={12} style={{ width: "100%" }}>
             <div>
               <Title level={4} style={{ marginBottom: 4 }}>Teacher Timetable</Title>
-              <Text type="secondary">Daily view for classes, room and period planning.</Text>
+              <Text type="secondary">Live teacher-wise daily schedule from backend data.</Text>
             </div>
 
             <Alert
               type="info"
               showIcon
               message="Need changes in schedule?"
-              description="Please contact School Admin to update class allocations."
+              description="Please update from Class Timetable page as School Admin."
             />
+
+            <Select
+              value={selectedTeacherId || undefined}
+              placeholder="Select teacher"
+              style={{ maxWidth: 320 }}
+              onChange={setSelectedTeacherId}
+            >
+              {teachers.map((teacher) => (
+                <Select.Option key={teacher.userId?._id} value={teacher.userId?._id}>
+                  {teacher.userId?.name}
+                </Select.Option>
+              ))}
+            </Select>
 
             <Segmented options={dayOrder} value={activeDay} onChange={setActiveDay} />
 
-            {daySchedule.length ? (
-              <Table rowKey="key" columns={columns} dataSource={daySchedule} pagination={false} />
-            ) : (
-              <Empty description="No periods scheduled for selected day" />
-            )}
+            <Spin spinning={loading}>
+              {timetable.length ? (
+                <Table rowKey="_id" columns={columns} dataSource={timetable} pagination={false} />
+              ) : (
+                <Empty description="No periods scheduled for selected teacher/day" />
+              )}
+            </Spin>
           </Space>
         </Card>
       </Content>
