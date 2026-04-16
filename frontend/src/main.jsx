@@ -509,7 +509,7 @@ const router = createBrowserRouter([
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
-              { path: "timetable", element: <ClassTimetable /> },
+              { path: "timetable", element: <TeacherTimetable /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
