@@ -1,21 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  BadgeCheck,
   BookOpen,
   CalendarDays,
+  Edit3,
   GraduationCap,
+  HeartPulse,
+  Home,
   Mail,
+  NotebookPen,
   Phone,
   Save,
+  ShieldCheck,
   User,
-  MapPin,
-  Droplets,
+  Users,
   Loader2,
   Users,
 } from "lucide-react";
 import { fetchStudentEnrollment, fetchStudentProfile, updateStudentProfile } from "../../../features/studentPortalSlice";
 
-const defaultStudentInfo = {
+const defaultStudentDetails = {
   dateOfBirth: "",
   gender: "",
   bloodGroup: "",
@@ -95,21 +100,42 @@ const Profile = () => {
       mobile: studentProfile?.motherInfo?.mobile || studentProfile?.motherId?.phone || "",
       email: studentProfile?.motherInfo?.email || studentProfile?.motherId?.email || "",
     });
-  }, [studentProfile]);
+  }, [profile, studentInfo]);
 
   const initials = useMemo(() => {
-    if (!profileForm.name) return "ST";
-    return profileForm.name
+    const fullName = profileForm?.name || user?.name || "Student";
+    return fullName
       .split(" ")
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("");
-  }, [profileForm.name]);
+  }, [profileForm?.name, user?.name]);
+
+  const registrationNumber =
+    enrollment?.registrationNumber ||
+    studentInfo?.registrationNumber ||
+    "-";
+
+  const classInfo = enrollment?.schoolClass?.name
+    ? `${enrollment.schoolClass.name}${
+        enrollment?.section?.name ? ` - ${enrollment.section.name}` : ""
+      }`
+    : studentInfo?.schoolClass?.name
+    ? `${studentInfo.schoolClass.name}${
+        studentInfo?.section?.name ? ` - ${studentInfo.section.name}` : ""
+      }`
+    : "-";
+
+  const academicYearName =
+    enrollment?.academicYear?.name || studentInfo?.academicYear?.name || "-";
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileForm((prev) => ({ ...prev, [name]: value }));
+    setProfileForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleStudentInfoChange = (e) => {
@@ -125,7 +151,12 @@ const Profile = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setSaveState({ saving: true, message: "", isError: false });
+
+    setSaveState({
+      saving: true,
+      message: "",
+      isError: false,
+    });
 
     try {
       await dispatch(
@@ -147,7 +178,10 @@ const Profile = () => {
     } catch (err) {
       setSaveState({
         saving: false,
-        message: err || "Profile update nahi ho paaya. Phir se try karein.",
+        message:
+          err?.message ||
+          err ||
+          "Profile update nahi ho paaya. Phir se try karein.",
         isError: true,
       });
     }
@@ -156,7 +190,8 @@ const Profile = () => {
   if (portalLoading || authLoading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center text-gray-600">
-        <Loader2 className="w-5 h-5 animate-spin mr-2" /> Profile load ho raha hai...
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        Profile load ho raha hai...
       </div>
     );
   }
@@ -182,6 +217,7 @@ const Profile = () => {
               <span className="inline-block mt-2 text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">Active Student</span>
             </div>
           </div>
+        </section>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
             <InfoBadge icon={<GraduationCap className="h-4 w-4" />} label="Registration" value={enrollment?.registrationNumber || "-"} />
@@ -246,8 +282,8 @@ const Section = ({ title, children }) => (
 );
 
 const InfoBadge = ({ icon, label, value }) => (
-  <div className="rounded-xl border bg-slate-50 p-3 min-w-[130px]">
-    <p className="text-slate-500 text-xs flex items-center gap-1">
+  <div className="min-w-[130px] rounded-xl border border-white/30 bg-white/10 p-3 backdrop-blur">
+    <p className="flex items-center gap-1 text-xs text-indigo-100">
       {icon}
       {label}
     </p>

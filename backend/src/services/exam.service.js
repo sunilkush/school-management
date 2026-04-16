@@ -132,7 +132,7 @@ export const getExamsService = async ({ query, user }) => {
     filters.title = { $regex: query.search.trim(), $options: "i" };
   }
 
-  if (user.roleId?.name === "Student") {
+/*   if (user.roleId?.name === "Student") {
     const student = await Student.findOne({ userId: user._id }).select("_id").lean();
     const enrollment = student
       ? await StudentEnrollment.findOne({ studentId: student._id, status: "Active" })
@@ -145,7 +145,7 @@ export const getExamsService = async ({ query, user }) => {
       filters.schoolClassId = enrollment.schoolClassId;
       filters.sectionId = enrollment.sectionId;
     }
-  }
+  } */
 
   const sortField = ["examDate", "totalMarks", "createdAt"].includes(query.sortBy)
     ? query.sortBy
