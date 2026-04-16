@@ -44,6 +44,7 @@ import moduleRoutes from "./routes/module.routes.js";
 import payrollRoutes from "./routes/payroll.routes.js";
 import studentPortalRoutes from "./routes/studentPortal.routes.js";
 import supportTicketRoutes from "./routes/supportTicket.routes.js";
+import timetableRoutes from "./routes/timetable.routes.js";
 
 import { ApiError } from "./utils/ApiError.js";
 import { sendError } from "./utils/response.js";
@@ -143,6 +144,7 @@ app.use("/api/v1/payroll", payrollRoutes);
 app.use("/api/v1/audit-logs", auditLogRoutes);
 app.use("/api/v1/student-portal", studentPortalRoutes);
 app.use("/api/v1/support-tickets", supportTicketRoutes);
+app.use("/api/v1/timetables", timetableRoutes);
 app.use((req, _res, next) => next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`)));
 
 app.use((err, req, res, _next) => {
