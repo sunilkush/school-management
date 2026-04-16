@@ -52,16 +52,24 @@ export const fetchStudentLibraryBooks = createAsyncThunk(
 );
 export const fetchStudentProfile = createAsyncThunk(
   "studentPortal/fetchStudentProfile",
-  async (userId, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      if (!userId) {
-        throw new Error("User id is required");
-      }
-
-      const res = await apiClient.get(`/student/getStudent/${userId}`);
+      const res = await apiClient.get("/student-portal/me/profile");
       return res.data?.data || null;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch student profile"));
+    }
+  }
+);
+
+export const updateStudentProfile = createAsyncThunk(
+  "studentPortal/updateStudentProfile",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put("/student-portal/me/profile", payload);
+      return res.data?.data || null;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to update student profile"));
     }
   }
 );
@@ -163,6 +171,13 @@ const studentPortalSlice = createSlice({
         state.profile = action.payload;
       })
       .addCase(fetchStudentProfile.rejected, setRejected)
+
+      .addCase(updateStudentProfile.pending, setPending)
+      .addCase(updateStudentProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+      })
+      .addCase(updateStudentProfile.rejected, setRejected)
 
       .addCase(fetchStudentEnrollment.pending, setPending)
       .addCase(fetchStudentEnrollment.fulfilled, (state, action) => {
