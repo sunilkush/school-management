@@ -239,13 +239,13 @@ const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
-
+import Register from "./components/forms/RegisterForm.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      { path: "/", element: <LoginPage /> },
+      { path: "/", element: <Register /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/forgot-password", element: <ForgetPasswordPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },

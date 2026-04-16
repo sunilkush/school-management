@@ -37,7 +37,8 @@ import {
   assignSchoolBoards,
 } from "../../../features/boardSlice.js";
 import { fetchSchools } from "../../../features/schoolSlice.js";
-import memoryStorage from "../../../utils/memoryStorage";
+import { currentUser } from "../../../features/authSlice.js";
+
 
 const { Content } = Layout;
 const { Text } = Typography;
@@ -127,7 +128,7 @@ const SchoolBoards = () => {
   const boardsState = useSelector((state) => state.boards || {});
   const boards = boardsState?.boards?.boards || boardsState?.boards || [];
   const loading = boardsState?.loading || false;
-
+  const {user} = useSelector((state) => state.auth || {});
   const { schools = [] } = useSelector((state) => state.school || {});
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -142,16 +143,11 @@ const SchoolBoards = () => {
   const [assignForm] = Form.useForm();
 
   /* ── Role ── */
-  let createdByRole = null;
-  try {
-    const user = JSON.parse(memoryStorage.getItem("user"));
-    createdByRole = user?.role?.name || null;
-  } catch {
-    createdByRole = null;
-  }
-
+ const createdByRole = user?.role?.name || null;
+   console.log(createdByRole)
   /* ── Fetch ── */
   useEffect(() => {
+    dispatch(currentUser())
     dispatch(getBoards());
     dispatch(fetchSchools());
   }, [dispatch]);
