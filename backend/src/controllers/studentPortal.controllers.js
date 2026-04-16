@@ -6,6 +6,7 @@ import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { StudentTimetable } from "../models/StudentTimetable.model.js";
 import { StudentTransportAssignment } from "../models/StudentTransportAssignment.model.js";
+import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -53,6 +54,84 @@ const getMyActiveEnrollment = async (user) => {
 
   return { student, academicYear, enrollment };
 };
+
+const safeText = (value) => (typeof value === "string" ? value.trim() : "");
+
+export const getMyProfile = asyncHandler(async (req, res) => {
+  const student = await Student.findOne({ userId: req.user._id })
+    .populate("fatherId", "name email phone")
+    .populate("motherId", "name email phone")
+    .lean();
+
+  if (!student) {
+    throw new ApiError(404, "Student profile not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, student, "Student profile fetched successfully"));
+});
+
+export const updateMyProfile = asyncHandler(async (req, res) => {
+  const {
+    name,
+    email,
+    phone,
+    dateOfBirth,
+    gender,
+    bloodGroup,
+    address,
+    fatherInfo = {},
+    motherInfo = {},
+  } = req.body;
+
+  if (!safeText(name) || !safeText(email)) {
+    throw new ApiError(400, "Name and email are required");
+  }
+
+  const [user, student] = await Promise.all([
+    User.findById(req.user._id),
+    Student.findOne({ userId: req.user._id }),
+  ]);
+
+  if (!user || !student) {
+    throw new ApiError(404, "Student profile not found");
+  }
+
+  user.name = safeText(name);
+  user.email = safeText(email).toLowerCase();
+  user.phone = safeText(phone);
+  await user.save();
+
+  if (dateOfBirth) student.dateOfBirth = new Date(dateOfBirth);
+  if (gender) student.gender = safeText(gender);
+  if (bloodGroup !== undefined) student.bloodGroup = safeText(bloodGroup);
+  if (address !== undefined) student.address = safeText(address);
+
+  student.fatherInfo = {
+    ...student.fatherInfo,
+    name: safeText(fatherInfo.name),
+    mobile: safeText(fatherInfo.mobile),
+    email: safeText(fatherInfo.email).toLowerCase(),
+  };
+  student.motherInfo = {
+    ...student.motherInfo,
+    name: safeText(motherInfo.name),
+    mobile: safeText(motherInfo.mobile),
+    email: safeText(motherInfo.email).toLowerCase(),
+  };
+
+  await student.save();
+
+  const updatedProfile = await Student.findById(student._id)
+    .populate("fatherId", "name email phone")
+    .populate("motherId", "name email phone")
+    .lean();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedProfile, "Student profile updated successfully"));
+});
 
 export const getMyGrades = asyncHandler(async (req, res) => {
   const { student, academicYear } = await getMyActiveEnrollment(req.user);

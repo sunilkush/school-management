@@ -81,6 +81,18 @@ const studentSchema = new mongoose.Schema(
       default: null,
     },
 
+    fatherInfo: {
+      name: { type: String, trim: true, default: "" },
+      mobile: { type: String, trim: true, default: "" },
+      email: { type: String, trim: true, lowercase: true, default: "" },
+    },
+
+    motherInfo: {
+      name: { type: String, trim: true, default: "" },
+      mobile: { type: String, trim: true, default: "" },
+      email: { type: String, trim: true, lowercase: true, default: "" },
+    },
+
     /* ===========================
        🟣 OTHER INFO
     ============================ */

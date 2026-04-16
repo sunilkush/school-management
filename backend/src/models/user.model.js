@@ -24,6 +24,12 @@ const userSchema = new Schema(
       index: true,
     },
 
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     password: {
       type: String,
       required: true
