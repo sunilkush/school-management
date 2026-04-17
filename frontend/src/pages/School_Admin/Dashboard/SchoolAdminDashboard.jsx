@@ -58,7 +58,7 @@ const CardSkeleton = ({ height = 120, isDark }) => (
   <div
     style={{
       borderRadius: 12,
-      padding: 20,
+
       background: tokens(isDark).cardBg,
       border: `1px solid ${tokens(isDark).cardBorder}`,
       height,

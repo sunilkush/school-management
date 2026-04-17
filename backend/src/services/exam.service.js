@@ -10,6 +10,13 @@ import { Attempt } from "../models/ExamAttempts.model.js";
 
 const OBJECT_ID = mongoose.Types.ObjectId;
 
+const isValidObjectIdParam = (value) => {
+  if (value === null || value === undefined) return false;
+  const normalized = String(value).trim().toLowerCase();
+  if (!normalized || normalized === "null" || normalized === "undefined") return false;
+  return mongoose.Types.ObjectId.isValid(normalized);
+};
+
 const normalizeExamPayload = (payload = {}) => ({
   ...payload,
   title: payload.name || payload.title,
@@ -121,11 +128,13 @@ export const getExamsService = async ({ query, user }) => {
 
   const filters = {};
   if (user.roleId?.name !== "Super Admin") filters.schoolId = user.schoolId;
-  if (query.schoolId && user.roleId?.name === "Super Admin") filters.schoolId = query.schoolId;
-  if (query.academicYearId) filters.academicYearId = query.academicYearId;
-  if (query.schoolClassId) filters.schoolClassId = query.schoolClassId;
-  if (query.sectionId) filters.sectionId = query.sectionId;
-  if (query.subjectId) filters.subjectId = query.subjectId;
+ if (query.schoolId && user.roleId?.name === "Super Admin" && isValidObjectIdParam(query.schoolId)) {
+    filters.schoolId = query.schoolId;
+  }
+  if (isValidObjectIdParam(query.academicYearId)) filters.academicYearId = query.academicYearId;
+  if (isValidObjectIdParam(query.schoolClassId)) filters.schoolClassId = query.schoolClassId;
+  if (isValidObjectIdParam(query.sectionId)) filters.sectionId = query.sectionId;
+  if (isValidObjectIdParam(query.subjectId)) filters.subjectId = query.subjectId;
   if (query.status) filters.status = query.status;
 
   if (query.search) {
