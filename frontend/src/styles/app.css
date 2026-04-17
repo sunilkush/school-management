@@ -138,7 +138,7 @@ body {
 
 .sidebar-nav .ant-menu-item-selected,
 .sidebar-nav .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  background: rgba(13, 110, 253, 0.2) !important;
+  background: #fff !important;
   color: var(--color-primary) !important;
 }
 
