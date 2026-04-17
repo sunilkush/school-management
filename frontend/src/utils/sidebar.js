@@ -152,11 +152,17 @@ export const sidebarMenu = {
       title: "Examination Management",
       icon: GraduationCap,
       subMenu: [
-        { title: "Exam Create", path: "schooladmin/exams/exams-create"},
-        { title: "Exams List", path: "schooladmin/exams/exams-list" },
-        { title: "Exam Schedule", path: "schooladmin/exams/schedule" },
-        { title: "Grade Entry", path: "schooladmin/exams/grades" },
-        { title: "Exam Reports", path: "schooladmin/exams/reports" },
+        { title: "Exam Setup", path: "schooladmin/exams" },
+        { title: "Subject Config", path: "schooladmin/exam-config" },
+        { title: "Exam Schedule", path: "schooladmin/exam-schedule" },
+        { title: "Question Bank", path: "schooladmin/question-bank" },
+        { title: "Question Papers", path: "schooladmin/question-papers" },
+        { title: "Result Management", path: "schooladmin/results" },
+        { title: "Exam Analytics", path: "schooladmin/exam-analytics" },
+        { title: "Online Evaluations", path: "schooladmin/online-exams/evaluations" },
+        // legacy routes
+        { title: "Legacy Exam Create", path: "schooladmin/exams/exams-create"},
+        { title: "Legacy Exams List", path: "schooladmin/exams/exams-list" },
       ],
     },
 
@@ -257,10 +263,18 @@ export const sidebarMenu = {
     {
       title: "Examinations",
       icon: GraduationCap,
-      subMenu: [
-        { title: "Exams List", path: "teacher/exams/list" },
-        { title: "Exam Reports", path: "teacher/exams/reports" },
-        { title: "Question Bank", path: "teacher/exams/question-bank" },
+     subMenu: [
+        { title: "Exam Setup", path: "schooladmin/exams" },
+        { title: "Subject Config", path: "schooladmin/exam-config" },
+        { title: "Exam Schedule", path: "schooladmin/exam-schedule" },
+        { title: "Question Bank", path: "schooladmin/question-bank" },
+        { title: "Question Papers", path: "schooladmin/question-papers" },
+        { title: "Result Management", path: "schooladmin/results" },
+        { title: "Exam Analytics", path: "schooladmin/exam-analytics" },
+        { title: "Online Evaluations", path: "schooladmin/online-exams/evaluations" },
+        // legacy routes
+        { title: "Legacy Exam Create", path: "schooladmin/exams/exams-create"},
+        { title: "Legacy Exams List", path: "schooladmin/exams/exams-list" },
       ],
     },
     
@@ -283,10 +297,13 @@ export const sidebarMenu = {
     {
       title: "Examinations",
       icon: GraduationCap,
-      subMenu: [
+     subMenu: [
         { title: "Exam Hub", path: "student/exams" },
-        { title: "Live Exams", path: "student/exams/exam-live" },
-        { title: "Exam Review", path: "student/exams/attempt-review" },
+        { title: "My Results", path: "student/results" },
+        { title: "Report Card", path: "student/report-card" },
+        // legacy routes
+        { title: "Legacy Live Exams", path: "student/exams/exam-live" },
+        { title: "Legacy Exam Review", path: "student/exams/attempt-review" },
       ],
     },
     { title: "Homework", path: "student/homework", icon: ClipboardList },
@@ -310,6 +327,8 @@ export const sidebarMenu = {
       icon: GraduationCap,
        subMenu: [
         { title: "Exam Hub", path: "parent/exams" },
+        { title: "Child Results", path: "parent/results" },
+        { title: "Child Report Card", path: "parent/report-card" },
       ],
 
     },

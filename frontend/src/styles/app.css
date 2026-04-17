@@ -9,9 +9,9 @@
   --color-border: #dee2e6;
   --color-card-bg: #ffffff;
   --color-page-bg: #f8f9fa;
-  --color-sidebar-bg: #052c65;
-  --color-sidebar-text: #ffffff;
-  --color-sidebar-muted: #d2e3fc;
+  --color-sidebar-bg: #ffffff;
+  --color-sidebar-text: #212529;
+  --color-sidebar-muted: #495057;
   --color-brand-soft: rgba(13, 110, 253, 0.1);
   --color-accent-soft: rgba(13, 110, 253, 0.14);
   --color-row-hover: rgba(210, 227, 252, 0.45);
@@ -37,7 +37,7 @@
   --color-border: #334155;
   --color-card-bg: #111827;
   --color-page-bg: #020617;
-  --color-sidebar-bg: #001739;
+  --color-sidebar-bg: #0b1220;
   --color-sidebar-text: #ffffff;
   --color-sidebar-muted: #94a3b8;
   --color-brand-soft: rgba(13, 110, 253, 0.2);
@@ -133,7 +133,7 @@ body {
 }
 
 .sidebar-root {
-  background: var(--color-sidebar-bg) !important;
+  background: #fff !important;
 }
 
 .sidebar-nav .ant-menu-item-selected,

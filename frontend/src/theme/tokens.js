@@ -31,7 +31,7 @@ export const appTheme = {
     colorText: colorTokens.gray900,
     colorMuted: colorTokens.gray700,
     colorBorder: colorTokens.borderLight,
-    colorSidebarBg: colorTokens.blue900,
+    colorSidebarBg: colorTokens.white,
   },
   dark: {
     colorPrimary: colorTokens.primary,
@@ -40,6 +40,6 @@ export const appTheme = {
     colorText: colorTokens.white,
     colorMuted: "#cbd5e1",
     colorBorder: colorTokens.borderDark,
-    colorSidebarBg: "#001739",
+    colorSidebarBg: "#0b1220",
   },
 };
