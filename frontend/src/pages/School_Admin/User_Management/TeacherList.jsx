@@ -246,7 +246,7 @@ const { users = [], loading } = useSelector((state) => state.auth);
     >
       {contextHolder} {/* ✅ IMPORTANT */}
 
-      <div style={{ padding: 24 }}>
+      <div style={{ padding: 0 }}>
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
           <Title level={4}>Users Management</Title>

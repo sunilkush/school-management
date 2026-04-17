@@ -20,6 +20,7 @@ import {
   createStudent,
 } from "../../features/studentSlice";
 import { getClassData } from "../../features/schoolClassSlice";
+import Title from "antd/es/skeleton/Title";
 
 
 const { TabPane } = Tabs;
@@ -160,7 +161,6 @@ const AdmissionForm = () => {
     <Card >
       <Form layout="vertical" form={form} onFinish={onFinish}>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
-
           {/* ================= STUDENT INFO ================= */}
           <TabPane tab="Student Info" key="student">
             <Row gutter={16}>

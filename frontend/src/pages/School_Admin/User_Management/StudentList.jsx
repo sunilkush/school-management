@@ -278,7 +278,7 @@ const StudentList = () => {
     >
      
 
-      <div style={{ padding: "24px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ padding: "0px", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* ── Page Header ── */}
         <div style={{ marginBottom: 24 }}>
