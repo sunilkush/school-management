@@ -135,6 +135,7 @@ export const sidebarMenu = {
         { title: "Student Admission", path: "schooladmin/admission" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Students", path: "schooladmin/studentList" },
+        { title: "Promotion", path: "schooladmin/students/promotion" },
         { title: "Parents", path: "schooladmin/parents-register" },
       ],
     },
