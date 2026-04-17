@@ -19,11 +19,11 @@ const getWindowWidth = () =>
    Design tokens
 ───────────────────────────────────────── */
 const tokens = () => ({
-  layoutBg: "var(--surface-page)",
-  headerBg: "var(--surface-header)",
-  headerBorder: "var(--border-color)",
-  contentBg: "var(--surface-page)",
-  drawerBg: "var(--surface-sidebar)",
+  layoutBg: "var(--color-page-bg)",
+  headerBg: "var(--color-bg)",
+  headerBorder: "var(--color-border)",
+  contentBg: "var(--color-page-bg)",
+  drawerBg: "var(--color-sidebar-bg)",
   sidebarWidth: 260,
 });
 
