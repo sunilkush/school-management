@@ -12,6 +12,13 @@ const resolveQuestionText = (answer) => {
   return snapshot?.statement || snapshot?.questionText || snapshot?.title || "Question";
 };
 
+const formatAttemptAnswer = (answer) => {
+  const raw = answer?.answer ?? answer?.response;
+  if (Array.isArray(raw)) return raw.join(", ");
+  if (raw && typeof raw === "object") return JSON.stringify(raw);
+  return raw?.toString?.() || "-";
+};
+
 const resolveAttemptStatus = (attempt) => {
   const status = attempt?.status || "in_progress";
   if (status === "evaluated") return { color: "green", label: "Evaluated" };
@@ -85,7 +92,7 @@ const AttemptReview = () => {
                   <Text strong>
                     Q{index + 1}: {resolveQuestionText(ans)}
                   </Text>
-                  <Text>Answer: {ans.answer?.toString?.() || ans.response?.toString?.() || "-"}</Text>
+                  <Text>Answer: {formatAttemptAnswer(ans)}</Text>
                   <Text>Marks: {ans.marksObtained ?? 0}</Text>
                   {ans.isCorrect !== null && ans.isCorrect !== undefined && (
                     <Tag color={ans.isCorrect ? "green" : "red"}>{ans.isCorrect ? "Correct" : "Incorrect"}</Tag>

@@ -16,8 +16,15 @@ const getOptionLabel = (option, index) => {
   return `Option ${index + 1}`;
 };
 
+const getNormalizedOptions = (type, options) => {
+  if (Array.isArray(options) && options.length) return options;
+  if (type === "true_false") return ["true", "false"];
+  return [];
+};
+
 const QuestionCard = ({ question, index, onAnswerChange, userAnswer }) => {
   const type = question?.type;
+  const options = getNormalizedOptions(type, question?.options);
 
   return (
     <Card style={{ marginBottom: 12 }} bordered>
@@ -33,7 +40,7 @@ const QuestionCard = ({ question, index, onAnswerChange, userAnswer }) => {
         {["mcq", "mcq_single", "true_false"].includes(type) && (
           <Radio.Group value={userAnswer} onChange={(e) => onAnswerChange(question._id, e.target.value)}>
             <Space direction="vertical" style={{ width: "100%" }}>
-              {(question.options || []).map((opt, i) => {
+              {options.map((opt, i) => {
                 const value = getOptionValue(opt, i);
                 return (
                   <Radio key={value} value={value} style={{ padding: 8, border: "1px solid #f0f0f0", borderRadius: 6 }}>
@@ -73,7 +80,27 @@ const QuestionCard = ({ question, index, onAnswerChange, userAnswer }) => {
           />
         )}
 
+        {type === "fill_blank" && (
+          <Input
+            placeholder="Type your answer"
+            value={userAnswer || ""}
+            onChange={(e) => onAnswerChange(question._id, e.target.value)}
+          />
+        )}
+
+        {type === "match" && (
+          <TextArea
+            rows={4}
+            placeholder="Write matching pairs (e.g., A-1, B-2)"
+            value={userAnswer || ""}
+            onChange={(e) => onAnswerChange(question._id, e.target.value)}
+          />
+        )}
+
         {!type && <Text type="secondary">Answer type unavailable for this question.</Text>}
+        {type && !["mcq", "mcq_single", "mcq_multi", "true_false", "subjective", "short_answer", "long_answer", "fill_blank", "match"].includes(type) && (
+          <Text type="secondary">This question type is not fully supported yet. Please provide answer in text format.</Text>
+        )}
       </Space>
     </Card>
   );
