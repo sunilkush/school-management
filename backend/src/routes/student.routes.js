@@ -8,6 +8,8 @@ import {
   deleteStudent,
   getLastRegisteredStudent,
   getStudentsBySchoolId,
+  getPromotionCandidates,
+  promoteStudentsToNextAcademicYear,
   getMyStudentEnrollmentId,
   getMyChildren,
 } from "../controllers/student.controllers.js";
@@ -66,6 +68,21 @@ router.get(
   auth,
   roleMiddleware(TEACHER_ROLE),
   getStudentsBySchoolId
+);
+
+
+router.get(
+  "/promotion/candidates",
+  auth,
+  roleMiddleware(ADMIN_ROLE),
+  getPromotionCandidates
+);
+
+router.post(
+  "/promotion/promote",
+  auth,
+  roleMiddleware(ADMIN_ROLE),
+  promoteStudentsToNextAcademicYear
 );
 
 router.get(

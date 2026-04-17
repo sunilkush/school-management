@@ -8,6 +8,7 @@ import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Section } from "../models/section.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
 import mongoose from "mongoose";
 import crypto from "crypto";
 /* ================= ROLE FETCH ================= */
@@ -911,6 +912,161 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
   );
 });
 
+
+const getPromotionCandidates = asyncHandler(async (req, res) => {
+  const schoolId = req.user?.schoolId || req.query.schoolId;
+  const { schoolClassId, academicYearId } = req.query;
+
+  if (!schoolId || !schoolClassId || !academicYearId) {
+    throw new ApiError(400, "schoolClassId and academicYearId are required");
+  }
+
+  const students = await StudentEnrollment.find({
+    schoolId,
+    academicYearId,
+    schoolClassId,
+    status: "Active",
+  })
+    .populate({ path: "studentId", populate: { path: "userId", select: "name email" } })
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .sort({ registrationNumber: 1 });
+
+  const data = students.map((enrollment) => ({
+    enrollmentId: enrollment._id,
+    studentId: enrollment.studentId?._id || null,
+    name: enrollment.studentId?.userId?.name || "N/A",
+    email: enrollment.studentId?.userId?.email || "",
+    registrationNumber: enrollment.registrationNumber,
+    currentClass: enrollment.schoolClassId?.name || "",
+    currentSection: enrollment.sectionId?.name || "",
+  }));
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { students: data }, "Promotion candidates fetched"));
+});
+
+const promoteStudentsToNextAcademicYear = asyncHandler(async (req, res) => {
+  const schoolId = req.user?.schoolId || req.body.schoolId;
+  const {
+    fromAcademicYearId,
+    toAcademicYearId,
+    toSchoolClassId,
+    toSectionId,
+    enrollmentIds,
+  } = req.body;
+
+  if (!schoolId || !fromAcademicYearId || !toAcademicYearId || !toSchoolClassId || !toSectionId) {
+    throw new ApiError(400, "fromAcademicYearId, toAcademicYearId, toSchoolClassId and toSectionId are required");
+  }
+
+  if (!Array.isArray(enrollmentIds) || enrollmentIds.length === 0) {
+    throw new ApiError(400, "Select at least one student for promotion");
+  }
+
+  const targetClass = await SchoolClass.findOne({
+    _id: toSchoolClassId,
+    schoolId,
+    academicYearId: toAcademicYearId,
+  }).select("_id");
+
+  if (!targetClass) {
+    throw new ApiError(404, "Target class not found in selected academic year");
+  }
+
+  const targetSection = await Section.findOne({
+    _id: toSectionId,
+    schoolId,
+    schoolClassId: toSchoolClassId,
+  }).select("_id");
+
+  if (!targetSection) {
+    throw new ApiError(404, "Target section not found for selected class");
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const sourceEnrollments = await StudentEnrollment.find({
+      _id: { $in: enrollmentIds },
+      schoolId,
+      academicYearId: fromAcademicYearId,
+      status: "Active",
+    }).session(session);
+
+    if (!sourceEnrollments.length) {
+      throw new ApiError(404, "No valid active enrollments found for promotion");
+    }
+
+    const studentIds = sourceEnrollments.map((item) => item.studentId);
+
+    const existingNextYear = await StudentEnrollment.find({
+      studentId: { $in: studentIds },
+      schoolId,
+      academicYearId: toAcademicYearId,
+    })
+      .select("studentId")
+      .session(session);
+
+    const alreadyPromoted = new Set(existingNextYear.map((item) => String(item.studentId)));
+
+    const promotable = sourceEnrollments.filter((item) => !alreadyPromoted.has(String(item.studentId)));
+
+    if (!promotable.length) {
+      throw new ApiError(409, "Selected students are already enrolled in target academic year");
+    }
+
+    const docsToCreate = promotable.map((item) => ({
+      studentId: item.studentId,
+      schoolId,
+      academicYearId: toAcademicYearId,
+      schoolClassId: toSchoolClassId,
+      sectionId: toSectionId,
+      registrationNumber: item.registrationNumber,
+      mobileNumber: item.mobileNumber,
+      feeDiscount: item.feeDiscount || 0,
+      status: "Active",
+    }));
+
+    const createdEnrollments = await StudentEnrollment.insertMany(docsToCreate, { session });
+
+    const promotedIds = promotable.map((item) => item._id);
+
+    await StudentEnrollment.updateMany(
+      { _id: { $in: promotedIds } },
+      { $set: { status: "Promoted" } },
+      { session }
+    );
+
+    await Section.updateOne(
+      { _id: toSectionId },
+      { $addToSet: { StudentEnrollmentId: { $each: createdEnrollments.map((item) => item._id) } } },
+      { session }
+    );
+
+    await session.commitTransaction();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          promotedCount: createdEnrollments.length,
+          skippedCount: sourceEnrollments.length - createdEnrollments.length,
+          promotedEnrollmentIds: createdEnrollments.map((item) => item._id),
+        },
+        "Students promoted successfully"
+      )
+    );
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+});
+
 const getMyStudentEnrollmentId = asyncHandler(async (req, res) => {
   // 🔐 Step 1: Find student
   const student = await Student.findOne({ userId: req.user._id }).select("_id");
@@ -1064,6 +1220,8 @@ export {
   deleteStudent,
   getLastRegisteredStudent,
   getStudentsBySchoolId,
+  getPromotionCandidates,
+  promoteStudentsToNextAcademicYear,
   getMyStudentEnrollmentId,
   getMyChildren,
 };

@@ -116,6 +116,7 @@ const AddStudent = lazy(() => import("./pages/School_Admin/Teachers_&_Students/A
 //const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
 const ParentList = lazy(() => import("./pages/School_Admin/User_Management/ParentsList.jsx"));
 const StudentList = lazy(() => import("./pages/School_Admin/User_Management/StudentList.jsx"));
+const StudentPromotion = lazy(() => import("./pages/School_Admin/Teachers_&_Students/StudentPromotion.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -464,6 +465,7 @@ const router = createBrowserRouter([
               { path: "notification", element: <Notification /> },
               { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
+              { path: "students/promotion", element: <StudentPromotion /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/exams-list", element: <ExamsPage /> },
