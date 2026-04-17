@@ -14,11 +14,7 @@ import { UploadOutlined } from "@ant-design/icons";
 
 import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
-import {
-  registerUser,
-  resetState,
-  
-} from "../../features/authSlice";
+import { registerUser, resetState ,fetchAllUser} from "../../features/authSlice";
 
 const { Text } = Typography;
 
@@ -45,11 +41,10 @@ const RegisterForm = ({ onClose }) => {
   const currentSchoolId = user?.school?._id;
   const isSuperAdmin = currentUserRole === "super admin";
   const isSchoolAdmin = currentUserRole === "school admin";
-
   const [successMessage, setSuccessMessage] = useState("");
 
   // ✅ FIX: avatar must be array
-const initialValues = {
+  const initialValues = {
     name: "",
     email: "",
     password: "",
@@ -104,10 +99,10 @@ const initialValues = {
 
   useEffect(() => {
     if (!success) return;
-
+    
     setSuccessMessage("User registered successfully");
     form.resetFields();
-    //dispatch(fetchAllUser());
+    dispatch(fetchAllUser());
 
     const timer = setTimeout(() => {
       setSuccessMessage("");
@@ -138,25 +133,26 @@ const initialValues = {
       delete payload.confirmPassword;
 
       dispatch(registerUser(payload));
-      
+    
     },
     [dispatch, isSchoolAdmin, currentSchoolId]
   );
   useEffect(() => {
-  if (success) {
-    setSuccessMessage("User registered successfully ✅");
+    if (success) {
+      setSuccessMessage("User registered successfully ✅");
 
-    form.resetFields(); // ✅ form reset
+      form.resetFields(); // ✅ form reset
 
-    const timer = setTimeout(() => {
-      setSuccessMessage("");
-      dispatch(resetState()); // ✅ redux reset
-      onClose?.(); // ✅ modal close (optional)
-    }, 1500);
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        dispatch(resetState()); // ✅ redux reset
+        onClose?.(); // ✅ modal close (optional)
+      }, 1500);
 
-    return () => clearTimeout(timer);
-  }
-}, [success, dispatch, form, onClose]);
+      return () => clearTimeout(timer);
+
+    }
+  }, [success, dispatch, form, onClose]);
   return (
     <>
       <Text type="secondary">Create user account</Text>
@@ -222,8 +218,8 @@ const initialValues = {
                   getFieldValue("password") === value
                   ? Promise.resolve()
                   : Promise.reject(
-                      new Error("Passwords do not match")
-                    );
+                    new Error("Passwords do not match")
+                  );
               },
             }),
           ]}

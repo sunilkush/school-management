@@ -190,6 +190,13 @@ const Admins = () => {
     ? new Set(users.map((u) => u.school?.name).filter(Boolean)).size
     : 0;
 
+
+    const handleCloseModal = () => {
+  setIsModalOpen(false);
+
+  // 🔥 reload users
+  dispatch(fetchAllUser({ roleName: ["School Admin"], isActive: true }));
+};
   /* ── Columns ── */
   const columns = [
     {
@@ -441,7 +448,7 @@ const Admins = () => {
           destroyOnClose
           styles={{ header: { borderBottom: "1px solid #f5f5f5", paddingBottom: 16 } }}
         >
-          <RegisterForm onClose={() => setIsModalOpen(false)} />
+          <RegisterForm onClose={handleCloseModal} />
         </Modal>
 
       </Layout>
