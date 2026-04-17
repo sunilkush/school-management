@@ -33,6 +33,31 @@ const getLucideIcon = (icon) => {
   return LayoutDashboard;
 };
 
+const normalizeLabel = (value = "") =>
+  value
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const detectModuleLabel = (title = "", parent = "") => {
+  const fullLabel = normalizeLabel(`${parent} ${title}`);
+
+  if (fullLabel.includes("timetable")) return "Timetable";
+  if (fullLabel.includes("attendance")) return "Attendance";
+  if (fullLabel.includes("exam")) return "Exam";
+  if (fullLabel.includes("library") || fullLabel.includes("book")) return "Library";
+  if (fullLabel.includes("transport") || fullLabel.includes("route") || fullLabel.includes("vehicle")) {
+    return "Transport";
+  }
+  if (fullLabel.includes("hostel") || fullLabel.includes("room")) return "Hostel";
+  if (fullLabel.includes("fee")) return "Fees";
+  if (fullLabel.includes("payroll")) return "Payroll";
+  if (fullLabel.includes("inventory")) return "Inventory";
+
+  return null;
+};
+
 // ⭐ Module Card
 const ModuleCard = ({ title, parent, path, Icon, hasAccess, color }) => {
   const content = (
@@ -104,6 +129,7 @@ const AllModules = () => {
             path: sub.path,
             parent: item.title,
             icon: getLucideIcon(sub.icon),
+            permissionModule: detectModuleLabel(sub.title, item.title),
           }))
         : [
             {
@@ -111,19 +137,27 @@ const AllModules = () => {
               path: item.path,
               parent: null,
               icon: getLucideIcon(item.icon),
+              permissionModule: detectModuleLabel(item.title),
             },
           ]
     );
 
   const modules = flattenMenu(menu);
 
-  const hasPermission = (title) => {
+  const hasPermission = (title, permissionModule) => {
     if (normalizedRole === "super admin") return true;
+    const normalizedTitle = normalizeLabel(title);
+    const normalizedPermissionModule = normalizeLabel(permissionModule || "");
 
-    return permissions.some(
-      (perm) =>
-        perm?.module?.toLowerCase() === title.toLowerCase()
-    );
+    return permissions.some((perm) => {
+      const moduleName = normalizeLabel(perm?.module || "");
+      if (!moduleName) return false;
+
+      return (
+        moduleName === normalizedTitle ||
+        (normalizedPermissionModule && moduleName === normalizedPermissionModule)
+      );
+    });
   };
 
   return (
@@ -150,7 +184,7 @@ const AllModules = () => {
                 parent={mod.parent}
                 path={mod.path}
                 Icon={mod.icon}
-                hasAccess={hasPermission(mod.title)}
+                hasAccess={hasPermission(mod.title, mod.permissionModule)}
                 color={COLORS[index % COLORS.length]}
               />
             </Col>
