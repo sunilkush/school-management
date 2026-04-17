@@ -22,7 +22,6 @@ router.put("/:schoolClassId", auth,requireRoles(ADMIN_ONLY), updateClass);
 router.delete("/:schoolClassId", auth,requireRoles(ADMIN_ONLY), deleteClass);
 
 // backward compatibility
-router.post("/create", auth,requireRoles(ADMIN_ONLY), createClass);
-router.get("/all", auth,requireRoles(ADMIN_TEACHER), getAllClasses);
+
 
 export default router;

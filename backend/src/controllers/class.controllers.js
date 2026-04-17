@@ -69,20 +69,35 @@ const deleteClass = asyncHandler(async (req, res) => {
 
 const getAllClasses = asyncHandler(async (req, res) => {
   const page = Number(req.query.page || 1);
-  const limit = Number(req.query.limit || 10);
+  const requestedLimit = Number(req.query.limit || 15);
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+    ? Math.min(requestedLimit, 15)
+    : 15;
   const search = req.query.search || "";
 
   const query = {};
   if (search) query.name = { $regex: search, $options: "i" };
 
-  const skip = (page - 1) * limit;
+  const shouldPaginate = Number.isFinite(limit) && limit > 0;
+  const skip = shouldPaginate ? (page - 1) * limit : 0;
 
   const [classes, total] = await Promise.all([
-    Class.find(query).skip(skip).limit(limit).sort({ createdAt: -1 }),
+    Class.find(query)
+      .skip(skip)
+      .limit(shouldPaginate ? limit : 0)
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "name email role")
+      .populate("updatedBy", "name email role"),
     Class.countDocuments(query),
   ]);
 
-  return res.status(200).json(new ApiResponse(200, classes, "Classes fetched successfully", { page, total, limit }));
+  const meta = shouldPaginate
+    ? { page, total, limit, totalPages: Math.ceil(total / limit) }
+    : { total };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, classes, "Classes fetched successfully", meta));
 });
 
 const getClassById = asyncHandler(async (req, res) => {

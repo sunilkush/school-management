@@ -246,7 +246,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      { path: "/", element: <Register /> },
+      { path: "/", element: <LoginPage /> },
       { path: "/login", element: <LoginPage /> },
       { path: "/forgot-password", element: <ForgetPasswordPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },

@@ -14,7 +14,7 @@ import { UploadOutlined } from "@ant-design/icons";
 
 import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
-import { registerUser, resetState ,fetchAllUser} from "../../features/authSlice";
+import { registerUser, resetState } from "../../features/authSlice";
 
 const { Text } = Typography;
 
@@ -102,7 +102,7 @@ const RegisterForm = ({ onClose }) => {
     
     setSuccessMessage("User registered successfully");
     form.resetFields();
-    dispatch(fetchAllUser());
+    //dispatch(fetchAllUser());
 
     const timer = setTimeout(() => {
       setSuccessMessage("");

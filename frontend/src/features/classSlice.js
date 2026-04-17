@@ -6,7 +6,7 @@ export const createClass = createAsyncThunk(
   "class/createClass",
   async (classData, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/class/create`, classData);
+      const res = await apiClient.post(`/class`, classData);
       return res.data?.data || res.data;
     } catch (error) {
       return rejectWithValue(
@@ -19,14 +19,11 @@ export const createClass = createAsyncThunk(
 // ================= FETCH =================
 export const fetchAllClasses = createAsyncThunk(
   "class/fetchAllClasses",
-  async (params = {}, { rejectWithValue, signal }) => {
+  async (_, { rejectWithValue}) => {
     try {
-      const { schoolId, academicYearId, page = 1, limit = 100 } = params;
+     
 
-      const res = await apiClient.get(`/class/all`, {
-        params: { schoolId, academicYearId, page, limit },
-        signal,
-      });
+      const res = await apiClient.get(`/class`);
 
       return res.data; // ✅ full response
     } catch (error) {
@@ -107,9 +104,6 @@ const classSlice = createSlice({
     loading: false,
     error: null,
     classList: [],
-    total: 0,
-    page: 1,
-    totalPages: 0,
     success: false,
     classAssignTeacher: [],
   },
@@ -129,13 +123,8 @@ const classSlice = createSlice({
       })
       .addCase(fetchAllClasses.fulfilled, (state, action) => {
         state.loading = false;
-
-        const payload = action.payload?.data || {};
-
-        state.classList = payload.classes || payload.data || [];
-        state.total = payload.total || 0;
-        state.page = payload.page || 1;
-        state.totalPages = payload.totalPages || 0;
+        state.classList =  action.payload.data || [];
+      
       })
       .addCase(fetchAllClasses.rejected, (state, action) => {
         state.loading = false;

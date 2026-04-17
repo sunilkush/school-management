@@ -3,9 +3,12 @@ import apiClient from "../api/httpClient";
 
 export const fetchPromotionAcademicYears = createAsyncThunk(
   "studentPromotion/fetchAcademicYears",
-  async (_, { rejectWithValue }) => {
+ async (_, { rejectWithValue, getState }) => {
     try {
-      const res = await apiClient.get("/academic-year");
+      const schoolId = getState()?.auth?.user?.school?._id;
+      if (!schoolId) return rejectWithValue("School not found for current user");
+
+      const res = await apiClient.get(`/academicYear/school/${schoolId}`);
       return res.data?.data || [];
     } catch (err) {
       return rejectWithValue(err?.response?.data?.message || "Failed to load academic years");

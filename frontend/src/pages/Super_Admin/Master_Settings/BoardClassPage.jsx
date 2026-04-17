@@ -142,7 +142,9 @@ export default function BoardClassPage() {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
+   if(selectedBoard){
+     dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
+   }
   }, [selectedBoard, dispatch]);
 
   /* ── Filtered Data ── */

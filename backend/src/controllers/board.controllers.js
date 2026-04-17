@@ -201,9 +201,11 @@ export const getSchoolBoards = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 });
 
   if (!schoolBoards.length) {
-    throw new ApiError(404, "No boards found for this school");
+    return res.status(200).json(
+      new ApiResponse(200, [], "No boards assigned to this school")
+    );
+    
   }
-
   return res.status(200).json(
     new ApiResponse(
       200,

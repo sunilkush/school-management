@@ -66,7 +66,7 @@ const ChaptersTopics = () => {
   const searchTimeout = useRef();
 
   const { user } = useSelector((state) => state.auth);
-  const { chapters, loading: chapterLoading } = useSelector((state) => state.chapters);
+  const { chapters, loading: chapterLoading } = useSelector((state) => state.chapter);
 
   const boards = useSelector((state) => state.boards?.boards || []);
   const boardLoading = useSelector((state) => state.boards?.loading);

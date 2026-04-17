@@ -1,18 +1,36 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
+/* ================= HELPERS ================= */
+const toArray = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.boards)) return payload.data.boards;
+  if (Array.isArray(payload?.data?.schoolBoards)) return payload.data.schoolBoards;
+  return [];
+};
 
-const Api_Base_Url = import.meta.env.VITE_API_URL;
+const toMessage = (payload, fallback = "Something went wrong") => {
+  if (typeof payload === "string") return payload;
+  if (typeof payload?.message === "string") return payload.message;
+  if (typeof payload?.error === "string") return payload.error;
+  if (typeof payload?.response?.data?.message === "string") {
+    return payload.response.data.message;
+  }
+  return fallback;
+};
 
 /* ================= CREATE BOARD ================= */
 export const createBoard = createAsyncThunk(
   "boards/createBoard",
   async (boardData, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/boards`, boardData, {      });
+      const res = await apiClient.post(`/boards`, boardData);
       return res.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data || "Create failed");
+      return rejectWithValue(
+        error?.response?.data || { message: "Create failed" }
+      );
     }
   }
 );
@@ -22,11 +40,12 @@ export const getBoards = createAsyncThunk(
   "boards/getBoards",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/boards`, {        params,
-      });
+      const res = await apiClient.get(`/boards`, { params });
       return res.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data || "Fetch failed");
+      return rejectWithValue(
+        error?.response?.data || { message: "Fetch failed" }
+      );
     }
   }
 );
@@ -36,10 +55,12 @@ export const updateBoard = createAsyncThunk(
   "boards/updateBoard",
   async ({ id, boardData }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`/boards/${id}`, boardData, {      });
+      const res = await apiClient.put(`/boards/${id}`, boardData);
       return res.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data || "Update failed");
+      return rejectWithValue(
+        error?.response?.data || { message: "Update failed" }
+      );
     }
   }
 );
@@ -49,10 +70,12 @@ export const deleteBoard = createAsyncThunk(
   "boards/deleteBoard",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await apiClient.delete(`/boards/${id}`, {      });
+      const res = await apiClient.delete(`/boards/${id}`);
       return res.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data || "Delete failed");
+      return rejectWithValue(
+        error?.response?.data || { message: "Delete failed" }
+      );
     }
   }
 );
@@ -62,63 +85,57 @@ export const assignSchoolBoards = createAsyncThunk(
   "boards/assignSchoolBoards",
   async (assignData, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(
-        `/boards/assignSchool-boards`,
-        assignData,
-        {}
-      );
+      const res = await apiClient.put(`/boards/assignSchool-boards`, assignData);
       return res.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data || "Assign Boards failed");
+      return rejectWithValue(
+        error?.response?.data || { message: "Assign Boards failed" }
+      );
     }
   }
 );
 
-/* ============ get school Boards ================== */
+/* ================= GET SCHOOL BOARDS ================= */
 export const getSchoolBoards = createAsyncThunk(
   "boards/getSchoolBoards",
-  async(schoolId,{rejectWithValue})=>{
-     try {
-       const res = await apiClient.get(`/boards/school-boards/${schoolId}`,{
-        headers:{
-        }
-       })
-       return res.data
-     } catch (error) {
-       return rejectWithValue(error?.response?.data)
-     }
+  async (schoolId, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/boards/school-boards/${schoolId}`);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || { message: "Failed to fetch school boards" }
+      );
+    }
   }
-)
+);
 
 /* ================= REMOVE SCHOOL BOARD ================= */
 export const removeSchoolBoard = createAsyncThunk(
   "boards/removeSchoolBoard",
   async (removeAssign, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(
-        `/boards/removeAssignSchool-boards`,
-        removeAssign,
-        {}
-      );
+      const res = await apiClient.put(`/boards/removeAssignSchool-boards`, removeAssign);
       return res.data;
     } catch (error) {
       return rejectWithValue(
-        error?.response?.data || "Remove Assign Boards failed"
+        error?.response?.data || { message: "Remove Assign Boards failed" }
       );
     }
   }
 );
 
-/* ================= SLICE ================= */
+/* ================= INITIAL STATE ================= */
 const initialState = {
   boards: [],
   totalBoards: 0,
   loading: false,
-  error: null,
+  error: null,          // ✅ always string or null
   assignSchool: [],
-  schoolBoards:[]
+  schoolBoards: [],     // ✅ always array
 };
 
+/* ================= SLICE ================= */
 const boardSlice = createSlice({
   name: "boards",
   initialState,
@@ -132,48 +149,82 @@ const boardSlice = createSlice({
       })
       .addCase(createBoard.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload?.data) {
-          state.boards.push(action.payload.data);
+        state.error = null;
+
+        const created = action.payload?.data;
+        if (created && typeof created === "object" && created._id) {
+          state.boards.unshift(created);
           state.totalBoards += 1;
         }
       })
       .addCase(createBoard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = toMessage(action.payload, "Create failed");
       })
 
-      /* GET ALL */
+      /* GET ALL BOARDS */
       .addCase(getBoards.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(getBoards.fulfilled, (state, action) => {
         state.loading = false;
-        state.boards = Array.isArray(action.payload?.data?.boards)
-          ? action.payload.data.boards
-          : [];
-        state.totalBoards = action.payload?.data?.total || 0;
+        state.error = null;
+
+        state.boards = toArray(action.payload);
+        state.totalBoards =
+          action.payload?.data?.total ||
+          action.payload?.total ||
+          state.boards.length ||
+          0;
       })
       .addCase(getBoards.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.boards = [];
+        state.totalBoards = 0;
+        state.error = toMessage(action.payload, "Fetch failed");
       })
 
       /* UPDATE */
+      .addCase(updateBoard.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateBoard.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+
         const updated = action.payload?.data;
-        if (!updated) return;
+        if (!updated?._id) return;
+
         const index = state.boards.findIndex((b) => b._id === updated._id);
-        if (index !== -1) state.boards[index] = updated;
+        if (index !== -1) {
+          state.boards[index] = updated;
+        }
+      })
+      .addCase(updateBoard.rejected, (state, action) => {
+        state.loading = false;
+        state.error = toMessage(action.payload, "Update failed");
       })
 
       /* DELETE */
+      .addCase(deleteBoard.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(deleteBoard.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+
         const deletedId = action.payload?.data?._id;
         if (deletedId) {
           state.boards = state.boards.filter((b) => b._id !== deletedId);
-          state.totalBoards -= 1;
+          state.totalBoards = Math.max(0, state.totalBoards - 1);
         }
+      })
+      .addCase(deleteBoard.rejected, (state, action) => {
+        state.loading = false;
+        state.error = toMessage(action.payload, "Delete failed");
       })
 
       /* ASSIGN SCHOOL BOARDS */
@@ -184,24 +235,34 @@ const boardSlice = createSlice({
       .addCase(assignSchoolBoards.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.assignSchool = action.payload?.data || [];
+        state.assignSchool = toArray(action.payload);
       })
       .addCase(assignSchoolBoards.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = toMessage(action.payload, "Assign Boards failed");
       })
 
-      .addCase(getSchoolBoards.pending, (state)=>{
+      /* GET SCHOOL BOARDS */
+      .addCase(getSchoolBoards.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getSchoolBoards.fulfilled, (state, action)=>{
+      .addCase(getSchoolBoards.fulfilled, (state, action) => {
         state.loading = false;
-        state.schoolBoards = action.payload.data
+
+        // ✅ API: { success:false, message:"No boards found...", data:null }
+        // then schoolBoards => []
+        state.schoolBoards = toArray(action.payload);
+
+        // optional: message string only, object nahi
+        state.error = action.payload?.success === false
+          ? toMessage(action.payload, null)
+          : null;
       })
-      .addCase(getSchoolBoards.rejected, (state, action)=>{
-       state.loading = false;
-        state.error = action.payload;
+      .addCase(getSchoolBoards.rejected, (state, action) => {
+        state.loading = false;
+        state.schoolBoards = [];
+        state.error = toMessage(action.payload, "Failed to fetch school boards");
       })
 
       /* REMOVE SCHOOL BOARD */
@@ -212,11 +273,11 @@ const boardSlice = createSlice({
       .addCase(removeSchoolBoard.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.assignSchool = action.payload?.data || [];
+        state.assignSchool = toArray(action.payload);
       })
       .addCase(removeSchoolBoard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = toMessage(action.payload, "Remove Assign Boards failed");
       });
   },
 });
