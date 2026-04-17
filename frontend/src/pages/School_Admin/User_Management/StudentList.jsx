@@ -100,7 +100,7 @@ const StudentList = () => {
       key: stu._id,
       name: stu.user?.name ?? "N/A",
       email: stu.user?.email ?? "N/A",
-      class: stu.class?.name ?? "N/A",
+      schoolClass: stu.schoolClass?.name ?? "N/A",
       section: stu.section?.name ?? "N/A",
       dateOfBirth: stu.student?.dateOfBirth
         ? new Date(stu.student.dateOfBirth).toISOString().split("T")[0]
@@ -171,7 +171,7 @@ const StudentList = () => {
     },
     {
       title: "Class",
-      dataIndex: "class",
+      dataIndex: "schoolClass",
       width: 90,
       render: (cls) => (
         <Tag color="blue" style={{ borderRadius: 20, fontWeight: 600 }}>{cls}</Tag>

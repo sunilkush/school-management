@@ -53,8 +53,8 @@ export const getExamAnalytics = asyncHandler(async (req, res) => {
 });
 
 export const updateExam = asyncHandler(async (req, res) => {
-  const existing = await Exam.findById(req.params.id).select("schoolId totalMarks passingMarks").lean();
-  ensureExamAccess(existing, req.user);
+  const exam = await Exam.findById(req.params.id);
+  ensureExamAccess(exam, req.user);
 
   const payload = {
     ...req.body,
@@ -63,20 +63,22 @@ export const updateExam = asyncHandler(async (req, res) => {
     passingMarks: req.body.passingMarks !== undefined ? Number(req.body.passingMarks) : undefined,
   };
 
-  const effectiveTotal = payload.totalMarks !== undefined ? payload.totalMarks : existing?.totalMarks;
-  const effectivePassing = payload.passingMarks !== undefined ? payload.passingMarks : existing?.passingMarks;
+  const effectiveTotal = payload.totalMarks !== undefined ? payload.totalMarks : exam.totalMarks;
+  const effectivePassing = payload.passingMarks !== undefined ? payload.passingMarks : exam.passingMarks;
 
   if (effectiveTotal !== undefined && effectivePassing !== undefined && effectivePassing > effectiveTotal) {
     throw new ApiError(400, "Passing marks cannot exceed total marks");
   }
 
-  const exam = await Exam.findByIdAndUpdate(req.params.id, payload, {
-    new: true,
-    runValidators: true,
-  }).lean();
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined) {
+      exam[key] = value;
+    }
+  });
 
-  if (!exam) throw new ApiError(404, "Exam not found");
-  return res.status(200).json(new ApiResponse(200, exam, "Exam updated successfully"));
+  await exam.save();
+
+  return res.status(200).json(new ApiResponse(200, exam.toObject(), "Exam updated successfully"));
 });
 
 export const deleteExam = asyncHandler(async (req, res) => {

@@ -10,6 +10,16 @@ const assertObjectId = (id, label) => {
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, `Invalid ${label}`);
 };
 
+const isWithinExamWindow = (now, startTime, endTime) => {
+  if (!startTime || !endTime) return false;
+
+  const nowTs = now.getTime();
+  const startTs = new Date(startTime).getTime();
+  const endTs = new Date(endTime).getTime();
+
+  return nowTs >= startTs && nowTs <= endTs;
+};
+
 const enforceAttemptReadAccess = async (attempt, req) => {
   const role = req.userRole?.name;
   const isPrivileged = ["Super Admin", "School Admin", "Teacher"].includes(role);
@@ -34,9 +44,6 @@ const enforceAttemptReadAccess = async (attempt, req) => {
 export const startAttempt = asyncHandler(async (req, res) => {
   const { examId } = req.body;
   const studentId = req.user._id;
-  
-
-
   assertObjectId(examId, "examId");
 
   const exam = await Exam.findById(examId).populate("questions.questionId");
@@ -44,10 +51,10 @@ export const startAttempt = asyncHandler(async (req, res) => {
   if (exam.status !== "published") throw new ApiError(400, "This exam is not published yet");
 
   const now = new Date();
-  if (exam.startTime && now < exam.startTime) {
-    throw new ApiError(400, "Exam has not started yet");
-  }
-  if (exam.endTime && now > exam.endTime) {
+  if (!isWithinExamWindow(now, exam.startTime, exam.endTime)) {
+    if (now < exam.startTime) {
+      throw new ApiError(400, "Exam has not started yet");
+    }
     throw new ApiError(400, "Exam window is closed");
   }
 

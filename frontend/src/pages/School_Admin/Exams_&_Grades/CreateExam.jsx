@@ -54,7 +54,7 @@ const CreateExam = () => {
   /* ================= REDUX ================= */
   const { schoolClasses } = useSelector((state) => state.schoolClass || {});
   const { questions = [] } = useSelector((state) => state.questions || {});
-  
+  console.log(schoolClasses)
 
   const academicYearId = selectedAcademicYear?._id;
   const schoolId = user?.school?._id;
