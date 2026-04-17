@@ -24,6 +24,38 @@ import { getExams, getStudentResults } from "../../../features/examSlice";
 import { getAttempts, startAttempt } from "../../../features/attemptSlice";
 
 const { Title, Text } = Typography;
+const getExamWindowMeta = (exam, now = dayjs()) => {
+  const startAt = exam?.startTime ? dayjs(exam.startTime) : null;
+  const endAt = exam?.endTime ? dayjs(exam.endTime) : null;
+  const isPublished = exam?.status === "published";
+
+  if (!isPublished) {
+    return { canStart: false, reason: "Exam is not published yet", color: "default" };
+  }
+
+  if (!startAt?.isValid() || !endAt?.isValid()) {
+    return { canStart: false, reason: "Exam time window is not configured", color: "default" };
+  }
+
+  if (now.isBefore(startAt)) {
+    return {
+      canStart: false,
+      reason: `Starts at ${startAt.format("DD MMM YYYY, hh:mm A")}`,
+      color: "gold",
+    };
+  }
+
+  if (now.isAfter(endAt)) {
+    return {
+      canStart: false,
+      reason: `Closed at ${endAt.format("DD MMM YYYY, hh:mm A")}`,
+      color: "red",
+    };
+  }
+
+  return { canStart: true, reason: "Live now", color: "green" };
+};
+
 
 const StudentExamsPage = () => {
   const dispatch = useDispatch();
@@ -161,7 +193,8 @@ const StudentExamsPage = () => {
             <Row gutter={[12, 12]}>
               {filteredExams.map((exam) => {
                 const attempt = inProgressByExam.get(`${exam._id}`);
-                const canStart = exam.status === "published";
+                const examWindow = getExamWindowMeta(exam);
+                const canStart = examWindow.canStart;
 
                 return (
                   <Col xs={24} lg={12} key={exam._id}>
@@ -176,7 +209,7 @@ const StudentExamsPage = () => {
                         <Text>Total: {exam.totalMarks ?? 0} • Passing: {exam.passingMarks ?? 0}</Text>
                         <Text type="secondary">Start Time: {exam.startTime ? dayjs(exam.startTime).format(" HH:mm") : "N/A"} | End Time: {exam.endTime ? dayjs(exam.endTime).format(" HH:mm") : "N/A"}</Text>
                         <Text type="secondary">Duration: {exam.durationMinutes ?? 0} minutes</Text>
- 
+                          <Tag color={examWindow.color}>{examWindow.reason}</Tag>
                         <Space wrap>
                           {attempt ? (
                             <Button icon={<ReloadOutlined />} type="primary" onClick={() => openExistingAttempt(attempt._id)}>
