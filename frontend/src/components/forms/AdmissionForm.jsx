@@ -59,13 +59,13 @@ const AdmissionForm = () => {
     (state) => state.students
   );
   const { user } = useSelector((state) => state.auth);
-  const { schoolClasses = []} = useSelector(
-        (state) => state.schoolClass || {}
-      );
+  const { schoolClasses = [] } = useSelector(
+    (state) => state.schoolClass || {}
+  );
 
   const schoolId = user?.school?._id;
- const { selectedAcademicYear } = useSelector((state) => state.academicYear);
-   const academicYearId = selectedAcademicYear._id
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+  const academicYearId = selectedAcademicYear?._id;
 
   const [sections, setSections] = useState([]);
 
@@ -91,66 +91,70 @@ const AdmissionForm = () => {
     form.setFieldsValue({ sectionId: undefined });
   };
 
- const onFinish = async (values) => {
-  try {
-    const payload = {
-      studentData: {
-        name: values.studentName,
-        email: values.email,
-      
-        dateOfBirth: values.dateOfBirth?.format("YYYY-MM-DD"),
-        gender: values.gender,
-        address: values.address,
-        bloodGroup: values.bloodGroup,
-      },
-
-      fatherData: {
-        name: values.fatherName,
-        email: values.fatherEmail,
-        mobile: values.fatherMobile,
-      },
-
-      motherData: {
-        name: values.motherName,
-        email: values.motherEmail,
-        mobile: values.motherMobile,
-      },
-
-      schoolId,
-      academicYearId,
-      schoolClassId: values.schoolClassId,
-      sectionId: values.sectionId,
-    };
-
-    const res = await dispatch(createStudent(payload));
-
-    if (res?.meta?.requestStatus === "fulfilled") {
-      message.success("Student admitted successfully");
-
-      const credentials = res?.payload?.credentials;
-      if (credentials) {
-        Modal.success({
-          title: "Login Credentials",
-          width: 560,
-          content: (
-            <div style={{ marginTop: 12 }}>
-              {renderCredentialLine("Student", credentials.student)}
-              {renderCredentialLine("Father", credentials.father)}
-              {renderCredentialLine("Mother", credentials.mother)}
-            </div>
-          ),
-        });
-      }
-
-      form.resetFields();
-      dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
-    } else {
-      message.error(res?.payload || "Admission failed");
+  const onFinish = async (values) => {
+    if (!schoolId || !academicYearId) {
+      message.error("Please select an academic year before submitting admission.");
+      return;
     }
-  } catch (err) {
-    message.error("Something went wrong", err.message);
-  }
-};
+
+    try {
+      const payload = {
+        studentData: {
+          name: values.studentName,
+          email: values.email,
+          dateOfBirth: values.dateOfBirth?.format("YYYY-MM-DD"),
+          gender: values.gender,
+          address: values.address,
+          bloodGroup: values.bloodGroup,
+        },
+
+        fatherData: {
+          name: values.fatherName,
+          email: values.fatherEmail,
+          mobile: values.fatherMobile,
+        },
+
+        motherData: {
+          name: values.motherName,
+          email: values.motherEmail,
+          mobile: values.motherMobile,
+        },
+
+        schoolId,
+        academicYearId,
+        schoolClassId: values.schoolClassId,
+        sectionId: values.sectionId,
+      };
+
+      const res = await dispatch(createStudent(payload));
+
+      if (res?.meta?.requestStatus === "fulfilled") {
+        message.success("Student admitted successfully");
+
+        const credentials = res?.payload?.credentials;
+        if (credentials) {
+          Modal.success({
+            title: "Login Credentials",
+            width: 560,
+            content: (
+              <div style={{ marginTop: 12 }}>
+                {renderCredentialLine("Student", credentials.student)}
+                {renderCredentialLine("Father", credentials.father)}
+                {renderCredentialLine("Mother", credentials.mother)}
+              </div>
+            ),
+          });
+        }
+
+        form.resetFields();
+        dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
+      } else {
+        message.error(res?.payload || "Admission failed");
+      }
+    } catch (err) {
+      message.error("Something went wrong", err.message);
+    }
+  };
 
   return (
     <Card >
