@@ -21,7 +21,7 @@ const isWithinExamWindow = (now, startTime, endTime) => {
 };
 
 const enforceAttemptReadAccess = async (attempt, req) => {
-  const role = req.userRole?.name;
+  const role = req.role?.name;
   const isPrivileged = ["Super Admin", "School Admin", "Teacher"].includes(role);
   if (isPrivileged) return;
 
