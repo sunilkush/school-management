@@ -13,7 +13,7 @@ import {
   getMyStudentEnrollmentId,
   getMyChildren,
 } from "../controllers/student.controllers.js";
-
+import { getMyProfile, updateMyProfile } from "../controllers/studentPortal.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { checkActiveAcademicYear } from "../middlewares/checActiveYear.middleware.js";
 
@@ -97,6 +97,20 @@ router.get(
   auth,
   roleMiddleware(["Parent"]),
   getMyChildren
+);
+
+router.get(
+  "/my/profile",
+  auth,
+  roleMiddleware(["Student"]),
+  getMyProfile
+);
+
+router.put(
+  "/my/profile",
+  auth,
+  roleMiddleware(["Student"]),
+  updateMyProfile
 );
 // ✅ Get Student by ID (Student can access ONLY own profile — controller handles security)
 router.get(

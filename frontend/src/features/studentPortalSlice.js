@@ -54,7 +54,7 @@ export const fetchStudentProfile = createAsyncThunk(
   "studentPortal/fetchStudentProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/student-portal/me/profile");
+       const res = await apiClient.get("/student/my/profile");
       return res.data?.data || null;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch student profile"));
@@ -66,7 +66,7 @@ export const updateStudentProfile = createAsyncThunk(
   "studentPortal/updateStudentProfile",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put("/student-portal/me/profile", payload);
+      const res = await apiClient.put("/student/my/profile", payload);
       return res.data?.data || null;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to update student profile"));
