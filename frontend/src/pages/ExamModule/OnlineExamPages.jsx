@@ -43,6 +43,15 @@ export const OnlineExamAttemptPage = () => {
 
   const questions = useMemo(() => (paper?.sections || []).flatMap((sec) => sec.questions || []), [paper]);
   const currentQuestion = questions[currentIndex] || null;
+  const currentResponse = useMemo(
+    () => (responses || []).find((response) => response?.questionId === currentQuestion?._id),
+    [responses, currentQuestion?._id]
+  );
+
+  useEffect(() => {
+    setTextAnswer(currentResponse?.answerText || "");
+    setSelectedOption(currentResponse?.selectedOption || "");
+  }, [currentResponse?.answerText, currentResponse?.selectedOption]);
 
   const saveCurrent = async () => {
     if (!currentQuestion) return;
@@ -75,9 +84,9 @@ export const OnlineExamAttemptPage = () => {
             <Input.TextArea rows={4} placeholder="Write your answer..." value={textAnswer} onChange={(e) => setTextAnswer(e.target.value)} />
             <Space style={{ marginTop: 12 }}>
               <Button onClick={() => setCurrentIndex((v) => Math.max(v - 1, 0))}>Previous</Button>
-              <Button onClick={saveCurrent}>Save & Next</Button>
-              <Button onClick={() => dispatch(markQuestionReview({ attemptId, payload: { questionId: currentQuestion?._id, isMarkedForReview: true } }))}>Mark Review</Button>
-              <Button onClick={() => dispatch(clearOnlineAnswer({ attemptId, payload: { questionId: currentQuestion?._id } }))}>Clear</Button>
+              <Button onClick={async () => { await saveCurrent(); setCurrentIndex((v) => Math.min(v + 1, questions.length - 1)); }}>Save & Next</Button>
+              <Button disabled={!currentQuestion?._id} onClick={() => dispatch(markQuestionReview({ attemptId, payload: { questionId: currentQuestion?._id, isMarkedForReview: true } }))}>Mark Review</Button>
+              <Button disabled={!currentQuestion?._id} onClick={() => dispatch(clearOnlineAnswer({ attemptId, payload: { questionId: currentQuestion?._id } }))}>Clear</Button>
               <Button type="primary" danger onClick={submitNow}>Final Submit</Button>
             </Space>
           </Card>

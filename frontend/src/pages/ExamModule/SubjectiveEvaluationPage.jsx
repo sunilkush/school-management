@@ -24,7 +24,9 @@ export const SubjectiveEvaluationDetailPage = () => {
   useEffect(() => { dispatch(fetchEvaluationDetail(attemptId)); }, [dispatch, attemptId]);
   const pending = (detail?.responses || []).filter((row) => ["Short Answer", "Long Answer", "Subjective", "Case Study"].includes(row?.questionId?.questionType));
   const saveGrades = async () => {
-    const evaluations = pending.map((p) => ({ questionId: p.questionId._id, marksObtained: Number(grades[p.questionId._id] || 0) }));
+    const evaluations = pending
+      .filter((p) => p?.questionId?._id)
+      .map((p) => ({ questionId: p.questionId._id, marksObtained: Number(grades[p.questionId._id] || 0) }));
     await dispatch(gradeSubjectiveAnswers({ attemptId, evaluations }));
     dispatch(fetchEvaluationDetail(attemptId));
   };
@@ -32,9 +34,16 @@ export const SubjectiveEvaluationDetailPage = () => {
     <Card title="Grade Subjective Responses">
       <Space direction="vertical" style={{ width: "100%" }}>
         {pending.map((row) => (
-          <Card key={row._id} type="inner" title={row.questionId.questionText}>
+          <Card key={row._id} type="inner" title={row?.questionId?.questionText || "Question"}>
             <p><strong>Answer:</strong> {row.answerText || "N/A"}</p>
-            <InputNumber min={0} value={grades[row.questionId._id]} onChange={(value) => setGrades((prev) => ({ ...prev, [row.questionId._id]: value }))} />
+            <InputNumber
+              min={0}
+              value={grades[row?.questionId?._id]}
+              onChange={(value) => {
+                if (!row?.questionId?._id) return;
+                setGrades((prev) => ({ ...prev, [row.questionId._id]: value }));
+              }}
+            />
           </Card>
         ))}
         <Space>
