@@ -13,18 +13,46 @@ import { lazy } from "react";
 import React, { Suspense } from "react";
 import { ConfigProvider, App as AntdApp, theme as antdTheme } from "antd";
 import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
+import { appTheme, colorTokens } from "./theme/tokens";
 
 const ThemedAntWrapper = ({ children }) => {
   const { isDark } = useTheme();
+  const mode = isDark ? appTheme.dark : appTheme.light;
 
   return (
     <ConfigProvider
       theme={{
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
+          colorPrimary: colorTokens.primary,
+          colorInfo: colorTokens.primary,
+          colorSuccess: colorTokens.primary,
+          colorWarning: colorTokens.secondary,
+          colorError: "#ff4d4f",
+          colorBgBase: mode.colorBg,
+          colorTextBase: mode.colorText,
+          colorTextSecondary: mode.colorMuted,
           borderRadius: 10,
-          colorPrimary: "#1677ff",
+          fontSize: 14,
           fontFamily: '"Noto Sans", sans-serif',
+        },
+        components: {
+          Layout: {
+            headerBg: "var(--color-bg)",
+            bodyBg: "var(--color-bg)",
+            siderBg: "var(--color-sidebar-bg)",
+          },
+          Menu: {
+            darkItemBg: "var(--color-sidebar-bg)",
+            darkItemSelectedBg: colorTokens.primary,
+            darkItemSelectedColor: colorTokens.white,
+            itemSelectedBg: "var(--color-brand-soft)",
+            itemSelectedColor: colorTokens.primary,
+          },
+          Table: {
+            headerBg: "var(--color-brand-soft)",
+            rowHoverBg: "var(--color-row-hover)",
+          },
         },
       }}
     >

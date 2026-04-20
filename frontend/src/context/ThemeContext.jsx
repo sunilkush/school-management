@@ -51,6 +51,8 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", resolvedTheme);
+    document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+    document.body.classList.toggle("dark", resolvedTheme === "dark");
 
     memoryStorage.setItem(THEME_MODE_KEY, themeMode);
     memoryStorage.setItem(THEME_KEY, resolvedTheme);
