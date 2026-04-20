@@ -1,41 +1,53 @@
 import mongoose, { Schema } from "mongoose";
 
+const subjectResultSchema = new Schema(
+  {
+    subjectId: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
+    examId: { type: Schema.Types.ObjectId, ref: "Exam", required: true },
+    totalMarks: { type: Number, required: true, min: 0 },
+    obtainedMarks: { type: Number, required: true, min: 0 },
+    percentage: { type: Number, required: true, min: 0, max: 100 },
+    grade: { type: String, required: true },
+    resultStatus: { type: String, enum: ["pass", "fail", "absent"], required: true },
+  },
+  { _id: false }
+);
+
 const examResultSchema = new Schema(
   {
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
-    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear", required: true, index: true },
-    examId: { type: Schema.Types.ObjectId, ref: "Exam", required: true, index: true },
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      required: true,
+      index: true,
+    },
     studentId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     schoolClassId: { type: Schema.Types.ObjectId, ref: "SchoolClass", required: true, index: true },
-    sectionId: { type: Schema.Types.ObjectId, ref: "Section", default: null, index: true },
-
-    subjects: [
-      {
-        subjectId: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
-        subjectName: { type: String, trim: true },
-        obtainedMarks: { type: Number, required: true, min: 0 },
-        totalMarks: { type: Number, required: true, min: 0 },
-        passingMarks: { type: Number, required: true, min: 0 },
-        isPassed: { type: Boolean, required: true },
-      },
-    ],
-
-    totalObtainedMarks: { type: Number, required: true, min: 0 },
-    totalMaximumMarks: { type: Number, required: true, min: 0 },
+    sectionId: { type: Schema.Types.ObjectId, ref: "Section", index: true },
+    examIds: [{ type: Schema.Types.ObjectId, ref: "Exam", required: true }],
+    subjects: { type: [subjectResultSchema], default: [] },
+    totalMarks: { type: Number, required: true, min: 0 },
+    obtainedMarks: { type: Number, required: true, min: 0 },
     percentage: { type: Number, required: true, min: 0, max: 100 },
-    grade: { type: String, required: true, trim: true },
-    resultStatus: { type: String, enum: ["PASS", "FAIL"], required: true },
-    rank: { type: Number, min: 1, default: null },
-
-    isPublished: { type: Boolean, default: false, index: true },
-    publishedAt: { type: Date, default: null },
+    overallGrade: { type: String, required: true },
+    passStatus: { type: String, enum: ["pass", "fail", "withheld"], default: "pass" },
+    classRank: { type: Number, default: null },
+    sectionRank: { type: Number, default: null },
+    publishStatus: {
+      type: String,
+      enum: ["draft", "published", "withheld", "locked"],
+      default: "draft",
+      index: true,
+    },
+    remarks: { type: String, trim: true, default: "" },
+    processedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     publishedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    publishedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
-examResultSchema.index({ schoolId: 1, examId: 1, studentId: 1 }, { unique: true });
-examResultSchema.index({ schoolId: 1, examId: 1, schoolClassId: 1, sectionId: 1, rank: 1 });
+examResultSchema.index({ schoolId: 1, academicYearId: 1, studentId: 1 }, { unique: true });
 
-export const ExamResult =
-  mongoose.models.ExamResult || mongoose.model("ExamResult", examResultSchema);
+export const ExamResult = mongoose.models.ExamResult || mongoose.model("ExamResult", examResultSchema);

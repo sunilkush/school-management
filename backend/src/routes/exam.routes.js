@@ -112,7 +112,6 @@ router.post("/attempt/start", auth, roleMiddleware(["Super Admin", "Teacher", "S
 router.post("/attempt/submit", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin", "Student"]), submitExamAttempt);
 router.post("/attempt/evaluate", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin"]), evaluateAttempt);
 
-router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamById);
 router.get(
   "/:id/analytics",
   auth,
@@ -120,6 +119,7 @@ router.get(
   validate({ params: { id: { required: true, type: "objectId" } } }),
   getExamAnalytics
 );
+router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamById);
 router.put(
   "/:id",
   auth,

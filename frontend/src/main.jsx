@@ -181,6 +181,14 @@ const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDeta
 const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
 const MyAttendancePage = lazy(() => import("./pages/Teacher/Profile/MyAttendancePage.jsx"));
 const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports.jsx"));
+const ExamAnalyticsPage = lazy(() => import("./pages/ExamManagement/ExamAnalyticsPage.jsx"));
+const ExamListPageV2 = lazy(() => import("./pages/ExamManagement/ExamListPage.jsx"));
+const ExamSettingsPage = lazy(() => import("./pages/ExamManagement/ExamSettingsPage.jsx"));
+const PaperBuilderPage = lazy(() => import("./pages/ExamManagement/PaperBuilderPage.jsx"));
+const QuestionBankPageV2 = lazy(() => import("./pages/ExamManagement/QuestionBankPage.jsx"));
+const ResultAndReportPage = lazy(() => import("./pages/ExamManagement/ResultAndReportPage.jsx"));
+const StudentOnlineExamPage = lazy(() => import("./pages/ExamManagement/StudentOnlineExamPage.jsx"));
+const TeacherEvaluationPage = lazy(() => import("./pages/ExamManagement/TeacherEvaluationPage.jsx"));
 
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
@@ -472,6 +480,13 @@ const router = createBrowserRouter([
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
               { path: "exams/reports", element: <ExamReports /> },
+              { path: "exam-management/settings", element: <ExamSettingsPage /> },
+              { path: "exam-management/exams", element: <ExamListPageV2 /> },
+              { path: "exam-management/questions", element: <QuestionBankPageV2 /> },
+              { path: "exam-management/paper-builder", element: <PaperBuilderPage /> },
+              { path: "exam-management/evaluation", element: <TeacherEvaluationPage /> },
+              { path: "exam-management/results", element: <ResultAndReportPage /> },
+              { path: "exam-management/analytics", element: <ExamAnalyticsPage /> },
               { path: "users/employee-form", element: <EmployeeForm /> },
               { path: "users/employee-details", element: <EmployeeDetailes /> },
               // Backward-compatible routes (legacy typos)
@@ -511,6 +526,12 @@ const router = createBrowserRouter([
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
+              { path: "exam-management/exams", element: <ExamListPageV2 /> },
+              { path: "exam-management/questions", element: <QuestionBankPageV2 /> },
+              { path: "exam-management/paper-builder", element: <PaperBuilderPage /> },
+              { path: "exam-management/evaluation", element: <TeacherEvaluationPage /> },
+              { path: "exam-management/results", element: <ResultAndReportPage /> },
+              { path: "exam-management/analytics", element: <ExamAnalyticsPage /> },
               { path: "timetable", element: <TeacherTimetable /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
@@ -548,6 +569,8 @@ const router = createBrowserRouter([
               { path: "exams/attempt-review", element: <AttemptReview /> },
               { path: "exams/exam-live", element: <ExamLive /> },
               { path: "exams", element: <StudentExamsPage /> },
+              { path: "exam-management/online", element: <StudentOnlineExamPage /> },
+              { path: "exam-management/results", element: <ResultAndReportPage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "communication/send", element: <SendNotification /> },
@@ -571,6 +594,7 @@ const router = createBrowserRouter([
               { path: "homework", element: <ChildHomework /> },
                { path: "fees", element: <ParentFees /> },
               { path: "exams", element: <ParentExamsPage /> },
+              { path: "exam-management/results", element: <ResultAndReportPage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <ChildMessages /> },
               { path: "profile", element: <Profile /> },

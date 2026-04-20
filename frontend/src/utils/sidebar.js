@@ -157,6 +157,11 @@ export const sidebarMenu = {
         { title: "Exam Schedule", path: "schooladmin/exams/schedule" },
         { title: "Grade Entry", path: "schooladmin/exams/grades" },
         { title: "Exam Reports", path: "schooladmin/exams/reports" },
+        { title: "Exam Settings", path: "schooladmin/exam-management/settings" },
+        { title: "Exam Manager", path: "schooladmin/exam-management/exams" },
+        { title: "Paper Builder", path: "schooladmin/exam-management/paper-builder" },
+        { title: "Result Processing", path: "schooladmin/exam-management/results" },
+        { title: "Exam Analytics", path: "schooladmin/exam-management/analytics" },
       ],
     },
 
@@ -261,6 +266,10 @@ export const sidebarMenu = {
         { title: "Exams List", path: "teacher/exams/list" },
         { title: "Exam Reports", path: "teacher/exams/reports" },
         { title: "Question Bank", path: "teacher/exams/question-bank" },
+        { title: "Exam Manager", path: "teacher/exam-management/exams" },
+        { title: "Paper Builder", path: "teacher/exam-management/paper-builder" },
+        { title: "Evaluation", path: "teacher/exam-management/evaluation" },
+        { title: "Results", path: "teacher/exam-management/results" },
       ],
     },
     
@@ -285,6 +294,8 @@ export const sidebarMenu = {
       icon: GraduationCap,
       subMenu: [
         { title: "Exam Hub", path: "student/exams" },
+        { title: "Online Attempt", path: "student/exam-management/online" },
+        { title: "Exam Results", path: "student/exam-management/results" },
         { title: "Live Exams", path: "student/exams/exam-live" },
         { title: "Exam Review", path: "student/exams/attempt-review" },
       ],
@@ -310,6 +321,7 @@ export const sidebarMenu = {
       icon: GraduationCap,
        subMenu: [
         { title: "Exam Hub", path: "parent/exams" },
+        { title: "Child Results", path: "parent/exam-management/results" },
       ],
 
     },
