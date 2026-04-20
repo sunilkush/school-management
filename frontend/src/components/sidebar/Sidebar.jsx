@@ -23,14 +23,14 @@ const tokens = (isDark) => ({
   bg: "var(--color-sidebar-bg)",
   border: "var(--color-border)",
   headerBg: isDark
-    ? "linear-gradient(145deg, rgba(28,92,75,0.28) 0%, rgba(2,2,2,1) 100%)"
-    : "linear-gradient(145deg, rgba(28,92,75,0.18) 0%, rgba(2,2,2,1) 100%)",
-  iconBg: "rgba(225, 197, 99, 0.2)",
+    ? "linear-gradient(145deg, rgba(13,110,253,0.28) 0%, rgba(2,2,2,1) 100%)"
+    : "linear-gradient(145deg, rgba(13,110,253,0.18) 0%, rgba(2,2,2,1) 100%)",
+  iconBg: "var(--color-brand-soft)",
   iconColor: "var(--color-accent)",
   accent: "var(--color-primary)",
   textPrimary: "var(--color-sidebar-text)",
   textSecondary: "var(--color-sidebar-muted)",
-  scrollbarThumb: "rgba(225, 197, 99, 0.4)",
+  scrollbarThumb: "rgba(13, 110, 253, 0.35)",
   shimmer: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.14)",
 });
 
@@ -103,7 +103,7 @@ const AuthLoadingState = ({ isDark }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: `0 0 0 8px ${isDark ? "rgba(28,92,75,0.18)" : "rgba(225,197,99,0.16)"}`,
+            boxShadow: `0 0 0 8px ${isDark ? "rgba(13,110,253,0.18)" : "rgba(13,110,253,0.16)"}`,
             animation: "ringPulse 2s ease-in-out infinite",
           }}
         >
@@ -119,7 +119,7 @@ const AuthLoadingState = ({ isDark }) => {
         </div>
         <style>{`
           @keyframes ringPulse {
-            0%, 100% { box-shadow: 0 0 0 8px ${isDark ? "rgba(28,92,75,0.18)" : "rgba(225,197,99,0.16)"}; }
+            0%, 100% { box-shadow: 0 0 0 8px ${isDark ? "rgba(13,110,253,0.18)" : "rgba(13,110,253,0.16)"}; }
             50%       { box-shadow: 0 0 0 14px transparent; }
           }
         `}</style>
@@ -183,9 +183,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
           font-weight: 600;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          background: ${isDark ? "rgba(225,197,99,0.16)" : "rgba(225,197,99,0.16)"};
+          background: ${isDark ? "rgba(13,110,253,0.2)" : "rgba(13,110,253,0.14)"};
           color: ${t.accent};
-          border: 1px solid ${isDark ? "rgba(225,197,99,0.3)" : "rgba(225,197,99,0.3)"};
+          border: 1px solid ${isDark ? "rgba(13,110,253,0.4)" : "rgba(13,110,253,0.3)"};
         }
       `}</style>
 
@@ -234,12 +234,12 @@ const Sidebar = ({ isOpen, onToggle }) => {
               <Avatar
                 size={36}
                 style={{
-                  background: `linear-gradient(135deg, ${t.accent}, ${isDark ? "#b89b3f" : "#e1c563"})`,
+                  background: `linear-gradient(135deg, ${t.accent}, var(--color-primary-hover))`,
                   color: "#fff",
                   fontSize: 13,
                   fontWeight: 700,
                   flexShrink: 0,
-                  boxShadow: "0 2px 8px rgba(225,197,99,0.28)",
+                  boxShadow: "0 2px 8px rgba(13,110,253,0.28)",
                 }}
               >
                 {initials}

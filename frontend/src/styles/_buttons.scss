@@ -1,0 +1,32 @@
+@use "variables" as *;
+
+.btn,
+.ant-btn {
+  border-radius: $border-radius-md;
+  transition: all 0.2s ease;
+}
+
+.btn-primary,
+.ant-btn-primary {
+  background: $primary !important;
+  border-color: $primary !important;
+  color: $white !important;
+
+  &:hover,
+  &:focus {
+    background: $blue-700 !important;
+    border-color: $blue-700 !important;
+  }
+}
+
+.ant-btn-default,
+.btn-secondary {
+  border-color: $gray-300 !important;
+  color: $gray-700 !important;
+
+  &:hover,
+  &:focus {
+    color: $primary !important;
+    border-color: $primary !important;
+  }
+}

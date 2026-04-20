@@ -1,0 +1,12 @@
+@use "variables" as *;
+
+.ant-layout-header {
+  background: var(--color-bg) !important;
+  border-bottom: 1px solid $gray-300 !important;
+}
+
+.topbar-action,
+.ant-badge,
+.ant-dropdown-trigger {
+  color: var(--color-text);
+}

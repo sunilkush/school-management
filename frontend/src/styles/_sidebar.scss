@@ -1,0 +1,17 @@
+@use "variables" as *;
+
+.sidebar-root {
+  background: var(--color-sidebar-bg) !important;
+}
+
+.sidebar-nav .ant-menu-item-selected,
+.sidebar-nav .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background: rgba(13, 110, 253, 0.2) !important;
+  color: $primary !important;
+}
+
+.sidebar-nav .ant-menu-item:hover,
+.sidebar-nav .ant-menu-submenu-title:hover {
+  background: rgba(210, 227, 252, 0.15) !important;
+  color: $primary !important;
+}

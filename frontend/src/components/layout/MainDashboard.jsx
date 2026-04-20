@@ -242,7 +242,7 @@ const Dashboard = () => {
               flex: 1,
               padding: isMobile ? 12 : 20,
               background: t.contentBg,
-              color: "var(--text-primary)",
+              color: "var(--color-text)",
               minHeight: "calc(100vh - 64px)",
             }}
           >

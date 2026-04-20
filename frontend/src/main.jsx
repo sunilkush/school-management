@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import "./index.css";
+import "./styles/app.css";
 import "antd/dist/reset.css";
 import App from "./App.jsx";
 import store, { persistor } from "./store/store.js";
@@ -26,9 +27,9 @@ const ThemedAntWrapper = ({ children }) => {
         token: {
           colorPrimary: colorTokens.primary,
           colorInfo: colorTokens.primary,
-          colorSuccess: colorTokens.primary,
-          colorWarning: colorTokens.secondary,
-          colorError: "#ff4d4f",
+          colorSuccess: colorTokens.success,
+          colorWarning: colorTokens.warning,
+          colorError: colorTokens.danger,
           colorBgBase: mode.colorBg,
           colorTextBase: mode.colorText,
           colorTextSecondary: mode.colorMuted,

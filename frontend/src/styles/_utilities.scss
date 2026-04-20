@@ -1,0 +1,25 @@
+@use "variables" as *;
+
+body {
+  font-family: "Noto Sans", sans-serif !important;
+  background: var(--color-page-bg) !important;
+  color: var(--color-text) !important;
+}
+
+a,
+.text-primary,
+.link-primary {
+  color: $primary;
+
+  &:hover {
+    color: $blue-700;
+  }
+}
+
+.bg-soft-primary {
+  background: $blue-100 !important;
+}
+
+.border-theme {
+  border-color: $gray-300 !important;
+}

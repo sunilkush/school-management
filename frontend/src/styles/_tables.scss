@@ -1,0 +1,21 @@
+@use "variables" as *;
+
+.ant-table {
+  background: var(--color-card-bg) !important;
+  color: var(--color-text) !important;
+}
+
+.ant-table-thead > tr > th {
+  background: rgba(210, 227, 252, 0.5) !important;
+  color: $gray-900 !important;
+  border-bottom: 1px solid $gray-300 !important;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid $gray-300 !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--color-row-hover) !important;
+}

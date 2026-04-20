@@ -14,11 +14,11 @@ const Loader = () => (
       alignItems: "center",
       height: "100vh",
       gap: 16,
-      background: "#f0f2f5", // ✅ Matches Ant Design app background
+      background: "var(--color-page-bg)", // ✅ Matches Ant Design app background
     }}
   >
     {/* Logo */}
-    <Title level={3} style={{ margin: 0, color: "#1677ff" }}>
+    <Title level={3} style={{ margin: 0, color: "var(--color-primary)" }}>
       School ERP
     </Title>
 

@@ -86,7 +86,7 @@ const LoginForm = () => {
     !error.toLowerCase().includes("unauthorized");
 
   return (
-    <Layout style={{ minHeight: "100vh",color: "var(--text-primary)" }}>
+    <Layout style={{ minHeight: "100vh",color: "var(--color-text)" }}>
       <Content>
         <Row style={{ minHeight: "100vh", margin: "0 auto" }}>
           <Col
@@ -103,15 +103,16 @@ const LoginForm = () => {
               style={{
                 width: "100%",
                 maxWidth: 420,
-                boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                boxShadow: "0 16px 32px rgba(33,37,41,0.12)",
+                border: "1px solid var(--color-border)",
                 borderRadius: 12,
                 background: "var(--card)",
                
               }}
               variant="borderless"
             >
-              <Title level={3} style={{color: "var(--text-primary)"}}>Welcome Back 👋</Title>
-              <Text type="secondary" style={{color: "var(--text-primary)"}}>
+              <Title level={3} style={{color: "var(--color-text)"}}>Welcome Back 👋</Title>
+              <Text type="secondary" style={{color: "var(--color-text)"}}>
                 Login to continue to your dashboard
               </Text>
 
@@ -149,10 +150,10 @@ const LoginForm = () => {
                 </Form.Item>
 
                 <Row justify="space-between" align="middle">
-                  <Form.Item name="remember" valuePropName="checked" style={{color: "var(--text-primary)"}}>
-                    <Checkbox style={{color: "var(--text-primary)"}}>Remember me</Checkbox>
+                  <Form.Item name="remember" valuePropName="checked" style={{color: "var(--color-text)"}}>
+                    <Checkbox style={{color: "var(--color-text)"}}>Remember me</Checkbox>
                   </Form.Item>
-                  <Link to="/forgot-password" style={{color: "var(--text-primary)"}}>
+                  <Link to="/forgot-password" style={{color: "var(--color-text)"}}>
                     Forgot password?
                   </Link>
                 </Row>
