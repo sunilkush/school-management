@@ -30,10 +30,10 @@ const styles = {
     position: "sticky",
     top: 0,
     zIndex: 100,
-    background: "var(--surface-elevated)",
+    background: "var(--color-bg)",
     backdropFilter: "blur(14px)",
     WebkitBackdropFilter: "blur(14px)",
-    borderBottom: "1px solid var(--border-muted)",
+    borderBottom: "1px solid var(--color-border)",
     boxShadow: "var(--header-shadow)",
     transition: "background 0.3s, border-color 0.3s",
   }),
@@ -46,8 +46,8 @@ const styles = {
     height: 36,
     borderRadius: 10,
     border: "none",
-    background: "var(--surface-soft)",
-    color: "var(--text-secondary)",
+    background: "var(--color-brand-soft)",
+    color: "var(--color-muted)",
     transition: "background 0.2s, color 0.2s, transform 0.15s",
     cursor: "pointer",
   }),
@@ -55,15 +55,15 @@ const styles = {
   searchInput: () => ({
     width: 260,
     borderRadius: 10,
-    background: "var(--surface-soft)",
-    border: "1px solid var(--border-muted)",
+    background: "var(--color-brand-soft)",
+    border: "1px solid var(--color-border)",
     boxShadow: "none",
   }),
 
   divider: () => ({
     width: 1,
     height: 22,
-    background: "var(--divider)",
+    background: "var(--color-border)",
     margin: "0 4px",
     borderRadius: 1,
   }),
@@ -86,7 +86,7 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, isDark, ariaLabel }) => {
       style={{
         ...styles.iconBtn(isDark),
         background: hovered
-          ? "var(--surface-soft-hover)"
+          ? "var(--color-accent-soft)"
           : styles.iconBtn(isDark).background,
         transform: hovered ? "scale(1.08)" : "scale(1)",
         fontSize: 16,
@@ -149,8 +149,8 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                color: "var(--text-secondary)",
-                background: "var(--surface-soft)",
+                color: "var(--color-muted)",
+                background: "var(--color-brand-soft)",
               }}
             />
           </Tooltip>
@@ -166,7 +166,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               prefix={
                 <SearchOutlined
                   style={{
-                    color:"var(--text-primary)",
+                    color:"var(--color-text)",
                     fontSize: 14,
                   }}
                 />
@@ -175,7 +175,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               styles={{
                 input: {
                   background: "transparent",
-                  color:"var(--text-primary)",
+                  color:"var(--color-text)",
                 },
               }}
             />
@@ -207,7 +207,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
 
           {/* Messages */}
           <IconBtn
-            icon={<MessageOutlined style={{ fontSize: 16,color:"var(--text-primary)" }} />}
+            icon={<MessageOutlined style={{ fontSize: 16,color:"var(--color-text)" }} />}
             tooltip="Messages"
             badge={3}
             isDark={isDark}
@@ -233,7 +233,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                   themeMode === "system"
                     ? <LaptopOutlined style={{ fontSize: 16 }} />
                     : isDark
-                      ? <SunOutlined style={{ fontSize: 16, color: "#facc15" }} />
+                      ? <SunOutlined style={{ fontSize: 16, color: "var(--color-accent)" }} />
                       : <MoonOutlined style={{ fontSize: 16 }} />
                 }
                 tooltip={`Theme: ${themeMode} (click for options)`}
@@ -285,14 +285,14 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
         styles={{
           header: {
             padding: "10px 16px",
-            background: isDark ? "#11131c" : "#fff",
+            background: "var(--color-bg)",
             borderBottom: isDark
               ? "1px solid rgba(255,255,255,0.06)"
               : "1px solid #f0f0f0",
           },
           body: {
             padding: "10px 16px",
-            background: isDark ? "#11131c" : "#fff",
+            background: "var(--color-bg)",
           },
         }}
       >
@@ -306,13 +306,11 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
             handleSearch(e.target.value);
             setMobileSearchOpen(false);
           }}
-          prefix={<SearchOutlined style={{ color: "rgba(0,0,0,0.3)", fontSize: 14 }} />}
+          prefix={<SearchOutlined style={{ color: "var(--color-muted)", fontSize: 14 }} />}
           style={{
             borderRadius: 10,
-            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-            border: isDark
-              ? "1px solid rgba(255,255,255,0.1)"
-              : "1px solid rgba(0,0,0,0.09)",
+            background: "var(--color-brand-soft)",
+            border: "1px solid var(--color-border)",
           }}
         />
       </Drawer>

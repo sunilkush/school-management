@@ -1,22 +1,34 @@
-// src/components/UI/button.jsx
 import React from "react";
 
-export function Button({ children, onClick, className = "", variant = "default", size = "md", type = "button" }) {
-  const base = "inline-flex items-center justify-center font-medium rounded-md transition";
+export function Button({
+  children,
+  onClick,
+  className = "",
+  variant = "primary",
+  size = "md",
+  type = "button",
+}) {
+  const base =
+    "inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:cursor-not-allowed disabled:opacity-60";
+
   const variants = {
-    default: "bg-blue-600 text-white hover:bg-blue-700",
-    outline: "border border-gray-300 text-gray-700 hover:bg-gray-100",
+    primary: "bg-brand text-surface hover:bg-primary-dark",
+    accent: "bg-accent text-dark hover:brightness-95",
+    outline: "border border-[var(--color-border)] bg-transparent text-[var(--color-text)] hover:bg-[var(--color-brand-soft)]",
+    ghost: "bg-transparent text-[var(--color-text)] hover:bg-[var(--color-brand-soft)]",
   };
+
   const sizes = {
-    sm: "px-2 py-1 text-sm",
-    md: "px-4 py-2 text-base",
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-sm",
+    lg: "px-5 py-2.5 text-base",
   };
 
   return (
     <button
       type={type}
       onClick={onClick}
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${base} ${variants[variant] ?? variants.primary} ${sizes[size] ?? sizes.md} ${className}`}
     >
       {children}
     </button>

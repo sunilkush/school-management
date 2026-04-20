@@ -20,18 +20,18 @@ const { Text, Title } = Typography;
    is hardcoded twice.
 ───────────────────────────────────────── */
 const tokens = (isDark) => ({
-  bg: isDark ? "#0d0d0d" : "#ffffff",
-  border: isDark ? "#1f1f1f" : "#f0f0f0",
+  bg: "var(--color-sidebar-bg)",
+  border: "var(--color-border)",
   headerBg: isDark
-    ? "linear-gradient(135deg, #141414 0%, #1a1a1a 100%)"
-    : "linear-gradient(135deg, #f0f7ff 0%, #e8f3ff 100%)",
-  iconBg: isDark ? "#1d2b3a" : "#ddeeff",
-  iconColor: isDark ? "#4da3ff" : "#1677ff",
-  accent: isDark ? "#4da3ff" : "#1677ff",
-  textPrimary: isDark ? "#e8e8e8" : "#1a1a2e",
-  textSecondary: isDark ? "#6b7280" : "#9ca3af",
-  scrollbarThumb: isDark ? "#2a2a2a" : "#e5e7eb",
-  shimmer: isDark ? "#1a1a1a" : "#f9fafb",
+    ? "linear-gradient(145deg, rgba(28,92,75,0.28) 0%, rgba(2,2,2,1) 100%)"
+    : "linear-gradient(145deg, rgba(28,92,75,0.18) 0%, rgba(2,2,2,1) 100%)",
+  iconBg: "rgba(225, 197, 99, 0.2)",
+  iconColor: "var(--color-accent)",
+  accent: "var(--color-primary)",
+  textPrimary: "var(--color-sidebar-text)",
+  textSecondary: "var(--color-sidebar-muted)",
+  scrollbarThumb: "rgba(225, 197, 99, 0.4)",
+  shimmer: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.14)",
 });
 
 /* ─────────────────────────────────────────
@@ -103,7 +103,7 @@ const AuthLoadingState = ({ isDark }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: `0 0 0 8px ${isDark ? "rgba(77,163,255,0.06)" : "rgba(22,119,255,0.08)"}`,
+            boxShadow: `0 0 0 8px ${isDark ? "rgba(28,92,75,0.18)" : "rgba(225,197,99,0.16)"}`,
             animation: "ringPulse 2s ease-in-out infinite",
           }}
         >
@@ -119,7 +119,7 @@ const AuthLoadingState = ({ isDark }) => {
         </div>
         <style>{`
           @keyframes ringPulse {
-            0%, 100% { box-shadow: 0 0 0 8px ${isDark ? "rgba(77,163,255,0.06)" : "rgba(22,119,255,0.08)"}; }
+            0%, 100% { box-shadow: 0 0 0 8px ${isDark ? "rgba(28,92,75,0.18)" : "rgba(225,197,99,0.16)"}; }
             50%       { box-shadow: 0 0 0 14px transparent; }
           }
         `}</style>
@@ -170,7 +170,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
         }
         /* Toggle button hover */
         .sidebar-toggle-btn:hover {
-          background: ${isDark ? "#1f1f1f" : "#f0f7ff"} !important;
+          background: var(--color-brand-soft) !important;
           color: ${t.accent} !important;
           transform: scale(1.08);
         }
@@ -183,9 +183,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
           font-weight: 600;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          background: ${isDark ? "rgba(77,163,255,0.12)" : "rgba(22,119,255,0.08)"};
+          background: ${isDark ? "rgba(225,197,99,0.16)" : "rgba(225,197,99,0.16)"};
           color: ${t.accent};
-          border: 1px solid ${isDark ? "rgba(77,163,255,0.2)" : "rgba(22,119,255,0.15)"};
+          border: 1px solid ${isDark ? "rgba(225,197,99,0.3)" : "rgba(225,197,99,0.3)"};
         }
       `}</style>
 
@@ -227,19 +227,19 @@ const Sidebar = ({ isOpen, onToggle }) => {
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <Badge
               dot
-              color={isDark ? "#22c55e" : "#16a34a"}
+              color={isDark ? "var(--color-accent)" : "var(--color-accent)"}
               offset={[-2, 2]}
               style={{ boxShadow: `0 0 0 2px ${t.bg}` }}
             >
               <Avatar
                 size={36}
                 style={{
-                  background: `linear-gradient(135deg, ${t.accent}, ${isDark ? "#1a56d4" : "#2563eb"})`,
+                  background: `linear-gradient(135deg, ${t.accent}, ${isDark ? "#b89b3f" : "#e1c563"})`,
                   color: "#fff",
                   fontSize: 13,
                   fontWeight: 700,
                   flexShrink: 0,
-                  boxShadow: `0 2px 8px ${isDark ? "rgba(77,163,255,0.3)" : "rgba(22,119,255,0.25)"}`,
+                  boxShadow: "0 2px 8px rgba(225,197,99,0.28)",
                 }}
               >
                 {initials}
@@ -353,7 +353,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: "#22c55e",
+              background: "var(--color-accent)",
               flexShrink: 0,
               boxShadow: "0 0 0 3px rgba(34,197,94,0.15)",
             }}
