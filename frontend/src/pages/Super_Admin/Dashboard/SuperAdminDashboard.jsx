@@ -588,7 +588,7 @@ const SuperAdminDashboard = () => {
                 title={
                   <Space>
                     <ThunderboltFilled style={{ color: "var(--cyan)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span style={{ color: "var(--color-text)" }}>
                       System Health
                     </span>
                   </Space>
@@ -635,7 +635,7 @@ const SuperAdminDashboard = () => {
                         <Text
                           style={{
                             fontSize: 13,
-                            color: "var(--text-primary)",
+                            color: "var(--color-text)",
                           }}
                         >
                           {item.label}
@@ -669,7 +669,7 @@ const SuperAdminDashboard = () => {
                     <SafetyCertificateOutlined
                       style={{ color: "var(--primary)" }}
                     />
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span style={{ color: "var(--color-text)" }}>
                       Subscription Status
                     </span>
                   </Space>
@@ -712,7 +712,7 @@ const SuperAdminDashboard = () => {
                 title={
                   <Space>
                     <RiseOutlined style={{ color: "var(--purple)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span style={{ color: "var(--color-text)" }}>
                       Top Schools by Students
                     </span>
                   </Space>
@@ -757,7 +757,7 @@ const SuperAdminDashboard = () => {
                                 fontSize: 13,
                                 fontWeight: 500,
                                 display: "block",
-                                color: "var(--text-primary)",
+                                color: "var(--color-text)",
                               }}
                             >
                               {school.name}
@@ -795,7 +795,7 @@ const SuperAdminDashboard = () => {
                 title={
                   <Space>
                     <BankOutlined style={{ color: "var(--primary)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span style={{ color: "var(--color-text)" }}>
                       All Schools
                     </span>
                     <Tag color="blue">{filteredSchools.length} shown</Tag>
@@ -851,7 +851,7 @@ const SuperAdminDashboard = () => {
                 title={
                   <Space>
                     <ClockCircleFilled style={{ color: "var(--orange)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span style={{ color: "var(--color-text)" }}>
                       Recent Activity
                     </span>
                   </Space>
@@ -894,7 +894,7 @@ const SuperAdminDashboard = () => {
                             fontSize: 13,
                             fontWeight: 500,
                             display: "block",
-                            color: "var(--text-primary)",
+                            color: "var(--color-text)",
                           }}
                         >
                           {item.text}
@@ -932,7 +932,7 @@ const SuperAdminDashboard = () => {
                 title={
                   <Space>
                     <DollarOutlined style={{ color: "var(--success)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span style={{ color: "var(--color-text)" }}>
                       Revenue by School
                     </span>
                   </Space>
@@ -972,7 +972,7 @@ const SuperAdminDashboard = () => {
                                 fontSize: 13,
                                 fontWeight: 500,
                                 display: "block",
-                                color: "var(--text-primary)",
+                                color: "var(--color-text)",
                               }}
                             >
                               {school.name}
@@ -1005,7 +1005,7 @@ const SuperAdminDashboard = () => {
                 title={
                   <Space>
                     <LinkOutlined style={{ color: "var(--success)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span style={{ color: "var(--color-text)" }}>
                       Quick Actions
                     </span>
                   </Space>
@@ -1014,7 +1014,7 @@ const SuperAdminDashboard = () => {
                 style={{
                   borderRadius: 16,
                   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  color: "var(--text-primary)",
+                  color: "var(--color-text)",
                 }}
               >
                 <Row gutter={[10, 10]}>

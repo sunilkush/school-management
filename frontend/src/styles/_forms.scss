@@ -1,0 +1,27 @@
+@use "variables" as *;
+
+.ant-form-item-label > label {
+  color: $gray-700 !important;
+  font-weight: 500;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker,
+.ant-input-number {
+  background: var(--color-bg) !important;
+  border-color: $gray-300 !important;
+  color: var(--color-text) !important;
+  border-radius: $border-radius-md !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused,
+.ant-input-number-focused {
+  border-color: $primary !important;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15) !important;
+}
