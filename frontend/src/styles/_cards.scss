@@ -1,0 +1,24 @@
+@use "variables" as *;
+
+.ant-card,
+.dashboard-card,
+.widget-card {
+  background: var(--color-card-bg) !important;
+  border: 1px solid $gray-300 !important;
+  border-radius: $border-radius-xl !important;
+  box-shadow: $shadow-sm;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+.metric-title {
+  color: $gray-700;
+}
+
+.metric-value {
+  color: $gray-900;
+}

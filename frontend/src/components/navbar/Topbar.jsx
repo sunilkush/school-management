@@ -233,7 +233,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                   themeMode === "system"
                     ? <LaptopOutlined style={{ fontSize: 16 }} />
                     : isDark
-                      ? <SunOutlined style={{ fontSize: 16, color: "var(--color-accent)" }} />
+                      ? <SunOutlined style={{ fontSize: 16, color: "var(--color-primary)" }} />
                       : <MoonOutlined style={{ fontSize: 16 }} />
                 }
                 tooltip={`Theme: ${themeMode} (click for options)`}

@@ -39,21 +39,21 @@ const handleLogout = async () => {
         <a href={`/dashboard/${rolePath}/settings`}>Settings</a>
       </Menu.Item>
       <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ color: "red" }}>
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ color: "var(--color-danger, #dc3545)" }}>
         Logout
       </Menu.Item>
     </Menu>
   );
 
   return (
-    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight" style={{color: "var(--text-primary)",background:"var( --surface-header)"}}>
+    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight" style={{color: "var(--color-text)",background:"var(--surface-header)"}}>
       <Col type="text" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
         {user?.avatar ? (
-          <Avatar src={user.avatar} size={24} style={{color: "var(--text-primary)"}} />
+          <Avatar src={user.avatar} size={24} style={{color: "var(--color-text)"}} />
         ) : (
-          <Avatar icon={<UserOutlined />} size={24} style={{color: "var(--text-primary)"}} />
+          <Avatar icon={<UserOutlined />} size={24} style={{color: "var(--color-text)"}} />
         )}
-        <Text style={{textTransform:"capitalize",color: "var(--text-primary)"}}>{user?.name || "User"}</Text>
+        <Text style={{textTransform:"capitalize",color: "var(--color-text)"}}>{user?.name || "User"}</Text>
       </Col>
     </Dropdown>
   );

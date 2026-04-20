@@ -51,10 +51,10 @@ const ForgetPasswordPage = () => {
         }}
       >
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <Title level={3} style={{ color: "var(--text-primary)" }}>
+          <Title level={3} style={{ color: "var(--color-text)" }}>
             Forgot Password
           </Title>
-          <Text type="secondary" style={{ color: "var(--text-primary)" }}>
+          <Text type="secondary" style={{ color: "var(--color-text)" }}>
             Enter your email to receive a reset link
           </Text>
         </div>
@@ -83,7 +83,7 @@ const ForgetPasswordPage = () => {
         </Form>
 
         <div style={{ textAlign: "center", marginTop: 10 }}>
-          <Text type="secondary" style={{ color: "var(--text-primary)" }}>
+          <Text type="secondary" style={{ color: "var(--color-text)" }}>
             Remember your password? <a href="/">Back to Login</a>
           </Text>
         </div>

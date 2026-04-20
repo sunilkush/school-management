@@ -28,9 +28,10 @@ const NotificationDropdown = () => {
         width: 340,
         maxHeight: 420,
         overflowY: "auto",
-        backgroundColor: "#fff",
+        backgroundColor: "var(--color-card-bg)",
         borderRadius: 4,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        boxShadow: "0 8px 24px rgba(33,37,41,0.12)",
+        border: "1px solid var(--color-border)",
       }}
     >
       <List
@@ -40,7 +41,7 @@ const NotificationDropdown = () => {
         header={<Text strong style={{ padding: "10px" }}>Notifications</Text>}
         footer={
           <div
-            style={{ textAlign: "center", cursor: "pointer", color: "#1890ff" }}
+            style={{ textAlign: "center", cursor: "pointer", color: "var(--color-primary)" }}
             onClick={() => navigate(`/dashboard/${getRolePath(user?.role?.name)}/notification`)}
           >
             See all notifications
@@ -49,7 +50,7 @@ const NotificationDropdown = () => {
         renderItem={(item) => (
           <List.Item style={{ padding: "10px 16px", cursor: "pointer" }}>
             <List.Item.Meta
-              avatar={<Avatar style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}>🔔</Avatar>}
+              avatar={<Avatar style={{ backgroundColor: "#e6f7ff", color: "var(--color-primary)" }}>🔔</Avatar>}
               title={<Text>{item.title}</Text>}
               description={<Text type="secondary" style={{ fontSize: 12 }}>{item.message}</Text>}
             />
@@ -62,7 +63,7 @@ const NotificationDropdown = () => {
   return (
     <Dropdown overlay={notificationMenu} trigger={["click"]} placement="bottomRight" arrow>
       <Badge count={notifications.length} offset={[-2, 2]}>
-        <BellOutlined style={{ fontSize: 20, cursor: "pointer", color: "var(--text-primary)" }} />
+        <BellOutlined style={{ fontSize: 20, cursor: "pointer", color: "var(--color-text)" }} />
       </Badge>
     </Dropdown>
   );
