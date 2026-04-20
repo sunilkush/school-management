@@ -265,6 +265,20 @@ const MonthlyReportPage = lazy(() => import("./pages/Attendance/MonthlyReportPag
 
 const ChildAttendancePage = lazy(() => import("./pages/Attendance/ChildAttendancePage.jsx"));
 const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage.jsx"));
+const ExamManagementPage = lazy(() => import("./pages/ExamModule/ExamManagementPage.jsx"));
+const ExamConfigPage = lazy(() => import("./pages/ExamModule/ExamConfigPage.jsx"));
+const ExamSchedulePageV2 = lazy(() => import("./pages/ExamModule/ExamSchedulePage.jsx"));
+const QuestionBankPageV2 = lazy(() => import("./pages/ExamModule/QuestionBankPage.jsx"));
+const QuestionPaperPageV2 = lazy(() => import("./pages/ExamModule/QuestionPaperPage.jsx"));
+const ResultManagementPage = lazy(() => import("./pages/ExamModule/ResultManagementPage.jsx"));
+const ExamAnalyticsPage = lazy(() => import("./pages/ExamModule/ExamAnalyticsPage.jsx"));
+const OnlineExamsAvailablePage = lazy(() => import("./pages/ExamModule/OnlineExamPages.jsx").then((m) => ({ default: m.OnlineExamsAvailablePage })));
+const OnlineExamAttemptPageV2 = lazy(() => import("./pages/ExamModule/OnlineExamPages.jsx").then((m) => ({ default: m.OnlineExamAttemptPage })));
+const OnlineAttemptResultPageV2 = lazy(() => import("./pages/ExamModule/OnlineExamPages.jsx").then((m) => ({ default: m.OnlineAttemptResultPage })));
+const SubjectiveEvaluationListPage = lazy(() => import("./pages/ExamModule/SubjectiveEvaluationPage.jsx").then((m) => ({ default: m.SubjectiveEvaluationListPage })));
+const SubjectiveEvaluationDetailPage = lazy(() => import("./pages/ExamModule/SubjectiveEvaluationPage.jsx").then((m) => ({ default: m.SubjectiveEvaluationDetailPage })));
+const StudentResultPortalPage = lazy(() => import("./pages/ExamModule/ResultPortalPages.jsx").then((m) => ({ default: m.StudentResultPortalPage })));
+const ReportCardPage = lazy(() => import("./pages/ExamModule/ResultPortalPages.jsx").then((m) => ({ default: m.ReportCardPage })));
 
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
@@ -498,6 +512,18 @@ const router = createBrowserRouter([
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/exams-list", element: <ExamsPage /> },
+              { path: "exams", element: <ExamManagementPage /> },
+              { path: "exams/create", element: <ExamManagementPage /> },
+              { path: "exams/:id", element: <ExamManagementPage /> },
+              { path: "exams/:id/edit", element: <ExamManagementPage /> },
+              { path: "exam-config", element: <ExamConfigPage /> },
+              { path: "exam-schedule", element: <ExamSchedulePageV2 /> },
+              { path: "question-bank", element: <QuestionBankPageV2 /> },
+              { path: "question-papers", element: <QuestionPaperPageV2 /> },
+              { path: "results", element: <ResultManagementPage /> },
+              { path: "exam-analytics", element: <ExamAnalyticsPage /> },
+              { path: "online-exams", element: <ExamManagementPage /> },
+              { path: "online-exams/evaluations", element: <SubjectiveEvaluationListPage /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
               { path: "exams/reports", element: <ExamReports /> },
@@ -540,6 +566,13 @@ const router = createBrowserRouter([
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
+              { path: "exams", element: <ExamManagementPage /> },
+              { path: "question-bank", element: <QuestionBankPageV2 /> },
+              { path: "question-papers", element: <QuestionPaperPageV2 /> },
+              { path: "marks-entry", element: <ResultManagementPage /> },
+              { path: "results-view", element: <ResultManagementPage /> },
+              { path: "online-exams/evaluations", element: <SubjectiveEvaluationListPage /> },
+              { path: "online-exams/evaluations/:attemptId", element: <SubjectiveEvaluationDetailPage /> },
               { path: "timetable", element: <TeacherTimetable /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
@@ -576,7 +609,13 @@ const router = createBrowserRouter([
               { path: "fees", element: <FeeStudent /> },
               { path: "exams/attempt-review", element: <AttemptReview /> },
               { path: "exams/exam-live", element: <ExamLive /> },
-              { path: "exams", element: <StudentExamsPage /> },
+              { path: "exams", element: <OnlineExamsAvailablePage /> },
+              { path: "exams/:examId/instructions", element: <OnlineExamsAvailablePage /> },
+              { path: "exams/:examId/start", element: <OnlineExamsAvailablePage /> },
+              { path: "exams/attempt/:attemptId", element: <OnlineExamAttemptPageV2 /> },
+              { path: "exams/attempt/:attemptId/result", element: <OnlineAttemptResultPageV2 /> },
+              { path: "results", element: <StudentResultPortalPage /> },
+              { path: "report-card", element: <ReportCardPage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "communication/send", element: <SendNotification /> },
@@ -605,6 +644,8 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "reports", element: <ExamReports /> },
+              { path: "results", element: <StudentResultPortalPage /> },
+              { path: "report-card", element: <ReportCardPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
@@ -715,6 +756,8 @@ const router = createBrowserRouter([
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
               { path: "reports", element: <ExamReports /> },
+              { path: "results", element: <StudentResultPortalPage /> },
+              { path: "report-card", element: <ReportCardPage /> },
               { path: "profile", element: <Profile /> },
               { path: "message", element: <Message /> },
               { path: "notification", element: <Notification /> },

@@ -50,6 +50,18 @@ import { baseApi } from "../services/baseApi";
 import accountRecoveryReducer from "../features/accountRecoverySlice";
 import payrollReducer from "../features/payrollSlice";
 import studentPromotionReducer from "../features/studentPromotionSlice";
+import examModuleExamReducer from "../features/exam/examSliceV2";
+import examSubjectConfigReducer from "../features/exam/examSubjectConfigSlice";
+import examScheduleReducerV2 from "../features/exam/examScheduleSlice";
+import questionBankReducerV2 from "../features/exam/questionBankSlice";
+import questionPaperReducerV2 from "../features/exam/questionPaperSlice";
+import examMarkReducerV2 from "../features/exam/examMarkSlice";
+import examResultReducerV2 from "../features/exam/examResultSlice";
+import examAnalyticsReducer from "../features/exam/examAnalyticsSlice";
+import gradeScaleReducer from "../features/exam/gradeScaleSlice";
+import onlineExamReducer from "../features/exam/onlineExamSlice";
+import examAttemptReducerV2 from "../features/exam/examAttemptSlice";
+import subjectiveEvaluationReducer from "../features/exam/subjectiveEvaluationSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -96,6 +108,18 @@ const rootReducer = combineReducers({
   accountRecovery: accountRecoveryReducer,
   payroll: payrollReducer,
   studentPromotion: studentPromotionReducer,
+  examModuleExam: examModuleExamReducer,
+  examSubjectConfig: examSubjectConfigReducer,
+  examSchedule: examScheduleReducerV2,
+  questionBank: questionBankReducerV2,
+  questionPaper: questionPaperReducerV2,
+  examMarksV2: examMarkReducerV2,
+  examResultsV2: examResultReducerV2,
+  examAnalytics: examAnalyticsReducer,
+  gradeScale: gradeScaleReducer,
+  onlineExam: onlineExamReducer,
+  examAttemptV2: examAttemptReducerV2,
+  subjectiveEvaluation: subjectiveEvaluationReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
