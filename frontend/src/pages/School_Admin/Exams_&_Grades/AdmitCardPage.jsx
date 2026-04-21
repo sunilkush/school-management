@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Button, Card, Select, Space, Table, Typography, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import apiClient from "../../../api/httpClient";
-import { getExams } from "../../../features/examSlice";
+
+import { getExams,getAdmitCards } from "../../../features/examSlice";
 
 const { Title } = Typography;
 
@@ -16,8 +16,10 @@ const AdmitCardPage = () => {
 
   const loadCards = async () => {
     if (!examId) return message.warning("Select exam first");
-    const res = await apiClient.get(`/exams/${examId}/admit-cards`);
-    setRows(res?.data?.data || []);
+    const res = await dispatch(getAdmitCards(examId));
+    if (res.payload) {
+      setRows(res.payload);
+    }
   };
 
   return (

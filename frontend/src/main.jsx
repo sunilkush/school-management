@@ -126,7 +126,7 @@ const EnterGrades = lazy(() => import("./pages/School_Admin/Exams_&_Grades/Enter
 const ExamReports = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamReport.jsx"));
 const ExamsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamPage.jsx"));
 const ExamCreate = lazy(() => import("./pages/School_Admin/Exams_&_Grades/CreateExam.jsx"));
-const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_&_Grades/PaperBuilder.jsx"));
+const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_&_Grades/PageBuilder.jsx"));
 const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/AdmitCardPage.jsx"));
 const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/SeatPlanPage.jsx"));
 const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamAnalyticsPage.jsx"));
