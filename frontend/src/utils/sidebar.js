@@ -156,6 +156,10 @@ export const sidebarMenu = {
         { title: "Exams List", path: "schooladmin/exams/exams-list" },
         { title: "Exam Schedule", path: "schooladmin/exams/schedule" },
         { title: "Grade Entry", path: "schooladmin/exams/grades" },
+        { title: "Paper Builder", path: "schooladmin/exams/paper-builder" },
+        { title: "Admit Card", path: "schooladmin/exams/admit-card" },
+        { title: "Seat Plan", path: "schooladmin/exams/seat-plan" },
+        { title: "Analytics", path: "schooladmin/exams/analytics" },
         { title: "Exam Reports", path: "schooladmin/exams/reports" },
       ],
     },
@@ -259,8 +263,9 @@ export const sidebarMenu = {
       icon: GraduationCap,
       subMenu: [
         { title: "Exams List", path: "teacher/exams/list" },
+        { title: "Evaluation", path: "teacher/exams/evaluation" },
         { title: "Exam Reports", path: "teacher/exams/reports" },
-        { title: "Question Bank", path: "teacher/exams/question-bank" },
+        { title: "Question Bank", path: "teacher/exams/question-bank" }
       ],
     },
     
@@ -439,6 +444,10 @@ export const sidebarMenu = {
     { title: "Question Bank", path: "examcoordinator/exams/question-bank", icon: ClipboardList },
     { title: "Exam Schedule", path: "examcoordinator/exams/schedule", icon: CalendarClock },
     { title: "Grade Entry", path: "examcoordinator/exams/grades", icon: ClipboardSignature },
+     { title: "Paper Builder", path: "examcoordinator/exams/paper-builder", icon: ClipboardList },
+    { title: "Admit Card", path: "examcoordinator/exams/admit-card", icon: FileText },
+    { title: "Seat Plan", path: "examcoordinator/exams/seat-plan", icon: MapPinned },
+    { title: "Analytics", path: "examcoordinator/exams/analytics", icon: FileBarChart2 },
     { title: "Exam Reports", path: "examcoordinator/reports", icon: FileBarChart2 },
     { title: "Profile", path: "examcoordinator/profile", icon: User },
   ],

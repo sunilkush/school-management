@@ -4,7 +4,7 @@ import {
   createExam,
   deleteExam,
   enterMarksBulk,
-  evaluateAttempt,
+  
   getClassResultSummary,
   getExamById,
   getExamAnalytics,
@@ -13,11 +13,11 @@ import {
   getStudentResult,
   publishExam,
   publishResult,
-  startExamAttempt,
-  submitExamAttempt,
   submitFinalMarks,
   updateExam,
   updateMarks,
+  getExamAdmitCards,
+  getExamSeatPlan,
 } from "../controllers/exam.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
@@ -108,9 +108,8 @@ router.get(
   getClassResultSummary
 );
 
-router.post("/attempt/start", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin", "Student"]), startExamAttempt);
-router.post("/attempt/submit", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin", "Student"]), submitExamAttempt);
-router.post("/attempt/evaluate", auth, roleMiddleware(["Super Admin", "Teacher", "School Admin"]), evaluateAttempt);
+router.get("/:id/admit-cards", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamAdmitCards);
+router.get("/:id/seat-plan", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamSeatPlan);
 
 router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamById);
 router.get(

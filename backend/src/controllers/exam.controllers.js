@@ -263,3 +263,70 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, attempt, "Attempt evaluated successfully"));
 });
+
+export const getExamAdmitCards = asyncHandler(async (req, res) => {
+  const exam = await Exam.findById(req.params.id)
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name")
+    .lean();
+  ensureExamAccess(exam, req.user);
+
+  const attempts = await Attempt.find({ examId: req.params.id })
+    .populate("studentId", "name email rollNumber")
+    .select("studentId createdAt")
+    .lean();
+
+  const admitCards = attempts.map((attempt, index) => ({
+    examId: exam._id,
+    examTitle: exam.title,
+    examDate: exam.examDate,
+    startTime: exam.startTime,
+    endTime: exam.endTime,
+    className: exam.schoolClassId?.name || null,
+    sectionName: exam.sectionId?.name || null,
+    subjectName: exam.subjectId?.name || null,
+    studentId: attempt.studentId?._id,
+    studentName: attempt.studentId?.name,
+    rollNumber: attempt.studentId?.rollNumber || `R-${index + 1}`,
+    seatNumber: `S-${index + 1}`,
+    instructions: [
+      "Carry a valid school identity card.",
+      "Reach the exam hall at least 30 minutes before start time.",
+      "Electronic devices are not allowed unless approved.",
+    ],
+  }));
+
+  return res.status(200).json(new ApiResponse(200, admitCards, "Admit cards generated successfully"));
+});
+
+export const getExamSeatPlan = asyncHandler(async (req, res) => {
+  const exam = await Exam.findById(req.params.id).lean();
+  ensureExamAccess(exam, req.user);
+
+  const attempts = await Attempt.find({ examId: req.params.id })
+    .populate("studentId", "name rollNumber")
+    .select("studentId")
+    .lean();
+
+  const roomCapacity = Math.max(Number(req.query.roomCapacity) || 30, 1);
+  const seatPlan = attempts.map((attempt, index) => {
+    const roomNumber = `Room-${Math.floor(index / roomCapacity) + 1}`;
+    const seatNumber = `Seat-${(index % roomCapacity) + 1}`;
+    return {
+      examId: exam._id,
+      studentId: attempt.studentId?._id,
+      studentName: attempt.studentId?.name,
+      rollNumber: attempt.studentId?.rollNumber || null,
+      roomNumber,
+      seatNumber,
+    };
+  });
+
+  return res.status(200).json(new ApiResponse(200, {
+    roomCapacity,
+    totalStudents: attempts.length,
+    totalRooms: Math.ceil(attempts.length / roomCapacity),
+    seatPlan,
+  }, "Seat plan generated successfully"));
+});

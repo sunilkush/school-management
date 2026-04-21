@@ -126,7 +126,10 @@ const EnterGrades = lazy(() => import("./pages/School_Admin/Exams_&_Grades/Enter
 const ExamReports = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamReport.jsx"));
 const ExamsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamPage.jsx"));
 const ExamCreate = lazy(() => import("./pages/School_Admin/Exams_&_Grades/CreateExam.jsx"));
-
+const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_&_Grades/PaperBuilder.jsx"));
+const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/AdmitCardPage.jsx"));
+const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/SeatPlanPage.jsx"));
+const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamAnalyticsPage.jsx"));
 const AllStudentsAttendance = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
 const StaffAttendance = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
 
@@ -172,6 +175,7 @@ const QuestionBank = lazy(() => import("./pages/Teacher/Exams/QuestionBank.jsx")
 const CreateQuestion = lazy(() => import("./pages/Teacher/Exams/CreateQuestion.jsx"));
 const BulkUploadQuestions = lazy(() => import("./pages/Teacher/Exams/BulkUploadQuestions.jsx"));
 const TeacherExamsPage = lazy(() => import("./pages/Teacher/Exams/TeacherExamsPage.jsx"));
+const TeacherEvaluationPage = lazy(() => import("./pages/Teacher/Exams/TeacherEvaluationPage.jsx"));
 const AssignedClasses = lazy(() => import("./pages/Teacher/Classes/AssignedClasses.jsx"));
 const ClassDetails = lazy(() => import("./pages/Teacher/Classes/ClassDetails.jsx"));
 const Assignments = lazy(() => import("./pages/Teacher/Assignments/Assignments.jsx"));
@@ -471,6 +475,10 @@ const router = createBrowserRouter([
               { path: "exams/exams-list", element: <ExamsPage /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
+               { path: "exams/paper-builder", element: <PaperBuilder /> },
+              { path: "exams/admit-card", element: <AdmitCardPage /> },
+              { path: "exams/seat-plan", element: <SeatPlanPage /> },
+              { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "users/employee-form", element: <EmployeeForm /> },
               { path: "users/employee-details", element: <EmployeeDetailes /> },
@@ -511,6 +519,7 @@ const router = createBrowserRouter([
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
+              { path: "exams/evaluation", element: <TeacherEvaluationPage /> },
               { path: "timetable", element: <TeacherTimetable /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
@@ -685,6 +694,10 @@ const router = createBrowserRouter([
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
+               { path: "exams/paper-builder", element: <PaperBuilder /> },
+              { path: "exams/admit-card", element: <AdmitCardPage /> },
+              { path: "exams/seat-plan", element: <SeatPlanPage /> },
+              { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "reports", element: <ExamReports /> },
               { path: "profile", element: <Profile /> },
               { path: "message", element: <Message /> },

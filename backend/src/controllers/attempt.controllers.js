@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
 import { Student } from "../models/student.model.js";
-
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 const assertObjectId = (id, label) => {
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, `Invalid ${label}`);
 };
@@ -57,7 +57,20 @@ export const startAttempt = asyncHandler(async (req, res) => {
     }
     throw new ApiError(400, "Exam window is closed");
   }
+  const enrollment = await StudentEnrollment.findOne({
+    studentId,
+    schoolId: exam.schoolId,
+    academicYearId: exam.academicYearId,
+    schoolClassId: exam.schoolClassId,
+    ...(exam.sectionId ? { sectionId: exam.sectionId } : {}),
+    status: "Active",
+  })
+    .select("_id")
+    .lean();
 
+  if (!enrollment) {
+    throw new ApiError(403, "Student is not enrolled in the exam class/section for this academic year");
+  }
   const existing = await Attempt.findOne({ examId, studentId, status: "in_progress" });
   if (existing) throw new ApiError(400, "You already have an active attempt");
 
@@ -83,7 +96,9 @@ export const startAttempt = asyncHandler(async (req, res) => {
   const schoolId = exam.schoolId 
   if (!schoolId) throw new ApiError(400, "schoolId could not be resolved for this attempt");
 
-  const attempt = await Attempt.create({ examId, studentId, schoolId, answers });
+  const attemptNumber = usedAttempts + 1;
+  const attempt = await Attempt.create({ examId, studentId, schoolId, answers, attemptNumber });
+
 
   return sendSuccess(res, {
     statusCode: 201,
@@ -133,6 +148,58 @@ export const submitAttempt = asyncHandler(async (req, res) => {
   await attempt.save();
 
   return sendSuccess(res, { message: "Attempt submitted successfully", data: attempt });
+});
+export const autosaveAttemptAnswer = asyncHandler(async (req, res) => {
+  const { attemptId } = req.params;
+  const { questionRef, questionId, answer, response, flagged } = req.body;
+  assertObjectId(attemptId, "attemptId");
+
+  const resolvedQuestionId = questionRef || questionId;
+  assertObjectId(resolvedQuestionId, "questionId");
+
+  const attempt = await Attempt.findById(attemptId);
+  if (!attempt) throw new ApiError(404, "Attempt not found");
+  if (attempt.studentId.toString() !== req.user._id.toString()) throw new ApiError(403, "Forbidden");
+  if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt is not active");
+
+  const answerIndex = attempt.answers.findIndex(
+    (item) => `${item.questionId}` === `${resolvedQuestionId}`
+  );
+  if (answerIndex === -1) throw new ApiError(404, "Question not found in attempt");
+
+  attempt.answers[answerIndex].response = answer ?? response ?? null;
+  if (typeof flagged === "boolean") {
+    attempt.answers[answerIndex].flagged = flagged;
+  }
+
+  await attempt.save();
+
+  return sendSuccess(res, {
+    message: "Answer autosaved successfully",
+    data: {
+      attemptId: attempt._id,
+      questionId: resolvedQuestionId,
+      savedAt: new Date().toISOString(),
+    },
+  });
+});
+
+export const getActiveAttemptByExam = asyncHandler(async (req, res) => {
+  const { examId } = req.params;
+  assertObjectId(examId, "examId");
+
+  const attempt = await Attempt.findOne({
+    examId,
+    studentId: req.user._id,
+    status: "in_progress",
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return sendSuccess(res, {
+    message: "Active attempt fetched successfully",
+    data: attempt || null,
+  });
 });
 
 export const evaluateAttempt = asyncHandler(async (req, res) => {
