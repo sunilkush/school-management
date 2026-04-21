@@ -278,7 +278,7 @@ const CreateQuestion = () => {
 
             <Space direction="vertical" style={{ width: "100%", marginTop: 12 }}>
               {options.map((opt, index) => (
-                <Row gutter={12} key={index}>
+                <Row gutter={6} key={index}>
                   <Col span={6}>
                     <Input
                       placeholder="Key"

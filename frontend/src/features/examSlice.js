@@ -100,7 +100,16 @@ export const publishResults = createAsyncThunk("exams/publishResults", async (pa
 export const getAdmitCards = createAsyncThunk("exams/getAdmitCards", async (examId, { rejectWithValue }) => {
   try {
     if (!examId) throw new Error("Invalid exam id");
-    const res = await apiClient.get(`/exams/${examId}/admit-cards`);
+    let res;
+    try {
+      res = await apiClient.get(`/exams/${examId}/admit-cards`);
+    } catch (error) {
+      const routeNotFound = error?.response?.status === 404
+        && typeof error?.response?.data?.message === "string"
+        && error.response.data.message.includes("Route not found");
+      if (!routeNotFound) throw error;
+      res = await apiClient.get(`/exams/${examId}/admit-card`);
+    }
     return res.data.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || error.message);
