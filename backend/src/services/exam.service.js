@@ -216,21 +216,32 @@ export const enterMarksBulkService = async ({ body, user }) => {
     throw new ApiError(403, "Forbidden for this school exam");
   }
 
-  // 3. Get student USER IDs from payload
-  const studentUserIds = [
+  // 3. Get student identifiers from payload (can be either User._id or Student._id)
+  const studentIdentifiers = [
     ...new Set(marks.map((entry) => `${entry.studentId}`)),
   ];
 
-  // 4. Convert USER ID → STUDENT ID
+  // 4. Resolve identifiers to both Student._id and User._id
   const students = await Student.find({
-    userId: { $in: studentUserIds },
+    $or: [
+      { userId: { $in: studentIdentifiers } },
+      { _id: { $in: studentIdentifiers } },
+    ],
   })
     .select("_id userId")
     .lean();
 
-  const userToStudent = new Map(
-    students.map((row) => [`${row.userId}`, `${row._id}`])
-  );
+  const identifierToStudent = new Map();
+  for (const row of students) {
+    identifierToStudent.set(`${row._id}`, {
+      studentDocId: `${row._id}`,
+      userId: `${row.userId}`,
+    });
+    identifierToStudent.set(`${row.userId}`, {
+      studentDocId: `${row._id}`,
+      userId: `${row.userId}`,
+    });
+  }
 
   const studentObjectIds = students.map((row) => row._id);
 
@@ -254,13 +265,13 @@ export const enterMarksBulkService = async ({ body, user }) => {
   const bulkOps = [];
 
   for (const entry of marks) {
-    const mappedStudentId = userToStudent.get(`${entry.studentId}`);
+    const resolvedStudent = identifierToStudent.get(`${entry.studentId}`);
 
-    if (!mappedStudentId) {
-      throw new ApiError(400, `Invalid student userId: ${entry.studentId}`);
+    if (!resolvedStudent) {
+      throw new ApiError(400, `Invalid studentId: ${entry.studentId}`);
     }
 
-    if (!allowedStudentIds.has(mappedStudentId)) {
+    if (!allowedStudentIds.has(resolvedStudent.studentDocId)) {
       throw new ApiError(
         400,
         `Student ${entry.studentId} not enrolled in this class/section`
@@ -271,7 +282,7 @@ export const enterMarksBulkService = async ({ body, user }) => {
       updateOne: {
         filter: {
           examId,
-          studentId: mappedStudentId, // ✅ FIXED
+          studentId: resolvedStudent.userId,
           subjectId: entry.subjectId || exam.subjectId,
         },
         update: {
@@ -287,7 +298,7 @@ export const enterMarksBulkService = async ({ body, user }) => {
           },
           $setOnInsert: {
             examId,
-            studentId: mappedStudentId, // ✅ FIXED
+            studentId: resolvedStudent.userId,
             subjectId: entry.subjectId || exam.subjectId,
             enteredBy: user._id,
           },

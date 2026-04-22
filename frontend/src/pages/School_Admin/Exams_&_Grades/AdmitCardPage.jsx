@@ -8,11 +8,24 @@ const { Title } = Typography;
 
 const AdmitCardPage = () => {
   const dispatch = useDispatch();
-  const { exams = [] } = useSelector((state) => state.exams || {});
+  const { exams = [], loading } = useSelector((state) => state.exams || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   const [examId, setExamId] = useState();
   const [rows, setRows] = useState([]);
 
-  React.useEffect(() => { dispatch(getExams()); }, [dispatch]);
+  const effectiveAcademicYear = React.useMemo(() => {
+    if (selectedAcademicYear?._id) return selectedAcademicYear;
+
+  }, [selectedAcademicYear]);
+
+  React.useEffect(() => {
+    if (!effectiveAcademicYear?._id) return;
+    dispatch(getExams({
+      schoolId: effectiveAcademicYear.schoolId,
+      academicYearId: effectiveAcademicYear._id,
+      limit: 100,
+    }));
+  }, [dispatch, effectiveAcademicYear]);
 
   const loadCards = async () => {
     if (!examId) return message.warning("Select exam first");
@@ -32,7 +45,7 @@ const AdmitCardPage = () => {
           />
           <Button type="primary" onClick={loadCards}>Generate</Button>
         </Space>
-        <Table rowKey={(r) => `${r.studentId}-${r.seatNumber}`} dataSource={rows} pagination={{ pageSize: 10 }}
+        <Table rowKey={(r) => `${r.studentId}-${r.seatNumber}`} dataSource={rows} loading={loading} pagination={{ pageSize: 10 }}
           columns={[
             { title: "Student", dataIndex: "studentName" },
             { title: "Roll No", dataIndex: "rollNumber" },

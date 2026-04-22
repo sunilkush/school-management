@@ -1,24 +1,46 @@
 import React, { useState } from "react";
 import { Button, Card, InputNumber, Select, Space, Table, Typography, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import apiClient from "../../../api/httpClient";
-import { getExams } from "../../../features/examSlice";
+
+import { getExams, getSeatPlan } from "../../../features/examSlice";
 
 const { Title } = Typography;
 
 const SeatPlanPage = () => {
   const dispatch = useDispatch();
-  const { exams = [] } = useSelector((state) => state.exams || {});
+  const { exams = [], seatPlan, loading } = useSelector((state) => state.exams || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   const [examId, setExamId] = useState();
   const [capacity, setCapacity] = useState(30);
   const [data, setData] = useState({ seatPlan: [] });
 
-  React.useEffect(() => { dispatch(getExams()); }, [dispatch]);
+  const effectiveAcademicYear = React.useMemo(() => {
+    if (selectedAcademicYear?._id) return selectedAcademicYear;
+    
+  }, [selectedAcademicYear]);
+
+  React.useEffect(() => {
+    if (!effectiveAcademicYear?._id) return;
+    dispatch(getExams({
+      schoolId: effectiveAcademicYear.schoolId,
+      academicYearId: effectiveAcademicYear._id,
+      limit: 100,
+    }));
+  }, [dispatch, effectiveAcademicYear]);
+
+  React.useEffect(() => {
+    if (seatPlan?.seatPlan) {
+      setData(seatPlan);
+    }
+  }, [seatPlan]);
 
   const loadSeatPlan = async () => {
     if (!examId) return message.warning("Select exam first");
-    const res = await apiClient.get(`/exams/${examId}/seat-plan?roomCapacity=${capacity}`);
-    setData(res?.data?.data || { seatPlan: [] });
+    const res = await dispatch(getSeatPlan({ examId, roomCapacity: capacity }));
+    if (res.meta.requestStatus === "rejected") {
+      return message.error(res.payload || "Unable to generate seat plan");
+    }
+    setData(res.payload || { seatPlan: [] });
   };
 
   return (
@@ -32,7 +54,7 @@ const SeatPlanPage = () => {
           <InputNumber min={1} value={capacity} onChange={setCapacity} addonBefore="Capacity" />
           <Button type="primary" onClick={loadSeatPlan}>Generate</Button>
         </Space>
-        <Table rowKey={(r) => `${r.studentId}-${r.seatNumber}`} dataSource={data.seatPlan || []}
+        <Table rowKey={(r) => `${r.studentId}-${r.seatNumber}`} dataSource={data.seatPlan || []} loading={loading}
           columns={[
             { title: "Room", dataIndex: "roomNumber" },
             { title: "Seat", dataIndex: "seatNumber" },

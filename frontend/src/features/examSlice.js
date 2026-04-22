@@ -116,6 +116,20 @@ export const getAdmitCards = createAsyncThunk("exams/getAdmitCards", async (exam
   }
 });
 
+export const getSeatPlan = createAsyncThunk("exams/getSeatPlan", async ({ examId, roomCapacity }, { rejectWithValue }) => {
+  try {
+    if (!examId) throw new Error("Invalid exam id");
+    const query = new URLSearchParams();
+    if (roomCapacity !== undefined && roomCapacity !== null) {
+      query.set("roomCapacity", roomCapacity);
+    }
+    const qs = query.toString();
+    const res = await apiClient.get(`/exams/${examId}/seat-plan${qs ? `?${qs}` : ""}`);
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
 
 export const getStudentResults = createAsyncThunk("exams/getStudentResults", async (params = {}, { rejectWithValue }) => {
   try {
@@ -153,6 +167,7 @@ const examSlice = createSlice({
     loading: false,
     error: null,
     admitCards:[],
+     seatPlan: { seatPlan: [] },
   },
   reducers: {
     clearCurrentExam: (state) => {
@@ -216,6 +231,15 @@ const examSlice = createSlice({
       })
       .addCase(getAdmitCards.fulfilled, (state, action) => {
         state.admitCards = action.payload;
+      })
+       .addCase(getAdmitCards.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(getSeatPlan.fulfilled, (state, action) => {
+        state.seatPlan = action.payload || { seatPlan: [] };
+      })
+      .addCase(getSeatPlan.rejected, (state, action) => {
+        state.error = action.payload;
       })
       .addCase(getStudentResults.fulfilled, (state, action) => {
         const payload = action.payload;

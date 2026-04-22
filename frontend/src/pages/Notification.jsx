@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -9,6 +9,7 @@ import {
   Input,
   List,
   Row,
+   Spin,
   Select,
   Space,
   Tag,
@@ -49,8 +50,9 @@ const ROLE_OPTIONS = [
 const Notification = () => {
   const { user } = useSelector((state) => state.auth);
   const [form] = Form.useForm();
-  const [allNotifications, setAllNotifications] = useState(() => getNotifications());
+   const [allNotifications, setAllNotifications] = useState([]);
   const [filterLevel, setFilterLevel] = useState("all");
+  const [loading, setLoading] = useState(true);
 
   const visibleNotifications = useMemo(
     () => getVisibleNotificationsForUser(allNotifications, user),
@@ -71,7 +73,24 @@ const Notification = () => {
 
   const selectedLevel = Form.useWatch("level", form);
 
-  const onCreateNotification = (values) => {
+const loadNotifications = useCallback(async () => {
+    setLoading(true);
+    try {
+      const rows = await getNotifications();
+      setAllNotifications(rows);
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || "Failed to load notifications";
+      message.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  const onCreateNotification = async (values) => {
     const payload = createNotificationPayload({
       title: values.title,
       message: values.message,
@@ -92,11 +111,15 @@ const Notification = () => {
       createdBy: user?.name || user?.fullName || user?.email || "Unknown",
     });
 
-    const nextList = [payload, ...allNotifications];
-    setAllNotifications(nextList);
-    saveNotifications(nextList);
-    form.resetFields();
-    message.success("Notification created successfully.");
+    try {
+      const createdNotification = await saveNotifications(payload);
+      setAllNotifications((prev) => [createdNotification, ...prev]);
+      form.resetFields();
+      message.success("Notification created successfully.");
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || "Failed to create notification";
+      message.error(errorMessage);
+    }
   };
 
   return (
@@ -195,14 +218,18 @@ const Notification = () => {
           />
         }
       >
-        {filteredNotifications.length === 0 ? (
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: 16 }}>
+            <Spin />
+          </div>
+        ) : filteredNotifications.length === 0 ? (
           <Empty description="No notifications available for your account." />
         ) : (
           <List
             itemLayout="vertical"
             dataSource={filteredNotifications}
             renderItem={(item) => (
-              <List.Item key={item.id}>
+              <List.Item key={item._id || item.id}>
                 <Space direction="vertical" size={6} style={{ width: "100%" }}>
                   <Space>
                     <Text strong>{item.title}</Text>

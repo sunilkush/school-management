@@ -1,6 +1,6 @@
 import { BellOutlined } from "@ant-design/icons";
 import { Avatar, Badge, Dropdown, List, Typography } from "antd";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getNotifications, getVisibleNotificationsForUser } from "../../utils/notifications";
@@ -17,9 +17,27 @@ const NotificationDropdown = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
-  const notifications = useMemo(() => {
-    const allNotifications = getNotifications();
-    return getVisibleNotificationsForUser(allNotifications, user).slice(0, 5);
+ const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      try {
+        const allNotifications = await getNotifications();
+        if (!mounted) return;
+        setNotifications(getVisibleNotificationsForUser(allNotifications, user).slice(0, 5));
+      } catch {
+        if (!mounted) return;
+        setNotifications([]);
+      }
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
   const notificationMenu = (

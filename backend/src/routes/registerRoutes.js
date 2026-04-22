@@ -38,6 +38,7 @@ import payrollRoutes from "./payroll.routes.js";
 import studentPortalRoutes from "./studentPortal.routes.js";
 import supportTicketRoutes from "./supportTicket.routes.js";
 import timetableRoutes from "./timetable.routes.js";
+import notificationRoutes from "./notification.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -79,6 +80,7 @@ export const apiV1Routes = [
   ["/student-portal", studentPortalRoutes],
   ["/support-tickets", supportTicketRoutes],
   ["/timetables", timetableRoutes],
+  ["/notifications", notificationRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {
