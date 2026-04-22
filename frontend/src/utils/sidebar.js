@@ -1,1 +1,529 @@
-export { sidebarMenu } from "../config/sidebar.config.js";
+import {
+  LayoutDashboard,
+  School,
+  Puzzle,
+  FileText,
+  Settings,
+  Users,
+  BookOpen,
+  CalendarClock,
+  ClipboardCheck,
+  Bus,
+  CreditCard,
+  Bell,
+  UserCheck,
+  ClipboardList,
+  GraduationCap,
+  FileCheck,
+  MessageCircle,
+  Clipboard,
+  ClipboardSignature,
+  FileBarChart2,
+  Book,
+  Briefcase,
+  MessageSquare,
+  User,
+  IndianRupee,
+  Cog,
+  BusFront,
+  MapPinned,
+  Receipt,
+  Fuel,
+  Wrench,
+  Clock,
+  UserPlus
+} from "lucide-react";
+
+export const sidebarMenu = {
+
+  /* ================= SUPER ADMIN ================= */
+  "super admin": [
+
+{ title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
+
+{
+  title: "School Management",
+  icon: School,
+  subMenu: [
+    { title: "School List", path: "superadmin/schools" },
+    { title: "School Reports", path: "superadmin/reports/schools" },
+  ],
+},
+
+{
+  title: "Subscription & Billing",
+  icon: CreditCard,
+  subMenu: [
+    { title: "Subscription Plans", path: "superadmin/subscriptions" },
+    { title: "Payment History", path: "superadmin/payments" },
+    { title: "Revenue Reports", path: "superadmin/revenue" },
+  ],
+},
+
+{
+  title: "User Management",
+  icon: Users,
+  subMenu: [
+    { title: "School Admins", path: "superadmin/users/admins" },
+  ],
+},
+{
+  title: "Acadmic Management",
+  icon: BookOpen,
+  subMenu: [
+    { title: "Class Management", path: "superadmin/academics/classes" },
+    { title: "Subject Management", path: "superadmin/academics/subjects" },
+    { title: "Academic Years", path:"superadmin/academics/academic-years"},
+    { title: "Board Management", path:"superadmin/academics/boards"},
+    { title: "Board Clasess", path:"superadmin/academics/boards-class"},
+    { title: "Chapter & Topic Management", path: "superadmin/academics/chapters-topics" },
+   
+  ],
+
+},
+{
+  title: "Module Management",
+  icon: Puzzle,
+  subMenu: [
+    { title: "All Modules", path: "superadmin/modules" },
+  ],
+},
+
+{
+  title: "Reports & Analytics",
+  icon: FileText,
+  subMenu: [
+    { title: "Platform Usage", path: "superadmin/reports/usage" },
+    { title: "Revenue Analytics", path: "superadmin/reports/revenue" },
+    { title: "Activity Logs", path: "superadmin/reports/activity" },
+  ],
+},
+
+{
+  title: "System Administration",
+  icon: Cog,
+  subMenu: [
+    { title: "Role Management", path: "superadmin/settings/roles" },
+    { title: "Permission Management", path: "superadmin/settings/permissions" },
+    { title: "System Backup", path: "superadmin/settings/backup" },
+    { title: "Audit Logs", path: "superadmin/settings/audit" },
+  ],
+},
+{
+  title:"Help",
+  icon: MessageSquare,
+  subMenu:[
+   
+    {title:"Documentation",path:"superadmin/support/documentation"},
+    {title:"Contact Support",path:"superadmin/support/contact"},
+    {title:"FAQs",path:"superadmin/support/faqs"},
+  ]
+}
+
+],
+
+  /* ================= SCHOOL ADMIN ================= */
+  "school admin": [
+    { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
+    { title:"School Setup", icon: School, path:"schooladmin/school-setup"},
+   /*  { title: "My Self", path: "schooladmin/profile", icon: User, }, */
+    {
+      title: "User Management",
+      icon: Users,
+      subMenu: [
+        { title: "Student Admission", path: "schooladmin/admission" },
+        { title: "Teachers & Staff", path: "schooladmin/teacher" },
+        { title: "Students", path: "schooladmin/studentList" },
+        { title: "Promotion", path: "schooladmin/students/promotion" },
+        { title: "Parents", path: "schooladmin/parents-register" },
+      ],
+    },
+
+    {
+      title: "Academic Management",
+      icon: BookOpen,
+      subMenu: [
+        { title: "Classes", path: "schooladmin/classes" },
+        { title: "Subjects", path: "schooladmin/subjects" },
+      ],
+    },
+
+    {
+      title: "Examination Management",
+      icon: GraduationCap,
+      subMenu: [
+        { title: "Exam Create", path: "schooladmin/exams/exams-create"},
+        { title: "Exams List", path: "schooladmin/exams/exams-list" },
+        { title: "Exam Schedule", path: "schooladmin/exams/schedule" },
+        { title: "Grade Entry", path: "schooladmin/exams/grades" },
+        { title: "Paper Builder", path: "schooladmin/exams/paper-builder" },
+        { title: "Admit Card", path: "schooladmin/exams/admit-card" },
+        { title: "Seat Plan", path: "schooladmin/exams/seat-plan" },
+        { title: "Analytics", path: "schooladmin/exams/analytics" },
+        { title: "Exam Reports", path: "schooladmin/exams/reports" },
+      ],
+    },
+
+    {
+      title: "Attendance Management",
+      icon: UserCheck,
+      subMenu: [
+        { title: "Student Attendance", path: "schooladmin/attendance/students" },
+        { title: "Staff Attendance", path: "schooladmin/attendance/staff" },
+      ],
+    },
+    {
+      title:"timetable management",
+      icon: CalendarClock,
+      subMenu:[
+        {title:"Create Timetable",path:"schooladmin/timetable/class"},
+        {title:"View Timetable",path:"schooladmin/timetable/teacher"},
+      ]
+    },
+    {
+      title: "Fee Management",
+      icon: CreditCard,
+      subMenu: [
+        { title: "Fee Categories", path: "schooladmin/fees/categories" },
+        { title: "Fee Structures", path: "schooladmin/fees/feestructure" },
+        { title: "Assign Fees", path: "schooladmin/fees/assign" },
+        { title: "Fee Collection", path: "schooladmin/fees/collect" },
+      ],
+    },
+
+    {
+      title: "Library Management",
+      icon: Book,
+      subMenu: [
+        { title: "Books", path: "schooladmin/library/books" },
+        { title: "Issue / Return", path: "schooladmin/library/issue" },
+      ],
+    },
+
+    {
+      title: "Transport Management",
+      icon: Bus,
+      subMenu: [
+        { title: "Routes", path: "schooladmin/transport/routes" },
+        { title: "Vehicles", path: "schooladmin/transport/vehicles" },
+        { title: "Assignments", path: "schooladmin/transport/assignments" },
+      ],
+    },
+{
+      title: "Hostel Management",
+      icon: ClipboardList,
+      subMenu: [
+        { title: "Hostel Rooms & Allocation", path: "schooladmin/hostel" },
+       // { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
+      ],
+    },
+
+    {
+      title: "Payroll",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
+        { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
+        { title: "Create Employee", path: "schooladmin/payroll/create-employee" },
+        { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
+        { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
+      ],
+    },
+    {
+      title: "Inventory Management",
+      icon: Briefcase,
+      subMenu: [
+        { title: "Supplies", path: "schooladmin/inventory/supplies" },
+        { title: "Assets", path: "schooladmin/inventory/assets" },
+      ],
+    },
+    { title: "Reports", path: "schooladmin/reports", icon: FileBarChart2 },
+    { title: "School Settings", path: "schooladmin/settings", icon: Settings },
+  ],
+
+  /* ================= TEACHER ================= */
+  teacher: [
+    { title: "Dashboard", path: "teacher", icon: LayoutDashboard },
+    { title: "Assigned Classes", path: "teacher/classes", icon: Book },
+  
+    {
+      title: "Attendance",
+      icon: UserCheck,
+      subMenu: [
+        { title: "Student Attendance", path: "teacher/attendance/students" },
+        { title: "Student Monthly Attendance", path: "teacher/attendance" },
+        { title: "My Daily Attendance", path: "teacher/attendance/my" },
+        { title: "My Monthly Report", path: "teacher/attendance/my/monthly" },
+      ],
+    },
+    { title: "Assignments", path: "teacher/assignments", icon: ClipboardList },
+   
+    {
+      title: "Examinations",
+      icon: GraduationCap,
+      subMenu: [
+        { title: "Exams List", path: "teacher/exams/list" },
+        { title: "Evaluation", path: "teacher/exams/evaluation" },
+        { title: "Exam Reports", path: "teacher/exams/reports" },
+        { title: "Question Bank", path: "teacher/exams/question-bank" }
+      ],
+    },
+    
+    { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
+    { title: "Reports", path: "teacher/reports", icon: FileBarChart2 },
+    {
+      title: "Profile",
+      icon: User,
+      subMenu: [
+        { title: "My Profile", path: "teacher/profile" },
+      
+        { title: "Change Password", path: "teacher/profile/change-password" }, ]
+    },
+  ],
+
+  /* ================= STUDENT ================= */
+  student: [
+    { title: "Dashboard", path: "student", icon: LayoutDashboard },
+    { title: "Profile", path: "student/profile", icon: User },
+    {
+      title: "Examinations",
+      icon: GraduationCap,
+      subMenu: [
+        { title: "Exam Hub", path: "student/exams" },
+        { title: "Live Exams", path: "student/exams/exam-live" },
+        { title: "Exam Review", path: "student/exams/attempt-review" },
+      ],
+    },
+    { title: "Homework", path: "student/homework", icon: ClipboardList },
+    { title: "Attendance", path: "student/attendance", icon: UserCheck },
+    { title: "Grades", path: "student/grades", icon: ClipboardSignature },
+    { title: "Timetable", path: "student/timetable", icon: CalendarClock },
+    { title: "Library", path: "student/library", icon: BookOpen },
+    { title: "Transport", path: "student/transport", icon: Bus },
+    //{ title: "Fees", path: "student/fees", icon: CreditCard },
+  ],
+
+  /* ================= PARENT ================= */
+  parent: [
+    { title: "Dashboard", path: "parent", icon: LayoutDashboard },
+    { title: "Children Overview", path: "parent/children", icon: Users },
+    { title: "Attendance", path: "parent/attendance", icon: UserCheck },
+    { title: "Grades", path: "parent/grades", icon: Clipboard },
+    { title: "Homework", path: "parent/homework", icon: ClipboardList },
+    {
+      title: "Examinations",
+      icon: GraduationCap,
+       subMenu: [
+        { title: "Exam Hub", path: "parent/exams" },
+      ],
+
+    },
+    { title: "Fees", path: "parent/fees", icon: CreditCard },
+    { title: "Messages", path: "parent/message", icon: MessageCircle },
+    { title: "Reports", path: "parent/reports", icon: FileBarChart2 },
+  ],
+
+  /* ================= ACCOUNTANT ================= */
+  accountant: [
+    { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
+    {
+      title: "Fee Management",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Fee Categories", path: "accountant/fees/categories" },
+        { title: "Fee Structure", path: "accountant/fees/feestructure" },
+        { title: "Assign Fees", path: "accountant/fees/assign" },
+        { title: "Fee Collection", path: "accountant/fees/collect" },
+      ],
+    },
+    {
+      title: "Payroll Management",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Monthly Run", path: "accountant/salary" },
+        { title: "Salary Structures", path: "accountant/salary/structures" },
+        { title: "Create Employee", path: "accountant/salary/create-employee" },
+        { title: "Payslips", path: "accountant/salary/payslips" },
+        { title: "Monthly Reports", path: "accountant/salary/reports/monthly" },
+      ],
+    },
+    { title: "Financial Reports", path: "accountant/reports", icon: FileBarChart2 },
+  ],
+
+  /* ================= LIBRARIAN ================= */
+  librarian: [
+    { title: "Dashboard", path: "librarian", icon: LayoutDashboard },
+    { title: "Library Management", path: "librarian/books", icon: BookOpen },
+    { title: "Members", path: "librarian/members", icon: Users },
+    { title: "Issue & Return", path: "librarian/records", icon: FileCheck },
+    { title: "Library Reports", path: "librarian/reports", icon: FileBarChart2 },
+  ],
+
+  /* ================= TRANSPORT ================= */
+  transport: [
+    { title: "Dashboard", path: "transport", icon: LayoutDashboard },
+
+    {
+      title: "Vehicle Management",
+      icon: BusFront,
+      subMenu: [
+        { title: "Add Vehicle", path: "transport/vehicles/add" },
+        { title: "Vehicle List", path: "transport/vehicles/list" },
+        { title: "Maintenance Records", path: "transport/vehicles/maintenance" },
+      ],
+    },
+
+    {
+      title: "Route Management",
+      icon: MapPinned,
+      subMenu: [
+        { title: "Add Route", path: "transport/routes/add" },
+        { title: "Route List", path: "transport/routes/list" },
+      ],
+    },
+
+    {
+      title: "Driver Management",
+      icon: Users,
+      subMenu: [
+        { title: "Add Driver", path: "transport/drivers/add" },
+        { title: "Driver List", path: "transport/drivers/list" },
+      ],
+    },
+
+    { title: "Transport Reports", path: "transport/reports", icon: FileBarChart2 },
+    { title: "Transport Settings", path: "transport/settings", icon: Settings },
+  ],
+  /* ================= SUPPORT STAFF ================= */
+  "support staff": [
+    { title: "Dashboard", path: "staff", icon: LayoutDashboard },
+    { title: "Assigned Tasks", path: "staff/tasks", icon: ClipboardList },
+    { title: "Attendance", path: "staff/attendance", icon: Clock },
+    { title: "Notifications", path: "staff/notification", icon: Bell },
+    { title: "Messages", path: "staff/message", icon: MessageSquare, },
+    {title: "Profile",path: "staff/profile",icon: User,},
+  ],
+  /* ================= SECURITY ================= */
+  security: [
+    { title: "Dashboard", path: "security", icon: LayoutDashboard },
+    {title: "Visitor Entry",path: "security/visitors",icon: UserPlus,},
+    {title: "Gate Log",path: "security/gate-log",icon: ClipboardCheck,},
+    {title: "Shift Attendance",path: "security/attendance",icon: Clock,},
+    {title: "Emergency Alerts",path: "security/alerts",icon: Bell,},
+    {title: "Profile", path: "security/profile",icon: User,},
+  ],
+  /* ================= PRINCIPAL ================= */
+  "principal": [
+    { title: "Dashboard", path: "principal", icon: LayoutDashboard },
+    {title: "School Overview",path: "principal/overview",icon: School,},
+    {title: "Staff Management",path: "principal/staff",icon: Users,},
+    {title: "Student Management",path: "principal/students",icon: Users,},
+    {title: "Academic Reports",path: "principal/reports/academic",icon: FileText,},
+    {title: "Attendance Reports",path: "principal/reports/attendance",icon: CalendarClock,},
+    { title: "Exams & Grades", path: "principal/exams", icon: GraduationCap },
+    { title: "Library Overview", path: "principal/library", icon: BookOpen },
+    { title: "Transport Overview", path: "principal/transport", icon: Bus },
+    { title: "School Settings", path: "principal/settings", icon: Settings },
+  ],
+
+  /* ================= VICE PRINCIPAL ================= */
+  "vice principal": [
+    { title: "Dashboard", path: "viceprincipal", icon: LayoutDashboard },
+    { title: "Academic Management", path: "viceprincipal/academics", icon: BookOpen },
+    { title: "Exams & Grades", path: "viceprincipal/exams", icon: GraduationCap },
+    { title: "Student Attendance", path: "viceprincipal/attendance/students", icon: UserCheck },
+    { title: "Teacher Attendance", path: "viceprincipal/attendance/staff", icon: UserCheck },
+    { title: "Reports", path: "viceprincipal/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "viceprincipal/profile", icon: User },
+  ],
+
+  /* ================= EXAM COORDINATOR ================= */
+  "exam coordinator": [
+    { title: "Dashboard", path: "examcoordinator", icon: LayoutDashboard },
+    { title: "Create Exams", path: "examcoordinator/exams/create", icon: GraduationCap },
+    { title: "Question Bank", path: "examcoordinator/exams/question-bank", icon: ClipboardList },
+    { title: "Exam Schedule", path: "examcoordinator/exams/schedule", icon: CalendarClock },
+    { title: "Grade Entry", path: "examcoordinator/exams/grades", icon: ClipboardSignature },
+     { title: "Paper Builder", path: "examcoordinator/exams/paper-builder", icon: ClipboardList },
+    { title: "Admit Card", path: "examcoordinator/exams/admit-card", icon: FileText },
+    { title: "Seat Plan", path: "examcoordinator/exams/seat-plan", icon: MapPinned },
+    { title: "Analytics", path: "examcoordinator/exams/analytics", icon: FileBarChart2 },
+    { title: "Exam Reports", path: "examcoordinator/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "examcoordinator/profile", icon: User },
+  ],
+
+  /* ================= RECEPTIONIST ================= */
+  "receptionist": [
+    { title: "Dashboard", path: "receptionist", icon: LayoutDashboard },
+    { title: "Visitor Management", path: "receptionist/visitors", icon: UserPlus },
+    { title: "Enquiries", path: "receptionist/enquiries", icon: MessageSquare },
+    { title: "Phone Calls Log", path: "receptionist/calls", icon: ClipboardCheck },
+    { title: "Notifications", path: "receptionist/notifications", icon: Bell },
+    { title: "Profile", path: "receptionist/profile", icon: User },
+  ],
+
+  /* ================= IT SUPPORT ================= */
+  "it support": [
+    { title: "Dashboard", path: "itsupport", icon: LayoutDashboard },
+    { title: "System Maintenance", path: "itsupport/maintenance", icon: Wrench },
+    { title: "User Support Tickets", path: "itsupport/tickets", icon: ClipboardList },
+    { title: "Network Status", path: "itsupport/network", icon: Fuel },
+    { title: "System Logs", path: "itsupport/logs", icon: FileBarChart2 },
+    { title: "Profile", path: "itsupport/profile", icon: User },
+  ],
+
+  /* ================= COUNSELOR ================= */
+  "counselor": [
+    { title: "Dashboard", path: "counselor", icon: LayoutDashboard },
+    { title: "Student Profiles", path: "counselor/students", icon: Users },
+    { title: "Counseling Sessions", path: "counselor/sessions", icon: CalendarClock },
+    { title: "Appointments", path: "counselor/appointments", icon: Clock },
+    { title: "Reports", path: "counselor/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "counselor/profile", icon: User },
+  ],
+
+  /* ================= SUBJECT COORDINATOR ================= */
+  "subject coordinator": [
+    { title: "Dashboard", path: "subjectcoordinator", icon: LayoutDashboard },
+    { title: "Subjects Overview", path: "subjectcoordinator/subjects", icon: BookOpen },
+    { title: "Teacher Assignment", path: "subjectcoordinator/teachers", icon: Users },
+    { title: "Class Assignment", path: "subjectcoordinator/classes", icon: Book },
+    { title: "Exams & Grades", path: "subjectcoordinator/exams", icon: GraduationCap },
+    { title: "Reports", path: "subjectcoordinator/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "subjectcoordinator/profile", icon: User },
+  ],
+
+  /* ================= HOSTEL WARDEN ================= */
+  "hostel warden": [
+    { title: "Dashboard", path: "hostelwarden", icon: LayoutDashboard },
+    { title: "Hostel Rooms", path: "hostelwarden/rooms", icon: BookOpen },
+    { title: "Student Allocation", path: "hostelwarden/students", icon: Users },
+    { title: "Attendance", path: "hostelwarden/attendance", icon: UserCheck },
+    { title: "Visitor Log", path: "hostelwarden/visitors", icon: UserPlus },
+    { title: "Reports", path: "hostelwarden/reports", icon: FileBarChart2 },
+    { title: "Profile", path: "hostelwarden/profile", icon: User },
+  ],
+
+
+
+  /* ================= TRANSPORT MANAGER ================= */
+  "transport manager": [
+    { title: "Dashboard", path: "transportmanager", icon: LayoutDashboard },
+    { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
+    { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
+    { title: "Drivers", path: "transportmanager/drivers", icon: Users },
+    { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
+  ],
+
+};
+
+
+const SUPPORT_CENTER_ITEM = { title: "Support Center", path: "support/tickets", icon: MessageSquare };
+
+Object.keys(sidebarMenu).forEach((roleKey) => {
+  const items = sidebarMenu[roleKey];
+  if (!Array.isArray(items)) return;
+
+  const hasSupport = items.some((item) => item?.path === "support/tickets");
+  if (!hasSupport) items.push(SUPPORT_CENTER_ITEM);
+});
