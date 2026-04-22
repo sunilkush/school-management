@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+
 const assertObjectId = (id, label) => {
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, `Invalid ${label}`);
 };

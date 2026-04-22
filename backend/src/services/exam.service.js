@@ -196,23 +196,45 @@ export const assignExamToClassService = async ({ body, user }) => {
 
 export const enterMarksBulkService = async ({ body, user }) => {
   const { examId, marks = [] } = body;
+
   if (!examId || !Array.isArray(marks) || !marks.length) {
     throw new ApiError(400, "examId and non-empty marks array are required");
   }
 
+  // 1. Get Exam
   const exam = await Exam.findById(examId)
     .select("schoolId academicYearId subjectId schoolClassId sectionId")
     .lean();
+
   if (!exam) throw new ApiError(404, "Exam not found");
-  if (user.roleId?.name !== "Super Admin" && `${exam.schoolId}` !== `${user.schoolId}`) {
+
+  // 2. School Permission Check
+  if (
+    user.roleId?.name !== "Super Admin" &&
+    `${exam.schoolId}` !== `${user.schoolId}`
+  ) {
     throw new ApiError(403, "Forbidden for this school exam");
   }
 
-  const studentUserIds = [...new Set(marks.map((entry) => `${entry.studentId}`))];
-  const students = await Student.find({ userId: { $in: studentUserIds } }).select("_id userId").lean();
-  const userToStudent = new Map(students.map((row) => [`${row.userId}`, `${row._id}`]));
+  // 3. Get student USER IDs from payload
+  const studentUserIds = [
+    ...new Set(marks.map((entry) => `${entry.studentId}`)),
+  ];
+
+  // 4. Convert USER ID → STUDENT ID
+  const students = await Student.find({
+    userId: { $in: studentUserIds },
+  })
+    .select("_id userId")
+    .lean();
+
+  const userToStudent = new Map(
+    students.map((row) => [`${row.userId}`, `${row._id}`])
+  );
+
   const studentObjectIds = students.map((row) => row._id);
 
+  // 5. Check enrollment
   const enrollments = await StudentEnrollment.find({
     studentId: { $in: studentObjectIds },
     schoolId: exam.schoolId,
@@ -223,42 +245,65 @@ export const enterMarksBulkService = async ({ body, user }) => {
   })
     .select("studentId")
     .lean();
-  const allowedStudentIds = new Set(enrollments.map((row) => `${row.studentId}`));
+
+  const allowedStudentIds = new Set(
+    enrollments.map((row) => `${row.studentId}`)
+  );
+
+  // 6. VALIDATION + TRANSFORM DATA
+  const bulkOps = [];
 
   for (const entry of marks) {
     const mappedStudentId = userToStudent.get(`${entry.studentId}`);
-    if (!mappedStudentId || !allowedStudentIds.has(mappedStudentId)) {
-      throw new ApiError(400, `Student ${entry.studentId} is not enrolled in this exam's class/section`);
+
+    if (!mappedStudentId) {
+      throw new ApiError(400, `Invalid student userId: ${entry.studentId}`);
     }
+
+    if (!allowedStudentIds.has(mappedStudentId)) {
+      throw new ApiError(
+        400,
+        `Student ${entry.studentId} not enrolled in this class/section`
+      );
+    }
+
+    bulkOps.push({
+      updateOne: {
+        filter: {
+          examId,
+          studentId: mappedStudentId, // ✅ FIXED
+          subjectId: entry.subjectId || exam.subjectId,
+        },
+        update: {
+          $set: {
+            schoolId: exam.schoolId,
+            academicYearId: exam.academicYearId,
+            schoolClassId: exam.schoolClassId, // ✅ FIXED
+            sectionId: exam.sectionId || null, // ✅ FIXED
+            totalMarks: Number(entry.totalMarks) || 0,
+            passingMarks: Number(entry.passingMarks) || 0,
+            obtainedMarks: Number(entry.obtainedMarks) || 0,
+            updatedBy: user._id,
+          },
+          $setOnInsert: {
+            examId,
+            studentId: mappedStudentId, // ✅ FIXED
+            subjectId: entry.subjectId || exam.subjectId,
+            enteredBy: user._id,
+          },
+        },
+        upsert: true,
+      },
+    });
   }
 
-  const bulkOps = marks.map((entry) => ({
-    updateOne: {
-      filter: { examId, studentId: entry.studentId, subjectId: entry.subjectId || exam.subjectId },
-      update: {
-        $set: {
-          schoolId: exam.schoolId,
-          academicYearId: exam.academicYearId,
-          schoolClassId: entry.schoolClassId,
-          sectionId: entry.sectionId || null,
-          totalMarks: Number(entry.totalMarks),
-          passingMarks: Number(entry.passingMarks),
-          obtainedMarks: Number(entry.obtainedMarks),
-          updatedBy: user._id,
-        },
-        $setOnInsert: {
-          examId,
-          studentId: entry.studentId,
-          subjectId: entry.subjectId || exam.subjectId,
-          enteredBy: user._id,
-        },
-      },
-      upsert: true,
-    },
-  }));
-
+  // 7. Execute Bulk
   const result = await Marks.bulkWrite(bulkOps, { ordered: false });
-  return result;
+
+  return {
+    message: "Marks uploaded successfully",
+    result,
+  };
 };
 
 export const updateMarksService = async ({ markId, body, user }) => {
@@ -309,7 +354,7 @@ export const getExamAnalyticsService = async ({ examId, user }) => {
         $group: {
           _id: "$status",
           count: { $sum: 1 },
-          averageScore: { $avg: "$totalMarksObtained" },
+          averageScore: { $avg: { $ifNull: ["$totalObtainedMarks", "$totalMarksObtained"] } },
         },
       },
     ]),
