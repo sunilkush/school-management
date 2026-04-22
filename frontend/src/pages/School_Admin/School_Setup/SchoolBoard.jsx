@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Select, Button, message, Skeleton } from "antd";
+import { Select, Button, Popconfirm, message, Skeleton } from "antd";
 import {
   ApartmentOutlined,
   PlusOutlined,
@@ -11,6 +11,7 @@ import {
   getBoards,
   assignSchoolBoards,
   getSchoolBoards,
+   removeSchoolBoard,
 } from "../../../features/boardSlice";
 import { useTheme } from "../../../context/ThemeContext";
 
@@ -90,6 +91,11 @@ const SchoolBoard = ({ next }) => {
   }, [dispatch, schoolId]);
 
   const handleSave = async () => {
+     if (schoolBoards.length > 0) {
+      message.warning("A school can have only one board");
+      return;
+    }
+
     if (!selectedBoard) {
       message.warning("Select a board first");
       return;
@@ -107,6 +113,21 @@ const SchoolBoard = ({ next }) => {
       setSaving(false);
     }
   };
+  const handleUnassign = async (boardId) => {
+    if (!schoolId || !boardId) return;
+
+    try {
+      setSaving(true);
+      await dispatch(removeSchoolBoard({ schoolId, boardId })).unwrap();
+      message.success("Board unassigned successfully");
+      dispatch(getSchoolBoards(schoolId));
+      dispatch(getBoards());
+    } catch (err) {
+      message.error(safeErrorMessage(err, "Failed to unassign board"));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const assignedIds = new Set(
     schoolBoards
@@ -114,7 +135,10 @@ const SchoolBoard = ({ next }) => {
       .filter(Boolean)
   );
 
-  const availableBoards = boards.filter((board) => !assignedIds.has(board?._id));
+ const hasAssignedBoard = schoolBoards.length > 0;
+  const availableBoards = hasAssignedBoard
+    ? []
+    : boards.filter((board) => !assignedIds.has(board?._id));
 
   const emptyMessage = "No boards assigned yet.";
 
@@ -174,7 +198,9 @@ const SchoolBoard = ({ next }) => {
               >
                 {availableBoards.length === 0 ? "All boards already assigned" : "No board found"}
               </span>
+              
             }
+            disabled={hasAssignedBoard}
           >
             {availableBoards.map((board) => (
               <Option key={board?._id} value={board?._id}>
@@ -188,12 +214,17 @@ const SchoolBoard = ({ next }) => {
             icon={<PlusOutlined />}
             onClick={handleSave}
             loading={saving}
-            disabled={!selectedBoard}
+            disabled={!selectedBoard || hasAssignedBoard}
             style={{ borderRadius: 8, height: 32, fontWeight: 600 }}
           >
             Assign
           </Button>
         </div>
+          {hasAssignedBoard && (
+          <div style={{ marginTop: 10, fontSize: 12, color: t.warning }}>
+            This school already has a board assigned. Only one board is allowed.
+          </div>
+        )}
       </div>
 
       <div
@@ -236,7 +267,7 @@ const SchoolBoard = ({ next }) => {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
               <thead>
                 <tr style={{ background: t.thBg }}>
-                  {["Board", "Primary", "Status"].map((h) => (
+                  {["Board", "Primary", "Status", "Action"].map((h) => (
                     <th
                       key={h}
                       style={{
@@ -261,14 +292,14 @@ const SchoolBoard = ({ next }) => {
                 {loading && schoolBoards.length === 0 ? (
                   [1, 2].map((i) => (
                     <tr key={i}>
-                      <td colSpan={3} style={{ padding: "12px 16px" }}>
+                      <td colSpan={4} style={{ padding: "12px 16px" }}>
                         <Skeleton active title={false} paragraph={{ rows: 1 }} />
                       </td>
                     </tr>
                   ))
                 ) : schoolBoards.length === 0 ? (
                   <tr>
-                    <td colSpan={3} style={{ padding: 32, textAlign: "center" }}>
+                   <td colSpan={4} style={{ padding: 32, textAlign: "center" }}>
                       <span style={{ color: t.textSec, fontSize: 13 }}>{emptyMessage}</span>
                     </td>
                   </tr>
@@ -362,6 +393,35 @@ const SchoolBoard = ({ next }) => {
                             </span>
                           )}
                         </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <Popconfirm
+                            title="Unassign this board?"
+                            description="This board will be removed from this school."
+                            okText="Unassign"
+                            cancelText="Cancel"
+                            onConfirm={() =>
+                              handleUnassign(item?.boardId?._id || item?.boardId)
+                            }
+                          >
+                            <Button
+                              danger
+                              size="small"
+                              loading={saving}
+                               style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 5,
+                                fontSize: 11,
+                                color: t.warning,
+                                background: t.warnBg,
+                                padding: "2px 8px",
+                                borderRadius: 99,
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </Popconfirm>
+                        </td>
                       </tr>
                     );
                   })
@@ -441,6 +501,24 @@ const SchoolBoard = ({ next }) => {
                   ) : (
                     <span style={{ fontSize: 11, color: t.warning }}>Inactive</span>
                   )}
+                </div>
+                <div>
+                  <Popconfirm
+                    title="Unassign this board?"
+                    description="This board will be removed from this school."
+                    okText="Unassign"
+                    cancelText="Cancel"
+                    onConfirm={() => handleUnassign(item?.boardId?._id || item?.boardId)}
+                  >
+                    <Button
+                      danger
+                      size="small"
+                      loading={saving}
+                      style={{ borderRadius: 8, fontWeight: 600 }}
+                    >
+                      Unassign
+                    </Button>
+                  </Popconfirm>
                 </div>
               </div>
             ))

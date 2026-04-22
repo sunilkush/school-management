@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   ConfigProvider,
+  Grid,
 } from "antd";
 
 import {
@@ -40,58 +41,47 @@ import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { useBreakpoint } = Grid;
 
 const TeacherList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const screens = useBreakpoint();
 
-const { users = [], loading } = useSelector((state) => state.auth);
-  
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+
+  const { users = []} = useSelector((state) => state.auth);
   const loggedInUser = useSelector((state) => state.auth.user);
- 
+
   const [searchText, setSearchText] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  
-  // ✅ AntD v5 Modal fix
+
   const [modal, contextHolder] = Modal.useModal();
- 
+
   const schoolId = loggedInUser?.school?._id;
 
-  /* ── Fetch ── */
   useEffect(() => {
     dispatch(currentUser());
   }, [dispatch]);
 
   useEffect(() => {
     if (!schoolId) return;
-
-    dispatch(
-      fetchAllUser({
-        isActive: true,
-      })
-    );
+    dispatch(fetchAllUser({ isActive: true }));
   }, [dispatch, schoolId]);
 
-
-  /* ── Delete Handler ── */
   const handleDelete = (id) => {
     modal.confirm({
       title: "Are you sure?",
       content: "This user will be permanently deleted",
-      okText: "Yes",
       okType: "danger",
-      cancelText: "Cancel",
-
       onOk: async () => {
         setDeletingId(id);
-
         try {
           await dispatch(deleteUser(id)).unwrap();
-          await dispatch(fetchAllUser());
-        } catch (error) {
-          console.error("Delete failed:", error);
+          dispatch(fetchAllUser());
         } finally {
           setDeletingId(null);
         }
@@ -99,15 +89,12 @@ const { users = [], loading } = useSelector((state) => state.auth);
     });
   };
 
-  /* ── Filter Users ── */
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       if (!u?.isActive) return false;
       if (u?.school?._id !== schoolId) return false;
 
       const role = u?.role?.name?.toLowerCase();
-
-     // Student records are intentionally excluded from this page
       if (role === "student") return false;
 
       const matchSearch =
@@ -121,7 +108,7 @@ const { users = [], loading } = useSelector((state) => state.auth);
     });
   }, [users, schoolId, searchText, selectedRole]);
 
-   const roleOptions = useMemo(() => {
+  const roleOptions = useMemo(() => {
     const roleMap = new Map();
 
     users.forEach((u) => {
@@ -137,13 +124,13 @@ const { users = [], loading } = useSelector((state) => state.auth);
       }
     });
 
-    return [...roleMap.entries()]
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+    return [...roleMap.entries()].map(([value, label]) => ({
+      value,
+      label,
+    }));
   }, [users, schoolId]);
 
-  /* ── Stats ── */
-   const stats = useMemo(() => {
+  const stats = useMemo(() => {
     return {
       total: filteredUsers.length,
       active: filteredUsers.length,
@@ -151,33 +138,18 @@ const { users = [], loading } = useSelector((state) => state.auth);
     };
   }, [filteredUsers, roleOptions]);
 
-  /* ── Columns ── */
   const columns = [
     {
       title: "User",
       render: (_, record) => (
         <Space>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 8,
-              background: "#6366f1",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 600,
-            }}
-          >
+          <div className="avatar">
             {record?.name?.charAt(0)}
           </div>
           <div>
             <Text strong>{record?.name}</Text>
             <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {record?.email}
-            </Text>
+            <Text type="secondary">{record?.email}</Text>
           </div>
         </Space>
       ),
@@ -199,34 +171,21 @@ const { users = [], loading } = useSelector((state) => state.auth);
       title: "Actions",
       render: (_, record) => (
         <Space>
-          <Tooltip title="Edit">
-            <Button
-              icon={<EditOutlined />}
-              type="text"
-              onClick={() =>
-                navigate(
-                  `/dashboard/schooladmin/users/employee-form?id=${record._id}`
-                )
-              }
-            />
-          </Tooltip>
-
-          <Tooltip title="View">
-            <Button
-              icon={<EyeOutlined />}
-              type="text"
-              onClick={() =>
-                navigate(
-                  `/dashboard/schooladmin/users/employee-details?id=${record._id}`
-                )
-              }
-            />
-          </Tooltip>
-
+          <Button
+            icon={<EditOutlined />}
+            onClick={() =>
+              navigate(`/dashboard/schooladmin/users/employee-form?id=${record._id}`)
+            }
+          />
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() =>
+              navigate(`/dashboard/schooladmin/users/employee-details?id=${record._id}`)
+            }
+          />
           <Button
             danger
             icon={<DeleteOutlined />}
-            type="text"
             loading={deletingId === record._id}
             onClick={() => handleDelete(record._id)}
           />
@@ -236,99 +195,106 @@ const { users = [], loading } = useSelector((state) => state.auth);
   ];
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          borderRadius: 10,
-          fontFamily: "'DM Sans', sans-serif",
-        },
-      }}
-    >
-      {contextHolder} {/* ✅ IMPORTANT */}
+    <ConfigProvider>
+      {contextHolder}
 
-      <div style={{ padding: 24 }}>
-        {/* Header */}
-        <div style={{ marginBottom: 20 }}>
-          <Title level={4}>Users Management</Title>
-          <Text type="secondary">Manage staff & teachers</Text>
-        </div>
+      <div style={{ padding: isMobile ? 12 : 24 }}>
+        <Title level={isMobile ? 5 : 4}>Users Management</Title>
 
         {/* Stats */}
-        <Row gutter={16} style={{ marginBottom: 20 }}>
+        <Row gutter={[12, 12]}>
           {[
-            { title: "Total Users", value: stats.total, icon: <TeamOutlined /> },
-            { title: "Active", value: stats.active, icon: <UserOutlined /> },
-            { title: "Roles", value: stats.roles, icon: <UserOutlined /> },
-            { title: "Showing", value: filteredUsers.length, icon: <UserOutlined /> },
+            { title: "Total", value: stats.total },
+            { title: "Active", value: stats.active },
+            { title: "Roles", value: stats.roles },
           ].map((s) => (
-            <Col xs={12} sm={6} key={s.title}>
-              <Card>
-                <Space>
-                  {s.icon}
-                  <div>
-                    <Text type="secondary">{s.title}</Text>
-                    <br />
-                    <Text strong>{s.value}</Text>
-                  </div>
-                </Space>
+            <Col xs={12} md={6} key={s.title}>
+              <Card size="small">
+                <Text>{s.title}</Text>
+                <br />
+                <Text strong>{s.value}</Text>
               </Card>
             </Col>
           ))}
         </Row>
 
-        {/* Main */}
-        <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-            <Space>
+        <Card style={{ marginTop: 20 }}>
+          {/* Filters */}
+          <Row gutter={[10, 10]}>
+            <Col xs={24} md={8}>
               <Input
                 prefix={<SearchOutlined />}
-                placeholder="Search user..."
-                allowClear
+                placeholder="Search..."
                 onChange={(e) => setSearchText(e.target.value)}
               />
+            </Col>
 
-              <Select value={selectedRole} onChange={setSelectedRole} style={{ width: 180 }}>
-                <Option value="all">All Roles</Option>
-                {roleOptions.map((role) => (
-                  <Option key={role.value} value={role.value}>
-                    {role.label}
+            <Col xs={24} md={6}>
+              <Select
+                value={selectedRole}
+                onChange={setSelectedRole}
+                style={{ width: "100%" }}
+              >
+                <Option value="all">All</Option>
+                {roleOptions.map((r) => (
+                  <Option key={r.value} value={r.value}>
+                    {r.label}
                   </Option>
                 ))}
               </Select>
+            </Col>
 
-               <Button
+            <Col xs={12} md={4}>
+              <Button
+                block
                 icon={<ReloadOutlined />}
-                loading={loading}
-                onClick={() => dispatch(fetchAllUser({ isActive: true }))}
-              />
-            </Space>
+                onClick={() => dispatch(fetchAllUser())}
+              >
+                Refresh
+              </Button>
+            </Col>
 
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setIsModalOpen(true)}
-            >
-              Add User
-            </Button>
-          </div>
+            <Col xs={12} md={6}>
+              <Button
+                type="primary"
+                block
+                icon={<PlusOutlined />}
+                onClick={() => setIsModalOpen(true)}
+              >
+                Add
+              </Button>
+            </Col>
+          </Row>
 
-          <Table
-            columns={columns}
-            dataSource={filteredUsers}
-            rowKey="_id"
-             loading={loading}
-            pagination={{ pageSize: 10 }}
-            locale={{ emptyText: <Empty description="No users found" /> }}
-          />
+          {/* Mobile Card View */}
+          {isMobile ? (
+            <div style={{ marginTop: 16 }}>
+              {filteredUsers.map((user) => (
+                <Card key={user._id} style={{ marginBottom: 10 }}>
+                  <Text strong>{user.name}</Text>
+                  <br />
+                  <Text>{user.email}</Text>
+                  <br />
+                  <Tag>{user.role?.name}</Tag>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={filteredUsers}
+              rowKey="_id"
+              pagination={{ pageSize: isTablet ? 6 : 10 }}
+              scroll={{ x: true }}
+            />
+          )}
         </Card>
 
-        {/* Add User Modal */}
         <Modal
           open={isModalOpen}
           footer={null}
           onCancel={() => setIsModalOpen(false)}
-          title="Add New User"
-          width={600}
+          width={isMobile ? "100%" : 600}
         >
           <RegisterForm onClose={() => setIsModalOpen(false)} />
         </Modal>

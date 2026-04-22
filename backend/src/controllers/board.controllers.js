@@ -3,7 +3,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import Board from "../models/Board.model.js";
 import mongoose from "mongoose";
-import { School } from "../models/school.model.js";
 import{SchoolBoard} from "../models/School_board.model.js";
 /* =====================================================
    CREATE BOARD
@@ -216,7 +215,8 @@ export const getSchoolBoards = asyncHandler(async (req, res) => {
 });
 
 export const removeSchoolBoard = asyncHandler(async (req, res) => {
-  const { schoolId, boardId } = req.params;
+ const schoolId = req.body?.schoolId || req.params?.schoolId;
+  const boardId = req.body?.boardId || req.params?.boardId;
 
   if (!mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "Invalid school id");
@@ -226,19 +226,13 @@ export const removeSchoolBoard = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid board id");
   }
 
-  const school = await School.findById(schoolId);
+  const schoolBoard = await SchoolBoard.findOneAndDelete({ schoolId, boardId });
 
-  if (!school) {
-    throw new ApiError(404, "School not found");
+  if (!schoolBoard) {
+    throw new ApiError(404, "Board assignment not found for this school");
   }
 
-  school.boards = (school.boards || []).filter(
-    (b) => b.toString() !== boardId
-  );
-
-  await school.save();
-
   return res.status(200).json(
-    new ApiResponse(200, school, "Board removed successfully")
+    new ApiResponse(200, schoolBoard, "Board removed successfully")
   );
 });

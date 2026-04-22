@@ -249,7 +249,6 @@ const SchoolClass = ({ next }) => {
         <Select
           style={{ width: 220 }}
           value={selectedBoard}
-          disabled
           placeholder="Board"
         >
           {schoolBoards.length > 0 &&
