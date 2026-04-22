@@ -97,6 +97,26 @@ export const publishResults = createAsyncThunk("exams/publishResults", async (pa
   }
 });
 
+export const getAdmitCards = createAsyncThunk("exams/getAdmitCards", async (examId, { rejectWithValue }) => {
+  try {
+    if (!examId) throw new Error("Invalid exam id");
+    let res;
+    try {
+      res = await apiClient.get(`/exams/${examId}/admit-cards`);
+    } catch (error) {
+      const routeNotFound = error?.response?.status === 404
+        && typeof error?.response?.data?.message === "string"
+        && error.response.data.message.includes("Route not found");
+      if (!routeNotFound) throw error;
+      res = await apiClient.get(`/exams/${examId}/admit-card`);
+    }
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
+
 export const getStudentResults = createAsyncThunk("exams/getStudentResults", async (params = {}, { rejectWithValue }) => {
   try {
     const query = new URLSearchParams(params).toString();
@@ -119,6 +139,8 @@ export const getParentResults = createAsyncThunk("exams/getParentResults", async
   }
 });
 
+
+
 const examSlice = createSlice({
   name: "exams",
   initialState: {
@@ -130,6 +152,7 @@ const examSlice = createSlice({
     analytics: null,
     loading: false,
     error: null,
+    admitCards:[],
   },
   reducers: {
     clearCurrentExam: (state) => {
@@ -190,6 +213,9 @@ const examSlice = createSlice({
       .addCase(publishExam.fulfilled, (state, action) => {
         const index = state.exams.findIndex((e) => e._id === action.payload._id);
         if (index !== -1) state.exams[index] = action.payload;
+      })
+      .addCase(getAdmitCards.fulfilled, (state, action) => {
+        state.admitCards = action.payload;
       })
       .addCase(getStudentResults.fulfilled, (state, action) => {
         const payload = action.payload;

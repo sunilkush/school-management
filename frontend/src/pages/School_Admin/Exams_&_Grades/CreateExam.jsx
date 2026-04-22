@@ -54,8 +54,7 @@ const CreateExam = () => {
   /* ================= REDUX ================= */
   const { schoolClasses } = useSelector((state) => state.schoolClass || {});
   const { questions = [] } = useSelector((state) => state.questions || {});
-  console.log(schoolClasses)
-
+  
   const academicYearId = selectedAcademicYear?._id;
   const schoolId = user?.school?._id;
   const userId = user?._id;
@@ -288,7 +287,7 @@ const CreateExam = () => {
           <Divider orientation="left">Basic Info</Divider>
 
           <Row gutter={16}>
-            <Col span={24}>
+            <Col span={24} >
               <Form.Item
                 name="title"
                 label="Exam Title"
@@ -298,7 +297,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={12}>
+            <Col span={12} md={6}>
               <Form.Item
                 name="examCode"
                 label="Exam Code"
@@ -311,7 +310,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={12}>
+            <Col span={12} md={6}>
               <Form.Item
                 name="schoolClassId"
                 label="Class"
@@ -327,7 +326,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={12}>
+            <Col span={12} md={6}>
               <Form.Item
                 name="sectionId"
                 label="Section (Optional)"
@@ -341,7 +340,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={12}>
+            <Col span={12} md={6}>
               <Form.Item
                 name="subjectId"
                 label="Subject"
@@ -362,7 +361,7 @@ const CreateExam = () => {
           <Divider orientation="left">Schedule</Divider>
 
           <Row gutter={16}>
-            <Col md={6}>
+            <Col md={6} span={12}>
               <Form.Item
                 name="examType"
                 label="Exam Type"
@@ -373,11 +372,24 @@ const CreateExam = () => {
                   <Option value="objective">Objective</Option>
                   <Option value="subjective">Subjective</Option>
                   <Option value="mixed">Mixed</Option>
+                  <Option value="unit_test">Unit Test</Option>
+                  <Option value="class_test">Class Test</Option>
+                  <Option value="Mid_term">Mid-term</Option>
+                  <Option value="final_exam">Final Exam</Option>
+                  <Option value="online_exam">Online Exam</Option>
+                  <Option value="practical_exam">Practical Exam</Option>
+                  <Option value="oral_exam">Oral Exam</Option>
+                  <Option value="assignment">Assignment</Option>
+                  <Option value="project">Project</Option>
+                  <Option value="quiz">Quiz</Option>
+                  <Option value="board_exam">Board Exam</Option>
+                  <Option value="competitive_exam">Competitive Exam</Option>
+                  <Option value="remedial_exam">Remedial Exam</Option>
                 </Select>
               </Form.Item>
             </Col>
 
-            <Col md={6}>
+            <Col md={6} span={12}>
               <Form.Item
                 name="examDate"
                 label="Exam Date"
@@ -387,7 +399,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={6}>
+            <Col md={4} span={12}>
               <Form.Item
                 name="startTime"
                 label="Start Time"
@@ -400,7 +412,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={6}>
+            <Col md={4} span={12}>
               <Form.Item
                 name="endTime"
                 label="End Time"
@@ -412,10 +424,7 @@ const CreateExam = () => {
                 />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col md={8}>
+            <Col md={4} span={12}>
               <Form.Item
                 name="durationMinutes"
                 label="Duration (Minutes)"
@@ -426,9 +435,11 @@ const CreateExam = () => {
             </Col>
           </Row>
 
+       
+
           <Divider orientation="left">Exam Experience</Divider>
           <Row gutter={16}>
-            <Col md={8}>
+            <Col md={4} span={12}>
               <Form.Item name="questionOrder" label="Question Order" initialValue="random">
                 <Select
                   options={[
@@ -438,22 +449,22 @@ const CreateExam = () => {
                 />
               </Form.Item>
             </Col>
-            <Col md={8}>
+            <Col md={4} span={12}>
               <Form.Item label="Shuffle Options" name="shuffleOptions" valuePropName="checked" initialValue>
                 <Switch checkedChildren="On" unCheckedChildren="Off" />
               </Form.Item>
             </Col>
-            <Col md={8}>
+            <Col md={4} span={12}>
               <Form.Item name={["settings", "negativeMarking"]} label="Negative Marking">
                 <InputNumber min={0} style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-            <Col md={8}>
+            <Col md={4} span={12}>
               <Form.Item name={["settings", "maxAttempts"]} label="Max Attempts" initialValue={1}>
                 <InputNumber min={1} style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-            <Col md={8}>
+            <Col md={4} span={12}>
               <Form.Item label="Allow Partial Scoring" name={["settings", "allowPartialScoring"]} valuePropName="checked">
                 <Switch checkedChildren="Yes" unCheckedChildren="No" />
               </Form.Item>
@@ -464,7 +475,7 @@ const CreateExam = () => {
           <Divider orientation="left">Marks</Divider>
 
           <Row gutter={16}>
-            <Col md={12}>
+            <Col md={6} span={12}>
               <Form.Item
                 name="totalMarks"
                 label="Total Marks"
@@ -474,7 +485,7 @@ const CreateExam = () => {
               </Form.Item>
             </Col>
 
-            <Col md={12}>
+            <Col md={6} span={12}>
               <Form.Item
                 name="passingMarks"
                 label="Passing Marks"

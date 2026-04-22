@@ -68,6 +68,11 @@ const AttemptSchema = new Schema(
       required: true,
       index: true
     },
+    attemptNumber: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
 
     startedAt: {
       type: Date,

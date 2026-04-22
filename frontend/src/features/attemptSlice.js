@@ -75,7 +75,33 @@ export const getAttempts = createAsyncThunk(
     }
   }
 );
+export const autosaveAnswer = createAsyncThunk(
+  "attempts/autosaveAnswer",
+  async ({ attemptId, questionId, answer, flagged = false }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.patch(`/attempt/${attemptId}/answer`, {
+        questionId,
+        answer,
+        flagged,
+      });
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
 
+export const getActiveAttemptByExam = createAsyncThunk(
+  "attempts/getActiveAttemptByExam",
+  async (examId, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/attempt/active/${examId}`);
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
 // --- Slice --- //
 const attemptSlice = createSlice({
   name: "attempts",
@@ -144,6 +170,12 @@ const attemptSlice = createSlice({
         }
       })
       .addCase(getAttempts.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
+      builder
+      .addCase(autosaveAnswer.pending, (state) => { state.error = null; })
+      .addCase(autosaveAnswer.rejected, (state, action) => { state.error = action.payload; })
+      .addCase(getActiveAttemptByExam.fulfilled, (state, action) => {
+        if (action.payload) state.currentAttempt = action.payload;
+      });
   },
 });
 

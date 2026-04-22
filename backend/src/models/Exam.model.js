@@ -55,9 +55,7 @@ const examSchema = new Schema(
     },
 
     examType: {
-      type: String,
-      enum: ["objective", "subjective", "mixed"],
-      default: "objective"
+      type: String
     },
 
     examDate: {

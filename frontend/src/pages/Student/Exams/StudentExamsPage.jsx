@@ -21,7 +21,7 @@ import { ClockCircleOutlined, PlayCircleOutlined, ReloadOutlined } from "@ant-de
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { getExams, getStudentResults } from "../../../features/examSlice";
-import { getAttempts, startAttempt } from "../../../features/attemptSlice";
+import { getActiveAttemptByExam, getAttempts, startAttempt } from "../../../features/attemptSlice";
 
 const { Title, Text } = Typography;
 const getExamWindowMeta = (exam, now = dayjs()) => {
@@ -126,6 +126,12 @@ const StudentExamsPage = () => {
 
   const handleStartAttempt = async (examId) => {
     try {
+      const activeAttempt = await dispatch(getActiveAttemptByExam(examId)).unwrap();
+      if (activeAttempt?._id) {
+        navigate(`/dashboard/student/exams/exam-live?attemptId=${activeAttempt._id}`);
+        message.info("Resuming existing attempt");
+        return;
+      }
       const attempt = await dispatch(startAttempt({ examId })).unwrap();
       navigate(`/dashboard/student/exams/exam-live?attemptId=${attempt._id}`);
       message.success("Exam started successfully");

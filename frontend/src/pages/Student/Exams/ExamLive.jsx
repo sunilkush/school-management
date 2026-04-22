@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Card, Col, Empty, Row, Space, Tag, Typography, message } from "antd";
@@ -6,7 +6,7 @@ import { Button, Card, Col, Empty, Row, Space, Tag, Typography, message } from "
 import QuestionCard from "./components/QuestionCard";
 import ExamTimer from "./components/ExamTimer";
 import AutosaveIndicator from "./components/AutosaveIndicator";
-import { getAttemptById, submitAttempt } from "../../../features/attemptSlice";
+import { autosaveAnswer, getAttemptById, submitAttempt } from "../../../features/attemptSlice";
 
 const { Title, Text } = Typography;
 
@@ -34,7 +34,7 @@ const ExamLive = () => {
   const [answers, setAnswers] = useState({});
   const [autosaveStatus, setAutosaveStatus] = useState("idle");
   const [submitting, setSubmitting] = useState(false);
-
+  const autosaveTimerRef = useRef();
   useEffect(() => {
     if (!attemptId) return;
     dispatch(getAttemptById(attemptId));
@@ -62,8 +62,19 @@ const ExamLive = () => {
     setAnswers((prev) => ({ ...prev, [qid]: answer }));
     setAutosaveStatus("saving");
 
-    setTimeout(() => setAutosaveStatus("saved"), 400);
+    if (!attemptId) return;
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      dispatch(autosaveAnswer({ attemptId, questionId: qid, answer }))
+        .unwrap()
+        .then(() => setAutosaveStatus("saved"))
+        .catch(() => setAutosaveStatus("error"));
+    }, 350);
   };
+
+  useEffect(() => () => {
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+  }, []);
 
   const buildSubmitPayload = () => {
     return questions.map((question) => ({
