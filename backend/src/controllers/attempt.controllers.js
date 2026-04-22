@@ -43,7 +43,7 @@ const enforceAttemptReadAccess = async (attempt, req) => {
 
 export const startAttempt = asyncHandler(async (req, res) => {
   const { examId } = req.body;
-  const studentId = req.user._id;
+  const studentUserId = req.user._id;
   assertObjectId(examId, "examId");
 
   const exam = await Exam.findById(examId).populate("questions.questionId");
@@ -57,8 +57,14 @@ export const startAttempt = asyncHandler(async (req, res) => {
     }
     throw new ApiError(400, "Exam window is closed");
   }
+
+  const student = await Student.findOne({ userId: studentUserId }).select("_id").lean();
+  if (!student) {
+    throw new ApiError(404, "Student profile not found");
+  }
+
   const enrollment = await StudentEnrollment.findOne({
-    studentId,
+    studentId: student._id,
     schoolId: exam.schoolId,
     academicYearId: exam.academicYearId,
     schoolClassId: exam.schoolClassId,
@@ -71,13 +77,13 @@ export const startAttempt = asyncHandler(async (req, res) => {
   if (!enrollment) {
     throw new ApiError(403, "Student is not enrolled in the exam class/section for this academic year");
   }
-  const existing = await Attempt.findOne({ examId, studentId, status: "in_progress" });
+  const existing = await Attempt.findOne({ examId, studentId: studentUserId, status: "in_progress" });
   if (existing) throw new ApiError(400, "You already have an active attempt");
 
   const maxAttempts = Number(exam?.settings?.maxAttempts || 1);
   const usedAttempts = await Attempt.countDocuments({
     examId,
-    studentId,
+    studentId: studentUserId,
     status: { $in: ["submitted", "evaluated"] },
   });
   if (usedAttempts >= maxAttempts) {
@@ -97,7 +103,13 @@ export const startAttempt = asyncHandler(async (req, res) => {
   if (!schoolId) throw new ApiError(400, "schoolId could not be resolved for this attempt");
 
   const attemptNumber = usedAttempts + 1;
-  const attempt = await Attempt.create({ examId, studentId, schoolId, answers, attemptNumber });
+  const attempt = await Attempt.create({
+    examId,
+    studentId: studentUserId,
+    schoolId,
+    answers,
+    attemptNumber,
+  });
 
 
   return sendSuccess(res, {

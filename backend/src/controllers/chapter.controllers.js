@@ -54,24 +54,44 @@ const createChapter = asyncHandler(async (req, res) => {
 });
 
 const getAllChapters = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page || 1);
-  const limit = Number(req.query.limit || 10);
   const filter = {};
-
+  console.log(req.query);
   if (req.query.boardClassId || req.query.schoolClassId) {
     filter.boardClassId = req.query.boardClassId || req.query.schoolClassId;
   }
-  if (req.query.subjectId) filter.subjectId = req.query.subjectId;
 
-  const skip = (page - 1) * limit;
-  const [chapters, total] = await Promise.all([
-     Chapter.find(filter).sort({ chapterNo: 1 }).skip(skip).limit(limit).populate(chapterPopulate),
-      Chapter.countDocuments(filter),
-  ]);
+  if (req.query.subjectId) {
+    filter.subjectId = req.query.subjectId;
+  }
 
-    return res
-    .status(200)
-    .json(new ApiResponse(200, chapters.map(formatChapter), "Chapters fetched successfully", { page, total, limit }));
+  if (req.query.isGlobal !== undefined) {
+    filter.isGlobal = req.query.isGlobal === "true";
+  }
+
+  if (req.query.isActive !== undefined) {
+    filter.isActive = req.query.isActive === "true";
+  }
+
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+
+  if (req.query.search?.trim()) {
+    filter.name = { $regex: req.query.search.trim(), $options: "i" };
+  }
+
+  // ✅ Direct fetch without pagination
+  const chapters = await Chapter.find(filter)
+    .sort({ chapterNo: 1, createdAt: -1 })
+    .populate(chapterPopulate);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      chapters.map(formatChapter),
+      "Chapters fetched successfully"
+    )
+  );
 });
 
 const getChapterById = asyncHandler(async (req, res) => {

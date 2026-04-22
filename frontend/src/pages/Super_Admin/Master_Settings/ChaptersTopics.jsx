@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Card,
   Table,
@@ -63,10 +63,10 @@ const ChaptersTopics = () => {
   const [form] = Form.useForm();
 
   const hasFetchedRef = useRef(false);
-  const searchTimeout = useRef();
+  const searchTimeout = useRef(null);
 
-  const { user } = useSelector((state) => state.auth);
-  const { chapters, loading: chapterLoading } = useSelector((state) => state.chapter);
+  const { user } = useSelector((state) => state.auth || {});
+  const { chapters = [], loading: chapterLoading, meta = {} } = useSelector((state) => state.chapter || {});
 
   const boards = useSelector((state) => state.boards?.boards || []);
   const boardLoading = useSelector((state) => state.boards?.loading);
@@ -79,15 +79,50 @@ const ChaptersTopics = () => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
+  const [searchValue, setSearchValue] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(500);
+
   const isSuperAdmin = user?.role?.name === "Super Admin";
 
-  useEffect(() => { dispatch(getBoards()); dispatch(getAllSubjects({})); }, [dispatch]);
-  useEffect(() => { if (selectedBoard) dispatch(getBoardClass({ boardId: selectedBoard })); }, [dispatch, selectedBoard]);
+  const fetchChapters = useCallback(
+    (overrides = {}) => {
+      if (!user && !isSuperAdmin) return;
+
+      dispatch(
+        fetchVisibleChapters({
+          page,
+          limit,
+          search: searchValue,
+          schoolId: isSuperAdmin ? undefined : user?.schoolId,
+          ...overrides,
+        })
+      );
+    },
+    [dispatch, isSuperAdmin, user, page, limit, searchValue]
+  );
+
+  useEffect(() => {
+    dispatch(getBoards());
+    dispatch(getAllSubjects({}));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (selectedBoard) {
+      dispatch(getBoardClass({ boardId: selectedBoard }));
+    }
+  }, [dispatch, selectedBoard]);
+
   useEffect(() => {
     if (!user || hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    dispatch(fetchVisibleChapters({ schoolId: isSuperAdmin ? undefined : user?.schoolId }));
-  }, [dispatch, user, isSuperAdmin]);
+    fetchChapters({ page: 1, limit: 10, search: "" });
+  }, [user, fetchChapters]);
+
+  useEffect(() => {
+    if (!hasFetchedRef.current) return;
+    fetchChapters();
+  }, [page, limit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredClasses = useMemo(() => {
     if (!selectedBoard) return boardClass;
@@ -95,9 +130,23 @@ const ChaptersTopics = () => {
   }, [selectedBoard, boardClass]);
 
   const handleSearch = (value) => {
+    const nextValue = value || "";
+    setSearchValue(nextValue);
+
     clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => dispatch(fetchVisibleChapters({ search: value })), 400);
+    searchTimeout.current = setTimeout(() => {
+      setPage(1);
+      dispatch(
+        fetchVisibleChapters({
+          page: 1,
+          limit,
+          search: nextValue,
+          schoolId: isSuperAdmin ? undefined : user?.schoolId,
+        })
+      );
+    }, 400);
   };
+
   useEffect(() => () => clearTimeout(searchTimeout.current), []);
 
   const handleAddChapter = () => {
@@ -110,54 +159,127 @@ const ChaptersTopics = () => {
 
   const handleEdit = (record) => {
     setEditingChapter(record);
-    setSelectedBoard(record?.board?._id);
-    setSelectedClass(record?.class?._id);
+    setSelectedBoard(record?.board?._id || null);
+    setSelectedClass(record?.class?._id || null);
+
+    if (record?.board?._id) {
+      dispatch(getBoardClass({ boardId: record.board._id }));
+    }
+
     form.setFieldsValue({
-      name: record?.name, chapterNo: record?.chapterNo,
-      description: record?.description, isGlobal: record?.isGlobal,
-      boardId: record?.board?._id, schoolClassId: record?.class?._id,
+      name: record?.name,
+      chapterNo: record?.chapterNo,
+      description: record?.description,
+      isGlobal: record?.isGlobal,
+      boardId: record?.board?._id,
+      schoolClassId: record?.class?._id,
       subjectId: record?.subject?._id,
     });
+
     setChapterModalVisible(true);
   };
 
   const handleDelete = async (id) => {
     const res = await dispatch(deleteChapterThunk(id));
-    if (!res.error) { message.success("Chapter deleted successfully"); setDeleteConfirmId(null); }
-    else message.error(res.payload);
+    if (!res.error) {
+      message.success("Chapter deleted successfully");
+      setDeleteConfirmId(null);
+      fetchChapters();
+    } else {
+      message.error(res.payload || "Failed to delete chapter");
+    }
   };
 
   const handleSubmit = async (values) => {
     if (!user) return message.error("User not loaded");
+
     const classId = values.schoolClassId || values.boardClassId;
+
     const payload = {
       ...values,
       schoolClassId: classId,
       boardClassId: classId,
       schoolId: values.isGlobal ? null : user?.schoolId,
     };
+
     let res;
-    if (editingChapter) res = await dispatch(updateChapterThunk({ id: editingChapter._id, payload }));
-    else res = await dispatch(createChapterThunk(payload));
-    if (!res.error) { message.success(editingChapter ? "Chapter updated!" : "Chapter created!"); setChapterModalVisible(false); form.resetFields(); }
-    else message.error(res.payload);
+    if (editingChapter) {
+      res = await dispatch(updateChapterThunk({ id: editingChapter._id, payload }));
+    } else {
+      res = await dispatch(createChapterThunk(payload));
+    }
+
+    if (!res.error) {
+      message.success(editingChapter ? "Chapter updated!" : "Chapter created!");
+      setChapterModalVisible(false);
+      form.resetFields();
+      setEditingChapter(null);
+      fetchChapters();
+    } else {
+      message.error(res.payload || "Failed to save chapter");
+    }
   };
 
   // ─── Tree builder ─────────────────────────────────────────────────────────
   const treeData = useMemo(() => {
     if (!chapters?.length) return [];
+
     const map = {};
+
     chapters.forEach((ch) => {
+      const boardId = ch?.board?._id || "unknown-board-id";
+      const classId = ch?.class?._id || "unknown-class-id";
+      const subjectId = ch?.subject?._id || "unknown-subject-id";
+
       const b = ch?.board?.name || "Unknown Board";
       const c = ch?.class?.name || "Unknown Class";
       const s = ch?.subject?.name || "Unknown Subject";
-      if (!map[b]) map[b] = { key: b, title: b, _type: "board", children: [] };
-      let classNode = map[b].children.find((x) => x.title === c);
-      if (!classNode) { classNode = { key: b + c, title: c, _type: "class", children: [] }; map[b].children.push(classNode); }
-      let subjectNode = classNode.children.find((x) => x.title === s);
-      if (!subjectNode) { subjectNode = { key: b + c + s, title: s, _type: "subject", children: [] }; classNode.children.push(subjectNode); }
-      subjectNode.children.push({ key: ch._id, title: ch.name, _type: "chapter", type: "chapter", ...ch });
+
+      const boardKey = `board-${boardId}`;
+      const classKey = `class-${boardId}-${classId}`;
+      const subjectKey = `subject-${boardId}-${classId}-${subjectId}`;
+      const chapterKey = `chapter-${ch._id}`;
+
+      if (!map[boardKey]) {
+        map[boardKey] = {
+          key: boardKey,
+          title: b,
+          _type: "board",
+          children: [],
+        };
+      }
+
+      let classNode = map[boardKey].children.find((x) => x.key === classKey);
+      if (!classNode) {
+        classNode = {
+          key: classKey,
+          title: c,
+          _type: "class",
+          children: [],
+        };
+        map[boardKey].children.push(classNode);
+      }
+
+      let subjectNode = classNode.children.find((x) => x.key === subjectKey);
+      if (!subjectNode) {
+        subjectNode = {
+          key: subjectKey,
+          title: s,
+          _type: "subject",
+          children: [],
+        };
+        classNode.children.push(subjectNode);
+      }
+
+      subjectNode.children.push({
+        key: chapterKey,
+        title: ch.name,
+        _type: "chapter",
+        type: "chapter",
+        ...ch,
+      });
     });
+
     return Object.values(map);
   }, [chapters]);
 
@@ -171,12 +293,18 @@ const ChaptersTopics = () => {
         const cfg = DEPTH_COLORS[type];
         const indentMap = { board: 0, class: 8, subject: 16, chapter: 24 };
         const indent = indentMap[type] ?? 0;
+
         return (
           <Space style={{ paddingLeft: indent }}>
             <Avatar
               size={28}
               icon={cfg.icon}
-              style={{ background: cfg.bg, color: cfg.text, border: `1.5px solid ${cfg.border}`, flexShrink: 0 }}
+              style={{
+                background: cfg.bg,
+                color: cfg.text,
+                border: `1.5px solid ${cfg.border}`,
+                flexShrink: 0,
+              }}
             />
             <Text strong={type !== "chapter"} style={{ color: cfg.text, fontSize: type === "board" ? 15 : 14 }}>
               {text}
@@ -254,8 +382,7 @@ const ChaptersTopics = () => {
     },
   ];
 
-  // ─── Stats bar ────────────────────────────────────────────────────────────
-  const totalChapters = chapters?.length || 0;
+  const totalChapters = meta?.total || chapters?.length || 0;
   const globalCount = chapters?.filter((c) => c.isGlobal).length || 0;
   const boardCount = treeData.length;
 
@@ -338,12 +465,22 @@ const ChaptersTopics = () => {
           <Table
             columns={columns}
             dataSource={treeData}
-            pagination={false}
-            expandable={{ childrenColumnName: "children", defaultExpandAllRows: true }}
             rowKey="key"
+            expandable={{ childrenColumnName: "children", defaultExpandAllRows: true }}
             rowClassName={(r) => `chapter-row-${r._type || "chapter"}`}
             onRow={(r) => ({ style: rowStyle(r._type || "chapter") })}
             style={{ borderRadius: "0 0 14px 14px", overflow: "hidden" }}
+            pagination={{
+              current: page,
+              pageSize: limit,
+              total: meta?.total || chapters?.length || 0,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50", "100","200","500"],
+              onChange: (nextPage, nextLimit) => {
+                setPage(nextPage);
+                setLimit(nextLimit);
+              },
+            }}
             locale={{
               emptyText: (
                 <div style={{ padding: "48px 0", textAlign: "center" }}>
@@ -372,7 +509,11 @@ const ChaptersTopics = () => {
           </Space>
         }
         open={chapterModalVisible}
-        onCancel={() => { setChapterModalVisible(false); form.resetFields(); }}
+        onCancel={() => {
+          setChapterModalVisible(false);
+          setEditingChapter(null);
+          form.resetFields();
+        }}
         onOk={() => form.submit()}
         okText={editingChapter ? "Save Changes" : "Create Chapter"}
         okButtonProps={{ style: { borderRadius: 8, fontWeight: 600 } }}
@@ -383,49 +524,74 @@ const ChaptersTopics = () => {
       >
         <Divider style={{ margin: "12px 0 20px" }} />
         <Form form={form} layout="vertical" onFinish={handleSubmit} requiredMark="optional">
-         
-            <Form.Item name="boardId" label="Board" rules={[{ required: true, message: "Select a board" }]} style={{ gridColumn: "1 / 2" }}>
-              <Select
-                placeholder="Choose board"
-                loading={boardLoading}
-                style={{ borderRadius: 8 }}
-                onChange={(v) => {
-                  setSelectedBoard(v);
-                  setSelectedClass(null);
-                  form.setFieldsValue({ schoolClassId: null, subjectId: null });
-                }}
-              >
-                {boards.map((b) => <Select.Option key={b._id} value={b._id}>{b.name}</Select.Option>)}
-              </Select>
-            </Form.Item>
-
-           
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-            <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Select a class" }]} >
-              <Select
-                placeholder="Choose class"
-                disabled={!selectedBoard}
-                onChange={(v) => { setSelectedClass(v); form.setFieldsValue({ subjectId: null }); }}
-              >
-                {filteredClasses.map((c) => <Select.Option key={c._id} value={c._id}>{c.name}</Select.Option>)}
-              </Select>
-            </Form.Item>
-            
-          <Form.Item name="subjectId" label="Subject" rules={[{ required: true, message: "Select a subject" }]} >
-            <Select placeholder="Choose subject" disabled={!selectedClass}>
-              {subjects.map((s) => <Select.Option key={s._id} value={s._id}>{s.name}</Select.Option>)}
+          <Form.Item
+            name="boardId"
+            label="Board"
+            rules={[{ required: true, message: "Select a board" }]}
+            style={{ gridColumn: "1 / 2" }}
+          >
+            <Select
+              placeholder="Choose board"
+              loading={boardLoading}
+              style={{ borderRadius: 8 }}
+              onChange={(v) => {
+                setSelectedBoard(v);
+                setSelectedClass(null);
+                form.setFieldsValue({ schoolClassId: null, subjectId: null });
+              }}
+            >
+              {boards.map((b) => (
+                <Select.Option key={b._id} value={b._id}>
+                  {b.name}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
 
-         </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-             <Form.Item name="chapterNo" label="Chapter No." rules={[{ required: true, message: "Required" }]}>
+            <Form.Item
+              name="schoolClassId"
+              label="Class"
+              rules={[{ required: true, message: "Select a class" }]}
+            >
+              <Select
+                placeholder="Choose class"
+                disabled={!selectedBoard}
+                onChange={(v) => {
+                  setSelectedClass(v);
+                  form.setFieldsValue({ subjectId: null });
+                }}
+              >
+                {filteredClasses.map((c) => (
+                  <Select.Option key={c._id} value={c._id}>
+                    {c.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="subjectId"
+              label="Subject"
+              rules={[{ required: true, message: "Select a subject" }]}
+            >
+              <Select placeholder="Choose subject" disabled={!selectedClass}>
+                {subjects.map((s) => (
+                  <Select.Option key={s._id} value={s._id}>
+                    {s.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Form.Item name="chapterNo" label="Chapter No." rules={[{ required: true, message: "Required" }]}>
               <InputNumber min={1} style={{ width: "100%" }} placeholder="1" />
             </Form.Item>
             <Form.Item name="name" label="Chapter Name" rules={[{ required: true, message: "Enter chapter name" }]}>
               <Input placeholder="e.g. Introduction to Algebra" />
             </Form.Item>
-           
           </div>
 
           <Form.Item name="description" label="Description">

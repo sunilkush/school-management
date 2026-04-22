@@ -185,6 +185,7 @@ const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDeta
 const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
 const MyAttendancePage = lazy(() => import("./pages/Teacher/Profile/MyAttendancePage.jsx"));
 const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports.jsx"));
+const MyAttendanceMonthlyReport = lazy(() => import("./pages/Teacher/Profile/MyAttendanceMonthlyReport.jsx"));
 
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
@@ -512,7 +513,7 @@ const router = createBrowserRouter([
               { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
-              { path: "attendance/my/monthly", element: <MyAttendancePage /> },
+              { path: "attendance/my/monthly", element: <MyAttendanceMonthlyReport /> },
              // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/create-question", element: <CreateQuestion /> },
               { path: "exams/bulk-upload-questions", element: <BulkUploadQuestions /> },
