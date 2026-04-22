@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Alert, Card, Col, Empty, List, Row, Skeleton, Space, Statistic, Tag, Typography } from "antd";
+import { Alert, Button, Card, Col, Empty, List, Row, Skeleton, Space, Statistic, Tag, Typography } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   fetchStudentEnrollment,
@@ -26,14 +27,16 @@ const StudentDashboard = () => {
   const { enrollment, grades, timetable, transportAssignment, libraryBooks, loading, error } =
     useSelector((state) => state.studentPortal);
 
-  useEffect(() => {
+  const loadDashboardData = useCallback(() => {
     dispatch(fetchStudentEnrollment());
     dispatch(fetchStudentGrades());
     dispatch(fetchStudentTimetable());
     dispatch(fetchStudentLibraryBooks());
     dispatch(fetchStudentTransport());
   }, [dispatch]);
-
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
   const stats = useMemo(() => {
     const gradeScores = (grades || []).map(getGradeScore).filter((value) => value !== null);
     const averageScore = gradeScores.length
@@ -44,10 +47,25 @@ const StudentDashboard = () => {
       subjects: grades?.length || 0,
       weeklyClasses: timetable?.length || 0,
       issuedBooks: libraryBooks?.length || 0,
+       booksDueSoon:
+        (libraryBooks || []).filter((book) => {
+          const dueDate = book?.dueDate;
+          if (!dueDate) return false;
+          const daysLeft = dayjs(dueDate).startOf("day").diff(dayjs().startOf("day"), "day");
+          return daysLeft >= 0 && daysLeft <= 3;
+        }).length || 0,
       avgScore: averageScore,
     };
   }, [grades, timetable, libraryBooks]);
-
+  const todayClasses = useMemo(() => {
+    const todayName = dayjs().format("dddd").toLowerCase();
+    return (timetable || [])
+      .filter((session) => {
+        const sessionDay = session?.day || session?.dayName || session?.weekday;
+        return !sessionDay || String(sessionDay).toLowerCase() === todayName;
+      })
+      .sort((a, b) => String(a?.startTime || "").localeCompare(String(b?.startTime || "")));
+  }, [timetable]);
   if (loading && !enrollment) {
     return <Skeleton active paragraph={{ rows: 7 }} />;
   }
@@ -63,6 +81,11 @@ const StudentDashboard = () => {
             ? `Class ${enrollment.schoolClass.name}${enrollment?.section?.name ? ` - ${enrollment.section.name}` : ""}`
             : "Your dashboard updates automatically as your records change."}
         </Text>
+        <div style={{ marginTop: 12 }}>
+          <Button icon={<ReloadOutlined />} loading={loading} onClick={loadDashboardData}>
+            Refresh Data
+          </Button>
+        </div>
       </Card>
 
       {error ? <Alert type="warning" showIcon message={error} /> : null}
@@ -80,7 +103,7 @@ const StudentDashboard = () => {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card>
-            <Statistic title="Issued Books" value={stats.issuedBooks} />
+            <Statistic title="Issued Books" value={stats.issuedBooks} suffix={stats.booksDueSoon ? `${stats.booksDueSoon} due soon` : ""} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -134,9 +157,9 @@ const StudentDashboard = () => {
       </Row>
 
       <Card title="Today at a Glance">
-        {(timetable || []).length ? (
+        {todayClasses.length ? (
           <List
-            dataSource={timetable.slice(0, 4)}
+            dataSource={todayClasses.slice(0, 4)}
             renderItem={(session) => (
               <List.Item>
                 <List.Item.Meta
@@ -149,7 +172,7 @@ const StudentDashboard = () => {
             )}
           />
         ) : (
-          <Empty description="No timetable entries available" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+         <Empty description="No classes scheduled for today" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
     </Space>

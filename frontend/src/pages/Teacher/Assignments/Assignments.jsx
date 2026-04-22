@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -16,6 +16,7 @@ import {
   Form,
   DatePicker,
   Empty,
+  List,
   message,
 } from "antd";
 import {
@@ -26,7 +27,7 @@ import {
 import dayjs from "dayjs";
 
 import { fetchAssignedClasses } from "../../../features/classSlice";
-
+import apiClient from "../../../api/httpClient";
 const { Title, Text } = Typography;
 
 const statusColors = {
@@ -54,10 +55,15 @@ const Assignments = () => {
 
   const [open, setOpen] = useState(false);
   const [assignments, setAssignments] = useState([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  const [submissionsOpen, setSubmissionsOpen] = useState(false);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
+
 
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedModalSectionId, setSelectedModalSectionId] = useState("");
-
   const getId = (value) => {
     if (!value) return "";
     return typeof value === "object" ? value._id : value;
@@ -67,6 +73,57 @@ const Assignments = () => {
     if (!selectedAcademicYear?._id) return;
     dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
   }, [dispatch, selectedAcademicYear?._id]);
+
+const mapAssignmentRecord = useCallback((item) => ({
+    _id: item?._id,
+    title: item?.title || "Assignment",
+    classId: String(getId(item?.schoolClassId?._id || item?.schoolClassId)),
+    class:
+      item?.schoolClassId?.className ||
+      item?.schoolClassId?.name ||
+      `Class ${item?.schoolClassId?.classNum || ""}`.trim() ||
+      "Class",
+    section: item?.sectionId?.name || "All Sections",
+    subject: item?.subjectId?.name || "Subject",
+    dueDate: item?.dueDate,
+    status: dayjs(item?.dueDate).isBefore(dayjs(), "day") ? "overdue" : "active",
+    createdBy: user?.name || "Teacher",
+  }), [user?.name]);
+
+  const fetchAssignments = useCallback(async () => {
+    if (!selectedAcademicYear?._id) return;
+
+    try {
+      setAssignmentsLoading(true);
+      const response = await apiClient.get("/student-portal/teacher/homework", {
+        params: { academicYearId: selectedAcademicYear._id },
+      });
+      const records = response.data?.data || [];
+      const assignmentsWithCounts = await Promise.all(
+        records.map(async (record) => {
+          try {
+            const subResponse = await apiClient.get(
+              `/student-portal/teacher/homework/${record._id}/submissions`
+            );
+            const mapped = mapAssignmentRecord(record);
+            return { ...mapped, submissionCount: (subResponse.data?.data || []).length };
+          } catch {
+            return { ...mapAssignmentRecord(record), submissionCount: 0 };
+          }
+        })
+      );
+      setAssignments(assignmentsWithCounts);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Unable to load assignments");
+    } finally {
+      setAssignmentsLoading(false);
+    }
+  }, [mapAssignmentRecord, selectedAcademicYear?._id]);
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [fetchAssignments]);
+
 
   const teacherClassOptions = useMemo(() => {
     return classAssignTeacher.map((cls) => ({
@@ -140,7 +197,7 @@ const Assignments = () => {
       const subjectName = subjectLike?.subjectName || "";
 
       if (!subjectId || !subjectName || subjectMap.has(subjectId)) return;
-      subjectMap.set(subjectId, { value: subjectName, label: subjectName });
+      subjectMap.set(subjectId, { value: subjectId, label: subjectName });
     };
 
     (selectedClass?.subjects || []).forEach(addSubject);
@@ -212,19 +269,27 @@ const Assignments = () => {
       const due = dayjs(values.dueDate);
       const status = due.isBefore(dayjs(), "day") ? "overdue" : "active";
 
-      const next = {
-        _id: `${Date.now()}`,
+     const next = {
+        academicYearId: selectedAcademicYear?._id,
         title: values.title,
-        classId: values.schoolClassId,
-        class: classInfo?.className || "Class",
-        section: sectionInfo?.sectionName || "Section",
-        subject: values.subject,
-        dueDate: due.format("YYYY-MM-DD"),
-        status,
-        createdBy: user?.name || "Teacher",
+        description: values.description,
+        schoolClassId: values.schoolClassId,
+        sectionId: values.sectionId,
+        subjectId: values.subject,
+        dueDate: due.toISOString(),
       };
 
-      setAssignments((prev) => [next, ...prev]);
+      const response = await apiClient.post("/student-portal/teacher/homework", next);
+      const mapped = mapAssignmentRecord(response.data?.data);
+      const created = {
+        ...mapped,
+        class: classInfo?.className || mapped.class,
+        section: sectionInfo?.sectionName || mapped.section,
+        status,
+        submissionCount: 0,
+      };
+
+      setAssignments((prev) => [created, ...prev]);
       message.success("Assignment created successfully.");
       resetModalState();
     } catch (error) {
@@ -272,7 +337,42 @@ const Assignments = () => {
         </Tag>
       ),
     },
+   {
+      title: "Submissions",
+      render: (_, rec) => (
+        <Button
+          type="link"
+          onClick={() => {
+            setSelectedAssignment(rec);
+            setSubmissionsOpen(true);
+          }}
+        >
+          {rec.submissionCount || 0} View
+        </Button>
+      ),
+    },
   ];
+
+  const fetchSubmissions = useCallback(async () => {
+    if (!selectedAssignment?._id) return;
+
+    try {
+      setSubmissionsLoading(true);
+      const response = await apiClient.get(
+        `/student-portal/teacher/homework/${selectedAssignment._id}/submissions`
+      );
+      setSubmissions(response.data?.data || []);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Unable to load submissions");
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  }, [selectedAssignment?._id]);
+
+  useEffect(() => {
+    if (!submissionsOpen) return;
+    fetchSubmissions();
+  }, [fetchSubmissions, submissionsOpen]);
 
   return (
     <div style={{ padding: 20 }}>
@@ -370,7 +470,7 @@ const Assignments = () => {
           columns={columns}
           dataSource={filteredAssignments}
           rowKey="_id"
-          loading={classLoading}
+           loading={classLoading || assignmentsLoading}
           pagination={{ pageSize: 8 }}
           locale={{
             emptyText: (
@@ -399,6 +499,7 @@ const Assignments = () => {
           onFinish={handleCreateAssignment}
           initialValues={{
             title: "",
+            description: "",
             schoolClassId: undefined,
             sectionId: undefined,
             subject: undefined,
@@ -412,7 +513,13 @@ const Assignments = () => {
           >
             <Input placeholder="Enter assignment title" />
           </Form.Item>
-
+         <Form.Item
+            label="Description"
+            name="description"
+            rules={[{ required: true, message: "Please enter assignment description" }]}
+          >
+            <Input.TextArea rows={3} placeholder="Enter assignment description" />
+          </Form.Item>
           <Form.Item
             label="Class"
             name="schoolClassId"
@@ -480,6 +587,71 @@ const Assignments = () => {
             Create Assignment
           </Button>
         </Form>
+      </Modal>
+    <Modal
+        title={`Submissions${selectedAssignment?.title ? ` - ${selectedAssignment.title}` : ""}`}
+        open={submissionsOpen}
+        onCancel={() => {
+          setSubmissionsOpen(false);
+          setSubmissions([]);
+          setSelectedAssignment(null);
+        }}
+        footer={null}
+      >
+        <List
+          loading={submissionsLoading}
+          dataSource={submissions}
+          locale={{ emptyText: "No student submissions yet" }}
+          renderItem={(item) => {
+            const enrollment = item?.studentEnrollmentId || {};
+            const studentUser = enrollment?.studentId?.userId || {};
+            return (
+              <List.Item>
+                <Space direction="vertical" size={0}>
+                  <Text strong>{studentUser?.name || "Student"}</Text>
+                  <Text type="secondary">
+                    Reg: {enrollment?.registrationNumber || "-"} | {enrollment?.sectionId?.name || "-"}
+                  </Text>
+                  <Text type="secondary">
+                    Submitted: {item?.submittedAt ? dayjs(item.submittedAt).format("DD MMM YYYY, hh:mm A") : "-"}
+                  </Text>
+                  {!!item?.attachments?.length && (
+                    <Space wrap>
+                      {item.attachments.map((attachment, idx) => (
+                        <Space
+                          key={`${attachment?.url || "file"}-${idx}`}
+                          size={4}
+                          style={{ border: "1px solid #f0f0f0", padding: "2px 8px", borderRadius: 6 }}
+                        >
+                          <Text style={{ fontSize: 12 }}>
+                            {attachment?.name || `Attachment ${idx + 1}`}
+                          </Text>
+                          <Button
+                            size="small"
+                            type="link"
+                            href={attachment?.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="small"
+                            type="link"
+                            href={attachment?.url}
+                            download={attachment?.name || `attachment-${idx + 1}`}
+                          >
+                            Download
+                          </Button>
+                        </Space>
+                      ))}
+                    </Space>
+                  )}
+                </Space>
+              </List.Item>
+            );
+          }}
+        />
       </Modal>
     </div>
   );

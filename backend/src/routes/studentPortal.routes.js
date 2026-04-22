@@ -1,12 +1,17 @@
 import { Router } from "express";
 import {
   assignStudentTransport,
+  createTeacherHomework,
   createTimetableEntry,
+  getHomeworkSubmissions,
   getMyGrades,
+  getMyHomework,
   getMyProfile,
   getMyLibraryBooks,
   getMyTimetable,
   getMyTransport,
+  getTeacherHomework,
+  submitHomework,
   updateMyProfile,
 } from "../controllers/studentPortal.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
@@ -20,8 +25,19 @@ router.get("/me/grades", auth, roleMiddleware(STUDENT_ONLY), getMyGrades);
 router.get("/me/profile", auth, roleMiddleware(STUDENT_ONLY), getMyProfile);
 router.put("/me/profile", auth, roleMiddleware(STUDENT_ONLY), updateMyProfile);
 router.get("/me/timetable", auth, roleMiddleware(STUDENT_ONLY), getMyTimetable);
+router.get("/me/homework", auth, roleMiddleware(STUDENT_ONLY), getMyHomework);
+router.post("/me/homework/:assignmentId/submit", auth, roleMiddleware(STUDENT_ONLY), submitHomework);
 router.get("/me/transport", auth, roleMiddleware(STUDENT_ONLY), getMyTransport);
 router.get("/me/library-books", auth, roleMiddleware(STUDENT_ONLY), getMyLibraryBooks);
+router.get("/teacher/homework", auth, roleMiddleware(ADMIN_AND_TEACHER), getTeacherHomework);
+router.post("/teacher/homework", auth, roleMiddleware(ADMIN_AND_TEACHER), createTeacherHomework);
+router.get(
+  "/teacher/homework/:assignmentId/submissions",
+  auth,
+  roleMiddleware(ADMIN_AND_TEACHER),
+  getHomeworkSubmissions
+);
+
 
 router.post(
   "/timetable",

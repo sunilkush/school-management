@@ -1,102 +1,249 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Card,
-  Typography,
-  List,
-  Tag,
+  Alert,
   Button,
+  Card,
+  Empty,
+  Input,
+  List,
   Modal,
-  Upload,
+  Select,
   Space,
-  Divider,
+  Spin,
+  Statistic,
+  Tag,
+  Typography,
+  Upload,
   message,
 } from "antd";
 import {
-  UploadOutlined,
-  FileTextOutlined,
   ClockCircleOutlined,
+  FileTextOutlined,
+  SearchOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
+import apiClient from "../../../api/httpClient";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
+
+const FALLBACK_HOMEWORK = [
+  {
+    _id: "demo-1",
+    subject: "Mathematics",
+    title: "Algebra Practice",
+    description: "Solve questions from chapter 3",
+    dueDate: "2026-04-30",
+    status: "Pending",
+  },
+  {
+    _id: "demo-2",
+    subject: "Science",
+    title: "Physics Assignment",
+    description: "Write short notes on Motion",
+    dueDate: "2026-04-20",
+    status: "Submitted",
+  },
+];
+
+const normalizeStatus = (status, dueDate) => {
+  if (status === "Submitted") return "Submitted";
+  if (!dueDate) return "Pending";
+  return dayjs(dueDate).isBefore(dayjs(), "day") ? "Late" : "Pending";
+};
+
+const statusColor = (status) => {
+  if (status === "Submitted") return "green";
+  if (status === "Late") return "red";
+  return "orange";
+};
 
 const StudentHomework = () => {
+  const [homeworkList, setHomeworkList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const [selectedHomework, setSelectedHomework] = useState(null);
   const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [fileList, setFileList] = useState([]);
 
-  // 🔹 Dummy Data (API se aayega)
-  const homeworkList = [
-    {
-      id: 1,
-      subject: "Mathematics",
-      title: "Algebra Practice",
-      description: "Solve questions from chapter 3",
-      dueDate: "2025-01-05",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      subject: "Science",
-      title: "Physics Assignment",
-      description: "Write short notes on Motion",
-      dueDate: "2025-01-02",
-      status: "Submitted",
-    },
-  ];
+  const loadHomework = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await apiClient.get("/student-portal/me/homework");
+      const apiHomework = res.data?.data?.homework || [];
+
+      const normalized = apiHomework.map((item) => {
+        const id = String(item?._id || item?.id || Math.random());
+        const baseStatus = item?.submission ? "Submitted" : item?.status || "Pending";
+
+        return {
+          _id: id,
+          subject:
+            item?.subjectId?.name ||
+            item?.subject?.name ||
+            item?.subject ||
+            "Subject",
+          title: item?.title || item?.topic || "Homework",
+          description: item?.description || "No description available",
+          dueDate: item?.dueDate ? dayjs(item.dueDate).format("YYYY-MM-DD") : "",
+          status: normalizeStatus(baseStatus, item?.dueDate),
+        };
+      });
+
+      setHomeworkList(normalized);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Homework API unavailable right now. Showing demo data.");
+      setHomeworkList(FALLBACK_HOMEWORK);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHomework();
+  }, []);
+
+  const filteredHomework = useMemo(() => {
+    return homeworkList.filter((item) => {
+      const search = query.trim().toLowerCase();
+      const matchesSearch =
+        !search ||
+        item.title.toLowerCase().includes(search) ||
+        item.subject.toLowerCase().includes(search);
+      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [homeworkList, query, statusFilter]);
+
+  const stats = useMemo(
+    () => ({
+      total: homeworkList.length,
+      submitted: homeworkList.filter((item) => item.status === "Submitted").length,
+      pending: homeworkList.filter((item) => item.status === "Pending").length,
+      late: homeworkList.filter((item) => item.status === "Late").length,
+    }),
+    [homeworkList]
+  );
 
   const openDetails = (hw) => {
     setSelectedHomework(hw);
     setOpen(true);
+    setFileList([]);
   };
 
-  const handleUpload = () => {
-    message.success("Homework submitted successfully");
-    setOpen(false);
-  };
+  const handleUpload = async () => {
+    if (!selectedHomework) return;
 
-  const statusColor = (status) => {
-    if (status === "Submitted") return "green";
-    if (status === "Late") return "red";
-    return "orange";
+    if (!fileList.length) {
+      message.warning("Please choose at least one file.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+
+      await apiClient.post(
+        `/student-portal/me/homework/${selectedHomework._id}/submit`,
+        {
+          attachments: fileList.map((file) => file.name).filter(Boolean),
+        }
+      );
+
+      setHomeworkList((prev) =>
+        prev.map((item) =>
+          item._id === selectedHomework._id ? { ...item, status: "Submitted" } : item
+        )
+      );
+
+      message.success("Homework submitted successfully.");
+      setOpen(false);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      <Title level={3}>📘 My Homework</Title>
+    <div style={{ padding: 24, maxWidth: 980, margin: "0 auto" }}>
+      <Space direction="vertical" style={{ width: "100%" }} size={16}>
+        <Title level={3} style={{ margin: 0 }}>📘 My Homework</Title>
 
-      <List
-        itemLayout="vertical"
-        dataSource={homeworkList}
-        renderItem={(item) => (
-          <Card style={{ marginBottom: 16 }}>
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Space>
-                <FileTextOutlined />
-                <Text strong>{item.subject}</Text>
-              </Space>
+        {error && <Alert type="warning" showIcon message={error} />}
 
-              <Title level={5}>{item.title}</Title>
+        <Space wrap>
+          <Statistic title="Total" value={stats.total} />
+          <Statistic title="Submitted" value={stats.submitted} />
+          <Statistic title="Pending" value={stats.pending} />
+          <Statistic title="Late" value={stats.late} />
+        </Space>
 
-              <Space>
-                <ClockCircleOutlined />
-                <Text type="secondary">Due: {item.dueDate}</Text>
-              </Space>
+        <Space wrap style={{ width: "100%" }}>
+          <Input
+            placeholder="Search by subject/title"
+            prefix={<SearchOutlined />}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{ width: 260 }}
+          />
 
-              <Tag color={statusColor(item.status)}>
-                {item.status}
-              </Tag>
+          <Select
+            value={statusFilter}
+            onChange={setStatusFilter}
+            style={{ width: 180 }}
+            options={[
+              { value: "all", label: "All Status" },
+              { value: "Pending", label: "Pending" },
+              { value: "Late", label: "Late" },
+              { value: "Submitted", label: "Submitted" },
+            ]}
+          />
 
-              <Button
-                type="link"
-                onClick={() => openDetails(item)}
-              >
-                View Details
-              </Button>
-            </Space>
+          <Button onClick={loadHomework}>Refresh</Button>
+        </Space>
+
+        {loading ? (
+          <Card>
+            <Spin />
           </Card>
-        )}
-      />
+        ) : (
+          <List
+            locale={{ emptyText: <Empty description="No homework found" /> }}
+            itemLayout="vertical"
+            dataSource={filteredHomework}
+            renderItem={(item) => (
+              <Card style={{ marginBottom: 8 }}>
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Space>
+                    <FileTextOutlined />
+                    <Text strong>{item.subject}</Text>
+                  </Space>
 
-      {/* 🔹 Homework Detail Modal */}
+                  <Title level={5} style={{ margin: 0 }}>{item.title}</Title>
+
+                  <Space>
+                    <ClockCircleOutlined />
+                    <Text type="secondary">Due: {item.dueDate || "Not specified"}</Text>
+                  </Space>
+
+                  <Tag color={statusColor(item.status)}>{item.status}</Tag>
+
+                  <Button type="link" onClick={() => openDetails(item)}>
+                    View Details
+                  </Button>
+                </Space>
+              </Card>
+            )}
+          />
+        )}
+      </Space>
+
       <Modal
         open={open}
         title="Homework Details"
@@ -104,43 +251,44 @@ const StudentHomework = () => {
         footer={null}
       >
         {selectedHomework && (
-          <>
-            <Text strong>Subject:</Text> {selectedHomework.subject}
-            <br />
-            <Text strong>Title:</Text> {selectedHomework.title}
-            <br />
+          <Space direction="vertical" style={{ width: "100%" }} size={10}>
+            <Text strong>Subject: </Text>
+            <Text>{selectedHomework.subject}</Text>
+
+            <Text strong>Title: </Text>
+            <Text>{selectedHomework.title}</Text>
+
             <Text strong>Description:</Text>
-            <p>{selectedHomework.description}</p>
+            <Paragraph style={{ marginTop: -8 }}>{selectedHomework.description}</Paragraph>
 
-            <Divider />
-
-            {selectedHomework.status !== "Submitted" && (
+            {selectedHomework.status !== "Submitted" ? (
               <>
-                <Upload>
-                  <Button icon={<UploadOutlined />}>
-                    Upload Homework
-                  </Button>
+                <Upload
+                  beforeUpload={() => false}
+                  multiple
+                  fileList={fileList}
+                  onChange={({ fileList: files }) => setFileList(files)}
+                >
+                  <Button icon={<UploadOutlined />}>Upload Homework</Button>
                 </Upload>
 
                 <Button
                   type="primary"
                   block
-                  style={{ marginTop: 16 }}
+                  loading={uploading}
                   onClick={handleUpload}
                 >
                   Submit Homework
                 </Button>
               </>
-            )}
-
-            {selectedHomework.status === "Submitted" && (
+            ) : (
               <Tag color="green">Already Submitted</Tag>
             )}
-          </>
+          </Space>
         )}
       </Modal>
     </div>
   );
 };
 
-export default StudentHomework;
+export default StudentHomework

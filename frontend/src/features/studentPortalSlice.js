@@ -107,6 +107,7 @@ const initialState = {
   transportAssignment: null,
   libraryBooks: [],
   loading: false,
+  pendingRequests: 0,
   error: null,
 };
 
@@ -120,68 +121,73 @@ const studentPortalSlice = createSlice({
   },
   extraReducers: (builder) => {
     const setPending = (state) => {
+       state.pendingRequests += 1;
       state.loading = true;
       state.error = null;
     };
+    const setFulfilled = (state) => {
+      state.pendingRequests = Math.max(0, state.pendingRequests - 1);
+      state.loading = state.pendingRequests > 0;
+    };
     const setRejected = (state, action) => {
-      state.loading = false;
+      state.pendingRequests = Math.max(0, state.pendingRequests - 1);
+      state.loading = state.pendingRequests > 0;
       state.error = action.payload || action.error?.message;
     };
 
     builder
       .addCase(fetchStudentGrades.pending, setPending)
       .addCase(fetchStudentGrades.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.grades = action.payload;
       })
       .addCase(fetchStudentGrades.rejected, setRejected)
 
       .addCase(fetchStudentTimetable.pending, setPending)
       .addCase(fetchStudentTimetable.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.timetable = action.payload;
       })
       .addCase(fetchStudentTimetable.rejected, setRejected)
 
       .addCase(fetchStudentTransport.pending, setPending)
       .addCase(fetchStudentTransport.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.transportAssignment = action.payload;
       })
       .addCase(fetchStudentTransport.rejected, setRejected)
 
       .addCase(fetchStudentLibraryBooks.pending, setPending)
       .addCase(fetchStudentLibraryBooks.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.libraryBooks = action.payload;
       })
       .addCase(fetchStudentLibraryBooks.rejected, setRejected)
 
       .addCase(fetchMyChildren.pending, setPending)
       .addCase(fetchMyChildren.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.children = action.payload;
       })
-     
       .addCase(fetchMyChildren.rejected, setRejected)
 
       .addCase(fetchStudentProfile.pending, setPending)
       .addCase(fetchStudentProfile.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.profile = action.payload;
       })
       .addCase(fetchStudentProfile.rejected, setRejected)
 
       .addCase(updateStudentProfile.pending, setPending)
       .addCase(updateStudentProfile.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.profile = action.payload;
       })
       .addCase(updateStudentProfile.rejected, setRejected)
 
       .addCase(fetchStudentEnrollment.pending, setPending)
       .addCase(fetchStudentEnrollment.fulfilled, (state, action) => {
-        state.loading = false;
+        setFulfilled(state);
         state.enrollment = action.payload;
       })
       .addCase(fetchStudentEnrollment.rejected, setRejected);

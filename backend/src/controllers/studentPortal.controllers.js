@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import { AcademicYear } from "../models/AcademicYear.model.js";
+import { Assignment } from "../models/AssignmentsAndHomework.model.js";
+import { AssignmentSubmission } from "../models/AssignmentSubmission.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
 import { IssuedBook } from "../models/IssuedBooks.model.js";
 import { Student } from "../models/student.model.js";
@@ -187,6 +189,196 @@ export const getMyTimetable = asyncHandler(async (req, res) => {
     )
   );
 });
+export const getMyHomework = asyncHandler(async (req, res) => {
+  const { enrollment, academicYear } = await getMyActiveEnrollment(req.user);
+
+  const homework = await Assignment.find({
+    schoolId: req.user.schoolId,
+    academicYearId: academicYear._id,
+    schoolClassId: enrollment.schoolClassId,
+    $or: [
+      { sectionId: enrollment.sectionId },
+      { sectionId: { $exists: false } },
+      { sectionId: null },
+    ],
+  })
+    .populate("subjectId", "name code")
+    .sort({ dueDate: 1, createdAt: -1 })
+    .lean();
+
+  const submissions = await AssignmentSubmission.find({
+    schoolId: req.user.schoolId,
+    academicYearId: academicYear._id,
+    studentEnrollmentId: enrollment._id,
+  })
+    .select("assignmentId submittedAt attachments")
+    .lean();
+
+  const submissionMap = new Map(
+    submissions.map((entry) => [String(entry.assignmentId), entry])
+  );
+
+  const homeworkWithSubmission = homework.map((item) => {
+    const submission = submissionMap.get(String(item._id));
+
+    return {
+      ...item,
+      submission: submission
+        ? {
+            submittedAt: submission.submittedAt,
+            attachments: submission.attachments || [],
+          }
+        : null,
+    };
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        enrollmentId: enrollment._id,
+        homework: homeworkWithSubmission,
+      },
+      "Student homework fetched successfully"
+    )
+  );
+});
+
+export const getTeacherHomework = asyncHandler(async (req, res) => {
+  const { academicYearId } = req.query;
+
+  const filters = {
+    schoolId: req.user.schoolId,
+    teacherId: req.user._id,
+  };
+
+  if (academicYearId) {
+    filters.academicYearId = academicYearId;
+  }
+
+  const homework = await Assignment.find(filters)
+    .populate("schoolClassId", "className classNum")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name code")
+    .sort({ dueDate: 1, createdAt: -1 })
+    .lean();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, homework, "Teacher homework fetched successfully"));
+});
+
+
+
+export const submitHomework = asyncHandler(async (req, res) => {
+  const { assignmentId } = req.params;
+  const { attachments = [], remarks = "" } = req.body || {};
+  const { student, enrollment, academicYear } = await getMyActiveEnrollment(req.user);
+
+  const assignment = await Assignment.findOne({
+    _id: assignmentId,
+    schoolId: req.user.schoolId,
+    academicYearId: academicYear._id,
+    schoolClassId: enrollment.schoolClassId,
+    $or: [{ sectionId: enrollment.sectionId }, { sectionId: null }, { sectionId: { $exists: false } }],
+  }).select("_id");
+
+  if (!assignment) {
+    throw new ApiError(404, "Homework not found for this student");
+  }
+
+  const submission = await AssignmentSubmission.findOneAndUpdate(
+    {
+      assignmentId: assignment._id,
+      studentEnrollmentId: enrollment._id,
+    },
+    {
+      schoolId: req.user.schoolId,
+      academicYearId: academicYear._id,
+      studentId: student._id,
+      studentEnrollmentId: enrollment._id,
+      attachments: Array.isArray(attachments) ? attachments : [],
+      remarks: typeof remarks === "string" ? remarks.trim() : "",
+      submittedAt: new Date(),
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  ).lean();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, submission, "Homework submitted successfully"));
+});
+
+export const getHomeworkSubmissions = asyncHandler(async (req, res) => {
+  const { assignmentId } = req.params;
+
+  const assignment = await Assignment.findOne({
+    _id: assignmentId,
+    schoolId: req.user.schoolId,
+    ...(req.user.role === "Teacher" ? { teacherId: req.user._id } : {}),
+  }).select("_id");
+
+  if (!assignment) {
+    throw new ApiError(404, "Assignment not found");
+  }
+
+  const submissions = await AssignmentSubmission.find({
+    assignmentId,
+    schoolId: req.user.schoolId,
+  })
+    .populate({
+      path: "studentEnrollmentId",
+      select: "registrationNumber",
+      populate: [
+        {
+          path: "studentId",
+          select: "userId",
+          populate: { path: "userId", select: "name email" },
+        },
+        { path: "schoolClassId", select: "className classNum" },
+        { path: "sectionId", select: "name" },
+      ],
+    })
+    .sort({ submittedAt: -1 })
+    .lean();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, submissions, "Homework submissions fetched successfully"));
+});
+
+export const createTeacherHomework = asyncHandler(async (req, res) => {
+  const { academicYearId, schoolClassId, sectionId, subjectId, title, description, dueDate, attachments = [] } =
+    req.body;
+
+  if (!academicYearId || !schoolClassId || !subjectId || !title || !description || !dueDate) {
+    throw new ApiError(400, "academicYearId, schoolClassId, subjectId, title, description, dueDate are required");
+  }
+
+  const created = await Assignment.create({
+    academicYearId,
+    schoolId: req.user.schoolId,
+    teacherId: req.user._id,
+    schoolClassId,
+    sectionId: sectionId || undefined,
+    subjectId,
+    title,
+    description,
+    dueDate: new Date(dueDate),
+    attachments,
+  });
+
+  const assignment = await Assignment.findById(created._id)
+    .populate("schoolClassId", "className classNum")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name code")
+    .lean();
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, assignment, "Assignment created successfully"));
+});
+
 
 export const createTimetableEntry = asyncHandler(async (req, res) => {
   const {
