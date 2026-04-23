@@ -16,7 +16,9 @@ const uploadOnCloudinary = async (filePath) => {
         if (!filePath) {
             throw new ApiError(400, "localpath Required !")
         }
-        const result = await cloudinary.uploader.upload(filePath);
+        const result = await cloudinary.uploader.upload(filePath,{
+            resource_type: "image",
+        });
         fs.unlinkSync(filePath)
         return result;
     } catch (error) {

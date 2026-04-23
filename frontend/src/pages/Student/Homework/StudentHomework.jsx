@@ -150,11 +150,16 @@ const StudentHomework = () => {
       setUploading(true);
       await new Promise((resolve) => setTimeout(resolve, 700));
 
+     const formData = new FormData();
+      fileList.forEach((file) => {
+        if (file?.originFileObj) {
+          formData.append("attachments", file.originFileObj);
+        }
+      });
+
       await apiClient.post(
         `/student-portal/me/homework/${selectedHomework._id}/submit`,
-        {
-          attachments: fileList.map((file) => file.name).filter(Boolean),
-        }
+        formData
       );
 
       setHomeworkList((prev) =>

@@ -648,6 +648,7 @@ const mapAssignmentRecord = useCallback((item) => ({
                           <Button
                             size="small"
                             type="link"
+                             target="_blank"
                             href={attachmentUrl}
                             download={attachmentName}
                           >
