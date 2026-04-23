@@ -15,6 +15,7 @@ import {
   updateMyProfile,
 } from "../controllers/studentPortal.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
@@ -26,7 +27,7 @@ router.get("/me/profile", auth, roleMiddleware(STUDENT_ONLY), getMyProfile);
 router.put("/me/profile", auth, roleMiddleware(STUDENT_ONLY), updateMyProfile);
 router.get("/me/timetable", auth, roleMiddleware(STUDENT_ONLY), getMyTimetable);
 router.get("/me/homework", auth, roleMiddleware(STUDENT_ONLY), getMyHomework);
-router.post("/me/homework/:assignmentId/submit", auth, roleMiddleware(STUDENT_ONLY), submitHomework);
+router.post("/me/homework/:assignmentId/submit", auth, roleMiddleware(STUDENT_ONLY), upload.fields([{ name: "attachments", maxCount: 2 }]), submitHomework);
 router.get("/me/transport", auth, roleMiddleware(STUDENT_ONLY), getMyTransport);
 router.get("/me/library-books", auth, roleMiddleware(STUDENT_ONLY), getMyLibraryBooks);
 router.get("/teacher/homework", auth, roleMiddleware(ADMIN_AND_TEACHER), getTeacherHomework);

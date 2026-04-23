@@ -32,7 +32,7 @@ const assignmentSubmissionSchema = new Schema(
       required: true,
       index: true,
     },
-    attachments: [{ type: String }],
+    attachments: [{ type: Schema.Types.Mixed }],
     remarks: {
       type: String,
       trim: true,

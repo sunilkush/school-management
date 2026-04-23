@@ -588,7 +588,7 @@ const mapAssignmentRecord = useCallback((item) => ({
           </Button>
         </Form>
       </Modal>
-    <Modal
+   <Modal
         title={`Submissions${selectedAssignment?.title ? ` - ${selectedAssignment.title}` : ""}`}
         open={submissionsOpen}
         onCancel={() => {
@@ -618,18 +618,28 @@ const mapAssignmentRecord = useCallback((item) => ({
                   {!!item?.attachments?.length && (
                     <Space wrap>
                       {item.attachments.map((attachment, idx) => (
+                        (() => {
+                          const attachmentUrl =
+                            typeof attachment === "string" ? attachment : attachment?.url;
+                          const attachmentName =
+                            (typeof attachment === "object" && attachment?.name) ||
+                            `Attachment ${idx + 1}`;
+
+                          if (!attachmentUrl) return null;
+
+                          return (
                         <Space
-                          key={`${attachment?.url || "file"}-${idx}`}
+                          key={`${attachmentUrl || "file"}-${idx}`}
                           size={4}
                           style={{ border: "1px solid #f0f0f0", padding: "2px 8px", borderRadius: 6 }}
                         >
                           <Text style={{ fontSize: 12 }}>
-                            {attachment?.name || `Attachment ${idx + 1}`}
+                            {attachmentName}
                           </Text>
                           <Button
                             size="small"
                             type="link"
-                            href={attachment?.url}
+                            href={attachmentUrl}
                             target="_blank"
                             rel="noreferrer"
                           >
@@ -638,12 +648,14 @@ const mapAssignmentRecord = useCallback((item) => ({
                           <Button
                             size="small"
                             type="link"
-                            href={attachment?.url}
-                            download={attachment?.name || `attachment-${idx + 1}`}
+                            href={attachmentUrl}
+                            download={attachmentName}
                           >
                             Download
                           </Button>
                         </Space>
+                          );
+                        })()
                       ))}
                     </Space>
                   )}

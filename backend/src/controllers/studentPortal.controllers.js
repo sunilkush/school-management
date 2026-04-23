@@ -12,7 +12,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const getMyActiveEnrollment = async (user) => {
   const student = await Student.findOne({ userId: user._id }).select("_id");
   if (!student) {
@@ -263,29 +263,136 @@ export const getTeacherHomework = asyncHandler(async (req, res) => {
     .sort({ dueDate: 1, createdAt: -1 })
     .lean();
 
+  const assignmentIds = homework.map((item) => item._id);
+  const submissionCountsRaw = assignmentIds.length
+    ? await AssignmentSubmission.aggregate([
+        {
+          $match: {
+            schoolId: req.user.schoolId,
+            assignmentId: { $in: assignmentIds },
+          },
+        },
+        {
+          $group: {
+            _id: "$assignmentId",
+            count: { $sum: 1 },
+          },
+        },
+      ])
+    : [];
+
+  const submissionCountMap = new Map(
+    submissionCountsRaw.map((item) => [String(item._id), item.count])
+  );
+
+  const data = homework.map((item) => ({
+    ...item,
+    submissionCount: submissionCountMap.get(String(item._id)) || 0,
+  }));
+
   return res
     .status(200)
-    .json(new ApiResponse(200, homework, "Teacher homework fetched successfully"));
+    .json(new ApiResponse(200, data, "Teacher homework fetched successfully"));
 });
 
+export const createTeacherHomework = asyncHandler(async (req, res) => {
+  const { academicYearId, schoolClassId, sectionId, subjectId, title, description, dueDate, attachments = [] } =
+    req.body;
 
+  if (!academicYearId || !schoolClassId || !subjectId || !title || !description || !dueDate) {
+    throw new ApiError(400, "academicYearId, schoolClassId, subjectId, title, description, dueDate are required");
+  }
+
+  const created = await Assignment.create({
+    academicYearId,
+    schoolId: req.user.schoolId,
+    teacherId: req.user._id,
+    schoolClassId,
+    sectionId: sectionId || undefined,
+    subjectId,
+    title,
+    description,
+    dueDate: new Date(dueDate),
+    attachments,
+  });
+
+  const assignment = await Assignment.findById(created._id)
+    .populate("schoolClassId", "className classNum")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name code")
+    .lean();
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, assignment, "Assignment created successfully"));
+});
 
 export const submitHomework = asyncHandler(async (req, res) => {
   const { assignmentId } = req.params;
   const { attachments = [], remarks = "" } = req.body || {};
-  const { student, enrollment, academicYear } = await getMyActiveEnrollment(req.user);
+
+  const { student, enrollment, academicYear } = await getMyActiveEnrollment(
+    req.user
+  );
 
   const assignment = await Assignment.findOne({
     _id: assignmentId,
     schoolId: req.user.schoolId,
     academicYearId: academicYear._id,
     schoolClassId: enrollment.schoolClassId,
-    $or: [{ sectionId: enrollment.sectionId }, { sectionId: null }, { sectionId: { $exists: false } }],
+    $or: [
+      { sectionId: enrollment.sectionId },
+      { sectionId: null },
+      { sectionId: { $exists: false } },
+    ],
   }).select("_id");
 
   if (!assignment) {
     throw new ApiError(404, "Homework not found for this student");
   }
+
+  // body se aane wale attachments normalize karo
+  const normalizedBodyAttachments = Array.isArray(attachments)
+    ? attachments
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          name: item.name || "attachment",
+          url: item.url || "",
+          mimeType: item.mimeType || "",
+          publicId: item.publicId || "",
+        }))
+        .filter((item) => item.url)
+    : [];
+
+  // file uploads handle karo
+  const uploadedAttachments = [];
+  const attachmentFiles = Array.isArray(req.files?.attachments)
+    ? req.files.attachments
+    : [];
+
+  for (const file of attachmentFiles) {
+    const uploaded = await uploadOnCloudinary(file.path);
+
+    if (!uploaded?.secure_url && !uploaded?.url) {
+      throw new ApiError(500, "Failed to upload one or more attachments");
+    }
+
+    uploadedAttachments.push({
+      name:
+        file.originalname ||
+        uploaded.original_filename ||
+        uploaded.display_name ||
+        "attachment",
+      url: uploaded.secure_url || uploaded.url,
+      mimeType: file.mimetype || "",
+      publicId: uploaded.public_id || "",
+    });
+  }
+
+  const normalizedAttachments = [
+    ...normalizedBodyAttachments,
+    ...uploadedAttachments,
+  ];
 
   const submission = await AssignmentSubmission.findOneAndUpdate(
     {
@@ -293,15 +400,20 @@ export const submitHomework = asyncHandler(async (req, res) => {
       studentEnrollmentId: enrollment._id,
     },
     {
+      assignmentId: assignment._id,
       schoolId: req.user.schoolId,
       academicYearId: academicYear._id,
       studentId: student._id,
       studentEnrollmentId: enrollment._id,
-      attachments: Array.isArray(attachments) ? attachments : [],
+      attachments: normalizedAttachments,
       remarks: typeof remarks === "string" ? remarks.trim() : "",
       submittedAt: new Date(),
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    }
   ).lean();
 
   return res
@@ -345,38 +457,6 @@ export const getHomeworkSubmissions = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, submissions, "Homework submissions fetched successfully"));
-});
-
-export const createTeacherHomework = asyncHandler(async (req, res) => {
-  const { academicYearId, schoolClassId, sectionId, subjectId, title, description, dueDate, attachments = [] } =
-    req.body;
-
-  if (!academicYearId || !schoolClassId || !subjectId || !title || !description || !dueDate) {
-    throw new ApiError(400, "academicYearId, schoolClassId, subjectId, title, description, dueDate are required");
-  }
-
-  const created = await Assignment.create({
-    academicYearId,
-    schoolId: req.user.schoolId,
-    teacherId: req.user._id,
-    schoolClassId,
-    sectionId: sectionId || undefined,
-    subjectId,
-    title,
-    description,
-    dueDate: new Date(dueDate),
-    attachments,
-  });
-
-  const assignment = await Assignment.findById(created._id)
-    .populate("schoolClassId", "className classNum")
-    .populate("sectionId", "name")
-    .populate("subjectId", "name code")
-    .lean();
-
-  return res
-    .status(201)
-    .json(new ApiResponse(201, assignment, "Assignment created successfully"));
 });
 
 
