@@ -15,7 +15,18 @@ const paymentSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-
+academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null,
+      index: true,
+    },
+    studentFeeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StudentFee",
+      default: null,
+      index: true,
+    },
     installmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "FeeInstallment",
@@ -53,8 +64,13 @@ const paymentSchema = new mongoose.Schema(
     receiptNo: {
       type: String,
       required: true,
-      unique: true,
+     
       index: true,
+    },
+    collectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
   },
   {
@@ -62,6 +78,12 @@ const paymentSchema = new mongoose.Schema(
     versionKey: false,
   }
 );
+
+paymentSchema.index(
+  { schoolId: 1, academicYearId: 1, receiptNo: 1 },
+  { unique: true }
+);
+paymentSchema.index({ schoolId: 1, studentId: 1, paymentDate: -1 });
 
 /**
  * Auto-update installment status after payment

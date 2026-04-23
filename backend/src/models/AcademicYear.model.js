@@ -27,6 +27,7 @@ const academicYearSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: false,
+      index:true
     },
     status: {
       type: String,
@@ -59,6 +60,13 @@ academicYearSchema.pre("save", function (next) {
   next();
 });
 
+academicYearSchema.pre("validate", function (next) {
+  if (this.startDate && this.endDate && this.startDate >= this.endDate) {
+    return next(new Error("Academic year startDate must be before endDate"));
+  }
+  next();
+});
+
 // Prevent updates on archived academic years
 academicYearSchema.pre("findOneAndUpdate", async function (next) {
   const docToUpdate = await this.model.findOne(this.getQuery());
@@ -69,6 +77,12 @@ academicYearSchema.pre("findOneAndUpdate", async function (next) {
   }
   next();
 });
+academicYearSchema.index({ schoolId: 1, name: 1 }, { unique: true });
+academicYearSchema.index({ schoolId: 1, code: 1 }, { unique: true });
+academicYearSchema.index(
+  { schoolId: 1, isActive: 1 },
+  { partialFilterExpression: { isActive: true } }
+);
 
 export const AcademicYear = mongoose.model("AcademicYear", academicYearSchema);
 

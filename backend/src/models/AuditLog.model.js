@@ -12,6 +12,18 @@ const auditLogSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+    actorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      default: null,
+      index: true,
+    },
     action: {
       type: String,
       required: true,
@@ -54,7 +66,7 @@ const auditLogSchema = new mongoose.Schema(
 
 auditLogSchema.index({ module: 1, createdAt: -1 });
 auditLogSchema.index({ actorName: 1, action: 1 });
-
+auditLogSchema.index({ schoolId: 1, module: 1, createdAt: -1 });
 const AuditLog = mongoose.model("AuditLog", auditLogSchema);
 
 export default AuditLog;

@@ -20,6 +20,8 @@ const studentEnrollmentSchema = new mongoose.Schema(
     registrationNumber: {
       type: String,
       required: true,
+       trim: true,
+      uppercase: true,
     },
     schoolClassId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -47,6 +49,16 @@ const studentEnrollmentSchema = new mongoose.Schema(
       enum: ["Active", "Promoted", "Transferred", "Alumni", "Inactive"],
       default: "Active",
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true }
 );
@@ -57,6 +69,10 @@ studentEnrollmentSchema.index(
   { unique: true }
 );
 studentEnrollmentSchema.index({ schoolId: 1, academicYearId: 1 });
+studentEnrollmentSchema.index(
+  { schoolId: 1, academicYearId: 1, registrationNumber: 1 },
+  { unique: true }
+);
 studentEnrollmentSchema.index({ createdAt: -1 });
 
 export const StudentEnrollment = mongoose.model(

@@ -32,10 +32,18 @@ const sectionSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    // Backward-compatible legacy field (kept to avoid breaking existing reads/writes)
     StudentEnrollmentId: [
       {
         type: Schema.Types.ObjectId,
-        ref: "User",
+        ref: "StudentEnrollment",
+      },
+    ],
+    // Preferred naming for new code paths
+    studentEnrollmentIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "StudentEnrollment",
       },
     ],
     // ✅ ADD SUBJECTS (VERY IMPORTANT)
@@ -74,6 +82,8 @@ const sectionSchema = new Schema(
     academicYearId: {
       type: Schema.Types.ObjectId,
       ref: "AcademicYear",
+      required: true,
+      index: true,
     }
   },
   { timestamps: true }
@@ -83,7 +93,7 @@ const sectionSchema = new Schema(
 
 // Same class me duplicate section na ho
 sectionSchema.index(
-  { schoolClassId: 1, name: 1 },
+  { schoolClassId: 1, academicYearId: 1, name: 1 },
   { unique: true }
 );
 

@@ -30,6 +30,48 @@ const NotificationSchema = new Schema(
       type: [String],
       default: [],
     },
+    channels: {
+      inApp: { type: Boolean, default: true },
+      email: { type: Boolean, default: false },
+      sms: { type: Boolean, default: false },
+      whatsapp: { type: Boolean, default: false },
+    },
+    deliveryStats: {
+      sent: { type: Number, default: 0 },
+      opened: { type: Number, default: 0 },
+      failed: { type: Number, default: 0 },
+    },
+    timezone: {
+      type: String,
+      default: "UTC",
+    },
+    scheduledAt: {
+      type: Date,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["draft", "scheduled", "sent"],
+      default: "sent",
+    },
+    readBy: {
+      type: [String],
+      default: [],
+    },
+    readReceipts: {
+      type: [
+        {
+          userToken: { type: String, required: true },
+          readAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+    targetUserObjectIds: {
+      type: [Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+    },
     createdBy: {
       type: String,
       required: true,
@@ -48,5 +90,6 @@ const NotificationSchema = new Schema(
   },
   { timestamps: true }
 );
-
+NotificationSchema.index({ schoolId: 1, createdAt: -1 });
+NotificationSchema.index({ level: 1, createdAt: -1 });
 export const Notification = mongoose.model("Notification", NotificationSchema);

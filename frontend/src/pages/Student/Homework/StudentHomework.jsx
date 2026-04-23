@@ -15,6 +15,7 @@ import {
   Typography,
   Upload,
   message,
+  Slider,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -70,7 +71,7 @@ const StudentHomework = () => {
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fileList, setFileList] = useState([]);
-
+  const [rubric, setRubric] = useState({ quality: 0, clarity: 0, timeliness: 0 });
   const loadHomework = async () => {
     setLoading(true);
     setError("");
@@ -136,7 +137,18 @@ const StudentHomework = () => {
     setSelectedHomework(hw);
     setOpen(true);
     setFileList([]);
+    setRubric({ quality: 0, clarity: 0, timeliness: 0 });
   };
+
+  const rubricScore = Math.round((rubric.quality + rubric.clarity + rubric.timeliness) / 3);
+
+  const plagiarismRisk = useMemo(() => {
+    if (!selectedHomework || !fileList.length) return 0;
+    const tokens = selectedHomework.title.toLowerCase().split(/\s+/).filter(Boolean);
+    const filenames = fileList.map((f) => String(f.name || f.originFileObj?.name || '').toLowerCase()).join(' ');
+    const overlap = tokens.filter((t) => filenames.includes(t)).length;
+    return Math.min(100, Math.round((overlap / Math.max(tokens.length, 1)) * 100));
+  }, [selectedHomework, fileList]);
 
   const handleUpload = async () => {
     if (!selectedHomework) return;
@@ -268,6 +280,18 @@ const StudentHomework = () => {
 
             {selectedHomework.status !== "Submitted" ? (
               <>
+              <Card size="small" title="Rubric Self-Check (before submit)">
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <Text>Quality</Text>
+                    <Slider value={rubric.quality} onChange={(v) => setRubric((p) => ({ ...p, quality: v }))} />
+                    <Text>Clarity</Text>
+                    <Slider value={rubric.clarity} onChange={(v) => setRubric((p) => ({ ...p, clarity: v }))} />
+                    <Text>Timeliness</Text>
+                    <Slider value={rubric.timeliness} onChange={(v) => setRubric((p) => ({ ...p, timeliness: v }))} />
+                    <Tag color="blue">Rubric Score Preview: {rubricScore}/100</Tag>
+                  </Space>
+                </Card>
+
                 <Upload
                   beforeUpload={() => false}
                   multiple
@@ -276,7 +300,9 @@ const StudentHomework = () => {
                 >
                   <Button icon={<UploadOutlined />}>Upload Homework</Button>
                 </Upload>
-
+                  <Tag color={plagiarismRisk > 70 ? "red" : plagiarismRisk > 40 ? "orange" : "green"}>
+                  Basic Similarity Check: {plagiarismRisk}%
+                </Tag>
                 <Button
                   type="primary"
                   block

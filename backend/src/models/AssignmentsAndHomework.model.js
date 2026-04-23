@@ -3,7 +3,7 @@ const AssignmentSchema = new Schema(
     {   
           academicYearId:{
                 type:Schema.Types.ObjectId,
-                ref: "AcademicYears",
+                 ref: "AcademicYear",
                 required: true
             },
         schoolId: {
@@ -47,8 +47,26 @@ const AssignmentSchema = new Schema(
         attachments: [
             { type: String }
         ],
+        status: {
+            type: String,
+            enum: ["draft", "assigned", "closed"],
+            default: "assigned",
+            index: true,
+        },
+        createdBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
+        updatedBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
     },
     { timestamps: true }
 );
+
+AssignmentSchema.index({ schoolId: 1, academicYearId: 1, schoolClassId: 1, sectionId: 1, subjectId: 1, dueDate: 1 });
 
 export const Assignment = mongoose.model("Assignment", AssignmentSchema)

@@ -18,7 +18,18 @@ const ResultSchema = new Schema(
       required: true,
       index: true
     },
-
+    studentEnrollmentId: {
+      type: Schema.Types.ObjectId,
+      ref: "StudentEnrollment",
+      default: null,
+      index: true,
+    },
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null,
+      index: true,
+    },
     examId: {
       type: Schema.Types.ObjectId,
       ref: "Exam",
@@ -105,6 +116,7 @@ ResultSchema.index(
 // Ranking queries (class/section wise)
 ResultSchema.index({
   schoolId: 1,
+  academicYearId: 1,
   examId: 1,
   schoolClassId: 1,
   sectionId: 1,

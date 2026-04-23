@@ -15,7 +15,7 @@ const subjectSchema = new Schema(
       type: String,
       trim: true,
       uppercase: true,
-      unique: true,
+     
     },
 
     shortName: {
@@ -118,8 +118,25 @@ const subjectSchema = new Schema(
 /* ================= INDEXES ================= */
 
 subjectSchema.index(
+  { schoolId: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isGlobal: false },
+  }
+);
+subjectSchema.index(
   { name: 1 },
-  { unique: true }
+  {
+    unique: true,
+    partialFilterExpression: { isGlobal: true },
+  }
+);
+subjectSchema.index(
+  { schoolId: 1, code: 1 },
+  {
+    unique: true,
+    sparse: true,
+  }
 );
 
 /* ================= AUTO SHORT NAME ================= */

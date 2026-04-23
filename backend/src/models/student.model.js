@@ -12,7 +12,12 @@ const studentSchema = new mongoose.Schema(
       unique: true, // one user = one student
       index: true,
     },
-
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      index: true,
+      default: null,
+    },
     /* ===========================
        📸 BASIC INFO
     ============================ */
@@ -127,6 +132,18 @@ const studentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "inactive", "alumni", "transferred"],
+      default: "active",
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -143,5 +160,5 @@ studentSchema.index({ motherId: 1 });
 
 // optional search
 studentSchema.index({ dateOfBirth: 1 });
-
+studentSchema.index({ schoolId: 1, status: 1 });
 export const Student = mongoose.model("Student", studentSchema);
