@@ -29,12 +29,10 @@ const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satur
 const TeacherTimetable = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth?.user);
-    const { selectedAcademicYear } = useSelector((s) => s.academicYear);
-     const activeAcademicYearId = selectedAcademicYear?._id
   const {
     teachers,
     teacherTimetable: timetable,
-   
+    activeAcademicYearId,
     loading,
   } = useSelector((state) => state.timetable);
   const [activeDay, setActiveDay] = useState("Monday");

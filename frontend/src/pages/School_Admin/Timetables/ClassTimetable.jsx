@@ -46,15 +46,13 @@ const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satur
 const ClassTimetable = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth?.user);
-   const { selectedAcademicYear } = useSelector((s) => s.academicYear);
-   const activeAcademicYearId = selectedAcademicYear?._id
   const {
     classTimetable: timetable,
     schoolClasses,
     sections,
     subjects,
     teachers,
-    
+    activeAcademicYearId,
     loading,
     saving,
   } = useSelector((state) => state.timetable);
