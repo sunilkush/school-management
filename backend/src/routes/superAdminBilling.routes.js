@@ -13,6 +13,9 @@ import {
   getSchoolInvoices,
   getSchoolSubscription,
   getSchoolUsage,
+  getRevenueSummary,
+  listAllInvoices,
+  listAllPayments,
   reactivateSubscription,
   renewSubscription,
   suspendSubscription,
@@ -40,6 +43,9 @@ router.get("/schools/:schoolId/subscription", getSchoolSubscription);
 
 router.post("/schools/:schoolId/invoices", generateInvoice);
 router.get("/schools/:schoolId/invoices", getSchoolInvoices);
+router.get("/invoices", listAllInvoices);
+router.get("/payments", listAllPayments);
+router.get("/revenue/summary", getRevenueSummary);
 router.get("/invoices/:invoiceId/pdf", downloadInvoicePdf);
 
 router.post("/invoices/:invoiceId/payments/manual", addManualPayment);

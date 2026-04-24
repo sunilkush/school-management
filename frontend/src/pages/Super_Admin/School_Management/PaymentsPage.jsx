@@ -1,387 +1,218 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import {
-  Table,
-  Card,
-  Row,
-  Col,
-  Tag,
-  Input,
-  Select,
-  Button,
-  Space,
-  Modal,
-  Typography,
-  Tooltip,
-  Empty,
   Alert,
+  Button,
+  Card,
+  Empty,
   Form,
+  Input,
   InputNumber,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
   message,
 } from "antd";
+import { AppstoreOutlined, DollarOutlined, EyeOutlined, WalletOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import {
-  SearchOutlined,
-  EyeOutlined,
-  BankOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
-  ExclamationCircleFilled,
-  CreditCardOutlined,
-  WalletOutlined,
-  CalendarOutlined,
-  FilterOutlined,
-  DollarOutlined,
-  BarChartOutlined,
-  AppstoreOutlined,
-} from "@ant-design/icons";
-import { fetchSchools } from "../../../features/schoolSlice";
+  addManualSubscriptionPayment,
+  fetchBillingInvoices,
+  fetchBillingPayments,
+} from "../../../features/superAdminBillingSlice";
 
-const { Text, Title } = Typography;
-const { Option } = Select;
-
-const C = {
-  primary: "#0F6E56",
-  primaryLight: "#E1F5EE",
-  primaryBorder: "#9FE1CB",
-  surface: "#ffffff",
-  bg: "#F4F6F5",
-  border: "#E8EDEB",
-  text: "#111827",
-  textSec: "#6B7280",
-  textMuted: "#9CA3AF",
-  purple: "#6D28D9",
-  purpleLight: "#F5F3FF",
-  purpleBorder: "#DDD6FE",
-  gold: "#B45309",
-  danger: "#DC2626",
-  dangerLight: "#FEF2F2",
-  dangerBorder: "#FECACA",
-  orange: "#C2410C",
-  orangeLight: "#FFF7ED",
-  orangeBorder: "#FED7AA",
-};
-
-const STATUS = {
-  Active: { color: C.primary, bg: C.primaryLight, border: C.primaryBorder, icon: <CheckCircleFilled style={{ fontSize: 11 }} /> },
-  Expired: { color: C.danger, bg: C.dangerLight, border: C.dangerBorder, icon: <CloseCircleFilled style={{ fontSize: 11 }} /> },
-  Pending: { color: C.orange, bg: C.orangeLight, border: C.orangeBorder, icon: <ExclamationCircleFilled style={{ fontSize: 11 }} /> },
-};
+const { Title, Text } = Typography;
 
 const formatCurrency = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
-const formatDate = (value) => new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-
-const getCycle = (days = 0) => {
-  if (days >= 365) return "Yearly";
-  if (days >= 90) return "Quarterly";
-  return "Monthly";
-};
-
-const getStatus = (school) => {
-  const expiresOn = new Date(school.createdAt);
-  const duration = school.subscriptionPlan?.durationInDays || 0;
-  expiresOn.setDate(expiresOn.getDate() + duration);
-  const now = new Date();
-
-  if (!school.subscriptionPlan) return "Pending";
-  if (!school.isActive || expiresOn < now) return "Expired";
-  return "Active";
-};
-
-const getDueAgingBucket = (dueDays) => {
-  if (dueDays <= 0) return "Current";
-  if (dueDays <= 30) return "0-30";
-  if (dueDays <= 60) return "31-60";
-  return "60+";
-};
-
-const reminderLevel = (dueDays) => {
-  if (dueDays <= 0) return { level: "None", channel: "-", escalation: "No reminder required" };
-  if (dueDays <= 15) return { level: "L1", channel: "Email + In-app", escalation: "Billing team" };
-  if (dueDays <= 30) return { level: "L2", channel: "Email + SMS", escalation: "Finance manager" };
-  if (dueDays <= 60) return { level: "L3", channel: "Email + SMS + Call", escalation: "School Admin + Finance lead" };
-  return { level: "L4", channel: "All channels", escalation: "Super Admin escalation" };
-};
-
-const StatCard = ({ icon, label, value, color, bg, border }) => (
-  <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.04)", height: "100%" }}>
-    <div style={{ width: 38, height: 38, borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", color, fontSize: 17 }}>{icon}</div>
-    <div>
-      <Text style={{ display: "block", fontSize: 10, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.6px", fontWeight: 600 }}>{label}</Text>
-      <Text strong style={{ fontSize: 22, color: C.text }}>{value}</Text>
-    </div>
-  </div>
-);
 
 export default function PaymentsPage() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { schools, loading } = useSelector((state) => state.school);
+  const dispatch = useDispatch();
+  const { invoices, payments, loading, error } = useSelector((state) => state.superAdminBilling);
 
-  const [open, setOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [searchText, setSearchText] = useState("");
-  const [planFilter, setPlanFilter] = useState(null);
-  const [statusFilter, setStatusFilter] = useState(null);
-
-  const [adjustmentOpen, setAdjustmentOpen] = useState(false);
-  const [adjustmentForm] = Form.useForm();
-  const [adjustmentQueue, setAdjustmentQueue] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [paymentForm] = Form.useForm();
 
   useEffect(() => {
-    dispatch(fetchSchools());
+    dispatch(fetchBillingInvoices());
+    dispatch(fetchBillingPayments());
   }, [dispatch]);
 
-  const data = useMemo(
-    () =>
-      (schools || []).map((school) => {
-        const plan = school.subscriptionPlan;
-        const cycle = getCycle(plan?.durationInDays);
-        const expiryDate = new Date(school.createdAt);
-        expiryDate.setDate(expiryDate.getDate() + (plan?.durationInDays || 0));
-
-        const now = new Date();
-        const dueDays = Math.max(0, Math.floor((now.getTime() - expiryDate.getTime()) / (1000 * 60 * 60 * 24)));
-        const systemAmount = plan?.price || 0;
-        const gatewayAmount = Number((systemAmount * (school.isActive ? 1 : 0.97)).toFixed(2));
-        const variance = Number((gatewayAmount - systemAmount).toFixed(2));
-
-        return {
-          key: school._id,
-          schoolId: school._id,
-          school: school.name,
-          plan: plan?.name || "Unassigned",
-          amount: systemAmount,
-          gatewayAmount,
-          variance,
-          dueDays,
-          agingBucket: getDueAgingBucket(dueDays),
-          escalation: reminderLevel(dueDays),
-          cycle,
-          method: "Online",
-          status: getStatus(school),
-          expiry: plan ? formatDate(expiryDate) : "—",
-        };
-      }),
-    [schools]
-  );
-
-  const filtered = data.filter((row) => {
-    const matchSearch = !searchText || row.school.toLowerCase().includes(searchText.toLowerCase());
-    const matchPlan = !planFilter || row.plan.toLowerCase() === planFilter;
-    const matchStatus = !statusFilter || row.status.toLowerCase() === statusFilter;
-    return matchSearch && matchPlan && matchStatus;
-  });
-
   const stats = useMemo(() => {
-    const totalRevenue = data.reduce((sum, row) => sum + row.amount, 0);
-    const totalGateway = data.reduce((sum, row) => sum + row.gatewayAmount, 0);
-    const totalVariance = Number((totalGateway - totalRevenue).toFixed(2));
-
-    const aging = {
-      current: data.filter((d) => d.agingBucket === "Current").length,
-      b0_30: data.filter((d) => d.agingBucket === "0-30").length,
-      b31_60: data.filter((d) => d.agingBucket === "31-60").length,
-      b60plus: data.filter((d) => d.agingBucket === "60+").length,
-    };
+    const totalInvoiced = invoices.reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
+    const totalCollected = invoices
+      .filter((invoice) => invoice.status === "paid")
+      .reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
 
     return {
-      totalRevenue,
-      active: data.filter((d) => d.status === "Active").length,
-      pending: data.filter((d) => d.status === "Pending").length,
-      expired: data.filter((d) => d.status === "Expired").length,
-      totalGateway,
-      totalVariance,
-      aging,
+      totalInvoiced,
+      totalCollected,
+      unpaid: invoices.filter((invoice) => ["unpaid", "overdue"].includes(invoice.status)).length,
     };
-  }, [data]);
+  }, [invoices]);
 
-  const columns = [
-    { title: "School", dataIndex: "school", render: (name) => <Space><BankOutlined style={{ color: C.primary }} /><Text>{name}</Text></Space> },
-    { title: "Plan", dataIndex: "plan", render: (plan) => <Tag style={{ borderRadius: 6, background: C.purpleLight, color: C.purple, border: `1px solid ${C.purpleBorder}` }}>{plan}</Tag> },
-    { title: "System Amount", dataIndex: "amount", render: (amount) => <Text strong style={{ color: C.gold }}>{formatCurrency(amount)}</Text> },
-    { title: "Gateway Amount", dataIndex: "gatewayAmount", render: (amount) => <Text>{formatCurrency(amount)}</Text> },
-    {
-      title: "Variance",
-      dataIndex: "variance",
-      render: (value) => <Tag color={value === 0 ? "green" : "orange"}>{formatCurrency(value)}</Tag>,
-    },
-    { title: "Dues Aging", dataIndex: "agingBucket", render: (bucket) => <Tag>{bucket}</Tag> },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => {
-        const s = STATUS[status] || STATUS.Pending;
-        return <Tag style={{ borderRadius: 6, background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>{status}</Tag>;
-      },
-    },
-    { title: "Expiry", dataIndex: "expiry", render: (date) => <Space><CalendarOutlined /><Text>{date}</Text></Space> },
-    {
-      title: "Action",
-      render: (_, record) => (
-        <Space>
-          <Tooltip title="View payment details">
-            <Button size="small" icon={<EyeOutlined />} onClick={() => { setSelectedPayment(record); setOpen(true); }}>
-              View
-            </Button>
-          </Tooltip>
-          <Button size="small" onClick={() => { setSelectedPayment(record); setAdjustmentOpen(true); }}>
-            Refund/Adjust
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  const invoiceRows = invoices.map((invoice) => ({
+    key: invoice._id,
+    ...invoice,
+    schoolName: invoice.schoolId?.name || "-",
+  }));
 
-  const reminderColumns = [
-    { title: "School", dataIndex: "school" },
-    { title: "Due Days", dataIndex: "dueDays" },
-    { title: "Reminder Level", render: (_, r) => <Tag color="blue">{r.escalation.level}</Tag> },
-    { title: "Channel", render: (_, r) => r.escalation.channel },
-    { title: "Escalation To", render: (_, r) => r.escalation.escalation },
-  ];
+  const paymentRows = payments.map((payment) => ({
+    key: payment._id,
+    ...payment,
+    schoolName: payment.schoolId?.name || "-",
+    invoiceNumber: payment.invoiceId?.invoiceNumber || "-",
+  }));
 
-  const adjustmentColumns = [
-    { title: "School", dataIndex: "school" },
-    { title: "Type", dataIndex: "type", render: (t) => <Tag>{t}</Tag> },
-    { title: "Amount", dataIndex: "amount", render: (a) => formatCurrency(a) },
-    { title: "Reason", dataIndex: "reason" },
-    { title: "Approval", dataIndex: "approvalStatus", render: (s) => <Tag color={s === "Approved" ? "green" : "orange"}>{s}</Tag> },
-  ];
+  const submitManualPayment = async () => {
+    if (!selectedInvoice) return;
 
-  const submitAdjustment = async () => {
     try {
-      const values = await adjustmentForm.validateFields();
-      const entry = {
-        id: `${Date.now()}`,
-        school: selectedPayment?.school,
-        type: values.type,
-        amount: values.amount,
-        reason: values.reason,
-        approvalStatus: "Pending Approval",
-      };
-      setAdjustmentQueue((prev) => [entry, ...prev]);
-      message.success("Adjustment request sent for approval workflow");
-      setAdjustmentOpen(false);
-      adjustmentForm.resetFields();
-    } catch {
-      // form validation
+      const values = await paymentForm.validateFields();
+      await dispatch(
+        addManualSubscriptionPayment({
+          invoiceId: selectedInvoice._id,
+          payload: {
+            amount: values.amount,
+            paymentMode: values.paymentMode,
+            transactionId: values.transactionId,
+            paymentProofUrl: values.paymentProofUrl,
+            status: values.status,
+          },
+        })
+      ).unwrap();
+
+      message.success("Payment recorded");
+      setPaymentOpen(false);
+      paymentForm.resetFields();
+      dispatch(fetchBillingInvoices());
+      dispatch(fetchBillingPayments());
+    } catch (err) {
+      message.error(err || "Failed to record payment");
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, padding: "28px 24px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, gap: 16, flexWrap: "wrap" }}>
+    <div style={{ background: "#F4F6F5", minHeight: "100vh", padding: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <div>
-          <Space align="center" size={10} style={{ marginBottom: 4 }}>
-            <WalletOutlined style={{ color: C.primary, fontSize: 18 }} />
-            <Title level={3} style={{ margin: 0, color: C.text }}>Payments Reliability Center</Title>
-          </Space>
-          <Text style={{ color: C.textSec, fontSize: 13 }}>Reconciliation, dues aging, reminder escalation and adjustment approvals.</Text>
+          <Title level={3} style={{ marginBottom: 2 }}>Subscription Payments</Title>
+          <Text type="secondary">Invoice-level billing and payment tracking for Super Admin.</Text>
         </div>
-
-        <Space wrap>
+        <Space>
           <Button icon={<AppstoreOutlined />} onClick={() => navigate("/dashboard/superadmin/subscriptions")}>Subscriptions</Button>
-          <Button type="primary" icon={<BarChartOutlined />} onClick={() => navigate("/dashboard/superadmin/revenue")}>Revenue</Button>
+          <Button icon={<DollarOutlined />} onClick={() => navigate("/dashboard/superadmin/revenue")}>Revenue</Button>
         </Space>
       </div>
 
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 16 }}
-        message="Finance-grade controls enabled"
-        description="Gateway reconciliation + dues aging + reminder escalation + refund/adjustment approval queue are now available on this dashboard."
-      />
+      {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 12 }} /> : null}
 
-      <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
-        <Col xs={12} md={6}><StatCard icon={<DollarOutlined />} label="System Revenue" value={formatCurrency(stats.totalRevenue)} color={C.primary} bg={C.primaryLight} border={C.primaryBorder} /></Col>
-        <Col xs={12} md={6}><StatCard icon={<CreditCardOutlined />} label="Gateway Total" value={formatCurrency(stats.totalGateway)} color="#1D4ED8" bg="#EFF6FF" border="#BFDBFE" /></Col>
-        <Col xs={12} md={6}><StatCard icon={<ExclamationCircleFilled />} label="Variance" value={formatCurrency(stats.totalVariance)} color={C.orange} bg={C.orangeLight} border={C.orangeBorder} /></Col>
-        <Col xs={12} md={6}><StatCard icon={<CloseCircleFilled />} label="60+ Days Due" value={stats.aging.b60plus} color={C.danger} bg={C.dangerLight} border={C.dangerBorder} /></Col>
-      </Row>
+      <Space style={{ width: "100%", marginBottom: 16 }} wrap>
+        <Card><Text>Total Invoiced</Text><Title level={4}>{formatCurrency(stats.totalInvoiced)}</Title></Card>
+        <Card><Text>Total Collected</Text><Title level={4}>{formatCurrency(stats.totalCollected)}</Title></Card>
+        <Card><Text>Pending Invoices</Text><Title level={4}>{stats.unpaid}</Title></Card>
+      </Space>
 
-      <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
-        <Col xs={24} md={6}><Card><Text>Current</Text><Title level={5}>{stats.aging.current}</Title></Card></Col>
-        <Col xs={24} md={6}><Card><Text>0-30 Days</Text><Title level={5}>{stats.aging.b0_30}</Title></Card></Col>
-        <Col xs={24} md={6}><Card><Text>31-60 Days</Text><Title level={5}>{stats.aging.b31_60}</Title></Card></Col>
-        <Col xs={24} md={6}><Card><Text>60+ Days</Text><Title level={5}>{stats.aging.b60plus}</Title></Card></Col>
-      </Row>
-
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <FilterOutlined style={{ color: C.primary }} />
-          <Input prefix={<SearchOutlined />} placeholder="Search school..." value={searchText} onChange={(e) => setSearchText(e.target.value)} allowClear style={{ width: 220 }} />
-          <Select placeholder="Plan" style={{ width: 140 }} value={planFilter} onChange={setPlanFilter} allowClear>
-            {[...new Set(data.map((d) => d.plan.toLowerCase()))].map((plan) => <Option key={plan} value={plan}>{plan}</Option>)}
-          </Select>
-          <Select placeholder="Status" style={{ width: 140 }} value={statusFilter} onChange={setStatusFilter} allowClear>
-            <Option value="active">Active</Option><Option value="expired">Expired</Option><Option value="pending">Pending</Option>
-          </Select>
-          <Text style={{ marginLeft: "auto", color: C.textMuted }}>{filtered.length} of {data.length} records</Text>
-        </div>
-      </Card>
-
-      <Card style={{ marginBottom: 16 }} title="Reconciliation Dashboard (Gateway vs System)">
+      <Card title="Invoices" style={{ marginBottom: 16 }}>
         <Table
           loading={loading}
-          columns={columns}
-          dataSource={filtered}
+          dataSource={invoiceRows}
           rowKey="key"
-          pagination={{ pageSize: 10, size: "small" }}
-          locale={{ emptyText: <Empty description={<Text>No subscription billing data found.</Text>} /> }}
+          locale={{ emptyText: <Empty description="No invoices found" /> }}
+          columns={[
+            { title: "Invoice", dataIndex: "invoiceNumber" },
+            { title: "School", dataIndex: "schoolName" },
+            { title: "Amount", dataIndex: "totalAmount", render: (amount) => formatCurrency(amount) },
+            { title: "Due Date", dataIndex: "dueDate", render: (date) => new Date(date).toLocaleDateString() },
+            {
+              title: "Status",
+              dataIndex: "status",
+              render: (status) => <Tag color={status === "paid" ? "green" : status === "overdue" ? "red" : "blue"}>{status}</Tag>,
+            },
+            {
+              title: "Action",
+              render: (_, row) => (
+                <Space>
+                  <Button
+                    size="small"
+                    icon={<EyeOutlined />}
+                    onClick={() => {
+                      setSelectedInvoice(row);
+                      setDetailsOpen(true);
+                    }}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<WalletOutlined />}
+                    onClick={() => {
+                      setSelectedInvoice(row);
+                      setPaymentOpen(true);
+                    }}
+                  >
+                    Add Payment
+                  </Button>
+                </Space>
+              ),
+            },
+          ]}
         />
       </Card>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <Card title="Auto Reminder Escalation Matrix">
-            <Table rowKey="key" size="small" pagination={{ pageSize: 6 }} columns={reminderColumns} dataSource={filtered.filter((r) => r.dueDays > 0)} />
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card title="Refund / Adjustment Approval Queue">
-            <Table
-              rowKey="id"
-              size="small"
-              pagination={{ pageSize: 6 }}
-              columns={adjustmentColumns}
-              dataSource={adjustmentQueue}
-              locale={{ emptyText: "No pending adjustments" }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <Card title="Payment History">
+        <Table
+          loading={loading}
+          dataSource={paymentRows}
+          rowKey="key"
+          locale={{ emptyText: <Empty description="No payments found" /> }}
+          columns={[
+            { title: "Invoice", dataIndex: "invoiceNumber" },
+            { title: "School", dataIndex: "schoolName" },
+            { title: "Mode", dataIndex: "paymentMode" },
+            { title: "Amount", dataIndex: "amount", render: (amount) => formatCurrency(amount) },
+            { title: "Transaction ID", dataIndex: "transactionId", render: (value) => value || "-" },
+            { title: "Status", dataIndex: "status", render: (status) => <Tag>{status}</Tag> },
+          ]}
+          pagination={{ pageSize: 8 }}
+        />
+      </Card>
 
-      <Modal open={open} onCancel={() => setOpen(false)} footer={null} title="Payment Details">
-        {selectedPayment && (
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
-            <Text><b>School:</b> {selectedPayment.school}</Text>
-            <Text><b>Plan:</b> {selectedPayment.plan}</Text>
-            <Text><b>System Amount:</b> {formatCurrency(selectedPayment.amount)}</Text>
-            <Text><b>Gateway Amount:</b> {formatCurrency(selectedPayment.gatewayAmount)}</Text>
-            <Text><b>Variance:</b> {formatCurrency(selectedPayment.variance)}</Text>
-            <Text><b>Dues Aging:</b> {selectedPayment.agingBucket}</Text>
-            <Text><b>Reminder Escalation:</b> {selectedPayment.escalation.level} ({selectedPayment.escalation.channel})</Text>
+      <Modal title="Invoice Details" open={detailsOpen} onCancel={() => setDetailsOpen(false)} footer={null}>
+        {selectedInvoice ? (
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Text><b>Invoice:</b> {selectedInvoice.invoiceNumber}</Text>
+            <Text><b>School:</b> {selectedInvoice.schoolName}</Text>
+            <Text><b>Plan Price:</b> {formatCurrency(selectedInvoice.planPrice)}</Text>
+            <Text><b>Discount:</b> {formatCurrency(selectedInvoice.discount)}</Text>
+            <Text><b>Tax/GST:</b> {formatCurrency(selectedInvoice.taxGst)}</Text>
+            <Text><b>Total:</b> {formatCurrency(selectedInvoice.totalAmount)}</Text>
           </Space>
-        )}
+        ) : null}
       </Modal>
 
-      <Modal
-        open={adjustmentOpen}
-        onCancel={() => setAdjustmentOpen(false)}
-        onOk={submitAdjustment}
-        title={`Refund / Adjustment (${selectedPayment?.school || ""})`}
-      >
-        <Form form={adjustmentForm} layout="vertical">
-          <Form.Item name="type" label="Request Type" rules={[{ required: true }]}>
-            <Select options={[{ label: "Refund", value: "Refund" }, { label: "Adjustment", value: "Adjustment" }]} />
-          </Form.Item>
+      <Modal title="Manual Payment Entry" open={paymentOpen} onCancel={() => setPaymentOpen(false)} onOk={submitManualPayment}>
+        <Form form={paymentForm} layout="vertical" initialValues={{ status: "success", paymentMode: "bank transfer" }}>
           <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
             <InputNumber min={1} style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="reason" label="Reason" rules={[{ required: true }]}>
-            <Input.TextArea rows={3} />
+          <Form.Item name="paymentMode" label="Payment Mode" rules={[{ required: true }]}>
+            <Select options={["cash", "bank transfer", "UPI", "card", "cheque", "gateway"].map((v) => ({ label: v, value: v }))} />
+          </Form.Item>
+          <Form.Item name="transactionId" label="Transaction ID">
+            <Input placeholder="Optional" />
+          </Form.Item>
+          <Form.Item name="paymentProofUrl" label="Payment Proof URL">
+            <Input placeholder="https://..." />
+          </Form.Item>
+          <Form.Item name="status" label="Status" rules={[{ required: true }]}>
+            <Select options={["pending", "success", "failed", "refunded"].map((v) => ({ label: v, value: v }))} />
           </Form.Item>
         </Form>
       </Modal>

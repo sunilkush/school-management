@@ -362,3 +362,51 @@ export const getFeatureAccessControl = asyncHandler(async (req, res) => {
     )
   );
 });
+
+
+export const listAllInvoices = asyncHandler(async (req, res) => {
+  const invoices = await SubscriptionInvoice.find()
+    .populate("schoolId", "name")
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json(new ApiResponse(200, invoices, "All invoices fetched"));
+});
+
+export const listAllPayments = asyncHandler(async (req, res) => {
+  const payments = await SubscriptionPayment.find()
+    .populate("schoolId", "name")
+    .populate("invoiceId", "invoiceNumber totalAmount status dueDate")
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json(new ApiResponse(200, payments, "All payments fetched"));
+});
+
+export const getRevenueSummary = asyncHandler(async (req, res) => {
+  const invoices = await SubscriptionInvoice.find();
+  const totalInvoiced = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
+  const totalPaid = invoices
+    .filter((inv) => inv.status === "paid")
+    .reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
+  const overdue = invoices
+    .filter((inv) => ["overdue", "unpaid"].includes(inv.status))
+    .reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
+
+  const byStatus = invoices.reduce((acc, inv) => {
+    acc[inv.status] = (acc[inv.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        totalInvoiced,
+        totalPaid,
+        totalOutstanding: Math.max(0, totalInvoiced - totalPaid),
+        overdue,
+        countByStatus: byStatus,
+      },
+      "Revenue summary fetched"
+    )
+  );
+});

@@ -35,6 +35,9 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { Form, Select, Switch, message } from "antd";
+import { assignSchoolPlan } from "../../../features/superAdminBillingSlice.js";
+import { fetchSchools } from "../../../features/schoolSlice";
 
 import PlanForm from "../../../components/forms/PlanForm.jsx";
 import PlanLogs from "./PlanLogs.jsx";
@@ -255,9 +258,14 @@ const SubscriptionPlans = () => {
   const [editingPlan, setEditingPlan] = useState(null);
   const [isLogsOpen, setIsLogsOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignForm] = Form.useForm();
+  const { schools } = useSelector((state) => state.school);
 
   useEffect(() => {
     dispatch(fetchSubscriptionPlans());
+    dispatch(fetchSchools());
   }, [dispatch]);
 
   const openAddModal = () => {
@@ -283,6 +291,29 @@ const SubscriptionPlans = () => {
       dispatch(createSubscriptionPlan(data));
     }
     setIsModalOpen(false);
+  };
+
+  const handleAssignPlan = async () => {
+    try {
+      const values = await assignForm.validateFields();
+      setAssignLoading(true);
+      await dispatch(
+        assignSchoolPlan({
+          schoolId: values.schoolId,
+          payload: {
+            planId: values.planId,
+            isTrial: values.isTrial || false,
+          },
+        })
+      ).unwrap();
+      message.success("Plan assigned successfully");
+      setAssignOpen(false);
+      assignForm.resetFields();
+    } catch (error) {
+      message.error(error || "Failed to assign plan");
+    } finally {
+      setAssignLoading(false);
+    }
   };
 
   const columns = [
@@ -541,6 +572,7 @@ const SubscriptionPlans = () => {
           <Button icon={<BarChartOutlined />} onClick={() => navigate("/dashboard/superadmin/revenue")}>
             Revenue
           </Button>
+          <Button onClick={() => setAssignOpen(true)}>Assign Plan</Button>
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -745,6 +777,39 @@ const SubscriptionPlans = () => {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
         />
+      </Modal>
+
+      <Modal
+        title="Assign plan to school"
+        open={assignOpen}
+        onCancel={() => setAssignOpen(false)}
+        onOk={handleAssignPlan}
+        confirmLoading={assignLoading}
+      >
+        <Form layout="vertical" form={assignForm}>
+          <Form.Item name="schoolId" label="School" rules={[{ required: true }]}>
+            <Select
+              showSearch
+              optionFilterProp="label"
+              options={(schools || []).map((school) => ({
+                label: school.name,
+                value: school._id,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item name="planId" label="Subscription Plan" rules={[{ required: true }]}>
+            <Select
+              showSearch
+              optionFilterProp="label"
+              options={(plans || [])
+                .filter((plan) => plan.isActive !== false)
+                .map((plan) => ({ label: `${plan.name} (₹${plan.price})`, value: plan._id }))}
+            />
+          </Form.Item>
+          <Form.Item name="isTrial" label="Start as trial" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+        </Form>
       </Modal>
 
       {/* ══ LOGS MODAL ══ */}
