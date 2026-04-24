@@ -26,30 +26,17 @@ const PlanForm = ({ initialValues, onClose }) => {
   const { loading } = useSelector((state) => state.subscriptionPlans);
 
   const moduleOptions = [
-    "Schools",
-    "Users",
-    "Teachers",
-    "Students",
-    "Parents",
-    "Classes",
-    "Subjects",
-    "Exams",
     "Attendance",
-    "Finance",
     "Fees",
-    "Reports",
-    "Hostel",
+    "Exam",
+    "Online Exam",
     "Transport",
-    "Assignments",
-    "Timetable",
-    "Notifications",
-    "Expenses",
+    "Hostel",
     "Library",
-    "Books",
-    "IssuedBooks",
-    "Rooms",
-    "Routes",
-    "Vehicles",
+    "Payroll",
+    "Reports",
+    "AI Features",
+    "Mobile App",
   ];
 
   // 🔹 Prefill for edit
@@ -108,6 +95,24 @@ const PlanForm = ({ initialValues, onClose }) => {
           <Input size="large" placeholder="Premium / Enterprise / Starter" />
         </Form.Item>
 
+
+        <Space size="large" style={{ display: "flex" }}>
+          <Form.Item
+            label="Plan Category"
+            name="category"
+            initialValue="Starter"
+            style={{ flex: 1 }}
+          >
+            <Select
+              options={["Starter", "Premium", "Enterprise", "Custom"].map((v) => ({ label: v, value: v }))}
+            />
+          </Form.Item>
+
+          <Form.Item label="Trial Plan" name="isTrialPlan" valuePropName="checked" style={{ flex: 1 }}>
+            <Switch />
+          </Form.Item>
+        </Space>
+
         <Space size="large" style={{ display: "flex" }}>
           <Form.Item
             label="Price (₹)"
@@ -126,6 +131,29 @@ const PlanForm = ({ initialValues, onClose }) => {
           >
             <InputNumber min={1} size="large" className="w-full" />
           </Form.Item>
+        </Space>
+
+        <Space size="large" style={{ display: "flex" }}>
+          <Form.Item
+            label="Trial Duration (Days)"
+            name="trialDurationInDays"
+            style={{ flex: 1 }}
+          >
+            <InputNumber min={1} size="large" className="w-full" />
+          </Form.Item>
+        </Space>
+      </Card>
+
+      <Divider />
+
+      <Card title="Plan Limits">
+        <Space size="large" style={{ display: "flex", flexWrap: "wrap" }}>
+          <Form.Item label="Max Schools" name={["limits", "maxSchools"]}><InputNumber min={0} className="w-full" /></Form.Item>
+          <Form.Item label="Max Students" name={["limits", "maxStudents"]}><InputNumber min={0} className="w-full" /></Form.Item>
+          <Form.Item label="Max Teachers" name={["limits", "maxTeachers"]}><InputNumber min={0} className="w-full" /></Form.Item>
+          <Form.Item label="Max Storage (MB)" name={["limits", "maxStorage"]}><InputNumber min={0} className="w-full" /></Form.Item>
+          <Form.Item label="Max SMS" name={["limits", "maxSMS"]}><InputNumber min={0} className="w-full" /></Form.Item>
+          <Form.Item label="Max Users" name={["limits", "maxUsers"]}><InputNumber min={0} className="w-full" /></Form.Item>
         </Space>
       </Card>
 

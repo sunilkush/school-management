@@ -10,7 +10,7 @@ export const createSubscriptionPlan = createAsyncThunk(
   async (planData, { rejectWithValue }) => {
     try {
       const res = await apiClient.post(
-        `/subscription/create`,
+        `/super-admin/billing/plans`,
         planData,
         {
             headers: {
@@ -59,7 +59,7 @@ export const updateSubscriptionPlan = createAsyncThunk(
   async ({ id, formData }, { rejectWithValue }) => {
     try {
       const res = await apiClient.put(
-        `/subscription/${id}`,
+        `/super-admin/billing/plans/${id}`,
         formData,
        {
             headers: {
@@ -83,7 +83,7 @@ export const deleteSubscriptionPlan = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const res = await apiClient.delete(
-        `/subscription/${id}`,
+        `/super-admin/billing/plans/${id}`,
        {
             headers: {
             },
@@ -220,14 +220,14 @@ const subscriptionPlanSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteSubscriptionPlan.fulfilled, (state, action) => {
-        const deletedId = action.payload?.data?._id;
-        if (deletedId) {
-          state.plans = state.plans.filter((p) => p._id !== deletedId);
-        }
+        const deletedId = action.meta.arg;
+        state.plans = state.plans.map((p) =>
+          p._id === deletedId ? { ...p, isActive: false } : p
+        );
 
         state.loading = false;
         state.success = true;
-        state.successMessage = "Plan deleted successfully!";
+        state.successMessage = "Plan deactivated successfully!";
       })
       .addCase(deleteSubscriptionPlan.rejected, (state, action) => {
         state.loading = false;

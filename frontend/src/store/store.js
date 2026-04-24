@@ -50,6 +50,7 @@ import { baseApi } from "../services/baseApi";
 import accountRecoveryReducer from "../features/accountRecoverySlice";
 import payrollReducer from "../features/payrollSlice";
 import studentPromotionReducer from "../features/studentPromotionSlice";
+import superAdminBillingReducer from "../features/superAdminBillingSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -96,6 +97,7 @@ const rootReducer = combineReducers({
   accountRecovery: accountRecoveryReducer,
   payroll: payrollReducer,
   studentPromotion: studentPromotionReducer,
+  superAdminBilling: superAdminBillingReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
