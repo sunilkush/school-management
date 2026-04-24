@@ -17,7 +17,15 @@ const DAY_OPTIONS = [
 
 const ACCESS_ROLES = ["Super Admin", "School Admin", "Teacher", "Student", "Principal", "Vice Principal"];
 
-const normalizeData = (payload) => payload?.data || payload || [];
+const normalizeRows = (responsePayload, roleName) => {
+  const data = responsePayload?.data;
+
+  if (roleName === "Student") {
+    return data?.timetable || [];
+  }
+
+  return Array.isArray(data) ? data : [];
+};
 
 const SchedulePage = () => {
   const user = useSelector((state) => state.auth?.user);
@@ -36,15 +44,20 @@ const SchedulePage = () => {
     try {
       if (roleName === "Student") {
         const response = await httpClient.get("/student-portal/me/timetable");
-        setRows(normalizeData(response?.data));
+        setRows(normalizeRows(response?.data, roleName));
       } else if (roleName === "Teacher") {
         const response = await httpClient.get("/timetables/teacher", {
-          params: user?._id ? { teacherId: user._id } : {},
+          params: {
+            ...(dayFilter !== "all" ? { day: dayFilter } : {}),
+            ...(user?._id ? { teacherId: user._id } : {}),
+          },
         });
-        setRows(normalizeData(response?.data));
+        setRows(normalizeRows(response?.data, roleName));
       } else {
-        const response = await httpClient.get("/timetables/class");
-        setRows(normalizeData(response?.data));
+        const response = await httpClient.get("/timetables/class", {
+          params: dayFilter !== "all" ? { day: dayFilter } : {},
+        });
+        setRows(normalizeRows(response?.data, roleName));
       }
     } catch (error) {
       message.error(error?.response?.data?.message || "Failed to load schedule");
@@ -60,7 +73,7 @@ const SchedulePage = () => {
     } else {
       setLoading(false);
     }
-  }, [canViewSchedule, roleName]);
+  }, [canViewSchedule, roleName, dayFilter]);
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -131,7 +144,7 @@ const SchedulePage = () => {
       <Card>
         <Space direction="vertical" size={2}>
           <Title level={4} style={{ margin: 0 }}>Schedule</Title>
-          <Text type="secondary">Timetable list with filters, quick search and period detail view.</Text>
+          <Text type="secondary">Role-wise live timetable for school admin, teacher and students.</Text>
         </Space>
       </Card>
 
