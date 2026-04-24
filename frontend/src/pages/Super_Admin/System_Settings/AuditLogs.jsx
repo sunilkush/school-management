@@ -192,7 +192,7 @@ const AuditLogs = () => {
   );
 
   return (
-    <div className="min-h-screen space-y-4">
+    <div className="min-h-screen space-y-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
           <Clock className="text-purple-600" />
