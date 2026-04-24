@@ -40,6 +40,9 @@ import supportTicketRoutes from "./supportTicket.routes.js";
 import timetableRoutes from "./timetable.routes.js";
 import notificationRoutes from "./notification.routes.js";
 import superAdminBillingRoutes from "./superAdminBilling.routes.js";
+import systemBackupRoutes from "./systemBackup.routes.js";
+import backupScheduleRoutes from "./backupSchedule.routes.js";
+import restoreJobRoutes from "./restoreJob.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -83,6 +86,9 @@ export const apiV1Routes = [
   ["/timetables", timetableRoutes],
   ["/notifications", notificationRoutes],
   ["/super-admin/billing", superAdminBillingRoutes],
+  ["/system-backups", systemBackupRoutes],
+  ["/backup-schedules", backupScheduleRoutes],
+  ["/restore-jobs", restoreJobRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {
