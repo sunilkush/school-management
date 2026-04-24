@@ -1,409 +1,246 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Input, Button, Table, Modal, Select, Switch, Tag, Typography,
+  Input,
+  Button,
+  Table,
+  Modal,
+  Select,
+  Switch,
+  Tag,
+  Typography,
+  Card,
+  Row,
+  Col,
+  Space,
+  Empty,
+  Tooltip,
+  message,
 } from "antd";
 import {
-  PlusOutlined, ReloadOutlined, BookOutlined, CodeOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  BookOutlined,
+  CodeOutlined,
+  SearchOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  GlobalOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { createClass, fetchAllClasses } from "../../../features/classSlice";
 
-const { Title } = Typography;
-
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
-  :root {
-    --brand:       #4f6ef7;
-    --brand-light: #eef1ff;
-    --brand-dark:  #3a56d4;
-    --bg:          #f5f6fa;
-    --surface:     #ffffff;
-    --border:      #e8eaf0;
-    --text:        #1a1d2e;
-    --muted:       #7c82a0;
-    --success:     #22c55e;
-    --danger:      #ef4444;
-  }
-
-  .cp-root {
-    min-height: 100vh;
-    background: var(--bg);
-    font-family: 'Sora', sans-serif !important;
-    padding: 36px 44px;
-  }
-
-  /* ── header ── */
-  .cp-page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-  }
-  .cp-header-left { display: flex; align-items: center; gap: 14px; }
-  .cp-icon-box {
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, var(--brand), #818cf8);
-    border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.3rem;
-    color: #fff;
-    box-shadow: 0 6px 20px rgba(79,110,247,.3);
-    flex-shrink: 0;
-  }
-  .cp-page-title {
-    font-family: 'Sora', sans-serif !important;
-    font-size: 1.5rem !important;
-    font-weight: 700 !important;
-    color: var(--text) !important;
-    margin: 0 !important;
-    line-height: 1.2 !important;
-  }
-  .cp-page-sub {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-  .cp-add-btn.ant-btn {
-    font-family: 'Sora', sans-serif;
-    font-weight: 600;
-    font-size: 0.875rem;
-    height: 42px;
-    padding: 0 22px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--brand), #818cf8);
-    border: none !important;
-    box-shadow: 0 4px 16px rgba(79,110,247,.35);
-    color: #fff !important;
-    transition: opacity .2s, transform .15s !important;
-  }
-  .cp-add-btn.ant-btn:hover {
-    opacity: 0.88 !important;
-    transform: translateY(-1px);
-    background: linear-gradient(135deg, var(--brand), #818cf8) !important;
-    box-shadow: 0 6px 22px rgba(79,110,247,.45) !important;
-  }
-
-  /* ── stats ── */
-  .cp-stats {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .cp-stat-card {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    box-shadow: 0 1px 6px rgba(0,0,0,.04);
-    transition: box-shadow .2s, transform .2s;
-  }
-  .cp-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); transform: translateY(-1px); }
-  .cp-stat-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.05rem;
-    flex-shrink: 0;
-  }
-  .cp-stat-icon.blue  { background: var(--brand-light); color: var(--brand); }
-  .cp-stat-icon.green { background: #dcfce7; color: var(--success); }
-  .cp-stat-icon.red   { background: #fee2e2; color: var(--danger); }
-  .cp-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text); line-height: 1; }
-  .cp-stat-label { font-size: 0.74rem; color: var(--muted); margin-top: 3px; }
-
-  /* ── table ── */
-  .cp-table-card {
-    background: var(--surface);
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0,0,0,.05);
-  }
-  .cp-table-card .ant-table {
-    font-family: 'Sora', sans-serif;
-    background: transparent;
-  }
-  .cp-table-card .ant-table-thead > tr > th {
-    background: #f8f9ff !important;
-    color: var(--muted) !important;
-    font-family: 'Sora', sans-serif;
-    font-size: 0.71rem;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border) !important;
-    padding: 13px 20px;
-  }
-  .cp-table-card .ant-table-tbody > tr > td {
-    padding: 14px 20px;
-    border-bottom: 1px solid #f0f1f8 !important;
-    font-size: 0.875rem;
-    color: var(--text);
-    font-family: 'Sora', sans-serif;
-  }
-  .cp-table-card .ant-table-tbody > tr:hover > td { background: #fafbff !important; }
-  .cp-table-card .ant-table-tbody > tr:last-child > td { border-bottom: none !important; }
-  .cp-table-card .ant-pagination { padding: 12px 20px; margin: 0 !important; }
-
-  .row-index {
-    font-size: 0.74rem;
-    font-weight: 600;
-    color: var(--muted);
-    background: var(--bg);
-    border-radius: 6px;
-    width: 26px; height: 26px;
-    display: inline-flex; align-items: center; justify-content: center;
-  }
-  .class-name-cell { display: flex; align-items: center; gap: 10px; }
-  .class-avatar {
-    width: 34px; height: 34px;
-    border-radius: 9px;
-    background: linear-gradient(135deg, var(--brand-light), #e0e7ff);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700;
-    font-size: 0.8rem;
-    color: var(--brand);
-    flex-shrink: 0;
-  }
-  .class-name-text { font-weight: 600; color: var(--text); }
-  .code-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.77rem;
-    font-weight: 500;
-    background: #f1f3ff;
-    color: var(--brand-dark);
-    padding: 3px 10px;
-    border-radius: 7px;
-    border: 1px solid #dde2ff;
-  }
-  .status-tag.ant-tag {
-    font-family: 'Sora', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 600;
-    border-radius: 100px;
-    padding: 3px 12px;
-    border: none;
-    display: inline-flex; align-items: center; gap: 5px;
-    margin: 0;
-  }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  .scope-tag.ant-tag {
-    font-family: 'Sora', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 600;
-    border-radius: 100px;
-    padding: 2px 10px;
-    margin: 0;
-  }
-
-  /* ── modal ── */
-  .cp-modal .ant-modal-content {
-    border-radius: 20px;
-    padding: 0;
-    overflow: hidden;
-    font-family: 'Sora', sans-serif;
-    box-shadow: 0 20px 60px rgba(0,0,0,.13);
-    border: 1px solid var(--border);
-  }
-  .cp-modal .ant-modal-header {
-    background: linear-gradient(135deg, var(--brand) 0%, #818cf8 100%);
-    padding: 22px 28px 18px;
-    border-bottom: none;
-    margin: 0;
-  }
-  .cp-modal .ant-modal-title {
-    font-family: 'Sora', sans-serif !important;
-    font-size: 1.1rem !important;
-    font-weight: 700 !important;
-    color: #fff !important;
-  }
-  .cp-modal .ant-modal-close {
-    top: 16px; right: 20px;
-    color: rgba(255,255,255,.75) !important;
-  }
-  .cp-modal .ant-modal-close:hover {
-    color: #fff !important;
-    background: rgba(255,255,255,.15) !important;
-    border-radius: 8px;
-  }
-  .cp-modal .ant-modal-body { padding: 24px 28px 28px; }
-
-  /* ── form ── */
-  .cp-form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-  }
-  .cp-field-full { grid-column: 1 / -1; }
-  .cp-field-label {
-    display: block;
-    font-size: 0.73rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-    font-family: 'Sora', sans-serif;
-  }
-  .cp-field .ant-input,
-  .cp-field .ant-select .ant-select-selector,
-  .cp-field .ant-input-affix-wrapper,
-  .cp-field textarea.ant-input {
-    font-family: 'Sora', sans-serif !important;
-    font-size: 0.875rem !important;
-    border-radius: 10px !important;
-    border-color: var(--border) !important;
-    background: #fafbff !important;
-    color: var(--text) !important;
-  }
-  .cp-field .ant-input:focus,
-  .cp-field .ant-select-focused .ant-select-selector,
-  .cp-field textarea.ant-input:focus {
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 3px rgba(79,110,247,.1) !important;
-  }
-
-  .cp-toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #fafbff;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 16px;
-  }
-  .cp-toggle-title { font-size: 0.875rem; font-weight: 500; color: var(--text); }
-  .cp-toggle-desc  { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
-  .cp-toggle-row .ant-switch-checked { background: var(--brand) !important; }
-
-  .cp-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-  .cp-modal-footer .ant-btn {
-    font-family: 'Sora', sans-serif;
-    font-weight: 600;
-    height: 40px;
-    border-radius: 10px;
-    font-size: 0.875rem;
-  }
-  .cp-modal-footer .ant-btn-primary {
-    background: linear-gradient(135deg, var(--brand), #818cf8) !important;
-    border: none !important;
-    box-shadow: 0 4px 14px rgba(79,110,247,.3);
-  }
-  .cp-modal-footer .ant-btn-primary:hover {
-    opacity: 0.88 !important;
-  }
-  .cp-modal-footer .ant-btn-default {
-    border-color: var(--border) !important;
-    color: var(--muted) !important;
-  }
-  .cp-modal-footer .ant-btn-default:hover {
-    border-color: var(--brand) !important;
-    color: var(--brand) !important;
-  }
-`;
+const { Title, Text } = Typography;
 
 const INIT = {
-  name: "", code: "", description: "",
-  status: "active", isActive: true, isGlobal: false,
+  name: "",
+  code: "",
+  description: "",
+  status: "active",
+  isActive: true,
+  isGlobal: false,
 };
+
+const css = `
+.class-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 45%, #fdf2f8 100%);
+}
+
+.class-hero {
+  background: #ffffffcc;
+  backdrop-filter: blur(14px);
+  border: 1px solid #e2e8f0;
+  border-radius: 26px;
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+}
+
+.class-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: #e0e7ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
+}
+
+.metric-card {
+  border-radius: 22px !important;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+}
+
+.metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.table-card {
+  border-radius: 24px !important;
+  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+}
+
+.class-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 13px;
+  background: #e0f2fe;
+  color: #0369a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.code-pill {
+  font-family: monospace;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #475569;
+}
+
+.class-modal .ant-modal-content {
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .class-page {
+    padding: 14px;
+  }
+}
+`;
 
 export default function ClassPage() {
   const dispatch = useDispatch();
   const { classList = [], loading: classLoading } = useSelector((s) => s.class);
 
-  const [open, setOpen]         = useState(false);
-  const [saving, setSaving]     = useState(false);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState(INIT);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
 
-  useEffect(() => { dispatch(fetchAllClasses()); }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchAllClasses());
+  }, [dispatch]);
 
   const handleChange = (field, value) =>
     setFormData((p) => ({ ...p, [field]: value }));
 
-  const resetForm  = () => setFormData(INIT);
+  const resetForm = () => setFormData(INIT);
 
   const handleSave = async () => {
+    if (!formData.name?.trim()) {
+      message.error("Class name is required");
+      return;
+    }
+
     setSaving(true);
     await dispatch(createClass(formData));
-    dispatch(fetchAllClasses());
-    resetForm();
+    await dispatch(fetchAllClasses());
     setSaving(false);
+    resetForm();
     setOpen(false);
+    message.success("Class created successfully");
   };
 
-  const total    = classList.length;
-  const active   = classList.filter((c) => c.status === "active").length;
-  const inactive = total - active;
+  const filteredClasses = useMemo(() => {
+    return classList.filter((item) => {
+      const keyword = search.toLowerCase();
+
+      const matchSearch =
+        !keyword ||
+        item?.name?.toLowerCase().includes(keyword) ||
+        item?.code?.toLowerCase().includes(keyword);
+
+      const matchStatus = !status || item.status === status;
+
+      return matchSearch && matchStatus;
+    });
+  }, [classList, search, status]);
+
+  const stats = useMemo(() => {
+    const total = classList.length;
+    const active = classList.filter((c) => c.status === "active").length;
+    const inactive = total - active;
+    const global = classList.filter((c) => c.isGlobal).length;
+
+    return { total, active, inactive, global };
+  }, [classList]);
 
   const columns = [
     {
       title: "#",
-      key: "index",
-      width: 54,
+      width: 70,
       render: (_, __, i) => (
-        <span className="row-index">{String(i + 1).padStart(2, "0")}</span>
+        <Text type="secondary">{String(i + 1).padStart(2, "0")}</Text>
       ),
     },
     {
-      title: "Class Name",
+      title: "Class",
       dataIndex: "name",
-      key: "name",
-      render: (name) => (
-        <div className="class-name-cell">
+      render: (name, row) => (
+        <Space>
           <div className="class-avatar">{name?.[0]?.toUpperCase() || "C"}</div>
-          <span className="class-name-text">{name}</span>
-        </div>
+          <div>
+            <Text strong>{name || "-"}</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {row.description || "No description"}
+            </Text>
+          </div>
+        </Space>
       ),
     },
     {
       title: "Code",
       dataIndex: "code",
-      key: "code",
       render: (code) => (
-        <span className="code-badge">
-          <CodeOutlined style={{ fontSize: 11 }} />
-          {code}
+        <span className="code-pill">
+          <CodeOutlined /> {code || "N/A"}
         </span>
       ),
     },
     {
       title: "Status",
       dataIndex: "status",
-      key: "status",
-      render: (status) =>
-        status === "active" ? (
-          <Tag color="success" className="status-tag">
-            <span className="status-dot" /> Active
+      render: (value) =>
+        value === "active" ? (
+          <Tag color="success" style={{ borderRadius: 999 }}>
+            Active
           </Tag>
         ) : (
-          <Tag color="error" className="status-tag">
-            <span className="status-dot" /> Inactive
+          <Tag color="error" style={{ borderRadius: 999 }}>
+            Inactive
           </Tag>
         ),
     },
     {
       title: "Scope",
       dataIndex: "isGlobal",
-      key: "isGlobal",
-      render: (v) =>
-        v
-          ? <Tag color="blue"    className="scope-tag">Global</Tag>
-          : <Tag color="default" className="scope-tag">Local</Tag>,
+      render: (value) =>
+        value ? (
+          <Tag icon={<GlobalOutlined />} color="blue" style={{ borderRadius: 999 }}>
+            Global
+          </Tag>
+        ) : (
+          <Tag icon={<HomeOutlined />} style={{ borderRadius: 999 }}>
+            Local
+          </Tag>
+        ),
     },
   ];
 
@@ -411,137 +248,254 @@ export default function ClassPage() {
     <>
       <style>{css}</style>
 
-      <div className="cp-root">
+      <div className="class-page">
+        <div className="class-hero">
+          <Row gutter={[16, 16]} justify="space-between" align="middle">
+            <Col xs={24} md={12}>
+              <Space align="center">
+                <div className="class-icon">
+                  <BookOutlined />
+                </div>
+                <div>
+                  <Title level={3} style={{ margin: 0 }}>
+                    Class Management
+                  </Title>
+                  <Text type="secondary">
+                    Academic classes ko create, search aur manage karein.
+                  </Text>
+                </div>
+              </Space>
+            </Col>
 
-        {/* ── Header ── */}
-        <div className="cp-page-header">
-          <div className="cp-header-left">
-            <div className="cp-icon-box"><BookOutlined /></div>
-            <div>
-              <Title level={3} className="cp-page-title">Class List</Title>
-              <div className="cp-page-sub">Manage and organise all academic classes</div>
-            </div>
-          </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            className="cp-add-btn"
-            onClick={() => setOpen(true)}
-          >
-            Add Class
-          </Button>
+            <Col xs={24} md={12}>
+              <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
+                <Button icon={<ReloadOutlined />} onClick={() => dispatch(fetchAllClasses())}>
+                  Refresh
+                </Button>
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
+                  Add Class
+                </Button>
+              </Space>
+            </Col>
+          </Row>
         </div>
 
-        {/* ── Stats ── */}
-        <div className="cp-stats">
-          {[
-            { icon: <BookOutlined />, cls: "blue",  value: total,    label: "Total Classes" },
-            { icon: "✓",              cls: "green", value: active,   label: "Active"        },
-            { icon: "✕",              cls: "red",   value: inactive, label: "Inactive"      },
-          ].map(({ icon, cls, value, label }) => (
-            <div className="cp-stat-card" key={label}>
-              <div className={`cp-stat-icon ${cls}`}>{icon}</div>
-              <div>
-                <div className="cp-stat-value">{value}</div>
-                <div className="cp-stat-label">{label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card bordered={false} className="metric-card">
+              <Space>
+                <div className="metric-icon" style={{ background: "#dbeafe", color: "#2563eb" }}>
+                  <BookOutlined />
+                </div>
+                <div>
+                  <Title level={3} style={{ margin: 0 }}>{stats.total}</Title>
+                  <Text type="secondary">Total Classes</Text>
+                </div>
+              </Space>
+            </Card>
+          </Col>
 
-        {/* ── Table ── */}
-        <div className="cp-table-card">
+          <Col xs={24} sm={12} lg={6}>
+            <Card bordered={false} className="metric-card">
+              <Space>
+                <div className="metric-icon" style={{ background: "#dcfce7", color: "#16a34a" }}>
+                  <CheckCircleOutlined />
+                </div>
+                <div>
+                  <Title level={3} style={{ margin: 0 }}>{stats.active}</Title>
+                  <Text type="secondary">Active Classes</Text>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} lg={6}>
+            <Card bordered={false} className="metric-card">
+              <Space>
+                <div className="metric-icon" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                  <CloseCircleOutlined />
+                </div>
+                <div>
+                  <Title level={3} style={{ margin: 0 }}>{stats.inactive}</Title>
+                  <Text type="secondary">Inactive Classes</Text>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} lg={6}>
+            <Card bordered={false} className="metric-card">
+              <Space>
+                <div className="metric-icon" style={{ background: "#ede9fe", color: "#7c3aed" }}>
+                  <GlobalOutlined />
+                </div>
+                <div>
+                  <Title level={3} style={{ margin: 0 }}>{stats.global}</Title>
+                  <Text type="secondary">Global Classes</Text>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+
+        <Card
+          bordered={false}
+          className="table-card"
+          title={
+            <Space>
+              <BookOutlined style={{ color: "#4f46e5" }} />
+              <span>Class List</span>
+              <Tag color="blue">{filteredClasses.length}</Tag>
+            </Space>
+          }
+        >
+          <Row gutter={[12, 12]} justify="space-between" style={{ marginBottom: 16 }}>
+            <Col xs={24} md={14}>
+              <Space wrap>
+                <Input
+                  allowClear
+                  prefix={<SearchOutlined />}
+                  placeholder="Search by class name or code"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{ width: 280 }}
+                />
+
+                <Select
+                  allowClear
+                  placeholder="Filter status"
+                  value={status || undefined}
+                  onChange={(v) => setStatus(v || "")}
+                  style={{ width: 160 }}
+                  options={[
+                    { label: "Active", value: "active" },
+                    { label: "Inactive", value: "inactive" },
+                  ]}
+                />
+              </Space>
+            </Col>
+          </Row>
+
           <Table
             columns={columns}
-            dataSource={classList}
+            dataSource={filteredClasses}
             loading={classLoading}
             rowKey="_id"
-            pagination={{ pageSize: 8, size: "small" }}
+            scroll={{ x: 750 }}
+            locale={{ emptyText: <Empty description="No classes found" /> }}
+            pagination={{
+              pageSize: 8,
+              showSizeChanger: true,
+              pageSizeOptions: [8, 16, 32],
+            }}
           />
-        </div>
-
+        </Card>
       </div>
 
-      {/* ── Modal ── */}
       <Modal
-        title="Create New Class"
+        title={
+          <Space>
+            <BookOutlined style={{ color: "#4f46e5" }} />
+            <span>Create New Class</span>
+          </Space>
+        }
         open={open}
         footer={null}
         onCancel={() => setOpen(false)}
-        className="cp-modal"
-        width={520}
+        className="class-modal"
+        width={620}
         destroyOnClose
       >
-        <div className="cp-form-grid">
-
-          {/* Name */}
-          <div className="cp-field">
-            <span className="cp-field-label">Class Name</span>
+        <Row gutter={[14, 10]} style={{ marginTop: 16 }}>
+          <Col xs={24} md={12}>
+            <Text strong>Class Name</Text>
             <Input
-              placeholder="e.g. Science — Grade 10"
+              size="large"
+              placeholder="e.g. Class 10"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
+              style={{ marginTop: 6 }}
             />
-          </div>
+          </Col>
 
-          {/* Code */}
-          <div className="cp-field">
-            <span className="cp-field-label">Class Code</span>
+          <Col xs={24} md={12}>
+            <Text strong>Class Code</Text>
             <Input
-              placeholder="e.g. SCI-10A"
+              size="large"
+              placeholder="e.g. CLS-10"
               value={formData.code}
               onChange={(e) => handleChange("code", e.target.value)}
+              style={{ marginTop: 6 }}
             />
-          </div>
+          </Col>
 
-          {/* Description */}
-          <div className="cp-field cp-field-full">
-            <span className="cp-field-label">Description</span>
+          <Col xs={24}>
+            <Text strong>Description</Text>
             <Input.TextArea
               placeholder="Short description about this class..."
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               rows={3}
+              style={{ marginTop: 6 }}
             />
-          </div>
+          </Col>
 
-          {/* Status */}
-          <div className="cp-field cp-field-full">
-            <span className="cp-field-label">Status</span>
+          <Col xs={24} md={12}>
+            <Text strong>Status</Text>
             <Select
-              style={{ width: "100%" }}
+              size="large"
+              style={{ width: "100%", marginTop: 6 }}
               value={formData.status}
               onChange={(v) => handleChange("status", v)}
               options={[
-                { label: "Active",   value: "active"   },
+                { label: "Active", value: "active" },
                 { label: "Inactive", value: "inactive" },
               ]}
             />
-          </div>
+          </Col>
 
-          {/* Global Toggle */}
-          <div className="cp-field cp-field-full">
-            <div className="cp-toggle-row">
-              <div>
-                <div className="cp-toggle-title">Make Global</div>
-                <div className="cp-toggle-desc">Available across all branches</div>
-              </div>
+          <Col xs={24} md={12}>
+            <Text strong>Scope</Text>
+            <div
+              style={{
+                marginTop: 6,
+                height: 40,
+                border: "1px solid #e2e8f0",
+                borderRadius: 10,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 12px",
+                background: "#f8fafc",
+              }}
+            >
+              <Text type="secondary">Make global</Text>
               <Switch
                 checked={formData.isGlobal}
                 onChange={(v) => handleChange("isGlobal", v)}
               />
             </div>
-          </div>
+          </Col>
+        </Row>
 
-        </div>
+        <Space style={{ width: "100%", justifyContent: "flex-end", marginTop: 22 }}>
+          <Button
+            onClick={() => {
+              resetForm();
+              setOpen(false);
+            }}
+          >
+            Cancel
+          </Button>
 
-        {/* Footer */}
-        <div className="cp-modal-footer">
-          <Button icon={<ReloadOutlined />} onClick={resetForm}>Reset</Button>
+          <Button icon={<ReloadOutlined />} onClick={resetForm}>
+            Reset
+          </Button>
+
           <Button type="primary" loading={saving} onClick={handleSave}>
             Save Class
           </Button>
-        </div>
+        </Space>
       </Modal>
     </>
   );

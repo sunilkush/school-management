@@ -4,19 +4,34 @@ import {
   Alert,
   Button,
   Card,
+  Col,
   Empty,
   Form,
   Input,
   InputNumber,
   Modal,
+  Row,
   Select,
   Space,
+  Statistic,
   Table,
   Tag,
   Typography,
   message,
+  Tooltip,
 } from "antd";
-import { AppstoreOutlined, DollarOutlined, EyeOutlined, WalletOutlined } from "@ant-design/icons";
+import {
+  AppstoreOutlined,
+  DollarOutlined,
+  EyeOutlined,
+  WalletOutlined,
+  SearchOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
+  ReloadOutlined,
+  CreditCardOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import {
   addManualSubscriptionPayment,
@@ -26,16 +41,106 @@ import {
 
 const { Title, Text } = Typography;
 
-const formatCurrency = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+const formatCurrency = (value) =>
+  `₹${Number(value || 0).toLocaleString("en-IN")}`;
+
+const statusConfig = {
+  paid: { label: "Paid", color: "success" },
+  success: { label: "Success", color: "success" },
+  unpaid: { label: "Unpaid", color: "warning" },
+  overdue: { label: "Overdue", color: "error" },
+  pending: { label: "Pending", color: "warning" },
+  failed: { label: "Failed", color: "error" },
+  refunded: { label: "Refunded", color: "purple" },
+  cancelled: { label: "Cancelled", color: "default" },
+  draft: { label: "Draft", color: "default" },
+};
+
+const paymentModeOptions = [
+  { label: "Cash", value: "cash" },
+  { label: "Bank Transfer", value: "bank_transfer" },
+  { label: "UPI", value: "upi" },
+  { label: "Card", value: "card" },
+  { label: "Cheque", value: "cheque" },
+  { label: "Gateway", value: "gateway" },
+];
+
+const MetricCard = ({ title, value, icon, bg, color, sub }) => (
+  <Card
+    bordered={false}
+    style={{
+      borderRadius: 22,
+      height: "100%",
+      boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+      overflow: "hidden",
+      position: "relative",
+    }}
+    bodyStyle={{ padding: 20 }}
+  >
+    <div
+      style={{
+        position: "absolute",
+        right: -30,
+        top: -30,
+        width: 110,
+        height: 110,
+        borderRadius: "50%",
+        background: bg,
+      }}
+    />
+
+    <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
+      <div>
+        <Text style={{ color: "#64748b", fontWeight: 600 }}>{title}</Text>
+        <Statistic
+          value={value}
+          valueStyle={{
+            marginTop: 4,
+            color: "#0f172a",
+            fontWeight: 800,
+            fontSize: 26,
+          }}
+        />
+        {sub ? <Text style={{ color: "#94a3b8", fontSize: 12 }}>{sub}</Text> : null}
+      </div>
+
+      <div
+        style={{
+          width: 46,
+          height: 46,
+          borderRadius: 16,
+          background: bg,
+          color,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+        }}
+      >
+        {icon}
+      </div>
+    </Space>
+  </Card>
+);
 
 export default function PaymentsPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { invoices, payments, loading, error } = useSelector((state) => state.superAdminBilling);
+
+  const {
+    invoices = [],
+    payments = [],
+    loading = false,
+    error,
+  } = useSelector((state) => state.superAdminBilling || {});
 
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [paymentSearch, setPaymentSearch] = useState("");
+  const [invoiceStatus, setInvoiceStatus] = useState("");
+
   const [paymentForm] = Form.useForm();
 
   useEffect(() => {
@@ -43,42 +148,94 @@ export default function PaymentsPage() {
     dispatch(fetchBillingPayments());
   }, [dispatch]);
 
+  const refreshData = () => {
+    dispatch(fetchBillingInvoices());
+    dispatch(fetchBillingPayments());
+    message.success("Payments data refreshed");
+  };
+
   const stats = useMemo(() => {
-    const totalInvoiced = invoices.reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
-    const totalCollected = invoices
-      .filter((invoice) => invoice.status === "paid")
-      .reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
+    const totalInvoiced = invoices.reduce(
+      (sum, invoice) => sum + Number(invoice.totalAmount || 0),
+      0
+    );
+
+    const totalCollected = payments
+      .filter((payment) => payment.status === "success")
+      .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
+    const pendingInvoices = invoices.filter((invoice) =>
+      ["unpaid", "overdue"].includes(invoice.status)
+    ).length;
 
     return {
       totalInvoiced,
       totalCollected,
-      unpaid: invoices.filter((invoice) => ["unpaid", "overdue"].includes(invoice.status)).length,
+      pendingInvoices,
+      totalPayments: payments.length,
     };
-  }, [invoices]);
+  }, [invoices, payments]);
 
-  const invoiceRows = invoices.map((invoice) => ({
-    key: invoice._id,
-    ...invoice,
-    schoolName: invoice.schoolId?.name || "-",
-  }));
+  const invoiceRows = useMemo(
+    () =>
+      invoices.map((invoice) => ({
+        key: invoice._id,
+        ...invoice,
+        schoolName: invoice.schoolId?.name || "-",
+      })),
+    [invoices]
+  );
 
-  const paymentRows = payments.map((payment) => ({
-    key: payment._id,
-    ...payment,
-    schoolName: payment.schoolId?.name || "-",
-    invoiceNumber: payment.invoiceId?.invoiceNumber || "-",
-  }));
+  const paymentRows = useMemo(
+    () =>
+      payments.map((payment) => ({
+        key: payment._id,
+        ...payment,
+        schoolName: payment.schoolId?.name || "-",
+        invoiceNumber: payment.invoiceId?.invoiceNumber || "-",
+      })),
+    [payments]
+  );
+
+  const filteredInvoices = useMemo(() => {
+    const keyword = invoiceSearch.toLowerCase();
+
+    return invoiceRows.filter((row) => {
+      const matchSearch =
+        !keyword ||
+        String(row.invoiceNumber || "").toLowerCase().includes(keyword) ||
+        String(row.schoolName || "").toLowerCase().includes(keyword);
+
+      const matchStatus = !invoiceStatus || row.status === invoiceStatus;
+
+      return matchSearch && matchStatus;
+    });
+  }, [invoiceRows, invoiceSearch, invoiceStatus]);
+
+  const filteredPayments = useMemo(() => {
+    const keyword = paymentSearch.toLowerCase();
+
+    return paymentRows.filter((row) => {
+      return (
+        !keyword ||
+        String(row.invoiceNumber || "").toLowerCase().includes(keyword) ||
+        String(row.schoolName || "").toLowerCase().includes(keyword) ||
+        String(row.transactionId || "").toLowerCase().includes(keyword)
+      );
+    });
+  }, [paymentRows, paymentSearch]);
 
   const submitManualPayment = async () => {
     if (!selectedInvoice) return;
 
     try {
       const values = await paymentForm.validateFields();
+
       await dispatch(
         addManualSubscriptionPayment({
           invoiceId: selectedInvoice._id,
           payload: {
-            amount: values.amount,
+            amount: Number(values.amount),
             paymentMode: values.paymentMode,
             transactionId: values.transactionId,
             paymentProofUrl: values.paymentProofUrl,
@@ -87,55 +244,268 @@ export default function PaymentsPage() {
         })
       ).unwrap();
 
-      message.success("Payment recorded");
+      message.success("Payment recorded successfully");
       setPaymentOpen(false);
+      setSelectedInvoice(null);
       paymentForm.resetFields();
       dispatch(fetchBillingInvoices());
       dispatch(fetchBillingPayments());
     } catch (err) {
+      if (err?.errorFields) return;
       message.error(err || "Failed to record payment");
     }
   };
 
   return (
-    <div style={{ background: "#F4F6F5", minHeight: "100vh", padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-        <div>
-          <Title level={3} style={{ marginBottom: 2 }}>Subscription Payments</Title>
-          <Text type="secondary">Invoice-level billing and payment tracking for Super Admin.</Text>
-        </div>
-        <Space>
-          <Button icon={<AppstoreOutlined />} onClick={() => navigate("/dashboard/superadmin/subscriptions")}>Subscriptions</Button>
-          <Button icon={<DollarOutlined />} onClick={() => navigate("/dashboard/superadmin/revenue")}>Revenue</Button>
-        </Space>
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: 24,
+        background:
+          "linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #fdf2f8 100%)",
+      }}
+    >
+      <div
+        style={{
+          background: "#ffffffcc",
+          backdropFilter: "blur(12px)",
+          border: "1px solid #e2e8f0",
+          borderRadius: 26,
+          padding: 22,
+          marginBottom: 18,
+          boxShadow: "0 12px 36px rgba(15,23,42,0.07)",
+        }}
+      >
+        <Row gutter={[16, 16]} justify="space-between" align="middle">
+          <Col xs={24} lg={12}>
+            <Space align="center">
+              <div
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: 18,
+                  background: "#dcfce7",
+                  color: "#16a34a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 24,
+                }}
+              >
+                <WalletOutlined />
+              </div>
+
+              <div>
+                <Title level={3} style={{ margin: 0, color: "#0f172a" }}>
+                  Subscription Payments
+                </Title>
+                <Text style={{ color: "#64748b" }}>
+                  Super Admin billing, invoices aur manual payment tracking.
+                </Text>
+              </div>
+            </Space>
+          </Col>
+
+          <Col xs={24} lg={12}>
+            <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
+              <Button icon={<ReloadOutlined />} onClick={refreshData}>
+                Refresh
+              </Button>
+              <Button
+                icon={<AppstoreOutlined />}
+                onClick={() => navigate("/dashboard/superadmin/subscriptions")}
+              >
+                Subscriptions
+              </Button>
+              <Button
+                type="primary"
+                icon={<DollarOutlined />}
+                onClick={() => navigate("/dashboard/superadmin/revenue")}
+              >
+                Revenue
+              </Button>
+            </Space>
+          </Col>
+        </Row>
       </div>
 
-      {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 12 }} /> : null}
+      {error ? (
+        <Alert
+          type="error"
+          showIcon
+          message={error}
+          style={{ marginBottom: 16, borderRadius: 14 }}
+        />
+      ) : null}
 
-      <Space style={{ width: "100%", marginBottom: 16 }} wrap>
-        <Card><Text>Total Invoiced</Text><Title level={4}>{formatCurrency(stats.totalInvoiced)}</Title></Card>
-        <Card><Text>Total Collected</Text><Title level={4}>{formatCurrency(stats.totalCollected)}</Title></Card>
-        <Card><Text>Pending Invoices</Text><Title level={4}>{stats.unpaid}</Title></Card>
-      </Space>
+      <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <MetricCard
+            title="Total Invoiced"
+            value={formatCurrency(stats.totalInvoiced)}
+            icon={<FileTextOutlined />}
+            bg="#dbeafe"
+            color="#2563eb"
+            sub="All generated invoices"
+          />
+        </Col>
 
-      <Card title="Invoices" style={{ marginBottom: 16 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <MetricCard
+            title="Total Collected"
+            value={formatCurrency(stats.totalCollected)}
+            icon={<CheckCircleOutlined />}
+            bg="#dcfce7"
+            color="#16a34a"
+            sub="Successful payments"
+          />
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <MetricCard
+            title="Pending Invoices"
+            value={stats.pendingInvoices}
+            icon={<ClockCircleOutlined />}
+            bg="#fef3c7"
+            color="#d97706"
+            sub="Unpaid + overdue"
+          />
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <MetricCard
+            title="Payment Records"
+            value={stats.totalPayments}
+            icon={<CreditCardOutlined />}
+            bg="#ede9fe"
+            color="#7c3aed"
+            sub="Total payment entries"
+          />
+        </Col>
+      </Row>
+
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 24,
+          marginBottom: 18,
+          boxShadow: "0 12px 36px rgba(15,23,42,0.07)",
+        }}
+        bodyStyle={{ padding: 18 }}
+        title={
+          <Space>
+            <FileTextOutlined style={{ color: "#2563eb" }} />
+            <span>Invoices</span>
+            <Tag color="blue">{filteredInvoices.length}</Tag>
+          </Space>
+        }
+      >
+        <Row gutter={[12, 12]} justify="space-between" style={{ marginBottom: 14 }}>
+          <Col xs={24} md={14}>
+            <Space wrap>
+              <Input
+                allowClear
+                prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
+                placeholder="Search invoice or school"
+                value={invoiceSearch}
+                onChange={(e) => setInvoiceSearch(e.target.value)}
+                style={{ width: 280, borderRadius: 12 }}
+              />
+
+              <Select
+                allowClear
+                placeholder="Filter status"
+                value={invoiceStatus || undefined}
+                onChange={(value) => setInvoiceStatus(value || "")}
+                style={{ width: 170 }}
+                options={["draft", "unpaid", "paid", "overdue", "cancelled"].map(
+                  (value) => ({
+                    label: statusConfig[value]?.label || value,
+                    value,
+                  })
+                )}
+              />
+            </Space>
+          </Col>
+        </Row>
+
         <Table
           loading={loading}
-          dataSource={invoiceRows}
+          dataSource={filteredInvoices}
           rowKey="key"
+          scroll={{ x: 850 }}
           locale={{ emptyText: <Empty description="No invoices found" /> }}
           columns={[
-            { title: "Invoice", dataIndex: "invoiceNumber" },
-            { title: "School", dataIndex: "schoolName" },
-            { title: "Amount", dataIndex: "totalAmount", render: (amount) => formatCurrency(amount) },
-            { title: "Due Date", dataIndex: "dueDate", render: (date) => new Date(date).toLocaleDateString() },
+            {
+              title: "Invoice",
+              dataIndex: "invoiceNumber",
+              render: (value) => (
+                <Space>
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 12,
+                      background: "#e0f2fe",
+                      color: "#0369a1",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <FileTextOutlined />
+                  </div>
+                  <Text strong>{value}</Text>
+                </Space>
+              ),
+            },
+            {
+              title: "School",
+              dataIndex: "schoolName",
+              render: (value) => (
+                <Text style={{ fontWeight: 600, color: "#334155" }}>{value}</Text>
+              ),
+            },
+            {
+              title: "Amount",
+              dataIndex: "totalAmount",
+              render: (amount) => (
+                <Text strong style={{ color: "#166534" }}>
+                  {formatCurrency(amount)}
+                </Text>
+              ),
+            },
+            {
+              title: "Due Date",
+              dataIndex: "dueDate",
+              render: (date) =>
+                date ? (
+                  <Text style={{ color: "#64748b" }}>
+                    {new Date(date).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </Text>
+                ) : (
+                  "-"
+                ),
+            },
             {
               title: "Status",
               dataIndex: "status",
-              render: (status) => <Tag color={status === "paid" ? "green" : status === "overdue" ? "red" : "blue"}>{status}</Tag>,
+              render: (status) => (
+                <Tag
+                  color={statusConfig[status]?.color || "default"}
+                  style={{ borderRadius: 999, padding: "2px 10px" }}
+                >
+                  {statusConfig[status]?.label || status}
+                </Tag>
+              ),
             },
             {
               title: "Action",
+              align: "right",
               render: (_, row) => (
                 <Space>
                   <Button
@@ -148,71 +518,253 @@ export default function PaymentsPage() {
                   >
                     View
                   </Button>
-                  <Button
-                    size="small"
-                    type="primary"
-                    icon={<WalletOutlined />}
-                    onClick={() => {
-                      setSelectedInvoice(row);
-                      setPaymentOpen(true);
-                    }}
-                  >
-                    Add Payment
-                  </Button>
+
+                  <Tooltip title={row.status === "paid" ? "Already paid" : "Record payment"}>
+                    <Button
+                      size="small"
+                      type="primary"
+                      icon={<WalletOutlined />}
+                      disabled={row.status === "paid"}
+                      onClick={() => {
+                        setSelectedInvoice(row);
+                        paymentForm.setFieldsValue({
+                          amount: row.totalAmount,
+                          status: "success",
+                          paymentMode: "bank_transfer",
+                        });
+                        setPaymentOpen(true);
+                      }}
+                    >
+                      Add Payment
+                    </Button>
+                  </Tooltip>
                 </Space>
               ),
             },
           ]}
+          pagination={{
+            pageSize: 8,
+            showSizeChanger: true,
+            pageSizeOptions: [8, 16, 32],
+          }}
         />
       </Card>
 
-      <Card title="Payment History">
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 24,
+          boxShadow: "0 12px 36px rgba(15,23,42,0.07)",
+        }}
+        bodyStyle={{ padding: 18 }}
+        title={
+          <Space>
+            <CreditCardOutlined style={{ color: "#7c3aed" }} />
+            <span>Payment History</span>
+            <Tag color="purple">{filteredPayments.length}</Tag>
+          </Space>
+        }
+      >
+        <Input
+          allowClear
+          prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
+          placeholder="Search invoice, school or transaction ID"
+          value={paymentSearch}
+          onChange={(e) => setPaymentSearch(e.target.value)}
+          style={{ width: 320, borderRadius: 12, marginBottom: 14 }}
+        />
+
         <Table
           loading={loading}
-          dataSource={paymentRows}
+          dataSource={filteredPayments}
           rowKey="key"
+          scroll={{ x: 850 }}
           locale={{ emptyText: <Empty description="No payments found" /> }}
           columns={[
             { title: "Invoice", dataIndex: "invoiceNumber" },
-            { title: "School", dataIndex: "schoolName" },
-            { title: "Mode", dataIndex: "paymentMode" },
-            { title: "Amount", dataIndex: "amount", render: (amount) => formatCurrency(amount) },
-            { title: "Transaction ID", dataIndex: "transactionId", render: (value) => value || "-" },
-            { title: "Status", dataIndex: "status", render: (status) => <Tag>{status}</Tag> },
+            {
+              title: "School",
+              dataIndex: "schoolName",
+              render: (value) => (
+                <Text style={{ fontWeight: 600, color: "#334155" }}>{value}</Text>
+              ),
+            },
+            {
+              title: "Mode",
+              dataIndex: "paymentMode",
+              render: (value) => <Tag color="blue">{value || "-"}</Tag>,
+            },
+            {
+              title: "Amount",
+              dataIndex: "amount",
+              render: (amount) => (
+                <Text strong style={{ color: "#166534" }}>
+                  {formatCurrency(amount)}
+                </Text>
+              ),
+            },
+            {
+              title: "Transaction ID",
+              dataIndex: "transactionId",
+              render: (value) => value || "-",
+            },
+            {
+              title: "Status",
+              dataIndex: "status",
+              render: (status) => (
+                <Tag
+                  color={statusConfig[status]?.color || "default"}
+                  style={{ borderRadius: 999, padding: "2px 10px" }}
+                >
+                  {statusConfig[status]?.label || status}
+                </Tag>
+              ),
+            },
           ]}
-          pagination={{ pageSize: 8 }}
+          pagination={{
+            pageSize: 8,
+            showSizeChanger: true,
+            pageSizeOptions: [8, 16, 32],
+          }}
         />
       </Card>
 
-      <Modal title="Invoice Details" open={detailsOpen} onCancel={() => setDetailsOpen(false)} footer={null}>
-        {selectedInvoice ? (
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <Text><b>Invoice:</b> {selectedInvoice.invoiceNumber}</Text>
-            <Text><b>School:</b> {selectedInvoice.schoolName}</Text>
-            <Text><b>Plan Price:</b> {formatCurrency(selectedInvoice.planPrice)}</Text>
-            <Text><b>Discount:</b> {formatCurrency(selectedInvoice.discount)}</Text>
-            <Text><b>Tax/GST:</b> {formatCurrency(selectedInvoice.taxGst)}</Text>
-            <Text><b>Total:</b> {formatCurrency(selectedInvoice.totalAmount)}</Text>
+      <Modal
+        title={
+          <Space>
+            <EyeOutlined style={{ color: "#2563eb" }} />
+            <span>Invoice Details</span>
           </Space>
+        }
+        open={detailsOpen}
+        onCancel={() => setDetailsOpen(false)}
+        footer={null}
+        width={560}
+        destroyOnClose
+      >
+        {selectedInvoice ? (
+          <div
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 18,
+              padding: 16,
+            }}
+          >
+            <Space direction="vertical" size={10} style={{ width: "100%" }}>
+              <Row justify="space-between">
+                <Text type="secondary">Invoice</Text>
+                <Text strong>{selectedInvoice.invoiceNumber}</Text>
+              </Row>
+              <Row justify="space-between">
+                <Text type="secondary">School</Text>
+                <Text strong>{selectedInvoice.schoolName}</Text>
+              </Row>
+              <Row justify="space-between">
+                <Text type="secondary">Plan Price</Text>
+                <Text>{formatCurrency(selectedInvoice.planPrice)}</Text>
+              </Row>
+              <Row justify="space-between">
+                <Text type="secondary">Discount</Text>
+                <Text>{formatCurrency(selectedInvoice.discount)}</Text>
+              </Row>
+              <Row justify="space-between">
+                <Text type="secondary">Tax/GST</Text>
+                <Text>{formatCurrency(selectedInvoice.taxGst)}</Text>
+              </Row>
+
+              <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: 10 }}>
+                <Row justify="space-between">
+                  <Text strong>Total Amount</Text>
+                  <Text strong style={{ color: "#166534", fontSize: 18 }}>
+                    {formatCurrency(selectedInvoice.totalAmount)}
+                  </Text>
+                </Row>
+              </div>
+            </Space>
+          </div>
         ) : null}
       </Modal>
 
-      <Modal title="Manual Payment Entry" open={paymentOpen} onCancel={() => setPaymentOpen(false)} onOk={submitManualPayment}>
-        <Form form={paymentForm} layout="vertical" initialValues={{ status: "success", paymentMode: "bank transfer" }}>
-          <Form.Item name="amount" label="Amount" rules={[{ required: true }]}>
-            <InputNumber min={1} style={{ width: "100%" }} />
+      <Modal
+        title={
+          <Space>
+            <WalletOutlined style={{ color: "#16a34a" }} />
+            <span>Manual Payment Entry</span>
+          </Space>
+        }
+        open={paymentOpen}
+        onCancel={() => {
+          setPaymentOpen(false);
+          setSelectedInvoice(null);
+          paymentForm.resetFields();
+        }}
+        onOk={submitManualPayment}
+        okText="Save Payment"
+        width={620}
+        destroyOnClose
+      >
+        {selectedInvoice ? (
+          <div
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 16,
+              padding: 12,
+              marginBottom: 16,
+            }}
+          >
+            <Text type="secondary">Selected Invoice</Text>
+            <div style={{ marginTop: 4 }}>
+              <Text strong>{selectedInvoice.schoolName}</Text>{" "}
+              <Tag color="blue">{selectedInvoice.invoiceNumber}</Tag>
+              <Tag color={statusConfig[selectedInvoice.status]?.color || "default"}>
+                {statusConfig[selectedInvoice.status]?.label || selectedInvoice.status}
+              </Tag>
+            </div>
+          </div>
+        ) : null}
+
+        <Form
+          form={paymentForm}
+          layout="vertical"
+          initialValues={{ status: "success", paymentMode: "bank_transfer" }}
+        >
+          <Form.Item
+            name="amount"
+            label="Amount"
+            rules={[{ required: true, message: "Please enter amount" }]}
+          >
+            <InputNumber min={1} prefix="₹" style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="paymentMode" label="Payment Mode" rules={[{ required: true }]}>
-            <Select options={["cash", "bank transfer", "UPI", "card", "cheque", "gateway"].map((v) => ({ label: v, value: v }))} />
+
+          <Form.Item
+            name="paymentMode"
+            label="Payment Mode"
+            rules={[{ required: true, message: "Please select payment mode" }]}
+          >
+            <Select options={paymentModeOptions} />
           </Form.Item>
+
           <Form.Item name="transactionId" label="Transaction ID">
-            <Input placeholder="Optional" />
+            <Input placeholder="Optional reference/transaction ID" />
           </Form.Item>
+
           <Form.Item name="paymentProofUrl" label="Payment Proof URL">
             <Input placeholder="https://..." />
           </Form.Item>
-          <Form.Item name="status" label="Status" rules={[{ required: true }]}>
-            <Select options={["pending", "success", "failed", "refunded"].map((v) => ({ label: v, value: v }))} />
+
+          <Form.Item
+            name="status"
+            label="Status"
+            rules={[{ required: true, message: "Please select status" }]}
+          >
+            <Select
+              options={["pending", "success", "failed", "refunded"].map((value) => ({
+                label: statusConfig[value]?.label || value,
+                value,
+              }))}
+            />
           </Form.Item>
         </Form>
       </Modal>

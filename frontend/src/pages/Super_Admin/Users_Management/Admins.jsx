@@ -334,7 +334,7 @@ const Admins = () => {
           </Button>
         </div>
 
-        <Content style={{ padding: "20px 0px" }}>
+        <Content style={{ padding: "20px 20px" }}>
 
           {/* ── Stats Row ── */}
           <div style={{

@@ -57,6 +57,46 @@ const statusColor = {
   pending_approval: "warning",
 };
 
+const STORAGE_KEY = "superadmin_system_backups";
+
+const getDefaultBackups = () => [
+  {
+    id: 1,
+    name: "backup_2025_10_20.zip",
+    size: "25.4 MB",
+    date: "2025-10-20 14:30",
+  },
+  {
+    id: 2,
+    name: "backup_2025_10_10.zip",
+    size: "24.8 MB",
+    date: "2025-10-10 12:15",
+  },
+];
+
+const saveBackups = (items) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+};
+
+const loadBackups = () => {
+  const stored = localStorage.getItem(STORAGE_KEY);
+
+  if (!stored) {
+    const defaults = getDefaultBackups();
+    saveBackups(defaults);
+    return defaults;
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    const defaults = getDefaultBackups();
+    saveBackups(defaults);
+    return defaults;
+  }
+};
+
 const Backups = () => {
   const dispatch = useDispatch();
   const { summary, backups, schedules, restoreJobs, auditLogs, loading, actionLoading, error, successMessage, downloadLink } =

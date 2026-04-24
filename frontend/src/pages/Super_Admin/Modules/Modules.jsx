@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { sidebarMenu } from "../../../utils/sidebar";
 import { Link } from "react-router-dom";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Lock, Search, ShieldCheck } from "lucide-react";
 import {
   Row,
   Col,
@@ -11,22 +11,94 @@ import {
   Typography,
   Empty,
   Tooltip,
+  Input,
+  Space,
+  Statistic,
 } from "antd";
 
 const { Title, Text } = Typography;
 
-// 🎨 Controlled random colors
-const COLORS = [
-  "blue",
-  "green",
-  "purple",
-  "cyan",
-  "geekblue",
-  "magenta",
-  "volcano",
+const PALETTES = [
+  { bg: "#dbeafe", text: "#2563eb", ring: "#bfdbfe" },
+  { bg: "#dcfce7", text: "#16a34a", ring: "#bbf7d0" },
+  { bg: "#ede9fe", text: "#7c3aed", ring: "#ddd6fe" },
+  { bg: "#cffafe", text: "#0891b2", ring: "#a5f3fc" },
+  { bg: "#fef3c7", text: "#d97706", ring: "#fde68a" },
+  { bg: "#fce7f3", text: "#db2777", ring: "#fbcfe8" },
 ];
 
-// ⭐ Safe icon resolver
+const css = `
+.modules-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #fdf2f8 100%);
+}
+
+.modules-hero {
+  background: #ffffffcc;
+  backdrop-filter: blur(14px);
+  border: 1px solid #e2e8f0;
+  border-radius: 28px;
+  padding: 24px;
+  margin-bottom: 18px;
+  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+}
+
+.modules-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  background: #e0e7ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modules-stat {
+  border-radius: 22px !important;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+}
+
+.module-card {
+  height: 100%;
+  border-radius: 22px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 26px rgba(15,23,42,0.05);
+  transition: 0.2s ease;
+  overflow: hidden;
+}
+
+.module-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 34px rgba(15,23,42,0.1);
+}
+
+.module-card.locked {
+  opacity: 0.62;
+  filter: grayscale(0.2);
+}
+
+.module-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.module-link {
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .modules-page {
+    padding: 14px;
+  }
+}
+`;
+
 const getLucideIcon = (icon) => {
   if (!icon) return LayoutDashboard;
   if (typeof icon === "function") return icon;
@@ -34,11 +106,7 @@ const getLucideIcon = (icon) => {
 };
 
 const normalizeLabel = (value = "") =>
-  value
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  value.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
 
 const detectModuleLabel = (title = "", parent = "") => {
   const fullLabel = normalizeLabel(`${parent} ${title}`);
@@ -47,7 +115,11 @@ const detectModuleLabel = (title = "", parent = "") => {
   if (fullLabel.includes("attendance")) return "Attendance";
   if (fullLabel.includes("exam")) return "Exam";
   if (fullLabel.includes("library") || fullLabel.includes("book")) return "Library";
-  if (fullLabel.includes("transport") || fullLabel.includes("route") || fullLabel.includes("vehicle")) {
+  if (
+    fullLabel.includes("transport") ||
+    fullLabel.includes("route") ||
+    fullLabel.includes("vehicle")
+  ) {
     return "Transport";
   }
   if (fullLabel.includes("hostel") || fullLabel.includes("room")) return "Hostel";
@@ -58,57 +130,63 @@ const detectModuleLabel = (title = "", parent = "") => {
   return null;
 };
 
-// ⭐ Module Card
-const ModuleCard = ({ title, parent, path, Icon, hasAccess, color }) => {
+const ModuleCard = ({ title, parent, path, Icon, hasAccess, palette }) => {
   const content = (
     <Card
       hoverable={hasAccess}
-      className={`h-full rounded-xl transition-all ${
-        hasAccess
-          ? "border border-gray-200 hover:shadow-lg"
-          : "border border-dashed opacity-70"
-      }`}
-      bodyStyle={{ padding: 16 }}
+      bordered={false}
+      className={`module-card ${!hasAccess ? "locked" : ""}`}
+      bodyStyle={{ padding: 18 }}
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
+      <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
         <div
-          className={`flex items-center justify-center w-10 h-10 rounded-lg bg-${color}-50 text-${color}-600`}
+          className="module-icon"
+          style={{
+            background: palette.bg,
+            color: palette.text,
+            boxShadow: `0 0 0 6px ${palette.ring}55`,
+          }}
         >
-          {Icon && <Icon size={20} />}
+          {Icon ? <Icon size={22} /> : <LayoutDashboard size={22} />}
         </div>
 
-        <div>
-          <Text strong className="block">
-            {title}
+        {hasAccess ? (
+          <Tag color="success" style={{ borderRadius: 999 }}>
+            Access
+          </Tag>
+        ) : (
+          <Tag color="error" icon={<Lock size={12} />} style={{ borderRadius: 999 }}>
+            Locked
+          </Tag>
+        )}
+      </Space>
+
+      <div style={{ marginTop: 18 }}>
+        <Text strong style={{ fontSize: 15, color: "#0f172a" }}>
+          {title}
+        </Text>
+
+        <div style={{ marginTop: 4 }}>
+          <Text style={{ fontSize: 12, color: "#64748b" }}>
+            {parent || "Dashboard Module"}
           </Text>
-          {parent && (
-            <Text type="secondary" className="text-xs">
-              {parent}
-            </Text>
-          )}
         </div>
-      </div>
-
-      {/* Status */}
-      <div className="mt-3">
-        <Tag color={hasAccess ? "green" : "red"}>
-          {hasAccess ? "Access Granted" : "No Access"}
-        </Tag>
       </div>
     </Card>
   );
 
   return hasAccess ? (
-    <Link to={`/dashboard/${path}`}>{content}</Link>
+    <Link className="module-link" to={`/dashboard/${path}`}>
+      {content}
+    </Link>
   ) : (
     <Tooltip title="You do not have permission">{content}</Tooltip>
   );
 };
 
-// ⭐ Main Component
 const AllModules = () => {
   const user = useSelector((state) => state.auth?.user);
+  const [search, setSearch] = useState("");
 
   const normalizedRole =
     (user?.role?.name || user?.role || "school admin").toLowerCase();
@@ -121,31 +199,34 @@ const AllModules = () => {
     ? sidebarMenu[normalizedRole]
     : [];
 
-  const flattenMenu = (items) =>
-    items.flatMap((item) =>
-      item.subMenu
-        ? item.subMenu.map((sub) => ({
-            title: sub.title,
-            path: sub.path,
-            parent: item.title,
-            icon: getLucideIcon(sub.icon),
-            permissionModule: detectModuleLabel(sub.title, item.title),
-          }))
-        : [
-            {
-              title: item.title,
-              path: item.path,
-              parent: null,
-              icon: getLucideIcon(item.icon),
-              permissionModule: detectModuleLabel(item.title),
-            },
-          ]
-    );
+  const modules = useMemo(() => {
+    const flattenMenu = (items) =>
+      items.flatMap((item) =>
+        item.subMenu
+          ? item.subMenu.map((sub) => ({
+              title: sub.title,
+              path: sub.path,
+              parent: item.title,
+              icon: getLucideIcon(sub.icon),
+              permissionModule: detectModuleLabel(sub.title, item.title),
+            }))
+          : [
+              {
+                title: item.title,
+                path: item.path,
+                parent: null,
+                icon: getLucideIcon(item.icon),
+                permissionModule: detectModuleLabel(item.title),
+              },
+            ]
+      );
 
-  const modules = flattenMenu(menu);
+    return flattenMenu(menu);
+  }, [menu]);
 
   const hasPermission = (title, permissionModule) => {
     if (normalizedRole === "super admin") return true;
+
     const normalizedTitle = normalizeLabel(title);
     const normalizedPermissionModule = normalizeLabel(permissionModule || "");
 
@@ -160,38 +241,118 @@ const AllModules = () => {
     });
   };
 
-  return (
-    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <Title level={3} className="!mb-1">
-          All Modules
-        </Title>
-        <Text type="secondary">
-          Role: <span className="capitalize">{normalizedRole}</span>
-        </Text>
-      </div>
+  const enhancedModules = useMemo(
+    () =>
+      modules.map((mod) => ({
+        ...mod,
+        hasAccess: hasPermission(mod.title, mod.permissionModule),
+      })),
+    [modules, permissions, normalizedRole]
+  );
 
-      {/* Grid */}
-      {modules.length === 0 ? (
-        <Empty description="No modules available" />
-      ) : (
-        <Row gutter={[16, 16]}>
-          {modules.map((mod, index) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={index}>
-              <ModuleCard
-                title={mod.title}
-                parent={mod.parent}
-                path={mod.path}
-                Icon={mod.icon}
-                hasAccess={hasPermission(mod.title, mod.permissionModule)}
-                color={COLORS[index % COLORS.length]}
+  const filteredModules = useMemo(() => {
+    const keyword = search.toLowerCase();
+
+    return enhancedModules.filter((mod) => {
+      return (
+        !keyword ||
+        mod.title?.toLowerCase().includes(keyword) ||
+        mod.parent?.toLowerCase().includes(keyword)
+      );
+    });
+  }, [enhancedModules, search]);
+
+  const accessCount = enhancedModules.filter((m) => m.hasAccess).length;
+  const lockedCount = enhancedModules.length - accessCount;
+
+  return (
+    <>
+      <style>{css}</style>
+
+      <div className="modules-page">
+        <div className="modules-hero">
+          <Row gutter={[16, 16]} align="middle" justify="space-between">
+            <Col xs={24} lg={12}>
+              <Space align="center">
+                <div className="modules-icon">
+                  <LayoutDashboard size={26} />
+                </div>
+                <div>
+                  <Title level={3} style={{ margin: 0 }}>
+                    All Modules
+                  </Title>
+                  <Text style={{ color: "#64748b" }}>
+                    Role based module launcher for{" "}
+                    <b style={{ textTransform: "capitalize" }}>{normalizedRole}</b>
+                  </Text>
+                </div>
+              </Space>
+            </Col>
+
+            <Col xs={24} lg={8}>
+              <Input
+                allowClear
+                size="large"
+                prefix={<Search size={17} color="#94a3b8" />}
+                placeholder="Search modules..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ borderRadius: 14 }}
               />
             </Col>
-          ))}
+          </Row>
+        </div>
+
+        <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
+          <Col xs={24} sm={8}>
+            <Card bordered={false} className="modules-stat">
+              <Statistic title="Total Modules" value={enhancedModules.length} />
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={8}>
+            <Card bordered={false} className="modules-stat">
+              <Statistic
+                title="Access Granted"
+                value={accessCount}
+                prefix={<ShieldCheck size={18} color="#16a34a" />}
+              />
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={8}>
+            <Card bordered={false} className="modules-stat">
+              <Statistic
+                title="Locked Modules"
+                value={lockedCount}
+                prefix={<Lock size={18} color="#dc2626" />}
+              />
+            </Card>
+          </Col>
         </Row>
-      )}
-    </div>
+
+        {filteredModules.length === 0 ? (
+          <Card bordered={false} style={{ borderRadius: 24 }}>
+            <Empty description="No modules available" />
+          </Card>
+        ) : (
+          <Row gutter={[16, 16]}>
+            {filteredModules.map((mod, index) => (
+              <Col xs={24} sm={12} md={8} lg={6} xl={6} key={`${mod.title}-${index}`}>
+                <ModuleCard
+                  title={mod.title}
+                  parent={mod.parent}
+                  path={mod.path}
+                  Icon={mod.icon}
+                  hasAccess={mod.hasAccess}
+                  palette={PALETTES[index % PALETTES.length]}
+                />
+              </Col>
+            ))}
+          </Row>
+        )}
+      </div>
+    </>
   );
 };
 
