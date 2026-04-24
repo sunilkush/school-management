@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Typography,
@@ -10,7 +10,11 @@ import {
   Tag,
   Avatar,
 } from "antd";
-import { ReloadOutlined, SearchOutlined, DownloadOutlined } from "@ant-design/icons";
+import {
+  ReloadOutlined,
+  SearchOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchActivityLogs } from "../../../features/activitySlice";
 
@@ -37,9 +41,11 @@ const AVATAR_PALETTES = [
 ];
 
 const ROLE_STYLES = {
-  Admin:   { bg: "#EEEDFE", color: "#534AB7" },
+  Parent:   { bg: "#EEEDFE", color: "#534AB7" },
   Teacher: { bg: "#E1F5EE", color: "#0F6E56" },
   Student: { bg: "#E6F1FB", color: "#185FA5" },
+  "Super Admin": { bg: "#FDECF7", color: "#9B2C6A" },
+  "School Admin": { bg: "#E8F0FE", color: "#1F4E8C" },
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -54,6 +60,7 @@ function getPalette(name = "") {
 function formatDate(d) {
   if (!d) return "—";
   const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return "—";
   return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
     + " " + dt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
@@ -117,26 +124,80 @@ const ActivityLogs = () => {
     dispatch(fetchActivityLogs());
   }, [dispatch]);
 
+const normalizedLogs = useMemo(() => {
+    return logs.map((log) => ({
+      ...log,
+      roleName:
+        typeof log.role === "string"
+          ? log.role
+          : log.role?.name || "—",
+      eventDate: log.date || log.createdAt || log.updatedAt || null,
+    }));
+  }, [logs]);
+
   // ── Derived stats ─────────────────────────────────────────────────────────
   const stats = useMemo(() => {
-    const todayCount = logs.filter((l) => l.date && isToday(l.date)).length;
-    const uniqueUsers = new Set(logs.map((l) => l.user?.name).filter(Boolean)).size;
-    const uniqueSchools = new Set(logs.map((l) => l.school?.name).filter(Boolean)).size;
-    return { total: logs.length, today: todayCount, users: uniqueUsers, schools: uniqueSchools };
-  }, [logs]);
+    const todayCount = normalizedLogs.filter((l) => l.eventDate && isToday(l.eventDate)).length;
+    const uniqueUsers = new Set(normalizedLogs.map((l) => l.user?.name).filter(Boolean)).size;
+    const uniqueSchools = new Set(normalizedLogs.map((l) => l.school?.name).filter(Boolean)).size;
+    return {
+      total: normalizedLogs.length,
+      today: todayCount,
+      users: uniqueUsers,
+      schools: uniqueSchools,
+    };
+  }, [normalizedLogs]);
 
   // ── Filtered + searched logs ──────────────────────────────────────────────
   const filteredLogs = useMemo(() => {
     const q = search.toLowerCase();
-    return logs.filter((log) => {
+   return normalizedLogs.filter((log) => {
       const matchSchool = selectedSchool === "All" || log.school?.name === selectedSchool;
-      const matchRole   = selectedRole === "All"   || log.role?.name === selectedRole;
+      const matchRole   = selectedRole === "All" || log.roleName === selectedRole;
       const matchSearch = !q
         || (log.user?.name || "").toLowerCase().includes(q)
-        || (log.action || "").toLowerCase().includes(q);
+        || (log.action || "").toLowerCase().includes(q)
+        || (log.description || "").toLowerCase().includes(q);
       return matchSchool && matchRole && matchSearch;
     });
-  }, [logs, selectedSchool, selectedRole, search]);
+  }, [normalizedLogs, selectedSchool, selectedRole, search]);
+
+  const roleOptions = useMemo(() => {
+    const discoveredRoles = new Set(
+      normalizedLogs.map((log) => log.roleName).filter((roleName) => roleName && roleName !== "—")
+    );
+    return ["All", ...discoveredRoles];
+  }, [normalizedLogs]);
+
+  const handleExport = useCallback(() => {
+    const rows = filteredLogs.map((log, index) => [
+      index + 1,
+      log.user?.name || "—",
+      log.roleName || "—",
+      log.action || "—",
+      log.description || "—",
+      log.school?.name || "—",
+      formatDate(log.eventDate),
+    ]);
+
+    const csvHeader = ["#", "User", "Role", "Action", "Description", "School", "Date"];
+    const csvContent = [csvHeader, ...rows]
+      .map((row) =>
+        row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `activity-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [filteredLogs]);
+
 
   const schoolOptions = ["All", ...schools.map((s) => s.name).filter(Boolean)];
 
@@ -175,7 +236,7 @@ const ActivityLogs = () => {
       dataIndex: "role",
       key: "role",
       render: (role) => {
-        const name = role?.name || "—";
+        const name = typeof role === "string" ? role : role?.name || "—";
         const style = ROLE_STYLES[name] || { bg: TOKEN.borderLight, color: TOKEN.textMuted };
         return (
           <Tag
@@ -235,10 +296,10 @@ const ActivityLogs = () => {
       ),
     },
     {
-      title: "Date",
-      dataIndex: "date",
+       title: "Date",
+      dataIndex: "eventDate",
       key: "date",
-      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      sorter: (a, b) => new Date(a.eventDate) - new Date(b.eventDate),
       defaultSortOrder: "descend",
       render: (date) => (
         <span style={{ fontFamily: "monospace", fontSize: 12, color: TOKEN.textMuted }}>
@@ -344,7 +405,7 @@ const ActivityLogs = () => {
               style={{ width: 140, fontSize: 13 }}
               dropdownStyle={{ fontSize: 13, borderRadius: 8 }}
             >
-              {["All", "Admin", "Teacher", "Student"].map((r) => (
+             {roleOptions.map((r) => (
                 <Option key={r} value={r}>{r === "All" ? "All roles" : r}</Option>
               ))}
             </Select>
@@ -368,6 +429,7 @@ const ActivityLogs = () => {
             <Button
               icon={<DownloadOutlined />}
               type="primary"
+                onClick={handleExport}
               style={{
                 borderRadius: 7,
                 fontSize: 13,

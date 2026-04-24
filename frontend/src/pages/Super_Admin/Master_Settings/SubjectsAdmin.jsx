@@ -426,7 +426,7 @@ const SubjectsAdmin = () => {
           </Space>
         </div>
 
-        <Content style={{ padding: "20px 0px" }}>
+        <Content style={{ padding: "20px 24px" }}>
 
           {/* ── Stats ── */}
           <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>

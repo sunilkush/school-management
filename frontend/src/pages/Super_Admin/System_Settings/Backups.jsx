@@ -8,6 +8,46 @@ import {
   RefreshCw,
 } from "lucide-react";
 
+const STORAGE_KEY = "superadmin_system_backups";
+
+const getDefaultBackups = () => [
+  {
+    id: 1,
+    name: "backup_2025_10_20.zip",
+    size: "25.4 MB",
+    date: "2025-10-20 14:30",
+  },
+  {
+    id: 2,
+    name: "backup_2025_10_10.zip",
+    size: "24.8 MB",
+    date: "2025-10-10 12:15",
+  },
+];
+
+const saveBackups = (items) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+};
+
+const loadBackups = () => {
+  const stored = localStorage.getItem(STORAGE_KEY);
+
+  if (!stored) {
+    const defaults = getDefaultBackups();
+    saveBackups(defaults);
+    return defaults;
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    const defaults = getDefaultBackups();
+    saveBackups(defaults);
+    return defaults;
+  }
+};
+
 const Backups = () => {
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,20 +56,7 @@ const Backups = () => {
   // Load simulated backups
   // -------------------------------------------
   useEffect(() => {
-    setBackups([
-      {
-        id: 1,
-        name: "backup_2025_10_20.zip",
-        size: "25.4 MB",
-        date: "2025-10-20 14:30",
-      },
-      {
-        id: 2,
-        name: "backup_2025_10_10.zip",
-        size: "24.8 MB",
-        date: "2025-10-10 12:15",
-      },
-    ]);
+    setBackups(loadBackups());
   }, []);
 
   // -------------------------------------------
@@ -46,7 +73,11 @@ const Backups = () => {
         date: new Date().toLocaleString(),
       };
 
-      setBackups((prev) => [newBackup, ...prev]);
+      setBackups((prev) => {
+        const updated = [newBackup, ...prev];
+        saveBackups(updated);
+        return updated;
+      });
       setLoading(false);
 
       message.success("Backup created successfully!");
@@ -57,14 +88,40 @@ const Backups = () => {
   // DOWNLOAD
   // -------------------------------------------
   const handleDownload = (backup) => {
-    message.info(`Downloading ${backup.name}`);
+    const backupContent = {
+      generatedAt: backup.date,
+      fileName: backup.name,
+      size: backup.size,
+      data: {
+        note: "Simulated backup payload",
+        tables: ["schools", "users", "settings", "audit_logs"],
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(backupContent, null, 2)], {
+      type: "application/json",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = backup.name.replace(/\.zip$/i, ".json");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    message.success(`${backup.name} downloaded`);
   };
 
   // -------------------------------------------
   // DELETE
   // -------------------------------------------
   const handleDelete = (id) => {
-    setBackups((prev) => prev.filter((b) => b.id !== id));
+    setBackups((prev) => {
+      const updated = prev.filter((b) => b.id !== id);
+      saveBackups(updated);
+      return updated;
+    });
     message.success("Backup deleted");
   };
 
@@ -72,10 +129,15 @@ const Backups = () => {
   // REFRESH
   // -------------------------------------------
   const handleRefresh = () => {
-    message.info("Refreshing list...");
-    window.location.reload();
-  };
+    setLoading(true);
 
+    setTimeout(() => {
+      const latestBackups = loadBackups();
+      setBackups(latestBackups);
+      setLoading(false);
+      message.success("Backup list refreshed");
+    }, 500);
+  };
   // -------------------------------------------
   // TABLE CONFIG
   // -------------------------------------------
