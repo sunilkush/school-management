@@ -12,7 +12,7 @@ const formatCurrency = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 export default function RevenuePage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { invoices, revenueSummary, loading } = useSelector((state) => state.superAdminBilling);
+  const { invoices = [], revenueSummary = {}, loading = false } = useSelector((state) => state?.superAdminBilling || {});
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
 
@@ -35,7 +35,14 @@ export default function RevenuePage() {
   );
 
   const filtered = rows.filter((row) => {
-    const matchSearch = !search || row.schoolName.toLowerCase().includes(search.toLowerCase()) || row.invoiceNumber.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      !search ||
+      String(row.schoolName || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      String(row.invoiceNumber || "")
+        .toLowerCase()
+        .includes(search.toLowerCase());
     const matchStatus = !status || row.status === status;
     return matchSearch && matchStatus;
   });
