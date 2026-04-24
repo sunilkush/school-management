@@ -30,3 +30,20 @@
   background-color: #e2e8f0;
   text-align: center;
 }
+:root {
+  --primary: #a5b4fc;     /* pastel indigo */
+  --success: #86efac;     /* pastel green */
+  --danger: #fca5a5;      /* pastel red */
+  --warning: #fde68a;     /* pastel yellow */
+  --purple: #d8b4fe;      /* pastel purple */
+  --cyan: #a5f3fc;        /* pastel cyan */
+  --orange: #fdba74;      /* pastel orange */
+
+  --bg: #f9fafb;          /* soft background */
+  --cardBg: #ffffff;
+  --border: #e5e7eb;
+
+  --text: #1f2937;
+  --textMuted: #6b7280;
+  --text-primary: #111827;
+}
