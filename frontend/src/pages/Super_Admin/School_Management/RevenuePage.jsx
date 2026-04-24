@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Card, Col, Form, Input, InputNumber, Modal, Row, Select, Space, Table, Tag, Typography, message } from "antd";
+import { Button, Card, Col, DatePicker, Form, Input, InputNumber, Modal, Row, Select, Space, Table, Tag, Typography, message } from "antd";
 import { AppstoreOutlined, DollarOutlined, PlusOutlined, SearchOutlined, WalletOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import {
@@ -70,7 +70,7 @@ export default function RevenuePage() {
           payload: {
             discount: Number(values.discount || 0),
             taxGst: Number(values.taxGst || 0),
-            dueDate: values.dueDate,
+            dueDate: values.dueDate ? values.dueDate.toDate().toISOString() : undefined,
             status: values.status || "unpaid",
           },
         })
@@ -216,7 +216,7 @@ export default function RevenuePage() {
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item label="Due Date" name="dueDate">
-            <Input placeholder="YYYY-MM-DD" />
+            <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
           </Form.Item>
           <Form.Item label="Status" name="status" initialValue="unpaid">
             <Select options={["draft", "unpaid", "paid", "overdue", "cancelled"].map((value) => ({ label: value, value }))} />
