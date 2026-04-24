@@ -219,6 +219,15 @@ export const generateInvoice = asyncHandler(async (req, res) => {
 
   const invoiceNumber = await nextInvoiceNumber();
   const planPrice = subscription.snapshot.price;
+  let normalizedDueDate = subscription.endDate;
+
+  if (dueDate) {
+    const parsedDueDate = new Date(dueDate);
+    if (Number.isNaN(parsedDueDate.getTime())) {
+      throw new ApiError(400, "Invalid dueDate. Please provide a valid date.");
+    }
+    normalizedDueDate = parsedDueDate;
+  }
 
   const invoice = await SubscriptionInvoice.create({
     schoolId,
@@ -230,7 +239,7 @@ export const generateInvoice = asyncHandler(async (req, res) => {
     discount,
     taxGst,
     totalAmount: calcTotalAmount({ planPrice, discount, taxGst }),
-    dueDate: dueDate ? new Date(dueDate) : subscription.endDate,
+    dueDate: normalizedDueDate,
     status,
   });
 
