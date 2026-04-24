@@ -52,6 +52,7 @@ import payrollReducer from "../features/payrollSlice";
 import studentPromotionReducer from "../features/studentPromotionSlice";
 import superAdminBillingReducer from "../features/superAdminBillingSlice";
 import systemBackupReducer from "../features/systemBackupSlice";
+import timetableReducer from "../features/timetableSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -100,6 +101,7 @@ const rootReducer = combineReducers({
   studentPromotion: studentPromotionReducer,
   superAdminBilling: superAdminBillingReducer,
   systemBackup: systemBackupReducer,
+  timetable: timetableReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
