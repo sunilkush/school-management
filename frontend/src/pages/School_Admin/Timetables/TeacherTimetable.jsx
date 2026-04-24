@@ -16,73 +16,52 @@ import {
   message,
 } from "antd";
 import { BookOutlined, ClockCircleOutlined, TeamOutlined } from "@ant-design/icons";
-import apiClient from "../../../api/httpClient";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchTeacherTimetable,
+  fetchTimetableMasterData,
+} from "../../../features/timetableSlice";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
 const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 const TeacherTimetable = () => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth?.user);
+  const {
+    teachers,
+    teacherTimetable: timetable,
+    activeAcademicYearId,
+    loading,
+  } = useSelector((state) => state.timetable);
   const [activeDay, setActiveDay] = useState("Monday");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
-  const [teachers, setTeachers] = useState([]);
-  const [timetable, setTimetable] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [academicYearId, setAcademicYearId] = useState("");
-
-  const fetchTeachers = async () => {
-    const [teacherRes, academicYearRes] = await Promise.all([
-      apiClient.get("/employee", { params: { employeeType: "Teacher", isActive: true } }),
-      apiClient.get("/academicYear"),
-    ]);
-
-    const teacherRows = teacherRes.data?.data || [];
-    const activeYear = (academicYearRes.data?.data || []).find((year) => year.isActive) || academicYearRes.data?.data?.[0];
-
-    setTeachers(teacherRows);
-    setAcademicYearId(activeYear?._id || "");
-
-    const firstTeacherId = teacherRows?.[0]?.userId?._id || "";
-    setSelectedTeacherId(firstTeacherId);
-
-    if (firstTeacherId) {
-      await fetchTimetable(firstTeacherId, activeDay, activeYear?._id || "");
-    }
-  };
-
-  const fetchTimetable = async (teacherId, day, yearId = academicYearId) => {
-    if (!teacherId) {
-      setTimetable([]);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const res = await apiClient.get("/timetables/teacher", {
-        params: {
-          teacherId,
-          day,
-          academicYearId: yearId,
-        },
-      });
-      setTimetable(res.data?.data || []);
-    } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to fetch teacher timetable");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchTeachers().catch((error) => message.error(error?.response?.data?.message || "Failed to load teachers"));
-  }, []);
+    dispatch(fetchTimetableMasterData({ schoolId: user?.schoolId }))
+      .unwrap()
+      .catch((error) => message.error(error || "Failed to load teachers"));
+  }, [dispatch, user?.schoolId]);
 
   useEffect(() => {
-    if (selectedTeacherId) {
-      fetchTimetable(selectedTeacherId, activeDay);
+    if (!selectedTeacherId && teachers.length) {
+      setSelectedTeacherId(teachers?.[0]?.userId?._id || "");
     }
-  }, [selectedTeacherId, activeDay]);
+  }, [selectedTeacherId, teachers]);
+
+  useEffect(() => {
+    if (!selectedTeacherId) return;
+    dispatch(
+      fetchTeacherTimetable({
+        teacherId: selectedTeacherId,
+        day: activeDay,
+        academicYearId: activeAcademicYearId,
+      })
+    )
+      .unwrap()
+      .catch((error) => message.error(error || "Failed to fetch teacher timetable"));
+  }, [activeAcademicYearId, activeDay, dispatch, selectedTeacherId]);
 
   const stats = useMemo(() => {
     const classCount = new Set(timetable.map((item) => `${item.schoolClassId?._id}-${item.sectionId?._id}`)).size;
