@@ -29,71 +29,51 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import apiClient from "../../../api/httpClient";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  createTimetableEntry,
+  deleteTimetableEntry,
+  fetchClassTimetable,
+  fetchTimetableMasterData,
+  updateTimetableEntry,
+} from "../../../features/timetableSlice";
 
 const { Content } = Layout;
 const { Option } = Select;
 const { Text, Title } = Typography;
 
 const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 const ClassTimetable = () => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth?.user);
+  const {
+    classTimetable: timetable,
+    schoolClasses,
+    sections,
+    subjects,
+    teachers,
+    activeAcademicYearId,
+    loading,
+    saving,
+  } = useSelector((state) => state.timetable);
   const [form] = Form.useForm();
-  const [timetable, setTimetable] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [activeDay, setActiveDay] = useState("Monday");
   const [filters, setFilters] = useState({ schoolClassId: "All", sectionId: "All" });
-  const [loading, setLoading] = useState(false);
-
-  const [schoolClasses, setSchoolClasses] = useState([]);
-  const [sections, setSections] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [academicYearId, setAcademicYearId] = useState("");
-
-  const fetchMasterData = async () => {
-    try {
-      setLoading(true);
-      const [classRes, sectionRes, subjectRes, employeeRes, academicYearRes] = await Promise.all([
-        apiClient.get("/school-class"),
-        apiClient.get("/sections"),
-        apiClient.get("/subject/all", { params: { limit: 100 } }),
-        apiClient.get("/employee", { params: { employeeType: "Teacher", isActive: true } }),
-        apiClient.get("/academicYear"),
-      ]);
-
-      const activeYear = (academicYearRes.data?.data || []).find((year) => year.isActive) || academicYearRes.data?.data?.[0];
-      const activeYearId = activeYear?._id || "";
-
-      setAcademicYearId(activeYearId);
-      setSchoolClasses(classRes.data?.data || []);
-      setSections(sectionRes.data?.data || []);
-      setSubjects(subjectRes.data?.data || []);
-      setTeachers(employeeRes.data?.data || []);
-
-      await fetchTimetable(activeYearId);
-    } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to load timetable data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTimetable = async (yearId = academicYearId) => {
-    try {
-      const params = {};
-      if (yearId) params.academicYearId = yearId;
-      const response = await apiClient.get("/timetables/class", { params });
-      setTimetable(response.data?.data || []);
-    } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to fetch timetable");
-    }
-  };
 
   useEffect(() => {
-    fetchMasterData();
-  }, []);
+    dispatch(fetchTimetableMasterData({ schoolId: user?.schoolId }))
+      .unwrap()
+      .catch((err) => message.error(err || "Failed to load timetable data"));
+  }, [dispatch, user?.schoolId]);
+
+  useEffect(() => {
+    if (!activeAcademicYearId) return;
+    dispatch(fetchClassTimetable({ academicYearId: activeAcademicYearId }))
+      .unwrap()
+      .catch((err) => message.error(err || "Failed to fetch timetable"));
+  }, [activeAcademicYearId, dispatch]);
 
   const filteredData = useMemo(() => {
     return timetable
@@ -121,13 +101,13 @@ const ClassTimetable = () => {
   };
 
   const handleSave = async (values) => {
-    if (values.endTime.isSameOrBefore(values.startTime)) {
+    if (!values?.startTime || !values?.endTime || !values.endTime.isAfter(values.startTime)) {
       message.error("End time should be greater than start time.");
       return;
     }
 
     const payload = {
-      academicYearId,
+      academicYearId: activeAcademicYearId,
       schoolClassId: values.schoolClassId,
       sectionId: values.sectionId,
       day: values.day,
@@ -139,22 +119,19 @@ const ClassTimetable = () => {
     };
 
     try {
-      setLoading(true);
       if (editingRecord?._id) {
-        await apiClient.put(`/timetables/${editingRecord._id}`, payload);
+        await dispatch(updateTimetableEntry({ id: editingRecord._id, payload })).unwrap();
         message.success("Class schedule updated successfully.");
       } else {
-        await apiClient.post("/timetables", payload);
+        await dispatch(createTimetableEntry(payload)).unwrap();
         message.success("Class schedule created successfully.");
       }
 
       setActiveDay(values.day);
       resetModalState();
-      await fetchTimetable();
+      await dispatch(fetchClassTimetable({ academicYearId: activeAcademicYearId })).unwrap();
     } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to save timetable entry");
-    } finally {
-      setLoading(false);
+      message.error(error || "Failed to save timetable entry");
     }
   };
 
@@ -175,14 +152,11 @@ const ClassTimetable = () => {
 
   const handleDelete = async (record) => {
     try {
-      setLoading(true);
-      await apiClient.delete(`/timetables/${record._id}`);
+      await dispatch(deleteTimetableEntry(record._id)).unwrap();
       message.success("Class schedule removed.");
-      await fetchTimetable();
+      await dispatch(fetchClassTimetable({ academicYearId: activeAcademicYearId })).unwrap();
     } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to delete timetable entry");
-    } finally {
-      setLoading(false);
+      message.error(error || "Failed to delete timetable entry");
     }
   };
 
@@ -365,7 +339,9 @@ const ClassTimetable = () => {
 
               <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
                 <Button style={{ marginRight: 8 }} onClick={resetModalState}>Cancel</Button>
-                <Button type="primary" htmlType="submit">{editingRecord ? "Update" : "Save"}</Button>
+                <Button type="primary" htmlType="submit" loading={saving}>
+                  {editingRecord ? "Update" : "Save"}
+                </Button>
               </Form.Item>
             </Form>
           </Modal>
