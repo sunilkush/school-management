@@ -51,6 +51,7 @@ import accountRecoveryReducer from "../features/accountRecoverySlice";
 import payrollReducer from "../features/payrollSlice";
 import studentPromotionReducer from "../features/studentPromotionSlice";
 import superAdminBillingReducer from "../features/superAdminBillingSlice";
+import systemBackupReducer from "../features/systemBackupSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -98,6 +99,7 @@ const rootReducer = combineReducers({
   payroll: payrollReducer,
   studentPromotion: studentPromotionReducer,
   superAdminBilling: superAdminBillingReducer,
+  systemBackup: systemBackupReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
