@@ -28,25 +28,26 @@ const renderDiff = (oldData = {}, newData = {}) => {
   }).filter(Boolean);
 };
 
-const PlanLogs = () => {
-  const { id } = useParams(); // plan id
+const PlanLogs = ({ planId }) => {
+  const { id: routePlanId } = useParams(); // plan id (route fallback)
+  const effectivePlanId = planId || routePlanId;
   const dispatch = useDispatch();
   const { planLogs, loading } = useSelector((state) => state.subscriptionPlans);
 
   useEffect(() => {
-    if (id) dispatch(fetchPlanLogs(id));
-  }, [dispatch, id]);
+    if (effectivePlanId) dispatch(fetchPlanLogs(effectivePlanId));
+  }, [dispatch, effectivePlanId]);
 
   if (loading) return <div className="p-6"><Spin /></div>;
 
   return (
     <div className="p-5">
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-        <div>
+        <div>{!planId && (
           <Link to="/dashboard/superadmin/subscriptions">
             <Button icon={<ArrowLeftOutlined />}>Back to Plans</Button>
           </Link>
-        </div>
+        )}</div>
         <h2 style={{ margin: 0 }}>Plan Update Logs</h2>
       </div>
 
@@ -77,7 +78,9 @@ const PlanLogs = () => {
 
                 <div style={{ marginTop: 12 }}>
                   <Tag color="gold">Changed at {dayjs(log.createdAt).format("DD-MMM-YYYY HH:mm")}</Tag>
-                  <Tag color="green">{log.newData?.isActive ? "Active" : "Inactive"}</Tag>
+                   {typeof log.newData?.isActive === "boolean" && (
+                    <Tag color="green">{log.newData.isActive ? "Active" : "Inactive"}</Tag>
+                  )}
                 </div>
               </Timeline.Item>
             ))}

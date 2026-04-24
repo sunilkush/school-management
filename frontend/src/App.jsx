@@ -33,7 +33,7 @@ function App() {
   const location = useLocation();
   const { profile, user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
 
-useEffect(() => {
+  useEffect(() => {
     const tokenToUse = accessToken || getAccessToken();
 
     if (tokenToUse) {
@@ -44,7 +44,7 @@ useEffect(() => {
     clearAccessToken();
   }, [accessToken]);
 
-useEffect(() => {
+  useEffect(() => {
     const bootstrapAuth = async () => {
       dispatch(startAuthInitialization());
 
@@ -74,14 +74,14 @@ useEffect(() => {
   useEffect(() => {
     if (!isAuthInitialized) return;
 
-     if (profile?.statusCode === 401 && accessToken) {
+    if (profile?.statusCode === 401 && accessToken) {
       dispatch(forceLogout());
 
       if (location.pathname !== "/login") {
         navigate("/login", { replace: true });
       }
     }
-   }, [dispatch, isAuthInitialized, profile, accessToken, navigate, location.pathname]);
+  }, [dispatch, isAuthInitialized, profile, accessToken, navigate, location.pathname]);
 
   if (!isAuthInitialized) {
     return (
