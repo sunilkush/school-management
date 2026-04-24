@@ -10,6 +10,23 @@ const { Option } = Select;
 
 const formatCurrency = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const getCycle = (days = 0) => (days >= 365 ? "Yearly" : days >= 90 ? "Quarterly" : "Monthly");
+const getPlanDetails = (school) => {
+  const plan = school?.subscriptionPlan;
+
+  if (!plan) {
+    return { name: "Unassigned", price: 0, durationInDays: 0 };
+  }
+
+  if (typeof plan === "string") {
+    return { name: plan, price: 0, durationInDays: 0 };
+  }
+
+  return {
+    name: plan?.name || plan?.planName || "Unassigned",
+    price: Number(plan?.price || 0),
+    durationInDays: Number(plan?.durationInDays || 0),
+  };
+};
 
 export default function RevenuePage() {
   const dispatch = useDispatch();
@@ -24,14 +41,14 @@ export default function RevenuePage() {
 
   const rows = useMemo(() => {
     return (schools || []).map((school, i) => {
-      const plan = school.subscriptionPlan;
+      const plan = getPlanDetails(school);
       return {
         key: school._id || i,
         school: school.name,
         city: school.address || "-",
-        plan: plan?.name || "Unassigned",
-        amount: Number(plan?.price || 0),
-        cycle: getCycle(plan?.durationInDays),
+        plan: plan.name,
+        amount: plan.price,
+        cycle: getCycle(plan.durationInDays),
         status: school.isActive ? "Paid" : "Overdue",
         date: new Date(school.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
       };
@@ -53,7 +70,11 @@ export default function RevenuePage() {
 
   const columns = [
     { title: "School", dataIndex: "school" },
-    { title: "Plan", dataIndex: "plan", render: (p) => <Tag>{p}</Tag> },
+    {
+      title: "Selected Plan",
+      dataIndex: "plan",
+      render: (p) => <Tag color={p === "Unassigned" ? "default" : "green"}>{p}</Tag>,
+    },
     { title: "Cycle", dataIndex: "cycle" },
     { title: "Amount", dataIndex: "amount", render: (a) => <Text strong>{formatCurrency(a)}</Text>, sorter: (a, b) => a.amount - b.amount },
     { title: "Date", dataIndex: "date" },
