@@ -13,7 +13,12 @@ import {
   getTeacherHomework,
   submitHomework,
   updateMyProfile,
+
 } from "../controllers/studentPortal.controllers.js";
+import {
+  getMyChildren,
+  getMyStudentEnrollmentId,
+} from "../controllers/student.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -25,6 +30,15 @@ const ADMIN_AND_TEACHER = ["Super Admin", "School Admin", "Teacher"];
 router.get("/me/grades", auth, roleMiddleware(STUDENT_ONLY), getMyGrades);
 router.get("/me/profile", auth, roleMiddleware(STUDENT_ONLY), getMyProfile);
 router.put("/me/profile", auth, roleMiddleware(STUDENT_ONLY), updateMyProfile);
+router.get("/my/profile", auth, roleMiddleware(STUDENT_ONLY), getMyProfile);
+router.put("/my/profile", auth, roleMiddleware(STUDENT_ONLY), updateMyProfile);
+router.get(
+  "/my/enrollment-id",
+  auth,
+  roleMiddleware(["Student", "Parent"]),
+  getMyStudentEnrollmentId
+);
+router.get("/my-children", auth, roleMiddleware(["Parent"]), getMyChildren);
 router.get("/me/timetable", auth, roleMiddleware(STUDENT_ONLY), getMyTimetable);
 router.get("/me/homework", auth, roleMiddleware(STUDENT_ONLY), getMyHomework);
 router.post("/me/homework/:assignmentId/submit", auth, roleMiddleware(STUDENT_ONLY), upload.fields([{ name: "attachments", maxCount: 2 }]), submitHomework);

@@ -2,13 +2,49 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
 const getError = (err, fallback) => err?.response?.data?.message || fallback;
+ const normalizeTransportAssignment = (assignment) => {
+  if (!assignment) return null;
 
+  return {
+    ...assignment,
+    routeName: assignment?.routeId?.name || assignment?.routeName || "",
+    vehicleNumber:
+      assignment?.vehicleId?.busNumber || assignment?.vehicleNumber || "",
+    stopName: assignment?.pickupStop || assignment?.stopName || "",
+  };
+};
+
+const normalizeTimetableEntry = (entry) => {
+  if (!entry) return entry;
+
+  return {
+    ...entry,
+    subject: entry?.subjectId || null,
+    teacher: entry?.teacherId || null,
+  };
+};
+
+const normalizeGrade = (grade) => {
+  if (!grade) return grade;
+
+  const firstSubject = Array.isArray(grade?.subjects) ? grade.subjects[0] : null;
+
+  return {
+    ...grade,
+    subjectName:
+      firstSubject?.subjectName || firstSubject?.subjectId?.name || "Subject",
+    examName: grade?.examId?.title || grade?.examName || "Assessment",
+    score: Number.isFinite(Number(grade?.percentage))
+      ? Number(grade.percentage)
+      : null,
+  };
+};
 export const fetchStudentGrades = createAsyncThunk(
   "studentPortal/fetchStudentGrades",
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/student-portal/me/grades");
-      return res.data?.data?.grades || [];
+       return (res.data?.data?.grades || []).map(normalizeGrade);
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch grades"));
     }
@@ -20,7 +56,7 @@ export const fetchStudentTimetable = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/student-portal/me/timetable");
-      return res.data?.data?.timetable || [];
+     return (res.data?.data?.timetable || []).map(normalizeTimetableEntry);
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch timetable"));
     }
@@ -32,7 +68,7 @@ export const fetchStudentTransport = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/student-portal/me/transport");
-      return res.data?.data?.assignment || null;
+      return normalizeTransportAssignment(res.data?.data?.assignment || null);
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch transport details"));
     }
@@ -54,7 +90,7 @@ export const fetchStudentProfile = createAsyncThunk(
   "studentPortal/fetchStudentProfile",
   async (_, { rejectWithValue }) => {
     try {
-       const res = await apiClient.get("/student/my/profile");
+        const res = await apiClient.get("/student-portal/me/profile");
       return res.data?.data || null;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch student profile"));
@@ -66,7 +102,7 @@ export const updateStudentProfile = createAsyncThunk(
   "studentPortal/updateStudentProfile",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put("/student/my/profile", payload);
+      const res = await apiClient.put("/student-portal/me/profile", payload);
       return res.data?.data || null;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to update student profile"));
@@ -78,7 +114,7 @@ export const fetchStudentEnrollment = createAsyncThunk(
   "studentPortal/fetchStudentEnrollment",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/student/my/enrollment-id");
+      const res = await apiClient.get("/student-portal/my/enrollment-id");
       return res.data?.data || null;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch student enrollment"));
