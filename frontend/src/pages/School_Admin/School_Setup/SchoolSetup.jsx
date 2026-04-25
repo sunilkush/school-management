@@ -299,6 +299,7 @@ const SchoolSetup = () => {
   return (
     <>
       <style>{`
+        
         .setup-panel {
           animation: setupFade 0.25s ease forwards;
         }
@@ -308,7 +309,7 @@ const SchoolSetup = () => {
         }
       `}</style>
 
-      <div style={{ padding: "0 0 24px" }}>
+      <div style={{ padding: "24px" }}>
         {/* Page header */}
         <div style={{
           background: t.cardBg,
