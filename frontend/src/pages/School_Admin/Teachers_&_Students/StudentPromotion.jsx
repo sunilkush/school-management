@@ -111,7 +111,7 @@ const StudentPromotion = () => {
 
   return (
     <>
-    <Card style={{margin:`24px`,backgroundColor:'#fff'}}>
+    <Card style={{backgroundColor:'#fff'}}>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         <div>
           <Title level={4} style={{ marginBottom: 4 }}>

@@ -157,7 +157,7 @@ const AdmissionForm = () => {
   };
 
   return (
-    <Card style={{margin:"24px"}}>
+    <Card>
       <Form layout="vertical" form={form} onFinish={onFinish}>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
 

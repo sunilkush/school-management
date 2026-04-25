@@ -445,10 +445,8 @@ const TeacherList = () => {
       <style>{`
         .users-page {
           min-height: 100%;
-          padding: 24px;
-          background:
-            radial-gradient(circle at top left, rgba(22, 119, 255, 0.09), transparent 32%),
-            linear-gradient(180deg, #f8fbff 0%, #f5f7fb 100%);
+         
+         
         }
 
         .page-hero {
