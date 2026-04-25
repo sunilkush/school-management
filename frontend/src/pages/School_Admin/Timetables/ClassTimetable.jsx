@@ -46,6 +46,7 @@ const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satur
 const ClassTimetable = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth?.user);
+  const schoolId = user.school._id
   const {
     classTimetable: timetable,
     schoolClasses,
@@ -61,12 +62,12 @@ const ClassTimetable = () => {
   const [editingRecord, setEditingRecord] = useState(null);
   const [activeDay, setActiveDay] = useState("Monday");
   const [filters, setFilters] = useState({ schoolClassId: "All", sectionId: "All" });
-
+  const selectedFormClassId = Form.useWatch("schoolClassId", form);
   useEffect(() => {
-    dispatch(fetchTimetableMasterData({ schoolId: user?.schoolId }))
+    dispatch(fetchTimetableMasterData({ schoolId: schoolId }))
       .unwrap()
       .catch((err) => message.error(err || "Failed to load timetable data"));
-  }, [dispatch, user?.schoolId]);
+  }, [dispatch, schoolId]);
 
   useEffect(() => {
     if (!activeAcademicYearId) return;
@@ -93,6 +94,19 @@ const ClassTimetable = () => {
       totalSubjects: uniqueSubjects.size,
     };
   }, [timetable]);
+   const formSections = useMemo(() => {
+    if (!selectedFormClassId) return [];
+
+    return sections.filter((section) => {
+      const sectionClassId =
+        section?.schoolClassId?._id ||
+        section?.schoolClassId ||
+        section?.class?._id ||
+        section?.classId;
+
+      return String(sectionClassId) === String(selectedFormClassId);
+    });
+  }, [sections, selectedFormClassId]);
 
   const resetModalState = () => {
     setModalVisible(false);
@@ -278,7 +292,10 @@ const ClassTimetable = () => {
               <Row gutter={12}>
                 <Col span={12}>
                   <Form.Item label="Class" name="schoolClassId" rules={[{ required: true, message: "Select class" }]}>
-                    <Select placeholder="Select class">
+                    <Select
+                      placeholder="Select class"
+                      onChange={() => form.setFieldsValue({ sectionId: undefined })}
+                    >
                       {schoolClasses.map((item) => (
                         <Option key={item._id} value={item._id}>{item.name || item.className}</Option>
                       ))}
@@ -287,8 +304,11 @@ const ClassTimetable = () => {
                 </Col>
                 <Col span={12}>
                   <Form.Item label="Section" name="sectionId" rules={[{ required: true, message: "Select section" }]}>
-                    <Select placeholder="Section">
-                      {sections.map((item) => (
+                     <Select
+                      placeholder={selectedFormClassId ? "Select section" : "Select class first"}
+                      disabled={!selectedFormClassId}
+                    >
+                      {formSections.map((item) => (
                         <Option key={item._id} value={item._id}>{item.name}</Option>
                       ))}
                     </Select>

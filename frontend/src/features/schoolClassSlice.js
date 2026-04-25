@@ -46,7 +46,7 @@ export const fetchSchoolClasses = createAsyncThunk(
   "schoolClass/fetchAll",
   async (params, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/school-class`, {        params, // { schoolId, academicYearId }
+      const res = await apiClient.get(`/school-class`, {params, // { schoolId, academicYearId }
       });
       return res.data.data;
     } catch (err) {

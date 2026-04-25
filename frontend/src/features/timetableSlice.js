@@ -8,12 +8,13 @@ export const fetchTimetableMasterData = createAsyncThunk(
   "timetable/fetchMasterData",
   async ({ schoolId } = {}, { rejectWithValue }) => {
     try {
+      console.log(schoolId)
       const paramsWithSchool = schoolId ? { schoolId } : {};
       const academicYearRequest = schoolId
         ? apiClient.get(`/academicYear/school/${schoolId}`)
         : Promise.resolve({ data: { data: [] } });
       const [classRes, sectionRes, subjectRes, teacherRes, academicYearRes] = await Promise.all([
-        apiClient.get("/school-class", { params: paramsWithSchool }),
+        apiClient.get("/school-class/class-detailes", { params: paramsWithSchool }),
         apiClient.get("/sections", { params: paramsWithSchool }),
         apiClient.get("/subject/all", { params: { limit: 100 } }),
         apiClient.get("/employee", {

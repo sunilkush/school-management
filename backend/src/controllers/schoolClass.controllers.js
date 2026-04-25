@@ -57,34 +57,64 @@ export const getAllSchoolClasses = async (req, res) => {
   try {
     const { schoolId, academicYearId } = req.query;
 
-    const filter = {};
-    if (schoolId) filter.schoolId = schoolId;
-    if (academicYearId) filter.academicYearId = academicYearId;
+    if (!schoolId) {
+      return res.status(400).json({
+        success: false,
+        message: "schoolId is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid schoolId",
+      });
+    }
+
+    const filter = {
+      schoolId: new mongoose.Types.ObjectId(schoolId),
+    };
+
+    if (academicYearId) {
+      if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid academicYearId",
+        });
+      }
+
+      filter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
+    }
 
     const classes = await SchoolClass.find(filter)
-      .select("name") // ✅ only class name
+      .select("name schoolId academicYearId")
       .sort({ createdAt: -1 })
       .lean();
 
     const classIds = classes.map((cls) => cls._id);
 
     const sections = await Section.find({
+      schoolId: new mongoose.Types.ObjectId(schoolId),
       schoolClassId: { $in: classIds },
+      ...(academicYearId && {
+        academicYearId: new mongoose.Types.ObjectId(academicYearId),
+      }),
     })
-      .select("name schoolClassId subjects") // ✅ only needed fields
+      .select("name schoolId schoolClassId classTeacherId subjects")
+      .populate("classTeacherId", "name email")
       .populate("subjects.subjectId", "name")
       .lean();
 
-    // ✅ FINAL STRUCTURE
     const finalData = classes.map((cls) => {
       const classSections = sections
         .filter(
-          (sec) =>
-            sec.schoolClassId.toString() === cls._id.toString()
+          (sec) => sec.schoolClassId?.toString() === cls._id.toString()
         )
         .map((sec) => ({
           _id: sec._id,
           name: sec.name,
+          schoolId: sec.schoolId,
+
           teacher: sec.classTeacherId
             ? {
                 _id: sec.classTeacherId._id,
@@ -92,21 +122,25 @@ export const getAllSchoolClasses = async (req, res) => {
                 email: sec.classTeacherId.email,
               }
             : null,
-          subjects: sec.subjects.map((sub) => ({
-            _id: sub.subjectId?._id,
-            name: sub.subjectId?.name,
+
+          subjects: (sec.subjects || []).map((sub) => ({
+            _id: sub.subjectId?._id || null,
+            name: sub.subjectId?.name || "",
           })),
         }));
 
       return {
         _id: cls._id,
         name: cls.name,
+        schoolId: cls.schoolId,
+        academicYearId: cls.academicYearId,
         sections: classSections,
       };
     });
 
     return res.status(200).json({
       success: true,
+      message: "School classes fetched successfully",
       data: finalData,
     });
   } catch (error) {
@@ -117,7 +151,6 @@ export const getAllSchoolClasses = async (req, res) => {
     });
   }
 };
-
 // 🔹 GET SINGLE
 export const getSchoolClassById = async (req, res) => {
   try {

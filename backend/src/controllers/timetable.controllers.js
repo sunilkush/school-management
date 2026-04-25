@@ -93,6 +93,31 @@ const verifySchoolOwnership = (req) => {
   }
   return schoolId;
 };
+const resolveSchoolIdForList = (req) => {
+  const requestedSchoolId = toObjectIdString(req.query?.schoolId);
+  const loggedInSchoolId = toObjectIdString(req.user?.schoolId);
+  const roleName = req.userRole?.name || req.user?.roleId?.name || "";
+
+  if (!requestedSchoolId) {
+    return verifySchoolOwnership(req);
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(requestedSchoolId)) {
+    throw new ApiError(400, "Invalid schoolId");
+  }
+
+  if (roleName !== "Super Admin") {
+    if (!loggedInSchoolId) {
+      throw new ApiError(400, "Logged-in user does not belong to a school");
+    }
+
+    if (loggedInSchoolId !== requestedSchoolId) {
+      throw new ApiError(403, "You are not allowed to access timetable of another school");
+    }
+  }
+
+  return requestedSchoolId;
+};
 
 const sortByWeekdayThenTime = (items = []) =>
   [...items].sort(
@@ -109,6 +134,7 @@ const dayOrderValue = (day) => {
 
 const populateTimetable = (query) =>
   query
+    .populate("schoolId", "schoolName name code")
     .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("subjectId", "name code")
@@ -116,7 +142,7 @@ const populateTimetable = (query) =>
     .lean();
 
 export const listClassTimetable = asyncHandler(async (req, res) => {
-  const schoolId = verifySchoolOwnership(req);
+  const schoolId = resolveSchoolIdForList(req);
   const { academicYearId, schoolClassId, sectionId, day } = req.query;
 
   const entries = await populateTimetable(
@@ -137,7 +163,7 @@ export const listClassTimetable = asyncHandler(async (req, res) => {
 });
 
 export const listTeacherTimetable = asyncHandler(async (req, res) => {
-  const schoolId = verifySchoolOwnership(req);
+   const schoolId = resolveSchoolIdForList(req);
   const teacherId = req.query.teacherId || req.user._id;
   const { academicYearId, day } = req.query;
 
