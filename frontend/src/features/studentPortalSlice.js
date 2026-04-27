@@ -24,6 +24,28 @@ const normalizeTimetableEntry = (entry) => {
   };
 };
 
+const normalizeTransportAssignment = (assignment) => {
+  if (!assignment) return null;
+
+  return {
+    ...assignment,
+    routeName: assignment?.routeId?.name || assignment?.routeName || "",
+    vehicleNumber:
+      assignment?.vehicleId?.busNumber || assignment?.vehicleNumber || "",
+    stopName: assignment?.pickupStop || assignment?.stopName || "",
+  };
+};
+
+const normalizeTimetableEntry = (entry) => {
+  if (!entry) return entry;
+
+  return {
+    ...entry,
+    subject: entry?.subjectId || null,
+    teacher: entry?.teacherId || null,
+  };
+};
+
 const normalizeGrade = (grade) => {
   if (!grade) return grade;
 
@@ -39,12 +61,13 @@ const normalizeGrade = (grade) => {
       : null,
   };
 };
+
 export const fetchStudentGrades = createAsyncThunk(
   "studentPortal/fetchStudentGrades",
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/student-portal/me/grades");
-       return (res.data?.data?.grades || []).map(normalizeGrade);
+      return (res.data?.data?.grades || []).map(normalizeGrade);
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch grades"));
     }
@@ -56,7 +79,7 @@ export const fetchStudentTimetable = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/student-portal/me/timetable");
-     return (res.data?.data?.timetable || []).map(normalizeTimetableEntry);
+      return (res.data?.data?.timetable || []).map(normalizeTimetableEntry);
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch timetable"));
     }
@@ -90,7 +113,7 @@ export const fetchStudentProfile = createAsyncThunk(
   "studentPortal/fetchStudentProfile",
   async (_, { rejectWithValue }) => {
     try {
-        const res = await apiClient.get("/student-portal/me/profile");
+       const res = await apiClient.get("/student-portal/me/profile");
       return res.data?.data || null;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch student profile"));
@@ -126,7 +149,7 @@ export const fetchMyChildren = createAsyncThunk(
   "studentPortal/fetchMyChildren",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/student/my-children");
+      const res = await apiClient.get("/student-portal/my-children");
       return res.data?.data || [];
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch children"));
