@@ -2,6 +2,27 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
 const getError = (err, fallback) => err?.response?.data?.message || fallback;
+ const normalizeTransportAssignment = (assignment) => {
+  if (!assignment) return null;
+
+  return {
+    ...assignment,
+    routeName: assignment?.routeId?.name || assignment?.routeName || "",
+    vehicleNumber:
+      assignment?.vehicleId?.busNumber || assignment?.vehicleNumber || "",
+    stopName: assignment?.pickupStop || assignment?.stopName || "",
+  };
+};
+
+const normalizeTimetableEntry = (entry) => {
+  if (!entry) return entry;
+
+  return {
+    ...entry,
+    subject: entry?.subjectId || null,
+    teacher: entry?.teacherId || null,
+  };
+};
 
 const normalizeTransportAssignment = (assignment) => {
   if (!assignment) return null;

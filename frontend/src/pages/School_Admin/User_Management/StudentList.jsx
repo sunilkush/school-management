@@ -243,7 +243,7 @@ const StudentList = () => {
   /* ── Guards ── */
   if (!isSchoolAdmin) {
     return (
-      <div style={{ padding: 20 }}>
+      <div >
         <Card style={{ borderRadius: 16, textAlign: "center", padding: "40px 0" }}>
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -278,7 +278,7 @@ const StudentList = () => {
     >
      
 
-      <div style={{ padding: "24px", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{  fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* ── Page Header ── */}
         <div style={{ marginBottom: 24 }}>

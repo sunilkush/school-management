@@ -110,7 +110,8 @@ const StudentPromotion = () => {
   );
 
   return (
-    <Card>
+    <>
+    <Card style={{backgroundColor:'#fff'}}>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         <div>
           <Title level={4} style={{ marginBottom: 4 }}>
@@ -200,6 +201,7 @@ const StudentPromotion = () => {
         </Space>
       </Space>
     </Card>
+    </>
   );
 };
 

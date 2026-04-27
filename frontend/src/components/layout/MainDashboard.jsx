@@ -240,10 +240,11 @@ const Dashboard = () => {
             className="dashboard-content"
             style={{
               flex: 1,
-              padding: isMobile ? 12 : 0,
+              padding: isMobile ? 12 : 24,
               background: t.contentBg,
               color: "var(--text-primary)",
               minHeight: "calc(100vh - 64px)",
+              
             }}
           >
             <div className="dashboard-outlet">

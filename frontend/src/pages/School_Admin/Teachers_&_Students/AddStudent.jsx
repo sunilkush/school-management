@@ -4,9 +4,9 @@ import AdmissionForm from '../../../components/forms/AdmissionForm'
 
 const AddStudent = () => {
   return (
-    <div>
-      <AdmissionForm/>
-    </div>
+    <>
+      <AdmissionForm />
+    </>
   )
 }
 
