@@ -173,7 +173,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title:"timetable management",
+      title:"Timetable Management",
       icon: CalendarClock,
       subMenu:[
         {title:"Create Timetable",path:"schooladmin/timetable/class"},
