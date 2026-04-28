@@ -87,13 +87,13 @@ const ClassTimetable = () => {
     schoolClassId: "All",
     sectionId: "All",
   });
-
+  const roleName = "Teacher"
   const selectedFormClassId = Form.useWatch("schoolClassId", form);
 
   useEffect(() => {
     if (!schoolId) return;
 
-    dispatch(fetchAllUser({ schoolId }))
+    dispatch(fetchAllUser({ schoolId,roleName }))
       .unwrap?.()
       .catch?.((err) => message.error(err || "Failed to load users"));
   }, [schoolId, dispatch]);
