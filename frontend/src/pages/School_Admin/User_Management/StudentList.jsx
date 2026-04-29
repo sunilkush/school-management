@@ -94,7 +94,7 @@ const StudentList = () => {
     if (schoolStudents?.data) return schoolStudents.data;
     return [];
   }, [schoolStudents]);
-
+ 
   const formattedStudents = useMemo(() =>
     studentsArray.map((stu) => ({
       key: stu._id,
