@@ -116,7 +116,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
   const { isDark, toggleTheme, themeMode, setThemeMode } = useTheme();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-
+   const isMobile = !screens.md;
   const loader = (
     <Spin size="small" style={{ display: "flex", alignItems: "center" }} />
   );
@@ -130,7 +130,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
       <Header style={styles.header(isDark)}>
 
         {/* ── LEFT ── */}
-        <Space align="center" size={12}>
+       <Space align="center" size={isMobile ? 8 : 12}>
           {/* Sidebar toggle */}
           <Tooltip title={isOpen ? "Collapse sidebar" : "Expand sidebar"} placement="bottom">
             <Button
@@ -183,10 +183,10 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
         </Space>
 
         {/* ── RIGHT ── */}
-        <Space size={6} align="center">
+         <Space size={isMobile ? 4 : 6} align="center">
 
           {/* Mobile search */}
-          {!screens.md && (
+          {isMobile && (
             <IconBtn
               icon={<SearchOutlined style={{ fontSize: 16 }} />}
               tooltip="Search"
@@ -196,23 +196,25 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           )}
 
           {/* Academic Year Switcher */}
-          {screens.sm && user?.role?.name !== "Super Admin" && (
+          {!isMobile && screens.sm && user?.role?.name !== "Super Admin" && (
             <Suspense fallback={loader}>
               <AcademicYearSwitcher />
             </Suspense>
           )}
 
           {/* Vertical divider */}
-          {screens.sm && <span style={styles.divider(isDark)} />}
+            {!isMobile && screens.sm && <span style={styles.divider(isDark)} />}
 
           {/* Messages */}
-          <IconBtn
-            icon={<MessageOutlined style={{ fontSize: 16,color:"var(--text-primary)" }} />}
-            tooltip="Messages"
-            badge={3}
-            isDark={isDark}
-            ariaLabel="Messages"
-          />
+         {!isMobile && (
+            <IconBtn
+              icon={<MessageOutlined style={{ fontSize: 16,color:"var(--text-primary)" }} />}
+              tooltip="Messages"
+              badge={3}
+              isDark={isDark}
+              ariaLabel="Messages"
+            />
+          )}
 
           {/* Theme toggle */}
           <Dropdown
@@ -250,7 +252,8 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           </Suspense>
 
           {/* Vertical divider */}
-          <span style={styles.divider(isDark)} />
+         {!isMobile && <span style={styles.divider(isDark)} />}
+
 
           {/* User */}
           <Suspense fallback={loader}>
