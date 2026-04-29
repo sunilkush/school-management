@@ -156,6 +156,13 @@ const EmployeeSalaries = lazy(() => import("./pages/School_Admin/Payroll/Employe
 const SalaryStructures = lazy(() => import("./pages/School_Admin/Payroll/SalaryStructures.jsx"));
 const GeneratePayslip = lazy(() => import("./pages/School_Admin/Payroll/GeneratePayslip.jsx"));
 const MonthlyPayrollReport = lazy(() => import("./pages/School_Admin/Payroll/MonthlyPayrollReport.jsx"));
+const PayrollDashboardEnterprise = lazy(() => import("./pages/School_Admin/Payroll/PayrollDashboardEnterprise.jsx"));
+const PayrollRunPage = lazy(() => import("./pages/School_Admin/Payroll/PayrollRunPage.jsx"));
+const PayrollApprovalPanel = lazy(() => import("./pages/School_Admin/Payroll/PayrollApprovalPanel.jsx"));
+const LoanManagementPage = lazy(() => import("./pages/School_Admin/Payroll/LoanManagementPage.jsx"));
+const TaxSettingsPage = lazy(() => import("./pages/School_Admin/Payroll/TaxSettingsPage.jsx"));
+const PayrollSelfServicePage = lazy(() => import("./pages/Employee/PayrollSelfServicePage.jsx"));
+const CreateEmployee = lazy(()=>import('./pages/School_Admin/Payroll/CreateEmployee.jsx'));
 
 const SendNotification = lazy(() => import("./pages/School_Admin/Communication/SendNotification.jsx"));
 const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"));
@@ -246,6 +253,7 @@ const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import Register from "./components/forms/RegisterForm.jsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -417,10 +425,6 @@ const router = createBrowserRouter([
               { path: "support/contact", element: <ContactSupport/> },
               { path: "support/documentation", element: <Documentation/> },
               { path: "support/faqs", element: <Faqs/> },
-             
-              
-
-
             ],
           },
           {
@@ -458,9 +462,14 @@ const router = createBrowserRouter([
               { path: "transport/assignments", element: <TransportAssignments /> },
               { path: "payroll/monthly-run", element: <EmployeeSalaries /> },
               { path: "payroll/salary-structures", element: <SalaryStructures /> },
-              { path: "payroll/create-employee", element: <EmployeeForm /> },
+              { path: "payroll/create-employee", element: <CreateEmployee/> },
               { path: "payroll/payslips", element: <GeneratePayslip /> },
               { path: "payroll/reports/monthly", element: <MonthlyPayrollReport /> },
+               { path: "payroll/enterprise/dashboard", element: <PayrollDashboardEnterprise /> },
+              { path: "payroll/enterprise/run", element: <PayrollRunPage /> },
+              { path: "payroll/enterprise/approval", element: <PayrollApprovalPanel /> },
+              { path: "payroll/enterprise/loans", element: <LoanManagementPage /> },
+              { path: "payroll/enterprise/tax", element: <TaxSettingsPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports", element: <SchoolAdminReport /> },
@@ -481,10 +490,10 @@ const router = createBrowserRouter([
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "exams/reports", element: <ExamReports /> },
-              { path: "users/employee-form", element: <EmployeeForm /> },
+            
               { path: "users/employee-details", element: <EmployeeDetailes /> },
               // Backward-compatible routes (legacy typos)
-              { path: "users/employee-from", element: <EmployeeForm /> },
+             
               { path: "users/employee-detailes", element: <EmployeeDetailes /> },
               { path: "calendar", element: <CalendarPage /> },
               { path: "events", element: <Events /> },
