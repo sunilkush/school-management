@@ -4,6 +4,7 @@ import {
   Card,
   Col,
   Empty,
+  Grid,
   Layout,
   Row,
   Segmented,
@@ -15,7 +16,11 @@ import {
   Typography,
   message,
 } from "antd";
-import { BookOutlined, ClockCircleOutlined, TeamOutlined } from "@ant-design/icons";
+import {
+  BookOutlined,
+  ClockCircleOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchTeacherTimetable,
@@ -24,25 +29,34 @@ import {
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 const TeacherTimetable = () => {
   const dispatch = useDispatch();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   const user = useSelector((state) => state.auth?.user);
+
   const {
-    teachers,
-    teacherTimetable: timetable,
+    teachers = [],
+    teacherTimetable: timetable = [],
     activeAcademicYearId,
     loading,
-  } = useSelector((state) => state.timetable);
+  } = useSelector((state) => state.timetable || {});
+
   const [activeDay, setActiveDay] = useState("Monday");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
   useEffect(() => {
-    dispatch(fetchTimetableMasterData({ schoolId: user?.schoolId }))
+    if (!user?.school?._id) return;
+
+    dispatch(fetchTimetableMasterData({ schoolId: user?.school?._id }))
       .unwrap()
       .catch((error) => message.error(error || "Failed to load teachers"));
-  }, [dispatch, user?.schoolId]);
+  }, [dispatch, user?.school?._id]);
 
   useEffect(() => {
     if (!selectedTeacherId && teachers.length) {
@@ -51,7 +65,8 @@ const TeacherTimetable = () => {
   }, [selectedTeacherId, teachers]);
 
   useEffect(() => {
-    if (!selectedTeacherId) return;
+    if (!selectedTeacherId || !activeAcademicYearId) return;
+
     dispatch(
       fetchTeacherTimetable({
         teacherId: selectedTeacherId,
@@ -60,70 +75,161 @@ const TeacherTimetable = () => {
       })
     )
       .unwrap()
-      .catch((error) => message.error(error || "Failed to fetch teacher timetable"));
+      .catch((error) =>
+        message.error(error || "Failed to fetch teacher timetable")
+      );
   }, [activeAcademicYearId, activeDay, dispatch, selectedTeacherId]);
 
   const stats = useMemo(() => {
-    const classCount = new Set(timetable.map((item) => `${item.schoolClassId?._id}-${item.sectionId?._id}`)).size;
+    const classCount = new Set(
+      timetable.map(
+        (item) => `${item.schoolClassId?._id || ""}-${item.sectionId?._id || ""}`
+      )
+    ).size;
+
     return {
       periods: timetable.length,
       classes: classCount,
-      subjects: new Set(timetable.map((item) => item.subjectId?._id)).size,
+      subjects: new Set(timetable.map((item) => item.subjectId?._id).filter(Boolean))
+        .size,
     };
   }, [timetable]);
 
   const columns = [
-    { title: "Period", key: "period", render: (_, row, idx) => `P${idx + 1}` },
-    { title: "Time", key: "time", render: (_, row) => `${row.startTime} - ${row.endTime}` },
-    { title: "Subject", key: "subject", render: (_, row) => <Tag color="blue">{row.subjectId?.name || "-"}</Tag> },
-    { title: "Class", key: "class", render: (_, row) => `${row.schoolClassId?.name || "-"} - ${row.sectionId?.name || "-"}` },
-    { title: "Room", dataIndex: "room", key: "room", render: (value) => value || "-" },
+    {
+      title: "Period",
+      key: "period",
+      render: (_, row, idx) => `P${idx + 1}`,
+    },
+    {
+      title: "Time",
+      key: "time",
+      render: (_, row) => `${row.startTime || "-"} - ${row.endTime || "-"}`,
+    },
+    {
+      title: "Subject",
+      key: "subject",
+      render: (_, row) => <Tag color="blue">{row.subjectId?.name || "-"}</Tag>,
+    },
+    {
+      title: "Class",
+      key: "class",
+      render: (_, row) =>
+        `${row.schoolClassId?.name || "-"} - ${row.sectionId?.name || "-"}`,
+    },
+    {
+      title: "Room",
+      dataIndex: "room",
+      key: "room",
+      render: (value) => value || "-",
+    },
   ];
 
+  const TimetableCard = ({ item, index }) => (
+    <Card
+      size="small"
+      style={{
+        borderRadius: 14,
+        marginBottom: 12,
+      }}
+    >
+      <Space direction="vertical" size={8} style={{ width: "100%" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 10,
+            alignItems: "flex-start",
+          }}
+        >
+          <div>
+            <Text strong>P{index + 1}</Text>
+            <br />
+            <Text type="secondary">
+              {item.startTime || "-"} - {item.endTime || "-"}
+            </Text>
+          </div>
+
+          <Tag color="blue">{item.subjectId?.name || "-"}</Tag>
+        </div>
+
+        <div>
+          <Text type="secondary">Class: </Text>
+          <Text>
+            {item.schoolClassId?.name || "-"} - {item.sectionId?.name || "-"}
+          </Text>
+        </div>
+
+        <div>
+          <Text type="secondary">Room: </Text>
+          <Text>{item.room || "-"}</Text>
+        </div>
+      </Space>
+    </Card>
+  );
+
   return (
-    <Layout style={{ padding: 24, minHeight: "100vh", background: "transparent" }}>
+    <Layout
+      style={{
+        padding: isMobile ? 0 : 0,
+        minHeight: "100vh",
+        background: "transparent",
+      }}
+    >
       <Content>
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={24} md={8}>
-            <Card>
+        <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+          <Col xs={24} sm={12} lg={8}>
+            <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
               <Space>
-                <ClockCircleOutlined style={{ color: "#1677ff" }} />
+                <ClockCircleOutlined style={{ color: "#1677ff", fontSize: 22 }} />
                 <div>
                   <Text type="secondary">Daily Periods</Text>
-                  <Title level={4} style={{ margin: 0 }}>{stats.periods}</Title>
+                  <Title level={4} style={{ margin: 0 }}>
+                    {stats.periods}
+                  </Title>
                 </div>
               </Space>
             </Card>
           </Col>
-          <Col xs={24} md={8}>
-            <Card>
+
+          <Col xs={24} sm={12} lg={8}>
+            <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
               <Space>
-                <TeamOutlined style={{ color: "#52c41a" }} />
+                <TeamOutlined style={{ color: "#52c41a", fontSize: 22 }} />
                 <div>
                   <Text type="secondary">Classes Handled</Text>
-                  <Title level={4} style={{ margin: 0 }}>{stats.classes}</Title>
+                  <Title level={4} style={{ margin: 0 }}>
+                    {stats.classes}
+                  </Title>
                 </div>
               </Space>
             </Card>
           </Col>
-          <Col xs={24} md={8}>
-            <Card>
+
+          <Col xs={24} sm={24} lg={8}>
+            <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
               <Space>
-                <BookOutlined style={{ color: "#722ed1" }} />
+                <BookOutlined style={{ color: "#722ed1", fontSize: 22 }} />
                 <div>
                   <Text type="secondary">Subjects</Text>
-                  <Title level={4} style={{ margin: 0 }}>{stats.subjects}</Title>
+                  <Title level={4} style={{ margin: 0 }}>
+                    {stats.subjects}
+                  </Title>
                 </div>
               </Space>
             </Card>
           </Col>
         </Row>
 
-        <Card>
+        <Card style={{ borderRadius: 18 }}>
           <Space direction="vertical" size={12} style={{ width: "100%" }}>
             <div>
-              <Title level={4} style={{ marginBottom: 4 }}>Teacher Timetable</Title>
-              <Text type="secondary">Live teacher-wise daily schedule from backend data.</Text>
+              <Title level={isMobile ? 5 : 4} style={{ marginBottom: 4 }}>
+                Teacher Timetable
+              </Title>
+              <Text type="secondary">
+                Live teacher-wise daily schedule from backend data.
+              </Text>
             </div>
 
             <Alert
@@ -136,21 +242,50 @@ const TeacherTimetable = () => {
             <Select
               value={selectedTeacherId || undefined}
               placeholder="Select teacher"
-              style={{ maxWidth: 320 }}
+              style={{ width: isMobile ? "100%" : 320 }}
               onChange={setSelectedTeacherId}
+              showSearch
+              optionFilterProp="children"
             >
               {teachers.map((teacher) => (
-                <Select.Option key={teacher.userId?._id} value={teacher.userId?._id}>
+                <Select.Option
+                  key={teacher.userId?._id}
+                  value={teacher.userId?._id}
+                >
                   {teacher.userId?.name}
                 </Select.Option>
               ))}
             </Select>
 
-            <Segmented options={dayOrder} value={activeDay} onChange={setActiveDay} />
+            <div
+              style={{
+                width: "100%",
+                overflowX: "auto",
+                paddingBottom: 4,
+              }}
+            >
+              <Segmented
+                options={dayOrder}
+                value={activeDay}
+                onChange={setActiveDay}
+              />
+            </div>
 
-            <Spin spinning={loading}>
+            <Spin spinning={!!loading}>
               {timetable.length ? (
-                <Table rowKey="_id" columns={columns} dataSource={timetable} pagination={false} />
+                isMobile ? (
+                  timetable.map((item, index) => (
+                    <TimetableCard key={item._id || index} item={item} index={index} />
+                  ))
+                ) : (
+                  <Table
+                    rowKey={(record) => record._id}
+                    columns={columns}
+                    dataSource={timetable}
+                    pagination={false}
+                    scroll={{ x: 760 }}
+                  />
+                )
               ) : (
                 <Empty description="No periods scheduled for selected teacher/day" />
               )}

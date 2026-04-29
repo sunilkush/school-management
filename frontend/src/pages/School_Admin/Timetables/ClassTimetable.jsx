@@ -20,6 +20,7 @@ import {
   Segmented,
   Spin,
   Popconfirm,
+  Grid,
 } from "antd";
 import {
   PlusOutlined,
@@ -45,15 +46,9 @@ import { fetchAllUser } from "../../../features/authSlice";
 const { Content } = Layout;
 const { Option } = Select;
 const { Text, Title } = Typography;
+const { useBreakpoint } = Grid;
 
-const dayOrder = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const getId = (value) => {
   if (!value) return "";
@@ -63,6 +58,8 @@ const getId = (value) => {
 
 const ClassTimetable = () => {
   const dispatch = useDispatch();
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
 
   const { user, users = [] } = useSelector((state) => state.auth || {});
   const schoolId = user?.school?._id || user?.schoolId?._id || user?.schoolId;
@@ -79,6 +76,7 @@ const ClassTimetable = () => {
   } = useSelector((state) => state.timetable || {});
 
   const [form] = Form.useForm();
+  const selectedFormClassId = Form.useWatch("schoolClassId", form);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -87,20 +85,18 @@ const ClassTimetable = () => {
     schoolClassId: "All",
     sectionId: "All",
   });
-  const roleName = "Teacher"
-  const selectedFormClassId = Form.useWatch("schoolClassId", form);
+
+  const roleName = "Teacher";
 
   useEffect(() => {
     if (!schoolId) return;
-
-    dispatch(fetchAllUser({ schoolId,roleName }))
+    dispatch(fetchAllUser({ schoolId, roleName }))
       .unwrap?.()
       .catch?.((err) => message.error(err || "Failed to load users"));
   }, [schoolId, dispatch]);
 
   useEffect(() => {
     if (!schoolId) return;
-
     dispatch(fetchTimetableMasterData({ schoolId }))
       .unwrap()
       .catch((err) => message.error(err || "Failed to load timetable data"));
@@ -108,7 +104,6 @@ const ClassTimetable = () => {
 
   useEffect(() => {
     if (!activeAcademicYearId) return;
-
     dispatch(fetchClassTimetable({ academicYearId: activeAcademicYearId }))
       .unwrap()
       .catch((err) => message.error(err || "Failed to fetch timetable"));
@@ -137,21 +132,14 @@ const ClassTimetable = () => {
           : getId(item.schoolClassId) === filters.schoolClassId
       )
       .filter((item) =>
-        filters.sectionId === "All"
-          ? true
-          : getId(item.sectionId) === filters.sectionId
+        filters.sectionId === "All" ? true : getId(item.sectionId) === filters.sectionId
       )
       .sort((a, b) => String(a.startTime).localeCompare(String(b.startTime)));
   }, [activeDay, filters, timetable]);
 
   const stats = useMemo(() => {
-    const uniqueTeachers = new Set(
-      timetable.map((entry) => getId(entry.teacherId)).filter(Boolean)
-    );
-
-    const uniqueSubjects = new Set(
-      timetable.map((entry) => getId(entry.subjectId)).filter(Boolean)
-    );
+    const uniqueTeachers = new Set(timetable.map((entry) => getId(entry.teacherId)).filter(Boolean));
+    const uniqueSubjects = new Set(timetable.map((entry) => getId(entry.subjectId)).filter(Boolean));
 
     return {
       totalSlots: timetable.length,
@@ -175,28 +163,17 @@ const ClassTimetable = () => {
   }, [sections, selectedFormClassId]);
 
   const teacherOptions = useMemo(() => {
-    const timetableTeachers = teachers
-      .map((item) => item?.userId || item)
-      .filter((item) => item?._id);
+    const timetableTeachers = teachers.map((item) => item?.userId || item).filter((item) => item?._id);
 
     const userTeachers = users.filter((item) => {
-      const roleName =
-        item?.role?.name ||
-        item?.roleId?.name ||
-        item?.role ||
-        item?.roleName ||
-        "";
-
-      return String(roleName).toLowerCase().includes("teacher");
+      const role =
+        item?.role?.name || item?.roleId?.name || item?.role || item?.roleName || "";
+      return String(role).toLowerCase().includes("teacher");
     });
 
-    const merged = [...timetableTeachers, ...userTeachers];
-
     const map = new Map();
-    merged.forEach((item) => {
-      if (item?._id && !map.has(item._id)) {
-        map.set(item._id, item);
-      }
+    [...timetableTeachers, ...userTeachers].forEach((item) => {
+      if (item?._id && !map.has(item._id)) map.set(item._id, item);
     });
 
     return Array.from(map.values());
@@ -214,11 +191,7 @@ const ClassTimetable = () => {
       return;
     }
 
-    if (
-      !values?.startTime ||
-      !values?.endTime ||
-      !values.endTime.isAfter(values.startTime)
-    ) {
+    if (!values?.startTime || !values?.endTime || !values.endTime.isAfter(values.startTime)) {
       message.error("End time should be greater than start time.");
       return;
     }
@@ -237,13 +210,7 @@ const ClassTimetable = () => {
 
     try {
       if (editingRecord?._id) {
-        await dispatch(
-          updateTimetableEntry({
-            id: editingRecord._id,
-            payload,
-          })
-        ).unwrap();
-
+        await dispatch(updateTimetableEntry({ id: editingRecord._id, payload })).unwrap();
         message.success("Class schedule updated successfully.");
       } else {
         await dispatch(createTimetableEntry(payload)).unwrap();
@@ -253,9 +220,7 @@ const ClassTimetable = () => {
       setActiveDay(values.day);
       resetModalState();
 
-      await dispatch(
-        fetchClassTimetable({ academicYearId: activeAcademicYearId })
-      ).unwrap();
+      await dispatch(fetchClassTimetable({ academicYearId: activeAcademicYearId })).unwrap();
     } catch (error) {
       message.error(error || "Failed to save timetable entry");
     }
@@ -284,9 +249,7 @@ const ClassTimetable = () => {
       message.success("Class schedule removed.");
 
       if (activeAcademicYearId) {
-        await dispatch(
-          fetchClassTimetable({ academicYearId: activeAcademicYearId })
-        ).unwrap();
+        await dispatch(fetchClassTimetable({ academicYearId: activeAcademicYearId })).unwrap();
       }
     } catch (error) {
       message.error(error || "Failed to delete timetable entry");
@@ -328,6 +291,7 @@ const ClassTimetable = () => {
     {
       title: "Actions",
       key: "actions",
+      fixed: "right",
       render: (_, record) => (
         <Space>
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)}>
@@ -350,30 +314,86 @@ const ClassTimetable = () => {
     },
   ];
 
+  const TimetableMobileCard = ({ item }) => (
+    <Card
+      size="small"
+      style={{
+        borderRadius: 14,
+        marginBottom: 12,
+      }}
+    >
+      <Space direction="vertical" style={{ width: "100%" }} size={10}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+          <div>
+            <Text strong>
+              {item.startTime || "-"} - {item.endTime || "-"}
+            </Text>
+            <br />
+            <Text type="secondary">
+              {item.schoolClassId?.name || item.schoolClassId?.className || "-"} /{" "}
+              {item.sectionId?.name || "-"}
+            </Text>
+          </div>
+
+          <Tag color="blue">{item.subjectId?.name || "-"}</Tag>
+        </div>
+
+        <div>
+          <Text type="secondary">Teacher: </Text>
+          <Text>{item.teacherId?.name || "-"}</Text>
+        </div>
+
+        <div>
+          <Text type="secondary">Room: </Text>
+          <Text>{item.room || "-"}</Text>
+        </div>
+
+        <Space style={{ width: "100%", justifyContent: "flex-end" }}>
+          <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(item)}>
+            Edit
+          </Button>
+
+          <Popconfirm
+            title="Delete schedule?"
+            okText="Yes"
+            cancelText="No"
+            onConfirm={() => handleDelete(item)}
+          >
+            <Button size="small" danger icon={<DeleteOutlined />}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </Space>
+      </Space>
+    </Card>
+  );
+
   return (
     <Layout
       style={{
-        padding: "24px",
+       
         minHeight: "100vh",
         background: "transparent",
       }}
     >
-      <Breadcrumb
-        style={{ marginBottom: 16 }}
-        items={[
-          { title: "Dashboard" },
-          { title: "Academics" },
-          { title: "Class Timetable" },
-        ]}
-      />
+      {!isMobile && (
+        <Breadcrumb
+          style={{ marginBottom: 16 }}
+          items={[
+            { title: "Dashboard" },
+            { title: "Academics" },
+            { title: "Class Timetable" },
+          ]}
+        />
+      )}
 
       <Content>
         <Spin spinning={!!loading}>
-          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-            <Col xs={24} md={8}>
-              <Card>
+          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+            <Col xs={24} sm={12} lg={8}>
+              <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
                 <Space>
-                  <CalendarOutlined style={{ color: "#1677ff" }} />
+                  <CalendarOutlined style={{ color: "#1677ff", fontSize: 22 }} />
                   <div>
                     <Text type="secondary">Total Slots</Text>
                     <Title level={4} style={{ margin: 0 }}>
@@ -384,10 +404,10 @@ const ClassTimetable = () => {
               </Card>
             </Col>
 
-            <Col xs={24} md={8}>
-              <Card>
+            <Col xs={24} sm={12} lg={8}>
+              <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
                 <Space>
-                  <TeamOutlined style={{ color: "#52c41a" }} />
+                  <TeamOutlined style={{ color: "#52c41a", fontSize: 22 }} />
                   <div>
                     <Text type="secondary">Teachers Assigned</Text>
                     <Title level={4} style={{ margin: 0 }}>
@@ -398,10 +418,10 @@ const ClassTimetable = () => {
               </Card>
             </Col>
 
-            <Col xs={24} md={8}>
-              <Card>
+            <Col xs={24} sm={24} lg={8}>
+              <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
                 <Space>
-                  <BookOutlined style={{ color: "#722ed1" }} />
+                  <BookOutlined style={{ color: "#722ed1", fontSize: 22 }} />
                   <div>
                     <Text type="secondary">Subjects Planned</Text>
                     <Title level={4} style={{ margin: 0 }}>
@@ -413,7 +433,7 @@ const ClassTimetable = () => {
             </Col>
           </Row>
 
-          <Card>
+          <Card style={{ borderRadius: 18 }}>
             <div
               style={{
                 display: "flex",
@@ -423,8 +443,8 @@ const ClassTimetable = () => {
                 marginBottom: 16,
               }}
             >
-              <div>
-                <Title level={4} style={{ marginBottom: 4 }}>
+              <div style={{ minWidth: 0 }}>
+                <Title level={isMobile ? 5 : 4} style={{ marginBottom: 4 }}>
                   Class Timetable Planner
                 </Title>
                 <Text type="secondary">
@@ -435,6 +455,7 @@ const ClassTimetable = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
+                block={isMobile}
                 onClick={() => {
                   setEditingRecord(null);
                   form.resetFields();
@@ -446,16 +467,28 @@ const ClassTimetable = () => {
               </Button>
             </div>
 
-            <Space wrap style={{ marginBottom: 16 }}>
-              <Segmented
-                options={dayOrder}
-                value={activeDay}
-                onChange={(value) => setActiveDay(value)}
-              />
+            <Space
+              direction={isMobile ? "vertical" : "horizontal"}
+              size={12}
+              style={{ width: "100%", marginBottom: 16 }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  overflowX: "auto",
+                  paddingBottom: 4,
+                }}
+              >
+                <Segmented
+                  options={dayOrder}
+                  value={activeDay}
+                  onChange={(value) => setActiveDay(value)}
+                />
+              </div>
 
               <Select
                 value={filters.schoolClassId}
-                style={{ width: 180 }}
+                style={{ width: isMobile ? "100%" : 180 }}
                 onChange={(value) =>
                   setFilters({
                     schoolClassId: value,
@@ -473,7 +506,7 @@ const ClassTimetable = () => {
 
               <Select
                 value={filters.sectionId}
-                style={{ width: 140 }}
+                style={{ width: isMobile ? "100%" : 140 }}
                 onChange={(value) =>
                   setFilters((prev) => ({
                     ...prev,
@@ -491,13 +524,19 @@ const ClassTimetable = () => {
             </Space>
 
             {filteredData.length ? (
-              <Table
-                columns={columns}
-                dataSource={filteredData}
-                pagination={{ pageSize: 6 }}
-                rowKey={(record) => record._id}
-                scroll={{ x: 900 }}
-              />
+              isMobile ? (
+                filteredData.map((item) => (
+                  <TimetableMobileCard key={item._id} item={item} />
+                ))
+              ) : (
+                <Table
+                  columns={columns}
+                  dataSource={filteredData}
+                  pagination={{ pageSize: 6, responsive: true }}
+                  rowKey={(record) => record._id}
+                  scroll={{ x: 900 }}
+                />
+              )
             ) : (
               <Empty description="No classes scheduled for selected filters" />
             )}
@@ -509,6 +548,8 @@ const ClassTimetable = () => {
             onCancel={resetModalState}
             footer={null}
             destroyOnHidden
+            width={isMobile ? "96%" : 620}
+            style={isMobile ? { top: 12 } : {}}
           >
             <Form form={form} layout="vertical" onFinish={handleSave}>
               <Row gutter={12}>
@@ -520,9 +561,7 @@ const ClassTimetable = () => {
                   >
                     <Select
                       placeholder="Select class"
-                      onChange={() =>
-                        form.setFieldsValue({ sectionId: undefined })
-                      }
+                      onChange={() => form.setFieldsValue({ sectionId: undefined })}
                     >
                       {schoolClasses.map((item) => (
                         <Option key={item._id} value={item._id}>
@@ -540,11 +579,7 @@ const ClassTimetable = () => {
                     rules={[{ required: true, message: "Select section" }]}
                   >
                     <Select
-                      placeholder={
-                        selectedFormClassId
-                          ? "Select section"
-                          : "Select class first"
-                      }
+                      placeholder={selectedFormClassId ? "Select section" : "Select class first"}
                       disabled={!selectedFormClassId}
                     >
                       {formSections.map((item) => (
@@ -610,11 +645,7 @@ const ClassTimetable = () => {
                     name="startTime"
                     rules={[{ required: true, message: "Select start time" }]}
                   >
-                    <TimePicker
-                      style={{ width: "100%" }}
-                      format="HH:mm"
-                      minuteStep={5}
-                    />
+                    <TimePicker style={{ width: "100%" }} format="HH:mm" minuteStep={5} />
                   </Form.Item>
                 </Col>
 
@@ -624,23 +655,24 @@ const ClassTimetable = () => {
                     name="endTime"
                     rules={[{ required: true, message: "Select end time" }]}
                   >
-                    <TimePicker
-                      style={{ width: "100%" }}
-                      format="HH:mm"
-                      minuteStep={5}
-                    />
+                    <TimePicker style={{ width: "100%" }} format="HH:mm" minuteStep={5} />
                   </Form.Item>
                 </Col>
               </Row>
 
-              <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
-                <Button style={{ marginRight: 8 }} onClick={resetModalState}>
-                  Cancel
-                </Button>
+              <Form.Item style={{ marginBottom: 0 }}>
+                <Space
+                  direction={isMobile ? "vertical" : "horizontal"}
+                  style={{ width: "100%", justifyContent: "flex-end" }}
+                >
+                  <Button block={isMobile} onClick={resetModalState}>
+                    Cancel
+                  </Button>
 
-                <Button type="primary" htmlType="submit" loading={!!saving}>
-                  {editingRecord ? "Update" : "Save"}
-                </Button>
+                  <Button block={isMobile} type="primary" htmlType="submit" loading={!!saving}>
+                    {editingRecord ? "Update" : "Save"}
+                  </Button>
+                </Space>
               </Form.Item>
             </Form>
           </Modal>
