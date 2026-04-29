@@ -17,6 +17,10 @@ const StudentPromotion = () => {
   const { academicYears, sourceClasses, targetClasses, sections, candidates, loading, promoting } = useSelector(
     (state) => state.studentPromotion
   );
+  const {user} = useSelector(
+    (state) => state.auth);
+  
+  const schoolId = user.school?._id
 
   const [fromAcademicYearId, setFromAcademicYearId] = useState(null);
   const [toAcademicYearId, setToAcademicYearId] = useState(null);
@@ -37,18 +41,18 @@ const StudentPromotion = () => {
 
   useEffect(() => {
     if (!fromAcademicYearId) return;
-    dispatch(fetchPromotionClasses({ academicYearId: fromAcademicYearId, mode: "source" })).catch(() => {});
+    dispatch(fetchPromotionClasses({ academicYearId: fromAcademicYearId, mode: "source",schoolId:schoolId })).catch(() => {});
     setSourceClassId(null);
     setSelectedRowKeys([]);
     dispatch(clearPromotionCandidates());
-  }, [dispatch, fromAcademicYearId]);
+  }, [dispatch, fromAcademicYearId,schoolId]);
 
   useEffect(() => {
     if (!toAcademicYearId) return;
-    dispatch(fetchPromotionClasses({ academicYearId: toAcademicYearId, mode: "target" })).catch(() => {});
+    dispatch(fetchPromotionClasses({ academicYearId: toAcademicYearId, mode: "target",schoolId:schoolId })).catch(() => {});
     setTargetClassId(null);
     setTargetSectionId(null);
-  }, [dispatch, toAcademicYearId]);
+  }, [dispatch, toAcademicYearId,schoolId]);
 
   useEffect(() => {
     if (!targetClassId) return;

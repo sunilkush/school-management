@@ -92,7 +92,7 @@ export const fetchAllStudentByRole = createAsyncThunk(
 );
 export const fetchStudentsBySchoolId = createAsyncThunk(
   "student/fetchBySchoolId",
-  async ({ schoolId, academicYearId, schoolClassId }, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId, schoolClassId,page,limit }, { rejectWithValue }) => {
     try {
       // ✅ check valid schoolId
       if (!schoolId) {
@@ -107,10 +107,11 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
           schoolId,
           academicYearId,
           schoolClassId,
+          page,limit
         },
       });
-     
-      return res.data?.data?.students;
+       console.log(res.data)
+      return res.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||

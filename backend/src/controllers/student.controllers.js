@@ -666,17 +666,34 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
   );
 });
 
-const getStudentsBySchoolId = asyncHandler(async (req, res) => {
-  let { schoolId, academicYearId, schoolClassId, page = 1, limit = 10 } = req.query;
+ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
+  let { schoolId, academicYearId, search = "", page, limit } = req.query;
 
-  // ✅ Validate schoolId
-  if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
-    throw new ApiError(400, "Valid schoolId is required");
+  const requesterSchoolId =
+    req.user?.school?._id || req.user?.schoolId;
+
+  const roleName =
+    req.user?.role?.name ||
+    req.user?.roleId?.name ||
+    "";
+
+  // ✅ Fix role logic
+  if (roleName !== "Super Admin") {
+    if (!requesterSchoolId) {
+      throw new ApiError(400, "School context missing");
+    }
+    schoolId = requesterSchoolId;
   }
 
-  schoolId = new mongoose.Types.ObjectId(schoolId);
+  if (!schoolId) {
+    throw new ApiError(400, "schoolId required");
+  }
 
-  // ✅ Get Active Academic Year if not provided
+  const matchFilter = {
+    schoolId: new mongoose.Types.ObjectId(schoolId),
+  };
+
+  // ✅ Active academic year
   if (!academicYearId) {
     const activeYear = await AcademicYear.findOne({
       schoolId,
@@ -684,234 +701,128 @@ const getStudentsBySchoolId = asyncHandler(async (req, res) => {
     }).lean();
 
     if (!activeYear) {
-      throw new ApiError(404, "No active academic year found");
+      throw new ApiError(404, "No active academic year");
     }
 
     academicYearId = activeYear._id;
   }
 
-  if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
-    throw new ApiError(400, "Invalid academicYearId format");
-  }
+  matchFilter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
 
-  academicYearId = new mongoose.Types.ObjectId(academicYearId);
-
-
-  if (schoolClassId && !mongoose.Types.ObjectId.isValid(schoolClassId)) {
-    throw new ApiError(400, "Invalid schoolClassId format");
-  }
-
-  const matchFilter = { schoolId, academicYearId };
-  if (schoolClassId) {
-    matchFilter.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
-  }
-
-  // ✅ Pagination
-  page = Math.max(1, parseInt(page) || 1);
-  limit = Math.max(1, Math.min(100, parseInt(limit) || 10));
+  page = Number(page) || 1;
+  limit = Number(limit) || 10;
   const skip = (page - 1) * limit;
 
-  const result = await StudentEnrollment.aggregate([
+  const pipeline = [
+    { $match: matchFilter },
+
+    // 🔥 STUDENT
     {
-      $match: matchFilter,
+      $lookup: {
+        from: "students",
+        localField: "studentId",
+        foreignField: "_id",
+        as: "student",
+      },
+    },
+    { $unwind: "$student" },
+
+    // 🔥 USER
+    {
+      $lookup: {
+        from: "users",
+        localField: "student.userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    {
+  $lookup: {
+    from: "academicyears",
+    localField: "academicYearId",
+    foreignField: "_id",
+    as: "academicYear",
+  },
+},
+{
+  $unwind: {
+    path: "$academicYear",
+    preserveNullAndEmptyArrays: true,
+  },
+},
+
+    // ✅ FIX: delete filter safe
+    {
+      $match: {
+        "user.isDeleted": { $ne: true },
+      },
     },
 
+    // 🔥 CLASS
     {
-      $facet: {
-        data: [
-          /* 🔥 SCHOOL */
-          {
-            $lookup: {
-              from: "schools",
-              localField: "schoolId",
-              foreignField: "_id",
-              as: "school",
-            },
-          },
-          {
-            $unwind: {
-              path: "$school",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
+      $lookup: {
+        from: "schoolclasses",
+        localField: "schoolClassId",
+        foreignField: "_id",
+        as: "schoolClass",
+      },
+    },
+    { $unwind: "$schoolClass" },
 
-          /* 🔥 ACADEMIC YEAR */
-          {
-            $lookup: {
-              from: "academicyears",
-              localField: "academicYearId",
-              foreignField: "_id",
-              as: "academicYear",
-            },
-          },
-          {
-            $unwind: {
-              path: "$academicYear",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
+    // 🔥 SECTION
+    {
+      $lookup: {
+        from: "sections",
+        localField: "sectionId",
+        foreignField: "_id",
+        as: "section",
+      },
+    },
+    { $unwind: "$section" },
 
-          /* STUDENT */
-          {
-            $lookup: {
-              from: "students",
-              localField: "studentId",
-              foreignField: "_id",
-              as: "student",
-            },
-          },
-          {
-            $unwind: {
-              path: "$student",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-
-          /* USER */
-          {
-            $lookup: {
-              from: "users",
-              localField: "student.userId",
-              foreignField: "_id",
-              as: "userDetails",
-            },
-          },
-          {
-            $unwind: {
-              path: "$userDetails",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-
-          /* FILTER USERS */
+    // 🔥 SEARCH FIX
+    ...(search
+      ? [
           {
             $match: {
               $or: [
-                { "userDetails.isDeleted": false },
-                { userDetails: null },
+                { "user.name": { $regex: search, $options: "i" } },
+                { "user.email": { $regex: search, $options: "i" } },
               ],
             },
           },
+        ]
+      : []),
 
-          /* CLASS */
-          {
-            $lookup: {
-              from: "schoolclasses",
-              localField: "schoolClassId",
-              foreignField: "_id",
-              as: "schoolClass",
-            },
-          },
-          {
-            $unwind: {
-              path: "$schoolClass",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
+    { $sort: { createdAt: -1 } },
 
-          /* SECTION */
-          {
-            $lookup: {
-              from: "sections",
-              localField: "sectionId",
-              foreignField: "_id",
-              as: "section",
-            },
-          },
-          {
-            $unwind: {
-              path: "$section",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-
-          /* SORT */
-          { $sort: { createdAt: -1 } },
-
-          /* PAGINATION */
+    {
+      $facet: {
+        students: [
           { $skip: skip },
           { $limit: limit },
-
-          /* FINAL RESPONSE */
-          {
-            $project: {
-              _id: 1,
-              registrationNumber: 1,
-              admissionDate: 1,
-              mobileNumber: 1,
-              feeDiscount: 1,
-              status: 1,
-
-              school: {
-                _id: "$school._id",
-                name: "$school.name",
-              },
-
-              academicYear: {
-                _id: "$academicYear._id",
-                name: "$academicYear.name",
-                isActive: "$academicYear.isActive",
-              },
-
-              student: {
-                _id: "$student._id",
-                dateOfBirth: "$student.dateOfBirth",
-                gender: "$student.gender",
-                religion: "$student.religion",
-                cast: "$student.cast",
-                bloodGroup: "$student.bloodGroup",
-                address: "$student.address",
-                identificationMark: "$student.identificationMark",
-                fatherInfo: "$student.fatherInfo",
-                motherInfo: "$student.motherInfo",
-              },
-
-              user: {
-                _id: "$userDetails._id",
-                name: "$userDetails.name",
-                email: "$userDetails.email",
-                avatar: "$userDetails.avatar",
-                isActive: "$userDetails.isActive",
-              },
-
-              schoolClass: {
-                _id: "$schoolClass._id",
-                name: "$schoolClass.name",
-              },
-
-              section: {
-                _id: "$section._id",
-                name: "$section.name",
-              },
-            },
-          },
         ],
-
         totalCount: [{ $count: "count" }],
       },
     },
-  ]);
+  ];
 
-  const students = result[0]?.data || [];
-  const total = result[0]?.totalCount[0]?.count || 0;
+  const result = await StudentEnrollment.aggregate(pipeline);
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        students,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      },
-      "Students Retrieved Successfully"
-    )
-  );
+  const students = result?.[0]?.students || [];
+  const total = result?.[0]?.totalCount?.[0]?.count || 0;
+
+  return res.status(200).json({
+    success: true,
+    data: students,   // ✅ IMPORTANT FIX
+    pagination: {
+      total,
+      page,
+      limit,
+    },
+  });
 });
-
 
 const getPromotionCandidates = asyncHandler(async (req, res) => {
   const schoolId = req.user?.schoolId || req.query.schoolId;

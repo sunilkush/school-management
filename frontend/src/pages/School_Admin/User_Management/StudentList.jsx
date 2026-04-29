@@ -71,7 +71,7 @@ const StudentList = () => {
 
   const { schoolStudents, loading } = useSelector((state) => state.students);
   const { user } = useSelector((state) => state.auth);
-  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
+  const { selectedAcademicYear, activeYear } = useSelector((state) => state.academicYear);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -79,12 +79,12 @@ const StudentList = () => {
   const [selectedSection, setSelectedSection] = useState("all");
 
   const schoolId = user?.school?._id;
-  const academicYearId = selectedAcademicYear?._id;
+   const academicYearId = selectedAcademicYear?._id || activeYear?._id;
   const isSchoolAdmin = user?.role?.name === "School Admin";
 
   /* ── Fetch ── */
   useEffect(() => {
-    if (!isSchoolAdmin || !schoolId || !academicYearId) return;
+  if (!isSchoolAdmin || !schoolId) return;
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
   }, [dispatch, isSchoolAdmin, schoolId, academicYearId, isModalOpen]);
 
@@ -93,8 +93,8 @@ const StudentList = () => {
     if (Array.isArray(schoolStudents)) return schoolStudents;
     if (schoolStudents?.data) return schoolStudents.data;
     return [];
-  }, [schoolStudents]);
- 
+  }, [schoolStudents] );
+  console.log(studentsArray)
   const formattedStudents = useMemo(() =>
     studentsArray.map((stu) => ({
       key: stu._id,
@@ -119,13 +119,13 @@ const StudentList = () => {
 
   /* ── Filters ── */
   const classOptions = useMemo(() => {
-    const classes = formattedStudents.map((s) => s.class).filter(Boolean);
+    const classes = formattedStudents.map((s) => s.schoolClass).filter(Boolean);
     return ["all", ...new Set(classes)];
   }, [formattedStudents]);
 
   const sectionOptions = useMemo(() => {
     const sections = formattedStudents
-      .filter((s) => selectedClass === "all" || s.class === selectedClass)
+      .filter((s) => selectedClass === "all" || s.schoolClass === selectedClass)
       .map((s) => s.section)
       .filter(Boolean);
     return ["all", ...new Set(sections)];
@@ -135,7 +135,7 @@ const StudentList = () => {
     formattedStudents.filter((stu) => {
       const matchSearch = stu.name.toLowerCase().includes(searchText.toLowerCase()) ||
         stu.email.toLowerCase().includes(searchText.toLowerCase());
-      const matchClass = selectedClass === "all" || stu.class === selectedClass;
+       const matchClass = selectedClass === "all" || stu.schoolClass === selectedClass;
       const matchSection = selectedSection === "all" || stu.section === selectedSection;
       return matchSearch && matchClass && matchSection;
     }),
@@ -145,7 +145,7 @@ const StudentList = () => {
   /* ── Stats ── */
   const stats = useMemo(() => {
     const active = formattedStudents.filter((s) => s.status === "Active").length;
-    const classes = new Set(formattedStudents.map((s) => s.class)).size;
+     const classes = new Set(formattedStudents.map((s) => s.schoolClass)).size;
     return { total: formattedStudents.length, active, classes };
   }, [formattedStudents]);
 

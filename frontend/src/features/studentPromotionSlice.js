@@ -18,9 +18,9 @@ export const fetchPromotionAcademicYears = createAsyncThunk(
 
 export const fetchPromotionClasses = createAsyncThunk(
   "studentPromotion/fetchClasses",
-  async ({ academicYearId, mode }, { rejectWithValue }) => {
+  async ({ academicYearId,schoolId, mode }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/school-class", { params: { academicYearId } });
+      const res = await apiClient.get("/school-class", { params: { academicYearId , schoolId } });
       return { mode, classes: res.data?.data || [] };
     } catch (err) {
       return rejectWithValue(err?.response?.data?.message || "Failed to load classes");
