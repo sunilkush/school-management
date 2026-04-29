@@ -65,6 +65,8 @@
 
   --cardBg: var(--surface);
   --textMuted: var(--text-muted);
+  --logo:
+
 }
 
 [data-theme="dark"] {
@@ -101,6 +103,7 @@
 
   --cardBg: var(--surface);
   --textMuted: var(--text-muted);
+  --logo:brightness(0) invert(1);
 }
 
 html,

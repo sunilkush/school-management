@@ -15,7 +15,7 @@ import {
   Alert,
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import logo from "../../../public/logo.png"
+import logo from "/logo.png"
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
@@ -111,7 +111,7 @@ const LoginForm = () => {
               variant="borderless"
             >
               
-               <img src={logo} style={{width:'150px',margin:"10px auto"}}/>
+               <img src={logo} style={{width:'150px',margin:"10px auto",filter:"var(--logo)"}}/>
 
              {/*  <Title level={3} style={{color: "var(--text-primary)"}}>Welcome Back 👋</Title> */}
               <Text type="secondary" style={{color: "var(--text-primary)",margin:"10px 0px"}}>
