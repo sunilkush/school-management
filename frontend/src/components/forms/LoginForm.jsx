@@ -105,7 +105,7 @@ const LoginForm = () => {
                 maxWidth: 420,
                 boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
                 borderRadius: 12,
-                background: "var(--card)",
+                background: "var(--cardBg)",
                 
               }}
               variant="borderless"
@@ -114,7 +114,7 @@ const LoginForm = () => {
                <img src={logo} style={{width:'150px',margin:"10px auto"}}/>
 
              {/*  <Title level={3} style={{color: "var(--text-primary)"}}>Welcome Back 👋</Title> */}
-              <Text type="secondary" style={{color: "var(--text-primary)"}}>
+              <Text type="secondary" style={{color: "var(--text-primary)",margin:"10px 0px"}}>
                 Login to continue to your dashboard
               </Text>
 
