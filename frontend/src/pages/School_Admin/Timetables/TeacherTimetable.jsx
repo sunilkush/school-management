@@ -32,7 +32,12 @@ const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
+const getTeacherOption = (teacher = {}) => {
+  const user = teacher?.userId || teacher?.user || teacher;
+  const id = user?._id || teacher?._id || "";
+  const name = user?.name || teacher?.name || teacher?.fullName || "";
+  return { id, name };
+};
 const TeacherTimetable = () => {
   const dispatch = useDispatch();
   const screens = useBreakpoint();
@@ -60,7 +65,7 @@ const TeacherTimetable = () => {
 
   useEffect(() => {
     if (!selectedTeacherId && teachers.length) {
-      setSelectedTeacherId(teachers?.[0]?.userId?._id || "");
+       setSelectedTeacherId(getTeacherOption(teachers?.[0]).id || "");
     }
   }, [selectedTeacherId, teachers]);
 
@@ -247,14 +252,16 @@ const TeacherTimetable = () => {
               showSearch
               optionFilterProp="children"
             >
-              {teachers.map((teacher) => (
-                <Select.Option
-                  key={teacher.userId?._id}
-                  value={teacher.userId?._id}
-                >
-                  {teacher.userId?.name}
-                </Select.Option>
-              ))}
+              {teachers.map((teacher) => {
+                const option = getTeacherOption(teacher);
+                if (!option.id) return null;
+
+                return (
+                  <Select.Option key={option.id} value={option.id}>
+                    {option.name || "Unnamed Teacher"}
+                  </Select.Option>
+                );
+              })}
             </Select>
 
             <div

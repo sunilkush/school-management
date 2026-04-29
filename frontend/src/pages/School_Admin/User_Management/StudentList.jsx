@@ -268,7 +268,7 @@ const StudentList = () => {
       theme={{
         token: {
           borderRadius: 10,
-          fontFamily: "'DM Sans', sans-serif",
+          
         },
         components: {
           Table: { borderRadius: 12 },
@@ -278,7 +278,7 @@ const StudentList = () => {
     >
      
 
-      <div style={{  fontFamily: "'DM Sans', sans-serif" }}>
+      <div >
 
         {/* ── Page Header ── */}
         <div style={{ marginBottom: 24 }}>

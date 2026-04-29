@@ -131,7 +131,7 @@ const ParentsList = () => {
         },
       }}
     >
-      <div style={{ padding: 24 }}>
+      <div style={{ padding: 0 }}>
         {/* ── Header ── */}
         <div style={{ marginBottom: 24 }}>
           <Title level={4} style={{ margin: 0 }}>
