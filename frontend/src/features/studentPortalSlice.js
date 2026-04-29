@@ -2,8 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
 const getError = (err, fallback) => err?.response?.data?.message || fallback;
-
-
 const normalizeTransportAssignment = (assignment) => {
   if (!assignment) return null;
 
