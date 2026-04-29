@@ -227,6 +227,11 @@ export const sidebarMenu = {
         { title: "Create Employee", path: "schooladmin/payroll/create-employee" },
         { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
         { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
+        { title: "Enterprise Dashboard", path: "schooladmin/payroll/enterprise/dashboard" },
+        { title: "Enterprise Run", path: "schooladmin/payroll/enterprise/run" },
+        { title: "Approvals", path: "schooladmin/payroll/enterprise/approval" },
+        { title: "Loans & Advance", path: "schooladmin/payroll/enterprise/loans" },
+        { title: "Tax Settings", path: "schooladmin/payroll/enterprise/tax" },
       ],
     },
     {
