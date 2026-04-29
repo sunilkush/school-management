@@ -23,7 +23,7 @@ const ThemedAntWrapper = ({ children }) => {
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
           borderRadius: 10,
-          colorPrimary: "#1677ff",
+          colorPrimary: "#1d5fd3",
           fontFamily: '"Noto Sans", sans-serif',
         },
       }}

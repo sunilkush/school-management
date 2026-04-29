@@ -24,14 +24,14 @@ export default withMT({
       },
        colors: {
         primary: {
-          DEFAULT: "#4F46E5", // Indigo
-          light: "#6366F1",
-          dark: "#4338CA",
+         DEFAULT: "#1d5fd3", // EduManage blue
+          light: "#3c7ff2",
+          dark: "#0b2460",
         },
         secondary: {
-          DEFAULT: "#10B981", // Emerald
-          light: "#34D399",
-          dark: "#059669",
+          DEFAULT: "#0b2460", // Deep navy
+          light: "#1d5fd3",
+          dark: "#081a46",
         },
         background: {
           DEFAULT: "#F9FAFB", // Gray-50
@@ -42,9 +42,9 @@ export default withMT({
           light: "#374151",
         },
         accent: {
-          DEFAULT: "#F59E0B", // Amber
-          light: "#FBBF24",
-          dark: "#D97706",
+         DEFAULT: "#f4b400", // Gold accent
+          light: "#ffcf4d",
+          dark: "#cc9200",
         },
       },
     },

@@ -15,7 +15,7 @@ import {
   Alert,
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-
+import logo from "../../../public/logo.png"
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
@@ -106,11 +106,14 @@ const LoginForm = () => {
                 boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
                 borderRadius: 12,
                 background: "var(--card)",
-               
+                
               }}
               variant="borderless"
             >
-              <Title level={3} style={{color: "var(--text-primary)"}}>Welcome Back 👋</Title>
+              
+               <img src={logo} style={{width:'150px',margin:"10px auto"}}/>
+
+             {/*  <Title level={3} style={{color: "var(--text-primary)"}}>Welcome Back 👋</Title> */}
               <Text type="secondary" style={{color: "var(--text-primary)"}}>
                 Login to continue to your dashboard
               </Text>
