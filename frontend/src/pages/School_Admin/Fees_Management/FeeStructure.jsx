@@ -58,10 +58,10 @@ const FeeStructure = () => {
   useEffect(() => {
     if (!schoolId) return;
 
-    dispatch(fetchSchoolClasses({ schoolId }));
+    dispatch(fetchSchoolClasses({ schoolId,academicYearId }));
    
     dispatch(fetchFeeHeads({ schoolId }));
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId,academicYearId]);
 
   useEffect(() => {
     if (!schoolId) return;

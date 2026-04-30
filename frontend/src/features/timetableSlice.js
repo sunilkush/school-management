@@ -6,10 +6,12 @@ const normalizeData = (payload) => payload?.data || payload || [];
 
 export const fetchTimetableMasterData = createAsyncThunk(
   "timetable/fetchMasterData",
-  async ({ schoolId } = {}, { rejectWithValue }) => {
+  async ({ schoolId,academicYearId  } = {}, { rejectWithValue }) => {
     try {
-      console.log(schoolId)
-      const paramsWithSchool = schoolId ? { schoolId } : {};
+     
+     const paramsWithSchool = schoolId || academicYearId
+  ? { ...(schoolId && { schoolId }), ...(academicYearId && { academicYearId }) }
+  : {};
       const academicYearRequest = schoolId
         ? apiClient.get(`/academicYear/school/${schoolId}`)
         : Promise.resolve({ data: { data: [] } });
@@ -17,9 +19,9 @@ export const fetchTimetableMasterData = createAsyncThunk(
         apiClient.get("/school-class/class-detailes", { params: paramsWithSchool }),
         apiClient.get("/sections", { params: paramsWithSchool }),
         apiClient.get("/subject/all", { params: { limit: 100 } }),
-        apiClient.get("/employee", {
+        apiClient.get("/user/all", {
           params: {
-            employeeType: "Teacher",
+            roleName: "Teacher",
             isActive: true,
             ...paramsWithSchool,
           },

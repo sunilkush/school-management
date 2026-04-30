@@ -62,6 +62,8 @@ const ClassTimetable = () => {
   const isMobile = !screens.md;
 
   const { user, users = [] } = useSelector((state) => state.auth || {});
+ const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
+   const academicYearId = selectedAcademicYear?._id;
   const schoolId = user?.school?._id || user?.schoolId?._id || user?.schoolId;
 
   const {
@@ -97,10 +99,10 @@ const ClassTimetable = () => {
 
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(fetchTimetableMasterData({ schoolId }))
+    dispatch(fetchTimetableMasterData({ schoolId,academicYearId }))
       .unwrap()
       .catch((err) => message.error(err || "Failed to load timetable data"));
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId,academicYearId]);
 
   useEffect(() => {
     if (!activeAcademicYearId) return;

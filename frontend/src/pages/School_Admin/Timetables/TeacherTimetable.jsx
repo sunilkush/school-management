@@ -44,7 +44,7 @@ const TeacherTimetable = () => {
   const isMobile = !screens.md;
 
   const user = useSelector((state) => state.auth?.user);
-
+  const schoolId = user.school?._id
   const {
     teachers = [],
     teacherTimetable: timetable = [],
@@ -56,12 +56,12 @@ const TeacherTimetable = () => {
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
   useEffect(() => {
-    if (!user?.school?._id) return;
+    if (!schoolId) return;
 
-    dispatch(fetchTimetableMasterData({ schoolId: user?.school?._id }))
+    dispatch(fetchTimetableMasterData({schoolId}))
       .unwrap()
       .catch((error) => message.error(error || "Failed to load teachers"));
-  }, [dispatch, user?.school?._id]);
+  }, [dispatch, schoolId]);
 
   useEffect(() => {
     if (!selectedTeacherId && teachers.length) {
