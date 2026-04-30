@@ -17,9 +17,10 @@ const SUPER_ADMIN = "Super Admin";
 const SCHOOL_ADMIN = "School Admin";
 const TEACHER = "Teacher";
 const STUDENT = "Student";
+const ACCOUNTANT = "Accountant"
 const ALL_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, STUDENT];
 const ADMIN_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN];
-const TEACHER_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER];
+const TEACHER_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, TEACHER,ACCOUNTANT];
 
 router.post(
   "/create",

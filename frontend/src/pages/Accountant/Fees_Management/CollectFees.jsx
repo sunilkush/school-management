@@ -184,7 +184,7 @@ const CollectFees = () => {
     [dispatch]
   );
 
-  const refreshData = useCallback(() => {
+ const refreshData = useCallback(() => {
     if (!schoolId || !academicYearId) {
       showAlert(
         "warning",
@@ -192,7 +192,7 @@ const CollectFees = () => {
         "Please select active academic year first."
       );
       return;
-    }
+    } 
 
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
 

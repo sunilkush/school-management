@@ -143,12 +143,11 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
             userId: studentUser._id,
             fatherId: fatherUser?._id || null,
             motherId: motherUser?._id || null,
-
+            schoolId,
             dateOfBirth: studentData.dateOfBirth,
             gender: studentData.gender,
             address: studentData.address,
             bloodGroup: studentData.bloodGroup,
-
             fatherInfo: fatherData,
             motherInfo: motherData,
           },

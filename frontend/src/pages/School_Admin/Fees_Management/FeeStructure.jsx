@@ -20,6 +20,8 @@ import { currentUser } from "../../../features/authSlice.js";
 import {
   fetchFeeStructures,
   createFeeStructure,
+   updateFeeStructure,
+  deleteFeeStructure,
 } from "../../../features/feeStructureSlice.js";
 
 const { Option } = Select;
@@ -37,6 +39,7 @@ const FeeStructure = () => {
   const academicYearId = selectedAcademicYear?._id;
   const schoolId = user?.school?._id;
   const [open, setOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState(null);
   const [filters, setFilters] = useState({
     schoolClassId: undefined,
     academicYearId: undefined,
@@ -68,12 +71,27 @@ const FeeStructure = () => {
     dispatch(fetchFeeStructures(feeStructureQuery));
   }, [dispatch, schoolId, feeStructureQuery]);
 
-  const handleSubmit = async (values) => {
+   const handleSubmit = async (values) => {
     try {
-      await dispatch(createFeeStructure({ ...values, schoolId, academicYearId})).unwrap();
+    
+      if (editingRecord?._id) {
+        await dispatch(
+          updateFeeStructure({
+            id: editingRecord._id,
+            data: { ...values, schoolId, academicYearId },
+          })
+        ).unwrap();
+        message.success("Fee Structure Updated");
+      } else {
+        await dispatch(
+          createFeeStructure({ ...values, schoolId, academicYearId })
+        ).unwrap();
+        message.success("Fee Structure Created");
+      }
 
-      message.success("Fee Structure Created");
+   
       setOpen(false);
+      setEditingRecord(null);
       form.resetFields();
 
       dispatch(fetchFeeStructures(feeStructureQuery));
@@ -81,7 +99,34 @@ const FeeStructure = () => {
       message.error(err || "Duplicate fee structure already exists");
     }
   };
+  const handleEdit = (record) => {
+    setEditingRecord(record);
+    form.setFieldsValue({
+      schoolClassId: record.schoolClassId?._id,
+      feeHeadId: record.feeHeadId?._id,
+      amount: record.amount,
+      frequency: record.frequency,
+    });
+    setOpen(true);
+  };
 
+  const handleDelete = (record) => {
+    Modal.confirm({
+      title: "Delete Fee Structure",
+      content: "Are you sure you want to delete this fee structure?",
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await dispatch(deleteFeeStructure(record._id)).unwrap();
+          message.success("Fee Structure Deleted");
+          dispatch(fetchFeeStructures(feeStructureQuery));
+        } catch (err) {
+          message.error(err || "Failed to delete fee structure");
+        }
+      },
+    });
+  };
   const columns = [
     {
       title: "Class",
@@ -104,6 +149,20 @@ const FeeStructure = () => {
       title: "Frequency",
       dataIndex: "frequency",
       render: (v) => (v ? v.toUpperCase() : "-"),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button type="link" onClick={() => handleEdit(record)}>
+            Edit
+          </Button>
+          <Button danger type="link" onClick={() => handleDelete(record)}>
+            Delete
+          </Button>
+        </Space>
+      ),
     },
   ];
 
@@ -134,7 +193,11 @@ const FeeStructure = () => {
           <Button
             type="primary"
             icon={<Plus size={18} />}
-            onClick={() => setOpen(true)}
+             onClick={() => {
+              setEditingRecord(null);
+              form.resetFields();
+              setOpen(true);
+            }}
           >
             Add Fee Structure
           </Button>
@@ -151,11 +214,15 @@ const FeeStructure = () => {
       </Card>
 
       <Modal
-        title="Create Fee Structure"
+        title={editingRecord ? "Update Fee Structure" : "Create Fee Structure"}
         open={open}
-        onCancel={() => setOpen(false)}
+       onCancel={() => {
+          setOpen(false);
+          setEditingRecord(null);
+          form.resetFields();
+        }}
         onOk={() => form.submit()}
-        okText="Save"
+        okText={editingRecord ? "Update" : "Save"}
       >
         <Form layout="vertical" form={form} onFinish={handleSubmit}>
           <Form.Item
