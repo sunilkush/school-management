@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { StudentFee } from "../models/studentFee.model.js";
 import { FeeStructure } from "../models/feeStructure.model.js";
 import { Student } from "../models/student.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
@@ -112,10 +113,11 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
 
 export const getMyFees = asyncHandler(async (req, res) => {
   let studentId = req.params.studentId || req.query.studentId;
-  const { page = 1, limit = 20, academicYearId } = req.query;
+  const academicYearId = req.params.academicYearId || req.query.academicYearId;
 
   const schoolId = req.user?.schoolId || req.user?.school?._id;
   const userId = req.user?._id;
+  const role = req.user?.roleId?.name?.toLowerCase();
 
   if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "School not found");
@@ -125,50 +127,25 @@ export const getMyFees = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized user");
   }
 
-  const role =
-    req.user?.roleId?.name ||
-    req.user?.role?.name ||
-    req.Role?.name ||
-    req.role?.name ||
-    "";
-
-  const normalizedRole = String(role).toLowerCase();
-
-  if (normalizedRole === "student") {
-    const myStudentProfile = await Student.findOne({
+  if (role === "student") {
+    const student = await Student.findOne({
       userId,
       schoolId,
       isActive: true,
     }).select("_id");
 
-    if (!myStudentProfile) {
-      throw new ApiError(404, "Student profile not found");
+    if (!student) {
+      throw new ApiError(404, "Student not found");
     }
 
-    if (!studentId) {
-      studentId = myStudentProfile._id.toString();
-    }
-
-    if (myStudentProfile._id.toString() !== studentId.toString()) {
-      throw new ApiError(403, "Forbidden");
-    }
+    studentId = student._id;
   }
 
   if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
     throw new ApiError(400, "Invalid student ID");
   }
 
-  const studentExists = await Student.exists({
-    _id: studentId,
-    schoolId,
-    isActive: true,
-  });
-
-  if (!studentExists) {
-    throw new ApiError(404, "Student not found");
-  }
-
-  if (normalizedRole === "parent") {
+  if (role === "parent") {
     const child = await Student.findOne({
       _id: studentId,
       schoolId,
@@ -181,10 +158,7 @@ export const getMyFees = asyncHandler(async (req, res) => {
     }).select("_id");
 
     if (!child) {
-      throw new ApiError(
-        403,
-        "Forbidden: This student is not linked with this parent"
-      );
+      throw new ApiError(403, "This student is not linked with this parent");
     }
   }
 
@@ -201,38 +175,22 @@ export const getMyFees = asyncHandler(async (req, res) => {
     filter.academicYearId = academicYearId;
   }
 
-  const safePage = Math.max(Number(page) || 1, 1);
-  const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
-  const skip = (safePage - 1) * safeLimit;
-
-  const [fees, total] = await Promise.all([
-    StudentFee.find(filter)
-      .populate({
-        path: "feeStructureId",
-        select: "name amount feeHeadId",
-        populate: {
-          path: "feeHeadId",
-          select: "name",
-        },
-      })
-      .populate("academicYearId", "name")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(safeLimit)
-      .lean(),
-
-    StudentFee.countDocuments(filter),
-  ]);
+  const fees = await StudentFee.find(filter)
+    .populate({
+      path: "feeStructureId",
+      select: "name amount feeHeadId",
+      populate: {
+        path: "feeHeadId",
+        select: "name",
+      },
+    })
+    .populate("academicYearId", "name")
+    .sort({ createdAt: -1 })
+    .lean();
 
   return sendSuccess(res, {
     message: "Fees fetched successfully",
     data: fees,
-    meta: {
-      page: safePage,
-      limit: safeLimit,
-      total,
-      totalPages: Math.ceil(total / safeLimit),
-    },
   });
 });
 export const payStudentFee = asyncHandler(async (req, res) => {

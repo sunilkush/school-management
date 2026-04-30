@@ -239,7 +239,7 @@ const CollectFees = () => {
 
     try {
       const response = await dispatch(
-        fetchMyFees({ studentId: record.studentId })
+        fetchMyFees({ studentId: record.studentId ,academicYearId})
       ).unwrap();
 
       const fees = Array.isArray(response)
