@@ -24,8 +24,18 @@ export const assignFeesToStudents = createAsyncThunk(
 ===================================================== */
 export const fetchMyFees = createAsyncThunk(
   "studentFee/fetchMyFees",
-  async (studentId, { rejectWithValue }) => {
+  async (studentIdentifier, { rejectWithValue }) => {
     try {
+      const studentId =
+        typeof studentIdentifier === "object"
+          ? studentIdentifier?.studentId
+          : studentIdentifier;
+
+      if (!studentId) {
+        return rejectWithValue("Student ID is required");
+      }
+
+   
       const { data } = await apiClient.get(`/student-fees/my/${studentId}`);
 
       const normalizedFees = Array.isArray(data?.data)

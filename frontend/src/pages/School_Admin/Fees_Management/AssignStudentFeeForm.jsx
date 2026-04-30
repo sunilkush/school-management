@@ -38,7 +38,10 @@ import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { currentUser } from "../../../features/authSlice";
 import { fetchFeeStructures } from "../../../features/feeStructureSlice";
-import { assignFeesToStudents } from "../../../features/studentFeeSlice";
+import {
+  assignFeesToStudents,
+  fetchMyFees,
+} from "../../../features/studentFeeSlice";
 
 const { Text, Title } = Typography;
 
@@ -49,8 +52,21 @@ const safeId = (v) => {
   return String(v);
 };
 
-const money = (value) =>
-  `₹${Number(value || 0).toLocaleString("en-IN")}`;
+const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+
+const getApiMessage = (err, fallback = "Something went wrong") => {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+
+  const msg =
+    err?.response?.data?.message ||
+    err?.data?.message ||
+    err?.payload?.message ||
+    err?.message ||
+    err?.error;
+
+  return typeof msg === "string" ? msg : fallback;
+};
 
 const AssignStudentFee = () => {
   const [form] = Form.useForm();
@@ -75,19 +91,22 @@ const AssignStudentFee = () => {
     (s) => s.feeStructure || {}
   );
 
-  const schoolStudents = Array.isArray(rawSchoolStudents)
-    ? rawSchoolStudents
-    : [];
+  const schoolStudents = useMemo(
+    () => (Array.isArray(rawSchoolStudents) ? rawSchoolStudents : []),
+    [rawSchoolStudents]
+  );
 
-  const schoolClasses = Array.isArray(rawSchoolClasses)
-    ? rawSchoolClasses
-    : [];
+  const schoolClasses = useMemo(
+    () => (Array.isArray(rawSchoolClasses) ? rawSchoolClasses : []),
+    [rawSchoolClasses]
+  );
 
-  const feeStructures = Array.isArray(rawFeeStructures)
-    ? rawFeeStructures
-    : [];
+  const feeStructures = useMemo(
+    () => (Array.isArray(rawFeeStructures) ? rawFeeStructures : []),
+    [rawFeeStructures]
+  );
 
-  const schoolId = user?.school?._id || user?.schoolId;
+  const schoolId = user?.school?._id || user?.schoolId || "";
 
   const selectedStudentId = Form.useWatch("studentId", form);
   const selectedClassId = Form.useWatch("schoolClassId", form);
@@ -115,10 +134,7 @@ const AssignStudentFee = () => {
   const filteredStudentsForClass = useMemo(() => {
     return schoolStudents.filter((s) => {
       const studentClassId =
-        s.class?._id ||
-        s.schoolClass?._id ||
-        s.classId ||
-        s.schoolClassId;
+        s.class?._id || s.schoolClass?._id || s.classId || s.schoolClassId;
 
       const matchClass =
         !effectiveClassId || safeId(studentClassId) === safeId(effectiveClassId);
@@ -160,6 +176,14 @@ const AssignStudentFee = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    if (!selectedAcademicYear?._id) return;
+
+    form.setFieldsValue({
+      academicYearId: selectedAcademicYear._id,
+    });
+  }, [selectedAcademicYear?._id, form]);
+
+  useEffect(() => {
     if (!schoolId) return;
 
     const params = {
@@ -167,19 +191,22 @@ const AssignStudentFee = () => {
       ...(selectedAcademicYear?._id && {
         academicYearId: selectedAcademicYear._id,
       }),
+      ...(selectedClassId && {
+        schoolClassId: selectedClassId,
+      }),
     };
 
     dispatch(fetchStudentsBySchoolId(params));
-    dispatch(fetchSchoolClasses(params));
-  }, [dispatch, schoolId, selectedAcademicYear?._id]);
 
-  useEffect(() => {
-    if (selectedAcademicYear?._id) {
-      form.setFieldsValue({
-        academicYearId: selectedAcademicYear._id,
-      });
-    }
-  }, [selectedAcademicYear, form]);
+    dispatch(
+      fetchSchoolClasses({
+        schoolId,
+        ...(selectedAcademicYear?._id && {
+          academicYearId: selectedAcademicYear._id,
+        }),
+      })
+    );
+  }, [dispatch, schoolId, selectedAcademicYear?._id, selectedClassId]);
 
   useEffect(() => {
     if (!schoolId || !academicYearId || !effectiveClassId) return;
@@ -212,6 +239,9 @@ const AssignStudentFee = () => {
       ...(selectedAcademicYear?._id && {
         academicYearId: selectedAcademicYear._id,
       }),
+      ...(selectedClassId && {
+        schoolClassId: selectedClassId,
+      }),
     };
 
     dispatch(fetchStudentsBySchoolId(params));
@@ -227,7 +257,38 @@ const AssignStudentFee = () => {
       );
     }
   };
-  console.log(schoolStudents)
+
+  const checkAlreadyAssignedFees = async ({ studentIds, feeIds }) => {
+    const alreadyAssigned = [];
+
+    for (const studentId of studentIds) {
+      const feesResponse = await dispatch(fetchMyFees({ studentId })).unwrap();
+
+      const fees = Array.isArray(feesResponse)
+        ? feesResponse
+        : Array.isArray(feesResponse?.data)
+        ? feesResponse.data
+        : [];
+
+      const assignedFeeIds = fees.map((fee) =>
+        safeId(fee.feeStructureId?._id || fee.feeStructureId)
+      );
+
+      const duplicateFeeIds = feeIds.filter((feeId) =>
+        assignedFeeIds.includes(safeId(feeId))
+      );
+
+      if (duplicateFeeIds.length) {
+        alreadyAssigned.push({
+          studentId,
+          duplicateFeeIds,
+        });
+      }
+    }
+
+    return alreadyAssigned;
+  };
+
   const feeColumns = [
     {
       title: "Fee Head",
@@ -246,7 +307,7 @@ const AssignStudentFee = () => {
       dataIndex: "frequency",
       width: 140,
       render: (value) => (
-        <Tag color="blue">{value ? value.toUpperCase() : "-"}</Tag>
+        <Tag color="blue">{value ? String(value).toUpperCase() : "-"}</Tag>
       ),
     },
     {
@@ -313,11 +374,17 @@ const AssignStudentFee = () => {
   const onFinish = async (values) => {
     try {
       if (!schoolId) {
-        return message.error("School not found. Please login again.");
+        return message.error({ content: "School not found. Please login again." });
+      }
+
+      if (!values.academicYearId) {
+        return message.warning({ content: "Please select academic year" });
       }
 
       if (!selectedFeeIds.length) {
-        return message.warning("Please select at least one fee structure");
+        return message.warning({
+          content: "Please select at least one fee structure",
+        });
       }
 
       const payloadBase = {
@@ -325,25 +392,49 @@ const AssignStudentFee = () => {
         academicYearId: values.academicYearId,
       };
 
+      let studentIdsToAssign = [];
+
       if (mode === "single") {
         if (!values.studentId) {
-          return message.warning("Please select student");
+          return message.warning({ content: "Please select student" });
         }
 
         payloadBase.studentId = values.studentId;
+        studentIdsToAssign = [values.studentId];
       }
 
       if (mode === "bulk") {
-        const studentIds = filteredStudentsForClass.map((s) => s._id);
+        studentIdsToAssign = filteredStudentsForClass.map((s) => s._id);
 
-        if (!studentIds.length) {
-          return message.warning("No students found in selected class");
+        if (!studentIdsToAssign.length) {
+          return message.warning({
+            content: "No students found in selected class",
+          });
         }
 
-        payloadBase.studentIds = studentIds;
+        payloadBase.studentIds = studentIdsToAssign;
       }
 
       setAssigning(true);
+
+      const alreadyAssigned = await checkAlreadyAssignedFees({
+        studentIds: studentIdsToAssign,
+        feeIds: selectedFeeIds,
+      });
+
+      if (alreadyAssigned.length === studentIdsToAssign.length) {
+        message.warning({
+          content: "Fees already assigned to all selected students",
+        });
+        return;
+      }
+
+      if (alreadyAssigned.length > 0) {
+        message.warning({
+          content: `Fees already assigned to ${alreadyAssigned.length} student(s). Please select only pending students.`,
+        });
+        return;
+      }
 
       await Promise.all(
         selectedFeeIds.map((feeStructureId) =>
@@ -357,7 +448,9 @@ const AssignStudentFee = () => {
         )
       );
 
-      message.success("Fees assigned successfully");
+      message.success({
+        content: "Fees assigned successfully",
+      });
 
       form.resetFields();
       form.setFieldsValue({
@@ -370,20 +463,16 @@ const AssignStudentFee = () => {
       setPreviewOpen(false);
       setMode("bulk");
     } catch (err) {
-      message.error(err?.message || err || "Failed to assign fee");
+      message.error({
+        content: getApiMessage(err, "Failed to assign fee"),
+      });
     } finally {
       setAssigning(false);
     }
   };
 
   return (
-    <div
-      style={{
-        padding: 24,
-        background: "#f5f7fb",
-        minHeight: "100vh",
-      }}
-    >
+    <div style={{ padding: 24, background: "#f5f7fb", minHeight: "100vh" }}>
       <Form form={form} layout="vertical" onFinish={onFinish}>
         <Card
           bordered={false}
@@ -485,14 +574,26 @@ const AssignStudentFee = () => {
               <Form.Item label="Assignment Mode">
                 <Radio.Group
                   value={mode}
-                  onChange={(e) => setMode(e.target.value)}
+                  onChange={(e) => {
+                    setMode(e.target.value);
+                    form.setFieldsValue({
+                      studentId: undefined,
+                      schoolClassId: undefined,
+                    });
+                  }}
                   buttonStyle="solid"
                   style={{ width: "100%" }}
                 >
-                  <Radio.Button value="bulk" style={{ width: "50%", textAlign: "center" }}>
+                  <Radio.Button
+                    value="bulk"
+                    style={{ width: "50%", textAlign: "center" }}
+                  >
                     Bulk
                   </Radio.Button>
-                  <Radio.Button value="single" style={{ width: "50%", textAlign: "center" }}>
+                  <Radio.Button
+                    value="single"
+                    style={{ width: "50%", textAlign: "center" }}
+                  >
                     Single
                   </Radio.Button>
                 </Radio.Group>
@@ -524,6 +625,7 @@ const AssignStudentFee = () => {
                   <Select
                     placeholder="Select Class"
                     showSearch
+                    allowClear
                     optionFilterProp="children"
                   >
                     {schoolClasses.map((c) => (
@@ -544,24 +646,16 @@ const AssignStudentFee = () => {
                   <Select
                     placeholder="Select Student"
                     showSearch
+                    allowClear
                     optionFilterProp="label"
-                    
                     options={schoolStudents.map((s) => ({
                       value: s._id,
                       label: `${s.user?.name || s.name || "-"} ${
                         s.registrationNumber || ""
-                      }`,
-                      children: (
-                        <Space direction="vertical" size={0}>
-                          <Text>{s.user?.name || s.name || "-"}</Text>
-                          <Text type="secondary">
-                            {s.class?.name || s.schoolClass?.name || "-"} -{" "}
-                            {s.section?.name || "-"}
-                          </Text>
-                        </Space>
-                      ),
+                      } (${s.class?.name || s.schoolClass?.name || "-"} - ${
+                        s.section?.name || "-"
+                      })`,
                     }))}
-                    optionRender={(option) => option.data.children}
                   />
                 </Form.Item>
               )}
@@ -670,7 +764,8 @@ const AssignStudentFee = () => {
                 },
                 {
                   title: "Frequency",
-                  render: (_, r) => r.frequency?.toUpperCase() || "-",
+                  render: (_, r) =>
+                    r.frequency ? String(r.frequency).toUpperCase() : "-",
                 },
                 {
                   title: "Amount",
@@ -685,7 +780,9 @@ const AssignStudentFee = () => {
               <Alert
                 type="success"
                 showIcon
-                message={selectedStudent?.user?.name || selectedStudent?.name || "-"}
+                message={String(
+                  selectedStudent?.user?.name || selectedStudent?.name || "-"
+                )}
                 description={`Class: ${
                   selectedStudent?.class?.name ||
                   selectedStudent?.schoolClass?.name ||

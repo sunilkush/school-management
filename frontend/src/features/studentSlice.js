@@ -110,7 +110,7 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
           page,limit
         },
       });
-       console.log(res.data)
+       
       return res.data;
     } catch (error) {
       return rejectWithValue(
@@ -273,7 +273,12 @@ const studentSlice = createSlice({
       })
       .addCase(fetchStudentsBySchoolId.fulfilled, (state, action) => {
         state.loading = false;
-        state.schoolStudents = action.payload || [];
+         state.schoolStudents =
+          action.payload?.data?.students ||
+          action.payload?.data ||
+          action.payload ||
+          [];
+          console.log( state.schoolStudents)
         state.success = true;
       })
       .addCase(fetchStudentsBySchoolId.rejected, (state, action) => {
