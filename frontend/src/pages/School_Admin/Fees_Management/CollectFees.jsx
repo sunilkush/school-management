@@ -20,6 +20,8 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 
+import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchMyFees, payStudentFee } from "../../../features/studentFeeSlice";
 
 const { Content } = Layout;
@@ -43,15 +45,34 @@ const CollectFees = () => {
   const [loadingPendingByStudent, setLoadingPendingByStudent] = useState({});
   const [selectedFeeDueAmount, setSelectedFeeDueAmount] = useState(0);
 
-
+  const { user } = useSelector((s) => s.auth || {});
   const { schoolStudents = [] } = useSelector((s) => s.students || {});
   const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
+  // ✅ FIX: selectedAcademicYear null ho sakta hai
+  const schoolId = user?.school?._id || user?.schoolId || "";
+  const academicYearId = selectedAcademicYear?._id || "";
 
+  // ✅ Classes only once school/year ke hisab se
+  useEffect(() => {
+    if (!schoolId || !academicYearId) return;
 
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+  }, [dispatch, schoolId, academicYearId]);
 
+  // ✅ Students fetch with schoolClassId when class selected
+  useEffect(() => {
+    if (!schoolId || !academicYearId) return;
 
+    const params = {
+      schoolId,
+      academicYearId,
+      ...(filterClass && { schoolClassId: filterClass }),
+    };
 
+    dispatch(fetchStudentsBySchoolId(params));
+  }, [dispatch, schoolId, academicYearId, filterClass]);
 
    const students = useMemo(() => {
     const getId = (value) => {
@@ -134,7 +155,7 @@ const CollectFees = () => {
     setLoadingFees(true);
     setSelectedFeeDueAmount(0);
     form.resetFields();
-
+    form.setFieldsValue({ paymentMode: "cash" });
     try {
       const fees = await dispatch(
         fetchMyFees({ studentId: record.studentId })
@@ -166,6 +187,7 @@ const CollectFees = () => {
           id: values.studentFeeId,
           payload: {
             paidAmount: Number(values.amount),
+             paymentMode: values.paymentMode,
           },
         })
       ).unwrap();
@@ -182,7 +204,15 @@ const CollectFees = () => {
       setSelectedFeeDueAmount(0);
       form.resetFields();
 
-    
+      if (schoolId && academicYearId) {
+        dispatch(
+          fetchStudentsBySchoolId({
+            schoolId,
+            academicYearId,
+            ...(filterClass && { schoolClassId: filterClass }),
+          })
+        );
+      }
     } catch (err) {
       message.error(err?.message || "Fee collection failed");
     } finally {
@@ -197,13 +227,10 @@ const CollectFees = () => {
         .includes(searchName.toLowerCase());
 
       const matchClass = filterClass ? s.classId === filterClass : true;
- // Fee collection page par sirf wahi students dikhaye jin ki fee assigned/pending ho
-      const dueAmount = Number(pendingFeesByStudent[s.studentId] || 0);
-      const hasAssignedPendingFee = dueAmount > 0;
 
-      return matchName && matchClass && hasAssignedPendingFee;
+      return matchName && matchClass;
     });
-   }, [students, searchName, filterClass, pendingFeesByStudent]);
+  }, [students, searchName, filterClass]);
 
   const columns = [
     {
@@ -219,7 +246,7 @@ const CollectFees = () => {
       dataIndex: "section",
     },
     {
-      title: "Pending Fee",
+       title: "Fee Status",
       render: (_, record) => {
         const id = record.studentId;
 
@@ -230,7 +257,7 @@ const CollectFees = () => {
         const due = Number(pendingFeesByStudent[id] || 0);
 
         return due > 0 ? (
-          <Tag color="red">₹{due.toLocaleString("en-IN")}</Tag>
+          <Tag color="red">Pending ₹{due.toLocaleString("en-IN")}</Tag>
         ) : (
           <Tag color="green">No Due</Tag>
         );
@@ -345,7 +372,19 @@ const CollectFees = () => {
                   })}
                 </Select>
               </Form.Item>
-
+                   <Form.Item
+                label="Payment Mode"
+                name="paymentMode"
+                initialValue="cash"
+                rules={[{ required: true, message: "Please select payment mode" }]}
+              >
+                <Select
+                  options={[
+                    { label: "Cash", value: "cash" },
+                    { label: "Online", value: "online" },
+                  ]}
+                />
+              </Form.Item>
               <Form.Item
                 label="Amount"
                 name="amount"

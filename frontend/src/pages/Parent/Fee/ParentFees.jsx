@@ -71,13 +71,13 @@ const ParentFees = () => {
   );
 
   const enrollmentId = selectedChild?.enrollmentId;
-
+  const selectedStudentId = selectedChild?._id || selectedChild?.studentId || selectedChild?.userId;
   useEffect(() => {
     if (!enrollmentId) return;
 
-    dispatch(fetchMyFees(enrollmentId));
+     if (selectedStudentId) dispatch(fetchMyFees(selectedStudentId));
     dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
-  }, [dispatch, enrollmentId]);
+  }, [dispatch, enrollmentId, selectedStudentId]);
 
   const openPayModal = (installment) => {
     setSelectedInstallment(installment);
@@ -119,7 +119,7 @@ const ParentFees = () => {
 
       message.success("Payment successful");
       setOpen(false);
-      dispatch(fetchMyFees(enrollmentId));
+      if (selectedStudentId) dispatch(fetchMyFees(selectedStudentId));
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     } catch (err) {
       message.error(err || "Payment failed");
@@ -160,7 +160,7 @@ const ParentFees = () => {
           message.success("Payment successful");
           setOpen(false);
           dispatch(fetchMyFees(enrollmentId));
-          dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
+           if (selectedStudentId) dispatch(fetchMyFees(selectedStudentId));
         },
         theme: { color: "#1677ff" },
       };

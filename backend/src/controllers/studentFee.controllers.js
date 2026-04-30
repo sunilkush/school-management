@@ -20,7 +20,11 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
   if (!feeStructureId || !academicYearId || !schoolId) {
     throw new ApiError(400, "feeStructureId, academicYearId and schoolId are required");
   }
-
+   for (const [key, value] of Object.entries({ feeStructureId, academicYearId, schoolId })) {
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+      throw new ApiError(400, `Invalid ${key}`);
+    }
+  }
   // ✅ Normalize students array
   let students = [];
   if (Array.isArray(studentIds) && studentIds.length > 0) {
@@ -31,6 +35,9 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
 
   if (!students.length) {
     throw new ApiError(400, "studentId or studentIds required");
+  }
+   if (students.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+    throw new ApiError(400, "Invalid studentId in selection");
   }
 
   // ✅ Remove duplicate studentIds
@@ -105,7 +112,7 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
 
 export const getMyFees = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
-  const { page = 1, limit = 20 } = req.query;
+  const { page = 1, limit = 20, academicYearId } = req.query;
 
   if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid student ID");
 
@@ -129,11 +136,13 @@ export const getMyFees = asyncHandler(async (req, res) => {
     }
   }
 
-  const filter = {
+const filter = {
     studentId,
     schoolId: req.user.schoolId,
+    ...(academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)
+      ? { academicYearId }
+      : {}),
   };
-
   const skip = (Number(page) - 1) * Number(limit);
 
   const [fees, total] = await Promise.all([
@@ -161,11 +170,18 @@ export const payStudentFee = asyncHandler(async (req, res) => {
   const { paidAmount } = req.body;
 
   if (!paidAmount || paidAmount <= 0) throw new ApiError(400, "Valid paidAmount required");
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    throw new ApiError(400, "Invalid fee record id");
+  }
 
   const feeRecord = await StudentFee.findOne({ _id: req.params.id, schoolId: req.user.schoolId });
   if (!feeRecord) throw new ApiError(404, "Fee record not found");
 
-  feeRecord.paidAmount += paidAmount;
+    if (Number(paidAmount) > Number(feeRecord.dueAmount)) {
+    throw new ApiError(400, "paidAmount cannot exceed dueAmount");
+  }
+
+  feeRecord.paidAmount += Number(paidAmount);
   await feeRecord.save();
 
   return sendSuccess(res, {

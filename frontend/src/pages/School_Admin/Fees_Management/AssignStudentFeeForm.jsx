@@ -259,7 +259,7 @@ const AssignStudentFee = () => {
   };
 
   const checkAlreadyAssignedFees = async ({ studentIds, feeIds }) => {
-    const alreadyAssigned = [];
+    const duplicateMap = {};
 
     for (const studentId of studentIds) {
       const feesResponse = await dispatch(fetchMyFees({ studentId })).unwrap();
@@ -271,22 +271,17 @@ const AssignStudentFee = () => {
         : [];
 
       const assignedFeeIds = fees.map((fee) =>
-        safeId(fee.feeStructureId?._id || fee.feeStructureId)
+         safeId(fee?.feeStructureId?._id || fee?.feeStructureId)
       );
 
-      const duplicateFeeIds = feeIds.filter((feeId) =>
+       duplicateMap[safeId(studentId)] = feeIds.filter((feeId) =>
         assignedFeeIds.includes(safeId(feeId))
       );
 
-      if (duplicateFeeIds.length) {
-        alreadyAssigned.push({
-          studentId,
-          duplicateFeeIds,
-        });
-      }
+     
     }
 
-    return alreadyAssigned;
+    return duplicateMap;
   };
 
   const feeColumns = [
@@ -417,40 +412,54 @@ const AssignStudentFee = () => {
 
       setAssigning(true);
 
-      const alreadyAssigned = await checkAlreadyAssignedFees({
+     const duplicateMap = await checkAlreadyAssignedFees({
         studentIds: studentIdsToAssign,
         feeIds: selectedFeeIds,
       });
 
-      if (alreadyAssigned.length === studentIdsToAssign.length) {
-        message.warning({
-          content: "Fees already assigned to all selected students",
-        });
-        return;
-      }
+  
 
-      if (alreadyAssigned.length > 0) {
-        message.warning({
-          content: `Fees already assigned to ${alreadyAssigned.length} student(s). Please select only pending students.`,
-        });
-        return;
-      }
+       const assignPromises = [];
+      let skippedAssignments = 0;
+    for (const feeStructureId of selectedFeeIds) {
+        const pendingStudentIds = studentIdsToAssign.filter(
+          (sid) => !(duplicateMap[safeId(sid)] || []).includes(safeId(feeStructureId))
+        );
 
-      await Promise.all(
-        selectedFeeIds.map((feeStructureId) =>
+        skippedAssignments += studentIdsToAssign.length - pendingStudentIds.length;
+
+          if (!pendingStudentIds.length) continue;
+
+        assignPromises.push(
           dispatch(
             assignFeesToStudents({
               ...payloadBase,
               feeStructureId,
+              ...(mode === "single"
+                ? { studentId: pendingStudentIds[0] }
+                : { studentIds: pendingStudentIds }),
               customAmount: customAmounts[feeStructureId] ?? null,
             })
           ).unwrap()
-        )
-      );
+        );
+      }
 
-      message.success({
-        content: "Fees assigned successfully",
-      });
+    if (!assignPromises.length) {
+        message.warning({ content: "Fees already assigned to all selected students" });
+        return;
+      }
+
+      await Promise.all(assignPromises);
+
+      if (skippedAssignments > 0) {
+        message.warning({
+          content: `Assigned pending fees only. Skipped ${skippedAssignments} already assigned entry(s).`,
+        });
+      } else {
+        message.success({
+          content: "Fees assigned successfully",
+        });
+      }
 
       form.resetFields();
       form.setFieldsValue({

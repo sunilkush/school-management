@@ -1,5 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
+const getApiMessage = (error, fallback = "Something went wrong") => {
+  const message =
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message;
+
+  return typeof message === "string" ? message : fallback;
+};
 
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS (School Admin)
@@ -14,7 +22,7 @@ export const assignFeesToStudents = createAsyncThunk(
       );
       return data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      return rejectWithValue(getApiMessage(err, "Failed to assign fees"));
     }
   }
 );
@@ -69,7 +77,7 @@ export const payStudentFee = createAsyncThunk(
       );
       return data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      return rejectWithValue(getApiMessage(err, "Payment failed"));
     }
   }
 );
@@ -87,7 +95,7 @@ export const fetchStudentFeeSummary = createAsyncThunk(
       });
       return data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || err.message);
+      return rejectWithValue(getApiMessage(err, "Failed to fetch fee summary"));
     }
   }
 );

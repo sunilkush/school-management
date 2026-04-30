@@ -47,7 +47,7 @@ const FeeStudent = () => {
   );
 
   const enrollmentId = myEnrollment?.enrollmentId;
-
+  const studentId = myEnrollment?.studentId;
   /* ================= LOCAL STATE ================= */
   const [open, setOpen] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState(null);
@@ -63,10 +63,10 @@ const FeeStudent = () => {
 
   useEffect(() => {
     if (enrollmentId) {
-      dispatch(fetchMyFees(enrollmentId));
+        if (studentId) dispatch(fetchMyFees(studentId));
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     }
-  }, [dispatch, enrollmentId]);
+  }, [dispatch, enrollmentId, studentId]);
 
   /* ================= GENERATE INSTALLMENTS ================= */
   const handleGenerateInstallments = async () => {
@@ -106,7 +106,7 @@ const FeeStudent = () => {
 
       message.success("Payment successful");
       setOpen(false);
-      dispatch(fetchMyFees(enrollmentId));
+      if (studentId) dispatch(fetchMyFees(studentId));
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     } catch (err) {
       message.error(err || "Payment failed");
@@ -147,7 +147,7 @@ const FeeStudent = () => {
 
           message.success("Payment successful");
           setOpen(false);
-          dispatch(fetchMyFees(enrollmentId));
+          if (studentId) dispatch(fetchMyFees(studentId));
           dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
         },
         theme: { color: "#1677ff" },
