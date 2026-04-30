@@ -12,7 +12,6 @@ import {
   Form,
   Input,
   InputNumber,
-  message,
   Radio,
   Row,
   Select,
@@ -33,7 +32,6 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { currentUser } from "../../../features/authSlice";
@@ -78,6 +76,12 @@ const AssignStudentFee = () => {
   const [studentSearch, setStudentSearch] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null);
+
+  const showAlert = (type, message, description = "") => {
+    setAlertInfo({ type, message, description });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const { schoolStudents: rawSchoolStudents } = useSelector(
     (s) => s.students || {}
@@ -177,10 +181,7 @@ const AssignStudentFee = () => {
 
   useEffect(() => {
     if (!selectedAcademicYear?._id) return;
-
-    form.setFieldsValue({
-      academicYearId: selectedAcademicYear._id,
-    });
+    form.setFieldsValue({ academicYearId: selectedAcademicYear._id });
   }, [selectedAcademicYear?._id, form]);
 
   useEffect(() => {
@@ -229,6 +230,7 @@ const AssignStudentFee = () => {
   useEffect(() => {
     setSelectedFeeIds([]);
     setCustomAmounts({});
+    setAlertInfo(null);
   }, [mode, effectiveClassId, academicYearId]);
 
   const refreshData = () => {
@@ -271,17 +273,32 @@ const AssignStudentFee = () => {
         : [];
 
       const assignedFeeIds = fees.map((fee) =>
-         safeId(fee?.feeStructureId?._id || fee?.feeStructureId)
+        safeId(fee?.feeStructureId?._id || fee?.feeStructureId)
       );
 
-       duplicateMap[safeId(studentId)] = feeIds.filter((feeId) =>
+      duplicateMap[safeId(studentId)] = feeIds.filter((feeId) =>
         assignedFeeIds.includes(safeId(feeId))
       );
-
-     
     }
 
     return duplicateMap;
+  };
+
+  const getStudentNames = (studentIds) => {
+    return studentIds
+      .map((sid) => {
+        const student = schoolStudents.find(
+          (s) => safeId(s._id) === safeId(sid)
+        );
+
+        return (
+          student?.user?.name ||
+          student?.name ||
+          student?.registrationNumber ||
+          "Unknown Student"
+        );
+      })
+      .join(", ");
   };
 
   const feeColumns = [
@@ -367,19 +384,26 @@ const AssignStudentFee = () => {
   ];
 
   const onFinish = async (values) => {
+    setAlertInfo(null);
+
     try {
       if (!schoolId) {
-        return message.error({ content: "School not found. Please login again." });
+        showAlert("error", "School Not Found", "Please login again.");
+        return;
       }
 
       if (!values.academicYearId) {
-        return message.warning({ content: "Please select academic year" });
+        showAlert("warning", "Academic Year Required", "Please select academic year.");
+        return;
       }
 
       if (!selectedFeeIds.length) {
-        return message.warning({
-          content: "Please select at least one fee structure",
-        });
+        showAlert(
+          "warning",
+          "Fee Structure Required",
+          "Please select at least one fee structure."
+        );
+        return;
       }
 
       const payloadBase = {
@@ -391,7 +415,8 @@ const AssignStudentFee = () => {
 
       if (mode === "single") {
         if (!values.studentId) {
-          return message.warning({ content: "Please select student" });
+          showAlert("warning", "Student Required", "Please select student.");
+          return;
         }
 
         payloadBase.studentId = values.studentId;
@@ -402,9 +427,12 @@ const AssignStudentFee = () => {
         studentIdsToAssign = filteredStudentsForClass.map((s) => s._id);
 
         if (!studentIdsToAssign.length) {
-          return message.warning({
-            content: "No students found in selected class",
-          });
+          showAlert(
+            "warning",
+            "No Students Found",
+            "No students found in selected class."
+          );
+          return;
         }
 
         payloadBase.studentIds = studentIdsToAssign;
@@ -412,23 +440,23 @@ const AssignStudentFee = () => {
 
       setAssigning(true);
 
-     const duplicateMap = await checkAlreadyAssignedFees({
+      const duplicateMap = await checkAlreadyAssignedFees({
         studentIds: studentIdsToAssign,
         feeIds: selectedFeeIds,
       });
 
-  
-
-       const assignPromises = [];
+      const assignPromises = [];
       let skippedAssignments = 0;
-    for (const feeStructureId of selectedFeeIds) {
+
+      for (const feeStructureId of selectedFeeIds) {
         const pendingStudentIds = studentIdsToAssign.filter(
-          (sid) => !(duplicateMap[safeId(sid)] || []).includes(safeId(feeStructureId))
+          (sid) =>
+            !(duplicateMap[safeId(sid)] || []).includes(safeId(feeStructureId))
         );
 
         skippedAssignments += studentIdsToAssign.length - pendingStudentIds.length;
 
-          if (!pendingStudentIds.length) continue;
+        if (!pendingStudentIds.length) continue;
 
         assignPromises.push(
           dispatch(
@@ -444,21 +472,31 @@ const AssignStudentFee = () => {
         );
       }
 
-    if (!assignPromises.length) {
-        message.warning({ content: "Fees already assigned to all selected students" });
+      if (!assignPromises.length) {
+        showAlert(
+          "warning",
+          "Fees Already Assigned",
+          `Selected fee is already assigned to: ${getStudentNames(
+            studentIdsToAssign
+          )}`
+        );
         return;
       }
 
       await Promise.all(assignPromises);
 
       if (skippedAssignments > 0) {
-        message.warning({
-          content: `Assigned pending fees only. Skipped ${skippedAssignments} already assigned entry(s).`,
-        });
+        showAlert(
+          "warning",
+          "Partially Assigned",
+          `Pending fees assigned successfully. Skipped ${skippedAssignments} already assigned entry(s).`
+        );
       } else {
-        message.success({
-          content: "Fees assigned successfully",
-        });
+        showAlert(
+          "success",
+          "Fees Assigned Successfully",
+          "Selected fee has been assigned successfully."
+        );
       }
 
       form.resetFields();
@@ -472,9 +510,11 @@ const AssignStudentFee = () => {
       setPreviewOpen(false);
       setMode("bulk");
     } catch (err) {
-      message.error({
-        content: getApiMessage(err, "Failed to assign fee"),
-      });
+      showAlert(
+        "error",
+        "Failed To Assign Fee",
+        getApiMessage(err, "Something went wrong while assigning fee.")
+      );
     } finally {
       setAssigning(false);
     }
@@ -482,7 +522,22 @@ const AssignStudentFee = () => {
 
   return (
     <div style={{ padding: 24, background: "#f5f7fb", minHeight: "100vh" }}>
-      <Form form={form} layout="vertical" onFinish={onFinish}>
+      {alertInfo && (
+        <Alert
+          style={{
+            marginBottom: 16,
+            borderRadius: 12,
+          }}
+          type={alertInfo.type}
+          showIcon
+          closable
+          message={alertInfo.message}
+          description={alertInfo.description}
+          onClose={() => setAlertInfo(null)}
+        />
+      )}
+
+          <Form form={form} layout="vertical" onFinish={onFinish}>
         <Card
           bordered={false}
           style={{
@@ -491,6 +546,7 @@ const AssignStudentFee = () => {
           }}
           bodyStyle={{ padding: 24 }}
         >
+        
           <Flex justify="space-between" align="center" wrap="wrap" gap={16}>
             <Space direction="vertical" size={2}>
               <Title level={3} style={{ margin: 0 }}>
@@ -553,7 +609,10 @@ const AssignStudentFee = () => {
 
             <Col xs={24} sm={12} lg={6}>
               <Card bordered={false} style={{ background: "#f8fafc" }}>
-                <Statistic title="Default Total" value={money(totalDefaultAmount)} />
+                <Statistic
+                  title="Default Total"
+                  value={money(totalDefaultAmount)}
+                />
               </Card>
             </Col>
 

@@ -187,7 +187,7 @@ export const sidebarMenu = {
         { title: "Fee Categories", path: "schooladmin/fees/categories" },
         { title: "Fee Structures", path: "schooladmin/fees/feestructure" },
         { title: "Assign Fees", path: "schooladmin/fees/assign" },
-        { title: "Fee Collection", path: "schooladmin/fees/collect" },
+        
       ],
     },
 
@@ -335,9 +335,6 @@ export const sidebarMenu = {
       title: "Fee Management",
       icon: IndianRupee,
       subMenu: [
-        { title: "Fee Categories", path: "accountant/fees/categories" },
-        { title: "Fee Structure", path: "accountant/fees/feestructure" },
-        { title: "Assign Fees", path: "accountant/fees/assign" },
         { title: "Fee Collection", path: "accountant/fees/collect" },
       ],
     },

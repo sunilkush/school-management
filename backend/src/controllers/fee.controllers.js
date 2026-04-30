@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+
 import { FeeStructure } from "../models/feeStructure.model.js";
-import { FeeHead } from "../models/feeHead.model.js";
+
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -12,7 +12,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
   const {
     schoolId,
     schoolClassId,
-    sessionId,
+     academicYearId,
     feeHeadId,
     amount,
     frequency,
@@ -35,7 +35,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
   const exists = await FeeStructure.findOne({
     schoolId: finalSchoolId,
     schoolClassId,
-    sessionId,
+    academicYearId,
     feeHeadId,
   });
 
@@ -49,7 +49,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
   const feeStructure = await FeeStructure.create({
     schoolId: finalSchoolId,
     schoolClassId,
-    sessionId,
+      academicYearId,
     feeHeadId,
     amount,
     frequency,
@@ -71,8 +71,8 @@ export const getFeeStructures = asyncHandler(async (req, res) => {
     filter.schoolId = req.query.schoolId;
   }
 
-  if (req.query.sessionId) {
-    filter.sessionId = req.query.sessionId;
+  if (req.query.academicYearId) {
+    filter.academicYearId = req.query.academicYearId;
   }
 
   if (req.query.schoolClassId) {
@@ -81,7 +81,7 @@ export const getFeeStructures = asyncHandler(async (req, res) => {
 
   const fees = await FeeStructure.find(filter)
     .populate("schoolClassId", "name")
-    .populate("sessionId", "name")
+     .populate("academicYearId", "name")
     .populate("feeHeadId", "name type")
     .populate("schoolId", "name")
     .sort({ createdAt: -1 });

@@ -6,7 +6,11 @@ import mongoose from "mongoose";
 /* ================= CREATE ================= */
 export const createFeeStructure = asyncHandler(async (req, res) => {
   const { schoolId, schoolClassId,  academicYearId, feeHeadId, amount, frequency } = req.body;
-
+   for (const [key, value] of Object.entries({ schoolId, schoolClassId, academicYearId, feeHeadId })) {
+    if (!mongoose.isValidObjectId(value)) {
+      throw new ApiError(400, `Invalid ${key}`);
+    }
+  }
   const existing = await FeeStructure.findOne({
   schoolId,
   schoolClassId,
@@ -15,7 +19,7 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
 });
 
 if (existing) {
-  throw new Error("Fee structure already exists for this class");
+   throw new ApiError(409, "Fee structure already exists for this class");
 }
 
   

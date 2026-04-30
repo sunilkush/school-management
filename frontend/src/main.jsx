@@ -140,7 +140,7 @@ const LibraryCard = lazy(() => import("./pages/School_Admin/Library/LibraryCard.
 const ClassTimetable = lazy(() => import("./pages/School_Admin/Timetables/ClassTimetable.jsx"));
 const TeacherTimetable = lazy(() => import("./pages/School_Admin/Timetables/TeacherTimetable.jsx"));
 
-const CollectFees = lazy(() => import("./pages/School_Admin/Fees_Management/CollectFees.jsx"));
+
 const FeeStructure = lazy(() => import("./pages/School_Admin/Fees_Management/FeeStructure.jsx"));
 const StudentAssignFees = lazy(() => import("./pages/School_Admin/Fees_Management/AssignStudentFeeForm.jsx"));
 const SchoolFeeCategories = lazy(() => import("./pages/School_Admin/Fees_Management/SchoolFeeCategories.jsx"));
@@ -215,6 +215,8 @@ const ChildHomework = lazy(() => import("./pages/Parent/Homework/ChildHomework.j
 const ChildMessages = lazy(() => import("./pages/Parent/Messages/ChildMessages.jsx"));
 const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.jsx"));
 const ParentFees = lazy(() => import("./pages/Parent/Fee/ParentFees.jsx"));
+// Accountant
+const CollectFees = lazy(() => import("./pages/Accountant/Fees_Management/CollectFees.jsx"));
 // Other
 const UserRegister = lazy(() => import("./pages/UserRegister.jsx"));
 const RoleWorkspace = lazy(() => import("./pages/RoleWorkspace.jsx"));
@@ -454,7 +456,7 @@ const router = createBrowserRouter([
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
-              { path: "fees/collect", element: <CollectFees /> },
+             
               { path: "hostel", element: <HostelManagement /> },
               { path: "hostel/allocation", element: <RoomAllocation /> },
               { path: "transport/routes", element: <RoutesPage /> },
@@ -608,9 +610,6 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <AccountantDashboard /> },
-              { path: "fees/categories", element: <SchoolFeeCategories /> },
-              { path: "fees/feestructure", element: <FeeStructure /> },
-              { path: "fees/assign", element: <StudentAssignFees /> },
               { path: "fees/collect", element: <CollectFees /> },
               { path: "salary", element: <EmployeeSalaries /> },
               { path: "salary/structures", element: <SalaryStructures /> },

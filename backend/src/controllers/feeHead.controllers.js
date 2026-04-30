@@ -6,10 +6,13 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 /* ================= CREATE ================= */
 export const createFeeHead = asyncHandler(async (req, res) => {
     const { schoolId, name, type, isEditable } = req.body;
-
+      if (!name?.trim()) {
+        throw new ApiError(400, "Fee head name is required");
+    }
     // School Admin apna hi school use karega
+    const currentRole = req.Role?.name || req.user?.role;
     const finalSchoolId =
-        req.user.role === "School Admin" ? req.user.schoolId : schoolId;
+         currentRole === "School Admin" ? req.user.schoolId : schoolId;
 
     if (!finalSchoolId) {
         throw new ApiError(400, "School ID is required");
@@ -59,7 +62,10 @@ export const getFeeHeads = asyncHandler(async (req, res) => {
 
 /* ================= GET BY SCHOOL ================= */
 export const getFeeHeadsBySchool = asyncHandler(async (req, res) => {
-    const { schoolId } = req.params;
+     const schoolId = req.query.schoolId || req.user.schoolId;
+    if (!schoolId) {
+        throw new ApiError(400, "schoolId is required");
+    }
    
     const feeHeads = await FeeHead.find({ schoolId }).sort({ createdAt: -1 });
     res.status(200).json(new ApiResponse(200, feeHeads, "Fee heads fetched"));

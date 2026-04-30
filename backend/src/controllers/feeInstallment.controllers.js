@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
 import { FeeStructure } from "../models/feeStructure.model.js";
-import { Payment } from "../models/payment.model.js";
+
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -83,10 +83,12 @@ export const generateInstallments = asyncHandler(async (req, res) => {
 export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
   const { studentId } = req.query;
 
+  // ✅ Validate
   if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
     throw new ApiError(400, "Invalid studentId");
   }
 
+  // ✅ Fetch installments
   const installments = await FeeInstallment.find({ studentId })
     .populate({
       path: "studentFeeId",
@@ -96,26 +98,46 @@ export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
     .sort({ dueDate: 1 })
     .lean();
 
-  /* ================= ADD FEE HEAD NAME ================= */
-  for (const inst of installments) {
-    if (inst.studentFeeId?.feeStructureId) {
-      const structure = await FeeStructure.findById(
-        inst.studentFeeId.feeStructureId
-      )
-        .populate("feeHeadId", "name")
-        .lean();
+  // ================= ADD FEE HEAD NAME =================
+  const feeStructureIds = [
+    ...new Set(
+      installments
+        .map((inst) => inst.studentFeeId?.feeStructureId?.toString())
+        .filter(Boolean)
+    ),
+  ];
 
-      if (structure) {
-        inst.feeHead = {
+const structures = await FeeStructure.find({
+  _id: { $in: feeStructureIds },
+})
+  .select("amount feeHeadId")
+  .populate("feeHeadId", "name")
+  .lean();
+
+  const structureMap = new Map(
+    structures.map((structure) => [
+      structure._id.toString(),
+      structure,
+    ])
+  );
+
+  // ✅ Attach feeHead data
+  for (const inst of installments) {
+    const structureId = inst.studentFeeId?.feeStructureId?.toString();
+
+    const structure = structureId
+      ? structureMap.get(structureId)
+      : null;
+
+    inst.feeHead = structure
+      ? {
           name: structure.feeHeadId?.name || "-",
-          amount: structure.amount,
-        };
-      } else {
-        inst.feeHead = null;
-      }
-    }
+          amount: structure.amount || 0,
+        }
+      : null;
   }
 
+  // ✅ Response
   return res.status(200).json(
     new ApiResponse(200, installments, "Installments fetched successfully")
   );
@@ -175,10 +197,7 @@ export const payInstallment = asyncHandler(async (req, res) => {
   if (studentFee.dueAmount <= 0) {
     studentFee.status = "paid";
     studentFee.dueAmount = 0;
-  } else {
-    studentFee.status = "partial";
   }
-console.log('Student Fee after payment:', studentFee);
   await studentFee.save();
    
   /* ================= RESPONSE ================= */

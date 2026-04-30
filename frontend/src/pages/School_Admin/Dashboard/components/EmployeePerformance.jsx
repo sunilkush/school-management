@@ -42,7 +42,7 @@ const EmployeePerformance = ({ employees = [] }) => {
               return (
                 <tr key={emp.email} style={{ borderBottom: `1px solid ${isDark ? "#1a1a1a" : "#f5f5f5"}` }}>
                   <td style={{ padding: "12px" }}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Avatar src={emp.avatar} size={34}>{emp?.name?.[0] || "E"}</Avatar><div><Text style={{ fontSize: 13 }}>{emp.name}</Text><br /><Text style={{ fontSize: 11 }}>{emp.email}</Text></div></div></td>
-                  <td style={{ padding: "12px" }}><Text style={{ fontSize: 12 }}>{emp.dept}</Text></td>
+                  <td style={{ padding: "12px",width:"200px" }}><Text style={{ fontSize: 12 }}>{emp.dept}</Text></td>
                   <td style={{ padding: "12px" }}><Text style={{ fontSize: 12.5 }}>{emp.designation}</Text></td>
                   <td style={{ padding: "12px" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: perf.color, background: perf.bg, border: `1px solid ${perf.border}`, padding: "3px 9px", borderRadius: 99 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: perf.dot }} />{emp.performance}</span></td>
                 </tr>

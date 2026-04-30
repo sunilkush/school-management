@@ -14,7 +14,7 @@ const router = Router();
 ===================================================== */
 router.use(auth);
 const ADMIN_ONLY = ["School Admin", "Accountant"];
-const STUDENT_PARENT = ["School Admin","Student", "Parent"];
+const STUDENT_PARENT = ["School Admin","Student", "Parent","Accountant"];
 const FEE_PAY_ROLES = ["School Admin", "Accountant", "Student", "Parent"];
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS
