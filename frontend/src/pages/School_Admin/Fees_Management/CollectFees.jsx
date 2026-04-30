@@ -20,8 +20,6 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 
-import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
-import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchMyFees, payStudentFee } from "../../../features/studentFeeSlice";
 
 const { Content } = Layout;
@@ -45,47 +43,35 @@ const CollectFees = () => {
   const [loadingPendingByStudent, setLoadingPendingByStudent] = useState({});
   const [selectedFeeDueAmount, setSelectedFeeDueAmount] = useState(0);
 
-  const { user } = useSelector((s) => s.auth || {});
+
   const { schoolStudents = [] } = useSelector((s) => s.students || {});
   const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
-  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
-  // ✅ FIX: selectedAcademicYear null ho sakta hai
-  const schoolId = user?.school?._id || user?.schoolId || "";
-  const academicYearId = selectedAcademicYear?._id || "";
 
-  // ✅ Classes only once school/year ke hisab se
-  useEffect(() => {
-    if (!schoolId || !academicYearId) return;
 
-    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-  }, [dispatch, schoolId, academicYearId]);
 
-  // ✅ Students fetch with schoolClassId when class selected
-  useEffect(() => {
-    if (!schoolId || !academicYearId) return;
 
-    const params = {
-      schoolId,
-      academicYearId,
-      ...(filterClass && { schoolClassId: filterClass }),
+
+
+   const students = useMemo(() => {
+    const getId = (value) => {
+      if (!value) return "";
+      if (typeof value === "string") return value;
+      return value?._id || value?.id || "";
     };
 
-    dispatch(fetchStudentsBySchoolId(params));
-  }, [dispatch, schoolId, academicYearId, filterClass]);
-
-  const students = useMemo(() => {
     return schoolStudents.map((s) => {
-      const studentId = s.student?._id || s.studentId || s._id;
+      const studentId = getId(s.student) || getId(s.studentId) || getId(s.user) || getId(s);
       const classObj = s.class || s.schoolClass || s.schoolClassId || {};
+      const classId = getId(classObj) || getId(s.classId) || getId(s.schoolClassId);
 
       return {
-        key: s._id,
+        key: s._id || studentId,
         studentId,
         name: s.user?.name || s.name || "-",
-        className: classObj?.name || "-",
-        classId: classObj?._id || s.classId || s.schoolClassId || "",
-        section: s.section?.name || "-",
+        className: classObj?.name || s.className || "-",
+        classId,
+        section: s.section?.name || s.sectionName || "-",
       };
     });
   }, [schoolStudents]);
@@ -196,15 +182,7 @@ const CollectFees = () => {
       setSelectedFeeDueAmount(0);
       form.resetFields();
 
-      if (schoolId && academicYearId) {
-        dispatch(
-          fetchStudentsBySchoolId({
-            schoolId,
-            academicYearId,
-            ...(filterClass && { schoolClassId: filterClass }),
-          })
-        );
-      }
+    
     } catch (err) {
       message.error(err?.message || "Fee collection failed");
     } finally {
@@ -219,10 +197,13 @@ const CollectFees = () => {
         .includes(searchName.toLowerCase());
 
       const matchClass = filterClass ? s.classId === filterClass : true;
+ // Fee collection page par sirf wahi students dikhaye jin ki fee assigned/pending ho
+      const dueAmount = Number(pendingFeesByStudent[s.studentId] || 0);
+      const hasAssignedPendingFee = dueAmount > 0;
 
-      return matchName && matchClass;
+      return matchName && matchClass && hasAssignedPendingFee;
     });
-  }, [students, searchName, filterClass]);
+   }, [students, searchName, filterClass, pendingFeesByStudent]);
 
   const columns = [
     {
@@ -346,19 +327,22 @@ const CollectFees = () => {
                 <Select
                   placeholder="Select fee"
                   onChange={(value) => {
-                    const fee = studentFees.find((f) => f._id === value);
+                    const fee = studentFees.find((f) => String(f._id || f.id) === String(value));
                     const due = Number(fee?.dueAmount || 0);
 
                     setSelectedFeeDueAmount(due);
                     form.setFieldsValue({ amount: due });
                   }}
                 >
-                  {studentFees.map((fee) => (
-                    <Option key={fee._id} value={fee._id}>
+                   {studentFees.map((fee) => {
+                    const feeId = fee?._id || fee?.id;
+                    return (
+                    <Option key={feeId} value={feeId}>
                       {fee.feeStructureId?.feeHeadId?.name || "Fee"} | ₹
                       {Number(fee.dueAmount || 0).toLocaleString("en-IN")}
                     </Option>
-                  ))}
+                );
+                  })}
                 </Select>
               </Form.Item>
 
