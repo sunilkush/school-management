@@ -17,6 +17,7 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     schoolId,
   } = req.body;
 
+
   // ✅ Required validation
   if (!feeStructureId || !academicYearId || !schoolId) {
     throw new ApiError(400, "feeStructureId, academicYearId and schoolId are required");

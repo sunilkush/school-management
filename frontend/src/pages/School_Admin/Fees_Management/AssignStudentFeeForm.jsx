@@ -47,8 +47,18 @@ const safeId = (v) => {
   if (!v) return "";
   if (typeof v === "string") return v;
   if (typeof v === "object" && v._id) return String(v._id);
+  if (typeof v === "object" && v.studentId) {
+    return typeof v.studentId === "object"
+      ? String(v.studentId?._id)
+      : String(v.studentId);
+  }
   return String(v);
 };
+
+const getStudentUserId = (student) => {
+  return safeId(student?.studentId?._id || student?.studentId);
+};
+
 
 const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -116,11 +126,11 @@ const AssignStudentFee = () => {
   const selectedClassId = Form.useWatch("schoolClassId", form);
   const academicYearId = Form.useWatch("academicYearId", form);
 
-  const selectedStudent = useMemo(() => {
-    return schoolStudents.find(
-      (s) => safeId(s._id) === safeId(selectedStudentId)
-    );
-  }, [schoolStudents, selectedStudentId]);
+ const selectedStudent = useMemo(() => {
+  return schoolStudents.find(
+    (s) => getStudentUserId(s) === safeId(selectedStudentId)
+  );
+}, [schoolStudents, selectedStudentId]);
 
   const effectiveClassId =
     mode === "single"
@@ -284,22 +294,6 @@ const AssignStudentFee = () => {
     return duplicateMap;
   };
 
-  const getStudentNames = (studentIds) => {
-    return studentIds
-      .map((sid) => {
-        const student = schoolStudents.find(
-          (s) => safeId(s._id) === safeId(sid)
-        );
-
-        return (
-          student?.user?.name ||
-          student?.name ||
-          student?.registrationNumber ||
-          "Unknown Student"
-        );
-      })
-      .join(", ");
-  };
 
   const feeColumns = [
     {
@@ -383,142 +377,153 @@ const AssignStudentFee = () => {
     },
   ];
 
-  const onFinish = async (values) => {
-    setAlertInfo(null);
+const onFinish = async (values) => {
+  setAlertInfo(null);
 
-    try {
-      if (!schoolId) {
-        showAlert("error", "School Not Found", "Please login again.");
-        return;
-      }
-
-      if (!values.academicYearId) {
-        showAlert("warning", "Academic Year Required", "Please select academic year.");
-        return;
-      }
-
-      if (!selectedFeeIds.length) {
-        showAlert(
-          "warning",
-          "Fee Structure Required",
-          "Please select at least one fee structure."
-        );
-        return;
-      }
-
-      const payloadBase = {
-        schoolId,
-        academicYearId: values.academicYearId,
-      };
-
-      let studentIdsToAssign = [];
-
-      if (mode === "single") {
-        if (!values.studentId) {
-          showAlert("warning", "Student Required", "Please select student.");
-          return;
-        }
-
-        payloadBase.studentId = values.studentId;
-        studentIdsToAssign = [values.studentId];
-      }
-
-      if (mode === "bulk") {
-        studentIdsToAssign = filteredStudentsForClass.map((s) => s._id);
-
-        if (!studentIdsToAssign.length) {
-          showAlert(
-            "warning",
-            "No Students Found",
-            "No students found in selected class."
-          );
-          return;
-        }
-
-        payloadBase.studentIds = studentIdsToAssign;
-      }
-
-      setAssigning(true);
-
-      const duplicateMap = await checkAlreadyAssignedFees({
-        studentIds: studentIdsToAssign,
-        feeIds: selectedFeeIds,
-      });
-
-      const assignPromises = [];
-      let skippedAssignments = 0;
-
-      for (const feeStructureId of selectedFeeIds) {
-        const pendingStudentIds = studentIdsToAssign.filter(
-          (sid) =>
-            !(duplicateMap[safeId(sid)] || []).includes(safeId(feeStructureId))
-        );
-
-        skippedAssignments += studentIdsToAssign.length - pendingStudentIds.length;
-
-        if (!pendingStudentIds.length) continue;
-
-        assignPromises.push(
-          dispatch(
-            assignFeesToStudents({
-              ...payloadBase,
-              feeStructureId,
-              ...(mode === "single"
-                ? { studentId: pendingStudentIds[0] }
-                : { studentIds: pendingStudentIds }),
-              customAmount: customAmounts[feeStructureId] ?? null,
-            })
-          ).unwrap()
-        );
-      }
-
-      if (!assignPromises.length) {
-        showAlert(
-          "warning",
-          "Fees Already Assigned",
-          `Selected fee is already assigned to: ${getStudentNames(
-            studentIdsToAssign
-          )}`
-        );
-        return;
-      }
-
-      await Promise.all(assignPromises);
-
-      if (skippedAssignments > 0) {
-        showAlert(
-          "warning",
-          "Partially Assigned",
-          `Pending fees assigned successfully. Skipped ${skippedAssignments} already assigned entry(s).`
-        );
-      } else {
-        showAlert(
-          "success",
-          "Fees Assigned Successfully",
-          "Selected fee has been assigned successfully."
-        );
-      }
-
-      form.resetFields();
-      form.setFieldsValue({
-        academicYearId: selectedAcademicYear?._id,
-      });
-
-      setSelectedFeeIds([]);
-      setCustomAmounts({});
-      setStudentSearch("");
-      setPreviewOpen(false);
-      setMode("bulk");
-    } catch (err) {
-      showAlert(
-        "error",
-        "Failed To Assign Fee",
-        getApiMessage(err, "Something went wrong while assigning fee.")
-      );
-    } finally {
-      setAssigning(false);
+  try {
+    if (!schoolId) {
+      showAlert("error", "School Not Found", "Please login again.");
+      return;
     }
-  };
+
+    if (!values.academicYearId) {
+      showAlert("warning", "Academic Year Required", "Please select academic year.");
+      return;
+    }
+
+    if (!selectedFeeIds.length) {
+      showAlert(
+        "warning",
+        "Fee Structure Required",
+        "Please select at least one fee structure."
+      );
+      return;
+    }
+
+    const payloadBase = {
+      schoolId,
+      academicYearId: values.academicYearId,
+    };
+
+    let studentIdsToAssign = [];
+
+    // ✅ SINGLE MODE FIX
+    if (mode === "single") {
+      if (!values.studentId) {
+        showAlert("warning", "Student Required", "Please select student.");
+        return;
+      }
+
+      
+
+      const studentId = safeId(values.studentId);
+        payloadBase.studentId = studentId;
+        studentIdsToAssign = [studentId];
+    }
+
+    // ✅ BULK MODE FIX
+    if (mode === "bulk") {
+     studentIdsToAssign = filteredStudentsForClass
+          .map((s) => getStudentUserId(s))
+          .filter(Boolean);
+
+      if (!studentIdsToAssign.length) {
+        showAlert(
+          "warning",
+          "No Students Found",
+          "No students found in selected class."
+        );
+        return;
+      }
+
+      payloadBase.studentIds = studentIdsToAssign;
+    }
+
+    setAssigning(true);
+
+    // ✅ DUPLICATE CHECK
+    const duplicateMap = await checkAlreadyAssignedFees({
+      studentIds: studentIdsToAssign,
+      feeIds: selectedFeeIds,
+    });
+
+    const assignPromises = [];
+    let skippedAssignments = 0;
+
+    for (const feeStructureId of selectedFeeIds) {
+      const pendingStudentIds = studentIdsToAssign.filter(
+        (sid) =>
+          !(duplicateMap[safeId(sid)] || []).includes(
+            safeId(feeStructureId)
+          )
+      );
+
+      skippedAssignments +=
+        studentIdsToAssign.length - pendingStudentIds.length;
+
+      if (!pendingStudentIds.length) continue;
+
+      assignPromises.push(
+        dispatch(
+          assignFeesToStudents({
+            ...payloadBase,
+            feeStructureId,
+            ...(mode === "single"
+              ? { studentId: pendingStudentIds[0] }
+              : { studentIds: pendingStudentIds }),
+            customAmount: customAmounts[feeStructureId] ?? null,
+          })
+        ).unwrap()
+      );
+    }
+
+    if (!assignPromises.length) {
+      showAlert(
+        "warning",
+        "Fees Already Assigned",
+        `Selected fee is already assigned to selected student(s).`
+      );
+      return;
+    }
+
+    await Promise.all(assignPromises);
+
+    if (skippedAssignments > 0) {
+      showAlert(
+        "warning",
+        "Partially Assigned",
+        `Skipped ${skippedAssignments} already assigned entries. बाकी assign हो गए।`
+      );
+    } else {
+      showAlert(
+        "success",
+        "Fees Assigned Successfully",
+        "All fees assigned successfully."
+      );
+    }
+
+    // ✅ RESET
+    form.resetFields();
+    form.setFieldsValue({
+      academicYearId: selectedAcademicYear?._id,
+    });
+
+    setSelectedFeeIds([]);
+    setCustomAmounts({});
+    setStudentSearch("");
+    setPreviewOpen(false);
+    setMode("bulk");
+
+  } catch (err) {
+    showAlert(
+      "error",
+      "Failed To Assign Fee",
+      getApiMessage(err, "Something went wrong while assigning fee.")
+    );
+  } finally {
+    setAssigning(false);
+  }
+};
 
   return (
     <div style={{ padding: 24, background: "#f5f7fb", minHeight: "100vh" }}>
@@ -716,8 +721,8 @@ const AssignStudentFee = () => {
                     showSearch
                     allowClear
                     optionFilterProp="label"
-                    options={schoolStudents.map((s) => ({
-                      value: s._id,
+                   options={schoolStudents.map((s) => ({
+                      value: getStudentUserId(s), // ✅ studentId only
                       label: `${s.user?.name || s.name || "-"} ${
                         s.registrationNumber || ""
                       } (${s.class?.name || s.schoolClass?.name || "-"} - ${
