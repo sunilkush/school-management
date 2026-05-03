@@ -11,14 +11,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
    ✅ GENERATE INSTALLMENTS (Monthly | Quarterly | Yearly)
 ===================================================== */
 export const generateInstallments = asyncHandler(async (req, res) => {
-  const { studentId, frequency } = req.body;
+  const { studentId } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(studentId)) {
     throw new ApiError(400, "Invalid studentId");
-  }
-
-  if (!["monthly", "quarterly", "yearly"].includes(frequency)) {
-    throw new ApiError(400, "Frequency must be monthly | quarterly | yearly");
   }
 
   const studentFees = await StudentFee.find({ studentId });
@@ -35,6 +31,16 @@ export const generateInstallments = asyncHandler(async (req, res) => {
     });
 
     if (exists) continue;
+
+    const feeStructure = await FeeStructure.findById(fee.feeStructureId)
+      .select("frequency")
+      .lean();
+
+    const frequency = feeStructure?.frequency;
+
+    if (!["monthly", "quarterly", "yearly"].includes(frequency)) {
+      continue;
+    }
 
     let baseDate = new Date();
     let count = frequency === "monthly" ? 12 : frequency === "quarterly" ? 4 : 1;
@@ -63,7 +69,10 @@ export const generateInstallments = asyncHandler(async (req, res) => {
   }
 
   if (!allInstallments.length) {
-    throw new ApiError(400, "Installments already generated");
+    throw new ApiError(
+      400,
+      "Installments already generated or fee structure frequency is missing"
+    );
   }
 
   await FeeInstallment.insertMany(allInstallments);
@@ -72,10 +81,11 @@ export const generateInstallments = asyncHandler(async (req, res) => {
     new ApiResponse(
       201,
       allInstallments,
-      `Installments (${frequency}) generated successfully`
+      "Installments generated successfully as per fee structure frequency"
     )
   );
 });
+
 
 /* =====================================================
    ✅ GET INSTALLMENTS + FEE HEAD NAMES (FIXED)

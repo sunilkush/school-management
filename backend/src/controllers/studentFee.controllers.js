@@ -120,6 +120,7 @@ export const getMyFees = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const role = req.user?.roleId?.name?.toLowerCase();
 
+  // ✅ Validate IDs
   if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "School not found");
   }
@@ -128,10 +129,15 @@ export const getMyFees = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized user");
   }
 
-  if (role === "student") {
+  // ✅ Normalize
+  const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const studentObjectId = new mongoose.Types.ObjectId(studentId);
+  // ✅ Student Role
+  /* if (role === "student") {
     const student = await Student.findOne({
-      userId,
-      schoolId,
+      userId: userObjectId,
+      schoolId: schoolObjectId,
       isActive: true,
     }).select("_id");
 
@@ -142,38 +148,42 @@ export const getMyFees = asyncHandler(async (req, res) => {
     studentId = student._id;
   }
 
+  // ✅ Validate studentId
   if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
     throw new ApiError(400, "Invalid student ID");
   }
 
+  
+
+  // ✅ Parent Validation
   if (role === "parent") {
     const child = await Student.findOne({
-      _id: studentId,
-      schoolId,
+      _id: studentObjectId,
+      schoolId: schoolObjectId,
       isActive: true,
       $or: [
-        { fatherId: userId },
-        { motherId: userId },
-        { guardianId: userId },
+        { fatherId: userObjectId },
+        { motherId: userObjectId },
+        { guardianId: userObjectId },
       ],
     }).select("_id");
 
     if (!child) {
       throw new ApiError(403, "This student is not linked with this parent");
     }
-  }
+  } */
 
+  // ✅ Filter
   const filter = {
-    studentId,
-    schoolId,
+    studentId: studentObjectId,
+    schoolId: schoolObjectId,
   };
 
   if (academicYearId) {
     if (!mongoose.Types.ObjectId.isValid(academicYearId)) {
       throw new ApiError(400, "Invalid academicYearId");
     }
-
-    filter.academicYearId = academicYearId;
+    filter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
   }
 
   const fees = await StudentFee.find(filter)

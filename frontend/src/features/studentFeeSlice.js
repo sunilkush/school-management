@@ -34,16 +34,25 @@ export const fetchMyFees = createAsyncThunk(
   "studentFee/fetchMyFees",
   async (studentIdentifier, { rejectWithValue }) => {
     try {
-      const studentId =
-        typeof studentIdentifier === "object"
-          ? studentIdentifier?.studentId
-          : studentIdentifier;
+      let studentId;
+
+      // ✅ Case 1: Array
+      if (Array.isArray(studentIdentifier)) {
+        studentId = studentIdentifier[0]; // first id
+      }
+      // ✅ Case 2: Object
+      else if (typeof studentIdentifier === "object") {
+        studentId = studentIdentifier?._id;
+      }
+      // ✅ Case 3: String
+      else {
+        studentId = studentIdentifier;
+      }
 
       if (!studentId) {
         return rejectWithValue("Student ID is required");
       }
 
-   
       const { data } = await apiClient.get(`/student-fees/my/${studentId}`);
 
       const normalizedFees = Array.isArray(data?.data)
@@ -58,7 +67,6 @@ export const fetchMyFees = createAsyncThunk(
     }
   }
 );
-
 
 /* =====================================================
    ✅ PAY STUDENT FEE
