@@ -56,10 +56,9 @@ const safeId = (v) => {
 };
 
 const getStudentUserId = (student) => {
-  return safeId(student?.studentId?._id || student?.studentId);
+  return safeId(student?.studentId);
 };
-
-
+console.log(getStudentUserId)
 const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 const getApiMessage = (err, fallback = "Something went wrong") => {
@@ -270,11 +269,19 @@ const AssignStudentFee = () => {
     }
   };
 
-  const checkAlreadyAssignedFees = async ({ studentIds, feeIds }) => {
-    const duplicateMap = {};
+ const checkAlreadyAssignedFees = async ({ studentIds, feeIds }) => {
+  const duplicateMap = {};
 
-    for (const studentId of studentIds) {
-      const feesResponse = await dispatch(fetchMyFees({ studentId })).unwrap();
+  try {
+    // ✅ parallel API calls (fast)
+    const responses = await Promise.all(
+      studentIds.map((sid) =>
+        dispatch(fetchMyFees(sid)).unwrap()
+      )
+    );
+
+    responses.forEach((feesResponse, index) => {
+      const studentId = studentIds[index];
 
       const fees = Array.isArray(feesResponse)
         ? feesResponse
@@ -289,10 +296,14 @@ const AssignStudentFee = () => {
       duplicateMap[safeId(studentId)] = feeIds.filter((feeId) =>
         assignedFeeIds.includes(safeId(feeId))
       );
-    }
+    });
 
     return duplicateMap;
-  };
+  } catch (err) {
+    console.error("Duplicate check failed:", err);
+    return {};
+  }
+};
 
 
   const feeColumns = [
@@ -387,16 +398,12 @@ const onFinish = async (values) => {
     }
 
     if (!values.academicYearId) {
-      showAlert("warning", "Academic Year Required", "Please select academic year.");
+      showAlert("warning", "Academic Year Required");
       return;
     }
 
     if (!selectedFeeIds.length) {
-      showAlert(
-        "warning",
-        "Fee Structure Required",
-        "Please select at least one fee structure."
-      );
+      showAlert("warning", "Select at least one fee");
       return;
     }
 
@@ -407,32 +414,26 @@ const onFinish = async (values) => {
 
     let studentIdsToAssign = [];
 
-    // ✅ SINGLE MODE FIX
+    // ✅ SINGLE
     if (mode === "single") {
-      if (!values.studentId) {
-        showAlert("warning", "Student Required", "Please select student.");
+      const studentId = safeId(values.studentId);
+      if (!studentId) {
+        showAlert("warning", "Student Required");
         return;
       }
 
-      
-
-      const studentId = safeId(values.studentId);
-        payloadBase.studentId = studentId;
-        studentIdsToAssign = [studentId];
+      payloadBase.studentId = studentId;
+      studentIdsToAssign = [studentId];
     }
 
-    // ✅ BULK MODE FIX
+    // ✅ BULK
     if (mode === "bulk") {
-     studentIdsToAssign = filteredStudentsForClass
-          .map((s) => getStudentUserId(s))
-          .filter(Boolean);
+      studentIdsToAssign = filteredStudentsForClass
+        .map((s) => getStudentUserId(s))
+        .filter(Boolean);
 
       if (!studentIdsToAssign.length) {
-        showAlert(
-          "warning",
-          "No Students Found",
-          "No students found in selected class."
-        );
+        showAlert("warning", "No students found");
         return;
       }
 
@@ -448,20 +449,19 @@ const onFinish = async (values) => {
     });
 
     const assignPromises = [];
-    let skippedAssignments = 0;
+    let skipped = 0;
 
     for (const feeStructureId of selectedFeeIds) {
-      const pendingStudentIds = studentIdsToAssign.filter(
+      const pendingStudents = studentIdsToAssign.filter(
         (sid) =>
           !(duplicateMap[safeId(sid)] || []).includes(
             safeId(feeStructureId)
           )
       );
 
-      skippedAssignments +=
-        studentIdsToAssign.length - pendingStudentIds.length;
+      skipped += studentIdsToAssign.length - pendingStudents.length;
 
-      if (!pendingStudentIds.length) continue;
+      if (!pendingStudents.length) continue;
 
       assignPromises.push(
         dispatch(
@@ -469,8 +469,8 @@ const onFinish = async (values) => {
             ...payloadBase,
             feeStructureId,
             ...(mode === "single"
-              ? { studentId: pendingStudentIds[0] }
-              : { studentIds: pendingStudentIds }),
+              ? { studentId: pendingStudents[0] }
+              : { studentIds: pendingStudents }),
             customAmount: customAmounts[feeStructureId] ?? null,
           })
         ).unwrap()
@@ -478,47 +478,31 @@ const onFinish = async (values) => {
     }
 
     if (!assignPromises.length) {
-      showAlert(
-        "warning",
-        "Fees Already Assigned",
-        `Selected fee is already assigned to selected student(s).`
-      );
+      showAlert("warning", "Fees already assigned");
       return;
     }
 
     await Promise.all(assignPromises);
 
-    if (skippedAssignments > 0) {
-      showAlert(
-        "warning",
-        "Partially Assigned",
-        `Skipped ${skippedAssignments} already assigned entries. बाकी assign हो गए।`
-      );
-    } else {
-      showAlert(
-        "success",
-        "Fees Assigned Successfully",
-        "All fees assigned successfully."
-      );
-    }
+    showAlert(
+      skipped > 0 ? "warning" : "success",
+      skipped > 0
+        ? `Skipped ${skipped} duplicates`
+        : "Fees assigned successfully"
+    );
 
-    // ✅ RESET
+    // reset
     form.resetFields();
-    form.setFieldsValue({
-      academicYearId: selectedAcademicYear?._id,
-    });
-
     setSelectedFeeIds([]);
     setCustomAmounts({});
-    setStudentSearch("");
     setPreviewOpen(false);
     setMode("bulk");
 
   } catch (err) {
     showAlert(
       "error",
-      "Failed To Assign Fee",
-      getApiMessage(err, "Something went wrong while assigning fee.")
+      "Failed",
+      getApiMessage(err)
     );
   } finally {
     setAssigning(false);

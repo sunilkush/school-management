@@ -68,17 +68,18 @@ const ParentFees = () => {
   const selectedChild = useMemo(
     () => children.find((child) => child.userId === selectedChildId) || null,
     [children, selectedChildId]
-  );
+  ); 
+  console.log(selectedChild)
 
-  const enrollmentId = selectedChild?.enrollmentId;
+  const enrollmentId = selectedChild?._id;
   const selectedStudentId = selectedChild?._id || selectedChild?.studentId || selectedChild?.userId;
   useEffect(() => {
     if (!enrollmentId) return;
 
     const childStudentIds = children
-      .map((child) => child?._id || child?.studentId || child?.userId)
+      .map((child) =>  child?._id )
       .filter(Boolean);
-
+    console.log(childStudentIds)
     if (childStudentIds.length) dispatch(fetchMyFees(childStudentIds));
     dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
   }, [dispatch, enrollmentId, children]);
@@ -175,6 +176,57 @@ const ParentFees = () => {
     }
   };
 
+  const groupedInstallments = useMemo(() => {
+  if (!Array.isArray(installments)) return [];
+
+  const map = {};
+
+  installments.forEach((inst) => {
+    const feeId =
+      inst?.feeStructureId?._id || inst?.feeStructureId;
+
+    if (!map[feeId]) {
+      map[feeId] = {
+        key: feeId,
+        feeHead:
+          inst?.feeStructureId?.feeHeadId?.name || "Fee",
+        totalAmount: 0,
+        paidAmount: 0,
+        dueAmount: 0,
+        installments: [],
+      };
+    }
+
+    map[feeId].installments.push(inst);
+    map[feeId].totalAmount += inst.amount || 0;
+    map[feeId].paidAmount += inst.paidAmount || 0;
+    map[feeId].dueAmount +=
+      (inst.amount || 0) - (inst.paidAmount || 0);
+  });
+
+  return Object.values(map);
+}, [installments]);
+ const groupedColumns = [
+  {
+    title: "Fee Head",
+    dataIndex: "feeHead",
+  },
+  {
+    title: "Total",
+    dataIndex: "totalAmount",
+    render: (v) => `₹${v}`,
+  },
+  {
+    title: "Paid",
+    dataIndex: "paidAmount",
+    render: (v) => `₹${v}`,
+  },
+  {
+    title: "Due",
+    dataIndex: "dueAmount",
+    render: (v) => `₹${v}`,
+  },
+];
   const feeColumns = [
     {
       title: "Fee Head",
@@ -190,7 +242,16 @@ const ParentFees = () => {
         s === "paid" ? <Tag color="green">PAID</Tag> : <Tag color="red">DUE</Tag>,
     },
   ];
-
+const expandedRowRender = (record) => {
+  return (
+    <Table
+      columns={installmentColumns}
+      dataSource={record.installments}
+      rowKey="_id"
+      pagination={false}
+    />
+  );
+};
   const installmentColumns = [
     { title: "Installment", dataIndex: "installmentName" },
     { title: "Amount", dataIndex: "amount", render: (v) => `₹${v}` },
@@ -270,13 +331,16 @@ const ParentFees = () => {
         ) : !enrollmentId ? (
           <Empty description="No active enrollment found for selected child" />
         ) : (
-          <Table
-            columns={installmentColumns}
-            dataSource={installments}
-            rowKey="_id"
-            loading={installmentLoading}
-            pagination={false}
-          />
+         <Table
+  columns={groupedColumns}
+  dataSource={groupedInstallments}
+  rowKey="key"
+  loading={installmentLoading}
+  expandable={{
+    expandedRowRender,
+  }}
+  pagination={false}
+/>
         )}
       </Card>
 
