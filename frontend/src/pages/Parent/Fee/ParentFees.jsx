@@ -1,19 +1,35 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Button,
   Card,
   Col,
+  Collapse,
   Descriptions,
   Empty,
+  Flex,
   InputNumber,
   Modal,
+  Progress,
   Radio,
+  Row,
   Select,
+  Space,
+  Statistic,
   Table,
   Tag,
   Typography,
   message,
 } from "antd";
+import {
+  CreditCardOutlined,
+  DownloadOutlined,
+  ReloadOutlined,
+  UserOutlined,
+  WalletOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import { fetchMyFees } from "../../../features/studentFeeSlice";
@@ -25,15 +41,24 @@ import { createPayment } from "../../../features/paymentSlice";
 
 const { Title, Text } = Typography;
 
-const loadRazorpay = () => {
-  return new Promise((resolve) => {
+const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
+
+const getErrorMessage = (err, fallback = "Something went wrong") => {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+  return err?.message || err?.payload?.message || err?.data?.message || fallback;
+};
+
+const loadRazorpay = () =>
+  new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => resolve(true);
     script.onerror = () => resolve(false);
     document.body.appendChild(script);
   });
-};
 
 const ParentFees = () => {
   const dispatch = useDispatch();
@@ -41,19 +66,25 @@ const ParentFees = () => {
   const { children = [], loading: childrenLoading } = useSelector(
     (state) => state.studentPortal || {}
   );
+
   const { myFees = [], loading: feeLoading } = useSelector(
     (state) => state.studentFee || {}
   );
+
   const { installments = [], loading: installmentLoading } = useSelector(
     (state) => state.feeInstallment || {}
   );
 
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+
   const [selectedChildId, setSelectedChildId] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState(null);
   const [amountPaid, setAmountPaid] = useState(0);
-  const [frequencyModalOpen, setFrequencyModalOpen] = useState(false);
-  const [selectedFrequency, setSelectedFrequency] = useState("monthly");
+
+  const [paying, setPaying] = useState(false);
+
+  const academicYearId = selectedAcademicYear?._id;
 
   useEffect(() => {
     dispatch(fetchMyChildren());
@@ -61,59 +92,125 @@ const ParentFees = () => {
 
   useEffect(() => {
     if (!selectedChildId && children.length) {
-      setSelectedChildId(children[0].userId);
+      setSelectedChildId(children[0]?.userId);
     }
   }, [children, selectedChildId]);
 
   const selectedChild = useMemo(
     () => children.find((child) => child.userId === selectedChildId) || null,
     [children, selectedChildId]
-  ); 
-  console.log(selectedChild)
+  );
 
   const enrollmentId = selectedChild?._id;
-  const selectedStudentId = selectedChild?._id || selectedChild?.studentId || selectedChild?.userId;
-  useEffect(() => {
-    if (!enrollmentId) return;
 
-    const childStudentIds = children
-      .map((child) =>  child?._id )
-      .filter(Boolean);
-    console.log(childStudentIds)
-    if (childStudentIds.length) dispatch(fetchMyFees(childStudentIds));
-    dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
-  }, [dispatch, enrollmentId, children]);
+  const refreshFeeData = () => {
+    if (!enrollmentId || !academicYearId) return;
+
+    dispatch(
+      fetchMyFees({
+        studentId: enrollmentId,
+        academicYearId,
+      })
+    );
+
+    dispatch(
+      fetchFeeInstallments({
+        studentId: enrollmentId,
+        academicYearId,
+      })
+    );
+  };
+
+  useEffect(() => {
+    refreshFeeData();
+  }, [dispatch, enrollmentId, academicYearId]);
+
+  const totalFees = useMemo(
+    () => myFees.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0),
+    [myFees]
+  );
+
+  const paidFees = useMemo(
+    () => myFees.reduce((sum, item) => sum + Number(item.paidAmount || 0), 0),
+    [myFees]
+  );
+
+  const dueFees = useMemo(
+    () => myFees.reduce((sum, item) => sum + Number(item.dueAmount || 0), 0),
+    [myFees]
+  );
+
+  const paidPercent = totalFees ? Math.round((paidFees / totalFees) * 100) : 0;
+
+  const groupedInstallments = useMemo(() => {
+    if (!Array.isArray(installments)) return [];
+
+    const map = {};
+
+    installments.forEach((inst) => {
+      const feeStructure =
+        inst?.studentFeeId?.feeStructureId || inst?.feeStructureId || {};
+
+      const feeId = feeStructure?._id || inst?.studentFeeId?._id || inst?._id;
+
+      if (!map[feeId]) {
+        map[feeId] = {
+          key: feeId,
+          feeHead: feeStructure?.feeHeadId?.name || inst?.feeHead?.name || "Fee",
+          totalAmount: 0,
+          paidAmount: 0,
+          dueAmount: 0,
+          installments: [],
+        };
+      }
+
+      const amount = Number(inst.amount || 0);
+      const paid = Number(inst.paidAmount || 0);
+
+      map[feeId].installments.push(inst);
+      map[feeId].totalAmount += amount;
+      map[feeId].paidAmount += paid;
+      map[feeId].dueAmount += amount - paid;
+    });
+
+    return Object.values(map);
+  }, [installments]);
 
   const openPayModal = (installment) => {
+    const due = Number(installment.amount || 0) - Number(installment.paidAmount || 0);
     setSelectedInstallment(installment);
-    setAmountPaid(installment.amount - installment.paidAmount);
-    setOpen(true);
+    setAmountPaid(due);
+    setPaymentOpen(true);
   };
 
-  const handleGenerateInstallments = async () => {
-    if (!enrollmentId) {
-      message.error("Active enrollment not found for selected child");
-      return;
-    }
+const handleGenerateInstallments = async () => {
+  if (!enrollmentId || !academicYearId) {
+    message.error("Student and academic year are required");
+    return;
+  }
 
-    try {
-      await dispatch(
-        generateInstallments({
-          studentId: enrollmentId,
-          frequency: selectedFrequency,
-        })
-      ).unwrap();
+  try {
+    await dispatch(
+      generateInstallments({
+        studentId: enrollmentId,
+        academicYearId,
+      })
+    ).unwrap();
 
-      message.success(`Installments generated (${selectedFrequency})`);
-      setFrequencyModalOpen(false);
-      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
-    } catch (err) {
-      message.error(err || "Failed to generate installments");
-    }
-  };
+    message.success("Installments generated successfully");
+   /*  setFrequencyModalOpen(false); */
+    refreshFeeData();
+  } catch (err) {
+    message.error(getErrorMessage(err, "Failed to generate installments"));
+  }
+};
 
   const handleCashPayment = async () => {
+    if (!selectedInstallment?._id || !amountPaid) return;
+
     try {
+      setPaying(true);
+
       await dispatch(
         createPayment({
           installmentId: selectedInstallment._id,
@@ -122,26 +219,31 @@ const ParentFees = () => {
         })
       ).unwrap();
 
-      message.success("Payment successful");
-      setOpen(false);
-      if (selectedStudentId) dispatch(fetchMyFees(selectedStudentId));
-      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
+      message.success("Cash payment saved successfully");
+      setPaymentOpen(false);
+      refreshFeeData();
     } catch (err) {
-      message.error(err || "Payment failed");
+      message.error(getErrorMessage(err, "Payment failed"));
+    } finally {
+      setPaying(false);
     }
   };
 
   const handleRazorpayPayment = async () => {
     const loaded = await loadRazorpay();
+
     if (!loaded) {
       message.error("Razorpay SDK failed to load");
       return;
     }
 
     try {
+      setPaying(true);
+
       const paymentInit = await dispatch(
         createPayment({
           installmentId: selectedInstallment._id,
+          amount: amountPaid,
           paymentMode: "razorpay",
         })
       ).unwrap();
@@ -152,249 +254,382 @@ const ParentFees = () => {
         currency: "INR",
         order_id: paymentInit?.data?.orderId,
         name: "School Fee Payment",
-        description: selectedInstallment.installmentName,
+        description: selectedInstallment?.installmentName || "Fee Payment",
         handler: async (response) => {
           await dispatch(
             createPayment({
               installmentId: selectedInstallment._id,
+              amount: amountPaid,
               paymentMode: "razorpay",
               razorpay: response,
             })
           ).unwrap();
 
-          message.success("Payment successful");
-          setOpen(false);
-          if (selectedStudentId) dispatch(fetchMyFees(selectedStudentId));
+          message.success("Online payment successful");
+          setPaymentOpen(false);
+          refreshFeeData();
         },
         theme: { color: "#1677ff" },
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      new window.Razorpay(options).open();
     } catch (err) {
-      message.error(err || "Payment failed");
+      message.error(getErrorMessage(err, "Online payment failed"));
+    } finally {
+      setPaying(false);
     }
   };
 
-  const groupedInstallments = useMemo(() => {
-  if (!Array.isArray(installments)) return [];
-
-  const map = {};
-
-  installments.forEach((inst) => {
-    const feeId =
-      inst?.feeStructureId?._id || inst?.feeStructureId;
-
-    if (!map[feeId]) {
-      map[feeId] = {
-        key: feeId,
-        feeHead:
-          inst?.feeStructureId?.feeHeadId?.name || "Fee",
-        totalAmount: 0,
-        paidAmount: 0,
-        dueAmount: 0,
-        installments: [],
-      };
-    }
-
-    map[feeId].installments.push(inst);
-    map[feeId].totalAmount += inst.amount || 0;
-    map[feeId].paidAmount += inst.paidAmount || 0;
-    map[feeId].dueAmount +=
-      (inst.amount || 0) - (inst.paidAmount || 0);
-  });
-
-  return Object.values(map);
-}, [installments]);
- const groupedColumns = [
-  {
-    title: "Fee Head",
-    dataIndex: "feeHead",
-  },
-  {
-    title: "Total",
-    dataIndex: "totalAmount",
-    render: (v) => `₹${v}`,
-  },
-  {
-    title: "Paid",
-    dataIndex: "paidAmount",
-    render: (v) => `₹${v}`,
-  },
-  {
-    title: "Due",
-    dataIndex: "dueAmount",
-    render: (v) => `₹${v}`,
-  },
-];
   const feeColumns = [
     {
       title: "Fee Head",
-      render: (_, r) => r.feeStructureId?.feeHeadId?.name || "-",
+      render: (_, r) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{r.feeStructureId?.feeHeadId?.name || "Fee"}</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {r.feeStructureId?.frequency || "Fee structure"}
+          </Text>
+        </Space>
+      ),
     },
-    { title: "Total", dataIndex: "totalAmount", render: (v) => `₹${v}` },
-    { title: "Paid", dataIndex: "paidAmount", render: (v) => `₹${v}` },
-    { title: "Due", dataIndex: "dueAmount", render: (v) => `₹${v}` },
+    {
+      title: "Total",
+      dataIndex: "totalAmount",
+      render: money,
+    },
+    {
+      title: "Paid",
+      dataIndex: "paidAmount",
+      render: (v) => <Text type="success">{money(v)}</Text>,
+    },
+    {
+      title: "Due",
+      dataIndex: "dueAmount",
+      render: (v) => <Text type="danger">{money(v)}</Text>,
+    },
     {
       title: "Status",
       dataIndex: "status",
-      render: (s) =>
-        s === "paid" ? <Tag color="green">PAID</Tag> : <Tag color="red">DUE</Tag>,
+      render: (s) => (
+        <Tag color={s === "paid" ? "success" : s === "partial" ? "warning" : "error"}>
+          {String(s || "due").toUpperCase()}
+        </Tag>
+      ),
     },
   ];
-const expandedRowRender = (record) => {
-  return (
-    <Table
-      columns={installmentColumns}
-      dataSource={record.installments}
-      rowKey="_id"
-      pagination={false}
-    />
-  );
-};
+
   const installmentColumns = [
-    { title: "Installment", dataIndex: "installmentName" },
-    { title: "Amount", dataIndex: "amount", render: (v) => `₹${v}` },
-    { title: "Paid", dataIndex: "paidAmount", render: (v) => `₹${v}` },
-    { title: "Due", render: (_, r) => `₹${r.amount - r.paidAmount}` },
+    {
+      title: "Installment",
+      dataIndex: "installmentName",
+      render: (v) => <Text strong>{v || "-"}</Text>,
+    },
+    {
+      title: "Due Date",
+      dataIndex: "dueDate",
+      render: (v) => (v ? new Date(v).toLocaleDateString("en-IN") : "-"),
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      render: money,
+    },
+    {
+      title: "Paid",
+      dataIndex: "paidAmount",
+      render: (v) => <Text type="success">{money(v)}</Text>,
+    },
+    {
+      title: "Due",
+      render: (_, r) => (
+        <Text type="danger">
+          {money(Number(r.amount || 0) - Number(r.paidAmount || 0))}
+        </Text>
+      ),
+    },
     {
       title: "Status",
       dataIndex: "status",
-      render: (s) => <Tag color={s === "paid" ? "green" : "orange"}>{s}</Tag>,
+      render: (s) => (
+        <Tag color={s === "paid" ? "success" : s === "partial" ? "warning" : "orange"}>
+          {String(s || "pending").toUpperCase()}
+        </Tag>
+      ),
     },
     {
       title: "Action",
-      render: (_, r) =>
-        r.status !== "paid" && (
+      fixed: "right",
+      render: (_, r) => {
+        const due = Number(r.amount || 0) - Number(r.paidAmount || 0);
+
+        return r.status !== "paid" && due > 0 ? (
           <Button type="primary" size="small" onClick={() => openPayModal(r)}>
-            Pay
+            Pay Now
           </Button>
-        ),
+        ) : (
+          <Tag color="success">Paid</Tag>
+        );
+      },
     },
   ];
 
+  const noChild = !selectedChildId;
+  const noEnrollment = selectedChildId && !enrollmentId;
+
   return (
-    <>
-      <Card>
-        <Title level={4} style={{ margin: 0 }}>Child Fee Details</Title>
-        <Select
-          placeholder="Select child"
-          value={selectedChildId}
-          onChange={setSelectedChildId}
-          style={{ maxWidth: 340, marginTop: 12, width: "100%" }}
-          loading={childrenLoading}
-          options={children.map((child) => ({
-            label: `${child.name || "Student"} (${child.registrationNumber || "-"})`,
-            value: child.userId,
-          }))}
-        />
-        {selectedChildId && !enrollmentId ? (
-          <Text type="warning" style={{ display: "block", marginTop: 12 }}>
-            Active enrollment not found for this child.
-          </Text>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f4f7fb",
+        padding: "0px",
+      }}
+    >
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 24,
+          marginBottom: 18,
+          boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+        }}
+      >
+        <Row gutter={[18, 18]} align="middle">
+          <Col xs={24} lg={14}>
+            <Space direction="vertical" size={4}>
+              <Title level={3} style={{ margin: 0 }}>
+                Parent Fee Portal
+              </Title>
+              <Text type="secondary">
+                View child fee details, installments, and make secure payments.
+              </Text>
+            </Space>
+          </Col>
+
+          <Col xs={24} lg={10}>
+            <Flex gap={10} justify="flex-end" wrap="wrap">
+              <Select
+                size="large"
+                placeholder="Select child"
+                value={selectedChildId}
+                onChange={setSelectedChildId}
+                loading={childrenLoading}
+                style={{ minWidth: 260, flex: 1 }}
+                options={children.map((child) => ({
+                  label: `${child.name || "Student"} (${child.registrationNumber || "-"})`,
+                  value: child.userId,
+                }))}
+              />
+
+              <Button
+                size="large"
+                icon={<ReloadOutlined />}
+                onClick={refreshFeeData}
+                disabled={!enrollmentId || !academicYearId}
+              >
+                Refresh
+              </Button>
+            </Flex>
+          </Col>
+        </Row>
+
+        {noEnrollment ? (
+          <Alert
+            style={{ marginTop: 16, borderRadius: 14 }}
+            type="warning"
+            showIcon
+            message="Active enrollment not found for this child."
+          />
         ) : null}
       </Card>
 
-      <Card title="Fees" style={{ marginTop: 16 }}>
-        {!selectedChildId ? (
+      <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
+        <Col xs={24} sm={12} xl={6}>
+          <Card bordered={false} style={{ borderRadius: 20 }}>
+            <Statistic title="Total Fees" value={totalFees} formatter={money} prefix={<WalletOutlined />} />
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} xl={6}>
+          <Card bordered={false} style={{ borderRadius: 20 }}>
+            <Statistic title="Paid" value={paidFees} formatter={money} valueStyle={{ color: "#16a34a" }} prefix={<CheckCircleOutlined />} />
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} xl={6}>
+          <Card bordered={false} style={{ borderRadius: 20 }}>
+            <Statistic title="Pending" value={dueFees} formatter={money} valueStyle={{ color: "#dc2626" }} prefix={<ClockCircleOutlined />} />
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} xl={6}>
+          <Card bordered={false} style={{ borderRadius: 20 }}>
+            <Text type="secondary">Payment Progress</Text>
+            <Progress percent={paidPercent} status={paidPercent === 100 ? "success" : "active"} />
+          </Card>
+        </Col>
+      </Row>
+
+      <Card
+        title={
+          <Space>
+            <UserOutlined />
+            Student Fee Summary
+          </Space>
+        }
+        bordered={false}
+        style={{
+          borderRadius: 24,
+          marginBottom: 18,
+          boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+        }}
+      >
+        {noChild ? (
           <Empty description="Please select a child to view fees" />
-        ) : !enrollmentId ? (
+        ) : noEnrollment ? (
           <Empty description="No active enrollment found for selected child" />
         ) : (
-          <Col style={{ overflow: "auto" }}>
-            <Table
-              columns={feeColumns}
-              dataSource={myFees}
-              rowKey="_id"
-              loading={feeLoading}
-              pagination={false}
-            />
-          </Col>
+          <Table
+            columns={feeColumns}
+            dataSource={myFees}
+            rowKey="_id"
+            loading={feeLoading}
+            pagination={false}
+            scroll={{ x: 850 }}
+          />
         )}
       </Card>
 
       <Card
         title="Installments"
-        style={{ marginTop: 16 }}
+        bordered={false}
+        style={{
+          borderRadius: 24,
+          boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+        }}
         extra={
-          <Button
+         <Button
             type="primary"
-            disabled={!enrollmentId || installments.length > 0}
-            onClick={() => setFrequencyModalOpen(true)}
+            disabled={!enrollmentId || !academicYearId || installments.length > 0}
+            onClick={handleGenerateInstallments}
           >
             Generate Installments
           </Button>
         }
       >
-        {!selectedChildId ? (
+        {noChild ? (
           <Empty description="Please select a child to view installments" />
-        ) : !enrollmentId ? (
+        ) : noEnrollment ? (
           <Empty description="No active enrollment found for selected child" />
+        ) : !groupedInstallments.length ? (
+          <Empty description="No installments generated yet" />
         ) : (
-         <Table
-  columns={groupedColumns}
-  dataSource={groupedInstallments}
-  rowKey="key"
-  loading={installmentLoading}
-  expandable={{
-    expandedRowRender,
-  }}
-  pagination={false}
-/>
+          <Collapse
+            bordered={false}
+            style={{ background: "transparent" }}
+            items={groupedInstallments.map((item) => ({
+              key: item.key,
+              label: (
+                <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
+                  <Text strong>{item.feeHead}</Text>
+
+                  <Space wrap>
+                    <Tag color="blue">Total {money(item.totalAmount)}</Tag>
+                    <Tag color="green">Paid {money(item.paidAmount)}</Tag>
+                    <Tag color="red">Due {money(item.dueAmount)}</Tag>
+                  </Space>
+                </Flex>
+              ),
+              children: (
+                <Table
+                  columns={installmentColumns}
+                  dataSource={item.installments}
+                  rowKey="_id"
+                  loading={installmentLoading}
+                  pagination={false}
+                  scroll={{ x: 900 }}
+                />
+              ),
+            }))}
+          />
         )}
       </Card>
 
-      <Modal
-        title="Select Installment Type"
-        open={frequencyModalOpen}
-        onCancel={() => setFrequencyModalOpen(false)}
-        onOk={handleGenerateInstallments}
-      >
-        <Radio.Group
-          value={selectedFrequency}
-          onChange={(e) => setSelectedFrequency(e.target.value)}
-        >
-          <Radio value="monthly">Monthly</Radio>
-          <Radio value="quarterly">Quarterly</Radio>
-          <Radio value="yearly">Yearly</Radio>
-        </Radio.Group>
-      </Modal>
+    
 
       <Modal
-        title="Pay Installment"
-        open={open}
-        onCancel={() => setOpen(false)}
-        footer={[
-          <Button key="cash" onClick={handleCashPayment}>
-            Pay Cash
-          </Button>,
-          <Button key="online" type="primary" onClick={handleRazorpayPayment}>
-            Pay Online
-          </Button>,
-        ]}
+        open={paymentOpen}
+        onCancel={() => setPaymentOpen(false)}
+        footer={null}
+        centered
+        width={440}
       >
         {selectedInstallment && (
-          <>
-            <Descriptions bordered column={1}>
-              <Descriptions.Item label="Installment">
-                {selectedInstallment.installmentName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Due">
-                ₹{selectedInstallment.amount - selectedInstallment.paidAmount}
-              </Descriptions.Item>
-            </Descriptions>
+          <Space direction="vertical" size="large" style={{ width: "100%" }}>
+            <div style={{ textAlign: "center" }}>
+              <Title level={4} style={{ marginBottom: 4 }}>
+                Pay Installment
+              </Title>
+              <Text type="secondary">Complete your fee payment securely</Text>
+            </div>
+
+            <Card
+              bordered={false}
+              style={{ background: "#f8fafc", borderRadius: 18 }}
+            >
+              <Descriptions column={1}>
+                <Descriptions.Item label="Installment">
+                  {selectedInstallment.installmentName}
+                </Descriptions.Item>
+                <Descriptions.Item label="Due Amount">
+                  {money(
+                    Number(selectedInstallment.amount || 0) -
+                      Number(selectedInstallment.paidAmount || 0)
+                  )}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
 
             <InputNumber
-              style={{ width: "100%", marginTop: 12 }}
+              size="large"
+              style={{ width: "100%" }}
               min={1}
-              max={selectedInstallment.amount - selectedInstallment.paidAmount}
+              max={
+                Number(selectedInstallment.amount || 0) -
+                Number(selectedInstallment.paidAmount || 0)
+              }
               value={amountPaid}
               onChange={setAmountPaid}
+              formatter={(value) =>
+                value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""
+              }
+              parser={(value) => value?.replace(/[₹,\s]/g, "")}
             />
-          </>
+
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Button
+                block
+                size="large"
+                type="primary"
+                icon={<CreditCardOutlined />}
+                loading={paying}
+                onClick={handleRazorpayPayment}
+              >
+                Pay Online
+              </Button>
+
+              <Button
+                block
+                size="large"
+                icon={<DownloadOutlined />}
+                loading={paying}
+                onClick={handleCashPayment}
+              >
+                Mark Cash Payment
+              </Button>
+            </Space>
+          </Space>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

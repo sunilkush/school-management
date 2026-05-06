@@ -16,6 +16,7 @@ export const assignFeesToStudents = createAsyncThunk(
   "studentFee/assign",
   async (payload, { rejectWithValue }) => {
     try {
+      console.log(payload)
       const { data } = await apiClient.post(
         `/student-fees/assign`,
         payload,
@@ -32,41 +33,30 @@ export const assignFeesToStudents = createAsyncThunk(
 ===================================================== */
 export const fetchMyFees = createAsyncThunk(
   "studentFee/fetchMyFees",
-  async (studentIdentifier, { rejectWithValue }) => {
+  async ({ studentId, enrollmentId, academicYearId }, { rejectWithValue }) => {
     try {
-      let studentId;
+      const finalStudentId = studentId || enrollmentId;
 
-      // ✅ Case 1: Array
-      if (Array.isArray(studentIdentifier)) {
-        studentId = studentIdentifier[0]; // first id
-      }
-      // ✅ Case 2: Object
-      else if (typeof studentIdentifier === "object") {
-        studentId = studentIdentifier?._id;
-      }
-      // ✅ Case 3: String
-      else {
-        studentId = studentIdentifier;
+      if (!finalStudentId || !academicYearId) {
+        return rejectWithValue("Student and academic year ID is required");
       }
 
-      if (!studentId) {
-        return rejectWithValue("Student ID is required");
-      }
+      const { data } = await apiClient.get(
+        `/student-fees/my/${finalStudentId}`,
+        {
+          params: { academicYearId },
+        }
+      );
 
-      const { data } = await apiClient.get(`/student-fees/my/${studentId}`);
-
-      const normalizedFees = Array.isArray(data?.data)
-        ? data.data
-        : Array.isArray(data?.data?.data)
-        ? data.data.data
-        : [];
-
-      return normalizedFees;
+      return Array.isArray(data?.data) ? data.data : [];
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(
+        err.response?.data?.message || err.message || "Failed to fetch fees"
+      );
     }
   }
 );
+
 
 /* =====================================================
    ✅ PAY STUDENT FEE

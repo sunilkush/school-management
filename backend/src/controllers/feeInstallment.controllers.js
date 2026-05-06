@@ -11,40 +11,63 @@ import { asyncHandler } from "../utils/asyncHandler.js";
    ✅ GENERATE INSTALLMENTS (Monthly | Quarterly | Yearly)
 ===================================================== */
 export const generateInstallments = asyncHandler(async (req, res) => {
-  const { studentId } = req.body;
+  const { studentId, academicYearId } = req.body;
+  const schoolId = req.user?.schoolId || req.user?.school?._id;
 
-  if (!mongoose.Types.ObjectId.isValid(studentId)) {
+  if (!schoolId) {
+    throw new ApiError(400, "School not found");
+  }
+
+  if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
     throw new ApiError(400, "Invalid studentId");
   }
 
-  const studentFees = await StudentFee.find({ studentId }).populate(
-    "feeStructureId",
-    "frequency"
-  );
+  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
+    throw new ApiError(400, "Invalid academicYearId");
+  }
+
+  const studentFees = await StudentFee.find({
+    studentId,
+    schoolId,
+    academicYearId,
+  }).populate("feeStructureId", "frequency");
 
   if (!studentFees.length) {
     throw new ApiError(404, "No fee records found for this student");
   }
 
-  let allInstallments = [];
+  const allInstallments = [];
 
   for (const fee of studentFees) {
-    const exists = await FeeInstallment.findOne({
+    const exists = await FeeInstallment.exists({
       studentFeeId: fee._id,
+      schoolId,
+      academicYearId,
     });
 
     if (exists) continue;
 
     const frequency = fee?.feeStructureId?.frequency || "yearly";
-    let baseDate = new Date();
-    let count = frequency === "monthly" ? 12 : frequency === "quarterly" ? 4 : 1;
-    let gap = frequency === "monthly" ? 1 : frequency === "quarterly" ? 3 : 12;
-    let amount = Number((fee.totalAmount / count).toFixed(2));
+
+    const count =
+      frequency === "monthly" ? 12 :
+      frequency === "quarterly" ? 4 :
+      frequency === "half_yearly" ? 2 :
+      1;
+
+    const gap =
+      frequency === "monthly" ? 1 :
+      frequency === "quarterly" ? 3 :
+      frequency === "half_yearly" ? 6 :
+      12;
+
+    const amount = Number((fee.totalAmount / count).toFixed(2));
+    const baseDate = new Date();
 
     for (let i = 1; i <= count; i++) {
       allInstallments.push({
-        schoolId: fee.schoolId,
-        academicYearId: fee.academicYearId,
+        schoolId,
+        academicYearId,
         studentId,
         studentFeeId: fee._id,
         installmentType: frequency,
@@ -53,9 +76,13 @@ export const generateInstallments = asyncHandler(async (req, res) => {
             ? baseDate.toLocaleString("default", { month: "short" })
             : frequency === "quarterly"
             ? `Q${i}`
+            : frequency === "half_yearly"
+            ? `H${i}`
             : "Yearly",
         amount,
+        paidAmount: 0,
         dueDate: new Date(baseDate),
+        status: "pending",
       });
 
       baseDate.setMonth(baseDate.getMonth() + gap);
@@ -66,124 +93,57 @@ export const generateInstallments = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Installments already generated");
   }
 
-  await FeeInstallment.insertMany(allInstallments);
+  const created = await FeeInstallment.insertMany(allInstallments);
 
-  res.status(201).json(
-    new ApiResponse(
-      201,
-      allInstallments,
-      "Installments generated successfully"
-    )
-  );
+  return res
+    .status(201)
+    .json(new ApiResponse(201, created, "Installments generated successfully"));
 });
-
 
 
 /* =====================================================
    ✅ GET INSTALLMENTS + FEE HEAD NAMES (FIXED)
 ===================================================== */
 export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
-  const { studentId } = req.query;
+  const { studentId, academicYearId } = req.query;
+  const schoolId = req.user?.schoolId || req.user?.school?._id;
 
-  // ✅ Validate
+  if (!schoolId) {
+    throw new ApiError(400, "School not found");
+  }
+
   if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
     throw new ApiError(400, "Invalid studentId");
   }
-   const studentFees = await StudentFee.find({ studentId }).populate(
-    "feeStructureId",
-    "frequency"
-  );
-  if (!studentFees.length) {
-    throw new ApiError(404, "No fee records found for this student");
+
+  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
+    throw new ApiError(400, "Invalid academicYearId");
   }
 
-  const allInstallments = [];
-  for (const fee of studentFees) {
-    const exists = await FeeInstallment.findOne({ studentFeeId: fee._id });
-    if (exists) continue;
-
-    const frequency = fee?.feeStructureId?.frequency || "yearly";
-    const count = frequency === "monthly" ? 12 : frequency === "quarterly" ? 4 : 1;
-    const gap = frequency === "monthly" ? 1 : frequency === "quarterly" ? 3 : 12;
-    const amount = Number((fee.totalAmount / count).toFixed(2));
-    const baseDate = new Date();
-
-    for (let i = 1; i <= count; i++) {
-      allInstallments.push({
-        schoolId: fee.schoolId,
-        academicYearId: fee.academicYearId,
-        studentId,
-        studentFeeId: fee._id,
-        installmentType: frequency,
-        installmentName:
-          frequency === "monthly"
-            ? baseDate.toLocaleString("default", { month: "short" })
-            : frequency === "quarterly"
-            ? `Q${i}`
-            : "Yearly",
-        amount,
-        dueDate: new Date(baseDate),
-      });
-      baseDate.setMonth(baseDate.getMonth() + gap);
-    }
-  }
-
-  if (allInstallments.length) {
-    await FeeInstallment.insertMany(allInstallments);
-  }
-  // ✅ Fetch installments
-  const installments = await FeeInstallment.find({ studentId })
+  const installments = await FeeInstallment.find({
+    studentId,
+    schoolId,
+    academicYearId,
+  })
     .populate({
       path: "studentFeeId",
       select: "totalAmount paidAmount dueAmount status feeStructureId",
+      populate: {
+        path: "feeStructureId",
+        select: "amount feeHeadId frequency",
+        populate: {
+          path: "feeHeadId",
+          select: "name",
+        },
+      },
     })
     .populate("academicYearId", "name")
     .sort({ dueDate: 1 })
     .lean();
 
-  // ================= ADD FEE HEAD NAME =================
-  const feeStructureIds = [
-    ...new Set(
-      installments
-        .map((inst) => inst.studentFeeId?.feeStructureId?.toString())
-        .filter(Boolean)
-    ),
-  ];
-
-const structures = await FeeStructure.find({
-  _id: { $in: feeStructureIds },
-})
-  .select("amount feeHeadId")
-  .populate("feeHeadId", "name")
-  .lean();
-
-  const structureMap = new Map(
-    structures.map((structure) => [
-      structure._id.toString(),
-      structure,
-    ])
-  );
-
-  // ✅ Attach feeHead data
-  for (const inst of installments) {
-    const structureId = inst.studentFeeId?.feeStructureId?.toString();
-
-    const structure = structureId
-      ? structureMap.get(structureId)
-      : null;
-
-    inst.feeHead = structure
-      ? {
-          name: structure.feeHeadId?.name || "-",
-          amount: structure.amount || 0,
-        }
-      : null;
-  }
-
-  // ✅ Response
-  return res.status(200).json(
-    new ApiResponse(200, installments, "Installments fetched successfully")
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, installments, "Installments fetched successfully"));
 });
 /* =====================================================
    💳 PAY INSTALLMENT (Cash / Online / Razorpay)

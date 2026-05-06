@@ -274,11 +274,16 @@ const AssignStudentFee = () => {
 
   try {
     // ✅ parallel API calls (fast)
-    const responses = await Promise.all(
-      studentIds.map((sid) =>
-        dispatch(fetchMyFees(sid)).unwrap()
-      )
-    );
+      const responses = await Promise.all(
+        studentIds.map((sid) =>
+          dispatch(
+            fetchMyFees({
+              studentId: sid,
+              academicYearId: selectedAcademicYear?._id,
+            })
+          ).unwrap()
+        )
+      );
 
     responses.forEach((feesResponse, index) => {
       const studentId = studentIds[index];
@@ -409,7 +414,7 @@ const onFinish = async (values) => {
 
     const payloadBase = {
       schoolId,
-      academicYearId: values.academicYearId,
+      academicYearId : selectedAcademicYear._id
     };
 
     let studentIdsToAssign = [];
