@@ -241,7 +241,7 @@ const ITSupportProfile = lazy(() =>
 );
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
-const EmployeeForm = lazy(() => import("./components/forms/EmployeeForm.jsx"));
+
 const ChangePassword = lazy(()=> import("./pages/Auth/ResetPasswordPage.jsx"));
 const AttendanceDashboardPage = lazy(() => import("./pages/Attendance/AttendanceDashboard.jsx"));
 const MarkAttendancePage = lazy(() => import("./pages/Attendance/MarkAttendancePage.jsx"));
@@ -613,7 +613,7 @@ const router = createBrowserRouter([
               { path: "fees/collect", element: <CollectFees /> },
               { path: "salary", element: <EmployeeSalaries /> },
               { path: "salary/structures", element: <SalaryStructures /> },
-              { path: "salary/create-employee", element: <EmployeeForm /> },
+              { path: "salary/create-employee", element: <CreateEmployee /> },
               { path: "salary/payslips", element: <GeneratePayslip /> },
               { path: "salary/reports/monthly", element: <MonthlyPayrollReport /> },
               { path: "reports", element: <Reports /> },

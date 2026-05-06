@@ -12,7 +12,7 @@ export const getPayrollActionPermissions = (roleName, cycleStatus) => {
   const reviewAccess = ["super admin", "school admin", "accountant", "principal", "admin"].includes(role);
 
   return {
-    canGenerate: fullAccess && !cycleStatus,
+    canGenerate: fullAccess && (!cycleStatus || cycleStatus === "draft"),
     canLock: reviewAccess && cycleStatus === "draft",
     canPay: fullAccess && cycleStatus === "locked",
   };

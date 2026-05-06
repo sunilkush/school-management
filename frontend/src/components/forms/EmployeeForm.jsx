@@ -132,11 +132,11 @@ const EmployeeForm = () => {
 
     const res = await dispatch(createEmployee(payload));
 
-    if (res?.payload?.success) {
-      message.success("Employee created successfully");
+    if (createEmployee.fulfilled.match(res) && res.payload?.success) {
+      message.success(res.payload?.message || "Employee created successfully");
       form.resetFields();
     } else {
-      message.error("Failed to create employee");
+      message.error(res?.payload?.message || "Failed to create employee");
     }
   };
 

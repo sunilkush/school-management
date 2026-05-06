@@ -15,8 +15,8 @@ const SalaryStructures = () => {
   const [search, setSearch] = useState("");
 
   const { employees, structures, loadingStructures, savingStructure } = useSelector((state) => state.payroll);
-  const safeEmployees = Array.isArray(employees) ? employees : [];
-  const safeStructures = Array.isArray(structures) ? structures : [];
+  const safeEmployees = useMemo(() => (Array.isArray(employees) ? employees : []), [employees]);
+  const safeStructures = useMemo(() => (Array.isArray(structures) ? structures : []), [structures]);
 
 
   useEffect(() => {

@@ -19,9 +19,9 @@ const PayrollHeaderActions = ({
       Refresh
     </Button>
 
-    <Tooltip title={permissions.canGenerate ? "" : "No permission or cycle already exists"}>
+   <Tooltip title={permissions.canGenerate ? "" : "No permission or cycle is locked/paid"}>
       <Button type="primary" onClick={onGenerate} loading={actionLoading.generate} disabled={!permissions.canGenerate}>
-        Generate
+        {selectedMonth ? "Generate / Refresh" : "Generate"}
       </Button>
     </Tooltip>
 

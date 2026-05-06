@@ -11,7 +11,17 @@ import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
 import { calculatePayrollEntry } from "../services/payrollCalculator.service.js";
 
-const getSchoolId = (req) => req.body.schoolId || req.query.schoolId || req.user.schoolId;
+const getSchoolId = (req) => {
+  const requestedSchoolId = req.body?.schoolId || req.query?.schoolId;
+  const userSchoolId = req.user?.schoolId;
+
+  if (req.userRole?.name === "Super Admin" && requestedSchoolId) return requestedSchoolId;
+  return userSchoolId || requestedSchoolId;
+};
+
+const assertSchoolId = (schoolId) => {
+  if (!schoolId) throw new ApiError(400, "School context is required for payroll");
+};
 
 const monthRangeUTC = ({ month, year }) => {
   const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
@@ -64,9 +74,41 @@ const writeAuditLog = async (req, action, description, meta = {}) => {
     meta,
   });
 };
+const ensureEmployeeBelongsToSchool = async ({ employeeId, schoolId }) => {
+  const employee = await Employee.findOne({ _id: employeeId, schoolId }).select("_id").lean();
+  if (!employee) throw new ApiError(404, "Employee not found for this school");
+  return employee;
+};
 
+const hasOverlappingActiveStructure = async ({ schoolId, employeeId, effectiveFrom, effectiveTo, excludeId }) => {
+  const from = new Date(effectiveFrom);
+  const to = effectiveTo ? new Date(effectiveTo) : new Date("2099-12-31T23:59:59.999Z");
+  const overlapFilter = {
+    schoolId,
+    employeeId,
+    status: "active",
+    effectiveFrom: { $lte: to },
+    $or: [{ effectiveTo: null }, { effectiveTo: { $gte: from } }],
+  };
+
+  if (excludeId) overlapFilter._id = { $ne: excludeId };
+  return Boolean(await PayrollStructure.exists(overlapFilter));
+};
 export const createPayrollStructure = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+  await ensureEmployeeBelongsToSchool({ employeeId: req.body.employeeId, schoolId });
+
+  if (req.body.status !== "inactive") {
+    const hasOverlap = await hasOverlappingActiveStructure({
+      schoolId,
+      employeeId: req.body.employeeId,
+      effectiveFrom: req.body.effectiveFrom,
+      effectiveTo: req.body.effectiveTo,
+    });
+    if (hasOverlap) throw new ApiError(409, "Active salary structure overlaps with an existing structure for this employee");
+  }
+
   const payload = {
     ...req.body,
     schoolId,
@@ -86,6 +128,7 @@ export const createPayrollStructure = asyncHandler(async (req, res) => {
 });
 export const getPayrollStructures = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
+   assertSchoolId(schoolId);
   const structures = await PayrollStructure.find({ schoolId })
     .populate({ path: "employeeId", select: "department designation userId", populate: { path: "userId", select: "name email" } })
     .sort({ effectiveFrom: -1, createdAt: -1 })
@@ -98,13 +141,29 @@ export const getPayrollStructures = asyncHandler(async (req, res) => {
 });
 export const updatePayrollStructure = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+  const existingStructure = await PayrollStructure.findOne({ _id: req.params.id, schoolId });
+  if (!existingStructure) throw new ApiError(404, "Payroll structure not found");
+
+  const nextStructure = { ...existingStructure.toObject(), ...req.body };
+  if (nextStructure.status === "active") {
+    const hasOverlap = await hasOverlappingActiveStructure({
+      schoolId,
+      employeeId: existingStructure.employeeId,
+      effectiveFrom: nextStructure.effectiveFrom,
+      effectiveTo: nextStructure.effectiveTo,
+      excludeId: existingStructure._id,
+    });
+    if (hasOverlap) throw new ApiError(409, "Active salary structure overlaps with an existing structure for this employee");
+  }
+
   const structure = await PayrollStructure.findOneAndUpdate(
     { _id: req.params.id, schoolId },
     { $set: req.body },
     { new: true }
   );
 
-  if (!structure) throw new ApiError(404, "Payroll structure not found");
+  
 
   await writeAuditLog(req, "PAYROLL_STRUCTURE_UPDATED", "Payroll salary structure updated", {
     payrollStructureId: structure._id,
@@ -114,32 +173,35 @@ export const updatePayrollStructure = asyncHandler(async (req, res) => {
 });
 
 export const generatePayrollCycle = asyncHandler(async (req, res) => {
-  const { month, year, schoolId: bodySchoolId } = req.body;
-  const schoolId = bodySchoolId || req.user.schoolId;
+  const { month, year } = req.body;
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
 
-  const alreadyExists = await PayrollCycle.findOne({ schoolId, month, year });
-  if (alreadyExists) {
-    throw new ApiError(409, "Payroll cycle already generated for this month/year");
+  let cycle = await PayrollCycle.findOne({ schoolId, month, year });
+  if (cycle && cycle.status !== "draft") {
+    throw new ApiError(409, "Locked or paid payroll cycle cannot be regenerated");
   }
 
   const employees = await Employee.find({ schoolId, isActive: true }).select("_id userId").lean();
   if (!employees.length) throw new ApiError(400, "No active employees found for this school");
 
-  const [policy] = await Promise.all([
-    PayrollPolicy.findOneAndUpdate(
-      { schoolId },
-      { $setOnInsert: { schoolId } },
-      { upsert: true, new: true }
-    ),
-  ]);
+  const policy = await PayrollPolicy.findOneAndUpdate(
+    { schoolId },
+    { $setOnInsert: { schoolId } },
+    { upsert: true, new: true }
+  );
 
-  const cycle = await PayrollCycle.create({
-    schoolId,
-    month,
-    year,
-    status: "draft",
-    processedBy: req.user._id,
-  });
+  const createdNewCycle = !cycle;
+  if (!cycle) {
+    cycle = await PayrollCycle.create({
+      schoolId,
+      month,
+      year,
+      status: "draft",
+      processedBy: req.user._id,
+    });
+  }
+
 
   const entries = [];
   for (const employee of employees) {
@@ -181,11 +243,17 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     });
   }
 
-  if (entries.length) {
-    await PayrollEntry.insertMany(entries, { ordered: false });
+if (!entries.length) {
+    if (createdNewCycle) await PayrollCycle.deleteOne({ _id: cycle._id });
+    throw new ApiError(400, "No active salary structures found for payroll generation");
   }
 
-  await writeAuditLog(req, "PAYROLL_CYCLE_GENERATED", "Payroll cycle generated", {
+  await PayrollEntry.deleteMany({ payrollCycleId: cycle._id });
+  await PayrollEntry.insertMany(entries, { ordered: false });
+  cycle.processedBy = req.user._id;
+  await cycle.save();
+
+  await writeAuditLog(req, createdNewCycle ? "PAYROLL_CYCLE_GENERATED" : "PAYROLL_CYCLE_REGENERATED", "Payroll cycle generated", {
     payrollCycleId: cycle._id,
     month,
     year,
@@ -193,8 +261,8 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   });
 
   return sendSuccess(res, {
-    statusCode: 201,
-    message: "Payroll cycle generated",
+    statusCode: createdNewCycle ? 201 : 200,
+    message: createdNewCycle ? "Payroll cycle generated" : "Draft payroll cycle refreshed",
     data: { cycle, entriesCount: entries.length },
   });
 });
@@ -202,7 +270,7 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
 export const getPayrollCycle = asyncHandler(async (req, res) => {
   const { month, year } = req.params;
   const schoolId = getSchoolId(req);
-
+  assertSchoolId(schoolId);
   const cycle = await PayrollCycle.findOne({ schoolId, month: Number(month), year: Number(year) }).lean();
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
 
@@ -219,6 +287,7 @@ export const getPayrollCycle = asyncHandler(async (req, res) => {
 
 export const lockPayrollCycle = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
+   assertSchoolId(schoolId);
   const cycle = await PayrollCycle.findOne({ _id: req.params.id, schoolId });
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
   if (cycle.status === "paid") throw new ApiError(400, "Paid cycle cannot be modified");
@@ -233,6 +302,7 @@ export const lockPayrollCycle = asyncHandler(async (req, res) => {
 
 export const payPayrollCycle = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
   const { transactionRefPrefix } = req.body;
   const cycle = await PayrollCycle.findOne({ _id: req.params.id, schoolId });
 
@@ -266,6 +336,7 @@ export const payPayrollCycle = asyncHandler(async (req, res) => {
 export const getPayslip = asyncHandler(async (req, res) => {
   const { employeeId, month, year } = req.params;
   const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
 
   const cycle = await PayrollCycle.findOne({ schoolId, month: Number(month), year: Number(year) }).lean();
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
@@ -286,6 +357,7 @@ export const getPayslip = asyncHandler(async (req, res) => {
 
 export const getMonthlyPayrollReport = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
   const { month, year } = req.query;
 
   const cycle = await PayrollCycle.findOne({ schoolId, month: Number(month), year: Number(year) });

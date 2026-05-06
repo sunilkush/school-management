@@ -149,7 +149,7 @@ const CollectFees = () => {
       }));
 
       try {
-        const response = await dispatch(fetchMyFees({ studentId })).unwrap();
+        const response = await dispatch(fetchMyFees({ studentId,academicYearId })).unwrap();
 
         const fees = Array.isArray(response)
           ? response
@@ -181,7 +181,7 @@ const CollectFees = () => {
         }));
       }
     },
-    [dispatch]
+    [dispatch,academicYearId]
   );
 
  const refreshData = useCallback(() => {

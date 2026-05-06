@@ -78,7 +78,7 @@ export const usePayrollActions = ({ month, year, cycleId, onSuccess }) => {
         message.success("Payroll cycle generated");
       } catch (error) {
         if (error?.response?.status === 409) {
-          message.info("Cycle already generated. Latest data refresh kiya jaa raha hai.");
+          message.info(normalizeApiError(error, "Cycle locked/paid hai, regenerate nahi ho sakta."));
           return;
         }
         message.error(normalizeApiError(error, "Cycle generation failed"));
