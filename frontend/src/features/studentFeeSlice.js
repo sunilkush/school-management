@@ -23,7 +23,9 @@ export const assignFeesToStudents = createAsyncThunk(
       );
       return data;
     } catch (err) {
-      return rejectWithValue(getApiMessage(err, "Failed to assign fees"));
+      return rejectWithValue(
+        getApiMessage(err, "Failed to assign fees")
+      );
     }
   }
 );
