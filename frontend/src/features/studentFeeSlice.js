@@ -16,7 +16,7 @@ export const assignFeesToStudents = createAsyncThunk(
   "studentFee/assign",
   async (payload, { rejectWithValue }) => {
     try {
-      console.log(payload)
+   
       const { data } = await apiClient.post(
         `/student-fees/assign`,
         payload,
