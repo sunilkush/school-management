@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { requireRoles } from "../middlewares/auth.middleware.js";
-import { approveLoan, approvePayroll, createLoanRequest, createTaxConfiguration, generatePayrollRun, getActiveTaxConfiguration, getEmployeeLoans, getPayrollRunDetails, getPayrollRuns, lockPayroll, payrollSummaryReport, rejectLoan } from "../controllers/payrollEnterprise.controllers.js";
-
+import { approveLoan, approvePayroll, createLoanRequest, createTaxConfiguration, generatePayrollRun, getActiveTaxConfiguration, getEmployeeLoans, getPayrollRunDetails, getPayrollRuns, getEnterprisePayslip, downloadEnterprisePayslip, lockPayroll, payrollSummaryReport, rejectLoan } from "../controllers/payrollEnterprise.controllers.js";
 const router = Router();
 const ADMIN = ["Super Admin", "School Admin", "Accountant"];
 
@@ -16,6 +15,8 @@ router.post("/run/:id/approve", requireRoles(ADMIN), approvePayroll);
 router.post("/run/:id/lock", requireRoles(ADMIN), lockPayroll);
 router.get("/runs", requireRoles(ADMIN), getPayrollRuns);
 router.get("/runs/:id", requireRoles(ADMIN), getPayrollRunDetails);
+router.get("/payslip/:payrollItemId", requireRoles(ADMIN), getEnterprisePayslip);
+router.get("/payslip/:payrollItemId/download", requireRoles(ADMIN), downloadEnterprisePayslip);
 router.get("/reports/summary", requireRoles(ADMIN), payrollSummaryReport);
 
 export default router;

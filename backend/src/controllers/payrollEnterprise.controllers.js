@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import PDFDocument from "pdfkit";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
@@ -10,6 +11,7 @@ import { TaxConfiguration } from "../models/TaxConfiguration.model.js";
 import { LoanAdvance } from "../models/LoanAdvance.model.js";
 import { ApprovalLog } from "../models/ApprovalLog.model.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
+import { School } from "../models/school.model.js";
 import { computeSalary } from "../services/enterprisePayroll.service.js";
 
 const ensureObjectId = (value, label = "id") => {
@@ -59,6 +61,110 @@ const context = async (req) => {
   };
 };
 
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const money = (value) => `INR ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+
+const normalizeBreakdown = (breakdown = {}) =>
+  Object.entries(breakdown || {}).map(([key, value]) => ({
+    label: key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase()),
+    amount: Number(value || 0),
+  }));
+
+const buildEnterprisePayslip = async ({ payrollItemId, schoolId, academicYearId }) => {
+  ensureObjectId(payrollItemId, "payroll item");
+  const item = await PayrollItem.findOne({ _id: payrollItemId, schoolId, academicYearId })
+    .populate({ path: "employeeId", select: "department designation employeeStatus bankDetails userId", populate: { path: "userId", select: "name email regId" } })
+    .populate({ path: "payrollRunId", select: "month year status totalPayout totalEmployees" })
+    .lean();
+
+  if (!item) throw new ApiError(404, "Payroll item not found");
+
+  const school = await School.findById(schoolId).select("name address email phone").lean();
+  const monthName = MONTH_NAMES[Number(item.payrollRunId?.month || 1) - 1] || "-";
+
+  return {
+    school,
+    run: item.payrollRunId,
+    item,
+    employee: item.employeeId,
+    monthLabel: `${monthName} ${item.payrollRunId?.year || ""}`.trim(),
+    earningsRows: normalizeBreakdown(item.earnings),
+    deductionRows: normalizeBreakdown(item.deductions),
+  };
+};
+
+const drawPayslipPdf = (doc, payslip) => {
+  const { school, employee, run, item, monthLabel, earningsRows, deductionRows } = payslip;
+  const employeeName = employee?.userId?.name || "Employee";
+
+  doc.fontSize(20).text(school?.name || "School", { align: "center" });
+  if (school?.address) doc.moveDown(0.2).fontSize(9).fillColor("#555").text(school.address, { align: "center" });
+  doc.moveDown(0.4).fillColor("#111").fontSize(16).text("Salary Slip", { align: "center" });
+  doc.moveDown(0.3).fontSize(11).text(monthLabel, { align: "center" });
+  doc.moveDown();
+
+  const left = 50;
+  const right = 320;
+  const line = (label, value, x, y) => {
+    doc.fontSize(9).fillColor("#666").text(label, x, y);
+    doc.fontSize(10).fillColor("#111").text(value || "-", x, y + 14);
+  };
+
+  let y = doc.y + 8;
+  line("Employee", employeeName, left, y);
+  line("Designation", employee?.designation || "Staff", right, y);
+  y += 42;
+  line("Department", employee?.department || "-", left, y);
+  line("Employee Code", employee?.userId?.regId || String(employee?._id || "-"), right, y);
+  y += 42;
+  line("Payroll Status", String(run?.status || "-").replaceAll("_", " ").toUpperCase(), left, y);
+  line("Generated On", new Date().toLocaleDateString("en-IN"), right, y);
+
+  y += 58;
+  doc.moveTo(left, y).lineTo(545, y).strokeColor("#e5e7eb").stroke();
+  y += 18;
+  doc.fontSize(12).fillColor("#111").text("Earnings", left, y).text("Deductions", right, y);
+  y += 22;
+
+  const maxRows = Math.max(earningsRows.length, deductionRows.length, 1);
+  for (let i = 0; i < maxRows; i += 1) {
+    const earning = earningsRows[i];
+    const deduction = deductionRows[i];
+    if (earning) {
+      doc.fontSize(9).fillColor("#374151").text(earning.label, left, y).text(money(earning.amount), left + 145, y, { width: 95, align: "right" });
+    }
+    if (deduction) {
+      doc.fontSize(9).fillColor("#374151").text(deduction.label, right, y).text(money(deduction.amount), right + 145, y, { width: 95, align: "right" });
+    }
+    y += 20;
+  }
+
+  y += 12;
+  doc.moveTo(left, y).lineTo(545, y).strokeColor("#e5e7eb").stroke();
+  y += 18;
+  doc.fontSize(10).fillColor("#111").text("Gross Salary", left, y).text(money(item.gross), left + 145, y, { width: 95, align: "right" });
+  doc.text("Total Deductions", right, y).text(money(item.totalDeductions), right + 145, y, { width: 95, align: "right" });
+  y += 34;
+  doc.roundedRect(left, y, 495, 46, 8).fillAndStroke("#ecfdf5", "#bbf7d0");
+  doc.fillColor("#047857").fontSize(13).text("Net Salary Payable", left + 18, y + 16);
+  doc.fontSize(15).text(money(item.netSalary), right + 72, y + 14, { width: 135, align: "right" });
+  y += 70;
+  doc.fillColor("#666").fontSize(8).text("This is a system generated salary slip and does not require a signature.", left, y, { align: "center", width: 495 });
+};
 const populateRun = (query) =>
   query.populate("createdBy", "name email").populate("approvedBy", "name email");
 
@@ -254,4 +360,35 @@ export const getEmployeeLoans = asyncHandler(async (req, res) => {
   if (req.query.status) filter.status = req.query.status;
   const loans = await populateLoan(LoanAdvance.find(filter).sort({ createdAt: -1 })).lean();
   return sendSuccess(res, { message: "Loans fetched", data: loans });
+});
+
+export const getEnterprisePayslip = asyncHandler(async (req, res) => {
+  const base = await context(req);
+  const payslip = await buildEnterprisePayslip({
+    payrollItemId: req.params.payrollItemId,
+    schoolId: base.schoolId,
+    academicYearId: base.academicYearId,
+  });
+
+  return sendSuccess(res, { message: "Enterprise payslip fetched", data: payslip });
+});
+
+export const downloadEnterprisePayslip = asyncHandler(async (req, res) => {
+  const base = await context(req);
+  const payslip = await buildEnterprisePayslip({
+    payrollItemId: req.params.payrollItemId,
+    schoolId: base.schoolId,
+    academicYearId: base.academicYearId,
+  });
+  const employeeName = payslip.employee?.userId?.name || "employee";
+  const safeEmployeeName = employeeName.replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "").toLowerCase() || "employee";
+  const filename = `salary-slip-${safeEmployeeName}-${payslip.run?.month}-${payslip.run?.year}.pdf`;
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+  const doc = new PDFDocument({ size: "A4", margin: 50 });
+  doc.pipe(res);
+  drawPayslipPdf(doc, payslip);
+  doc.end();
 });

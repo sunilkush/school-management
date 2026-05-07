@@ -9,6 +9,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Modal,
   Popconfirm,
   Progress,
   Row,
@@ -20,11 +21,11 @@ import {
   Typography,
   message,
 } from "antd";
-import { CalendarClock, CheckCircle2, Eye, FileLock2, IndianRupee, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
+import { CalendarClock, CheckCircle2, Download, Eye, FileLock2, IndianRupee, ReceiptText, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { approvePayrollRun, fetchPayrollRunDetails, fetchPayrollRuns, generatePayrollRun, lockPayrollRun } from "../../../features/payrollEnterpriseSlice";
-
+import httpClient from "../../../api/httpClient";
 const { Text, Title } = Typography;
 
 const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -39,7 +40,12 @@ const statusTone = {
 const statusProgress = { draft: 25, hr_approved: 50, accountant_approved: 75, approved: 90, locked: 100 };
 const label = (v) => String(v || "-").replaceAll("_", " ").toUpperCase();
 const getStatusTone = (status) => statusTone[status] || statusTone.draft;
-
+const breakdownRows = (breakdown = {}) =>
+  Object.entries(breakdown || {}).map(([key, value]) => ({
+    key,
+    label: key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase()),
+    value,
+  }));
 const cardStyle = { borderRadius: 20, boxShadow: "0 16px 40px rgba(15, 23, 42, 0.08)", border: "1px solid #edf2f7" };
 const softCardStyle = { borderRadius: 18, border: "1px solid #e2e8f0", background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)" };
 
@@ -47,6 +53,9 @@ export default function PayrollRunPage() {
   const [form] = Form.useForm();
   const [comment, setComment] = useState("");
   const [open, setOpen] = useState(false);
+  const [payslipOpen, setPayslipOpen] = useState(false);
+  const [selectedPayslip, setSelectedPayslip] = useState(null);
+  const [downloadingPayslipId, setDownloadingPayslipId] = useState(null);
   const dispatch = useDispatch();
   const { runs, runDetails, saving } = useSelector((s) => s.payrollEnterprise);
 
@@ -87,6 +96,32 @@ export default function PayrollRunPage() {
   const viewDetails = (id) => {
     dispatch(fetchPayrollRunDetails(id));
     setOpen(true);
+  };
+const openPayslip = (item) => {
+    setSelectedPayslip(item);
+    setPayslipOpen(true);
+  };
+
+  const downloadPayslip = async (item) => {
+    setDownloadingPayslipId(item._id);
+    try {
+      const response = await httpClient.get(`/payroll-enterprise/payslip/${item._id}/download`, { responseType: "blob" });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const employeeName = item.employeeId?.userId?.name || "employee";
+      link.href = url;
+      link.download = `salary-slip-${employeeName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${runDetails?.run?.month}-${runDetails?.run?.year}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      message.success("Salary slip downloaded");
+    } catch (e) {
+      message.error(e?.response?.data?.message || "Salary slip download failed");
+    } finally {
+      setDownloadingPayslipId(null);
+    }
   };
 
   const cols = [
@@ -137,6 +172,23 @@ export default function PayrollRunPage() {
     { title: "Deductions", dataIndex: "totalDeductions", render: money },
     { title: "Loan EMI", dataIndex: "loanEmiDeduction", render: money },
     { title: "Net Salary", dataIndex: "netSalary", render: (v) => <Text strong style={{ color: "#047857" }}>{money(v)}</Text> },
+    {
+      title: "Salary Slip",
+      fixed: "right",
+      render: (_, item) => (
+        <Space wrap>
+          <Button size="small" icon={<ReceiptText size={14} />} onClick={() => openPayslip(item)}>View</Button>
+          <Button
+            size="small"
+            icon={<Download size={14} />}
+            loading={downloadingPayslipId === item._id}
+            onClick={() => downloadPayslip(item)}
+          >
+            Download
+          </Button>
+        </Space>
+      ),
+    },
   ];
 
   return (
@@ -280,6 +332,76 @@ export default function PayrollRunPage() {
           )}
           <Table rowKey="_id" size="small" dataSource={runDetails?.items || []} columns={detailColumns} scroll={{ x: 760 }} />
         </Drawer>
+        <Modal
+          width={760}
+          open={payslipOpen}
+          onCancel={() => setPayslipOpen(false)}
+          title={
+            <Space>
+              <ReceiptText size={18} />
+              Salary Slip Preview
+            </Space>
+          }
+          footer={[
+            <Button key="close" onClick={() => setPayslipOpen(false)}>Close</Button>,
+            <Button
+              key="download"
+              type="primary"
+              icon={<Download size={16} />}
+              loading={selectedPayslip && downloadingPayslipId === selectedPayslip._id}
+              onClick={() => selectedPayslip && downloadPayslip(selectedPayslip)}
+            >
+              Download PDF
+            </Button>,
+          ]}
+        >
+          {selectedPayslip ? (
+            <Space direction="vertical" style={{ width: "100%" }} size={16}>
+              <div style={{ textAlign: "center", padding: "10px 0" }}>
+                <Title level={4} style={{ marginBottom: 0 }}>Salary Slip</Title>
+                <Text type="secondary">{runDetails?.run ? `${String(runDetails.run.month).padStart(2, "0")}/${runDetails.run.year}` : "-"}</Text>
+              </div>
+              <Descriptions bordered size="small" column={2}>
+                <Descriptions.Item label="Employee">{selectedPayslip.employeeId?.userId?.name || "-"}</Descriptions.Item>
+                <Descriptions.Item label="Designation">{selectedPayslip.employeeId?.designation || "Staff"}</Descriptions.Item>
+                <Descriptions.Item label="Department">{selectedPayslip.employeeId?.department || "-"}</Descriptions.Item>
+                <Descriptions.Item label="Status">
+                  <Tag color={statusColor[runDetails?.run?.status]}>{label(runDetails?.run?.status)}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Working Days">{selectedPayslip.attendance?.workingDays || 0}</Descriptions.Item>
+                <Descriptions.Item label="LOP Days">{selectedPayslip.attendance?.lopDays || 0}</Descriptions.Item>
+                <Descriptions.Item label="Gross Salary">{money(selectedPayslip.gross)}</Descriptions.Item>
+                <Descriptions.Item label="Net Salary">
+                  <Text strong style={{ color: "#047857" }}>{money(selectedPayslip.netSalary)}</Text>
+                </Descriptions.Item>
+              </Descriptions>
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  <Table
+                    size="small"
+                    title={() => <Text strong>Earnings</Text>}
+                    rowKey="key"
+                    columns={[{ title: "Head", dataIndex: "label" }, { title: "Amount", dataIndex: "value", align: "right", render: money }]}
+                    dataSource={breakdownRows(selectedPayslip.earnings)}
+                    pagination={false}
+                  />
+                </Col>
+                <Col xs={24} md={12}>
+                  <Table
+                    size="small"
+                    title={() => <Text strong>Deductions</Text>}
+                    rowKey="key"
+                    columns={[{ title: "Head", dataIndex: "label" }, { title: "Amount", dataIndex: "value", align: "right", render: money }]}
+                    dataSource={breakdownRows(selectedPayslip.deductions)}
+                    pagination={false}
+                  />
+                </Col>
+              </Row>
+            </Space>
+          ) : (
+            <Empty description="Select an employee salary slip" />
+          )}
+        </Modal>
       </Space>
     </div>
   );
