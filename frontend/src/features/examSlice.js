@@ -96,21 +96,35 @@ export const publishResults = createAsyncThunk("exams/publishResults", async (pa
     return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
-
+const requestAdmitCards = async (examId, method) => {
+  if (!examId) throw new Error("Invalid exam id");
+  let res;
+  try {
+    res = await apiClient[method](`/exams/${examId}/admit-cards${method === "post" ? "/generate" : ""}`);
+  } catch (error) {
+    const routeNotFound = error?.response?.status === 404
+      && typeof error?.response?.data?.message === "string"
+      && error.response.data.message.includes("Route not found");
+    if (!routeNotFound) throw error;
+    res = await apiClient[method](`/exams/${examId}/admit-card${method === "post" ? "/generate" : ""}`);
+  }
+  return {
+    cards: res.data.data || [],
+    meta: res.data.meta || {},
+    message: res.data.message,
+  };
+};
 export const getAdmitCards = createAsyncThunk("exams/getAdmitCards", async (examId, { rejectWithValue }) => {
   try {
-    if (!examId) throw new Error("Invalid exam id");
-    let res;
-    try {
-      res = await apiClient.get(`/exams/${examId}/admit-cards`);
-    } catch (error) {
-      const routeNotFound = error?.response?.status === 404
-        && typeof error?.response?.data?.message === "string"
-        && error.response.data.message.includes("Route not found");
-      if (!routeNotFound) throw error;
-      res = await apiClient.get(`/exams/${examId}/admit-card`);
-    }
-    return res.data.data;
+    return await requestAdmitCards(examId, "get");
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
+export const generateAdmitCards = createAsyncThunk("exams/generateAdmitCards", async (examId, { rejectWithValue }) => {
+  try {
+    return await requestAdmitCards(examId, "post");
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || error.message);
   }
@@ -166,7 +180,8 @@ const examSlice = createSlice({
     analytics: null,
     loading: false,
     error: null,
-    admitCards:[],
+    admitCards: [],
+    admitCardsGenerated: false,
      seatPlan: { seatPlan: [] },
   },
   reducers: {
@@ -229,10 +244,23 @@ const examSlice = createSlice({
         const index = state.exams.findIndex((e) => e._id === action.payload._id);
         if (index !== -1) state.exams[index] = action.payload;
       })
-      .addCase(getAdmitCards.fulfilled, (state, action) => {
-        state.admitCards = action.payload;
+     .addCase(getAdmitCards.fulfilled, (state, action) => {
+        state.admitCards = action.payload.cards || [];
+        state.admitCardsGenerated = Boolean(action.payload.meta?.isGenerated);
       })
        .addCase(getAdmitCards.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(generateAdmitCards.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(generateAdmitCards.fulfilled, (state, action) => {
+        state.loading = false;
+        state.admitCards = action.payload.cards || [];
+        state.admitCardsGenerated = Boolean(action.payload.meta?.isGenerated);
+      })
+       .addCase(generateAdmitCards.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload;
       })
       .addCase(getSeatPlan.fulfilled, (state, action) => {

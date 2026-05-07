@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js'
 import mongoose from 'mongoose'
 import { Exam } from '../models/Exam.model.js'
 import { Attempt } from '../models/ExamAttempts.model.js'
+import { AdmitCard } from '../models/AdmitCard.model.js'
 import { Question } from '../models/Questions.model.js'
 import {
     assignExamToClassService,
@@ -375,38 +376,54 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, attempt, 'Attempt evaluated successfully'))
 })
 
-export const getExamAdmitCards = asyncHandler(async (req, res) => {
-    const exam = await Exam.findById(req.params.id)
-        .populate('schoolClassId', 'name')
-        .populate('sectionId', 'name')
-        .populate('subjectId', 'name')
-        .lean()
-    ensureExamAccess(exam, req.user)
+const ADMIT_CARD_INSTRUCTIONS = [
+    'Carry a valid school identity card.',
+    'Reach the exam hall at least 30 minutes before start time.',
+    'Electronic devices are not allowed unless approved.',
+]
 
-    const attempts = await Attempt.find({ examId: req.params.id })
+const getStoredAdmitCards = async (examId) => AdmitCard.find({ examId })
+    .sort({ seatNumber: 1, createdAt: 1 })
+    .lean()
+
+const buildAdmitCardPayloads = async (exam, userId) => {
+    const attempts = await Attempt.find({ examId: exam._id })
         .populate('studentId', 'name email rollNumber')
         .select('studentId createdAt')
+        .sort({ createdAt: 1, _id: 1 })
         .lean()
 
-    const admitCards = attempts.map((attempt, index) => ({
-        examId: exam._id,
-        examTitle: exam.title,
-        examDate: exam.examDate,
-        startTime: exam.startTime,
-        endTime: exam.endTime,
-        className: exam.schoolClassId?.name || null,
-        sectionName: exam.sectionId?.name || null,
-        subjectName: exam.subjectId?.name || null,
-        studentId: attempt.studentId?._id,
-        studentName: attempt.studentId?.name,
-        rollNumber: attempt.studentId?.rollNumber || `R-${index + 1}`,
-        seatNumber: `S-${index + 1}`,
-        instructions: [
-            'Carry a valid school identity card.',
-            'Reach the exam hall at least 30 minutes before start time.',
-            'Electronic devices are not allowed unless approved.',
-        ],
-    }))
+    return attempts
+        .filter((attempt) => attempt.studentId?._id)
+        .map((attempt, index) => ({
+            schoolId: exam.schoolId,
+            examId: exam._id,
+            examTitle: exam.title,
+            examDate: exam.examDate,
+            startTime: exam.startTime,
+            endTime: exam.endTime,
+            className: exam.schoolClassId?.name || null,
+            sectionName: exam.sectionId?.name || null,
+            subjectName: exam.subjectId?.name || null,
+            studentId: attempt.studentId._id,
+            studentName: attempt.studentId.name,
+            rollNumber: attempt.studentId.rollNumber || `R-${index + 1}`,
+            seatNumber: `S-${index + 1}`,
+            instructions: ADMIT_CARD_INSTRUCTIONS,
+            generatedBy: userId,
+        }))
+}
+
+const getExamForAdmitCards = async (examId) => Exam.findById(examId)
+    .populate('schoolClassId', 'name')
+    .populate('sectionId', 'name')
+    .populate('subjectId', 'name')
+
+export const getExamAdmitCards = asyncHandler(async (req, res) => {
+    const exam = await getExamForAdmitCards(req.params.id).lean()
+    ensureExamAccess(exam, req.user)
+
+    const admitCards = await getStoredAdmitCards(req.params.id)
 
     return res
         .status(200)
@@ -414,11 +431,50 @@ export const getExamAdmitCards = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 admitCards,
-                'Admit cards generated successfully'
+                admitCards.length
+                    ? 'Admit cards fetched successfully'
+                    : 'Admit cards are not generated yet',
+                { isGenerated: admitCards.length > 0 }
             )
         )
 })
 
+export const generateExamAdmitCards = asyncHandler(async (req, res) => {
+    const exam = await getExamForAdmitCards(req.params.id).lean()
+    ensureExamAccess(exam, req.user)
+
+    const existingAdmitCards = await getStoredAdmitCards(req.params.id)
+    if (existingAdmitCards.length) {
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    existingAdmitCards,
+                    'Admit cards already generated. Use view or download option.',
+                    { isGenerated: true, alreadyGenerated: true }
+                )
+            )
+    }
+
+    const admitCardPayloads = await buildAdmitCardPayloads(exam, req.user._id)
+    if (!admitCardPayloads.length) {
+        throw new ApiError(400, 'No students found to generate admit cards')
+    }
+
+    const admitCards = await AdmitCard.insertMany(admitCardPayloads, { ordered: true })
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(
+                201,
+                admitCards,
+                'Admit cards generated successfully',
+                { isGenerated: true, alreadyGenerated: false }
+            )
+        )
+})
 export const getExamSeatPlan = asyncHandler(async (req, res) => {
     const exam = await Exam.findById(req.params.id).lean()
     ensureExamAccess(exam, req.user)

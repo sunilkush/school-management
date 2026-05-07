@@ -17,6 +17,7 @@ import {
   updateExam,
   updateMarks,
   getExamAdmitCards,
+  generateExamAdmitCards,
   getExamSeatPlan,
 } from "../controllers/exam.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
@@ -108,6 +109,13 @@ router.get(
   roleMiddleware(TEACHER_ROLES),
   validate({ query: { examId: { required: true, type: "objectId" }, schoolClassId: { required: true, type: "objectId" } } }),
   getClassResultSummary
+);
+router.post(
+  ["/:id/admit-cards/generate", "/:id/admit-card/generate"],
+  auth,
+  roleMiddleware(ADMIN_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  generateExamAdmitCards
 );
 
 router.get(
