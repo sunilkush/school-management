@@ -25,7 +25,7 @@ import { CalendarClock, CheckCircle2, Download, Eye, FileLock2, IndianRupee, Rec
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { approvePayrollRun, fetchPayrollRunDetails, fetchPayrollRuns, generateBankTransfer, generatePayrollRun, lockPayrollRun, markPayrollPaid, rollbackPayrollRun } from "../../../features/payrollEnterpriseSlice";
-
+import httpClient from "../../../api/httpClient";
 const { Text, Title } = Typography;
 
 const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
