@@ -9,6 +9,7 @@ const payrollItemSchema = new Schema({
   gross: { type: Number, required: true },
   deductions: { type: Schema.Types.Mixed, default: {} },
   earnings: { type: Schema.Types.Mixed, default: {} },
+  totalDeductions: { type: Number, default: 0 },
   netSalary: { type: Number, required: true },
   attendance: { type: Schema.Types.Mixed, default: {} },
   leaveDeduction: { type: Number, default: 0 },
