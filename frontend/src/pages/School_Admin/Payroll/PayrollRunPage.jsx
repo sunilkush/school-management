@@ -7,14 +7,8 @@ const { Text, Title } = Typography;
 
 const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
 const statusColor = { draft: "default", hr_approved: "blue", accountant_approved: "purple", approved: "green", locked: "gold" };
-const statusTone = {
-  draft: { bg: "#f8fafc", border: "#e2e8f0", text: "#475569" },
-  hr_approved: { bg: "#eff6ff", border: "#bfdbfe", text: "#1d4ed8" },
-  accountant_approved: { bg: "#f5f3ff", border: "#ddd6fe", text: "#6d28d9" },
-  approved: { bg: "#ecfdf5", border: "#bbf7d0", text: "#047857" },
-  locked: { bg: "#fffbeb", border: "#fde68a", text: "#b45309" },
-};
-const statusProgress = { draft: 25, hr_approved: 50, accountant_approved: 75, approved: 90, locked: 100 };
+
+
 const label = (v) => String(v || "-").replaceAll("_", " ").toUpperCase();
 const cardStyle = { borderRadius: 16, boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)" };
 const heroStyle = { borderRadius: 18, background: "linear-gradient(135deg, #ecfeff 0%, #f8fafc 55%, #eef2ff 100%)", border: "1px solid #bae6fd" };
@@ -28,13 +22,7 @@ export default function PayrollRunPage() {
 
   useEffect(() => { dispatch(fetchPayrollRuns()); }, [dispatch]);
 
-  const summary = useMemo(() => {
-    const totalPayout = runs.reduce((sum, run) => sum + Number(run.totalPayout || 0), 0);
-    const totalEmployees = runs.reduce((sum, run) => sum + Number(run.totalEmployees || 0), 0);
-    const pendingApprovals = runs.filter((run) => !["approved", "locked"].includes(run.status)).length;
-    const lockedRuns = runs.filter((run) => run.status === "locked").length;
-    return { totalPayout, totalEmployees, pendingApprovals, lockedRuns };
-  }, [runs]);
+
 
   const onFinish = async (values) => {
     try {
