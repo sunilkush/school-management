@@ -540,6 +540,7 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "profile/change-password", element: <ChangePassword /> },
@@ -616,11 +617,17 @@ const router = createBrowserRouter([
               { path: "salary/create-employee", element: <CreateEmployee /> },
               { path: "salary/payslips", element: <GeneratePayslip /> },
               { path: "salary/reports/monthly", element: <MonthlyPayrollReport /> },
+              { path: "salary/enterprise/dashboard", element: <PayrollDashboardEnterprise /> },
+              { path: "salary/enterprise/run", element: <PayrollRunPage /> },
+              { path: "salary/enterprise/approval", element: <PayrollApprovalPanel /> },
+              { path: "salary/enterprise/loans", element: <LoanManagementPage /> },
+              { path: "salary/enterprise/tax", element: <TaxSettingsPage /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
@@ -647,7 +654,16 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
+              { path: "payroll", element: <PayrollSelfServicePage /> },
             ],
+          },
+           {
+            path: "viceprincipal/payroll",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "viceprincipal/*",
@@ -782,7 +798,7 @@ const router = createBrowserRouter([
           {
             path: "staff",
             element: (
-              <ProtectedRoute allowedRoles={["Staff"]}>
+                <ProtectedRoute allowedRoles={["Staff", "Support Staff"]}>
             <Outlet />
               </ProtectedRoute>
             ),

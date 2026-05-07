@@ -173,25 +173,52 @@ export const updatePayrollStructure = asyncHandler(async (req, res) => {
 });
 
 export const generatePayrollCycle = asyncHandler(async (req, res) => {
-  const { month, year } = req.body;
+  const month = Number(req.body.month);
+  const year = Number(req.body.year);
   const schoolId = getSchoolId(req);
+  console.log(month,year,schoolId)
   assertSchoolId(schoolId);
 
-  let cycle = await PayrollCycle.findOne({ schoolId, month, year });
-  if (cycle && cycle.status !== "draft") {
-    throw new ApiError(409, "Locked or paid payroll cycle cannot be regenerated");
+  if (!month || month < 1 || month > 12) {
+    throw new ApiError(400, "Invalid month");
   }
 
-  const employees = await Employee.find({ schoolId, isActive: true }).select("_id userId").lean();
-  if (!employees.length) throw new ApiError(400, "No active employees found for this school");
+  if (!year || year < 2000) {
+    throw new ApiError(400, "Invalid year");
+  }
+
+  let cycle = await PayrollCycle.findOne({
+    schoolId: new mongoose.Types.ObjectId(schoolId),
+    month,
+    year,
+  });
+
+  console.log("Payroll cycle found:", cycle);
+
+  if (cycle && cycle.status !== "draft") {
+    throw new ApiError(
+      409,
+      `Payroll cycle already ${cycle.status}. Locked or paid payroll cycle cannot be regenerated`
+    );
+  }
+
+  const employees = await Employee.find({
+    schoolId,
+    isActive: true,
+  }).select("_id userId").lean();
+  console.log("employees",employees)
+  if (!employees.length) {
+    throw new ApiError(400, "No active employees found for this school");
+  }
 
   const policy = await PayrollPolicy.findOneAndUpdate(
     { schoolId },
     { $setOnInsert: { schoolId } },
     { upsert: true, new: true }
   );
-
+  console.log("policy",policy)
   const createdNewCycle = !cycle;
+
   if (!cycle) {
     cycle = await PayrollCycle.create({
       schoolId,
@@ -202,68 +229,111 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     });
   }
 
-
   const entries = [];
-  for (const employee of employees) {
-    const structure = await PayrollStructure.findOne({
-      schoolId,
-      employeeId: employee._id,
-      status: "active",
-      effectiveFrom: { $lte: new Date(Date.UTC(year, month - 1, 1)) },
-      $or: [{ effectiveTo: null }, { effectiveTo: { $gte: new Date(Date.UTC(year, month, 0, 23, 59, 59, 999)) } }],
-    })
-      .sort({ effectiveFrom: -1 })
-      .lean();
 
-    if (!structure) continue;
+  const cycleStart = new Date(Date.UTC(year, month - 1, 1));
+  const cycleEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-    const attendance = await getAttendanceSummary({
-      schoolId,
-      employeeUserId: employee.userId,
-      month,
-      year,
-    });
+ for (const employee of employees) {
+  const structure = await PayrollStructure.findOne({
+    schoolId: new mongoose.Types.ObjectId(schoolId),
+    employeeId: employee._id,
+    status: "active",
+    effectiveFrom: { $lte: cycleEnd },
+    $or: [
+      { effectiveTo: null },
+      { effectiveTo: { $exists: false } },
+      { effectiveTo: { $gte: cycleStart } },
+    ],
+  })
+    .sort({ effectiveFrom: -1 })
+    .lean();
 
-    const calculated = calculatePayrollEntry({ structure, attendance, policy });
-    const warnings = [];
-    if (attendance.isMissingAttendance) warnings.push("Attendance missing for selected cycle");
-    if (calculated.netPay < 0) warnings.push("Net pay is negative. Review deductions/policy.");
+  console.log("employee:", employee._id);
+  console.log("structure:", structure);
 
-    entries.push({
-      payrollCycleId: cycle._id,
-      schoolId,
-      employeeId: employee._id,
-      ...calculated.attendance,
-      earningsBreakdown: calculated.earningsBreakdown,
-      deductionsBreakdown: calculated.deductionsBreakdown,
-      grossEarnings: calculated.grossEarnings,
-      totalDeductions: calculated.totalDeductions,
-      netPay: calculated.netPay,
-      warnings,
-    });
+  if (!structure) continue;
+
+  const attendance = await getAttendanceSummary({
+    schoolId,
+    employeeUserId: employee.userId,
+    month,
+    year,
+  });
+
+  const calculated = calculatePayrollEntry({
+    structure,
+    attendance,
+    policy,
+  });
+
+  const warnings = [];
+
+  if (attendance.isMissingAttendance) {
+    warnings.push("Attendance missing for selected cycle");
   }
 
-if (!entries.length) {
-    if (createdNewCycle) await PayrollCycle.deleteOne({ _id: cycle._id });
-    throw new ApiError(400, "No active salary structures found for payroll generation");
+  if (calculated.netPay < 0) {
+    warnings.push("Net pay is negative. Review deductions/policy.");
+  }
+
+  entries.push({
+    payrollCycleId: cycle._id,
+    schoolId,
+    employeeId: employee._id,
+
+    ...calculated.attendance,
+
+    earningsBreakdown: calculated.earningsBreakdown,
+    deductionsBreakdown: calculated.deductionsBreakdown,
+    grossEarnings: calculated.grossEarnings,
+    totalDeductions: calculated.totalDeductions,
+    netPay: calculated.netPay,
+    warnings,
+  });
+}
+
+  if (!entries.length) {
+    if (createdNewCycle) {
+      await PayrollCycle.deleteOne({ _id: cycle._id });
+    }
+
+    throw new ApiError(
+      400,
+      "No active salary structures found for payroll generation"
+    );
   }
 
   await PayrollEntry.deleteMany({ payrollCycleId: cycle._id });
   await PayrollEntry.insertMany(entries, { ordered: false });
+
   cycle.processedBy = req.user._id;
   await cycle.save();
 
-  await writeAuditLog(req, createdNewCycle ? "PAYROLL_CYCLE_GENERATED" : "PAYROLL_CYCLE_REGENERATED", "Payroll cycle generated", {
-    payrollCycleId: cycle._id,
-    month,
-    year,
-    generatedEntries: entries.length,
-  });
+  await writeAuditLog(
+    req,
+    createdNewCycle
+      ? "PAYROLL_CYCLE_GENERATED"
+      : "PAYROLL_CYCLE_REGENERATED",
+    "Payroll cycle generated",
+    {
+      payrollCycleId: cycle._id,
+      month,
+      year,
+      generatedEntries: entries.length,
+    }
+  );
 
   return sendSuccess(res, {
     statusCode: createdNewCycle ? 201 : 200,
-    message: createdNewCycle ? "Payroll cycle generated" : "Draft payroll cycle refreshed",
-    data: { cycle, entriesCount: entries.length },
+    message: createdNewCycle
+      ? "Payroll cycle generated"
+      : "Draft payroll cycle refreshed",
+    data: {
+      payrollCycle: cycle, // ✅ frontend ke liye clear name
+      cycle,              // ✅ backward compatibility
+      entriesCount: entries.length,
+    },
   });
 });
 
@@ -272,6 +342,7 @@ export const getPayrollCycle = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
   assertSchoolId(schoolId);
   const cycle = await PayrollCycle.findOne({ schoolId, month: Number(month), year: Number(year) }).lean();
+  
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
 
   const entries = await PayrollEntry.find({ payrollCycleId: cycle._id })
@@ -348,11 +419,62 @@ export const getPayslip = asyncHandler(async (req, res) => {
   if (!entry) throw new ApiError(404, "Payslip not found for employee");
 
   const isSelf = req.user?._id?.toString() === entry.employeeId?.userId?._id?.toString();
-  if (!isSelf && ["Teacher", "Employee"].includes(req.userRole?.name)) {
+  if (!isSelf && ["Teacher", "Employee", "Staff", "Support Staff"].includes(req.userRole?.name)) {
     throw new ApiError(403, "You can only view your own payslip");
   }
 
   return sendSuccess(res, { message: "Payslip fetched", data: { cycle, entry } });
+});
+export const getMyPayrollSummary = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  const limit = Math.min(Number(req.query.limit) || 12, 24);
+
+  const employee = await Employee.findOne({ schoolId, userId: req.user._id })
+    .populate({ path: "userId", select: "name email" })
+    .lean();
+
+  if (!employee) throw new ApiError(404, "Employee payroll profile not found");
+
+  const structure = await PayrollStructure.findOne({
+    schoolId,
+    employeeId: employee._id,
+    status: "active",
+  })
+    .sort({ effectiveFrom: -1 })
+    .lean();
+
+  const entries = await PayrollEntry.find({ schoolId, employeeId: employee._id })
+    .populate({ path: "payrollCycleId", select: "month year status paidAt lockedAt" })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  const payslips = entries
+    .filter((entry) => entry.payrollCycleId)
+    .map((entry) => ({
+      _id: entry._id,
+      cycle: entry.payrollCycleId,
+      month: entry.payrollCycleId.month,
+      year: entry.payrollCycleId.year,
+      workingDays: entry.workingDays,
+      presentDays: entry.presentDays,
+      paidLeaves: entry.paidLeaves,
+      lopDays: entry.lopDays,
+      grossEarnings: entry.grossEarnings,
+      totalDeductions: entry.totalDeductions,
+      netPay: entry.netPay,
+      paymentStatus: entry.paymentStatus,
+      paidAt: entry.paidAt,
+      transactionRef: entry.transactionRef,
+      earningsBreakdown: entry.earningsBreakdown,
+      deductionsBreakdown: entry.deductionsBreakdown,
+      warnings: entry.warnings || [],
+    }));
+
+  return sendSuccess(res, {
+    message: "My payroll summary fetched",
+    data: { employee, structure, payslips },
+  });
 });
 
 export const getMonthlyPayrollReport = asyncHandler(async (req, res) => {

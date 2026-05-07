@@ -25,7 +25,7 @@ const STATUS_OPTIONS = ["Open", "In Progress", "Resolved", "Closed"];
 const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
 const CATEGORY_OPTIONS = ["General", "Technical", "Academic", "Finance", "Transport", "Hostel", "Library", "Other"];
 
-const supportPath = (import.meta.env.VITE_API_URL || "/api").includes("/api/v1")
+const supportPath = (import.meta.env.VITE_API_URL || "/api/v1").includes("/api/v1")
   ? "/support-tickets"
   : "/v1/support-tickets";
 

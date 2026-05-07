@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, __dirname, '');
   const proxyTarget = env.VITE_API_PROXY_TARGET || env.VITE_API_URL;
   const enableProxy = typeof proxyTarget === 'string' && /^https?:\/\//.test(proxyTarget);
 

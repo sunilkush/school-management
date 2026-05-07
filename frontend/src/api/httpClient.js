@@ -1,7 +1,7 @@
 import axios from "axios";
 import { clearAccessToken, getAccessToken, setAccessToken } from "./authToken";
 
-const API_URL_V1 = import.meta.env.VITE_API_URL || "/api";
+const API_URL_V1 = import.meta.env.VITE_API_URL || "/api/v1";
 
 const httpClient = axios.create({
   baseURL: API_URL_V1,

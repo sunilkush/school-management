@@ -125,6 +125,7 @@ export const sidebarMenu = {
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
     { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
+   
     { title:"School Setup", icon: School, path:"schooladmin/school-setup"},
    /*  { title: "My Self", path: "schooladmin/profile", icon: User, }, */
     {
@@ -222,9 +223,9 @@ export const sidebarMenu = {
       title: "Payroll",
       icon: IndianRupee,
       subMenu: [
-        { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
-        { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
         { title: "Create Employee", path: "schooladmin/payroll/create-employee" },
+        { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
+        { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
         { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
         { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
         { title: "Enterprise Dashboard", path: "schooladmin/payroll/enterprise/dashboard" },
@@ -242,6 +243,9 @@ export const sidebarMenu = {
         { title: "Assets", path: "schooladmin/inventory/assets" },
       ],
     },
+     { title: "My Payroll", path: "schooladmin/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "schooladmin/attendance", icon: Clock },
+    { title: "Profile", path: "schooladmin/profile", icon: User },
     { title: "Reports", path: "schooladmin/reports", icon: FileBarChart2 },
     { title: "School Settings", path: "schooladmin/settings", icon: Settings },
   ],
@@ -276,14 +280,12 @@ export const sidebarMenu = {
     
     { title: "Timetable", path: "teacher/timetable", icon: CalendarClock },
     { title: "Reports", path: "teacher/reports", icon: FileBarChart2 },
-    {
-      title: "Profile",
-      icon: User,
-      subMenu: [
-        { title: "My Profile", path: "teacher/profile" },
-      
-        { title: "Change Password", path: "teacher/profile/change-password" }, ]
-    },
+    { title: "My Payroll", path: "teacher/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "teacher/attendance", icon: Clock },
+    { title: "Profile", path: "teacher/profile", icon: User },
+    { title: "Change Password", path: "teacher/profile/change-password" },
+
+   
   ],
 
   /* ================= STUDENT ================= */
@@ -331,6 +333,9 @@ export const sidebarMenu = {
   /* ================= ACCOUNTANT ================= */
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
+    { title: "My Payroll", path: "accountant/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "accountant/attendance", icon: Clock },
+    { title: "Profile", path: "accountant/profile", icon: User },
     {
       title: "Fee Management",
       icon: IndianRupee,
@@ -342,11 +347,17 @@ export const sidebarMenu = {
       title: "Payroll Management",
       icon: IndianRupee,
       subMenu: [
-        { title: "Monthly Run", path: "accountant/salary" },
-        { title: "Salary Structures", path: "accountant/salary/structures" },
         { title: "Create Employee", path: "accountant/salary/create-employee" },
+        { title: "Salary Structures", path: "accountant/salary/structures" },
+        { title: "Monthly Run", path: "accountant/salary" },
         { title: "Payslips", path: "accountant/salary/payslips" },
         { title: "Monthly Reports", path: "accountant/salary/reports/monthly" },
+        { title: "Enterprise Dashboard", path: "accountant/salary/enterprise/dashboard" },
+        { title: "Enterprise Run", path: "accountant/salary/enterprise/run" },
+        { title: "Approvals", path: "accountant/salary/enterprise/approval" },
+        { title: "Loans & Advance", path: "accountant/salary/enterprise/loans" },
+        { title: "Tax Settings", path: "accountant/salary/enterprise/tax" },
+        
       ],
     },
     { title: "Financial Reports", path: "accountant/reports", icon: FileBarChart2 },
@@ -359,11 +370,17 @@ export const sidebarMenu = {
     { title: "Members", path: "librarian/members", icon: Users },
     { title: "Issue & Return", path: "librarian/records", icon: FileCheck },
     { title: "Library Reports", path: "librarian/reports", icon: FileBarChart2 },
+    { title: "My Payroll", path: "employee/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "employee/attendance", icon: Clock },
+    { title: "Profile", path: "employee/profile", icon: User },
   ],
 
   /* ================= TRANSPORT ================= */
   transport: [
     { title: "Dashboard", path: "transport", icon: LayoutDashboard },
+     { title: "My Payroll", path: "employee/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "employee/attendance", icon: Clock },
+    { title: "Profile", path: "employee/profile", icon: User },
 
     {
       title: "Vehicle Management",
@@ -395,6 +412,9 @@ export const sidebarMenu = {
 
     { title: "Transport Reports", path: "transport/reports", icon: FileBarChart2 },
     { title: "Transport Settings", path: "transport/settings", icon: Settings },
+    { title: "My Payroll", path: "transport/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "transport/attendance", icon: Clock },
+    { title: "Profile", path: "transport/profile", icon: User },
   ],
   /* ================= SUPPORT STAFF ================= */
   "support staff": [
@@ -403,7 +423,10 @@ export const sidebarMenu = {
     { title: "Attendance", path: "staff/attendance", icon: Clock },
     { title: "Notifications", path: "staff/notification", icon: Bell },
     { title: "Messages", path: "staff/message", icon: MessageSquare, },
-    {title: "Profile",path: "staff/profile",icon: User,},
+    { title: "Profile",path: "staff/profile",icon: User,},
+    { title: "My Payroll", path: "staff/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "staff/attendance", icon: Clock },
+    
   ],
   /* ================= SECURITY ================= */
   security: [
@@ -413,6 +436,9 @@ export const sidebarMenu = {
     {title: "Shift Attendance",path: "security/attendance",icon: Clock,},
     {title: "Emergency Alerts",path: "security/alerts",icon: Bell,},
     {title: "Profile", path: "security/profile",icon: User,},
+    {title: "My Payroll", path: "security/payroll", icon: IndianRupee },
+    {title: "Attendance", path: "security/attendance", icon: Clock },
+    
   ],
   /* ================= PRINCIPAL ================= */
   "principal": [
@@ -426,6 +452,9 @@ export const sidebarMenu = {
     { title: "Library Overview", path: "principal/library", icon: BookOpen },
     { title: "Transport Overview", path: "principal/transport", icon: Bus },
     { title: "School Settings", path: "principal/settings", icon: Settings },
+    { title: "My Payroll", path: "principal/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "principal/attendance", icon: Clock },
+    { title: "Profile", path: "principal/profile", icon: User },
   ],
 
   /* ================= VICE PRINCIPAL ================= */
@@ -437,6 +466,9 @@ export const sidebarMenu = {
     { title: "Teacher Attendance", path: "viceprincipal/attendance/staff", icon: UserCheck },
     { title: "Reports", path: "viceprincipal/reports", icon: FileBarChart2 },
     { title: "Profile", path: "viceprincipal/profile", icon: User },
+    { title: "My Payroll", path: "viceprincipal/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "viceprincipal/attendance", icon: Clock },
+   
   ],
 
   /* ================= EXAM COORDINATOR ================= */
@@ -452,6 +484,9 @@ export const sidebarMenu = {
     { title: "Analytics", path: "examcoordinator/exams/analytics", icon: FileBarChart2 },
     { title: "Exam Reports", path: "examcoordinator/reports", icon: FileBarChart2 },
     { title: "Profile", path: "examcoordinator/profile", icon: User },
+    { title: "My Payroll", path: "examcoordinator/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "examcoordinator/attendance", icon: Clock },
+   
   ],
 
   /* ================= RECEPTIONIST ================= */
@@ -462,6 +497,8 @@ export const sidebarMenu = {
     { title: "Phone Calls Log", path: "receptionist/calls", icon: ClipboardCheck },
     { title: "Notifications", path: "receptionist/notifications", icon: Bell },
     { title: "Profile", path: "receptionist/profile", icon: User },
+     { title: "My Payroll", path: "receptionist/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "receptionist/attendance", icon: Clock },
   ],
 
   /* ================= IT SUPPORT ================= */
@@ -472,6 +509,8 @@ export const sidebarMenu = {
     { title: "Network Status", path: "itsupport/network", icon: Fuel },
     { title: "System Logs", path: "itsupport/logs", icon: FileBarChart2 },
     { title: "Profile", path: "itsupport/profile", icon: User },
+    { title: "My Payroll", path: "itsupport/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "itsupport/attendance", icon: Clock },
   ],
 
   /* ================= COUNSELOR ================= */
@@ -504,6 +543,8 @@ export const sidebarMenu = {
     { title: "Visitor Log", path: "hostelwarden/visitors", icon: UserPlus },
     { title: "Reports", path: "hostelwarden/reports", icon: FileBarChart2 },
     { title: "Profile", path: "hostelwarden/profile", icon: User },
+     { title: "My Payroll", path: "hostelwarden/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "hostelwarden/attendance", icon: Clock },
   ],
 
 
@@ -515,6 +556,9 @@ export const sidebarMenu = {
     { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
     { title: "Drivers", path: "transportmanager/drivers", icon: Users },
     { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
+     { title: "Profile", path: "transportmanager/profile", icon: User },
+     { title: "My Payroll", path: "transportmanager/payroll", icon: IndianRupee },
+    { title: "Attendance", path: "transportmanager/attendance", icon: Clock },
   ],
 
 };
