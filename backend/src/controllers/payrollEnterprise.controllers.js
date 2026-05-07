@@ -9,16 +9,54 @@ import { PayrollItem } from "../models/PayrollItem.model.js";
 import { TaxConfiguration } from "../models/TaxConfiguration.model.js";
 import { LoanAdvance } from "../models/LoanAdvance.model.js";
 import { ApprovalLog } from "../models/ApprovalLog.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 import { computeSalary } from "../services/enterprisePayroll.service.js";
-
-const context = (req) => ({
-  schoolId: req.user.schoolId,
-  academicYearId: req.user.academicYearId,
-  createdBy: req.user._id,
-});
 
 const ensureObjectId = (value, label = "id") => {
   if (!mongoose.Types.ObjectId.isValid(value)) throw new ApiError(400, `Invalid ${label}`);
+};
+
+const resolveSchoolId = (req) => {
+  const schoolId = req.user?.schoolId || req.body?.schoolId || req.query?.schoolId;
+  if (!schoolId) throw new ApiError(400, "School ID missing from user session.");
+  ensureObjectId(schoolId, "school");
+  return schoolId;
+};
+
+const resolveAcademicYearId = async (req, schoolId) => {
+  const requestedAcademicYearId = req.body?.academicYearId || req.query?.academicYearId || req.academicYearId || req.user?.academicYearId;
+
+  if (requestedAcademicYearId) {
+    ensureObjectId(requestedAcademicYearId, "academicYearId");
+    const academicYear = await AcademicYear.findOne({ _id: requestedAcademicYearId, schoolId }).select("_id").lean();
+    if (!academicYear) throw new ApiError(400, "Academic year not found for this school");
+    return academicYear._id;
+  }
+
+  const activeAcademicYear = await AcademicYear.findOne({
+    schoolId,
+    isActive: true,
+    status: "active",
+  })
+    .select("_id")
+    .lean();
+
+  if (!activeAcademicYear) {
+    throw new ApiError(400, "No active academic year found. Please activate an academic year first.");
+  }
+
+  return activeAcademicYear._id;
+};
+
+const context = async (req) => {
+  const schoolId = resolveSchoolId(req);
+  const academicYearId = await resolveAcademicYearId(req, schoolId);
+
+  return {
+    schoolId,
+    academicYearId,
+    createdBy: req.user._id,
+  };
 };
 
 const populateRun = (query) =>
@@ -30,21 +68,22 @@ const populateLoan = (query) =>
     .populate("createdBy", "name email");
 
 export const createTaxConfiguration = asyncHandler(async (req, res) => {
-  const base = context(req);
+  const base = await context(req);
   await TaxConfiguration.updateMany({ schoolId: base.schoolId, academicYearId: base.academicYearId }, { $set: { isActive: false } });
-  const doc = await TaxConfiguration.create({ ...base, ...req.body, isActive: true });
+  const doc = await TaxConfiguration.create({ ...req.body, ...base, isActive: true });
   return sendSuccess(res, { statusCode: 201, message: "Tax configuration saved", data: doc });
 });
 
 export const getActiveTaxConfiguration = asyncHandler(async (req, res) => {
-  const doc = await TaxConfiguration.findOne({ schoolId: req.user.schoolId, academicYearId: req.user.academicYearId, isActive: true })
+  const base = await context(req);
+  const doc = await TaxConfiguration.findOne({ schoolId: base.schoolId, academicYearId: base.academicYearId, isActive: true })
     .sort({ createdAt: -1 })
     .lean();
   return sendSuccess(res, { message: "Tax configuration fetched", data: doc });
 });
 
 export const createLoanRequest = asyncHandler(async (req, res) => {
-  const base = context(req);
+  const base = await context(req);
   const { employeeId, totalAmount, emiAmount, startMonth } = req.body;
   ensureObjectId(employeeId, "employee");
 
@@ -71,8 +110,9 @@ export const createLoanRequest = asyncHandler(async (req, res) => {
 });
 
 export const approveLoan = asyncHandler(async (req, res) => {
+  const base = await context(req);
   ensureObjectId(req.params.id, "loan");
-  const loan = await LoanAdvance.findOne({ _id: req.params.id, schoolId: req.user.schoolId });
+  const loan = await LoanAdvance.findOne({ _id: req.params.id, schoolId: base.schoolId, academicYearId: base.academicYearId });
   if (!loan) throw new ApiError(404, "Loan request not found");
   if (loan.status !== "pending") throw new ApiError(400, "Only pending loan requests can be approved");
   loan.status = "active";
@@ -83,8 +123,9 @@ export const approveLoan = asyncHandler(async (req, res) => {
 });
 
 export const rejectLoan = asyncHandler(async (req, res) => {
+  const base = await context(req);
   ensureObjectId(req.params.id, "loan");
-  const loan = await LoanAdvance.findOne({ _id: req.params.id, schoolId: req.user.schoolId });
+  const loan = await LoanAdvance.findOne({ _id: req.params.id, schoolId: base.schoolId, academicYearId: base.academicYearId });
   if (!loan) throw new ApiError(404, "Loan request not found");
   if (loan.status !== "pending") throw new ApiError(400, "Only pending loan requests can be rejected");
   loan.status = "rejected";
@@ -96,7 +137,7 @@ export const rejectLoan = asyncHandler(async (req, res) => {
 });
 
 export const generatePayrollRun = asyncHandler(async (req, res) => {
-  const base = context(req);
+  const base = await context(req);
   const month = Number(req.body.month);
   const year = Number(req.body.year);
   if (!Number.isInteger(month) || month < 1 || month > 12) throw new ApiError(400, "Month must be between 1 and 12");
@@ -145,31 +186,34 @@ export const generatePayrollRun = asyncHandler(async (req, res) => {
 });
 
 export const approvePayroll = asyncHandler(async (req, res) => {
+  const base = await context(req);
   ensureObjectId(req.params.id, "payroll run");
-  const run = await PayrollRun.findOne({ _id: req.params.id, schoolId: req.user.schoolId });
+  const run = await PayrollRun.findOne({ _id: req.params.id, schoolId: base.schoolId, academicYearId: base.academicYearId });
   if (!run) throw new ApiError(404, "Payroll run not found");
   const nextMap = { draft: "hr_approved", hr_approved: "accountant_approved", accountant_approved: "approved" };
   if (!nextMap[run.status]) throw new ApiError(400, "Payroll cannot be approved in current status");
   run.status = nextMap[run.status];
   run.approvedBy.addToSet(req.user._id);
   await run.save();
-  await ApprovalLog.create({ ...context(req), payrollRunId: run._id, level: run.status === "hr_approved" ? "hr" : run.status === "accountant_approved" ? "accountant" : "admin", action: "approved", comment: req.body.comment || "" });
+  await ApprovalLog.create({ ...base, payrollRunId: run._id, level: run.status === "hr_approved" ? "hr" : run.status === "accountant_approved" ? "accountant" : "admin", action: "approved", comment: req.body.comment || "" });
   return sendSuccess(res, { message: "Payroll approved", data: run });
 });
 
 export const lockPayroll = asyncHandler(async (req, res) => {
+  const base = await context(req);
   ensureObjectId(req.params.id, "payroll run");
-  const run = await PayrollRun.findOneAndUpdate({ _id: req.params.id, schoolId: req.user.schoolId, status: "approved" }, { $set: { status: "locked" } }, { new: true });
+  const run = await PayrollRun.findOneAndUpdate({ _id: req.params.id, schoolId: base.schoolId, academicYearId: base.academicYearId, status: "approved" }, { $set: { status: "locked" } }, { new: true });
   if (!run) throw new ApiError(400, "Only approved payroll can be locked");
-  await ApprovalLog.create({ ...context(req), payrollRunId: run._id, level: "admin", action: "locked", comment: req.body.comment || "" });
+  await ApprovalLog.create({ ...base, payrollRunId: run._id, level: "admin", action: "locked", comment: req.body.comment || "" });
   return sendSuccess(res, { message: "Payroll locked", data: run });
 });
 
 export const payrollSummaryReport = asyncHandler(async (req, res) => {
-  const match = { schoolId: new mongoose.Types.ObjectId(req.user.schoolId), academicYearId: new mongoose.Types.ObjectId(req.user.academicYearId) };
+  const base = await context(req);
+  const match = { schoolId: new mongoose.Types.ObjectId(base.schoolId), academicYearId: new mongoose.Types.ObjectId(base.academicYearId) };
   const [runSummary] = await PayrollRun.aggregate([{ $match: match }, { $group: { _id: null, totalRuns: { $sum: 1 }, totalPayout: { $sum: "$totalPayout" }, employeesProcessed: { $sum: "$totalEmployees" }, pendingApprovals: { $sum: { $cond: [{ $in: ["$status", ["draft", "hr_approved", "accountant_approved"]] }, 1, 0] } }, lockedRuns: { $sum: { $cond: [{ $eq: ["$status", "locked"] }, 1, 0] } } } }]);
   const loanSummary = await LoanAdvance.aggregate([{ $match: match }, { $group: { _id: "$status", count: { $sum: 1 }, remaining: { $sum: "$remainingAmount" } } }]);
-  const activeTaxConfig = await TaxConfiguration.findOne({ schoolId: req.user.schoolId, academicYearId: req.user.academicYearId, isActive: true }).sort({ createdAt: -1 }).lean();
+  const activeTaxConfig = await TaxConfiguration.findOne({ schoolId: base.schoolId, academicYearId: base.academicYearId, isActive: true }).sort({ createdAt: -1 }).lean();
   return sendSuccess(res, {
     message: "Payroll summary report",
     data: {
@@ -186,13 +230,15 @@ export const payrollSummaryReport = asyncHandler(async (req, res) => {
 });
 
 export const getPayrollRuns = asyncHandler(async (req, res) => {
-  const runs = await populateRun(PayrollRun.find({ schoolId: req.user.schoolId, academicYearId: req.user.academicYearId }).sort({ createdAt: -1 })).lean();
+  const base = await context(req);
+  const runs = await populateRun(PayrollRun.find({ schoolId: base.schoolId, academicYearId: base.academicYearId }).sort({ createdAt: -1 })).lean();
   return sendSuccess(res, { message: "Payroll runs fetched", data: runs });
 });
 
 export const getPayrollRunDetails = asyncHandler(async (req, res) => {
+  const base = await context(req);
   ensureObjectId(req.params.id, "payroll run");
-  const run = await populateRun(PayrollRun.findOne({ _id: req.params.id, schoolId: req.user.schoolId, academicYearId: req.user.academicYearId })).lean();
+  const run = await populateRun(PayrollRun.findOne({ _id: req.params.id, schoolId: base.schoolId, academicYearId: base.academicYearId })).lean();
   if (!run) throw new ApiError(404, "Payroll run not found");
   const items = await PayrollItem.find({ payrollRunId: run._id })
     .populate({ path: "employeeId", select: "designation department userId", populate: { path: "userId", select: "name email regId" } })
@@ -203,7 +249,8 @@ export const getPayrollRunDetails = asyncHandler(async (req, res) => {
 });
 
 export const getEmployeeLoans = asyncHandler(async (req, res) => {
-  const filter = { schoolId: req.user.schoolId, academicYearId: req.user.academicYearId };
+  const base = await context(req);
+  const filter = { schoolId: base.schoolId, academicYearId: base.academicYearId };
   if (req.query.status) filter.status = req.query.status;
   const loans = await populateLoan(LoanAdvance.find(filter).sort({ createdAt: -1 })).lean();
   return sendSuccess(res, { message: "Loans fetched", data: loans });
