@@ -12,6 +12,11 @@ const payrollItemSchema = new Schema({
   totalDeductions: { type: Number, default: 0 },
   netSalary: { type: Number, required: true },
   attendance: { type: Schema.Types.Mixed, default: {} },
+  leave: { type: Schema.Types.Mixed, default: {} },
+  reimbursements: { type: [Schema.Types.Mixed], default: [] },
+  bonuses: { type: [Schema.Types.Mixed], default: [] },
+  compliance: { type: Schema.Types.Mixed, default: {} },
+  anomalyFlags: { type: [String], default: [] },
   leaveDeduction: { type: Number, default: 0 },
   loanEmiDeduction: { type: Number, default: 0 },
 }, { timestamps: true });

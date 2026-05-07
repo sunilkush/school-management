@@ -58,6 +58,33 @@ export const lockPayrollRun = createAsyncThunk("pe/lock", async ({ id, comment }
   }
 });
 
+export const markPayrollPaid = createAsyncThunk("pe/paid", async ({ id, comment }, { rejectWithValue }) => {
+  try {
+    const { data } = await httpClient.post(`/payroll-enterprise/run/${id}/pay`, { comment });
+    return data.data;
+  } catch (e) {
+    return rejectWithValue(err(e, "Failed paid update"));
+  }
+});
+
+export const rollbackPayrollRun = createAsyncThunk("pe/rollback", async ({ id, reason }, { rejectWithValue }) => {
+  try {
+    const { data } = await httpClient.post(`/payroll-enterprise/run/${id}/rollback`, { reason });
+    return data.data;
+  } catch (e) {
+    return rejectWithValue(err(e, "Failed rollback"));
+  }
+});
+
+export const generateBankTransfer = createAsyncThunk("pe/bankTransfer", async ({ id, format }, { rejectWithValue }) => {
+  try {
+    const { data } = await httpClient.post(`/payroll-enterprise/run/${id}/bank-transfer`, { format });
+    return data.data;
+  } catch (e) {
+    return rejectWithValue(err(e, "Failed bank transfer"));
+  }
+});
+
 export const fetchLoans = createAsyncThunk("pe/loans", async (_, { rejectWithValue }) => {
   try {
     const { data } = await httpClient.get("/payroll-enterprise/loan");
@@ -103,6 +130,24 @@ export const fetchTaxSettings = createAsyncThunk("pe/taxFetch", async (_, { reje
   }
 });
 
+export const fetchReimbursements = createAsyncThunk("pe/reimbursements", async (_, { rejectWithValue }) => {
+  try {
+    const { data } = await httpClient.get("/payroll-enterprise/reimbursements");
+    return data.data || [];
+  } catch (e) {
+    return rejectWithValue(err(e, "Failed reimbursements"));
+  }
+});
+
+export const fetchComplianceFilings = createAsyncThunk("pe/compliance", async (_, { rejectWithValue }) => {
+  try {
+    const { data } = await httpClient.get("/payroll-enterprise/compliance");
+    return data.data || [];
+  } catch (e) {
+    return rejectWithValue(err(e, "Failed compliance"));
+  }
+});
+
 export const updateTaxSettings = createAsyncThunk("pe/tax", async (payload, { rejectWithValue }) => {
   try {
     const { data } = await httpClient.post("/payroll-enterprise/tax-config", payload);
@@ -119,6 +164,9 @@ const slice = createSlice({
     runs: [],
     runDetails: null,
     loans: [],
+    reimbursements: [],
+    complianceFilings: [],
+    bankTransfer: null,
     taxSettings: null,
     loading: false,
     saving: false,
@@ -151,6 +199,12 @@ const slice = createSlice({
       .addCase(fetchLoans.fulfilled, (s, a) => {
         s.loans = a.payload;
       })
+      .addCase(fetchReimbursements.fulfilled, (s, a) => {
+        s.reimbursements = a.payload;
+      })
+      .addCase(fetchComplianceFilings.fulfilled, (s, a) => {
+        s.complianceFilings = a.payload;
+      })
       .addCase(fetchTaxSettings.fulfilled, (s, a) => {
         s.taxSettings = a.payload;
       })
@@ -173,6 +227,17 @@ const slice = createSlice({
       .addCase(lockPayrollRun.fulfilled, (s, a) => {
         s.runs = replaceById(s.runs, a.payload);
         if (s.runDetails?.run?._id === a.payload?._id) s.runDetails.run = a.payload;
+      })
+      .addCase(markPayrollPaid.fulfilled, (s, a) => {
+        s.runs = replaceById(s.runs, a.payload);
+        if (s.runDetails?.run?._id === a.payload?._id) s.runDetails.run = a.payload;
+      })
+      .addCase(rollbackPayrollRun.fulfilled, (s, a) => {
+        s.runs = replaceById(s.runs, a.payload);
+        if (s.runDetails?.run?._id === a.payload?._id) s.runDetails.run = a.payload;
+      })
+      .addCase(generateBankTransfer.fulfilled, (s, a) => {
+        s.bankTransfer = a.payload;
       })
       .addCase(createLoanRequest.pending, (s) => {
         s.saving = true;

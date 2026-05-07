@@ -24,20 +24,25 @@ import {
 import { CalendarClock, CheckCircle2, Download, Eye, FileLock2, IndianRupee, ReceiptText, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { approvePayrollRun, fetchPayrollRunDetails, fetchPayrollRuns, generatePayrollRun, lockPayrollRun } from "../../../features/payrollEnterpriseSlice";
-import httpClient from "../../../api/httpClient";
+import { approvePayrollRun, fetchPayrollRunDetails, fetchPayrollRuns, generateBankTransfer, generatePayrollRun, lockPayrollRun, markPayrollPaid, rollbackPayrollRun } from "../../../features/payrollEnterpriseSlice";
+
 const { Text, Title } = Typography;
 
 const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
-const statusColor = { draft: "default", hr_approved: "blue", accountant_approved: "purple", approved: "green", locked: "gold" };
+const statusColor = { draft: "default", processing: "cyan", verified: "blue", hr_approved: "geekblue", accountant_approved: "purple", principal_approved: "magenta", approved: "green", paid: "lime", locked: "gold", rolled_back: "red" };
 const statusTone = {
   draft: { bg: "#f8fafc", border: "#e2e8f0", text: "#475569" },
+  processing: { bg: "#ecfeff", border: "#a5f3fc", text: "#0e7490" },
+  verified: { bg: "#eff6ff", border: "#bfdbfe", text: "#1d4ed8" },
   hr_approved: { bg: "#eff6ff", border: "#bfdbfe", text: "#1d4ed8" },
   accountant_approved: { bg: "#f5f3ff", border: "#ddd6fe", text: "#6d28d9" },
+  principal_approved: { bg: "#fdf2f8", border: "#fbcfe8", text: "#be185d" },
   approved: { bg: "#ecfdf5", border: "#bbf7d0", text: "#047857" },
+  paid: { bg: "#f0fdf4", border: "#bbf7d0", text: "#15803d" },
   locked: { bg: "#fffbeb", border: "#fde68a", text: "#b45309" },
+  rolled_back: { bg: "#fef2f2", border: "#fecaca", text: "#b91c1c" },
 };
-const statusProgress = { draft: 25, hr_approved: 50, accountant_approved: 75, approved: 90, locked: 100 };
+const statusProgress = { draft: 10, processing: 20, verified: 35, hr_approved: 50, accountant_approved: 65, principal_approved: 80, approved: 90, paid: 96, locked: 100, rolled_back: 0 };
 const label = (v) => String(v || "-").replaceAll("_", " ").toUpperCase();
 const getStatusTone = (status) => statusTone[status] || statusTone.draft;
 const breakdownRows = (breakdown = {}) =>
@@ -64,7 +69,7 @@ export default function PayrollRunPage() {
   const summary = useMemo(() => {
     const totalPayout = runs.reduce((sum, run) => sum + Number(run.totalPayout || 0), 0);
     const totalEmployees = runs.reduce((sum, run) => sum + Number(run.totalEmployees || 0), 0);
-    const pendingApprovals = runs.filter((run) => !["approved", "locked"].includes(run.status)).length;
+    const pendingApprovals = runs.filter((run) => !["approved", "paid", "locked", "rolled_back"].includes(run.status)).length;
     const lockedRuns = runs.filter((run) => run.status === "locked").length;
     return { totalPayout, totalEmployees, pendingApprovals, lockedRuns };
   }, [runs]);
@@ -90,6 +95,29 @@ export default function PayrollRunPage() {
       await dispatch(lockPayrollRun({ id, comment })).unwrap();
       message.success("Payroll locked");
       setComment("");
+    } catch (e) { message.error(e); }
+  };
+
+  const markPaid = async (id) => {
+    try {
+      await dispatch(markPayrollPaid({ id, comment })).unwrap();
+      message.success("Payroll marked paid");
+      setComment("");
+    } catch (e) { message.error(e); }
+  };
+
+  const rollback = async (id) => {
+    try {
+      await dispatch(rollbackPayrollRun({ id, reason: comment })).unwrap();
+      message.success("Payroll rolled back");
+      setComment("");
+    } catch (e) { message.error(e); }
+  };
+
+  const bankTransfer = async (id) => {
+    try {
+      await dispatch(generateBankTransfer({ id, format: "bank_csv" })).unwrap();
+      message.success("Bank transfer file generated");
     } catch (e) { message.error(e); }
   };
 
@@ -130,7 +158,7 @@ const openPayslip = (item) => {
       render: (_, r) => (
         <Space direction="vertical" size={2}>
           <Text strong>{`${String(r.month).padStart(2, "0")}/${r.year}`}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>Monthly enterprise run</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>{label(r.cycleType || "monthly")} enterprise run</Text>
         </Space>
       ),
     },
@@ -151,14 +179,27 @@ const openPayslip = (item) => {
       render: (_, r) => (
         <Space wrap>
           <Button icon={<Eye size={16} />} onClick={() => viewDetails(r._id)}>View</Button>
-          {!["approved", "locked"].includes(r.status) && (
+          {!["approved", "paid", "locked", "rolled_back"].includes(r.status) && (
             <Popconfirm title="Approve next stage?" description="This will move the run to the next approval checkpoint." onConfirm={() => approve(r._id)}>
               <Button type="primary" icon={<CheckCircle2 size={16} />}>Approve</Button>
             </Popconfirm>
           )}
           {r.status === "approved" && (
+            <Popconfirm title="Mark salary paid?" description="This will move payroll to paid status before lock." onConfirm={() => markPaid(r._id)}>
+              <Button icon={<IndianRupee size={16} />}>Paid</Button>
+            </Popconfirm>
+          )}
+          {["approved", "paid"].includes(r.status) && (
+            <Button icon={<ShieldCheck size={16} />} onClick={() => bankTransfer(r._id)}>Bank File</Button>
+          )}
+          {["approved", "paid"].includes(r.status) && (
             <Popconfirm title="Lock this payroll?" description="Locked payroll cannot be changed from this run screen." onConfirm={() => lock(r._id)}>
               <Button danger icon={<FileLock2 size={16} />}>Lock</Button>
+            </Popconfirm>
+          )}
+          {!["locked", "rolled_back"].includes(r.status) && (
+            <Popconfirm title="Rollback this payroll?" description="Use this only when payroll needs reprocessing." onConfirm={() => rollback(r._id)}>
+              <Button danger>Rollback</Button>
             </Popconfirm>
           )}
         </Space>
@@ -171,6 +212,7 @@ const openPayslip = (item) => {
     { title: "Gross", dataIndex: "gross", render: money },
     { title: "Deductions", dataIndex: "totalDeductions", render: money },
     { title: "Loan EMI", dataIndex: "loanEmiDeduction", render: money },
+    { title: "Anomalies", dataIndex: "anomalyFlags", render: (flags = []) => flags.length ? flags.map((flag) => <Tag color="red" key={flag}>{label(flag)}</Tag>) : "-" },
     { title: "Net Salary", dataIndex: "netSalary", render: (v) => <Text strong style={{ color: "#047857" }}>{money(v)}</Text> },
     {
       title: "Salary Slip",

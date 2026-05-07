@@ -23,12 +23,12 @@ const approvalLogSchema = new Schema(
         },
         level: {
             type: String,
-            enum: ['hr', 'accountant', 'admin'],
+            enum: ['hr', 'accountant', 'principal', 'management', 'admin'],
             required: true,
         },
         action: {
             type: String,
-            enum: ['approved', 'rejected', 'locked', 'unlocked'],
+            enum: ['approved', 'rejected', 'locked', 'unlocked', 'paid', 'rolled_back'],
             required: true,
         },
         comment: { type: String, trim: true, default: '' },

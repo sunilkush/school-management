@@ -17,7 +17,19 @@ const payrollStructureSchema = new Schema(
     basic: { type: Number, required: true, min: 0 },
     hra: { type: Number, default: 0, min: 0 },
     da: { type: Number, default: 0, min: 0 },
+    conveyance: { type: Number, default: 0, min: 0 },
+    medical: { type: Number, default: 0, min: 0 },
     specialAllowance: { type: Number, default: 0, min: 0 },
+    bonus: { type: Number, default: 0, min: 0 },
+    incentive: { type: Number, default: 0, min: 0 },
+    deductions: {
+      pf: { type: Number, default: 0, min: 0 },
+      esi: { type: Number, default: 0, min: 0 },
+      professionalTax: { type: Number, default: 0, min: 0 },
+      tds: { type: Number, default: 0, min: 0 },
+      lateFine: { type: Number, default: 0, min: 0 },
+    },
+    componentRules: { type: [Schema.Types.Mixed], default: [] },
     grossMonthly: { type: Number, required: true, min: 0 },
     pfEnabled: { type: Boolean, default: true },
     esiEnabled: { type: Boolean, default: false },
@@ -26,10 +38,12 @@ const payrollStructureSchema = new Schema(
     effectiveTo: { type: Date, default: null },
     status: {
       type: String,
-      enum: ["active", "inactive"],
+      enum: ["draft", "active", "inactive", "archived"],
       default: "active",
       index: true,
     },
+    approvalStatus: { type: String, enum: ["pending", "approved", "rejected"], default: "approved", index: true },
+    approvedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
