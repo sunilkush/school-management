@@ -66,6 +66,18 @@ const employeeSchema = new Schema(
       maxlength: 200,
     },
     // Employment
+    employeeCode: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    schoolMappings: [
+      {
+        schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true },
+        role: { type: String, trim: true, default: "Employee" },
+        isPrimary: { type: Boolean, default: false },
+      },
+    ],
 
     department: { 
       type: String 
@@ -75,9 +87,22 @@ const employeeSchema = new Schema(
     }, // or ObjectId ref
     employeeStatus: {
       type: String,
-      enum: ["Full-Time", "Part-Time", "Contract"],
+      enum: ["Full-Time", "Part-Time", "Contract", "Permanent", "Intern"],
+    },
+    employmentType: {
+      type: String,
+      enum: ["Permanent", "Contract", "Part Time", "Intern", "Full Time"],
+      default: "Permanent",
     },
     joinDate: { type: Date },
+    shift: {
+      name: { type: String, trim: true },
+      startTime: { type: String, trim: true },
+      endTime: { type: String, trim: true },
+      weeklyOffs: { type: [String], default: [] },
+    },
+    workLocation: { type: String, trim: true },
+    reportingManager: { type: Schema.Types.ObjectId, ref: "Employee", default: null },
     
     // Salary
     salaryId: {
@@ -110,9 +135,28 @@ const employeeSchema = new Schema(
       bankName: String,
       branch: String,
       panNumber: String,
+      aadhaarNumber: String,
+      uanNumber: String,
       pfNumber: String,
       esiNumber: String,
     },
+    documents: [
+      {
+        type: { type: String, trim: true, required: true },
+        url: { type: String, trim: true, required: true },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+    salaryHistory: [
+      {
+        payrollStructureId: { type: Schema.Types.ObjectId, ref: "PayrollStructure" },
+        effectiveFrom: Date,
+        grossMonthly: Number,
+        changedBy: { type: Schema.Types.ObjectId, ref: "User" },
+        changedAt: { type: Date, default: Date.now },
+        reason: { type: String, trim: true },
+      },
+    ],
     // Common
     notes: {
       type: String,
@@ -122,5 +166,7 @@ const employeeSchema = new Schema(
   },
   { timestamps: true }
 );
+
+employeeSchema.index({ schoolId: 1, employeeCode: 1 }, { unique: true, sparse: true });
 
 export const Employee = mongoose.model("Employee", employeeSchema);
