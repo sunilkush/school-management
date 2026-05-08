@@ -201,6 +201,7 @@ export default function BoardClassPage() {
           background: "linear-gradient(135deg, #0f0c29 0%, #302b63 60%, #24243e 100%)",
           padding: "20px 32px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
+          borderBottomLeftRadius: 24, borderBottomRightRadius: 24,borderTopRightRadius: 24,borderTopLeftRadius: 24,
         }}>
           <div>
             <div style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>Board Classes</div>
@@ -221,7 +222,7 @@ export default function BoardClassPage() {
           </Button>
         </div>
 
-        <Content style={{ padding: "24px 32px" }}>
+        <Content style={{ padding: "24px 0px" }}>
 
           {/* ── Stats ── */}
           <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
