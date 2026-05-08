@@ -1,5 +1,5 @@
 // services/grading.service.js
-import { Attempt } from "../models/ExamAttempts.model.js";
+import { ExamAttempt } from "../models/ExamAttempts.model.js";
 import { Question } from "../models/Questions.model.js";
 import { Exam } from "../models/Exam.model.js";
 import { ApiError } from "./ApiError.js";
@@ -51,7 +51,7 @@ export const autoGradeAttempt = async (attempt) => {
  * Manual evaluation for subjective questions
  */
 export const manualGrade = async (attemptId, evaluations) => {
-  const attempt = await Attempt.findById(attemptId);
+  const attempt = await ExamAttempt.findById(attemptId);
   if (!attempt) throw new Error("Attempt not found");
 
   let totalScore = attempt.score || 0;
@@ -101,7 +101,7 @@ export const generateGradingReport = async ({ examId, schoolId, type } = {}) => 
     filter.schoolId = schoolId;
   }
 
-  const attempts = await Attempt.find(filter)
+  const attempts = await ExamAttempt.find(filter)
     .populate("examId", "title totalMarks passingMarks examDate")
     .populate("studentId", "name email")
     .sort({ createdAt: -1 })

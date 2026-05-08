@@ -6,7 +6,7 @@ import { Marks } from "../models/Marks.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
-import { Attempt } from "../models/ExamAttempts.model.js";
+import { ExamAttempt } from "../models/ExamAttempts.model.js";
 
 const OBJECT_ID = mongoose.Types.ObjectId;
 
@@ -359,7 +359,7 @@ export const getExamAnalyticsService = async ({ examId, user }) => {
   }
 
   const [attemptStats, marksStats, resultStats] = await Promise.all([
-    Attempt.aggregate([
+    ExamAttempt.aggregate([
       { $match: { examId: new OBJECT_ID(examId) } },
       {
         $group: {

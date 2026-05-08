@@ -8,66 +8,71 @@ const AnswerSchema = new Schema(
     questionId: {
       type: Schema.Types.ObjectId,
       ref: "Question",
-      required: true
+      required: true,
     },
 
-    // Immutable snapshot of question at exam time
     questionSnapshot: {
       statement: String,
       questionType: String,
       options: Array,
-      marks: Number,
-      negativeMarks: Number
+      marks: { type: Number, default: 0 },
+      negativeMarks: { type: Number, default: 0 },
     },
 
-    response: Schema.Types.Mixed, // ['A'], ['A','B'], "true", "text"
+    response: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
 
     marksObtained: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
     },
 
     isCorrect: {
       type: Boolean,
-      default: null
+      default: null,
     },
 
     flagged: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   { _id: false }
 );
 
-const AttemptSchema = new Schema(
+const ExamAttemptSchema = new Schema(
   {
     schoolId: {
       type: Schema.Types.ObjectId,
       ref: "School",
       required: true,
-      index: true
+      index: true,
     },
 
     examId: {
       type: Schema.Types.ObjectId,
       ref: "Exam",
-      required: true
+      required: true,
+      index: true,
     },
 
     examSubjectId: {
       type: Schema.Types.ObjectId,
       ref: "ExamSubject",
-      index: true
+      index: true,
+      default: null,
     },
 
     studentId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true
+      index: true,
     },
+
     attemptNumber: {
       type: Number,
       default: 1,
@@ -76,53 +81,55 @@ const AttemptSchema = new Schema(
 
     startedAt: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
 
     submittedAt: {
-      type: Date
+      type: Date,
+      default: null,
     },
 
     endedAt: {
-      type: Date
+      type: Date,
+      default: null,
     },
 
     durationSeconds: {
       type: Number,
-      min: 0
+      default: 0,
+      min: 0,
     },
 
     status: {
       type: String,
       enum: ["in_progress", "submitted", "evaluated", "abandoned"],
-      default: "in_progress"
+      default: "in_progress",
+      index: true,
     },
 
     answers: {
       type: [AnswerSchema],
-      default: []
+      default: [],
     },
 
+    // ✅ Single source of truth
     totalMarksObtained: {
       type: Number,
       default: 0,
-      min: 0
-    },
-
-    totalObtainedMarks: {
-      type: Number,
-      default: 0
+      min: 0,
     },
 
     grade: {
       type: String,
-      trim: true
+      trim: true,
+      default: "",
     },
 
     reviewComments: {
       type: String,
-      trim: true
-    }
+      trim: true,
+      default: "",
+    },
   },
   { timestamps: true }
 );
@@ -130,32 +137,47 @@ const AttemptSchema = new Schema(
 /* ===============================
    HOOKS
 ================================ */
-AttemptSchema.pre("save", function (next) {
+ExamAttemptSchema.pre("save", function (next) {
   if (this.endedAt && !this.submittedAt) {
     this.submittedAt = this.endedAt;
   }
 
-  if (typeof this.totalObtainedMarks === "number") {
-    this.totalMarksObtained = this.totalObtainedMarks;
-  } else if (typeof this.totalMarksObtained === "number") {
-    this.totalObtainedMarks = this.totalMarksObtained;
+  // ✅ Auto calculate total marks from answers
+  if (Array.isArray(this.answers)) {
+    this.totalMarksObtained = this.answers.reduce(
+      (sum, ans) => sum + (Number(ans.marksObtained) || 0),
+      0
+    );
   }
 
   if (this.submittedAt && this.startedAt) {
-    this.durationSeconds = Math.floor(
-      (this.submittedAt.getTime() - this.startedAt.getTime()) / 1000
+    this.durationSeconds = Math.max(
+      0,
+      Math.floor(
+        (this.submittedAt.getTime() - this.startedAt.getTime()) / 1000
+      )
     );
   }
+
   next();
 });
 
 /* ===============================
-   INDEXES (CRITICAL)
+   INDEXES
 ================================ */
-// One attempt number per student in an exam
-AttemptSchema.index(
+ExamAttemptSchema.index(
   { schoolId: 1, examId: 1, studentId: 1, attemptNumber: 1 },
   { unique: true }
 );
 
-export const Attempt = mongoose.model("Attempt", AttemptSchema);
+ExamAttemptSchema.index({
+  schoolId: 1,
+  examId: 1,
+  examSubjectId: 1,
+  status: 1,
+});
+
+// ✅ Prevent OverwriteModelError
+export const ExamAttempt =
+  mongoose.models.ExamAttempt ||
+  mongoose.model("ExamAttempt", ExamAttemptSchema);

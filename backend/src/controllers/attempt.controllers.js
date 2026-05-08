@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { Attempt } from "../models/ExamAttempts.model.js";
+import { ExamAttempt } from "../models/ExamAttempts.model.js";
 import { Exam } from "../models/Exam.model.js";
 import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
@@ -78,7 +78,7 @@ export const startAttempt = asyncHandler(async (req, res) => {
   if (!enrollment) {
     throw new ApiError(403, "Student is not enrolled in the exam class/section for this academic year");
   }
-  const existing = await Attempt.findOne({ examId, studentId: studentUserId, status: "in_progress" });
+  const existing = await ExamAttempt.findOne({ examId, studentId: studentUserId, status: "in_progress" });
   if (existing) throw new ApiError(400, "You already have an active attempt");
 
   const maxAttempts = Number(exam?.settings?.maxAttempts || 1);
@@ -248,7 +248,7 @@ export const getAttemptById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   assertObjectId(id, "id");
 
-  const attempt = await Attempt.findById(id).populate("examId studentId answers.questionId");
+  const attempt = await ExamAttempt.findById(id).populate("examId studentId answers.questionId");
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
   await enforceAttemptReadAccess(attempt, req);
@@ -282,12 +282,12 @@ export const getAttempts = asyncHandler(async (req, res) => {
   const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
   const [attempts, total] = await Promise.all([
-    Attempt.find(filters)
+    ExamAttempt.find(filters)
       .populate("examId studentId answers.questionId")
       .skip(skip)
       .limit(parseInt(limit, 10))
       .sort(sort),
-    Attempt.countDocuments(filters),
+    ExamAttempt.countDocuments(filters),
   ]);
 
   return sendSuccess(res, {

@@ -1,4 +1,4 @@
-import { Attempt } from "../models/ExamAttempts.model.js";
+import { ExamAttempt } from "../models/ExamAttempts.model.js";
 import { Exam } from "../models/Exam.model.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -23,7 +23,7 @@ export const getExamReport = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school exam"));
   }
 
-  const attempts = await Attempt.find({ examId, schoolId: exam.schoolId }).populate("studentId", "name email");
+  const attempts = await ExamAttempt.find({ examId, schoolId: exam.schoolId }).populate("studentId", "name email");
 
   return res.status(200).json(
     new ApiResponse(200, { exam, attempts }, "Exam report fetched successfully")
@@ -47,7 +47,7 @@ export const getStudentReport = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school student"));
   }
 
-  const attempts = await Attempt.find({ studentId, schoolId: student.schoolId }).populate(
+  const attempts = await ExamAttempt.find({ studentId, schoolId: student.schoolId }).populate(
     "examId",
     "title subjectId"
   );
@@ -74,7 +74,7 @@ export const getPerformanceSummary = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school exam"));
   }
 
-  const attempts = await Attempt.find({ examId, schoolId: exam.schoolId });
+  const attempts = await ExamAttempt.find({ examId, schoolId: exam.schoolId });
   if (!attempts.length) {
     return res.status(404).json(new ApiResponse(404, null, "No attempts found for this exam"));
   }

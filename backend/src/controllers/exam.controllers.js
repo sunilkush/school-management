@@ -3,7 +3,7 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { ApiError } from '../utils/ApiError.js'
 import mongoose from 'mongoose'
 import { Exam } from '../models/Exam.model.js'
-import { Attempt } from '../models/ExamAttempts.model.js'
+import { ExamAttempt } from '../models/ExamAttempts.model.js'
 import { AdmitCard } from '../models/AdmitCard.model.js'
 import { Question } from '../models/Questions.model.js'
 import {
@@ -251,7 +251,7 @@ export const startExamAttempt = asyncHandler(async (req, res) => {
         throw new ApiError(403, 'Forbidden for this school exam')
     }
 
-    const attempts = await Attempt.countDocuments({
+    const attempts = await ExamAttempt.countDocuments({
         examId,
         studentId: resolvedStudentId,
     })
@@ -259,7 +259,7 @@ export const startExamAttempt = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Max attempts reached')
     }
 
-    const attempt = await Attempt.create({
+    const attempt = await ExamAttempt.create({
         examId,
         studentId: resolvedStudentId,
         schoolId: exam.schoolId,
@@ -273,7 +273,7 @@ export const submitExamAttempt = asyncHandler(async (req, res) => {
     const { attemptId, answers = [] } = req.body
     if (!mongoose.Types.ObjectId.isValid(attemptId))
         throw new ApiError(400, 'Invalid attemptId')
-    const attempt = await Attempt.findById(attemptId).populate(
+    const attempt = await ExamAttempt.findById(attemptId).populate(
         'examId',
         'examType settings'
     )
@@ -344,7 +344,7 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
     const { attemptId, evaluations = [] } = req.body
     if (!mongoose.Types.ObjectId.isValid(attemptId))
         throw new ApiError(400, 'Invalid attemptId')
-    const attempt = await Attempt.findById(attemptId)
+    const attempt = await ExamAttempt.findById(attemptId)
     if (!attempt) throw new ApiError(404, 'Attempt not found')
     if (
         req.userRole?.name !== 'Super Admin' &&
@@ -387,7 +387,7 @@ const getStoredAdmitCards = async (examId) => AdmitCard.find({ examId })
     .lean()
 
 const buildAdmitCardPayloads = async (exam, userId) => {
-    const attempts = await Attempt.find({ examId: exam._id })
+    const attempts = await ExamAttempt.find({ examId: exam._id })
         .populate('studentId', 'name email rollNumber')
         .select('studentId createdAt')
         .sort({ createdAt: 1, _id: 1 })
@@ -414,7 +414,7 @@ const buildAdmitCardPayloads = async (exam, userId) => {
         }))
 }
 
-const getExamForAdmitCards = async (examId) => Exam.findById(examId)
+const getExamForAdmitCards = (examId) => Exam.findById(examId)
     .populate('schoolClassId', 'name')
     .populate('sectionId', 'name')
     .populate('subjectId', 'name')
@@ -479,7 +479,7 @@ export const getExamSeatPlan = asyncHandler(async (req, res) => {
     const exam = await Exam.findById(req.params.id).lean()
     ensureExamAccess(exam, req.user)
 
-    const attempts = await Attempt.find({ examId: req.params.id })
+    const attempts = await ExamAttempt.find({ examId: req.params.id })
         .populate('studentId', 'name rollNumber')
         .select('studentId')
         .lean()
