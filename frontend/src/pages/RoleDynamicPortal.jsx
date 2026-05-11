@@ -3,6 +3,10 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Card, Row, Col, Typography, Tag, List, Button, Space, Empty, Alert } from "antd";
 import { useSelector } from "react-redux";
 import RoleDashboardOverview from "../components/dashboard/RoleDashboardOverview";
+import Notification from "./Notification";
+import Message from "./Message";
+import SendNotification from "./School_Admin/Communication/SendNotification";
+import SmsEmailHistory from "./School_Admin/Communication/SmsEmailHistory";
 
 const { Title, Text } = Typography;
 
@@ -118,6 +122,11 @@ const RoleDynamicPortal = () => {
   if (!roleConfig[roleKey]) {
     return <Navigate to="/dashboard/workspace" replace />;
   }
+
+  if (activeSection === "notification") return <Notification />;
+  if (activeSection === "message") return <Message />;
+  if (activeSection === "communication/send") return <SendNotification />;
+  if (activeSection === "communication/history") return <SmsEmailHistory />;
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>

@@ -1,30 +1,38 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Badge,
   Button,
   Card,
+  Checkbox,
   Col,
+  DatePicker,
   Empty,
   Form,
   Input,
   List,
   Row,
-   Spin,
   Select,
   Space,
+  Spin,
+  Statistic,
   Tag,
   Typography,
   message,
 } from "antd";
-import { useSelector } from "react-redux";
+import { CheckCircleOutlined, SendOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { createNotificationPayload, getVisibleNotificationsForUser } from "../utils/notifications";
 import {
-  createNotificationPayload,
-  getNotifications,
-  getVisibleNotificationsForUser,
-  saveNotifications,
-} from "../utils/notifications";
+  createNotification as createNotificationAction,
+  fetchNotificationAnalytics,
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "../features/notificationSlice";
+import { ALL_ROLE_NAMES, getRoleName } from "../utils/roles";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const LEVEL_OPTIONS = [
   { label: "All Roles & Users", value: "all" },
@@ -33,26 +41,27 @@ const LEVEL_OPTIONS = [
   { label: "Specific Users", value: "user" },
 ];
 
-const ROLE_OPTIONS = [
-  "Super Admin",
-  "School Admin",
-  "Principal",
-  "Vice Principal",
-  "Teacher",
-  "Student",
-  "Parent",
-  "Accountant",
-  "Receptionist",
-  "Librarian",
-  "Staff",
-].map((role) => ({ label: role, value: role }));
+const FILTER_OPTIONS = [{ label: "All", value: "all" }, ...LEVEL_OPTIONS.slice(1)];
+const ROLE_OPTIONS = ALL_ROLE_NAMES.map((role) => ({ label: role, value: role }));
+const CREATOR_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Receptionist", "IT Support"];
+
+const formatDate = (value) => {
+  if (!value) return "Just now";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
+};
 
 const Notification = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { items: allNotifications, analytics, loading, creating: submitting } = useSelector((state) => state.notifications);
   const [form] = Form.useForm();
-   const [allNotifications, setAllNotifications] = useState([]);
   const [filterLevel, setFilterLevel] = useState("all");
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const roleName = getRoleName(user);
+  const canCreateNotification = CREATOR_ROLES.includes(roleName);
+  const selectedLevel = Form.useWatch("level", form);
 
   const visibleNotifications = useMemo(
     () => getVisibleNotificationsForUser(allNotifications, user),
@@ -60,31 +69,32 @@ const Notification = () => {
   );
 
   const filteredNotifications = useMemo(() => {
-    if (filterLevel === "all") return visibleNotifications;
-    return visibleNotifications.filter((item) => item.level === filterLevel);
-  }, [visibleNotifications, filterLevel]);
+    const query = search.trim().toLowerCase();
+    return visibleNotifications.filter((item) => {
+      const matchesLevel = filterLevel === "all" || item.level === filterLevel;
+      const matchesSearch =
+        !query ||
+        [item.title, item.message, item.createdBy]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      return matchesLevel && matchesSearch;
+    });
+  }, [visibleNotifications, filterLevel, search]);
 
-  const canCreateNotification = [
-    "Super Admin",
-    "School Admin",
-    "Principal",
-    "Vice Principal",
-  ].includes(user?.role?.name);
+  const unreadCount = visibleNotifications.filter((item) => !item.isRead).length;
 
-  const selectedLevel = Form.useWatch("level", form);
-
-const loadNotifications = useCallback(async () => {
-    setLoading(true);
+  const loadNotifications = useCallback(async () => {
     try {
-      const rows = await getNotifications();
-      setAllNotifications(rows);
+      await Promise.all([
+        dispatch(fetchNotifications()).unwrap(),
+        dispatch(fetchNotificationAnalytics()).unwrap(),
+      ]);
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || "Failed to load notifications";
-      message.error(errorMessage);
-    } finally {
-      setLoading(false);
+      message.error(error || "Failed to load notifications");
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     loadNotifications();
@@ -96,132 +106,154 @@ const loadNotifications = useCallback(async () => {
       message: values.message,
       level: values.level,
       targetRoles: values.targetRoles || [],
-      targetLevels: values.targetLevels
-        ? values.targetLevels
-            .split(",")
-            .map((part) => part.trim())
-            .filter(Boolean)
-        : [],
-      targetUserIds: values.targetUserIds
-        ? values.targetUserIds
-            .split(",")
-            .map((part) => part.trim())
-            .filter(Boolean)
-        : [],
-      createdBy: user?.name || user?.fullName || user?.email || "Unknown",
+      targetLevels: values.targetLevels || [],
+      targetUserIds: values.targetUserIds || [],
+      channels: {
+        inApp: values.channels?.includes("inApp") ?? true,
+        email: values.channels?.includes("email"),
+        sms: values.channels?.includes("sms"),
+        whatsapp: values.channels?.includes("whatsapp"),
+      },
+      scheduledAt: values.scheduledAt?.toISOString?.() || null,
+      status: values.saveAsDraft ? "draft" : undefined,
     });
 
     try {
-      const createdNotification = await saveNotifications(payload);
-      setAllNotifications((prev) => [createdNotification, ...prev]);
+      await dispatch(createNotificationAction(payload)).unwrap();
       form.resetFields();
       message.success("Notification created successfully.");
+      loadNotifications();
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || "Failed to create notification";
-      message.error(errorMessage);
+      message.error(error || "Failed to create notification");
+    }
+  };
+
+  const handleMarkRead = async (notification) => {
+    if (!notification?._id || notification.isRead) return;
+    try {
+      await dispatch(markNotificationRead(notification._id)).unwrap();
+    } catch (error) {
+      message.error(error || "Failed to mark notification as read");
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await dispatch(markAllNotificationsRead()).unwrap();
+      await loadNotifications();
+      message.success("All visible notifications marked as read.");
+    } catch (error) {
+      message.error(error || "Failed to mark all notifications as read");
     }
   };
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>
-      <Title level={3} style={{ marginBottom: 0 }}>Level-wise Notifications</Title>
-      <Text type="secondary">
-        Dashboard notifications for all roles and users with role-wise and level-wise targeting.
-      </Text>
+      <Card>
+        <Space direction="vertical" size={4} style={{ width: "100%" }}>
+          <Title level={3} style={{ marginBottom: 0 }}>Notifications</Title>
+          <Text type="secondary">
+            Role-wise, user-level, and user-specific in-app notification center for every portal role.
+          </Text>
+        </Space>
+      </Card>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={12} md={6}><Card><Statistic title="Visible" value={visibleNotifications.length} /></Card></Col>
+        <Col xs={12} md={6}><Card><Statistic title="Unread" value={unreadCount} /></Card></Col>
+        <Col xs={12} md={6}><Card><Statistic title="Scheduled" value={analytics.scheduled || 0} /></Card></Col>
+        <Col xs={12} md={6}><Card><Statistic title="Opened" value={analytics.opened || 0} /></Card></Col>
+      </Row>
 
       {!canCreateNotification && (
-        <Alert
-          type="info"
-          showIcon
-          message="You can view notifications assigned to your role/user level."
-        />
+        <Alert type="info" showIcon message="You can view notifications assigned to your role, level, or user account." />
       )}
 
       {canCreateNotification && (
-        <Card title="Create Notification">
-          <Form layout="vertical" form={form} onFinish={onCreateNotification}>
+        <Card title="Create / Broadcast Notification">
+          <Form
+            layout="vertical"
+            form={form}
+            onFinish={onCreateNotification}
+            initialValues={{ level: "all", channels: ["inApp"] }}
+          >
             <Row gutter={12}>
               <Col xs={24} md={8}>
-                <Form.Item
-                  label="Target Type"
-                  name="level"
-                  initialValue="all"
-                  rules={[{ required: true, message: "Please select target type" }]}
-                >
+                <Form.Item label="Target Type" name="level" rules={[{ required: true, message: "Please select target type" }]}>
                   <Select options={LEVEL_OPTIONS} />
                 </Form.Item>
               </Col>
               <Col xs={24} md={16}>
-                <Form.Item
-                  label="Title"
-                  name="title"
-                  rules={[{ required: true, message: "Please enter title" }]}
-                >
+                <Form.Item label="Title" name="title" rules={[{ required: true, message: "Please enter title" }]}>
                   <Input placeholder="Exam update / Fees reminder / Event circular" />
                 </Form.Item>
               </Col>
             </Row>
 
             {(selectedLevel === "role" || selectedLevel === "user-level") && (
-              <Form.Item
-                label="Roles"
-                name="targetRoles"
-                rules={[{ required: true, message: "Select at least one role" }]}
-              >
+              <Form.Item label="Roles" name="targetRoles" rules={[{ required: true, message: "Select at least one role" }]}>
                 <Select mode="multiple" options={ROLE_OPTIONS} placeholder="Select roles" />
               </Form.Item>
             )}
 
             {selectedLevel === "user-level" && (
-              <Form.Item
-                label="User Levels (comma-separated)"
-                name="targetLevels"
-                rules={[{ required: true, message: "Enter at least one user level" }]}
-              >
-                <Input placeholder="Class 10, Class 12, Science" />
+              <Form.Item label="User Levels" name="targetLevels" rules={[{ required: true, message: "Enter at least one user level" }]}>
+                <Select mode="tags" tokenSeparators={[","]} placeholder="Class 10, Class 12, Science, Section A" />
               </Form.Item>
             )}
 
             {selectedLevel === "user" && (
-              <Form.Item
-                label="User IDs / Emails (comma-separated)"
-                name="targetUserIds"
-                rules={[{ required: true, message: "Enter target users" }]}
-              >
-                <Input placeholder="user1@mail.com, 67e83e0f..., user2@mail.com" />
+              <Form.Item label="User IDs / Emails / Registration IDs" name="targetUserIds" rules={[{ required: true, message: "Enter target users" }]}>
+                <Select mode="tags" tokenSeparators={[","]} placeholder="user@mail.com, 67e83e0f..., REG-001" />
               </Form.Item>
             )}
 
-            <Form.Item
-              label="Message"
-              name="message"
-              rules={[{ required: true, message: "Please enter message" }]}
-            >
-              <Input.TextArea rows={3} placeholder="Write notification details..." />
+            <Form.Item label="Message" name="message" rules={[{ required: true, message: "Please enter message" }]}>
+              <Input.TextArea rows={4} placeholder="Write notification details..." />
             </Form.Item>
 
-            <Button type="primary" htmlType="submit">
-              Publish Notification
-            </Button>
+            <Row gutter={12}>
+              <Col xs={24} md={12}>
+                <Form.Item label="Delivery Channels" name="channels" rules={[{ required: true, message: "Select at least one channel" }]}>
+                  <Checkbox.Group
+                    options={[
+                      { label: "In App", value: "inApp" },
+                      { label: "Email", value: "email" },
+                      { label: "SMS", value: "sms" },
+                      { label: "WhatsApp", value: "whatsapp" },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item label="Schedule (optional)" name="scheduledAt">
+                  <DatePicker showTime style={{ width: "100%" }} placeholder="Send later" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Space wrap>
+              <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting}>Publish Notification</Button>
+              <Form.Item name="saveAsDraft" valuePropName="checked" noStyle>
+                <Checkbox>Save as draft</Checkbox>
+              </Form.Item>
+            </Space>
           </Form>
         </Card>
       )}
 
       <Card
-        title="My Notifications"
+        title={<Space>My Notifications <Badge count={unreadCount} /></Space>}
         extra={
-          <Select
-            style={{ minWidth: 180 }}
-            value={filterLevel}
-            onChange={setFilterLevel}
-            options={LEVEL_OPTIONS}
-          />
+          <Space wrap>
+            <Input.Search allowClear placeholder="Search notifications" value={search} onChange={(event) => setSearch(event.target.value)} style={{ width: 220 }} />
+            <Select style={{ minWidth: 180 }} value={filterLevel} onChange={setFilterLevel} options={FILTER_OPTIONS} />
+            <Button icon={<CheckCircleOutlined />} onClick={handleMarkAllRead} disabled={!unreadCount}>Mark all read</Button>
+          </Space>
         }
       >
         {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: 16 }}>
-            <Spin />
-          </div>
+          <div style={{ display: "flex", justifyContent: "center", padding: 16 }}><Spin /></div>
         ) : filteredNotifications.length === 0 ? (
           <Empty description="No notifications available for your account." />
         ) : (
@@ -229,17 +261,21 @@ const loadNotifications = useCallback(async () => {
             itemLayout="vertical"
             dataSource={filteredNotifications}
             renderItem={(item) => (
-              <List.Item key={item._id || item.id}>
+              <List.Item
+                key={item._id || item.id}
+                onClick={() => handleMarkRead(item)}
+                style={{ cursor: item.isRead ? "default" : "pointer", background: item.isRead ? "transparent" : "#f6ffed", padding: 16 }}
+              >
                 <Space direction="vertical" size={6} style={{ width: "100%" }}>
-                  <Space>
+                  <Space wrap>
+                    <Badge status={item.isRead ? "default" : "processing"} />
                     <Text strong>{item.title}</Text>
-                    <Tag color="blue">{item.level}</Tag>
-                    <Text type="secondary">By {item.createdBy}</Text>
+                    <Tag color="blue">{item.level || "all"}</Tag>
+                    <Tag color={item.status === "scheduled" ? "orange" : item.status === "draft" ? "default" : "green"}>{item.status || "sent"}</Tag>
+                    <Text type="secondary">By {item.createdBy || "System"}</Text>
                   </Space>
-                  <Text>{item.message}</Text>
-                  <Text type="secondary">
-                    {new Date(item.createdAt).toLocaleString()}
-                  </Text>
+                  <Paragraph style={{ marginBottom: 0 }}>{item.message}</Paragraph>
+                  <Text type="secondary">{formatDate(item.createdAt)}</Text>
                 </Space>
               </List.Item>
             )}

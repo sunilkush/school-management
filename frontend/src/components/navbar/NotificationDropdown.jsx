@@ -1,32 +1,31 @@
 import { BellOutlined } from "@ant-design/icons";
-import { Avatar, Badge, Dropdown, List, Typography } from "antd";
-import { useEffect, useState } from "react";
+import { Avatar, Badge, Button, Dropdown, List, Space, Typography } from "antd";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { getNotifications, getVisibleNotificationsForUser } from "../../utils/notifications";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchNotifications, markNotificationRead } from "../../features/notificationSlice";
+import { getRoleName, getRolePath } from "../../utils/roles";
 
 const { Text } = Typography;
 
-const getRolePath = (roleName) =>
-  (roleName || "")
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/_/g, "-");
-
 const NotificationDropdown = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const allNotifications = useSelector((state) => state.notifications.items);
+  const [notifications, setNotifications] = useState([]);
 
- const [notifications, setNotifications] = useState([]);
+  const notificationPath = useMemo(() => `/dashboard/${getRolePath(getRoleName(user))}/notification`, [user]);
+  const unreadCount = notifications.filter((item) => !item.isRead).length;
 
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       try {
-        const allNotifications = await getNotifications();
+        const rows = await dispatch(fetchNotifications()).unwrap();
         if (!mounted) return;
-        setNotifications(getVisibleNotificationsForUser(allNotifications, user).slice(0, 5));
+        setNotifications(rows.slice(0, 5));
       } catch {
         if (!mounted) return;
         setNotifications([]);
@@ -34,20 +33,35 @@ const NotificationDropdown = () => {
     };
 
     load();
-
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    setNotifications(allNotifications.slice(0, 5));
+  }, [allNotifications]);
+
+  const openNotification = async (item) => {
+    if (item?._id && !item.isRead) {
+      try {
+        const updated = await dispatch(markNotificationRead(item._id)).unwrap();
+        setNotifications((prev) => prev.map((row) => (row._id === item._id ? updated : row)));
+      } catch {
+        // Keep navigation available even if read receipt update fails.
+      }
+    }
+    navigate(notificationPath);
+  };
 
   const notificationMenu = (
     <div
       style={{
-        width: 340,
-        maxHeight: 420,
+        width: 360,
+        maxHeight: 440,
         overflowY: "auto",
         backgroundColor: "#fff",
-        borderRadius: 4,
+        borderRadius: 8,
         boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
       }}
     >
@@ -55,20 +69,22 @@ const NotificationDropdown = () => {
         itemLayout="horizontal"
         dataSource={notifications}
         locale={{ emptyText: "No notifications" }}
-        header={<Text strong style={{ padding: "10px" }}>Notifications</Text>}
+        header={
+          <Space style={{ padding: "10px 12px", width: "100%", justifyContent: "space-between" }}>
+            <Text strong>Notifications</Text>
+            <Text type="secondary">{unreadCount} unread</Text>
+          </Space>
+        }
         footer={
-          <div
-            style={{ textAlign: "center", cursor: "pointer", color: "#1890ff" }}
-            onClick={() => navigate(`/dashboard/${getRolePath(user?.role?.name)}/notification`)}
-          >
-            See all notifications
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <Button type="link" onClick={() => navigate(notificationPath)}>See all notifications</Button>
           </div>
         }
         renderItem={(item) => (
-          <List.Item style={{ padding: "10px 16px", cursor: "pointer" }}>
+          <List.Item onClick={() => openNotification(item)} style={{ padding: "10px 16px", cursor: "pointer", background: item.isRead ? "#fff" : "#f6ffed" }}>
             <List.Item.Meta
               avatar={<Avatar style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}>🔔</Avatar>}
-              title={<Text>{item.title}</Text>}
+              title={<Text strong={!item.isRead}>{item.title}</Text>}
               description={<Text type="secondary" style={{ fontSize: 12 }}>{item.message}</Text>}
             />
           </List.Item>
@@ -78,8 +94,8 @@ const NotificationDropdown = () => {
   );
 
   return (
-    <Dropdown overlay={notificationMenu} trigger={["click"]} placement="bottomRight" arrow>
-      <Badge count={notifications.length} offset={[-2, 2]}>
+    <Dropdown dropdownRender={() => notificationMenu} trigger={["click"]} placement="bottomRight" arrow>
+      <Badge count={unreadCount} offset={[-2, 2]}>
         <BellOutlined style={{ fontSize: 20, cursor: "pointer", color: "var(--text-primary)" }} />
       </Badge>
     </Dropdown>

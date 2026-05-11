@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Card, Drawer, Empty, Input, List, Select, Space, Spin, Tag, Typography, message } from "antd";
-import { useSelector } from "react-redux";
-import httpClient from "../api/httpClient";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchNotifications } from "../features/notificationSlice";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -27,6 +27,7 @@ const MessagePage = () => {
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
   const [selected, setSelected] = useState(null);
+  const dispatch = useDispatch();
 
   const userRole = useSelector((state) => state.auth?.user?.role?.name || "");
 
@@ -44,18 +45,17 @@ const MessagePage = () => {
     "Librarian",
   ].includes(userRole);
 
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await httpClient.get("/notifications");
-      const data = response?.data?.data || [];
+      const data = await dispatch(fetchNotifications()).unwrap();
       setRows(data);
     } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to load messages");
+      message.error(error || "Failed to load messages");
     } finally {
       setLoading(false);
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     if (canView) {
@@ -63,7 +63,7 @@ const MessagePage = () => {
     } else {
       setLoading(false);
     }
-  }, [canView]);
+  }, [canView, loadMessages]);
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();

@@ -54,6 +54,7 @@ import superAdminBillingReducer from "../features/superAdminBillingSlice";
 import systemBackupReducer from "../features/systemBackupSlice";
 import timetableReducer from "../features/timetableSlice";
 import payrollEnterpriseReducer from "../features/payrollEnterpriseSlice";
+import notificationReducer from "../features/notificationSlice";
 
 const authPersistConfig = {
   key: "auth",
@@ -104,6 +105,7 @@ const rootReducer = combineReducers({
   systemBackup: systemBackupReducer,
   timetable: timetableReducer,
    payrollEnterprise: payrollEnterpriseReducer,
+  notifications: notificationReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
