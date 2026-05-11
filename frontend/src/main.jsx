@@ -212,7 +212,7 @@ const MyChildren = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
 const ChildAttendance = lazy(() => import("./pages/Parent/Attendance/ChildAttendance.jsx"));
 const ChildGrades = lazy(() => import("./pages/Parent/Grades/ChildGrades.jsx"));
 const ChildHomework = lazy(() => import("./pages/Parent/Homework/ChildHomework.jsx"));
-const ChildMessages = lazy(() => import("./pages/Parent/Messages/ChildMessages.jsx"));
+/* const ChildMessages = lazy(() => import("./pages/Parent/Messages/ChildMessages.jsx")); */
 const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.jsx"));
 const ParentFees = lazy(() => import("./pages/Parent/Fee/ParentFees.jsx"));
 // Accountant
@@ -594,7 +594,7 @@ const router = createBrowserRouter([
                { path: "fees", element: <ParentFees /> },
               { path: "exams", element: <ParentExamsPage /> },
               { path: "settings", element: <SettingsPage /> },
-              { path: "message", element: <ChildMessages /> },
+              { path: "message", element: <Message  /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "reports", element: <ExamReports /> },
@@ -754,7 +754,7 @@ const router = createBrowserRouter([
               { path: "network", element: <NetworkStatus /> },
               { path: "logs", element: <SystemLogs /> },
               { path: "profile", element: <ITSupportProfile /> },
-              { path: "message", element: <Message /> },
+               { path: "message", element: <Message /> },
               { path: "notification", element: <Notification /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
