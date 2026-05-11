@@ -106,6 +106,7 @@ const MessagePage = () => {
   const [search, setSearch] = useState("");
   const [composeOpen, setComposeOpen] = useState(false);
   const [selected, setSelected] = useState(null);
+  const dispatch = useDispatch();
 
   const canUseMessages = MESSAGE_ROLES.includes(roleName);
 

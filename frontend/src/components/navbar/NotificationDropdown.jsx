@@ -10,6 +10,7 @@ const { Text } = Typography;
 
 const NotificationDropdown = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [notifications, setNotifications] = useState([]);
 
@@ -34,7 +35,23 @@ const NotificationDropdown = () => {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    setNotifications(allNotifications.slice(0, 5));
+  }, [allNotifications]);
+
+  const openNotification = async (item) => {
+    if (item?._id && !item.isRead) {
+      try {
+        const updated = await dispatch(markNotificationRead(item._id)).unwrap();
+        setNotifications((prev) => prev.map((row) => (row._id === item._id ? updated : row)));
+      } catch {
+        // Keep navigation available even if read receipt update fails.
+      }
+    }
+    navigate(notificationPath);
+  };
 
   const openNotification = async (item) => {
     if (item?._id && !item.isRead) {

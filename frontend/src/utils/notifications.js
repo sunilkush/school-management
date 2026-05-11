@@ -1,15 +1,7 @@
-import httpClient from "../api/httpClient";
-
-export const getNotifications = async () => {
-  const response = await httpClient.get("/notifications");
-  return response.data?.data || [];
+const normalizeArray = (value) => {
+  const source = Array.isArray(value) ? value : String(value || "").split(",");
+  return [...new Set(source.map((item) => String(item).trim()).filter(Boolean))];
 };
-
-export const saveNotifications = async (payload) => {
-  const response = await httpClient.post("/notifications", payload);
-  return response.data?.data;
-};
-
 
 const getUserLevelTokens = (user) => {
   const rawValues = [
@@ -19,38 +11,43 @@ const getUserLevelTokens = (user) => {
     user?.profile?.className,
     user?.section,
     user?.department,
+    user?.designation,
     user?.role?.name,
-  ]
-    .filter(Boolean)
-    .map((value) => String(value).trim());
+    user?.roleId?.name,
+  ];
 
-  return [...new Set(rawValues)];
+  return normalizeArray(rawValues).map((value) => value.toLowerCase());
 };
 
-export const getUserIdentity = (user) => String(user?._id || user?.id || user?.email || "guest");
+export const getUserIdentityTokens = (user) =>
+  normalizeArray([user?._id, user?.id, user?.email, user?.regId]).map((value) => value.toLowerCase());
 
 export const isNotificationVisibleToUser = (notification, user) => {
-  const roleName = user?.role?.name;
-  const userId = getUserIdentity(user);
+  if (notification?.isRead !== undefined) return true;
+
+  const roleName = (typeof user?.role === "string" ? user.role : user?.role?.name || user?.roleId?.name || "").toLowerCase();
+  const userIds = getUserIdentityTokens(user);
   const userLevels = getUserLevelTokens(user);
 
   if (notification.level === "all") return true;
 
   if (notification.level === "role") {
-    return notification.targetRoles?.includes(roleName);
+    return normalizeArray(notification.targetRoles)
+      .map((role) => role.toLowerCase())
+      .includes(roleName);
   }
 
   if (notification.level === "user-level") {
-    const roleAllowed =
-      !notification.targetRoles?.length || notification.targetRoles.includes(roleName);
-    const levelAllowed =
-      !notification.targetLevels?.length ||
-      notification.targetLevels.some((level) => userLevels.includes(level));
+    const targetRoles = normalizeArray(notification.targetRoles).map((role) => role.toLowerCase());
+    const targetLevels = normalizeArray(notification.targetLevels).map((level) => level.toLowerCase());
+    const roleAllowed = !targetRoles.length || targetRoles.includes(roleName);
+    const levelAllowed = !targetLevels.length || targetLevels.some((level) => userLevels.includes(level));
     return roleAllowed && levelAllowed;
   }
 
   if (notification.level === "user") {
-    return notification.targetUserIds?.includes(userId);
+    const targets = normalizeArray(notification.targetUserIds).map((id) => id.toLowerCase());
+    return userIds.some((id) => targets.includes(id));
   }
 
   return false;
@@ -62,18 +59,23 @@ export const getVisibleNotificationsForUser = (notifications, user) =>
 export const createNotificationPayload = ({
   title,
   message,
-  level,
+  level = "all",
   targetRoles = [],
   targetLevels = [],
   targetUserIds = [],
- 
+  channels = { inApp: true },
+  timezone = "UTC",
+  scheduledAt = null,
+  status,
 }) => ({
-  
   title: title.trim(),
   message: message.trim(),
   level,
-  targetRoles,
-  targetLevels,
-  targetUserIds,
- 
+  targetRoles: normalizeArray(targetRoles),
+  targetLevels: normalizeArray(targetLevels),
+  targetUserIds: normalizeArray(targetUserIds),
+  channels,
+  timezone,
+  scheduledAt,
+  status,
 });

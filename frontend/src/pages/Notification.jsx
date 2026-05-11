@@ -53,7 +53,9 @@ const formatDate = (value) => {
 };
 
 const Notification = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { items: allNotifications, analytics, loading, creating: submitting } = useSelector((state) => state.notifications);
   const [form] = Form.useForm();
   const [allNotifications, setAllNotifications] = useState([]);
   const [analytics, setAnalytics] = useState({});
@@ -99,7 +101,7 @@ const Notification = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     loadNotifications();
@@ -125,8 +127,7 @@ const Notification = () => {
 
     setSubmitting(true);
     try {
-      const createdNotification = await saveNotifications(payload);
-      setAllNotifications((prev) => [createdNotification, ...prev]);
+      await dispatch(createNotificationAction(payload)).unwrap();
       form.resetFields();
       message.success("Notification created successfully.");
       loadNotifications();
