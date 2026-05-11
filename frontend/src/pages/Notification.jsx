@@ -21,15 +21,16 @@ import {
   message,
 } from "antd";
 import { CheckCircleOutlined, SendOutlined } from "@ant-design/icons";
-import { useDispatch, useSelector } from "react-redux";
-import { createNotificationPayload, getVisibleNotificationsForUser } from "../utils/notifications";
+import { useSelector } from "react-redux";
 import {
-  createNotification as createNotificationAction,
-  fetchNotificationAnalytics,
-  fetchNotifications,
-  markAllNotificationsRead,
-  markNotificationRead,
-} from "../features/notificationSlice";
+  createNotificationPayload,
+  getNotificationAnalytics,
+  getNotifications,
+  getVisibleNotificationsForUser,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  saveNotifications,
+} from "../utils/notifications";
 import { ALL_ROLE_NAMES, getRoleName } from "../utils/roles";
 
 const { Title, Text, Paragraph } = Typography;
@@ -56,8 +57,12 @@ const Notification = () => {
   const { user } = useSelector((state) => state.auth);
   const { items: allNotifications, analytics, loading, creating: submitting } = useSelector((state) => state.notifications);
   const [form] = Form.useForm();
+  const [allNotifications, setAllNotifications] = useState([]);
+  const [analytics, setAnalytics] = useState({});
   const [filterLevel, setFilterLevel] = useState("all");
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const roleName = getRoleName(user);
   const canCreateNotification = CREATOR_ROLES.includes(roleName);
@@ -86,13 +91,15 @@ const Notification = () => {
   const unreadCount = visibleNotifications.filter((item) => !item.isRead).length;
 
   const loadNotifications = useCallback(async () => {
+    setLoading(true);
     try {
-      await Promise.all([
-        dispatch(fetchNotifications()).unwrap(),
-        dispatch(fetchNotificationAnalytics()).unwrap(),
-      ]);
+      const [rows, stats] = await Promise.all([getNotifications(), getNotificationAnalytics()]);
+      setAllNotifications(rows);
+      setAnalytics(stats);
     } catch (error) {
-      message.error(error || "Failed to load notifications");
+      message.error(error?.response?.data?.message || "Failed to load notifications");
+    } finally {
+      setLoading(false);
     }
   }, [dispatch]);
 
@@ -118,32 +125,36 @@ const Notification = () => {
       status: values.saveAsDraft ? "draft" : undefined,
     });
 
+    setSubmitting(true);
     try {
       await dispatch(createNotificationAction(payload)).unwrap();
       form.resetFields();
       message.success("Notification created successfully.");
       loadNotifications();
     } catch (error) {
-      message.error(error || "Failed to create notification");
+      message.error(error?.response?.data?.message || "Failed to create notification");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleMarkRead = async (notification) => {
     if (!notification?._id || notification.isRead) return;
     try {
-      await dispatch(markNotificationRead(notification._id)).unwrap();
+      const updated = await markNotificationAsRead(notification._id);
+      setAllNotifications((prev) => prev.map((item) => (item._id === notification._id ? updated : item)));
     } catch (error) {
-      message.error(error || "Failed to mark notification as read");
+      message.error(error?.response?.data?.message || "Failed to mark notification as read");
     }
   };
 
   const handleMarkAllRead = async () => {
     try {
-      await dispatch(markAllNotificationsRead()).unwrap();
+      await markAllNotificationsAsRead();
       await loadNotifications();
       message.success("All visible notifications marked as read.");
     } catch (error) {
-      message.error(error || "Failed to mark all notifications as read");
+      message.error(error?.response?.data?.message || "Failed to mark all notifications as read");
     }
   };
 

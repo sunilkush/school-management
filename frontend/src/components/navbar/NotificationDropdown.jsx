@@ -2,8 +2,8 @@ import { BellOutlined } from "@ant-design/icons";
 import { Avatar, Badge, Button, Dropdown, List, Space, Typography } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchNotifications, markNotificationRead } from "../../features/notificationSlice";
+import { useSelector } from "react-redux";
+import { getNotifications, markNotificationAsRead } from "../../utils/notifications";
 import { getRoleName, getRolePath } from "../../utils/roles";
 
 const { Text } = Typography;
@@ -12,7 +12,6 @@ const NotificationDropdown = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const allNotifications = useSelector((state) => state.notifications.items);
   const [notifications, setNotifications] = useState([]);
 
   const notificationPath = useMemo(() => `/dashboard/${getRolePath(getRoleName(user))}/notification`, [user]);
@@ -23,7 +22,7 @@ const NotificationDropdown = () => {
 
     const load = async () => {
       try {
-        const rows = await dispatch(fetchNotifications()).unwrap();
+        const rows = await getNotifications();
         if (!mounted) return;
         setNotifications(rows.slice(0, 5));
       } catch {
@@ -46,6 +45,18 @@ const NotificationDropdown = () => {
     if (item?._id && !item.isRead) {
       try {
         const updated = await dispatch(markNotificationRead(item._id)).unwrap();
+        setNotifications((prev) => prev.map((row) => (row._id === item._id ? updated : row)));
+      } catch {
+        // Keep navigation available even if read receipt update fails.
+      }
+    }
+    navigate(notificationPath);
+  };
+
+  const openNotification = async (item) => {
+    if (item?._id && !item.isRead) {
+      try {
+        const updated = await markNotificationAsRead(item._id);
         setNotifications((prev) => prev.map((row) => (row._id === item._id ? updated : row)));
       } catch {
         // Keep navigation available even if read receipt update fails.

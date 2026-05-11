@@ -124,6 +124,7 @@ const MessagePage = () => {
     return { total: rows.length, unread, urgent };
   }, [mailbox, rows]);
 
+  
   const loadRecipients = useCallback(async () => {
     await dispatch(fetchMessageRecipients()).unwrap();
   }, [dispatch]);
