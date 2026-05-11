@@ -40,6 +40,7 @@ import studentPortalRoutes from "./studentPortal.routes.js";
 import supportTicketRoutes from "./supportTicket.routes.js";
 import timetableRoutes from "./timetable.routes.js";
 import notificationRoutes from "./notification.routes.js";
+import messageRoutes from "./message.routes.js";
 import superAdminBillingRoutes from "./superAdminBilling.routes.js";
 import systemBackupRoutes from "./systemBackup.routes.js";
 import backupScheduleRoutes from "./backupSchedule.routes.js";
@@ -87,6 +88,7 @@ export const apiV1Routes = [
   ["/support-tickets", supportTicketRoutes],
   ["/timetables", timetableRoutes],
   ["/notifications", notificationRoutes],
+  ["/messages", messageRoutes],
   ["/super-admin/billing", superAdminBillingRoutes],
   ["/system-backups", systemBackupRoutes],
   ["/backup-schedules", backupScheduleRoutes],

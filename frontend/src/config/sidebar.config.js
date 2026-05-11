@@ -558,7 +558,9 @@ Object.keys(sidebarMenu).forEach((roleKey) => {
   if (!items.some((item) => item?.path === moduleHubItem.path)) {
     items.push(moduleHubItem);
   }
-
+   const rolePath = roleKey.replace(/\s+/g, "");
+  const hasMessage = items.some((item) => item?.path === `${rolePath}/message` || item?.path?.endsWith("/message"));
+  if (!hasMessage) items.push({ title: "Messages", path: `${rolePath}/message`, icon: MessageSquare });
   if (!items.some((item) => item?.path === supportCenterItem.path)) {
     items.push(supportCenterItem);
   }
