@@ -78,9 +78,8 @@ const ExamLive = () => {
 
   const buildSubmitPayload = () => {
     return questions.map((question) => ({
-      questionRef: `${question._id}`,
-      answer: answers[question._id] ?? null,
-      flagged: false,
+            questionId: `${question._id}`,
+      response: answers[question._id] ?? null,
     }));
   };
 
