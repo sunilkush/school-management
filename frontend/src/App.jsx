@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from "react";
+import React, { useEffect, lazy, Suspense, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,8 +31,12 @@ function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile, user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
-
+  const profileStatusCode = useSelector((state) => state.auth.profile?.statusCode);
+  const userId = useSelector((state) => state.auth.user?._id);
+  const accessToken = useSelector((state) => state.auth.accessToken);
+  const isAuthInitialized = useSelector((state) => state.auth.isAuthInitialized);
+  const hasPersistedUser = useSelector((state) => Boolean(state.auth.user));
+  const hasPersistedUserRef = useRef(hasPersistedUser);
   useEffect(() => {
     const tokenToUse = accessToken || getAccessToken();
 
@@ -43,22 +47,32 @@ function App() {
 
     clearAccessToken();
   }, [accessToken]);
-
-  useEffect(() => {
+ useEffect(() => {
     const bootstrapAuth = async () => {
       dispatch(startAuthInitialization());
+      let completed = false;
 
       try {
-        await dispatch(initializeAuth()).unwrap();
-
+        const initPayload = await dispatch(initializeAuth()).unwrap();
         const token = getAccessToken();
+        const hasUserForFirstPaint = Boolean(initPayload?.user) || hasPersistedUserRef.current;
+
+        if (token && hasUserForFirstPaint) {
+          dispatch(completeAuthInitialization());
+          completed = true;
+          dispatch(currentUser());
+          return;
+        }
+
         if (token) {
           await dispatch(currentUser()).unwrap();
         }
       } catch {
         // Keep existing persisted/login state. Avoid force-logout on transient init failures.
       } finally {
-        dispatch(completeAuthInitialization());
+        if (!completed) {
+          dispatch(completeAuthInitialization());
+        }
       }
     };
 
@@ -66,22 +80,22 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (user?._id) {
+    if (userId) {
       dispatch(fetchMyPermissions());
     }
-  }, [dispatch, user]);
+  }, [dispatch, userId]);
 
   useEffect(() => {
     if (!isAuthInitialized) return;
 
-    if (profile?.statusCode === 401 && accessToken) {
+    if (profileStatusCode === 401 && accessToken) {
       dispatch(forceLogout());
 
       if (location.pathname !== "/login") {
         navigate("/login", { replace: true });
       }
     }
-  }, [dispatch, isAuthInitialized, profile, accessToken, navigate, location.pathname]);
+ }, [dispatch, isAuthInitialized, profileStatusCode, accessToken, navigate, location.pathname]);
 
   if (!isAuthInitialized) {
     return (

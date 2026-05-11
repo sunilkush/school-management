@@ -2,18 +2,12 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const fetchMyPermissions = createAsyncThunk(
   "roleUi/fetchMyPermissions",
   async (_, { rejectWithValue }) => {
     try {
-    
-
-      const res = await apiClient.get(`/user/my-permissions`, {
-        headers: {
-        },
-      });
+      const res = await apiClient.get(`/user/my-permissions`);
 
       return res.data?.data;
     } catch (error) {
@@ -21,6 +15,12 @@ export const fetchMyPermissions = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch role permissions"
       );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { loading, permissions } = getState().roleUi || {};
+      return !loading && (!Array.isArray(permissions) || permissions.length === 0);
+    },
   }
 );
 

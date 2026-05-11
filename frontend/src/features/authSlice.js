@@ -292,14 +292,14 @@ const authSlice = createSlice({
       .addCase(activeUser.fulfilled, (state, action) => {
         state.users = state.users.map((u) => (u._id === action.payload._id ? action.payload : u));
       })
-      .addMatcher((action) => action.type.endsWith("/pending"), (state) => {
+     .addMatcher((action) => action.type.startsWith("user/") && action.type.endsWith("/pending"), (state) => {
         state.loading = true;
       })
-      .addMatcher((action) => action.type.endsWith("/fulfilled"), (state) => {
+      .addMatcher((action) => action.type.startsWith("user/") && action.type.endsWith("/fulfilled"), (state) => {
         state.loading = false;
         state.error = null;
       })
-      .addMatcher((action) => action.type.endsWith("/rejected"), (state, action) => {
+      .addMatcher((action) => action.type.startsWith("user/") && action.type.endsWith("/rejected"), (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
