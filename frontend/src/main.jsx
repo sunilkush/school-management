@@ -594,7 +594,7 @@ const router = createBrowserRouter([
                { path: "fees", element: <ParentFees /> },
               { path: "exams", element: <ParentExamsPage /> },
               { path: "settings", element: <SettingsPage /> },
-              { path: "message", element: <ChildMessages /> },
+              { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "reports", element: <ExamReports /> },

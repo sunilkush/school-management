@@ -7,7 +7,7 @@ import Notification from "./Notification";
 import Message from "./Message";
 import SendNotification from "./School_Admin/Communication/SendNotification";
 import SmsEmailHistory from "./School_Admin/Communication/SmsEmailHistory";
-
+import MessagePage from "./Message";
 const { Title, Text } = Typography;
 
 const roleConfig = {
@@ -122,7 +122,9 @@ const RoleDynamicPortal = () => {
   if (!roleConfig[roleKey]) {
     return <Navigate to="/dashboard/workspace" replace />;
   }
-
+  if (activeSection === "message") {
+    return <MessagePage />;
+  }
   if (activeSection === "notification") return <Notification />;
   if (activeSection === "message") return <Message />;
   if (activeSection === "communication/send") return <SendNotification />;
