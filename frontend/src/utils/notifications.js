@@ -1,6 +1,33 @@
+import httpClient from "../api/httpClient";
+
 const normalizeArray = (value) => {
   const source = Array.isArray(value) ? value : String(value || "").split(",");
   return [...new Set(source.map((item) => String(item).trim()).filter(Boolean))];
+};
+
+export const getNotifications = async (params = {}) => {
+  const response = await httpClient.get("/notifications", { params });
+  return response.data?.data || [];
+};
+
+export const getNotificationAnalytics = async () => {
+  const response = await httpClient.get("/notifications/analytics");
+  return response.data?.data || {};
+};
+
+export const saveNotifications = async (payload) => {
+  const response = await httpClient.post("/notifications", payload);
+  return response.data?.data;
+};
+
+export const markNotificationAsRead = async (id) => {
+  const response = await httpClient.patch(`/notifications/${id}/read`);
+  return response.data?.data;
+};
+
+export const markAllNotificationsAsRead = async () => {
+  const response = await httpClient.patch("/notifications/read-all");
+  return response.data?.data;
 };
 
 const getUserLevelTokens = (user) => {
