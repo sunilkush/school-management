@@ -9,6 +9,42 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ExamAttempt } from "../models/ExamAttempts.model.js";
 
 const OBJECT_ID = mongoose.Types.ObjectId;
+const getActiveEnrollmentForStudentUser = async ({ userId, academicYearId }) => {
+  const student = await Student.findOne({ userId }).select("_id").lean();
+  if (!student) return null;
+
+  const enrollmentQuery = { studentId: student._id, status: "Active" };
+  if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
+    enrollmentQuery.academicYearId = academicYearId;
+  }
+
+  return StudentEnrollment.findOne(enrollmentQuery)
+    .sort({ createdAt: -1 })
+    .select("schoolId academicYearId schoolClassId sectionId")
+    .lean();
+};
+
+const getParentChildEnrollment = async ({ parentId, studentUserId, academicYearId }) => {
+  const childQuery = {
+    $or: [{ fatherId: parentId }, { motherId: parentId }, { guardianId: parentId }],
+  };
+  if (studentUserId && mongoose.Types.ObjectId.isValid(studentUserId)) {
+    childQuery.userId = studentUserId;
+  }
+
+  const child = await Student.findOne(childQuery).select("_id userId").lean();
+  if (!child) return null;
+
+  const enrollmentQuery = { studentId: child._id, status: "Active" };
+  if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
+    enrollmentQuery.academicYearId = academicYearId;
+  }
+
+  return StudentEnrollment.findOne(enrollmentQuery)
+    .sort({ createdAt: -1 })
+    .select("schoolId academicYearId schoolClassId sectionId")
+    .lean();
+};
 
 const normalizeExamPayload = (payload = {}) => ({
   ...payload,
@@ -129,23 +165,55 @@ export const getExamsService = async ({ query, user }) => {
   if (query.status) filters.status = query.status;
 
   if (query.search) {
-    filters.title = { $regex: query.search.trim(), $options: "i" };
+    const searchTerm = query.search.trim();
+    filters.$or = [
+      { title: { $regex: searchTerm, $options: "i" } },
+      { examCode: { $regex: searchTerm, $options: "i" } },
+    ];
   }
 
-/*   if (user.roleId?.name === "Student") {
-    const student = await Student.findOne({ userId: user._id }).select("_id").lean();
-    const enrollment = student
-      ? await StudentEnrollment.findOne({ studentId: student._id, status: "Active" })
-      .sort({ createdAt: -1 })
-      .select("schoolClassId sectionId")
-      .lean()
-      : null;
+  if (user.roleId?.name === "Student") {
+    const enrollment = await getActiveEnrollmentForStudentUser({
+      userId: user._id,
+      academicYearId: query.academicYearId,
+    });
 
+    filters.status = "published";
     if (enrollment) {
+      filters.schoolId = enrollment.schoolId;
+      filters.academicYearId = enrollment.academicYearId;
       filters.schoolClassId = enrollment.schoolClassId;
-      filters.sectionId = enrollment.sectionId;
+      filters.$or = [
+        { sectionId: enrollment.sectionId },
+        { sectionId: null },
+        { sectionId: { $exists: false } },
+      ];
+    } else {
+      filters._id = { $exists: false };
     }
-  } */
+  }
+
+  if (user.roleId?.name === "Parent") {
+    const enrollment = await getParentChildEnrollment({
+      parentId: user._id,
+      studentUserId: query.studentId,
+      academicYearId: query.academicYearId,
+    });
+
+    filters.status = "published";
+    if (enrollment) {
+      filters.schoolId = enrollment.schoolId;
+      filters.academicYearId = enrollment.academicYearId;
+      filters.schoolClassId = enrollment.schoolClassId;
+      filters.$or = [
+        { sectionId: enrollment.sectionId },
+        { sectionId: null },
+        { sectionId: { $exists: false } },
+      ];
+    } else {
+      filters._id = { $exists: false };
+    }
+  }
 
   const sortField = ["examDate", "totalMarks", "createdAt"].includes(query.sortBy)
     ? query.sortBy

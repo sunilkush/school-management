@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import StatusTag from "../../components/attendance/StatusTag";
 import { fetchMyAttendance, markBulkAttendance } from "../../features/attendanceSlice";
-
+import { getAttendanceRoleFromUser } from "../../utils/attendanceRoles";
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -17,9 +17,11 @@ const MyAttendancePage = () => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [todayStatus, setTodayStatus] = useState("present");
 
-  const isTeacher = user?.role?.name === "Teacher";
+ 
   const isMonthlyRoute = location.pathname.endsWith("/monthly");
-
+  const canSelfMark = !["Student", "Parent", "Super Admin", "School Admin"].includes(
+    typeof user?.role === "string" ? user.role : user?.role?.name
+  );
   useEffect(() => {
     dispatch(
       fetchMyAttendance({
@@ -30,19 +32,19 @@ const MyAttendancePage = () => {
   }, [dispatch, selectedMonth]);
 
   const handleAddDailyAttendance = async () => {
-    if (!isTeacher || !user?._id) return;
+   if (!canSelfMark || !user?._id) return;
 
     try {
       await dispatch(
         markBulkAttendance({
           schoolId: user?.school?._id || user?.schoolId,
           date: new Date().toISOString(),
-          role: "teacher",
+          role: getAttendanceRoleFromUser(user),
           records: [
             {
               userId: user._id,
               status: todayStatus,
-              remarks: "Self marked by teacher",
+               remarks: "Self marked attendance",
             },
           ],
         })
@@ -103,7 +105,7 @@ const MyAttendancePage = () => {
         {error ? <Alert type="error" showIcon message={error} /> : null}
         {successMessage ? <Alert type="success" showIcon message={successMessage} /> : null}
 
-        {isTeacher && !isMonthlyRoute ? (
+        {canSelfMark && !isMonthlyRoute ? (
           <Row gutter={12} align="middle">
             <Col>
               <Text strong>Add Daily Attendance:</Text>

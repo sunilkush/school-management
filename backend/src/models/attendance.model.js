@@ -1,8 +1,28 @@
 import mongoose, { Schema } from "mongoose";
 
 const ATTENDANCE_STATUSES = ["present", "absent", "late", "halfday", "leave"];
-const ATTENDANCE_ROLES = ["student", "teacher", "staff"];
-
+const ATTENDANCE_ROLES = [
+  "student",
+  "teacher",
+  "staff",
+  "support_staff",
+  "accountant",
+  "admin",
+  "school_admin",
+  "super_admin",
+  "principal",
+  "vice_principal",
+  "subject_coordinator",
+  "librarian",
+  "hostel_warden",
+  "transport_manager",
+  "exam_coordinator",
+  "receptionist",
+  "it_support",
+  "counselor",
+  "security",
+  "parent",
+];
 const attendanceSchema = new Schema(
   {
     schoolId: {

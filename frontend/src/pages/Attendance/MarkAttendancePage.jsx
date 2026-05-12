@@ -3,6 +3,7 @@ import { Button, Card, DatePicker, Input, Row, Col, Select, message } from "antd
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import BulkAttendanceTable from "../../components/attendance/BulkAttendanceTable";
+import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
 import {
   fetchAttendance,
   markBulkAttendance,
@@ -85,7 +86,7 @@ const MarkAttendancePage = () => {
           <Select
             style={{ width: "100%" }}
             value={filters.role || "student"}
-            options={["student", "teacher", "staff"].map((r) => ({ label: r, value: r }))}
+            options={ATTENDANCE_ROLE_OPTIONS}
             onChange={(value) => dispatch(setAttendanceFilters({ role: value }))}
           />
         </Col>

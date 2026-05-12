@@ -11,9 +11,105 @@ const STAFF = "Staff";
 const SUPPORT_STAFF = "Support Staff";
 const STUDENT = "Student";
 const PARENT = "Parent";
+const ACCOUNTANT = "Accountant";
 const ADMIN = "Admin";
 const PRINCIPAL = "Principal";
 const VICE_PRINCIPAL = "Vice Principal";
+const SUBJECT_COORDINATOR = "Subject Coordinator";
+const LIBRARIAN = "Librarian";
+const HOSTEL_WARDEN = "Hostel Warden";
+const TRANSPORT_MANAGER = "Transport Manager";
+const EXAM_COORDINATOR = "Exam Coordinator";
+const RECEPTIONIST = "Receptionist";
+const IT_SUPPORT = "IT Support";
+const COUNSELOR = "Counselor";
+const SECURITY = "Security";
+
+const ROLE_TO_ATTENDANCE_ROLE = {
+  [SUPER_ADMIN]: "super_admin",
+  [SCHOOL_ADMIN]: "school_admin",
+  [ADMIN]: "admin",
+  [PRINCIPAL]: "principal",
+  [VICE_PRINCIPAL]: "vice_principal",
+  [TEACHER]: "teacher",
+  [SUBJECT_COORDINATOR]: "subject_coordinator",
+  [STUDENT]: "student",
+  [PARENT]: "parent",
+  [ACCOUNTANT]: "accountant",
+  [STAFF]: "staff",
+  [SUPPORT_STAFF]: "support_staff",
+  [LIBRARIAN]: "librarian",
+  [HOSTEL_WARDEN]: "hostel_warden",
+  [TRANSPORT_MANAGER]: "transport_manager",
+  [EXAM_COORDINATOR]: "exam_coordinator",
+  [RECEPTIONIST]: "receptionist",
+  [IT_SUPPORT]: "it_support",
+  [COUNSELOR]: "counselor",
+  [SECURITY]: "security",
+};
+
+const ADMIN_ATTENDANCE_ROLES = [SUPER_ADMIN, SCHOOL_ADMIN, ADMIN, PRINCIPAL, VICE_PRINCIPAL];
+const STUDENT_ATTENDANCE_MARKERS = [...ADMIN_ATTENDANCE_ROLES, TEACHER, HOSTEL_WARDEN];
+const STAFF_ATTENDANCE_MARKERS = [...ADMIN_ATTENDANCE_ROLES, ACCOUNTANT];
+const SELF_ATTENDANCE_ROLES = [
+  TEACHER,
+  STAFF,
+  SUPPORT_STAFF,
+  SUBJECT_COORDINATOR,
+  LIBRARIAN,
+  HOSTEL_WARDEN,
+  TRANSPORT_MANAGER,
+  EXAM_COORDINATOR,
+  RECEPTIONIST,
+  IT_SUPPORT,
+  COUNSELOR,
+  SECURITY,
+  ACCOUNTANT,
+];
+const ALL_ATTENDANCE_ROLES = [
+  SUPER_ADMIN,
+  SCHOOL_ADMIN,
+  ADMIN,
+  PRINCIPAL,
+  VICE_PRINCIPAL,
+  TEACHER,
+  SUBJECT_COORDINATOR,
+  STUDENT,
+  PARENT,
+  ACCOUNTANT,
+  STAFF,
+  SUPPORT_STAFF,
+  LIBRARIAN,
+  HOSTEL_WARDEN,
+  TRANSPORT_MANAGER,
+  EXAM_COORDINATOR,
+  RECEPTIONIST,
+  IT_SUPPORT,
+  COUNSELOR,
+  SECURITY,
+];
+
+const getAttendanceRoleForUser = (roleName) => ROLE_TO_ATTENDANCE_ROLE[roleName] || "staff";
+
+const isSelfAttendancePayload = (req, role, records = []) => {
+  const myAttendanceRole = getAttendanceRoleForUser(req.userRole?.name);
+  const myUserId = req.user?._id?.toString();
+  return Boolean(myUserId) && role === myAttendanceRole && records.every((record) => record.userId?.toString() === myUserId);
+};
+
+const applyReadScope = (req, filter) => {
+  const userRole = req.userRole?.name;
+  if (ADMIN_ATTENDANCE_ROLES.includes(userRole) || [ACCOUNTANT, HOSTEL_WARDEN].includes(userRole)) return;
+
+  if (userRole === TEACHER) {
+    filter.$or = [{ markedBy: req.user._id }, { userId: req.user._id }];
+    return;
+  }
+
+  if (SELF_ATTENDANCE_ROLES.includes(userRole) || userRole === STUDENT) {
+    filter.userId = req.user._id;
+  }
+};
 
 const normalizeDateStart = (value) => {
   const date = new Date(value);
@@ -64,17 +160,13 @@ const assertTeacherScope = (req, payload = {}) => {
 export const markBulkAttendance = asyncHandler(async (req, res) => {
   const { schoolId, date, role, schoolClassId, sectionId, subjectId, remarks, records } = req.body;
 
-  const allowedRoles = [SUPER_ADMIN, SCHOOL_ADMIN, ADMIN, PRINCIPAL, VICE_PRINCIPAL, TEACHER, STAFF, SUPPORT_STAFF];
-  if (!allowedRoles.includes(req.userRole?.name)) {
-    throw new ApiError(403, "You are not allowed to mark attendance");
-  }
+  const userRole = req.userRole?.name;
+  const canSelfMark = SELF_ATTENDANCE_ROLES.includes(userRole) && isSelfAttendancePayload(req, role, records);
+  const canMarkStudents = STUDENT_ATTENDANCE_MARKERS.includes(userRole) && role === "student";
+  const canMarkStaffLike = STAFF_ATTENDANCE_MARKERS.includes(userRole) && role !== "student";
 
-  if ([STAFF, SUPPORT_STAFF].includes(req.userRole?.name) && role !== "staff") {
-    throw new ApiError(403, "Staff can only mark self attendance");
-  }
-
-    if (req.userRole?.name === TEACHER && !["student", "teacher"].includes(role)) {
-    throw new ApiError(403, "Teacher can only mark student or self attendance");
+  if (!canSelfMark && !canMarkStudents && !canMarkStaffLike) {
+    throw new ApiError(403, "You are not allowed to mark attendance for this role");
   }
 
   const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
@@ -95,17 +187,10 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
     checkOutAt: record.checkOutAt || null,
   }));
 
-  if ([STAFF, SUPPORT_STAFF].includes(req.userRole?.name)) {
+  if (SELF_ATTENDANCE_ROLES.includes(userRole) && !ADMIN_ATTENDANCE_ROLES.includes(userRole) && !canMarkStudents) {
     docs.forEach((doc) => {
       if (doc.userId.toString() !== req.user._id.toString()) {
-        throw new ApiError(403, "Staff can mark only their own attendance");
-      }
-    });
-  }
-   if (req.userRole?.name === TEACHER && role === "teacher") {
-    docs.forEach((doc) => {
-      if (doc.userId.toString() !== req.user._id.toString()) {
-        throw new ApiError(403, "Teacher can mark only their own attendance");
+        throw new ApiError(403, "You can mark only your own attendance");
       }
     });
   }
@@ -150,7 +235,7 @@ export const getAttendance = asyncHandler(async (req, res) => {
     };
   }
 
-  assertTeacherScope(req, filter);
+  applyReadScope(req, filter);
 
   const skip = (page - 1) * limit;
 
@@ -197,6 +282,9 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
   if (schoolClassId) match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   if (sectionId) match.sectionId = new mongoose.Types.ObjectId(sectionId);
   if (role) match.role = role;
+  if (req.userRole?.name === TEACHER) {
+    match.$or = [{ markedBy: req.user._id }, { userId: req.user._id }];
+  }
 
   const pipeline = [
     { $match: match },
@@ -340,7 +428,7 @@ export const deleteAttendance = asyncHandler(async (req, res) => {
 });
 
 export const getMyAttendance = asyncHandler(async (req, res) => {
-  const { month, year, childId } = req.query;
+  const { month, year, childId, schoolId } = req.query;
 
   let targetUserId = req.user._id;
   if (req.userRole?.name === PARENT) {
@@ -350,12 +438,12 @@ export const getMyAttendance = asyncHandler(async (req, res) => {
     targetUserId = childId;
   }
 
-  if (![STUDENT, TEACHER, STAFF, SUPPORT_STAFF, PARENT, SUPER_ADMIN, SCHOOL_ADMIN, ADMIN, PRINCIPAL, VICE_PRINCIPAL].includes(req.userRole?.name)) {
+  if (!ALL_ATTENDANCE_ROLES.includes(req.userRole?.name)) {
     throw new ApiError(403, "Not allowed to access this endpoint");
   }
 
   const filter = {
-    schoolId: ensureSchoolAccess(req, req.user?.schoolId?.toString()),
+    schoolId: ensureSchoolAccess(req, schoolId || req.user?.schoolId?.toString()),
     userId: targetUserId,
   };
 

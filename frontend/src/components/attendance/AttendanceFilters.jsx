@@ -1,8 +1,8 @@
 import React from "react";
 import { Col, DatePicker, Input, Row, Select } from "antd";
 import dayjs from "dayjs";
+import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
 
-const roleOptions = ["student", "teacher", "staff"];
 
 const AttendanceFilters = ({ filters, onChange, showSearch = true }) => (
   <Row gutter={[12, 12]}>
@@ -33,7 +33,7 @@ const AttendanceFilters = ({ filters, onChange, showSearch = true }) => (
         placeholder="Role"
         style={{ width: "100%" }}
         value={filters.role || undefined}
-        options={roleOptions.map((role) => ({ label: role, value: role }))}
+        options={ATTENDANCE_ROLE_OPTIONS}
         onChange={(value) => onChange({ role: value || null })}
       />
     </Col>

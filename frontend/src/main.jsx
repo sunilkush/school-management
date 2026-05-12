@@ -196,9 +196,9 @@ const MyStudents = lazy(() => import("./pages/Teacher/My_Students/MyStudents.jsx
 const StudentAttendance = lazy(() => import("./pages/Teacher/Attendance/StudentAttendance.jsx"));
 const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDetailes.jsx"));
 const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
-const MyAttendancePage = lazy(() => import("./pages/Teacher/Profile/MyAttendancePage.jsx"));
+const MyAttendancePage = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
 const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports.jsx"));
-const MyAttendanceMonthlyReport = lazy(() => import("./pages/Teacher/Profile/MyAttendanceMonthlyReport.jsx"));
+const MyAttendanceMonthlyReport = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
 
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
@@ -411,6 +411,7 @@ const router = createBrowserRouter([
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports/school-wise", element: <SchoolWiseReports /> },
               { path: "reports/attendance", element: <AttendanceDashboardPage /> },
+               { path: "attendance/mark", element: <MarkAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "reports/finance", element: <FinanceSummary /> },
@@ -453,6 +454,7 @@ const router = createBrowserRouter([
               { path: "subjects", element: <Subjects /> },
               { path: "attendance/students", element: <AllStudentsAttendance /> },
               { path: "attendance/staff", element: <StaffAttendance /> },
+               { path: "attendance/mark", element: <MarkAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "attendance/dashboard", element: <AttendanceDashboardPage /> },
               { path: "attendance/monthly", element: <MonthlyReportPage /> },
@@ -535,6 +537,8 @@ const router = createBrowserRouter([
               { path: "attendance/my", element: <MyAttendancePage /> },
               { path: "attendance/my/monthly", element: <MyAttendanceMonthlyReport /> },
              // { path: "exams", element: <ScheduleExams /> },
+              { path: "exams/create", element: <ExamCreate /> },
+              { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/create-question", element: <CreateQuestion /> },
               { path: "exams/bulk-upload-questions", element: <BulkUploadQuestions /> },
               { path: "exams/reports", element: <ExamReports /> },
@@ -550,6 +554,9 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
+               { path: "attendance", element: <MyAttendancePage /> },
+              { path: "attendance/table", element: <AttendanceTablePage /> },
+              { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "profile/change-password", element: <ChangePassword /> },
@@ -638,6 +645,9 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
+              { path: "attendance", element: <MyAttendancePage /> },
+              { path: "attendance/table", element: <AttendanceTablePage /> },
+              { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
@@ -656,8 +666,18 @@ const router = createBrowserRouter([
               { path: "staff", element: <TeacherList /> },
               { path: "students", element: <StudentList /> },
               { path: "reports/academic", element: <ExamReports /> },
-              { path: "reports/attendance", element: <SchoolAdminReport /> },
+              { path: "reports/attendance", element: <MonthlyReportPage /> },
+              { path: "attendance/mark", element: <MarkAttendancePage /> },
+              { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "exams", element: <ExamsPage /> },
+               { path: "exams/create", element: <ExamCreate /> },
+              { path: "exams/edit/:id", element: <ExamCreate /> },
+              { path: "exams/schedule", element: <ExamSchedule /> },
+              { path: "exams/grades", element: <EnterGrades /> },
+              { path: "exams/paper-builder", element: <PaperBuilder /> },
+              { path: "exams/admit-card", element: <AdmitCardPage /> },
+              { path: "exams/seat-plan", element: <SeatPlanPage /> },
+              { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "library", element: <LibraryCard /> },
               { path: "transport", element: <RoutesPage /> },
               { path: "timetable", element: <PrincipalTimetableOverview /> },
@@ -681,6 +701,78 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
                 <PrincipalTimetableOverview />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <ExamsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/create",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <ExamCreate />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/edit/:id",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <ExamCreate />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/schedule",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <ExamSchedule />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/grades",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <EnterGrades />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/paper-builder",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <PaperBuilder />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/admit-card",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <AdmitCardPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/seat-plan",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <SeatPlanPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/exams/analytics",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <ExamAnalyticsPage />
               </ProtectedRoute>
             ),
           },
@@ -733,6 +825,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <RoleDynamicPortal /> },
+              { path: "exams", element: <ExamsPage /> },
               { path: "exams/create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/question-bank", element: <QuestionBank /> },

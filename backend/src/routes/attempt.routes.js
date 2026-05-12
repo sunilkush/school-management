@@ -16,9 +16,9 @@ router.post("/start", roleMiddleware(["Student"]), startAttempt);
 router.get("/active/:examId", roleMiddleware(["Student"]), getActiveAttemptByExam);
 router.patch("/:attemptId/answer", roleMiddleware(["Student"]), autosaveAttemptAnswer);
 router.post("/submit", roleMiddleware(["Student"]), submitAttempt);
-router.post("/evaluate", roleMiddleware(["Super Admin", "School Admin", "Teacher"]), evaluateAttempt);
-router.get("/", roleMiddleware(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttempts);
-router.get("/:id", roleMiddleware(["Super Admin", "School Admin", "Teacher", "Student", "Parent"]), getAttemptById);
+router.post("/evaluate", roleMiddleware(["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator"]), evaluateAttempt);
+router.get("/", roleMiddleware(["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Student", "Parent"]), getAttempts);
+router.get("/:id", roleMiddleware(["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Student", "Parent"]), getAttemptById);
 
 
 export default router;

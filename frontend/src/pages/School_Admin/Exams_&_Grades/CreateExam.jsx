@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import dayjs from "dayjs";
 import {
   Card,
@@ -29,7 +29,8 @@ import {
   getExamById,
 } from "../../../features/examSlice.js";
 
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { getExamRouteConfig } from "../../../utils/examRoutes";
 
 
 const { Title } = Typography;
@@ -39,6 +40,8 @@ const CreateExam = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const navigate = useNavigate();
+   const location = useLocation();
+  const examRoutes = useMemo(() => getExamRouteConfig(location.pathname), [location.pathname]);
   const { id } = useParams();
 
   const isEditMode = id && id !== "undefined" && id !== "null";
@@ -248,7 +251,7 @@ const CreateExam = () => {
         message.success("Exam Created Successfully");
       }
 
-      navigate("/dashboard/schooladmin/exams/exams-list");
+      navigate(examRoutes.listPath);
     } catch (err) {
       console.error(err);
       message.error("Failed to save exam");

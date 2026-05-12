@@ -25,7 +25,7 @@ import {
   MoreOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import memoryStorage from "../../../utils/memoryStorage";
@@ -38,6 +38,7 @@ import {
 } from "../../../features/examSlice.js";
 import ExamPageHeader from "../../../components/exams/ExamPageHeader";
 import ExamStatCards from "../../../components/exams/ExamStatCards";
+import { getExamRouteConfig } from "../../../utils/examRoutes";
 
 const { Text } = Typography;
 
@@ -50,6 +51,8 @@ const statusColor = {
 const ExamsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const examRoutes = useMemo(() => getExamRouteConfig(location.pathname), [location.pathname]);
   const { exams = [], loading, analytics, pagination, error } = useSelector((state) => state.exams || {});
   const { selectedAcademicYear: selectedAcademicYearFromState } = useSelector((state) => state.academicYear || {});
 
@@ -207,7 +210,7 @@ const ExamsPage = () => {
                 key: "edit",
                 icon: <EditOutlined />,
                 label: "Edit",
-                onClick: () => navigate(`/dashboard/schooladmin/exams/edit/${record._id}`),
+                onClick: () => navigate(examRoutes.editPath(record._id)),
               },
               {
                 key: "status",
@@ -286,7 +289,7 @@ const ExamsPage = () => {
               key="create"
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => navigate("/dashboard/schooladmin/exams/exams-create")}
+             onClick={() => navigate(examRoutes.createPath)}
             >
               Create Exam
             </Button>,

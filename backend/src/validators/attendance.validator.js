@@ -8,7 +8,28 @@ const objectId = z.preprocess(
 const attendanceStatus = z.enum(["present", "absent", "late", "halfday", "leave"]);
 const attendanceRole = z.preprocess(
   (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
-  z.enum(["student", "teacher", "staff"])
+  z.enum([
+    "student",
+    "teacher",
+    "staff",
+    "support_staff",
+    "accountant",
+    "admin",
+    "school_admin",
+    "super_admin",
+    "principal",
+    "vice_principal",
+    "subject_coordinator",
+    "librarian",
+    "hostel_warden",
+    "transport_manager",
+    "exam_coordinator",
+    "receptionist",
+    "it_support",
+    "counselor",
+    "security",
+    "parent",
+  ])
 );
 
 const optionalObjectId = objectId.nullish().transform((val) => val ?? null);
@@ -128,5 +149,6 @@ export const myAttendanceQuerySchema = z.object({
     month: z.coerce.number().int().min(1).max(12).optional(),
     year: z.coerce.number().int().min(2000).max(2100).optional(),
     childId: objectId.optional(),
+    schoolId: objectId.optional(),
   }),
 });

@@ -22,9 +22,14 @@ const isWithinExamWindow = (now, startTime, endTime) => {
 };
 
 const enforceAttemptReadAccess = async (attempt, req) => {
-  const role = req.role?.name;
-  const isPrivileged = ["Super Admin", "School Admin", "Teacher"].includes(role);
-  if (isPrivileged) return;
+ const role = req.userRole?.name || req.user?.roleId?.name;
+  const isPrivileged = ["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator"].includes(role);
+  if (isPrivileged) {
+    if (role !== "Super Admin" && `${attempt.schoolId}` !== `${req.user.schoolId}`) {
+      throw new ApiError(403, "Forbidden access outside your school");
+    }
+    return;
+  }
 
   if (role === "Parent") {
     const child = await Student.findOne({
@@ -82,7 +87,7 @@ export const startAttempt = asyncHandler(async (req, res) => {
   if (existing) throw new ApiError(400, "You already have an active attempt");
 
   const maxAttempts = Number(exam?.settings?.maxAttempts || 1);
-  const usedAttempts = await Attempt.countDocuments({
+  const usedAttempts = await ExamAttempt.countDocuments({
     examId,
     studentId: studentUserId,
     status: { $in: ["submitted", "evaluated"] },
@@ -104,7 +109,7 @@ export const startAttempt = asyncHandler(async (req, res) => {
   if (!schoolId) throw new ApiError(400, "schoolId could not be resolved for this attempt");
 
   const attemptNumber = usedAttempts + 1;
-  const attempt = await Attempt.create({
+  const attempt = await ExamAttempt.create({
     examId,
     studentId: studentUserId,
     schoolId,
@@ -124,7 +129,7 @@ export const submitAttempt = asyncHandler(async (req, res) => {
   const { attemptId, answers = [] } = req.body;
   assertObjectId(attemptId, "attemptId");
 
-  const attempt = await Attempt.findById(attemptId);
+  const attempt = await ExamAttempt.findById(attemptId);
   if (!attempt) throw new ApiError(404, "Attempt not found");
   if (attempt.studentId.toString() !== req.user._id.toString()) throw new ApiError(403, "Forbidden");
   if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt already submitted");
@@ -170,7 +175,7 @@ export const autosaveAttemptAnswer = asyncHandler(async (req, res) => {
   const resolvedQuestionId = questionRef || questionId;
   assertObjectId(resolvedQuestionId, "questionId");
 
-  const attempt = await Attempt.findById(attemptId);
+  const attempt = await ExamAttempt.findById(attemptId);
   if (!attempt) throw new ApiError(404, "Attempt not found");
   if (attempt.studentId.toString() !== req.user._id.toString()) throw new ApiError(403, "Forbidden");
   if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt is not active");
@@ -201,7 +206,7 @@ export const getActiveAttemptByExam = asyncHandler(async (req, res) => {
   const { examId } = req.params;
   assertObjectId(examId, "examId");
 
-  const attempt = await Attempt.findOne({
+  const attempt = await ExamAttempt.findOne({
     examId,
     studentId: req.user._id,
     status: "in_progress",
@@ -219,7 +224,7 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
   const { attemptId, evaluations = [] } = req.body;
   assertObjectId(attemptId, "attemptId");
 
-  const attempt = await Attempt.findById(attemptId);
+   const attempt = await ExamAttempt.findById(attemptId);
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
   attempt.answers = attempt.answers.map((ans) => {
@@ -260,6 +265,7 @@ export const getAttempts = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, studentId, examId, status, sort = "-createdAt" } = req.query;
 
   const filters = {};
+  if (req.userRole?.name !== "Super Admin" && req.user?.schoolId) filters.schoolId = req.user.schoolId;
   if (studentId) filters.studentId = studentId;
   if (examId) filters.examId = examId;
   if (status) filters.status = status;

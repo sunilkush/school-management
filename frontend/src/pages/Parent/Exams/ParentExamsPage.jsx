@@ -55,6 +55,7 @@ const ParentExamsPage = () => {
     if (!selectedChild?.classId) return;
     dispatch(
       getExams({
+         studentId: selectedChildId,
         schoolClassId: selectedChild.classId,
         ...(selectedChild.sectionId ? { sectionId: selectedChild.sectionId } : {}),
         sortBy: "examDate",
@@ -62,7 +63,7 @@ const ParentExamsPage = () => {
         status: "published",
       })
     ).unwrap().catch(() => null);
-  }, [dispatch, selectedChild]);
+  }, [dispatch, selectedChild, selectedChildId]);
 
   const summary = useMemo(() => {
     const total = results.length;

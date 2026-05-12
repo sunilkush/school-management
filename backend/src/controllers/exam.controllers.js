@@ -6,6 +6,7 @@ import { Exam } from '../models/Exam.model.js'
 import { ExamAttempt } from '../models/ExamAttempts.model.js'
 import { AdmitCard } from '../models/AdmitCard.model.js'
 import { Question } from '../models/Questions.model.js'
+import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
 import {
     assignExamToClassService,
     createExamService,
@@ -387,32 +388,46 @@ const getStoredAdmitCards = async (examId) => AdmitCard.find({ examId })
     .lean()
 
 const buildAdmitCardPayloads = async (exam, userId) => {
-    const attempts = await ExamAttempt.find({ examId: exam._id })
-        .populate('studentId', 'name email rollNumber')
-        .select('studentId createdAt')
-        .sort({ createdAt: 1, _id: 1 })
+    const enrollmentFilter = {
+        schoolId: exam.schoolId,
+        academicYearId: exam.academicYearId,
+        schoolClassId: exam.schoolClassId?._id || exam.schoolClassId,
+        status: 'Active',
+    }
+
+    if (exam.sectionId?._id || exam.sectionId) {
+        enrollmentFilter.sectionId = exam.sectionId?._id || exam.sectionId
+    }
+
+    const enrollments = await StudentEnrollment.find(enrollmentFilter)
+        .populate({ path: 'studentId', select: 'userId', populate: { path: 'userId', select: 'name email rollNumber' } })
+        .sort({ registrationNumber: 1, createdAt: 1, _id: 1 })
         .lean()
 
-    return attempts
-        .filter((attempt) => attempt.studentId?._id)
-        .map((attempt, index) => ({
-            schoolId: exam.schoolId,
-            examId: exam._id,
-            examTitle: exam.title,
-            examDate: exam.examDate,
-            startTime: exam.startTime,
-            endTime: exam.endTime,
-            className: exam.schoolClassId?.name || null,
-            sectionName: exam.sectionId?.name || null,
-            subjectName: exam.subjectId?.name || null,
-            studentId: attempt.studentId._id,
-            studentName: attempt.studentId.name,
-            rollNumber: attempt.studentId.rollNumber || `R-${index + 1}`,
-            seatNumber: `S-${index + 1}`,
-            instructions: ADMIT_CARD_INSTRUCTIONS,
-            generatedBy: userId,
-        }))
+    return enrollments
+        .filter((enrollment) => enrollment.studentId?.userId?._id)
+        .map((enrollment, index) => {
+            const studentUser = enrollment.studentId.userId
+            return {
+                schoolId: exam.schoolId,
+                examId: exam._id,
+                examTitle: exam.title,
+                examDate: exam.examDate,
+                startTime: exam.startTime,
+                endTime: exam.endTime,
+                className: exam.schoolClassId?.name || null,
+                sectionName: exam.sectionId?.name || null,
+                subjectName: exam.subjectId?.name || null,
+                studentId: studentUser._id,
+                studentName: studentUser.name,
+                rollNumber: enrollment.registrationNumber || studentUser.rollNumber || `R-${index + 1}`,
+                seatNumber: `S-${index + 1}`,
+                instructions: ADMIT_CARD_INSTRUCTIONS,
+                generatedBy: userId,
+            }
+        })
 }
+
 
 const getExamForAdmitCards = (examId) => Exam.findById(examId)
     .populate('schoolClassId', 'name')
@@ -479,20 +494,29 @@ export const getExamSeatPlan = asyncHandler(async (req, res) => {
     const exam = await Exam.findById(req.params.id).lean()
     ensureExamAccess(exam, req.user)
 
-    const attempts = await ExamAttempt.find({ examId: req.params.id })
-        .populate('studentId', 'name rollNumber')
-        .select('studentId')
+    const enrollmentFilter = {
+        schoolId: exam.schoolId,
+        academicYearId: exam.academicYearId,
+        schoolClassId: exam.schoolClassId,
+        status: 'Active',
+    }
+    if (exam.sectionId) enrollmentFilter.sectionId = exam.sectionId
+
+    const enrollments = await StudentEnrollment.find(enrollmentFilter)
+        .populate({ path: 'studentId', select: 'userId', populate: { path: 'userId', select: 'name rollNumber' } })
+        .sort({ registrationNumber: 1, createdAt: 1, _id: 1 })
         .lean()
 
     const roomCapacity = Math.max(Number(req.query.roomCapacity) || 30, 1)
-    const seatPlan = attempts.map((attempt, index) => {
+    const seatPlan = enrollments.map((enrollment, index) => {
         const roomNumber = `Room-${Math.floor(index / roomCapacity) + 1}`
         const seatNumber = `Seat-${(index % roomCapacity) + 1}`
+        const studentUser = enrollment.studentId?.userId
         return {
             examId: exam._id,
-            studentId: attempt.studentId?._id,
-            studentName: attempt.studentId?.name,
-            rollNumber: attempt.studentId?.rollNumber || null,
+            studentId: studentUser?._id,
+            studentName: studentUser?.name,
+            rollNumber: enrollment.registrationNumber || studentUser?.rollNumber || null,
             roomNumber,
             seatNumber,
         }
@@ -503,8 +527,8 @@ export const getExamSeatPlan = asyncHandler(async (req, res) => {
             200,
             {
                 roomCapacity,
-                totalStudents: attempts.length,
-                totalRooms: Math.ceil(attempts.length / roomCapacity),
+                totalStudents: enrollments.length,
+                totalRooms: Math.ceil(enrollments.length / roomCapacity),
                 seatPlan,
             },
             'Seat plan generated successfully'

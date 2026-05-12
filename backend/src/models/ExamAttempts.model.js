@@ -27,7 +27,7 @@ const AnswerSchema = new Schema(
     marksObtained: {
       type: Number,
       default: 0,
-      min: 0,
+     
     },
 
     isCorrect: {
@@ -116,7 +116,7 @@ const ExamAttemptSchema = new Schema(
     totalMarksObtained: {
       type: Number,
       default: 0,
-      min: 0,
+      
     },
 
     grade: {

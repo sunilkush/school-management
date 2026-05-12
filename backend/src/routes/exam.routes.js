@@ -25,12 +25,12 @@ import { validate } from "../middlewares/validate.middleware.js";
 
 const router = express.Router();
 
-const ADMIN_ROLES = ["Super Admin", "School Admin"];
-const TEACHER_ROLES = ["Super Admin", "School Admin", "Teacher"];
-const EXAM_MANAGE_ROLES = ["Super Admin", "School Admin", "Teacher"];
-const READ_ROLES = [...TEACHER_ROLES, "Student", "Parent"];
-const STUDENT_RESULT_ROLES = ["Super Admin", "School Admin", "Teacher", "Student"];
-const PARENT_RESULT_ROLES = ["Super Admin", "School Admin", "Teacher", "Parent"];
+const ADMIN_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator"];
+const TEACHER_ROLES = ["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator"];
+const EXAM_MANAGE_ROLES = ["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator"];
+const READ_ROLES = [...TEACHER_ROLES, "Student", "Parent", "Accountant", "Staff", "Support Staff"];
+const STUDENT_RESULT_ROLES = [...TEACHER_ROLES, "Student"];
+const PARENT_RESULT_ROLES = [...TEACHER_ROLES, "Parent"];
 
 router.post(
   "/",
@@ -127,7 +127,6 @@ router.get(
 );
 router.get("/:id/seat-plan", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamSeatPlan);
 
-router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamById);
 router.get(
   "/:id/analytics",
   auth,
@@ -135,6 +134,7 @@ router.get(
   validate({ params: { id: { required: true, type: "objectId" } } }),
   getExamAnalytics
 );
+router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamById);
 router.put(
   "/:id",
   auth,

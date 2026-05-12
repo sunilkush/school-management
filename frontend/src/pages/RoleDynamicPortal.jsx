@@ -7,7 +7,10 @@ import Notification from "./Notification";
 import Message from "./Message";
 import SendNotification from "./School_Admin/Communication/SendNotification";
 import SmsEmailHistory from "./School_Admin/Communication/SmsEmailHistory";
-
+import MyAttendancePage from "./Attendance/MyAttendancePage";
+import AttendanceTablePage from "./Attendance/AttendanceTablePage";
+import MarkAttendancePage from "./Attendance/MarkAttendancePage";
+import MonthlyReportPage from "./Attendance/MonthlyReportPage";
 const { Title, Text } = Typography;
 
 const roleConfig = {
@@ -127,6 +130,10 @@ const RoleDynamicPortal = () => {
   if (activeSection === "message") return <Message />;
   if (activeSection === "communication/send") return <SendNotification />;
   if (activeSection === "communication/history") return <SmsEmailHistory />;
+  if (["attendance", "shift-attendance"].includes(activeSection)) return <MyAttendancePage />;
+  if (activeSection === "attendance/table") return <AttendanceTablePage />;
+  if (["attendance/monthly", "reports/attendance"].includes(activeSection)) return <MonthlyReportPage />;
+  if (["attendance/students", "attendance/staff", "attendance/mark"].includes(activeSection)) return <MarkAttendancePage />;
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>
       <Card>
