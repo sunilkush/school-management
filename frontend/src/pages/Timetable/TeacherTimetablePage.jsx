@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Alert, App, Card, Empty, Select, Skeleton, Space, Typography } from "antd";
-import apiClient from "../../api/httpClient";
-import { fetchMyTeacherTimetable, fetchTimeSlots, fetchTimetable } from "../../features/timetableSlice";
+import { fetchMyTeacherTimetable, fetchTimetable, fetchTimetableMasterData } from "../../features/timetableSlice";
 import TimetableGrid from "./TimetableGrid";
 import { getName, schoolIdFromUser } from "./timetableUi";
 
@@ -18,35 +17,27 @@ export default function TeacherTimetablePage() {
     const { message } = App.useApp();
     const { user } = useSelector(s => s.auth);
     const selectedAcademicYear = useSelector(s => s.academicYear.selectedAcademicYear || s.academicYear.activeYear);
-    const { timeSlots, myTeacherTimetable, teacherTimetable, loading } = useSelector(s => s.timetable);
+    const { timeSlots, myTeacherTimetable, teacherTimetable, loading, teachers } = useSelector(s => s.timetable);
     const schoolId = schoolIdFromUser(user);
     const academicYearId = selectedAcademicYear?._id;
     const isSchoolAdmin = getRoleName(user) === "school admin";
-    const [teachers, setTeachers] = useState([]);
     const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
     useEffect(() => {
         if (!schoolId || !academicYearId) return;
-        dispatch(fetchTimeSlots({ schoolId, academicYearId }));
-    }, [dispatch, schoolId, academicYearId]);
+        dispatch(fetchTimetableMasterData({
+            schoolId,
+            academicYearId,
+            includeClasses: false,
+            includeSections: false,
+            includeTeachers: isSchoolAdmin,
+        })).unwrap().catch(message.error);
+    }, [dispatch, schoolId, academicYearId, isSchoolAdmin, message]);
 
     useEffect(() => {
-        if (!isSchoolAdmin || !schoolId) return;
-
-        let ignore = false;
-        apiClient.get("/user/all", { params: { schoolId, roleName: "Teacher", isActive: true } })
-            .then((res) => {
-                if (ignore) return;
-                const rows = res.data?.data || [];
-                setTeachers(rows);
-                setSelectedTeacherId((current) => current || rows[0]?._id || "");
-            })
-            .catch((error) => {
-                if (!ignore) message.error(error.response?.data?.message || error.message || "Failed to load teachers");
-            });
-
-        return () => { ignore = true; };
-    }, [isSchoolAdmin, schoolId, message]);
+        if (!isSchoolAdmin || selectedTeacherId || !teachers.length) return;
+        setSelectedTeacherId(teachers[0]?._id || "");
+    }, [isSchoolAdmin, selectedTeacherId, teachers]);
 
     useEffect(() => {
         if (!schoolId || !academicYearId) return;
