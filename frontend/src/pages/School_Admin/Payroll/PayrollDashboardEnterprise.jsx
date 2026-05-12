@@ -1,7 +1,8 @@
-import { Alert, Card, Col, List, Progress, Row, Space, Statistic, Table, Tabs, Tag, Timeline, Typography } from "antd";
+import { Alert, Button, Card, Col, List, Progress, Row, Space, Statistic, Table, Tabs, Tag, Timeline, Typography } from "antd";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchComplianceFilings, fetchPayrollDashboard, fetchPayrollRuns, fetchReimbursements } from "../../../features/payrollEnterpriseSlice";
+import { useLocation, useNavigate } from "react-router-dom";
+import { fetchComplianceFilings, fetchPayrollDashboard, fetchPayrollRuns, fetchReimbursements, fetchUnifiedPayrollOverview } from "../../../features/payrollEnterpriseSlice";
 
 const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
 const statusColor = { draft: "default", processing: "cyan", verified: "blue", hr_approved: "geekblue", accountant_approved: "purple", principal_approved: "magenta", approved: "green", paid: "lime", locked: "gold", rolled_back: "red" };
@@ -13,26 +14,32 @@ const summaryValue = (rows = [], key, field = "count") => rows.find((item) => it
 
 export default function PayrollDashboardEnterprise() {
   const dispatch = useDispatch();
-  const { dashboard, runs, reimbursements, complianceFilings, loading, error } = useSelector((s) => s.payrollEnterprise);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { dashboard, unifiedOverview, runs, reimbursements, complianceFilings, loading, error } = useSelector((s) => s.payrollEnterprise);
 
   useEffect(() => {
     dispatch(fetchPayrollDashboard());
+    dispatch(fetchUnifiedPayrollOverview());
     dispatch(fetchPayrollRuns());
     dispatch(fetchReimbursements());
     dispatch(fetchComplianceFilings());
   }, [dispatch]);
 
   const activeTax = dashboard?.activeTaxConfig || {};
+  const unifiedSummary = unifiedOverview?.summary || {};
+  const unifiedRuns = unifiedOverview?.runs || [];
   const approvalProgress = Math.min(100, ((dashboard?.lockedRuns || 0) / Math.max(1, dashboard?.totalRuns || 1)) * 100);
+  const payrollBasePath = location.pathname.includes("/accountant/") ? "/dashboard/accountant/salary" : "/dashboard/schooladmin/payroll";
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size={18}>
       <Card style={heroStyle}>
         <Space direction="vertical" size={4}>
-          <Tag color="blue">Enterprise payroll ecosystem</Tag>
+          <Tag color="blue">Unified payroll ecosystem</Tag>
           <Typography.Title level={3} style={{ margin: 0 }}>Payroll command center</Typography.Title>
           <Typography.Text type="secondary">
-            Multi-school payroll, attendance/leave impact, statutory liabilities, reimbursements, bank transfer, approvals aur audit logs ko ek audit-ready view me manage karein.
+            Basic payroll cycles aur enterprise payroll runs ko ek merged command center me analyze karein: salary structures, payouts, approvals, compliance, reimbursements, bank transfer aur audit logs.
           </Typography.Text>
         </Space>
       </Card>
@@ -42,32 +49,74 @@ export default function PayrollDashboardEnterprise() {
       <Row gutter={[16, 16]}>
         <Col xs={24} md={12} xl={6}>
           <Card loading={loading} style={cardStyle}>
-            <Statistic title="Total salary expense" value={dashboard?.totalPayout || 0} formatter={money} />
-            <Typography.Text type="secondary">Approved/generated runs ka payable amount.</Typography.Text>
+            <Statistic title="Unified salary expense" value={unifiedSummary.totalPayout || dashboard?.totalPayout || 0} formatter={money} />
+            <Typography.Text type="secondary">Basic + enterprise payroll ka merged payout.</Typography.Text>
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
           <Card loading={loading} style={cardStyle}>
-            <Statistic title="PF liability" value={dashboard?.pfLiability || 0} formatter={money} />
-            <Typography.Text type="secondary">Employee PF deduction liability.</Typography.Text>
+            <Statistic title="Basic / Enterprise runs" value={`${unifiedSummary.basicRuns || 0} / ${unifiedSummary.enterpriseRuns || 0}`} />
+            <Typography.Text type="secondary">Legacy cycles aur advanced runs dono visible.</Typography.Text>
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
           <Card loading={loading} style={cardStyle}>
-            <Statistic title="ESI liability" value={dashboard?.esiLiability || 0} formatter={money} />
-            <Typography.Text type="secondary">ESI statutory payout tracking.</Typography.Text>
+            <Statistic title="Active salary structures" value={unifiedSummary.activeStructures || 0} />
+            <Typography.Text type="secondary">Employees ready for basic or enterprise payroll.</Typography.Text>
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
           <Card loading={loading} style={cardStyle}>
-            <Statistic title="Pending approvals" value={dashboard?.pendingApprovals || 0} />
-            <Typography.Text type="secondary">HR → Accounts → Principal → Management flow.</Typography.Text>
+            <Statistic title="Pending approvals" value={unifiedSummary.pendingApprovals || dashboard?.pendingApprovals || 0} />
+            <Typography.Text type="secondary">Enterprise HR → Accounts → Principal → Management flow.</Typography.Text>
           </Card>
         </Col>
       </Row>
 
       <Tabs
         items={[
+          {
+            key: "unified",
+            label: "Merged overview",
+            children: (
+              <Row gutter={[16, 16]}>
+                <Col xs={24} lg={16}>
+                  <Card title="Basic + enterprise payroll timeline" extra={<Typography.Text type="secondary">Source-wise merged latest payroll activity</Typography.Text>} style={cardStyle}>
+                    <Table
+                      rowKey={(row) => `${row.source}-${row._id}`}
+                      size="middle"
+                      pagination={{ pageSize: 6 }}
+                      dataSource={unifiedRuns}
+                      columns={[
+                        { title: "Source", dataIndex: "source", render: (source) => <Tag color={source === "enterprise" ? "purple" : "blue"}>{label(source)}</Tag> },
+                        { title: "Salary period", render: (_, r) => `${String(r.month).padStart(2, "0")}/${r.year}` },
+                        { title: "Employees", dataIndex: "totalEmployees" },
+                        { title: "Gross", dataIndex: "totalEarnings", render: money },
+                        { title: "Deductions", dataIndex: "totalDeductions", render: money },
+                        { title: "Net payout", dataIndex: "totalPayout", render: money },
+                        { title: "Status", dataIndex: "status", render: (v) => <Tag color={statusColor[v]}>{label(v)}</Tag> },
+                      ]}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} lg={8}>
+                  <Card title="Migration readiness" style={cardStyle}>
+                    <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                      <Alert showIcon type="success" message="Basic payroll remains available while enterprise features add approvals, compliance, loans and bank transfers." />
+                      <Statistic title="Active employees" value={unifiedSummary.activeEmployees || 0} />
+                      <Statistic title="Employees processed" value={unifiedSummary.totalEmployeesProcessed || 0} />
+                      <Statistic title="Unified deductions" value={unifiedSummary.totalDeductions || 0} formatter={money} />
+                      <Space wrap>
+                        <Button type="primary" onClick={() => navigate(`${payrollBasePath}/monthly-run`)}>Open basic run</Button>
+                        <Button onClick={() => navigate(`${payrollBasePath}/enterprise/run`)}>Open enterprise run</Button>
+                        <Button onClick={() => navigate(`${payrollBasePath}/salary-structures`)}>Salary structures</Button>
+                      </Space>
+                    </Space>
+                  </Card>
+                </Col>
+              </Row>
+            ),
+          },
           {
             key: "runs",
             label: "Payroll cycles",

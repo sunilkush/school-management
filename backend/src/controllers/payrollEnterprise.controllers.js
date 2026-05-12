@@ -16,8 +16,90 @@ import { BonusIncentive } from "../models/BonusIncentive.model.js";
 import { PayrollAuditLog } from "../models/PayrollAuditLog.model.js";
 import { BankTransfer } from "../models/BankTransfer.model.js";
 import { ComplianceFiling } from "../models/ComplianceFiling.model.js";
+import { PayrollCycle } from "../models/payrollCycle.model.js";
+import { PayrollEntry } from "../models/payrollEntry.model.js";
+import { School } from "../models/school.model.js";
 import { computeSalary } from "../services/enterprisePayroll.service.js";
 
+const titleCase = (value = "") => String(value || "").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+const money = (value) => Number(Number(value || 0).toFixed(2));
+
+const buildEnterprisePayslip = async ({ payrollItemId, schoolId, academicYearId }) => {
+  ensureObjectId(payrollItemId, "payroll item");
+  const item = await PayrollItem.findOne({ _id: payrollItemId, schoolId, academicYearId })
+    .populate({
+      path: "employeeId",
+      select: "employeeCode designation department employeeStatus bankDetails userId",
+      populate: { path: "userId", select: "name email regId" },
+    })
+    .lean();
+
+  if (!item) throw new ApiError(404, "Payroll item not found for this school and academic year");
+
+  const [run, school] = await Promise.all([
+    PayrollRun.findOne({ _id: item.payrollRunId, schoolId, academicYearId }).lean(),
+    School.findById(schoolId).select("name address email phone").lean(),
+  ]);
+
+  if (!run) throw new ApiError(404, "Payroll run not found for this salary slip");
+
+  return {
+    run,
+    item,
+    employee: item.employeeId,
+    school,
+    generatedAt: new Date(),
+    totals: {
+      gross: money(item.gross),
+      deductions: money(item.totalDeductions),
+      net: money(item.netSalary),
+    },
+  };
+};
+
+const drawAmountTable = (doc, title, rows, x, y) => {
+  doc.fontSize(11).font("Helvetica-Bold").text(title, x, y);
+  let cursor = y + 18;
+  doc.font("Helvetica").fontSize(9);
+  rows.forEach(([label, value]) => {
+    doc.text(titleCase(label), x, cursor, { width: 150 });
+    doc.text(`INR ${money(value).toLocaleString("en-IN")}`, x + 155, cursor, { width: 90, align: "right" });
+    cursor += 16;
+  });
+  return cursor;
+};
+
+const drawPayslipPdf = (doc, payslip) => {
+  const { school, employee, run, item } = payslip;
+  const employeeName = employee?.userId?.name || "Employee";
+  doc.font("Helvetica-Bold").fontSize(18).text(school?.name || "School", { align: "center" });
+  doc.font("Helvetica").fontSize(9).text([school?.address, school?.email, school?.phone].filter(Boolean).join(" | "), { align: "center" });
+  doc.moveDown(1.2);
+  doc.font("Helvetica-Bold").fontSize(15).text("Salary Slip", { align: "center" });
+  doc.font("Helvetica").fontSize(10).text(`Payroll Period: ${String(run.month).padStart(2, "0")}/${run.year}`, { align: "center" });
+  doc.moveDown();
+
+  const top = doc.y + 8;
+  doc.roundedRect(50, top, 495, 92, 8).stroke("#d1d5db");
+  doc.font("Helvetica-Bold").fontSize(10).text("Employee Details", 65, top + 12);
+  doc.font("Helvetica").fontSize(9);
+  doc.text(`Name: ${employeeName}`, 65, top + 32);
+  doc.text(`Employee Code: ${employee?.employeeCode || "-"}`, 65, top + 48);
+  doc.text(`Designation: ${employee?.designation || "-"}`, 65, top + 64);
+  doc.text(`Department: ${employee?.department || "-"}`, 310, top + 32);
+  doc.text(`Status: ${titleCase(run.status)}`, 310, top + 48);
+  doc.text(`Working Days: ${item.attendance?.workingDays || 0}`, 310, top + 64);
+
+  const tableTop = top + 120;
+  drawAmountTable(doc, "Earnings", Object.entries(item.earnings || {}), 65, tableTop);
+  drawAmountTable(doc, "Deductions", Object.entries(item.deductions || {}), 310, tableTop);
+
+  doc.moveTo(50, 665).lineTo(545, 665).stroke("#d1d5db");
+  doc.font("Helvetica-Bold").fontSize(12).text(`Gross: INR ${money(item.gross).toLocaleString("en-IN")}`, 65, 680);
+  doc.text(`Deductions: INR ${money(item.totalDeductions).toLocaleString("en-IN")}`, 230, 680);
+  doc.fillColor("#047857").text(`Net Salary: INR ${money(item.netSalary).toLocaleString("en-IN")}`, 405, 680);
+  doc.fillColor("#111827").font("Helvetica").fontSize(8).text("Computer generated salary slip. No signature required.", 50, 735, { align: "center" });
+};
 const ensureObjectId = (value, label = "id") => {
   if (!mongoose.Types.ObjectId.isValid(value)) throw new ApiError(400, `Invalid ${label}`);
 };
@@ -366,6 +448,72 @@ export const getEmployeeLoans = asyncHandler(async (req, res) => {
   if (req.query.status) filter.status = req.query.status;
   const loans = await populateLoan(LoanAdvance.find(filter).sort({ createdAt: -1 })).lean();
   return sendSuccess(res, { message: "Loans fetched", data: loans });
+});
+export const getUnifiedPayrollOverview = asyncHandler(async (req, res) => {
+  const base = await context(req);
+  const basicCycles = await PayrollCycle.find({ schoolId: base.schoolId }).sort({ year: -1, month: -1, createdAt: -1 }).limit(12).lean();
+  const basicCycleIds = basicCycles.map((cycle) => cycle._id);
+  const basicEntries = await PayrollEntry.find({ payrollCycleId: { $in: basicCycleIds } }).lean();
+  const basicEntryMap = basicEntries.reduce((acc, entry) => {
+    const key = String(entry.payrollCycleId);
+    if (!acc[key]) acc[key] = { totalEmployees: 0, gross: 0, deductions: 0, net: 0, paid: 0 };
+    acc[key].totalEmployees += 1;
+    acc[key].gross += Number(entry.grossEarnings || 0);
+    acc[key].deductions += Number(entry.totalDeductions || 0);
+    acc[key].net += Number(entry.netPay || 0);
+    if (entry.paymentStatus === "paid") acc[key].paid += 1;
+    return acc;
+  }, {});
+
+  const basicRuns = basicCycles.map((cycle) => ({
+    _id: cycle._id,
+    source: "basic",
+    month: cycle.month,
+    year: cycle.year,
+    status: cycle.status,
+    totalEmployees: basicEntryMap[String(cycle._id)]?.totalEmployees || 0,
+    totalPayout: money(basicEntryMap[String(cycle._id)]?.net || 0),
+    totalEarnings: money(basicEntryMap[String(cycle._id)]?.gross || 0),
+    totalDeductions: money(basicEntryMap[String(cycle._id)]?.deductions || 0),
+    paidEmployees: basicEntryMap[String(cycle._id)]?.paid || 0,
+    createdAt: cycle.createdAt,
+  }));
+
+  const enterpriseRuns = await PayrollRun.find({ schoolId: base.schoolId, academicYearId: base.academicYearId }).sort({ year: -1, month: -1, createdAt: -1 }).limit(12).lean();
+  const normalizedEnterpriseRuns = enterpriseRuns.map((run) => ({
+    _id: run._id,
+    source: "enterprise",
+    month: run.month,
+    year: run.year,
+    status: run.status,
+    totalEmployees: run.totalEmployees || 0,
+    totalPayout: money(run.totalPayout || 0),
+    totalEarnings: money(run.totalEarnings || 0),
+    totalDeductions: money(run.totalDeductions || 0),
+    pfLiability: money(run.pfLiability || 0),
+    esiLiability: money(run.esiLiability || 0),
+    tdsLiability: money(run.tdsLiability || 0),
+    createdAt: run.createdAt,
+  }));
+
+  const activeStructures = await PayrollStructure.countDocuments({ schoolId: base.schoolId, status: "active" });
+  const activeEmployees = await Employee.countDocuments({ schoolId: base.schoolId, isActive: true });
+  const combinedRuns = [...normalizedEnterpriseRuns, ...basicRuns].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const summary = combinedRuns.reduce(
+    (acc, run) => {
+      acc.totalRuns += 1;
+      acc.totalEmployeesProcessed += Number(run.totalEmployees || 0);
+      acc.totalPayout += Number(run.totalPayout || 0);
+      acc.totalDeductions += Number(run.totalDeductions || 0);
+      if (run.source === "basic") acc.basicRuns += 1;
+      if (run.source === "enterprise") acc.enterpriseRuns += 1;
+      if (["verified", "hr_approved", "accountant_approved", "principal_approved"].includes(run.status)) acc.pendingApprovals += 1;
+      return acc;
+    },
+    { totalRuns: 0, basicRuns: 0, enterpriseRuns: 0, totalEmployeesProcessed: 0, totalPayout: 0, totalDeductions: 0, pendingApprovals: 0, activeStructures, activeEmployees }
+  );
+
+  return sendSuccess(res, { message: "Unified payroll overview fetched", data: { summary, runs: combinedRuns.slice(0, 18) } });
 });
 
 export const getEnterprisePayslip = asyncHandler(async (req, res) => {

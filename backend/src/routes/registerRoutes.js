@@ -34,8 +34,6 @@ import inventoryRoutes from "./inventory.routes.js";
 import hostelRoutes from "./hostel.routes.js";
 import auditLogRoutes from "./auditLog.routes.js";
 import moduleRoutes from "./module.routes.js";
-import payrollRoutes from "./payroll.routes.js";
-import payrollEnterpriseRoutes from "./payrollEnterprise.routes.js";
 import studentPortalRoutes from "./studentPortal.routes.js";
 import supportTicketRoutes from "./supportTicket.routes.js";
 import timetableRoutes from "./timetable.routes.js";
@@ -81,8 +79,6 @@ export const apiV1Routes = [
   ["/inventory", inventoryRoutes],
   ["/hostel", hostelRoutes],
   ["/modules", moduleRoutes],
-  ["/payroll", payrollRoutes],
-  ["/payroll-enterprise", payrollEnterpriseRoutes],
   ["/audit-logs", auditLogRoutes],
   ["/student-portal", studentPortalRoutes],
   ["/support-tickets", supportTicketRoutes],

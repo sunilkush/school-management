@@ -48,12 +48,12 @@ import studentPortalReducer from "../features/studentPortalSlice.js";
 import { attachAuthStore } from "../api/httpClient";
 import { baseApi } from "../services/baseApi";
 import accountRecoveryReducer from "../features/accountRecoverySlice";
-import payrollReducer from "../features/payrollSlice";
+
 import studentPromotionReducer from "../features/studentPromotionSlice";
 import superAdminBillingReducer from "../features/superAdminBillingSlice";
 import systemBackupReducer from "../features/systemBackupSlice";
 import timetableReducer from "../features/timetableSlice";
-import payrollEnterpriseReducer from "../features/payrollEnterpriseSlice";
+
 import notificationReducer from "../features/notificationSlice";
 import messageReducer from "../features/messageSlice";
 const authPersistConfig = {
@@ -99,12 +99,12 @@ const rootReducer = combineReducers({
   hostel: hostelReducer,
   studentPortal: studentPortalReducer,
   accountRecovery: accountRecoveryReducer,
-  payroll: payrollReducer,
+ 
   studentPromotion: studentPromotionReducer,
   superAdminBilling: superAdminBillingReducer,
   systemBackup: systemBackupReducer,
   timetable: timetableReducer,
-  payrollEnterprise: payrollEnterpriseReducer,
+ 
   messages: messageReducer,
   notification: notificationReducer,
   [baseApi.reducerPath]: baseApi.reducer,

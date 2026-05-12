@@ -124,7 +124,7 @@ const detectModuleLabel = (title = "", parent = "") => {
   }
   if (fullLabel.includes("hostel") || fullLabel.includes("room")) return "Hostel";
   if (fullLabel.includes("fee")) return "Fees";
-  if (fullLabel.includes("payroll")) return "Payroll";
+  
   if (fullLabel.includes("inventory")) return "Inventory";
 
   return null;

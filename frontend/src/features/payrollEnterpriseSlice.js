@@ -3,6 +3,14 @@ import httpClient from "../api/httpClient";
 
 const err = (error, fb) => error?.response?.data?.message || fb;
 const replaceById = (items, item) => items.map((row) => (row._id === item?._id ? item : row));
+export const fetchUnifiedPayrollOverview = createAsyncThunk("pe/unifiedOverview", async (_, { rejectWithValue }) => {
+  try {
+    const { data } = await httpClient.get("/payroll-enterprise/unified/overview");
+    return data.data;
+  } catch (e) {
+    return rejectWithValue(err(e, "Failed unified payroll overview"));
+  }
+});
 
 export const fetchPayrollDashboard = createAsyncThunk("pe/dashboard", async (_, { rejectWithValue }) => {
   try {
@@ -161,6 +169,7 @@ const slice = createSlice({
   name: "payrollEnterprise",
   initialState: {
     dashboard: null,
+    unifiedOverview: null,
     runs: [],
     runDetails: null,
     loans: [],
@@ -178,7 +187,13 @@ const slice = createSlice({
     },
   },
   extraReducers: (b) => {
-    b.addCase(fetchPayrollDashboard.pending, (s) => {
+    b.addCase(fetchUnifiedPayrollOverview.fulfilled, (s, a) => {
+        s.unifiedOverview = a.payload;
+      })
+      .addCase(fetchUnifiedPayrollOverview.rejected, (s, a) => {
+        s.error = a.payload;
+      })
+      .addCase(fetchPayrollDashboard.pending, (s) => {
       s.loading = true;
       s.error = null;
     })

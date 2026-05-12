@@ -33,7 +33,6 @@ const PlanForm = ({ initialValues, onClose }) => {
     "Transport",
     "Hostel",
     "Library",
-    "Payroll",
     "Reports",
     "AI Features",
     "Mobile App",
