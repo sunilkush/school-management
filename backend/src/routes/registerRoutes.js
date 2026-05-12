@@ -86,7 +86,8 @@ export const apiV1Routes = [
   ["/audit-logs", auditLogRoutes],
   ["/student-portal", studentPortalRoutes],
   ["/support-tickets", supportTicketRoutes],
-  ["/timetables", timetableRoutes],
+  ["/timetable", timetableRoutes],
+  /* ["/timetables", timetableRoutes], */
   ["/notifications", notificationRoutes],
   ["/messages", messageRoutes],
   ["/super-admin/billing", superAdminBillingRoutes],

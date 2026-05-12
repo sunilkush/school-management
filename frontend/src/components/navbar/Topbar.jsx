@@ -205,17 +205,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           {/* Vertical divider */}
             {!isMobile && screens.sm && <span style={styles.divider(isDark)} />}
 
-          {/* Messages */}
-         {!isMobile && (
-            <IconBtn
-              icon={<MessageOutlined style={{ fontSize: 16,color:"var(--text-primary)" }} />}
-              tooltip="Messages"
-              badge={3}
-              isDark={isDark}
-              ariaLabel="Messages"
-            />
-          )}
-
+          
           {/* Theme toggle */}
           <Dropdown
             trigger={["click"]}

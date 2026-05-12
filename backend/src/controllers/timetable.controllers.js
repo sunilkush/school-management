@@ -1,303 +1,345 @@
 import mongoose from "mongoose";
-import { StudentTimetable } from "../models/StudentTimetable.model.js";
+import { TimeSlot } from "../models/TimeSlot.model.js";
+import { Room } from "../models/Room.model.js";
+import { Timetable } from "../models/Timetable.model.js";
+import { Student } from "../models/student.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const toTrimmed = (value) => (typeof value === "string" ? value.trim() : "");
-const toObjectIdString = (value) => (value ? value.toString() : "");
+const CRUD_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Academic Coordinator", "Exam Coordinator"];
+const READ_ROLES = [...CRUD_ROLES, "Teacher", "Student", "Parent", "Staff", "Support Staff"];
+const DAY_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const TEACHING_TYPES = ["regular", "substitution", "activity"];
 
-const buildListQuery = ({ schoolId, academicYearId, schoolClassId, sectionId, teacherId, day }) => {
-  const query = { schoolId, isActive: true };
-  if (academicYearId) query.academicYearId = academicYearId;
-  if (schoolClassId) query.schoolClassId = schoolClassId;
-  if (sectionId) query.sectionId = sectionId;
-  if (teacherId) query.teacherId = teacherId;
-  if (day) query.day = day;
-  return query;
+const id = (value) => value?._id?.toString?.() || value?.toString?.() || "";
+const compact = (obj) => Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined && value !== null && value !== ""));
+const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
+const roleName = (req) => req.userRole?.name || req.user?.roleId?.name || "";
+const requireRole = (req, allowed) => {
+  if (!allowed.includes(roleName(req))) throw new ApiError(403, "Forbidden. Insufficient role access.");
+};
+const success = (res, status, data, message) => res.status(status).json(new ApiResponse(status, data, message));
+
+const normalizeDay = (day) => (typeof day === "string" ? day.toLowerCase() : day);
+const normalizeEntryPayload = (payload = {}) => {
+  const type = payload.type || "regular";
+  const normalized = {
+    dayOfWeek: normalizeDay(payload.dayOfWeek),
+    timeSlotId: payload.timeSlotId,
+    subjectId: TEACHING_TYPES.includes(type) ? payload.subjectId || null : null,
+    teacherId: TEACHING_TYPES.includes(type) ? payload.teacherId || null : null,
+    roomId: payload.roomId || null,
+    type,
+    note: payload.note || "",
+    status: payload.status || "active",
+  };
+  return normalized;
 };
 
-const checkTimeOverlap = async ({
-  schoolId,
-  academicYearId,
-  schoolClassId,
-  sectionId,
-  teacherId,
-  day,
-  startTime,
-  endTime,
-  skipId,
-}) => {
-  const commonFilter = {
-    schoolId,
-    academicYearId,
-    day,
-    isActive: true,
-    ...(skipId ? { _id: { $ne: skipId } } : {}),
-  };
-
-  const [classSectionEntries, teacherEntries] = await Promise.all([
-    StudentTimetable.find({
-      ...commonFilter,
-      schoolClassId,
-      sectionId,
-    })
-      .select("startTime endTime")
-      .lean(),
-    teacherId
-      ? StudentTimetable.find({
-          ...commonFilter,
-          teacherId,
-        })
-          .select("startTime endTime")
-          .lean()
-      : [],
-  ]);
-
-  const hasClassOverlap = classSectionEntries.some(
-    (entry) => !(endTime <= entry.startTime || startTime >= entry.endTime)
-  );
-  const hasTeacherOverlap = teacherEntries.some(
-    (entry) => !(endTime <= entry.startTime || startTime >= entry.endTime)
-  );
-
-  if (hasClassOverlap) {
-    throw new ApiError(400, "Time slot overlaps with an existing period for this class and section");
+const resolveSchoolId = (req, source = {}) => {
+  const requested = id(source.schoolId ?? req.query?.schoolId ?? req.body?.schoolId);
+  const current = id(req.user?.schoolId ?? req.user?.school?._id);
+  if (!requested && !current) throw new ApiError(400, "schoolId is required");
+  const selected = requested || current;
+  if (!isObjectId(selected)) throw new ApiError(400, "Invalid schoolId");
+  if (roleName(req) !== "Super Admin" && current && selected !== current) {
+    throw new ApiError(403, "You are not allowed to access another school's timetable");
   }
-
-  if (hasTeacherOverlap) {
-    throw new ApiError(400, "Teacher already has another period in this time slot");
-  }
+  return selected;
 };
 
-const validateForeignKeys = ({ academicYearId, schoolClassId, sectionId, subjectId, teacherId }) => {
-  const keyMap = {
-    academicYearId,
-    schoolClassId,
-    sectionId,
-    subjectId,
-    teacherId,
-  };
-
-  Object.entries(keyMap).forEach(([key, value]) => {
-    if (!mongoose.Types.ObjectId.isValid(value)) {
-      throw new ApiError(400, `Invalid ${key}`);
-    }
+const validateIds = (fields) => {
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value && !isObjectId(value)) throw new ApiError(400, `Invalid ${key}`);
   });
 };
 
-const verifySchoolOwnership = (req) => {
-  const schoolId = toObjectIdString(req.user?.schoolId);
-  if (!schoolId) {
-    throw new ApiError(400, "Logged-in user does not belong to a school");
+const handleDuplicate = (error) => {
+  if (error?.code !== 11000) throw error;
+  if (error.keyPattern?.schoolId && error.keyPattern?.academicYearId && error.keyPattern?.schoolClassId) {
+    throw new ApiError(409, "Timetable period already exists for this section");
   }
-  return schoolId;
-};
-const resolveSchoolIdForList = (req) => {
-  const requestedSchoolId = toObjectIdString(req.query?.schoolId);
-  const loggedInSchoolId = toObjectIdString(req.user?.schoolId);
-  const roleName = req.userRole?.name || req.user?.roleId?.name || "";
-
-  if (!requestedSchoolId) {
-    return verifySchoolOwnership(req);
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(requestedSchoolId)) {
-    throw new ApiError(400, "Invalid schoolId");
-  }
-
-  if (roleName !== "Super Admin") {
-    if (!loggedInSchoolId) {
-      throw new ApiError(400, "Logged-in user does not belong to a school");
-    }
-
-    if (loggedInSchoolId !== requestedSchoolId) {
-      throw new ApiError(403, "You are not allowed to access timetable of another school");
-    }
-  }
-
-  return requestedSchoolId;
-};
-
-const sortByWeekdayThenTime = (items = []) =>
-  [...items].sort(
-    (a, b) =>
-      dayOrderValue(a.day) - dayOrderValue(b.day) ||
-      String(a.startTime).localeCompare(String(b.startTime))
-  );
-
-const dayOrderValue = (day) => {
-  const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const index = dayOrder.indexOf(day);
-  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+  throw new ApiError(409, "Duplicate timetable setup record already exists");
 };
 
 const populateTimetable = (query) =>
   query
     .populate("schoolId", "schoolName name code")
+    .populate("academicYearId", "name year startDate endDate isActive")
     .populate("schoolClassId", "name")
     .populate("sectionId", "name")
-    .populate("subjectId", "name code")
-    .populate("teacherId", "name email")
+    .populate("timeSlotId", "name startTime endTime type order")
+    .populate("subjectId", "name code shortName")
+    .populate("teacherId", "name email avatar")
+    .populate("roomId", "name code type capacity")
     .lean();
 
-export const listClassTimetable = asyncHandler(async (req, res) => {
-  const schoolId = resolveSchoolIdForList(req);
-  const { academicYearId, schoolClassId, sectionId, day } = req.query;
-
-  const entries = await populateTimetable(
-    StudentTimetable.find(
-    buildListQuery({
-      schoolId,
-      academicYearId,
-      schoolClassId,
-      sectionId,
-      day,
-    })
-  )
-  );
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, sortByWeekdayThenTime(entries), "Class timetable fetched successfully"));
-});
-
-export const listTeacherTimetable = asyncHandler(async (req, res) => {
-   const schoolId = resolveSchoolIdForList(req);
-  const teacherId = req.query.teacherId || req.user._id;
-  const { academicYearId, day } = req.query;
-
-  if (!mongoose.Types.ObjectId.isValid(teacherId)) {
-    throw new ApiError(400, "Invalid teacherId");
-  }
-
-  const entries = await populateTimetable(
-    StudentTimetable.find(
-    buildListQuery({
-      schoolId,
-      academicYearId,
-      teacherId,
-      day,
-    })
-  )
-  );
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, sortByWeekdayThenTime(entries), "Teacher timetable fetched successfully"));
-});
-
-export const createClassTimetableEntry = asyncHandler(async (req, res) => {
-  const { academicYearId, schoolClassId, sectionId, subjectId, teacherId, day, startTime, endTime, room } = req.body;
-
-  if (!academicYearId || !schoolClassId || !sectionId || !subjectId || !teacherId || !day || !startTime || !endTime) {
-    throw new ApiError(400, "Missing required timetable fields");
-  }
-  validateForeignKeys({ academicYearId, schoolClassId, sectionId, subjectId, teacherId });
-  const schoolId = verifySchoolOwnership(req);
-
-  if (endTime <= startTime) {
-    throw new ApiError(400, "End time should be greater than start time");
-  }
-
-  await checkTimeOverlap({
-    schoolId,
-    academicYearId,
-    schoolClassId,
-    sectionId,
-    teacherId,
-    day,
-    startTime,
-    endTime,
+const sortTimetable = (rows = []) =>
+  [...rows].sort((a, b) => {
+    const dayDiff = DAY_ORDER.indexOf(a.dayOfWeek) - DAY_ORDER.indexOf(b.dayOfWeek);
+    if (dayDiff) return dayDiff;
+    return (a.timeSlotId?.order ?? 999) - (b.timeSlotId?.order ?? 999);
   });
 
-  const entry = await StudentTimetable.create({
-    schoolId,
-    academicYearId,
-    schoolClassId,
-    sectionId,
-    subjectId,
-    teacherId,
-    day,
-    startTime,
-    endTime,
-    room: toTrimmed(room),
+const validateEntry = (entry) => {
+  validateIds({
+    academicYearId: entry.academicYearId,
+    schoolClassId: entry.schoolClassId,
+    sectionId: entry.sectionId,
+    timeSlotId: entry.timeSlotId,
+    subjectId: entry.subjectId,
+    teacherId: entry.teacherId,
+    roomId: entry.roomId,
   });
+  if (!DAY_ORDER.includes(entry.dayOfWeek)) throw new ApiError(400, "Invalid dayOfWeek");
+  if (TEACHING_TYPES.includes(entry.type) && entry.status !== "cancelled") {
+    if (!entry.subjectId || !entry.teacherId) throw new ApiError(400, "Subject and teacher are required for regular periods");
+  }
+};
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, entry, "Class timetable entry created successfully"));
+const assertNoClashes = async ({ schoolId, academicYearId, dayOfWeek, timeSlotId, teacherId, roomId, skipId }) => {
+  const base = compact({ schoolId, academicYearId, dayOfWeek, timeSlotId, status: "active", _id: skipId ? { $ne: skipId } : undefined });
+  const checks = [];
+  if (teacherId) checks.push(Timetable.exists({ ...base, teacherId }));
+  else checks.push(Promise.resolve(null));
+  if (roomId) checks.push(Timetable.exists({ ...base, roomId }));
+  else checks.push(Promise.resolve(null));
+  const [teacherClash, roomClash] = await Promise.all(checks);
+  if (teacherClash) throw new ApiError(409, "Teacher already assigned in this time slot");
+  if (roomClash) throw new ApiError(409, "Room already booked in this time slot");
+};
+
+const currentEnrollmentForUser = async (userId, academicYearId) => {
+  const student = await Student.findOne({ userId, isActive: true }).lean();
+  if (!student) throw new ApiError(404, "Student profile not found");
+  const enrollment = await StudentEnrollment.findOne(
+    compact({ studentId: student._id, academicYearId, status: "Active" })
+  ).sort({ createdAt: -1 }).lean();
+  if (!enrollment) throw new ApiError(404, "Active student enrollment not found");
+  return { student, enrollment };
+};
+
+export const listTimeSlots = asyncHandler(async (req, res) => {
+  requireRole(req, READ_ROLES);
+  const schoolId = resolveSchoolId(req);
+  const { academicYearId } = req.query;
+  if (!academicYearId) throw new ApiError(400, "academicYearId is required");
+  validateIds({ academicYearId });
+  const rows = await TimeSlot.find({ schoolId, academicYearId, isActive: true }).sort({ order: 1, startTime: 1 }).lean();
+  return success(res, 200, rows, "Time slots fetched successfully");
 });
 
-export const updateClassTimetableEntry = asyncHandler(async (req, res) => {
-  const schoolId = verifySchoolOwnership(req);
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new ApiError(400, "Invalid timetable id");
+export const createTimeSlot = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  const payload = { ...req.body, schoolId, createdBy: req.user._id, updatedBy: req.user._id };
+  validateIds({ academicYearId: payload.academicYearId });
+  if (!payload.academicYearId || !payload.name || !payload.startTime || !payload.endTime || payload.order === undefined) {
+    throw new ApiError(400, "name, startTime, endTime, order, and academicYearId are required");
   }
-
-  const existing = await StudentTimetable.findOne({ _id: id, schoolId, isActive: true });
-  if (!existing) {
-    throw new ApiError(404, "Timetable entry not found");
-  }
-
-  const payload = {
-    academicYearId: req.body.academicYearId || existing.academicYearId,
-    schoolClassId: req.body.schoolClassId || existing.schoolClassId,
-    sectionId: req.body.sectionId || existing.sectionId,
-    subjectId: req.body.subjectId || existing.subjectId,
-    teacherId: req.body.teacherId || existing.teacherId,
-    day: req.body.day || existing.day,
-    startTime: req.body.startTime || existing.startTime,
-    endTime: req.body.endTime || existing.endTime,
-    room: req.body.room !== undefined ? toTrimmed(req.body.room) : existing.room,
-  };
-  validateForeignKeys(payload);
-
-  if (payload.endTime <= payload.startTime) {
-    throw new ApiError(400, "End time should be greater than start time");
-  }
-
-  await checkTimeOverlap({
-    schoolId,
-    academicYearId: payload.academicYearId,
-    schoolClassId: payload.schoolClassId,
-    sectionId: payload.sectionId,
-    teacherId: payload.teacherId,
-    day: payload.day,
-    startTime: payload.startTime,
-    endTime: payload.endTime,
-    skipId: id,
-  });
-
-  const updated = await StudentTimetable.findByIdAndUpdate(id, payload, {
-    new: true,
-    runValidators: true,
-  });
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, updated, "Class timetable entry updated successfully"));
+  if (payload.endTime <= payload.startTime) throw new ApiError(400, "End time must be greater than start time");
+  try {
+    const row = await TimeSlot.create(payload);
+    return success(res, 201, row, "Time slot created successfully");
+  } catch (error) { handleDuplicate(error); }
 });
 
-export const deleteClassTimetableEntry = asyncHandler(async (req, res) => {
-  const schoolId = verifySchoolOwnership(req);
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new ApiError(400, "Invalid timetable id");
-  }
-
-  const deleted = await StudentTimetable.findOneAndUpdate(
-    { _id: id, schoolId, isActive: true },
-    { isActive: false },
-    { new: true }
-  );
-
-  if (!deleted) {
-    throw new ApiError(404, "Timetable entry not found");
-  }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, deleted, "Class timetable entry deleted successfully"));
+export const updateTimeSlot = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  validateIds({ id: req.params.id, academicYearId: req.body.academicYearId });
+  if (req.body.endTime && req.body.startTime && req.body.endTime <= req.body.startTime) throw new ApiError(400, "End time must be greater than start time");
+  try {
+    const row = await TimeSlot.findOneAndUpdate({ _id: req.params.id, schoolId }, { ...req.body, updatedBy: req.user._id }, { new: true, runValidators: true });
+    if (!row) throw new ApiError(404, "Time slot not found");
+    return success(res, 200, row, "Time slot updated successfully");
+  } catch (error) { handleDuplicate(error); }
 });
+
+export const deleteTimeSlot = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req);
+  validateIds({ id: req.params.id });
+  const row = await TimeSlot.findOneAndUpdate({ _id: req.params.id, schoolId }, { isActive: false, updatedBy: req.user._id }, { new: true });
+  if (!row) throw new ApiError(404, "Time slot not found");
+  return success(res, 200, row, "Time slot deleted successfully");
+});
+
+export const listRooms = asyncHandler(async (req, res) => {
+  requireRole(req, READ_ROLES);
+  const schoolId = resolveSchoolId(req);
+  const rows = await Room.find({ schoolId, isActive: true }).sort({ name: 1 }).lean();
+  return success(res, 200, rows, "Rooms fetched successfully");
+});
+
+export const createRoom = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  if (!req.body.name) throw new ApiError(400, "Room name is required");
+  try {
+    const row = await Room.create({ ...req.body, schoolId });
+    return success(res, 201, row, "Room created successfully");
+  } catch (error) { handleDuplicate(error); }
+});
+
+export const updateRoom = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  validateIds({ id: req.params.id });
+  try {
+    const row = await Room.findOneAndUpdate({ _id: req.params.id, schoolId }, req.body, { new: true, runValidators: true });
+    if (!row) throw new ApiError(404, "Room not found");
+    return success(res, 200, row, "Room updated successfully");
+  } catch (error) { handleDuplicate(error); }
+});
+
+export const deleteRoom = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req);
+  validateIds({ id: req.params.id });
+  const row = await Room.findOneAndUpdate({ _id: req.params.id, schoolId }, { isActive: false }, { new: true });
+  if (!row) throw new ApiError(404, "Room not found");
+  return success(res, 200, row, "Room deleted successfully");
+});
+
+export const listTimetable = asyncHandler(async (req, res) => {
+  requireRole(req, READ_ROLES);
+  const schoolId = resolveSchoolId(req);
+  const { academicYearId, schoolClassId, sectionId, teacherId, dayOfWeek, day } = req.query;
+  validateIds({ academicYearId, schoolClassId, sectionId, teacherId });
+  const selectedTeacherId = req.path.endsWith("/teacher") && !teacherId ? req.user._id : teacherId;
+  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, teacherId: selectedTeacherId, dayOfWeek: normalizeDay(dayOfWeek || day), status: "active" })));
+  return success(res, 200, sortTimetable(rows), "Timetable fetched successfully");
+});
+
+export const createTimetableEntry = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  const entry = { ...normalizeEntryPayload(req.body), schoolId, academicYearId: req.body.academicYearId, schoolClassId: req.body.schoolClassId, sectionId: req.body.sectionId, createdBy: req.user._id, updatedBy: req.user._id };
+  validateEntry(entry);
+  await assertNoClashes(entry);
+  try {
+    const created = await Timetable.create(entry);
+    const populated = await populateTimetable(Timetable.findById(created._id));
+    return success(res, 201, populated, "Timetable entry created successfully");
+  } catch (error) { handleDuplicate(error); }
+});
+
+export const bulkSaveTimetable = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  const { academicYearId, schoolClassId, sectionId, entries = [] } = req.body;
+  if (!academicYearId || !schoolClassId || !sectionId || !Array.isArray(entries)) throw new ApiError(400, "Bulk timetable payload is invalid");
+  const saved = [];
+  for (const raw of entries) {
+    const entry = { ...normalizeEntryPayload(raw), schoolId, academicYearId, schoolClassId, sectionId, updatedBy: req.user._id };
+    validateEntry(entry);
+    const existing = await Timetable.findOne({ schoolId, academicYearId, schoolClassId, sectionId, dayOfWeek: entry.dayOfWeek, timeSlotId: entry.timeSlotId }).lean();
+    await assertNoClashes({ ...entry, skipId: existing?._id });
+    const row = await Timetable.findOneAndUpdate(
+      { schoolId, academicYearId, schoolClassId, sectionId, dayOfWeek: entry.dayOfWeek, timeSlotId: entry.timeSlotId },
+      { $set: entry, $setOnInsert: { createdBy: req.user._id } },
+      { new: true, runValidators: true, upsert: true }
+    );
+    saved.push(row);
+  }
+  const rows = await populateTimetable(Timetable.find({ _id: { $in: saved.map((row) => row._id) } }));
+  return success(res, 200, sortTimetable(rows), "Timetable saved successfully");
+});
+
+export const updateTimetableEntry = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  validateIds({ id: req.params.id });
+  const existing = await Timetable.findOne({ _id: req.params.id, schoolId });
+  if (!existing) throw new ApiError(404, "Timetable entry not found");
+  const patch = { ...normalizeEntryPayload({ ...existing.toObject(), ...req.body }), academicYearId: req.body.academicYearId || existing.academicYearId, schoolClassId: req.body.schoolClassId || existing.schoolClassId, sectionId: req.body.sectionId || existing.sectionId, updatedBy: req.user._id };
+  const merged = { ...existing.toObject(), ...patch, academicYearId: req.body.academicYearId || existing.academicYearId, schoolClassId: req.body.schoolClassId || existing.schoolClassId, sectionId: req.body.sectionId || existing.sectionId };
+  validateEntry(merged);
+  await assertNoClashes({ ...merged, skipId: existing._id });
+  try {
+    const row = await Timetable.findByIdAndUpdate(existing._id, patch, { new: true, runValidators: true });
+    const populated = await populateTimetable(Timetable.findById(row._id));
+    return success(res, 200, populated, "Timetable entry updated successfully");
+  } catch (error) { handleDuplicate(error); }
+});
+
+export const deleteTimetableEntry = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req);
+  validateIds({ id: req.params.id });
+  const row = await Timetable.findOneAndDelete({ _id: req.params.id, schoolId });
+  if (!row) throw new ApiError(404, "Timetable entry not found");
+  return success(res, 200, row, "Timetable entry deleted successfully");
+});
+
+export const copyWeekTimetable = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+  const schoolId = resolveSchoolId(req, req.body);
+  const { fromSchoolClassId, fromSectionId, toSchoolClassId, toSectionId, academicYearId } = req.body;
+  validateIds({ fromSchoolClassId, fromSectionId, toSchoolClassId, toSectionId, academicYearId });
+  const source = await Timetable.find({ schoolId, academicYearId, schoolClassId: fromSchoolClassId, sectionId: fromSectionId, status: "active" }).lean();
+  const copied = [];
+  for (const src of source) {
+    const entry = { ...src, _id: undefined, schoolClassId: toSchoolClassId, sectionId: toSectionId, createdBy: req.user._id, updatedBy: req.user._id };
+    await assertNoClashes(entry);
+    const row = await Timetable.findOneAndUpdate(
+      { schoolId, academicYearId, schoolClassId: toSchoolClassId, sectionId: toSectionId, dayOfWeek: src.dayOfWeek, timeSlotId: src.timeSlotId },
+      { $set: entry },
+      { upsert: true, new: true, runValidators: true }
+    );
+    copied.push(row);
+  }
+  const rows = await populateTimetable(Timetable.find({ _id: { $in: copied.map((row) => row._id) } }));
+  return success(res, 200, sortTimetable(rows), "Weekly timetable copied successfully");
+});
+
+export const myTeacherTimetable = asyncHandler(async (req, res) => {
+  requireRole(req, ["Teacher", ...CRUD_ROLES, "Staff", "Support Staff"]);
+  const schoolId = resolveSchoolId(req);
+  const { academicYearId } = req.query;
+  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, teacherId: req.user._id, status: "active" })));
+  return success(res, 200, sortTimetable(rows), "Teacher timetable fetched successfully");
+});
+
+export const myStudentTimetable = asyncHandler(async (req, res) => {
+  requireRole(req, ["Student"]);
+  const { academicYearId } = req.query;
+  const { enrollment } = await currentEnrollmentForUser(req.user._id, academicYearId);
+  const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }));
+  return success(res, 200, sortTimetable(rows), "Student timetable fetched successfully");
+});
+
+export const childTimetable = asyncHandler(async (req, res) => {
+  requireRole(req, ["Parent", ...CRUD_ROLES]);
+  const { academicYearId } = req.query;
+  validateIds({ studentId: req.params.studentId, academicYearId });
+  const student = await Student.findById(req.params.studentId).lean();
+  if (!student) throw new ApiError(404, "Student not found");
+  if (roleName(req) === "Parent" && ![id(student.fatherId), id(student.motherId), id(student.guardianId)].includes(id(req.user._id))) {
+    throw new ApiError(403, "You are not allowed to view this child's timetable");
+  }
+  const enrollment = await StudentEnrollment.findOne(compact({ studentId: student._id, academicYearId, status: "Active" })).sort({ createdAt: -1 }).lean();
+  if (!enrollment) throw new ApiError(404, "Active student enrollment not found");
+  const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }));
+  return success(res, 200, sortTimetable(rows), "Child timetable fetched successfully");
+});
+
+export const classSectionTimetable = asyncHandler(async (req, res) => {
+  requireRole(req, READ_ROLES);
+  const schoolId = resolveSchoolId(req);
+  const { academicYearId } = req.query;
+  const { schoolClassId, sectionId } = req.params;
+  validateIds({ academicYearId, schoolClassId, sectionId });
+  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, status: "active" })));
+  return success(res, 200, sortTimetable(rows), "Class section timetable fetched successfully");
+});
+
+// Backward-compatible aliases used by older frontend paths.
+export const listClassTimetable = listTimetable;
+export const listTeacherTimetable = listTimetable;
+export const createClassTimetableEntry = createTimetableEntry;
+export const updateClassTimetableEntry = updateTimetableEntry;
+export const deleteClassTimetableEntry = deleteTimetableEntry;

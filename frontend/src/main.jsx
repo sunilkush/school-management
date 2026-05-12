@@ -137,9 +137,15 @@ const Books = lazy(() => import("./pages/School_Admin/Library/Books.jsx"));
 const IssueBook = lazy(() => import("./pages/School_Admin/Library/IssueBook.jsx"));
 const LibraryCard = lazy(() => import("./pages/School_Admin/Library/LibraryCard.jsx"));
 
-const ClassTimetable = lazy(() => import("./pages/School_Admin/Timetables/ClassTimetable.jsx"));
-const TeacherTimetable = lazy(() => import("./pages/School_Admin/Timetables/TeacherTimetable.jsx"));
-
+const SchoolAdminTimetablePage = lazy(() => import("./pages/Timetable/SchoolAdminTimetablePage.jsx"));
+const TimeSlotManager = lazy(() => import("./pages/Timetable/TimeSlotManager.jsx"));
+const RoomManager = lazy(() => import("./pages/Timetable/RoomManager.jsx"));
+const TeacherTimetablePage = lazy(() => import("./pages/Timetable/TeacherTimetablePage.jsx"));
+const StudentTimetablePage = lazy(() => import("./pages/Timetable/StudentTimetablePage.jsx"));
+const ParentChildTimetablePage = lazy(() => import("./pages/Timetable/ParentChildTimetablePage.jsx"));
+const PrincipalTimetableOverview = lazy(() => import("./pages/Timetable/PrincipalTimetableOverview.jsx"));
+const ClassTimetable = SchoolAdminTimetablePage;
+const TeacherTimetable = TeacherTimetablePage;
 
 const FeeStructure = lazy(() => import("./pages/School_Admin/Fees_Management/FeeStructure.jsx"));
 const StudentAssignFees = lazy(() => import("./pages/School_Admin/Fees_Management/AssignStudentFeeForm.jsx"));
@@ -201,7 +207,7 @@ const ExamLive = lazy(() => import("./pages/Student/Exams/ExamLive.jsx"));
 const AttemptReview = lazy(() => import("./pages/Student/Exams/AttemptReview.jsx"));
 const StudentExamsPage = lazy(() => import("./pages/Student/Exams/StudentExamsPage.jsx"));
 const StudentAllowedBook = lazy(() => import("./pages/Student/Library/StudentAllowedBook.jsx"));
-const StudentTimetable = lazy(() => import("./pages/Student/Timetable/StudentTimeTable.jsx"));
+const StudentTimetable = lazy(() => import("./pages/Timetable/StudentTimetablePage.jsx"));
 const StudentAttendancePage = lazy(() => import("./pages/Student/Attendance/MyAttendancePage.jsx"));
 const StudentTransport = lazy(() => import("./pages/Student/Transport/StudentTransport.jsx"));
 const StudentGrades = lazy(() => import("./pages/Student/Grades/StudentGrades.jsx"));
@@ -453,6 +459,9 @@ const router = createBrowserRouter([
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
               { path: "library/card", element: <LibraryCard /> },
+              { path: "timetable", element: <SchoolAdminTimetablePage /> },
+              { path: "timetable/time-slots", element: <TimeSlotManager /> },
+              { path: "timetable/rooms", element: <RoomManager /> },
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
@@ -532,7 +541,7 @@ const router = createBrowserRouter([
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
               { path: "exams/evaluation", element: <TeacherEvaluationPage /> },
-              { path: "timetable", element: <TeacherTimetable /> },
+              { path: "timetable", element: <TeacherTimetablePage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -562,7 +571,7 @@ const router = createBrowserRouter([
               { path: "homework", element: <StudentHomework /> },
               { path: "attendance", element: <StudentAttendancePage /> },
               { path: "grades", element: <StudentGrades /> },
-              { path: "timetable", element: <StudentTimetable /> },
+              { path: "timetable", element: <StudentTimetablePage /> },
               { path: "library", element: <StudentAllowedBook /> },
               { path: "hostel", element: <HostelManagement /> },
               { path: "transport", element: <StudentTransport /> },
@@ -598,6 +607,7 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "reports", element: <ExamReports /> },
+               { path: "timetable", element: <ParentChildTimetablePage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
@@ -650,6 +660,7 @@ const router = createBrowserRouter([
               { path: "exams", element: <ExamsPage /> },
               { path: "library", element: <LibraryCard /> },
               { path: "transport", element: <RoutesPage /> },
+              { path: "timetable", element: <PrincipalTimetableOverview /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
@@ -662,6 +673,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
                 <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+           {
+            path: "viceprincipal/timetable",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <PrincipalTimetableOverview />
               </ProtectedRoute>
             ),
           },

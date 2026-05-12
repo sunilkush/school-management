@@ -1,22 +1,53 @@
 import { Router } from "express";
 import {
-  createClassTimetableEntry,
-  deleteClassTimetableEntry,
-  listClassTimetable,
-  listTeacherTimetable,
-  updateClassTimetableEntry,
+  bulkSaveTimetable,
+  childTimetable,
+  classSectionTimetable,
+  copyWeekTimetable,
+  createRoom,
+  createTimeSlot,
+  createTimetableEntry,
+  deleteRoom,
+  deleteTimeSlot,
+  deleteTimetableEntry,
+  listRooms,
+  listTimeSlots,
+  listTimetable,
+  myStudentTimetable,
+  myTeacherTimetable,
+  updateRoom,
+  updateTimeSlot,
+  updateTimetableEntry,
 } from "../controllers/timetable.controllers.js";
-import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
+import { auth } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-const ADMIN_AND_TEACHER = ["Super Admin", "School Admin", "Teacher"];
-const ADMIN_ONLY = ["Super Admin", "School Admin"];
+router.use(auth);
 
-router.get("/class", auth, roleMiddleware(ADMIN_AND_TEACHER), listClassTimetable);
-router.get("/teacher", auth, roleMiddleware(ADMIN_AND_TEACHER), listTeacherTimetable);
-router.post("/", auth, roleMiddleware(ADMIN_ONLY), createClassTimetableEntry);
-router.put("/:id", auth, roleMiddleware(ADMIN_ONLY), updateClassTimetableEntry);
-router.delete("/:id", auth, roleMiddleware(ADMIN_ONLY), deleteClassTimetableEntry);
+router.get("/time-slots", listTimeSlots);
+router.post("/time-slots", createTimeSlot);
+router.put("/time-slots/:id", updateTimeSlot);
+router.delete("/time-slots/:id", deleteTimeSlot);
+
+router.get("/rooms", listRooms);
+router.post("/rooms", createRoom);
+router.put("/rooms/:id", updateRoom);
+router.delete("/rooms/:id", deleteRoom);
+
+router.get("/teacher/my", myTeacherTimetable);
+router.get("/student/my", myStudentTimetable);
+router.get("/parent/child/:studentId", childTimetable);
+router.get("/class-section/:schoolClassId/:sectionId", classSectionTimetable);
+
+router.get("/class", listTimetable);
+router.get("/teacher", listTimetable);
+router.get("/", listTimetable);
+router.post("/", createTimetableEntry);
+router.post("/bulk", bulkSaveTimetable);
+router.post("/copy-week", copyWeekTimetable);
+router.put("/:id", updateTimetableEntry);
+router.delete("/:id", deleteTimetableEntry);
+
 
 export default router;
