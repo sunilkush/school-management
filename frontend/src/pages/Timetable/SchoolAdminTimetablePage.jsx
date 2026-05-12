@@ -51,6 +51,10 @@ export default function SchoolAdminTimetablePage() {
   }, [dispatch, schoolId, academicYearId, filters, message]);
 
   const sections = useMemo(() => masters.sections.filter((s) => !filters.schoolClassId || getId(s.schoolClassId) === filters.schoolClassId), [masters.sections, filters.schoolClassId]);
+  const fromCopyClassId = Form.useWatch("fromSchoolClassId", copyForm);
+  const toCopyClassId = Form.useWatch("toSchoolClassId", copyForm);
+  const fromCopySections = useMemo(() => masters.sections.filter((s) => getId(s.schoolClassId) === fromCopyClassId), [masters.sections, fromCopyClassId]);
+  const toCopySections = useMemo(() => masters.sections.filter((s) => getId(s.schoolClassId) === toCopyClassId), [masters.sections, toCopyClassId]);
   const openModal = (seed = {}, entry = null) => { setEditing(entry); form.setFieldsValue({ type: "regular", ...seed, ...entry, timeSlotId: getId(entry?.timeSlotId) || seed.timeSlotId, subjectId: getId(entry?.subjectId), teacherId: getId(entry?.teacherId), roomId: getId(entry?.roomId) }); setModalOpen(true); };
   const save = async () => {
     try {
@@ -79,8 +83,21 @@ export default function SchoolAdminTimetablePage() {
     <Card className="shadow-sm"><Row justify="space-between" gutter={[16,16]}><Col><Title level={3}>Timetable Planner</Title><Text type="secondary">Build weekly class-section timetables, detect teacher and room conflicts, and publish reliable schedules.</Text></Col><Col><Space wrap><Button icon={<SaveOutlined />} disabled={!entries.length} loading={saving} onClick={bulkSave}>Bulk Save</Button><Button icon={<CopyOutlined />} disabled={!academicYearId} onClick={()=>{copyForm.setFieldsValue({ fromSchoolClassId: filters.schoolClassId, fromSectionId: filters.sectionId }); setCopyOpen(true);}}>Copy Timetable</Button></Space></Col></Row></Card>
     <Card className="shadow-sm"><Row gutter={[16,16]}><Col xs={24} md={8}><Select className="w-full" placeholder="Class" value={filters.schoolClassId || undefined} onChange={(v)=>setFilters({ schoolClassId:v, sectionId:"" })} options={masters.classes.map((c)=>({value:c._id,label:getName(c)}))}/></Col><Col xs={24} md={8}><Select className="w-full" placeholder="Section" value={filters.sectionId || undefined} onChange={(v)=>setFilters((f)=>({...f,sectionId:v}))} options={sections.map((s)=>({value:s._id,label:getName(s)}))}/></Col><Col xs={24} md={8}><Text strong>Academic Year:</Text> {selectedAcademicYear?.name || selectedAcademicYear?.year || "Select active academic year"}</Col></Row></Card>
     <Card className="shadow-sm">{!academicYearId ? <Empty description="Select an academic year first" /> : loading ? <Skeleton active /> : filters.schoolClassId && filters.sectionId ? <TimetableGrid timeSlots={timeSlots} entries={entries} onAdd={(seed)=>openModal(seed)} onEdit={(e)=>openModal({}, e)} onDelete={remove} /> : <Empty description="Select class and section" />}</Card>
-    <Modal open={copyOpen} title="Copy Weekly Timetable" onCancel={()=>setCopyOpen(false)} onOk={copyWeek} confirmLoading={saving} destroyOnClose>
-      <Form form={copyForm} layout="vertical"><Form.Item name="fromSchoolClassId" label="From Class" rules={[{required:true}]}><Select options={masters.classes.map((c)=>({value:c._id,label:getName(c)}))}/></Form.Item><Form.Item name="fromSectionId" label="From Section" rules={[{required:true}]}><Select options={masters.sections.map((s)=>({value:s._id,label:getName(s)}))}/></Form.Item><Form.Item name="toSchoolClassId" label="To Class" rules={[{required:true}]}><Select options={masters.classes.map((c)=>({value:c._id,label:getName(c)}))}/></Form.Item><Form.Item name="toSectionId" label="To Section" rules={[{required:true}]}><Select options={masters.sections.map((s)=>({value:s._id,label:getName(s)}))}/></Form.Item></Form>
+  <Modal open={copyOpen} title="Copy Weekly Timetable" onCancel={()=>setCopyOpen(false)} onOk={copyWeek} confirmLoading={saving} destroyOnClose>
+      <Form form={copyForm} layout="vertical">
+        <Form.Item name="fromSchoolClassId" label="From Class" rules={[{required:true}]}>
+          <Select options={masters.classes.map((c)=>({value:c._id,label:getName(c)}))} onChange={()=>copyForm.setFieldValue("fromSectionId", undefined)}/>
+        </Form.Item>
+        <Form.Item name="fromSectionId" label="From Section" rules={[{required:true}]}>
+          <Select disabled={!fromCopyClassId} options={fromCopySections.map((s)=>({value:s._id,label:getName(s)}))}/>
+        </Form.Item>
+        <Form.Item name="toSchoolClassId" label="To Class" rules={[{required:true}]}>
+          <Select options={masters.classes.map((c)=>({value:c._id,label:getName(c)}))} onChange={()=>copyForm.setFieldValue("toSectionId", undefined)}/>
+        </Form.Item>
+        <Form.Item name="toSectionId" label="To Section" rules={[{required:true}]}>
+          <Select disabled={!toCopyClassId} options={toCopySections.map((s)=>({value:s._id,label:getName(s)}))}/>
+        </Form.Item>
+      </Form>
     </Modal>
     <Modal open={modalOpen} title={editing ? "Edit Period" : "Add Period"} onCancel={()=>setModalOpen(false)} onOk={save} confirmLoading={saving} destroyOnClose>
       <Form form={form} layout="vertical"><Form.Item name="dayOfWeek" label="Day" rules={[{required:true}]}><Select options={["monday","tuesday","wednesday","thursday","friday","saturday"].map((d)=>({value:d,label:d}))}/></Form.Item><Form.Item name="timeSlotId" label="Time Slot" rules={[{required:true}]}><Select options={timeSlots.map((s)=>({value:s._id,label:`${s.name} (${s.startTime}-${s.endTime})`}))}/></Form.Item><Form.Item name="type" label="Type" rules={[{required:true}]}><Select options={types.map((t)=>({value:t,label:t}))}/></Form.Item>{teachingTypes.includes(type) ? <><Form.Item name="subjectId" label="Subject" rules={[{required:true}]}><Select showSearch optionFilterProp="label" options={masters.subjects.map((s)=>({value:s._id,label:getName(s)}))}/></Form.Item><Form.Item name="teacherId" label="Teacher" rules={[{required:true}]}><Select showSearch optionFilterProp="label" options={masters.teachers.map((t)=>({value:t._id,label:getName(t)}))}/></Form.Item></> : null}<Form.Item name="roomId" label="Room"><Select allowClear options={rooms.map((r)=>({value:r._id,label:`${getName(r)} ${r.code || ""}`}))}/></Form.Item><Form.Item name="note" label="Note"><Input.TextArea rows={3}/></Form.Item></Form>
