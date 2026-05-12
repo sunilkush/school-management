@@ -23,6 +23,7 @@ import {
   Briefcase,
   MessageSquare,
   User,
+  IndianRupee,
   Cog,
   BusFront,
   MapPinned,
@@ -51,8 +52,6 @@ const communicationMenu = (basePath) => ({
 const supportCenterItem = { title: "Support Center", path: "support/tickets", icon: MessageSquare };
 const moduleHubItem = { title: "Module Hub", path: "modules", icon: Puzzle };
 const roleWorkspaceItem = { title: "Role Workspace", path: "workspace", icon: ClipboardList };
-
-
 
 export const sidebarMenu = {
   /* ================= SUPER ADMIN ================= */
@@ -256,7 +255,22 @@ export const sidebarMenu = {
         { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
       ],
     },
-   
+    {
+      title: "Payroll",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Create Employee", path: "schooladmin/payroll/create-employee" },
+        { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
+        { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
+        { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
+        { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
+        { title: "Enterprise Dashboard", path: "schooladmin/payroll/enterprise/dashboard" },
+        { title: "Enterprise Run", path: "schooladmin/payroll/enterprise/run" },
+        { title: "Approvals", path: "schooladmin/payroll/enterprise/approval" },
+        { title: "Loans & Advance", path: "schooladmin/payroll/enterprise/loans" },
+        { title: "Tax Settings", path: "schooladmin/payroll/enterprise/tax" },
+      ],
+    },
     {
       title: "Inventory Management",
       icon: Briefcase,
@@ -307,7 +321,7 @@ export const sidebarMenu = {
       ],
     },
     { title: "Teacher Reports", path: "teacher/reports", icon: FileBarChart2 },
-   
+    { title: "My Payroll", path: "teacher/payroll", icon: IndianRupee },
     communicationMenu("teacher"),
     { title: "Settings", path: "teacher/settings", icon: Settings },
     ...commonSelfService("teacher"),
@@ -350,7 +364,23 @@ export const sidebarMenu = {
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
     { title: "Fee Collection", path: "accountant/fees/collect", icon: CreditCard },
-   
+    {
+      title: "Payroll",
+      icon: IndianRupee,
+      subMenu: [
+        { title: "Salary Run", path: "accountant/salary" },
+        { title: "Salary Structures", path: "accountant/salary/structures" },
+        { title: "Create Employee", path: "accountant/salary/create-employee" },
+        { title: "Payslip Center", path: "accountant/salary/payslips" },
+        { title: "Monthly Reports", path: "accountant/salary/reports/monthly" },
+        { title: "Enterprise Dashboard", path: "accountant/salary/enterprise/dashboard" },
+        { title: "Enterprise Run", path: "accountant/salary/enterprise/run" },
+        { title: "Approvals", path: "accountant/salary/enterprise/approval" },
+        { title: "Loans & Advance", path: "accountant/salary/enterprise/loans" },
+        { title: "Tax Settings", path: "accountant/salary/enterprise/tax" },
+        { title: "My Payroll", path: "accountant/payroll" },
+      ],
+    },
      { title: "Attendance", path: "accountant/attendance", icon: Clock },
     { title: "Attendance Reports", path: "accountant/attendance/monthly", icon: FileBarChart2 },
     { title: "Reports", path: "accountant/reports", icon: FileBarChart2 },
@@ -373,7 +403,7 @@ export const sidebarMenu = {
     { title: "Exams", path: "principal/exams", icon: GraduationCap },
     { title: "Library", path: "principal/library", icon: Book },
     { title: "Transport", path: "principal/transport", icon: Bus },
-   
+    { title: "My Payroll", path: "principal/payroll", icon: IndianRupee },
     { title: "Settings", path: "principal/settings", icon: Settings },
     ...commonSelfService("principal"),
   ],
@@ -388,7 +418,7 @@ export const sidebarMenu = {
     { title: "Teacher Attendance", path: "viceprincipal/attendance/staff", icon: UserCheck },
     { title: "Attendance Table", path: "viceprincipal/attendance/table", icon: ClipboardList },
     { title: "Reports", path: "viceprincipal/reports", icon: FileBarChart2 },
-  
+    { title: "My Payroll", path: "viceprincipal/payroll", icon: IndianRupee },
     roleWorkspaceItem,
     ...commonSelfService("viceprincipal"),
   ],
