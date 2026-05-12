@@ -1,160 +1,313 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  Layout,
+  Alert,
   Breadcrumb,
-  Table,
   Button,
-  Space,
-  Modal,
+  Card,
+  Col,
+  DatePicker,
   Form,
   Input,
-  DatePicker,
-  Select,
-  message,
-  Card,
+  Layout,
+  Modal,
+  Popconfirm,
   Row,
-  Col,
+  Select,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  message,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import {
+  EVENT_AUDIENCES,
+  EVENT_STATUSES,
+  EVENT_TYPES,
+  createSchoolEvent,
+  deleteSchoolEvent,
+  fetchSchoolEventStats,
+  fetchSchoolEvents,
+  updateSchoolEvent,
+} from "../../../services/schoolEventApi";
 
 const { Content } = Layout;
-const { Option } = Select;
+const { RangePicker } = DatePicker;
+
+const EVENT_COLORS = {
+  Event: "blue",
+  Holiday: "green",
+  Meeting: "purple",
+  Exam: "red",
+  Activity: "orange",
+  Reminder: "cyan",
+};
+
+const toDate = (value) => (value ? dayjs(value).format("YYYY-MM-DD") : "-");
+
+const toPayload = (values) => ({
+  title: values.title?.trim(),
+  type: values.type,
+  description: values.description?.trim() || "",
+  location: values.location?.trim() || "",
+  audience: values.audience,
+  status: values.status,
+  allDay: values.allDay ?? true,
+  startDate: values.dateRange?.[0]?.startOf("day").toISOString(),
+  endDate: values.dateRange?.[1]?.endOf("day").toISOString(),
+  color: values.color || "#1677ff",
+});
 
 const Events = () => {
-  const [events, setEvents] = useState([
-    { key: 1, name: "Sports Day", date: "2026-01-15", type: "Event", description: "Annual sports activities" },
-    { key: 2, name: "Parent-Teacher Meeting", date: "2026-01-20", type: "Meeting", description: "Discuss student progress" },
-  ]);
-
-  const [modalVisible, setModalVisible] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [filters, setFilters] = useState({ q: "", type: undefined, status: undefined });
   const [form] = Form.useForm();
 
-  // Open modal for add/edit
+  const loadEvents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [eventRows, statData] = await Promise.all([fetchSchoolEvents(filters), fetchSchoolEventStats()]);
+      setEvents(eventRows);
+      setStats(statData);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Failed to load school events");
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
   const openModal = (event = null) => {
     setEditingEvent(event);
-    if (event) {
-      form.setFieldsValue({
-        ...event,
-        date: dayjs(event.date),
-      });
-    } else {
-      form.resetFields();
-    }
-    setModalVisible(true);
+    form.setFieldsValue(
+      event
+        ? {
+            title: event.title,
+            type: event.type,
+            description: event.description,
+            location: event.location,
+            audience: event.audience,
+            status: event.status,
+            color: event.color || "#1677ff",
+            allDay: event.allDay,
+            dateRange: [dayjs(event.startDate), dayjs(event.endDate)],
+          }
+        : {
+            type: "Event",
+            audience: "All",
+            status: "scheduled",
+            color: "#1677ff",
+            allDay: true,
+            dateRange: [dayjs(), dayjs()],
+          }
+    );
+    setModalOpen(true);
   };
 
-  // Save event
-  const handleSaveEvent = (values) => {
-    const newEvent = {
-      key: editingEvent ? editingEvent.key : events.length + 1,
-      name: values.name,
-      type: values.type,
-      description: values.description,
-      date: values.date.format("YYYY-MM-DD"),
-    };
-
-    if (editingEvent) {
-      setEvents(events.map((e) => (e.key === editingEvent.key ? newEvent : e)));
-      message.success("Event updated successfully!");
-    } else {
-      setEvents([...events, newEvent]);
-      message.success("Event added successfully!");
-    }
-
-    setModalVisible(false);
+  const closeModal = () => {
+    setModalOpen(false);
     setEditingEvent(null);
     form.resetFields();
   };
 
-  // Delete event
-  const handleDeleteEvent = (event) => {
-    Modal.confirm({
-      title: "Are you sure?",
-      content: `Do you want to delete the event "${event.name}"?`,
-      okText: "Yes",
-      cancelText: "No",
-      onOk: () => {
-        setEvents(events.filter((e) => e.key !== event.key));
-        message.success("Event deleted successfully!");
-      },
-    });
+  const handleSaveEvent = async (values) => {
+    setSaving(true);
+    try {
+      const payload = toPayload(values);
+      if (editingEvent?._id) {
+        await updateSchoolEvent(editingEvent._id, payload);
+        message.success("Event updated successfully");
+      } else {
+        await createSchoolEvent(payload);
+        message.success("Event added successfully");
+      }
+      closeModal();
+      await loadEvents();
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Failed to save event");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Summary
-  const totalEvents = events.length;
-  const today = dayjs();
-  const upcomingEvents = events.filter((e) => dayjs(e.date).isAfter(today)).length;
-  const pastEvents = events.filter((e) => dayjs(e.date).isBefore(today)).length;
+  const handleDeleteEvent = async (event) => {
+    try {
+      await deleteSchoolEvent(event._id);
+      message.success("Event deleted successfully");
+      await loadEvents();
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Failed to delete event");
+    }
+  };
 
   const columns = [
-    { title: "Event Name", dataIndex: "name", key: "name" },
-    { title: "Date", dataIndex: "date", key: "date" },
-    { title: "Type", dataIndex: "type", key: "type" },
-    { title: "Description", dataIndex: "description", key: "description" },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => openModal(record)}>Edit</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteEvent(record)}>Delete</Button>
-        </Space>
-      ),
-    },
-  ];
+      {
+        title: "Event Name",
+        dataIndex: "title",
+        key: "title",
+        render: (title, record) => (
+          <Space direction="vertical" size={0}>
+            <strong>{title}</strong>
+            {record.location ? <span style={{ color: "#64748b" }}>{record.location}</span> : null}
+          </Space>
+        ),
+      },
+      {
+        title: "Date",
+        key: "date",
+        render: (_, record) =>
+          toDate(record.startDate) === toDate(record.endDate)
+            ? toDate(record.startDate)
+            : `${toDate(record.startDate)} to ${toDate(record.endDate)}`,
+      },
+      {
+        title: "Type",
+        dataIndex: "type",
+        key: "type",
+        render: (type) => <Tag color={EVENT_COLORS[type] || "default"}>{type}</Tag>,
+      },
+      { title: "Audience", dataIndex: "audience", key: "audience" },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        render: (status) => <Tag color={status === "cancelled" ? "red" : status === "completed" ? "green" : "blue"}>{status}</Tag>,
+      },
+      { title: "Description", dataIndex: "description", key: "description", ellipsis: true },
+      {
+        title: "Actions",
+        key: "actions",
+        render: (_, record) => (
+          <Space>
+            <Button icon={<EditOutlined />} onClick={() => openModal(record)}>
+              Edit
+            </Button>
+            <Popconfirm
+              title="Delete event?"
+              description={`Do you want to delete "${record.title}"?`}
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => handleDeleteEvent(record)}
+            >
+              <Button danger icon={<DeleteOutlined />}>
+                Delete
+              </Button>
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Events</Breadcrumb.Item>
-      </Breadcrumb>
+    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
+      <Breadcrumb style={{ marginBottom: 24 }} items={[{ title: "Dashboard" }, { title: "Events" }]} />
 
       <Content>
-        {/* Summary Cards */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}><Card title="Total Events">{totalEvents}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Upcoming Events">{upcomingEvents}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Past Events">{pastEvents}</Card></Col>
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Create and manage school events, holidays, meetings, exams, and reminders. Events saved here are also shown on the Calendar page."
+        />
+
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card><Statistic title="Total Events" value={stats.total || 0} /></Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card><Statistic title="Upcoming" value={stats.upcoming || 0} /></Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card><Statistic title="Past" value={stats.past || 0} /></Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card><Statistic title="Cancelled" value={stats.cancelled || 0} /></Card>
+          </Col>
         </Row>
 
-        <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2>Events List</h2>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()}>Add Event</Button>
-        </div>
-
-        <Table columns={columns} dataSource={events} rowKey="key" pagination={{ pageSize: 5 }} />
-
-        {/* Add/Edit Modal */}
-        <Modal
-          title={editingEvent ? "Edit Event" : "Add Event"}
-          visible={modalVisible}
-          onCancel={() => { setModalVisible(false); setEditingEvent(null); form.resetFields(); }}
-          footer={null}
+        <Card
+          title="Events List"
+          extra={
+            <Space wrap>
+              <Input.Search
+                allowClear
+                placeholder="Search events"
+                onSearch={(q) => setFilters((prev) => ({ ...prev, q }))}
+                style={{ width: 220 }}
+              />
+              <Select
+                allowClear
+                placeholder="Type"
+                style={{ width: 150 }}
+                options={EVENT_TYPES.map((type) => ({ label: type, value: type }))}
+                onChange={(type) => setFilters((prev) => ({ ...prev, type }))}
+              />
+              <Select
+                allowClear
+                placeholder="Status"
+                style={{ width: 150 }}
+                options={EVENT_STATUSES.map((status) => ({ label: status, value: status }))}
+                onChange={(status) => setFilters((prev) => ({ ...prev, status }))}
+              />
+              <Button icon={<ReloadOutlined />} onClick={loadEvents}>Refresh</Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()}>Add Event</Button>
+            </Space>
+          }
         >
+          <Table columns={columns} dataSource={events} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} />
+        </Card>
+
+        <Modal title={editingEvent ? "Edit Event" : "Add Event"} open={modalOpen} onCancel={closeModal} footer={null} destroyOnClose>
           <Form form={form} layout="vertical" onFinish={handleSaveEvent}>
-            <Form.Item label="Event Name" name="name" rules={[{ required: true, message: "Enter event name" }]}>
+            <Form.Item label="Event Name" name="title" rules={[{ required: true, message: "Enter event name" }]}>
               <Input placeholder="Enter event name" />
             </Form.Item>
-            <Form.Item label="Event Type" name="type" rules={[{ required: true, message: "Select event type" }]}>
-              <Select placeholder="Select event type">
-                <Option value="Event">Event</Option>
-                <Option value="Holiday">Holiday</Option>
-                <Option value="Meeting">Meeting</Option>
-              </Select>
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item label="Event Type" name="type" rules={[{ required: true, message: "Select event type" }]}>
+                  <Select options={EVENT_TYPES.map((type) => ({ label: type, value: type }))} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Audience" name="audience" rules={[{ required: true, message: "Select audience" }]}>
+                  <Select options={EVENT_AUDIENCES.map((audience) => ({ label: audience, value: audience }))} />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Form.Item label="Date Range" name="dateRange" rules={[{ required: true, message: "Select event dates" }]}>
+              <RangePicker style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item label="Description" name="description" rules={[{ required: true, message: "Enter description" }]}>
+            <Row gutter={12}>
+              <Col span={12}>
+                <Form.Item label="Status" name="status" rules={[{ required: true, message: "Select status" }]}>
+                  <Select options={EVENT_STATUSES.map((status) => ({ label: status, value: status }))} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Color" name="color">
+                  <Input type="color" />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Form.Item label="Location" name="location">
+              <Input placeholder="Venue / room / online link" />
+            </Form.Item>
+            <Form.Item label="Description" name="description">
               <Input.TextArea placeholder="Enter description" rows={3} />
             </Form.Item>
-            <Form.Item label="Date" name="date" rules={[{ required: true, message: "Select date" }]}>
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item style={{ textAlign: "right" }}>
+            <Form.Item style={{ textAlign: "right", marginBottom: 0 }}>
               <Space>
-                <Button onClick={() => { setModalVisible(false); setEditingEvent(null); form.resetFields(); }}>Cancel</Button>
-                <Button type="primary" htmlType="submit">{editingEvent ? "Update" : "Add"}</Button>
+                <Button onClick={closeModal}>Cancel</Button>
+                <Button type="primary" htmlType="submit" loading={saving}>{editingEvent ? "Update" : "Add"}</Button>
               </Space>
             </Form.Item>
           </Form>
