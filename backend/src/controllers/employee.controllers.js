@@ -82,7 +82,7 @@ export const registerEmployee = async (req, res) => {
       createdUser = newUser;
     } else {
       // 👉 Case 2: अगर userId दिया गया है तो check कर लो valid है या नहीं
-      const existingUser = await User.findById(finalUserId);
+       const existingUser = await User.findOne({ _id: finalUserId, isActive: true, isDeleted: { $ne: true } });
       if (!existingUser) {
         return res
           .status(404)

@@ -39,7 +39,7 @@ export const getStudentReport = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, "Student ID is required"));
   }
 
-  const student = await User.findById(studentId);
+   const student = await User.findOne({ _id: studentId, isActive: true, isDeleted: { $ne: true } });
   if (!student) {
     return res.status(404).json(new ApiResponse(404, null, "Student not found"));
   }

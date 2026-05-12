@@ -61,9 +61,9 @@ const safeText = (value) => (typeof value === "string" ? value.trim() : "");
 
 export const getMyProfile = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ userId: req.user._id })
-    .populate("userId", "name email phone")
-    .populate("fatherId", "name email phone")
-    .populate("motherId", "name email phone")
+    .populate({ path: "userId", select: "name email phone", match: { isActive: true, isDeleted: { $ne: true } } })
+    .populate({ path: "fatherId", select: "name email phone", match: { isActive: true, isDeleted: { $ne: true } } })
+    .populate({ path: "motherId", select: "name email phone", match: { isActive: true, isDeleted: { $ne: true } } })
     .lean();
 
   if (!student) {
@@ -93,7 +93,7 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
   }
 
   const [user, student] = await Promise.all([
-    User.findById(req.user._id),
+    User.findOne({ _id: req.user._id, isActive: true, isDeleted: { $ne: true } }),
     Student.findOne({ userId: req.user._id }),
   ]);
 
@@ -127,8 +127,8 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
   await student.save();
 
   const updatedProfile = await Student.findById(student._id)
-    .populate("fatherId", "name email phone")
-    .populate("motherId", "name email phone")
+    .populate({ path: "fatherId", select: "name email phone", match: { isActive: true, isDeleted: { $ne: true } } })
+    .populate({ path: "motherId", select: "name email phone", match: { isActive: true, isDeleted: { $ne: true } } })
     .lean();
 
   return res
@@ -174,7 +174,7 @@ export const getMyTimetable = asyncHandler(async (req, res) => {
     isActive: true,
   })
     .populate("subjectId", "name code")
-    .populate("teacherId", "name email")
+    .populate({ path: "teacherId", select: "name email", match: { isActive: true, isDeleted: { $ne: true } } })
     .sort({ day: 1, startTime: 1 })
     .lean();
 

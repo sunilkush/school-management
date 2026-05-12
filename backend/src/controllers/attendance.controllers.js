@@ -359,8 +359,16 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "users",
-        localField: "_id",
-        foreignField: "_id",
+       let: { userRef: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$userRef"] },
+              isActive: true,
+              isDeleted: { $ne: true },
+            },
+          },
+        ],
         as: "user",
       },
     },

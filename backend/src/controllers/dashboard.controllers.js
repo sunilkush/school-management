@@ -274,15 +274,23 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
         },
       },
       { $unwind: "$employee" },
-      {
+     {
         $lookup: {
           from: "users",
-          localField: "employee.userId",
-          foreignField: "_id",
+          let: { userRef: "$employee.userId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$userRef"] },
+                isActive: true,
+                isDeleted: { $ne: true },
+              },
+            },
+          ],
           as: "user",
         },
       },
-      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      { $unwind: "$user" },
       {
         $addFields: {
           performanceScore: {

@@ -28,7 +28,7 @@ export const getSchoolOverviewReport = async (req, res, next) => {
     const academicYear = await AcademicYear.findById(academicObjId);
     if (!academicYear) throw new ApiError(404, "Academic Year not found");
     const roleWise = await User.aggregate([
-      { $match: { schoolId: schoolObjId } },
+      { $match: { schoolId: schoolObjId, isActive: true, isDeleted: { $ne: true } } },
       { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleData" } },
       { $unwind: "$roleData" },
       { $group: { _id: "$roleData.name", count: { $sum: 1 } } },

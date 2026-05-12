@@ -83,6 +83,8 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       fatherUser = await User.findOne({
         email: fatherData.email,
         schoolId,
+        isActive: true,
+        isDeleted: { $ne: true },
       }).session(session);
 
       if (!fatherUser) {
@@ -113,6 +115,8 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       motherUser = await User.findOne({
         email: motherData.email,
         schoolId,
+        isActive: true,
+        isDeleted: { $ne: true },
       }).session(session);
 
       if (!motherUser) {
@@ -310,12 +314,20 @@ export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "users",
-        localField: "studentInfo.userId",
-        foreignField: "_id",
+        let: { userRef: "$studentInfo.userId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$userRef"] },
+              isActive: true,
+              isDeleted: { $ne: true },
+            },
+          },
+        ],
         as: "userDetails",
       },
     },
-    { $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$userDetails" },
 
     {
       $lookup: {
@@ -367,11 +379,11 @@ const getStudentById = asyncHandler(async (req, res) => {
   }
 
   // ✅ Student can access ONLY his own profile
-  const student = await Student.findOne({
+ const student = await Student.findOne({
     userId: req.user._id,
-  }).populate("userId", "-password -refreshToken")
-    .populate("fatherId", "name email")
-    .populate("motherId", "name email");
+  }).populate({ path: "userId", select: "-password -refreshToken", match: { isActive: true, isDeleted: { $ne: true } } })
+    .populate({ path: "fatherId", select: "name email", match: { isActive: true, isDeleted: { $ne: true } } })
+    .populate({ path: "motherId", select: "name email", match: { isActive: true, isDeleted: { $ne: true } } });
 
   
   if (!student) {
@@ -730,8 +742,16 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "users",
-        localField: "student.userId",
-        foreignField: "_id",
+        let: { userRef: "$student.userId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$userRef"] },
+              isActive: true,
+              isDeleted: { $ne: true },
+            },
+          },
+        ],
         as: "user",
       },
     },
@@ -837,7 +857,7 @@ const getPromotionCandidates = asyncHandler(async (req, res) => {
     schoolClassId,
     status: "Active",
   })
-    .populate({ path: "studentId", populate: { path: "userId", select: "name email" } })
+    .populate({ path: "studentId", populate: { path: "userId", select: "name email", match: { isActive: true, isDeleted: { $ne: true } } } })
     .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .sort({ registrationNumber: 1 });
@@ -1055,12 +1075,20 @@ const getMyChildren = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "users",
-        localField: "userId",
-        foreignField: "_id",
+        let: { userRef: "$userId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$userRef"] },
+              isActive: true,
+              isDeleted: { $ne: true },
+            },
+          },
+        ],
         as: "user",
       },
     },
-    { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+    { $unwind: "$user" },
     {
       $lookup: {
         from: "studentenrollments",

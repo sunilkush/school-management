@@ -21,7 +21,7 @@ const createHostel = asyncHandler(async (req, res) => {
     }
 
     // Check if student exists
-    const student = await User.findById(studentId);
+     const student = await User.findOne({ _id: studentId, isActive: true, isDeleted: { $ne: true } });
     if (!student) {
         throw new ApiError(404, "Student not found!");
     }

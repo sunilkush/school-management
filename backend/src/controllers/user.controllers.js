@@ -9,10 +9,13 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { sendEmail } from '../utils/mailServices.js'
 import { Role } from '../models/Roles.model.js'
+import { Student } from '../models/student.model.js'
+import { Employee } from '../models/Employee.model.js'
+import { Teacher } from '../models/teacherAssignment.model.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
-    const user = await User.findById(userId)
+    const user = await User.findOne({ _id: userId, isActive: true, isDeleted: { $ne: true } })
     if (!user) throw new ApiError(404, 'User not found')
 
     const accessToken = user.generateAccessToken()
@@ -168,7 +171,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   // 1️⃣ Find user
-  const user = await User.findOne({ email })
+  const user = await User.findOne({ email, isActive: true, isDeleted: { $ne: true } })
     .populate("roleId")
     .populate("schoolId");
 
@@ -208,6 +211,8 @@ const loginUser = asyncHandler(async (req, res) => {
     {
       $match: {
         _id: new mongoose.Types.ObjectId(user._id),
+        isActive: true,
+        isDeleted: { $ne: true },
       },
     },
 
@@ -314,7 +319,7 @@ const updateUser = asyncHandler(async (req, res) => {
   const { name, email } = req.body
   if (!name || !email) throw new ApiError(400, 'All fields are required')
 
-  const user = await User.findById(req.user?._id)
+  const user = await User.findOne({ _id: req.user?._id, isActive: true, isDeleted: { $ne: true } })
   if (!user) throw new ApiError(404, 'User not found')
 
   user.name = name
@@ -338,7 +343,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   }
 
   // ✅ FIX: password select karo
-  const user = await User.findById(req.user?._id).select("+password");
+  const user = await User.findOne({ _id: req.user?._id, isActive: true, isDeleted: { $ne: true } }).select("+password");
 
   if (!user || !user.password) {
     throw new ApiError(404, 'User not found');
@@ -367,7 +372,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
   const userWithDetails = await User.aggregate([
     {
-      $match: { _id: userId },
+      $match: { _id: userId, isActive: true, isDeleted: { $ne: true } },
     },
 
     // ===== ROLE =====
@@ -508,10 +513,9 @@ const getAllUsers = asyncHandler(async (req, res) => {
     matchStage.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   }
 
-  // ✅ Active filter
-  if (typeof isActive !== "undefined") {
-    matchStage.isActive = isActive === "true";
-  }
+ // ✅ Active filter: by default only active, non-deleted users are fetched
+  matchStage.isDeleted = { $ne: true };
+  matchStage.isActive = true;
 
   // ✅ Search filter
   if (search) {
@@ -647,44 +651,92 @@ const getAllUsers = asyncHandler(async (req, res) => {
  * @desc Deactivate user
  * @route DELETE /api/users/:id
  */
+const toggleLinkedUserDetails = async (userId, isActive) => {
+  const studentStatus = isActive ? "active" : "inactive";
+  const teacherStatus = isActive ? "active" : "inactive";
+
+  const [studentResult, employeeResult, teacherResult] = await Promise.all([
+    Student.updateMany(
+      { userId },
+      { $set: { isActive, status: studentStatus } }
+    ),
+    Employee.updateMany(
+      { userId },
+      { $set: { isActive } }
+    ),
+    Teacher.updateMany(
+      { teacherId: userId },
+      { $set: { status: teacherStatus } }
+    ),
+  ]);
+
+  return {
+    students: studentResult.modifiedCount || 0,
+    employees: employeeResult.modifiedCount || 0,
+    teacherAssignments: teacherResult.modifiedCount || 0,
+  };
+};
 
 const deleteUser = asyncHandler(async (req, res) => {
-  const { id } = req.params
-  if (!id) throw new ApiError(400, 'User ID is required')
+  const { id } = req.params;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'Valid User ID is required');
+  }
 
   const user = await User.findByIdAndUpdate(
     id,
-    { isActive: false },
+    { isActive: false, isDeleted: true },
     { new: true }
-  )
+  ).select('-password -refreshToken -emailVerificationToken -resetPasswordToken');
 
-  if (!user) throw new ApiError(404, 'User not found')
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const linkedRecords = await toggleLinkedUserDetails(user._id, false);
+  const userWithLinkedSummary = { ...user.toObject(), linkedRecords };
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, 'User deactivated successfully'))
-})
+    .json(
+      new ApiResponse(
+        200,
+        userWithLinkedSummary,
+        'User and linked details deactivated successfully'
+      )
+    );
+});
+
 
 /**
  * @desc Activate user
  * @route PATCH /api/users/:id/activate
  */
 const activeUser = asyncHandler(async (req, res) => {
-  const { id } = req.params
-  if (!id) throw new ApiError(400, 'User ID is required')
+  const { id } = req.params;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, 'Valid User ID is required');
+  }
 
   const user = await User.findByIdAndUpdate(
     id,
-    { isActive: true },
+    { isActive: true, isDeleted: false },
     { new: true }
-  )
+  ).select('-password -refreshToken -emailVerificationToken -resetPasswordToken');
 
-  if (!user) throw new ApiError(404, 'User not found')
+  if (!user) throw new ApiError(404, 'User not found');
+
+  const linkedRecords = await toggleLinkedUserDetails(user._id, true);
+  const userWithLinkedSummary = { ...user.toObject(), linkedRecords };
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, 'User activated successfully'))
-})
+    .json(
+      new ApiResponse(
+        200,
+        userWithLinkedSummary,
+        'User and linked details activated successfully'
+      )
+    );
+});
 
 const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params // using query ?id=
@@ -696,7 +748,11 @@ const getUserById = asyncHandler(async (req, res) => {
   const requesterRole = await getRequesterRoleName(req);
   const requesterSchoolId = req?.user?.schoolId;
 
-  const userMatch = { _id: new mongoose.Types.ObjectId(id) };
+  const userMatch = {
+    _id: new mongoose.Types.ObjectId(id),
+    isActive: true,
+    isDeleted: { $ne: true },
+  };
   if (
     requesterRole !== "Super Admin" &&
     requesterSchoolId &&
@@ -793,7 +849,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Invalid refresh token');
   }
 
-  const user = await User.findById(decoded?._id).select("+refreshToken");
+  const user = await User.findOne({ _id: decoded?._id, isActive: true, isDeleted: { $ne: true } }).select("+refreshToken");
   if (!user || user.refreshToken !== incomingRefreshToken) {
     throw new ApiError(401, 'Refresh token expired or mismatched');
   }
@@ -811,7 +867,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) throw new ApiError(400, 'Email is required');
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email, isActive: true, isDeleted: { $ne: true } });
   if (!user) throw new ApiError(404, 'User not found');
 
   const token = user.generateResetPasswordToken();
@@ -834,6 +890,8 @@ const resetPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     resetPasswordToken: hashedToken,
     resetPasswordExpire: { $gt: new Date() },
+    isActive: true,
+    isDeleted: { $ne: true },
   });
 
   if (!user) throw new ApiError(400, 'Invalid or expired reset token');
@@ -854,6 +912,8 @@ const verifyEmail = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     emailVerificationToken: hashedToken,
     emailVerificationExpire: { $gt: new Date() },
+    isActive: true,
+    isDeleted: { $ne: true },
   });
 
   if (!user) throw new ApiError(400, 'Invalid or expired verification token');
@@ -870,7 +930,7 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) throw new ApiError(400, 'Email is required');
 
-  const user = await User.findOne({ email });
+ const user = await User.findOne({ email, isActive: true, isDeleted: { $ne: true } });
   if (!user) throw new ApiError(404, 'User not found');
 
   if (user.isEmailVerified) {

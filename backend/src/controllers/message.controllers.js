@@ -28,8 +28,8 @@ const ALL_MESSAGE_ROLES = [
 ];
 
 const MESSAGE_POPULATE = [
-  { path: "senderId", select: "name email roleId schoolId", populate: { path: "roleId", select: "name" } },
-  { path: "recipientIds", select: "name email roleId schoolId", populate: { path: "roleId", select: "name" } },
+  { path: "senderId", select: "name email roleId schoolId", match: { isActive: true, isDeleted: { $ne: true } }, populate: { path: "roleId", select: "name" } },
+  { path: "recipientIds", select: "name email roleId schoolId", match: { isActive: true, isDeleted: { $ne: true } }, populate: { path: "roleId", select: "name" } },
 ];
 
 const getRoleName = (user) => user?.roleId?.name || user?.role?.name || "";
