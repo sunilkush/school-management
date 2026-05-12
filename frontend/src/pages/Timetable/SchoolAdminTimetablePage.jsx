@@ -57,6 +57,7 @@ export default function SchoolAdminTimetablePage() {
     subjects,
     teachers,
   } = useSelector((s) => s.timetable);
+  
   const schoolId = schoolIdFromUser(user);
   const academicYearId = selectedAcademicYear?._id;
   const [filters, setFilters] = useState({ schoolClassId: "", sectionId: "" });
