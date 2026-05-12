@@ -14,7 +14,7 @@ import React, { Suspense } from "react";
 import { ConfigProvider, App as AntdApp, theme as antdTheme } from "antd";
 import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 
-const ThemedAntWrapper = ({ children }) => {
+export const ThemedAntWrapper = ({ children }) => {
   const { isDark } = useTheme();
 
   return (
