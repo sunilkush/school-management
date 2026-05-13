@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
+import { getErrorMessage } from "../utils/errorMessage";
 
 /* ================= CREATE ================= */
 
@@ -10,7 +11,7 @@ export const createAcademicYear = createAsyncThunk(
       const res = await apiClient.post(`/academicYear/create`, data);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(getErrorMessage(err, "Something went wrong"));
     }
   }
 );
@@ -24,7 +25,7 @@ export const fetchAllAcademicYears = createAsyncThunk(
       const res = await apiClient.get(`/academicYear/school/${schoolId}`);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(getErrorMessage(err, "Something went wrong"));
     }
   }
 );
@@ -38,7 +39,7 @@ export const fetchActiveAcademicYear = createAsyncThunk(
       const res = await apiClient.get(`/academicYear/active/${schoolId}`);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(getErrorMessage(err, "Something went wrong"));
     }
   }
 );
@@ -54,7 +55,7 @@ export const setActiveAcademicYear = createAsyncThunk(
       );
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(getErrorMessage(err, "Something went wrong"));
     }
   }
 );
@@ -68,7 +69,7 @@ export const archiveAcademicYear = createAsyncThunk(
       const res = await apiClient.post(`/academicYear/archive/${id}`);
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(getErrorMessage(err, "Something went wrong"));
     }
   }
 );
@@ -82,7 +83,7 @@ export const deleteAcademicYear = createAsyncThunk(
       const res = await apiClient.delete(`/academicYear/${id}`);
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(getErrorMessage(err, "Something went wrong"));
     }
   }
 );
@@ -96,7 +97,7 @@ export const updateAcademicYear = createAsyncThunk(
       const res = await apiClient.put(`/academicYear/${id}`, data);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(getErrorMessage(err, "Something went wrong"));
     }
   }
 );
@@ -250,7 +251,7 @@ const academicYearSlice = createSlice({
         (action) => action.type.endsWith("/rejected"),
         (state, action) => {
           state.loading = false;
-          state.error = action.payload || "Something went wrong";
+          state.error = getErrorMessage(action.payload || action.error, "Something went wrong");
         }
       );
   },

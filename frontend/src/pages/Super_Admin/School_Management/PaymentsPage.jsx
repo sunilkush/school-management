@@ -38,6 +38,7 @@ import {
   fetchBillingInvoices,
   fetchBillingPayments,
 } from "../../../features/superAdminBillingSlice";
+import { getErrorMessage } from "../../../utils/errorMessage";
 
 const { Title, Text } = Typography;
 
@@ -333,7 +334,7 @@ export default function PaymentsPage() {
         <Alert
           type="error"
           showIcon
-          message={error}
+          message={getErrorMessage(error)}
           style={{ marginBottom: 16, borderRadius: 14 }}
         />
       ) : null}

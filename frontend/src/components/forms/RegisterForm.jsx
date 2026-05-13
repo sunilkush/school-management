@@ -15,6 +15,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
 import { registerUser, resetState } from "../../features/authSlice";
+import { getErrorMessage } from "./../../utils/errorMessage";
 
 const { Text } = Typography;
 
@@ -169,7 +170,7 @@ const RegisterForm = ({ onClose }) => {
       {error && (
         <Alert
           type="error"
-          message={error}
+          message={getErrorMessage(error)}
           showIcon
           style={{ marginTop: 12 }}
         />

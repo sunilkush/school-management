@@ -16,6 +16,7 @@ import {
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import logo from "/logo.png"
+import { getErrorMessage } from "./../../utils/errorMessage";
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
@@ -162,7 +163,7 @@ const LoginForm = () => {
 
                 {showError && (
                   <Alert
-                    message={error}
+                    message={getErrorMessage(error)}
                     type="error"
                     showIcon
                     style={{ marginBottom: 16 }}

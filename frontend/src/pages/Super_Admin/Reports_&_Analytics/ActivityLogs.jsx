@@ -17,6 +17,7 @@ import {
 } from "@ant-design/icons";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchActivityLogs } from "../../../features/activitySlice";
+import { getErrorMessage } from "./../../../utils/errorMessage";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -471,7 +472,7 @@ const normalizedLogs = useMemo(() => {
 
         {error && (
           <div style={{ padding: "12px 20px" }}>
-            <Text type="danger" style={{ fontSize: 13 }}>{error}</Text>
+            <Text type="danger" style={{ fontSize: 13 }}>{getErrorMessage(error)}</Text>
           </div>
         )}
       </div>

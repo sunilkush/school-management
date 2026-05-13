@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Calendar, Card, DatePicker, Empty, Row, Spin, Statistic } from "antd";
 import dayjs from "dayjs";
 import apiClient from "../api/httpClient";
+import { getErrorMessage } from "./../utils/errorMessage";
 
 const ATTENDANCE_STATUSES = ["present", "absent", "leave", "late", "halfday"];
 
@@ -114,7 +115,7 @@ const AttendanceCalendar = ({ userId, schoolId }) => {
         <Empty description="Attendance dekhne ke liye Profile tab me employee select karein." />
       ) : (
         <>
-          {error ? <Alert type="error" showIcon message={error} className="mb-3" /> : null}
+          {error ? <Alert type="error" showIcon message={getErrorMessage(error)} className="mb-3" /> : null}
 
           <Row gutter={[12, 12]} className="mb-4">
             <Card size="small" className="min-w-[120px]">

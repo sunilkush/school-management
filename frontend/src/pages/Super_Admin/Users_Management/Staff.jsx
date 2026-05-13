@@ -19,6 +19,7 @@ import {
 } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { FaUserCircle } from "react-icons/fa";
+import { getErrorMessage } from "../../../utils/errorMessage";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -144,7 +145,7 @@ const Staff = () => {
   if (error) {
     return (
       <Text type="danger" className="block text-center mt-6">
-        {error}
+        {getErrorMessage(error)}
       </Text>
     );
   }

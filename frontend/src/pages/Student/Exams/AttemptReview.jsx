@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { Alert, Card, Col, Divider, Empty, List, Progress, Row, Space, Spin, Statistic, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import { getAttemptById } from "../../../features/attemptSlice";
+import { getErrorMessage } from "./../../../utils/errorMessage";
 
 const { Title, Text } = Typography;
 
@@ -103,7 +104,7 @@ const AttemptReview = () => {
             <Tag color={statusMeta.color}>{statusMeta.label}</Tag>
             <Tag color="purple">Attempt ID: {attemptId}</Tag>
           </Space>
-          {error ? <Alert type="warning" showIcon message={error} /> : null}
+          {error ? <Alert type="warning" showIcon message={getErrorMessage(error)} /> : null}
 
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={12} md={8}><Card size="small"><Statistic title="Total Score" value={reviewStats?.obtained ?? 0} /></Card></Col>

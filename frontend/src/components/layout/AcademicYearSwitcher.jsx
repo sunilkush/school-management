@@ -5,6 +5,7 @@ import {
   fetchActiveAcademicYear,
   setSelectedAcademicYear,
 } from "../../features/academicYearSlice";
+import { getErrorMessage } from "../../utils/errorMessage";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -79,7 +80,7 @@ const AcademicYearSwitcher = () => {
      ❌ ERROR
   ============================ */
   if (error) {
-    return <Text type="danger">{error}</Text>;
+    return <Text type="danger">{getErrorMessage(error)}</Text>;
   }
 
   return (

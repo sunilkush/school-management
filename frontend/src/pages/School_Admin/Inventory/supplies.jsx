@@ -26,6 +26,7 @@ import {
   fetchInventoryItems,
   updateInventoryItem,
 } from "../../../features/inventorySlice";
+import { getErrorMessage } from "../../../utils/errorMessage";
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -165,7 +166,7 @@ const Supplies = () => {
         <Title level={4} style={{ marginBottom: 4 }}>Supplies Management</Title>
         <Text type="secondary">Track stock levels and keep essentials available for staff and students.</Text>
 
-        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={error} /> : null}
+        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={getErrorMessage(error)} /> : null}
 
         <Row gutter={16} style={{ marginTop: 20, marginBottom: 20 }}>
           <Col xs={24} sm={8}><Card title="Total Supplies">{totalSupplies}</Card></Col>

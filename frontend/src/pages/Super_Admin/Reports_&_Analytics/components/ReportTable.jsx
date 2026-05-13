@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteReport, reportView } from "../../../../features/reportSlice";
 import dayjs from "dayjs";
+import { getErrorMessage } from "./../../../../utils/errorMessage";
 
 const ReportsTable = () => {
   const { items, loading, error } = useSelector((state) => state.reports);
@@ -26,7 +27,7 @@ const ReportsTable = () => {
   return (
     <div>
       {loading && <div className="py-4">Loading...</div>}
-      {error && <div className="text-red-500 py-2">{error}</div>}
+      {error && <div className="text-red-500 py-2">{getErrorMessage(error)}</div>}
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="table-auto w-full border-collapse">

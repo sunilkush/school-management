@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
+import { getErrorMessage } from "./../../../utils/errorMessage";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -192,7 +193,7 @@ const StudentHomework = () => {
       <Space direction="vertical" style={{ width: "100%" }} size={16}>
         <Title level={3} style={{ margin: 0 }}>📘 My Homework</Title>
 
-        {error && <Alert type="warning" showIcon message={error} />}
+        {error && <Alert type="warning" showIcon message={getErrorMessage(error)} />}
 
         <Space wrap>
           <Statistic title="Total" value={stats.total} />

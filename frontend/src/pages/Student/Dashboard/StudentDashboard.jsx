@@ -10,6 +10,7 @@ import {
   fetchStudentTimetable,
   fetchStudentTransport,
 } from "../../../features/studentPortalSlice";
+import { getErrorMessage } from "../../../utils/errorMessage";
 
 const { Text, Title } = Typography;
 
@@ -88,7 +89,7 @@ const StudentDashboard = () => {
         </div>
       </Card>
 
-      {error ? <Alert type="warning" showIcon message={error} /> : null}
+      {error ? <Alert type="warning" showIcon message={getErrorMessage(error)} /> : null}
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>

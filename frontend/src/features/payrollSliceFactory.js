@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import httpClient from "../api/httpClient";
+import { getErrorMessage } from "../utils/errorMessage";
 
 const normalizeList = (payload) => {
   const data = payload?.data ?? payload;
@@ -15,7 +16,7 @@ export const createPayrollResourceSlice = ({ name, endpoint, idKey = "_id" }) =>
       const res = await httpClient.get(endpoint, { params });
       return res.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Request failed");
+      return rejectWithValue(getErrorMessage(error, "Request failed"));
     }
   });
 
@@ -24,7 +25,7 @@ export const createPayrollResourceSlice = ({ name, endpoint, idKey = "_id" }) =>
       const res = await httpClient.post(endpoint, payload);
       return res.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Request failed");
+      return rejectWithValue(getErrorMessage(error, "Request failed"));
     }
   });
 
@@ -34,7 +35,7 @@ export const createPayrollResourceSlice = ({ name, endpoint, idKey = "_id" }) =>
       const res = await httpClient[method](`${endpoint}/${id}${actionPath}`, data || {});
       return res.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Request failed");
+      return rejectWithValue(getErrorMessage(error, "Request failed"));
     }
   });
 
@@ -43,7 +44,7 @@ export const createPayrollResourceSlice = ({ name, endpoint, idKey = "_id" }) =>
       await httpClient.delete(`${endpoint}/${id}`);
       return id;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Request failed");
+      return rejectWithValue(getErrorMessage(error, "Request failed"));
     }
   });
 
@@ -65,13 +66,13 @@ export const createPayrollResourceSlice = ({ name, endpoint, idKey = "_id" }) =>
       builder
         .addCase(fetchAll.pending, (state) => { state.loading = true; state.error = null; })
         .addCase(fetchAll.fulfilled, (state, action) => { state.loading = false; state.items = normalizeList(action.payload); state.selected = action.payload?.data && !Array.isArray(action.payload.data) ? action.payload.data : state.selected; state.lastMessage = action.payload?.message || null; })
-        .addCase(fetchAll.rejected, (state, action) => { state.loading = false; state.error = action.payload; state.items = []; })
+        .addCase(fetchAll.rejected, (state, action) => { state.loading = false; state.error = getErrorMessage(action.payload, "Request failed"); state.items = []; })
         .addCase(createOne.pending, (state) => { state.loading = true; state.error = null; })
         .addCase(createOne.fulfilled, (state, action) => { state.loading = false; const record = action.payload?.data; if (record) state.items.unshift(record); state.selected = record || state.selected; state.lastMessage = action.payload?.message || null; })
-        .addCase(createOne.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+        .addCase(createOne.rejected, (state, action) => { state.loading = false; state.error = getErrorMessage(action.payload, "Request failed"); })
         .addCase(updateOne.pending, (state) => { state.loading = true; state.error = null; })
         .addCase(updateOne.fulfilled, (state, action) => { state.loading = false; const record = action.payload?.data; if (record?.[idKey]) state.items = state.items.map((item) => item?.[idKey] === record[idKey] ? record : item); state.selected = record || state.selected; state.lastMessage = action.payload?.message || null; })
-        .addCase(updateOne.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+        .addCase(updateOne.rejected, (state, action) => { state.loading = false; state.error = getErrorMessage(action.payload, "Request failed"); })
         .addCase(deleteOne.fulfilled, (state, action) => { state.items = state.items.filter((item) => item?.[idKey] !== action.payload); });
     },
   });

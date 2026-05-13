@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { toast } from "react-toastify";
 import { clearAccessToken, getAccessToken } from "../api/authToken";
+import { getErrorMessage } from "../utils/errorMessage";
 
 const baseUrl = import.meta.env.VITE_API_URL || "/api/v1";
 
@@ -24,7 +25,7 @@ const baseQueryWithGlobalHandling = async (args, api, extraOptions) => {
   }
 
   if (result.error && result.error.status !== 401) {
-    const message = result.error.data?.message || "Request failed";
+    const message = getErrorMessage(result.error, "Request failed");
     toast.error(message);
   }
 

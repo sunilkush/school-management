@@ -6,6 +6,7 @@ import { useLocation } from "react-router-dom";
 import StatusTag from "../../components/attendance/StatusTag";
 import { fetchMyAttendance, markBulkAttendance } from "../../features/attendanceSlice";
 import { getAttendanceRoleFromUser } from "../../utils/attendanceRoles";
+import { getErrorMessage } from "./../../utils/errorMessage";
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -102,7 +103,7 @@ const MyAttendancePage = () => {
           </Col>
         </Row>
 
-        {error ? <Alert type="error" showIcon message={error} /> : null}
+        {error ? <Alert type="error" showIcon message={getErrorMessage(error)} /> : null}
         {successMessage ? <Alert type="success" showIcon message={successMessage} /> : null}
 
         {canSelfMark && !isMonthlyRoute ? (

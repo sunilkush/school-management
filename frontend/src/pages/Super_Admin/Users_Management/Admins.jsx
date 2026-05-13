@@ -36,6 +36,7 @@ import {
 } from "@ant-design/icons";
 
 import RegisterForm from "../../../components/forms/RegisterForm";
+import { getErrorMessage } from "../../../utils/errorMessage";
 
 const { Content } = Layout;
 const { Text } = Typography;
@@ -356,7 +357,7 @@ const Admins = () => {
               borderRadius: 10, padding: "10px 16px",
               color: "#ff4d4f", fontSize: 13, marginBottom: 16,
             }}>
-              {error}
+              {getErrorMessage(error)}
             </div>
           )}
 

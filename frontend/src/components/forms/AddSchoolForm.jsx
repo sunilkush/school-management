@@ -18,6 +18,7 @@ import {
   Select,
 } from "antd";
 import { UploadOutlined, BankOutlined } from "@ant-design/icons";
+import { getErrorMessage } from "./../../utils/errorMessage";
 const { Title, Text } = Typography;
 
 const AddSchoolForm = () => {
@@ -98,7 +99,7 @@ const AddSchoolForm = () => {
       {/* ===== FEEDBACK ===== */}
       {error && (
         <Text type="danger" className="block mb-3">
-          {error}
+          {getErrorMessage(error)}
         </Text>
       )}
       {success && (

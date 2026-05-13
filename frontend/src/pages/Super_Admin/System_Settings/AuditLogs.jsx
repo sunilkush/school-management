@@ -14,6 +14,7 @@ import {
 import { Clock, Download, RefreshCcw, Search } from "lucide-react";
 import dayjs from "dayjs";
 import httpClient from "../../../api/httpClient";
+import { getErrorMessage } from "./../../../utils/errorMessage";
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -254,7 +255,7 @@ const AuditLogs = () => {
           />
         </Space>
 
-        {error ? <Text type="danger">{error}</Text> : null}
+        {error ? <Text type="danger">{getErrorMessage(error)}</Text> : null}
 
         <Table
           rowKey="_id"

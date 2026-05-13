@@ -14,6 +14,7 @@ import { fetchPayrollReport } from "../../features/payrollReportSlice";
 import { fetchEmployeeLoan, createEmployeeLoan } from "../../features/employeeLoanSlice";
 import { fetchReimbursement, createReimbursement, updateReimbursement } from "../../features/reimbursementSlice";
 import httpClient from "../../api/httpClient";
+import { getErrorMessage } from "./../../utils/errorMessage";
 
 const { Title, Text } = Typography;
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
@@ -32,7 +33,7 @@ function PageShell({ title, subtitle, actions, children, error }) {
         <Col><Title level={3} style={{ margin: 0 }}>{title}</Title><Text type="secondary">{subtitle}</Text></Col>
         <Col><Space wrap>{actions}</Space></Col>
       </Row>
-      {error ? <Alert type="error" showIcon message={String(error)} /> : null}
+      {error ? <Alert type="error" showIcon message={getErrorMessage(error)} /> : null}
       {children}
     </Space>
   </div>;

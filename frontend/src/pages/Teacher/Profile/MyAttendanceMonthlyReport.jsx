@@ -30,6 +30,7 @@ import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { fetchMyAttendance, markBulkAttendance } from "../../../features/attendanceSlice";
+import { getErrorMessage } from "./../../../utils/errorMessage";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -248,7 +249,7 @@ const MyAttendanceMonthlyReport = () => {
       {(error || successMessage) && (
         <div style={{ marginTop: 16 }}>
           <Space direction="vertical" style={{ width: "100%" }}>
-            {error ? <Alert type="error" showIcon message={error} /> : null}
+            {error ? <Alert type="error" showIcon message={getErrorMessage(error)} /> : null}
             {successMessage ? (
               <Alert type="success" showIcon message={successMessage} />
             ) : null}

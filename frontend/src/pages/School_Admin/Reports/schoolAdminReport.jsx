@@ -23,6 +23,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllAcademicYears, fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import { fetchSchoolReports } from "../../../features/reportSlice";
+import { getErrorMessage } from "./../../../utils/errorMessage";
 
 
 const { Content } = Layout;
@@ -147,7 +148,7 @@ const SchoolAdminReport = () => {
         )}
 
         {!accessError && !loading && error && (
-          <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />
+          <Alert type="error" message={getErrorMessage(error)} showIcon style={{ marginBottom: 16 }} />
         )}
 
         {!accessError && !loading && !error && !schoolReports?.academicYear && (

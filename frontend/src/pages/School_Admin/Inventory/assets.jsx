@@ -26,6 +26,7 @@ import {
   fetchInventoryItems,
   updateInventoryItem,
 } from "../../../features/inventorySlice";
+import { getErrorMessage } from "../../../utils/errorMessage";
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -166,7 +167,7 @@ const Assets = () => {
         <Title level={4} style={{ marginBottom: 4 }}>Assets Management</Title>
         <Text type="secondary">Manage high-value assets and keep allocation transparent.</Text>
 
-        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={error} /> : null}
+        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={getErrorMessage(error)} /> : null}
 
         <Row gutter={16} style={{ marginTop: 20, marginBottom: 20 }}>
           <Col xs={24} sm={8}><Card title="Total Assets">{totalAssets}</Card></Col>
