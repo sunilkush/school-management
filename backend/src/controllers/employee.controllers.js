@@ -20,7 +20,6 @@ export const registerEmployee = async (req, res) => {
       bloodType,
       religion,
       employeeStatus,
-      salaryId,
       accountHolder,
       accountNumber,
       ifscCode,
@@ -91,8 +90,6 @@ export const registerEmployee = async (req, res) => {
     }
 
     // 🔧 Clean data before saving (fix Cast to ObjectId errors)
-    const cleanedSalaryId =
-      salaryId && salaryId !== "" ? salaryId : null;
 
     const cleanedSubjects =
       Array.isArray(subjects) && subjects.length > 0
@@ -134,7 +131,6 @@ export const registerEmployee = async (req, res) => {
       experience,
       subjects: cleanedSubjects,
       notes,
-      salaryId: cleanedSalaryId,
       bankDetails: {
         accountHolder,
         accountNumber,

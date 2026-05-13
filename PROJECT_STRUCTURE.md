@@ -11,7 +11,7 @@
 - `middlewares/` → Auth, validation, request context, security middleware.
 - `models/` → Mongoose schemas/models.
 - `routes/` → API route files + route registry (`registerRoutes.js`).
-- `services/` → Domain services (payroll, exams, fee calculations).
+- `services/` → Domain services (exams, fee calculations, and other workflows).
 - `utils/` → Shared utility helpers.
 - `validators/` → Request validators.
 - `views/` → EJS templates.

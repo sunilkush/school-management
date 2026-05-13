@@ -2,7 +2,7 @@ export const ERP_MODULES = [
   { key: "school-management", title: "School Management", description: "School profile, settings, and subscription controls." },
   { key: "academic-management", title: "Academic Management", description: "Boards, classes, sections, subjects, chapters, and lesson plans." },
   { key: "student-management", title: "Student Management", description: "Admissions, profile management, promotions, and documents." },
-  { key: "teacher-management", title: "Teacher Management", description: "Teacher profile, assignment, attendance, and salary tracking." },
+  { key: "teacher-management", title: "Teacher Management", description: "Teacher profile, assignment, and attendance tracking." },
   { key: "attendance-system", title: "Attendance System", description: "Student/staff attendance with QR and biometric support." },
   { key: "exam-result", title: "Exam & Result", description: "Exam creation, scheduling, marks, report cards, and analytics." },
   { key: "timetable-management", title: "Timetable", description: "Class, teacher, and student timetable planning and visibility." },

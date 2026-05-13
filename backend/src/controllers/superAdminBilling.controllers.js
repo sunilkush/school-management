@@ -349,7 +349,6 @@ export const getFeatureAccessControl = asyncHandler(async (req, res) => {
     Transport: false,
     Hostel: false,
     Library: false,
-    Payroll: false,
     Reports: false,
     "AI Features": false,
     "Mobile App": false,
