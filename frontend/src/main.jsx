@@ -189,6 +189,28 @@ const MyAttendancePage = lazy(() => import("./pages/Attendance/MyAttendancePage.
 const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports.jsx"));
 const MyAttendanceMonthlyReport = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
 
+
+// Payroll
+const PayrollDashboard = lazy(() => import("./pages/Payroll/PayrollDashboard.jsx"));
+const PayrollSettingsPage = lazy(() => import("./pages/Payroll/PayrollSettingsPage.jsx"));
+const SalaryComponentsPage = lazy(() => import("./pages/Payroll/SalaryComponentsPage.jsx"));
+const EmployeePayrollPage = lazy(() => import("./pages/Payroll/EmployeePayrollPage.jsx"));
+const SalaryStructurePage = lazy(() => import("./pages/Payroll/SalaryStructurePage.jsx"));
+const PayrollCyclesPage = lazy(() => import("./pages/Payroll/PayrollCyclesPage.jsx"));
+const PayrollCycleDetailPage = lazy(() => import("./pages/Payroll/PayrollCycleDetailPage.jsx"));
+const PayrollApprovalsPage = lazy(() => import("./pages/Payroll/PayrollApprovalsPage.jsx"));
+const PayslipAdminPage = lazy(() => import("./pages/Payroll/PayslipAdminPage.jsx"));
+const PayrollReportsPage = lazy(() => import("./pages/Payroll/PayrollReportsPage.jsx"));
+const EmployeeLoanPage = lazy(() => import("./pages/Payroll/EmployeeLoanPage.jsx"));
+const ReimbursementAdminPage = lazy(() => import("./pages/Payroll/ReimbursementAdminPage.jsx"));
+const MyPayrollDashboard = lazy(() => import("./pages/Payroll/MyPayrollDashboard.jsx"));
+const MyPayslipsPage = lazy(() => import("./pages/Payroll/MyPayslipsPage.jsx"));
+const MyReimbursementsPage = lazy(() => import("./pages/Payroll/MyReimbursementsPage.jsx"));
+const MyLoansPage = lazy(() => import("./pages/Payroll/MyLoansPage.jsx"));
+const MyTaxDeclarationPage = lazy(() => import("./pages/Payroll/MyTaxDeclarationPage.jsx"));
+const PayrollOverviewPage = lazy(() => import("./pages/Payroll/PayrollOverviewPage.jsx"));
+const PayrollTemplateSettingsPage = lazy(() => import("./pages/Payroll/PayrollTemplateSettingsPage.jsx"));
+
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
 const StudentHomework = lazy(() => import("./pages/Student/Homework/StudentHomework.jsx"));
@@ -423,6 +445,9 @@ const router = createBrowserRouter([
               { path: "support/contact", element: <ContactSupport/> },
               { path: "support/documentation", element: <Documentation/> },
               { path: "support/faqs", element: <Faqs/> },
+              { path: "payroll/overview", element: <PayrollOverviewPage /> },
+              { path: "payroll/templates", element: <PayrollTemplateSettingsPage /> },
+              { path: "payroll/compliance", element: <PayrollReportsPage /> },
             ],
           },
           {
@@ -434,6 +459,18 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <SchoolAdminDashboard /> },
+              { path: "payroll", element: <PayrollDashboard /> },
+              { path: "payroll/settings", element: <PayrollSettingsPage /> },
+              { path: "payroll/components", element: <SalaryComponentsPage /> },
+              { path: "payroll/employees", element: <EmployeePayrollPage /> },
+              { path: "payroll/structures", element: <SalaryStructurePage /> },
+              { path: "payroll/cycles", element: <PayrollCyclesPage /> },
+              { path: "payroll/cycles/:id", element: <PayrollCycleDetailPage /> },
+              { path: "payroll/approvals", element: <PayrollApprovalsPage /> },
+              { path: "payroll/payslips", element: <PayslipAdminPage /> },
+              { path: "payroll/reports", element: <PayrollReportsPage /> },
+              { path: "payroll/loans", element: <EmployeeLoanPage /> },
+              { path: "payroll/reimbursements", element: <ReimbursementAdminPage /> },
               //{ path: "users/student/add", element: <AddStudent /> },
               //{ path: "users/teacher/add", element: <AddTeacher /> },
               { path: "parents-register", element: <ParentList /> },
@@ -507,6 +544,11 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <TeacherDashboard /> },
+              { path: "payroll", element: <MyPayrollDashboard /> },
+              { path: "payroll/payslips", element: <MyPayslipsPage /> },
+              { path: "payroll/reimbursements", element: <MyReimbursementsPage /> },
+              { path: "payroll/loans", element: <MyLoansPage /> },
+              { path: "payroll/tax", element: <MyTaxDeclarationPage /> },
               { path: "classes", element: <AssignedClasses /> },
               { path: "classes/:classId", element: <ClassDetails /> },
               { path: "students", element: <MyStudents /> },
@@ -606,6 +648,16 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <AccountantDashboard /> },
+              { path: "payroll", element: <PayrollDashboard /> },
+              { path: "payroll/components", element: <SalaryComponentsPage /> },
+              { path: "payroll/employees", element: <EmployeePayrollPage /> },
+              { path: "payroll/structures", element: <SalaryStructurePage /> },
+              { path: "payroll/cycles", element: <PayrollCyclesPage /> },
+              { path: "payroll/cycles/:id", element: <PayrollCycleDetailPage /> },
+              { path: "payroll/payslips", element: <PayslipAdminPage /> },
+              { path: "payroll/reports", element: <PayrollReportsPage /> },
+              { path: "payroll/loans", element: <EmployeeLoanPage /> },
+              { path: "payroll/reimbursements", element: <ReimbursementAdminPage /> },
               { path: "fees/collect", element: <CollectFees /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
@@ -630,6 +682,18 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <SchoolAdminDashboard /> },
               { path: "overview", element: <SchoolAdminDashboard /> },
+              { path: "payroll", element: <PayrollDashboard /> },
+              { path: "payroll/settings", element: <PayrollSettingsPage /> },
+              { path: "payroll/components", element: <SalaryComponentsPage /> },
+              { path: "payroll/employees", element: <EmployeePayrollPage /> },
+              { path: "payroll/structures", element: <SalaryStructurePage /> },
+              { path: "payroll/cycles", element: <PayrollCyclesPage /> },
+              { path: "payroll/cycles/:id", element: <PayrollCycleDetailPage /> },
+              { path: "payroll/approvals", element: <PayrollApprovalsPage /> },
+              { path: "payroll/payslips", element: <PayslipAdminPage /> },
+              { path: "payroll/reports", element: <PayrollReportsPage /> },
+              { path: "payroll/loans", element: <EmployeeLoanPage /> },
+              { path: "payroll/reimbursements", element: <ReimbursementAdminPage /> },
               { path: "staff", element: <TeacherList /> },
               { path: "students", element: <StudentList /> },
               { path: "reports/academic", element: <ExamReports /> },
@@ -878,6 +942,11 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <StaffDashboard /> },
+              { path: "payroll", element: <MyPayrollDashboard /> },
+              { path: "payroll/payslips", element: <MyPayslipsPage /> },
+              { path: "payroll/reimbursements", element: <MyReimbursementsPage /> },
+              { path: "payroll/loans", element: <MyLoansPage /> },
+              { path: "payroll/tax", element: <MyTaxDeclarationPage /> },
               { path: "tasks", element: <Schedule /> },
               { path: "attendance", element: <MyAttendancePage /> },
               { path: "settings", element: <SettingsPage /> },
