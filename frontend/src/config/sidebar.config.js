@@ -57,6 +57,15 @@ export const sidebarMenu = {
   "super admin": [
     { title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
     {
+      title: "Payroll",
+      icon: CreditCard,
+      subMenu: [
+        { title: "Payroll Overview", path: "superadmin/payroll/overview" },
+        { title: "Payroll Templates", path: "superadmin/payroll/templates" },
+        { title: "Compliance", path: "superadmin/payroll/compliance" },
+      ],
+    },
+    {
       title: "School Management",
       icon: School,
       subMenu: [
@@ -165,6 +174,23 @@ export const sidebarMenu = {
   "school admin": [
     { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
     { title: "School Setup", path: "schooladmin/school-setup", icon: School },
+    {
+      title: "Payroll",
+      icon: CreditCard,
+      subMenu: [
+        { title: "Payroll Dashboard", path: "schooladmin/payroll" },
+        { title: "Settings", path: "schooladmin/payroll/settings" },
+        { title: "Salary Components", path: "schooladmin/payroll/components" },
+        { title: "Employees", path: "schooladmin/payroll/employees" },
+        { title: "Salary Structures", path: "schooladmin/payroll/structures" },
+        { title: "Payroll Cycles", path: "schooladmin/payroll/cycles" },
+        { title: "Approvals", path: "schooladmin/payroll/approvals" },
+        { title: "Payslips", path: "schooladmin/payroll/payslips" },
+        { title: "Reports", path: "schooladmin/payroll/reports" },
+        { title: "Loans", path: "schooladmin/payroll/loans" },
+        { title: "Reimbursements", path: "schooladmin/payroll/reimbursements" },
+      ],
+    },
     {
       title: "User Management",
       icon: Users,
@@ -304,6 +330,17 @@ export const sidebarMenu = {
       ],
     },
     { title: "Teacher Reports", path: "teacher/reports", icon: FileBarChart2 },
+    {
+      title: "My Payroll",
+      icon: CreditCard,
+      subMenu: [
+        { title: "My Payroll", path: "teacher/payroll" },
+        { title: "My Payslips", path: "teacher/payroll/payslips" },
+        { title: "My Reimbursements", path: "teacher/payroll/reimbursements" },
+        { title: "My Loans", path: "teacher/payroll/loans" },
+        { title: "Tax Declaration", path: "teacher/payroll/tax" },
+      ],
+    },
     communicationMenu("teacher"),
     { title: "Settings", path: "teacher/settings", icon: Settings },
     ...commonSelfService("teacher"),
@@ -346,6 +383,21 @@ export const sidebarMenu = {
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
     { title: "Fee Collection", path: "accountant/fees/collect", icon: CreditCard },
+    {
+      title: "Payroll",
+      icon: CreditCard,
+      subMenu: [
+        { title: "Payroll Dashboard", path: "accountant/payroll" },
+        { title: "Salary Components", path: "accountant/payroll/components" },
+        { title: "Employees", path: "accountant/payroll/employees" },
+        { title: "Salary Structures", path: "accountant/payroll/structures" },
+        { title: "Payroll Cycles", path: "accountant/payroll/cycles" },
+        { title: "Payslips", path: "accountant/payroll/payslips" },
+        { title: "Reports", path: "accountant/payroll/reports" },
+        { title: "Loans", path: "accountant/payroll/loans" },
+        { title: "Reimbursements", path: "accountant/payroll/reimbursements" },
+      ],
+    },
      { title: "Attendance", path: "accountant/attendance", icon: Clock },
     { title: "Attendance Reports", path: "accountant/attendance/monthly", icon: FileBarChart2 },
     { title: "Reports", path: "accountant/reports", icon: FileBarChart2 },
@@ -358,6 +410,23 @@ export const sidebarMenu = {
   principal: [
     { title: "Dashboard", path: "principal", icon: LayoutDashboard },
     { title: "Overview", path: "principal/overview", icon: FileBarChart2 },
+    {
+      title: "Payroll",
+      icon: CreditCard,
+      subMenu: [
+        { title: "Payroll Dashboard", path: "principal/payroll" },
+        { title: "Settings", path: "principal/payroll/settings" },
+        { title: "Salary Components", path: "principal/payroll/components" },
+        { title: "Employees", path: "principal/payroll/employees" },
+        { title: "Salary Structures", path: "principal/payroll/structures" },
+        { title: "Payroll Cycles", path: "principal/payroll/cycles" },
+        { title: "Approvals", path: "principal/payroll/approvals" },
+        { title: "Payslips", path: "principal/payroll/payslips" },
+        { title: "Reports", path: "principal/payroll/reports" },
+        { title: "Loans", path: "principal/payroll/loans" },
+        { title: "Reimbursements", path: "principal/payroll/reimbursements" },
+      ],
+    },
     { title: "Staff", path: "principal/staff", icon: Users },
     { title: "Students", path: "principal/students", icon: Users },
     { title: "Academic Reports", path: "principal/reports/academic", icon: GraduationCap },
@@ -504,6 +573,17 @@ export const sidebarMenu = {
     { title: "Dashboard", path: "staff", icon: LayoutDashboard },
     { title: "Tasks & Schedule", path: "staff/tasks", icon: CalendarClock },
     { title: "My Attendance", path: "staff/attendance", icon: Clock },
+    {
+      title: "My Payroll",
+      icon: CreditCard,
+      subMenu: [
+        { title: "My Payroll", path: "staff/payroll" },
+        { title: "My Payslips", path: "staff/payroll/payslips" },
+        { title: "My Reimbursements", path: "staff/payroll/reimbursements" },
+        { title: "My Loans", path: "staff/payroll/loans" },
+        { title: "Tax Declaration", path: "staff/payroll/tax" },
+      ],
+    },
     communicationMenu("staff"),
     { title: "Settings", path: "staff/settings", icon: Settings },
     ...commonSelfService("staff"),
@@ -512,6 +592,17 @@ export const sidebarMenu = {
     { title: "Dashboard", path: "staff", icon: LayoutDashboard },
     { title: "Tasks & Schedule", path: "staff/tasks", icon: CalendarClock },
     { title: "My Attendance", path: "staff/attendance", icon: Clock },
+    {
+      title: "My Payroll",
+      icon: CreditCard,
+      subMenu: [
+        { title: "My Payroll", path: "staff/payroll" },
+        { title: "My Payslips", path: "staff/payroll/payslips" },
+        { title: "My Reimbursements", path: "staff/payroll/reimbursements" },
+        { title: "My Loans", path: "staff/payroll/loans" },
+        { title: "Tax Declaration", path: "staff/payroll/tax" },
+      ],
+    },
     communicationMenu("staff"),
     { title: "Settings", path: "staff/settings", icon: Settings },
     roleWorkspaceItem,
