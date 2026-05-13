@@ -31,7 +31,7 @@ import {
   Fuel,
   Wrench,
   Clock,
-   UserPlus,
+  UserPlus,
 } from "lucide-react";
 
 const commonSelfService = (basePath) => [
@@ -49,9 +49,17 @@ const communicationMenu = (basePath) => ({
   ],
 });
 
-const supportCenterItem = { title: "Support Center", path: "support/tickets", icon: MessageSquare };
+const supportCenterItem = {
+  title: "Support Center",
+  path: "support/tickets",
+  icon: MessageSquare,
+};
 const moduleHubItem = { title: "Module Hub", path: "modules", icon: Puzzle };
-const roleWorkspaceItem = { title: "Role Workspace", path: "workspace", icon: ClipboardList };
+const roleWorkspaceItem = {
+  title: "Role Workspace",
+  path: "workspace",
+  icon: ClipboardList,
+};
 
 export const sidebarMenu = {
   /* ================= SUPER ADMIN ================= */
@@ -97,19 +105,28 @@ export const sidebarMenu = {
         { title: "Classes", path: "superadmin/academics/classes" },
         { title: "Class Sections", path: "superadmin/classes-sections/list" },
         { title: "Subjects", path: "superadmin/academics/subjects" },
-        { title: "Academic Years", path: "superadmin/academics/academic-years" },
+        {
+          title: "Academic Years",
+          path: "superadmin/academics/academic-years",
+        },
         { title: "Boards", path: "superadmin/academics/boards" },
         { title: "Board Classes", path: "superadmin/academics/boards-class" },
-        { title: "Chapters & Topics", path: "superadmin/academics/chapters-topics" },
+        {
+          title: "Chapters & Topics",
+          path: "superadmin/academics/chapters-topics",
+        },
       ],
     },
     {
       title: "Attendance",
       icon: UserCheck,
       subMenu: [
-        { title: "Attendance Dashboard", path: "superadmin/reports/attendance" },
-         { title: "Mark Attendance", path: "superadmin/attendance/mark" },
-         
+        {
+          title: "Attendance Dashboard",
+          path: "superadmin/reports/attendance",
+        },
+        { title: "Mark Attendance", path: "superadmin/attendance/mark" },
+
         { title: "Attendance Table", path: "superadmin/attendance/table" },
         { title: "Monthly Report", path: "superadmin/attendance/monthly" },
       ],
@@ -119,7 +136,10 @@ export const sidebarMenu = {
       icon: FileBarChart2,
       subMenu: [
         { title: "Reports Home", path: "superadmin/reports" },
-        { title: "School Wise Reports", path: "superadmin/reports/school-wise" },
+        {
+          title: "School Wise Reports",
+          path: "superadmin/reports/school-wise",
+        },
         { title: "Finance Summary", path: "superadmin/reports/finance" },
         { title: "Academic Reports", path: "superadmin/reports/academic" },
         { title: "Platform Usage", path: "superadmin/reports/usage" },
@@ -176,7 +196,10 @@ export const sidebarMenu = {
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },
-        { title: "Employee Details", path: "schooladmin/users/employee-details" },
+        {
+          title: "Employee Details",
+          path: "schooladmin/users/employee-details",
+        },
       ],
     },
     {
@@ -212,11 +235,17 @@ export const sidebarMenu = {
       title: "Attendance Management",
       icon: UserCheck,
       subMenu: [
-        { title: "Student Attendance", path: "schooladmin/attendance/students" },
+        {
+          title: "Student Attendance",
+          path: "schooladmin/attendance/students",
+        },
         { title: "Staff Attendance", path: "schooladmin/attendance/staff" },
-         { title: "Mark Attendance", path: "schooladmin/attendance/mark" },
+        { title: "Mark Attendance", path: "schooladmin/attendance/mark" },
         { title: "Attendance Table", path: "schooladmin/attendance/table" },
-        { title: "Attendance Dashboard", path: "schooladmin/attendance/dashboard" },
+        {
+          title: "Attendance Dashboard",
+          path: "schooladmin/attendance/dashboard",
+        },
         { title: "Monthly Attendance", path: "schooladmin/attendance/monthly" },
       ],
     },
@@ -259,15 +288,33 @@ export const sidebarMenu = {
       title: "Payroll",
       icon: IndianRupee,
       subMenu: [
-        { title: "Create Employee", path: "schooladmin/payroll/create-employee" },
-        { title: "Salary Structures", path: "schooladmin/payroll/salary-structures" },
-        { title: "Monthly Run", path: "schooladmin/payroll/monthly-run" },
-        { title: "Payslip Center", path: "schooladmin/payroll/payslips" },
-        { title: "Monthly Reports", path: "schooladmin/payroll/reports/monthly" },
-        { title: "Enterprise Dashboard", path: "schooladmin/payroll/enterprise/dashboard" },
-        { title: "Enterprise Run", path: "schooladmin/payroll/enterprise/run" },
-        { title: "Approvals", path: "schooladmin/payroll/enterprise/approval" },
-        { title: "Loans & Advance", path: "schooladmin/payroll/enterprise/loans" },
+        { title: "Payroll Dashboard", path: "schooladmin/payroll/dashboard" },
+        { title: "Salary Components", path: "schooladmin/payroll/components" },
+        { title: "Salary Templates", path: "schooladmin/payroll/templates" },
+        {
+          title: "Employee Structures",
+          path: "schooladmin/payroll/employee-structures",
+        },
+        { title: "Payroll Cycles", path: "schooladmin/payroll/cycles" },
+        { title: "Run Payroll", path: "schooladmin/payroll/run" },
+        { title: "Payroll Approval", path: "schooladmin/payroll/approval" },
+        { title: "Payslip Management", path: "schooladmin/payroll/payslips" },
+        { title: "Salary Payments", path: "schooladmin/payroll/payments" },
+        { title: "Loans & Advances", path: "schooladmin/payroll/loans" },
+        { title: "Statutory Reports", path: "schooladmin/payroll/statutory" },
+        { title: "Payroll Reports", path: "schooladmin/payroll/reports" },
+        {
+          title: "Create Employee",
+          path: "schooladmin/payroll/create-employee",
+        },
+        {
+          title: "Legacy Monthly Run",
+          path: "schooladmin/payroll/monthly-run",
+        },
+        {
+          title: "Legacy Monthly Reports",
+          path: "schooladmin/payroll/reports/monthly",
+        },
         { title: "Tax Settings", path: "schooladmin/payroll/enterprise/tax" },
       ],
     },
@@ -315,7 +362,10 @@ export const sidebarMenu = {
         { title: "Exam List", path: "teacher/exams/list" },
         { title: "Question Bank", path: "teacher/exams/question-bank" },
         { title: "Create Question", path: "teacher/exams/create-question" },
-        { title: "Bulk Upload Questions", path: "teacher/exams/bulk-upload-questions" },
+        {
+          title: "Bulk Upload Questions",
+          path: "teacher/exams/bulk-upload-questions",
+        },
         { title: "Evaluation", path: "teacher/exams/evaluation" },
         { title: "Exam Reports", path: "teacher/exams/reports" },
       ],
@@ -352,7 +402,7 @@ export const sidebarMenu = {
     { title: "Grades", path: "parent/grades", icon: FileCheck },
     { title: "Homework", path: "parent/homework", icon: ClipboardCheck },
     { title: "Fees", path: "parent/fees", icon: Receipt },
-     { title: "Timetable", path: "parent/timetable", icon: CalendarClock },
+    { title: "Timetable", path: "parent/timetable", icon: CalendarClock },
     { title: "Exams", path: "parent/exams", icon: GraduationCap },
     { title: "Reports", path: "parent/reports", icon: FileBarChart2 },
     communicationMenu("parent"),
@@ -363,7 +413,11 @@ export const sidebarMenu = {
   /* ================= ACCOUNTANT ================= */
   accountant: [
     { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
-    { title: "Fee Collection", path: "accountant/fees/collect", icon: CreditCard },
+    {
+      title: "Fee Collection",
+      path: "accountant/fees/collect",
+      icon: CreditCard,
+    },
     {
       title: "Payroll",
       icon: IndianRupee,
@@ -373,16 +427,26 @@ export const sidebarMenu = {
         { title: "Create Employee", path: "accountant/salary/create-employee" },
         { title: "Payslip Center", path: "accountant/salary/payslips" },
         { title: "Monthly Reports", path: "accountant/salary/reports/monthly" },
-        { title: "Enterprise Dashboard", path: "accountant/salary/enterprise/dashboard" },
+        {
+          title: "Enterprise Dashboard",
+          path: "accountant/salary/enterprise/dashboard",
+        },
         { title: "Enterprise Run", path: "accountant/salary/enterprise/run" },
         { title: "Approvals", path: "accountant/salary/enterprise/approval" },
-        { title: "Loans & Advance", path: "accountant/salary/enterprise/loans" },
+        {
+          title: "Loans & Advance",
+          path: "accountant/salary/enterprise/loans",
+        },
         { title: "Tax Settings", path: "accountant/salary/enterprise/tax" },
         { title: "My Payroll", path: "accountant/payroll" },
       ],
     },
-     { title: "Attendance", path: "accountant/attendance", icon: Clock },
-    { title: "Attendance Reports", path: "accountant/attendance/monthly", icon: FileBarChart2 },
+    { title: "Attendance", path: "accountant/attendance", icon: Clock },
+    {
+      title: "Attendance Reports",
+      path: "accountant/attendance/monthly",
+      icon: FileBarChart2,
+    },
     { title: "Reports", path: "accountant/reports", icon: FileBarChart2 },
     communicationMenu("accountant"),
     { title: "Settings", path: "accountant/settings", icon: Settings },
@@ -395,11 +459,27 @@ export const sidebarMenu = {
     { title: "Overview", path: "principal/overview", icon: FileBarChart2 },
     { title: "Staff", path: "principal/staff", icon: Users },
     { title: "Students", path: "principal/students", icon: Users },
-    { title: "Academic Reports", path: "principal/reports/academic", icon: GraduationCap },
+    {
+      title: "Academic Reports",
+      path: "principal/reports/academic",
+      icon: GraduationCap,
+    },
     { title: "Timetable", path: "principal/timetable", icon: CalendarClock },
-    { title: "Attendance Reports", path: "principal/reports/attendance", icon: UserCheck },
-    { title: "Mark Attendance", path: "principal/attendance/mark", icon: ClipboardCheck },
-    { title: "Attendance Table", path: "principal/attendance/table", icon: ClipboardList },
+    {
+      title: "Attendance Reports",
+      path: "principal/reports/attendance",
+      icon: UserCheck,
+    },
+    {
+      title: "Mark Attendance",
+      path: "principal/attendance/mark",
+      icon: ClipboardCheck,
+    },
+    {
+      title: "Attendance Table",
+      path: "principal/attendance/table",
+      icon: ClipboardList,
+    },
     { title: "Exams", path: "principal/exams", icon: GraduationCap },
     { title: "Library", path: "principal/library", icon: Book },
     { title: "Transport", path: "principal/transport", icon: Bus },
@@ -411,12 +491,36 @@ export const sidebarMenu = {
   /* ================= VICE PRINCIPAL ================= */
   "vice principal": [
     { title: "Dashboard", path: "viceprincipal", icon: LayoutDashboard },
-    { title: "Academic Management", path: "viceprincipal/academics", icon: BookOpen },
-    { title: "Timetable", path: "viceprincipal/timetable", icon: CalendarClock },
-    { title: "Exams & Grades", path: "viceprincipal/exams", icon: GraduationCap },
-    { title: "Student Attendance", path: "viceprincipal/attendance/students", icon: UserCheck },
-    { title: "Teacher Attendance", path: "viceprincipal/attendance/staff", icon: UserCheck },
-    { title: "Attendance Table", path: "viceprincipal/attendance/table", icon: ClipboardList },
+    {
+      title: "Academic Management",
+      path: "viceprincipal/academics",
+      icon: BookOpen,
+    },
+    {
+      title: "Timetable",
+      path: "viceprincipal/timetable",
+      icon: CalendarClock,
+    },
+    {
+      title: "Exams & Grades",
+      path: "viceprincipal/exams",
+      icon: GraduationCap,
+    },
+    {
+      title: "Student Attendance",
+      path: "viceprincipal/attendance/students",
+      icon: UserCheck,
+    },
+    {
+      title: "Teacher Attendance",
+      path: "viceprincipal/attendance/staff",
+      icon: UserCheck,
+    },
+    {
+      title: "Attendance Table",
+      path: "viceprincipal/attendance/table",
+      icon: ClipboardList,
+    },
     { title: "Reports", path: "viceprincipal/reports", icon: FileBarChart2 },
     { title: "My Payroll", path: "viceprincipal/payroll", icon: IndianRupee },
     roleWorkspaceItem,
@@ -449,11 +553,31 @@ export const sidebarMenu = {
   /* ================= SUBJECT COORDINATOR ================= */
   "subject coordinator": [
     { title: "Dashboard", path: "subjectcoordinator", icon: LayoutDashboard },
-    { title: "Subjects Overview", path: "subjectcoordinator/subjects", icon: BookOpen },
-    { title: "Teacher Assignment", path: "subjectcoordinator/teachers", icon: Users },
-    { title: "Class Assignment", path: "subjectcoordinator/classes", icon: Book },
-    { title: "Assessments", path: "subjectcoordinator/assessments", icon: ClipboardSignature },
-    { title: "Reports", path: "subjectcoordinator/reports", icon: FileBarChart2 },
+    {
+      title: "Subjects Overview",
+      path: "subjectcoordinator/subjects",
+      icon: BookOpen,
+    },
+    {
+      title: "Teacher Assignment",
+      path: "subjectcoordinator/teachers",
+      icon: Users,
+    },
+    {
+      title: "Class Assignment",
+      path: "subjectcoordinator/classes",
+      icon: Book,
+    },
+    {
+      title: "Assessments",
+      path: "subjectcoordinator/assessments",
+      icon: ClipboardSignature,
+    },
+    {
+      title: "Reports",
+      path: "subjectcoordinator/reports",
+      icon: FileBarChart2,
+    },
     roleWorkspaceItem,
     ...commonSelfService("subjectcoordinator"),
   ],
@@ -462,7 +586,11 @@ export const sidebarMenu = {
   librarian: [
     { title: "Dashboard", path: "librarian", icon: LayoutDashboard },
     { title: "Book Catalog", path: "librarian/book-catalog", icon: Book },
-    { title: "Issue / Return", path: "librarian/issue-return", icon: ClipboardCheck },
+    {
+      title: "Issue / Return",
+      path: "librarian/issue-return",
+      icon: ClipboardCheck,
+    },
     { title: "Members", path: "librarian/members", icon: Users },
     { title: "Reports", path: "librarian/reports", icon: FileBarChart2 },
     roleWorkspaceItem,
@@ -473,8 +601,16 @@ export const sidebarMenu = {
   "hostel warden": [
     { title: "Dashboard", path: "hostelwarden", icon: LayoutDashboard },
     { title: "Hostel Rooms", path: "hostelwarden/rooms", icon: BookOpen },
-    { title: "Student Allocation", path: "hostelwarden/allocations", icon: Users },
-    { title: "Hostel Attendance", path: "hostelwarden/attendance", icon: UserCheck },
+    {
+      title: "Student Allocation",
+      path: "hostelwarden/allocations",
+      icon: Users,
+    },
+    {
+      title: "Hostel Attendance",
+      path: "hostelwarden/attendance",
+      icon: UserCheck,
+    },
     { title: "Visitor Log", path: "hostelwarden/visitors", icon: UserPlus },
     { title: "Reports", path: "hostelwarden/reports", icon: FileBarChart2 },
     roleWorkspaceItem,
@@ -487,7 +623,11 @@ export const sidebarMenu = {
     { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
     { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
     { title: "Drivers", path: "transportmanager/drivers", icon: Users },
-    { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
+    {
+      title: "Fuel & Maintenance",
+      path: "transportmanager/maintenance",
+      icon: Fuel,
+    },
     roleWorkspaceItem,
     ...commonSelfService("transportmanager"),
   ],
@@ -495,9 +635,17 @@ export const sidebarMenu = {
   /* ================= RECEPTIONIST ================= */
   receptionist: [
     { title: "Dashboard", path: "receptionist", icon: LayoutDashboard },
-    { title: "Visitor Management", path: "receptionist/visitors", icon: UserPlus },
+    {
+      title: "Visitor Management",
+      path: "receptionist/visitors",
+      icon: UserPlus,
+    },
     { title: "Enquiries", path: "receptionist/enquiries", icon: MessageSquare },
-    { title: "Phone Calls Log", path: "receptionist/calls", icon: ClipboardCheck },
+    {
+      title: "Phone Calls Log",
+      path: "receptionist/calls",
+      icon: ClipboardCheck,
+    },
     { title: "Broadcasts", path: "receptionist/broadcasts", icon: Bell },
     roleWorkspaceItem,
     ...commonSelfService("receptionist"),
@@ -506,8 +654,16 @@ export const sidebarMenu = {
   /* ================= IT SUPPORT ================= */
   "it support": [
     { title: "Dashboard", path: "itsupport", icon: LayoutDashboard },
-    { title: "System Maintenance", path: "itsupport/maintenance", icon: Wrench },
-    { title: "User Support Tickets", path: "itsupport/tickets", icon: ClipboardList },
+    {
+      title: "System Maintenance",
+      path: "itsupport/maintenance",
+      icon: Wrench,
+    },
+    {
+      title: "User Support Tickets",
+      path: "itsupport/tickets",
+      icon: ClipboardList,
+    },
     { title: "Network Status", path: "itsupport/network", icon: Fuel },
     { title: "System Logs", path: "itsupport/logs", icon: FileBarChart2 },
     { title: "Profile", path: "itsupport/profile", icon: User },
@@ -518,7 +674,11 @@ export const sidebarMenu = {
   counselor: [
     { title: "Dashboard", path: "counselor", icon: LayoutDashboard },
     { title: "Student Profiles", path: "counselor/students", icon: Users },
-    { title: "Counseling Sessions", path: "counselor/sessions", icon: CalendarClock },
+    {
+      title: "Counseling Sessions",
+      path: "counselor/sessions",
+      icon: CalendarClock,
+    },
     { title: "Appointments", path: "counselor/appointments", icon: Clock },
     { title: "Reports", path: "counselor/reports", icon: FileBarChart2 },
     roleWorkspaceItem,
@@ -528,9 +688,17 @@ export const sidebarMenu = {
   /* ================= SECURITY ================= */
   security: [
     { title: "Dashboard", path: "security", icon: LayoutDashboard },
-    { title: "Entry Register", path: "security/entry-register", icon: Clipboard },
+    {
+      title: "Entry Register",
+      path: "security/entry-register",
+      icon: Clipboard,
+    },
     { title: "Gate Logs", path: "security/gate-logs", icon: ClipboardList },
-    { title: "Shift Attendance", path: "security/shift-attendance", icon: Clock },
+    {
+      title: "Shift Attendance",
+      path: "security/shift-attendance",
+      icon: Clock,
+    },
     { title: "Emergency Alerts", path: "security/alerts", icon: Bell },
     roleWorkspaceItem,
     ...commonSelfService("security"),
@@ -560,20 +728,32 @@ export const sidebarMenu = {
     { title: "Dashboard", path: "transportmanager", icon: LayoutDashboard },
     { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
     { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
-    { title: "Assignments", path: "schooladmin/transport/assignments", icon: Bus },
+    {
+      title: "Assignments",
+      path: "schooladmin/transport/assignments",
+      icon: Bus,
+    },
   ],
 };
 
 Object.keys(sidebarMenu).forEach((roleKey) => {
   const items = sidebarMenu[roleKey];
   if (!Array.isArray(items)) return;
- 
+
   if (!items.some((item) => item?.path === moduleHubItem.path)) {
     items.push(moduleHubItem);
   }
-   const rolePath = roleKey.replace(/\s+/g, "");
-  const hasMessage = items.some((item) => item?.path === `${rolePath}/message` || item?.path?.endsWith("/message"));
-  if (!hasMessage) items.push({ title: "Messages", path: `${rolePath}/message`, icon: MessageSquare });
+  const rolePath = roleKey.replace(/\s+/g, "");
+  const hasMessage = items.some(
+    (item) =>
+      item?.path === `${rolePath}/message` || item?.path?.endsWith("/message"),
+  );
+  if (!hasMessage)
+    items.push({
+      title: "Messages",
+      path: `${rolePath}/message`,
+      icon: MessageSquare,
+    });
   if (!items.some((item) => item?.path === supportCenterItem.path)) {
     items.push(supportCenterItem);
   }

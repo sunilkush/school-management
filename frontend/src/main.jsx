@@ -1,6 +1,6 @@
-import { PrimeReactProvider } from 'primereact/api';
-import Tailwind from 'primereact/passthrough/tailwind';
-import { twMerge } from 'tailwind-merge';
+import { PrimeReactProvider } from "primereact/api";
+import Tailwind from "primereact/passthrough/tailwind";
+import { twMerge } from "tailwind-merge";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -8,7 +8,7 @@ import "./index.css";
 import "antd/dist/reset.css";
 import App from "./App.jsx";
 import store, { persistor } from "./store/store.js";
-import {Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { lazy } from "react";
 import React, { Suspense } from "react";
 import { ConfigProvider, App as AntdApp, theme as antdTheme } from "antd";
@@ -20,7 +20,9 @@ export const ThemedAntWrapper = ({ children }) => {
   return (
     <ConfigProvider
       theme={{
-        algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        algorithm: isDark
+          ? antdTheme.darkAlgorithm
+          : antdTheme.defaultAlgorithm,
         token: {
           borderRadius: 10,
           colorPrimary: "#1d5fd3",
@@ -38,20 +40,40 @@ const LoginPage = lazy(() => import("./pages/Auth/LoginPage.jsx"));
 const Dashboard = lazy(() => import("./components/layout/MainDashboard.jsx"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized.jsx"));
 const NoActiveYear = lazy(() => import("./pages/no-active-year.jsx"));
-const ForgetPasswordPage = lazy(()=>import("./pages/Auth/ForgetPasswordPage.jsx"));
-const ResetPasswordPage = lazy(()=>import("./pages/Auth/ResetPasswordPage.jsx"));
-const VerifyEmailPage = lazy(()=> import("./pages/Auth/VerifyEmailPage.jsx"));
-const ResendVerificationPage = lazy(()=>import("./pages/Auth/ResendVerificationPage.jsx"));
+const ForgetPasswordPage = lazy(
+  () => import("./pages/Auth/ForgetPasswordPage.jsx"),
+);
+const ResetPasswordPage = lazy(
+  () => import("./pages/Auth/ResetPasswordPage.jsx"),
+);
+const VerifyEmailPage = lazy(() => import("./pages/Auth/VerifyEmailPage.jsx"));
+const ResendVerificationPage = lazy(
+  () => import("./pages/Auth/ResendVerificationPage.jsx"),
+);
 
-const NotFoundPage = lazy(()=>import("./pages/NotFoundPage.jsx"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage.jsx"));
 // Dashboards
-const SuperAdminDashboard = lazy(() => import("./pages/Super_Admin/Dashboard/SuperAdminDashboard.jsx"));
-const SchoolAdminDashboard = lazy(() => import("./pages/School_Admin/Dashboard/SchoolAdminDashboard.jsx"));
-const StudentDashboard = lazy(() => import("./pages/Student/Dashboard/StudentDashboard.jsx"));
-const TeacherDashboard = lazy(() => import("./pages/Teacher/Dashboard/TeacherDashboard.jsx"));
-const AccountantDashboard = lazy(() => import("./pages/Accountant/Dashboard/AccountantDashboard.jsx"));
-const StaffDashboard = lazy(() => import("./pages/Staff/Dashboard/StaffDashboard.jsx"));
-const ParentDashboard = lazy(() => import("./pages/Parent/Dashboard/ParentDashboard.jsx"));
+const SuperAdminDashboard = lazy(
+  () => import("./pages/Super_Admin/Dashboard/SuperAdminDashboard.jsx"),
+);
+const SchoolAdminDashboard = lazy(
+  () => import("./pages/School_Admin/Dashboard/SchoolAdminDashboard.jsx"),
+);
+const StudentDashboard = lazy(
+  () => import("./pages/Student/Dashboard/StudentDashboard.jsx"),
+);
+const TeacherDashboard = lazy(
+  () => import("./pages/Teacher/Dashboard/TeacherDashboard.jsx"),
+);
+const AccountantDashboard = lazy(
+  () => import("./pages/Accountant/Dashboard/AccountantDashboard.jsx"),
+);
+const StaffDashboard = lazy(
+  () => import("./pages/Staff/Dashboard/StaffDashboard.jsx"),
+);
+const ParentDashboard = lazy(
+  () => import("./pages/Parent/Dashboard/ParentDashboard.jsx"),
+);
 
 // Common
 const Profile = lazy(() => import("./pages/Profile.jsx"));
@@ -60,202 +82,471 @@ const Message = lazy(() => import("./pages/Message.jsx"));
 const Settings = lazy(() => import("./pages/Settings.jsx"));
 const Documents = lazy(() => import("./pages/Documents.jsx"));
 const Schedule = lazy(() => import("./pages/Schedule.jsx"));
-const Loader = lazy(()=> import("./components/Loader/Loader.jsx"));
+const Loader = lazy(() => import("./components/Loader/Loader.jsx"));
 // Super Admin
-const Reports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/Reports.jsx"));
-const Schools = lazy(() => import("./pages/Super_Admin/School_Management/Schools.jsx"));
-const AddSchool = lazy(() => import("./pages/Super_Admin/School_Management/AddSchool.jsx"));
-const SubscriptionPlans = lazy(() => import("./pages/Super_Admin/School_Management/SubscriptionPlans.jsx"));
-const SchoolReports = lazy(() => import("./pages/Super_Admin/School_Management/SchoolReports.jsx"));
-const PaymentsPage = lazy(() => import("./pages/Super_Admin/School_Management/PaymentsPage.jsx"));
-const RevenuePage = lazy(() => import("./pages/Super_Admin/School_Management/RevenuePage.jsx"));
+const Reports = lazy(
+  () => import("./pages/Super_Admin/Reports_&_Analytics/Reports.jsx"),
+);
+const Schools = lazy(
+  () => import("./pages/Super_Admin/School_Management/Schools.jsx"),
+);
+const AddSchool = lazy(
+  () => import("./pages/Super_Admin/School_Management/AddSchool.jsx"),
+);
+const SubscriptionPlans = lazy(
+  () => import("./pages/Super_Admin/School_Management/SubscriptionPlans.jsx"),
+);
+const SchoolReports = lazy(
+  () => import("./pages/Super_Admin/School_Management/SchoolReports.jsx"),
+);
+const PaymentsPage = lazy(
+  () => import("./pages/Super_Admin/School_Management/PaymentsPage.jsx"),
+);
+const RevenuePage = lazy(
+  () => import("./pages/Super_Admin/School_Management/RevenuePage.jsx"),
+);
 //const PlanLogs = lazy(() => import("./pages/SuperAdmin/Schools/PlanLogs.jsx"));
 
-const Roles = lazy(() => import("./pages/Super_Admin/System_Settings/Roles.jsx"));
-const Permissions = lazy(() => import("./pages/Super_Admin/System_Settings/Permissions.jsx"));
-const GlobalConfig = lazy(() => import("./pages/Super_Admin/System_Settings/GlobalConfig.jsx"));
-const AuditLogs = lazy(() => import("./pages/Super_Admin/System_Settings/AuditLogs.jsx"));
-const Backups = lazy(() => import("./pages/Super_Admin/System_Settings/Backups.jsx"));
+const Roles = lazy(
+  () => import("./pages/Super_Admin/System_Settings/Roles.jsx"),
+);
+const Permissions = lazy(
+  () => import("./pages/Super_Admin/System_Settings/Permissions.jsx"),
+);
+const GlobalConfig = lazy(
+  () => import("./pages/Super_Admin/System_Settings/GlobalConfig.jsx"),
+);
+const AuditLogs = lazy(
+  () => import("./pages/Super_Admin/System_Settings/AuditLogs.jsx"),
+);
+const Backups = lazy(
+  () => import("./pages/Super_Admin/System_Settings/Backups.jsx"),
+);
 
-const AcademicYears = lazy(() => import("./pages/Super_Admin/Master_Settings/AcademicYears.jsx"));
-const ClassPage = lazy(() => import("./pages/Super_Admin/Master_Settings/ClassPage.jsx"));
-const ClassSectionList = lazy(() => import("./pages/Super_Admin/Master_Settings/ClassSectionList.jsx"));
-const SubjectsAdmin = lazy(() => import("./pages/Super_Admin/Master_Settings/SubjectsAdmin.jsx"));
-const FeeCategories = lazy(() => import("./pages/Super_Admin/Master_Settings/FeeCategories.jsx"));
-const Designations = lazy(() => import("./pages/Super_Admin/Master_Settings/Designations.jsx"));
-const Departments = lazy(() => import("./pages/Super_Admin/Master_Settings/Departments.jsx"));
-const SchoolBoards = lazy(() => import("./pages/Super_Admin/Master_Settings/SchoolBoards.jsx"));
-const ChaptersTopics = lazy(() => import("./pages/Super_Admin/Master_Settings/ChaptersTopics.jsx"));
-const BoardClassPage = lazy(() => import("./pages/Super_Admin/Master_Settings/BoardClassPage.jsx"));
+const AcademicYears = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/AcademicYears.jsx"),
+);
+const ClassPage = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/ClassPage.jsx"),
+);
+const ClassSectionList = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/ClassSectionList.jsx"),
+);
+const SubjectsAdmin = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/SubjectsAdmin.jsx"),
+);
+const FeeCategories = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/FeeCategories.jsx"),
+);
+const Designations = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/Designations.jsx"),
+);
+const Departments = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/Departments.jsx"),
+);
+const SchoolBoards = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/SchoolBoards.jsx"),
+);
+const ChaptersTopics = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/ChaptersTopics.jsx"),
+);
+const BoardClassPage = lazy(
+  () => import("./pages/Super_Admin/Master_Settings/BoardClassPage.jsx"),
+);
 
 const Modules = lazy(() => import("./pages/Super_Admin/Modules/Modules.jsx"));
-const SchoolWiseReports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/SchoolWiseReports.jsx"));
-const AttendanceSummary = lazy(() => import("./pages/School_Admin/Reports/schoolAdminReport.jsx"));
-const FinanceSummary = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/FinanceSummary.jsx"));
-const AcademicReports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/AcademicReports.jsx"));
-const ActivityLogs = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/ActivityLogs.jsx"));
-const PlatformUsage = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/PlatfromUsage.jsx"));
-const RevenueAnalytics = lazy(()=> import("./pages/Super_Admin/Reports_&_Analytics/RevenueAnalytics.jsx"));
+const SchoolWiseReports = lazy(
+  () => import("./pages/Super_Admin/Reports_&_Analytics/SchoolWiseReports.jsx"),
+);
+const AttendanceSummary = lazy(
+  () => import("./pages/School_Admin/Reports/schoolAdminReport.jsx"),
+);
+const FinanceSummary = lazy(
+  () => import("./pages/Super_Admin/Reports_&_Analytics/FinanceSummary.jsx"),
+);
+const AcademicReports = lazy(
+  () => import("./pages/Super_Admin/Reports_&_Analytics/AcademicReports.jsx"),
+);
+const ActivityLogs = lazy(
+  () => import("./pages/Super_Admin/Reports_&_Analytics/ActivityLogs.jsx"),
+);
+const PlatformUsage = lazy(
+  () => import("./pages/Super_Admin/Reports_&_Analytics/PlatfromUsage.jsx"),
+);
+const RevenueAnalytics = lazy(
+  () => import("./pages/Super_Admin/Reports_&_Analytics/RevenueAnalytics.jsx"),
+);
 // Super Admin Users
-const Admins = lazy(() => import("./pages/Super_Admin/Users_Management/Admins.jsx"));
-const Staff = lazy(() => import("./pages/Super_Admin/Users_Management/Staff.jsx"));
-const Teachers = lazy(() => import("./pages/Super_Admin/Users_Management/Teachers.jsx"));
-const Parents = lazy(() => import("./pages/Super_Admin/Users_Management/Parents.jsx"));
-const Students = lazy(() => import("./pages/Super_Admin/Users_Management/students.jsx"));
-const Accountant = lazy(() => import("./pages/Super_Admin/Users_Management/Accountant.jsx"));
-const Librarian = lazy(() => import("./pages/Super_Admin/Users_Management/Librarian.jsx"));
-const Transport = lazy(() => import("./pages/Super_Admin/Users_Management/Transport.jsx"));
+const Admins = lazy(
+  () => import("./pages/Super_Admin/Users_Management/Admins.jsx"),
+);
+const Staff = lazy(
+  () => import("./pages/Super_Admin/Users_Management/Staff.jsx"),
+);
+const Teachers = lazy(
+  () => import("./pages/Super_Admin/Users_Management/Teachers.jsx"),
+);
+const Parents = lazy(
+  () => import("./pages/Super_Admin/Users_Management/Parents.jsx"),
+);
+const Students = lazy(
+  () => import("./pages/Super_Admin/Users_Management/students.jsx"),
+);
+const Accountant = lazy(
+  () => import("./pages/Super_Admin/Users_Management/Accountant.jsx"),
+);
+const Librarian = lazy(
+  () => import("./pages/Super_Admin/Users_Management/Librarian.jsx"),
+);
+const Transport = lazy(
+  () => import("./pages/Super_Admin/Users_Management/Transport.jsx"),
+);
 // Super Admin Support
-const TicketPage = lazy(() => import("./pages/Super_Admin/Support/TicketPage.jsx"));
+const TicketPage = lazy(
+  () => import("./pages/Super_Admin/Support/TicketPage.jsx"),
+);
 const Faqs = lazy(() => import("./pages/Super_Admin/Support/Faqs.jsx"));
-const ContactSupport = lazy(() => import("./pages/Super_Admin/Support/ContactSupport.jsx"));
-const Documentation = lazy(() => import("./pages/Super_Admin/Support/Documentation.jsx"));
+const ContactSupport = lazy(
+  () => import("./pages/Super_Admin/Support/ContactSupport.jsx"),
+);
+const Documentation = lazy(
+  () => import("./pages/Super_Admin/Support/Documentation.jsx"),
+);
 // School Admin
-const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
-const AddStudent = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AddStudent.jsx"));
+const TeacherList = lazy(
+  () => import("./pages/School_Admin/User_Management/TeacherList.jsx"),
+);
+const AddStudent = lazy(
+  () => import("./pages/School_Admin/Teachers_&_Students/AddStudent.jsx"),
+);
 //const AddTeacher = lazy(() => import("./pages/School_Admin/User_Management/AddTeacher.jsx"));
-const ParentList = lazy(() => import("./pages/School_Admin/User_Management/ParentsList.jsx"));
-const StudentList = lazy(() => import("./pages/School_Admin/User_Management/StudentList.jsx"));
-const StudentPromotion = lazy(() => import("./pages/School_Admin/Teachers_&_Students/StudentPromotion.jsx"));
+const ParentList = lazy(
+  () => import("./pages/School_Admin/User_Management/ParentsList.jsx"),
+);
+const StudentList = lazy(
+  () => import("./pages/School_Admin/User_Management/StudentList.jsx"),
+);
+const StudentPromotion = lazy(
+  () => import("./pages/School_Admin/Teachers_&_Students/StudentPromotion.jsx"),
+);
 
-const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
-const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
+const Classes = lazy(
+  () => import("./pages/School_Admin/Academic_Management/Classes.jsx"),
+);
+const Subjects = lazy(
+  () => import("./pages/School_Admin/Academic_Management/Subjects.jsx"),
+);
 
-const ExamSchedule = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamSchedule.jsx"));
-const EnterGrades = lazy(() => import("./pages/School_Admin/Exams_&_Grades/EnterGrades.jsx"));
-const ExamReports = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamReport.jsx"));
-const ExamsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamPage.jsx"));
-const ExamCreate = lazy(() => import("./pages/School_Admin/Exams_&_Grades/CreateExam.jsx"));
-const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_&_Grades/PageBuilder.jsx"));
-const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/AdmitCardPage.jsx"));
-const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/SeatPlanPage.jsx"));
-const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamAnalyticsPage.jsx"));
-const AllStudentsAttendance = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
-const StaffAttendance = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
+const ExamSchedule = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/ExamSchedule.jsx"),
+);
+const EnterGrades = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/EnterGrades.jsx"),
+);
+const ExamReports = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/ExamReport.jsx"),
+);
+const ExamsPage = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/ExamPage.jsx"),
+);
+const ExamCreate = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/CreateExam.jsx"),
+);
+const PaperBuilder = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/PageBuilder.jsx"),
+);
+const AdmitCardPage = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/AdmitCardPage.jsx"),
+);
+const SeatPlanPage = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/SeatPlanPage.jsx"),
+);
+const ExamAnalyticsPage = lazy(
+  () => import("./pages/School_Admin/Exams_&_Grades/ExamAnalyticsPage.jsx"),
+);
+const AllStudentsAttendance = lazy(
+  () => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"),
+);
+const StaffAttendance = lazy(
+  () => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"),
+);
 
 const Books = lazy(() => import("./pages/School_Admin/Library/Books.jsx"));
-const IssueBook = lazy(() => import("./pages/School_Admin/Library/IssueBook.jsx"));
-const LibraryCard = lazy(() => import("./pages/School_Admin/Library/LibraryCard.jsx"));
+const IssueBook = lazy(
+  () => import("./pages/School_Admin/Library/IssueBook.jsx"),
+);
+const LibraryCard = lazy(
+  () => import("./pages/School_Admin/Library/LibraryCard.jsx"),
+);
 
-const SchoolAdminTimetablePage = lazy(() => import("./pages/Timetable/SchoolAdminTimetablePage.jsx"));
-const TimeSlotManager = lazy(() => import("./pages/Timetable/TimeSlotManager.jsx"));
+const SchoolAdminTimetablePage = lazy(
+  () => import("./pages/Timetable/SchoolAdminTimetablePage.jsx"),
+);
+const TimeSlotManager = lazy(
+  () => import("./pages/Timetable/TimeSlotManager.jsx"),
+);
 const RoomManager = lazy(() => import("./pages/Timetable/RoomManager.jsx"));
-const TeacherTimetablePage = lazy(() => import("./pages/Timetable/TeacherTimetablePage.jsx"));
-const StudentTimetablePage = lazy(() => import("./pages/Timetable/StudentTimetablePage.jsx"));
-const ParentChildTimetablePage = lazy(() => import("./pages/Timetable/ParentChildTimetablePage.jsx"));
-const PrincipalTimetableOverview = lazy(() => import("./pages/Timetable/PrincipalTimetableOverview.jsx"));
+const TeacherTimetablePage = lazy(
+  () => import("./pages/Timetable/TeacherTimetablePage.jsx"),
+);
+const StudentTimetablePage = lazy(
+  () => import("./pages/Timetable/StudentTimetablePage.jsx"),
+);
+const ParentChildTimetablePage = lazy(
+  () => import("./pages/Timetable/ParentChildTimetablePage.jsx"),
+);
+const PrincipalTimetableOverview = lazy(
+  () => import("./pages/Timetable/PrincipalTimetableOverview.jsx"),
+);
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
-const FeeStructure = lazy(() => import("./pages/School_Admin/Fees_Management/FeeStructure.jsx"));
-const StudentAssignFees = lazy(() => import("./pages/School_Admin/Fees_Management/AssignStudentFeeForm.jsx"));
-const SchoolFeeCategories = lazy(() => import("./pages/School_Admin/Fees_Management/SchoolFeeCategories.jsx"));
+const FeeStructure = lazy(
+  () => import("./pages/School_Admin/Fees_Management/FeeStructure.jsx"),
+);
+const StudentAssignFees = lazy(
+  () => import("./pages/School_Admin/Fees_Management/AssignStudentFeeForm.jsx"),
+);
+const SchoolFeeCategories = lazy(
+  () => import("./pages/School_Admin/Fees_Management/SchoolFeeCategories.jsx"),
+);
 
-const HostelManagement = lazy(() => import("./pages/School_Admin/Hostel/HostelManagement.jsx"));
-const RoomAllocation = lazy(() => import("./pages/School_Admin/Hostel/RoomAllocation.jsx"));
+const HostelManagement = lazy(
+  () => import("./pages/School_Admin/Hostel/HostelManagement.jsx"),
+);
+const RoomAllocation = lazy(
+  () => import("./pages/School_Admin/Hostel/RoomAllocation.jsx"),
+);
 
-const RoutesPage = lazy(() => import("./pages/School_Admin/Transport/RoutesPage.jsx"));
-const Vehicles = lazy(() => import("./pages/School_Admin/Transport/Vehicles.jsx"));
-const TransportAssignments = lazy(() => import("./pages/School_Admin/Transport/Assignments.jsx"));
+const RoutesPage = lazy(
+  () => import("./pages/School_Admin/Transport/RoutesPage.jsx"),
+);
+const Vehicles = lazy(
+  () => import("./pages/School_Admin/Transport/Vehicles.jsx"),
+);
+const TransportAssignments = lazy(
+  () => import("./pages/School_Admin/Transport/Assignments.jsx"),
+);
 
-const EmployeeSalaries = lazy(() => import("./pages/School_Admin/Payroll/EmployeeSalaries.jsx"));
-const SalaryStructures = lazy(() => import("./pages/School_Admin/Payroll/SalaryStructures.jsx"));
-const GeneratePayslip = lazy(() => import("./pages/School_Admin/Payroll/GeneratePayslip.jsx"));
-const MonthlyPayrollReport = lazy(() => import("./pages/School_Admin/Payroll/MonthlyPayrollReport.jsx"));
-const PayrollDashboardEnterprise = lazy(() => import("./pages/School_Admin/Payroll/PayrollDashboardEnterprise.jsx"));
-const PayrollRunPage = lazy(() => import("./pages/School_Admin/Payroll/PayrollRunPage.jsx"));
-const PayrollApprovalPanel = lazy(() => import("./pages/School_Admin/Payroll/PayrollApprovalPanel.jsx"));
-const LoanManagementPage = lazy(() => import("./pages/School_Admin/Payroll/LoanManagementPage.jsx"));
-const TaxSettingsPage = lazy(() => import("./pages/School_Admin/Payroll/TaxSettingsPage.jsx"));
-const PayrollSelfServicePage = lazy(() => import("./pages/Employee/PayrollSelfServicePage.jsx"));
-const CreateEmployee = lazy(()=>import('./pages/School_Admin/Payroll/CreateEmployee.jsx'));
+const EmployeeSalaries = lazy(
+  () => import("./pages/School_Admin/Payroll/EmployeeSalaries.jsx"),
+);
+const SalaryStructures = lazy(
+  () => import("./pages/School_Admin/Payroll/SalaryStructures.jsx"),
+);
+const GeneratePayslip = lazy(
+  () => import("./pages/School_Admin/Payroll/GeneratePayslip.jsx"),
+);
+const MonthlyPayrollReport = lazy(
+  () => import("./pages/School_Admin/Payroll/MonthlyPayrollReport.jsx"),
+);
+const PayrollDashboardEnterprise = lazy(
+  () => import("./pages/School_Admin/Payroll/PayrollDashboardEnterprise.jsx"),
+);
+const PayrollRunPage = lazy(
+  () => import("./pages/School_Admin/Payroll/PayrollRunPage.jsx"),
+);
+const PayrollApprovalPanel = lazy(
+  () => import("./pages/School_Admin/Payroll/PayrollApprovalPanel.jsx"),
+);
+const LoanManagementPage = lazy(
+  () => import("./pages/School_Admin/Payroll/LoanManagementPage.jsx"),
+);
+const TaxSettingsPage = lazy(
+  () => import("./pages/School_Admin/Payroll/TaxSettingsPage.jsx"),
+);
+const PayrollSelfServicePage = lazy(
+  () => import("./pages/Employee/PayrollSelfServicePage.jsx"),
+);
+const PayrollModulePage = lazy(
+  () => import("./pages/School_Admin/Payroll/Enterprise/PayrollModulePage.jsx"),
+);
+const CreateEmployee = lazy(
+  () => import("./pages/School_Admin/Payroll/CreateEmployee.jsx"),
+);
 
-const SendNotification = lazy(() => import("./pages/School_Admin/Communication/SendNotification.jsx"));
-const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"));
+const SendNotification = lazy(
+  () => import("./pages/School_Admin/Communication/SendNotification.jsx"),
+);
+const SmsEmailHistory = lazy(
+  () => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"),
+);
 
-const Supplies = lazy(() => import("./pages/School_Admin/Inventory/supplies.jsx"));
+const Supplies = lazy(
+  () => import("./pages/School_Admin/Inventory/supplies.jsx"),
+);
 const Assets = lazy(() => import("./pages/School_Admin/Inventory/assets.jsx"));
 
-const Events = lazy(() => import("./pages/School_Admin/Events_&_Calendar/events.jsx"));
-const CalendarPage = lazy(() => import("./pages/School_Admin/Events_&_Calendar/CalendarPage.jsx"));
+const Events = lazy(
+  () => import("./pages/School_Admin/Events_&_Calendar/events.jsx"),
+);
+const CalendarPage = lazy(
+  () => import("./pages/School_Admin/Events_&_Calendar/CalendarPage.jsx"),
+);
 
-const SettingsPage = lazy(() => import("./pages/School_Admin/Settings/SettingsPage.jsx"));
-const SchoolAdminReport = lazy(() => import("./pages/School_Admin/Reports/schoolAdminReport.jsx"));
-const SchoolSetup = lazy(()=>import("./pages/School_Admin/School_Setup/SchoolSetup.jsx"));
+const SettingsPage = lazy(
+  () => import("./pages/School_Admin/Settings/SettingsPage.jsx"),
+);
+const SchoolAdminReport = lazy(
+  () => import("./pages/School_Admin/Reports/schoolAdminReport.jsx"),
+);
+const SchoolSetup = lazy(
+  () => import("./pages/School_Admin/School_Setup/SchoolSetup.jsx"),
+);
 
 // Teacher
-const QuestionBank = lazy(() => import("./pages/Teacher/Exams/QuestionBank.jsx"));
-const CreateQuestion = lazy(() => import("./pages/Teacher/Exams/CreateQuestion.jsx"));
-const BulkUploadQuestions = lazy(() => import("./pages/Teacher/Exams/BulkUploadQuestions.jsx"));
-const TeacherExamsPage = lazy(() => import("./pages/Teacher/Exams/TeacherExamsPage.jsx"));
-const TeacherEvaluationPage = lazy(() => import("./pages/Teacher/Exams/TeacherEvaluationPage.jsx"));
-const AssignedClasses = lazy(() => import("./pages/Teacher/Classes/AssignedClasses.jsx"));
-const ClassDetails = lazy(() => import("./pages/Teacher/Classes/ClassDetails.jsx"));
-const Assignments = lazy(() => import("./pages/Teacher/Assignments/Assignments.jsx"));
-const MyStudents = lazy(() => import("./pages/Teacher/My_Students/MyStudents.jsx"));
-const StudentAttendance = lazy(() => import("./pages/Teacher/Attendance/StudentAttendance.jsx"));
-const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDetailes.jsx"));
-const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
-const MyAttendancePage = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
-const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports.jsx"));
-const MyAttendanceMonthlyReport = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
+const QuestionBank = lazy(
+  () => import("./pages/Teacher/Exams/QuestionBank.jsx"),
+);
+const CreateQuestion = lazy(
+  () => import("./pages/Teacher/Exams/CreateQuestion.jsx"),
+);
+const BulkUploadQuestions = lazy(
+  () => import("./pages/Teacher/Exams/BulkUploadQuestions.jsx"),
+);
+const TeacherExamsPage = lazy(
+  () => import("./pages/Teacher/Exams/TeacherExamsPage.jsx"),
+);
+const TeacherEvaluationPage = lazy(
+  () => import("./pages/Teacher/Exams/TeacherEvaluationPage.jsx"),
+);
+const AssignedClasses = lazy(
+  () => import("./pages/Teacher/Classes/AssignedClasses.jsx"),
+);
+const ClassDetails = lazy(
+  () => import("./pages/Teacher/Classes/ClassDetails.jsx"),
+);
+const Assignments = lazy(
+  () => import("./pages/Teacher/Assignments/Assignments.jsx"),
+);
+const MyStudents = lazy(
+  () => import("./pages/Teacher/My_Students/MyStudents.jsx"),
+);
+const StudentAttendance = lazy(
+  () => import("./pages/Teacher/Attendance/StudentAttendance.jsx"),
+);
+const EmployeeDetailes = lazy(
+  () => import("./pages/Teacher/Profile/EmployeeDetailes.jsx"),
+);
+const MonthlyAttendanceReport = lazy(
+  () => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"),
+);
+const MyAttendancePage = lazy(
+  () => import("./pages/Attendance/MyAttendancePage.jsx"),
+);
+const TeacherReports = lazy(
+  () => import("./pages/Teacher/Reports/TeacherReports.jsx"),
+);
+const MyAttendanceMonthlyReport = lazy(
+  () => import("./pages/Attendance/MyAttendancePage.jsx"),
+);
 
 // Student
 const FeeStudent = lazy(() => import("./pages/Student/Fees/FeeStudent.jsx"));
-const StudentHomework = lazy(() => import("./pages/Student/Homework/StudentHomework.jsx"));
+const StudentHomework = lazy(
+  () => import("./pages/Student/Homework/StudentHomework.jsx"),
+);
 const ExamLive = lazy(() => import("./pages/Student/Exams/ExamLive.jsx"));
-const AttemptReview = lazy(() => import("./pages/Student/Exams/AttemptReview.jsx"));
-const StudentExamsPage = lazy(() => import("./pages/Student/Exams/StudentExamsPage.jsx"));
-const StudentAllowedBook = lazy(() => import("./pages/Student/Library/StudentAllowedBook.jsx"));
-const StudentTimetable = lazy(() => import("./pages/Timetable/StudentTimetablePage.jsx"));
-const StudentAttendancePage = lazy(() => import("./pages/Student/Attendance/MyAttendancePage.jsx"));
-const StudentTransport = lazy(() => import("./pages/Student/Transport/StudentTransport.jsx"));
-const StudentGrades = lazy(() => import("./pages/Student/Grades/StudentGrades.jsx"));
-const StudentProfile = lazy(()=>import("./pages/Student/Profile/Profile.jsx"))
+const AttemptReview = lazy(
+  () => import("./pages/Student/Exams/AttemptReview.jsx"),
+);
+const StudentExamsPage = lazy(
+  () => import("./pages/Student/Exams/StudentExamsPage.jsx"),
+);
+const StudentAllowedBook = lazy(
+  () => import("./pages/Student/Library/StudentAllowedBook.jsx"),
+);
+const StudentTimetable = lazy(
+  () => import("./pages/Timetable/StudentTimetablePage.jsx"),
+);
+const StudentAttendancePage = lazy(
+  () => import("./pages/Student/Attendance/MyAttendancePage.jsx"),
+);
+const StudentTransport = lazy(
+  () => import("./pages/Student/Transport/StudentTransport.jsx"),
+);
+const StudentGrades = lazy(
+  () => import("./pages/Student/Grades/StudentGrades.jsx"),
+);
+const StudentProfile = lazy(
+  () => import("./pages/Student/Profile/Profile.jsx"),
+);
 
 // Parent
 const MyChildren = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
-const ChildAttendance = lazy(() => import("./pages/Parent/Attendance/ChildAttendance.jsx"));
+const ChildAttendance = lazy(
+  () => import("./pages/Parent/Attendance/ChildAttendance.jsx"),
+);
 const ChildGrades = lazy(() => import("./pages/Parent/Grades/ChildGrades.jsx"));
-const ChildHomework = lazy(() => import("./pages/Parent/Homework/ChildHomework.jsx"));
+const ChildHomework = lazy(
+  () => import("./pages/Parent/Homework/ChildHomework.jsx"),
+);
 /* const ChildMessages = lazy(() => import("./pages/Parent/Messages/ChildMessages.jsx")); */
-const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.jsx"));
+const ParentExamsPage = lazy(
+  () => import("./pages/Parent/Exams/ParentExamsPage.jsx"),
+);
 const ParentFees = lazy(() => import("./pages/Parent/Fee/ParentFees.jsx"));
 // Accountant
-const CollectFees = lazy(() => import("./pages/Accountant/Fees_Management/CollectFees.jsx"));
+const CollectFees = lazy(
+  () => import("./pages/Accountant/Fees_Management/CollectFees.jsx"),
+);
 // Other
 const UserRegister = lazy(() => import("./pages/UserRegister.jsx"));
 const RoleWorkspace = lazy(() => import("./pages/RoleWorkspace.jsx"));
 const RoleDynamicPortal = lazy(() => import("./pages/RoleDynamicPortal.jsx"));
 const ITSupportDashboard = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportDashboard }))
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({
+    default: module.ITSupportDashboard,
+  })),
 );
 const SystemMaintenance = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemMaintenance }))
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({
+    default: module.SystemMaintenance,
+  })),
 );
 const UserSupportTickets = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.UserSupportTickets }))
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({
+    default: module.UserSupportTickets,
+  })),
 );
 const NetworkStatus = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.NetworkStatus }))
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({
+    default: module.NetworkStatus,
+  })),
 );
 const SystemLogs = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemLogs }))
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({
+    default: module.SystemLogs,
+  })),
 );
 const ITSupportProfile = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportProfile }))
+  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({
+    default: module.ITSupportProfile,
+  })),
 );
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
 
-const ChangePassword = lazy(()=> import("./pages/Auth/ResetPasswordPage.jsx"));
-const AttendanceDashboardPage = lazy(() => import("./pages/Attendance/AttendanceDashboard.jsx"));
-const MarkAttendancePage = lazy(() => import("./pages/Attendance/MarkAttendancePage.jsx"));
-const AttendanceTablePage = lazy(() => import("./pages/Attendance/AttendanceTablePage.jsx"));
-const MonthlyReportPage = lazy(() => import("./pages/Attendance/MonthlyReportPage.jsx"));
+const ChangePassword = lazy(() => import("./pages/Auth/ResetPasswordPage.jsx"));
+const AttendanceDashboardPage = lazy(
+  () => import("./pages/Attendance/AttendanceDashboard.jsx"),
+);
+const MarkAttendancePage = lazy(
+  () => import("./pages/Attendance/MarkAttendancePage.jsx"),
+);
+const AttendanceTablePage = lazy(
+  () => import("./pages/Attendance/AttendanceTablePage.jsx"),
+);
+const MonthlyReportPage = lazy(
+  () => import("./pages/Attendance/MonthlyReportPage.jsx"),
+);
 
-const ChildAttendancePage = lazy(() => import("./pages/Attendance/ChildAttendancePage.jsx"));
-const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage.jsx"));
+const ChildAttendancePage = lazy(
+  () => import("./pages/Attendance/ChildAttendancePage.jsx"),
+);
+const SupportTicketsPage = lazy(
+  () => import("./pages/Support/SupportTicketsPage.jsx"),
+);
 
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
@@ -276,7 +567,7 @@ const router = createBrowserRouter([
       { path: "/no-active-year", element: <NoActiveYear /> },
       { path: "unauthorized", element: <Unauthorized /> },
       { path: "*", element: <Unauthorized /> },
-      { path: "NotFoundPage", element:<NotFoundPage/> },
+      { path: "NotFoundPage", element: <NotFoundPage /> },
       {
         path: "dashboard",
         element: <Dashboard />,
@@ -377,14 +668,14 @@ const router = createBrowserRouter([
             path: "superadmin",
             element: (
               <ProtectedRoute allowedRoles={["Super Admin"]}>
-               <Outlet />
+                <Outlet />
               </ProtectedRoute>
             ),
             children: [
               { index: true, element: <SuperAdminDashboard /> },
               { path: "schools", element: <Schools /> },
               { path: "subscriptions", element: <SubscriptionPlans /> },
-             // { path: "subscriptions/:id/logs", element: <PlanLogs /> },
+              // { path: "subscriptions/:id/logs", element: <PlanLogs /> },
               { path: "reports/schools", element: <SchoolReports /> },
               { path: "users/admins", element: <Admins /> },
               { path: "users/teachers", element: <Teachers /> },
@@ -410,8 +701,11 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports/school-wise", element: <SchoolWiseReports /> },
-              { path: "reports/attendance", element: <AttendanceDashboardPage /> },
-               { path: "attendance/mark", element: <MarkAttendancePage /> },
+              {
+                path: "reports/attendance",
+                element: <AttendanceDashboardPage />,
+              },
+              { path: "attendance/mark", element: <MarkAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "reports/finance", element: <FinanceSummary /> },
@@ -424,23 +718,26 @@ const router = createBrowserRouter([
               { path: "settings/audit", element: <AuditLogs /> },
               { path: "settings/backup", element: <Backups /> },
               { path: "academics/boards", element: <SchoolBoards /> },
-              { path: "academics/chapters-topics", element: <ChaptersTopics /> },
+              {
+                path: "academics/chapters-topics",
+                element: <ChaptersTopics />,
+              },
               { path: "academics/boards-class", element: <BoardClassPage /> },
               { path: "payments", element: <PaymentsPage /> },
               { path: "revenue", element: <RevenuePage /> },
               { path: "reports/usage", element: <PlatformUsage /> },
-              { path: "reports/revenue", element: <RevenueAnalytics/> },
-              { path: "support/tickets", element: <TicketPage/> },
-              { path: "support/contact", element: <ContactSupport/> },
-              { path: "support/documentation", element: <Documentation/> },
-              { path: "support/faqs", element: <Faqs/> },
+              { path: "reports/revenue", element: <RevenueAnalytics /> },
+              { path: "support/tickets", element: <TicketPage /> },
+              { path: "support/contact", element: <ContactSupport /> },
+              { path: "support/documentation", element: <Documentation /> },
+              { path: "support/faqs", element: <Faqs /> },
             ],
           },
           {
             path: "schooladmin",
             element: (
               <ProtectedRoute allowedRoles={["School Admin"]}>
-              <Outlet />
+                <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -452,11 +749,17 @@ const router = createBrowserRouter([
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
-              { path: "attendance/students", element: <AllStudentsAttendance /> },
+              {
+                path: "attendance/students",
+                element: <AllStudentsAttendance />,
+              },
               { path: "attendance/staff", element: <StaffAttendance /> },
-               { path: "attendance/mark", element: <MarkAttendancePage /> },
+              { path: "attendance/mark", element: <MarkAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
-              { path: "attendance/dashboard", element: <AttendanceDashboardPage /> },
+              {
+                path: "attendance/dashboard",
+                element: <AttendanceDashboardPage />,
+              },
               { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
@@ -467,22 +770,87 @@ const router = createBrowserRouter([
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
-             
+
               { path: "hostel", element: <HostelManagement /> },
               { path: "hostel/allocation", element: <RoomAllocation /> },
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
-              { path: "transport/assignments", element: <TransportAssignments /> },
+              {
+                path: "transport/assignments",
+                element: <TransportAssignments />,
+              },
               { path: "payroll/monthly-run", element: <EmployeeSalaries /> },
-              { path: "payroll/salary-structures", element: <SalaryStructures /> },
-              { path: "payroll/create-employee", element: <CreateEmployee/> },
-              { path: "payroll/payslips", element: <GeneratePayslip /> },
-              { path: "payroll/reports/monthly", element: <MonthlyPayrollReport /> },
-               { path: "payroll/enterprise/dashboard", element: <PayrollDashboardEnterprise /> },
+              {
+                path: "payroll/salary-structures",
+                element: <SalaryStructures />,
+              },
+              { path: "payroll/create-employee", element: <CreateEmployee /> },
+              {
+                path: "payroll/payslips",
+                element: <PayrollModulePage page="payslips" />,
+              },
+              {
+                path: "payroll/reports/monthly",
+                element: <MonthlyPayrollReport />,
+              },
+              {
+                path: "payroll/enterprise/dashboard",
+                element: <PayrollDashboardEnterprise />,
+              },
               { path: "payroll/enterprise/run", element: <PayrollRunPage /> },
-              { path: "payroll/enterprise/approval", element: <PayrollApprovalPanel /> },
-              { path: "payroll/enterprise/loans", element: <LoanManagementPage /> },
+              {
+                path: "payroll/enterprise/approval",
+                element: <PayrollApprovalPanel />,
+              },
+              {
+                path: "payroll/enterprise/loans",
+                element: <LoanManagementPage />,
+              },
               { path: "payroll/enterprise/tax", element: <TaxSettingsPage /> },
+              {
+                path: "payroll/dashboard",
+                element: <PayrollModulePage page="dashboard" />,
+              },
+              {
+                path: "payroll/components",
+                element: <PayrollModulePage page="components" />,
+              },
+              {
+                path: "payroll/templates",
+                element: <PayrollModulePage page="templates" />,
+              },
+              {
+                path: "payroll/employee-structures",
+                element: <PayrollModulePage page="structures" />,
+              },
+              {
+                path: "payroll/cycles",
+                element: <PayrollModulePage page="cycles" />,
+              },
+              {
+                path: "payroll/run",
+                element: <PayrollModulePage page="run" />,
+              },
+              {
+                path: "payroll/approval",
+                element: <PayrollModulePage page="approval" />,
+              },
+              {
+                path: "payroll/payments",
+                element: <PayrollModulePage page="payments" />,
+              },
+              {
+                path: "payroll/loans",
+                element: <PayrollModulePage page="loans" />,
+              },
+              {
+                path: "payroll/statutory",
+                element: <PayrollModulePage page="statutory" />,
+              },
+              {
+                path: "payroll/reports",
+                element: <PayrollModulePage page="reports" />,
+              },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports", element: <SchoolAdminReport /> },
@@ -498,16 +866,19 @@ const router = createBrowserRouter([
               { path: "exams/exams-list", element: <ExamsPage /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
-               { path: "exams/paper-builder", element: <PaperBuilder /> },
+              { path: "exams/paper-builder", element: <PaperBuilder /> },
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "exams/reports", element: <ExamReports /> },
-            
+
               { path: "users/employee-details", element: <EmployeeDetailes /> },
               // Backward-compatible routes (legacy typos)
-             
-              { path: "users/employee-detailes", element: <EmployeeDetailes /> },
+
+              {
+                path: "users/employee-detailes",
+                element: <EmployeeDetailes />,
+              },
               { path: "calendar", element: <CalendarPage /> },
               { path: "events", element: <Events /> },
               { path: "inventory/supplies", element: <Supplies /> },
@@ -515,15 +886,13 @@ const router = createBrowserRouter([
               { path: "fees/feestructure", element: <FeeStructure /> },
               { path: "fees/assign", element: <StudentAssignFees /> },
               { path: "school-setup", element: <SchoolSetup /> },
-              
-
             ],
           },
           {
             path: "teacher",
             element: (
               <ProtectedRoute allowedRoles={["Teacher"]}>
-               <Outlet />
+                <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -535,12 +904,18 @@ const router = createBrowserRouter([
               { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
-              { path: "attendance/my/monthly", element: <MyAttendanceMonthlyReport /> },
-             // { path: "exams", element: <ScheduleExams /> },
+              {
+                path: "attendance/my/monthly",
+                element: <MyAttendanceMonthlyReport />,
+              },
+              // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/create-question", element: <CreateQuestion /> },
-              { path: "exams/bulk-upload-questions", element: <BulkUploadQuestions /> },
+              {
+                path: "exams/bulk-upload-questions",
+                element: <BulkUploadQuestions />,
+              },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
@@ -553,16 +928,14 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
-               { path: "attendance", element: <MyAttendancePage /> },
+              { path: "payroll", element: <PayrollModulePage page="my" /> },
+              { path: "attendance", element: <MyAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "profile/change-password", element: <ChangePassword /> },
               { path: "reports", element: <TeacherReports /> },
-             
-
             ],
           },
           {
@@ -591,14 +964,13 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "notification", element: <Notification /> },
- 
             ],
           },
           {
             path: "parent",
             element: (
               <ProtectedRoute allowedRoles={["Parent"]}>
-              <Outlet />
+                <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -607,14 +979,14 @@ const router = createBrowserRouter([
               { path: "attendance", element: <ChildAttendancePage /> },
               { path: "grades", element: <ChildGrades /> },
               { path: "homework", element: <ChildHomework /> },
-               { path: "fees", element: <ParentFees /> },
+              { path: "fees", element: <ParentFees /> },
               { path: "exams", element: <ParentExamsPage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "reports", element: <ExamReports /> },
-               { path: "timetable", element: <ParentChildTimetablePage /> },
+              { path: "timetable", element: <ParentChildTimetablePage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
@@ -623,7 +995,7 @@ const router = createBrowserRouter([
             path: "accountant",
             element: (
               <ProtectedRoute allowedRoles={["Accountant"]}>
-              <Outlet />
+                <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -633,18 +1005,30 @@ const router = createBrowserRouter([
               { path: "salary/structures", element: <SalaryStructures /> },
               { path: "salary/create-employee", element: <CreateEmployee /> },
               { path: "salary/payslips", element: <GeneratePayslip /> },
-              { path: "salary/reports/monthly", element: <MonthlyPayrollReport /> },
-              { path: "salary/enterprise/dashboard", element: <PayrollDashboardEnterprise /> },
+              {
+                path: "salary/reports/monthly",
+                element: <MonthlyPayrollReport />,
+              },
+              {
+                path: "salary/enterprise/dashboard",
+                element: <PayrollDashboardEnterprise />,
+              },
               { path: "salary/enterprise/run", element: <PayrollRunPage /> },
-              { path: "salary/enterprise/approval", element: <PayrollApprovalPanel /> },
-              { path: "salary/enterprise/loans", element: <LoanManagementPage /> },
+              {
+                path: "salary/enterprise/approval",
+                element: <PayrollApprovalPanel />,
+              },
+              {
+                path: "salary/enterprise/loans",
+                element: <LoanManagementPage />,
+              },
               { path: "salary/enterprise/tax", element: <TaxSettingsPage /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
+              { path: "payroll", element: <PayrollModulePage page="my" /> },
               { path: "attendance", element: <MyAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "attendance/monthly", element: <MonthlyReportPage /> },
@@ -670,7 +1054,7 @@ const router = createBrowserRouter([
               { path: "attendance/mark", element: <MarkAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
               { path: "exams", element: <ExamsPage /> },
-               { path: "exams/create", element: <ExamCreate /> },
+              { path: "exams/create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
@@ -685,10 +1069,10 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
+              { path: "payroll", element: <PayrollModulePage page="my" /> },
             ],
           },
-           {
+          {
             path: "viceprincipal/payroll",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
@@ -696,7 +1080,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-           {
+          {
             path: "viceprincipal/timetable",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
@@ -816,7 +1200,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-           {
+          {
             path: "examcoordinator",
             element: (
               <ProtectedRoute allowedRoles={["Exam Coordinator"]}>
@@ -831,7 +1215,7 @@ const router = createBrowserRouter([
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
-               { path: "exams/paper-builder", element: <PaperBuilder /> },
+              { path: "exams/paper-builder", element: <PaperBuilder /> },
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
@@ -914,8 +1298,8 @@ const router = createBrowserRouter([
           {
             path: "staff",
             element: (
-                <ProtectedRoute allowedRoles={["Staff", "Support Staff"]}>
-            <Outlet />
+              <ProtectedRoute allowedRoles={["Staff", "Support Staff"]}>
+                <Outlet />
               </ProtectedRoute>
             ),
             children: [
@@ -935,8 +1319,6 @@ const router = createBrowserRouter([
     ],
   },
 ]);
-
-
 
 const mountNode = document.getElementById("root");
 
@@ -972,7 +1354,7 @@ const renderApp = () => {
           </ThemedAntWrapper>
         </ThemeProvider>
       </PersistGate>
-    </Provider>
+    </Provider>,
   );
 };
 
@@ -982,10 +1364,12 @@ if (import.meta.hot) {
   import.meta.hot.accept(renderApp);
 }
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register('/sw.js')
-      .catch((error) => console.error('Service worker registration failed:', error));
+      .register("/sw.js")
+      .catch((error) =>
+        console.error("Service worker registration failed:", error),
+      );
   });
 }
