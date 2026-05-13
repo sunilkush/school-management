@@ -9,7 +9,6 @@ import { School } from "../models/school.model.js";
 import { Payment } from "../models/payment.model.js";
 import { Employee } from "../models/Employee.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
-import { PayrollEntry } from "../models/payrollEntry.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
 import { ExamClass } from "../models/ExamClass.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -155,8 +154,6 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
     currentIncomeAgg,
     previousIncomeAgg,
     incomeModeBreakdown,
-    salaryStats,
-    salaryByUnit,
     employeePerformance,
   ] = await Promise.all([
     StudentEnrollment.countDocuments({ schoolId: schoolObjectId }),
@@ -203,81 +200,12 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
       { $group: { _id: "$paymentMode", value: { $sum: "$amountPaid" } } },
       { $sort: { value: -1 } },
     ]),
-    PayrollEntry.aggregate([
+    Employee.aggregate([
+      { $match: { schoolId: schoolObjectId, isActive: true } },
       {
-        $match: {
-          schoolId: schoolObjectId,
-          createdAt: { $gte: currentMonthStart, $lt: currentMonthEnd },
-        },
-      },
-      {
-        $lookup: {
-          from: "employees",
-          localField: "employeeId",
-          foreignField: "_id",
-          as: "employee",
-        },
-      },
-      { $unwind: "$employee" },
-      {
-        $group: {
-          _id: { $ifNull: ["$employee.department", "General"] },
-          value: { $sum: "$netPay" },
-        },
-      },
-      { $sort: { value: -1 } },
-      { $limit: 5 },
-    ]),
-    PayrollEntry.aggregate([
-      {
-        $match: {
-          schoolId: schoolObjectId,
-          createdAt: {
-            $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1),
-            $lt: currentMonthEnd,
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "employees",
-          localField: "employeeId",
-          foreignField: "_id",
-          as: "employee",
-        },
-      },
-      { $unwind: "$employee" },
-      {
-        $group: {
-          _id: {
-            month: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-            department: { $ifNull: ["$employee.department", "General"] },
-          },
-          value: { $sum: "$netPay" },
-        },
-      },
-      { $sort: { "_id.month": 1 } },
-    ]),
-    PayrollEntry.aggregate([
-      {
-        $match: {
-          schoolId: schoolObjectId,
-          createdAt: { $gte: currentMonthStart, $lt: currentMonthEnd },
-        },
-      },
-      {
-        $lookup: {
-          from: "employees",
-          localField: "employeeId",
-          foreignField: "_id",
-          as: "employee",
-        },
-      },
-      { $unwind: "$employee" },
-     {
         $lookup: {
           from: "users",
-          let: { userRef: "$employee.userId" },
+          let: { userRef: "$userId" },
           pipeline: [
             {
               $match: {
@@ -291,27 +219,15 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
         },
       },
       { $unwind: "$user" },
-      {
-        $addFields: {
-          performanceScore: {
-            $cond: [
-              { $gt: ["$workingDays", 0] },
-              { $multiply: [{ $divide: ["$presentDays", "$workingDays"] }, 100] },
-              0,
-            ],
-          },
-        },
-      },
-      { $sort: { performanceScore: -1 } },
       { $limit: 5 },
       {
         $project: {
           _id: 0,
           name: { $ifNull: ["$user.name", "Employee"] },
           email: { $ifNull: ["$user.email", "-"] },
-          designation: { $ifNull: ["$employee.designation", "Staff"] },
-          dept: { $ifNull: ["$employee.department", "General"] },
-          score: { $round: ["$performanceScore", 0] },
+          designation: { $ifNull: ["$designation", "Staff"] },
+          dept: { $ifNull: ["$department", "General"] },
+          score: { $literal: 0 },
         },
       },
     ]),
@@ -321,34 +237,6 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
   const currentIncome = currentIncomeAgg[0]?.total || 0;
   const activeStaff = Math.max(totalStaff, totalTeachers);
 
-  const monthlyLabel = new Intl.DateTimeFormat("en-US", { month: "short" });
-  const monthKeys = Array.from({ length: 12 }, (_, index) => {
-    const d = new Date(new Date().getFullYear(), new Date().getMonth() - (11 - index), 1);
-    return {
-      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: monthlyLabel.format(d),
-    };
-  });
-
-  const topDepartments = salaryStats.slice(0, 2).map((item) => item._id);
-  const fallbackDepartments = ["Teaching", "Administration"];
-  const selectedDepartments =
-    topDepartments.length === 2 ? topDepartments : [...topDepartments, ...fallbackDepartments].slice(0, 2);
-
-  const salaryByMonthMap = monthKeys.map((month) => {
-    const item = { month: month.label };
-    selectedDepartments.forEach((dept) => {
-      item[dept] = 0;
-    });
-
-    salaryByUnit
-      .filter((row) => row._id.month === month.key && selectedDepartments.includes(row._id.department))
-      .forEach((row) => {
-        item[row._id.department] = Number((row.value || 0).toFixed(0));
-      });
-
-    return item;
-  });
 
   const incomeAnalysisTotal = incomeModeBreakdown.reduce((sum, item) => sum + (item.value || 0), 0);
   const incomeAnalysis = (incomeModeBreakdown.length ? incomeModeBreakdown : [
@@ -382,20 +270,7 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
         growth: safeGrowth(currentIncome, previousIncomeTotal),
       },
     },
-    salaryStatistics: salaryStats.map((item, index) => ({
-      title: item._id,
-      value: Number((item.value || 0).toFixed(0)),
-      color: ["#1677ff", "#7c3aed", "#0ea472", "#ea580c", "#0891b2"][index % 5],
-    })),
     incomeAnalysis,
-    salaryByUnit: {
-      units: selectedDepartments.map((dept, index) => ({
-        key: dept,
-        color: index === 0 ? "#1677ff" : "#7c3aed",
-        label: dept,
-      })),
-      chartData: salaryByMonthMap,
-    },
     employeeStructure: [
       { label: "Students", count: totalStudents, color: "#1677ff" },
       { label: "Teachers", count: totalTeachers, color: "#7c3aed" },

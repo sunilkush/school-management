@@ -22,8 +22,6 @@ import { useTheme } from "../../../context/ThemeContext.jsx";
 
 // ── Lazy components ──
 const SummaryCards      = lazy(() => import("./components/SummaryCards.jsx"));
-const SalaryStatistics  = lazy(() => import("./components/SalaryStatistics.jsx"));
-const TotalSalaryByUnit = lazy(() => import("./components/TotalSalaryByUnit.jsx"));
 const IncomeAnalysis    = lazy(() => import("./components/IncomeAnalysis.jsx"));
 const EmployeeStructure = lazy(() => import("./components/EmployeeStructure.jsx"));
 const EmployeePerformance = lazy(() => import("./components/EmployeePerformance.jsx"));
@@ -258,22 +256,9 @@ const SchoolAdminDashboard = () => {
         />
 
         <Row gutter={[16, 16]}>
-          <Col xs={24} lg={12}>
-            <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
-              <SalaryStatistics stats={analytics?.salaryStatistics} />
-            </Suspense>
-          </Col>
-          <Col xs={24} lg={12}>
+          <Col span={24}>
             <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
               <IncomeAnalysis data={analytics?.incomeAnalysis} />
-            </Suspense>
-          </Col>
-        </Row>
-
-        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-          <Col span={24}>
-            <Suspense fallback={<ChartSkeleton height={180} isDark={isDark} />}>
-              <TotalSalaryByUnit data={analytics?.salaryByUnit} />
             </Suspense>
           </Col>
         </Row>

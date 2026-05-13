@@ -103,13 +103,6 @@ const employeeSchema = new Schema(
     },
     workLocation: { type: String, trim: true },
     reportingManager: { type: Schema.Types.ObjectId, ref: "Employee", default: null },
-    
-    // Salary
-    salaryId: {
-      type: Schema.Types.ObjectId,
-      ref: "Salary",
-      default: null,
-    },
 
     // Teacher-specific fields
     experience: {
@@ -127,7 +120,7 @@ const employeeSchema = new Schema(
         ref: "Subject",
       },
     ],
-    // Banking Details (Salary Credit ke liye)
+    // Banking Details
     bankDetails: {
       accountHolder: String,
       accountNumber: String,
@@ -145,16 +138,6 @@ const employeeSchema = new Schema(
         type: { type: String, trim: true, required: true },
         url: { type: String, trim: true, required: true },
         uploadedAt: { type: Date, default: Date.now },
-      },
-    ],
-    salaryHistory: [
-      {
-        payrollStructureId: { type: Schema.Types.ObjectId, ref: "PayrollStructure" },
-        effectiveFrom: Date,
-        grossMonthly: Number,
-        changedBy: { type: Schema.Types.ObjectId, ref: "User" },
-        changedAt: { type: Date, default: Date.now },
-        reason: { type: String, trim: true },
       },
     ],
     // Common

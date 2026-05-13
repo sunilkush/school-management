@@ -34,41 +34,6 @@ const docs = {
     title: "Billing & Subscription",
     content: "Manage subscription plans, invoices, and payments.",
   },
-  payrollGuide: {
-    title: "Payroll Module Guide (Super Admin & Accountant)",
-    content:
-      "Payroll module me month-wise salary cycle run hota hai: pehle structure set karein, phir monthly run generate karein, cycle lock karein, payment mark karein aur payslip/report nikalein.",
-    stepsByRole: [
-      {
-        role: "Super Admin (Control & Audit)",
-        steps: [
-          "Login karein aur School Management > School List se school ki basic setup readiness verify karein (employees, designations, departments).",
-          "Modules section me ensure karein ki Payroll module active ho.",
-          "Roles & Permissions me Accountant/School Admin ko payroll actions ka access verify karein (monthly run, lock, pay, payslip, reports).",
-          "Support/Documentation aur audit policies share karein taaki payroll cycle standard process follow ho.",
-          "Month close ke baad Reports & Analytics / audit screens se payroll summary aur process compliance review karein.",
-        ],
-      },
-      {
-        role: "Accountant (Daily Operations)",
-        steps: [
-          "Sidebar me Payroll > Salary Structures open karein.",
-          "Har employee/role ke liye earnings (basic, allowances) aur deductions (PF, tax, advance) configure karein.",
-          "Payroll > Monthly Run par jaake month select karein aur cycle generate karein.",
-          "Generated entries verify karein: gross pay, deductions, net pay. Kisi mismatch par structure update karke cycle refresh karein.",
-          "Final verification ke baad cycle lock karein, phir payment mode (bank/cash/reference) ke saath Mark as Paid karein.",
-          "Payroll > Payslips me employee + month select karke preview/print karein.",
-          "Payroll > Monthly Reports se salary expense summary export/download karein for records.",
-        ],
-      },
-    ],
-    checklist: [
-      "Cycle generate se pehle salary structure update hona chahiye.",
-      "Lock ke baad changes avoid karein; correction ho to controlled re-run process use karein.",
-      "Payment mark karne se pehle net pay aur employee mapping cross-check karein.",
-      "Har month ka report aur payslip archive maintain karein (audit ke liye).",
-    ],
-  },
   api: {
     title: "API Documentation",
     content: "Use our REST APIs: /auth, /users, /subjects, /classes, /chapters",
@@ -136,7 +101,7 @@ const Documentation = () => {
             {docs[activeKey].checklist?.length ? (
               <>
                 <Divider />
-                <Title level={5}>Checklist (Before closing payroll month)</Title>
+                <Title level={5}>Checklist</Title>
                 <List
                   size="small"
                   dataSource={docs[activeKey].checklist}
