@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { AuditOutlined, BankOutlined, BarChartOutlined, CalculatorOutlined, CalendarOutlined, DollarOutlined, FileTextOutlined, InboxOutlined, ProfileOutlined, SafetyCertificateOutlined, SettingOutlined, WalletOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
-import payrollSidebarConfig from "../../config/sidebar/payrollSidebarConfig";
+
 import { hasPermission } from "../../features/payroll/components/PayrollPermissionGuard";
 
 const { Text } = Typography;
@@ -153,9 +153,7 @@ const SidebarMenu = ({ role }) => {
     if (!sidebarConfig) return [];
     const normalizedRole = String(role || "").toLowerCase();
     const baseItems = Array.isArray(sidebarConfig?.[normalizedRole]) ? sidebarConfig[normalizedRole] : Array.isArray(sidebarConfig?.[role]) ? sidebarConfig[role] : [];
-    const payrollItems = payrollSidebarConfig[normalizedRole] || [];
-    const mergedItems = [...baseItems, ...payrollItems];
-    return mergedItems
+    return baseItems
       .map((item) => {
         if (!item?.subMenu?.length) return hasPermission(user, item.permission) ? item : null;
         const subMenu = item.subMenu.filter((sub) => hasPermission(user, sub.permission));
