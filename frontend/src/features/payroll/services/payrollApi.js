@@ -14,6 +14,9 @@ export const buildPayrollScope = (state) => {
 const withScope = (payload = {}, scope = {}) => ({ ...payload, ...Object.fromEntries(Object.entries(scope).filter(([, v]) => Boolean(v))) });
 
 export const payrollApi = {
+  employees: {
+    list: (scope) => httpClient.get("/employee", { params: scope }).then(unwrap),
+  },
   settings: {
     save: (data, scope) => httpClient.post("/payroll/settings", withScope(data, scope)).then(unwrap),
     list: (scope) => httpClient.get("/payroll/settings", { params: scope }).then(unwrap),
