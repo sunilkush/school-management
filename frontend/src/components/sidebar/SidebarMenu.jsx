@@ -2,9 +2,22 @@ import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Menu, Typography } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-import { InboxOutlined } from "@ant-design/icons";
+import { AuditOutlined, BankOutlined, BarChartOutlined, CalculatorOutlined, CalendarOutlined, DollarOutlined, FileTextOutlined, InboxOutlined, ProfileOutlined, SafetyCertificateOutlined, SettingOutlined, WalletOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
+import payrollSidebarConfig from "../../config/sidebar/payrollSidebarConfig";
+import { hasPermission } from "../../features/payroll/components/PayrollPermissionGuard";
 
 const { Text } = Typography;
+const antIconMap = { AuditOutlined, BankOutlined, BarChartOutlined, CalculatorOutlined, CalendarOutlined, DollarOutlined, FileTextOutlined, ProfileOutlined, SafetyCertificateOutlined, SettingOutlined, WalletOutlined };
+const renderIcon = (icon, size = 15) => {
+  if (!icon) return null;
+  if (typeof icon === "string") {
+    const Icon = antIconMap[icon] || DollarOutlined;
+    return <Icon />;
+  }
+  const Icon = icon;
+  return <Icon size={size} strokeWidth={1.8} />;
+};
 
 /* ─────────────────────────────────────────
    Design tokens — mirrors Sidebar.jsx
@@ -120,6 +133,7 @@ const SidebarMenu = ({ role }) => {
   const { isDark: isDarkMode } = useTheme();
   const t = tokens(isDarkMode);
 
+  const user = useSelector((state) => state.auth.user);
   const [sidebarConfig, setSidebarConfig] = useState(null);
   const [openKeys, setOpenKeys] = useState([]);
 
@@ -137,8 +151,18 @@ const SidebarMenu = ({ role }) => {
   /* Derive flat menu items for this role */
   const menuItems = useMemo(() => {
     if (!sidebarConfig) return [];
-    return Array.isArray(sidebarConfig?.[role]) ? sidebarConfig[role] : [];
-  }, [role, sidebarConfig]);
+    const normalizedRole = String(role || "").toLowerCase();
+    const baseItems = Array.isArray(sidebarConfig?.[normalizedRole]) ? sidebarConfig[normalizedRole] : Array.isArray(sidebarConfig?.[role]) ? sidebarConfig[role] : [];
+    const payrollItems = payrollSidebarConfig[normalizedRole] || [];
+    const mergedItems = [...baseItems, ...payrollItems];
+    return mergedItems
+      .map((item) => {
+        if (!item?.subMenu?.length) return hasPermission(user, item.permission) ? item : null;
+        const subMenu = item.subMenu.filter((sub) => hasPermission(user, sub.permission));
+        return subMenu.length ? { ...item, subMenu } : null;
+      })
+      .filter(Boolean);
+  }, [role, sidebarConfig, user]);
 
   /* Auto-open parent when a child route is active */
   useEffect(() => {
@@ -162,7 +186,7 @@ const SidebarMenu = ({ role }) => {
   const antMenuItems = useMemo(() => {
     return menuItems.map((item) => {
       const icon = item.icon ? (
-        <item.icon size={15} strokeWidth={1.8} />
+        renderIcon(item.icon, 15)
       ) : null;
 
       if (!item?.subMenu?.length) {
@@ -175,7 +199,7 @@ const SidebarMenu = ({ role }) => {
         label: item.title,
         children: item.subMenu.map((sub) => ({
           key: sub.path,
-          icon: sub.icon ? <sub.icon size={13} strokeWidth={1.8} /> : null,
+          icon: renderIcon(sub.icon, 13),
           label: sub.title,
         })),
       };

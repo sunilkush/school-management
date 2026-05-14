@@ -136,7 +136,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
   const { isDark } = useTheme();
   const t = tokens(isDark);
 
-  const role = user?.role?.name?.toLowerCase();
+  const role = (user?.roleId?.name || user?.role?.name || user?.role || "").toLowerCase();
   const schoolName = user?.school?.name || "Super Admin";
   const initials = schoolName
     .split(" ")

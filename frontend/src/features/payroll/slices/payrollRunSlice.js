@@ -1,0 +1,9 @@
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { buildPayrollScope, payrollApi } from "../services/payrollApi";
+const scoped = (fn, type) => createAsyncThunk(type, async (arg, { getState, rejectWithValue }) => { try { return await fn(arg, buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
+export const fetchPayrollRunItems = scoped((cycleId, scope) => payrollApi.runs.items(cycleId, scope), "payrollRuns/items");
+export const calculatePayrollRun = scoped((cycleId, scope) => payrollApi.runs.calculate(cycleId, scope), "payrollRuns/calculate");
+export const approvePayrollRun = scoped((cycleId, scope) => payrollApi.runs.approve(cycleId, {}, scope), "payrollRuns/approve");
+export const markPayrollPaid = scoped((cycleId, scope) => payrollApi.runs.markPaid(cycleId, scope), "payrollRuns/markPaid");
+const slice = createSlice({ name: "payrollRuns", initialState: { items: [], run: null, loading: false, error: null }, reducers: {}, extraReducers: (b) => { const p=(s)=>{s.loading=true;s.error=null}; const r=(s,a)=>{s.loading=false;s.error=a.payload}; b.addCase(fetchPayrollRunItems.pending,p).addCase(fetchPayrollRunItems.fulfilled,(s,a)=>{s.loading=false;s.items=a.payload||[]}).addCase(fetchPayrollRunItems.rejected,r).addCase(calculatePayrollRun.pending,p).addCase(calculatePayrollRun.fulfilled,(s,a)=>{s.loading=false;s.run=a.payload?.run||a.payload}).addCase(calculatePayrollRun.rejected,r).addMatcher((a)=>a.type.startsWith("payrollRuns/")&&a.type.endsWith("/fulfilled"),(s)=>{s.loading=false}); }});
+export default slice.reducer;

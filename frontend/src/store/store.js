@@ -56,6 +56,15 @@ import timetableReducer from "../features/timetableSlice";
 
 import notificationReducer from "../features/notificationSlice";
 import messageReducer from "../features/messageSlice";
+import payrollSettingReducer from "../features/payroll/slices/payrollSettingSlice";
+import salaryComponentReducer from "../features/payroll/slices/salaryComponentSlice";
+import salaryStructureReducer from "../features/payroll/slices/salaryStructureSlice";
+import payrollCycleReducer from "../features/payroll/slices/payrollCycleSlice";
+import payrollRunReducer from "../features/payroll/slices/payrollRunSlice";
+import payslipReducer from "../features/payroll/slices/payslipSlice";
+import employeeLoanReducer from "../features/payroll/slices/employeeLoanSlice";
+import payrollReportReducer from "../features/payroll/slices/payrollReportSlice";
+
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -107,6 +116,14 @@ const rootReducer = combineReducers({
  
   messages: messageReducer,
   notification: notificationReducer,
+  payrollSettings: payrollSettingReducer,
+  salaryComponents: salaryComponentReducer,
+  salaryStructures: salaryStructureReducer,
+  payrollCycles: payrollCycleReducer,
+  payrollRuns: payrollRunReducer,
+  payslips: payslipReducer,
+  employeeLoans: employeeLoanReducer,
+  payrollReports: payrollReportReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
