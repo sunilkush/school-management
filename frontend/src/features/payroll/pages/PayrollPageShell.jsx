@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Button, Card, Empty, Form, Modal, Skeleton, Table, Tabs, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import PayrollStatusTag from "../components/PayrollStatusTag";
 import PayrollStatsCards from "../components/PayrollStatsCards";
 import PayrollFilters from "../components/PayrollFilters";
-import PayrollPermissionGuard, { getRoleName } from "../components/PayrollPermissionGuard";
+import PayrollPermissionGuard from "../components/PayrollPermissionGuard";
 import SalaryComponentForm from "../components/SalaryComponentForm";
 import SalaryStructureBuilder from "../components/SalaryStructureBuilder";
 import PayrollCycleForm from "../components/PayrollCycleForm";
@@ -33,13 +33,103 @@ export const PayrollSettingsPage = () => { const [form] = Form.useForm(); const 
 
 export const SalaryComponentsPage = () => { const dispatch = useDispatch(); const user = useUser(); const [open, setOpen] = useState(false); const [form] = Form.useForm(); const state = useSelector(s => s.salaryComponents || {}); useEffect(() => { dispatch(fetchSalaryComponents()) }, [dispatch]); return <div className="p-4"><PageHeader title="Salary Components" subtitle="Manage earnings, deductions and employer contribution templates"><ActionButton user={user} permission="payroll.components.manage" type="primary" onClick={() => setOpen(true)}>Add Component</ActionButton></PageHeader><SafeTable loading={state.loading} dataSource={state.items} columns={["name", "code", "type", "calculationType", "percentageOf", "value", "taxable", "pfApplicable", "esiApplicable"].map(k => ({ title: k, dataIndex: k, render: (v) => typeof v === "boolean" ? (v ? "Yes" : "No") : v })).concat([{ title: "Status", dataIndex: "status", render: s => <PayrollStatusTag status={s} /> }, { title: "Actions", render: (_, r) => <ActionButton user={user} permission="payroll.components.manage" danger onClick={() => Modal.confirm({ title: "Deactivate component?", onOk: () => dispatch(deleteSalaryComponent(r._id)) })}>Delete/Deactivate</ActionButton> }])} /><Modal open={open} title="Add Salary Component" onCancel={() => setOpen(false)} onOk={() => form.validateFields().then(v => dispatch(createSalaryComponent(v)).unwrap()).then(() => { message.success("Component saved"); setOpen(false); dispatch(fetchSalaryComponents()) }).catch(message.error)}><SalaryComponentForm form={form} /></Modal></div> };
 
-export const SalaryStructurePage = () => { const dispatch = useDispatch(); const user = useUser(); const [open, setOpen] = useState(false); const [form] = Form.useForm(); const state = useSelector(s => s.salaryStructures || {}); useEffect(() => { dispatch(fetchSalaryStructures()) }, [dispatch]); return <div className="p-4"><PageHeader title="Salary Structures" subtitle="Create, revise and approve employee CTC structures"><ActionButton user={user} permission="payroll.salaryStructure.manage" type="primary" onClick={() => setOpen(true)}>Create Salary Structure</ActionButton></PageHeader><PayrollFilters /><SafeTable loading={state.loading} dataSource={state.items} columns={[{ title: "Employee Name", dataIndex: ["employeeId", "employeeCode"] }, { title: "Employee Code", dataIndex: ["employeeId", "employeeCode"] }, { title: "Department", dataIndex: ["employeeId", "department"] }, { title: "Designation", dataIndex: ["employeeId", "designation"] }, { title: "Effective From", dataIndex: "effectiveFrom" }, { title: "Gross Monthly", dataIndex: "grossMonthly", render: money }, { title: "Net Monthly Estimate", dataIndex: "netMonthly", render: money }, { title: "CTC Monthly", dataIndex: "ctcMonthly", render: money }, { title: "Status", dataIndex: "status", render: s => <PayrollStatusTag status={s} /> }, { title: "Approved By", dataIndex: "approvedBy" }, { title: "Actions", render: (_, r) => <div className="flex gap-2"><Button>View</Button><ActionButton user={user} permission="payroll.approve" onClick={() => dispatch(approveSalaryStructure(r._id))}>Approve</ActionButton></div> }]} /><Modal width={1100} open={open} title="Salary Structure Builder" onCancel={() => setOpen(false)} onOk={() => form.submit()}><SalaryStructureBuilder form={form} onFinish={(v) => dispatch(createSalaryStructure(v)).unwrap().then(() => { message.success("Structure saved"); setOpen(false); dispatch(fetchSalaryStructures()) }).catch(message.error)} /></Modal></div> };
 
 export const EmployeeSalaryProfile = () => <SalaryStructurePage />;
 export const PayrollCyclePage = () => { const dispatch = useDispatch(); const user = useUser(); const [open, setOpen] = useState(false); const [form] = Form.useForm(); const state = useSelector(s => s.payrollCycles || {}); useEffect(() => { dispatch(fetchPayrollCycles()) }, [dispatch]); const act = (text, permission, fn) => <ActionButton user={user} permission={permission} onClick={fn}>{text}</ActionButton>; return <div className="p-4"><PageHeader title="Payroll Cycles" subtitle="Create monthly cycles, process payroll, pay and lock"><ActionButton user={user} permission="payroll.cycles.manage" type="primary" onClick={() => setOpen(true)}>Create Cycle</ActionButton></PageHeader><SafeTable loading={state.loading} dataSource={state.items} columns={["cycleName", "month", "year", "startDate", "endDate", "paymentDate", "totalEmployees", "grossPay", "deductions", "netPay"].map(k => ({ title: k, dataIndex: k, render: ["grossPay", "deductions", "netPay"].includes(k) ? money : undefined })).concat([{ title: "Status", dataIndex: "status", render: s => <PayrollStatusTag status={s} /> }, { title: "Actions", render: (_, r) => <div className="flex flex-wrap gap-2">{act("Calculate", "payroll.runs.manage", () => dispatch(calculatePayrollRun(r._id)))}{act("Approve", "payroll.approve", () => dispatch(approvePayrollRun(r._id)))}{act("Generate Payslips", "payroll.payslips.manage", () => dispatch(generatePayslips(r._id)))}{act("Publish", "payroll.payslips.manage", () => dispatch(publishPayslips(r._id)))}{act("Mark Paid", "payroll.runs.manage", () => dispatch(markPayrollPaid(r._id)))}{act("Lock", "payroll.cycles.manage", () => Modal.confirm({ title: "Lock payroll cycle?", onOk: () => dispatch(lockPayrollCycle(r._id)) }))}</div> }])} /><Modal open={open} title="Create Payroll Cycle" onCancel={() => setOpen(false)} onOk={() => form.validateFields().then(v => dispatch(createPayrollCycle(v)).unwrap()).then(() => { message.success("Cycle created"); setOpen(false); dispatch(fetchPayrollCycles()) }).catch(message.error)}><PayrollCycleForm form={form} /></Modal></div> };
 export const PayrollRunPage = () => { const dispatch = useDispatch(); const state = useSelector(s => s.payrollRuns || {}); const cycleId = window.location.pathname.split("/").pop(); useEffect(() => { if (cycleId && !cycleId.includes("runs")) dispatch(fetchPayrollRunItems(cycleId)); }, [dispatch, cycleId]); return <div className="p-4"><PageHeader title="Payroll Run" subtitle="Review employee-wise earnings, deductions, statutory and net salary"><PayrollApprovalTimeline status="review" /></PageHeader><PayrollRunTable items={state.items} loading={state.loading} /></div> };
 export const PayslipPage = () => { const dispatch = useDispatch(); const state = useSelector(s => s.payslips || {}); const [active, setActive] = useState(null); useEffect(() => { dispatch(fetchPayslips()) }, [dispatch]); return <div className="p-4"><PageHeader title="Payslips" subtitle="Generate, preview, publish, email and download payslips" /><PayrollFilters /><SafeTable dataSource={state.items} columns={["payslipNumber", "month", "year", "grossPay", "deductions", "netPay", "generatedAt"].map(k => ({ title: k, dataIndex: k, render: ["grossPay", "deductions", "netPay"].includes(k) ? money : undefined })).concat([{ title: "Published Status", dataIndex: "status", render: s => <PayrollStatusTag status={s} /> }, { title: "Actions", render: (_, r) => <div className="flex gap-2"><Button onClick={() => setActive(r)}>Preview</Button><Button>Download PDF</Button><Button>Send Email</Button></div> }])} /><Modal width={900} open={!!active} onCancel={() => setActive(null)} footer={null}><PayslipPreview payslip={active} /></Modal></div> };
 export const MyPayslipsPage = () => { const [items, setItems] = useState([]); const [loading, setLoading] = useState(false); const [active, setActive] = useState(null); const scope = useSelector(buildPayrollScope); useEffect(() => { setLoading(true); payrollApi.payslips.mine(scope).then(setItems).catch((e) => message.error(e?.response?.data?.message || "My payslips load failed")).finally(() => setLoading(false)); }, [scope?.schoolId, scope?.academicYearId]); return <div className="p-4"><PageHeader title="My Payslips" subtitle="View published payslips and download salary slips" /><SafeTable loading={loading} dataSource={items} columns={[{ title: "Month", render: (_, r) => `${r.month}/${r.year}` }, { title: "Gross", dataIndex: "grossPay", render: money }, { title: "Deductions", dataIndex: "deductions", render: money }, { title: "Net Pay", dataIndex: "netPay", render: money }, { title: "Payment", dataIndex: "paymentStatus", render: s => <PayrollStatusTag status={s} /> }, { title: "Actions", render: (_, r) => <Button onClick={() => setActive(r)}>Preview / Download</Button> }]} /><Modal open={!!active} onCancel={() => setActive(null)} footer={null} width={720}><PayslipPreview payslip={active} /></Modal></div> };
+
+const getEmployeeName = (employee) => employee?.userId?.name || employee?.name || employee?.fullName || employee?.email || employee?.userId?.email || "-";
+const getEmployeeCode = (employee) => employee?.employeeCode || employee?.userId?.regId || employee?.regId || "-";
+
+export const SalaryStructurePage = () => {
+  const dispatch = useDispatch();
+  const user = useUser();
+  const [open, setOpen] = useState(false);
+  const [form] = Form.useForm();
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const state = useSelector((s) => s.salaryStructures || {});
+  const schoolId = useSelector((s) => buildPayrollScope(s).schoolId);
+  const academicYearId = useSelector((s) => buildPayrollScope(s).academicYearId);
+
+  useEffect(() => {
+    dispatch(fetchSalaryStructures());
+  }, [dispatch]);
+
+  useEffect(() => {
+    let ignore = false;
+    setEmployeesLoading(true);
+    payrollApi.employees
+      .list({ schoolId, academicYearId })
+      .then((data) => {
+        if (!ignore) setEmployees(Array.isArray(data) ? data : []);
+      })
+      .catch((error) => {
+        if (!ignore) message.error(error?.response?.data?.message || error?.message || "Employee list load failed");
+      })
+      .finally(() => {
+        if (!ignore) setEmployeesLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [schoolId, academicYearId]);
+
+  const salaryStructureColumns = [
+    { title: "Employee Name", render: (_, row) => getEmployeeName(row.employeeId) },
+    { title: "Employee Code", render: (_, row) => getEmployeeCode(row.employeeId) },
+    { title: "Department", dataIndex: ["employeeId", "department"] },
+    { title: "Designation", dataIndex: ["employeeId", "designation"] },
+    { title: "Effective From", dataIndex: "effectiveFrom" },
+    { title: "Gross Monthly", dataIndex: "grossMonthly", render: money },
+    { title: "Net Monthly Estimate", dataIndex: "netMonthly", render: money },
+    { title: "CTC Monthly", dataIndex: "ctcMonthly", render: money },
+    { title: "Status", dataIndex: "status", render: (status) => <PayrollStatusTag status={status} /> },
+    { title: "Approved By", dataIndex: "approvedBy" },
+    {
+      title: "Actions",
+      render: (_, row) => (
+        <div className="flex gap-2">
+          <Button>View</Button>
+          <ActionButton user={user} permission="payroll.approve" onClick={() => dispatch(approveSalaryStructure(row._id))}>Approve</ActionButton>
+        </div>
+      ),
+    },
+  ];
+
+  const handleOpen = () => {
+    form.resetFields();
+    setOpen(true);
+  };
+
+  const handleSubmit = (values) => {
+    dispatch(createSalaryStructure(values))
+      .unwrap()
+      .then(() => {
+        message.success("Structure saved");
+        setOpen(false);
+        dispatch(fetchSalaryStructures());
+      })
+      .catch((error) => message.error(error || "Salary structure save failed"));
+  };
+
+  return (
+    <div className="p-4">
+      <PageHeader title="Salary Structures" subtitle="Create, revise and approve employee CTC structures">
+        <ActionButton user={user} permission="payroll.salaryStructure.manage" type="primary" onClick={handleOpen}>Create Salary Structure</ActionButton>
+      </PageHeader>
+      <PayrollFilters />
+      <SafeTable loading={state.loading} dataSource={state.items} columns={salaryStructureColumns} />
+      <Modal width={1100} open={open} title="Salary Structure Builder" onCancel={() => setOpen(false)} onOk={() => form.submit()}>
+        <SalaryStructureBuilder form={form} onFinish={handleSubmit} employees={employees} employeesLoading={employeesLoading} />
+      </Modal>
+    </div>
+  );
+};
+
+
 
 export const EmployeeLoanPage = () => { const dispatch = useDispatch(); const state = useSelector(s => s.employeeLoans || {}); useEffect(() => { dispatch(fetchEmployeeLoans()) }, [dispatch]); return <div className="p-4"><PageHeader title="Employee Loans & Advances" subtitle="Request, approve, reject and close salary advances" /><Card title="Loan Request Form" className="mb-4"><Alert type="info" showIcon message="Fields: Employee, Loan Type, Principal Amount, EMI Amount, Installments, Start Month, Reason, Attachment" /><Button type="primary" className="mt-3" onClick={() => dispatch(createEmployeeLoan({ loanType: "advance", principalAmount: 0, status: "pending" }))}>Submit Request</Button></Card><SafeTable dataSource={state.items} columns={["employeeId", "loanType", "principalAmount", "emiAmount", "totalInstallments", "paidInstallments", "balance", "startMonth"].map(k => ({ title: k, dataIndex: k })).concat([{ title: "Status", dataIndex: "status", render: s => <PayrollStatusTag status={s} /> }, { title: "Actions", render: () => "Approve / Reject / Close" }])} /></div> };
 export const TaxDeclarationPage = () => <div className="p-4"><PageHeader title="Tax Declarations" subtitle="PAN, tax regime, investment declarations, HRA and proof uploads" /><Card><Alert type="info" showIcon message="Actions: Save Draft, Submit Declaration, Upload Proof, View Status" /></Card></div>;

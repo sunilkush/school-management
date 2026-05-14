@@ -113,7 +113,16 @@ export const createSalaryStructure = asyncHandler(async (req, res) => {
   await writePayrollAudit(req, { action: "create", entity: "EmployeeSalaryStructure", entityId: doc._id, employeeId: doc.employeeId, after: doc.toObject() });
   send(res, 201, doc, "Salary structure created");
 });
-export const listSalaryStructures = asyncHandler(async (req, res) => send(res, 200, await EmployeeSalaryStructure.find(scopedQuery(req)).populate("employeeId", "employeeCode department designation").sort({ updatedAt: -1 }).lean()));
+export const listSalaryStructures = asyncHandler(async (req, res) =>
+  send(
+    res,
+    200,
+    await EmployeeSalaryStructure.find(scopedQuery(req))
+      .populate({ path: "employeeId", select: "employeeCode department designation userId", populate: { path: "userId", select: "name email regId" } })
+      .sort({ updatedAt: -1 })
+      .lean()
+  )
+);
 export const getEmployeeSalaryStructure = asyncHandler(async (req, res) => {
   requireValidObjectId(req.params.employeeId, "employeeId");
   const scope = validateScope(req);
