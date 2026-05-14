@@ -37,6 +37,42 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+export const normalizeSidebarRole = (role = "") =>
+  String(role)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, " ");
+
+export const sidebarRoleAliases = {
+  superadmin: "super admin",
+  "super-admin": "super admin",
+  "super_admin": "super admin",
+  schooladmin: "school admin",
+  "school-admin": "school admin",
+  "school_admin": "school admin",
+  viceprincipal: "vice principal",
+  "vice-principal": "vice principal",
+  "vice_principal": "vice principal",
+  examcoordinator: "exam coordinator",
+  "exam-coordinator": "exam coordinator",
+  "exam_coordinator": "exam coordinator",
+  subjectcoordinator: "subject coordinator",
+  "subject-coordinator": "subject coordinator",
+  "subject_coordinator": "subject coordinator",
+  hostelwarden: "hostel warden",
+  "hostel-warden": "hostel warden",
+  "hostel_warden": "hostel warden",
+  transportmanager: "transport manager",
+  "transport-manager": "transport manager",
+  "transport_manager": "transport manager",
+  itsupport: "it support",
+  "it-support": "it support",
+  "it_support": "it support",
+  supportstaff: "support staff",
+  "support-staff": "support staff",
+  "support_staff": "support staff",
+};
+
 const commonSelfService = (basePath) => [
   { title: "Messages", path: `${basePath}/message`, icon: MessageCircle },
   { title: "Notifications", path: `${basePath}/notification`, icon: Bell },
@@ -729,6 +765,19 @@ Object.keys(sidebarMenu).forEach((roleKey) => {
   if (!items.some((item) => item?.path === supportCenterItem.path)) {
     items.push(supportCenterItem);
   }
+});
+
+export const getSidebarMenuByRole = (role) => {
+  const rawRole = String(role || "").trim().toLowerCase();
+  const normalizedRole = normalizeSidebarRole(role);
+  const canonicalRole = sidebarRoleAliases[rawRole] || sidebarRoleAliases[normalizedRole] || normalizedRole;
+
+  return sidebarMenu[canonicalRole] || sidebarMenu[rawRole] || [];
+};
+
+Object.entries(sidebarRoleAliases).forEach(([alias, canonicalRole]) => {
+  if (sidebarMenu[alias] || !sidebarMenu[canonicalRole]) return;
+  sidebarMenu[alias] = sidebarMenu[canonicalRole];
 });
 
 export default sidebarMenu;

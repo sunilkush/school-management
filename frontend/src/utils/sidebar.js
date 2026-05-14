@@ -1,1 +1,1 @@
-export { sidebarMenu } from "../config/sidebar.config";
+export { getSidebarMenuByRole, normalizeSidebarRole, sidebarMenu, sidebarRoleAliases } from "../config/sidebar.config";
