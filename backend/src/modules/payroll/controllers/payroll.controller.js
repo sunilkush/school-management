@@ -217,7 +217,7 @@ export const createEmployeeLoan = asyncHandler(async (req, res) => {
   const scope = validateScope(req);
   let employeeId = req.body.employeeId;
 
-  if (!isPayrollAdmin(req)) {
+  if (!isPayrollAdmin(req) || !employeeId) {
     const employee = await getMyEmployee(req, scope);
     if (!employee) throw new ApiError(404, "Employee payroll profile not found for current user");
     employeeId = employee._id;
@@ -229,6 +229,30 @@ export const createEmployeeLoan = asyncHandler(async (req, res) => {
   await writePayrollAudit(req, { action: "create", entity: "EmployeeLoan", entityId: doc._id, employeeId: doc.employeeId, after: doc.toObject() });
   send(res, 201, doc, "Loan request saved");
 });
+
+export const updateEmployeeLoan = asyncHandler(async (req, res) => {
+  requireValidObjectId(req.params.id, "loanId");
+  const scope = validateScope(req);
+  const loan = await EmployeeLoan.findOne({ _id: req.params.id, schoolId: scope.schoolId });
+  assertSameSchool(loan, scope.schoolId);
+  await assertSelfEmployeeAccess(req, scope, loan.employeeId);
+
+  const payload = { ...req.body, updatedBy: req.user?._id };
+  if (!isPayrollAdmin(req) && payload.status && payload.status !== "pending") {
+    throw new ApiError(403, "Only payroll approvers can change loan approval status");
+  }
+  if (payload.status === "approved") {
+    payload.approvedBy = req.user?._id;
+    payload.approvedAt = new Date();
+    payload.approvedAmount = payload.approvedAmount || loan.approvedAmount || loan.principalAmount;
+    payload.balance = payload.balance ?? loan.balance ?? payload.approvedAmount;
+  }
+
+  const doc = await EmployeeLoan.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
+  await writePayrollAudit(req, { action: "update", entity: "EmployeeLoan", entityId: doc._id, employeeId: doc.employeeId, before: loan.toObject(), after: doc.toObject() });
+  send(res, 200, doc, "Loan request updated");
+});
+
 export const listTaxDeclarations = asyncHandler(async (req, res) => {
   const scope = scopedQuery(req);
   const employeeFilter = await getEmployeeScopedQuery(req, scope);
@@ -238,7 +262,7 @@ export const upsertTaxDeclaration = asyncHandler(async (req, res) => {
   const scope = validateScope(req);
   let employeeId = req.body.employeeId;
 
-  if (!isPayrollAdmin(req)) {
+  if (!isPayrollAdmin(req) || !employeeId) {
     const employee = await getMyEmployee(req, scope);
     if (!employee) throw new ApiError(404, "Employee payroll profile not found for current user");
     employeeId = employee._id;

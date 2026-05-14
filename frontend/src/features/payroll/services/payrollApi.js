@@ -62,6 +62,7 @@ export const payrollApi = {
   loans: {
     list: (scope) => httpClient.get("/payroll/loans", { params: scope }).then(unwrap),
     create: (data, scope) => httpClient.post("/payroll/loans", withScope(data, scope)).then(unwrap),
+    update: (id, data, scope) => httpClient.patch(`/payroll/loans/${id}`, withScope(data, scope)).then(unwrap),
   },
   tax: {
     list: (scope) => httpClient.get("/payroll/tax-declarations", { params: scope }).then(unwrap),

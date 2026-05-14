@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { Button, Dropdown, Input, Select, Table } from "antd";
+import { Button, Dropdown, Input, Select, Table, message } from "antd";
 import PayrollStatusTag from "./PayrollStatusTag";
 import PayrollRunItemDetailDrawer from "./PayrollRunItemDetailDrawer";
 
-const PayrollRunTable = ({ items = [], loading }) => {
+const PayrollRunTable = ({ items = [], loading, onRecalculate, onApproveItem, onHoldPayment }) => {
   const [q, setQ] = useState("");
   const [dept, setDept] = useState();
   const [status, setStatus] = useState();
@@ -17,6 +17,12 @@ const PayrollRunTable = ({ items = [], loading }) => {
     [items, q, dept, status]
   );
   const depts = [...new Set(items.map((item) => item.employeeSnapshot?.department).filter(Boolean))];
+
+  const runAction = (handler, record, fallback) => {
+    if (handler) return handler(record);
+    message.info(fallback);
+    return null;
+  };
 
   const columns = [
     { title: "Employee Name", dataIndex: ["employeeSnapshot", "employeeCode"] },
@@ -43,7 +49,12 @@ const PayrollRunTable = ({ items = [], loading }) => {
               { key: "approve", label: "Approve Item" },
               { key: "hold", label: "Hold Payment" },
             ],
-            onClick: ({ key }) => key === "view" && setActive(record),
+            onClick: ({ key }) => {
+              if (key === "view") setActive(record);
+              if (key === "recalc") runAction(onRecalculate, record, "Recalculate from cycle actions");
+              if (key === "approve") runAction(onApproveItem, record, "Approve from cycle approval action");
+              if (key === "hold") runAction(onHoldPayment, record, "Hold action sent");
+            },
           }}
         >
           <Button>Actions</Button>
