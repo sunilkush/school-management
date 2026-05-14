@@ -142,7 +142,7 @@ const SidebarMenu = ({ role }) => {
     let cancelled = false;
     const loadMenu = async () => {
       const module = await import("../../utils/sidebar");
-      if (!cancelled) setSidebarConfig(module.sidebarMenu);
+      if (!cancelled) setSidebarConfig(module);
     };
     loadMenu();
     return () => { cancelled = true; };
@@ -151,8 +151,10 @@ const SidebarMenu = ({ role }) => {
   /* Derive flat menu items for this role */
   const menuItems = useMemo(() => {
     if (!sidebarConfig) return [];
-    const normalizedRole = String(role || "").toLowerCase();
-    const baseItems = Array.isArray(sidebarConfig?.[normalizedRole]) ? sidebarConfig[normalizedRole] : Array.isArray(sidebarConfig?.[role]) ? sidebarConfig[role] : [];
+    const baseItems = typeof sidebarConfig.getSidebarMenuByRole === "function"
+      ? sidebarConfig.getSidebarMenuByRole(role)
+      : [];
+
     return baseItems
       .map((item) => {
         if (!item?.subMenu?.length) return hasPermission(user, item.permission) ? item : null;
