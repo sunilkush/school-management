@@ -53,6 +53,9 @@ export const payrollApi = {
     mine: (scope) => httpClient.get("/payroll/payslips/my", { params: scope }).then(unwrap),
     download: (id, scope) => httpClient.get(`/payroll/payslips/${id}/download`, { params: scope }).then(unwrap),
   },
+  self: {
+    summary: (scope) => httpClient.get("/payroll/self/summary", { params: scope }).then(unwrap),
+  },
   loans: {
     list: (scope) => httpClient.get("/payroll/loans", { params: scope }).then(unwrap),
     create: (data, scope) => httpClient.post("/payroll/loans", withScope(data, scope)).then(unwrap),

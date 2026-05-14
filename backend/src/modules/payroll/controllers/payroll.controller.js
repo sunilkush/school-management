@@ -22,6 +22,25 @@ import { assertSameSchool, requireValidObjectId, validateScope } from "../valida
 
 const send = (res, status, data, message = "Success") => res.status(status).json(new ApiResponse(status, data, message));
 const actor = (req) => ({ createdBy: req.user?._id, updatedBy: req.user?._id });
+const PAYROLL_ADMIN_ROLES = new Set(["Super Admin", "School Admin", "Accountant", "HR", "Principal", "Auditor", "Management"]);
+const isPayrollAdmin = (req) => PAYROLL_ADMIN_ROLES.has(req.userRole?.name);
+const getMyEmployee = async (req, scope) => Employee.findOne({ schoolId: scope.schoolId, userId: req.user?._id }).lean();
+const getEmployeeScopedQuery = async (req, scope) => {
+  if (isPayrollAdmin(req)) return {};
+
+  const employee = await getMyEmployee(req, scope);
+  if (!employee) throw new ApiError(404, "Employee payroll profile not found for current user");
+
+  return { employeeId: employee._id };
+};
+const assertSelfEmployeeAccess = async (req, scope, employeeId) => {
+  if (isPayrollAdmin(req)) return;
+
+  const employee = await getMyEmployee(req, scope);
+  if (!employee || employee._id.toString() !== employeeId?.toString()) {
+    throw new ApiError(403, "You can access only your own payroll records");
+  }
+};
 const ensureUnlocked = async (cycleId, schoolId) => {
   const cycle = await PayrollCycle.findOne({ _id: cycleId, schoolId });
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
@@ -97,7 +116,10 @@ export const createSalaryStructure = asyncHandler(async (req, res) => {
 export const listSalaryStructures = asyncHandler(async (req, res) => send(res, 200, await EmployeeSalaryStructure.find(scopedQuery(req)).populate("employeeId", "employeeCode department designation").sort({ updatedAt: -1 }).lean()));
 export const getEmployeeSalaryStructure = asyncHandler(async (req, res) => {
   requireValidObjectId(req.params.employeeId, "employeeId");
-  send(res, 200, await EmployeeSalaryStructure.find({ ...scopedQuery(req), employeeId: req.params.employeeId }).sort({ effectiveFrom: -1 }).lean());
+  const scope = validateScope(req);
+  await assertSelfEmployeeAccess(req, scope, req.params.employeeId);
+  const query = scope.academicYearId ? { ...scope } : { schoolId: scope.schoolId };
+  send(res, 200, await EmployeeSalaryStructure.find({ ...query, employeeId: req.params.employeeId }).sort({ effectiveFrom: -1 }).lean());
 });
 export const updateSalaryStructure = asyncHandler(async (req, res) => {
   requireValidObjectId(req.params.id);
@@ -146,13 +168,79 @@ export const markPayrollPaid = asyncHandler(async (req, res) => { requireValidOb
 export const generatePayslips = asyncHandler(async (req, res) => { requireValidObjectId(req.params.cycleId, "cycleId"); const scope = validateScope(req); const cycle = await PayrollCycle.findOne({ _id: req.params.cycleId, schoolId: scope.schoolId }); assertSameSchool(cycle, scope.schoolId); const items = await PayrollRunItem.find({ schoolId: scope.schoolId, cycleId: cycle._id }).lean(); const docs = []; for (const item of items) { docs.push(await Payslip.findOneAndUpdate({ schoolId: scope.schoolId, cycleId: cycle._id, employeeId: item.employeeId }, { ...scope, cycleId: cycle._id, payrollRunItemId: item._id, employeeId: item.employeeId, payslipNumber: `PS-${cycle.year}${String(cycle.month).padStart(2, "0")}-${String(item.employeeId).slice(-6)}`, month: cycle.month, year: cycle.year, grossPay: item.grossPay, deductions: item.totalDeductions, employerContribution: item.employerContribution, netPay: item.netPay, payload: item, status: "generated", ...actor(req) }, { upsert: true, new: true, runValidators: true })); } await writePayrollAudit(req, { action: "generate", entity: "Payslip", entityId: cycle._id, remarks: `${docs.length} payslips generated`, after: { schoolId: scope.schoolId, academicYearId: scope.academicYearId } }); send(res, 201, docs, "Payslips generated"); });
 export const publishPayslips = asyncHandler(async (req, res) => { requireValidObjectId(req.params.cycleId, "cycleId"); const scope = validateScope(req); const result = await Payslip.updateMany({ schoolId: scope.schoolId, cycleId: req.params.cycleId }, { status: "published", publishedAt: new Date(), publishedBy: req.user?._id, updatedBy: req.user?._id }); await writePayrollAudit(req, { action: "publish", entity: "Payslip", entityId: req.params.cycleId, remarks: `${result.modifiedCount} payslips published`, after: { schoolId: scope.schoolId, academicYearId: scope.academicYearId } }); send(res, 200, result, "Payslips published"); });
 export const listPayslips = asyncHandler(async (req, res) => send(res, 200, await Payslip.find(scopedQuery(req)).populate("employeeId", "employeeCode department designation").sort({ year: -1, month: -1 }).lean()));
-export const listMyPayslips = asyncHandler(async (req, res) => { const scope = validateScope(req); const employee = await Employee.findOne({ schoolId: scope.schoolId, userId: req.user?._id }).lean(); if (!employee) return send(res, 200, []); send(res, 200, await Payslip.find({ schoolId: scope.schoolId, employeeId: employee._id, status: "published" }).sort({ year: -1, month: -1 }).lean()); });
-export const downloadPayslip = asyncHandler(async (req, res) => { requireValidObjectId(req.params.id); const doc = await Payslip.findOne({ _id: req.params.id, ...scopedQuery(req) }).lean(); if (!doc) throw new ApiError(404, "Payslip not found"); send(res, 200, { ...doc, downloadUrl: `/api/v1/payroll/payslips/${doc._id}/download` }, "Payslip download payload"); });
+export const listMyPayslips = asyncHandler(async (req, res) => {
+  const scope = validateScope(req);
+  const employee = await getMyEmployee(req, scope);
+  if (!employee) return send(res, 200, []);
 
-export const listEmployeeLoans = asyncHandler(async (req, res) => send(res, 200, await EmployeeLoan.find(scopedQuery(req)).sort({ createdAt: -1 }).lean()));
-export const createEmployeeLoan = asyncHandler(async (req, res) => { const doc = await EmployeeLoan.create({ ...req.body, ...validateScope(req), status: req.body.status || "pending", balance: req.body.approvedAmount || req.body.principalAmount, ...actor(req) }); await writePayrollAudit(req, { action: "create", entity: "EmployeeLoan", entityId: doc._id, employeeId: doc.employeeId, after: doc.toObject() }); send(res, 201, doc, "Loan request saved"); });
-export const listTaxDeclarations = asyncHandler(async (req, res) => send(res, 200, await TaxDeclaration.find(scopedQuery(req)).sort({ updatedAt: -1 }).lean()));
-export const upsertTaxDeclaration = asyncHandler(async (req, res) => { const scope = validateScope(req); const doc = await TaxDeclaration.findOneAndUpdate({ schoolId: scope.schoolId, employeeId: req.body.employeeId, financialYear: req.body.financialYear }, { ...req.body, ...scope, ...actor(req) }, { upsert: true, new: true, runValidators: true }); await writePayrollAudit(req, { action: "upsert", entity: "TaxDeclaration", entityId: doc._id, employeeId: doc.employeeId, after: doc.toObject() }); send(res, 201, doc, "Tax declaration saved"); });
+  send(res, 200, await Payslip.find({ schoolId: scope.schoolId, employeeId: employee._id, status: "published" }).sort({ year: -1, month: -1 }).lean());
+});
+export const getMyPayrollSummary = asyncHandler(async (req, res) => {
+  const scope = validateScope(req);
+  const employee = await getMyEmployee(req, scope);
+  if (!employee) return send(res, 200, { employee: null, structure: null, payslips: [], loans: [], taxDeclarations: [] });
+
+  const scopeQuery = scope.academicYearId ? { ...scope } : { schoolId: scope.schoolId };
+  const [structure, payslips, loans, taxDeclarations] = await Promise.all([
+    EmployeeSalaryStructure.findOne({ ...scopeQuery, employeeId: employee._id, status: "approved" }).sort({ effectiveFrom: -1 }).lean(),
+    Payslip.find({ schoolId: scope.schoolId, employeeId: employee._id, status: "published" }).sort({ year: -1, month: -1 }).limit(24).lean(),
+    EmployeeLoan.find({ ...scopeQuery, employeeId: employee._id }).sort({ createdAt: -1 }).lean(),
+    TaxDeclaration.find({ ...scopeQuery, employeeId: employee._id }).sort({ updatedAt: -1 }).lean(),
+  ]);
+
+  send(res, 200, { employee, structure, payslips, loans, taxDeclarations });
+});
+export const downloadPayslip = asyncHandler(async (req, res) => {
+  requireValidObjectId(req.params.id);
+  const scope = scopedQuery(req);
+  const employeeFilter = await getEmployeeScopedQuery(req, scope);
+  const doc = await Payslip.findOne({ _id: req.params.id, ...scope, ...employeeFilter }).lean();
+  if (!doc) throw new ApiError(404, "Payslip not found");
+  send(res, 200, { ...doc, downloadUrl: `/api/v1/payroll/payslips/${doc._id}/download` }, "Payslip download payload");
+});
+
+export const listEmployeeLoans = asyncHandler(async (req, res) => {
+  const scope = scopedQuery(req);
+  const employeeFilter = await getEmployeeScopedQuery(req, scope);
+  send(res, 200, await EmployeeLoan.find({ ...scope, ...employeeFilter }).sort({ createdAt: -1 }).lean());
+});
+export const createEmployeeLoan = asyncHandler(async (req, res) => {
+  const scope = validateScope(req);
+  let employeeId = req.body.employeeId;
+
+  if (!isPayrollAdmin(req)) {
+    const employee = await getMyEmployee(req, scope);
+    if (!employee) throw new ApiError(404, "Employee payroll profile not found for current user");
+    employeeId = employee._id;
+  } else {
+    requireValidObjectId(employeeId, "employeeId");
+  }
+
+  const doc = await EmployeeLoan.create({ ...req.body, employeeId, ...scope, status: req.body.status || "pending", balance: req.body.approvedAmount || req.body.principalAmount, ...actor(req) });
+  await writePayrollAudit(req, { action: "create", entity: "EmployeeLoan", entityId: doc._id, employeeId: doc.employeeId, after: doc.toObject() });
+  send(res, 201, doc, "Loan request saved");
+});
+export const listTaxDeclarations = asyncHandler(async (req, res) => {
+  const scope = scopedQuery(req);
+  const employeeFilter = await getEmployeeScopedQuery(req, scope);
+  send(res, 200, await TaxDeclaration.find({ ...scope, ...employeeFilter }).sort({ updatedAt: -1 }).lean());
+});
+export const upsertTaxDeclaration = asyncHandler(async (req, res) => {
+  const scope = validateScope(req);
+  let employeeId = req.body.employeeId;
+
+  if (!isPayrollAdmin(req)) {
+    const employee = await getMyEmployee(req, scope);
+    if (!employee) throw new ApiError(404, "Employee payroll profile not found for current user");
+    employeeId = employee._id;
+  } else {
+    requireValidObjectId(employeeId, "employeeId");
+  }
+
+  const doc = await TaxDeclaration.findOneAndUpdate({ schoolId: scope.schoolId, employeeId, financialYear: req.body.financialYear }, { ...req.body, employeeId, ...scope, ...actor(req) }, { upsert: true, new: true, runValidators: true });
+  await writePayrollAudit(req, { action: "upsert", entity: "TaxDeclaration", entityId: doc._id, employeeId: doc.employeeId, after: doc.toObject() });
+  send(res, 201, doc, "Tax declaration saved");
+});
 
 export const payrollSummaryReport = asyncHandler(async (req, res) => { const scope = scopedQuery(req); const cycles = await PayrollCycle.find(scope).sort({ year: -1, month: -1 }).lean(); const totals = cycles.reduce((a, c) => ({ grossPay: a.grossPay + (c.grossPay || 0), deductions: a.deductions + (c.deductions || 0), netPay: a.netPay + (c.netPay || 0), employerContribution: a.employerContribution + (c.employerContribution || 0) }), { grossPay: 0, deductions: 0, netPay: 0, employerContribution: 0 }); send(res, 200, { cards: totals, cycles }); });
 export const departmentCostReport = asyncHandler(async (req, res) => { const items = await PayrollRunItem.find(scopedQuery(req)).lean(); const rows = Object.values(items.reduce((acc, item) => { const dept = item.employeeSnapshot?.department || "Unassigned"; acc[dept] ||= { department: dept, employees: 0, grossPay: 0, deductions: 0, netPay: 0 }; acc[dept].employees += 1; acc[dept].grossPay += item.grossPay || 0; acc[dept].deductions += item.totalDeductions || 0; acc[dept].netPay += item.netPay || 0; return acc; }, {})); send(res, 200, rows); });

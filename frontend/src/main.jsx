@@ -275,6 +275,25 @@ import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import Register from "./components/forms/RegisterForm.jsx";
 
+const employeePayrollRoleRoutes = [
+  ["viceprincipal", "Vice Principal"],
+  ["subjectcoordinator", "Subject Coordinator"],
+  ["librarian", "Librarian"],
+  ["hostelwarden", "Hostel Warden"],
+  ["transportmanager", "Transport Manager"],
+  ["examcoordinator", "Exam Coordinator"],
+  ["receptionist", "Receptionist"],
+  ["itsupport", "IT Support"],
+  ["counselor", "Counselor"],
+  ["security", "Security"],
+].flatMap(([basePath, role]) => [
+  { path: `${basePath}/payroll`, element: (<ProtectedRoute allowedRoles={[role]}><MyPayrollDashboard /></ProtectedRoute>) },
+  { path: `${basePath}/payroll/payslips`, element: (<ProtectedRoute allowedRoles={[role]}><MyPayslipsPage /></ProtectedRoute>) },
+  { path: `${basePath}/payroll/salary-structure`, element: (<ProtectedRoute allowedRoles={[role]}><SalaryStructurePage /></ProtectedRoute>) },
+  { path: `${basePath}/payroll/loans`, element: (<ProtectedRoute allowedRoles={[role]}><MyLoanRequestPage /></ProtectedRoute>) },
+  { path: `${basePath}/payroll/tax-declaration`, element: (<ProtectedRoute allowedRoles={[role]}><MyTaxDeclarationPage /></ProtectedRoute>) },
+]);
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -718,7 +737,8 @@ const router = createBrowserRouter([
             ],
          
           },
-           {
+           ...employeePayrollRoleRoutes,
+          {
             path: "viceprincipal/timetable",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>

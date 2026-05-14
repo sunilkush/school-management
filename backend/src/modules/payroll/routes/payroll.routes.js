@@ -17,6 +17,7 @@ import {
   generatePayslips,
   getEmployeeSalaryStructure,
   getPayrollCycle,
+  getMyPayrollSummary,
   getPayrollSettings,
   listEmployeeLoans,
   listPayrollCycles,
@@ -47,7 +48,7 @@ const STRUCTURE = ["Super Admin", "School Admin", "HR"];
 const PROCESS = ["Super Admin", "School Admin", "Accountant"];
 const APPROVE = ["Super Admin", "School Admin", "Principal"];
 const REPORTS = ["Super Admin", "School Admin", "Principal", "Accountant", "Auditor", "Management"];
-const SELF = ["Teacher", "Staff", "Support Staff", "Employee", "Principal", "Accountant", "HR"];
+const SELF = ["Teacher", "Staff", "Support Staff", "Employee", "Principal", "Accountant", "HR", "Vice Principal", "Subject Coordinator", "Librarian", "Hostel Warden", "Transport Manager", "Exam Coordinator", "Receptionist", "IT Support", "Counselor", "Security"];
 
 router.post("/settings", requireRoles(SETTINGS), upsertPayrollSettings);
 router.get("/settings", requireRoles([...SETTINGS, "Principal", "Accountant", "Auditor"]), getPayrollSettings);
@@ -80,6 +81,7 @@ router.post("/payslips/:cycleId/generate", requireRoles(PROCESS), generatePaysli
 router.post("/payslips/:cycleId/publish", requireRoles([...FULL, "Accountant"]), publishPayslips);
 router.get("/payslips", requireRoles([...PROCESS, ...APPROVE, "HR"]), listPayslips);
 router.get("/payslips/my", requireRoles(SELF), listMyPayslips);
+router.get("/self/summary", requireRoles(SELF), getMyPayrollSummary);
 router.get("/payslips/:id/download", requireRoles([...PROCESS, ...APPROVE, ...SELF]), downloadPayslip);
 
 router.get("/loans", requireRoles([...STRUCTURE, ...SELF, ...PROCESS]), listEmployeeLoans);

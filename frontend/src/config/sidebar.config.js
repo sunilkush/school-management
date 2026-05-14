@@ -168,6 +168,31 @@ const payrollMenu = {
   },
 };
 
+const employeePayrollBasePaths = {
+  "vice principal": "viceprincipal",
+  "subject coordinator": "subjectcoordinator",
+  librarian: "librarian",
+  "hostel warden": "hostelwarden",
+  "transport manager": "transportmanager",
+  "exam coordinator": "examcoordinator",
+  receptionist: "receptionist",
+  "it support": "itsupport",
+  counselor: "counselor",
+  security: "security",
+};
+
+const selfPayrollMenu = (basePath) => ({
+  title: "My Payroll",
+  icon: Wallet,
+  subMenu: [
+    { title: "Payroll Dashboard", path: `${basePath}/payroll`, permission: "payroll.self.view" },
+    { title: "My Payslips", path: `${basePath}/payroll/payslips`, permission: "payroll.self.payslips.view" },
+    { title: "My Salary Structure", path: `${basePath}/payroll/salary-structure`, permission: "payroll.self.salaryStructure.view" },
+    { title: "Loan / Advance Request", path: `${basePath}/payroll/loans`, permission: "payroll.self.loans.manage" },
+    { title: "Tax Declaration", path: `${basePath}/payroll/tax-declaration`, permission: "payroll.self.tax.manage" },
+  ],
+});
+
 const supportCenterItem = { title: "Support Center", path: "support/tickets", icon: MessageSquare };
 const moduleHubItem = { title: "Module Hub", path: "modules", icon: Puzzle };
 const roleWorkspaceItem = { title: "Role Workspace", path: "workspace", icon: ClipboardList };
@@ -679,6 +704,13 @@ export const sidebarMenu = {
 Object.keys(sidebarMenu).forEach((roleKey) => {
   const items = sidebarMenu[roleKey];
   if (!Array.isArray(items)) return;
+
+  const payrollBasePath = employeePayrollBasePaths[roleKey];
+  const hasPayroll = items.some((item) => item?.path?.includes("/payroll") || item?.subMenu?.some((child) => child?.path?.includes("/payroll")));
+
+  if (payrollBasePath && !hasPayroll) {
+    items.push(selfPayrollMenu(payrollBasePath));
+  }
 
   if (!items.some((item) => item?.path === moduleHubItem.path)) {
     items.push(moduleHubItem);
