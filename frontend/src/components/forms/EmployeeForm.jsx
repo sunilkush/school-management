@@ -35,7 +35,7 @@ import { useSearchParams } from "react-router-dom";
 
 // 🔥 Lazy Load
 const AttendanceCalendar = lazy(() =>
-  import("../../pages/AttendanceCalendar")
+  import("../../pages/attendance/AttendanceCalendar")
 );
 
 dayjs.extend(customParseFormat);
