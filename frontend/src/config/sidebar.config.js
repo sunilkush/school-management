@@ -70,6 +70,7 @@ const payrollMenu = {
     icon: Wallet,
     subMenu: [
       { title: "Dashboard", path: "schooladmin/payroll", permission: "payroll.dashboard.view" },
+      { title: "Create Employee", path: "schooladmin/payroll/create-employee", permission: "payroll.createEmployee.manage" },
       { title: "Payroll Settings", path: "schooladmin/payroll/settings", permission: "payroll.settings.manage" },
       { title: "Salary Components", path: "schooladmin/payroll/components", permission: "payroll.components.manage" },
       { title: "Salary Structures", path: "schooladmin/payroll/salary-structures", permission: "payroll.salaryStructure.manage" },
@@ -439,7 +440,7 @@ export const sidebarMenu = {
       { title: "School Settings", path: "schooladmin/settings", icon: Settings },
       ...commonSelfService("schooladmin"),
     ],
-    "Fee Management"
+   
   ),
 
   teacher: withPayroll("teacher", [

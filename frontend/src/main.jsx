@@ -250,6 +250,7 @@ const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage
 
 // Payroll Module
 const SuperAdminPayrollOverview = lazy(() => import("./features/payroll/pages/SuperAdminPayrollOverview.jsx"));
+const CreateEmployee = lazy(() => import("./pages/School_Admin/Payroll/CreateEmployee.jsx"));
 const PayrollDashboardPage = lazy(() => import("./features/payroll/pages/PayrollDashboard.jsx"));
 const PayrollSettingsPage = lazy(() => import("./features/payroll/pages/PayrollSettingsPage.jsx"));
 const SalaryComponentsPage = lazy(() => import("./features/payroll/pages/SalaryComponentsPage.jsx"));
@@ -542,6 +543,7 @@ const router = createBrowserRouter([
               { path: "fees/feestructure", element: <FeeStructure /> },
               { path: "fees/assign", element: <StudentAssignFees /> },
               { path: "payroll", element: <PayrollDashboardPage /> },
+              { path: "payroll/create-employee", element: <CreateEmployee /> },
               { path: "payroll/settings", element: <PayrollSettingsPage /> },
               { path: "payroll/components", element: <SalaryComponentsPage /> },
               { path: "payroll/salary-structures", element: <SalaryStructurePage /> },
