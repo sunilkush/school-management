@@ -21,5 +21,11 @@ export function hasPermission(user, permission) {
     return p?.code === permission || `${p?.module}.${p?.action}` === permission || (Array.isArray(p?.actions) && p.actions.map((a) => `${p.module}.${a}`).includes(permission));
   });
 }
+const selfPayrollPermissions = ["payroll.self.view", "payroll.self.payslips.view", "payroll.self.salaryStructure.view", "payroll.self.loans.manage", "payroll.self.tax.manage"];
+["Support Staff", "Employee", "Vice Principal", "Subject Coordinator", "Librarian", "Hostel Warden", "Transport Manager", "Exam Coordinator", "Receptionist", "IT Support", "Counselor", "Security"].forEach((role) => {
+  rolePermissions[role] = rolePermissions[role] || selfPayrollPermissions;
+});
+rolePermissions.Management = ["payroll.reports.view", "payroll.audit.view", "payroll.reports.departmentCost.view", "payroll.reports.statutory.view"];
+
 const PayrollPermissionGuard = ({ user, permission, children, fallback = null }) => hasPermission(user, permission) ? <>{children}</> : fallback;
 export default PayrollPermissionGuard;
