@@ -39,6 +39,7 @@ import {
   updateSalaryStructure,
   upsertPayrollSettings,
   upsertTaxDeclaration,
+  updateEmployeeLoan,
 } from "../controllers/payroll.controller.js";
 
 const router = Router();
@@ -86,6 +87,7 @@ router.get("/payslips/:id/download", requireRoles([...PROCESS, ...APPROVE, ...SE
 
 router.get("/loans", requireRoles([...STRUCTURE, ...SELF, ...PROCESS]), listEmployeeLoans);
 router.post("/loans", requireRoles([...STRUCTURE, ...SELF]), createEmployeeLoan);
+router.patch("/loans/:id", requireRoles([...STRUCTURE, ...SELF, ...PROCESS]), updateEmployeeLoan);
 router.get("/tax-declarations", requireRoles([...STRUCTURE, ...SELF, ...PROCESS]), listTaxDeclarations);
 router.post("/tax-declarations", requireRoles([...STRUCTURE, ...SELF]), upsertTaxDeclaration);
 
