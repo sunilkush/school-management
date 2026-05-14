@@ -1,0 +1,6 @@
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { buildPayrollScope, payrollApi } from "../services/payrollApi";
+export const fetchPayrollSummaryReport = createAsyncThunk("payrollReports/summary", async (_, { getState, rejectWithValue }) => { try { return await payrollApi.reports.summary(buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
+export const fetchPayrollAuditLogs = createAsyncThunk("payrollReports/audit", async (_, { getState, rejectWithValue }) => { try { return await payrollApi.reports.auditLogs(buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
+const slice = createSlice({ name: "payrollReports", initialState: { summary: null, auditLogs: [], loading: false, error: null }, reducers: {}, extraReducers: (b) => { b.addCase(fetchPayrollSummaryReport.pending,(s)=>{s.loading=true}).addCase(fetchPayrollSummaryReport.fulfilled,(s,a)=>{s.loading=false;s.summary=a.payload}).addCase(fetchPayrollSummaryReport.rejected,(s,a)=>{s.loading=false;s.error=a.payload}).addCase(fetchPayrollAuditLogs.fulfilled,(s,a)=>{s.auditLogs=a.payload||[]}); }});
+export default slice.reducer;
