@@ -19,6 +19,115 @@ const renderIcon = (icon, size = 15) => {
   return <Icon size={size} strokeWidth={1.8} />;
 };
 
+const normalizeText = (value = "") => String(value).trim().toLowerCase();
+
+const menuGroups = [
+  {
+    title: "Overview",
+    matches: ["dashboard", "home"],
+  },
+  {
+    title: "School Setup",
+    matches: [
+      "school",
+      "academic year",
+      "board",
+      "class",
+      "section",
+      "subject",
+      "chapter",
+      "topic",
+      "module",
+      "master",
+    ],
+  },
+  {
+    title: "People",
+    matches: [
+      "user",
+      "student",
+      "teacher",
+      "parent",
+      "staff",
+      "employee",
+      "librarian",
+      "accountant",
+      "admin",
+      "role",
+      "designation",
+      "children",
+    ],
+  },
+  {
+    title: "Academics",
+    matches: [
+      "academic",
+      "classroom",
+      "homework",
+      "assignment",
+      "attendance",
+      "exam",
+      "question",
+      "grade",
+      "timetable",
+      "time table",
+      "library",
+      "admit",
+      "seat",
+    ],
+  },
+  {
+    title: "Finance",
+    matches: ["fee", "fees", "payroll", "salary", "payment", "revenue", "subscription", "plan", "tax", "loan", "payslip"],
+  },
+  {
+    title: "Operations",
+    matches: ["transport", "vehicle", "route", "hostel", "inventory", "asset", "supply", "room"],
+  },
+  {
+    title: "Communication",
+    matches: ["communication", "message", "notification"],
+  },
+  {
+    title: "Reports & Support",
+    matches: ["report", "analytics", "log", "audit", "ticket", "support", "faq", "documentation"],
+  },
+  {
+    title: "Settings",
+    matches: ["setting", "config", "backup", "permission", "profile"],
+  },
+];
+
+const getMenuGroup = (item) => {
+  const haystack = normalizeText([
+    item?.group,
+    item?.title,
+    item?.path,
+    ...(item?.subMenu || []).flatMap((sub) => [sub?.title, sub?.path, sub?.group]),
+  ].filter(Boolean).join(" "));
+
+  return menuGroups.find((group) => group.matches.some((match) => haystack.includes(match)))?.title || "Other";
+};
+
+const buildMenuItem = (item) => {
+  const icon = item.icon ? renderIcon(item.icon, 15) : null;
+
+  if (!item?.subMenu?.length) {
+    return { key: item.path, icon, label: item.title };
+  }
+
+  return {
+    key: item.title,
+    icon,
+    label: item.title,
+    children: item.subMenu.map((sub) => ({
+      key: sub.path,
+      icon: renderIcon(sub.icon, 13),
+      label: sub.title,
+    })),
+  };
+};
+
 /* ─────────────────────────────────────────
    Design tokens — mirrors Sidebar.jsx
 ───────────────────────────────────────── */
@@ -182,28 +291,21 @@ const SidebarMenu = ({ role }) => {
     [openKeys]
   );
 
-  /* Build Ant Design menu item tree */
+  /* Build a grouped Ant Design menu item tree */
   const antMenuItems = useMemo(() => {
-    return menuItems.map((item) => {
-      const icon = item.icon ? (
-        renderIcon(item.icon, 15)
-      ) : null;
+    const groupedItems = menuItems.reduce((groups, item) => {
+      const groupTitle = getMenuGroup(item);
+      if (!groups.has(groupTitle)) groups.set(groupTitle, []);
+      groups.get(groupTitle).push(buildMenuItem(item));
+      return groups;
+    }, new Map());
 
-      if (!item?.subMenu?.length) {
-        return { key: item.path, icon, label: item.title };
-      }
-
-      return {
-        key: item.title,
-        icon,
-        label: item.title,
-        children: item.subMenu.map((sub) => ({
-          key: sub.path,
-          icon: renderIcon(sub.icon, 13),
-          label: sub.title,
-        })),
-      };
-    });
+    return Array.from(groupedItems.entries()).map(([groupTitle, children]) => ({
+      key: `group-${groupTitle}`,
+      type: "group",
+      label: groupTitle,
+      children,
+    }));
   }, [menuItems]);
 
   const selectedKey = location.pathname.replace("/dashboard/", "");
@@ -215,6 +317,26 @@ const SidebarMenu = ({ role }) => {
   return (
     <>
       <style>{`
+        /* ── Group label ── */
+        .sidebar-nav .ant-menu-item-group-title {
+          color: ${t.textSecondary} !important;
+          font-size: 10px !important;
+          font-weight: 700 !important;
+          letter-spacing: 0.08em !important;
+          line-height: 18px !important;
+          margin: 12px 16px 4px !important;
+          padding: 0 !important;
+          text-transform: uppercase !important;
+        }
+
+        .sidebar-nav .ant-menu-item-group:first-child .ant-menu-item-group-title {
+          margin-top: 4px !important;
+        }
+
+        .sidebar-nav .ant-menu-item-group-list {
+          margin: 0 !important;
+        }
+
         /* ── Item base ── */
         .sidebar-nav .ant-menu-item,
         .sidebar-nav .ant-menu-submenu-title {
