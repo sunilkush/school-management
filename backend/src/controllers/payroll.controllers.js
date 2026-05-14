@@ -346,7 +346,11 @@ export const getPayrollCycle = asyncHandler(async (req, res) => {
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
 
   const entries = await PayrollEntry.find({ payrollCycleId: cycle._id })
-    .populate({ path: "employeeId", select: "department designation userId", populate: { path: "userId", select: "name email" } })
+   .populate({
+      path: "employeeId",
+      select: "department designation employeeCode phoneNo bankDetails.bankName bankDetails.accountNumber userId",
+      populate: { path: "userId", select: "name email" },
+    })
     .sort({ createdAt: -1 })
     .lean();
 

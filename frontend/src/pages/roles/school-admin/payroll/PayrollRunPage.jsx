@@ -208,7 +208,14 @@ const openPayslip = (item) => {
   ];
 
   const detailColumns = [
-    { title: "Employee", render: (_, r) => <Text strong>{r.employeeId?.userId?.name || "-"}</Text> },
+    {
+      title: "Employee Name",
+      render: (_, r) => <Text strong>{r.employeeId?.userId?.name || r.employeeId?.employeeCode || "-"}</Text>,
+    },
+    {
+      title: "Emp Code",
+      render: (_, r) => <Text type="secondary">{r.employeeId?.employeeCode || "-"}</Text>,
+    },
     { title: "Gross", dataIndex: "gross", render: money },
     { title: "Deductions", dataIndex: "totalDeductions", render: money },
     { title: "Loan EMI", dataIndex: "loanEmiDeduction", render: money },
