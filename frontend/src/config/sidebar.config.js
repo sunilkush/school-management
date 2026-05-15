@@ -252,7 +252,7 @@ export const sidebarMenu = {
       icon: ClipboardList,
       subMenu: [
         { title: "Hostel Rooms", path: "schooladmin/hostel" },
-        { title: "Room Allocation", path: "schooladmin/hostel/allocation" },
+       /*  { title: "Room Allocation", path: "schooladmin/hostel/allocation" }, */
       ],
     },
     {

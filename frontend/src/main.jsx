@@ -462,9 +462,7 @@ const router = createBrowserRouter([
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
-             
               { path: "hostel", element: <HostelManagement /> },
-              { path: "hostel/allocation", element: <RoomAllocation /> },
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
               { path: "transport/assignments", element: <TransportAssignments /> },
