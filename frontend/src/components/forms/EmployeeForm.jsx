@@ -111,10 +111,21 @@ const EmployeeForm = () => {
     return userList
       .filter((user) => user?.isActive)
       .filter((user) => user?.role?.name?.toLowerCase() !== "student")
-      .map((user) => ({
-        value: user._id,
-        label: `${user?.name || "User"} (${user?.role?.name || "No Role"})`,
-      }));
+      .filter((user) => {
+      const role = user?.role?.name?.toLowerCase();
+
+      return (
+        user?.isActive &&
+        role !== "student" &&
+        role !== "parent" &&
+        role !== "super admin"
+      );
+    })
+    .map((user) => ({
+      value: user._id,
+      label: `${user?.name || "User"} (${user?.role?.name || "No Role"})`,
+    }));
+     
   }, [users]);
 
   const handleSubmit = async (values) => {
