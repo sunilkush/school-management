@@ -44,17 +44,20 @@ const PayrollEntriesTable = ({ entries, loading }) => {
   }, [filteredEntries]);
 
   const handleExportCsv = () => {
-    const headers = ["Employee", "Department", "PresentDays", "WorkingDays", "LOPDays", "Gross", "Deduction", "Net", "Status"];
+    const headers = ["Employee", "Department", "PresentDays", "WorkingDays", "LOPDays", "LateCount", "OvertimeHours", "Gross", "Deduction", "Net", "Status", "PaymentMode"];
     const rows = filteredEntries.map((row) => [
       row.employeeId?.userId?.name || "-",
       row.employeeId?.department || "-",
       row.presentDays || 0,
       row.workingDays || 0,
       row.lopDays || 0,
+      row.lateCount || 0,
+      row.overtimeHours || 0,
       row.grossEarnings || 0,
       row.totalDeductions || 0,
       row.netPay || 0,
       row.paymentStatus || "pending",
+      row.paymentMode || "-",
     ]);
 
     const csv = [headers, ...rows]
@@ -80,6 +83,8 @@ const PayrollEntriesTable = ({ entries, loading }) => {
       render: (_, r) => (
         <Text>
           {r.presentDays}/{r.workingDays} ({r.lopDays} LOP)
+          <br />
+          Late: {r.lateCount || 0} • OT: {r.overtimeHours || 0}h
         </Text>
       ),
     },
@@ -90,6 +95,11 @@ const PayrollEntriesTable = ({ entries, loading }) => {
       title: "Status",
       dataIndex: "paymentStatus",
       render: (s) => <Tag color={s === "paid" ? "green" : "orange"}>{s?.toUpperCase()}</Tag>,
+    },
+    {
+      title: "Mode",
+      dataIndex: "paymentMode",
+      render: (mode) => (mode ? mode.toUpperCase() : "-"),
     },
     { title: "Warnings", dataIndex: "warnings", render: (w) => <WarningsList warnings={w} /> },
   ];

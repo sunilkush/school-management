@@ -19,6 +19,7 @@ const payrollPolicySchema = new Schema(
       default: "nearest",
     },
     payDateDayOfMonth: { type: Number, default: 1, min: 1, max: 28 },
+    overtimeRatePerHour: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 );

@@ -10,6 +10,14 @@ const payrollCycleSchema = new Schema(
     },
     month: { type: Number, required: true, min: 1, max: 12 },
     year: { type: Number, required: true, min: 2000 },
+    cycleType: {
+      type: String,
+      enum: ["monthly", "weekly", "custom"],
+      default: "monthly",
+      index: true,
+    },
+    cycleStartDate: { type: Date, default: null },
+    cycleEndDate: { type: Date, default: null },
     status: {
       type: String,
       enum: ["draft", "locked", "paid"],

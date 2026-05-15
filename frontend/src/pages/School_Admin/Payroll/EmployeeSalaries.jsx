@@ -13,6 +13,8 @@ const { Content } = Layout;
 
 const EmployeeSalaries = () => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
+  const [cycleType, setCycleType] = useState("monthly");
+  const [paymentMode, setPaymentMode] = useState("bank");
   const userRole = useSelector((state) => state.auth.user?.role?.name);
   const month = selectedMonth.month() + 1;
   const year = selectedMonth.year();
@@ -22,6 +24,8 @@ const EmployeeSalaries = () => {
     month,
     year,
     cycleId: cycle?._id,
+    cycleType,
+    paymentMode,
     onSuccess: refreshCycle,
   });
 
@@ -47,6 +51,10 @@ const EmployeeSalaries = () => {
               onGenerate={generateCycle}
               onLock={lockCycle}
               onPay={payCycle}
+              cycleType={cycleType}
+              onCycleTypeChange={setCycleType}
+              paymentMode={paymentMode}
+              onPaymentModeChange={setPaymentMode}
               loading={loading}
               actionLoading={actionLoading}
               permissions={permissions}
