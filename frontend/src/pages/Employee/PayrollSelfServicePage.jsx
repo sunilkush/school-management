@@ -51,6 +51,7 @@ export default function PayrollSelfServicePage() {
       render: (status) => <Tag color={status === "paid" ? "green" : "gold"}>{String(status || "pending").toUpperCase()}</Tag>,
     },
     { title: "Transaction", dataIndex: "transactionRef", render: (value) => value || "-" },
+    { title: "Payment Mode", dataIndex: "paymentMode", render: (value) => (value ? String(value).toUpperCase() : "-") },
   ];
 
   return (
@@ -129,6 +130,8 @@ export default function PayrollSelfServicePage() {
                   <Descriptions.Item label="Present Days">{latestPayslip.presentDays}</Descriptions.Item>
                   <Descriptions.Item label="Paid Leaves">{latestPayslip.paidLeaves}</Descriptions.Item>
                   <Descriptions.Item label="LOP Days">{latestPayslip.lopDays}</Descriptions.Item>
+                  <Descriptions.Item label="Late Marks">{latestPayslip.lateCount || 0}</Descriptions.Item>
+                  <Descriptions.Item label="Overtime Hours">{latestPayslip.overtimeHours || 0}</Descriptions.Item>
                 </Descriptions>
               </Card>
             ) : (

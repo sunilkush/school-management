@@ -47,6 +47,9 @@ export const payrollCycleGenerateSchema = z.object({
     schoolId: objectId.optional(),
     month: z.coerce.number().int().min(1).max(12),
     year: z.coerce.number().int().min(2000).max(2100),
+    cycleType: z.enum(["monthly", "weekly", "custom"]).default("monthly").optional(),
+    cycleStartDate: z.coerce.date().optional(),
+    cycleEndDate: z.coerce.date().optional(),
   }),
   params: z.object({}).optional().default({}),
   query: z.object({}).optional().default({}),
@@ -65,6 +68,7 @@ export const payrollCycleActionSchema = z.object({
   body: z.object({
     schoolId: objectId.optional(),
     transactionRefPrefix: z.string().trim().min(2).max(40).optional(),
+    paymentMode: z.enum(["bank", "cash", "upi", "cheque", "other"]).optional(),
   }).optional().default({}),
   params: z.object({ id: objectId }),
   query: z.object({}).optional().default({}),

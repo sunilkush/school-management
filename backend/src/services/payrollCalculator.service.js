@@ -18,6 +18,8 @@ export const calculatePayrollEntry = ({
   const paidLeaveLimit = Number(policy.paidLeavePerMonth || 0);
   const paidLeaves = Math.min(leaveDays, paidLeaveLimit);
   const lopDays = Math.max(workingDays - (presentDays + paidLeaves), 0);
+  const lateCount = Number(attendance.lateCount || 0);
+  const overtimeHours = Number(attendance.overtimeHours || 0);
 
   const gross = Number(structure.grossMonthly || 0);
   const perDay = workingDays > 0 ? gross / workingDays : 0;
@@ -28,8 +30,12 @@ export const calculatePayrollEntry = ({
   const professionalTax = structure.professionalTaxEnabled ? Number(policy.professionalTaxAmount || 0) : 0;
 
   const statutoryDeductions = pf + esi + professionalTax;
-  const totalDeductions = lopDeduction + statutoryDeductions + Number(otherDeductions || 0);
-  const netRaw = gross - totalDeductions + Number(reimbursements || 0);
+  const lateFine = Number(structure?.deductions?.lateFine || 0) * lateCount;
+  const tds = Number(structure?.deductions?.tds || 0);
+  const overtimeRatePerHour = Number(policy.overtimeRatePerHour || 0);
+  const overtimePay = overtimeHours * overtimeRatePerHour;
+  const totalDeductions = lopDeduction + statutoryDeductions + lateFine + tds + Number(otherDeductions || 0);
+  const netRaw = gross - totalDeductions + Number(reimbursements || 0) + overtimePay;
   const netPay = applyRounding(netRaw, policy.roundingMode);
 
   return {
@@ -38,6 +44,8 @@ export const calculatePayrollEntry = ({
       presentDays,
       paidLeaves,
       lopDays,
+      lateCount,
+      overtimeHours,
     },
     earningsBreakdown: {
       basic: Number(structure.basic || 0),
@@ -45,12 +53,15 @@ export const calculatePayrollEntry = ({
       da: Number(structure.da || 0),
       specialAllowance: Number(structure.specialAllowance || 0),
       reimbursements: Number(reimbursements || 0),
+      overtimePay,
     },
     deductionsBreakdown: {
       lopDeduction,
       pf,
       esi,
       professionalTax,
+      lateFine,
+      tds,
       otherDeductions: Number(otherDeductions || 0),
     },
     grossEarnings: gross,

@@ -58,7 +58,7 @@ export const usePayrollCycle = (month, year) => {
   return { loading, cycle, entries, summary, isCycleMissing, refreshCycle };
 };
 
-export const usePayrollActions = ({ month, year, cycleId, onSuccess }) => {
+export const usePayrollActions = ({ month, year, cycleId, cycleType, paymentMode, onSuccess }) => {
   const [actionLoading, setActionLoading] = useState({ generate: false, lock: false, pay: false });
 
   const withAction = async (key, action) => {
@@ -74,7 +74,7 @@ export const usePayrollActions = ({ month, year, cycleId, onSuccess }) => {
   const generateCycle = () =>
     withAction("generate", async () => {
       try {
-        await httpClient.post("/payroll/cycle/generate", { month, year });
+        await httpClient.post("/payroll/cycle/generate", { month, year, cycleType });
         message.success("Payroll cycle generated");
       } catch (error) {
         if (error?.response?.status === 409) {
@@ -100,6 +100,7 @@ export const usePayrollActions = ({ month, year, cycleId, onSuccess }) => {
       try {
         await httpClient.post(`/payroll/cycle/${cycleId}/pay`, {
           transactionRefPrefix: `SAL-${year}${String(month).padStart(2, "0")}`,
+          paymentMode,
         });
         message.success("Payroll marked as paid");
       } catch (error) {

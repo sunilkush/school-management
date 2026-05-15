@@ -38,7 +38,7 @@ const getAttendanceSummary = async ({ schoolId, employeeUserId, month, year }) =
     role: { $in: ["teacher", "staff"] },
     date: { $gte: start, $lte: end },
   })
-    .select("status")
+    .select("status checkInAt checkOutAt")
     .lean();
 
   const statusCount = records.reduce(
@@ -52,11 +52,21 @@ const getAttendanceSummary = async ({ schoolId, employeeUserId, month, year }) =
   const workingDays = records.length;
   const presentDays = statusCount.present + statusCount.late + statusCount.halfday * 0.5;
   const leaveDays = statusCount.leave;
+  const lateCount = statusCount.late;
+  const overtimeHours = records.reduce((acc, record) => {
+    if (!record?.checkInAt || !record?.checkOutAt) return acc;
+    const workedMs = new Date(record.checkOutAt).getTime() - new Date(record.checkInAt).getTime();
+    if (workedMs <= 0) return acc;
+    const workedHours = workedMs / (1000 * 60 * 60);
+    return acc + Math.max(workedHours - 8, 0);
+  }, 0);
 
   return {
     workingDays,
     presentDays,
     leaveDays,
+    lateCount,
+    overtimeHours: Number(overtimeHours.toFixed(2)),
     isMissingAttendance: workingDays === 0,
   };
 };
@@ -176,7 +186,6 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   const month = Number(req.body.month);
   const year = Number(req.body.year);
   const schoolId = getSchoolId(req);
-  console.log(month,year,schoolId)
   assertSchoolId(schoolId);
 
   if (!month || month < 1 || month > 12) {
@@ -193,7 +202,6 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     year,
   });
 
-  console.log("Payroll cycle found:", cycle);
 
   if (cycle && cycle.status !== "draft") {
     throw new ApiError(
@@ -206,7 +214,6 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     schoolId,
     isActive: true,
   }).select("_id userId").lean();
-  console.log("employees",employees)
   if (!employees.length) {
     throw new ApiError(400, "No active employees found for this school");
   }
@@ -216,7 +223,13 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     { $setOnInsert: { schoolId } },
     { upsert: true, new: true }
   );
-  console.log("policy",policy)
+  const cycleType = req.body.cycleType || "monthly";
+  const cycleStartDate = req.body.cycleStartDate ? new Date(req.body.cycleStartDate) : null;
+  const cycleEndDate = req.body.cycleEndDate ? new Date(req.body.cycleEndDate) : null;
+
+  if (cycleType === "custom" && (!cycleStartDate || !cycleEndDate)) {
+    throw new ApiError(400, "cycleStartDate and cycleEndDate are required for custom cycle");
+  }
   const createdNewCycle = !cycle;
 
   if (!cycle) {
@@ -224,6 +237,9 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
       schoolId,
       month,
       year,
+      cycleType,
+      cycleStartDate,
+      cycleEndDate,
       status: "draft",
       processedBy: req.user._id,
     });
@@ -374,7 +390,7 @@ export const lockPayrollCycle = asyncHandler(async (req, res) => {
 export const payPayrollCycle = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
   assertSchoolId(schoolId);
-  const { transactionRefPrefix } = req.body;
+  const { transactionRefPrefix, paymentMode } = req.body;
   const cycle = await PayrollCycle.findOne({ _id: req.params.id, schoolId });
 
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
@@ -385,6 +401,7 @@ export const payPayrollCycle = asyncHandler(async (req, res) => {
 
   for (const entry of entries) {
     entry.paymentStatus = "paid";
+    entry.paymentMode = paymentMode || "bank";
     entry.paidAt = now;
     entry.transactionRef = transactionRefPrefix
       ? `${transactionRefPrefix}-${entry.employeeId}`
@@ -464,6 +481,7 @@ export const getMyPayrollSummary = asyncHandler(async (req, res) => {
       totalDeductions: entry.totalDeductions,
       netPay: entry.netPay,
       paymentStatus: entry.paymentStatus,
+      paymentMode: entry.paymentMode,
       paidAt: entry.paidAt,
       transactionRef: entry.transactionRef,
       earningsBreakdown: entry.earningsBreakdown,

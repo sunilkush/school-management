@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, DatePicker, Space, Tooltip } from "antd";
+import { Button, DatePicker, Select, Space, Tooltip } from "antd";
 import { CheckOutlined, LockOutlined, ReloadOutlined } from "@ant-design/icons";
 
 const PayrollHeaderActions = ({
@@ -9,12 +9,38 @@ const PayrollHeaderActions = ({
   onGenerate,
   onLock,
   onPay,
+  cycleType,
+  onCycleTypeChange,
+  paymentMode,
+  onPaymentModeChange,
   loading,
   actionLoading,
   permissions,
 }) => (
   <Space wrap>
     <DatePicker picker="month" value={selectedMonth} onChange={onMonthChange} />
+    <Select
+      value={cycleType}
+      onChange={onCycleTypeChange}
+      style={{ width: 160 }}
+      options={[
+        { value: "monthly", label: "Monthly" },
+        { value: "weekly", label: "Weekly" },
+        { value: "custom", label: "Custom" },
+      ]}
+    />
+    <Select
+      value={paymentMode}
+      onChange={onPaymentModeChange}
+      style={{ width: 150 }}
+      options={[
+        { value: "bank", label: "Bank" },
+        { value: "cash", label: "Cash" },
+        { value: "upi", label: "UPI" },
+        { value: "cheque", label: "Cheque" },
+        { value: "other", label: "Other" },
+      ]}
+    />
     <Button icon={<ReloadOutlined />} onClick={onRefresh} loading={loading}>
       Refresh
     </Button>

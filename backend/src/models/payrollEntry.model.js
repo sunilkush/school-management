@@ -36,6 +36,11 @@ const payrollEntrySchema = new Schema(
       default: "pending",
       index: true,
     },
+    paymentMode: {
+      type: String,
+      enum: ["bank", "cash", "upi", "cheque", "other"],
+      default: null,
+    },
     paidAt: { type: Date, default: null },
     transactionRef: { type: String, default: null, trim: true },
   },
