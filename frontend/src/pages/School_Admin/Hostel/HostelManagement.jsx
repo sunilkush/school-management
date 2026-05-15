@@ -17,12 +17,13 @@ import {
   Col,
   Typography,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined, UserAddOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined, UserAddOutlined, UserDeleteOutlined } from "@ant-design/icons";
 import {
   assignHostelStudent,
   createHostelRoom,
   deleteHostelRoom,
   fetchHostelRooms,
+  unassignHostelStudent,
   updateHostelRoom,
 } from "../../../features/hostelSlice";
 
@@ -32,6 +33,7 @@ const { Title, Text } = Typography;
 const HostelManagement = () => {
   const dispatch = useDispatch();
   const { rooms, loading, actionLoading } = useSelector((state) => state.hostel);
+  const currentRole = useSelector((state) => state.auth?.user?.roleId?.name || state.auth?.user?.role?.name || state.auth?.user?.role);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -40,6 +42,8 @@ const HostelManagement = () => {
 
   const [form] = Form.useForm();
   const [assignForm] = Form.useForm();
+
+  const canManageHostel = ["Super Admin", "School Admin", "Admin", "Principal", "Vice Principal", "Hostel Warden"].includes(currentRole);
 
   useEffect(() => {
     dispatch(fetchHostelRooms());
@@ -118,6 +122,23 @@ const HostelManagement = () => {
     }
   };
 
+  const handleUnassignStudent = (room, student) => {
+    Modal.confirm({
+      title: `Unassign ${student.name} from Room ${room.roomNumber}?`,
+      content: "Student will be removed from this room allocation.",
+      okText: "Unassign",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await dispatch(unassignHostelStudent({ roomId: room._id, studentId: student._id })).unwrap();
+          message.success(`${student.name} unassigned successfully`);
+        } catch (error) {
+          message.error(error || "Unable to unassign student");
+        }
+      },
+    });
+  };
+
   const columns = [
     { title: "Room Number", dataIndex: "roomNumber", key: "roomNumber" },
     { title: "Capacity", dataIndex: "capacity", key: "capacity" },
@@ -139,14 +160,34 @@ const HostelManagement = () => {
       key: "actions",
       render: (_, record) => (
         <Space size="small" wrap>
-          <Button type="primary" icon={<UserAddOutlined />} onClick={() => handleOpenAssignModal(record)}>
+          <Button type="primary" icon={<UserAddOutlined />} onClick={() => handleOpenAssignModal(record)} disabled={!canManageHostel}>
             Assign Student
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => handleEditRoom(record)}>Edit</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteRoom(record)}>Delete</Button>
+          <Button icon={<EditOutlined />} onClick={() => handleEditRoom(record)} disabled={!canManageHostel}>Edit</Button>
+          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteRoom(record)} disabled={!canManageHostel}>Delete</Button>
         </Space>
       ),
     },
+    {
+      title: "Unassign",
+      key: "unassign",
+      render: (_, record) => (
+        <Space size="small" wrap>
+          {(record.students || []).map((student) => (
+            <Button
+              key={student._id}
+              danger
+              icon={<UserDeleteOutlined />}
+              onClick={() => handleUnassignStudent(record, student)}
+              disabled={!canManageHostel}
+            >
+              {student.name}
+            </Button>
+          ))}
+          {!record.students?.length ? "-" : null}
+        </Space>
+      ),
+    }
   ];
 
   return (
@@ -169,7 +210,7 @@ const HostelManagement = () => {
 
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Title level={5} style={{ margin: 0 }}>Hostel Rooms</Title>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)} disabled={!canManageHostel}>
             Add Room
           </Button>
         </div>

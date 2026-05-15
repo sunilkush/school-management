@@ -54,6 +54,18 @@ export const assignHostelStudent = createAsyncThunk(
   }
 );
 
+export const unassignHostelStudent = createAsyncThunk(
+  "hostel/unassignStudent",
+  async ({ roomId, studentId }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.delete(`/hostel/rooms/${roomId}/students/${studentId}`);
+      return res?.data?.data;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to unassign student"));
+    }
+  }
+);
+
 const hostelSlice = createSlice({
   name: "hostel",
   initialState: {
@@ -95,7 +107,7 @@ const hostelSlice = createSlice({
           if (action.type === "hostel/createRoom/fulfilled") {
             state.rooms.unshift(action.payload);
           }
-          if (["hostel/updateRoom/fulfilled", "hostel/assignStudent/fulfilled"].includes(action.type)) {
+          if (["hostel/updateRoom/fulfilled", "hostel/assignStudent/fulfilled", "hostel/unassignStudent/fulfilled"].includes(action.type)) {
             const idx = state.rooms.findIndex((room) => room._id === action.payload?._id);
             if (idx !== -1) state.rooms[idx] = action.payload;
           }

@@ -72,8 +72,31 @@ export const assignStudentToRoom = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Room is full");
   }
 
-  room.students.push({ name: studentName });
+  const existingStudent = room.students.find(
+    (student) => student.name?.trim().toLowerCase() === studentName.trim().toLowerCase()
+  );
+  if (existingStudent) throw new ApiError(400, "Student is already assigned to this room");
+
+  room.students.push({ name: studentName.trim() });
   await room.save();
 
   return res.status(200).json(new ApiResponse(200, room, "Student assigned successfully"));
+});
+
+export const removeStudentFromRoom = asyncHandler(async (req, res) => {
+  const { id, studentId } = req.params;
+
+  const room = await HostelRoom.findById(id);
+  if (!room) throw new ApiError(404, "Hostel room not found");
+
+  const initialCount = room.students.length;
+  room.students = room.students.filter((student) => student._id.toString() !== studentId);
+
+  if (room.students.length === initialCount) {
+    throw new ApiError(404, "Student assignment not found in this room");
+  }
+
+  await room.save();
+
+  return res.status(200).json(new ApiResponse(200, room, "Student unassigned successfully"));
 });
