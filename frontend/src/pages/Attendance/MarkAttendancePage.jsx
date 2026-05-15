@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Button, Card, DatePicker, Input, Row, Col, Select, message } from "antd";
+import { Alert, Button, Card, DatePicker, Input, Row, Col, Select, Space, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import BulkAttendanceTable from "../../components/attendance/BulkAttendanceTable";
@@ -10,6 +10,8 @@ import {
   setAttendanceFilters,
   setDraftAttendanceStatus,
 } from "../../features/attendanceSlice";
+
+const { Text } = Typography;
 
 const MarkAttendancePage = () => {
   const dispatch = useDispatch();
@@ -51,38 +53,20 @@ const MarkAttendancePage = () => {
     }
   };
 
+  const setAllStatus = (status) => {
+    rows.forEach((row) => dispatch(setDraftAttendanceStatus({ userId: row.userId, status })));
+  };
+
   return (
-    <Card title="Bulk Mark Attendance">
+    <Card title="Mark Attendance" extra={<Text type="secondary">Simple 3-step flow: filter → load users → save</Text>}>
+      <Alert
+        showIcon
+        type="info"
+        style={{ marginBottom: 12 }}
+        message="Use role and date first. School/Class/Section IDs are optional advanced filters."
+      />
       <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
-        <Col xs={24} md={5}>
-          <Input
-            placeholder="School ID"
-            value={filters.schoolId || ""}
-            onChange={(e) => dispatch(setAttendanceFilters({ schoolId: e.target.value || null }))}
-          />
-        </Col>
-        <Col xs={24} md={4}>
-          <Input
-            placeholder="Class ID"
-            value={filters.classId || ""}
-            onChange={(e) => dispatch(setAttendanceFilters({ classId: e.target.value || null }))}
-          />
-        </Col>
-        <Col xs={24} md={4}>
-          <Input
-            placeholder="Section ID"
-            value={filters.sectionId || ""}
-            onChange={(e) => dispatch(setAttendanceFilters({ sectionId: e.target.value || null }))}
-          />
-        </Col>
-        <Col xs={24} md={4}>
-          <DatePicker
-            style={{ width: "100%" }}
-            value={filters.date ? dayjs(filters.date) : dayjs()}
-            onChange={(value) => dispatch(setAttendanceFilters({ date: value?.toISOString() || null }))}
-          />
-        </Col>
-        <Col xs={24} md={4}>
+        <Col xs={24} md={6}>
           <Select
             style={{ width: "100%" }}
             value={filters.role || "student"}
@@ -90,12 +74,52 @@ const MarkAttendancePage = () => {
             onChange={(value) => dispatch(setAttendanceFilters({ role: value }))}
           />
         </Col>
-        <Col xs={24} md={3}>
+        <Col xs={24} md={6}>
+          <DatePicker
+            style={{ width: "100%" }}
+            value={filters.date ? dayjs(filters.date) : dayjs()}
+            onChange={(value) => dispatch(setAttendanceFilters({ date: value?.toISOString() || null }))}
+          />
+        </Col>
+        <Col xs={24} md={6}>
           <Button onClick={handleLoad} block>
-            Load
+            Load Users
           </Button>
         </Col>
+        <Col xs={24} md={6}>
+          <Button block onClick={() => dispatch(setAttendanceFilters({ schoolId: null, classId: null, sectionId: null }))}>
+            Clear Optional IDs
+          </Button>
+        </Col>
+        <Col xs={24} md={8}>
+          <Input
+            placeholder="School ID (optional)"
+            value={filters.schoolId || ""}
+            onChange={(e) => dispatch(setAttendanceFilters({ schoolId: e.target.value || null }))}
+          />
+        </Col>
+        <Col xs={24} md={8}>
+          <Input
+            placeholder="Class ID (optional)"
+            value={filters.classId || ""}
+            onChange={(e) => dispatch(setAttendanceFilters({ classId: e.target.value || null }))}
+          />
+        </Col>
+        <Col xs={24} md={8}>
+          <Input
+            placeholder="Section ID (optional)"
+            value={filters.sectionId || ""}
+            onChange={(e) => dispatch(setAttendanceFilters({ sectionId: e.target.value || null }))}
+          />
+        </Col>
       </Row>
+
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Text type="secondary">Quick mark all:</Text>
+        <Button size="small" onClick={() => setAllStatus("present")} disabled={!rows.length}>Present</Button>
+        <Button size="small" onClick={() => setAllStatus("absent")} disabled={!rows.length}>Absent</Button>
+        <Button size="small" onClick={() => setAllStatus("leave")} disabled={!rows.length}>Leave</Button>
+      </Space>
 
       <BulkAttendanceTable
         rows={rows}
