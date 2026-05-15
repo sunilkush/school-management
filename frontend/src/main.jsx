@@ -162,11 +162,6 @@ const EmployeeSalaries = lazy(() => import("./pages/School_Admin/Payroll/Employe
 const SalaryStructures = lazy(() => import("./pages/School_Admin/Payroll/SalaryStructures.jsx"));
 const GeneratePayslip = lazy(() => import("./pages/School_Admin/Payroll/GeneratePayslip.jsx"));
 const MonthlyPayrollReport = lazy(() => import("./pages/School_Admin/Payroll/MonthlyPayrollReport.jsx"));
-const PayrollDashboardEnterprise = lazy(() => import("./pages/School_Admin/Payroll/PayrollDashboardEnterprise.jsx"));
-const PayrollRunPage = lazy(() => import("./pages/School_Admin/Payroll/PayrollRunPage.jsx"));
-const PayrollApprovalPanel = lazy(() => import("./pages/School_Admin/Payroll/PayrollApprovalPanel.jsx"));
-const LoanManagementPage = lazy(() => import("./pages/School_Admin/Payroll/LoanManagementPage.jsx"));
-const TaxSettingsPage = lazy(() => import("./pages/School_Admin/Payroll/TaxSettingsPage.jsx"));
 const PayrollSelfServicePage = lazy(() => import("./pages/Employee/PayrollSelfServicePage.jsx"));
 const CreateEmployee = lazy(()=>import('./pages/School_Admin/Payroll/CreateEmployee.jsx'));
 
@@ -478,11 +473,6 @@ const router = createBrowserRouter([
               { path: "payroll/create-employee", element: <CreateEmployee/> },
               { path: "payroll/payslips", element: <GeneratePayslip /> },
               { path: "payroll/reports/monthly", element: <MonthlyPayrollReport /> },
-               { path: "payroll/enterprise/dashboard", element: <PayrollDashboardEnterprise /> },
-              { path: "payroll/enterprise/run", element: <PayrollRunPage /> },
-              { path: "payroll/enterprise/approval", element: <PayrollApprovalPanel /> },
-              { path: "payroll/enterprise/loans", element: <LoanManagementPage /> },
-              { path: "payroll/enterprise/tax", element: <TaxSettingsPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports", element: <SchoolAdminReport /> },
@@ -634,11 +624,6 @@ const router = createBrowserRouter([
               { path: "salary/create-employee", element: <CreateEmployee /> },
               { path: "salary/payslips", element: <GeneratePayslip /> },
               { path: "salary/reports/monthly", element: <MonthlyPayrollReport /> },
-              { path: "salary/enterprise/dashboard", element: <PayrollDashboardEnterprise /> },
-              { path: "salary/enterprise/run", element: <PayrollRunPage /> },
-              { path: "salary/enterprise/approval", element: <PayrollApprovalPanel /> },
-              { path: "salary/enterprise/loans", element: <LoanManagementPage /> },
-              { path: "salary/enterprise/tax", element: <TaxSettingsPage /> },
               { path: "reports", element: <Reports /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
