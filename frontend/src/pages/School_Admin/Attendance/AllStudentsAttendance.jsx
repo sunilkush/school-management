@@ -5,8 +5,6 @@ import {
   Table,
   Select,
   Button,
-  Row,
-  Col,
   Typography,
   Tag,
   DatePicker,
@@ -33,14 +31,16 @@ const { Title, Text } = Typography;
 const AllStudentsAttendance = () => {
   const dispatch = useDispatch();
 
-  const { schoolStudents = [], loading } = useSelector((state) => state.students || {});
-  const { loading: attendanceLoading } = useSelector((state) => state.attendance || {});
-  const { user: currentUser } = useSelector((state) => state.auth || {});
-  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
+  const { schoolStudents = [], loading } = useSelector((s) => s.students || {});
+  const { loading: attendanceLoading } = useSelector((s) => s.attendance || {});
+  const { user: currentUser } = useSelector((s) => s.auth || {});
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
 
   const schoolId = currentUser?.school?._id;
   const academicYearId =
-    currentUser?.school?.academicYear?._id || currentUser?.school?.academicYear || null;
+    currentUser?.school?.academicYear?._id ||
+    currentUser?.school?.academicYear ||
+    null;
 
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -49,378 +49,259 @@ const AllStudentsAttendance = () => {
   const [searchText, setSearchText] = useState("");
   const [attendance, setAttendance] = useState({});
 
-  // Normalize students response
-  const normalizedStudents = useMemo(() => {
+  /* ---------------- DATA ---------------- */
+  const students = useMemo(() => {
     if (Array.isArray(schoolStudents)) return schoolStudents;
     if (Array.isArray(schoolStudents?.students)) return schoolStudents.students;
-    if (Array.isArray(schoolStudents?.data?.students)) return schoolStudents.data.students;
+    if (Array.isArray(schoolStudents?.data?.students))
+      return schoolStudents.data.students;
     return [];
   }, [schoolStudents]);
 
-  // Normalize classes response
-  const normalizedClasses = useMemo(() => {
+  const classes = useMemo(() => {
     if (Array.isArray(schoolClasses)) return schoolClasses;
     if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
-    if (Array.isArray(schoolClasses?.data)) return schoolClasses.data;
     return [];
   }, [schoolClasses]);
 
-  // Initial load
+  /* ---------------- FETCH ---------------- */
   useEffect(() => {
     if (!schoolId) return;
 
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-  }, [dispatch, schoolId, academicYearId]);
+  }, [schoolId]);
 
-  // Default attendance = present
-  useEffect(() => {
-    const defaultAttendance = {};
-    normalizedStudents.forEach((student) => {
-      defaultAttendance[student._id] = attendance[student._id] || "present";
-    });
-    setAttendance(defaultAttendance);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalizedStudents]);
+  /* ---------------- FILTER ---------------- */
+  const filteredStudents = useMemo(() => {
+    const q = searchText.toLowerCase();
 
-  // Sort classes like CLASS 1, CLASS 2...
-  const sortedClasses = useMemo(() => {
-    return [...normalizedClasses].sort((a, b) => {
-      const numA = parseInt((a?.name || "").replace(/\D/g, ""), 10);
-      const numB = parseInt((b?.name || "").replace(/\D/g, ""), 10);
-
-      if (Number.isNaN(numA) || Number.isNaN(numB)) {
-        return (a?.name || "").localeCompare(b?.name || "");
-      }
-
-      return numA - numB;
-    });
-  }, [normalizedClasses]);
-
-  // Section list from selected class
-  const sectionList = useMemo(() => {
-    if (!selectedClass) return [];
-
-    const selectedClassObj = normalizedClasses.find(
-      (cls) => cls?.name === selectedClass
-    );
-
-    if (!selectedClassObj?.sections || !Array.isArray(selectedClassObj.sections)) {
-      return [];
-    }
-
-    return selectedClassObj.sections.map((sec) => ({
-      value: sec?._id,
-      label: sec?.name,
-      name: sec?.name,
-      _id: sec?._id,
-    }));
-  }, [normalizedClasses, selectedClass]);
-
-  // Filter students
-  const filteredData = useMemo(() => {
-    const query = searchText.trim().toLowerCase();
-
-    return normalizedStudents.filter((item) => {
-      const fullName = item?.user?.name?.toLowerCase() || "";
-      const rollNo =
-        `${item?.rollNumber || item?.registrationNumber || ""}`.toLowerCase();
+    return students.filter((s) => {
+      const name = s?.user?.name?.toLowerCase() || "";
+      const roll =
+        `${s?.rollNumber || s?.registrationNumber || ""}`.toLowerCase();
 
       const classMatch = selectedClass
-        ? item?.schoolClass?.name === selectedClass
+        ? s?.schoolClass?.name === selectedClass
         : true;
 
       const sectionMatch = selectedSection
-        ? item?.section?._id === selectedSection
+        ? s?.section?._id === selectedSection
         : true;
 
       const statusMatch = filterStatus
-        ? attendance[item._id] === filterStatus
+        ? attendance[s._id] === filterStatus
         : true;
 
-      const searchMatch =
-        !query || fullName.includes(query) || rollNo.includes(query);
+      const searchMatch = !q || name.includes(q) || roll.includes(q);
 
       return classMatch && sectionMatch && statusMatch && searchMatch;
     });
   }, [
-    normalizedStudents,
+    students,
     selectedClass,
     selectedSection,
     filterStatus,
-    attendance,
     searchText,
+    attendance,
   ]);
 
-  // Attendance summary
+  /* ---------------- SUMMARY ---------------- */
   const summary = useMemo(() => {
-    let present = 0;
-    let absent = 0;
+    let present = 0,
+      absent = 0;
 
-    filteredData.forEach((student) => {
-      if (attendance[student._id] === "absent") absent += 1;
-      else present += 1;
+    filteredStudents.forEach((s) => {
+      if (attendance[s._id] === "absent") absent++;
+      else present++;
     });
 
-    const total = filteredData.length;
-    const presentRate = total ? Math.round((present / total) * 100) : 0;
+    const total = filteredStudents.length;
+    return {
+      present,
+      absent,
+      total,
+      rate: total ? Math.round((present / total) * 100) : 0,
+    };
+  }, [filteredStudents, attendance]);
 
-    return { present, absent, total, presentRate };
-  }, [filteredData, attendance]);
-
-  const handleClassChange = (value) => {
-    setSelectedClass(value);
-    setSelectedSection(null);
+  /* ---------------- ACTIONS ---------------- */
+  const handleChange = (id, value) => {
+    setAttendance((p) => ({ ...p, [id]: value }));
   };
 
-  const handleAttendanceChange = (studentId, status) => {
-    setAttendance((prev) => ({
-      ...prev,
-      [studentId]: status,
-    }));
-  };
-
-  const markAllPresent = () => {
+  const markAll = (status) => {
     const updated = {};
-    filteredData.forEach((student) => {
-      updated[student._id] = "present";
-    });
-    setAttendance((prev) => ({ ...prev, ...updated }));
-  };
-
-  const markAllAbsent = () => {
-    const updated = {};
-    filteredData.forEach((student) => {
-      updated[student._id] = "absent";
-    });
-    setAttendance((prev) => ({ ...prev, ...updated }));
+    filteredStudents.forEach((s) => (updated[s._id] = status));
+    setAttendance((p) => ({ ...p, ...updated }));
   };
 
   const handleSubmit = async () => {
-    if (!selectedClass || !selectedSection) {
-      message.warning("Please select class and section");
-      return;
-    }
-
-    if (!attendanceDate) {
-      message.warning("Please select attendance date");
-      return;
-    }
-
-    if (!filteredData.length) {
-      message.warning("No students found for selected class and section");
-      return;
-    }
-
-    const selectedClassObj = normalizedClasses.find(
-      (cls) => cls?.name === selectedClass
-    );
+    if (!selectedClass || !selectedSection)
+      return message.warning("Select class & section");
 
     const payload = {
       schoolId,
       role: "student",
-      classId: selectedClassObj?._id || null,
+      classId: classes.find((c) => c.name === selectedClass)?._id,
       sectionId: selectedSection,
       date: attendanceDate.startOf("day").toISOString(),
-      records: filteredData.map((student) => ({
-        userId: student?.user?._id,
-        status: attendance[student._id] || "present",
+      records: filteredStudents.map((s) => ({
+        userId: s?.user?._id,
+        status: attendance[s._id] || "present",
       })),
     };
 
-    const result = await dispatch(markBulkAttendance(payload));
+    const res = await dispatch(markBulkAttendance(payload));
 
-    if (result?.meta?.requestStatus === "fulfilled") {
-      message.success("Attendance saved successfully");
+    if (res?.meta?.requestStatus === "fulfilled") {
+      message.success("Attendance saved");
     } else {
-      message.error(result?.payload || "Failed to save attendance");
+      message.error("Failed to save attendance");
     }
   };
 
+  /* ---------------- TABLE ---------------- */
   const columns = [
     {
       title: "Student",
-      dataIndex: ["user", "name"],
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record?.user?.name || "Unnamed"}</Text>
-          <Text type="secondary">
-            Roll No: {record?.rollNumber || record?.registrationNumber || "N/A"}
-          </Text>
-        </Space>
+      render: (_, r) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{r?.user?.name}</span>
+          <span className="text-xs text-gray-500">
+            Roll: {r?.rollNumber || "-"}
+          </span>
+        </div>
       ),
     },
     {
-      title: "Class/Section",
-      render: (_, record) => (
-        <Tag>
-          {`${record?.schoolClass?.name || "-"}${
-            record?.section?.name ? ` • ${record.section.name}` : ""
-          }`}
+      title: "Class",
+      render: (_, r) => (
+        <Tag color="blue">
+          {r?.schoolClass?.name} {r?.section?.name && `• ${r.section.name}`}
         </Tag>
       ),
     },
     {
-      title: "Attendance",
-      key: "attendance",
-      render: (_, record) => (
+      title: "Status",
+      render: (_, r) => (
         <Radio.Group
-          value={attendance[record._id]}
-          onChange={(e) => handleAttendanceChange(record._id, e.target.value)}
-          optionType="button"
+          value={attendance[r._id]}
+          onChange={(e) => handleChange(r._id, e.target.value)}
           buttonStyle="solid"
           size="small"
         >
-          <Radio.Button value="present">Present</Radio.Button>
-          <Radio.Button value="absent">Absent</Radio.Button>
+          <Radio.Button value="present">P</Radio.Button>
+          <Radio.Button value="absent">A</Radio.Button>
         </Radio.Group>
       ),
     },
   ];
 
   return (
-    <Card>
-      <Space
-        direction="vertical"
-        size={4}
-        style={{ width: "100%", marginBottom: 14 }}
-      >
-        <Title level={4} style={{ marginBottom: 0 }}>
-          Student Attendance
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* HEADER */}
+      <div className="mb-4">
+        <Title level={4} className="!mb-0">
+          Attendance Management
         </Title>
         <Text type="secondary">
-          Fast, filter-first attendance flow for class teachers and admin teams.
+          Simple class-wise attendance tracking system
         </Text>
-      </Space>
+      </div>
 
-      <Row gutter={[12, 12]}>
-        <Col xs={24} md={6}>
+      {/* FILTER BAR */}
+      <Card className="mb-4 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <Select
-            placeholder="Select Class *"
-            style={{ width: "100%" }}
+            placeholder="Class"
             value={selectedClass}
-            onChange={handleClassChange}
-            options={sortedClasses.map((cls) => ({
-              value: cls?.name,
-              label: cls?.name,
-            }))}
+            onChange={setSelectedClass}
+            options={classes.map((c) => ({ value: c.name, label: c.name }))}
           />
-        </Col>
 
-        <Col xs={24} md={5}>
           <Select
-            placeholder="Select Section *"
-            style={{ width: "100%" }}
-            disabled={!selectedClass}
+            placeholder="Section"
             value={selectedSection}
             onChange={setSelectedSection}
-            options={sectionList.map((sec) => ({
-              value: sec.value,
-              label: sec.label,
-            }))}
+            disabled={!selectedClass}
+            options={
+              classes
+                .find((c) => c.name === selectedClass)
+                ?.sections?.map((s) => ({
+                  value: s._id,
+                  label: s.name,
+                })) || []
+            }
           />
-        </Col>
 
-        <Col xs={24} md={5}>
           <DatePicker
-            style={{ width: "100%" }}
             value={attendanceDate}
             onChange={setAttendanceDate}
-            disabledDate={(current) => current && current > dayjs().endOf("day")}
+            className="w-full"
           />
-        </Col>
 
-        <Col xs={24} md={4}>
           <Select
-            placeholder="Status"
             allowClear
-            style={{ width: "100%" }}
-            value={filterStatus}
+            placeholder="Status"
             onChange={setFilterStatus}
             options={[
               { value: "present", label: "Present" },
               { value: "absent", label: "Absent" },
             ]}
           />
-        </Col>
 
-        <Col xs={24} md={4}>
           <Input
-            placeholder="Search name / roll"
+            placeholder="Search"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-        </Col>
-      </Row>
+        </div>
+      </Card>
 
-      <Divider style={{ margin: "14px 0" }} />
+      {/* SUMMARY */}
+      <Card className="mb-4">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <div className="w-full md:w-1/2">
+            <Progress percent={summary.rate} />
+            <div className="flex gap-2 mt-2">
+              <Tag color="green">Present {summary.present}</Tag>
+              <Tag color="red">Absent {summary.absent}</Tag>
+              <Tag>Total {summary.total}</Tag>
+            </div>
+          </div>
 
-      <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
-        <Col xs={24} md={9}>
-          <Card size="small">
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Text type="secondary">Present rate</Text>
-              <Progress percent={summary.presentRate} size="small" />
-              <Space wrap>
-                <Tag color="green">Present: {summary.present}</Tag>
-                <Tag color="red">Absent: {summary.absent}</Tag>
-                <Tag>Total: {summary.total}</Tag>
-              </Space>
-            </Space>
-          </Card>
-        </Col>
-
-        <Col
-          xs={24}
-          md={15}
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-          }}
-        >
-          <Space wrap>
-            <Button
-              icon={<CheckCircleOutlined />}
-              onClick={markAllPresent}
-              disabled={!filteredData.length}
-            >
-              Mark all present
+          <div className="flex gap-2 items-center">
+            <Button onClick={() => markAll("present")}>
+              All Present
             </Button>
-
-            <Button
-              danger
-              onClick={markAllAbsent}
-              disabled={!filteredData.length}
-            >
-              Mark all absent
+            <Button danger onClick={() => markAll("absent")}>
+              All Absent
             </Button>
-
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              onClick={handleSubmit}
               loading={attendanceLoading}
-              disabled={!selectedClass || !selectedSection || attendanceLoading}
+              onClick={handleSubmit}
             >
-              Save attendance
+              Save
             </Button>
-          </Space>
-        </Col>
-      </Row>
+          </div>
+        </div>
+      </Card>
 
-      <Table
-        rowKey="_id"
-        columns={columns}
-        dataSource={filteredData}
-        loading={loading}
-        pagination={{ pageSize: 10, showSizeChanger: true }}
-        rowClassName={(record) =>
-          attendance[record._id] === "absent" ? "attendance-row-absent" : ""
-        }
-      />
-    </Card>
+      {/* TABLE */}
+      <Card className="shadow-sm">
+        <Table
+          rowKey="_id"
+          columns={columns}
+          dataSource={filteredStudents}
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+        />
+      </Card>
+    </div>
   );
 };
 

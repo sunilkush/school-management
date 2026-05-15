@@ -1,11 +1,23 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Card, Col, DatePicker, Row, Select, Space, Statistic, Table, Tag, Typography, message } from "antd";
+import {
+  Card,
+  Table,
+  Select,
+  Button,
+  DatePicker,
+  Typography,
+  Row,
+  Col,
+  Statistic,
+  Tag,
+  message,
+} from "antd";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMonthlyReport } from "../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 const ROLE_OPTIONS = [
   { label: "Students", value: "student" },
@@ -16,216 +28,208 @@ const ROLE_OPTIONS = [
 const MonthlyReportPage = () => {
   const dispatch = useDispatch();
 
-  const { monthlyReport = [], reportLoading } = useSelector((state) => state.attendance || {});
-  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
-  const { user: currentUser } = useSelector((state) => state.auth || {});
+  const { monthlyReport = [], reportLoading } = useSelector(
+    (s) => s.attendance || {}
+  );
+  const { schoolClasses = [] } = useSelector(
+    (s) => s.schoolClass || {}
+  );
+  const { user } = useSelector((s) => s.auth || {});
 
-  const schoolId = currentUser?.school?._id;
-  const academicYearId = currentUser?.school?.academicYear?._id || currentUser?.school?.academicYear;
+  const schoolId = user?.school?._id;
+  const academicYearId =
+    user?.school?.academicYear?._id || user?.school?.academicYear;
 
-  const [monthDate, setMonthDate] = useState(dayjs());
+  const [month, setMonth] = useState(dayjs());
   const [role, setRole] = useState("student");
-  const [schoolClassId, setSchoolClassId] = useState();
+  const [classId, setClassId] = useState();
   const [sectionId, setSectionId] = useState();
 
+  /* ---------------- FETCH CLASSES ---------------- */
   useEffect(() => {
-    if (!schoolId || role !== "student") return;
-    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-  }, [dispatch, schoolId, academicYearId, role]);
+    if (role === "student" && schoolId) {
+      dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+    }
+  }, [role, schoolId]);
 
-  const normalizedClasses = useMemo(() => {
+  /* ---------------- NORMALIZE ---------------- */
+  const classes = useMemo(() => {
     if (Array.isArray(schoolClasses)) return schoolClasses;
     if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
-    if (Array.isArray(schoolClasses?.data)) return schoolClasses.data;
     return [];
   }, [schoolClasses]);
 
-  const selectedClass = useMemo(
-    () => normalizedClasses.find((item) => item?._id === schoolClassId),
-    [normalizedClasses, schoolClassId]
-  );
+  const selectedClass = classes.find((c) => c._id === classId);
 
-  const classOptions = useMemo(
-    () =>
-      normalizedClasses.map((item) => ({
-        value: item?._id,
-        label: item?.name,
-      })),
-    [normalizedClasses]
-  );
+  /* ---------------- OPTIONS ---------------- */
+  const classOptions = classes.map((c) => ({
+    value: c._id,
+    label: c.name,
+  }));
 
-  const sectionOptions = useMemo(
-    () =>
-      (selectedClass?.sections || []).map((item) => ({
-        value: item?._id,
-        label: item?.name,
-      })),
-    [selectedClass]
-  );
+  const sectionOptions =
+    selectedClass?.sections?.map((s) => ({
+      value: s._id,
+      label: s.name,
+    })) || [];
 
+  /* ---------------- SUMMARY ---------------- */
   const summary = useMemo(() => {
-    if (!monthlyReport.length) {
-      return { average: 0, totalUsers: 0, highRisk: 0 };
-    }
+    const total = monthlyReport.length;
 
-    const average = (
-      monthlyReport.reduce((acc, row) => acc + (row.attendancePercentage || 0), 0) / monthlyReport.length
-    ).toFixed(2);
+    const avg =
+      total > 0
+        ? (
+            monthlyReport.reduce(
+              (a, b) => a + (b.attendancePercentage || 0),
+              0
+            ) / total
+          ).toFixed(1)
+        : 0;
 
-    const highRisk = monthlyReport.filter((row) => (row.attendancePercentage || 0) < 75).length;
+    const low = monthlyReport.filter(
+      (r) => (r.attendancePercentage || 0) < 75
+    ).length;
 
     return {
-      average: Number(average),
-      totalUsers: monthlyReport.length,
-      highRisk,
+      total,
+      avg,
+      low,
     };
   }, [monthlyReport]);
 
-  const handleRoleChange = (value) => {
-    setRole(value);
-    setSchoolClassId(undefined);
-    setSectionId(undefined);
-  };
-
+  /* ---------------- ACTION ---------------- */
   const handleGenerate = () => {
-    if (!schoolId) {
-      message.error("School information not found in current login session.");
-      return;
-    }
-
-    if (role === "student" && schoolClassId && !sectionId) {
-      message.warning("Please select a section or clear class filter.");
-      return;
-    }
+    if (!schoolId) return message.error("School not found");
 
     dispatch(
       fetchMonthlyReport({
         schoolId,
-        month: monthDate.month() + 1,
-        year: monthDate.year(),
+        month: month.month() + 1,
+        year: month.year(),
         role,
-        schoolClassId: role === "student" ? schoolClassId : undefined,
+        schoolClassId: role === "student" ? classId : undefined,
         sectionId: role === "student" ? sectionId : undefined,
       })
     );
   };
 
+  /* ---------------- TABLE ---------------- */
   const columns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      render: (value) => value || "-",
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      render: (value) => value || "-",
-    },
-    {
-      title: "Present",
-      dataIndex: "presentDays",
-      align: "center",
-      width: 100,
-    },
+    { title: "Name", dataIndex: "name" },
+    { title: "Email", dataIndex: "email" },
+    { title: "Present", dataIndex: "presentDays", align: "center" },
     {
       title: "Absent",
-      key: "absentDays",
+      render: (_, r) => r?.statusBreakdown?.absent || 0,
       align: "center",
-      width: 100,
-      render: (_, row) => row?.statusBreakdown?.absent || 0,
     },
     {
       title: "Leave",
-      key: "leaveDays",
+      render: (_, r) => r?.statusBreakdown?.leave || 0,
       align: "center",
-      width: 100,
-      render: (_, row) => row?.statusBreakdown?.leave || 0,
     },
+    { title: "Total", dataIndex: "totalDays", align: "center" },
     {
-      title: "Total",
-      dataIndex: "totalDays",
-      align: "center",
-      width: 100,
-    },
-    {
-      title: "Attendance %",
+      title: "Attendance",
       dataIndex: "attendancePercentage",
       align: "center",
-      width: 130,
-      render: (value) => (
-        <Tag color={value >= 90 ? "green" : value >= 75 ? "gold" : "red"}>{value || 0}%</Tag>
+      render: (v) => (
+        <Tag color={v >= 90 ? "green" : v >= 75 ? "gold" : "red"}>
+          {v || 0}%
+        </Tag>
       ),
     },
   ];
 
   return (
-    <Card
-      title="Monthly Attendance Report"
-      extra={<Text type="secondary">School Admin can track students, teachers and staff month-wise.</Text>}
-    >
-      <Row gutter={[12, 12]}>
-        <Col xs={24} md={5}>
-          <DatePicker picker="month" style={{ width: "100%" }} value={monthDate} onChange={setMonthDate} />
-        </Col>
-        <Col xs={24} md={5}>
-          <Select
-            style={{ width: "100%" }}
-            value={role}
-            onChange={handleRoleChange}
-            options={ROLE_OPTIONS}
-            placeholder="Select role"
-          />
-        </Col>
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* HEADER */}
+      <div className="mb-4">
+        <Title level={4} className="!mb-0">
+          Monthly Attendance Report
+        </Title>
+        <Text type="secondary">
+          Track performance of students, staff & teachers
+        </Text>
+      </div>
 
-        <Col xs={24} md={5}>
+      {/* FILTERS */}
+      <Card className="mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <DatePicker
+            picker="month"
+            value={month}
+            onChange={setMonth}
+            className="w-full"
+          />
+
           <Select
+            value={role}
+            onChange={setRole}
+            options={ROLE_OPTIONS}
+            placeholder="Role"
+          />
+
+          <Select
+            placeholder="Class"
             allowClear
             disabled={role !== "student"}
-            style={{ width: "100%" }}
-            value={schoolClassId}
-            options={classOptions}
-            placeholder="Class (students)"
-            onChange={(value) => {
-              setSchoolClassId(value);
+            value={classId}
+            onChange={(v) => {
+              setClassId(v);
               setSectionId(undefined);
             }}
+            options={classOptions}
           />
-        </Col>
 
-        <Col xs={24} md={5}>
           <Select
+            placeholder="Section"
             allowClear
-            disabled={role !== "student" || !schoolClassId}
-            style={{ width: "100%" }}
+            disabled={!classId || role !== "student"}
             value={sectionId}
-            options={sectionOptions}
-            placeholder="Section (students)"
             onChange={setSectionId}
+            options={sectionOptions}
           />
-        </Col>
 
-        <Col xs={24} md={4}>
-          <Button block type="primary" loading={reportLoading} onClick={handleGenerate}>
+          <Button type="primary" loading={reportLoading} onClick={handleGenerate}>
             Generate
           </Button>
+        </div>
+      </Card>
+
+      {/* SUMMARY DASHBOARD */}
+      <Row gutter={[12, 12]} className="mb-4">
+        <Col xs={12} md={8}>
+          <Card size="small">
+            <Statistic title="Total Users" value={summary.total} />
+          </Card>
+        </Col>
+
+        <Col xs={12} md={8}>
+          <Card size="small">
+            <Statistic title="Average Attendance" value={summary.avg} suffix="%" />
+          </Card>
+        </Col>
+
+        <Col xs={12} md={8}>
+          <Card size="small">
+            <Statistic title="Below 75%" value={summary.low} />
+          </Card>
         </Col>
       </Row>
 
-      <Space size={12} style={{ marginTop: 16, marginBottom: 8 }} wrap>
-        <Statistic title="Users" value={summary.totalUsers} />
-        <Statistic title="Average %" value={summary.average} precision={2} suffix="%" />
-        <Statistic title="Below 75%" value={summary.highRisk} />
-      </Space>
-
-      <Table
-        rowKey="userId"
-        loading={reportLoading}
-        style={{ marginTop: 8 }}
-        dataSource={monthlyReport}
-        columns={columns}
-        pagination={{ pageSize: 10, showSizeChanger: true }}
-      />
-    </Card>
+      {/* TABLE */}
+      <Card>
+        <Table
+          rowKey="userId"
+          loading={reportLoading}
+          dataSource={monthlyReport}
+          columns={columns}
+          pagination={{ pageSize: 10 }}
+        />
+      </Card>
+    </div>
   );
 };
 

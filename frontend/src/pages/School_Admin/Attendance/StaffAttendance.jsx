@@ -2,8 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   Card,
   Table,
-  Row,
-  Col,
   Select,
   Button,
   Typography,
@@ -12,12 +10,16 @@ import {
   Space,
   DatePicker,
   TimePicker,
-  Divider,
   message,
   Input,
   Statistic,
 } from "antd";
-import { SaveOutlined, ReloadOutlined, SearchOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  SaveOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUser } from "../../../features/authSlice";
 import { submitAttendance } from "../../../features/attendanceSlice";
@@ -25,11 +27,13 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-
 const StaffAttendance = () => {
   const dispatch = useDispatch();
-   const { users = [], user: currentUser } = useSelector((state) => state.auth || {});
- 
+  const { users = [], user: currentUser } = useSelector(
+    (state) => state.auth || {}
+  );
+
+  const schoolId = currentUser?.school?._id;
 
   const [attendance, setAttendance] = useState({});
   const [timings, setTimings] = useState({});
@@ -38,105 +42,83 @@ const StaffAttendance = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedDate, setSelectedDate] = useState(dayjs());
 
-  const schoolId = currentUser?.school?._id;
-
+  /* ---------------- FETCH ---------------- */
   useEffect(() => {
-    if (schoolId) {
-      dispatch(fetchAllUser({ schoolId, roleName: ["Teacher", "Staff", "Super Admin"], isActive: true }));
-    }
-  }, [dispatch, schoolId]);
+    if (!schoolId) return;
 
-  /* ------------------ HELPERS ------------------ */
-  const getRoleName = (staff) =>
-     staff?.role?.name || staff?.roleId?.name || staff?.role?.title || staff?.roleId?.title || "";
+    dispatch(
+      fetchAllUser({
+        schoolId,
+        roleName: ["Teacher", "Staff", "Super Admin"],
+        isActive: true,
+      })
+    );
+  }, [schoolId,dispatch]);
 
-  const normalizeTimestamp = (dateValue, timeValue) => {
-    if (!dateValue || !timeValue) return undefined;
-
-    return dateValue.hour(timeValue.hour()).minute(timeValue.minute()).second(0).millisecond(0).toISOString();
-  };
-
-  /* ------------------ FILTER ------------------ */
-  const departmentOptions = useMemo(() => {
-    const values = users.map((u) => u.department).filter(Boolean);
-    return [...new Set(values)].map((v) => ({ value: v, label: v }));
-  }, [users]);
-
-  const roleOptions = useMemo(() => {
-    const values = users.map((u) => getRoleName(u)).filter(Boolean);
-    return [...new Set(values)].map((v) => ({ value: v, label: v }));
-  }, [users]);
+  /* ---------------- HELPERS ---------------- */
+  const getRole = (u) =>
+    u?.role?.name || u?.roleId?.name || u?.role?.title || "";
 
   const filteredStaff = useMemo(() => {
-    const excludedRoles = ["Student", "Parent"];
-     const query = searchText.trim().toLowerCase();
+    const q = searchText.toLowerCase();
+    const excluded = ["Student", "Parent"];
 
-    return users.filter((s) => {
-      const roleName = getRoleName(s);
-      if (excludedRoles.includes(roleName)) return false;
-       const fullName = (s.name || s.fullName || "").toLowerCase();
-      const employeeCode = `${s.employeeId || s.staffId || ""}`.toLowerCase();
+    return users.filter((u) => {
+      const role = getRole(u);
+      if (excluded.includes(role)) return false;
+
+      const name = (u.name || u.fullName || "").toLowerCase();
+      const emp = `${u.employeeId || ""}`.toLowerCase();
+
       return (
-         (!filterDept || s.department === filterDept) &&
-        (!filterRole || roleName === filterRole) &&
-        (!query || fullName.includes(query) || employeeCode.includes(query))
+        (!filterDept || u.department === filterDept) &&
+        (!filterRole || role === filterRole) &&
+        (!q || name.includes(q) || emp.includes(q))
       );
     });
- }, [users, filterDept, filterRole, searchText]);
-  const summary = useMemo(() => {
-    const counts = { present: 0, absent: 0, leave: 0, marked: 0 };
+  }, [users, filterDept, filterRole, searchText]);
 
-    Object.values(attendance).forEach((status) => {
-      if (!status) return;
-      counts.marked += 1;
-      counts[status] += 1;
+  /* ---------------- SUMMARY ---------------- */
+  const summary = useMemo(() => {
+    const s = { present: 0, absent: 0, leave: 0, marked: 0 };
+
+    Object.values(attendance).forEach((v) => {
+      if (!v) return;
+      s[v]++;
+      s.marked++;
     });
 
-    return { ...counts, total: filteredStaff.length };
-  }, [attendance, filteredStaff.length]);
-  /* ------------------ ACTIONS ------------------ */
-  const handleAttendanceChange = (id, status) => {
-    setAttendance((p) => ({ ...p, [id]: status }));
+    return { ...s, total: filteredStaff.length };
+  }, [attendance, filteredStaff]);
 
-    if (status !== "present") {
+  /* ---------------- ACTIONS ---------------- */
+  const handleChange = (id, value) => {
+    setAttendance((p) => ({ ...p, [id]: value }));
+    if (value !== "present") {
       setTimings((p) => ({ ...p, [id]: {} }));
     }
   };
-  const markAllVisiblePresent = () => {
-    const updates = {};
-    filteredStaff.forEach((staff) => {
-      updates[staff._id] = "present";
-    });
-    setAttendance((prev) => ({ ...prev, ...updates }));
-  };
-  const calculateHours = (inTime, outTime) => {
-    if (!inTime || !outTime) return "—";
-    const diff = outTime.diff(inTime, "minute");
-    return diff > 0 ? `${(diff / 60).toFixed(2)} hrs` : "—";
+
+  const markAllPresent = () => {
+    const updated = {};
+    filteredStaff.forEach((s) => (updated[s._id] = "present"));
+    setAttendance((p) => ({ ...p, ...updated }));
   };
 
-  /* ------------------ SUBMIT ------------------ */
+  const resetAll = () => {
+    setAttendance({});
+    setTimings({});
+  };
+
   const handleSubmit = async () => {
-    if (!selectedDate) {
-      return message.warning("Please select date");
-    }
+    if (!schoolId) return message.error("School not found");
 
-    if (!schoolId) {
-      return message.error("School not found");
-    }
+    const records = Object.entries(attendance).map(([userId, status]) => ({
+      userId,
+      status,
+    }));
 
-    const records = Object.entries(attendance)
-      .filter(([, status]) => status)
-      .map(([userId, status]) => ({
-        userId,
-        status,
-        checkInAt: normalizeTimestamp(selectedDate, timings[userId]?.in),
-        checkOutAt: normalizeTimestamp(selectedDate, timings[userId]?.out),
-      }));
-
-    if (!records.length) {
-      return message.warning("Mark at least one attendance");
-    }
+    if (!records.length) return message.warning("Mark attendance first");
 
     try {
       await dispatch(
@@ -148,186 +130,152 @@ const StaffAttendance = () => {
         })
       ).unwrap();
 
-     message.success("Attendance saved successfully");
-    } catch (err) {
-      message.error(err || "Error saving attendance");
+      message.success("Attendance saved");
+    } catch (e) {
+      message.error("Failed to save attendance",e);
     }
   };
 
-  /* ------------------ COLUMNS ------------------ */
+  /* ---------------- TABLE ---------------- */
   const columns = [
     {
       title: "Staff",
-      dataIndex: "name",
-       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record?.name || record?.fullName || "Unnamed"}</Text>
-          <Text type="secondary">{record?.employeeId || record?.regId || "ID: N/A"}</Text>
-        </Space>
+      render: (_, r) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{r?.name || r?.fullName}</span>
+          <span className="text-xs text-gray-500">
+            {r?.employeeId || "ID N/A"}
+          </span>
+        </div>
       ),
     },
     {
       title: "Role",
-      render: (_, r) => getRoleName(r) || "—",
-    },
-    {
-      title: "Department",
-      dataIndex: "department",
-        render: (dept) => dept || "—",
+      render: (_, r) => getRole(r) || "—",
     },
     {
       title: "Attendance",
-      align: "center",
       render: (_, r) => (
         <Radio.Group
-          size="small"
           value={attendance[r._id]}
-          onChange={(e) => handleAttendanceChange(r._id, e.target.value)}
-          optionType="button"
+          onChange={(e) => handleChange(r._id, e.target.value)}
           buttonStyle="solid"
+          size="small"
         >
-         <Radio.Button value="present">Present</Radio.Button>
-          <Radio.Button value="absent">Absent</Radio.Button>
-          <Radio.Button value="leave">Leave</Radio.Button>
+          <Radio.Button value="present">P</Radio.Button>
+          <Radio.Button value="absent">A</Radio.Button>
+          <Radio.Button value="leave">L</Radio.Button>
         </Radio.Group>
       ),
     },
     {
-     title: "In/Out Time",
+      title: "Time",
       render: (_, r) =>
         attendance[r._id] === "present" ? (
           <Space>
             <TimePicker
               size="small"
               format="HH:mm"
-              value={timings[r._id]?.in}
-              onChange={(time) =>
+              onChange={(t) =>
                 setTimings((p) => ({
                   ...p,
-                  [r._id]: { ...p[r._id], in: time },
+                  [r._id]: { ...p[r._id], in: t },
                 }))
               }
             />
             <TimePicker
               size="small"
               format="HH:mm"
-              value={timings[r._id]?.out}
-              onChange={(time) =>
+              onChange={(t) =>
                 setTimings((p) => ({
                   ...p,
-                  [r._id]: { ...p[r._id], out: time },
+                  [r._id]: { ...p[r._id], out: t },
                 }))
               }
             />
           </Space>
         ) : (
-          <Text type="secondary">—</Text>
+          <span className="text-gray-400">—</span>
         ),
-    },
-    {
-      title: "Hours",
-       render: (_, r) => <Tag color="blue">{calculateHours(timings[r._id]?.in, timings[r._id]?.out)}</Tag>,
     },
   ];
 
   return (
-    <Card>
-      <Space direction="vertical" size={4} style={{ width: "100%", marginBottom: 14 }}>
-        <Title level={4} style={{ marginBottom: 0 }}>
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* HEADER */}
+      <div className="mb-4">
+        <Title level={4} className="!mb-0">
           Staff Attendance
         </Title>
-        <Text type="secondary">Modern, quick-mark flow with smart filters and shift timing support.</Text>
-      </Space>
+        <Text type="secondary">
+          Quick attendance with role-based staff tracking
+        </Text>
+      </div>
 
-      <Row gutter={[12, 12]}>
-        <Col xs={24} md={4}>
+      {/* FILTER BAR */}
+      <Card className="mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <DatePicker
             value={selectedDate}
             onChange={setSelectedDate}
-            style={{ width: "100%" }}
-             disabledDate={(current) => current && current > dayjs().endOf("day")}
+            className="w-full"
           />
-        </Col>
 
-          <Col xs={24} md={4}>
           <Select
-            allowClear
             placeholder="Department"
-            style={{ width: "100%" }}
-            value={filterDept}
-            onChange={setFilterDept}
-         options={departmentOptions}
-          />
-        </Col>
-
-         <Col xs={24} md={4}>
-          <Select
             allowClear
-            placeholder="Role"
-            style={{ width: "100%" }}
-             value={filterRole}
-            onChange={setFilterRole}
-            options={roleOptions}
+            onChange={setFilterDept}
           />
-        </Col>
 
-       <Col xs={24} md={6}>
+          <Select placeholder="Role" allowClear onChange={setFilterRole} />
+
           <Input
-            placeholder="Search staff / employee id"
+            placeholder="Search staff"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-        </Col>
-        <Col xs={24} md={6} style={{ textAlign: "right" }}>
-          <Space wrap style={{ justifyContent: "flex-end" }}>
-            <Button icon={<CheckCircleOutlined />} onClick={markAllVisiblePresent}>
-              Mark visible present
+
+          <div className="flex gap-2 justify-end">
+            <Button onClick={markAllPresent} icon={<CheckCircleOutlined />}>
+              All Present
             </Button>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => {
-                setAttendance({});
-                setTimings({});
-              }}
-            >
+            <Button onClick={resetAll} icon={<ReloadOutlined />}>
               Reset
             </Button>
-
             <Button type="primary" icon={<SaveOutlined />} onClick={handleSubmit}>
               Save
             </Button>
-          </Space>
-        </Col>
-      </Row>
+          </div>
+        </div>
+      </Card>
 
-     <Divider style={{ margin: "14px 0" }} />
-
-      <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
-        <Col xs={12} md={6}>
-          <Card size="small">
-            <Statistic title="Visible Staff" value={summary.total} />
-          </Card>
-        </Col>
-        <Col xs={12} md={6}>
-          <Card size="small">
-            <Statistic title="Marked" value={summary.marked} />
-          </Card>
-        </Col>
-        <Col xs={12} md={4}>
-          <Tag color="green" style={{ padding: "6px 10px" }}>Present: {summary.present}</Tag>
-        </Col>
-        <Col xs={12} md={4}>
-          <Tag color="red" style={{ padding: "6px 10px" }}>Absent: {summary.absent}</Tag>
-        </Col>
-        <Col xs={12} md={4}>
-          <Tag color="orange" style={{ padding: "6px 10px" }}>Leave: {summary.leave}</Tag>
-        </Col>
-        </Row>
+      {/* SUMMARY */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <Card size="small">
+          <Statistic title="Total" value={summary.total} />
+        </Card>
+        <Card size="small">
+          <Statistic title="Marked" value={summary.marked} />
+        </Card>
+        <Card size="small">
+          <Tag color="green">Present: {summary.present}</Tag>
+        </Card>
+        <Card size="small">
+          <Tag color="red">Absent: {summary.absent}</Tag>
+        </Card>
+      </div>
 
       {/* TABLE */}
-     <Table rowKey="_id" columns={columns} dataSource={filteredStaff} pagination={{ pageSize: 8, showSizeChanger: true }} />
-    </Card>
+      <Card>
+        <Table
+          rowKey="_id"
+          columns={columns}
+          dataSource={filteredStaff}
+          pagination={{ pageSize: 8 }}
+        />
+      </Card>
+    </div>
   );
 };
 

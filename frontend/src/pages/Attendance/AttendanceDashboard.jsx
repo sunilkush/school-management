@@ -1,19 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Button,
   Card,
-  Col,
   DatePicker,
-  Empty,
-  Input,
-  List,
-  Progress,
   Row,
-  Space,
+  Col,
   Statistic,
   Table,
   Tag,
   Typography,
+  Progress,
+  List,
+  Button,
+  Empty,
+  Space,
+  Input,
   message,
 } from "antd";
 import dayjs from "dayjs";
@@ -22,360 +22,271 @@ import { fetchMonthlyReport } from "../../features/attendanceSlice";
 
 const { Title, Text } = Typography;
 
-const queueStorageKey = ({ schoolId, month, year }) => `attendanceActionQueue:${schoolId || "na"}:${year}-${month}`;
-
-const normalizeDailyEntries = (dailyStatus = {}) =>
-  Object.entries(dailyStatus)
-    .map(([key, status]) => {
-      const numericDay = Number(key);
-      const parsed = Number.isNaN(numericDay) ? dayjs(key).date() : numericDay;
-      return {
-        day: Number.isNaN(parsed) ? 0 : parsed,
-        status: String(status || "").toLowerCase(),
-      };
-    })
-    .filter((entry) => entry.day > 0)
-    .sort((a, b) => a.day - b.day);
-
-const getConsecutiveAbsenceStreak = (dailyStatus = {}) => {
-  const entries = normalizeDailyEntries(dailyStatus);
-  let streak = 0;
-  for (let index = entries.length - 1; index >= 0; index -= 1) {
-    if (entries[index].status === "absent") streak += 1;
-    else break;
-  }
-  return streak;
-};
-
-const getWeeklyAbsenceRate = (dailyStatus = {}) => {
-  const entries = normalizeDailyEntries(dailyStatus);
-  if (!entries.length) return 0;
-  const last7 = entries.slice(-7);
-  const absentDays = last7.filter((entry) => entry.status === "absent").length;
-  return Number(((absentDays / last7.length) * 100).toFixed(2));
-};
-
-const getMonthlyAbsenceRate = (row) => {
-  const present = Number(row?.statusBreakdown?.present || 0);
-  const absent = Number(row?.statusBreakdown?.absent || 0);
-  const leave = Number(row?.statusBreakdown?.leave || 0);
-  const total = present + absent + leave;
-  if (!total) return Number((100 - Number(row?.attendancePercentage || 0)).toFixed(2));
-  return Number(((absent / total) * 100).toFixed(2));
-};
-
 const AttendanceDashboard = () => {
   const dispatch = useDispatch();
-  const { monthlyReport, reportLoading } = useSelector((state) => state.attendance);
-  const { user } = useSelector((state) => state.auth);
+
+  const { monthlyReport = [], reportLoading } = useSelector(
+    (s) => s.attendance
+  );
+
+  const { user } = useSelector((s) => s.auth);
+
+  const schoolId = user?.schoolId || user?.school?._id;
 
   const now = dayjs();
-  const [selectedMonth, setSelectedMonth] = useState(now.month() + 1);
-  const [selectedYear, setSelectedYear] = useState(now.year());
-  const [queueItems, setQueueItems] = useState([]);
-  const [noteDrafts, setNoteDrafts] = useState({});
+  const [month, setMonth] = useState(now.month() + 1);
+  const [year, setYear] = useState(now.year());
 
-  const activeSchoolId = user?.schoolId || user?.school?._id || null;
+  const [queue, setQueue] = useState([]);
+  const [notes, setNotes] = useState({});
 
+  /* ---------------- FETCH ---------------- */
   useEffect(() => {
-    if (!activeSchoolId) return;
-    dispatch(
-      fetchMonthlyReport({
-        schoolId: activeSchoolId,
-        month: selectedMonth,
-        year: selectedYear,
-      })
-    );
-  }, [dispatch, activeSchoolId, selectedMonth, selectedYear]);
+    if (!schoolId) return;
 
-  useEffect(() => {
-    if (!activeSchoolId) return;
-    try {
-      const raw = localStorage.getItem(
-        queueStorageKey({ schoolId: activeSchoolId, month: selectedMonth, year: selectedYear })
-      );
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setQueueItems(parsed);
-      } else {
-        setQueueItems([]);
-      }
-    } catch {
-      setQueueItems([]);
-    }
-  }, [activeSchoolId, selectedMonth, selectedYear]);
+    dispatch(fetchMonthlyReport({ schoolId, month, year }));
+  }, [month, year]);
 
-  const persistQueue = (nextQueue) => {
-    setQueueItems(nextQueue);
-    if (!activeSchoolId) return;
-    try {
-      localStorage.setItem(
-        queueStorageKey({ schoolId: activeSchoolId, month: selectedMonth, year: selectedYear }),
-        JSON.stringify(nextQueue)
-      );
-    } catch {
-      // ignore storage quota errors
+  /* ---------------- HELPERS ---------------- */
+  const getStreak = (daily = {}) => {
+    const values = Object.values(daily || {});
+    let streak = 0;
+    for (let i = values.length - 1; i >= 0; i--) {
+      if (values[i] === "absent") streak++;
+      else break;
     }
+    return streak;
   };
 
+  /* ---------------- ANALYTICS ---------------- */
   const analytics = useMemo(() => {
     if (!monthlyReport.length) {
       return {
-        tracked: 0,
-        averageAttendance: 0,
-        weeklyAbsenceRate: 0,
-        monthlyAbsenceRate: 0,
-        chronicRiskCount: 0,
-        parentAlertCandidates: [],
-        riskRows: [],
+        total: 0,
+        avg: 0,
+        risk: 0,
+        alerts: [],
+        highRisk: [],
       };
     }
 
-    const tracked = monthlyReport.length;
-    const averageAttendance =
-      monthlyReport.reduce((acc, row) => acc + Number(row?.attendancePercentage || 0), 0) / tracked;
+    const total = monthlyReport.length;
 
-    const weeklyAbsenceRate =
-      monthlyReport.reduce((acc, row) => acc + getWeeklyAbsenceRate(row?.dailyStatus || {}), 0) / tracked;
+    const avg =
+      monthlyReport.reduce(
+        (a, b) => a + Number(b.attendancePercentage || 0),
+        0
+      ) / total;
 
-    const monthlyAbsenceRate =
-      monthlyReport.reduce((acc, row) => acc + getMonthlyAbsenceRate(row), 0) / tracked;
+    const enriched = monthlyReport.map((r) => {
+      const streak = getStreak(r.dailyStatus || {});
+      const att = Number(r.attendancePercentage || 0);
 
-    const riskRows = monthlyReport
-      .map((row) => {
-        const streak = getConsecutiveAbsenceStreak(row?.dailyStatus || {});
-        const attendance = Number(row?.attendancePercentage || 0);
-        const monthlyAbsence = getMonthlyAbsenceRate(row);
+      return {
+        id: r.userId,
+        name: r.name,
+        attendance: att,
+        streak,
+        risk: Math.max(0, 75 - att) + streak * 8,
+      };
+    });
 
-        return {
-          userId: row?.userId,
-          name: row?.name || row?.studentName || row?.user?.name || "Unknown",
-          attendance,
-          monthlyAbsence,
-          streak,
-          riskScore: Number((Math.max(0, 75 - attendance) + streak * 8 + monthlyAbsence * 0.4).toFixed(2)),
-        };
-      })
-      .filter((row) => row.attendance < 75 || row.streak >= 3)
-      .sort((a, b) => b.riskScore - a.riskScore);
+    const highRisk = enriched.filter(
+      (r) => r.attendance < 75 || r.streak >= 3
+    );
 
-    const parentAlertCandidates = riskRows.filter((row) => row.streak >= 3);
+    const alerts = enriched.filter((r) => r.streak >= 3);
 
     return {
-      tracked,
-      averageAttendance: Number(averageAttendance.toFixed(2)),
-      weeklyAbsenceRate: Number(weeklyAbsenceRate.toFixed(2)),
-      monthlyAbsenceRate: Number(monthlyAbsenceRate.toFixed(2)),
-      chronicRiskCount: riskRows.length,
-      parentAlertCandidates,
-      riskRows,
+      total,
+      avg: Number(avg.toFixed(1)),
+      risk: highRisk.length,
+      alerts,
+      highRisk,
     };
   }, [monthlyReport]);
 
-  const handleQueueCandidate = (candidate) => {
-    const exists = queueItems.some((item) => item.userId === candidate.userId);
-    if (exists) {
-      message.info("Student already in teacher action queue");
+  /* ---------------- QUEUE ---------------- */
+  const addToQueue = (item) => {
+    if (queue.find((q) => q.id === item.id)) {
+      message.info("Already in queue");
       return;
     }
 
-    const nextQueue = [
+    setQueue((prev) => [
       {
-        userId: candidate.userId,
-        name: candidate.name,
-        status: "pending-follow-up",
-        streak: candidate.streak,
-        attendance: candidate.attendance,
+        ...item,
+        status: "pending",
         note: "",
         updatedAt: new Date().toISOString(),
       },
-      ...queueItems,
-    ];
-
-    persistQueue(nextQueue);
-    message.success("Added to class teacher action queue");
+      ...prev,
+    ]);
   };
 
-  const handleSaveNote = (userId) => {
-    const note = (noteDrafts[userId] || "").trim();
-    if (!note) {
-      message.warning("Please enter follow-up note first");
-      return;
-    }
+  const saveNote = (id) => {
+    if (!notes[id]) return message.warning("Enter note first");
 
-    const nextQueue = queueItems.map((item) =>
-      item.userId === userId
-        ? {
-            ...item,
-            note,
-            status: "follow-up-done",
-            updatedAt: new Date().toISOString(),
-          }
-        : item
+    setQueue((prev) =>
+      prev.map((q) =>
+        q.id === id
+          ? {
+              ...q,
+              note: notes[id],
+              status: "done",
+              updatedAt: new Date().toISOString(),
+            }
+          : q
+      )
     );
 
-    persistQueue(nextQueue);
-    setNoteDrafts((prev) => ({ ...prev, [userId]: "" }));
-    message.success("Follow-up note saved");
+    message.success("Saved");
   };
 
-  const riskColumns = [
-    {
-      title: "Student",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Attendance %",
-      dataIndex: "attendance",
-      key: "attendance",
-      render: (value) => <Tag color={value < 75 ? "red" : "green"}>{value}%</Tag>,
-    },
-    {
-      title: "Current Absence Streak",
-      dataIndex: "streak",
-      key: "streak",
-      render: (value) => <Tag color={value >= 3 ? "volcano" : "default"}>{value} day(s)</Tag>,
-    },
-    {
-      title: "Risk",
-      dataIndex: "riskScore",
-      key: "riskScore",
-      render: (value) => <Tag color={value > 30 ? "red" : "orange"}>{value}</Tag>,
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_value, record) => (
-        <Button size="small" onClick={() => handleQueueCandidate(record)}>
-          Add to Queue
-        </Button>
-      ),
-    },
-  ];
-
+  /* ---------------- UI ---------------- */
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
-      <Card loading={reportLoading}>
-        <Space direction="vertical" style={{ width: "100%" }} size={8}>
-          <Title level={4} style={{ marginBottom: 0 }}>Attendance Analytics Dashboard</Title>
-          <Text type="secondary">Weekly/monthly trends, chronic risk flags, parent alerts and teacher action queue.</Text>
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen space-y-4">
+      {/* HEADER */}
+      <div>
+        <Title level={4} className="!mb-0">
+          Attendance Analytics
+        </Title>
+        <Text type="secondary">
+          Risk detection, trends & teacher follow-ups
+        </Text>
+      </div>
 
-          <Space wrap>
-            <Text strong>Report Month:</Text>
-            <DatePicker
-              picker="month"
-              value={dayjs(`${selectedYear}-${selectedMonth}-01`) }
-              onChange={(value) => {
-                const next = value || dayjs();
-                setSelectedMonth(next.month() + 1);
-                setSelectedYear(next.year());
-              }}
-            />
-          </Space>
-        </Space>
-
-        <Row gutter={[16, 16]} style={{ marginTop: 12 }}>
-          <Col xs={24} sm={12} lg={6}><Statistic title="Students Tracked" value={analytics.tracked} /></Col>
-          <Col xs={24} sm={12} lg={6}><Statistic title="Average Attendance" value={analytics.averageAttendance} suffix="%" /></Col>
-          <Col xs={24} sm={12} lg={6}><Statistic title="Weekly Absence Trend" value={analytics.weeklyAbsenceRate} suffix="%" /></Col>
-          <Col xs={24} sm={12} lg={6}><Statistic title="Monthly Absence Trend" value={analytics.monthlyAbsenceRate} suffix="%" /></Col>
-        </Row>
-
-        <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
-          <Col xs={24} md={12}>
-            <Card size="small" title="Attendance Health">
-              <Progress
-                percent={analytics.averageAttendance}
-                status={analytics.averageAttendance < 75 ? "exception" : "active"}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} md={12}>
-            <Card size="small" title="Priority Alerts">
-              <Space direction="vertical" size={4}>
-                <Text>Chronic risk students: <strong>{analytics.chronicRiskCount}</strong></Text>
-                <Text>Parent alert candidates (3+ consecutive absences): <strong>{analytics.parentAlertCandidates.length}</strong></Text>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
+      {/* MONTH SELECT */}
+      <Card>
+        <DatePicker
+          picker="month"
+          value={dayjs(`${year}-${month}-01`)}
+          onChange={(v) => {
+            const d = v || dayjs();
+            setMonth(d.month() + 1);
+            setYear(d.year());
+          }}
+        />
       </Card>
 
-      <Card
-        title="Auto-risk Flags (Chronic Absentees)"
-        extra={<Tag color="red">Rule: Attendance &lt;75% OR 3+ consecutive absences</Tag>}
-      >
-        {analytics.riskRows.length ? (
-          <Table rowKey={(row) => row.userId || row.name} columns={riskColumns} dataSource={analytics.riskRows} pagination={{ pageSize: 8 }} />
-        ) : (
-          <Empty description="No chronic risk students detected." />
-        )}
-      </Card>
+      {/* KPI CARDS */}
+      <Row gutter={[12, 12]}>
+        <Col xs={12} md={6}>
+          <Card>
+            <Statistic title="Students" value={analytics.total} />
+          </Card>
+        </Col>
 
-      <Card
-        title="Parent Auto-alert Queue"
-        extra={<Tag color="orange">Rule: Trigger when 3 consecutive absences found</Tag>}
-      >
-        {!analytics.parentAlertCandidates.length ? (
-          <Empty description="No candidates for parent alerts this month." />
-        ) : (
+        <Col xs={12} md={6}>
+          <Card>
+            <Statistic title="Avg Attendance" value={analytics.avg} suffix="%" />
+          </Card>
+        </Col>
+
+        <Col xs={12} md={6}>
+          <Card>
+            <Statistic title="Risk Students" value={analytics.risk} />
+          </Card>
+        </Col>
+
+        <Col xs={12} md={6}>
+          <Card>
+            <Progress percent={analytics.avg} />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* ALERTS */}
+      <Card title="🚨 Risk Alerts">
+        {analytics.alerts.length ? (
           <List
-            dataSource={analytics.parentAlertCandidates}
-            renderItem={(item) => (
+            dataSource={analytics.alerts}
+            renderItem={(i) => (
               <List.Item
                 actions={[
-                  <Button key="queue" size="small" onClick={() => handleQueueCandidate(item)}>
-                    Add to Teacher Queue
+                  <Button key="add" size="small" onClick={() => addToQueue(i)}>
+                    Add
                   </Button>,
                 ]}
               >
                 <List.Item.Meta
-                  title={`${item.name} (${item.attendance}% attendance)`}
-                  description={`Consecutive absence streak: ${item.streak} day(s)`}
+                  title={i.name}
+                  description={`Attendance: ${i.attendance}% | Streak: ${i.streak}`}
                 />
               </List.Item>
             )}
           />
+        ) : (
+          <Empty description="No alerts" />
         )}
       </Card>
 
-      <Card title="Class Teacher Action Queue (with Follow-up Notes)">
-        {!queueItems.length ? (
-          <Empty description="No pending follow-ups." />
+      {/* HIGH RISK TABLE */}
+      <Card title="High Risk Students">
+        <Table
+          rowKey="id"
+          dataSource={analytics.highRisk}
+          pagination={{ pageSize: 6 }}
+          columns={[
+            { title: "Name", dataIndex: "name" },
+            {
+              title: "Attendance",
+              dataIndex: "attendance",
+              render: (v) => <Tag color={v < 75 ? "red" : "green"}>{v}%</Tag>,
+            },
+            {
+              title: "Streak",
+              dataIndex: "streak",
+              render: (v) => <Tag color="orange">{v}</Tag>,
+            },
+            {
+              title: "Action",
+              render: (_, r) => (
+                <Button size="small" onClick={() => addToQueue(r)}>
+                  Add to Queue
+                </Button>
+              ),
+            },
+          ]}
+        />
+      </Card>
+
+      {/* QUEUE */}
+      <Card title="Teacher Action Queue">
+        {!queue.length ? (
+          <Empty description="No pending follow-ups" />
         ) : (
           <List
-            dataSource={queueItems}
+            dataSource={queue}
             renderItem={(item) => (
               <List.Item>
-                <Space direction="vertical" style={{ width: "100%" }} size={8}>
+                <Space direction="vertical" style={{ width: "100%" }}>
                   <Space wrap>
-                    <Text strong>{item.name}</Text>
-                    <Tag color={item.status === "follow-up-done" ? "green" : "gold"}>{item.status}</Tag>
-                    <Tag>Streak: {item.streak}</Tag>
-                    <Tag>Attendance: {item.attendance}%</Tag>
-                    <Text type="secondary">Updated: {new Date(item.updatedAt).toLocaleString()}</Text>
+                    <Tag>{item.name}</Tag>
+                    <Tag color={item.status === "done" ? "green" : "gold"}>
+                      {item.status}
+                    </Tag>
                   </Space>
 
                   <Input.TextArea
                     rows={2}
-                    value={noteDrafts[item.userId] ?? item.note}
-                    onChange={(event) => setNoteDrafts((prev) => ({ ...prev, [item.userId]: event.target.value }))}
-                    placeholder="Add follow-up note for parent call / counseling / home visit"
+                    value={notes[item.id] || item.note}
+                    onChange={(e) =>
+                      setNotes((p) => ({ ...p, [item.id]: e.target.value }))
+                    }
+                    placeholder="Follow-up note"
                   />
 
-                  <Space>
-                    <Button size="small" type="primary" onClick={() => handleSaveNote(item.userId)}>
-                      Save Follow-up
-                    </Button>
-                  </Space>
+                  <Button size="small" type="primary" onClick={() => saveNote(item.id)}>
+                    Save
+                  </Button>
                 </Space>
               </List.Item>
             )}
           />
         )}
       </Card>
-    </Space>
+    </div>
   );
 };
 

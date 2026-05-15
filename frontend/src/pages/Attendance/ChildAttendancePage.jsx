@@ -1,19 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import {
-  Alert,
   Card,
-  Col,
-  Empty,
-  Row,
   Select,
-  Space,
+  Row,
+  Col,
   Statistic,
   Table,
   Tag,
   Typography,
+  Empty,
+  Alert,
+  Space,
 } from "antd";
 import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchMyAttendance } from "../../features/attendanceSlice";
 import { fetchMyChildren } from "../../features/studentPortalSlice";
 
@@ -21,170 +21,203 @@ const { Title, Text } = Typography;
 
 const ChildAttendancePage = () => {
   const dispatch = useDispatch();
-  const { children = [], loading: childLoading } = useSelector((state) => state.studentPortal || {});
-  const { myAttendance = [], loading: attendanceLoading } = useSelector((state) => state.attendance || {});
 
-  const [selectedChildId, setSelectedChildId] = useState(null);
+  const { children = [], loading: childLoading } = useSelector(
+    (s) => s.studentPortal || {}
+  );
 
+  const { myAttendance = [], loading: attendanceLoading } = useSelector(
+    (s) => s.attendance || {}
+  );
+
+  const [childId, setChildId] = useState(null);
+
+  /* ---------------- FETCH CHILDREN ---------------- */
   useEffect(() => {
     dispatch(fetchMyChildren());
-  }, [dispatch]);
+  }, []);
 
+  /* ---------------- AUTO SELECT FIRST CHILD ---------------- */
   useEffect(() => {
-    if (!selectedChildId && children.length) {
-      setSelectedChildId(children[0].userId);
+    if (!childId && children.length) {
+      setChildId(children[0].userId);
     }
-  }, [children, selectedChildId]);
+  }, [children]);
 
+  /* ---------------- FETCH ATTENDANCE ---------------- */
   useEffect(() => {
-    if (selectedChildId) {
-      dispatch(fetchMyAttendance({ childId: selectedChildId }));
+    if (childId) {
+      dispatch(fetchMyAttendance({ childId }));
     }
-  }, [dispatch, selectedChildId]);
+  }, [childId]);
 
-  const summary = useMemo(() => {
-    const initial = {
-      totalDays: myAttendance.length,
-      presentDays: 0,
-      absentDays: 0,
-      leaveDays: 0,
-    };
-
-    myAttendance.forEach((record) => {
-      const status = String(record.status || "").toLowerCase();
-      if (status === "present") initial.presentDays += 1;
-      else if (status === "absent") initial.absentDays += 1;
-      else initial.leaveDays += 1;
-    });
-
-    const attendancePercent = initial.totalDays
-      ? Math.round((initial.presentDays / initial.totalDays) * 100)
-      : 0;
-
-    return { ...initial, attendancePercent };
-  }, [myAttendance]);
-
+  /* ---------------- CHILD OPTIONS ---------------- */
   const childOptions = useMemo(
     () =>
-      children.map((child) => ({
-        label: child?.name || "Unnamed Child",
-        value: child?.userId,
+      children.map((c) => ({
+        label: c?.name || "Child",
+        value: c?.userId,
       })),
     [children]
   );
 
+  /* ---------------- SUMMARY ---------------- */
+  const summary = useMemo(() => {
+    const s = {
+      total: myAttendance.length,
+      present: 0,
+      absent: 0,
+      leave: 0,
+    };
+
+    myAttendance.forEach((r) => {
+      const status = (r.status || "").toLowerCase();
+      if (status === "present") s.present++;
+      else if (status === "absent") s.absent++;
+      else s.leave++;
+    });
+
+    const percent = s.total
+      ? Math.round((s.present / s.total) * 100)
+      : 0;
+
+    return { ...s, percent };
+  }, [myAttendance]);
+
+  /* ---------------- TABLE ---------------- */
   const columns = [
     {
       title: "Date",
       dataIndex: "date",
-      render: (value) => (value ? dayjs(value).format("DD MMM YYYY") : "-"),
-      width: 170,
+      render: (d) => (d ? dayjs(d).format("DD MMM YYYY") : "-"),
     },
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) => {
-        const normalizedStatus = String(status || "-").toLowerCase();
-        const color =
-          normalizedStatus === "present"
-            ? "green"
-            : normalizedStatus === "absent"
-              ? "red"
-              : "gold";
-        return <Tag color={color}>{normalizedStatus.toUpperCase()}</Tag>;
+      render: (s) => {
+        const v = (s || "").toLowerCase();
+
+        return (
+          <Tag color={v === "present" ? "green" : v === "absent" ? "red" : "gold"}>
+            {v.toUpperCase()}
+          </Tag>
+        );
       },
-      width: 120,
     },
     {
       title: "Remarks",
       dataIndex: "remarks",
-      render: (value) => value || "No remark",
+      render: (v) => v || "—",
     },
   ];
 
   const loading = childLoading || attendanceLoading;
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
-      <Card>
-        <Space direction="vertical" size={6} style={{ width: "100%" }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Child Attendance
-          </Title>
-          <Text type="secondary">
-            Child select karo and attendance summary + daily records ek hi screen par dekh lo.
-          </Text>
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* HEADER */}
+      <div className="mb-4">
+        <Title level={4} className="!mb-0">
+          Child Attendance
+        </Title>
+        <Text type="secondary">
+          View your child’s attendance summary and history
+        </Text>
+      </div>
+
+      {/* CHILD SELECT */}
+      <Card className="mb-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
+          <Text strong>Select Child</Text>
+
           <Select
-            placeholder="Select child"
-            value={selectedChildId}
-            onChange={setSelectedChildId}
+            placeholder="Choose child"
+            value={childId}
+            onChange={setChildId}
             loading={childLoading}
-            style={{ width: "100%", maxWidth: 360 }}
             options={childOptions}
-            showSearch
-            optionFilterProp="label"
+            className="w-full md:w-80"
             disabled={!childOptions.length}
+            showSearch
           />
-          {!childOptions.length && !childLoading && (
-            <Alert
-              type="info"
-              showIcon
-              message="No linked child found for this parent account."
-            />
-          )}
-        </Space>
+        </div>
+
+        {!childOptions.length && !childLoading && (
+          <Alert
+            className="mt-3"
+            type="info"
+            showIcon
+            message="No child linked with this account"
+          />
+        )}
       </Card>
 
-      {selectedChildId ? (
+      {/* EMPTY STATE */}
+      {!childId ? (
+        <Card>
+          <Empty description="Select a child to view attendance" />
+        </Card>
+      ) : (
         <>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic title="Total Days" value={summary.totalDays} />
+          {/* SUMMARY CARDS */}
+          <Row gutter={[12, 12]} className="mb-4">
+            <Col xs={12} md={6}>
+              <Card size="small">
+                <Statistic title="Total" value={summary.total} />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic title="Present" value={summary.presentDays} valueStyle={{ color: "#389e0d" }} />
+
+            <Col xs={12} md={6}>
+              <Card size="small">
+                <Statistic
+                  title="Present"
+                  value={summary.present}
+                  valueStyle={{ color: "#389e0d" }}
+                />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic title="Absent" value={summary.absentDays} valueStyle={{ color: "#cf1322" }} />
+
+            <Col xs={12} md={6}>
+              <Card size="small">
+                <Statistic
+                  title="Absent"
+                  value={summary.absent}
+                  valueStyle={{ color: "#cf1322" }}
+                />
               </Card>
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
+
+            <Col xs={12} md={6}>
+              <Card size="small">
                 <Statistic
                   title="Attendance %"
-                  value={summary.attendancePercent}
+                  value={summary.percent}
                   suffix="%"
-                  valueStyle={{ color: summary.attendancePercent >= 75 ? "#1677ff" : "#d46b08" }}
+                  valueStyle={{
+                    color: summary.percent >= 75 ? "#1677ff" : "#d46b08",
+                  }}
                 />
               </Card>
             </Col>
           </Row>
 
+          {/* TABLE */}
           <Card title="Attendance History" loading={loading}>
             {myAttendance.length ? (
               <Table
                 rowKey="_id"
                 columns={columns}
                 dataSource={myAttendance}
-                pagination={{ pageSize: 10, showSizeChanger: false }}
-                scroll={{ x: 700 }}
+                pagination={{ pageSize: 8 }}
+                scroll={{ x: true }}
               />
             ) : (
-              <Empty description="Attendance records not found" />
+              <Empty description="No attendance records found" />
             )}
           </Card>
         </>
-      ) : (
-        <Card>
-          <Empty description="Please select a child to view attendance" />
-        </Card>
       )}
-    </Space>
+    </div>
   );
 };
 
