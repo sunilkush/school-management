@@ -1,9 +1,47 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { buildPayrollScope, payrollApi } from "../services/payrollApi";
-import { createPayrollEntitySlice } from "./createPayrollSlice";
-const entity = createPayrollEntitySlice({ name: "payslips", api: payrollApi.payslips });
-export const fetchPayslips = entity.thunks.fetchAll;
-export const fetchMyPayslips = createAsyncThunk("payslips/fetchMine", async (_, { getState, rejectWithValue }) => { try { return await payrollApi.payslips.mine(buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
-export const generatePayslips = createAsyncThunk("payslips/generate", async (cycleId, { getState, rejectWithValue }) => { try { return await payrollApi.payslips.generate(cycleId, buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
-export const publishPayslips = createAsyncThunk("payslips/publish", async (cycleId, { getState, rejectWithValue }) => { try { return await payrollApi.payslips.publish(cycleId, buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
-export default entity.reducer;
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import payrollApi from "../services/payrollApi";
+
+const initialState = {
+  list: [],
+  data: null,
+  selected: null,
+  loading: false,
+  error: null,
+  pagination: { current: 1, pageSize: 10, total: 0 },
+  filters: {},
+};
+
+export const fetchPayslip = createAsyncThunk("payroll/payslip/fetch", async (params, { rejectWithValue }) => {
+  try {
+    const res = await payrollApi.getPayrollDashboard(params || {});
+    return res?.data?.data || res?.data || {};
+  } catch (error) {
+    return rejectWithValue(error?.response?.data || { message: error?.message || "Something went wrong" });
+  }
+});
+
+const payslipSlice = createSlice({
+  name: "payslip",
+  initialState,
+  reducers: {
+    setSelected: (state, action) => { state.selected = action.payload; },
+    clearError: (state) => { state.error = null; },
+    resetState: () => initialState,
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPayslip.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchPayslip.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+        state.list = action.payload?.items || action.payload?.list || [];
+      })
+      .addCase(fetchPayslip.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error;
+      });
+  },
+});
+
+export const { setSelected, clearError, resetState } = payslipSlice.actions;
+export default payslipSlice.reducer;

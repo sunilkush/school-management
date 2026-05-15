@@ -11,7 +11,7 @@ const initialState = {
   filters: {},
 };
 
-export const fetchPayrollRun = createAsyncThunk("payroll/payrollRun/fetch", async (params, { rejectWithValue }) => {
+export const fetchPayrollEmployee = createAsyncThunk("payroll/payrollEmployee/fetch", async (params, { rejectWithValue }) => {
   try {
     const res = await payrollApi.getPayrollDashboard(params || {});
     return res?.data?.data || res?.data || {};
@@ -20,8 +20,8 @@ export const fetchPayrollRun = createAsyncThunk("payroll/payrollRun/fetch", asyn
   }
 });
 
-const payrollRunSlice = createSlice({
-  name: "payrollRun",
+const payrollEmployeeSlice = createSlice({
+  name: "payrollEmployee",
   initialState,
   reducers: {
     setSelected: (state, action) => { state.selected = action.payload; },
@@ -30,18 +30,18 @@ const payrollRunSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchPayrollRun.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchPayrollRun.fulfilled, (state, action) => {
+      .addCase(fetchPayrollEmployee.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchPayrollEmployee.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
         state.list = action.payload?.items || action.payload?.list || [];
       })
-      .addCase(fetchPayrollRun.rejected, (state, action) => {
+      .addCase(fetchPayrollEmployee.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error;
       });
   },
 });
 
-export const { setSelected, clearError, resetState } = payrollRunSlice.actions;
-export default payrollRunSlice.reducer;
+export const { setSelected, clearError, resetState } = payrollEmployeeSlice.actions;
+export default payrollEmployeeSlice.reducer;

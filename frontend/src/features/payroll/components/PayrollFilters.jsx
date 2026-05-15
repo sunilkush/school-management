@@ -1,4 +1,2 @@
 import React from "react";
-import { Card, DatePicker, Form, Input, Select } from "antd";
-const PayrollFilters = ({ onChange }) => <Card className="mb-4"><Form layout="vertical" className="grid grid-cols-1 gap-3 md:grid-cols-6" onValuesChange={(_, values) => onChange?.(values)}><Form.Item label="Month" name="month"><DatePicker picker="month" className="w-full" /></Form.Item><Form.Item label="Year" name="year"><DatePicker picker="year" className="w-full" /></Form.Item><Form.Item label="Department" name="department"><Input placeholder="Department" /></Form.Item><Form.Item label="Designation" name="designation"><Input placeholder="Designation" /></Form.Item><Form.Item label="Employee" name="employee"><Input placeholder="Search employee" /></Form.Item><Form.Item label="Status" name="status"><Select allowClear options={["draft","processing","review","approved","paid","locked","published"].map((v)=>({label:v,value:v}))} /></Form.Item></Form></Card>;
-export default PayrollFilters;
+export default function PayrollFilters(){return <div />;}

@@ -1,6 +1,47 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { buildPayrollScope, payrollApi } from "../services/payrollApi";
-export const fetchPayrollSummaryReport = createAsyncThunk("payrollReports/summary", async (_, { getState, rejectWithValue }) => { try { return await payrollApi.reports.summary(buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
-export const fetchPayrollAuditLogs = createAsyncThunk("payrollReports/audit", async (_, { getState, rejectWithValue }) => { try { return await payrollApi.reports.auditLogs(buildPayrollScope(getState())); } catch (e) { return rejectWithValue(e.response?.data?.message || e.message); } });
-const slice = createSlice({ name: "payrollReports", initialState: { summary: null, auditLogs: [], loading: false, error: null }, reducers: {}, extraReducers: (b) => { b.addCase(fetchPayrollSummaryReport.pending,(s)=>{s.loading=true}).addCase(fetchPayrollSummaryReport.fulfilled,(s,a)=>{s.loading=false;s.summary=a.payload}).addCase(fetchPayrollSummaryReport.rejected,(s,a)=>{s.loading=false;s.error=a.payload}).addCase(fetchPayrollAuditLogs.fulfilled,(s,a)=>{s.auditLogs=a.payload||[]}); }});
-export default slice.reducer;
+import payrollApi from "../services/payrollApi";
+
+const initialState = {
+  list: [],
+  data: null,
+  selected: null,
+  loading: false,
+  error: null,
+  pagination: { current: 1, pageSize: 10, total: 0 },
+  filters: {},
+};
+
+export const fetchPayrollReport = createAsyncThunk("payroll/payrollReport/fetch", async (params, { rejectWithValue }) => {
+  try {
+    const res = await payrollApi.getPayrollDashboard(params || {});
+    return res?.data?.data || res?.data || {};
+  } catch (error) {
+    return rejectWithValue(error?.response?.data || { message: error?.message || "Something went wrong" });
+  }
+});
+
+const payrollReportSlice = createSlice({
+  name: "payrollReport",
+  initialState,
+  reducers: {
+    setSelected: (state, action) => { state.selected = action.payload; },
+    clearError: (state) => { state.error = null; },
+    resetState: () => initialState,
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPayrollReport.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchPayrollReport.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+        state.list = action.payload?.items || action.payload?.list || [];
+      })
+      .addCase(fetchPayrollReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error;
+      });
+  },
+});
+
+export const { setSelected, clearError, resetState } = payrollReportSlice.actions;
+export default payrollReportSlice.reducer;

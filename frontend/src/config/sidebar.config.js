@@ -90,10 +90,10 @@ const communicationMenu = (basePath) => ({
 
 const payrollMenu = {
   "super admin": {
-    title: "Payroll Management",
+    title: "Payroll",
     icon: Banknote,
     subMenu: [
-      { title: "Payroll Overview", path: "superadmin/payroll", permission: "payroll.global.view" },
+      { title: "Dashboard", path: "superadmin/payroll", permission: "payroll.global.view" },
       { title: "School Payroll Usage", path: "superadmin/payroll/schools", permission: "payroll.global.schools.view" },
       { title: "Payroll Plans", path: "superadmin/payroll/plans", permission: "payroll.global.plans.manage" },
       { title: "Compliance Templates", path: "superadmin/payroll/compliance-templates", permission: "payroll.global.compliance.manage" },
@@ -106,12 +106,12 @@ const payrollMenu = {
     icon: Wallet,
     subMenu: [
       { title: "Dashboard", path: "schooladmin/payroll", permission: "payroll.dashboard.view" },
-      { title: "Create Employee", path: "schooladmin/payroll/create-employee", permission: "payroll.createEmployee.manage" },
-      { title: "Payroll Settings", path: "schooladmin/payroll/settings", permission: "payroll.settings.manage" },
+      { title: "Employee Payroll", path: "schooladmin/payroll/create-employee", permission: "payroll.createEmployee.manage" },
+      { title: "Settings", path: "schooladmin/payroll/settings", permission: "payroll.settings.manage" },
       { title: "Salary Components", path: "schooladmin/payroll/components", permission: "payroll.components.manage" },
       { title: "Salary Structures", path: "schooladmin/payroll/salary-structures", permission: "payroll.salaryStructure.manage" },
       { title: "Payroll Cycles", path: "schooladmin/payroll/cycles", permission: "payroll.cycles.manage" },
-      { title: "Payroll Runs", path: "schooladmin/payroll/runs", permission: "payroll.runs.view" },
+      { title: "Run Payroll", path: "schooladmin/payroll/runs", permission: "payroll.runs.view" },
       { title: "Payslips", path: "schooladmin/payroll/payslips", permission: "payroll.payslips.manage" },
       { title: "Loans & Advances", path: "schooladmin/payroll/loans", permission: "payroll.loans.manage" },
       { title: "Tax Declarations", path: "schooladmin/payroll/tax-declarations", permission: "payroll.tax.manage" },
@@ -125,8 +125,8 @@ const payrollMenu = {
     icon: Wallet,
     subMenu: [
       { title: "Payroll Dashboard", path: "principal/payroll", permission: "payroll.dashboard.view" },
-      { title: "Payroll Approvals", path: "principal/payroll/approvals", permission: "payroll.approve" },
-      { title: "Payroll Reports", path: "principal/payroll/reports", permission: "payroll.reports.view" },
+      { title: "Approvals", path: "principal/payroll/approvals", permission: "payroll.approve" },
+      { title: "Reports", path: "principal/payroll/reports", permission: "payroll.reports.view" },
       { title: "Payroll Audit Logs", path: "principal/payroll/audit-logs", permission: "payroll.audit.view" },
     ],
   },
@@ -194,7 +194,7 @@ const payrollMenu = {
   },
 
   auditor: {
-    title: "Payroll Reports",
+    title: "Reports",
     icon: FileBarChart2,
     subMenu: [
       { title: "Payroll Summary", path: "auditor/payroll/reports", permission: "payroll.reports.view" },

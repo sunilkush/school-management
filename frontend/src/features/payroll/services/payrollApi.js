@@ -1,81 +1,42 @@
 import httpClient from "../../../api/httpClient";
 
-const unwrap = (response) => response.data?.data ?? response.data;
-
-export const buildPayrollScope = (state) => {
-  const user = state?.auth?.user;
-  const selectedAcademicYear = state?.academicYear?.selectedAcademicYear || state?.academicYear?.activeYear;
-  return {
-    schoolId: user?.school?._id || user?.schoolId || user?.school,
-    academicYearId: selectedAcademicYear?._id || selectedAcademicYear,
-  };
-};
-
-const withScope = (payload = {}, scope = {}) => ({ ...payload, ...Object.fromEntries(Object.entries(scope).filter(([, v]) => Boolean(v))) });
+const withScope = (payload = {}, params = {}) => ({ ...payload, ...params });
 
 export const payrollApi = {
-  employees: {
-    list: (scope) => httpClient.get("/employee", { params: scope }).then(unwrap),
-  },
-  settings: {
-    save: (data, scope) => httpClient.post("/payroll/settings", withScope(data, scope)).then(unwrap),
-    list: (scope) => httpClient.get("/payroll/settings", { params: scope }).then(unwrap),
-    update: (id, data, scope) => httpClient.patch(`/payroll/settings/${id}`, withScope(data, scope)).then(unwrap),
-  },
-  components: {
-    create: (data, scope) => httpClient.post("/payroll/components", withScope(data, scope)).then(unwrap),
-    list: (scope) => httpClient.get("/payroll/components", { params: scope }).then(unwrap),
-    update: (id, data, scope) => httpClient.patch(`/payroll/components/${id}`, withScope(data, scope)).then(unwrap),
-    remove: (id, scope) => httpClient.delete(`/payroll/components/${id}`, { params: scope }).then(unwrap),
-  },
-  salaryStructures: {
-    create: (data, scope) => httpClient.post("/payroll/salary-structures", withScope(data, scope)).then(unwrap),
-    list: (scope) => httpClient.get("/payroll/salary-structures", { params: scope }).then(unwrap),
-    byEmployee: (employeeId, scope) => httpClient.get(`/payroll/salary-structures/employee/${employeeId}`, { params: scope }).then(unwrap),
-    update: (id, data, scope) => httpClient.patch(`/payroll/salary-structures/${id}`, withScope(data, scope)).then(unwrap),
-    approve: (id, data, scope) => httpClient.post(`/payroll/salary-structures/${id}/approve`, withScope(data, scope)).then(unwrap),
-  },
-  cycles: {
-    create: (data, scope) => httpClient.post("/payroll/cycles", withScope(data, scope)).then(unwrap),
-    list: (scope) => httpClient.get("/payroll/cycles", { params: scope }).then(unwrap),
-    get: (id, scope) => httpClient.get(`/payroll/cycles/${id}`, { params: scope }).then(unwrap),
-    update: (id, data, scope) => httpClient.patch(`/payroll/cycles/${id}`, withScope(data, scope)).then(unwrap),
-    lock: (id, scope) => httpClient.post(`/payroll/cycles/${id}/lock`, scope).then(unwrap),
-  },
-  runs: {
-    calculate: (cycleId, scope) => httpClient.post(`/payroll/runs/${cycleId}/calculate`, scope).then(unwrap),
-    items: (cycleId, scope) => httpClient.get(`/payroll/runs/${cycleId}/items`, { params: scope }).then(unwrap),
-    updateItem: (itemId, data, scope) => httpClient.patch(`/payroll/runs/items/${itemId}`, withScope(data, scope)).then(unwrap),
-    approve: (cycleId, data, scope) => httpClient.post(`/payroll/runs/${cycleId}/approve`, withScope(data, scope)).then(unwrap),
-    markPaid: (cycleId, scope) => httpClient.post(`/payroll/runs/${cycleId}/mark-paid`, scope).then(unwrap),
-  },
-  payslips: {
-    generate: (cycleId, scope) => httpClient.post(`/payroll/payslips/${cycleId}/generate`, scope).then(unwrap),
-    publish: (cycleId, scope) => httpClient.post(`/payroll/payslips/${cycleId}/publish`, scope).then(unwrap),
-    list: (scope) => httpClient.get("/payroll/payslips", { params: scope }).then(unwrap),
-    mine: (scope) => httpClient.get("/payroll/payslips/my", { params: scope }).then(unwrap),
-    download: (id, scope) => httpClient.get(`/payroll/payslips/${id}/download`, { params: scope }).then(unwrap),
-  },
-  self: {
-    summary: (scope) => httpClient.get("/payroll/self/summary", { params: scope }).then(unwrap),
-  },
-  loans: {
-    list: (scope) => httpClient.get("/payroll/loans", { params: scope }).then(unwrap),
-    create: (data, scope) => httpClient.post("/payroll/loans", withScope(data, scope)).then(unwrap),
-    update: (id, data, scope) => httpClient.patch(`/payroll/loans/${id}`, withScope(data, scope)).then(unwrap),
-  },
-  tax: {
-    list: (scope) => httpClient.get("/payroll/tax-declarations", { params: scope }).then(unwrap),
-    save: (data, scope) => httpClient.post("/payroll/tax-declarations", withScope(data, scope)).then(unwrap),
-  },
-  reports: {
-    summary: (scope) => httpClient.get("/payroll/reports/summary", { params: scope }).then(unwrap),
-    departmentCost: (scope) => httpClient.get("/payroll/reports/department-cost", { params: scope }).then(unwrap),
-    statutory: (scope) => httpClient.get("/payroll/reports/statutory", { params: scope }).then(unwrap),
-    bankExport: (scope) => httpClient.get("/payroll/reports/bank-export", { params: scope }).then(unwrap),
-    employeeLedger: (employeeId, scope) => httpClient.get(`/payroll/reports/employee-ledger/${employeeId}`, { params: scope }).then(unwrap),
-    auditLogs: (scope) => httpClient.get("/payroll/audit-logs", { params: scope }).then(unwrap),
-  },
+  getPayrollDashboard: (params) => httpClient.get('/payroll/dashboard', { params }),
+  getEmployeePayrolls: (params) => httpClient.get('/payroll/employees', { params }),
+  createEmployeePayroll: (payload) => httpClient.post('/payroll/employees', payload),
+  updateEmployeePayroll: (id, payload) => httpClient.patch(`/payroll/employees/${id}`, payload),
+  getSalaryStructures: (params) => httpClient.get('/payroll/salary-structures', { params }),
+  createSalaryStructure: (payload) => httpClient.post('/payroll/salary-structures', payload),
+  updateSalaryStructure: (id, payload) => httpClient.patch(`/payroll/salary-structures/${id}`, payload),
+  getAttendanceAdjustments: (params) => httpClient.get('/payroll/attendance-adjustments', { params }),
+  syncAttendanceAdjustments: (payload) => httpClient.post('/payroll/attendance-adjustments/sync', payload),
+  updateAttendanceAdjustment: (id, payload) => httpClient.patch(`/payroll/attendance-adjustments/${id}`, payload),
+  getPayrollCycles: (params) => httpClient.get('/payroll/cycles', { params }),
+  createPayrollCycle: (payload) => httpClient.post('/payroll/cycles', payload),
+  updatePayrollCycle: (id, payload) => httpClient.patch(`/payroll/cycles/${id}`, payload),
+  runPayroll: (payload) => httpClient.post('/payroll/run', payload),
+  previewPayroll: (params) => httpClient.get('/payroll/run/preview', { params }),
+  recalculatePayroll: (payload) => httpClient.post('/payroll/run/recalculate', payload),
+  submitPayrollForApproval: (cycleId) => httpClient.post(`/payroll/cycles/${cycleId}/submit-approval`),
+  getPayrollApprovals: (params) => httpClient.get('/payroll/approvals', { params }),
+  approvePayroll: (id, payload) => httpClient.post(`/payroll/approvals/${id}/approve`, payload),
+  rejectPayroll: (id, payload) => httpClient.post(`/payroll/approvals/${id}/reject`, payload),
+  getPayslips: (params) => httpClient.get('/payroll/payslips', { params }),
+  generatePayslips: (payload) => httpClient.post('/payroll/payslips/generate', payload),
+  downloadPayslip: (id) => httpClient.get(`/payroll/payslips/${id}/download`, { responseType: 'blob' }),
+  emailPayslip: (id) => httpClient.post(`/payroll/payslips/${id}/email`),
+  markPayrollPaid: (id, payload) => httpClient.post(`/payroll/cycles/${id}/mark-paid`, payload),
+  lockPayrollCycle: (cycleId) => httpClient.post(`/payroll/cycles/${cycleId}/lock`),
+  getPayrollReports: (params) => httpClient.get('/payroll/reports', { params }),
+  getMyPayroll: (params) => httpClient.get('/payroll/my', { params }),
+  getMyPayslips: (params) => httpClient.get('/payroll/my/payslips', { params }),
+  createTaxDeclaration: (payload) => httpClient.post('/payroll/my/tax-declarations', payload),
+  createLoanAdvanceRequest: (payload) => httpClient.post('/payroll/my/loan-advance', payload),
 };
 
+export const withPayrollScope = (payload, scope) => withScope(payload, scope);
 export default payrollApi;
+
+export const buildPayrollScope = (state = {}) => ({ schoolId: state?.auth?.user?.schoolId, academicYearId: state?.academicYear?.selectedAcademicYear?._id || state?.auth?.user?.selectedAcademicYear?._id });
