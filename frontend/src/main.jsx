@@ -786,12 +786,22 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "hostelwarden/*",
+            path: "hostelwarden",
             element: (
               <ProtectedRoute allowedRoles={["Hostel Warden"]}>
-                <RoleDynamicPortal />
+                <Outlet />
               </ProtectedRoute>
             ),
+            children: [
+              { index: true, element: <RoleDynamicPortal /> },
+              { path: "rooms", element: <HostelManagement /> },
+              { path: "allocations", element: <HostelManagement /> },
+              { path: "attendance", element: <AllStudentsAttendance /> },
+              { path: "profile", element: <Profile /> },
+              { path: "message", element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "settings", element: <SettingsPage /> },
+            ],
           },
           {
             path: "transportmanager/*",

@@ -53,7 +53,6 @@ const roleConfig = {
       { title: "Rooms", path: "hostelwarden/rooms" },
       { title: "Allocations", path: "hostelwarden/allocations" },
       { title: "Attendance", path: "hostelwarden/attendance" },
-      { title: "Visitors", path: "hostelwarden/visitors" },
     ],
   },
   transportmanager: {

@@ -465,8 +465,6 @@ export const sidebarMenu = {
     { title: "Hostel Rooms", path: "hostelwarden/rooms", icon: BookOpen },
     { title: "Student Allocation", path: "hostelwarden/allocations", icon: Users },
     { title: "Hostel Attendance", path: "hostelwarden/attendance", icon: UserCheck },
-    { title: "Visitor Log", path: "hostelwarden/visitors", icon: UserPlus },
-    { title: "Reports", path: "hostelwarden/reports", icon: FileBarChart2 },
     roleWorkspaceItem,
     ...commonSelfService("hostelwarden"),
   ],
