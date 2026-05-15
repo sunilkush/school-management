@@ -768,10 +768,26 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "subjectcoordinator/payroll",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "subjectcoordinator/*",
             element: (
               <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
                 <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "librarian/payroll",
+            element: (
+              <ProtectedRoute allowedRoles={["Librarian"]}>
+                <PayrollSelfServicePage />
               </ProtectedRoute>
             ),
           },
@@ -795,11 +811,20 @@ const router = createBrowserRouter([
               { path: "rooms", element: <HostelManagement /> },
               { path: "allocations", element: <HostelManagement /> },
               { path: "attendance", element: <AllStudentsAttendance /> },
+              { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "profile", element: <Profile /> },
               { path: "message", element: <Message /> },
               { path: "notification", element: <Notification /> },
               { path: "settings", element: <SettingsPage /> },
             ],
+          },
+          {
+            path: "transportmanager/payroll",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "transportmanager/*",
@@ -829,6 +854,7 @@ const router = createBrowserRouter([
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "reports", element: <ExamReports /> },
+              { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "profile", element: <Profile /> },
               { path: "message", element: <Message /> },
               { path: "notification", element: <Notification /> },
@@ -836,6 +862,14 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
+          },
+          {
+            path: "receptionist/payroll",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "receptionist/*",
@@ -859,6 +893,7 @@ const router = createBrowserRouter([
               { path: "network", element: <NetworkStatus /> },
               { path: "logs", element: <SystemLogs /> },
               { path: "profile", element: <ITSupportProfile /> },
+              { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "message", element: <Message /> },
               { path: "notification", element: <Notification /> },
               { path: "communication/send", element: <SendNotification /> },
@@ -866,10 +901,26 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: "counselor/payroll",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "counselor/*",
             element: (
               <ProtectedRoute allowedRoles={["Counselor"]}>
                 <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/payroll",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <PayrollSelfServicePage />
               </ProtectedRoute>
             ),
           },
@@ -915,6 +966,7 @@ const router = createBrowserRouter([
               { index: true, element: <StaffDashboard /> },
               { path: "tasks", element: <Schedule /> },
               { path: "attendance", element: <MyAttendancePage /> },
+              { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
