@@ -11,6 +11,7 @@ import store, { persistor } from "./store/store.js";
 import {Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { lazy } from "react";
 import React, { Suspense } from "react";
+import Loader from "./components/Loader/Loader.jsx";
 import { ConfigProvider, App as AntdApp, theme as antdTheme } from "antd";
 import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 
@@ -60,7 +61,6 @@ const Message = lazy(() => import("./pages/Message.jsx"));
 const Settings = lazy(() => import("./pages/Settings.jsx"));
 const Documents = lazy(() => import("./pages/Documents.jsx"));
 const Schedule = lazy(() => import("./pages/Schedule.jsx"));
-const Loader = lazy(()=> import("./components/Loader/Loader.jsx"));
 // Super Admin
 const Reports = lazy(() => import("./pages/Super_Admin/Reports_&_Analytics/Reports.jsx"));
 const Schools = lazy(() => import("./pages/Super_Admin/School_Management/Schools.jsx"));

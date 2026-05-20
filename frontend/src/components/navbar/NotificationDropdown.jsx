@@ -283,10 +283,10 @@ const NotificationDropdown = () => {
         type="button"
         aria-label="Open notifications"
         style={{
-          width: 42,
-          height: 42,
+          width: 37,
+          height: 37,
           border: "1px solid var(--border, #eef0f4)",
-          borderRadius: 14,
+          borderRadius: 10,
           background: "var(--card, #ffffff)",
           display: "inline-flex",
           alignItems: "center",

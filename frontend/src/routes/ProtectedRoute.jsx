@@ -1,6 +1,8 @@
+import { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import Loader from "../components/Loader/Loader";
+
+const Loader = lazy(() => import("../components/Loader/Loader"));
 
 const resolveRoleName = (user) =>
   typeof user?.role === "string" ? user.role : user?.role?.name;
@@ -10,7 +12,11 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   const { user, accessToken, isAuthInitialized } = useSelector((state) => state.auth);
  
   if (!isAuthInitialized) {
-    return <Loader />;
+    return (
+      <Suspense fallback={null}>
+        <Loader />
+      </Suspense>
+    );
   }
 
   if (!accessToken || !user) {

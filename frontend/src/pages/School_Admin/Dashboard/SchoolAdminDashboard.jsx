@@ -37,7 +37,7 @@ const tokens = (isDark) => ({
   pageBg:       "var(--surface-page)",
   cardBg:       isDark ? "#141414" : "#ffffff",
   cardBorder:   isDark ? "#1f1f1f" : "#f0f0f0",
-  sectionBg:    isDark ? "#0f0f0f" : "#f8faff",
+  sectionBg:    isDark ? "#0f0f0f" : "#ffffff",
   sectionBorder:isDark ? "#1f1f1f" : "#e8eef8",
   textPrimary:  isDark ? "#e8e8e8" : "#1a1a2e",
   textSecondary:isDark ? "#6b7280" : "#9ca3af",

@@ -176,7 +176,7 @@ export const sidebarMenu = {
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },
-        { title: "Employee Details", path: "schooladmin/users/employee-details" },
+       /*  { title: "Employee Details", path: "schooladmin/users/employee-details" }, */
       ],
     },
     {

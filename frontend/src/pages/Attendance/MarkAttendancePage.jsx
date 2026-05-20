@@ -76,7 +76,7 @@ const MarkAttendancePage = () => {
         message.error("Failed to save attendance");
       }
     } catch (e) {
-      message.error("Server error");
+      message.error("Server error", e.message);
     }
   };
 

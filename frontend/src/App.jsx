@@ -1,4 +1,5 @@
 import React, { useEffect, lazy, Suspense, useRef } from "react";
+import Loader from "./components/Loader/Loader";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,7 +26,6 @@ const SpeedInsights = lazy(() =>
   }))
 );
 
-const Loader = lazy(() => import("./components/Loader/Loader"));
 
 function App() {
   const dispatch = useDispatch();

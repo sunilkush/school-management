@@ -1,74 +1,35 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  Table,
-  Card,
-  Input,
-  Button,
-  Modal,
-  Space,
-  Avatar,
-  Select,
-  Empty,
-  Spin,
-  Tag,
-  Typography,
-  Tooltip,
-  Badge,
-  Statistic,
-  Row,
-  Col,
-  Divider,
-  ConfigProvider,
-  
-} from "antd";
-import {
-  UserOutlined,
-  SearchOutlined,
-  DownloadOutlined,
-  PlusOutlined,
-  TeamOutlined,
-  BookOutlined,
-  CalendarOutlined,
-  FilterOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
-
+import { Table, Modal, Spin } from "antd";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
 
-const { Option } = Select;
-const { Title, Text } = Typography;
-
-/* ──────────────────────────────────────
-   STATUS COLOUR MAP
-────────────────────────────────────── */
-const statusConfig = {
-  Active: { color: "success", label: "Active" },
-  Inactive: { color: "error", label: "Inactive" },
-  Pending: { color: "warning", label: "Pending" },
-};
-
-/* ──────────────────────────────────────
-   BLOOD GROUP COLOURS
-────────────────────────────────────── */
 const bloodGroupColor = {
-  "A+": "red",
-  "A-": "volcano",
-  "B+": "orange",
-  "B-": "gold",
-  "AB+": "blue",
-  "AB-": "geekblue",
-  "O+": "green",
-  "O-": "lime",
+  "A+":  { bg: "#fef2f2", color: "#dc2626" },
+  "A-":  { bg: "#fff7ed", color: "#c2410c" },
+  "B+":  { bg: "#fef9ec", color: "#d97706" },
+  "B-":  { bg: "#fefce8", color: "#ca8a04" },
+  "AB+": { bg: "#eff6ff", color: "#2563eb" },
+  "AB-": { bg: "#eef2ff", color: "#4338ca" },
+  "O+":  { bg: "#f0fdf8", color: "#059669" },
+  "O-":  { bg: "#f0fdf4", color: "#16a34a" },
 };
 
-/* ══════════════════════════════════════
-   COMPONENT
-══════════════════════════════════════ */
+const AVATAR_COLORS = [
+  { bg: "#ede9fe", color: "#7c6ff7" },
+  { bg: "#f0fdf8", color: "#1d9e75" },
+  { bg: "#fef9ec", color: "#e69020" },
+  { bg: "#fce7f3", color: "#db2777" },
+  { bg: "#e0f2fe", color: "#0284c7" },
+];
+
+const getAvatarColor = (name = "") => {
+  const idx = (name.charCodeAt(0) || 0) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[idx];
+};
+
 const StudentList = () => {
   const dispatch = useDispatch();
-
   const { schoolStudents, loading } = useSelector((state) => state.students);
   const { user } = useSelector((state) => state.auth);
   const { selectedAcademicYear, activeYear } = useSelector((state) => state.academicYear);
@@ -79,22 +40,20 @@ const StudentList = () => {
   const [selectedSection, setSelectedSection] = useState("all");
 
   const schoolId = user?.school?._id;
-   const academicYearId = selectedAcademicYear?._id || activeYear?._id;
+  const academicYearId = selectedAcademicYear?._id || activeYear?._id;
   const isSchoolAdmin = user?.role?.name === "School Admin";
 
-  /* ── Fetch ── */
   useEffect(() => {
-  if (!isSchoolAdmin || !schoolId) return;
+    if (!isSchoolAdmin || !schoolId) return;
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
   }, [dispatch, isSchoolAdmin, schoolId, academicYearId, isModalOpen]);
 
-  /* ── Data ── */
   const studentsArray = useMemo(() => {
     if (Array.isArray(schoolStudents)) return schoolStudents;
     if (schoolStudents?.data) return schoolStudents.data;
     return [];
-  }, [schoolStudents] );
-  console.log(studentsArray)
+  }, [schoolStudents]);
+
   const formattedStudents = useMemo(() =>
     studentsArray.map((stu) => ({
       key: stu._id,
@@ -110,14 +69,12 @@ const StudentList = () => {
         ? new Date(stu.admissionDate).toISOString().split("T")[0]
         : "N/A",
       bloodGroup: stu.student?.bloodGroup ?? "N/A",
-      schoolName: stu.school?.name ?? "N/A",
       academicYear: stu.academicYear?.name ?? "N/A",
       status: stu.status ?? "Active",
     })),
     [studentsArray]
   );
 
-  /* ── Filters ── */
   const classOptions = useMemo(() => {
     const classes = formattedStudents.map((s) => s.schoolClass).filter(Boolean);
     return ["all", ...new Set(classes)];
@@ -133,48 +90,56 @@ const StudentList = () => {
 
   const filteredStudents = useMemo(() =>
     formattedStudents.filter((stu) => {
-      const matchSearch = stu.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      const matchSearch =
+        stu.name.toLowerCase().includes(searchText.toLowerCase()) ||
         stu.email.toLowerCase().includes(searchText.toLowerCase());
-       const matchClass = selectedClass === "all" || stu.schoolClass === selectedClass;
+      const matchClass = selectedClass === "all" || stu.schoolClass === selectedClass;
       const matchSection = selectedSection === "all" || stu.section === selectedSection;
       return matchSearch && matchClass && matchSection;
     }),
     [formattedStudents, searchText, selectedClass, selectedSection]
   );
 
-  /* ── Stats ── */
-  const stats = useMemo(() => {
-    const active = formattedStudents.filter((s) => s.status === "Active").length;
-     const classes = new Set(formattedStudents.map((s) => s.schoolClass)).size;
-    return { total: formattedStudents.length, active, classes };
-  }, [formattedStudents]);
+  const stats = useMemo(() => ({
+    total: formattedStudents.length,
+    active: formattedStudents.filter((s) => s.status === "Active").length,
+    classes: new Set(formattedStudents.map((s) => s.schoolClass)).size,
+    showing: filteredStudents.length,
+  }), [formattedStudents, filteredStudents]);
 
-  /* ── Columns ── */
   const columns = [
     {
       title: "Student",
       dataIndex: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name, record) => (
-        <Space size={10}>
-          <Avatar
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&bold=true`}
-            size={36}
-            style={{ flexShrink: 0 }}
-          />
-          <div style={{ lineHeight: 1.3 }}>
-            <Text strong style={{ display: "block", fontSize: 13 }}>{name}</Text>
-            <Text type="secondary" style={{ fontSize: 11 }}>{record.email}</Text>
+      render: (name, record) => {
+        const { bg, color } = getAvatarColor(name);
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: "50%",
+              background: bg, color, fontWeight: 700, fontSize: 13,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              {name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, color: "#1a1a2e", fontSize: 13 }}>{name}</div>
+              <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>{record.email}</div>
+            </div>
           </div>
-        </Space>
-      ),
+        );
+      },
     },
     {
       title: "Class",
       dataIndex: "schoolClass",
       width: 90,
       render: (cls) => (
-        <Tag color="blue" style={{ borderRadius: 20, fontWeight: 600 }}>{cls}</Tag>
+        <span style={{ display: "inline-block", padding: "2px 10px", background: "#f0eeff", color: "#7c6ff7", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+          {cls}
+        </span>
       ),
     },
     {
@@ -182,51 +147,51 @@ const StudentList = () => {
       dataIndex: "section",
       width: 90,
       render: (sec) => (
-        <Tag color="geekblue" style={{ borderRadius: 20 }}>{sec}</Tag>
+        <span style={{ display: "inline-block", padding: "2px 10px", background: "#f0fdf8", color: "#1d9e75", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+          {sec}
+        </span>
       ),
     },
     {
       title: "Blood Group",
       dataIndex: "bloodGroup",
       width: 110,
-      render: (bg) =>
-        bg !== "N/A" ? (
-          <Tag color={bloodGroupColor[bg] ?? "default"} style={{ borderRadius: 20, fontWeight: 700 }}>{bg}</Tag>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
+      render: (bg) => {
+        const style = bloodGroupColor[bg];
+        if (!style) return <span style={{ color: "#ccc" }}>—</span>;
+        return (
+          <span style={{ display: "inline-block", padding: "2px 10px", background: style.bg, color: style.color, borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
+            {bg}
+          </span>
+        );
+      },
     },
     {
       title: "Date of Birth",
       dataIndex: "dateOfBirth",
       width: 120,
-      render: (dob) => (
-        <Space size={4}>
-          <CalendarOutlined style={{ color: "#8c8c8c", fontSize: 12 }} />
-          <Text style={{ fontSize: 12 }}>{dob}</Text>
-        </Space>
-      ),
+      render: (dob) => <span style={{ fontSize: 12, color: "#666" }}>📅 {dob}</span>,
     },
     {
       title: "Phone",
       dataIndex: "mobileNumber",
       width: 130,
-      render: (phone) => <Text style={{ fontSize: 12 }}>{phone}</Text>,
+      render: (phone) => <span style={{ fontSize: 12, color: "#666" }}>{phone}</span>,
     },
     {
       title: "Admission",
       dataIndex: "admissionDate",
       width: 120,
-      render: (date) => <Text style={{ fontSize: 12 }}>{date}</Text>,
+      render: (date) => <span style={{ fontSize: 12, color: "#666" }}>{date}</span>,
     },
     {
       title: "Academic Year",
       dataIndex: "academicYear",
       width: 130,
       render: (year) => (
-        <Tag style={{ borderRadius: 20, background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}>
+        <span style={{ display: "inline-block", padding: "2px 10px", background: "#fef9ec", color: "#e69020", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
           {year}
-        </Tag>
+        </span>
       ),
     },
     {
@@ -234,294 +199,288 @@ const StudentList = () => {
       dataIndex: "status",
       width: 100,
       render: (status) => {
-        const cfg = statusConfig[status] ?? { color: "default", label: status };
-        return <Badge status={cfg.color} text={cfg.label} />;
+        const isActive = status === "Active";
+        const isPending = status === "Pending";
+        const statusColor = isActive ? "#1d9e75" : isPending ? "#e69020" : "#e24b4a";
+        const statusBg   = isActive ? "#d4f0e8"  : isPending ? "#fef0c7" : "#fce8e8";
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: statusColor, boxShadow: `0 0 0 2px ${statusBg}` }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: statusColor }}>{status}</span>
+          </div>
+        );
       },
     },
   ];
 
-  /* ── Guards ── */
   if (!isSchoolAdmin) {
     return (
-      <div >
-        <Card style={{ borderRadius: 16, textAlign: "center", padding: "40px 0" }}>
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <span>
-                <Text strong style={{ fontSize: 16 }}>Access Restricted</Text>
-                <br />
-                <Text type="secondary">You don't have permission to view this page.</Text>
-              </span>
-            }
-          />
-        </Card>
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
+        padding: "32px 16px",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{ textAlign: "center", padding: "56px 32px", background: "#fff", borderRadius: 20, boxShadow: "0 8px 40px rgba(124,111,247,0.1)" }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <div style={{ fontWeight: 700, fontSize: 18, color: "#1a1a2e", marginBottom: 8 }}>Access Restricted</div>
+          <div style={{ fontSize: 14, color: "#aaa" }}>You don't have permission to view this page.</div>
+        </div>
       </div>
     );
   }
 
   if (!user) return <Spin size="large" fullscreen />;
 
-  /* ── Render ── */
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          borderRadius: 10,
-          
-        },
-        components: {
-          Table: { borderRadius: 12 },
-          Card: { borderRadius: 16 },
-        },
-      }}
-    >
-     
+    <div style={{
+      minHeight: "100vh",
+     // background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
+      padding: "0",
+     // fontFamily: "'Inter', -apple-system, sans-serif",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-      <div >
-
-        {/* ── Page Header ── */}
-        <div style={{ marginBottom: 24 }}>
-          <Title level={4} style={{ margin: 0, fontWeight: 700, color: "#1e293b" }}>
-            Students
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            {selectedAcademicYear?.name ?? "Current"} Academic Year ·{" "}
-            {user?.school?.name ?? "School"}
-          </Text>
-        </div>
-
-        {/* ── Stats Row ── */}
-        <Row gutter={16} style={{ marginBottom: 20 }}>
-          {[
-            {
-              title: "Total Students",
-              value: stats.total,
-              icon: <TeamOutlined style={{ fontSize: 20, color: "#6366f1" }} />,
-              bg: "#f5f3ff",
-              color: "#6366f1",
-            },
-            {
-              title: "Active",
-              value: stats.active,
-              icon: <UserOutlined style={{ fontSize: 20, color: "#16a34a" }} />,
-              bg: "#f0fdf4",
-              color: "#16a34a",
-            },
-            {
-              title: "Classes",
-              value: stats.classes,
-              icon: <BookOutlined style={{ fontSize: 20, color: "#0ea5e9" }} />,
-              bg: "#f0f9ff",
-              color: "#0ea5e9",
-            },
-            {
-              title: "Showing",
-              value: filteredStudents.length,
-              icon: <FilterOutlined style={{ fontSize: 20, color: "#f59e0b" }} />,
-              bg: "#fffbeb",
-              color: "#f59e0b",
-            },
-          ].map((stat) => (
-            <Col xs={12} sm={6} key={stat.title}>
-              <Card className="stat-card" bodyStyle={{ padding: "16px 20px" }}>
-                <Space size={12} align="start">
-                  <div
-                    style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 10,
-                      background: stat.bg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-                      {stat.title}
-                    </Text>
-                    <div>
-                      <Text strong style={{ fontSize: 22, color: "#1e293b", lineHeight: 1.2 }}>
-                        {stat.value}
-                      </Text>
-                    </div>
-                  </div>
-                </Space>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-
-        {/* ── Main Table Card ── */}
-        <Card
-          bodyStyle={{ padding: 0 }}
-          style={{ borderRadius: 16, border: "1.5px solid #e2e8f0", overflow: "hidden" }}
-        >
-          {/* Toolbar */}
-          <div
-            style={{
-              padding: "16px 20px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderBottom: "1px solid #f1f5f9",
-              background: "#fff",
-            }}
-          >
-            {/* Left: filters */}
-            <Space wrap size={8}>
-              <Input
-                className="search-input"
-                prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
-                placeholder="Search by name or email…"
-                allowClear
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 220, borderRadius: 8 }}
-              />
-
-              <Select
-                className="filter-select"
-                value={selectedClass}
-                onChange={(value) => {
-                  setSelectedClass(value);
-                  setSelectedSection("all");
-                }}
-                style={{ width: 145 }}
-                placeholder="All Classes"
-              >
-                {classOptions.map((cls) => (
-                  <Option key={cls} value={cls}>
-                    {cls === "all" ? "All Classes" : cls}
-                  </Option>
-                ))}
-              </Select>
-
-              <Select
-                className="filter-select"
-                value={selectedSection}
-                onChange={setSelectedSection}
-                disabled={selectedClass === "all"}
-                style={{ width: 145 }}
-                placeholder="All Sections"
-              >
-                {sectionOptions.map((sec) => (
-                  <Option key={sec} value={sec}>
-                    {sec === "all" ? "All Sections" : sec}
-                  </Option>
-                ))}
-              </Select>
-
-              <Tooltip title="Refresh data">
-                <Button
-                  icon={<ReloadOutlined />}
-                  style={{ borderRadius: 8, borderColor: "#e2e8f0", color: "#64748b" }}
-                  onClick={() =>
-                    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }))
-                  }
-                />
-              </Tooltip>
-            </Space>
-
-            {/* Right: actions */}
-            <Space size={8}>
-              <Button
-                icon={<DownloadOutlined />}
-                style={{ borderRadius: 8, borderColor: "#e2e8f0", color: "#475569", fontWeight: 500 }}
-              >
-                Export
-              </Button>
-
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                className="add-btn"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Add Student
-              </Button>
-            </Space>
-          </div>
-
-          {/* Table */}
-          <Table
-            className="student-table"
-            loading={loading}
-            columns={columns}
-            dataSource={filteredStudents}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total, range) =>
-                `${range[0]}–${range[1]} of ${total} students`,
-              style: { padding: "12px 20px" },
-            }}
-            scroll={{ x: 1000 }}
-            locale={{
-              emptyText: (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    searchText || selectedClass !== "all"
-                      ? "No students match the current filters."
-                      : "No students enrolled yet."
-                  }
-                  style={{ padding: "40px 0" }}
-                />
-              ),
-            }}
-            style={{ borderRadius: 0 }}
-            size="middle"
-          />
-        </Card>
-      </div>
-
-      {/* ── Modal ── */}
-      <Modal
-        title={
-          <Space>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: "#f5f3ff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <UserOutlined style={{ color: "#6366f1", fontSize: 16 }} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>
-                New Student Admission
-              </div>
-              <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 400 }}>
-                Fill in the details below
-              </div>
-            </div>
-          </Space>
+        .stu-table .ant-table { background: transparent !important; }
+        .stu-table .ant-table-thead > tr > th {
+          background: #f8f7ff !important;
+          color: #aaa !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.08em !important;
+          border-bottom: 1px solid #ede9fe !important;
+          padding: 12px 16px !important;
         }
+        .stu-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid #f5f3ff !important;
+          padding: 13px 16px !important;
+        }
+        .stu-table .ant-table-tbody > tr:hover > td { background: #faf8ff !important; }
+        .stu-table .ant-table-tbody > tr:last-child > td { border-bottom: none !important; }
+        .stu-table .ant-pagination-item-active { border-color: #7c6ff7 !important; }
+        .stu-table .ant-pagination-item-active a { color: #7c6ff7 !important; }
+        .stu-table .ant-table-column-sorter-up.active svg,
+        .stu-table .ant-table-column-sorter-down.active svg { color: #7c6ff7 !important; }
+
+        .stu-search {
+          height: 40px;
+          border-radius: 10px !important;
+          border: 1.5px solid #e8e4ff !important;
+          background: #fdfcff !important;
+          font-size: 13px !important;
+          padding: 0 12px 0 38px !important;
+          outline: none; color: #1a1a2e;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          width: 220px;
+        }
+        .stu-search:focus {
+          border-color: #7c6ff7 !important;
+          box-shadow: 0 0 0 3px rgba(124,111,247,0.1) !important;
+        }
+        .stu-search::placeholder { color: #ccc; }
+        .stu-search-wrap { position: relative; }
+        .stu-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #c5bef5; font-size: 14px; pointer-events: none; }
+
+        .stu-filter {
+          height: 40px;
+          border-radius: 10px !important;
+          border: 1.5px solid #e8e4ff !important;
+          background: #fdfcff !important;
+          font-size: 13px !important;
+          padding: 0 10px !important;
+          outline: none; color: #1a1a2e; cursor: pointer;
+          min-width: 130px;
+        }
+        .stu-filter:focus { border-color: #7c6ff7 !important; }
+        .stu-filter:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .stu-btn {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 0 18px; height: 40px; border-radius: 10px;
+          font-size: 13px; font-weight: 600; cursor: pointer;
+          border: none; transition: all 0.2s;
+        }
+        .stu-btn.ghost {
+          background: #f0eeff; color: #7c6ff7;
+          border: 1.5px solid #ddd8ff;
+        }
+        .stu-btn.ghost:hover { background: #e4dfff; }
+        .stu-btn.primary {
+          background: linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%);
+          color: #fff;
+          box-shadow: 0 4px 14px rgba(124,111,247,0.35);
+        }
+        .stu-btn.primary:hover {
+          box-shadow: 0 6px 20px rgba(124,111,247,0.45);
+          transform: translateY(-1px);
+        }
+      `}</style>
+
+      {/* Add Student Modal */}
+      <Modal
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={820}
+        onCancel={() => setIsModalOpen(false)}
+        width={860}
+        centered
         destroyOnClose
-        styles={{
-          header: { padding: "20px 24px 14px", borderBottom: "1px solid #f1f5f9" },
-          body: { padding: "20px 24px 24px" },
-        }}
-        style={{ borderRadius: 18, overflow: "hidden" }}
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: "#f0eeff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🎓</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "#1a1a2e" }}>New Student Admission</div>
+              <div style={{ fontSize: 12, color: "#aaa", fontWeight: 400 }}>Fill in the details below</div>
+            </div>
+          </div>
+        }
+        styles={{ header: { borderBottom: "1px solid #f0eeff", paddingBottom: 14 } }}
       >
         <AdmissionForm onClose={() => setIsModalOpen(false)} />
       </Modal>
-    </ConfigProvider>
+
+      <div style={{
+        background: "#fff", borderRadius: 20,
+        boxShadow: "0 8px 40px rgba(124,111,247,0.1), 0 2px 8px rgba(0,0,0,0.04)",
+        overflow: "hidden", width:"100%", margin: "0 auto",
+      }}>
+
+        {/* Header */}
+        <div style={{
+          background: "linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%)",
+          padding: "28px 36px", position: "relative", overflow: "hidden",
+        }}>
+          <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
+          <div style={{ position: "absolute", bottom: -50, right: 80, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
+          <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
+                School Management
+              </div>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
+                Students
+              </h1>
+              <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
+                {selectedAcademicYear?.name ?? "Current"} Academic Year · {user?.school?.name ?? "School"}
+              </p>
+            </div>
+            <button className="stu-btn primary" style={{ background: "rgba(255,255,255,0.2)", boxShadow: "none", border: "1.5px solid rgba(255,255,255,0.3)" }} onClick={() => setIsModalOpen(true)}>
+              + Add Student
+            </button>
+          </div>
+        </div>
+
+        <div style={{ padding: "28px 36px" }}>
+
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 28 }}>
+            {[
+              { label: "Total Students", value: stats.total,   icon: "👥", color: "#7c6ff7", bg: "#f0eeff" },
+              { label: "Active",         value: stats.active,  icon: "✅", color: "#1d9e75", bg: "#f0fdf8" },
+              { label: "Classes",        value: stats.classes, icon: "📚", color: "#0284c7", bg: "#e0f2fe" },
+              { label: "Showing",        value: stats.showing, icon: "👁", color: "#e69020", bg: "#fef9ec" },
+            ].map((stat) => (
+              <div key={stat.label} style={{
+                padding: "16px 20px", background: stat.bg, borderRadius: 14,
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: stat.color, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                    {stat.label}
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
+                </div>
+                <div style={{ fontSize: 28, opacity: 0.7 }}>{stat.icon}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Toolbar */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#b0a8f5", textTransform: "uppercase", letterSpacing: "0.12em", marginRight: 4 }}>
+              All Students
+            </div>
+            <div style={{ flex: 1 }} />
+
+            <div className="stu-search-wrap">
+              <span className="stu-search-icon">🔍</span>
+              <input
+                className="stu-search"
+                placeholder="Search by name or email…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+
+            <select
+              className="stu-filter"
+              value={selectedClass}
+              onChange={(e) => { setSelectedClass(e.target.value); setSelectedSection("all"); }}
+            >
+              {classOptions.map((cls) => (
+                <option key={cls} value={cls}>{cls === "all" ? "All Classes" : cls}</option>
+              ))}
+            </select>
+
+            <select
+              className="stu-filter"
+              value={selectedSection}
+              onChange={(e) => setSelectedSection(e.target.value)}
+              disabled={selectedClass === "all"}
+            >
+              {sectionOptions.map((sec) => (
+                <option key={sec} value={sec}>{sec === "all" ? "All Sections" : sec}</option>
+              ))}
+            </select>
+
+            <button className="stu-btn ghost" onClick={() => dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }))}>
+              ↺ Refresh
+            </button>
+
+            <button className="stu-btn ghost">
+              ↓ Export
+            </button>
+          </div>
+
+          {/* Empty State */}
+          {!loading && filteredStudents.length === 0 ? (
+            <div style={{
+              textAlign: "center", padding: "56px 24px",
+              border: "1.5px dashed #ddd8ff", borderRadius: 16,
+              background: "#faf9ff",
+            }}>
+              <div style={{ fontSize: 44, marginBottom: 12 }}>🎓</div>
+              <div style={{ fontWeight: 600, color: "#aaa", marginBottom: 4 }}>
+                {searchText || selectedClass !== "all" ? "No students match your filters" : "No students enrolled yet"}
+              </div>
+              <div style={{ fontSize: 13, color: "#c5bef5" }}>
+                {searchText || selectedClass !== "all"
+                  ? "Try adjusting your search or filter"
+                  : "Click \"Add Student\" to enroll the first student"}
+              </div>
+            </div>
+          ) : (
+            <div className="stu-table" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #ede9fe" }}>
+              <Table
+                loading={loading}
+                columns={columns}
+                dataSource={filteredStudents}
+                pagination={{
+                  pageSize: 10,
+                  size: "small",
+                  showSizeChanger: true,
+                  showTotal: (total, range) => (
+                    <span style={{ fontSize: 12, color: "#aaa" }}>{range[0]}–{range[1]} of {total} students</span>
+                  ),
+                }}
+                scroll={{ x: 1000 }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
