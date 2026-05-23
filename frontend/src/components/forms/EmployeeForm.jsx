@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, lazy, Suspense } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Tabs,
   Form,
@@ -61,8 +64,13 @@ const maritalStatuses = ["Single", "Married", "Divorced", "Widowed"];
 const religions = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
 const employeeStatuses = ["Full-Time", "Part-Time", "Contract"];
 
+const formSchema = z.object({}).passthrough();
+
 const EmployeeForm = () => {
   const [form] = Form.useForm();
+  const { handleSubmit: rhfHandleSubmit } = useForm({
+    resolver: zodResolver(formSchema),
+  });
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
    const selectedUserId = Form.useWatch("userId", form);
@@ -163,7 +171,7 @@ const EmployeeForm = () => {
             </span>
           }
         >
-          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form form={form} layout="vertical" onFinish={rhfHandleSubmit((values) => handleSubmit(values))}>
             {/* PERSONAL INFO */}
             <Card title="Personal Information" className="mb-4">
               <Row gutter={16}>

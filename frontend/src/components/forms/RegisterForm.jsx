@@ -1,4 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
 import { Form, Input, Select, Upload, Checkbox } from "antd";
 import { fetchSchools } from "../../features/schoolSlice";
@@ -8,8 +11,13 @@ import { registerUser, resetState } from "../../features/authSlice";
 const EXCLUDED_ROLES_FOR_SCHOOL_ADMIN = ["super admin", "school admin", "student", "parent"];
 const MAX_AVATAR_SIZE_BYTES = 1024 * 1024;
 
+const formSchema = z.object({}).passthrough();
+
 const RegisterForm = ({ onClose }) => {
   const [form] = Form.useForm();
+  const { handleSubmit: rhfHandleSubmit } = useForm({
+    resolver: zodResolver(formSchema),
+  });
   const dispatch = useDispatch();
 
   const { roles } = useSelector((state) => state.role);
@@ -205,7 +213,7 @@ const RegisterForm = ({ onClose }) => {
         form={form}
         layout="vertical"
         initialValues={initialValues}
-        onFinish={onFinish}
+        onFinish={rhfHandleSubmit((values) => onFinish(values))}
         className="reg-form"
       >
         {/* Two column row: Name + Email */}

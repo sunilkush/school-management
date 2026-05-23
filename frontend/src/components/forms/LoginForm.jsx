@@ -1,4 +1,7 @@
 import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, resetState } from "../../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,8 +18,8 @@ import {
   Alert,
 } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
-import logo from "/logo.png"
-const { Title, Text } = Typography;
+import logo from "/logo.png";
+const { Text } = Typography;
 const { Content } = Layout;
 
 const roleRoutes = {
@@ -41,14 +44,39 @@ const roleRoutes = {
   security: "/dashboard/security",
 };
 
+
+const loginSchema = z.object({
+  email: z
+    .string({ required_error: "Email is required" })
+    .min(1, "Email is required")
+    .email("Invalid email"),
+  password: z
+    .string({ required_error: "Password is required" })
+    .min(1, "Password is required"),
+  remember: z.boolean().optional(),
+});
+
 const LoginForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const { loading, error } = useSelector((state) => state.auth);
 
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      remember: false,
+    },
+  });
+
   // 🔥 FINAL LOGIN HANDLER
-  const onFinish = async (values) => {
+  const onSubmit = async (values) => {
     try {
       const res = await dispatch(loginUser(values)).unwrap();
 
@@ -121,40 +149,81 @@ const LoginForm = () => {
               <Form
                 layout="vertical"
                 style={{ marginTop: 24 }}
-                onFinish={onFinish}
-                onValuesChange={onValuesChange}
+                onFinish={handleSubmit(onSubmit)}
               >
-                <Form.Item
-                  label="Email Address"
-                  name="email"
-                  rules={[
-                    { required: true, message: "Email is required" },
-                    { type: "email", message: "Invalid email" },
-                  ]}
-                >
-                  <Input
-                    size="large"
-                    prefix={<MailOutlined />}
-                    placeholder="admin@example.com"
+                <div style={{ marginBottom: 16 }}>
+                  <Text style={{ display: "block", marginBottom: 8, color: "var(--text-primary)" }}>
+                    Email Address
+                  </Text>
+                  <Controller
+                    name="email"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        size="large"
+                        prefix={<MailOutlined />}
+                        placeholder="admin@example.com"
+                        status={errors.email ? "error" : ""}
+                        onChange={(event) => {
+                          onValuesChange();
+                          field.onChange(event);
+                        }}
+                      />
+                    )}
                   />
-                </Form.Item>
+                  {errors.email && (
+                    <Text type="danger" style={{ fontSize: 12 }}>
+                      {errors.email.message}
+                    </Text>
+                  )}
+                </div>
 
-                <Form.Item
-                  label="Password"
-                  name="password"
-                  rules={[{ required: true, message: "Password is required" }]}
-                >
-                  <Input.Password
-                    size="large"
-                    prefix={<LockOutlined />}
-                    placeholder="••••••••"
+                <div style={{ marginBottom: 16 }}>
+                  <Text style={{ display: "block", marginBottom: 8, color: "var(--text-primary)" }}>
+                    Password
+                  </Text>
+                  <Controller
+                    name="password"
+                    control={control}
+                    render={({ field }) => (
+                      <Input.Password
+                        {...field}
+                        size="large"
+                        prefix={<LockOutlined />}
+                        placeholder="••••••••"
+                        status={errors.password ? "error" : ""}
+                        onChange={(event) => {
+                          onValuesChange();
+                          field.onChange(event);
+                        }}
+                      />
+                    )}
                   />
-                </Form.Item>
+                  {errors.password && (
+                    <Text type="danger" style={{ fontSize: 12 }}>
+                      {errors.password.message}
+                    </Text>
+                  )}
+                </div>
 
                 <Row justify="space-between" align="middle">
-                  <Form.Item name="remember" valuePropName="checked" style={{color: "var(--text-primary)"}}>
-                    <Checkbox style={{color: "var(--text-primary)"}}>Remember me</Checkbox>
-                  </Form.Item>
+                  <Controller
+                    name="remember"
+                    control={control}
+                    render={({ field }) => (
+                      <Checkbox
+                        checked={field.value}
+                        onChange={(event) => {
+                          onValuesChange();
+                          field.onChange(event.target.checked);
+                        }}
+                        style={{color: "var(--text-primary)"}}
+                      >
+                        Remember me
+                      </Checkbox>
+                    )}
+                  />
                   <Link to="/forgot-password" style={{color: "var(--text-primary)"}}>
                     Forgot password?
                   </Link>

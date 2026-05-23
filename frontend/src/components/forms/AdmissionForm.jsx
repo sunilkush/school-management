@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, Input, Select, DatePicker, Button, InputNumber, message, Modal } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastRegisteredStudent, createStudent } from "../../features/studentSlice";
@@ -12,6 +15,8 @@ const TABS = [
   { key: "father", label: "Father", icon: "👨", step: 3 },
   { key: "mother", label: "Mother", icon: "👩", step: 4 },
 ];
+
+const formSchema = z.object({}).passthrough();
 
 const renderCredentialLine = (label, creds) => {
   if (!creds) return null;
@@ -49,6 +54,9 @@ const selectStyle = {
 
 const AdmissionForm = () => {
   const [form] = Form.useForm();
+  const { handleSubmit: rhfHandleSubmit } = useForm({
+    resolver: zodResolver(formSchema),
+  });
   const dispatch = useDispatch();
   const tabKeys = ["student", "other", "father", "mother"];
   const [activeTab, setActiveTab] = useState("student");
@@ -418,7 +426,7 @@ const AdmissionForm = () => {
 
         {/* Form Body */}
         <div style={{ padding: "32px 36px" }}>
-          <Form className="adm-form" layout="vertical" form={form} onFinish={onFinish}>
+          <Form className="adm-form" layout="vertical" form={form} onFinish={rhfHandleSubmit((values) => onFinish(values))}>
 
             {/* ── STUDENT INFO ── */}
             {activeTab === "student" && (
