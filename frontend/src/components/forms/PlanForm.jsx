@@ -1,4 +1,7 @@
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   Input,
@@ -20,8 +23,13 @@ import {
 
 const { Title, Text } = Typography;
 
+const formSchema = z.object({}).passthrough();
+
 const PlanForm = ({ initialValues, onClose }) => {
   const [form] = Form.useForm();
+  const { handleSubmit: rhfHandleSubmit } = useForm({
+    resolver: zodResolver(formSchema),
+  });
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.subscriptionPlans);
 
@@ -82,7 +90,7 @@ const PlanForm = ({ initialValues, onClose }) => {
   };
 
   return (
-    <Form form={form} layout="vertical" onFinish={onFinish}>
+    <Form form={form} layout="vertical" onFinish={rhfHandleSubmit((values) => onFinish(values))}>
       {/* PLAN DETAILS */}
       <Card>
         <Title level={4}>Plan Details</Title>
