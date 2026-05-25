@@ -21,7 +21,7 @@ const formSchema = z.object({}).passthrough();
 const renderCredentialLine = (label, creds) => {
   if (!creds) return null;
   return (
-    <div key={label} style={{ marginBottom: 16, padding: "12px 16px", background: "#f8f7ff", borderRadius: 10, borderLeft: "3px solid #7c6ff7" }}>
+    <div key={label} style={{ marginBottom: 16, padding: "5px", background: "#f8f7ff", borderRadius: 10, borderLeft: "3px solid #1677ff" }}>
       <div style={{ fontWeight: 600, color: "#4a3fa8", marginBottom: 6, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
       <div style={{ fontSize: 13, color: "#555", marginBottom: 2 }}>Login ID: <span style={{ fontWeight: 500, color: "#222" }}>{creds.loginId || "—"}</span></div>
       <div style={{ fontSize: 13, color: "#555" }}>Password: <span style={{ fontWeight: 500, color: "#222" }}>{creds.password || "Already exists (unchanged)"}</span></div>
@@ -40,10 +40,10 @@ const SectionHeading = ({ children }) => (
 );
 
 const inputStyle = {
-  borderRadius: 10,
-  border: "1.5px solid #e8e4ff",
-  fontSize: 14,
-  height: 42,
+  borderRadius: 5,
+  border: "1.5px solid #69b1ff",
+  fontSize: 12,
+  height: 30,
   background: "#fdfcff",
   color: "#1a1a2e",
 };
@@ -178,10 +178,10 @@ const AdmissionForm = () => {
         .adm-form .ant-input-number,
         .adm-form .ant-input-number-input,
         .adm-form .ant-picker {
-          border-radius: 10px !important;
-          border: 1.5px solid #e8e4ff !important;
+          border-radius: 5px !important;
+          border: 1.5px solid #69b1ff !important;
           font-size: 14px !important;
-          height: 42px !important;
+          height: 30px !important;
           background: #fdfcff !important;
           color: #1a1a2e !important;
           width: 100% !important;
@@ -192,7 +192,7 @@ const AdmissionForm = () => {
         .adm-form .ant-input:hover,
         .adm-form .ant-input-number:hover,
         .adm-form .ant-picker:hover {
-          border-color: #7c6ff7 !important;
+          border-color: #1677ff !important;
           box-shadow: 0 0 0 3px rgba(124, 111, 247, 0.1) !important;
         }
         .adm-form textarea.ant-input {
@@ -201,16 +201,16 @@ const AdmissionForm = () => {
           padding-top: 10px !important;
         }
         .adm-form .ant-select .ant-select-selector {
-          border-radius: 10px !important;
-          border: 1.5px solid #e8e4ff !important;
-          font-size: 14px !important;
-          height: 42px !important;
+          border-radius: 5px !important;
+          border: 1.5px solid #69b1ff !important;
+          font-size: 12px !important;
+          height: 30px !important;
           background: #fdfcff !important;
           align-items: center !important;
         }
         .adm-form .ant-select:hover .ant-select-selector,
         .adm-form .ant-select-focused .ant-select-selector {
-          border-color: #7c6ff7 !important;
+          border-color: #1677ff !important;
           box-shadow: 0 0 0 3px rgba(124, 111, 247, 0.1) !important;
         }
         .adm-form .ant-form-item-explain-error {
@@ -219,7 +219,7 @@ const AdmissionForm = () => {
         }
         .adm-form .ant-input[disabled] {
           background: #f3f0ff !important;
-          color: #7c6ff7 !important;
+          color: #1677ff !important;
           font-weight: 600 !important;
           border-color: #ddd8ff !important;
         }
@@ -255,7 +255,7 @@ const AdmissionForm = () => {
           transition: all 0.2s;
         }
         .tab-btn.active .step-circle {
-          background: #7c6ff7;
+          background: #1677ff;
           color: #fff;
           box-shadow: 0 4px 14px rgba(124, 111, 247, 0.4);
         }
@@ -280,7 +280,7 @@ const AdmissionForm = () => {
           transform: translateX(-50%);
           height: 3px;
           width: 0;
-          background: #7c6ff7;
+          background: #1677ff;
           border-radius: 2px 2px 0 0;
           transition: width 0.2s;
         }
@@ -288,7 +288,7 @@ const AdmissionForm = () => {
         .progress-connector {
           flex: 1;
           height: 2px;
-          background: #e8e4ff;
+          background: #69b1ff;
           margin-top: -20px;
           position: relative;
           top: -6px;
@@ -299,10 +299,10 @@ const AdmissionForm = () => {
           align-items: center;
           gap: 8px;
           padding: 0 28px;
-          height: 44px;
+          height: 30px;
           border-radius: 12px;
-          font-size: 14px;
-          font-weight: 600;
+          font-size: 12px;
+          font-weight: 400;
           cursor: pointer;
           border: none;
           transition: all 0.2s;
@@ -314,14 +314,14 @@ const AdmissionForm = () => {
         }
         .nav-btn.secondary {
           background: #f0eeff;
-          color: #7c6ff7;
+          color: #1677ff;
         }
         .nav-btn.secondary:not(:disabled):hover {
           background: #e4dfff;
           transform: translateX(-2px);
         }
         .nav-btn.primary {
-          background: linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%);
+          background: linear-gradient(135deg, #1677ff 0%, #5a50c9 100%);
           color: #fff;
           box-shadow: 0 4px 14px rgba(124, 111, 247, 0.35);
         }
@@ -359,15 +359,15 @@ const AdmissionForm = () => {
           border-radius: 20px;
           font-size: 11px;
           font-weight: 600;
-          color: #7c6ff7;
+          color: #1677ff;
         }
       `}</style>
 
       <div className="adm-card">
         {/* Header */}
         <div style={{
-          background: "linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%)",
-          padding: "28px 36px",
+          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
+          padding: "10px",
           position: "relative",
           overflow: "hidden",
         }}>
@@ -384,7 +384,7 @@ const AdmissionForm = () => {
               <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
                 School Management
               </div>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
                 New Student Admission
               </h1>
             </div>
@@ -425,7 +425,7 @@ const AdmissionForm = () => {
         </div>
 
         {/* Form Body */}
-        <div style={{ padding: "32px 36px" }}>
+        <div style={{ padding: "20px" }}>
           <Form className="adm-form" layout="vertical" form={form} onFinish={rhfHandleSubmit((values) => onFinish(values))}>
 
             {/* ── STUDENT INFO ── */}
@@ -571,7 +571,7 @@ const AdmissionForm = () => {
                 </div>
                 <div style={{ marginTop: 8, padding: "14px 18px", background: "#f8f7ff", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 20 }}>💡</span>
-                  <span style={{ fontSize: 13, color: "#7c6ff7" }}>Father's login credentials will be auto-generated after successful admission.</span>
+                  <span style={{ fontSize: 13, color: "#1677ff" }}>Father's login credentials will be auto-generated after successful admission.</span>
                 </div>
               </div>
             )}
@@ -604,7 +604,7 @@ const AdmissionForm = () => {
                 </div>
                 <div style={{ marginTop: 8, padding: "14px 18px", background: "#f8f7ff", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 20 }}>💡</span>
-                  <span style={{ fontSize: 13, color: "#7c6ff7" }}>Mother's login credentials will be auto-generated after successful admission.</span>
+                  <span style={{ fontSize: 13, color: "#1677ff" }}>Mother's login credentials will be auto-generated after successful admission.</span>
                 </div>
               </div>
             )}
@@ -633,7 +633,7 @@ const AdmissionForm = () => {
                     width: i === currentIndex ? 24 : 8,
                     height: 8,
                     borderRadius: 4,
-                    background: i === currentIndex ? "#7c6ff7" : i < currentIndex ? "#5DCAA5" : "#e8e4ff",
+                    background: i === currentIndex ? "#1677ff" : i < currentIndex ? "#5DCAA5" : "#69b1ff",
                     transition: "all 0.3s",
                   }} />
                 ))}
