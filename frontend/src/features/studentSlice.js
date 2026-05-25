@@ -50,6 +50,18 @@ export const createStudent = createAsyncThunk(
   }
 );
 
+export const bulkCreateStudents = createAsyncThunk(
+  "student/bulkAddStudent",
+  async (students, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post(`/student/bulk-register`, { students });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Bulk add failed");
+    }
+  }
+);
+
 // fetch all students
 export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
@@ -230,6 +242,19 @@ const studentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         toast.error(state.error || "Failed to create student");
+      })
+      .addCase(bulkCreateStudents.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(bulkCreateStudents.fulfilled, (state) => {
+        state.loading = false;
+        toast.success("Bulk student admission completed");
+      })
+      .addCase(bulkCreateStudents.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(state.error || "Bulk student admission failed");
       })
 
       // fetch all students

@@ -20,42 +20,31 @@ const getRoleByName = async (name, schoolId, session) => {
   }).session(session);
 };
 
-/* ================= CREATE STUDENT ================= */
-const createStudentAdmission = asyncHandler(async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+const admitSingleStudent = async ({
+  studentData,
+  fatherData,
+  motherData,
+  schoolId,
+  academicYearId,
+  schoolClassId,
+  sectionId,
+  session,
+}) => {
+  if (!studentData?.name || !studentData?.email) {
+    throw new ApiError(400, "Student name & email required");
+  }
+  if (!schoolId || !academicYearId || !schoolClassId || !sectionId) {
+    throw new ApiError(400, "School, class, section required");
+  }
 
-  try {
-    const {
-      studentData,
-      fatherData,
-      motherData,
-      schoolId,
-      academicYearId,
-      schoolClassId,
-      sectionId,
-    } = req.body;
-    console.log(req.body);
-    /* 🔐 VALIDATION */
-    if (!studentData?.name || !studentData?.email) {
-      throw new ApiError(400, "Student name & email required");
-    }
+  const generatePassword = () => crypto.randomBytes(6).toString("hex");
 
-    if (!schoolId || !academicYearId || !schoolClassId || !sectionId) {
-      throw new ApiError(400, "School, class, section required");
-    }
+  const studentRole = await getRoleByName("Student", schoolId, session);
+  const parentRole = await getRoleByName("Parent", schoolId, session);
 
-    /* 🔑 PASSWORD */
-    const generatePassword = () => crypto.randomBytes(6).toString("hex");
-
-    /* 🎯 ROLE AUTO PICK */
-
-    const studentRole = await getRoleByName("Student", schoolId, session);
-    const parentRole = await getRoleByName("Parent", schoolId, session);
-
-    if (!studentRole || !parentRole) {
-      throw new ApiError(500, "Roles not configured properly");
-    }
+  if (!studentRole || !parentRole) {
+    throw new ApiError(500, "Roles not configured properly");
+  }
 
     /* 👤 STUDENT USER */
     const studentPassword = generatePassword();
@@ -218,51 +207,76 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
     }
 
 
-    await session.commitTransaction();
-    session.endSession();
+  return {
+    student,
+    studentUser,
+    father: fatherUser,
+    mother: motherUser,
+    enrollment,
+    credentials: {
+      student: {
+        userId: studentUser._id,
+        loginId: studentUser.email,
+        password: studentPassword,
+        isNew: true,
+      },
+      father: fatherUser
+        ? {
+            userId: fatherUser._id,
+            loginId: fatherUser.email,
+            password: fatherPassword,
+            isNew: Boolean(fatherPassword),
+          }
+        : null,
+      mother: motherUser
+        ? {
+            userId: motherUser._id,
+            loginId: motherUser.email,
+            password: motherPassword,
+            isNew: Boolean(motherPassword),
+          }
+        : null,
+    },
+  };
+};
 
-    return res.status(201).json(
-      new ApiResponse(
-        201,
-        {
-          student,
-          studentUser,
-          father: fatherUser,
-          mother: motherUser,
-          enrollment,
-          credentials: {
-            student: {
-              userId: studentUser._id,
-              loginId: studentUser.email,
-              password: studentPassword,
-              isNew: true,
-            },
-            father: fatherUser
-              ? {
-                  userId: fatherUser._id,
-                  loginId: fatherUser.email,
-                  password: fatherPassword,
-                  isNew: Boolean(fatherPassword),
-                }
-              : null,
-            mother: motherUser
-              ? {
-                  userId: motherUser._id,
-                  loginId: motherUser.email,
-                  password: motherPassword,
-                  isNew: Boolean(motherPassword),
-                }
-              : null,
-          },
-        },
-        "Student admission successful"
-      )
-    );
+/* ================= CREATE STUDENT ================= */
+const createStudentAdmission = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const result = await admitSingleStudent({ ...req.body, session });
+    await session.commitTransaction();
+    return res.status(201).json(new ApiResponse(201, result, "Student admission successful"));
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
     throw error;
+  } finally {
+    session.endSession();
   }
+});
+
+const bulkCreateStudentAdmission = asyncHandler(async (req, res) => {
+  const { students } = req.body;
+  if (!Array.isArray(students) || students.length === 0) {
+    throw new ApiError(400, "students array is required");
+  }
+  const results = [];
+  for (const payload of students) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const result = await admitSingleStudent({ ...payload, session });
+      await session.commitTransaction();
+      results.push({ success: true, studentEmail: payload?.studentData?.email, result });
+    } catch (error) {
+      await session.abortTransaction();
+      results.push({ success: false, studentEmail: payload?.studentData?.email, error: error.message });
+    } finally {
+      session.endSession();
+    }
+  }
+  return res.status(200).json(new ApiResponse(200, { results }, "Bulk student admission processed"));
 });
 // ✅ Get Students (with aggregation)
 export const getStudentsByRole = asyncHandler(async (req, res) => {
@@ -1153,6 +1167,7 @@ const getMyChildren = asyncHandler(async (req, res) => {
 
 export {
   createStudentAdmission,
+  bulkCreateStudentAdmission,
   getStudentById,
   updateStudent,
   deleteStudent,

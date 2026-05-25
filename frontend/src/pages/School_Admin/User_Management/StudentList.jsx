@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Modal, Spin } from "antd";
-import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
+import { Table, Modal, Spin, message } from "antd";
+import { bulkCreateStudents, fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
 
 const bloodGroupColor = {
@@ -35,6 +35,8 @@ const StudentList = () => {
   const { selectedAcademicYear, activeYear } = useSelector((state) => state.academicYear);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkJson, setBulkJson] = useState("");
   const [searchText, setSearchText] = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedSection, setSelectedSection] = useState("all");
@@ -106,6 +108,27 @@ const StudentList = () => {
     classes: new Set(formattedStudents.map((s) => s.schoolClass)).size,
     showing: filteredStudents.length,
   }), [formattedStudents, filteredStudents]);
+
+  const handleBulkSubmit = async () => {
+    try {
+      const parsed = JSON.parse(bulkJson);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        return message.error("Please paste a JSON array of students.");
+      }
+      const res = await dispatch(bulkCreateStudents(parsed));
+      if (res?.meta?.requestStatus === "fulfilled") {
+        const failed = res.payload?.results?.filter((r) => !r.success)?.length || 0;
+        message.success(`Bulk upload completed. Success: ${parsed.length - failed}, Failed: ${failed}`);
+        setIsBulkModalOpen(false);
+        setBulkJson("");
+        dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+      } else {
+        message.error(res?.payload || "Bulk upload failed");
+      }
+    } catch {
+      message.error("Invalid JSON format");
+    }
+  };
 
   const columns = [
     {
@@ -339,6 +362,22 @@ const StudentList = () => {
       >
         <AdmissionForm onClose={() => setIsModalOpen(false)} />
       </Modal>
+      <Modal
+        open={isBulkModalOpen}
+        onCancel={() => setIsBulkModalOpen(false)}
+        onOk={handleBulkSubmit}
+        okText="Upload Students"
+        width={900}
+        title="Bulk Student Admission (JSON)"
+      >
+        <p style={{ fontSize: 12, color: "#666" }}>Paste JSON array. Each item needs: studentData, fatherData, motherData, schoolId, academicYearId, schoolClassId, sectionId.</p>
+        <textarea
+          value={bulkJson}
+          onChange={(e) => setBulkJson(e.target.value)}
+          placeholder='[{"studentData":{"name":"A","email":"a@test.com"},"fatherData":{"name":"F","email":"f@test.com","mobile":"9999999999"},"motherData":{"name":"M","email":"m@test.com","mobile":"8888888888"},"schoolId":"...","academicYearId":"...","schoolClassId":"...","sectionId":"..."}]'
+          style={{ width: "100%", minHeight: 320, borderRadius: 8, border: "1px solid #ddd", padding: 10, fontFamily: "monospace", fontSize: 12 }}
+        />
+      </Modal>
 
       <div style={{
         background: "#fff", borderRadius: 20,
@@ -367,6 +406,9 @@ const StudentList = () => {
             </div>
             <button className="stu-btn primary" style={{ background: "rgba(255,255,255,0.2)", boxShadow: "none", border: "1.5px solid rgba(255,255,255,0.3)" }} onClick={() => setIsModalOpen(true)}>
               + Add Student
+            </button>
+            <button className="stu-btn primary" style={{ background: "rgba(255,255,255,0.2)", boxShadow: "none", border: "1.5px solid rgba(255,255,255,0.3)" }} onClick={() => setIsBulkModalOpen(true)}>
+              + Bulk Add
             </button>
           </div>
         </div>

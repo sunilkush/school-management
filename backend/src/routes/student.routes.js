@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createStudentAdmission,
+  bulkCreateStudentAdmission,
   getStudentsByRole,
   getStudentsSuperAdmin,
   getStudentById,
@@ -34,6 +35,12 @@ router.post(
   auth,
   roleMiddleware(ADMIN_ROLE),
   createStudentAdmission
+);
+router.post(
+  "/bulk-register",
+  auth,
+  roleMiddleware(ADMIN_ROLE),
+  bulkCreateStudentAdmission
 );
 
 // ✅ Get All Students (Super Admin, School Admin, Teacher, Accountant)
