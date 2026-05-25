@@ -35,7 +35,7 @@
   color-scheme: light;
 
   /* School management - light theme */
-  --primary: #1d5fd3;
+  --primary: #2563eb;
   --primary-soft: #e8f1ff;
   --secondary: #0a2f73;
   --accent: #f4b400;
@@ -45,12 +45,12 @@
   --warning: #d99700;
   --info: #1a73d9;
 
-  --bg: #f3f7ff;
+  --bg: #f4f7fe;
   --surface: #ffffff;
   --surface-elevated: #ffffff;
   --surface-soft: #edf3ff;
   --surface-soft-hover: #dbe7ff;
-  --surface-header: rgba(255, 255, 255, 0.88);
+  --surface-header: rgba(255, 255, 255, 0.68);
 
   --border: #d2def2;
   --border-muted: #e2e8f0;
@@ -65,8 +65,9 @@
 
   --cardBg: var(--surface);
   --textMuted: var(--text-muted);
-  --logo:
-
+  --logo: none;
+  --dark-bg: #020817;
+  --dark-surface: #0f172a;
 }
 
 [data-theme="dark"] {
@@ -83,8 +84,8 @@
   --warning: #ffcf4d;
   --info: #4ba8ff;
 
-  --bg: #040b1c;
-  --surface: #0b1f4d;
+  --bg: #020817;
+  --surface: #0f172a;
   --surface-elevated: rgba(15, 23, 42, 0.9);
   --surface-soft: #13306b;
   --surface-soft-hover: #1a3f85;
