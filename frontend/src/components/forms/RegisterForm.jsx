@@ -43,7 +43,7 @@ const RegisterForm = ({ onClose }) => {
   useEffect(() => {
     if (!schools?.length) dispatch(fetchSchools());
     if (!roles?.length) dispatch(fetchRoles());
-  }, [dispatch]);
+  }, [dispatch,schools?.length, roles?.length]);
 
   useEffect(() => {
     if (isSchoolAdmin && currentSchoolId) {
