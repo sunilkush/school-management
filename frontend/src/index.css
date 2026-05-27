@@ -208,6 +208,13 @@ body {
   .verify-card { text-align: center; }
   .verify-spin-copy { margin-top: 16px; }
   .success-icon { color: #52c41a !important; }
+  .page-center-shell { @apply min-h-screen grid place-items-center p-4; background: var(--bg); }
+  .page-center-shell-flex { @apply min-h-screen flex items-center justify-center p-5; background: var(--bg); }
+  .center-card-md { width: 100%; max-width: 560px; text-align: center; border-radius: 16px !important; }
+  .center-card-sm { width: 100%; max-width: 520px; }
+  .title-no-margin { margin: 0 !important; }
+  .warning-icon-lg { font-size: 40px; color: #faad14; }
+  .btn-top-gap { margin-top: 12px; }
 
   .fade-up { animation: fadeUp .45s ease-out both; }
   .animate-float { animation: float 3.4s ease-in-out infinite; }

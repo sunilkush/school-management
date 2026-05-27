@@ -23,14 +23,14 @@ const NoActiveYear = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 16 }}>
-      <Card style={{ maxWidth: 560, width: "100%", textAlign: "center", borderRadius: 16 }}>
+    <div className="page-center-shell">
+      <Card className="center-card-md">
         <Space direction="vertical" size={8}>
-          <WarningOutlined style={{ fontSize: 40, color: "#faad14" }} />
-          <Title level={3} style={{ margin: 0 }}>No Active Academic Year</Title>
+          <WarningOutlined className="warning-icon-lg" />
+          <Title level={3} className="title-no-margin">No Active Academic Year</Title>
           <Text type="secondary">Please select or create an academic year to continue.</Text>
           <Text type="secondary">If you are a Super Admin, you can create it from Settings.</Text>
-          <Button type="primary" onClick={handleGoToSettings} style={{ marginTop: 12 }}>
+          <Button type="primary" onClick={handleGoToSettings} className="btn-top-gap">
             Go to Settings
           </Button>
         </Space>
