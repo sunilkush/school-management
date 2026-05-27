@@ -21,7 +21,7 @@ const RoleWorkspace = () => {
 
   if (loading) {
     return (
-      <Flex style={{ minHeight: "60vh" }} align="center" justify="center">
+      <Flex className="role-workspace-loader" align="center" justify="center">
         <Spin size="large" tip="Loading role workspace..." />
       </Flex>
     );
@@ -30,7 +30,7 @@ const RoleWorkspace = () => {
   return (
     <Flex vertical gap={16}>
       <Card>
-        <Title level={3} style={{ marginBottom: 8 }}>Role Workspace</Title>
+        <Title level={3} className="role-workspace-title">Role Workspace</Title>
         <Text type="secondary">
           Welcome, <b>{roleName}</b>. This screen is auto-configured from your role permissions.
         </Text>

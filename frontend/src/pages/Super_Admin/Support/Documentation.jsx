@@ -88,15 +88,15 @@ const Documentation = () => {
   }, [search]);
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f5f6fa" }}>
+    <Layout className="docs-layout-shell">
       
       {/* SIDEBAR */}
-      <Sider width={260} style={{ background: "#fff", padding: 16 }}>
+      <Sider width={260} className="docs-sider">
         <Search
           placeholder="Search docs..."
           allowClear
           onChange={(e) => setSearch(e.target.value)}
-          style={{ marginBottom: 16 }}
+          className="docs-search"
         />
 
         <Menu
@@ -112,13 +112,13 @@ const Documentation = () => {
 
       {/* CONTENT */}
       <Layout>
-        <Content style={{ padding: 24 }}>
-          <Card style={{ borderRadius: 12 }}>
+        <Content className="docs-content">
+          <Card className="docs-main-card">
             <Title level={3}>{docs[activeKey].title}</Title>
             <Paragraph>{docs[activeKey].content}</Paragraph>
 
             {docs[activeKey].stepsByRole?.map((section) => (
-              <div key={section.role} style={{ marginBottom: 16 }}>
+              <div key={section.role} className="docs-role-section">
                 <Title level={5}>{section.role}</Title>
                 <List
                   size="small"
@@ -146,7 +146,7 @@ const Documentation = () => {
             ) : null}
 
             {/* EXTRA UI */}
-            <div style={{ marginTop: 30 }}>
+            <div className="docs-extra">
               <Title level={5}>💡 Tips</Title>
               <Paragraph>
                 Use proper role-based access and keep your data secure.
