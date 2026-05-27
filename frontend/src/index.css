@@ -215,6 +215,17 @@ body {
   .title-no-margin { margin: 0 !important; }
   .warning-icon-lg { font-size: 40px; color: #faad14; }
   .btn-top-gap { margin-top: 12px; }
+  .page-stack { width: 100%; }
+  .page-title-tight { margin: 0 !important; }
+  .page-title-subtight { margin-bottom: 4px !important; }
+  .search-input-lg { width: 290px; }
+  .search-input-md { width: 280px; }
+  .filter-select-sm { width: 180px; }
+  .table-loading-wrap { text-align: center; padding: 20px; }
+  .drawer-stack { width: 100%; }
+  .record-id-text { font-size: 12px; }
+  .json-preview { white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+  .table-row-clickable { cursor: pointer; }
 
   .fade-up { animation: fadeUp .45s ease-out both; }
   .animate-float { animation: float 3.4s ease-in-out infinite; }

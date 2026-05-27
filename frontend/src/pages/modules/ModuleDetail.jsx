@@ -45,9 +45,9 @@ const ModuleDetail = () => {
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" size={16} className="page-stack">
       <Card>
-        <Title level={3} style={{ marginBottom: 6 }}>{moduleData.title}</Title>
+        <Title level={3} className="mb-1.5">{moduleData.title}</Title>
         <Text type="secondary">{moduleData.description}</Text>
       </Card>
 
@@ -56,7 +56,7 @@ const ModuleDetail = () => {
           <Col xs={24} md={8} key={item.label}>
             <Card>
               <Text type="secondary">{item.label}</Text>
-              <Title level={4} style={{ margin: 0 }}>{item.value}</Title>
+              <Title level={4} className="page-title-tight">{item.value}</Title>
             </Card>
           </Col>
         ))}
