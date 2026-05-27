@@ -3,8 +3,8 @@ import RegisterForm from "../components/forms/RegisterForm";
 
 const UserRegister = () => {
   return (
-    <div style={{ padding: 16, display: "flex", justifyContent: "center" }}>
-      <Card style={{ width: "100%", maxWidth: 520 }}>
+    <div className="flex justify-center p-4">
+      <Card className="center-card-sm">
         <RegisterForm />
       </Card>
     </div>

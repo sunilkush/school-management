@@ -28,34 +28,19 @@ const VerifyEmailPage = () => {
   const status = !token ? "error" : success ? "success" : error ? "error" : "loading";
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f7fa",
-      }}
-    >
-      <Card
-        style={{
-          width: 420,
-          borderRadius: 12,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-          textAlign: "center",
-        }}
-      >
+    <div className="auth-shell">
+      <Card className="auth-card auth-card-wide verify-card">
         {loading || status === "loading" ? (
           <>
             <Spin size="large" />
-            <div style={{ marginTop: 16 }}>
+            <div className="verify-spin-copy">
               <Title level={4}>Verifying your email...</Title>
               <Text type="secondary">Please wait while we verify your account</Text>
             </div>
           </>
         ) : status === "success" ? (
           <Result
-            icon={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
+            icon={<CheckCircleOutlined className="success-icon" />}
             title="Email Verified Successfully 🎉"
             subTitle="Your account is now active. You can login."
             extra={[

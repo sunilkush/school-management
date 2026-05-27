@@ -124,26 +124,26 @@ const TicketPage = () => {
   ];
 
   return (
-    <div style={{ padding: 24, background: "#f5f6fa", minHeight: "100vh" }}>
+    <div className="support-page-shell">
       
       {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+      <div className="support-page-header">
         <h2>🎫 Ticket Management</h2>
       </div>
 
       {/* FILTER BAR */}
-      <Card style={{ marginBottom: 20 }}>
+      <Card className="support-filter-card">
         <Space wrap>
           <Search
             placeholder="Search tickets..."
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 250 }}
+            className="support-search-width"
           />
 
           <Select
             placeholder="Filter Status"
             allowClear
-            style={{ width: 160 }}
+            className="support-select-width"
             onChange={(v) => setStatusFilter(v || "")}
           >
             <Option value="Open">Open</Option>
