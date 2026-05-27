@@ -4,27 +4,41 @@ import dayjs from "dayjs";
 import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
 
 
-const AttendanceFilters = ({ filters, onChange, showSearch = true }) => (
+const AttendanceFilters = ({
+  filters,
+  onChange,
+  showSearch = true,
+  schoolName = "",
+  classOptions = [],
+  sectionOptions = [],
+}) => (
   <Row gutter={[12, 12]}>
     <Col xs={24} md={4}>
       <Input
-        placeholder="School ID"
-        value={filters.schoolId || ""}
-        onChange={(e) => onChange({ schoolId: e.target.value || null })}
+        placeholder="School"
+        value={schoolName || ""}
+        disabled
       />
     </Col>
     <Col xs={24} md={4}>
-      <Input
-        placeholder="Class ID"
-        value={filters.classId || ""}
-        onChange={(e) => onChange({ classId: e.target.value || null })}
+      <Select
+        allowClear
+        placeholder="Select Class"
+        style={{ width: "100%" }}
+        value={filters.classId || undefined}
+        options={classOptions}
+        onChange={(value) => onChange({ classId: value || null, sectionId: null })}
       />
     </Col>
     <Col xs={24} md={4}>
-      <Input
-        placeholder="Section ID"
-        value={filters.sectionId || ""}
-        onChange={(e) => onChange({ sectionId: e.target.value || null })}
+      <Select
+        allowClear
+        placeholder="Select Section"
+        style={{ width: "100%" }}
+        value={filters.sectionId || undefined}
+        disabled={!filters.classId}
+        options={sectionOptions}
+        onChange={(value) => onChange({ sectionId: value || null })}
       />
     </Col>
     <Col xs={24} md={4}>

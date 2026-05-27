@@ -13,6 +13,7 @@ import {
   message,
   Drawer,
   Descriptions,
+  Alert,
 } from "antd";
 import {
   BarChartOutlined,
@@ -296,7 +297,20 @@ const ExamsPage = () => {
           ]}
         />
       </Card>
-
+        <Alert
+        type="info"
+        showIcon
+        style={{ borderRadius: 10 }}
+        message="Exam Module Guide"
+        description={
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <li><strong>Step 1:</strong> Exam List page se <strong>Create Exam</strong> open karke basic details save karein.</li>
+            <li><strong>Step 2:</strong> Save ke baad same exam ko <strong>Edit</strong> karein aur questions add/update karein.</li>
+            <li><strong>Step 3:</strong> Exam ready ho to status <strong>Draft → Published</strong> karein taaki students attempt kar saken.</li>
+            <li><strong>Step 4:</strong> Exam ke baad <strong>Publish Result</strong> use karein, phir <strong>View Analytics</strong> se performance check karein.</li>
+          </ul>
+        }
+      />
       <ExamStatCards
         items={[
           { key: "total", title: "Total Exams", value: summary.total, prefix: <FileDoneOutlined /> },

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Button, Card, Table, Space, Typography, Tag, Popconfirm } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import AttendanceFilters from "../../components/attendance/AttendanceFilters";
@@ -10,7 +10,7 @@ import {
   setAttendanceFilters,
   updateAttendanceRecord,
 } from "../../features/attendanceSlice";
-
+import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 const { Title, Text } = Typography;
 
 const AttendanceTablePage = () => {
@@ -19,11 +19,44 @@ const AttendanceTablePage = () => {
   const { list, filters, pagination, loading } = useSelector(
     (state) => state.attendance
   );
+const { user } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
+  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
+
+  const schoolId = user?.school?._id || null;
+  const academicYearId = selectedAcademicYear?._id || selectedAcademicYear || null;
+
+  const classes = useMemo(() => {
+    if (Array.isArray(schoolClasses)) return schoolClasses;
+    if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
+    return [];
+  }, [schoolClasses]);
+
+  const classOptions = useMemo(
+    () => classes.map((cls) => ({ value: cls._id, label: cls.name })),
+    [classes]
+  );
+
+  const sectionOptions = useMemo(() => {
+    const selectedClass = classes.find((cls) => cls._id === filters.classId);
+    return (
+      selectedClass?.sections?.map((section) => ({
+        value: section._id,
+        label: section.name,
+      })) || []
+    );
+  }, [classes, filters.classId]);
 
   /* ---------------- FETCH ---------------- */
   useEffect(() => {
     dispatch(fetchAttendance(filters));
-  }, [filters]);
+  }, [dispatch, filters]);
+
+  useEffect(() => {
+    if (!schoolId) return;
+    dispatch(setAttendanceFilters({ schoolId }));
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+  }, [dispatch, schoolId, academicYearId]);
 
   /* ---------------- COLUMNS ---------------- */
   const columns = [
@@ -126,6 +159,9 @@ const AttendanceTablePage = () => {
           onChange={(delta) =>
             dispatch(setAttendanceFilters({ ...delta, page: 1 }))
           }
+          schoolName={user?.school?.name}
+          classOptions={classOptions}
+          sectionOptions={sectionOptions}
         />
       </Card>
 

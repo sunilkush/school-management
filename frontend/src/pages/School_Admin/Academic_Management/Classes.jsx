@@ -1,299 +1,225 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { getClassData } from "../../../features/schoolClassSlice";
 import { fetchAllUser } from "../../../features/authSlice";
-import { Modal, Select, Spin, message } from "antd";
-import { useTheme } from "../../../context/ThemeContext";
 import { assignSubjectTeacher } from "../../../features/sectionSlice";
+import { Modal, Select, Empty, Spin, message, Input } from "antd";
+import { SearchOutlined, UserAddOutlined, BookOutlined, TeamOutlined, CloseOutlined, CheckOutlined } from "@ant-design/icons";
+import { useTheme } from "../../../context/ThemeContext";
 
 const { Option } = Select;
 
-/* ─────────────────────────────────────────
-   CONSTANTS
-───────────────────────────────────────── */
-const PALETTES = [
-  { a:"#6EE7F7", b:"#3B82F6", glow:"rgba(59,130,246,0.35)"  },
-  { a:"#A78BFA", b:"#7C3AED", glow:"rgba(124,58,237,0.35)"  },
-  { a:"#6EE7B7", b:"#059669", glow:"rgba(5,150,105,0.35)"   },
-  { a:"#FCA5A5", b:"#DC2626", glow:"rgba(220,38,38,0.3)"    },
-  { a:"#FCD34D", b:"#D97706", glow:"rgba(217,119,6,0.3)"    },
-  { a:"#F9A8D4", b:"#DB2777", glow:"rgba(219,39,119,0.3)"   },
-];
-const getPal = (idx=0) => PALETTES[idx % PALETTES.length];
+/* ── PESTEL PALETTE ─────────────────────────────────────────────────────────
+   P – Political   →  Crimson   #DC2626
+   E – Economic    →  Emerald   #059669
+   S – Social      →  Cobalt    #2563EB
+   T – Technology  →  Violet    #7C3AED
+   E – Environment →  Teal      #0D9488
+   L – Legal       →  Amber     #D97706
+───────────────────────────────────────────────────────────────────────────── */
 
-/* ─────────────────────────────────────────
-   CSS INJECTION
-───────────────────────────────────────── */
-const STYLE_ID = "cls-v2-styles";
-const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
-
-  .cls-root { font-family:'Instrument Sans',system-ui,sans-serif; }
-
-  .cls-card {
-    transition: transform 0.28s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s ease;
-    animation: cls-up 0.45s ease both;
-  }
-  .cls-card:hover { transform: translateY(-5px) scale(1.012); }
-
-  .cls-stat {
-    transition: transform 0.22s ease;
-    animation: cls-up 0.4s ease both;
-  }
-  .cls-stat:hover { transform: translateY(-3px); }
-
-  @keyframes cls-up {
-    from { opacity:0; transform:translateY(20px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-
-  .cls-assign-btn {
-    transition: opacity 0.18s, transform 0.18s;
-    border:none; cursor:pointer;
-  }
-  .cls-assign-btn:hover { opacity:0.88; transform:scale(0.98); }
-  .cls-assign-btn:active { transform:scale(0.95); }
-
-  .cls-search:focus-within {
-    border-color:rgba(99,102,241,0.55) !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
-  }
-
-  .cls-chip { transition: transform 0.15s; }
-  .cls-chip:hover { transform:scale(1.04); }
-
-  .cls-sec-row { transition: background 0.18s; }
-`;
-
-const StyleInject = () => {
-  useEffect(() => {
-    if (!document.getElementById(STYLE_ID)) {
-      const el = document.createElement("style");
-      el.id = STYLE_ID; el.textContent = CSS;
-      document.head.appendChild(el);
-    }
-    return () => { document.getElementById(STYLE_ID)?.remove(); };
-  }, []);
-  return null;
+const PESTEL = {
+  P: { bg: "#DC2626", light: "#FEF2F2", text: "#DC2626", accent: "#991B1B" },
+  E: { bg: "#059669", light: "#ECFDF5", text: "#059669", accent: "#047857" },
+  S: { bg: "#2563EB", light: "#EFF6FF", text: "#2563EB", accent: "#1D4ED8" },
+  T: { bg: "#7C3AED", light: "#F5F3FF", text: "#7C3AED", accent: "#6D28D9" },
+  Ev: { bg: "#0D9488", light: "#F0FDFA", text: "#0D9488", accent: "#0F766E" },
+  L: { bg: "#D97706", light: "#FFFBEB", text: "#D97706", accent: "#B45309" },
 };
 
-/* ─────────────────────────────────────────
-   ICONS
-───────────────────────────────────────── */
-const Ico = ({ children, size=16, stroke="currentColor", sw=2 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
-    {children}
-  </svg>
-);
-const SearchIco = () => (
-  <Ico stroke="#64748b">
-    <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.35" y2="16.35"/>
-  </Ico>
-);
-const BookIco = ({ c="currentColor" }) => (
-  <Ico stroke={c}>
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-  </Ico>
-);
-const UsersIco = ({ c="currentColor" }) => (
-  <Ico stroke={c}>
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-  </Ico>
-);
-const GridIco = ({ c="currentColor" }) => (
-  <Ico stroke={c}>
-    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-  </Ico>
-);
-const UserPlusIco = ({ c="currentColor" }) => (
-  <Ico stroke={c}>
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-  </Ico>
-);
+const statColors = [
+  { icon: <TeamOutlined />, label: "Total Classes", key: "classes", pestel: PESTEL.S },
+  { icon: <BookOutlined />, label: "Sections", key: "sections", pestel: PESTEL.T },
+  { icon: <UserAddOutlined />, label: "Subjects", key: "subjects", pestel: PESTEL.Ev },
+];
 
-/* ─────────────────────────────────────────
-   STAT CARD
-───────────────────────────────────────── */
-const StatCard = ({ label, value, icon, accent, delay=0, dark }) => (
-  <div className="cls-stat" style={{
-    flex:"1 1 130px", minWidth:130,
-    borderRadius:20, padding:"18px 20px",
-    background:dark
-      ? "linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))"
-      : "linear-gradient(145deg,#ffffff,#f8fafc)",
-    border:`1px solid ${dark?"rgba(255,255,255,0.07)":"rgba(0,0,0,0.06)"}`,
-    backdropFilter:"blur(20px)",
-    boxShadow:dark
-      ? "0 4px 24px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.05)"
-      : "0 4px 20px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.9)",
-    animationDelay:`${delay}ms`,
-    position:"relative", overflow:"hidden",
-  }}>
+const cardGradients = [
+  `linear-gradient(135deg, ${PESTEL.T.bg} 0%, ${PESTEL.S.bg} 100%)`,
+  `linear-gradient(135deg, ${PESTEL.E.bg} 0%, ${PESTEL.Ev.bg} 100%)`,
+  `linear-gradient(135deg, ${PESTEL.P.bg} 0%, ${PESTEL.L.bg} 100%)`,
+  `linear-gradient(135deg, ${PESTEL.S.bg} 0%, ${PESTEL.T.bg} 100%)`,
+  `linear-gradient(135deg, ${PESTEL.Ev.bg} 0%, ${PESTEL.E.bg} 100%)`,
+  `linear-gradient(135deg, ${PESTEL.L.bg} 0%, ${PESTEL.P.bg} 100%)`,
+];
+
+const subjectChipColors = [PESTEL.P, PESTEL.E, PESTEL.S, PESTEL.T, PESTEL.Ev, PESTEL.L];
+
+/* ─── STAT CARD ─────────────────────────────────────────────────────────── */
+const StatCard = ({ icon, label, value, pestel }) => (
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: 20,
+      padding: "22px 24px",
+      border: `1.5px solid #F1F5F9`,
+      display: "flex",
+      alignItems: "center",
+      gap: 18,
+      boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+      transition: "transform 0.2s, box-shadow 0.2s",
+    }}
+    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(0,0,0,0.12)"; }}
+    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.06)"; }}
+  >
     <div style={{
-      position:"absolute", top:-20, right:-20,
-      width:80, height:80, borderRadius:"50%",
-      background:`radial-gradient(circle,${accent}2e 0%,transparent 70%)`,
-      pointerEvents:"none",
-    }}/>
-    <div style={{
-      width:38, height:38, borderRadius:12,
-      background:`${accent}1a`, border:`1px solid ${accent}33`,
-      display:"flex", alignItems:"center", justifyContent:"center",
-      marginBottom:12,
+      width: 56, height: 56, borderRadius: 16,
+      background: pestel.light,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 24, color: pestel.bg, flexShrink: 0,
     }}>
       {icon}
     </div>
-    <div style={{ fontSize:28, fontWeight:800, fontFamily:"'Syne',sans-serif", color:dark?"#f8fafc":"#0f172a", lineHeight:1 }}>
-      {value}
+    <div>
+      <div style={{ fontSize: 13, color: "#94A3B8", fontWeight: 500, letterSpacing: "0.03em", fontFamily: "'DM Sans', sans-serif" }}>{label}</div>
+      <div style={{ fontSize: 32, fontWeight: 800, color: "#0F172A", lineHeight: 1.1, fontFamily: "'Sora', sans-serif" }}>{value}</div>
     </div>
-    <div style={{ fontSize:12, color:"#64748b", marginTop:4, fontWeight:500 }}>{label}</div>
-  </div>
-);
-
-/* ─────────────────────────────────────────
-   SUBJECT CHIP
-───────────────────────────────────────── */
-const SubjectChip = ({ s, dark }) => (
-  <div className="cls-chip" style={{
-    display:"flex", alignItems:"center", gap:5,
-    padding:"4px 10px 4px 7px", borderRadius:30, fontSize:11.5, fontWeight:500,
-    background:dark?"rgba(255,255,255,0.05)":"rgba(99,102,241,0.07)",
-    border:`1px solid ${dark?"rgba(255,255,255,0.09)":"rgba(99,102,241,0.18)"}`,
-  }}>
     <div style={{
-      width:6, height:6, borderRadius:"50%", flexShrink:0,
-      background:s.teacherName?"#22c55e":"#f59e0b",
-      boxShadow:s.teacherName?"0 0 5px #22c55e88":"0 0 5px #f59e0b88",
-    }}/>
-    <span style={{ color:dark?"#c7d2fe":"#4338ca", fontWeight:600 }}>{s.name}</span>
-    <span style={{ color:"#94a3b8", fontSize:10.5 }}>· {s.teacherName||"Unassigned"}</span>
+      marginLeft: "auto", width: 5, alignSelf: "stretch",
+      borderRadius: 99, background: pestel.bg, opacity: 0.85,
+    }} />
   </div>
 );
 
-/* ─────────────────────────────────────────
-   CLASS CARD
-───────────────────────────────────────── */
-const ClassCard = ({ item, idx, dark, onAssign }) => {
-  const pal     = getPal(item.name, idx);
-  const classNum = item.name?.replace(/\D/g,"") || item.name?.[0] || "C";
-  const totalSubjects = item.sections?.reduce((a,s)=>a+(s.subjects?.length||0),0)||0;
+/* ─── SUBJECT CHIP ──────────────────────────────────────────────────────── */
+const SubjectChip = ({ name, teacherName, colorIdx }) => {
+  const c = subjectChipColors[colorIdx % subjectChipColors.length];
+  return (
+    <div style={{
+      background: c.light,
+      border: `1.5px solid ${c.bg}22`,
+      borderRadius: 12,
+      padding: "8px 12px",
+      minWidth: 110,
+    }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: c.bg, fontFamily: "'Sora', sans-serif" }}>{name}</div>
+      <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>
+        {teacherName || "Not Assigned"}
+      </div>
+    </div>
+  );
+};
+
+/* ─── CLASS CARD ─────────────────────────────────────────────────────────── */
+const ClassCard = ({ item, index, onAssign }) => {
+  const [expanded, setExpanded] = useState(null);
+  const gradient = cardGradients[index % cardGradients.length];
 
   return (
-    <div className="cls-card" style={{
-      borderRadius:22, overflow:"hidden",
-      background:dark
-        ? "linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))"
-        : "linear-gradient(145deg,#ffffff,#f9fafb)",
-      border:`1px solid ${dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.07)"}`,
-      backdropFilter:"blur(24px)",
-      boxShadow:dark
-        ? "0 4px 32px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.05)"
-        : "0 4px 24px rgba(0,0,0,0.07),inset 0 1px 0 rgba(255,255,255,0.95)",
-      animationDelay:`${idx*70}ms`,
-      position:"relative",
-      display:"flex", flexDirection:"column",
-    }}>
-      {/* Glow */}
-      <div style={{
-        position:"absolute", top:-30, right:-30, width:130, height:130, borderRadius:"50%",
-        background:`radial-gradient(circle,${pal.glow} 0%,transparent 70%)`,
-        pointerEvents:"none",
-      }}/>
+    <div style={{
+      borderRadius: 24,
+      overflow: "hidden",
+      border: "1.5px solid #F1F5F9",
+      background: "#fff",
+      boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
+      transition: "transform 0.25s, box-shadow 0.25s",
+      display: "flex", flexDirection: "column",
+    }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 16px 40px rgba(0,0,0,0.13)"; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.07)"; }}
+    >
+      {/* Header */}
+      <div style={{ background: gradient, padding: "22px 22px 18px", position: "relative", overflow: "hidden" }}>
+        {/* Decorative circles */}
+        <div style={{ position: "absolute", top: -28, right: -28, width: 90, height: 90, borderRadius: "50%", background: "rgba(255,255,255,0.12)" }} />
+        <div style={{ position: "absolute", bottom: -18, left: 60, width: 56, height: 56, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
 
-      {/* Top gradient header */}
-      <div style={{
-        background:`linear-gradient(135deg,${pal.a},${pal.b})`,
-        padding:"20px 20px 16px",
-        position:"relative", overflow:"hidden",
-      }}>
-        <div style={{
-          position:"absolute", top:-25, right:-25, width:100, height:100, borderRadius:"50%",
-          background:"rgba(255,255,255,0.1)", pointerEvents:"none",
-        }}/>
-        <div style={{
-          position:"absolute", bottom:-40, left:-20, width:80, height:80, borderRadius:"50%",
-          background:"rgba(255,255,255,0.07)", pointerEvents:"none",
-        }}/>
-
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif" }}>Class</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif", marginTop: 2 }}>{item.name}</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
+              {item.sections?.length || 0} Section{item.sections?.length !== 1 ? "s" : ""}
+            </div>
+          </div>
           <div style={{
-            width:50, height:50, borderRadius:16,
-            background:"rgba(255,255,255,0.22)",
-            border:"1.5px solid rgba(255,255,255,0.35)",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:22, fontWeight:800, color:"#fff",
-            fontFamily:"'Syne',sans-serif",
-            backdropFilter:"blur(8px)",
+            width: 52, height: 52, borderRadius: 16,
+            background: "rgba(255,255,255,0.22)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22, fontWeight: 900, color: "#fff",
+            fontFamily: "'Sora', sans-serif",
+            backdropFilter: "blur(8px)",
           }}>
-            {classNum}
+            {String(index + 1).padStart(2, "0")}
           </div>
-          <div style={{ textAlign:"right" }}>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.7)", fontWeight:500 }}>{totalSubjects} subjects</div>
-          </div>
-        </div>
-
-        <div style={{ marginTop:12 }}>
-          <div style={{ fontSize:18, fontWeight:800, color:"#fff", fontFamily:"'Syne',sans-serif", letterSpacing:"-0.3px" }}>
-            {item.name}
-          </div>
-          <div style={{ fontSize:12, color:"rgba(255,255,255,0.72)", marginTop:2 }}>
-            {item.sections?.length||0} sections
-          </div>
-        </div>
-
-        {/* Section pills */}
-        <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginTop:10 }}>
-          {item.sections?.map((s)=>(
-            <span key={s._id} style={{
-              padding:"3px 10px", borderRadius:30, fontSize:11.5, fontWeight:600,
-              background:"rgba(255,255,255,0.2)", color:"#fff",
-              border:"1px solid rgba(255,255,255,0.3)",
-            }}>
-              {s.name}
-            </span>
-          ))}
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ padding:"14px 16px 16px", flex:1, display:"flex", flexDirection:"column", gap:8 }}>
-        {item.sections?.map((sec)=>(
-          <div key={sec._id} className="cls-sec-row" style={{
-            borderRadius:14, padding:"10px 12px",
-            background:dark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.025)",
-            border:`1px solid ${dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.05)"}`,
-          }}>
-            <div style={{
-              fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.6px",
-              color:dark?"#64748b":"#94a3b8", marginBottom:7,
-            }}>
-              {sec.name}
-            </div>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-              {sec.subjects?.length
-                ? sec.subjects.map((s)=><SubjectChip key={s._id} s={s} dark={dark}/>)
-                : <span style={{ fontSize:12, color:"#94a3b8", fontStyle:"italic" }}>No subjects</span>
-              }
-            </div>
-          </div>
-        ))}
+      <div style={{ padding: "18px 18px 0", flex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {item.sections?.map((sec, si) => {
+            const isOpen = expanded === sec._id;
+            const secColor = subjectChipColors[si % subjectChipColors.length];
+            return (
+              <div key={sec._id} style={{
+                borderRadius: 16,
+                border: `1.5px solid ${isOpen ? secColor.bg + "44" : "#F1F5F9"}`,
+                background: isOpen ? secColor.light : "#F8FAFC",
+                overflow: "hidden",
+                transition: "border 0.2s, background 0.2s",
+              }}>
+                <button
+                  onClick={() => setExpanded(isOpen ? null : sec._id)}
+                  style={{
+                    width: "100%", background: "none", border: "none", cursor: "pointer",
+                    padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8,
+                      background: secColor.bg, display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif" }}>
+                        {sec.name?.charAt(0) || "?"}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", fontFamily: "'Sora', sans-serif" }}>{sec.name}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, color: secColor.bg,
+                      background: secColor.light, borderRadius: 99, padding: "2px 10px",
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}>
+                      {sec.subjects?.length || 0} subj
+                    </span>
+                    <span style={{ fontSize: 14, color: "#94A3B8", transition: "transform 0.2s", display: "inline-block", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+                  </div>
+                </button>
 
-        {/* Assign button */}
-        <button className="cls-assign-btn" onClick={() => onAssign(item)} style={{
-          marginTop:6, width:"100%", padding:"11px 0", borderRadius:14,
-          background:`linear-gradient(135deg,${pal.a},${pal.b})`,
-          color:"#fff", fontSize:13, fontWeight:700,
-          fontFamily:"'Instrument Sans',sans-serif",
-          boxShadow:`0 4px 14px ${pal.glow}`,
-          letterSpacing:"0.2px",
-        }}>
+                {isOpen && (
+                  <div style={{ padding: "0 14px 14px", display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {sec.subjects?.length ? sec.subjects.map((sub, subIdx) => (
+                      <SubjectChip key={sub._id} name={sub.name} teacherName={sub.teacherName} colorIdx={subIdx} />
+                    )) : (
+                      <span style={{ fontSize: 12, color: "#CBD5E1", fontFamily: "'DM Sans', sans-serif" }}>No subjects yet</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Assign Button */}
+      <div style={{ padding: 18 }}>
+        <button
+          onClick={() => onAssign(item)}
+          style={{
+            width: "100%", height: 46, borderRadius: 14,
+            background: gradient,
+            border: "none", color: "#fff",
+            fontSize: 14, fontWeight: 700, cursor: "pointer",
+            fontFamily: "'Sora', sans-serif", letterSpacing: "0.03em",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            transition: "opacity 0.2s, transform 0.15s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = "0.88"; e.currentTarget.style.transform = "scale(1.01)"; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
+        >
+          <UserAddOutlined style={{ fontSize: 16 }} />
           Assign Teacher
         </button>
       </div>
@@ -301,246 +227,312 @@ const ClassCard = ({ item, idx, dark, onAssign }) => {
   );
 };
 
-/* ─────────────────────────────────────────
-   PAGE
-───────────────────────────────────────── */
+/* ─── MODAL LABEL ────────────────────────────────────────────────────────── */
+const FieldLabel = ({ letter, label, color }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+    <div style={{
+      width: 22, height: 22, borderRadius: 6, background: color.bg,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 11, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif",
+      flexShrink: 0,
+    }}>{letter}</div>
+    <span style={{ fontSize: 13, fontWeight: 700, color: "#374151", fontFamily: "'DM Sans', sans-serif" }}>{label}</span>
+  </div>
+);
+
+/* ─── MAIN COMPONENT ─────────────────────────────────────────────────────── */
 const Classes = () => {
-  const dispatch   = useDispatch();
+  const dispatch = useDispatch();
   const { isDark } = useTheme();
 
-  const { schoolClasses=[], loading } = useSelector((s)=>s.schoolClass||{});
-  const { user, users=[] }            = useSelector((s)=>s.auth||{});
+  const { schoolClasses = [], loading } = useSelector((state) => state.schoolClass || {});
+  const { user, users = [] } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+
   const schoolId = user?.school?._id;
-  const { selectedAcademicYear, activeYear } = useSelector((state) => state.academicYear);
-   const academicYearId = selectedAcademicYear?._id || activeYear?._id;
-  const [filterText,       setFilterText]       = useState("");
-  const [openModal,        setOpenModal]         = useState(false);
-  const [selectedClass,    setSelectedClass]     = useState(null);
-  const [selectedSection,  setSelectedSection]   = useState(null);
-  const [selectedSubject,  setSelectedSubject]   = useState(null);
-  const [selectedTeacher,  setSelectedTeacher]   = useState(null);
+  const academicYearId = selectedAcademicYear?._id || selectedAcademicYear || null;
 
-  useEffect(()=>{
-    dispatch(fetchAllUser({ roleName:["Teacher"], isActive:true }));
-  },[dispatch]);
-  useEffect(()=>{
-    if(schoolId) dispatch(getClassData({ schoolId, academicYearId }));
-  },[dispatch,schoolId,academicYearId]);
+  const [filterText, setFilterText] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
-  const filtered = useMemo(()=>
-    schoolClasses.filter((i)=>i.name?.toLowerCase().includes(filterText.toLowerCase()))
-  ,[schoolClasses,filterText]);
+  useEffect(() => {
+    dispatch(fetchAllUser({ roleName: ["Teacher"], isActive: true }));
+  }, [dispatch]);
 
-  const stats = useMemo(()=>({
-    classes:  schoolClasses.length,
-    sections: schoolClasses.reduce((a,c)=>a+(c.sections?.length||0),0),
-    subjects: schoolClasses.reduce((a,c)=>a+(c.sections?.reduce((x,s)=>x+(s.subjects?.length||0),0)||0),0),
-  }),[schoolClasses]);
+  useEffect(() => {
+    if (schoolId && academicYearId) dispatch(getClassData({ schoolId, academicYearId }));
+  }, [dispatch, schoolId, academicYearId]);
+
+  const filteredItems = useMemo(() =>
+    schoolClasses.filter(item => item.name?.toLowerCase().includes(filterText.toLowerCase())),
+    [schoolClasses, filterText]
+  );
+
+  const stats = useMemo(() => ({
+    classes: schoolClasses.length,
+    sections: schoolClasses.reduce((acc, cls) => acc + (cls.sections?.length || 0), 0),
+    subjects: schoolClasses.reduce((acc, cls) => acc + (cls.sections?.reduce((a, s) => a + (s.subjects?.length || 0), 0) || 0), 0),
+  }), [schoolClasses]);
 
   const handleClose = () => {
     setOpenModal(false);
-    setSelectedClass(null); setSelectedSection(null);
-    setSelectedSubject(null); setSelectedTeacher(null);
+    setSelectedClass(null);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+    setSelectedTeacher(null);
+  };
+
+  const handleAssign = (item) => {
+    setSelectedClass(item);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+    setSelectedTeacher(null);
+    setOpenModal(true);
   };
 
   const handleFinish = async () => {
-    if (!selectedSection||!selectedSubject||!selectedTeacher)
-      return message.error("Please select all fields");
+    if (!selectedSection || !selectedSubject || !selectedTeacher)
+      return message.error("Please fill in all fields");
     try {
-      await dispatch(assignSubjectTeacher({
-        sectionId:selectedSection, subjectId:selectedSubject, teacherId:selectedTeacher,
-      })).unwrap();
+      await dispatch(assignSubjectTeacher({ sectionId: selectedSection, subjectId: selectedSubject, teacherId: selectedTeacher })).unwrap();
       dispatch(getClassData({ schoolId, academicYearId }));
-      message.success("Teacher assigned successfully ✅");
+      message.success("Teacher Assigned Successfully ✅");
       handleClose();
-    } catch { message.error("Failed to assign teacher"); }
+    } catch (err) {
+      message.error("Assignment Failed: " + (err?.message || "Unknown error"));
+    }
   };
 
+  /* ── FONT INJECTION ── */
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap";
+    document.head.appendChild(link);
+    return () => document.head.removeChild(link);
+  }, []);
+
+  /* ── PESTEL LEGEND ── */
+  const pestelLegend = [
+    { letter: "P", label: "Political", color: PESTEL.P.bg },
+    { letter: "E", label: "Economic", color: PESTEL.E.bg },
+    { letter: "S", label: "Social", color: PESTEL.S.bg },
+    { letter: "T", label: "Tech", color: PESTEL.T.bg },
+    { letter: "E", label: "Environment", color: PESTEL.Ev.bg },
+    { letter: "L", label: "Legal", color: PESTEL.L.bg },
+  ];
+
+  const pageBg = isDark ? "#0B1120" : "#F8FAFC";
+  const textPrimary = isDark ? "#F1F5F9" : "#0F172A";
+
   return (
-    <>
-      <StyleInject/>
-      <div className="cls-root" style={{ minHeight:"100vh", padding:"28px 24px", color:isDark?"#e2e8f0":"#1e293b", position:"relative" }}>
+    <div style={{ minHeight: "100vh", background: pageBg, padding: "28px 20px", fontFamily: "'DM Sans', sans-serif", transition: "background 0.3s" }}>
 
-        {/* Ambient blobs */}
-        <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, overflow:"hidden" }}>
-          <div style={{ position:"absolute", top:"-8%", right:"-4%", width:500, height:500, borderRadius:"50%",
-            background:`radial-gradient(circle,${isDark?"rgba(139,92,246,0.07)":"rgba(139,92,246,0.04)"} 0%,transparent 70%)` }}/>
-          <div style={{ position:"absolute", bottom:"-8%", left:"-4%", width:560, height:560, borderRadius:"50%",
-            background:`radial-gradient(circle,${isDark?"rgba(6,182,212,0.06)":"rgba(6,182,212,0.03)"} 0%,transparent 70%)` }}/>
-        </div>
-
-        <div style={{ position:"relative", zIndex:1 }}>
-
-          {/* HEADER */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:28, flexWrap:"wrap", gap:14 }}>
-            <div>
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:5 }}>
-                <div style={{
-                  width:38, height:38, borderRadius:12,
-                  background:"linear-gradient(135deg,#8b5cf6,#6366f1)",
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  boxShadow:"0 4px 14px rgba(139,92,246,0.4)",
-                }}>
-                  <GridIco c="#fff"/>
+      {/* ── HEADER ── */}
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 20, marginBottom: 32 }}>
+        <div>
+          {/* PESTEL legend dots */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+            {pestelLegend.map((p, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: p.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif" }}>{p.letter}</span>
                 </div>
-                <h1 style={{
-                  margin:0, fontSize:27, fontWeight:800,
-                  fontFamily:"'Syne',sans-serif",
-                  letterSpacing:"-0.6px",
-                  color:isDark?"#f8fafc":"#0f172a",
-                }}>
-                  Classes
-                </h1>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>{p.label}</span>
               </div>
-              <p style={{ margin:0, fontSize:13, color:"#64748b", fontWeight:500 }}>
-                Manage classes, sections & teacher assignments
-              </p>
-            </div>
-
-            {/* Search */}
-            <div className="cls-search" style={{
-              display:"flex", alignItems:"center", gap:8,
-              padding:"10px 16px", borderRadius:16,
-              background:isDark?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.88)",
-              border:`1.5px solid ${isDark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.08)"}`,
-              backdropFilter:"blur(20px)",
-              boxShadow:isDark?"none":"0 2px 12px rgba(0,0,0,0.05)",
-              transition:"border-color 0.2s, box-shadow 0.2s",
-              width:240,
-            }}>
-              <SearchIco/>
-              <input
-                style={{
-                  border:"none", outline:"none", background:"transparent",
-                  fontSize:13, color:isDark?"#e2e8f0":"#1e293b",
-                  width:"100%", fontFamily:"inherit",
-                }}
-                placeholder="Search class…"
-                value={filterText}
-                onChange={(e)=>setFilterText(e.target.value)}
-              />
-              {filterText && (
-                <span onClick={()=>setFilterText("")} style={{ cursor:"pointer", color:"#94a3b8", fontSize:18, lineHeight:1 }}>×</span>
-              )}
-            </div>
+            ))}
           </div>
 
-          {/* STATS */}
-          <div style={{ display:"flex", gap:12, marginBottom:28, flexWrap:"wrap" }}>
-            <StatCard label="Total Classes"   value={stats.classes}  dark={isDark} accent="#8b5cf6" delay={0}   icon={<GridIco c="#8b5cf6"/>}/>
-            <StatCard label="Total Sections"  value={stats.sections} dark={isDark} accent="#3b82f6" delay={60}  icon={<UsersIco c="#3b82f6"/>}/>
-            <StatCard label="Total Subjects"  value={stats.subjects} dark={isDark} accent="#10b981" delay={120} icon={<BookIco c="#10b981"/>}/>
-          </div>
-
-          {/* GRID */}
-          {loading ? (
-            <div style={{ display:"flex", justifyContent:"center", padding:80 }}><Spin size="large"/></div>
-          ) : filtered.length===0 ? (
-            <div style={{
-              textAlign:"center", padding:"80px 20px", borderRadius:24,
-              background:isDark?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.6)",
-              border:`1px dashed ${isDark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.09)"}`,
-            }}>
-              <div style={{ fontSize:52, marginBottom:14 }}>🏫</div>
-              <div style={{ fontSize:18, fontWeight:700, fontFamily:"'Syne',sans-serif", color:isDark?"#f1f5f9":"#0f172a" }}>
-                No classes found
-              </div>
-              <div style={{ fontSize:13, color:"#64748b", marginTop:6 }}>
-                {filterText?`No results for "${filterText}"`:"No classes added yet"}
-              </div>
-            </div>
-          ) : (
-            <>
-              <div style={{ fontSize:12, color:"#64748b", fontWeight:500, marginBottom:16 }}>
-                Showing{" "}
-                <strong style={{ color:isDark?"#a5b4fc":"#4f46e5" }}>{filtered.length}</strong>
-                {" "}of {schoolClasses.length} classes
-              </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))", gap:18 }}>
-                {filtered.map((item,i)=>(
-                  <ClassCard key={item._id} item={item} idx={i} dark={isDark}
-                    onAssign={(cls)=>{
-                      setSelectedClass(cls);
-                      setSelectedSection(null); setSelectedSubject(null); setSelectedTeacher(null);
-                      setOpenModal(true);
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+          <h1 style={{ fontSize: 30, fontWeight: 800, color: textPrimary, fontFamily: "'Sora', sans-serif", margin: 0, lineHeight: 1.15 }}>
+            Classes Management
+          </h1>
+          <p style={{ color: "#94A3B8", fontSize: 14, marginTop: 6, fontWeight: 400 }}>
+            Manage classes, sections & teacher assignments
+          </p>
         </div>
 
-        {/* MODAL */}
-        <Modal
-          title={
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <div style={{
-                width:34, height:34, borderRadius:10,
-                background:"linear-gradient(135deg,#8b5cf6,#6366f1)",
-                display:"flex", alignItems:"center", justifyContent:"center",
-                boxShadow:"0 3px 10px rgba(139,92,246,0.4)",
-              }}>
-                <UserPlusIco c="#fff"/>
-              </div>
-              <div>
-                <div style={{ fontWeight:700, fontSize:15, fontFamily:"'Syne',sans-serif" }}>Assign Teacher</div>
-                <div style={{ fontSize:11, color:"#94a3b8", fontWeight:400 }}>{selectedClass?.name}</div>
-              </div>
+        {/* Search */}
+        <div style={{ position: "relative", width: 280 }}>
+          <SearchOutlined style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", fontSize: 16, zIndex: 1 }} />
+          <input
+            value={filterText}
+            onChange={e => setFilterText(e.target.value)}
+            placeholder="Search class..."
+            style={{
+              width: "100%", height: 46, borderRadius: 14,
+              border: "1.5px solid #E2E8F0",
+              paddingLeft: 40, paddingRight: 16,
+              fontSize: 14, color: "#0F172A",
+              background: isDark ? "#1E293B" : "#fff",
+              outline: "none", fontFamily: "'DM Sans', sans-serif",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* ── STATS ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 32 }}>
+        {statColors.map(s => (
+          <StatCard key={s.key} icon={s.icon} label={s.label} value={stats[s.key]} pestel={s.pestel} />
+        ))}
+      </div>
+
+      {/* ── CONTENT ── */}
+      {loading ? (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 240 }}>
+          <Spin size="large" />
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div style={{ background: "#fff", borderRadius: 24, border: "1.5px solid #F1F5F9", padding: "60px 24px", textAlign: "center" }}>
+          <Empty description={<span style={{ color: "#94A3B8", fontFamily: "'DM Sans', sans-serif" }}>No Classes Found</span>} />
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
+          {filteredItems.map((item, index) => (
+            <ClassCard key={item._id} item={item} index={index} onAssign={handleAssign} />
+          ))}
+        </div>
+      )}
+
+      {/* ── MODAL ── */}
+      <Modal
+        open={openModal}
+        onCancel={handleClose}
+        footer={null}
+        centered
+        destroyOnClose
+        width={460}
+        styles={{ body: { padding: 0 }, content: { borderRadius: 24, overflow: "hidden", padding: 0 } }}
+        closeIcon={null}
+      >
+        {/* Modal Header */}
+        <div style={{
+          background: "linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)",
+          padding: "24px 28px 20px", position: "relative",
+        }}>
+          <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
+            <div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif" }}>Assignment</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif", marginTop: 2 }}>Assign Teacher</div>
             </div>
-          }
-          open={openModal}
-          onCancel={handleClose}
-          onOk={handleFinish}
-          okText="Assign"
-          cancelText="Cancel"
-          okButtonProps={{ style:{ background:"linear-gradient(135deg,#8b5cf6,#6366f1)", border:"none", fontWeight:600, borderRadius:10, height:36 } }}
-          cancelButtonProps={{ style:{ borderRadius:10, height:36 } }}
-          destroyOnClose
-          styles={{ body:{ paddingTop:8 } }}
-        >
+            <button onClick={handleClose} style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.18)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15 }}>
+              <CloseOutlined />
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Body */}
+        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, background: "#fff" }}>
+
+          {/* Class display */}
+          <div>
+            <FieldLabel letter="S" label="Class" color={PESTEL.S} />
+            <div style={{
+              padding: "12px 16px", borderRadius: 12,
+              background: PESTEL.S.light, border: `1.5px solid ${PESTEL.S.bg}33`,
+              fontSize: 15, fontWeight: 700, color: PESTEL.S.bg,
+              fontFamily: "'Sora', sans-serif",
+            }}>
+              {selectedClass?.name}
+            </div>
+          </div>
+
           {/* Section */}
-          <div style={{ marginBottom:14 }}>
-            <label style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.5px", color:"#64748b", display:"block", marginBottom:6 }}>
-              Section
-            </label>
-            <Select style={{ width:"100%" }} value={selectedSection} placeholder="Select a section"
-              onChange={(v)=>{ setSelectedSection(v); setSelectedSubject(null); }}>
-              {selectedClass?.sections?.map((s)=>(
+          <div>
+            <FieldLabel letter="E" label="Section" color={PESTEL.Ev} />
+            <Select
+              style={{ width: "100%" }}
+              size="large"
+              placeholder="Select Section"
+              value={selectedSection}
+              onChange={(val) => { setSelectedSection(val); setSelectedSubject(null); }}
+              styles={{ selector: { borderRadius: 12, borderColor: `${PESTEL.Ev.bg}55`, background: PESTEL.Ev.light } }}
+            >
+              {selectedClass?.sections?.map(s => (
                 <Option key={s._id} value={s._id}>{s.name}</Option>
               ))}
             </Select>
           </div>
 
           {/* Subject */}
-          <div style={{ marginBottom:14 }}>
-            <label style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.5px", color:"#64748b", display:"block", marginBottom:6 }}>
-              Subject
-            </label>
-            <Select style={{ width:"100%" }} value={selectedSubject} placeholder="Select a subject"
-              onChange={setSelectedSubject} disabled={!selectedSection}>
-              {selectedClass?.sections?.find((s)=>s._id===selectedSection)?.subjects?.map((sub)=>(
-                <Option key={sub._id} value={sub._id}>{sub.name}</Option>
-              ))}
+          <div>
+            <FieldLabel letter="T" label="Subject" color={PESTEL.T} />
+            <Select
+              style={{ width: "100%" }}
+              size="large"
+              placeholder="Select Subject"
+              value={selectedSubject}
+              onChange={setSelectedSubject}
+              disabled={!selectedSection}
+              styles={{ selector: { borderRadius: 12, borderColor: `${PESTEL.T.bg}55` } }}
+            >
+              {selectedClass?.sections
+                ?.find(s => s._id === selectedSection)
+                ?.subjects?.map(sub => (
+                  <Option key={sub._id} value={sub._id}>{sub.name}</Option>
+                ))}
             </Select>
           </div>
 
           {/* Teacher */}
           <div>
-            <label style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.5px", color:"#64748b", display:"block", marginBottom:6 }}>
-              Teacher
-            </label>
-            <Select style={{ width:"100%" }} value={selectedTeacher} placeholder="Search & select teacher"
-              onChange={setSelectedTeacher} showSearch
-              filterOption={(inp,opt)=>opt?.children?.toLowerCase().includes(inp.toLowerCase())}>
-              {users.map((t)=>(
-                <Option key={t._id} value={t._id}>{t.name}</Option>
+            <FieldLabel letter="L" label="Teacher" color={PESTEL.L} />
+            <Select
+              style={{ width: "100%" }}
+              size="large"
+              showSearch
+              placeholder="Search Teacher..."
+              value={selectedTeacher}
+              onChange={setSelectedTeacher}
+              optionFilterProp="children"
+              styles={{ selector: { borderRadius: 12, borderColor: `${PESTEL.L.bg}55` } }}
+            >
+              {users.map(teacher => (
+                <Option key={teacher._id} value={teacher._id}>{teacher.name}</Option>
               ))}
             </Select>
           </div>
-        </Modal>
-      </div>
-    </>
+
+          {/* Action Buttons */}
+          <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
+            <button
+              onClick={handleClose}
+              style={{
+                flex: 1, height: 46, borderRadius: 12,
+                border: "1.5px solid #E2E8F0", background: "#F8FAFC",
+                color: "#64748B", fontSize: 14, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              <CloseOutlined style={{ fontSize: 13 }} /> Cancel
+            </button>
+            <button
+              onClick={handleFinish}
+              style={{
+                flex: 2, height: 46, borderRadius: 12,
+                background: "linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)",
+                border: "none", color: "#fff",
+                fontSize: 14, fontWeight: 700, cursor: "pointer",
+                fontFamily: "'Sora', sans-serif", letterSpacing: "0.02em",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                transition: "opacity 0.2s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            >
+              <CheckOutlined style={{ fontSize: 15 }} /> Assign Teacher
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </div>
   );
 };
 
