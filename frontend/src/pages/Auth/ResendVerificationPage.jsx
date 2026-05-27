@@ -34,23 +34,9 @@ const ResendVerificationPage = () => {
   }, [dispatch, error]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f7fa",
-      }}
-    >
-      <Card
-        style={{
-          width: 400,
-          borderRadius: 12,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+    <div className="auth-shell">
+      <Card className="auth-card">
+        <div className="auth-header">
           <Title level={3}>Resend Verification</Title>
           <Text type="secondary">Didn’t receive the email? Enter your email again</Text>
         </div>
@@ -81,7 +67,7 @@ const ResendVerificationPage = () => {
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: "center", marginTop: 10 }}>
+        <div className="auth-footer">
           <Text type="secondary">
             Already verified? <a href="/login">Go to Login</a>
           </Text>

@@ -198,6 +198,16 @@ body {
   .docs-extra { margin-top: 30px; }
   .role-workspace-loader { min-height: 60vh; }
   .role-workspace-title { margin-bottom: 8px !important; }
+  .auth-shell { @apply min-h-screen flex items-center justify-center px-4; background: var(--bg); }
+  .auth-card { width: 400px; border-radius: 16px !important; box-shadow: var(--shadow-soft) !important; }
+  .auth-card-wide { width: 420px; }
+  .auth-header { @apply text-center mb-5; }
+  .auth-footer { @apply text-center mt-2.5; }
+  .auth-title { color: var(--text) !important; }
+  .auth-text { color: var(--text-muted) !important; }
+  .verify-card { text-align: center; }
+  .verify-spin-copy { margin-top: 16px; }
+  .success-icon { color: #52c41a !important; }
 
   .fade-up { animation: fadeUp .45s ease-out both; }
   .animate-float { animation: float 3.4s ease-in-out infinite; }
