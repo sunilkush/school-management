@@ -35,10 +35,10 @@ const MonthlyReportPage = () => {
     (s) => s.schoolClass || {}
   );
   const { user } = useSelector((s) => s.auth || {});
-
+  const {selectedAcademicYear} = useSelector((s) => s.academicYear || {});
   const schoolId = user?.school?._id;
   const academicYearId =
-    user?.school?.academicYear?._id || user?.school?.academicYear;
+    selectedAcademicYear?._id ;
 
   const [month, setMonth] = useState(dayjs());
   const [role, setRole] = useState("student");
@@ -50,7 +50,7 @@ const MonthlyReportPage = () => {
     if (role === "student" && schoolId) {
       dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
     }
-  }, [role, schoolId]);
+  }, [role, schoolId, academicYearId,dispatch]);
 
   /* ---------------- NORMALIZE ---------------- */
   const classes = useMemo(() => {

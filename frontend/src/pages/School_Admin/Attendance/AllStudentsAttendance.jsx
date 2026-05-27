@@ -34,14 +34,11 @@ const AllStudentsAttendance = () => {
   const { schoolStudents = [], loading } = useSelector((s) => s.students || {});
   const { loading: attendanceLoading } = useSelector((s) => s.attendance || {});
   const { user: currentUser } = useSelector((s) => s.auth || {});
-  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
-
+  const { schoolClasses = [] } = useSelector((s) =>  s.schoolClass || {});
+  const { selectedAcademicYear} = useSelector((s) => s.academicYear || {});
   const schoolId = currentUser?.school?._id;
-  const academicYearId =
-    currentUser?.school?.academicYear?._id ||
-    currentUser?.school?.academicYear ||
-    null;
-
+  const academicYearId = selectedAcademicYear?._id;
+ 
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
   const [filterStatus, setFilterStatus] = useState(null);
@@ -70,7 +67,7 @@ const AllStudentsAttendance = () => {
 
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-  }, [schoolId]);
+  }, [schoolId, academicYearId, dispatch]);
 
   /* ---------------- FILTER ---------------- */
   const filteredStudents = useMemo(() => {

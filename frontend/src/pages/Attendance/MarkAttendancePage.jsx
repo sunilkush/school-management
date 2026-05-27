@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   Card,
   DatePicker,
@@ -20,18 +20,40 @@ import {
   setAttendanceFilters,
   setDraftAttendanceStatus,
 } from "../../features/attendanceSlice";
-
+import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
 
 const { Title, Text } = Typography;
 
 const MarkAttendancePage = () => {
-  const dispatch = useDispatch();
-
+  const dispatch = useDispatch();  
   const { list, draftRecords, loading, filters } = useSelector(
     (s) => s.attendance
   );
+  const { user } = useSelector((s) => s.auth || {});
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
+  const {selectedAcademicYear} = useSelector((s) => s.academicYear || {});
+  const schoolId = user?.school?._id || null;
+  const academicYearId =
+    selectedAcademicYear?._id || selectedAcademicYear || null;
 
+  const classes = useMemo(() => {
+    if (Array.isArray(schoolClasses)) return schoolClasses;
+    if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
+    return [];
+  }, [schoolClasses]);
+
+  useEffect(() => {
+    if (!schoolId) return;
+
+    dispatch(
+      setAttendanceFilters({
+        schoolId,
+      })
+    );
+
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+  }, [dispatch, schoolId, academicYearId]);
   /* ---------------- ROWS ---------------- */
   const rows = useMemo(() => {
     return list.map((item) => ({
@@ -96,43 +118,40 @@ const MarkAttendancePage = () => {
       <Card className="mb-4">
         <Row gutter={[12, 12]}>
           <Col xs={24} md={5}>
-            <Input
-              placeholder="School ID"
-              value={filters.schoolId || ""}
-              onChange={(e) =>
-                dispatch(
-                  setAttendanceFilters({
-                    schoolId: e.target.value || null,
-                  })
-                )
+            <Input placeholder="School" value={user?.school?.name || ""} disabled />
+          </Col>
+
+          <Col xs={24} md={5}>
+            <Select
+              className="w-full"
+              placeholder="Select Class"
+              value={filters.classId || undefined}
+              options={classes.map((cls) => ({
+                value: cls._id,
+                label: cls.name,
+              }))}
+              onChange={(value) =>
+                dispatch(setAttendanceFilters({ classId: value || null, sectionId: null }))
               }
             />
           </Col>
 
           <Col xs={24} md={5}>
-            <Input
-              placeholder="Class ID"
-              value={filters.classId || ""}
-              onChange={(e) =>
-                dispatch(
-                  setAttendanceFilters({
-                    classId: e.target.value || null,
-                  })
-                )
+            <Select
+              className="w-full"
+              placeholder="Select Section"
+              value={filters.sectionId || undefined}
+              disabled={!filters.classId}
+              options={
+                classes
+                  .find((cls) => cls._id === filters.classId)
+                  ?.sections?.map((section) => ({
+                    value: section._id,
+                    label: section.name,
+                  })) || []
               }
-            />
-          </Col>
-
-          <Col xs={24} md={5}>
-            <Input
-              placeholder="Section ID"
-              value={filters.sectionId || ""}
-              onChange={(e) =>
-                dispatch(
-                  setAttendanceFilters({
-                    sectionId: e.target.value || null,
-                  })
-                )
+              onChange={(value) =>
+                dispatch(setAttendanceFilters({ sectionId: value || null }))
               }
             />
           </Col>
