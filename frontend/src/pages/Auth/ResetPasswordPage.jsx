@@ -43,23 +43,9 @@ const ResetPasswordPage = () => {
   }, [dispatch, error]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f7fa",
-      }}
-    >
-      <Card
-        style={{
-          width: 400,
-          borderRadius: 12,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+    <div className="auth-shell">
+      <Card className="auth-card">
+        <div className="auth-header">
           <Title level={3}>Reset Password</Title>
           <Text type="secondary">Enter your new password below</Text>
         </div>
@@ -102,7 +88,7 @@ const ResetPasswordPage = () => {
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: "center", marginTop: 10 }}>
+        <div className="auth-footer">
           <Text type="secondary">
             Back to <a href="/login">Login</a>
           </Text>

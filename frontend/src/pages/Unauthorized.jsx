@@ -3,7 +3,7 @@ import { Result, Button } from "antd";
 
 const Unauthorized = () => {
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 16 }}>
+    <div className="page-center-shell">
       <Result
         status="403"
         title="Access Denied"

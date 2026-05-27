@@ -62,14 +62,14 @@ const Faqs = () => {
   }, [search, activeTab]);
 
   return (
-    <div style={{ padding: 24, background: "#f5f6fa", minHeight: "100vh" }}>
+    <div className="support-page-shell">
       
       {/* HEADER */}
       <Title level={3}>❓ Help & FAQs</Title>
       <Text type="secondary">Find answers to common questions</Text>
 
       {/* SEARCH */}
-      <Card style={{ marginTop: 20, marginBottom: 20 }}>
+      <Card className="my-5">
         <Search
           placeholder="Search your question..."
           allowClear

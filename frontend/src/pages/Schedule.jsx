@@ -140,10 +140,10 @@ const SchedulePage = () => {
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" size={16} className="page-stack">
       <Card>
         <Space direction="vertical" size={2}>
-          <Title level={4} style={{ margin: 0 }}>Schedule</Title>
+          <Title level={4} className="page-title-tight">Schedule</Title>
           <Text type="secondary">Role-wise live timetable for school admin, teacher and students.</Text>
         </Space>
       </Card>
@@ -155,15 +155,15 @@ const SchedulePage = () => {
             placeholder="Search subject, class, section, teacher"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            style={{ width: 290 }}
+            className="search-input-lg"
           />
-          <Select value={dayFilter} onChange={setDayFilter} options={DAY_OPTIONS} style={{ width: 180 }} />
+          <Select value={dayFilter} onChange={setDayFilter} options={DAY_OPTIONS} className="filter-select-sm" />
         </Space>
       </Card>
 
       <Card title="Timetable">
         {loading ? (
-          <div style={{ textAlign: "center", padding: 20 }}><Spin /></div>
+          <div className="table-loading-wrap"><Spin /></div>
         ) : filteredRows.length === 0 ? (
           <Empty description="No schedule entries found" />
         ) : (
@@ -172,10 +172,8 @@ const SchedulePage = () => {
             columns={columns}
             dataSource={filteredRows}
             pagination={{ pageSize: 10 }}
-            onRow={(record) => ({
-              onClick: () => setSelected(record),
-              style: { cursor: "pointer" },
-            })}
+            rowClassName="table-row-clickable"
+            onRow={(record) => ({ onClick: () => setSelected(record) })}
           />
         )}
       </Card>
@@ -187,7 +185,7 @@ const SchedulePage = () => {
         width={460}
       >
         {selected && (
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+          <Space direction="vertical" size={8} className="drawer-stack">
             <Tag color="blue">{selected?.day || selected?.weekday || "-"}</Tag>
             <Text><strong>Time:</strong> {selected?.startTime || "--:--"} - {selected?.endTime || "--:--"}</Text>
             <Text><strong>Subject:</strong> {selected?.subjectId?.name || selected?.subject?.name || selected?.subject || "-"}</Text>

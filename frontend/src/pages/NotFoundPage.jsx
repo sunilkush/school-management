@@ -8,16 +8,7 @@ const NotFoundPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f7fa",
-        padding: 20,
-      }}
-    >
+    <div className="page-center-shell-flex">
       <Result
         status="404"
         title="404"

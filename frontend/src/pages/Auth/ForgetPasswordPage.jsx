@@ -34,27 +34,13 @@ const ForgetPasswordPage = () => {
   }, [dispatch, error]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "var(--surface-page)",
-      }}
-    >
-      <Card
-        style={{
-          width: 400,
-          borderRadius: 12,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <Title level={3} style={{ color: "var(--text-primary)" }}>
+    <div className="auth-shell">
+      <Card className="auth-card">
+        <div className="auth-header">
+          <Title level={3} className="auth-title">
             Forgot Password
           </Title>
-          <Text type="secondary" style={{ color: "var(--text-primary)" }}>
+          <Text type="secondary" className="auth-text">
             Enter your email to receive a reset link
           </Text>
         </div>
@@ -82,8 +68,8 @@ const ForgetPasswordPage = () => {
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: "center", marginTop: 10 }}>
-          <Text type="secondary" style={{ color: "var(--text-primary)" }}>
+        <div className="auth-footer">
+          <Text type="secondary" className="auth-text">
             Remember your password? <a href="/">Back to Login</a>
           </Text>
         </div>

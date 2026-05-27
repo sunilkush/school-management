@@ -18,15 +18,57 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 
 export const ThemedAntWrapper = ({ children }) => {
   const { isDark } = useTheme();
+  const palette = {
+    primary: "#7c3aed",
+    info: "#06b6d4",
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+  };
 
   return (
     <ConfigProvider
       theme={{
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          borderRadius: 10,
-          colorPrimary: "#1d5fd3",
+          borderRadius: 14,
+          borderRadiusLG: 18,
+          borderRadiusSM: 10,
+          colorPrimary: palette.primary,
+          colorInfo: palette.info,
+          colorSuccess: palette.success,
+          colorWarning: palette.warning,
+          colorError: palette.error,
+          colorBgBase: isDark ? "#020617" : "#f8fafc",
+          colorBgContainer: isDark ? "#0f172a" : "#ffffff",
+          colorTextBase: isDark ? "#e2e8f0" : "#0f172a",
+          colorBorder: isDark ? "#334155" : "#e2e8f0",
+          boxShadow: isDark
+            ? "0 12px 36px rgba(2, 6, 23, 0.55)"
+            : "0 10px 30px rgba(15, 23, 42, 0.10)",
           fontFamily: '"Noto Sans", sans-serif',
+        },
+        components: {
+          Layout: {
+            bodyBg: isDark ? "#020617" : "#f8fafc",
+            siderBg: isDark ? "#0f172a" : "#ffffff",
+            headerBg: isDark ? "#0f172a" : "#ffffff",
+          },
+          Card: {
+            borderRadiusLG: 18,
+          },
+          Button: {
+            borderRadius: 12,
+            controlHeight: 40,
+          },
+          Input: {
+            borderRadius: 12,
+            controlHeight: 40,
+          },
+          Select: {
+            borderRadius: 12,
+            controlHeight: 40,
+          },
         },
       }}
     >

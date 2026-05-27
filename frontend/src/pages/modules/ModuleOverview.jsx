@@ -19,9 +19,9 @@ const ModuleOverview = () => {
   }, [roleName, permissions]);
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" size={16} className="page-stack">
       <Card>
-        <Title level={3} style={{ marginBottom: 4 }}>ERP Module Center</Title>
+        <Title level={3} className="page-title-subtight">ERP Module Center</Title>
         <Text type="secondary">Role based module access for {roleName || "current user"}.</Text>
       </Card>
 

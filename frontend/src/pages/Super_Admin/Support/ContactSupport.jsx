@@ -37,7 +37,7 @@ const ContactSupport = () => {
   };
 
   return (
-    <div style={{ padding: 24, background: "#f5f6fa", minHeight: "100vh" }}>
+    <div className="support-page-shell">
       
       {/* HEADER */}
       <Title level={3}>📩 Contact Support</Title>
@@ -105,7 +105,7 @@ const ContactSupport = () => {
         <Col xs={24} md={10}>
           
           {/* CONTACT INFO */}
-          <Card title="Support Info" style={{ marginBottom: 16 }}>
+          <Card title="Support Info" className="support-info-card">
             <p><MailOutlined /> support@yoursaas.com</p>
             <p><PhoneOutlined /> +91 9876543210</p>
             <p><MessageOutlined /> Live Chat Available</p>
