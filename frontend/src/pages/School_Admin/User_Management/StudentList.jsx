@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Table, Modal, Spin } from "antd";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
-
+import { User,Check,Landmark,Eye ,Cake} from "lucide-react";
 const bloodGroupColor = {
   "A+":  { bg: "#fef2f2", color: "#dc2626" },
   "A-":  { bg: "#fff7ed", color: "#c2410c" },
@@ -135,7 +135,7 @@ const StudentList = () => {
     {
       title: "Class",
       dataIndex: "schoolClass",
-      width: 90,
+      width: 130,
       render: (cls) => (
         <span style={{ display: "inline-block", padding: "2px 10px", background: "#f0eeff", color: "#7c6ff7", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
           {cls}
@@ -169,8 +169,8 @@ const StudentList = () => {
     {
       title: "Date of Birth",
       dataIndex: "dateOfBirth",
-      width: 120,
-      render: (dob) => <span style={{ fontSize: 12, color: "#666" }}>📅 {dob}</span>,
+      width: 150,
+      render: (dob) => <span style={{ fontSize: 12, color: "#666",display:`flex`, alignItems: "center",justifyContent:"center", gap: 6 }}><Cake /> {dob}</span>,
     },
     {
       title: "Phone",
@@ -348,17 +348,15 @@ const StudentList = () => {
 
         {/* Header */}
         <div style={{
-          background: "linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%)",
-          padding: "28px 36px", position: "relative", overflow: "hidden",
+          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
+          padding: "10px", position: "relative", overflow: "hidden",
         }}>
           <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
           <div style={{ position: "absolute", bottom: -50, right: 80, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
           <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
-                School Management
-              </div>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
+             
+              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#fff", letterSpacing: "-0.01em" }}>
                 Students
               </h1>
               <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
@@ -371,15 +369,15 @@ const StudentList = () => {
           </div>
         </div>
 
-        <div style={{ padding: "28px 36px" }}>
+        <div style={{ padding: "15px" }}>
 
           {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 28 }}>
             {[
-              { label: "Total Students", value: stats.total,   icon: "👥", color: "#7c6ff7", bg: "#f0eeff" },
-              { label: "Active",         value: stats.active,  icon: "✅", color: "#1d9e75", bg: "#f0fdf8" },
-              { label: "Classes",        value: stats.classes, icon: "📚", color: "#0284c7", bg: "#e0f2fe" },
-              { label: "Showing",        value: stats.showing, icon: "👁", color: "#e69020", bg: "#fef9ec" },
+              { label: "Total Students", value: stats.total,   icon: <User /> , color: "#7c6ff7", bg: "#f0eeff" },
+              { label: "Active",         value: stats.active,  icon: <Check />, color: "#1d9e75", bg: "#f0fdf8" },
+              { label: "Classes",        value: stats.classes, icon: <Landmark />, color: "#0284c7", bg: "#e0f2fe" },
+              { label: "Showing",        value: stats.showing, icon: <Eye />, color: "#e69020", bg: "#fef9ec" },
             ].map((stat) => (
               <div key={stat.label} style={{
                 padding: "16px 20px", background: stat.bg, borderRadius: 14,

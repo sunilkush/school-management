@@ -7,7 +7,7 @@ import { Form, Input, Select, Upload, Checkbox } from "antd";
 import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
 import { registerUser, resetState } from "../../features/authSlice";
-
+import { Camera} from "lucide-react";
 const EXCLUDED_ROLES_FOR_SCHOOL_ADMIN = ["super admin", "school admin", "student", "parent"];
 const MAX_AVATAR_SIZE_BYTES = 1024 * 1024;
 
@@ -103,13 +103,13 @@ const RegisterForm = ({ onClose }) => {
         .reg-form .ant-input-affix-wrapper {
           border-radius: 10px !important;
           border: 1.5px solid #e8e4ff !important;
-          font-size: 14px !important;
-          height: 42px !important;
+          font-size: 12px !important;
+          height: 30px !important;
           background: #fdfcff !important;
           color: #1a1a2e !important;
         }
         .reg-form .ant-input-affix-wrapper { padding: 0 12px !important; }
-        .reg-form .ant-input-affix-wrapper input { height: 40px !important; background: transparent !important; }
+        .reg-form .ant-input-affix-wrapper input { height: 30px !important; background: transparent !important; }
         .reg-form .ant-input:focus,
         .reg-form .ant-input-affix-wrapper:focus,
         .reg-form .ant-input-affix-wrapper-focused {
@@ -123,10 +123,10 @@ const RegisterForm = ({ onClose }) => {
         .reg-form .ant-select .ant-select-selector {
           border-radius: 10px !important;
           border: 1.5px solid #e8e4ff !important;
-          height: 42px !important;
+          height: 30px !important;
           background: #fdfcff !important;
           align-items: center !important;
-          font-size: 14px !important;
+          font-size: 12px !important;
         }
         .reg-form .ant-select:hover .ant-select-selector,
         .reg-form .ant-select-focused .ant-select-selector {
@@ -160,10 +160,10 @@ const RegisterForm = ({ onClose }) => {
         .reg-alert.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
         .submit-btn {
-          width: 100%; height: 46px; border-radius: 12px;
-          font-size: 15px; font-weight: 700; cursor: pointer;
+          width: 100%; height: 30px; border-radius: 12px;
+          font-size: 12px; font-weight: 600; cursor: pointer;
           border: none; transition: all 0.2s; letter-spacing: 0.01em;
-          background: linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%);
+          background: linear-gradient(135deg, #1677ff 0%, #5a50c9 100%);
           color: #fff;
           box-shadow: 0 4px 14px rgba(124, 111, 247, 0.35);
           margin-top: 6px;
@@ -272,12 +272,12 @@ const RegisterForm = ({ onClose }) => {
         >
           <Upload beforeUpload={handleAvatarUpload} maxCount={1} showUploadList={false}>
             <div className="upload-zone">
-              <div className="upload-icon">📷</div>
+              <div className="upload-icon"><Camera /></div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#7c6ff7" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#1677ff" }}>
                   {avatarName || "Click to upload avatar"}
                 </div>
-                <div style={{ fontSize: 11, color: "#c5bef5", marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: "#1677ff", marginTop: 2 }}>
                   PNG, JPG · Max 1 MB
                 </div>
               </div>
@@ -289,7 +289,7 @@ const RegisterForm = ({ onClose }) => {
         <Form.Item name="isActive" valuePropName="checked" style={{ marginBottom: 20 }}>
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "12px 16px", background: "#faf9ff",
+            padding: "10px", background: "#faf9ff",
             border: "1.5px solid #ede9fe", borderRadius: 12,
           }}>
             <div>

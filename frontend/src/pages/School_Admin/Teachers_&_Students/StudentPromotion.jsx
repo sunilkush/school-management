@@ -9,7 +9,7 @@ import {
   fetchPromotionSections,
   promoteStudents,
 } from "../../../features/studentPromotionSlice";
-
+import { GraduationCap } from "lucide-react";
 const StudentPromotion = () => {
   const dispatch = useDispatch();
   const { academicYears, sourceClasses, targetClasses, sections, candidates, loading, promoting } = useSelector(
@@ -178,8 +178,8 @@ const StudentPromotion = () => {
         .promo-select .ant-select-selector {
           border-radius: 10px !important;
           border: 1.5px solid #e8e4ff !important;
-          font-size: 14px !important;
-          height: 42px !important;
+          font-size: 12px !important;
+          height: 30px !important;
           background: #fdfcff !important;
           align-items: center !important;
         }
@@ -240,9 +240,9 @@ const StudentPromotion = () => {
           align-items: center;
           gap: 8px;
           padding: 0 24px;
-          height: 42px;
+          height: 30px;
           border-radius: 11px;
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 600;
           cursor: pointer;
           border: none;
@@ -276,7 +276,7 @@ const StudentPromotion = () => {
           justify-content: center;
           width: 32px;
           height: 32px;
-          background: linear-gradient(135deg, #7c6ff7, #5a50c9);
+          background: linear-gradient(135deg, #1677ff, #5a50c9);
           border-radius: 50%;
           color: #fff;
           font-size: 14px;
@@ -297,18 +297,16 @@ const StudentPromotion = () => {
 
         {/* Header */}
         <div style={{
-          background: "linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%)",
-          padding: "28px 36px",
+          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
+          padding: "20px",
           position: "relative",
           overflow: "hidden",
         }}>
           <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
           <div style={{ position: "absolute", bottom: -50, right: 80, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
           <div style={{ position: "relative" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
-              School Management
-            </div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
+           
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
               Student Promotion
             </h1>
             <p style={{ margin: "6px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
@@ -317,19 +315,19 @@ const StudentPromotion = () => {
           </div>
         </div>
 
-        <div style={{ padding: "32px 36px" }}>
+        <div style={{ padding: "20px" }}>
 
           {/* Filter Panel */}
           <div style={{
             background: "#faf9ff",
             border: "1px solid #ede9fe",
             borderRadius: 16,
-            padding: "24px 28px",
-            marginBottom: 28,
+            padding: "10px",
+            marginBottom: 10,
           }}>
 
             {/* Section label */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#b0a8f5", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#b0a8f5", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
               Promotion Configuration
             </div>
 
@@ -410,7 +408,7 @@ const StudentPromotion = () => {
 
           {/* Stats bar */}
           {candidates.length > 0 && (
-            <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <div style={{ display: "flex", gap: 12, marginBottom: 10 }}>
               {[
                 { label: "Total Students", value: candidates.length, color: "#7c6ff7", bg: "#f0eeff" },
                 { label: "Selected", value: selectedRowKeys.length, color: "#1d9e75", bg: "#f0fdf8" },
@@ -431,11 +429,11 @@ const StudentPromotion = () => {
           {/* Empty state */}
           {!loading && candidates.length === 0 && (
             <div style={{
-              textAlign: "center", padding: "48px 24px",
+              textAlign: "center", padding: "20px",
               border: "1.5px dashed #ddd8ff", borderRadius: 16,
-              background: "#faf9ff", marginBottom: 24,
+              background: "#faf9ff", marginBottom: 10,
             }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🎓</div>
+              <div style={{  marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center" }}><GraduationCap size={60} /></div>
               <div style={{ fontWeight: 600, color: "#aaa", marginBottom: 4 }}>No students loaded</div>
               <div style={{ fontSize: 13, color: "#c5bef5" }}>Select a source year and class, then click "Load Students"</div>
             </div>
@@ -447,7 +445,7 @@ const StudentPromotion = () => {
               borderRadius: 14,
               overflow: "hidden",
               border: "1px solid #ede9fe",
-              marginBottom: 24,
+              marginBottom: 10,
             }}>
               <Table
                 rowKey="enrollmentId"
@@ -469,7 +467,7 @@ const StudentPromotion = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "18px 24px",
+            padding: "10px",
             background: "#f8f7ff",
             borderRadius: 14,
             border: "1px solid #ede9fe",

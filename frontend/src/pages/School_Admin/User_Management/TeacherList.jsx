@@ -8,7 +8,7 @@ import {
 } from "../../../features/authSlice";
 import RegisterForm from "../../../components/forms/RegisterForm";
 import { useNavigate } from "react-router-dom";
-
+import { Users, Check, Tag, Trash2 , Eye,SquarePen ,Search } from "lucide-react";
 const TeacherList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -182,14 +182,14 @@ const TeacherList = () => {
             title="View details"
             onClick={() => navigate(`/dashboard/schooladmin/users/employee-details?id=${record._id}`)}
           >
-            👁
+           <Eye size={16} color="#7c6ff7" />
           </button>
           <button
             className="icon-btn edit"
             title="Edit user"
             onClick={() => navigate(`/dashboard/schooladmin/users/employee-form?id=${record._id}`)}
           >
-            ✏️
+           <SquarePen size={16} color="#faad14" />
           </button>
           <button
             className="icon-btn delete"
@@ -197,7 +197,7 @@ const TeacherList = () => {
             disabled={deletingId === record._id}
             onClick={() => handleDelete(record._id)}
           >
-            {deletingId === record._id ? "…" : "🗑"}
+            {deletingId === record._id ? "…" : <Trash2 color="red" size={16} />}
           </button>
         </div>
       ),
@@ -352,7 +352,7 @@ const TeacherList = () => {
       {confirmDeleteId && (
         <div className="confirm-overlay" onClick={() => setConfirmDeleteId(null)}>
           <div className="confirm-box" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🗑️</div>
+            <div style={{ fontSize: 36, marginBottom: 12 }}><Trash2 size={36} /></div>
             <div style={{ fontSize: 17, fontWeight: 700, color: "#1a1a2e", marginBottom: 8 }}>Delete User?</div>
             <div style={{ fontSize: 14, color: "#aaa", marginBottom: 24 }}>
               This user will be permanently removed. This action cannot be undone.
@@ -401,17 +401,15 @@ const TeacherList = () => {
 
         {/* Header */}
         <div style={{
-          background: "linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%)",
-          padding: "28px 36px", position: "relative", overflow: "hidden",
+          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
+          padding: "18px", position: "relative", overflow: "hidden",
         }}>
           <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
           <div style={{ position: "absolute", bottom: -50, right: 80, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
           <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
-                School Management
-              </div>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
+             
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
                 Staff Directory
               </h1>
               <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
@@ -424,14 +422,14 @@ const TeacherList = () => {
           </div>
         </div>
 
-        <div style={{ padding: "28px 36px" }}>
+        <div style={{ padding: "20px" }}>
 
           {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 28 }}>
             {[
-              { label: "Total Staff", value: stats.total, icon: "👥", color: "#7c6ff7", bg: "#f0eeff" },
-              { label: "Active", value: stats.active, icon: "✅", color: "#1d9e75", bg: "#f0fdf8" },
-              { label: "Roles", value: stats.roles, icon: "🏷", color: "#e69020", bg: "#fef9ec" },
+              { label: "Total Staff", value: stats.total, icon: <Users />, color: "#7c6ff7", bg: "#f0eeff" },
+              { label: "Active", value: stats.active, icon: <Check />, color: "#1d9e75", bg: "#f0fdf8" },
+              { label: "Roles", value: stats.roles, icon: <Tag />, color: "#e69020", bg: "#fef9ec" },
             ].map((stat) => (
               <div key={stat.label} style={{
                 padding: "16px 20px", background: stat.bg, borderRadius: 14,
@@ -457,7 +455,7 @@ const TeacherList = () => {
             </div>
             <div style={{ flex: 1 }} />
             <div className="search-wrap">
-              <span className="search-icon">🔍</span>
+              <span className="search-icon"><Search size={16} /></span>
               <input
                 className="search-input"
                 placeholder="Search by name, email or phone…"

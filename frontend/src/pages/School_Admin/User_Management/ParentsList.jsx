@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Table } from "antd";
 import { fetchAllUser } from "../../../features/authSlice";
-
+import { Users, Check, Eye } from "lucide-react";
 const ParentsList = () => {
   const dispatch = useDispatch();
   const [searchText, setSearchText] = useState("");
@@ -167,10 +167,10 @@ const ParentsList = () => {
           background: #faf8ff !important;
         }
         .parents-table .ant-pagination-item-active {
-          border-color: #7c6ff7 !important;
+          border-color: #1677ff !important;
         }
         .parents-table .ant-pagination-item-active a {
-          color: #7c6ff7 !important;
+          color: #1677ff !important;
         }
         .parents-table .ant-table-tbody > tr:last-child > td {
           border-bottom: none !important;
@@ -215,8 +215,8 @@ const ParentsList = () => {
 
         {/* Header */}
         <div style={{
-          background: "linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%)",
-          padding: "28px 36px",
+          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
+          padding: "20px",
           position: "relative",
           overflow: "hidden",
         }}>
@@ -224,10 +224,8 @@ const ParentsList = () => {
           <div style={{ position: "absolute", bottom: -50, right: 80, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
           <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
-                School Management
-              </div>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
+             
+              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
                 Parents Directory
               </h1>
               <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
@@ -248,14 +246,14 @@ const ParentsList = () => {
           </div>
         </div>
 
-        <div style={{ padding: "28px 36px" }}>
+        <div style={{ padding: "20px" }}>
 
           {/* Stats Row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 28 }}>
             {[
-              { label: "Total Parents", value: stats.total, icon: "👨‍👩‍👧", color: "#7c6ff7", bg: "#f0eeff" },
-              { label: "Active", value: stats.active, icon: "✅", color: "#1d9e75", bg: "#f0fdf8" },
-              { label: "Showing", value: stats.showing, icon: "👁", color: "#e69020", bg: "#fef9ec" },
+              { label: "Total Parents", value: stats.total, icon: <Users />, color: "#7c6ff7", bg: "#f0eeff" },
+              { label: "Active", value: stats.active, icon: <Check />, color: "#1d9e75", bg: "#f0fdf8" },
+              { label: "Showing", value: stats.showing, icon: <Eye />, color: "#e69020", bg: "#fef9ec" },
             ].map((stat) => (
               <div key={stat.label} style={{
                 padding: "16px 20px",
