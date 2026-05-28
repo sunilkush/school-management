@@ -35,8 +35,7 @@ import {
 } from "lucide-react";
 
 const commonSelfService = (basePath) => [
-  { title: "Messages", path: `${basePath}/message`, icon: MessageCircle },
-  { title: "Notifications", path: `${basePath}/notification`, icon: Bell },
+ 
   { title: "Profile", path: `${basePath}/profile`, icon: User },
 ];
 
@@ -44,7 +43,9 @@ const communicationMenu = (basePath) => ({
   title: "Communication",
   icon: MessageSquare,
   subMenu: [
-    { title: "Send Message", path: `${basePath}/communication/send` },
+     { title: "Send Messages", path: `${basePath}/message`, },
+     { title: "Notifications", path: `${basePath}/notification`,  },
+   // { title: "Send Message", path: `${basePath}/communication/send` },
     { title: "Message History", path: `${basePath}/communication/history` },
   ],
 });
@@ -56,9 +57,9 @@ const roleWorkspaceItem = { title: "Role Workspace", path: "workspace", icon: Cl
 export const sidebarMenu = {
   /* ================= SUPER ADMIN ================= */
   "super admin": [
-    { title: "Dashboard", path: "superadmin", icon: LayoutDashboard },
+    { title: "Platform Overview", path: "superadmin", icon: LayoutDashboard },
     {
-      title: "School Management",
+      title: "Schools",
       icon: School,
       subMenu: [
         { title: "School List", path: "superadmin/schools" },
@@ -76,7 +77,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "User Management",
+      title: "Users",
       icon: Users,
       subMenu: [
         { title: "School Admins", path: "superadmin/users/admins" },
@@ -91,7 +92,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Academic Management",
+      title: "Academics",
       icon: BookOpen,
       subMenu: [
         { title: "Classes", path: "superadmin/academics/classes" },
@@ -127,7 +128,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Master Settings",
+      title: "Master configurations",
       icon: Settings,
       subMenu: [
         { title: "Fee Categories", path: "superadmin/fees/categories" },
@@ -137,7 +138,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "System Administration",
+      title: "System Control ",
       icon: Cog,
       subMenu: [
         { title: "Roles", path: "superadmin/settings/roles" },
@@ -149,7 +150,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Help",
+      title: "Support Center",
       icon: MessageSquare,
       subMenu: [
         { title: "Support Tickets", path: "superadmin/support/tickets" },
@@ -164,10 +165,10 @@ export const sidebarMenu = {
 
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
-    { title: "Dashboard", path: "schooladmin", icon: LayoutDashboard },
+    { title: "Overview", path: "schooladmin", icon: LayoutDashboard },
     { title: "School Setup", path: "schooladmin/school-setup", icon: School },
     {
-      title: "User Management",
+      title: "Users",
       icon: Users,
       subMenu: [
         { title: "Student Admission", path: "schooladmin/admission" },
@@ -180,7 +181,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Academic Management",
+      title: "Academics",
       icon: BookOpen,
       subMenu: [
         { title: "Classes", path: "schooladmin/classes" },
@@ -194,7 +195,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Examination Management",
+      title: "Examinations",
       icon: GraduationCap,
       subMenu: [
         { title: "Create Exam", path: "schooladmin/exams/exams-create" },
@@ -209,7 +210,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Attendance Management",
+      title: "Attendance",
       icon: UserCheck,
       subMenu: [
         { title: "Student Attendance", path: "schooladmin/attendance/students" },
@@ -221,7 +222,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Fee Management",
+      title: "Fees",
       icon: CreditCard,
       subMenu: [
         { title: "Fee Categories", path: "schooladmin/fees/categories" },
@@ -230,7 +231,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Library Management",
+      title: "Library",
       icon: Book,
       subMenu: [
         { title: "Books", path: "schooladmin/library/books" },
@@ -239,7 +240,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Transport Management",
+      title: "Transport",
       icon: Bus,
       subMenu: [
         { title: "Routes", path: "schooladmin/transport/routes" },
@@ -248,7 +249,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Hostel Management",
+      title: "Hostel",
       icon: ClipboardList,
       subMenu: [
         { title: "Hostel Rooms", path: "schooladmin/hostel" },
@@ -267,7 +268,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Inventory Management",
+      title: "Inventory",
       icon: Briefcase,
       subMenu: [
         { title: "Supplies", path: "schooladmin/inventory/supplies" },
@@ -282,7 +283,7 @@ export const sidebarMenu = {
 
   /* ================= TEACHER ================= */
   teacher: [
-    { title: "Dashboard", path: "teacher", icon: LayoutDashboard },
+    { title: "Overview", path: "teacher", icon: LayoutDashboard },
     {
       title: "Classroom",
       icon: BookOpen,
@@ -324,7 +325,7 @@ export const sidebarMenu = {
 
   /* ================= STUDENT ================= */
   student: [
-    { title: "Dashboard", path: "student", icon: LayoutDashboard },
+    { title: "Overview", path: "student", icon: LayoutDashboard },
     { title: "Homework", path: "student/homework", icon: ClipboardCheck },
     { title: "Attendance", path: "student/attendance", icon: UserCheck },
     { title: "Grades", path: "student/grades", icon: FileCheck },
@@ -341,7 +342,7 @@ export const sidebarMenu = {
 
   /* ================= PARENT ================= */
   parent: [
-    { title: "Dashboard", path: "parent", icon: LayoutDashboard },
+    { title: "Overview", path: "parent", icon: LayoutDashboard },
     { title: "My Children", path: "parent/children", icon: Users },
     { title: "Attendance", path: "parent/attendance", icon: UserCheck },
     { title: "Grades", path: "parent/grades", icon: FileCheck },
@@ -357,7 +358,7 @@ export const sidebarMenu = {
 
   /* ================= ACCOUNTANT ================= */
   accountant: [
-    { title: "Dashboard", path: "accountant", icon: LayoutDashboard },
+    { title: "Overview", path: "accountant", icon: LayoutDashboard },
     { title: "Fee Collection", path: "accountant/fees/collect", icon: CreditCard },
     {
       title: "Payroll",
@@ -381,8 +382,7 @@ export const sidebarMenu = {
 
   /* ================= PRINCIPAL ================= */
   principal: [
-    { title: "Dashboard", path: "principal", icon: LayoutDashboard },
-    { title: "Overview", path: "principal/overview", icon: FileBarChart2 },
+    { title: "Overview", path: "principal", icon: LayoutDashboard },
     { title: "Staff", path: "principal/staff", icon: Users },
     { title: "Students", path: "principal/students", icon: Users },
     { title: "Academic Reports", path: "principal/reports/academic", icon: GraduationCap },
@@ -400,8 +400,8 @@ export const sidebarMenu = {
 
   /* ================= VICE PRINCIPAL ================= */
   "vice principal": [
-    { title: "Dashboard", path: "viceprincipal", icon: LayoutDashboard },
-    { title: "Academic Management", path: "viceprincipal/academics", icon: BookOpen },
+    { title: "Overview", path: "viceprincipal", icon: LayoutDashboard },
+    { title: "Academics", path: "viceprincipal/academics", icon: BookOpen },
     { title: "Timetable", path: "viceprincipal/timetable", icon: CalendarClock },
     { title: "Exams & Grades", path: "viceprincipal/exams", icon: GraduationCap },
     { title: "Student Attendance", path: "viceprincipal/attendance/students", icon: UserCheck },
@@ -415,7 +415,7 @@ export const sidebarMenu = {
 
   /* ================= EXAM COORDINATOR ================= */
   "exam coordinator": [
-    { title: "Dashboard", path: "examcoordinator", icon: LayoutDashboard },
+    { title: "Overview", path: "examcoordinator", icon: LayoutDashboard },
     {
       title: "Exam Operations",
       icon: GraduationCap,
@@ -439,7 +439,7 @@ export const sidebarMenu = {
 
   /* ================= SUBJECT COORDINATOR ================= */
   "subject coordinator": [
-    { title: "Dashboard", path: "subjectcoordinator", icon: LayoutDashboard },
+    { title: "Overview", path: "subjectcoordinator", icon: LayoutDashboard },
     { title: "Subjects Overview", path: "subjectcoordinator/subjects", icon: BookOpen },
     { title: "Teacher Assignment", path: "subjectcoordinator/teachers", icon: Users },
     { title: "Class Assignment", path: "subjectcoordinator/classes", icon: Book },
@@ -452,7 +452,7 @@ export const sidebarMenu = {
 
   /* ================= LIBRARIAN ================= */
   librarian: [
-    { title: "Dashboard", path: "librarian", icon: LayoutDashboard },
+    { title: "Overview", path: "librarian", icon: LayoutDashboard },
     { title: "Book Catalog", path: "librarian/book-catalog", icon: Book },
     { title: "Issue / Return", path: "librarian/issue-return", icon: ClipboardCheck },
     { title: "Members", path: "librarian/members", icon: Users },
@@ -464,7 +464,7 @@ export const sidebarMenu = {
 
   /* ================= HOSTEL WARDEN ================= */
   "hostel warden": [
-    { title: "Dashboard", path: "hostelwarden", icon: LayoutDashboard },
+    { title: "Overview", path: "hostelwarden", icon: LayoutDashboard },
     { title: "Hostel Rooms", path: "hostelwarden/rooms", icon: BookOpen },
     { title: "Student Allocation", path: "hostelwarden/allocations", icon: Users },
     { title: "Hostel Attendance", path: "hostelwarden/attendance", icon: UserCheck },
@@ -475,7 +475,7 @@ export const sidebarMenu = {
 
   /* ================= TRANSPORT MANAGER ================= */
   "transport manager": [
-    { title: "Dashboard", path: "transportmanager", icon: LayoutDashboard },
+    { title: "Overview", path: "transportmanager", icon: LayoutDashboard },
     { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
     { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
     { title: "Drivers", path: "transportmanager/drivers", icon: Users },
@@ -487,7 +487,7 @@ export const sidebarMenu = {
 
   /* ================= RECEPTIONIST ================= */
   receptionist: [
-    { title: "Dashboard", path: "receptionist", icon: LayoutDashboard },
+    { title: "Overview", path: "receptionist", icon: LayoutDashboard },
     { title: "Visitor Management", path: "receptionist/visitors", icon: UserPlus },
     { title: "Enquiries", path: "receptionist/enquiries", icon: MessageSquare },
     { title: "Phone Calls Log", path: "receptionist/calls", icon: ClipboardCheck },
@@ -499,7 +499,7 @@ export const sidebarMenu = {
 
   /* ================= IT SUPPORT ================= */
   "it support": [
-    { title: "Dashboard", path: "itsupport", icon: LayoutDashboard },
+    { title: "Overview", path: "itsupport", icon: LayoutDashboard },
     { title: "System Maintenance", path: "itsupport/maintenance", icon: Wrench },
     { title: "User Support Tickets", path: "itsupport/tickets", icon: ClipboardList },
     { title: "Network Status", path: "itsupport/network", icon: Fuel },
@@ -511,7 +511,7 @@ export const sidebarMenu = {
 
   /* ================= COUNSELOR ================= */
   counselor: [
-    { title: "Dashboard", path: "counselor", icon: LayoutDashboard },
+    { title: "Overview", path: "counselor", icon: LayoutDashboard },
     { title: "Student Profiles", path: "counselor/students", icon: Users },
     { title: "Counseling Sessions", path: "counselor/sessions", icon: CalendarClock },
     { title: "Appointments", path: "counselor/appointments", icon: Clock },
@@ -523,7 +523,7 @@ export const sidebarMenu = {
 
   /* ================= SECURITY ================= */
   security: [
-    { title: "Dashboard", path: "security", icon: LayoutDashboard },
+    { title: "Overview", path: "security", icon: LayoutDashboard },
     { title: "Entry Register", path: "security/entry-register", icon: Clipboard },
     { title: "Gate Logs", path: "security/gate-logs", icon: ClipboardList },
     { title: "Shift Attendance", path: "security/shift-attendance", icon: Clock },
@@ -535,7 +535,7 @@ export const sidebarMenu = {
 
   /* ================= STAFF / SUPPORT STAFF ================= */
   staff: [
-    { title: "Dashboard", path: "staff", icon: LayoutDashboard },
+    { title: "Overview", path: "staff", icon: LayoutDashboard },
     { title: "Tasks & Schedule", path: "staff/tasks", icon: CalendarClock },
     { title: "My Attendance", path: "staff/attendance", icon: Clock },
     communicationMenu("staff"),
@@ -543,7 +543,7 @@ export const sidebarMenu = {
     ...commonSelfService("staff"),
   ],
   "support staff": [
-    { title: "Dashboard", path: "staff", icon: LayoutDashboard },
+    { title: "Overview", path: "staff", icon: LayoutDashboard },
     { title: "Tasks & Schedule", path: "staff/tasks", icon: CalendarClock },
     { title: "My Attendance", path: "staff/attendance", icon: Clock },
     communicationMenu("staff"),
@@ -554,7 +554,7 @@ export const sidebarMenu = {
 
   /* ================= LEGACY / ALIASES ================= */
   transport: [
-    { title: "Dashboard", path: "transportmanager", icon: LayoutDashboard },
+    { title: "Overview", path: "transportmanager", icon: LayoutDashboard },
     { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
     { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
     { title: "Assignments", path: "schooladmin/transport/assignments", icon: Bus },
@@ -568,10 +568,11 @@ Object.keys(sidebarMenu).forEach((roleKey) => {
   if (!items.some((item) => item?.path === moduleHubItem.path)) {
     items.push(moduleHubItem);
   }
-   const rolePath = roleKey.replace(/\s+/g, "");
-  const hasMessage = items.some((item) => item?.path === `${rolePath}/message` || item?.path?.endsWith("/message"));
-  if (!hasMessage) items.push({ title: "Messages", path: `${rolePath}/message`, icon: MessageSquare });
+   //const rolePath = roleKey.replace(/\s+/g, "");
+  //const hasMessage = items.some((item) => item?.path === `${rolePath}/message` || item?.path?.endsWith("/message"));
+  //if (!hasMessage) items.push({ title: "Messages", path: `${rolePath}/message`, icon: MessageSquare });
   if (!items.some((item) => item?.path === supportCenterItem.path)) {
     items.push(supportCenterItem);
   }
 });
+
