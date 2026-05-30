@@ -207,7 +207,7 @@ const LoginForm = () => {
                   )}
                 </div>
 
-                <Row justify="space-between" align="middle">
+                <Row justify="space-between" align="middle"  style={{ marginBottom: 24 }}>
                   <Controller
                     name="remember"
                     control={control}
