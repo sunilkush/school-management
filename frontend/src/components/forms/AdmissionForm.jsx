@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, Input, Select, DatePicker, Button, InputNumber, message, Modal } from "antd";
+import { Form, Input, Select, DatePicker, InputNumber, message, Modal } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastRegisteredStudent, createStudent } from "../../features/studentSlice";
 import { getClassData } from "../../features/schoolClassSlice";
@@ -16,7 +13,6 @@ const TABS = [
   { key: "mother", label: "Mother", icon: "👩", step: 4 },
 ];
 
-const formSchema = z.object({}).passthrough();
 
 const renderCredentialLine = (label, creds) => {
   if (!creds) return null;
@@ -29,9 +25,7 @@ const renderCredentialLine = (label, creds) => {
   );
 };
 
-const FieldLabel = ({ children }) => (
-  <span style={{ fontSize: 12, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.06em" }}>{children}</span>
-);
+
 
 const SectionHeading = ({ children }) => (
   <div style={{ fontSize: 11, fontWeight: 700, color: "#b0a8f5", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 20, marginTop: 4, paddingBottom: 8, borderBottom: "1px solid #f0eeff" }}>
@@ -54,9 +48,7 @@ const selectStyle = {
 
 const AdmissionForm = () => {
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+ 
   const dispatch = useDispatch();
   const tabKeys = ["student", "other", "father", "mother"];
   const [activeTab, setActiveTab] = useState("student");
@@ -426,7 +418,7 @@ const AdmissionForm = () => {
 
         {/* Form Body */}
         <div style={{ padding: "20px" }}>
-          <Form className="adm-form" layout="vertical" form={form} onFinish={rhfHandleSubmit((values) => onFinish(values))}>
+        <Form className="adm-form" layout="vertical" form={form} onFinish={() => onFinish(form.getFieldsValue(true))}>
 
             {/* ── STUDENT INFO ── */}
             {activeTab === "student" && (
