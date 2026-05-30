@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -32,14 +30,11 @@ import apiClient from "../../api/httpClient";
 
 const { Title, Text } = Typography;
 
-const formSchema = z.object({}).passthrough();
 
 const AssignSubjectsForm = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+
 
   // 🔹 Redux state
   const { schools = [] } = useSelector((s) => s.school);
@@ -246,7 +241,7 @@ const AssignSubjectsForm = () => {
               type="primary"
               size="large"
               loading={loading}
-              onClick={rhfHandleSubmit(() => handleAssignmentsSubmit())}
+              onClick={() => handleAssignmentsSubmit()}
             >
               Save Assignments
             </Button>

@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useDispatch, useSelector } from "react-redux";
 import { addSchool, resetSchoolState } from "../../features/schoolSlice";
 import { getBoards } from "../../features/boardSlice";
@@ -23,14 +21,11 @@ import {
 import { UploadOutlined, BankOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 
-const formSchema = z.object({}).passthrough();
 
 const AddSchoolForm = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+
   const { loading, error, message: successMessage, success } = useSelector(
     (state) => state.school
   );
@@ -119,7 +114,7 @@ const AddSchoolForm = () => {
       <Form
         form={form}
         layout="vertical"
-        onFinish={rhfHandleSubmit((values) => onFinish(values))}
+        onFinish={() => onFinish(form.getFieldsValue(true))}
         initialValues={{ isActive: true }}
       >
         {/* ===== BASIC INFO ===== */}

@@ -1,7 +1,5 @@
 import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -41,13 +39,10 @@ const roleOptions = [
   "Exam Coordinator","Receptionist","IT Support","Counselor","Subject Coordinator","Support Staff","Security","Driver"
 ];
 
-const formSchema = z.object({}).passthrough();
 
 const AddRoleForm = () => {
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+
   const dispatch = useDispatch();
 
   const { schools } = useSelector((state) => state.school);
@@ -116,7 +111,7 @@ const AddRoleForm = () => {
           isActive: true,
           permissions: [],
         }}
-        onFinish={rhfHandleSubmit((values) => onFinish(values))}
+        onFinish={() => onFinish(form.getFieldsValue(true))}
       >
         {/* ROLE INFO */}
         <Title level={5}>Role Information</Title>

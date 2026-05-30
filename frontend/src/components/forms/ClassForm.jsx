@@ -1,7 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   Form,
@@ -22,13 +20,10 @@ const CLASS_OPTIONS = [
   "7th","8th","9th","10th","11th","12th",
 ];
 
-const formSchema = z.object({}).passthrough();
 
 const ClassForm = ({ onClose, onSuccess, initialData }) => {
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.class);
 
@@ -82,7 +77,7 @@ const ClassForm = ({ onClose, onSuccess, initialData }) => {
       <Form
         form={form}
         layout="vertical"
-        onFinish={rhfHandleSubmit((values) => handleFinish(values))}
+        onFinish={() => handleFinish(form.getFieldsValue(true))}
         autoComplete="off"
       >
         {/* Class Name */}
