@@ -224,7 +224,7 @@ export default function SupportTicketsPage() {
   );
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" size={16} style={{ width: "100%", padding: "24px" }}>
       <Card>
         <Space direction="vertical" size={4}>
           <Title level={4} style={{ margin: 0 }}>Support Tickets</Title>

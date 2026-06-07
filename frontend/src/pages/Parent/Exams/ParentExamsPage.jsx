@@ -111,7 +111,7 @@ const ParentExamsPage = () => {
   }
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="middle">
+    <Space direction="vertical" style={{ width: "100%", padding: "24px" }} size="middle">
       <Card bordered={false} style={{ borderRadius: 12 }}>
         <ExamPageHeader
           title="Child Exam Hub"

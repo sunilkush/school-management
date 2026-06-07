@@ -50,7 +50,7 @@ const ChildHomework = () => {
   }, [selectedChild]);
 
   return (
-    <Card loading={loading}>
+    <Card loading={loading} style={{ margin: "24px" }}  >
       <Space direction="vertical" style={{ width: "100%" }} size={14}>
         <Title level={4} style={{ margin: 0 }}>Parent Engagement Center</Title>
 
