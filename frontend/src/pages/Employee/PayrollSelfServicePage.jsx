@@ -57,6 +57,10 @@ export default function PayrollSelfServicePage() {
   return (
     <Spin spinning={loading}>
       <Tabs
+       style={{ marginTop: 16,padding:24 }}
+       type="line"
+       size="large"
+       tabBarGutter={48}
         items={[
           {
             key: "payslips",
