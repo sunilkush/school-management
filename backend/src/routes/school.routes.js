@@ -13,7 +13,7 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-const ADMIN_ROLE = ["Super Admin", "School Admin"];
+const ADMIN_ROLE = ["Super Admin", "School Admin","Accountant"];
 
 const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
 const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];

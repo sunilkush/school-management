@@ -134,7 +134,7 @@ const RoleDynamicPortal = () => {
   if (["attendance/monthly", "reports/attendance"].includes(activeSection)) return <MonthlyReportPage />;
   if (["attendance/students", "attendance/staff", "attendance/mark"].includes(activeSection)) return <MarkAttendancePage />;
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" size={16} style={{ width: "100%",padding:24 }}>
       <Card>
         <Title level={3} style={{ marginBottom: 4 }}>{config.title}</Title>
         <Text type="secondary">{config.subtitle}</Text>

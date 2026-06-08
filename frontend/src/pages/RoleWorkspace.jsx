@@ -28,7 +28,7 @@ const RoleWorkspace = () => {
   }
 
   return (
-    <Flex vertical gap={16}>
+    <Flex vertical gap={16} style={{ minHeight: "100vh", padding: 24 }}>
       <Card>
         <Title level={3} className="role-workspace-title">Role Workspace</Title>
         <Text type="secondary">
