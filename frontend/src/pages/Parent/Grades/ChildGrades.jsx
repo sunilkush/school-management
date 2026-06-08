@@ -45,8 +45,8 @@ const ChildGrades = () => {
   ];
 
   return (
-    <Card loading={loading}>
-      <Space direction="vertical" style={{ width: "100%" }}>
+    <Card loading={loading} style={{ margin: "24px" }}>
+      <Space direction="vertical" style={{ width: "100%", }}>
         <Title level={4} style={{ margin: 0 }}>Child Grades</Title>
 
         <Select

@@ -81,7 +81,7 @@ const MyAttendancePage = () => {
         markBulkAttendance({
           schoolId: user?.school?._id || user?.schoolId,
           date: new Date().toISOString(),
-          role: "staff",
+          role: typeof user?.role === "string" ? user.role : user?.role?.name,
           records: [
             {
               userId: user._id,

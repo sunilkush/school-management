@@ -55,7 +55,7 @@ export default function ParentChildTimetablePage() {
       .catch(message.error);
   };
   return (
-    <Space direction="vertical" className="w-full" size="large">
+    <Space direction="vertical" className="w-full px-5 py-5" size="large">
       <Card>
         <Typography.Title level={3}>Child Timetable</Typography.Title>
         <Typography.Text type="secondary">

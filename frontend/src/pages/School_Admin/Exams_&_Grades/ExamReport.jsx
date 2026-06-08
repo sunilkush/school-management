@@ -55,7 +55,7 @@ const ExamReports = () => {
   };
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+    <Space direction="vertical" size="middle" style={{ width: "100%", padding: "24px" }}>
       <Card bordered={false} style={{ borderRadius: 12 }}>
         <ExamPageHeader
           title="Exam Reports"

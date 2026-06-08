@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   Form,
   Input,
@@ -22,13 +20,10 @@ import { createClass, updateClass } from "../../features/classSlice";
 const { Option } = Select;
 
 
-const formSchema = z.object({}).passthrough();
 
 const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+ 
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const schoolId = user?.school?._id;
@@ -122,7 +117,7 @@ const ClassFormSA = ({ initialData, onSuccess, onClose }) => {
       <Form
         form={form}
         layout="vertical"
-        onFinish={rhfHandleSubmit((values) => onFinish(values))}
+        onFinish={() => onFinish(form.getFieldsValue(true))}
         initialValues={{
           isActive: true,
           sections: [{ sectionId: "", teacherId: "" }],

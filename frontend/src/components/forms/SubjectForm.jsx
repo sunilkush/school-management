@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   Modal,
@@ -42,7 +40,7 @@ const STATUS_OPTIONS = [
 ];
 
 // ✅ Reusable option builder — eliminates all inline .map() JSX repetition
-const formSchema = z.object({}).passthrough();
+
 
 const toOptions = (items) =>
   items.map((item) => ({ value: item, label: item }));
@@ -50,9 +48,7 @@ const toOptions = (items) =>
 const SubjectForm = ({ isOpen, onClose, editData = null }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+
 
   const { users = [], user } = useSelector((state) => state.auth);
   const { loading } = useSelector((state) => state.subject);
@@ -147,7 +143,7 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
       <Form
         form={form}
         layout="vertical"
-        onFinish={rhfHandleSubmit((values) => onFinish(values))}
+        onFinish={() => onFinish(form.getFieldsValue(true))}
         style={{ marginTop: 16 }}
       >
         {/* Subject Name */}

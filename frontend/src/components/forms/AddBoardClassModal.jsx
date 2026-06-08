@@ -1,8 +1,6 @@
 import { Modal, Form, Select, Button, message,Input } from "antd";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useDispatch, useSelector } from "react-redux";
 
 import { getBoards } from "../../features/boardSlice";
@@ -11,13 +9,10 @@ import { createBoardClass } from "../../features/boardClassSlice.js";
 
 const { TextArea } = Input;
 
-const formSchema = z.object({}).passthrough();
 
 const AddBoardClassModal = ({ open, setOpen }) => {
   const [form] = Form.useForm();
-  const { handleSubmit: rhfHandleSubmit } = useForm({
-    resolver: zodResolver(formSchema),
-  });
+  
   const dispatch = useDispatch();
 
   const boards = useSelector((state) => state.boards.boards || []);
@@ -51,7 +46,7 @@ const AddBoardClassModal = ({ open, setOpen }) => {
       footer={null}
       width={600}
     >
-      <Form layout="vertical" form={form} onFinish={rhfHandleSubmit((values) => handleSubmit(values))}>
+      <Form layout="vertical" form={form} onFinish={() => handleSubmit(form.getFieldsValue(true))}>
         
         {/* ✅ BOARD */}
         <Form.Item

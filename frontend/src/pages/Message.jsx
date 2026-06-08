@@ -375,7 +375,7 @@ const sendReply = async (values) => {
   }
 
   return (
-    <Space direction="vertical" size={18} style={{ width: "100%" }}>
+    <Space direction="vertical" size={18} style={{ width: "100%", padding: "24px" }}>
       <Card style={pageStyles.mutedCard} styles={{ body: { padding: isMobile ? 18 : 24 } }}>
         <Flex vertical={isMobile} gap={16} align={isMobile ? "stretch" : "center"} justify="space-between">
           <Space direction="vertical" size={4} style={{ maxWidth: 720 }}>
@@ -430,7 +430,7 @@ const sendReply = async (values) => {
           <Tabs
             activeKey={mailbox}
             onChange={setMailbox}
-            style={{ width: isMobile ? "100%" : "auto" }}
+            style={{ width: isMobile ? "100%" : "auto",display: "flex", flexWrap: "wrap", gap: isMobile ? 12 : 24 }}
             tabBarGutter={isMobile ? 12 : 24}
             items={[
               { key: "inbox", label: "Inbox", icon: <Inbox size={15} /> },

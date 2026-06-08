@@ -381,7 +381,7 @@ const handleGenerateInstallments = async () => {
       style={{
         minHeight: "100vh",
         background: "#f4f7fb",
-        padding: "0px",
+        padding: "24px",
       }}
     >
       <Card

@@ -90,7 +90,7 @@ const MY_ATTENDANCE_ROLES = [
 router.post(
   "/mark-bulk",
   auth,
-  roleMiddleware(MANAGE_ROLES),
+  roleMiddleware(SELF_ATTENDANCE_ROLES),
   validateRequest(markBulkAttendanceSchema),
   markBulkAttendance
 );
