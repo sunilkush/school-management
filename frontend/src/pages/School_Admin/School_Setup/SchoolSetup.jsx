@@ -309,7 +309,11 @@ const SchoolSetup = () => {
         }
       `}</style>
 
-      <div style={{ padding: "24px" }}>
+      <div style={{
+        minHeight: "100dvh",
+        padding: 24,
+        background: t.pageBg,
+      }}>
         {/* Page header */}
         <div style={{
           background: t.cardBg,

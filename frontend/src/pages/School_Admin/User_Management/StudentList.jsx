@@ -236,7 +236,7 @@ const StudentList = () => {
     <div style={{
       minHeight: "100vh",
      // background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
-      padding: "0",
+      padding: "24px",
      // fontFamily: "'Inter', -apple-system, sans-serif",
     }}>
       <style>{`

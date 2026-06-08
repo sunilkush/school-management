@@ -150,6 +150,7 @@ const SchoolAdminDashboard = () => {
 
   return (
     <>
+    <div className="p-5">
       <style>{`
         /* Card hover lift */
         .dash-card {
@@ -301,6 +302,7 @@ const SchoolAdminDashboard = () => {
             </Suspense>
           </Col>
         </Row>
+      </div>
       </div>
     </>
   );

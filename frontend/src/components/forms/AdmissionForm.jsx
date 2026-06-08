@@ -152,7 +152,7 @@ const AdmissionForm = () => {
     <div style={{
       minHeight: "100vh",
       //background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
-      padding: "0px",
+      padding: "24px",
       fontFamily: "'Inter', -apple-system, sans-serif",
     }}>
       <style>{`
@@ -340,7 +340,7 @@ const AdmissionForm = () => {
           box-shadow: 0 8px 40px rgba(124, 111, 247, 0.1), 0 2px 8px rgba(0,0,0,0.04);
           overflow: hidden;
           width: 100%;
-          margin: 0 auto;
+         
         }
         .info-badge {
           display: inline-flex;

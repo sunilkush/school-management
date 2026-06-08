@@ -169,7 +169,7 @@ const StudentPromotion = () => {
     <div style={{
       minHeight: "100vh",
       //background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
-      padding: "0px",
+      padding: "24px",
       fontFamily: "'Inter', -apple-system, sans-serif",
     }}>
       <style>{`
@@ -293,6 +293,7 @@ const StudentPromotion = () => {
         overflow: "hidden",
         Width: "100%",
         margin: "0 auto",
+        padding:0
       }}>
 
         {/* Header */}

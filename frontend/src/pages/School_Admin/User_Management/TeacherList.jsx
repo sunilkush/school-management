@@ -297,7 +297,7 @@ const TeacherList = () => {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", padding: 0 }}>
+    <div style={{ minHeight: "100vh", padding: 24 }}>
       <style>{`
         .staff-table .ant-table {
           background: transparent !important;
