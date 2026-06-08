@@ -2,6 +2,34 @@ import apiClient from "../api/httpClient";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const toRoleName = (role = "") => String(role).trim().toLowerCase();
+const unwrapApiEnvelope = (payload) => {
+  let current = payload;
+
+  while (
+    current &&
+    typeof current === "object" &&
+    !Array.isArray(current) &&
+    Object.prototype.hasOwnProperty.call(current, "data") &&
+    Object.prototype.hasOwnProperty.call(current, "success")
+  ) {
+    current = current.data;
+  }
+
+  return current;
+};
+const toSummaryValue = (value) => {
+  if (typeof value === "number" || typeof value === "string") return value;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.length;
+  if (value && typeof value === "object") {
+    const unwrapped = unwrapApiEnvelope(value);
+
+    if (unwrapped !== value) return toSummaryValue(unwrapped);
+    if (typeof value.message === "string") return value.message;
+  }
+
+  return 0;
+};
 const toTitleFromKey = (key = "") =>
   key
     .replace(/([A-Z])/g, " $1")
@@ -25,8 +53,8 @@ export const fetchDashboardSummary = createAsyncThunk(
         params, // role + schoolId go here
       });
 
-      // ✅ Extract inner data so reducer doesn't have to deal with wrapping object
-      return { role, data: response.data.data };
+      // Extract and unwrap API envelopes so React never receives a response object as card text.
+      return { role, data: unwrapApiEnvelope(response.data?.data ?? response.data) };
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -56,7 +84,8 @@ const dashboardSlice = createSlice({
       .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
         state.loading = false;
 
-        const { role, data } = action.payload;
+        const { role } = action.payload;
+        const data = unwrapApiEnvelope(action.payload?.data);
         const normalizedRole = toRoleName(role);
 
         // ❌ Safety check (important)
@@ -88,12 +117,7 @@ const dashboardSlice = createSlice({
         } else {
           state.summary = Object.entries(data).map(([key, value]) => ({
             title: toTitleFromKey(key),
-            value:
-              typeof value === "number" || typeof value === "string"
-                ? value
-                : Array.isArray(value)
-                  ? value.length
-                  : 0,
+            value: toSummaryValue(value),
           }));
         }
 

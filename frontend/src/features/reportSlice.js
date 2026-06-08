@@ -2,7 +2,31 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from "../api/httpClient";
 import qs from 'qs';
 
+const unwrapApiEnvelope = (payload) => {
+  let current = payload;
 
+  while (
+    current &&
+    typeof current === 'object' &&
+    !Array.isArray(current) &&
+    Object.prototype.hasOwnProperty.call(current, 'data') &&
+    Object.prototype.hasOwnProperty.call(current, 'success')
+  ) {
+    current = current.data;
+  }
+
+  return current;
+};
+
+const normalizeReports = (payload) => {
+  const data = unwrapApiEnvelope(payload);
+
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.reports)) return data.reports;
+  if (Array.isArray(data?.items)) return data.items;
+
+  return [];
+};
 
 // Get all reports with filters
 export const fetchReports = createAsyncThunk(
@@ -18,7 +42,7 @@ export const fetchReports = createAsyncThunk(
 
       const res = await apiClient.get(`/report/getReport${query}`);
 
-      return res.data.data || [];
+      return normalizeReports(res.data?.data ?? res.data);
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
     }
@@ -32,7 +56,7 @@ export const createReport = createAsyncThunk(
     try {
       const res = await apiClient.post(`/report/create`, payload);
 
-      return res.data.data;
+      return unwrapApiEnvelope(res.data?.data ?? res.data);
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
     }
@@ -60,7 +84,7 @@ export const reportView = createAsyncThunk(
     try {
       const res = await apiClient.get(`/report/view/${id}`);
 
-      return res.data.data;
+      return unwrapApiEnvelope(res.data?.data ?? res.data);
     } catch (err) {
       return rejectWithValue(err.response?.data || { message: err.message });
     }
@@ -89,6 +113,7 @@ const reportSlice = createSlice({
   name: 'reports',
   initialState: {
     items: [],
+    reports: [],
     schoolReports: [], // FIXED
     loading: false,
     error: null,
@@ -103,27 +128,31 @@ const reportSlice = createSlice({
       })
       .addCase(fetchReports.fulfilled, (state, action) => {
         state.loading = false;
-        state.reports = Array.isArray(action.payload)
-          ? action.payload
-          : Array.isArray(action.payload?.reports)
-          ? action.payload.reports
-          : [];
+        state.items = normalizeReports(action.payload);
+        state.reports = state.items;
       })
       .addCase(fetchReports.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || 'Failed to fetch reports';
+        state.error =
+          action.payload?.message ||
+          (typeof action.payload === 'string' ? action.payload : null) ||
+          'Failed to fetch reports';
       })
 
       // Create Report
       .addCase(createReport.fulfilled, (state, action) => {
         state.loading = false;
-        state.items.unshift(action.payload);
+        if (action.payload) {
+          state.items.unshift(action.payload);
+          state.reports = state.items;
+        }
       })
 
       // Delete Report
       .addCase(deleteReport.fulfilled, (state, action) => {
         state.loading = false;
         state.items = state.items.filter((r) => r._id !== action.payload);
+        state.reports = state.items;
       })
 
       // View Report
@@ -135,6 +164,7 @@ const reportSlice = createSlice({
         } else {
           state.items.push(action.payload);
         }
+        state.reports = state.items;
       })
 
       .addCase(fetchSchoolReports.pending, (state) => {

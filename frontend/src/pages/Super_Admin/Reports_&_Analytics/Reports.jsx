@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Space } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -26,21 +26,16 @@ const Reports = () => {
     status: "",
   });
   const { user } = useSelector((state) => state.auth) || {};
-  // ✅ Correctly parse role 
-  const storedUser = user;
-  let parsedRole;
-  
-  if (storedUser) {
-    try {
-     
-      parsedRole = user?.role?.name;
-      
-    } catch (e) {
-      console.error("Invalid user object in memoryStorage", e);
-    }
-  }
-  
-  
+  const parsedRole = useMemo(() => {
+    const role = user?.role;
+
+    if (typeof role === "string") return role;
+    if (typeof role?.name === "string") return role.name;
+    if (typeof user?.roleId?.name === "string") return user.roleId.name;
+
+    return "User";
+  }, [user]);
+
 
   useEffect(() => {
   if (parsedRole) {
