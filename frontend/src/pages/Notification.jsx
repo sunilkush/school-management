@@ -202,32 +202,32 @@ const Notification = () => {
       title: "Visible",
       value: visibleNotifications.length,
       icon: <InboxOutlined />,
-      color: "#1677ff",
-      background: "linear-gradient(135deg, #e6f4ff 0%, #ffffff 100%)",
+      color: "#7c3aed",
+      background: "linear-gradient(135deg, #ede9fe 0%, var(--surface) 100%)",
       helper: "Assigned to you",
     },
     {
       title: "Unread",
       value: unreadCount,
       icon: <BellOutlined />,
-      color: "#fa8c16",
-      background: "linear-gradient(135deg, #fff7e6 0%, #ffffff 100%)",
+      color: "#f97316",
+      background: "linear-gradient(135deg, #fff7ed 0%, var(--surface) 100%)",
       helper: "Needs attention",
     },
     {
       title: "Scheduled",
       value: analytics.scheduled || 0,
       icon: <CalendarOutlined />,
-      color: "#722ed1",
-      background: "linear-gradient(135deg, #f9f0ff 0%, #ffffff 100%)",
+      color: "#0284c7",
+      background: "linear-gradient(135deg, #e0f2fe 0%, var(--surface) 100%)",
       helper: "Planned delivery",
     },
     {
       title: "Opened",
       value: analytics.opened || 0,
       icon: <EyeOutlined />,
-      color: "#52c41a",
-      background: "linear-gradient(135deg, #f6ffed 0%, #ffffff 100%)",
+      color: "#059669",
+      background: "linear-gradient(135deg, #d1fae5 0%, var(--surface) 100%)",
       helper: "Engagement",
     },
   ];
@@ -289,14 +289,15 @@ const Notification = () => {
   };
 
   return (
-    <div style={{ width: "100%", padding: pagePadding, background: "#f5f7fb", minHeight: "100vh" }}>
+    <div style={{ width: "100%", padding: pagePadding, background: "var(--surface-page)", minHeight: "100vh" }}>
       <Space direction="vertical" size={isMobile ? 14 : 20} style={{ width: "100%" }}>
         <Card
           bordered={false}
           style={{
             borderRadius: 20,
             overflow: "hidden",
-            background: "linear-gradient(135deg, #f0f7ff 0%, #ffffff 55%, #f9f0ff 100%)",
+            background: "var(--surface)",
+            border: "1px solid var(--border-muted)",
             boxShadow: "0 12px 32px rgba(15, 23, 42, 0.06)",
           }}
           styles={{ body: { padding: isMobile ? 18 : 28 } }}
@@ -310,7 +311,7 @@ const Notification = () => {
                       width: 44,
                       height: 44,
                       borderRadius: 14,
-                      background: "#1677ff",
+                      background: "var(--primary)",
                       color: "#fff",
                       display: "inline-flex",
                       alignItems: "center",
@@ -370,7 +371,7 @@ const Notification = () => {
                   >
                     {stat.icon}
                   </span>
-                  <Statistic title={stat.title} value={stat.value} valueStyle={{ fontSize: isMobile ? 22 : 28, color: "#111827" }} />
+                  <Statistic title={stat.title} value={stat.value} valueStyle={{ fontSize: isMobile ? 22 : 28, color: "var(--text-primary)" }} />
                   {!isMobile && <Text type="secondary">{stat.helper}</Text>}
                 </Space>
               </Card>
@@ -544,10 +545,10 @@ const Notification = () => {
                         style={{
                           width: "100%",
                           cursor: item.isRead ? "default" : "pointer",
-                          background: item.isRead ? "#ffffff" : "linear-gradient(90deg, #f0f7ff 0%, #ffffff 100%)",
-                          borderLeft: item.isRead ? "4px solid transparent" : "4px solid #1677ff",
+                          background: item.isRead ? "var(--surface)" : "linear-gradient(90deg, #ede9fe 0%, var(--surface) 100%)",
+                          borderLeft: item.isRead ? "4px solid transparent" : "4px solid var(--primary)",
                           borderRadius: 16,
-                          boxShadow: item.isRead ? "0 4px 16px rgba(15, 23, 42, 0.04)" : "0 8px 24px rgba(22, 119, 255, 0.10)",
+                          boxShadow: item.isRead ? "0 4px 16px rgba(15, 23, 42, 0.04)" : "0 8px 24px rgba(124, 58, 237, 0.10)",
                         }}
                         styles={{ body: { padding: isMobile ? 14 : 18 } }}
                       >
@@ -578,7 +579,7 @@ const Notification = () => {
                               </Space>
                             </Col>
                           </Row>
-                          <Paragraph style={{ marginBottom: 0, color: "#374151" }}>{notificationMessage}</Paragraph>
+                          <Paragraph style={{ marginBottom: 0, color: "var(--text-secondary)" }}>{notificationMessage}</Paragraph>
                         </Space>
                       </Card>
                     </List.Item>

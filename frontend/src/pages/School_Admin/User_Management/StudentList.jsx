@@ -1,9 +1,22 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Modal, Spin } from "antd";
+import {
+  Table, Modal, Input, Select, Button, Space, Tooltip, Tag, Badge,
+} from "antd";
+import {
+  PlusOutlined, ReloadOutlined, ExportOutlined, SearchOutlined,
+  TeamOutlined, CheckCircleOutlined, BookOutlined, EyeOutlined,
+  LockOutlined,
+} from "@ant-design/icons";
+import { Cake } from "lucide-react";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
-import { User,Check,Landmark,Eye ,Cake} from "lucide-react";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, pageCard, toolbarRow, tableContainer,
+  tableHeadCss, avatarStyle, pill, emptyState, statCard, statLabel, statValue,
+} from "../../../styles/pageStyles";
+
 const bloodGroupColor = {
   "A+":  { bg: "#fef2f2", color: "#dc2626" },
   "A-":  { bg: "#fff7ed", color: "#c2410c" },
@@ -15,33 +28,27 @@ const bloodGroupColor = {
   "O-":  { bg: "#f0fdf4", color: "#16a34a" },
 };
 
-const AVATAR_COLORS = [
-  { bg: "#ede9fe", color: "#7c6ff7" },
-  { bg: "#f0fdf8", color: "#1d9e75" },
-  { bg: "#fef9ec", color: "#e69020" },
-  { bg: "#fce7f3", color: "#db2777" },
-  { bg: "#e0f2fe", color: "#0284c7" },
+const STAT_META = [
+  { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "#7c3aed" },
+  { key: "active",  label: "Active",          icon: <CheckCircleOutlined />, color: "#10b981" },
+  { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "#0284c7" },
+  { key: "showing", label: "Showing",         icon: <EyeOutlined />,         color: "#f97316" },
 ];
-
-const getAvatarColor = (name = "") => {
-  const idx = (name.charCodeAt(0) || 0) % AVATAR_COLORS.length;
-  return AVATAR_COLORS[idx];
-};
 
 const StudentList = () => {
   const dispatch = useDispatch();
-  const { schoolStudents, loading } = useSelector((state) => state.students);
-  const { user } = useSelector((state) => state.auth);
-  const { selectedAcademicYear, activeYear } = useSelector((state) => state.academicYear);
+  const { schoolStudents, loading } = useSelector((s) => s.students);
+  const { user } = useSelector((s) => s.auth);
+  const { selectedAcademicYear, activeYear } = useSelector((s) => s.academicYear);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [isModalOpen, setIsModalOpen]     = useState(false);
+  const [searchText, setSearchText]       = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedSection, setSelectedSection] = useState("all");
 
-  const schoolId = user?.school?._id;
+  const schoolId       = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id || activeYear?._id;
-  const isSchoolAdmin = user?.role?.name === "School Admin";
+  const isSchoolAdmin  = user?.role?.name === "School Admin";
 
   useEffect(() => {
     if (!isSchoolAdmin || !schoolId) return;
@@ -54,159 +61,134 @@ const StudentList = () => {
     return [];
   }, [schoolStudents]);
 
-  const formattedStudents = useMemo(() =>
-    studentsArray.map((stu) => ({
-      key: stu._id,
-      name: stu.user?.name ?? "N/A",
-      email: stu.user?.email ?? "N/A",
-      schoolClass: stu.schoolClass?.name ?? "N/A",
-      section: stu.section?.name ?? "N/A",
-      dateOfBirth: stu.student?.dateOfBirth
-        ? new Date(stu.student.dateOfBirth).toISOString().split("T")[0]
-        : "N/A",
-      mobileNumber: stu.mobileNumber ?? "N/A",
-      admissionDate: stu.admissionDate
-        ? new Date(stu.admissionDate).toISOString().split("T")[0]
-        : "N/A",
-      bloodGroup: stu.student?.bloodGroup ?? "N/A",
-      academicYear: stu.academicYear?.name ?? "N/A",
-      status: stu.status ?? "Active",
+  const formatted = useMemo(() =>
+    studentsArray.map((s) => ({
+      key: s._id,
+      name:          s.user?.name          ?? "N/A",
+      email:         s.user?.email         ?? "N/A",
+      schoolClass:   s.schoolClass?.name   ?? "N/A",
+      section:       s.section?.name       ?? "N/A",
+      dateOfBirth:   s.student?.dateOfBirth
+        ? new Date(s.student.dateOfBirth).toISOString().split("T")[0] : "N/A",
+      mobileNumber:  s.mobileNumber        ?? "N/A",
+      admissionDate: s.admissionDate
+        ? new Date(s.admissionDate).toISOString().split("T")[0] : "N/A",
+      bloodGroup:    s.student?.bloodGroup ?? "N/A",
+      academicYear:  s.academicYear?.name  ?? "N/A",
+      status:        s.status              ?? "Active",
     })),
     [studentsArray]
   );
 
   const classOptions = useMemo(() => {
-    const classes = formattedStudents.map((s) => s.schoolClass).filter(Boolean);
-    return ["all", ...new Set(classes)];
-  }, [formattedStudents]);
+    const cls = formatted.map((s) => s.schoolClass).filter(Boolean);
+    return [{ value: "all", label: "All Classes" }, ...([...new Set(cls)].map((c) => ({ value: c, label: c })))];
+  }, [formatted]);
 
   const sectionOptions = useMemo(() => {
-    const sections = formattedStudents
+    const secs = formatted
       .filter((s) => selectedClass === "all" || s.schoolClass === selectedClass)
-      .map((s) => s.section)
-      .filter(Boolean);
-    return ["all", ...new Set(sections)];
-  }, [formattedStudents, selectedClass]);
+      .map((s) => s.section).filter(Boolean);
+    return [{ value: "all", label: "All Sections" }, ...([...new Set(secs)].map((s) => ({ value: s, label: s })))];
+  }, [formatted, selectedClass]);
 
-  const filteredStudents = useMemo(() =>
-    formattedStudents.filter((stu) => {
-      const matchSearch =
-        stu.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        stu.email.toLowerCase().includes(searchText.toLowerCase());
-      const matchClass = selectedClass === "all" || stu.schoolClass === selectedClass;
-      const matchSection = selectedSection === "all" || stu.section === selectedSection;
-      return matchSearch && matchClass && matchSection;
+  const filtered = useMemo(() =>
+    formatted.filter((s) => {
+      const q = searchText.toLowerCase();
+      return (
+        (s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)) &&
+        (selectedClass   === "all" || s.schoolClass === selectedClass) &&
+        (selectedSection === "all" || s.section     === selectedSection)
+      );
     }),
-    [formattedStudents, searchText, selectedClass, selectedSection]
+    [formatted, searchText, selectedClass, selectedSection]
   );
 
   const stats = useMemo(() => ({
-    total: formattedStudents.length,
-    active: formattedStudents.filter((s) => s.status === "Active").length,
-    classes: new Set(formattedStudents.map((s) => s.schoolClass)).size,
-    showing: filteredStudents.length,
-  }), [formattedStudents, filteredStudents]);
+    total:   formatted.length,
+    active:  formatted.filter((s) => s.status === "Active").length,
+    classes: new Set(formatted.map((s) => s.schoolClass)).size,
+    showing: filtered.length,
+  }), [formatted, filtered]);
 
   const columns = [
     {
       title: "Student",
       dataIndex: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (name, record) => {
-        const { bg, color } = getAvatarColor(name);
-        return (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: "50%",
-              background: bg, color, fontWeight: 700, fontSize: 13,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              {name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div style={{ fontWeight: 600, color: "#1a1a2e", fontSize: 13 }}>{name}</div>
-              <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>{record.email}</div>
-            </div>
+      render: (name, r) => (
+        <Space>
+          <div style={avatarStyle(name, 38)}>{name.charAt(0).toUpperCase()}</div>
+          <div>
+            <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{name}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{r.email}</div>
           </div>
-        );
-      },
+        </Space>
+      ),
     },
     {
       title: "Class",
       dataIndex: "schoolClass",
-      width: 130,
-      render: (cls) => (
-        <span style={{ display: "inline-block", padding: "2px 10px", background: "#f0eeff", color: "#7c6ff7", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
-          {cls}
-        </span>
-      ),
+      width: 110,
+      render: (v) => <span style={pill("#7c3aed")}>{v}</span>,
     },
     {
       title: "Section",
       dataIndex: "section",
       width: 90,
-      render: (sec) => (
-        <span style={{ display: "inline-block", padding: "2px 10px", background: "#f0fdf8", color: "#1d9e75", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
-          {sec}
-        </span>
-      ),
+      render: (v) => <span style={pill("#059669")}>{v}</span>,
     },
     {
       title: "Blood Group",
       dataIndex: "bloodGroup",
       width: 110,
       render: (bg) => {
-        const style = bloodGroupColor[bg];
-        if (!style) return <span style={{ color: "#ccc" }}>—</span>;
-        return (
-          <span style={{ display: "inline-block", padding: "2px 10px", background: style.bg, color: style.color, borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
-            {bg}
-          </span>
-        );
+        const s = bloodGroupColor[bg];
+        if (!s) return <span style={{ color: "var(--text-muted)" }}>—</span>;
+        return <span style={pill(s.color, s.bg)}>{bg}</span>;
       },
     },
     {
       title: "Date of Birth",
       dataIndex: "dateOfBirth",
-      width: 150,
-      render: (dob) => <span style={{ fontSize: 12, color: "#666",display:`flex`, alignItems: "center",justifyContent:"center", gap: 6 }}><Cake /> {dob}</span>,
+      width: 140,
+      render: (d) => (
+        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 5 }}>
+          <Cake size={13} /> {d}
+        </span>
+      ),
     },
     {
       title: "Phone",
       dataIndex: "mobileNumber",
       width: 130,
-      render: (phone) => <span style={{ fontSize: 12, color: "#666" }}>{phone}</span>,
+      render: (v) => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v}</span>,
     },
     {
       title: "Admission",
       dataIndex: "admissionDate",
       width: 120,
-      render: (date) => <span style={{ fontSize: 12, color: "#666" }}>{date}</span>,
+      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v}</span>,
     },
     {
       title: "Academic Year",
       dataIndex: "academicYear",
       width: 130,
-      render: (year) => (
-        <span style={{ display: "inline-block", padding: "2px 10px", background: "#fef9ec", color: "#e69020", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
-          {year}
-        </span>
-      ),
+      render: (v) => <span style={pill("#f97316")}>{v}</span>,
     },
     {
       title: "Status",
       dataIndex: "status",
       width: 100,
-      render: (status) => {
-        const isActive = status === "Active";
-        const isPending = status === "Pending";
-        const statusColor = isActive ? "#1d9e75" : isPending ? "#e69020" : "#e24b4a";
-        const statusBg   = isActive ? "#d4f0e8"  : isPending ? "#fef0c7" : "#fce8e8";
+      render: (s) => {
+        const isActive  = s === "Active";
+        const isPending = s === "Pending";
+        const color = isActive ? "#15803d" : isPending ? "#92400e" : "#991b1b";
+        const dot   = isActive ? "#22c55e" : isPending ? "#f59e0b" : "#ef4444";
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: statusColor, boxShadow: `0 0 0 2px ${statusBg}` }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: statusColor }}>{status}</span>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, boxShadow: `0 0 0 2px ${dot}30` }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color }}>{s}</span>
           </div>
         );
       },
@@ -215,261 +197,140 @@ const StudentList = () => {
 
   if (!isSchoolAdmin) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
-        padding: "32px 16px",
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        <div style={{ textAlign: "center", padding: "56px 32px", background: "#fff", borderRadius: 20, boxShadow: "0 8px 40px rgba(124,111,247,0.1)" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-          <div style={{ fontWeight: 700, fontSize: 18, color: "#1a1a2e", marginBottom: 8 }}>Access Restricted</div>
-          <div style={{ fontSize: 14, color: "#aaa" }}>You don't have permission to view this page.</div>
+      <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{
+          textAlign: "center", padding: "56px 32px", background: "var(--surface)",
+          borderRadius: 20, border: "1px solid var(--border-muted)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+        }}>
+          <LockOutlined style={{ fontSize: 44, color: "var(--text-muted)", marginBottom: 16, display: "block" }} />
+          <div style={{ fontWeight: 700, fontSize: 18, color: "var(--text-primary)", marginBottom: 8 }}>Access Restricted</div>
+          <div style={{ fontSize: 14, color: "var(--text-muted)" }}>You don't have permission to view this page.</div>
         </div>
       </div>
     );
   }
 
-  if (!user) return <Spin size="large" fullscreen />;
-
   return (
-    <div style={{
-      minHeight: "100vh",
-     // background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
-      padding: "24px",
-     // fontFamily: "'Inter', -apple-system, sans-serif",
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    <>
+      <style>{tableHeadCss("stu-table")}</style>
 
-        .stu-table .ant-table { background: transparent !important; }
-        .stu-table .ant-table-thead > tr > th {
-          background: #f8f7ff !important;
-          color: #aaa !important;
-          font-size: 11px !important;
-          font-weight: 700 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.08em !important;
-          border-bottom: 1px solid #ede9fe !important;
-          padding: 12px 16px !important;
+      <PageHeader
+        title="Students"
+        subtitle={`${selectedAcademicYear?.name ?? "Current"} Academic Year · ${user?.school?.name ?? "School"}`}
+        icon={<TeamOutlined />}
+        extra={
+          <Space size={8}>
+            <Tooltip title="Refresh">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }))}
+              />
+            </Tooltip>
+            <Button icon={<ExportOutlined />}>Export</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+              Add Student
+            </Button>
+          </Space>
         }
-        .stu-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f5f3ff !important;
-          padding: 13px 16px !important;
-        }
-        .stu-table .ant-table-tbody > tr:hover > td { background: #faf8ff !important; }
-        .stu-table .ant-table-tbody > tr:last-child > td { border-bottom: none !important; }
-        .stu-table .ant-pagination-item-active { border-color: #7c6ff7 !important; }
-        .stu-table .ant-pagination-item-active a { color: #7c6ff7 !important; }
-        .stu-table .ant-table-column-sorter-up.active svg,
-        .stu-table .ant-table-column-sorter-down.active svg { color: #7c6ff7 !important; }
+      />
 
-        .stu-search {
-          height: 40px;
-          border-radius: 10px !important;
-          border: 1.5px solid #e8e4ff !important;
-          background: #fdfcff !important;
-          font-size: 13px !important;
-          padding: 0 12px 0 38px !important;
-          outline: none; color: #1a1a2e;
-          transition: border-color 0.2s, box-shadow 0.2s;
-          width: 220px;
-        }
-        .stu-search:focus {
-          border-color: #7c6ff7 !important;
-          box-shadow: 0 0 0 3px rgba(124,111,247,0.1) !important;
-        }
-        .stu-search::placeholder { color: #ccc; }
-        .stu-search-wrap { position: relative; }
-        .stu-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #c5bef5; font-size: 14px; pointer-events: none; }
-
-        .stu-filter {
-          height: 40px;
-          border-radius: 10px !important;
-          border: 1.5px solid #e8e4ff !important;
-          background: #fdfcff !important;
-          font-size: 13px !important;
-          padding: 0 10px !important;
-          outline: none; color: #1a1a2e; cursor: pointer;
-          min-width: 130px;
-        }
-        .stu-filter:focus { border-color: #7c6ff7 !important; }
-        .stu-filter:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .stu-btn {
-          display: inline-flex; align-items: center; gap: 7px;
-          padding: 0 18px; height: 40px; border-radius: 10px;
-          font-size: 13px; font-weight: 600; cursor: pointer;
-          border: none; transition: all 0.2s;
-        }
-        .stu-btn.ghost {
-          background: #f0eeff; color: #7c6ff7;
-          border: 1.5px solid #ddd8ff;
-        }
-        .stu-btn.ghost:hover { background: #e4dfff; }
-        .stu-btn.primary {
-          background: linear-gradient(135deg, #7c6ff7 0%, #5a50c9 100%);
-          color: #fff;
-          box-shadow: 0 4px 14px rgba(124,111,247,0.35);
-        }
-        .stu-btn.primary:hover {
-          box-shadow: 0 6px 20px rgba(124,111,247,0.45);
-          transform: translateY(-1px);
-        }
-      `}</style>
-
-      {/* Add Student Modal */}
-      <Modal
-        open={isModalOpen}
-        footer={null}
-        onCancel={() => setIsModalOpen(false)}
-        width={860}
-        centered
-        destroyOnClose
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 9, background: "#f0eeff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🎓</div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "#1a1a2e" }}>New Student Admission</div>
-              <div style={{ fontSize: 12, color: "#aaa", fontWeight: 400 }}>Fill in the details below</div>
-            </div>
-          </div>
-        }
-        styles={{ header: { borderBottom: "1px solid #f0eeff", paddingBottom: 14 } }}
-      >
-        <AdmissionForm onClose={() => setIsModalOpen(false)} />
-      </Modal>
-
-      <div style={{
-        background: "#fff", borderRadius: 20,
-        boxShadow: "0 8px 40px rgba(124,111,247,0.1), 0 2px 8px rgba(0,0,0,0.04)",
-        overflow: "hidden", width:"100%", margin: "0 auto",
-      }}>
-
-        {/* Header */}
-        <div style={{
-          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
-          padding: "10px", position: "relative", overflow: "hidden",
-        }}>
-          <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
-          <div style={{ position: "absolute", bottom: -50, right: 80, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-          <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-            <div>
-             
-              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#fff", letterSpacing: "-0.01em" }}>
-                Students
-              </h1>
-              <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
-                {selectedAcademicYear?.name ?? "Current"} Academic Year · {user?.school?.name ?? "School"}
-              </p>
-            </div>
-            <button className="stu-btn primary" style={{ background: "rgba(255,255,255,0.2)", boxShadow: "none", border: "1.5px solid rgba(255,255,255,0.3)" }} onClick={() => setIsModalOpen(true)}>
-              + Add Student
-            </button>
-          </div>
-        </div>
-
-        <div style={{ padding: "15px" }}>
-
-          {/* Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 28 }}>
-            {[
-              { label: "Total Students", value: stats.total,   icon: <User /> , color: "#7c6ff7", bg: "#f0eeff" },
-              { label: "Active",         value: stats.active,  icon: <Check />, color: "#1d9e75", bg: "#f0fdf8" },
-              { label: "Classes",        value: stats.classes, icon: <Landmark />, color: "#0284c7", bg: "#e0f2fe" },
-              { label: "Showing",        value: stats.showing, icon: <Eye />, color: "#e69020", bg: "#fef9ec" },
-            ].map((stat) => (
-              <div key={stat.label} style={{
-                padding: "16px 20px", background: stat.bg, borderRadius: 14,
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: stat.color, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-                    {stat.label}
-                  </div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
-                </div>
-                <div style={{ fontSize: 28, opacity: 0.7 }}>{stat.icon}</div>
+      <div style={pageWrapper}>
+        <Modal
+          open={isModalOpen}
+          footer={null}
+          onCancel={() => setIsModalOpen(false)}
+          width={860}
+          centered
+          destroyOnClose
+          title={
+            <Space>
+              <div style={{
+                width: 34, height: 34, borderRadius: 9,
+                background: "var(--primary-light)", color: "var(--primary)",
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
+              }}>🎓</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>New Student Admission</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the details below</div>
               </div>
-            ))}
-          </div>
+            </Space>
+          }
+        >
+          <AdmissionForm onClose={() => setIsModalOpen(false)} />
+        </Modal>
 
-          {/* Toolbar */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#b0a8f5", textTransform: "uppercase", letterSpacing: "0.12em", marginRight: 4 }}>
-              All Students
+        <div style={pageCard}>
+          <div style={{ padding: "20px 20px 0" }}>
+            {/* KPI Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+              {STAT_META.map(({ key, label, icon, color }) => (
+                <div key={key} style={statCard({ color })}>
+                  <div>
+                    <div style={statLabel(color)}>{label}</div>
+                    <div style={statValue(color)}>{stats[key]}</div>
+                  </div>
+                  <div style={{ fontSize: 24, color, opacity: 0.6 }}>{icon}</div>
+                </div>
+              ))}
             </div>
-            <div style={{ flex: 1 }} />
 
-            <div className="stu-search-wrap">
-              <span className="stu-search-icon">🔍</span>
-              <input
-                className="stu-search"
+            {/* Toolbar */}
+            <div style={toolbarRow}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                All Students
+              </span>
+              <div style={{ flex: 1 }} />
+              <Input.Search
                 placeholder="Search by name or email…"
+                allowClear
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 240 }}
+              />
+              <Select
+                value={selectedClass}
+                options={classOptions}
+                onChange={(v) => { setSelectedClass(v); setSelectedSection("all"); }}
+                style={{ width: 140 }}
+              />
+              <Select
+                value={selectedSection}
+                options={sectionOptions}
+                onChange={(v) => setSelectedSection(v)}
+                disabled={selectedClass === "all"}
+                style={{ width: 130 }}
               />
             </div>
-
-            <select
-              className="stu-filter"
-              value={selectedClass}
-              onChange={(e) => { setSelectedClass(e.target.value); setSelectedSection("all"); }}
-            >
-              {classOptions.map((cls) => (
-                <option key={cls} value={cls}>{cls === "all" ? "All Classes" : cls}</option>
-              ))}
-            </select>
-
-            <select
-              className="stu-filter"
-              value={selectedSection}
-              onChange={(e) => setSelectedSection(e.target.value)}
-              disabled={selectedClass === "all"}
-            >
-              {sectionOptions.map((sec) => (
-                <option key={sec} value={sec}>{sec === "all" ? "All Sections" : sec}</option>
-              ))}
-            </select>
-
-            <button className="stu-btn ghost" onClick={() => dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }))}>
-              ↺ Refresh
-            </button>
-
-            <button className="stu-btn ghost">
-              ↓ Export
-            </button>
           </div>
 
-          {/* Empty State */}
-          {!loading && filteredStudents.length === 0 ? (
-            <div style={{
-              textAlign: "center", padding: "56px 24px",
-              border: "1.5px dashed #ddd8ff", borderRadius: 16,
-              background: "#faf9ff",
-            }}>
-              <div style={{ fontSize: 44, marginBottom: 12 }}>🎓</div>
-              <div style={{ fontWeight: 600, color: "#aaa", marginBottom: 4 }}>
-                {searchText || selectedClass !== "all" ? "No students match your filters" : "No students enrolled yet"}
-              </div>
-              <div style={{ fontSize: 13, color: "#c5bef5" }}>
-                {searchText || selectedClass !== "all"
-                  ? "Try adjusting your search or filter"
-                  : "Click \"Add Student\" to enroll the first student"}
+          {/* Table / Empty */}
+          {!loading && filtered.length === 0 ? (
+            <div style={{ padding: "0 20px 20px" }}>
+              <div style={emptyState}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🎓</div>
+                <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
+                  {searchText || selectedClass !== "all" ? "No students match your filters" : "No students enrolled yet"}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                  {searchText || selectedClass !== "all"
+                    ? "Try adjusting your search or filter"
+                    : 'Click "Add Student" to enroll the first student'}
+                </div>
               </div>
             </div>
           ) : (
-            <div className="stu-table" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #ede9fe" }}>
+            <div className="stu-table" style={{ ...tableContainer, borderRadius: 0, border: "none", borderTop: "1px solid var(--border-muted)" }}>
               <Table
                 loading={loading}
                 columns={columns}
-                dataSource={filteredStudents}
+                dataSource={filtered}
                 pagination={{
                   pageSize: 10,
                   size: "small",
                   showSizeChanger: true,
                   showTotal: (total, range) => (
-                    <span style={{ fontSize: 12, color: "#aaa" }}>{range[0]}–{range[1]} of {total} students</span>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{range[0]}–{range[1]} of {total} students</span>
                   ),
                 }}
                 scroll={{ x: 1000 }}
@@ -478,7 +339,7 @@ const StudentList = () => {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

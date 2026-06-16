@@ -1,38 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Typography,
-  Input,
-  Select,
-  Tag,
-  Modal,
-  Form,
-  message,
-  Popconfirm,
-  Row,
-  Col,
-  Statistic,
-  Tooltip,
+  Table, Button, Space, Input, Select, Tag, Modal, Form, message,
+  Popconfirm, Row, Col, Tooltip,
 } from "antd";
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  BookOutlined,
-  SearchOutlined,
+  PlusOutlined, EditOutlined, DeleteOutlined, BookOutlined,
+  ReloadOutlined, SearchOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  createLibraryBook,
-  deleteLibraryBook,
-  fetchLibraryBooks,
-  updateLibraryBook,
+  createLibraryBook, deleteLibraryBook, fetchLibraryBooks, updateLibraryBook,
 } from "../../../features/librarySlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, pageCard, toolbarRow, tableHeadCss, statCard, statLabel, statValue,
+  pill, emptyState, iconWell,
+} from "../../../styles/pageStyles";
 
-const { Title, Text } = Typography;
 const { Option } = Select;
 
 const normalizeBook = (book) => ({
@@ -50,6 +34,12 @@ const normalizeBook = (book) => ({
   schoolId: book.schoolId?._id || book.schoolId,
 });
 
+const STAT_META = [
+  { key: "total",     label: "Total Books", color: "#7c3aed" },
+  { key: "available", label: "Available",   color: "#059669" },
+  { key: "issued",    label: "Issued",      color: "#dc2626" },
+];
+
 const Books = () => {
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,11 +48,10 @@ const Books = () => {
   const [categoryFilter, setCategoryFilter] = useState();
   const [statusFilter, setStatusFilter] = useState();
   const [form] = Form.useForm();
-    const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
+
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   const { user } = useSelector((state) => state.auth || {});
-  const { books: rawBooks = [], booksLoading, actionLoading } = useSelector(
-    (state) => state.library || {}
-  );
+  const { books: rawBooks = [], booksLoading, actionLoading } = useSelector((state) => state.library || {});
 
   const schoolId = user?.school?._id || user?.schoolId;
   const academicYearId = selectedAcademicYear?._id;
@@ -76,16 +65,13 @@ const Books = () => {
     }
   }, [dispatch]);
 
-  useEffect(() => {
-    fetchBooks();
-  }, [fetchBooks]);
+  useEffect(() => { fetchBooks(); }, [fetchBooks]);
 
   const handleSave = async (values) => {
     if (!schoolId && !editingBook?.schoolId) {
       message.error("School context not found. Please re-login.");
       return;
     }
-
     const payload = {
       title: values.title,
       author: values.author,
@@ -98,7 +84,6 @@ const Books = () => {
       schoolId: editingBook?.schoolId || schoolId,
       academicYearId: editingBook?.academicYearId || academicYearId || null,
     };
-
     try {
       if (editingBook?._id) {
         await dispatch(updateLibraryBook({ id: editingBook._id, payload })).unwrap();
@@ -107,7 +92,6 @@ const Books = () => {
         await dispatch(createLibraryBook(payload)).unwrap();
         message.success("Book added successfully");
       }
-
       setIsModalOpen(false);
       setEditingBook(null);
       form.resetFields();
@@ -130,15 +114,12 @@ const Books = () => {
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
       const search = searchText.trim().toLowerCase();
-      const bySearch =
-        !search ||
+      const bySearch = !search ||
         book.title.toLowerCase().includes(search) ||
         book.author.toLowerCase().includes(search) ||
         book.isbn.toLowerCase().includes(search);
-
       const byCategory = !categoryFilter || book.category === categoryFilter;
       const byStatus = !statusFilter || book.status === statusFilter;
-
       return bySearch && byCategory && byStatus;
     });
   }, [books, searchText, categoryFilter, statusFilter]);
@@ -148,41 +129,59 @@ const Books = () => {
     [books]
   );
 
+  const stats = useMemo(() => ({
+    total:     books.length,
+    available: books.filter((b) => b.quantity > 0).length,
+    issued:    books.filter((b) => b.quantity === 0).length,
+  }), [books]);
+
   const columns = [
     {
-      title: "Book Name",
+      title: "Book",
       dataIndex: "title",
       key: "title",
-      render: (text) => <Text strong>{text}</Text>,
+      render: (text, r) => (
+        <div>
+          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{text}</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{r.author}</div>
+        </div>
+      ),
     },
-    { title: "Author", dataIndex: "author", key: "author" },
-    { title: "Category", dataIndex: "category", key: "category" },
+    { title: "Category", dataIndex: "category", key: "category",
+      render: (v) => <span style={pill("#7c3aed", "#ede9fe")}>{v}</span>,
+    },
+    { title: "ISBN", dataIndex: "isbn", key: "isbn",
+      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v || "—"}</span>,
+    },
     {
       title: "Available",
       dataIndex: "quantity",
       key: "quantity",
-      render: (q) =>
-        q > 0 ? <Tag color="green">{q}</Tag> : <Tag color="red">Out</Tag>,
+      render: (q) => q > 0
+        ? <span style={pill("#059669", "#d1fae5")}>{q} / {books.find((b) => b.quantity === q)?.totalCopies ?? q}</span>
+        : <span style={pill("#dc2626", "#fee2e2")}>Out of stock</span>,
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) =>
-        status === "Available" ? (
-          <Tag color="green">Available</Tag>
-        ) : (
-          <Tag color="orange">Issued</Tag>
-        ),
+      render: (status) => status === "Available"
+        ? <span style={pill("#059669", "#d1fae5")}>Available</span>
+        : <span style={pill("#f97316", "#fff7ed")}>Issued</span>,
+    },
+    {
+      title: "Shelf",
+      dataIndex: "shelfLocation",
+      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v || "—"}</span>,
     },
     {
       title: "Actions",
       align: "center",
       render: (_, record) => (
-        <Space>
+        <Space size={4}>
           <Tooltip title="Edit Book">
             <Button
-              icon={<EditOutlined />}
+              type="text" size="small" icon={<EditOutlined />} style={{ color: "#f59e0b" }}
               onClick={() => {
                 setEditingBook(record);
                 form.setFieldsValue({
@@ -199,13 +198,16 @@ const Books = () => {
               }}
             />
           </Tooltip>
-
           <Popconfirm
             title="Delete this book?"
+            description="This action cannot be undone."
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(record._id)}
           >
             <Tooltip title="Delete Book">
-              <Button danger icon={<DeleteOutlined />} />
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -214,141 +216,176 @@ const Books = () => {
   ];
 
   return (
-    <Card>
-      <Row justify="space-between" align="middle">
-        <Title level={3}>
-          <BookOutlined /> Library Books
-        </Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setIsModalOpen(true)}
-        >
-          Add Book
-        </Button>
-      </Row>
+    <>
+      <style>{tableHeadCss("books-table")}</style>
 
-      <Row gutter={16} style={{ marginTop: 16 }}>
-        <Col span={6}>
-          <Statistic title="Total Books" value={books.length} />
-        </Col>
-        <Col span={6}>
-          <Statistic
-            title="Available"
-            value={books.filter((b) => b.quantity > 0).length}
-          />
-        </Col>
-        <Col span={6}>
-          <Statistic
-            title="Issued"
-            value={books.filter((b) => b.quantity === 0).length}
-          />
-        </Col>
-      </Row>
-
-      <Row gutter={16} style={{ margin: "16px 0" }}>
-        <Col span={8}>
-          <Input
-            prefix={<SearchOutlined />}
-            placeholder="Search book / author / ISBN"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Category"
-            style={{ width: "100%" }}
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-          >
-            {categories.map((category) => (
-              <Option key={category} value={category}>
-                {category}
-              </Option>
-            ))}
-          </Select>
-        </Col>
-        <Col span={6}>
-          <Select
-            allowClear
-            placeholder="Status"
-            style={{ width: "100%" }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          >
-            <Option value="Available">Available</Option>
-            <Option value="Issued">Issued</Option>
-          </Select>
-        </Col>
-      </Row>
-
-      <Table
-        columns={columns}
-        dataSource={filteredBooks}
-        rowKey="_id"
-        bordered
-        loading={booksLoading || actionLoading}
-        pagination={{ pageSize: 5 }}
-        locale={{ emptyText: "No books found" }}
+      <PageHeader
+        title="Library Books"
+        subtitle={`${selectedAcademicYear?.name ?? "Current Year"} · ${user?.school?.name ?? "School"}`}
+        icon={<BookOutlined />}
+        extra={
+          <Space size={8}>
+            <Tooltip title="Refresh">
+              <Button icon={<ReloadOutlined />} onClick={fetchBooks} />
+            </Tooltip>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingBook(null); form.resetFields(); setIsModalOpen(true); }}>
+              Add Book
+            </Button>
+          </Space>
+        }
       />
 
-      <Modal
-        title={editingBook ? "Edit Book" : "Add Book"}
-        open={isModalOpen}
-        confirmLoading={actionLoading}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setEditingBook(null);
-          form.resetFields();
-        }}
-        onOk={() => form.submit()}
-        okText="Save"
-      >
-        <Form form={form} layout="vertical" onFinish={handleSave}>
-          <Form.Item name="title" label="Book Title" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
+      <div style={pageWrapper}>
+        <div style={pageCard}>
+          <div style={{ padding: "20px 20px 0" }}>
+            {/* KPI stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+              {STAT_META.map(({ key, label, color }) => (
+                <div key={key} style={statCard({ color })}>
+                  <div>
+                    <div style={statLabel(color)}>{label}</div>
+                    <div style={statValue(color)}>{stats[key]}</div>
+                  </div>
+                  <div style={{ fontSize: 28, color, opacity: 0.5 }}><BookOutlined /></div>
+                </div>
+              ))}
+            </div>
 
-          <Form.Item name="author" label="Author" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
+            {/* Toolbar */}
+            <div style={toolbarRow}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                All Books
+              </span>
+              <div style={{ flex: 1 }} />
+              <Input.Search
+                prefix={<SearchOutlined />}
+                placeholder="Search book / author / ISBN"
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 260 }}
+              />
+              <Select
+                allowClear
+                placeholder="Category"
+                style={{ width: 160 }}
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+              >
+                {categories.map((category) => (
+                  <Option key={category} value={category}>{category}</Option>
+                ))}
+              </Select>
+              <Select
+                allowClear
+                placeholder="Status"
+                style={{ width: 130 }}
+                value={statusFilter}
+                onChange={setStatusFilter}
+              >
+                <Option value="Available">Available</Option>
+                <Option value="Issued">Issued</Option>
+              </Select>
+            </div>
+          </div>
 
-          <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
+          {!booksLoading && filteredBooks.length === 0 ? (
+            <div style={{ padding: "0 20px 20px" }}>
+              <div style={emptyState}>
+                <BookOutlined style={{ fontSize: 36, color: "var(--text-muted)", marginBottom: 12, display: "block" }} />
+                <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
+                  {searchText || categoryFilter || statusFilter ? "No books match your filters" : "No books in the library yet"}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                  {searchText || categoryFilter || statusFilter ? "Try clearing your filters" : 'Click "Add Book" to add the first book'}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="books-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
+              <Table
+                columns={columns}
+                dataSource={filteredBooks}
+                rowKey="_id"
+                loading={booksLoading || actionLoading}
+                pagination={{
+                  pageSize: 10,
+                  size: "small",
+                  showTotal: (total) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{total} books</span>,
+                }}
+                scroll={{ x: 800 }}
+                locale={{ emptyText: "No books found" }}
+              />
+            </div>
+          )}
+        </div>
 
-          <Form.Item name="publisher" label="Publisher" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="isbn" label="ISBN" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="totalCopies" label="Total Copies" rules={[{ required: true }]}>
-            <Input type="number" min={1} />
-          </Form.Item>
-
-          <Form.Item
-            name="availableCopies"
-            label="Available Copies"
-            rules={[{ required: true }]}
-          >
-            <Input type="number" min={0} />
-          </Form.Item>
-
-          <Form.Item
-            name="shelfLocation"
-            label="Shelf Location"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Card>
+        <Modal
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={iconWell("var(--primary)", 34)}><BookOutlined /></div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                  {editingBook ? "Edit Book" : "Add Book"}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the book details</div>
+              </div>
+            </div>
+          }
+          open={isModalOpen}
+          confirmLoading={actionLoading}
+          onCancel={() => { setIsModalOpen(false); setEditingBook(null); form.resetFields(); }}
+          onOk={() => form.submit()}
+          okText="Save"
+          centered
+        >
+          <Form form={form} layout="vertical" onFinish={handleSave} style={{ marginTop: 8 }}>
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
+                <Form.Item name="title" label="Book Title" rules={[{ required: true }]}>
+                  <Input placeholder="Enter title" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="author" label="Author" rules={[{ required: true }]}>
+                  <Input placeholder="Enter author" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+                  <Input placeholder="Enter category" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="publisher" label="Publisher" rules={[{ required: true }]}>
+                  <Input placeholder="Enter publisher" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="isbn" label="ISBN" rules={[{ required: true }]}>
+                  <Input placeholder="Enter ISBN" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="shelfLocation" label="Shelf Location" rules={[{ required: true }]}>
+                  <Input placeholder="e.g. A-01" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="totalCopies" label="Total Copies" rules={[{ required: true }]}>
+                  <Input type="number" min={1} placeholder="Total copies" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item name="availableCopies" label="Available Copies" rules={[{ required: true }]}>
+                  <Input type="number" min={0} placeholder="Available copies" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+        </Modal>
+      </div>
+    </>
   );
 };
 

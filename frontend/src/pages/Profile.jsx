@@ -1,323 +1,182 @@
 import { useState, useEffect } from "react";
+import { Button, Col, Row, Space, Tabs, Grid } from "antd";
 import {
-  Layout,
-  Card,
-  Row,
-  Col,
-  Avatar,
-  Typography,
-  Button,
-  Tabs,
-  Tag,
-  Space,
-  Dropdown,
-  Grid,
-} from "antd";
-
-import {
-  MoreOutlined,
-  MailOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  CheckSquareOutlined,
-  MessageOutlined,
-  FolderOutlined,
-  SettingOutlined,
-  EditOutlined,
-  RightOutlined,
+  CalendarOutlined, CheckSquareOutlined, EditOutlined, FolderOutlined,
+  MailOutlined, MessageOutlined, SettingOutlined, UserOutlined,
 } from "@ant-design/icons";
-
-import userProfile from "../assets/userProfile.png";
 import AttendanceCalendar from "./AttendanceCalendar";
 import { useDispatch, useSelector } from "react-redux";
 import { currentUser } from "../features/authSlice";
+import PageHeader from "../components/layout/PageHeader";
+import { avatarColor, pageCard, pageWrapper, pill, sectionPanel } from "../styles/pageStyles";
 
-const { Title, Text } = Typography;
-const { Content } = Layout;
 const { useBreakpoint } = Grid;
+
+const InfoRow = ({ label, value }) => (
+  <div style={{ marginBottom: 18 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>{label}</div>
+    <div style={{ fontSize: 14, color: value ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 500 }}>{value || "—"}</div>
+  </div>
+);
 
 const Profile = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState("profile");
-
   const screens = useBreakpoint();
 
-  useEffect(() => {
-    dispatch(currentUser());
-  }, [dispatch]);
+  useEffect(() => { dispatch(currentUser()); }, [dispatch]);
+
+  const initials = (user?.name || "U").charAt(0).toUpperCase();
+  const { bg: avatarBg, color: avatarFg } = avatarColor(user?.name || "U");
 
   return (
-    <Layout style={{ background: "#f5f7fa", minHeight: "100vh" }}>
-      <Content
-        style={{
-          padding: screens.xs ? 12 : 24,
-          maxWidth: 1400,
-          margin: "0 auto",
-          width: "100%",
-        }}
-      >
-        {/* ================= Header ================= */}
-        <Card>
-          <Row
-            justify="space-between"
-            align={screens.xs ? "top" : "middle"}
-            gutter={[16, 16]}
-          >
-            <Col xs={24} md={16}>
-              <Space
-                size={screens.xs ? "middle" : "large"}
-                wrap
-                align="center"
-              >
-                <Avatar size={screens.xs ? 50 : 64} src={userProfile} />
-
-                <div>
-                  <Title
-                    level={screens.xs ? 5 : 4}
-                    style={{ marginBottom: 4, textTransform: "capitalize" }}
-                  >
-                    {user?.name}
-                  </Title>
-
-                  <Tag color={user?.isActive ? "green" : "red"}>
-                    {user?.isActive ? "Active" : "Inactive"}
-                  </Tag>
-                </div>
-
-                {!screens.xs && (
-                  <Space size="large" wrap>
-                    <div>
-                      <Text type="secondary">Last Clocked In</Text>
-                      <br />
-                      <Text>A few seconds ago</Text>
-                    </div>
-                    <div>
-                      <Text type="secondary">Last Messaged</Text>
-                      <br />
-                      <Text>2 days ago</Text>
-                    </div>
-                    <div>
-                      <Text type="secondary">Employee ID</Text>
-                      <br />
-                      <Text>#123456</Text>
-                    </div>
-                  </Space>
+    <>
+      <PageHeader
+        title={user?.name || "My Profile"}
+        subtitle={`${user?.role?.name || "Staff"} · ${user?.school?.name || "School"}`}
+        icon={<UserOutlined />}
+        extra={
+          <Space>
+            <Button icon={<MailOutlined />} type="primary">Send Email</Button>
+            <Button icon={<EditOutlined />}>Edit Profile</Button>
+          </Space>
+        }
+      />
+      <div style={pageWrapper}>
+        {/* Avatar hero card */}
+        <div style={{ ...pageCard, marginBottom: 20, padding: screens.xs ? "20px 16px" : "24px 28px" }}>
+          <Space size={screens.xs ? 16 : 20} align="center" wrap>
+            <div style={{
+              width: screens.xs ? 56 : 72,
+              height: screens.xs ? 56 : 72,
+              borderRadius: "50%",
+              background: avatarBg,
+              color: avatarFg,
+              fontWeight: 800,
+              fontSize: screens.xs ? 22 : 28,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+              border: `3px solid ${avatarFg}30`,
+              boxShadow: `0 4px 16px ${avatarFg}20`,
+            }}>
+              {initials}
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: screens.xs ? 17 : 21, color: "var(--text-primary)", marginBottom: 8, textTransform: "capitalize" }}>
+                {user?.name || "—"}
+              </div>
+              <Space size={6} wrap>
+                <span style={pill(user?.isActive ? "#059669" : "#dc2626", user?.isActive ? "#d1fae5" : "#fee2e2")}>
+                  {user?.isActive ? "Active" : "Inactive"}
+                </span>
+                {user?.role?.name && <span style={pill("#7c3aed", "#ede9fe")}>{user.role.name}</span>}
+                {user?.school?.name && <span style={pill("#0284c7", "#e0f2fe")}>{user.school.name}</span>}
+              </Space>
+            </div>
+            {!screens.xs && (
+              <Space size={28} wrap style={{ marginLeft: 12 }}>
+                {user?.email && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Email</div>
+                    <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>{user.email}</div>
+                  </div>
+                )}
+                {user?.phone && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Phone</div>
+                    <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>{user.phone}</div>
+                  </div>
                 )}
               </Space>
-            </Col>
+            )}
+          </Space>
+        </div>
 
-            <Col xs={24} md={8} style={{ textAlign: screens.xs ? "left" : "right" }}>
-              <Space>
-                <Dropdown
-                  menu={{
-                    items: [{ key: "1", label: "More Actions" }],
-                  }}
-                >
-                  <Button icon={<MoreOutlined />} />
-                </Dropdown>
+        {/* Tab bar */}
+        <div style={{ ...pageCard, marginBottom: 20 }}>
+          <div style={{ padding: "0 24px" }}>
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              tabBarGutter={screens.xs ? 12 : 28}
+              items={[
+                { key: "profile",    label: <Space size={4}><UserOutlined />Profile</Space> },
+                { key: "attendance", label: <Space size={4}><CalendarOutlined />Attendance</Space> },
+                { key: "tasks",      label: <Space size={4}><CheckSquareOutlined />Tasks</Space> },
+                { key: "messages",   label: <Space size={4}><MessageOutlined />Messages</Space> },
+                { key: "files",      label: <Space size={4}><FolderOutlined />Files</Space> },
+                { key: "settings",   label: <Space size={4}><SettingOutlined />Settings</Space> },
+              ]}
+            />
+          </div>
+        </div>
 
-                <Button type="primary" icon={<MailOutlined />}>
-                  Send Email
-                </Button>
-              </Space>
-            </Col>
-          </Row>
-        </Card>
-
-        {/* ================= Tabs ================= */}
-        <Card style={{ marginTop: 16 }}>
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            tabBarGutter={screens.xs ? 12 : 32}
-            items={[
-              {
-                key: "profile",
-                label: (
-                  <Space size={4}>
-                    <UserOutlined /> Profile
-                  </Space>
-                ),
-              },
-              {
-                key: "attendance",
-                label: (
-                  <Space size={4}>
-                    <CalendarOutlined /> Attendance
-                  </Space>
-                ),
-              },
-              {
-                key: "tasks",
-                label: (
-                  <Space size={4}>
-                    <CheckSquareOutlined /> Tasks
-                  </Space>
-                ),
-              },
-              {
-                key: "messages",
-                label: (
-                  <Space size={4}>
-                    <MessageOutlined /> Messages
-                  </Space>
-                ),
-              },
-              {
-                key: "files",
-                label: (
-                  <Space size={4}>
-                    <FolderOutlined /> Files
-                  </Space>
-                ),
-              },
-              {
-                key: "settings",
-                label: (
-                  <Space size={4}>
-                    <SettingOutlined /> Settings
-                  </Space>
-                ),
-              },
-            ]}
-          />
-        </Card>
-
-        {/* ================= Profile Tab ================= */}
+        {/* Profile tab */}
         {activeTab === "profile" && (
-          <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-            {/* Left */}
+          <Row gutter={[16, 16]}>
             <Col xs={24} lg={16}>
-              <Card
-                title="Personal Information"
-                extra={<Button icon={<EditOutlined />}>Edit</Button>}
-              >
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} sm={12}>
-                    <Text type="secondary">Full Name</Text>
-                    <br />
-                    <Text>{user?.name}</Text>
-                  </Col>
-
-                  <Col xs={24} sm={12}>
-                    <Text type="secondary">Gender</Text>
-                    <br />
-                    <Text>Male</Text>
-                  </Col>
-
-                  <Col xs={24} sm={12}>
-                    <Text type="secondary">Marital Status</Text>
-                    <br />
-                    <Text>Single</Text>
-                  </Col>
-
-                  <Col xs={24} sm={12}>
-                    <Text type="secondary">Religion</Text>
-                    <br />
-                    <Text>-</Text>
-                  </Col>
-
-                  <Col xs={24} sm={12}>
-                    <Text type="secondary">Birth Date</Text>
-                    <br />
-                    <Text>-</Text>
-                  </Col>
-
-                  <Col xs={24} sm={12}>
-                    <Text type="secondary">Blood Group</Text>
-                    <br />
-                    <Text>-</Text>
-                  </Col>
+              <div style={{ ...sectionPanel, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Personal Information</div>
+                  <Button size="small" icon={<EditOutlined />}>Edit</Button>
+                </div>
+                <Row gutter={[24, 4]}>
+                  <Col xs={24} sm={12}><InfoRow label="Full Name" value={user?.name} /></Col>
+                  <Col xs={24} sm={12}><InfoRow label="Gender" value={null} /></Col>
+                  <Col xs={24} sm={12}><InfoRow label="Marital Status" value={null} /></Col>
+                  <Col xs={24} sm={12}><InfoRow label="Religion" value={null} /></Col>
+                  <Col xs={24} sm={12}><InfoRow label="Birth Date" value={null} /></Col>
+                  <Col xs={24} sm={12}><InfoRow label="Blood Group" value={null} /></Col>
                 </Row>
-              </Card>
-
-              <Card
-                title="Address Information"
-                extra={<Button icon={<EditOutlined />}>Edit</Button>}
-                style={{ marginTop: 16 }}
-              >
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} md={18}>
-                    <Text type="secondary">Residential Address</Text>
-                    <br />
-                    <Text>-</Text>
-                  </Col>
-
-                  <Col xs={24} md={6}>
-                    <Button type="link">
-                      View on Map <RightOutlined />
-                    </Button>
-                  </Col>
-                </Row>
-              </Card>
+              </div>
+              <div style={sectionPanel}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Address Information</div>
+                  <Button size="small" icon={<EditOutlined />}>Edit</Button>
+                </div>
+                <InfoRow label="Residential Address" value={null} />
+              </div>
             </Col>
 
-            {/* Right */}
             <Col xs={24} lg={8}>
-              <Card
-                title="Contact Information"
-                extra={<Button icon={<EditOutlined />}>Edit</Button>}
-              >
-                <Text type="secondary">Phone</Text>
-                <br />
-                <Tag color="blue">{user?.phone}</Tag>
-
-                <br />
-                <br />
-
-                <Text type="secondary">Email</Text>
-                <br />
-                <Tag color="blue">{user?.email}</Tag>
-              </Card>
-
-              <Card title="Student Overview" style={{ marginTop: 16 }}>
-                <Row gutter={[16, 16]}>
-                  <Col xs={12}>
-                    <Text type="secondary">Role</Text>
-                    <br />
-                    <Text>{user?.role?.name}</Text>
-                  </Col>
-
-                  <Col xs={12}>
-                    <Text type="secondary">Status</Text>
-                    <br />
-                    <Text>Full Time</Text>
-                  </Col>
+              <div style={{ ...sectionPanel, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Contact Information</div>
+                  <Button size="small" icon={<EditOutlined />}>Edit</Button>
+                </div>
+                <InfoRow label="Phone" value={user?.phone} />
+                <InfoRow label="Email" value={user?.email} />
+              </div>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 20 }}>Overview</div>
+                <Row gutter={[16, 4]}>
+                  <Col xs={12}><InfoRow label="Role" value={user?.role?.name} /></Col>
+                  <Col xs={12}><InfoRow label="Status" value={user?.isActive ? "Active" : "Inactive"} /></Col>
+                  <Col xs={24}><InfoRow label="School" value={user?.school?.name} /></Col>
                 </Row>
-
-                <Button type="link" style={{ padding: 0, marginTop: 12 }}>
-                  View Contract <RightOutlined />
-                </Button>
-              </Card>
+              </div>
             </Col>
           </Row>
         )}
 
-        {/* ================= Attendance ================= */}
         {activeTab === "attendance" && (
-          <Card style={{ marginTop: 16 }}>
-            <AttendanceCalendar />
-          </Card>
+          <div style={pageCard}>
+            <div style={{ padding: 24 }}><AttendanceCalendar /></div>
+          </div>
         )}
 
-        {activeTab === "tasks" && (
-          <Card style={{ marginTop: 16 }}>Tasks Section</Card>
+        {["tasks", "messages", "files", "settings"].map((tab) =>
+          activeTab === tab ? (
+            <div key={tab} style={{ ...sectionPanel, padding: "56px 24px", textAlign: "center" }}>
+              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)} section coming soon
+              </div>
+            </div>
+          ) : null
         )}
-
-        {activeTab === "messages" && (
-          <Card style={{ marginTop: 16 }}>Messages Section</Card>
-        )}
-
-        {activeTab === "files" && (
-          <Card style={{ marginTop: 16 }}>Files Section</Card>
-        )}
-
-        {activeTab === "settings" && (
-          <Card style={{ marginTop: 16 }}>Settings Section</Card>
-        )}
-      </Content>
-    </Layout>
+      </div>
+    </>
   );
 };
 

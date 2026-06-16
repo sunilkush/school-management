@@ -1,25 +1,10 @@
 import React, { useEffect, useMemo } from "react";
 import {
-  Layout,
-  Row,
-  Col,
-  Card,
-  Typography,
-  Avatar,
-  List,
-  Button,
-  Space,
-  Progress,
-  Empty,
-  Spin,
-  Tag,
+  Row, Col, Card, List, Button, Space, Progress, Empty, Spin, Tag,
 } from "antd";
 import {
-  UserOutlined,
-  BookOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  FileTextOutlined,
+  UserOutlined, BookOutlined, CalendarOutlined, CheckCircleOutlined,
+  FileTextOutlined, DashboardOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -27,9 +12,10 @@ import dayjs from "dayjs";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import { fetchMyAttendance } from "../../../features/attendanceSlice";
 import { getExams } from "../../../features/examSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, pageCard, sectionPanel, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles";
 
-const { Content } = Layout;
-const { Title, Text } = Typography;
+const STAT_COLORS = ["#7c3aed", "#0284c7", "#f97316", "#dc2626"];
 
 const TeacherDashboard = () => {
   const dispatch = useDispatch();
@@ -43,7 +29,6 @@ const TeacherDashboard = () => {
 
   useEffect(() => {
     if (!selectedAcademicYear?._id) return;
-
     dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
     dispatch(fetchMyAttendance({ academicYearId: selectedAcademicYear._id, limit: 31 }));
     dispatch(getExams({ academicYearId: selectedAcademicYear._id, limit: 20 }));
@@ -51,14 +36,10 @@ const TeacherDashboard = () => {
 
   const dashboardData = useMemo(() => {
     const totalClasses = classAssignTeacher.length;
-
-    const totalStudents = classAssignTeacher.reduce(
-      (sum, cls) => sum + Number(cls?.studentCount || 0),
-      0
-    );
-
+    const totalStudents = classAssignTeacher.reduce((sum, cls) => sum + Number(cls?.studentCount || 0), 0);
     const today = dayjs();
     const normalizedExams = Array.isArray(exams) ? exams : [];
+
     const todayExams = normalizedExams.filter((exam) => {
       const examDate = exam?.date || exam?.examDate || exam?.startDate;
       return examDate && dayjs(examDate).isValid() && dayjs(examDate).isSame(today, "day");
@@ -69,11 +50,7 @@ const TeacherDashboard = () => {
         const examDate = exam?.date || exam?.examDate || exam?.startDate;
         return examDate && dayjs(examDate).isValid() && !dayjs(examDate).isBefore(today, "day");
       })
-      .sort((a, b) => {
-        const firstDate = dayjs(a?.date || a?.examDate || a?.startDate).valueOf();
-        const secondDate = dayjs(b?.date || b?.examDate || b?.startDate).valueOf();
-        return firstDate - secondDate;
-      })
+      .sort((a, b) => dayjs(a?.date || a?.examDate || a?.startDate).valueOf() - dayjs(b?.date || b?.examDate || b?.startDate).valueOf())
       .slice(0, 5)
       .map((exam) => ({
         name: exam?.title || exam?.name || "Untitled Exam",
@@ -107,91 +84,64 @@ const TeacherDashboard = () => {
   }, [classAssignTeacher, exams, myAttendance]);
 
   const stats = [
-    {
-      title: "Assigned Classes",
-      value: dashboardData.totalClasses,
-      icon: <BookOutlined style={{ fontSize: 22 }} />,
-    },
-    {
-      title: "Students",
-      value: dashboardData.totalStudents,
-      icon: <UserOutlined style={{ fontSize: 22 }} />,
-    },
-    {
-      title: "Today Exams",
-      value: dashboardData.todayExamsCount,
-      icon: <CalendarOutlined style={{ fontSize: 22 }} />,
-    },
-    {
-      title: "Pending Tasks",
-      value: dashboardData.pendingTasks,
-      icon: <FileTextOutlined style={{ fontSize: 22 }} />,
-    },
+    { title: "Assigned Classes", value: dashboardData.totalClasses,    icon: <BookOutlined /> },
+    { title: "Students",          value: dashboardData.totalStudents,   icon: <UserOutlined /> },
+    { title: "Today Exams",       value: dashboardData.todayExamsCount, icon: <CalendarOutlined /> },
+    { title: "Pending Tasks",     value: dashboardData.pendingTasks,    icon: <FileTextOutlined /> },
   ];
 
   const isLoading = classLoading || attendanceLoading || examLoading;
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f5f7fb" }}>
-      <Content style={{ padding: "24px" }}>
-        <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-          <Col>
-            <Title level={3} style={{ margin: 0 }}>
-              Teacher Dashboard
-            </Title>
-            <Text type="secondary">Welcome back, {user?.name || "Teacher"} 👋</Text>
-          </Col>
-
-          <Col>
-            <Space>
-              <Avatar size={45} icon={<UserOutlined />} src={user?.avatar} />
-            </Space>
-          </Col>
-        </Row>
-
+    <>
+      <PageHeader
+        title="Teacher Dashboard"
+        subtitle={`Welcome back, ${user?.name || "Teacher"} · ${selectedAcademicYear?.name ?? ""}`}
+        icon={<DashboardOutlined />}
+      />
+      <div style={pageWrapper}>
         <Spin spinning={isLoading}>
-          <Row gutter={[16, 16]}>
-            {stats.map((item) => (
-              <Col xs={24} sm={12} md={6} key={item.title}>
-                <Card bordered={false} style={{ borderRadius: 12 }}>
-                  <Space align="start">
-                    <Avatar size={48} style={{ background: "#1677ff" }} icon={item.icon} />
-                    <div>
-                      <Text type="secondary">{item.title}</Text>
-                      <Title level={3} style={{ margin: 0 }}>
-                        {item.value}
-                      </Title>
-                    </div>
-                  </Space>
-                </Card>
-              </Col>
+          {/* KPI stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 20 }}>
+            {stats.map((item, i) => (
+              <div key={item.title} style={statCard({ color: STAT_COLORS[i] })}>
+                <div>
+                  <div style={statLabel(STAT_COLORS[i])}>{item.title}</div>
+                  <div style={statValue(STAT_COLORS[i])}>{item.value}</div>
+                </div>
+                <div style={{ fontSize: 26, color: STAT_COLORS[i], opacity: 0.5 }}>{item.icon}</div>
+              </div>
             ))}
-          </Row>
+          </div>
 
-          <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Row gutter={[16, 16]}>
             <Col xs={24} md={14}>
-              <Card title="Upcoming Exams" bordered={false} style={{ borderRadius: 12 }}>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Upcoming Exams</div>
                 {dashboardData.upcomingExams.length ? (
                   <List
                     dataSource={dashboardData.upcomingExams}
                     renderItem={(item) => (
-                      <List.Item>
-                        <List.Item.Meta
-                          avatar={<Avatar icon={<BookOutlined />} />}
-                          title={`${item.name} - ${item.className}`}
-                          description={`Date: ${item.date ? dayjs(item.date).format("DD MMM YYYY") : "N/A"}`}
-                        />
+                      <List.Item style={{ padding: "10px 0", borderBottom: "1px solid var(--border-muted)" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{item.name}</div>
+                          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{item.className}</div>
+                        </div>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          {item.date ? dayjs(item.date).format("DD MMM YYYY") : "N/A"}
+                        </span>
                       </List.Item>
                     )}
                   />
                 ) : (
-                  <Empty description="No upcoming exams" />
+                  <Empty description="No upcoming exams" image={Empty.PRESENTED_IMAGE_SIMPLE} />
                 )}
-              </Card>
+              </div>
             </Col>
 
             <Col xs={24} md={10}>
-              <Card title="Quick Actions" bordered={false} style={{ borderRadius: 12 }}>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Quick Actions</div>
                 <Space direction="vertical" style={{ width: "100%" }}>
                   <Button type="primary" block onClick={() => navigate("/dashboard/teacher/attendance")}>
                     Mark Attendance
@@ -206,46 +156,47 @@ const TeacherDashboard = () => {
                     View Students
                   </Button>
                 </Space>
-              </Card>
+              </div>
             </Col>
           </Row>
 
           <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
             <Col xs={24} md={12}>
-              <Card title="My Attendance" bordered={false} style={{ borderRadius: 12 }}>
-                <Text>Present Days (Last records)</Text>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>My Attendance</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Present days from last {myAttendance.length} records</div>
                 <Progress
                   percent={dashboardData.attendancePercent}
                   status="active"
-                  strokeColor="#52c41a"
-                  style={{ marginTop: 10 }}
+                  strokeColor="#059669"
                 />
-              </Card>
+              </div>
             </Col>
 
             <Col xs={24} md={12}>
-              <Card title="Assigned Sections" bordered={false} style={{ borderRadius: 12 }}>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Assigned Sections</div>
                 {dashboardData.sections.length ? (
                   <List
                     dataSource={dashboardData.sections}
                     renderItem={(item, index) => (
-                      <List.Item key={`${item.className}-${item.sectionName}-${index}`}>
-                        <Space style={{ width: "100%", justifyContent: "space-between" }}>
-                          <Text>{item.className} - {item.sectionName}</Text>
-                          <Tag color={item.role === "Class Teacher" ? "green" : "blue"}>{item.role}</Tag>
-                        </Space>
+                      <List.Item key={`${item.className}-${item.sectionName}-${index}`} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-muted)" }}>
+                        <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{item.className} — {item.sectionName}</span>
+                        <span style={pill(item.role === "Class Teacher" ? "#059669" : "#0284c7", item.role === "Class Teacher" ? "#d1fae5" : "#e0f2fe")}>
+                          {item.role}
+                        </span>
                       </List.Item>
                     )}
                   />
                 ) : (
-                  <Empty description="No sections assigned yet" />
+                  <Empty description="No sections assigned yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
                 )}
-              </Card>
+              </div>
             </Col>
           </Row>
         </Spin>
-      </Content>
-    </Layout>
+      </div>
+    </>
   );
 };
 
