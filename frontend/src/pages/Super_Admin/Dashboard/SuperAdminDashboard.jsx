@@ -43,11 +43,13 @@ import {
   ThunderboltFilled,
   SafetyCertificateOutlined,
   LinkOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
 import {
   useGetSuperAdminDashboardSummaryQuery,
   useGetSuperAdminSchoolsQuery,
 } from "../../../services/schoolDashboardApi";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
 
 const { Content } = Layout;
 const { Text } = Typography;
@@ -495,20 +497,38 @@ const SuperAdminDashboard = () => {
       }}
     >
       <Layout style={{ background: "var(--bg)" }}>
+        <PageHeader
+          title="Super Admin Dashboard"
+          subtitle="Platform-wide overview — schools, subscriptions and revenue"
+          icon={<DashboardOutlined />}
+          extra={
+            isFetching ? (
+              <Spin size="small" />
+            ) : (
+              <Button
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={handleRefresh}
+              >
+                Refresh
+              </Button>
+            )
+          }
+        />
         <Content style={{ padding: "24px", overflow: "auto" }}>
           {hasError && (
             <Alert
               type="error"
               showIcon
               message="Some dashboard data failed to load."
-              style={{ marginBottom: 16 }}
+              description="Statistics may be incomplete. Try refreshing."
+              action={
+                <Button size="small" icon={<ReloadOutlined />} onClick={handleRefresh}>
+                  Retry
+                </Button>
+              }
+              style={{ marginBottom: 16, borderRadius: 10 }}
             />
-          )}
-
-          {(isLoading || isFetching) && (
-            <div style={{ marginBottom: 16 }}>
-              <Spin size="small" />
-            </div>
           )}
 
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
@@ -599,7 +619,7 @@ const SuperAdminDashboard = () => {
                   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                   height: "100%",
                 }}
-                extra={<Tag color="success">Dynamic</Tag>}
+                extra={<Tag color="orange">Static Preview</Tag>}
               >
                 <Space direction="vertical" style={{ width: "100%" }} size={16}>
                   {[
@@ -857,9 +877,12 @@ const SuperAdminDashboard = () => {
                   </Space>
                 }
                 extra={
-                  <Button type="link" size="small">
-                    View All
-                  </Button>
+                  <Space size={6}>
+                    <Tag color="orange">Static Preview</Tag>
+                    <Button type="link" size="small">
+                      View All
+                    </Button>
+                  </Space>
                 }
                 bordered={false}
                 style={{

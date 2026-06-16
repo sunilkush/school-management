@@ -121,8 +121,8 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
     <Spin size="small" style={{ display: "flex", alignItems: "center" }} />
   );
 
-  const handleSearch = (value) => {
-    console.log("Search:", value);
+  const handleSearch = (_value) => {
+    // TODO: implement global search
   };
 
   return (

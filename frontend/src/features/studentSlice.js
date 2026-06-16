@@ -3,8 +3,6 @@ import apiClient from "../api/httpClient";
 import { toast } from "react-toastify";
 
 
-const Api_Base_Url = import.meta.env.VITE_API_URL;
-
 // fetch last student
 export const fetchLastRegisteredStudent = createAsyncThunk(
   "students/fetchLastRegisteredStudent",
@@ -278,7 +276,6 @@ const studentSlice = createSlice({
           action.payload?.data ||
           action.payload ||
           [];
-          console.log( state.schoolStudents)
         state.success = true;
       })
       .addCase(fetchStudentsBySchoolId.rejected, (state, action) => {

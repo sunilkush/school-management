@@ -10,15 +10,7 @@ export const fetchAllFees = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.get(`/fees/allFees`, {
-        headers: {
-        },
-        params,
-      });
-
-      console.log("Fetched Fees:", res.data);
-
-      // ✅ RETURN FULL RESPONSE
+      const res = await apiClient.get(`/fees/allFees`, { params });
       return res.data;
     } catch (e) {
       return rejectWithValue(e.response?.data || "Failed to load fees");
@@ -35,14 +27,7 @@ export const createFee = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.post(
-        `/fees/createFees`,
-        payload,
-        {
-          headers: {
-          },
-        }
-      );
+      const res = await apiClient.post(`/fees/createFees`, payload);
 
       // Single created fee
       return res.data.data;
@@ -60,10 +45,7 @@ export const deleteFees = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
 
-      await apiClient.delete(`/fees/${id}`, {
-        headers: {
-        },
-      });
+      await apiClient.delete(`/fees/${id}`);
 
       return id;
     } catch (e) {
@@ -80,13 +62,7 @@ export const fetchStudentFees = createAsyncThunk(
   async (studentId, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.get(
-        `/student-fees/${studentId}`,
-        {
-          headers: {
-          },
-        }
-      );
+      const res = await apiClient.get(`/student-fees/${studentId}`);
 
       return res.data.data;
     } catch (e) {

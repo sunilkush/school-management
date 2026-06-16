@@ -274,7 +274,7 @@ const authSlice = createSlice({
       .addCase(fetchAllUser.fulfilled, (state, action) => {
         state.users = action.payload;
         state.hasFetchedUsers = true;
-        state.isLoading = true;
+        state.loading = false;
       })
       .addCase(registerUser.fulfilled, (state) => {
         state.success = true;
@@ -285,9 +285,7 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter(
-          (u) => u._id !== action.payload
-        ).map((u) => (u._id === action.payload._id ? { ...u, isActive: false } : u));
+        state.users = state.users.filter((u) => u._id !== action.payload);
       })
       .addCase(activeUser.fulfilled, (state, action) => {
         state.users = state.users.map((u) => (u._id === action.payload._id ? action.payload : u));

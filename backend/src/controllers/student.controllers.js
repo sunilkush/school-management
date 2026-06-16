@@ -35,7 +35,6 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       schoolClassId,
       sectionId,
     } = req.body;
-    console.log(req.body);
     /* 🔐 VALIDATION */
     if (!studentData?.name || !studentData?.email) {
       throw new ApiError(400, "Student name & email required");
@@ -65,7 +64,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
           {
             name: studentData.name,
             email: studentData.email,
-            password: "784512",
+            password: studentPassword,
             roleId: studentRole._id,
             schoolId,
             isEmailVerified: true,
@@ -95,7 +94,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
               {
                 name: fatherData.name,
                 email: fatherData.email,
-                password: "784512",
+                password: fatherPassword,
                 roleId: parentRole._id,
                 schoolId,
                 isEmailVerified: true,
@@ -538,34 +537,7 @@ const updateStudent = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(
         200,
-        {
-          student,
-          enrollment,
-          credentials: {
-            student: {
-              userId: studentUser._id,
-              loginId: studentUser.email,
-              password: studentPassword,
-              isNew: true,
-            },
-            father: fatherUser
-              ? {
-                  userId: fatherUser._id,
-                  loginId: fatherUser.email,
-                  password: fatherPassword,
-                  isNew: Boolean(fatherPassword),
-                }
-              : null,
-            mother: motherUser
-              ? {
-                  userId: motherUser._id,
-                  loginId: motherUser.email,
-                  password: motherPassword,
-                  isNew: Boolean(motherPassword),
-                }
-              : null,
-          },
-        },
+        { student, enrollment },
         "Student updated successfully!"
       )
     );
@@ -596,7 +568,6 @@ const deleteStudent = asyncHandler(async (req, res) => {
 
 // ✅ Get last student & generate next reg no
 const getLastRegisteredStudent = asyncHandler(async (req, res) => {
-  debugger;
   const { schoolId, academicYearId } = req.query;
 
   // ✅ Validate IDs

@@ -88,7 +88,7 @@ const registerUser = asyncHandler(async (req, res) => {
   let academicYearId = null;
   const activeAcademicYear = await AcademicYear.findOne({
     schoolId,
-    status: "active",
+    $or: [{ isActive: true }, { status: "active" }],
   });
   if (activeAcademicYear) {
     academicYearId = activeAcademicYear._id;
@@ -100,10 +100,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!existingUser.isActive) {
       // ✅ Reactivate user
       existingUser.isActive = true;
-
-      // optional: update other fields
       existingUser.name = req.body.name || existingUser.name;
-      existingUser.role = req.body.role || existingUser.role;
 
       await existingUser.save();
 
@@ -165,7 +162,6 @@ const registerUser = asyncHandler(async (req, res) => {
  */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-   console.log("Login attempt:", { email }); // Debug log
   if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }

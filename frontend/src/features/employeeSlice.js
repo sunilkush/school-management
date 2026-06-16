@@ -1,18 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
-const Api_Base_Url = import.meta.env.VITE_API_URL
 export const createEmployee = createAsyncThunk(
     "employee/createEmployee",
     async (formData, { rejectWithValue }) => {
         try {
-            const res = await apiClient.post(
-                `/employee`,
-                formData, {
-                headers: {
-                }
-            }
-            );
+            const res = await apiClient.post("/employee", formData);
             return res.data;
         } catch (err) {
             return rejectWithValue(err.response?.data || { message: err.message });

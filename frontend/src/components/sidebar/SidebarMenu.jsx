@@ -11,13 +11,13 @@ const { Text } = Typography;
 ───────────────────────────────────────── */
 const tokens = (isDark) => ({
   bg: "transparent",
-  accent: isDark ? "#4da3ff" : "#1677ff",
-  accentBg: isDark ? "rgba(77,163,255,0.08)" : "rgba(22,119,255,0.07)",
-  accentBgHover: isDark ? "rgba(77,163,255,0.05)" : "rgba(22,119,255,0.04)",
-  textPrimary: isDark ? "#e8e8e8" : "#1a1a2e",
-  textSecondary: isDark ? "#6b7280" : "#9ca3af",
-  subItemIndent: isDark ? "rgba(77,163,255,0.15)" : "rgba(22,119,255,0.12)",
-  skeletonBase: isDark ? "#1a1a1a" : "#f4f6f8",
+  accent: isDark ? "#a78bfa" : "#7c3aed",
+  accentBg: isDark ? "rgba(167,139,250,0.10)" : "rgba(124,58,237,0.08)",
+  accentBgHover: isDark ? "rgba(167,139,250,0.06)" : "rgba(124,58,237,0.04)",
+  textPrimary: isDark ? "#e2e8f0" : "#0f172a",
+  textSecondary: isDark ? "#64748b" : "#94a3b8",
+  subItemIndent: isDark ? "rgba(167,139,250,0.18)" : "rgba(124,58,237,0.15)",
+  skeletonBase: isDark ? "#1e293b" : "#f1f5f9",
 });
 
 /* ─────────────────────────────────────────

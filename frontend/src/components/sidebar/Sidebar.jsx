@@ -20,18 +20,18 @@ const { Text, Title } = Typography;
    is hardcoded twice.
 ───────────────────────────────────────── */
 const tokens = (isDark) => ({
-  bg: isDark ? "#0d0d0d" : "#ffffff",
-  border: isDark ? "#1f1f1f" : "#f0f0f0",
+  bg: isDark ? "#0f172a" : "#ffffff",
+  border: isDark ? "#1e293b" : "#f1f5f9",
   headerBg: isDark
-    ? "linear-gradient(135deg, #141414 0%, #1a1a1a 100%)"
-    : "linear-gradient(135deg, #f0f7ff 0%, #e8f3ff 100%)",
-  iconBg: isDark ? "#1d2b3a" : "#ddeeff",
-  iconColor: isDark ? "#4da3ff" : "#1677ff",
-  accent: isDark ? "#4da3ff" : "#1677ff",
-  textPrimary: isDark ? "#e8e8e8" : "#1a1a2e",
-  textSecondary: isDark ? "#6b7280" : "#9ca3af",
-  scrollbarThumb: isDark ? "#2a2a2a" : "#e5e7eb",
-  shimmer: isDark ? "#1a1a1a" : "#f9fafb",
+    ? "linear-gradient(135deg, #13102b 0%, #1a1535 100%)"
+    : "linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)",
+  iconBg: isDark ? "#2d1f5e" : "#ede9fe",
+  iconColor: isDark ? "#a78bfa" : "#7c3aed",
+  accent: isDark ? "#a78bfa" : "#7c3aed",
+  textPrimary: isDark ? "#e2e8f0" : "#0f172a",
+  textSecondary: isDark ? "#64748b" : "#94a3b8",
+  scrollbarThumb: isDark ? "#1e293b" : "#e5e7eb",
+  shimmer: isDark ? "#1e293b" : "#f8fafc",
 });
 
 /* ─────────────────────────────────────────
@@ -234,12 +234,12 @@ const Sidebar = ({ isOpen, onToggle }) => {
               <Avatar
                 size={36}
                 style={{
-                  background: `linear-gradient(135deg, ${t.accent}, ${isDark ? "#1a56d4" : "#2563eb"})`,
+                  background: `linear-gradient(135deg, ${t.accent}, ${isDark ? "#06b6d4" : "#06b6d4"})`,
                   color: "#fff",
                   fontSize: 13,
                   fontWeight: 700,
                   flexShrink: 0,
-                  boxShadow: `0 2px 8px ${isDark ? "rgba(77,163,255,0.3)" : "rgba(22,119,255,0.25)"}`,
+                  boxShadow: `0 2px 8px ${isDark ? "rgba(167,139,250,0.35)" : "rgba(124,58,237,0.28)"}`,
                 }}
               >
                 {initials}

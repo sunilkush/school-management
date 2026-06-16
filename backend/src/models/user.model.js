@@ -2,7 +2,6 @@ import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { type } from "os";
 
 const userSchema = new Schema(
   {
@@ -106,9 +105,6 @@ const userSchema = new Schema(
     lastLoginAt: {
         type:Date
     },
-    isDeleted:{
-        type:Boolean
-    }
   },
   {
     timestamps: true,
@@ -118,7 +114,7 @@ const userSchema = new Schema(
 
 // 🔥 Composite Unique Index (VERY IMPORTANT)
 userSchema.index({ email: 1, schoolId: 1 }, { unique: true });
-userSchema.index({ regId: 1, schoolId: 1 }, { unique: true });
+userSchema.index({ regId: 1, schoolId: 1 }, { unique: true, sparse: true });
 
 
 // 🔹 Password Hash Middleware

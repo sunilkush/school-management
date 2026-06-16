@@ -1,14 +1,15 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { logoutUser } from "../../features/authSlice";
-import { Avatar, Dropdown, Menu, Typography ,Col} from "antd";
+import { Avatar, Dropdown, Typography, Divider } from "antd";
 import {
   UserOutlined,
   MailOutlined,
   BellOutlined,
   SettingOutlined,
   LogoutOutlined,
+  CrownOutlined,
 } from "@ant-design/icons";
 
 const { Text } = Typography;
@@ -17,44 +18,136 @@ const UserDropdown = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") ;
 
-const handleLogout = async () => {
+  const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") || "";
+
+  const handleLogout = async () => {
     await dispatch(logoutUser());
     navigate("/", { replace: true });
   };
 
-  const menu = (
-    <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />}>
-        <a href={`/dashboard/${rolePath}/profile`}>Profile</a>
-      </Menu.Item>
-      <Menu.Item key="message" icon={<MailOutlined />}>
-        <a href={`/dashboard/${rolePath}/message`}>Message</a>
-      </Menu.Item>
-      <Menu.Item key="notification" icon={<BellOutlined />}>
-        <a href={`/dashboard/${rolePath}/notification`}>Notification</a>
-      </Menu.Item>
-      <Menu.Item key="settings" icon={<SettingOutlined />}>
-        <a href={`/dashboard/${rolePath}/settings`}>Settings</a>
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout} style={{ color: "red" }}>
-        Logout
-      </Menu.Item>
-    </Menu>
-  );
+  const menuItems = [
+    {
+      key: "header",
+      label: (
+        <div style={{ padding: "4px 0 8px" }}>
+          <Text strong style={{ display: "block", fontSize: 14, color: "var(--text-primary)" }}>
+            {user?.name || "User"}
+          </Text>
+          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {user?.email || ""}
+          </Text>
+          {user?.role?.name && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                marginTop: 4,
+                padding: "2px 8px",
+                borderRadius: 99,
+                fontSize: 11,
+                fontWeight: 600,
+                background: "var(--primary-light)",
+                color: "var(--primary)",
+                border: "1px solid rgba(124,58,237,0.15)",
+              }}
+            >
+              <CrownOutlined style={{ fontSize: 10 }} />
+              {user.role.name}
+            </span>
+          )}
+        </div>
+      ),
+      disabled: true,
+    },
+    { type: "divider" },
+    {
+      key: "profile",
+      icon: <UserOutlined />,
+      label: <Link to={`/dashboard/${rolePath}/profile`} style={{ color: "inherit" }}>Profile</Link>,
+    },
+    {
+      key: "message",
+      icon: <MailOutlined />,
+      label: <Link to={`/dashboard/${rolePath}/message`} style={{ color: "inherit" }}>Messages</Link>,
+    },
+    {
+      key: "notification",
+      icon: <BellOutlined />,
+      label: <Link to={`/dashboard/${rolePath}/notification`} style={{ color: "inherit" }}>Notifications</Link>,
+    },
+    {
+      key: "settings",
+      icon: <SettingOutlined />,
+      label: <Link to={`/dashboard/${rolePath}/settings`} style={{ color: "inherit" }}>Settings</Link>,
+    },
+    { type: "divider" },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Sign Out",
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
+  const initials = user?.name
+    ? user.name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
+    : "U";
 
   return (
-    <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight" style={{color: "var(--text-primary)",background:"var( --surface-header)"}}>
-      <Col type="text" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+    <Dropdown
+      menu={{ items: menuItems }}
+      trigger={["click"]}
+      placement="bottomRight"
+      overlayStyle={{ minWidth: 220 }}
+    >
+      <button
+        aria-label="User menu"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          cursor: "pointer",
+          background: "transparent",
+          border: "none",
+          padding: "4px 8px",
+          borderRadius: 10,
+          transition: "background 0.18s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-soft)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+      >
         {user?.avatar ? (
-          <Avatar src={user.avatar} size={24} style={{color: "var(--text-primary)"}} />
+          <Avatar src={user.avatar} size={32} />
         ) : (
-          <Avatar icon={<UserOutlined />} size={24} style={{color: "var(--text-primary)"}} />
+          <Avatar
+            size={32}
+            style={{
+              background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+              color: "#fff",
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            {initials}
+          </Avatar>
         )}
-        <Text style={{textTransform:"capitalize",color: "var(--text-primary)"}}>{user?.name || "User"}</Text>
-      </Col>
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--text-primary)",
+            maxWidth: 120,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {user?.name?.split(" ")[0] || "User"}
+        </Text>
+      </button>
     </Dropdown>
   );
 };

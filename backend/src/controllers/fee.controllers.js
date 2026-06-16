@@ -18,12 +18,14 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
     frequency,
   } = req.body;
 
-  if (!["Super Admin", "School Admin"].includes(req.user.role)) {
+  const userRoleName = req.user?.roleId?.name || req.user?.role?.name || "";
+
+  if (!["Super Admin", "School Admin"].includes(userRoleName)) {
     throw new ApiError(403, "Not allowed to create fee structure");
   }
 
   const finalSchoolId =
-    req.user.role === "School Admin"
+    userRoleName === "School Admin"
       ? req.user.schoolId
       : schoolId;
 
@@ -99,8 +101,9 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Fee structure not found");
   }
 
+  const updaterRoleName = req.user?.roleId?.name || req.user?.role?.name || "";
   if (
-    req.user.role === "School Admin" &&
+    updaterRoleName === "School Admin" &&
     fee.schoolId.toString() !== req.user.schoolId.toString()
   ) {
     throw new ApiError(403, "You cannot update this fee structure");
@@ -122,8 +125,9 @@ export const deleteFeeStructure = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Fee structure not found");
   }
 
+  const deleterRoleName = req.user?.roleId?.name || req.user?.role?.name || "";
   if (
-    req.user.role === "School Admin" &&
+    deleterRoleName === "School Admin" &&
     fee.schoolId.toString() !== req.user.schoolId.toString()
   ) {
     throw new ApiError(403, "You cannot delete this fee structure");

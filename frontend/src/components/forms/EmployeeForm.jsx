@@ -35,9 +35,7 @@ import { fetchAllUser } from "../../features/authSlice";
 import { useSearchParams } from "react-router-dom";
 
 // 🔥 Lazy Load
-const AttendanceCalendar = lazy(() =>
-  import("../../pages/AttendanceCalendar")
-);
+const AttendanceCalendar = lazy(() => import("../../pages/AttendanceCalendar"));
 
 dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrBefore);
@@ -59,42 +57,52 @@ const qualifications = [
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const maritalStatuses = ["Single", "Married", "Divorced", "Widowed"];
-const religions = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"];
+const religions = [
+  "Hindu",
+  "Muslim",
+  "Christian",
+  "Sikh",
+  "Buddhist",
+  "Jain",
+  "Other",
+];
 const employeeStatuses = ["Full-Time", "Part-Time", "Contract"];
-
-
 
 const EmployeeForm = () => {
   const [form] = Form.useForm();
 
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
-   const selectedUserId = Form.useWatch("userId", form);
+  const selectedUserId = Form.useWatch("userId", form);
   const { profile, users = [] } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
   const { subjects = [] } = useSelector((state) => state.subject);
   const { loading } = useSelector((state) => state.employee);
-  
+
   const schoolId = profile?.school?._id;
   const academicYearId = activeYear?._id;
-  
-    const page = 1;
-    const limit = 50;
-    
-  
-    /* ── FETCH ── */
-    useEffect(() => {
-      if (schoolId) {
-        dispatch(getAllSubjects({ page, limit, schoolId, academicYearId }));
-      }
-    }, [dispatch, schoolId, academicYearId]);
+
+  const page = 1;
+  const limit = 50;
+
+  /* ── FETCH ── */
+  useEffect(() => {
+    if (schoolId && academicYearId) {
+      dispatch(
+        getAllSubjects({
+          page,
+          limit,
+          schoolId,
+          academicYearId,
+        }),
+      );
+    }
+  }, [dispatch, schoolId, academicYearId]);
   useEffect(() => {
     if (schoolId) {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
   }, [schoolId, dispatch]);
-
- 
 
   useEffect(() => {
     if (schoolId) {
@@ -110,27 +118,24 @@ const EmployeeForm = () => {
   }, [form, searchParams]);
 
   const userOptions = useMemo(() => {
-    const userList = Array.isArray(users) ? users : [];
+  const userList = Array.isArray(users) ? users : [];
 
-    return userList
-      .filter((user) => user?.isActive)
-      .filter((user) => user?.role?.name?.toLowerCase() !== "student")
-      .filter((user) => {
+  return userList
+    .filter((user) => {
       const role = user?.role?.name?.toLowerCase();
 
       return (
         user?.isActive &&
-        role !== "student" &&
-        role !== "parent" &&
-        role !== "super admin"
+        !["student", "parent", "super admin"].includes(role)
       );
     })
     .map((user) => ({
       value: user._id,
-      label: `${user?.name || "User"} (${user?.role?.name || "No Role"})`,
+      label: `${user?.name || "User"} (${
+        user?.role?.name || "No Role"
+      })`,
     }));
-     
-  }, [users]);
+}, [users]);
 
   const handleSubmit = async (values) => {
     const payload = {
@@ -167,7 +172,7 @@ const EmployeeForm = () => {
             </span>
           }
         >
-          <Form form={form} layout="vertical" onFinish={() => handleSubmit(form.getFieldsValue(true))}>
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
             {/* PERSONAL INFO */}
             <Card title="Personal Information" className="mb-4">
               <Row gutter={16}>
@@ -175,7 +180,9 @@ const EmployeeForm = () => {
                   <Form.Item
                     name="userId"
                     label="Select User (Student excluded)"
-                    rules={[{ required: true, message: "Please select a user" }]}
+                    rules={[
+                      { required: true, message: "Please select a user" },
+                    ]}
                   >
                     <Select
                       showSearch
@@ -186,37 +193,65 @@ const EmployeeForm = () => {
                   </Form.Item>
                 </Col>
                 <Col md={8}>
-                  <Form.Item name="gender" label="Gender" rules={[{ required: true }]}>
-                    <Select options={[{ value: "Male" }, { value: "Female" }]} />
+                  <Form.Item
+                    name="gender"
+                    label="Gender"
+                    rules={[{ required: true }]}
+                  >
+                    <Select
+                      options={[{ value: "Male" }, { value: "Female" }]}
+                    />
                   </Form.Item>
                 </Col>
 
                 <Col md={8}>
-                  <Form.Item name="maritalStatus" label="Marital Status" rules={[{ required: true }]}>
-                    <Select options={maritalStatuses.map(m => ({ value: m }))} />
+                  <Form.Item
+                    name="maritalStatus"
+                    label="Marital Status"
+                    rules={[{ required: true }]}
+                  >
+                    <Select
+                      options={maritalStatuses.map((m) => ({ value: m }))}
+                    />
                   </Form.Item>
                 </Col>
 
                 <Col md={8}>
-                  <Form.Item name="religion" label="Religion" rules={[{ required: true }]}>
-                    <Select options={religions.map(r => ({ value: r }))} />
+                  <Form.Item
+                    name="religion"
+                    label="Religion"
+                    rules={[{ required: true }]}
+                  >
+                    <Select options={religions.map((r) => ({ value: r }))} />
                   </Form.Item>
                 </Col>
 
                 <Col md={8}>
-                  <Form.Item name="dateOfBirth" label="Date of Birth" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="dateOfBirth"
+                    label="Date of Birth"
+                    rules={[{ required: true }]}
+                  >
                     <DatePicker className="w-full" />
                   </Form.Item>
                 </Col>
 
                 <Col md={8}>
-                  <Form.Item name="bloodType" label="Blood Group" rules={[{ required: true }]}>
-                    <Select options={bloodGroups.map(b => ({ value: b }))} />
+                  <Form.Item
+                    name="bloodType"
+                    label="Blood Group"
+                    rules={[{ required: true }]}
+                  >
+                    <Select options={bloodGroups.map((b) => ({ value: b }))} />
                   </Form.Item>
                 </Col>
 
                 <Col md={8}>
-                  <Form.Item name="idProof" label="Aadhar Number" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="idProof"
+                    label="Aadhar Number"
+                    rules={[{ required: true }]}
+                  >
                     <Input />
                   </Form.Item>
                 </Col>
@@ -241,29 +276,49 @@ const EmployeeForm = () => {
                   <Form.Item
                     name="citizenAddress"
                     label="Citizen Address"
-                    rules={[{ required: true, message: "Citizen address is required" }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Citizen address is required",
+                      },
+                    ]}
                   >
-                    <Input />
+                    <Input.TextArea rows={3} placeholder="Full address" />
                   </Form.Item>
                 </Col>
 
                 <Col md={12}>
-                  <Form.Item name="qualification" label="Qualification" rules={[{ required: true }]}>
-                    <Select mode="multiple" options={qualifications.map(q => ({ value: q }))} />
+                  <Form.Item
+                    name="qualification"
+                    label="Qualification"
+                    rules={[{ required: true }]}
+                  >
+                    <Select
+                      mode="multiple"
+                      options={qualifications.map((q) => ({ value: q }))}
+                    />
                   </Form.Item>
                 </Col>
 
                 <Col md={12}>
-                  <Form.Item name="experience" label="Experience" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="experience"
+                    label="Experience"
+                    rules={[{ required: true }]}
+                  >
                     <Input type="number" min={0} placeholder="e.g. 5" />
                   </Form.Item>
                 </Col>
 
                 <Col span={24}>
-                  <Form.Item name="subjects" label="Subjects" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="subjects"
+                    label="Subjects"
+                    rules={[{ required: true }]}
+                  >
                     <Select
                       mode="multiple"
-                      options={subjects.map(s => ({
+                      options={subjects.map((s) => ({
                         label: s.name,
                         value: s._id,
                       }))}
@@ -277,19 +332,31 @@ const EmployeeForm = () => {
             <Card title="Employment Overview">
               <Row gutter={16}>
                 <Col md={8}>
-                  <Form.Item name="joinDate" label="Joining Date" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="joinDate"
+                    label="Joining Date"
+                    rules={[{ required: true }]}
+                  >
                     <DatePicker className="w-full" />
                   </Form.Item>
                 </Col>
 
                 <Col md={8}>
-                  <Form.Item name="department" label="Department" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="department"
+                    label="Department"
+                    rules={[{ required: true }]}
+                  >
                     <Input />
                   </Form.Item>
                 </Col>
 
                 <Col md={8}>
-                  <Form.Item name="designation" label="Designation" rules={[{ required: true }]}>
+                  <Form.Item
+                    name="designation"
+                    label="Designation"
+                    rules={[{ required: true }]}
+                  >
                     <Input />
                   </Form.Item>
                 </Col>
@@ -298,9 +365,18 @@ const EmployeeForm = () => {
                   <Form.Item
                     name="employeeStatus"
                     label="Employment Status"
-                    rules={[{ required: true, message: "Please select employment status" }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select employment status",
+                      },
+                    ]}
                   >
-                    <Select options={employeeStatuses.map((status) => ({ value: status }))} />
+                    <Select
+                      options={employeeStatuses.map((status) => ({
+                        value: status,
+                      }))}
+                    />
                   </Form.Item>
                 </Col>
               </Row>
@@ -376,15 +452,39 @@ const EmployeeForm = () => {
           }
         >
           {/* 🔥 Lazy Loaded Component */}
-          <Suspense fallback={<Spin />}>
-            <AttendanceCalendar userId={selectedUserId} schoolId={schoolId} />
+          <Suspense fallback={<Spin size="large" />}>
+            {selectedUserId ? (
+              <AttendanceCalendar userId={selectedUserId} schoolId={schoolId} />
+            ) : (
+              <div>Please select user first</div>
+            )}
           </Suspense>
         </TabPane>
 
-        <TabPane key="tasks" tab={<ClipboardList size={16} />}>Coming soon</TabPane>
-        <TabPane key="messages" tab={<MessageCircleMore size={16} />}>Coming soon</TabPane>
-        <TabPane key="files" tab={<FolderClosed size={16} />}>Coming soon</TabPane>
-        <TabPane key="settings" tab={<Settings size={16} />}>Coming soon</TabPane>
+        <TabPane
+          key="tasks"
+          tab={<span className="flex items-center gap-1"><ClipboardList size={16} /> Tasks</span>}
+        >
+          <div className="p-8 text-center text-gray-400">Coming soon</div>
+        </TabPane>
+        <TabPane
+          key="messages"
+          tab={<span className="flex items-center gap-1"><MessageCircleMore size={16} /> Messages</span>}
+        >
+          <div className="p-8 text-center text-gray-400">Coming soon</div>
+        </TabPane>
+        <TabPane
+          key="files"
+          tab={<span className="flex items-center gap-1"><FolderClosed size={16} /> Files</span>}
+        >
+          <div className="p-8 text-center text-gray-400">Coming soon</div>
+        </TabPane>
+        <TabPane
+          key="settings"
+          tab={<span className="flex items-center gap-1"><Settings size={16} /> Settings</span>}
+        >
+          <div className="p-8 text-center text-gray-400">Coming soon</div>
+        </TabPane>
       </Tabs>
     </Card>
   );

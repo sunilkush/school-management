@@ -2,23 +2,24 @@ import React, { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
 import { useGetSchoolAdminDashboardAnalyticsQuery } from "../../../services/schoolDashboardApi";
 import {
-  Card,
   Row,
   Col,
   Typography,
   Space,
   Skeleton,
   Tag,
-  Breadcrumb,
+  Alert,
+  Button,
 } from "antd";
 import {
   DashboardOutlined,
-  HomeOutlined,
   RiseOutlined,
   TeamOutlined,
   DollarOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../../context/ThemeContext.jsx";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
 
 // ── Lazy components ──
 const SummaryCards      = lazy(() => import("./components/SummaryCards.jsx"));
@@ -41,7 +42,8 @@ const tokens = (isDark) => ({
   sectionBorder:isDark ? "#1f1f1f" : "#e8eef8",
   textPrimary:  isDark ? "#e8e8e8" : "#1a1a2e",
   textSecondary:isDark ? "#6b7280" : "#9ca3af",
-  accent:       isDark ? "#4da3ff" : "#1677ff",
+  accent:       isDark ? "#a78bfa" : "#7c3aed",
+  accentBg:     isDark ? "rgba(167,139,250,0.10)" : "rgba(124,58,237,0.08)",
   shadow:       isDark
     ? "0 2px 12px rgba(0,0,0,0.4)"
     : "0 2px 12px rgba(0,0,0,0.06)",
@@ -85,6 +87,23 @@ const ChartSkeleton = ({ height = 280, isDark }) => (
   </div>
 );
 
+const SectionErrorBanner = ({ message, onRetry }) => (
+  <Alert
+    type="error"
+    showIcon
+    message="Failed to load data"
+    description={message || "An unexpected error occurred. Please try again."}
+    action={
+      onRetry && (
+        <Button size="small" icon={<ReloadOutlined />} onClick={onRetry}>
+          Retry
+        </Button>
+      )
+    }
+    style={{ borderRadius: 10, marginBottom: 8 }}
+  />
+);
+
 /* ─────────────────────────────────────────
    Section header — thin labelled divider
    with an icon and optional tag.
@@ -105,7 +124,7 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue", isDark }) => {
           width: 32,
           height: 32,
           borderRadius: 8,
-          background: isDark ? "rgba(77,163,255,0.1)" : "rgba(22,119,255,0.07)",
+          background: t.accentBg,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -145,11 +164,33 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue", isDark }) => {
 const SchoolAdminDashboard = () => {
   const { isDark } = useTheme();
   const t = tokens(isDark);
-  const schoolId = useSelector((state) => state?.auth?.user?.schoolId?._id || state?.auth?.user?.schoolId);
-  const { data: analytics } = useGetSchoolAdminDashboardAnalyticsQuery(schoolId);
+  const schoolId = useSelector(
+    (state) => state?.auth?.user?.schoolId?._id || state?.auth?.user?.schoolId
+  );
+  const {
+    data: analytics,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetSchoolAdminDashboardAnalyticsQuery(schoolId);
 
   return (
     <>
+      <PageHeader
+        title="School Dashboard"
+        subtitle="Monitor school performance, finance and staff activity"
+        icon={<DashboardOutlined />}
+        extra={
+          <Tag
+            color="purple"
+            style={{ borderRadius: 99, padding: "3px 10px", fontSize: 11 }}
+          >
+            Live Overview
+          </Tag>
+        }
+      />
+
     <div className="p-5">
       <style>{`
         /* Card hover lift */
@@ -182,48 +223,13 @@ const SchoolAdminDashboard = () => {
         .dash-section:nth-child(4) { animation: dashFadeUp 0.3s ease 0.26s both; }
       `}</style>
 
-      {/* ── PAGE HEADER ── */}
-      <div className="dash-section" style={{ marginBottom: 20 }}>
-        <Breadcrumb
-          style={{ marginBottom: 12, fontSize: 12 }}
-          items={[
-            { href: "/dashboard", title: <HomeOutlined /> },
-            { title: "School Dashboard" },
-          ]}
+      {/* ── API error banner ── */}
+      {isError && (
+        <SectionErrorBanner
+          message={error?.data?.message || error?.message}
+          onRetry={refetch}
         />
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <Space direction="vertical" size={2}>
-            <Space align="center" size={10}>
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  background: isDark ? "rgba(77,163,255,0.12)" : "rgba(22,119,255,0.09)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <DashboardOutlined style={{ fontSize: 20, color: t.accent }} />
-              </div>
-              <Title level={4} style={{ margin: 0, color: t.textPrimary }}>
-                School Dashboard
-              </Title>
-            </Space>
-            <Text style={{ color: t.textSecondary, fontSize: 13, paddingLeft: 50 }}>
-              Monitor school performance, finance and staff activity
-            </Text>
-          </Space>
-
-          <Tag
-            color={isDark ? "geekblue" : "blue"}
-            style={{ borderRadius: 99, padding: "3px 10px", fontSize: 11, height: "fit-content" }}
-          >
-            Live Overview
-          </Tag>
-        </div>
-      </div>
+      )}
 
       {/* ── SUMMARY KPIs ── */}
       <div className="dash-section">
@@ -233,19 +239,29 @@ const SchoolAdminDashboard = () => {
           tag="Today"
           isDark={isDark}
         />
-        <Suspense
-          fallback={
-            <Row gutter={[16, 16]}>
-              {[1, 2, 3, 4].map((i) => (
-                <Col key={i} xs={24} sm={12} lg={6}>
-                  <CardSkeleton height={100} isDark={isDark} />
-                </Col>
-              ))}
-            </Row>
-          }
-        >
-          <SummaryCards summary={analytics?.summary} />
-        </Suspense>
+        {isLoading ? (
+          <Row gutter={[16, 16]}>
+            {[1, 2, 3, 4].map((i) => (
+              <Col key={i} xs={24} sm={12} lg={6}>
+                <CardSkeleton height={100} isDark={isDark} />
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          <Suspense
+            fallback={
+              <Row gutter={[16, 16]}>
+                {[1, 2, 3, 4].map((i) => (
+                  <Col key={i} xs={24} sm={12} lg={6}>
+                    <CardSkeleton height={100} isDark={isDark} />
+                  </Col>
+                ))}
+              </Row>
+            }
+          >
+            <SummaryCards summary={analytics?.summary} />
+          </Suspense>
+        )}
       </div>
 
       {/* ── FINANCE ── */}
@@ -260,22 +276,34 @@ const SchoolAdminDashboard = () => {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}>
-            <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
-              <SalaryStatistics stats={analytics?.salaryStatistics} />
-            </Suspense>
+            {isLoading ? (
+              <ChartSkeleton height={260} isDark={isDark} />
+            ) : (
+              <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
+                <SalaryStatistics stats={analytics?.salaryStatistics} />
+              </Suspense>
+            )}
           </Col>
           <Col xs={24} lg={12}>
-            <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
-              <IncomeAnalysis data={analytics?.incomeAnalysis} />
-            </Suspense>
+            {isLoading ? (
+              <ChartSkeleton height={260} isDark={isDark} />
+            ) : (
+              <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
+                <IncomeAnalysis data={analytics?.incomeAnalysis} />
+              </Suspense>
+            )}
           </Col>
         </Row>
 
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
           <Col span={24}>
-            <Suspense fallback={<ChartSkeleton height={180} isDark={isDark} />}>
-              <TotalSalaryByUnit data={analytics?.salaryByUnit} />
-            </Suspense>
+            {isLoading ? (
+              <ChartSkeleton height={180} isDark={isDark} />
+            ) : (
+              <Suspense fallback={<ChartSkeleton height={180} isDark={isDark} />}>
+                <TotalSalaryByUnit data={analytics?.salaryByUnit} />
+              </Suspense>
+            )}
           </Col>
         </Row>
       </div>
@@ -292,14 +320,22 @@ const SchoolAdminDashboard = () => {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={8}>
-            <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
-              <EmployeeStructure data={analytics?.employeeStructure} />
-            </Suspense>
+            {isLoading ? (
+              <ChartSkeleton height={280} isDark={isDark} />
+            ) : (
+              <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
+                <EmployeeStructure data={analytics?.employeeStructure} />
+              </Suspense>
+            )}
           </Col>
           <Col xs={24} lg={16}>
-            <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
-              <EmployeePerformance employees={analytics?.employeePerformance} />
-            </Suspense>
+            {isLoading ? (
+              <ChartSkeleton height={280} isDark={isDark} />
+            ) : (
+              <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
+                <EmployeePerformance employees={analytics?.employeePerformance} />
+              </Suspense>
+            )}
           </Col>
         </Row>
       </div>

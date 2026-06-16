@@ -31,7 +31,8 @@ import {
   Fuel,
   Wrench,
   Clock,
-   UserPlus,
+  UserPlus,
+  HelpCircle
 } from "lucide-react";
 
 const commonSelfService = (basePath) => [
@@ -151,7 +152,7 @@ export const sidebarMenu = {
     },
     {
       title: "Support Center",
-      icon: MessageSquare,
+      icon: HelpCircle,
       subMenu: [
         { title: "Support Tickets", path: "superadmin/support/tickets" },
         { title: "Documentation", path: "superadmin/support/documentation" },
