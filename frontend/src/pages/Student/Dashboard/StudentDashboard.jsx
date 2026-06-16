@@ -11,7 +11,7 @@ import {
   fetchStudentTransport,
 } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles";
+import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const getGradeScore = (grade = {}) => {
   const numeric = [grade?.percentage, grade?.marks, grade?.score, grade?.obtainedMarks]
@@ -94,7 +94,7 @@ const StudentDashboard = () => {
         {error && <Alert type="warning" showIcon message={error} style={{ borderRadius: 10, marginBottom: 16 }} />}
 
         {/* KPI stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 20 }}>
+        <div className="stat-grid" style={statGrid(180)}>
           {statMeta.map(({ key, label, icon, suffix }, i) => (
             <div key={key} style={statCard({ color: STAT_COLORS[i] })}>
               <div>

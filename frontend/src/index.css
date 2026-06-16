@@ -672,3 +672,129 @@ body {
     background: #fff;
   }
 }
+
+/* =========================
+   Mobile Responsive Overrides
+========================= */
+
+/* Prevent horizontal overflow on page body */
+body {
+  overflow-x: hidden;
+}
+
+/* Modals: constrain to viewport on all screen sizes */
+.ant-modal-wrap .ant-modal {
+  max-width: calc(100vw - 24px) !important;
+}
+
+/* Responsive stat grids — use .stat-grid class alongside inline styles */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+/* Responsive page-toolbar — use .page-toolbar class on toolbar divs */
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+/* Auth cards: full-width on mobile */
+@media (max-width: 480px) {
+  .auth-card,
+  .auth-card-wide {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* PageHeader: stack title + actions vertically */
+  .page-header-root {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 14px 16px 12px !important;
+    gap: 10px !important;
+  }
+
+  .page-header-extra {
+    width: 100%;
+  }
+
+  .page-header-extra .ant-space {
+    flex-wrap: wrap !important;
+    width: 100% !important;
+  }
+
+  /* Toolbar inputs: stretch to fill row when wrapped */
+  .page-toolbar .ant-input-affix-wrapper,
+  .page-toolbar .ant-input-group-wrapper,
+  .page-toolbar .ant-select,
+  .page-toolbar .ant-picker {
+    flex: 1 1 140px !important;
+    min-width: 0 !important;
+  }
+
+  /* Stat grid: 2 columns on tablet/mobile */
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Modals: tighter margin */
+  .ant-modal-wrap .ant-modal {
+    margin: 8px auto !important;
+  }
+
+  /* Calendar: allow horizontal scroll */
+  .ant-picker-calendar {
+    overflow-x: auto;
+  }
+
+  /* Tables: always allow horizontal scroll */
+  .ant-table-wrapper {
+    overflow-x: auto !important;
+  }
+
+  /* pageWrapper padding reduction */
+  .page-wrapper-responsive {
+    padding: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stat grid: 2 columns on small phones */
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Page wrapper: tighter on phones */
+  .page-wrapper-responsive {
+    padding: 10px !important;
+  }
+
+  /* PageHeader title: smaller font */
+  .page-header-root .ant-typography {
+    font-size: 17px !important;
+  }
+
+  /* Breadcrumb: hide middle items on very small screens */
+  .page-header-root .ant-breadcrumb-separator:not(:last-child),
+  .page-header-root .ant-breadcrumb-link:not(:first-child):not(:last-child) {
+    display: none;
+  }
+
+  /* Modal full-width content */
+  .ant-modal-content {
+    border-radius: 14px !important;
+  }
+
+  /* Form: tighter label */
+  .ant-form-item-label {
+    padding-bottom: 2px !important;
+  }
+}

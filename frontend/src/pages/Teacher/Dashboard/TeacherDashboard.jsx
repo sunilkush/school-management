@@ -13,7 +13,7 @@ import { fetchAssignedClasses } from "../../../features/classSlice";
 import { fetchMyAttendance } from "../../../features/attendanceSlice";
 import { getExams } from "../../../features/examSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pageCard, sectionPanel, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles";
+import { pageWrapper, pageCard, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const STAT_COLORS = ["#7c3aed", "#0284c7", "#f97316", "#dc2626"];
 
@@ -102,7 +102,7 @@ const TeacherDashboard = () => {
       <div style={pageWrapper}>
         <Spin spinning={isLoading}>
           {/* KPI stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 20 }}>
+          <div className="stat-grid" style={statGrid(180)}>
             {stats.map((item, i) => (
               <div key={item.title} style={statCard({ color: STAT_COLORS[i] })}>
                 <div>

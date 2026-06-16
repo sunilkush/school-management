@@ -14,7 +14,7 @@ import AdmissionForm from "../../../components/forms/AdmissionForm";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, pageCard, toolbarRow, tableContainer,
-  tableHeadCss, avatarStyle, pill, emptyState, statCard, statLabel, statValue,
+  tableHeadCss, avatarStyle, pill, emptyState, statCard, statLabel, statValue, statGrid,
 } from "../../../styles/pageStyles";
 
 const bloodGroupColor = {
@@ -263,7 +263,7 @@ const StudentList = () => {
         <div style={pageCard}>
           <div style={{ padding: "20px 20px 0" }}>
             {/* KPI Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+            <div className="stat-grid" style={statGrid(180)}>
               {STAT_META.map(({ key, label, icon, color }) => (
                 <div key={key} style={statCard({ color })}>
                   <div>
@@ -276,7 +276,7 @@ const StudentList = () => {
             </div>
 
             {/* Toolbar */}
-            <div style={toolbarRow}>
+            <div className="page-toolbar" style={toolbarRow}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Students
               </span>

@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, pageCard, toolbarRow, tableHeadCss,
-  avatarStyle, pill, emptyState, statCard, statLabel, statValue,
+  avatarStyle, pill, emptyState, statCard, statLabel, statValue, statGrid,
 } from "../../../styles/pageStyles";
 
 const ROLE_COLORS = {
@@ -233,7 +233,7 @@ const TeacherList = () => {
         <div style={pageCard}>
           <div style={{ padding: "20px 20px 0" }}>
             {/* KPI row */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+            <div className="stat-grid" style={statGrid(200)}>
               {STAT_META.map(({ key, label, icon, color }) => (
                 <div key={key} style={statCard({ color })}>
                   <div>
@@ -246,7 +246,7 @@ const TeacherList = () => {
             </div>
 
             {/* Toolbar */}
-            <div style={toolbarRow}>
+            <div className="page-toolbar" style={toolbarRow}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Staff
               </span>

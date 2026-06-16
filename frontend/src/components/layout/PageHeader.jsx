@@ -1,9 +1,10 @@
 import React from "react";
-import { Breadcrumb, Typography, Space } from "antd";
+import { Breadcrumb, Grid, Typography, Space } from "antd";
 import { Link, useLocation } from "react-router-dom";
 import { HomeOutlined, RightOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 /**
  * PageHeader — standardised page header used by every dashboard page.
@@ -25,6 +26,8 @@ const PageHeader = ({
   compact = false,
 }) => {
   const location = useLocation();
+  const screens = useBreakpoint();
+  const isMobile = !screens.sm;
 
   /* Auto-generate breadcrumbs from pathname when not provided */
   const autoCrumbs = React.useMemo(() => {
@@ -68,26 +71,32 @@ const PageHeader = ({
     })),
   ];
 
+  const paddingV = compact ? "14px" : isMobile ? "14px" : "24px";
+  const paddingH = isMobile ? "16px" : "24px";
+
   return (
     <div
+      className="page-header-root"
       style={{
-        padding: compact ? "16px 24px 12px" : "24px 24px 20px",
+        padding: `${paddingV} ${paddingH} ${compact ? "12px" : isMobile ? "12px" : "20px"}`,
         borderBottom: "1px solid var(--border-muted)",
         background: "var(--surface-header)",
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "space-between",
-        gap: 16,
+        gap: 12,
         flexWrap: "wrap",
       }}
     >
       {/* Left: breadcrumb + title + subtitle */}
-      <div style={{ minWidth: 0 }}>
-        <Breadcrumb
-          items={breadcrumbItems}
-          separator={<RightOutlined style={{ fontSize: 10, color: "var(--text-muted)" }} />}
-          style={{ marginBottom: compact ? 6 : 10 }}
-        />
+      <div style={{ minWidth: 0, flex: "1 1 200px" }}>
+        {!isMobile && (
+          <Breadcrumb
+            items={breadcrumbItems}
+            separator={<RightOutlined style={{ fontSize: 10, color: "var(--text-muted)" }} />}
+            style={{ marginBottom: compact ? 6 : 10 }}
+          />
+        )}
 
         <Space align="center" size={10} style={{ flexWrap: "wrap" }}>
           {icon && (
@@ -96,12 +105,12 @@ const PageHeader = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 36,
-                height: 36,
+                width: isMobile ? 30 : 36,
+                height: isMobile ? 30 : 36,
                 borderRadius: 10,
                 background: "var(--primary-light)",
                 color: "var(--primary)",
-                fontSize: 18,
+                fontSize: isMobile ? 15 : 18,
                 flexShrink: 0,
               }}
             >
@@ -110,12 +119,12 @@ const PageHeader = ({
           )}
           <div>
             <Title
-              level={4}
+              level={isMobile ? 5 : 4}
               style={{
                 margin: 0,
                 color: "var(--text-primary)",
                 fontWeight: 700,
-                fontSize: compact ? 16 : 20,
+                fontSize: compact ? 16 : isMobile ? 16 : 20,
                 lineHeight: 1.3,
               }}
             >
@@ -125,7 +134,7 @@ const PageHeader = ({
               <Text
                 style={{
                   color: "var(--text-muted)",
-                  fontSize: 13,
+                  fontSize: isMobile ? 12 : 13,
                   display: "block",
                   marginTop: 2,
                 }}
@@ -139,9 +148,18 @@ const PageHeader = ({
 
       {/* Right: extra actions */}
       {extra && (
-        <Space wrap size={8} style={{ flexShrink: 0, alignSelf: "center" }}>
-          {extra}
-        </Space>
+        <div
+          className="page-header-extra"
+          style={{
+            flexShrink: 0,
+            alignSelf: isMobile ? "stretch" : "center",
+            width: isMobile ? "100%" : "auto",
+          }}
+        >
+          <Space wrap size={8} style={{ width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
+            {extra}
+          </Space>
+        </div>
       )}
     </div>
   );

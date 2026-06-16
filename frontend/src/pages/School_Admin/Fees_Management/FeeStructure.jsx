@@ -184,7 +184,7 @@ const FeeStructure = () => {
       <div style={pageWrapper}>
         <div style={pageCard}>
           <div style={{ padding: "20px 20px 0" }}>
-            <div style={toolbarRow}>
+            <div className="page-toolbar" style={toolbarRow}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Fee Structures
               </span>

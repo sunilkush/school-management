@@ -10,8 +10,21 @@ import React from "react";
 export const pageWrapper = {
   minHeight: "100vh",
   background: "var(--surface-page)",
-  padding: "24px",
+  padding: "clamp(12px, 3vw, 24px)",
 };
+
+/* ── Responsive stat-card grid ───────────────────────────────────── */
+/**
+ * statGrid(minColPx?) — returns an inline style for a responsive grid.
+ * Pair with className="stat-grid" to also get the CSS media-query fallback.
+ * minColPx defaults to 150 → collapses to 2 cols at ~360px, 4+ on desktop.
+ */
+export const statGrid = (minColPx = 150) => ({
+  display: "grid",
+  gridTemplateColumns: `repeat(auto-fit, minmax(${minColPx}px, 1fr))`,
+  gap: 14,
+  marginBottom: 20,
+});
 
 /* ── Main content card ───────────────────────────────────────────── */
 export const pageCard = {

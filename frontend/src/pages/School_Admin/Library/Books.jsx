@@ -13,7 +13,7 @@ import {
 } from "../../../features/librarySlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
-  pageWrapper, pageCard, toolbarRow, tableHeadCss, statCard, statLabel, statValue,
+  pageWrapper, pageCard, toolbarRow, tableHeadCss, statCard, statLabel, statValue, statGrid,
   pill, emptyState, iconWell,
 } from "../../../styles/pageStyles";
 
@@ -239,7 +239,7 @@ const Books = () => {
         <div style={pageCard}>
           <div style={{ padding: "20px 20px 0" }}>
             {/* KPI stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+            <div className="stat-grid" style={statGrid(200)}>
               {STAT_META.map(({ key, label, color }) => (
                 <div key={key} style={statCard({ color })}>
                   <div>
@@ -252,7 +252,7 @@ const Books = () => {
             </div>
 
             {/* Toolbar */}
-            <div style={toolbarRow}>
+            <div className="page-toolbar" style={toolbarRow}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Books
               </span>

@@ -15,7 +15,7 @@ import {
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, pageCard, toolbarRow, tableHeadCss,
-  statCard, statLabel, statValue, pill, iconWell,
+  statCard, statLabel, statValue, statGrid, pill, iconWell,
 } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
@@ -248,7 +248,7 @@ const Events = () => {
         />
 
         {/* KPI stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 20 }}>
+        <div className="stat-grid" style={statGrid(180)}>
           {STAT_META.map(({ key, label, color }) => (
             <div key={key} style={statCard({ color })}>
               <div>
@@ -262,7 +262,7 @@ const Events = () => {
 
         <div style={pageCard}>
           <div style={{ padding: "20px 20px 0" }}>
-            <div style={toolbarRow}>
+            <div className="page-toolbar" style={toolbarRow}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Events
               </span>
