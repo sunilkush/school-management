@@ -191,7 +191,7 @@ const SchoolAdminDashboard = () => {
         }
       />
 
-    <div className="p-5">
+    <div style={{ padding: "clamp(12px, 3vw, 24px)" }}>
       <style>{`
         /* Card hover lift */
         .dash-card {

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Button,
-  Card,
   Dropdown,
   Empty,
   Input,
@@ -40,6 +39,18 @@ import {
 import ExamPageHeader from "../../../components/exams/ExamPageHeader";
 import ExamStatCards from "../../../components/exams/ExamStatCards";
 import { getExamRouteConfig } from "../../../utils/examRoutes";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+  toolbarRow,
+  tableHeadCss,
+  statCard,
+  statLabel,
+  statValue,
+  statGrid,
+} from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 
@@ -83,7 +94,6 @@ const ExamsPage = () => {
 
   useEffect(() => {
     if (!schoolId || !academicYearId) return;
-
     const params = {
       schoolId,
       academicYearId,
@@ -258,94 +268,106 @@ const ExamsPage = () => {
   ];
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-      <Card bordered={false} style={{ borderRadius: 12 }}>
-        <ExamPageHeader
-          title="Exam Operations"
-          subtitle="Manage exam lifecycle, publishing, and performance from one workspace."
-          breadcrumbItems={[{ title: "Dashboard" }, { title: "Exams" }, { title: "Exam List" }]}
-          actions={[
-            <Select
-              key="status"
-              value={statusFilter}
-              style={{ width: 150 }}
-              onChange={(value) => {
-                setPage(1);
-                setStatusFilter(value);
-              }}
-              options={["all", "draft", "published", "completed"].map((status) => ({
-                label: status.charAt(0).toUpperCase() + status.slice(1),
-                value: status,
-              }))}
-            />,
-            <Input.Search
-              key="search"
-              allowClear
-              placeholder="Search exam title or code"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              style={{ width: 280 }}
-            />,
-            <Button
-              key="create"
-              type="primary"
-              icon={<PlusOutlined />}
-             onClick={() => navigate(examRoutes.createPath)}
-            >
-              Create Exam
-            </Button>,
-          ]}
-        />
-      </Card>
-        <Alert
-        type="info"
-        showIcon
-        style={{ borderRadius: 10 }}
-        message="Exam Module Guide"
-        description={
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li><strong>Step 1:</strong> Exam List page se <strong>Create Exam</strong> open karke basic details save karein.</li>
-            <li><strong>Step 2:</strong> Save ke baad same exam ko <strong>Edit</strong> karein aur questions add/update karein.</li>
-            <li><strong>Step 3:</strong> Exam ready ho to status <strong>Draft → Published</strong> karein taaki students attempt kar saken.</li>
-            <li><strong>Step 4:</strong> Exam ke baad <strong>Publish Result</strong> use karein, phir <strong>View Analytics</strong> se performance check karein.</li>
-          </ul>
-        }
-      />
-      <ExamStatCards
-        items={[
-          { key: "total", title: "Total Exams", value: summary.total, prefix: <FileDoneOutlined /> },
-          { key: "published", title: "Published", value: summary.published, prefix: <CheckCircleOutlined />, valueStyle: { color: "#389e0d" } },
-          { key: "draft", title: "Draft", value: summary.draft, prefix: <ClockCircleOutlined />, valueStyle: { color: "#d48806" } },
-          { key: "completed", title: "Completed", value: summary.completed, prefix: <BarChartOutlined />, valueStyle: { color: "#531dab" } },
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("exam-table")}</style>
+      <PageHeader
+        title="Exam Operations"
+        subtitle="Manage exam lifecycle, publishing, and performance from one workspace."
+        icon={<FileDoneOutlined />}
+        extra={[
+          <Select
+            key="status"
+            value={statusFilter}
+            style={{ width: 150 }}
+            onChange={(value) => {
+              setPage(1);
+              setStatusFilter(value);
+            }}
+            options={["all", "draft", "published", "completed"].map((status) => ({
+              label: status.charAt(0).toUpperCase() + status.slice(1),
+              value: status,
+            }))}
+          />,
+          <Input.Search
+            key="search"
+            allowClear
+            placeholder="Search exam title or code"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            style={{ width: 240 }}
+          />,
+          <Button
+            key="create"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate(examRoutes.createPath)}
+          >
+            Create Exam
+          </Button>,
         ]}
       />
 
-      <Card bordered={false} style={{ borderRadius: 12 }}>
-        <Table
-          loading={loading}
-          columns={columns}
-          dataSource={exams}
-          rowKey="_id"
-          scroll={{ x: 1100 }}
-          pagination={{
-            current: page,
-            pageSize,
-            total: pagination?.total || exams.length,
-            onChange: (nextPage, nextPageSize) => {
-              setPage(nextPage);
-              setPageSize(nextPageSize);
-            },
-          }}
-          locale={{
-            emptyText: (
-              <Empty
-                description={error ? "Unable to load exams. Retry with different filters." : "No exams found"}
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            ),
-          }}
+      <div style={{ marginTop: 20 }}>
+        <Alert
+          type="info"
+          showIcon
+          style={{ borderRadius: 10, marginBottom: 16 }}
+          message="Exam Module Guide"
+          description={
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <li><strong>Step 1:</strong> Exam List page se <strong>Create Exam</strong> open karke basic details save karein.</li>
+              <li><strong>Step 2:</strong> Save ke baad same exam ko <strong>Edit</strong> karein aur questions add/update karein.</li>
+              <li><strong>Step 3:</strong> Exam ready ho to status <strong>Draft → Published</strong> karein taaki students attempt kar saken.</li>
+              <li><strong>Step 4:</strong> Exam ke baad <strong>Publish Result</strong> use karein, phir <strong>View Analytics</strong> se performance check karein.</li>
+            </ul>
+          }
         />
-      </Card>
+
+        <div className="stat-grid" style={statGrid(180)}>
+          {[
+            { key: "total", title: "Total Exams", value: summary.total, color: "var(--primary)", icon: <FileDoneOutlined /> },
+            { key: "published", title: "Published", value: summary.published, color: "#389e0d", icon: <CheckCircleOutlined /> },
+            { key: "draft", title: "Draft", value: summary.draft, color: "#d48806", icon: <ClockCircleOutlined /> },
+            { key: "completed", title: "Completed", value: summary.completed, color: "#531dab", icon: <BarChartOutlined /> },
+          ].map((item) => (
+            <div key={item.key} style={statCard({ color: item.color })}>
+              <div>
+                <div style={statLabel(item.color)}>{item.title}</div>
+                <div style={statValue(item.color)}>{item.value}</div>
+              </div>
+              <span style={{ fontSize: 28, color: item.color, opacity: 0.6 }}>{item.icon}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={pageCard}>
+          <Table
+            className="exam-table"
+            loading={loading}
+            columns={columns}
+            dataSource={exams}
+            rowKey="_id"
+            scroll={{ x: "max-content" }}
+            pagination={{
+              current: page,
+              pageSize,
+              total: pagination?.total || exams.length,
+              onChange: (nextPage, nextPageSize) => {
+                setPage(nextPage);
+                setPageSize(nextPageSize);
+              },
+            }}
+            locale={{
+              emptyText: (
+                <Empty
+                  description={error ? "Unable to load exams. Retry with different filters." : "No exams found"}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              ),
+            }}
+          />
+        </div>
+      </div>
 
       <Drawer
         title="Exam Analytics"
@@ -354,20 +376,18 @@ const ExamsPage = () => {
         width={680}
       >
         {analytics ? (
-          <>
-            <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label="Exam">{analytics.exam?.title}</Descriptions.Item>
-              <Descriptions.Item label="Class">{analytics.exam?.schoolClassId?.name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Subject">{analytics.exam?.subjectId?.name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Risk Level">{analytics.enterpriseInsights?.riskLevel?.toUpperCase()}</Descriptions.Item>
-              <Descriptions.Item label="Recommendation">{analytics.enterpriseInsights?.recommendation}</Descriptions.Item>
-            </Descriptions>
-          </>
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="Exam">{analytics.exam?.title}</Descriptions.Item>
+            <Descriptions.Item label="Class">{analytics.exam?.schoolClassId?.name || "-"}</Descriptions.Item>
+            <Descriptions.Item label="Subject">{analytics.exam?.subjectId?.name || "-"}</Descriptions.Item>
+            <Descriptions.Item label="Risk Level">{analytics.enterpriseInsights?.riskLevel?.toUpperCase()}</Descriptions.Item>
+            <Descriptions.Item label="Recommendation">{analytics.enterpriseInsights?.recommendation}</Descriptions.Item>
+          </Descriptions>
         ) : (
           <Empty description="No analytics available" />
         )}
       </Drawer>
-    </Space>
+    </div>
   );
 };
 

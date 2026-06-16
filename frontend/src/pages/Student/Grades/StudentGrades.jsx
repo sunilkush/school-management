@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Collapse, Empty, Space, Table, Tag, Typography } from "antd";
+import { Collapse, Empty, Space, Table, Tag, Typography } from "antd";
+import { TrophyOutlined } from "@ant-design/icons";
 import { fetchStudentGrades } from "../../../features/studentPortalSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, pageCard, tableHeadCss, pill } from "../../../styles/pageStyles";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const StudentGrades = () => {
   const dispatch = useDispatch();
@@ -21,7 +24,9 @@ const StudentGrades = () => {
       title: "Result",
       key: "isPassed",
       render: (_, row) => (
-        <Tag color={row.isPassed ? "green" : "red"}>{row.isPassed ? "PASS" : "FAIL"}</Tag>
+        <span style={pill(row.isPassed ? "#16a34a" : "#dc2626", row.isPassed ? "#f0fdf4" : "#fff1f2")}>
+          {row.isPassed ? "PASS" : "FAIL"}
+        </span>
       ),
     },
   ];
@@ -37,46 +42,56 @@ const StudentGrades = () => {
   }, [grades]);
 
   return (
-    <Card loading={loading}>
-      <Space direction="vertical" style={{ width: "100%" }}>
-        <Title level={4} style={{ margin: 0 }}>My Grades</Title>
-        {summary && (
-          <Space>
-            <Tag color="blue">Total Exams: {summary.total}</Tag>
-            <Tag color="green">Passed: {summary.passCount}</Tag>
-            <Tag color="red">Failed: {summary.failCount}</Tag>
-          </Space>
-        )}
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("grades-tbl")}</style>
+      <PageHeader
+        title="My Grades"
+        subtitle="View published exam results and subject-wise marks"
+        icon={<TrophyOutlined />}
+      />
+      <div style={{ ...pageCard, margin: "16px 0" }}>
+        <div style={{ padding: "16px 20px" }}>
+          {summary && (
+            <Space wrap style={{ marginBottom: 16 }}>
+              <Tag color="blue">Total Exams: {summary.total}</Tag>
+              <Tag color="green">Passed: {summary.passCount}</Tag>
+              <Tag color="red">Failed: {summary.failCount}</Tag>
+            </Space>
+          )}
 
-        {!grades.length ? (
-          <Empty description="No published grades found" />
-        ) : (
-          <Collapse
-            items={grades.map((grade) => ({
-              key: grade._id,
-              label: `${grade.examId?.title || "Exam"} • ${grade.percentage}% • Grade ${grade.grade}`,
-              children: (
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Table
-                    rowKey={(row) => `${row.subjectId || row.subjectName}`}
-                    columns={subjectColumns}
-                    dataSource={grade.subjects || []}
-                    pagination={false}
-                    size="small"
-                  />
-                  <Text>
-                    Status:{" "}
-                    <Tag color={grade.resultStatus === "PASS" ? "green" : "red"}>
-                      {grade.resultStatus}
-                    </Tag>
-                  </Text>
-                </Space>
-              ),
-            }))}
-          />
-        )}
-      </Space>
-    </Card>
+          {!grades.length ? (
+            <Empty description="No published grades found" />
+          ) : (
+            <Collapse
+              loading={loading}
+              items={grades.map((grade) => ({
+                key: grade._id,
+                label: `${grade.examId?.title || "Exam"} • ${grade.percentage}% • Grade ${grade.grade}`,
+                children: (
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <Table
+                      className="grades-tbl"
+                      rowKey={(row) => `${row.subjectId || row.subjectName}`}
+                      columns={subjectColumns}
+                      dataSource={grade.subjects || []}
+                      pagination={false}
+                      size="small"
+                      scroll={{ x: "max-content" }}
+                    />
+                    <Text>
+                      Status:{" "}
+                      <span style={pill(grade.resultStatus === "PASS" ? "#16a34a" : "#dc2626", grade.resultStatus === "PASS" ? "#f0fdf4" : "#fff1f2")}>
+                        {grade.resultStatus}
+                      </span>
+                    </Text>
+                  </Space>
+                ),
+              }))}
+            />
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

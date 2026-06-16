@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Breadcrumb, Card, Layout, Space } from "antd";
+import { Alert, Space } from "antd";
+import { TeamOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import dayjs from "dayjs";
 import PayrollHeaderActions from "../../../components/payroll/PayrollHeaderActions";
@@ -8,8 +9,12 @@ import PayrollSummaryCards from "../../../components/payroll/PayrollSummaryCards
 import PayrollEntriesTable from "../../../components/payroll/PayrollEntriesTable";
 import { usePayrollActions, usePayrollCycle } from "../../../hooks/payrollHooks";
 import { getPayrollActionPermissions } from "../../../utils/payroll";
-
-const { Content } = Layout;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+} from "../../../styles/pageStyles";
 
 const EmployeeSalaries = () => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
@@ -35,14 +40,15 @@ const EmployeeSalaries = () => {
   );
 
   return (
-    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 20 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Payroll</Breadcrumb.Item>
-        <Breadcrumb.Item>Monthly Run</Breadcrumb.Item>
-      </Breadcrumb>
-      <Content>
-        <Card style={{ marginBottom: 16 }}>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Monthly Payroll Run"
+        subtitle="Generate, review and process monthly payroll"
+        icon={<TeamOutlined />}
+      />
+
+      <div style={{ padding: "20px" }}>
+        <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Space wrap style={{ justifyContent: "space-between", width: "100%" }}>
             <PayrollHeaderActions
               selectedMonth={selectedMonth}
@@ -61,7 +67,7 @@ const EmployeeSalaries = () => {
             />
             <PayrollCycleStatus status={cycle?.status} />
           </Space>
-        </Card>
+        </div>
 
         {isCycleMissing && (
           <Alert
@@ -77,11 +83,12 @@ const EmployeeSalaries = () => {
           <PayrollSummaryCards summary={summary} />
         </div>
 
-        <Card title="Payroll Entries">
+        <div style={{ ...pageCard, padding: 24 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Payroll Entries</div>
           <PayrollEntriesTable entries={entries} loading={loading} />
-        </Card>
-      </Content>
-    </Layout>
+        </div>
+      </div>
+    </div>
   );
 };
 

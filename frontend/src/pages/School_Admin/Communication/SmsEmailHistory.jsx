@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import {
-  Layout,
-  Breadcrumb,
   Table,
   Card,
   Row,
@@ -12,10 +10,11 @@ import {
   Button,
   Space,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, MailOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import { pageWrapper, tableHeadCss } from "../../../styles/pageStyles.js";
 
-const { Content } = Layout;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
@@ -60,14 +59,14 @@ const SmsEmailHistory = () => {
   const totalEmail = history.filter((h) => h.type === "Email").length;
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Notifications</Breadcrumb.Item>
-        <Breadcrumb.Item>SMS & Email History</Breadcrumb.Item>
-      </Breadcrumb>
-
-      <Content>
+    <>
+      <style>{tableHeadCss("sms-history-tbl")}</style>
+      <PageHeader
+        title="SMS & Email History"
+        subtitle="View all sent notifications and communication history"
+        icon={<MailOutlined />}
+      />
+      <div style={pageWrapper}>
         {/* Summary Cards */}
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12}>
@@ -79,39 +78,39 @@ const SmsEmailHistory = () => {
         </Row>
 
         {/* Filters */}
-        <Card style={{ marginBottom: 24 }} title="Filters">
-          <Space style={{ flexWrap: "wrap" }}>
-            <Select
-              placeholder="Select Type"
-              allowClear
-              style={{ width: 150 }}
-              onChange={(value) => setFilters({ ...filters, type: value })}
-            >
-              <Option value="SMS">SMS</Option>
-              <Option value="Email">Email</Option>
-            </Select>
+        <div className="page-toolbar" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+          <Select
+            placeholder="Select Type"
+            allowClear
+            style={{ width: 150 }}
+            onChange={(value) => setFilters({ ...filters, type: value })}
+          >
+            <Option value="SMS">SMS</Option>
+            <Option value="Email">Email</Option>
+          </Select>
 
-            <Input
-              placeholder="Search by title/message"
-              prefix={<SearchOutlined />}
-              style={{ width: 250 }}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            />
+          <Input
+            placeholder="Search by title/message"
+            prefix={<SearchOutlined />}
+            style={{ width: 250 }}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          />
 
-            <RangePicker
-              onChange={(dates) => setFilters({ ...filters, dateRange: dates })}
-            />
+          <RangePicker
+            onChange={(dates) => setFilters({ ...filters, dateRange: dates })}
+          />
 
-            <Button
-              onClick={() => setFilters({ type: null, search: "", dateRange: null })}
-            >
-              Reset
-            </Button>
-          </Space>
-        </Card>
+          <Button
+            onClick={() => setFilters({ type: null, search: "", dateRange: null })}
+          >
+            Reset
+          </Button>
+        </div>
 
         {/* History Table */}
         <Table
+          className="sms-history-tbl"
+          scroll={{ x: 600 }}
           columns={[
             { title: "Type", dataIndex: "type", key: "type" },
             { title: "Title", dataIndex: "title", key: "title" },
@@ -123,8 +122,8 @@ const SmsEmailHistory = () => {
           rowKey="key"
           pagination={{ pageSize: 5 }}
         />
-      </Content>
-    </Layout>
+      </div>
+    </>
   );
 };
 

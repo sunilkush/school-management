@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
-  Card,
   Empty,
   Input,
   List,
@@ -10,7 +9,6 @@ import {
   Select,
   Space,
   Spin,
-  Statistic,
   Tag,
   Typography,
   Upload,
@@ -18,6 +16,7 @@ import {
   Slider,
 } from "antd";
 import {
+  BookOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
   SearchOutlined,
@@ -25,8 +24,20 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+  statGrid,
+  statCard,
+  statLabel,
+  statValue,
+  toolbarRow,
+  pill,
+} from "../../../styles/pageStyles";
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 const FALLBACK_HOMEWORK = [
   {
@@ -54,9 +65,9 @@ const normalizeStatus = (status, dueDate) => {
 };
 
 const statusColor = (status) => {
-  if (status === "Submitted") return "green";
-  if (status === "Late") return "red";
-  return "orange";
+  if (status === "Submitted") return { color: "#16a34a", bg: "#f0fdf4" };
+  if (status === "Late") return { color: "#dc2626", bg: "#fff1f2" };
+  return { color: "#d97706", bg: "#fffbeb" };
 };
 
 const StudentHomework = () => {
@@ -162,7 +173,7 @@ const StudentHomework = () => {
       setUploading(true);
       await new Promise((resolve) => setTimeout(resolve, 700));
 
-     const formData = new FormData();
+      const formData = new FormData();
       fileList.forEach((file) => {
         if (file?.originFileObj) {
           formData.append("attachments", file.originFileObj);
@@ -187,33 +198,48 @@ const StudentHomework = () => {
     }
   };
 
+  const STAT_ITEMS = [
+    { label: "Total", value: stats.total, color: "var(--primary)" },
+    { label: "Submitted", value: stats.submitted, color: "#16a34a" },
+    { label: "Pending", value: stats.pending, color: "#d97706" },
+    { label: "Late", value: stats.late, color: "#dc2626" },
+  ];
+
   return (
-    <div style={{ padding: 24, maxWidth: 980, margin: "0 auto" }}>
-      <Space direction="vertical" style={{ width: "100%" }} size={16}>
-        <Title level={3} style={{ margin: 0 }}>📘 My Homework</Title>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="My Homework"
+        subtitle="Track and submit your assignments"
+        icon={<BookOutlined />}
+      />
 
-        {error && <Alert type="warning" showIcon message={error} />}
+      {error && <Alert type="warning" showIcon message={error} style={{ margin: "16px 0" }} />}
 
-        <Space wrap>
-          <Statistic title="Total" value={stats.total} />
-          <Statistic title="Submitted" value={stats.submitted} />
-          <Statistic title="Pending" value={stats.pending} />
-          <Statistic title="Late" value={stats.late} />
-        </Space>
+      <div className="stat-grid" style={{ ...statGrid(140), margin: "16px 0" }}>
+        {STAT_ITEMS.map((s) => (
+          <div key={s.label} style={statCard({ color: s.color })}>
+            <div>
+              <div style={statLabel(s.color)}>{s.label}</div>
+              <div style={statValue(s.color)}>{s.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        <Space wrap style={{ width: "100%" }}>
+      <div style={pageCard}>
+        <div className="page-toolbar" style={toolbarRow}>
           <Input
             placeholder="Search by subject/title"
             prefix={<SearchOutlined />}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            style={{ width: 260 }}
+            style={{ maxWidth: 260 }}
+            allowClear
           />
-
           <Select
             value={statusFilter}
             onChange={setStatusFilter}
-            style={{ width: 180 }}
+            style={{ width: 160 }}
             options={[
               { value: "all", label: "All Status" },
               { value: "Pending", label: "Pending" },
@@ -221,51 +247,60 @@ const StudentHomework = () => {
               { value: "Submitted", label: "Submitted" },
             ]}
           />
-
           <Button onClick={loadHomework}>Refresh</Button>
-        </Space>
+        </div>
 
         {loading ? (
-          <Card>
+          <div style={{ textAlign: "center", padding: 40 }}>
             <Spin />
-          </Card>
+          </div>
         ) : (
           <List
             locale={{ emptyText: <Empty description="No homework found" /> }}
             itemLayout="vertical"
             dataSource={filteredHomework}
-            renderItem={(item) => (
-              <Card style={{ marginBottom: 8 }}>
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Space>
-                    <FileTextOutlined />
-                    <Text strong>{item.subject}</Text>
-                  </Space>
-
-                  <Title level={5} style={{ margin: 0 }}>{item.title}</Title>
-
-                  <Space>
-                    <ClockCircleOutlined />
-                    <Text type="secondary">Due: {item.dueDate || "Not specified"}</Text>
-                  </Space>
-
-                  <Tag color={statusColor(item.status)}>{item.status}</Tag>
-
-                  <Button type="link" onClick={() => openDetails(item)}>
+            renderItem={(item) => {
+              const sc = statusColor(item.status);
+              return (
+                <div
+                  key={item._id}
+                  style={{
+                    padding: "14px 20px",
+                    borderBottom: "1px solid var(--border-muted)",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 14,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <FileTextOutlined style={{ fontSize: 20, color: "var(--primary)", marginTop: 2 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{item.title}</div>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 6 }}>{item.subject}</div>
+                    <Space wrap size={8}>
+                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        <ClockCircleOutlined style={{ marginRight: 4 }} />
+                        Due: {item.dueDate || "Not specified"}
+                      </span>
+                      <span style={pill(sc.color, sc.bg)}>{item.status}</span>
+                    </Space>
+                  </div>
+                  <Button type="link" style={{ padding: 0 }} onClick={() => openDetails(item)}>
                     View Details
                   </Button>
-                </Space>
-              </Card>
-            )}
+                </div>
+              );
+            }}
           />
         )}
-      </Space>
+      </div>
 
       <Modal
         open={open}
         title="Homework Details"
         onCancel={() => setOpen(false)}
         footer={null}
+        centered
       >
         {selectedHomework && (
           <Space direction="vertical" style={{ width: "100%" }} size={10}>
@@ -280,7 +315,8 @@ const StudentHomework = () => {
 
             {selectedHomework.status !== "Submitted" ? (
               <>
-              <Card size="small" title="Rubric Self-Check (before submit)">
+                <div style={sectionPanel}>
+                  <div style={{ fontWeight: 600, marginBottom: 10, fontSize: 13 }}>Rubric Self-Check (before submit)</div>
                   <Space direction="vertical" style={{ width: "100%" }}>
                     <Text>Quality</Text>
                     <Slider value={rubric.quality} onChange={(v) => setRubric((p) => ({ ...p, quality: v }))} />
@@ -290,7 +326,7 @@ const StudentHomework = () => {
                     <Slider value={rubric.timeliness} onChange={(v) => setRubric((p) => ({ ...p, timeliness: v }))} />
                     <Tag color="blue">Rubric Score Preview: {rubricScore}/100</Tag>
                   </Space>
-                </Card>
+                </div>
 
                 <Upload
                   beforeUpload={() => false}
@@ -300,7 +336,7 @@ const StudentHomework = () => {
                 >
                   <Button icon={<UploadOutlined />}>Upload Homework</Button>
                 </Upload>
-                  <Tag color={plagiarismRisk > 70 ? "red" : plagiarismRisk > 40 ? "orange" : "green"}>
+                <Tag color={plagiarismRisk > 70 ? "red" : plagiarismRisk > 40 ? "orange" : "green"}>
                   Basic Similarity Check: {plagiarismRisk}%
                 </Tag>
                 <Button
@@ -322,4 +358,4 @@ const StudentHomework = () => {
   );
 };
 
-export default StudentHomework
+export default StudentHomework;

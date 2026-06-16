@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import dayjs from "dayjs";
 import {
-  Card,
   Form,
   Input,
   Select,
@@ -12,16 +11,15 @@ import {
   Col,
   Divider,
   message,
-  Typography,
   TimePicker,
   Spin,
   Switch,
   Alert,
 } from "antd";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PlusOutlined, FormOutlined } from "@ant-design/icons";
 
 import { useDispatch, useSelector } from "react-redux";
-import { getClassData} from "../../../features/schoolClassSlice.js";
+import { getClassData } from "../../../features/schoolClassSlice.js";
 import { getQuestions } from "../../../features/questionSlice.js";
 import {
   createExam,
@@ -31,49 +29,49 @@ import {
 
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getExamRouteConfig } from "../../../utils/examRoutes";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+} from "../../../styles/pageStyles";
 
-
-const { Title } = Typography;
 const { Option } = Select;
 
 const CreateExam = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const navigate = useNavigate();
-   const location = useLocation();
+  const location = useLocation();
   const examRoutes = useMemo(() => getExamRouteConfig(location.pathname), [location.pathname]);
   const { id } = useParams();
 
   const isEditMode = id && id !== "undefined" && id !== "null";
-  
-  /* ================= LOCAL STATE ================= */
+
   const [selectedClass, setSelectedClass] = useState(null);
   const [subjectList, setSubjectList] = useState([]);
   const [sectionList, setSectionList] = useState([]);
   const [examQuestions, setExamQuestions] = useState([]);
-  const [examData, setExamData] = useState(null); // ⭐ important
-  const {user=[],loading} = useSelector((state) => state.auth || {});
-  const {selectedAcademicYear} = useSelector((state) => state.academicYear || {});
-  /* ================= REDUX ================= */
+  const [examData, setExamData] = useState(null);
+  const { user = [], loading } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   const { schoolClasses } = useSelector((state) => state.schoolClass || {});
   const { questions = [] } = useSelector((state) => state.questions || {});
-  
+
   const academicYearId = selectedAcademicYear?._id;
   const schoolId = user?.school?._id;
   const userId = user?._id;
-  /* ================= FETCH CLASSES ================= */
+
   useEffect(() => {
     if (schoolId) {
-      dispatch(getClassData({ schoolId,academicYearId }));
+      dispatch(getClassData({ schoolId, academicYearId }));
       dispatch(getQuestions({ schoolId }));
     }
-  }, [schoolId, dispatch,academicYearId]);
+  }, [schoolId, dispatch, academicYearId]);
 
-  /* ================= LOAD EXAM ================= */
   useEffect(() => {
     if (!isEditMode) return;
     if (!id) return;
-
     loadExam();
     // eslint-disable-next-line
   }, [id]);
@@ -84,58 +82,46 @@ const CreateExam = () => {
         console.error("Invalid exam id:", id);
         return;
       }
-
       const res = await dispatch(getExamById(id)).unwrap();
-      setExamData(res); // ⭐ store first
+      setExamData(res);
     } catch (error) {
       message.error(error?.message || "Failed to load exam");
     }
   };
 
-  /* ================= AFTER CLASSES + EXAM READY ================= */
-    /* ================= CLASS CHANGE ================= */
- const handleClassChange = useCallback((schoolClassId, subjectIdFromEdit = null, sectionIdFromEdit = null) => {
-  setSelectedClass(schoolClassId);
+  const handleClassChange = useCallback((schoolClassId, subjectIdFromEdit = null, sectionIdFromEdit = null) => {
+    setSelectedClass(schoolClassId);
+    const selected = schoolClasses.find((c) => c._id === schoolClassId);
+    setSectionList(selected?.sections || []);
 
-  const selected = schoolClasses.find((c) => c._id === schoolClassId);
-  setSectionList(selected?.sections || []);
-
-  // ✅ sections ke andar se subjects nikaalo
-  let subjects = [];
-
-  if (selected?.sections?.length) {
-    selected.sections.forEach((section) => {
-      if (section.subjects?.length) {
-        section.subjects.forEach((sub) => {
-          subjects.push({
-            _id: sub._id,
-            name: sub.name,
+    let subjects = [];
+    if (selected?.sections?.length) {
+      selected.sections.forEach((section) => {
+        if (section.subjects?.length) {
+          section.subjects.forEach((sub) => {
+            subjects.push({ _id: sub._id, name: sub.name });
           });
-        });
-      }
-    });
-  }
+        }
+      });
+    }
 
-  // ✅ duplicate remove (important)
-  const uniqueSubjects = Array.from(
-    new Map(subjects.map((item) => [item._id, item])).values()
-  );
+    const uniqueSubjects = Array.from(
+      new Map(subjects.map((item) => [item._id, item])).values()
+    );
+    setSubjectList(uniqueSubjects);
 
-  setSubjectList(uniqueSubjects);
+    if (!subjectIdFromEdit) {
+      form.setFieldsValue({ subjectId: undefined, sectionId: undefined });
+    } else if (sectionIdFromEdit) {
+      form.setFieldsValue({ sectionId: sectionIdFromEdit });
+    }
+  }, [form, schoolClasses]);
 
-  // edit mode me reset na ho
-  if (!subjectIdFromEdit) {
-    form.setFieldsValue({ subjectId: undefined, sectionId: undefined });
-  } else if (sectionIdFromEdit) {
-    form.setFieldsValue({ sectionId: sectionIdFromEdit });
-  }
-}, [form, schoolClasses]);
   useEffect(() => {
     if (!examData) return;
     if (!schoolClasses.length) return;
 
     const schoolClassIdValue = examData.schoolClassId?._id || examData.schoolClassId;
-
     handleClassChange(
       schoolClassIdValue,
       examData.subjectId?._id || examData.subjectId,
@@ -180,13 +166,9 @@ const CreateExam = () => {
     return String(classId) === String(selectedClass) && String(subjectId) === String(selectedSubject);
   });
 
-
-
-  /* ================= AUTO DURATION ================= */
   const calculateDuration = () => {
     const start = form.getFieldValue("startTime");
     const end = form.getFieldValue("endTime");
-
     if (start && end) {
       const diff = dayjs(end).diff(dayjs(start), "minute");
       if (diff > 0) {
@@ -195,7 +177,6 @@ const CreateExam = () => {
     }
   };
 
-  /* ================= SUBMIT ================= */
   const handleSubmit = async (values) => {
     try {
       if (dayjs(values.endTime).isBefore(dayjs(values.startTime))) {
@@ -231,7 +212,7 @@ const CreateExam = () => {
         shuffleOptions: values.shuffleOptions,
         settings: values.settings,
       };
-      
+
       if (isEditMode) {
         const formattedQuestions = examQuestions
           .filter((question) => question.questionId)
@@ -239,7 +220,7 @@ const CreateExam = () => {
             questionId: question.questionId,
             marks: Number(question.marks || 0),
           }));
-      
+
         if (!id || id === "undefined" || id === "null") {
           return message.error("Invalid exam id 2");
         }
@@ -277,301 +258,290 @@ const CreateExam = () => {
     );
   };
 
-  /* ================= UI ================= */
   return (
-    <Spin spinning={loading}>
-      <Card bordered={false} style={{ borderRadius: 12 }}>
-        <Title level={4}>
-          {isEditMode ? "Edit Exam" : "Create Exam"}
-        </Title>
+    <div style={pageWrapper}>
+      <PageHeader
+        title={isEditMode ? "Edit Exam" : "Create Exam"}
+        subtitle={isEditMode ? "Update exam details and manage questions." : "Fill in details to create a new exam."}
+        icon={<FormOutlined />}
+      />
 
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          {/* BASIC INFO */}
-          <Divider orientation="left">Basic Info</Divider>
+      <div style={{ marginTop: 20 }}>
+        <Spin spinning={loading}>
+          <div style={pageCard}>
+            <div style={{ padding: 24 }}>
+              <Form form={form} layout="vertical" onFinish={handleSubmit}>
+                <Divider orientation="left">Basic Info</Divider>
 
-          <Row gutter={16}>
-            <Col span={24} >
-              <Form.Item
-                name="title"
-                label="Exam Title"
-                rules={[{ required: true, message: "Enter exam title" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-
-            <Col span={12} md={6}>
-              <Form.Item
-                name="examCode"
-                label="Exam Code"
-                rules={[
-                  { required: true, message: "Enter exam code" },
-                  { pattern: /^[A-Za-z0-9-_]+$/, message: "Use only letters, numbers, - or _" },
-                ]}
-              >
-                <Input placeholder="e.g. MIDTERM-10A-MATH" />
-              </Form.Item>
-            </Col>
-
-            <Col span={12} md={6}>
-              <Form.Item
-                name="schoolClassId"
-                label="Class"
-                rules={[{ required: true, message: "Select class" }]}
-              >
-                <Select onChange={handleClassChange}>
-                  {schoolClasses.map((cls) => (
-                    <Option key={cls._id} value={cls._id}>
-                      {cls.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={12} md={6}>
-              <Form.Item
-                name="sectionId"
-                label="Section (Optional)"
-              >
-                <Select
-                  allowClear
-                  disabled={!selectedClass}
-                  placeholder="All sections"
-                  options={sectionList.map((sec) => ({ label: sec.name, value: sec._id }))}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col span={12} md={6}>
-              <Form.Item
-                name="subjectId"
-                label="Subject"
-                rules={[{ required: true, message: "Select subject" }]}
-              >
-                <Select disabled={!selectedClass}>
-                  {subjectList.map((sub) => (
-                    <Option key={sub._id} value={sub._id}>
-                      {sub.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* SCHEDULE */}
-          <Divider orientation="left">Schedule</Divider>
-
-          <Row gutter={16}>
-            <Col md={6} span={12}>
-              <Form.Item
-                name="examType"
-                label="Exam Type"
-                initialValue="objective"
-                rules={[{ required: true }]}
-              >
-                <Select>
-                  <Option value="objective">Objective</Option>
-                  <Option value="subjective">Subjective</Option>
-                  <Option value="mixed">Mixed</Option>
-                  <Option value="unit_test">Unit Test</Option>
-                  <Option value="class_test">Class Test</Option>
-                  <Option value="Mid_term">Mid-term</Option>
-                  <Option value="final_exam">Final Exam</Option>
-                  <Option value="online_exam">Online Exam</Option>
-                  <Option value="practical_exam">Practical Exam</Option>
-                  <Option value="oral_exam">Oral Exam</Option>
-                  <Option value="assignment">Assignment</Option>
-                  <Option value="project">Project</Option>
-                  <Option value="quiz">Quiz</Option>
-                  <Option value="board_exam">Board Exam</Option>
-                  <Option value="competitive_exam">Competitive Exam</Option>
-                  <Option value="remedial_exam">Remedial Exam</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col md={6} span={12}>
-              <Form.Item
-                name="examDate"
-                label="Exam Date"
-                rules={[{ required: true }]}
-              >
-                <DatePicker style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-
-            <Col md={4} span={12}>
-              <Form.Item
-                name="startTime"
-                label="Start Time"
-                rules={[{ required: true }]}
-              >
-                <TimePicker
-                  style={{ width: "100%" }}
-                  onChange={calculateDuration}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col md={4} span={12}>
-              <Form.Item
-                name="endTime"
-                label="End Time"
-                rules={[{ required: true }]}
-              >
-                <TimePicker
-                  style={{ width: "100%" }}
-                  onChange={calculateDuration}
-                />
-              </Form.Item>
-            </Col>
-            <Col md={4} span={12}>
-              <Form.Item
-                name="durationMinutes"
-                label="Duration (Minutes)"
-                rules={[{ required: true }]}
-              >
-                <InputNumber min={1} style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-       
-
-          <Divider orientation="left">Exam Experience</Divider>
-          <Row gutter={16}>
-            <Col md={4} span={12}>
-              <Form.Item name="questionOrder" label="Question Order" initialValue="random">
-                <Select
-                  options={[
-                    { label: "Random", value: "random" },
-                    { label: "Fixed", value: "fixed" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-            <Col md={4} span={12}>
-              <Form.Item label="Shuffle Options" name="shuffleOptions" valuePropName="checked" initialValue>
-                <Switch checkedChildren="On" unCheckedChildren="Off" />
-              </Form.Item>
-            </Col>
-            <Col md={4} span={12}>
-              <Form.Item name={["settings", "negativeMarking"]} label="Negative Marking">
-                <InputNumber min={0} style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-            <Col md={4} span={12}>
-              <Form.Item name={["settings", "maxAttempts"]} label="Max Attempts" initialValue={1}>
-                <InputNumber min={1} style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-            <Col md={4} span={12}>
-              <Form.Item label="Allow Partial Scoring" name={["settings", "allowPartialScoring"]} valuePropName="checked">
-                <Switch checkedChildren="Yes" unCheckedChildren="No" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* MARKS */}
-          <Divider orientation="left">Marks</Divider>
-
-          <Row gutter={16}>
-            <Col md={6} span={12}>
-              <Form.Item
-                name="totalMarks"
-                label="Total Marks"
-                rules={[{ required: true }]}
-              >
-                <InputNumber min={1} style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-
-            <Col md={6} span={12}>
-              <Form.Item
-                name="passingMarks"
-                label="Passing Marks"
-                dependencies={["totalMarks"]}
-                rules={[
-                  { required: true },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      const total = Number(getFieldValue("totalMarks") || 0);
-                      if (value === undefined || Number(value) <= total) return Promise.resolve();
-                      return Promise.reject(new Error("Passing marks cannot exceed total marks"));
-                    },
-                  }),
-                ]}
-              >
-                <InputNumber min={0} style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* STATUS */}
-          <Divider />
-          {!isEditMode && (
-            <Alert
-              type="info"
-              showIcon
-              message="पहले exam save करें। उसके बाद Edit Exam स्क्रीन से questions add किए जा सकते हैं।"
-              style={{ marginBottom: 16 }}
-            />
-          )}
-          <Form.Item name="status" label="Status">
-            <Select>
-              <Option value="draft">Draft</Option>
-              <Option value="published">Published</Option>
-              <Option value="completed">Completed</Option>
-            </Select>
-          </Form.Item>
-
-          {isEditMode && (
-            <>
-              <Divider orientation="left">Questions</Divider>
-
-              <Button type="dashed" onClick={addQuestion} styles={{marginBottom:10}} block icon={<PlusOutlined />}>
-                Add Question
-              </Button>
-
-              {examQuestions.map((question, index) => (
-                <Row gutter={12} key={index} style={{ marginTop: 10,marginBottom:10 }}>
-                  <Col span={16}>
-                    <Select
-                      value={question.questionId}
-                      onChange={(value) => handleQuestionSelect(index, value)}
-                      style={{ width: "100%" }}
-                      showSearch
-                      optionFilterProp="children"
-                      placeholder="Select question"
+                <Row gutter={16}>
+                  <Col span={24}>
+                    <Form.Item
+                      name="title"
+                      label="Exam Title"
+                      rules={[{ required: true, message: "Enter exam title" }]}
                     >
-                      {filteredQuestions.map((availableQuestion) => (
-                        <Option key={availableQuestion._id} value={availableQuestion._id}>
-                          {availableQuestion.statement}
-                        </Option>
-                      ))}
-                    </Select>
+                      <Input />
+                    </Form.Item>
                   </Col>
 
-                  <Col span={4}>
-                    <InputNumber value={question.marks} disabled style={{ width: "100%" }} />
+                  <Col span={12} md={6}>
+                    <Form.Item
+                      name="examCode"
+                      label="Exam Code"
+                      rules={[
+                        { required: true, message: "Enter exam code" },
+                        { pattern: /^[A-Za-z0-9-_]+$/, message: "Use only letters, numbers, - or _" },
+                      ]}
+                    >
+                      <Input placeholder="e.g. MIDTERM-10A-MATH" />
+                    </Form.Item>
                   </Col>
 
-                  <Col span={4}>
-                    <Button danger icon={<DeleteOutlined />} onClick={() => removeQuestion(index)} block />
+                  <Col span={12} md={6}>
+                    <Form.Item
+                      name="schoolClassId"
+                      label="Class"
+                      rules={[{ required: true, message: "Select class" }]}
+                    >
+                      <Select onChange={handleClassChange}>
+                        {schoolClasses.map((cls) => (
+                          <Option key={cls._id} value={cls._id}>{cls.name}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={12} md={6}>
+                    <Form.Item name="sectionId" label="Section (Optional)">
+                      <Select
+                        allowClear
+                        disabled={!selectedClass}
+                        placeholder="All sections"
+                        options={sectionList.map((sec) => ({ label: sec.name, value: sec._id }))}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={12} md={6}>
+                    <Form.Item
+                      name="subjectId"
+                      label="Subject"
+                      rules={[{ required: true, message: "Select subject" }]}
+                    >
+                      <Select disabled={!selectedClass}>
+                        {subjectList.map((sub) => (
+                          <Option key={sub._id} value={sub._id}>{sub.name}</Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
                   </Col>
                 </Row>
-              ))}
-            </>
-          )}
 
-          <Button type="primary" htmlType="submit" block>
-            Save Exam
-          </Button>
-        </Form>
-      </Card>
-    </Spin>
+                <Divider orientation="left">Schedule</Divider>
+
+                <Row gutter={16}>
+                  <Col md={6} span={12}>
+                    <Form.Item
+                      name="examType"
+                      label="Exam Type"
+                      initialValue="objective"
+                      rules={[{ required: true }]}
+                    >
+                      <Select>
+                        <Option value="objective">Objective</Option>
+                        <Option value="subjective">Subjective</Option>
+                        <Option value="mixed">Mixed</Option>
+                        <Option value="unit_test">Unit Test</Option>
+                        <Option value="class_test">Class Test</Option>
+                        <Option value="Mid_term">Mid-term</Option>
+                        <Option value="final_exam">Final Exam</Option>
+                        <Option value="online_exam">Online Exam</Option>
+                        <Option value="practical_exam">Practical Exam</Option>
+                        <Option value="oral_exam">Oral Exam</Option>
+                        <Option value="assignment">Assignment</Option>
+                        <Option value="project">Project</Option>
+                        <Option value="quiz">Quiz</Option>
+                        <Option value="board_exam">Board Exam</Option>
+                        <Option value="competitive_exam">Competitive Exam</Option>
+                        <Option value="remedial_exam">Remedial Exam</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={6} span={12}>
+                    <Form.Item
+                      name="examDate"
+                      label="Exam Date"
+                      rules={[{ required: true }]}
+                    >
+                      <DatePicker style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={4} span={12}>
+                    <Form.Item
+                      name="startTime"
+                      label="Start Time"
+                      rules={[{ required: true }]}
+                    >
+                      <TimePicker style={{ width: "100%" }} onChange={calculateDuration} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={4} span={12}>
+                    <Form.Item
+                      name="endTime"
+                      label="End Time"
+                      rules={[{ required: true }]}
+                    >
+                      <TimePicker style={{ width: "100%" }} onChange={calculateDuration} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={4} span={12}>
+                    <Form.Item
+                      name="durationMinutes"
+                      label="Duration (Minutes)"
+                      rules={[{ required: true }]}
+                    >
+                      <InputNumber min={1} style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Divider orientation="left">Exam Experience</Divider>
+                <Row gutter={16}>
+                  <Col md={4} span={12}>
+                    <Form.Item name="questionOrder" label="Question Order" initialValue="random">
+                      <Select
+                        options={[
+                          { label: "Random", value: "random" },
+                          { label: "Fixed", value: "fixed" },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col md={4} span={12}>
+                    <Form.Item label="Shuffle Options" name="shuffleOptions" valuePropName="checked" initialValue>
+                      <Switch checkedChildren="On" unCheckedChildren="Off" />
+                    </Form.Item>
+                  </Col>
+                  <Col md={4} span={12}>
+                    <Form.Item name={["settings", "negativeMarking"]} label="Negative Marking">
+                      <InputNumber min={0} style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                  <Col md={4} span={12}>
+                    <Form.Item name={["settings", "maxAttempts"]} label="Max Attempts" initialValue={1}>
+                      <InputNumber min={1} style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                  <Col md={4} span={12}>
+                    <Form.Item label="Allow Partial Scoring" name={["settings", "allowPartialScoring"]} valuePropName="checked">
+                      <Switch checkedChildren="Yes" unCheckedChildren="No" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Divider orientation="left">Marks</Divider>
+
+                <Row gutter={16}>
+                  <Col md={6} span={12}>
+                    <Form.Item
+                      name="totalMarks"
+                      label="Total Marks"
+                      rules={[{ required: true }]}
+                    >
+                      <InputNumber min={1} style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col md={6} span={12}>
+                    <Form.Item
+                      name="passingMarks"
+                      label="Passing Marks"
+                      dependencies={["totalMarks"]}
+                      rules={[
+                        { required: true },
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            const total = Number(getFieldValue("totalMarks") || 0);
+                            if (value === undefined || Number(value) <= total) return Promise.resolve();
+                            return Promise.reject(new Error("Passing marks cannot exceed total marks"));
+                          },
+                        }),
+                      ]}
+                    >
+                      <InputNumber min={0} style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Divider />
+                {!isEditMode && (
+                  <Alert
+                    type="info"
+                    showIcon
+                    message="Save the exam first. Questions can be added from the Edit Exam screen."
+                    style={{ marginBottom: 16, borderRadius: 10 }}
+                  />
+                )}
+                <Form.Item name="status" label="Status">
+                  <Select>
+                    <Option value="draft">Draft</Option>
+                    <Option value="published">Published</Option>
+                    <Option value="completed">Completed</Option>
+                  </Select>
+                </Form.Item>
+
+                {isEditMode && (
+                  <>
+                    <Divider orientation="left">Questions</Divider>
+
+                    <Button type="dashed" onClick={addQuestion} style={{ marginBottom: 10 }} block icon={<PlusOutlined />}>
+                      Add Question
+                    </Button>
+
+                    {examQuestions.map((question, index) => (
+                      <Row gutter={12} key={index} style={{ marginTop: 10, marginBottom: 10 }}>
+                        <Col span={16}>
+                          <Select
+                            value={question.questionId}
+                            onChange={(value) => handleQuestionSelect(index, value)}
+                            style={{ width: "100%" }}
+                            showSearch
+                            optionFilterProp="children"
+                            placeholder="Select question"
+                          >
+                            {filteredQuestions.map((availableQuestion) => (
+                              <Option key={availableQuestion._id} value={availableQuestion._id}>
+                                {availableQuestion.statement}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Col>
+
+                        <Col span={4}>
+                          <InputNumber value={question.marks} disabled style={{ width: "100%" }} />
+                        </Col>
+
+                        <Col span={4}>
+                          <Button danger icon={<DeleteOutlined />} onClick={() => removeQuestion(index)} block />
+                        </Col>
+                      </Row>
+                    ))}
+                  </>
+                )}
+
+                <Button type="primary" htmlType="submit" block style={{ marginTop: 8 }}>
+                  Save Exam
+                </Button>
+              </Form>
+            </div>
+          </div>
+        </Spin>
+      </div>
+    </div>
   );
 };
 

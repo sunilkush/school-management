@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Breadcrumb, Col, Form, Input, Layout, Row, message } from "antd";
+import { Alert, Col, Form, Input, Row, message } from "antd";
+import { DollarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import SalaryStructureForm from "../../../components/payroll/SalaryStructureForm";
 import SalaryStructureTable from "../../../components/payroll/SalaryStructureTable";
 import { fetchPayrollEmployees, fetchPayrollStructures, savePayrollStructure } from "../../../features/payrollSlice";
-
-const { Content } = Layout;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+} from "../../../styles/pageStyles";
 
 const SalaryStructures = () => {
   const dispatch = useDispatch();
@@ -17,7 +21,6 @@ const SalaryStructures = () => {
   const { employees, structures, loadingStructures, savingStructure } = useSelector((state) => state.payroll);
   const safeEmployees = useMemo(() => (Array.isArray(employees) ? employees : []), [employees]);
   const safeStructures = useMemo(() => (Array.isArray(structures) ? structures : []), [structures]);
-
 
   useEffect(() => {
     dispatch(fetchPayrollEmployees())
@@ -104,13 +107,14 @@ const SalaryStructures = () => {
   }, [safeStructures, search]);
 
   return (
-    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 20 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Payroll</Breadcrumb.Item>
-        <Breadcrumb.Item>Salary Structures</Breadcrumb.Item>
-      </Breadcrumb>
-      <Content>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Salary Structures"
+        subtitle="Define and manage employee salary components"
+        icon={<DollarOutlined />}
+      />
+
+      <div style={{ padding: "20px" }}>
         {!safeStructures.length && (
           <Alert
             showIcon
@@ -132,12 +136,18 @@ const SalaryStructures = () => {
             />
           </Col>
           <Col xs={24} lg={14}>
-            <Input.Search placeholder="Search employee" onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: 12 }} />
-            <SalaryStructureTable data={filteredStructures} loading={loadingStructures} onEdit={onEdit} />
+            <div style={pageCard}>
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-muted)" }}>
+                <Input.Search placeholder="Search employee" onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              <div style={{ padding: 16 }}>
+                <SalaryStructureTable data={filteredStructures} loading={loadingStructures} onEdit={onEdit} />
+              </div>
+            </div>
           </Col>
         </Row>
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 };
 

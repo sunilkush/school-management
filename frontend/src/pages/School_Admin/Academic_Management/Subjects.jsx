@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { Spin } from "antd";
 import { getAllSubjects } from "../../../features/subjectSlice.js";
 import { useTheme } from "../../../context/ThemeContext.jsx";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import { pageWrapper } from "../../../styles/pageStyles.js";
 
 /* ─────────────────────────────────────────
    HELPERS
@@ -295,60 +297,29 @@ const Subjects = () => {
   return (
     <>
       <StyleInject />
-      <div className="subj-root" style={{ minHeight:"100vh", padding:"28px 24px", color:isDark?"#e2e8f0":"#1e293b", position:"relative" }}>
+      <PageHeader
+        title="Subjects"
+        subtitle={`Curriculum management · ${safe.length} subjects`}
+        icon={<BookIco c="currentColor" />}
+      />
+      <div className="subj-root" style={{ ...pageWrapper, color: isDark ? "#e2e8f0" : "var(--text-primary)" }}>
 
-        {/* Ambient blobs */}
-        <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, overflow:"hidden" }}>
-          <div style={{ position:"absolute", top:"-8%", left:"-4%", width:520, height:520, borderRadius:"50%",
-            background:`radial-gradient(circle,${isDark?"rgba(99,102,241,0.07)":"rgba(99,102,241,0.04)"} 0%,transparent 70%)` }}/>
-          <div style={{ position:"absolute", bottom:"-8%", right:"-4%", width:580, height:580, borderRadius:"50%",
-            background:`radial-gradient(circle,${isDark?"rgba(6,182,212,0.06)":"rgba(6,182,212,0.03)"} 0%,transparent 70%)` }}/>
-        </div>
+        <div style={{ position:"relative" }}>
 
-        <div style={{ position:"relative", zIndex:1 }}>
-
-          {/* HEADER */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:28, flexWrap:"wrap", gap:14 }}>
-            <div>
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:5 }}>
-                <div style={{
-                  width:38, height:38, borderRadius:12,
-                  background:"linear-gradient(135deg,#6366f1,#8b5cf6)",
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  boxShadow:"0 4px 14px rgba(99,102,241,0.4)",
-                }}>
-                  <BookIco c="#fff"/>
-                </div>
-                <h1 style={{
-                  margin:0, fontSize:27, fontWeight:800,
-                  fontFamily:"'Syne',sans-serif",
-                  letterSpacing:"-0.6px",
-                  color:isDark?"#f8fafc":"#0f172a",
-                }}>
-                  Subjects
-                </h1>
-              </div>
-              <p style={{ margin:0, fontSize:13, color:"#64748b", fontWeight:500 }}>
-                Curriculum management · {safe.length} subjects
-              </p>
-            </div>
-
-            {/* Search */}
+          {/* SEARCH TOOLBAR */}
+          <div className="page-toolbar" style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", marginBottom:24, flexWrap:"wrap", gap:10 }}>
             <div className="subj-search" style={{
               display:"flex", alignItems:"center", gap:8,
-              padding:"10px 16px", borderRadius:16,
-              background:isDark?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.88)",
-              border:`1.5px solid ${isDark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.08)"}`,
-              backdropFilter:"blur(20px)",
-              boxShadow:isDark?"none":"0 2px 12px rgba(0,0,0,0.05)",
-              transition:"border-color 0.2s, box-shadow 0.2s",
-              width:240,
+              padding:"10px 16px", borderRadius:12,
+              background: "var(--surface)",
+              border: "1px solid var(--border-muted)",
+              width: 240,
             }}>
               <SearchIco/>
               <input
                 style={{
                   border:"none", outline:"none", background:"transparent",
-                  fontSize:13, color:isDark?"#e2e8f0":"#1e293b",
+                  fontSize:13, color: "var(--text-primary)",
                   width:"100%", fontFamily:"inherit",
                 }}
                 placeholder="Search subjects…"
@@ -356,13 +327,13 @@ const Subjects = () => {
                 onChange={(e) => setSearchText(e.target.value)}
               />
               {searchText && (
-                <span onClick={() => setSearchText("")} style={{ cursor:"pointer", color:"#94a3b8", fontSize:18, lineHeight:1 }}>×</span>
+                <span onClick={() => setSearchText("")} style={{ cursor:"pointer", color: "var(--text-muted)", fontSize:18, lineHeight:1 }}>×</span>
               )}
             </div>
           </div>
 
           {/* STATS */}
-          <div style={{ display:"flex", gap:12, marginBottom:28, flexWrap:"wrap" }}>
+          <div className="stat-grid" style={{ display:"flex", gap:12, marginBottom:28, flexWrap:"wrap" }}>
             <StatCard label="Total Subjects" value={stats.total}    dark={isDark} accent="#6366f1" delay={0}   icon={<BookIco c="#6366f1"/>}/>
             <StatCard label="Active"          value={stats.active}   dark={isDark} accent="#22c55e" delay={60}  icon={<CheckIco c="#22c55e"/>}/>
             <StatCard label="Global"          value={stats.global}   dark={isDark} accent="#3b82f6" delay={120} icon={<GlobeIco c="#3b82f6"/>}/>

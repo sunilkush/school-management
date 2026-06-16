@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import {
-  Layout,
-  Breadcrumb,
   Form,
   DatePicker,
   Select,
@@ -10,13 +8,12 @@ import {
   message,
   Row,
   Col,
-  Card,
-  Tag,
 } from "antd";
 import {
   PlusOutlined,
   RollbackOutlined,
   DeleteOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,8 +25,15 @@ import {
   issueLibraryBook,
   returnLibraryBook,
 } from "../../../features/librarySlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+  tableHeadCss,
+  pill,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
 const { Option } = Select;
 
 const normalizeIssuedRecord = (entry) => ({
@@ -141,9 +145,9 @@ const IssueBook = () => {
       render: (status) => {
         const normalized = String(status || "").toLowerCase();
         return normalized === "issued" ? (
-          <Tag color="orange">Issued</Tag>
+          <span style={pill("#d97706", "#fef3c7")}>Issued</span>
         ) : (
-          <Tag color="green">Returned</Tag>
+          <span style={pill("#059669", "#d1fae5")}>Returned</span>
         );
       },
     },
@@ -168,17 +172,19 @@ const IssueBook = () => {
   );
 
   return (
-    <Layout style={{ padding: 24, minHeight: "100vh", background: "#f5f7fa" }}>
-      <Breadcrumb style={{ marginBottom: 20 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Library</Breadcrumb.Item>
-        <Breadcrumb.Item>Issue / Return Book</Breadcrumb.Item>
-      </Breadcrumb>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("issue-book-tbl")}</style>
+      <PageHeader
+        title="Issue / Return Book"
+        subtitle="Manage book issue and return records"
+        icon={<BookOutlined />}
+      />
 
-      <Content>
+      <div style={{ padding: "20px" }}>
         <Row gutter={[24, 24]}>
           <Col xs={24} md={12}>
-            <Card title="📘 Issue Book" bordered={false} style={{ borderRadius: 12 }}>
+            <div style={sectionPanel}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Issue Book</div>
               <Form form={issueForm} layout="vertical" onFinish={handleIssueBook}>
                 <Form.Item
                   label="Student"
@@ -203,10 +209,7 @@ const IssueBook = () => {
                         student?.registrationNumber;
 
                       return (
-                        <Option
-                          key={resolvedStudentId}
-                          value={resolvedStudentId}
-                        >
+                        <Option key={resolvedStudentId} value={resolvedStudentId}>
                           {label}
                         </Option>
                       );
@@ -235,21 +238,12 @@ const IssueBook = () => {
 
                 <Row gutter={12}>
                   <Col span={12}>
-                    <Form.Item
-                      label="Issue Date"
-                      name="issueDate"
-                      rules={[{ required: true }]}
-                    >
+                    <Form.Item label="Issue Date" name="issueDate" rules={[{ required: true }]}>
                       <DatePicker style={{ width: "100%" }} />
                     </Form.Item>
                   </Col>
-
                   <Col span={12}>
-                    <Form.Item
-                      label="Expected Return Date"
-                      name="returnDate"
-                      rules={[{ required: true }]}
-                    >
+                    <Form.Item label="Expected Return Date" name="returnDate" rules={[{ required: true }]}>
                       <DatePicker style={{ width: "100%" }} />
                     </Form.Item>
                   </Col>
@@ -265,11 +259,12 @@ const IssueBook = () => {
                   Issue Book
                 </Button>
               </Form>
-            </Card>
+            </div>
           </Col>
 
           <Col xs={24} md={12}>
-            <Card title="📗 Return Book" bordered={false} style={{ borderRadius: 12 }}>
+            <div style={sectionPanel}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Return Book</div>
               <Form form={returnForm} layout="vertical" onFinish={handleReturnBook}>
                 <Form.Item
                   label="Issued Book Record"
@@ -296,21 +291,24 @@ const IssueBook = () => {
                   Return Book
                 </Button>
               </Form>
-            </Card>
+            </div>
           </Col>
         </Row>
 
-        <Card title="📋 Issued Book Records" style={{ marginTop: 24, borderRadius: 12 }} bordered={false}>
+        <div style={{ ...pageCard, marginTop: 24, padding: 24 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Issued Book Records</div>
           <Table
+            className="issue-book-tbl"
             columns={columns}
             dataSource={issuedBooks}
             pagination={{ pageSize: 5 }}
             rowKey="_id"
             loading={issuedLoading || actionLoading}
+            scroll={{ x: "max-content" }}
           />
-        </Card>
-      </Content>
-    </Layout>
+        </div>
+      </div>
+    </div>
   );
 };
 

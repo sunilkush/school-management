@@ -1,10 +1,11 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Empty, Table, Tag, Typography } from "antd";
+import { Empty, Table } from "antd";
+import { ReadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { fetchStudentLibraryBooks } from "../../../features/studentPortalSlice";
-
-const { Title } = Typography;
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, pageCard, tableHeadCss, pill } from "../../../styles/pageStyles";
 
 const StudentAllowedBook = () => {
   const dispatch = useDispatch();
@@ -31,20 +32,39 @@ const StudentAllowedBook = () => {
       title: "Status",
       dataIndex: "status",
       render: (status) => (
-        <Tag color={status === "Overdue" ? "red" : "blue"}>{status}</Tag>
+        <span style={pill(status === "Overdue" ? "#dc2626" : "#0284c7", status === "Overdue" ? "#fff1f2" : "#e0f2fe")}>
+          {status}
+        </span>
       ),
     },
   ];
 
   return (
-    <Card loading={loading}>
-      <Title level={4}>My Issued Books</Title>
-      {libraryBooks.length ? (
-        <Table rowKey="_id" columns={columns} dataSource={libraryBooks} pagination={false} />
-      ) : (
-        <Empty description="No books currently issued" />
-      )}
-    </Card>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("lib-tbl")}</style>
+      <PageHeader
+        title="My Issued Books"
+        subtitle="Books currently borrowed from the school library"
+        icon={<ReadOutlined />}
+      />
+      <div style={{ ...pageCard, marginTop: 16 }}>
+        {libraryBooks.length ? (
+          <Table
+            className="lib-tbl"
+            rowKey="_id"
+            columns={columns}
+            dataSource={libraryBooks}
+            loading={loading}
+            pagination={false}
+            scroll={{ x: "max-content" }}
+          />
+        ) : (
+          <div style={{ padding: 40 }}>
+            <Empty description="No books currently issued" />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

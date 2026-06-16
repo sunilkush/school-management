@@ -1,13 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Breadcrumb, Button, Card, Col, Empty, Layout, Row, Space, Table, message } from "antd";
+import { Alert, Button, Col, Empty, Row, Space, Table, message } from "antd";
+import { FileTextOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import httpClient from "../../../api/httpClient";
 import { usePayrollCycle, usePayslip } from "../../../hooks/payrollHooks";
 import PayslipFilters from "../../../components/payroll/PayslipFilters";
 import PayslipPreview from "../../../components/payroll/PayslipPreview";
 import { formatCurrencyINR } from "../../../utils/payroll";
-
-const { Content } = Layout;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+  tableHeadCss,
+} from "../../../styles/pageStyles";
 
 const GeneratePayslip = () => {
   const [employees, setEmployees] = useState([]);
@@ -18,7 +24,7 @@ const GeneratePayslip = () => {
   const year = selectedMonth.year();
 
   const { entries, loading, isCycleMissing, refreshCycle } = usePayrollCycle(month, year);
- const { loading: payslipLoading, payslip, notFound, fetchPayslip, clearPayslip } = usePayslip({
+  const { loading: payslipLoading, payslip, notFound, fetchPayslip, clearPayslip } = usePayslip({
     month,
     year,
     employeeId: selectedEmployeeId,
@@ -31,7 +37,7 @@ const GeneratePayslip = () => {
       .catch(() => message.error("Employees load failed"));
   }, []);
 
- useEffect(() => {
+  useEffect(() => {
     clearPayslip();
   }, [month, year, selectedEmployeeId, clearPayslip]);
 
@@ -65,14 +71,16 @@ const GeneratePayslip = () => {
   ];
 
   return (
-    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 20 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Payroll</Breadcrumb.Item>
-        <Breadcrumb.Item>Payslip Center</Breadcrumb.Item>
-      </Breadcrumb>
-      <Content>
-        <Card style={{ marginBottom: 16 }}>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("payslip-tbl")}</style>
+      <PageHeader
+        title="Payslip Center"
+        subtitle="Generate and preview employee payslips"
+        icon={<FileTextOutlined />}
+      />
+
+      <div style={{ padding: "20px" }}>
+        <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <PayslipFilters
             monthValue={selectedMonth}
             onMonthChange={(v) => v && setSelectedMonth(v)}
@@ -84,32 +92,44 @@ const GeneratePayslip = () => {
             onPrint={() => window.print()}
             loading={payslipLoading}
           />
-        </Card>
+        </div>
 
         <Row gutter={16}>
           <Col xs={24} lg={12}>
-            <Card title={`Cycle Entries - ${selectedMonth.format("MMMM YYYY")}`}>
+            <div style={{ ...pageCard, padding: 24, marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>
+                Cycle Entries — {selectedMonth.format("MMMM YYYY")}
+              </div>
               {isCycleMissing ? (
                 <Alert type="info" showIcon message="Cycle not found" description="Generate cycle first for this month." />
               ) : entries.length ? (
-                <Table rowKey="_id" columns={entriesColumns} dataSource={entries} loading={loading} pagination={{ pageSize: 6 }} />
+                <Table
+                  className="payslip-tbl"
+                  rowKey="_id"
+                  columns={entriesColumns}
+                  dataSource={entries}
+                  loading={loading}
+                  pagination={{ pageSize: 6 }}
+                  scroll={{ x: "max-content" }}
+                />
               ) : (
                 <Empty description="No payroll entries" />
               )}
-            </Card>
+            </div>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card
-              title="Payslip Preview"
-              extra={<Space>{notFound && <Alert type="warning" message="Payslip not found for selected employee/month" showIcon />}</Space>}
-            >
+            <div style={{ ...pageCard, padding: 24 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 12 }}>Payslip Preview</div>
+              {notFound && (
+                <Alert type="warning" message="Payslip not found for selected employee/month" showIcon style={{ marginBottom: 12 }} />
+              )}
               <PayslipPreview payslip={payslip} monthLabel={selectedMonth.format("MMMM YYYY")} />
-            </Card>
+            </div>
           </Col>
         </Row>
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 };
 

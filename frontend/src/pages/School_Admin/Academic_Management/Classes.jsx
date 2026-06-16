@@ -6,6 +6,8 @@ import { assignSubjectTeacher } from "../../../features/sectionSlice";
 import { Modal, Select, Empty, Spin, message, Input } from "antd";
 import { SearchOutlined, UserAddOutlined, BookOutlined, TeamOutlined, CloseOutlined, CheckOutlined } from "@ant-design/icons";
 import { useTheme } from "../../../context/ThemeContext";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import { pageWrapper } from "../../../styles/pageStyles.js";
 
 const { Option } = Select;
 
@@ -330,46 +332,29 @@ const Classes = () => {
   const textPrimary = isDark ? "#F1F5F9" : "#0F172A";
 
   return (
-    <div style={{ minHeight: "100vh", background: pageBg, padding: "28px 20px", fontFamily: "'DM Sans', sans-serif", transition: "background 0.3s" }}>
+    <>
+    <PageHeader
+      title="Classes Management"
+      subtitle="Manage classes, sections & teacher assignments"
+      icon={<BookOutlined />}
+    />
+    <div style={{ ...pageWrapper, fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* ── HEADER ── */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 20, marginBottom: 32 }}>
-        <div>
-          {/* PESTEL legend dots */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-            {pestelLegend.map((p, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 20, height: 20, borderRadius: 6, background: p.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif" }}>{p.letter}</span>
-                </div>
-                <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>{p.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <h1 style={{ fontSize: 30, fontWeight: 800, color: textPrimary, fontFamily: "'Sora', sans-serif", margin: 0, lineHeight: 1.15 }}>
-            Classes Management
-          </h1>
-          <p style={{ color: "#94A3B8", fontSize: 14, marginTop: 6, fontWeight: 400 }}>
-            Manage classes, sections & teacher assignments
-          </p>
-        </div>
-
-        {/* Search */}
-        <div style={{ position: "relative", width: 280 }}>
-          <SearchOutlined style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", fontSize: 16, zIndex: 1 }} />
+      {/* ── SEARCH TOOLBAR ── */}
+      <div className="page-toolbar" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <div style={{ position: "relative", flex: "1 1 220px", maxWidth: 320 }}>
+          <SearchOutlined style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: 16, zIndex: 1 }} />
           <input
             value={filterText}
             onChange={e => setFilterText(e.target.value)}
             placeholder="Search class..."
             style={{
-              width: "100%", height: 46, borderRadius: 14,
-              border: "1.5px solid #E2E8F0",
+              width: "100%", height: 40, borderRadius: 10,
+              border: "1px solid var(--border-muted)",
               paddingLeft: 40, paddingRight: 16,
-              fontSize: 14, color: "#0F172A",
-              background: isDark ? "#1E293B" : "#fff",
-              outline: "none", fontFamily: "'DM Sans', sans-serif",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              fontSize: 14, color: "var(--text-primary)",
+              background: "var(--surface)",
+              outline: "none",
             }}
           />
         </div>
@@ -407,6 +392,7 @@ const Classes = () => {
         centered
         destroyOnClose
         width={460}
+        title={null}
         styles={{ body: { padding: 0 }, content: { borderRadius: 24, overflow: "hidden", padding: 0 } }}
         closeIcon={null}
       >
@@ -533,6 +519,7 @@ const Classes = () => {
         </div>
       </Modal>
     </div>
+    </>
   );
 };
 

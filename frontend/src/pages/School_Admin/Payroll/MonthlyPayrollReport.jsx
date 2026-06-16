@@ -1,10 +1,16 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Breadcrumb, Button, Card, DatePicker, Layout, Space, Table } from "antd";
+import { Alert, Button, DatePicker, Space, Table } from "antd";
+import { BarChartOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { usePayrollCycle, useMonthlyPayrollReport } from "../../../hooks/payrollHooks";
 import MonthlyPayrollReportCards from "../../../components/payroll/MonthlyPayrollReportCards";
-
-const { Content } = Layout;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+  tableHeadCss,
+} from "../../../styles/pageStyles";
 
 const MonthlyPayrollReport = () => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
@@ -26,20 +32,22 @@ const MonthlyPayrollReport = () => {
   }, [entries]);
 
   return (
-    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 20 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Payroll</Breadcrumb.Item>
-        <Breadcrumb.Item>Monthly Reports</Breadcrumb.Item>
-      </Breadcrumb>
-      <Content>
-        <Card style={{ marginBottom: 16 }}>
-          <Space>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("payroll-report-tbl")}</style>
+      <PageHeader
+        title="Monthly Payroll Report"
+        subtitle="Department-wise payroll summary and export"
+        icon={<BarChartOutlined />}
+      />
+
+      <div style={{ padding: "20px" }}>
+        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+          <Space wrap>
             <DatePicker picker="month" value={selectedMonth} onChange={(v) => v && setSelectedMonth(v)} />
             <Button onClick={refreshReport}>Refresh</Button>
             <Button onClick={() => window.print()} disabled={!report}>Export / Print</Button>
           </Space>
-        </Card>
+        </div>
 
         {isEmpty ? (
           <Alert type="info" showIcon message="No report for selected month" description="Generate payroll cycle for this month first." />
@@ -57,22 +65,28 @@ const MonthlyPayrollReport = () => {
               }
             />
 
-            <Card title="Department-wise Distribution" style={{ marginTop: 16 }} loading={loading}>
+            <div style={{ ...pageCard, padding: 24, marginTop: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>
+                Department-wise Distribution
+              </div>
               <Table
+                className="payroll-report-tbl"
                 rowKey="department"
                 dataSource={deptRows}
+                loading={loading}
                 columns={[
                   { title: "Department", dataIndex: "department" },
                   { title: "Employees", dataIndex: "employees" },
                   { title: "Net Pay", dataIndex: "netPay" },
                 ]}
                 pagination={false}
+                scroll={{ x: "max-content" }}
               />
-            </Card>
+            </div>
           </>
         )}
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 };
 

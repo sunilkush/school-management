@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import {
-  Card,
   Table,
   Tag,
   Button,
   Modal,
   Descriptions,
   message,
-  Col,
   InputNumber,
   Radio,
+  Space,
 } from "antd";
+import { DollarOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 
 import { fetchMyFees } from "../../../features/studentFeeSlice";
@@ -20,8 +20,9 @@ import {
   generateInstallments,
   fetchFeeInstallments,
 } from "../../../features/feeInstallmentSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, pageCard, sectionPanel, tableHeadCss, pill } from "../../../styles/pageStyles";
 
-/* ================= RAZORPAY SCRIPT LOADER ================= */
 const loadRazorpay = () => {
   return new Promise((resolve) => {
     const script = document.createElement("script");
@@ -35,7 +36,6 @@ const loadRazorpay = () => {
 const FeeStudent = () => {
   const dispatch = useDispatch();
 
-  /* ================= REDUX STATE ================= */
   const { myFees = [], loading: feeLoading } = useSelector(
     (state) => state.studentFee
   );
@@ -48,7 +48,7 @@ const FeeStudent = () => {
 
   const enrollmentId = myEnrollment?.enrollmentId;
   const studentId = myEnrollment?.studentId;
-  /* ================= LOCAL STATE ================= */
+
   const [open, setOpen] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState(null);
   const [amountPaid, setAmountPaid] = useState(0);
@@ -56,19 +56,17 @@ const FeeStudent = () => {
   const [frequencyModalOpen, setFrequencyModalOpen] = useState(false);
   const [selectedFrequency, setSelectedFrequency] = useState("monthly");
 
-  /* ================= FETCH DATA ================= */
   useEffect(() => {
     dispatch(fetchMyStudentEnrollment());
   }, [dispatch]);
 
   useEffect(() => {
     if (enrollmentId) {
-        if (studentId) dispatch(fetchMyFees(studentId));
+      if (studentId) dispatch(fetchMyFees(studentId));
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     }
   }, [dispatch, enrollmentId, studentId]);
 
-  /* ================= GENERATE INSTALLMENTS ================= */
   const handleGenerateInstallments = async () => {
     try {
       await dispatch(
@@ -86,14 +84,12 @@ const FeeStudent = () => {
     }
   };
 
-  /* ================= OPEN PAY MODAL ================= */
   const openPayModal = (installment) => {
     setSelectedInstallment(installment);
     setAmountPaid(installment.amount - installment.paidAmount);
     setOpen(true);
   };
 
-  /* ================= CASH PAYMENT ================= */
   const handleCashPayment = async () => {
     try {
       await dispatch(
@@ -113,7 +109,6 @@ const FeeStudent = () => {
     }
   };
 
-  /* ================= RAZORPAY PAYMENT ================= */
   const handleRazorpayPayment = async () => {
     const loaded = await loadRazorpay();
     if (!loaded) {
@@ -150,7 +145,7 @@ const FeeStudent = () => {
           if (studentId) dispatch(fetchMyFees(studentId));
           dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
         },
-        theme: { color: "#1677ff" },
+        theme: { color: "var(--primary)" },
       };
 
       const rzp = new window.Razorpay(options);
@@ -160,7 +155,6 @@ const FeeStudent = () => {
     }
   };
 
-  /* ================= TABLE COLUMNS ================= */
   const feeColumns = [
     {
       title: "Fee Head",
@@ -173,7 +167,11 @@ const FeeStudent = () => {
       title: "Status",
       dataIndex: "status",
       render: (s) =>
-        s === "paid" ? <Tag color="green">PAID</Tag> : <Tag color="red">DUE</Tag>,
+        s === "paid" ? (
+          <span style={pill("#16a34a", "#f0fdf4")}>PAID</span>
+        ) : (
+          <span style={pill("#dc2626", "#fff1f2")}>DUE</span>
+        ),
     },
   ];
 
@@ -189,7 +187,9 @@ const FeeStudent = () => {
       title: "Status",
       dataIndex: "status",
       render: (s) => (
-        <Tag color={s === "paid" ? "green" : "orange"}>{s}</Tag>
+        <span style={pill(s === "paid" ? "#16a34a" : "#d97706", s === "paid" ? "#f0fdf4" : "#fffbeb")}>
+          {s}
+        </span>
       ),
     },
     {
@@ -204,25 +204,32 @@ const FeeStudent = () => {
   ];
 
   return (
-    <>
-      {/* ===== FEES ===== */}
-      <Card title="My Fees">
-        <Col style={{ overflow: "auto" }}>
-          <Table
-            columns={feeColumns}
-            dataSource={myFees}
-            rowKey="_id"
-            loading={feeLoading}
-            pagination={false}
-          />
-        </Col>
-      </Card>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("fees-tbl")}{tableHeadCss("inst-tbl")}</style>
+      <PageHeader
+        title="My Fees"
+        subtitle="View your fee structure and manage payments"
+        icon={<DollarOutlined />}
+      />
 
-      {/* ===== INSTALLMENTS ===== */}
-      <Card
-        title="Installments"
-        style={{ marginTop: 16 }}
-        extra={
+      <div style={{ ...sectionPanel, marginTop: 16 }}>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: "var(--text-primary)" }}>
+          Fee Summary
+        </div>
+        <Table
+          className="fees-tbl"
+          columns={feeColumns}
+          dataSource={myFees}
+          rowKey="_id"
+          loading={feeLoading}
+          pagination={false}
+          scroll={{ x: "max-content" }}
+        />
+      </div>
+
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Installments</div>
           <Button
             type="primary"
             disabled={installments.length > 0}
@@ -230,39 +237,42 @@ const FeeStudent = () => {
           >
             Generate Installments
           </Button>
-        }
-      >
+        </div>
         <Table
+          className="inst-tbl"
           columns={installmentColumns}
           dataSource={installments}
           rowKey="_id"
           loading={installmentLoading}
           pagination={false}
+          scroll={{ x: "max-content" }}
         />
-      </Card>
+      </div>
 
-      {/* ===== FREQUENCY MODAL ===== */}
       <Modal
         title="Select Installment Type"
         open={frequencyModalOpen}
         onCancel={() => setFrequencyModalOpen(false)}
         onOk={handleGenerateInstallments}
+        centered
       >
         <Radio.Group
           value={selectedFrequency}
           onChange={(e) => setSelectedFrequency(e.target.value)}
         >
-          <Radio value="monthly">Monthly</Radio>
-          <Radio value="quarterly">Quarterly</Radio>
-          <Radio value="yearly">Yearly</Radio>
+          <Space direction="vertical">
+            <Radio value="monthly">Monthly</Radio>
+            <Radio value="quarterly">Quarterly</Radio>
+            <Radio value="yearly">Yearly</Radio>
+          </Space>
         </Radio.Group>
       </Modal>
 
-      {/* ===== PAY MODAL ===== */}
       <Modal
         title="Pay Installment"
         open={open}
         onCancel={() => setOpen(false)}
+        centered
         footer={[
           <Button key="cash" onClick={handleCashPayment}>
             Pay Cash
@@ -274,7 +284,7 @@ const FeeStudent = () => {
       >
         {selectedInstallment && (
           <>
-            <Descriptions bordered column={1}>
+            <Descriptions bordered column={1} style={{ marginBottom: 12 }}>
               <Descriptions.Item label="Installment">
                 {selectedInstallment.installmentName}
               </Descriptions.Item>
@@ -284,19 +294,16 @@ const FeeStudent = () => {
             </Descriptions>
 
             <InputNumber
-              style={{ width: "100%", marginTop: 12 }}
+              style={{ width: "100%" }}
               min={1}
-              max={
-                selectedInstallment.amount -
-                selectedInstallment.paidAmount
-              }
+              max={selectedInstallment.amount - selectedInstallment.paidAmount}
               value={amountPaid}
               onChange={setAmountPaid}
             />
           </>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

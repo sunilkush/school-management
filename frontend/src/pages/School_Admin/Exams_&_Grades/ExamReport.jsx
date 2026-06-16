@@ -1,11 +1,21 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Alert, Button, Card, Empty, Input, Row, Select, Space, Table, Tag } from "antd";
-import { FileExcelOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { Alert, Button, Empty, Input, Select, Space, Table, Tag } from "antd";
+import { FileExcelOutlined, FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
 import { exportReportExcel, exportReportPDF, fetchReports } from "../../../features/examReportSlice";
 import { getExams } from "../../../features/examSlice";
-import ExamPageHeader from "../../../components/exams/ExamPageHeader";
-import ExamStatCards from "../../../components/exams/ExamStatCards";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  toolbarRow,
+  tableHeadCss,
+  statCard,
+  statLabel,
+  statValue,
+  statGrid,
+  pill,
+} from "../../../styles/pageStyles";
 
 const ExamReports = () => {
   const dispatch = useDispatch();
@@ -55,71 +65,79 @@ const ExamReports = () => {
   };
 
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%", padding: "24px" }}>
-      <Card bordered={false} style={{ borderRadius: 12 }}>
-        <ExamPageHeader
-          title="Exam Reports"
-          subtitle="Filter, audit, and export report outcomes with enterprise-ready controls."
-          breadcrumbItems={[{ title: "Dashboard" }, { title: "Exams" }, { title: "Reports" }]}
-          actions={[
-            <Button key="excel" icon={<FileExcelOutlined />} onClick={() => handleExport("excel")}>Export Excel</Button>,
-            <Button key="pdf" danger icon={<FilePdfOutlined />} onClick={() => handleExport("pdf")}>Export PDF</Button>,
-          ]}
-        />
-      </Card>
-
-      <ExamStatCards
-        items={[
-          { key: "total", title: "Total Records", value: stats.total },
-          { key: "passed", title: "Pass", value: stats.passed, valueStyle: { color: "#389e0d" } },
-          { key: "failed", title: "Fail", value: stats.failed, valueStyle: { color: "#cf1322" } },
-          { key: "avg", title: "Average %", value: stats.avg, suffix: "%" },
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("report-table")}</style>
+      <PageHeader
+        title="Exam Reports"
+        subtitle="Filter, audit, and export report outcomes with enterprise-ready controls."
+        icon={<FileTextOutlined />}
+        extra={[
+          <Button key="excel" icon={<FileExcelOutlined />} onClick={() => handleExport("excel")}>Export Excel</Button>,
+          <Button key="pdf" danger icon={<FilePdfOutlined />} onClick={() => handleExport("pdf")}>Export PDF</Button>,
         ]}
       />
 
-      <Card bordered={false} style={{ borderRadius: 12 }}>
-        <Row gutter={[12, 12]}>
-          <Select
-            allowClear
-            style={{ minWidth: 220 }}
-            placeholder="Select exam"
-            value={filters.examId}
-            onChange={(value) => setFilters((prev) => ({ ...prev, examId: value }))}
-            options={exams.map((exam) => ({ label: exam?.title || "Untitled Exam", value: exam?._id }))}
-          />
-          <Select
-            allowClear
-            style={{ minWidth: 170 }}
-            placeholder="Result type"
-            value={filters.type || undefined}
-            onChange={(value) => setFilters((prev) => ({ ...prev, type: value || "" }))}
-            options={[{ label: "All", value: "" }, { label: "Passed", value: "pass" }, { label: "Failed", value: "fail" }]}
-          />
-          <Input.Search
-            allowClear
-            placeholder="Search student/exam"
-            value={filters.search}
-            onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
-            style={{ minWidth: 260 }}
-          />
-        </Row>
+      <div style={{ marginTop: 20 }}>
+        <div className="stat-grid" style={statGrid(160)}>
+          {[
+            { key: "total", title: "Total Records", value: stats.total, color: "var(--primary)" },
+            { key: "passed", title: "Pass", value: stats.passed, color: "#389e0d" },
+            { key: "failed", title: "Fail", value: stats.failed, color: "#cf1322" },
+            { key: "avg", title: "Average %", value: `${stats.avg}%`, color: "#0284c7" },
+          ].map((item) => (
+            <div key={item.key} style={statCard({ color: item.color })}>
+              <div>
+                <div style={statLabel(item.color)}>{item.title}</div>
+                <div style={statValue(item.color)}>{item.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-        {error ? (
-          <Alert
-            style={{ marginTop: 16 }}
-            type="error"
-            showIcon
-            message="Failed to load exam reports"
-            description={String(error)}
-          />
-        ) : null}
+        <div style={pageCard}>
+          <div className="page-toolbar" style={{ ...toolbarRow, padding: "16px 16px 0" }}>
+            <Select
+              allowClear
+              style={{ minWidth: 220 }}
+              placeholder="Select exam"
+              value={filters.examId}
+              onChange={(value) => setFilters((prev) => ({ ...prev, examId: value }))}
+              options={exams.map((exam) => ({ label: exam?.title || "Untitled Exam", value: exam?._id }))}
+            />
+            <Select
+              allowClear
+              style={{ minWidth: 170 }}
+              placeholder="Result type"
+              value={filters.type || undefined}
+              onChange={(value) => setFilters((prev) => ({ ...prev, type: value || "" }))}
+              options={[{ label: "All", value: "" }, { label: "Passed", value: "pass" }, { label: "Failed", value: "fail" }]}
+            />
+            <Input.Search
+              allowClear
+              placeholder="Search student/exam"
+              value={filters.search}
+              onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
+              style={{ minWidth: 240 }}
+            />
+          </div>
 
-        <div style={{ marginTop: 20 }}>
+          {error ? (
+            <Alert
+              style={{ margin: 16 }}
+              type="error"
+              showIcon
+              message="Failed to load exam reports"
+              description={String(error)}
+            />
+          ) : null}
+
           <Table
+            className="report-table"
             loading={loading}
             rowKey="_id"
             dataSource={filteredReports}
             locale={{ emptyText: <Empty description="No report records found" /> }}
+            scroll={{ x: "max-content" }}
             columns={[
               { title: "Exam", dataIndex: "examTitle", key: "examTitle" },
               { title: "Student", dataIndex: "studentName", key: "studentName" },
@@ -142,14 +160,21 @@ const ExamReports = () => {
                 dataIndex: "status",
                 key: "status",
                 align: "center",
-                render: (status) => <Tag color={status === "Pass" ? "green" : status === "Fail" ? "red" : "blue"}>{status || "Pending"}</Tag>,
+                render: (status) => (
+                  <span style={pill(
+                    status === "Pass" ? "#389e0d" : status === "Fail" ? "#cf1322" : "#0284c7",
+                    status === "Pass" ? "#f0fdf4" : status === "Fail" ? "#fff1f2" : "#e0f2fe"
+                  )}>
+                    {status || "Pending"}
+                  </span>
+                ),
               },
             ]}
             pagination={{ pageSize: 10, showSizeChanger: true }}
           />
         </div>
-      </Card>
-    </Space>
+      </div>
+    </div>
   );
 };
 

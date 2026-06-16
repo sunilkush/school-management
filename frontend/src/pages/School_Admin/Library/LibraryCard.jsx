@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import {
-  Layout,
-  Breadcrumb,
   Form,
   Input,
   Select,
@@ -11,9 +9,15 @@ import {
   Space,
   message,
 } from "antd";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, CreditCardOutlined } from "@ant-design/icons";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  sectionPanel,
+  tableHeadCss,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
 const { Option } = Select;
 
 const LibraryCard = () => {
@@ -66,17 +70,17 @@ const LibraryCard = () => {
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Library</Breadcrumb.Item>
-        <Breadcrumb.Item>Library Cards</Breadcrumb.Item>
-      </Breadcrumb>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("lib-card-tbl")}</style>
+      <PageHeader
+        title="Library Cards"
+        subtitle="Issue and manage library membership cards"
+        icon={<CreditCardOutlined />}
+      />
 
-      <Content>
-        {/* Library Card Form */}
-        <div style={{ marginBottom: 32 }}>
-          <h2 style={{ marginBottom: 16 }}>Issue a Library Card</h2>
+      <div style={{ padding: "20px" }}>
+        <div style={sectionPanel}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Issue a Library Card</div>
           <Form
             form={form}
             layout="vertical"
@@ -142,18 +146,19 @@ const LibraryCard = () => {
           </Form>
         </div>
 
-        {/* Issued Cards Table */}
-        <div>
-          <h2 style={{ marginBottom: 16 }}>Issued Library Cards</h2>
+        <div style={{ ...pageCard, marginTop: 24, padding: 24 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Issued Library Cards</div>
           <Table
+            className="lib-card-tbl"
             columns={columns}
             dataSource={cards}
             pagination={{ pageSize: 5 }}
             rowKey="key"
+            scroll={{ x: "max-content" }}
           />
         </div>
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 };
 

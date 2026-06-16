@@ -13,11 +13,14 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { UserOutlined } from "@ant-design/icons";
 import {
   fetchStudentEnrollment,
   fetchStudentProfile,
   updateStudentProfile,
 } from "../../../features/studentPortalSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, pageCard, sectionPanel, avatarStyle } from "../../../styles/pageStyles";
 
 const defaultStudentDetails = {
   dateOfBirth: "",
@@ -159,37 +162,23 @@ const Profile = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setProfileForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleStudentInfoChange = (e) => {
     const { name, value } = e.target;
-    setStudentInfo((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setStudentInfo((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleGuardianChange = (type, e) => {
     const { name, value } = e.target;
     const setter = type === "father" ? setFatherInfo : setMotherInfo;
-    setter((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setter((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-
-    setSaveState({
-      saving: true,
-      message: "",
-      isError: false,
-    });
+    setSaveState({ saving: true, message: "", isError: false });
 
     try {
       await dispatch(
@@ -206,18 +195,12 @@ const Profile = () => {
         })
       ).unwrap();
 
-      setSaveState({
-        saving: false,
-        message: "Profile successfully update ho gaya ✅",
-        isError: false,
-      });
-
+      setSaveState({ saving: false, message: "Profile updated successfully", isError: false });
       await dispatch(fetchStudentProfile()).unwrap();
     } catch (err) {
       setSaveState({
         saving: false,
-        message:
-          err?.message || err || "Profile update nahi ho paaya. Phir se try karein.",
+        message: err?.message || err || "Profile update failed. Please try again.",
         isError: true,
       });
     }
@@ -225,169 +208,104 @@ const Profile = () => {
 
   if (portalLoading || authLoading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center text-gray-600">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        Profile load ho raha hai...
+      <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text-muted)" }}>
+        <Loader2 style={{ width: 20, height: 20 }} />
+        Loading profile...
       </div>
     );
   }
 
   if (portalError) {
     return (
-      <div className="m-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-        <p className="font-medium">Error</p>
-        <p className="text-sm">{portalError}</p>
+      <div style={{ ...pageWrapper }}>
+        <div style={{ border: "1px solid #fca5a5", background: "#fff1f2", borderRadius: 12, padding: 16, color: "#dc2626" }}>
+          <p style={{ fontWeight: 600, margin: "0 0 4px" }}>Error</p>
+          <p style={{ fontSize: 13, margin: 0 }}>{portalError}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 bg-slate-50 min-h-screen space-y-5">
-      <div className="bg-white rounded-2xl border p-4 md:p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row gap-5 md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-indigo-600 text-white font-semibold flex items-center justify-center text-lg">
+    <div style={pageWrapper}>
+      <PageHeader
+        title="My Profile"
+        subtitle="View and update your personal information"
+        icon={<UserOutlined />}
+      />
+
+      <div style={{ ...pageCard, marginTop: 16, padding: "20px 24px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={avatarStyle(profileForm.name || "S", 56)}>
               {initials}
             </div>
-
             <div>
-              <h1 className="text-xl font-bold text-slate-800">
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                 {profileForm.name || "Student Profile"}
-              </h1>
-              <p className="text-sm text-slate-500">
-                {profileForm.email || "No email"}
-              </p>
-              <span className="inline-block mt-2 text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{profileForm.email || "No email"}</div>
+              <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "#d1fae5", color: "#059669", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
                 Active Student
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm w-full md:w-auto">
-            <InfoBadge
-              icon={<GraduationCap className="h-4 w-4" />}
-              label="Registration"
-              value={registrationNumber}
-            />
-            <InfoBadge
-              icon={<BookOpen className="h-4 w-4" />}
-              label="Class"
-              value={classInfo}
-            />
-            <InfoBadge
-              icon={<CalendarDays className="h-4 w-4" />}
-              label="Academic Year"
-              value={getDisplayValue(academicYearName)}
-            />
+          <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, flex: "1 1 340px", maxWidth: 480 }}>
+            <InfoBadge icon={<GraduationCap style={{ width: 14, height: 14 }} />} label="Registration" value={registrationNumber} />
+            <InfoBadge icon={<BookOpen style={{ width: 14, height: 14 }} />} label="Class" value={classInfo} />
+            <InfoBadge icon={<CalendarDays style={{ width: 14, height: 14 }} />} label="Academic Year" value={getDisplayValue(academicYearName)} />
           </div>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        <div className="xl:col-span-2 bg-white rounded-2xl border p-4 md:p-6 space-y-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-slate-800">Basic Profile</h2>
-
+      <form onSubmit={handleSave} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
+        <div style={{ ...pageCard, padding: "20px 24px", gridColumn: "span 2" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Basic Profile</div>
             <button
               type="submit"
               disabled={saveState.saving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm disabled:opacity-50"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 16px", borderRadius: 8,
+                background: "var(--primary)", color: "#fff",
+                border: "none", cursor: "pointer", fontSize: 13,
+                opacity: saveState.saving ? 0.6 : 1,
+              }}
             >
-              {saveState.saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              {saveState.saving ? <Loader2 style={{ width: 14, height: 14 }} /> : <Save style={{ width: 14, height: 14 }} />}
               {saveState.saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
 
           <Section title="Student Account">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                icon={<User className="h-4 w-4" />}
-                label="Full Name"
-                name="name"
-                value={profileForm.name}
-                onChange={handleProfileChange}
-                required
-              />
-              <InputField
-                icon={<Mail className="h-4 w-4" />}
-                label="Email"
-                name="email"
-                type="email"
-                value={profileForm.email}
-                onChange={handleProfileChange}
-                required
-              />
-              <InputField
-                icon={<Phone className="h-4 w-4" />}
-                label="Phone"
-                name="phone"
-                value={profileForm.phone}
-                onChange={handleProfileChange}
-              />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+              <InputField icon={<User style={{ width: 14, height: 14 }} />} label="Full Name" name="name" value={profileForm.name} onChange={handleProfileChange} required />
+              <InputField icon={<Mail style={{ width: 14, height: 14 }} />} label="Email" name="email" type="email" value={profileForm.email} onChange={handleProfileChange} required />
+              <InputField icon={<Phone style={{ width: 14, height: 14 }} />} label="Phone" name="phone" value={profileForm.phone} onChange={handleProfileChange} />
             </div>
           </Section>
 
           <Section title="Student Details">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SelectField
-                label="Gender"
-                name="gender"
-                value={studentInfo.gender}
-                onChange={handleStudentInfoChange}
-                options={["Male", "Female", "Other"]}
-              />
-              <InputField
-                icon={<Droplets className="h-4 w-4" />}
-                label="Blood Group"
-                name="bloodGroup"
-                value={studentInfo.bloodGroup}
-                onChange={handleStudentInfoChange}
-              />
-              <InputField
-                icon={<CalendarDays className="h-4 w-4" />}
-                label="Date of Birth"
-                name="dateOfBirth"
-                type="date"
-                value={studentInfo.dateOfBirth}
-                onChange={handleStudentInfoChange}
-              />
-              <InputField
-                icon={<MapPin className="h-4 w-4" />}
-                label="Address"
-                name="address"
-                value={studentInfo.address}
-                onChange={handleStudentInfoChange}
-                fullWidth
-              />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+              <SelectField label="Gender" name="gender" value={studentInfo.gender} onChange={handleStudentInfoChange} options={["Male", "Female", "Other"]} />
+              <InputField icon={<Droplets style={{ width: 14, height: 14 }} />} label="Blood Group" name="bloodGroup" value={studentInfo.bloodGroup} onChange={handleStudentInfoChange} />
+              <InputField icon={<CalendarDays style={{ width: 14, height: 14 }} />} label="Date of Birth" name="dateOfBirth" type="date" value={studentInfo.dateOfBirth} onChange={handleStudentInfoChange} />
+              <InputField icon={<MapPin style={{ width: 14, height: 14 }} />} label="Address" name="address" value={studentInfo.address} onChange={handleStudentInfoChange} />
             </div>
           </Section>
 
           {saveState.message && (
-            <p
-              className={`text-sm ${
-                saveState.isError ? "text-red-600" : "text-emerald-600"
-              }`}
-            >
+            <p style={{ fontSize: 13, color: saveState.isError ? "#dc2626" : "#16a34a", margin: "8px 0 0" }}>
               {saveState.message}
             </p>
           )}
         </div>
 
-        <div className="space-y-5">
-          <GuardianCard
-            title="Father Details"
-            data={fatherInfo}
-            onChange={(e) => handleGuardianChange("father", e)}
-          />
-          <GuardianCard
-            title="Mother Details"
-            data={motherInfo}
-            onChange={(e) => handleGuardianChange("mother", e)}
-          />
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <GuardianCard title="Father Details" data={fatherInfo} onChange={(e) => handleGuardianChange("father", e)} />
+          <GuardianCard title="Mother Details" data={motherInfo} onChange={(e) => handleGuardianChange("mother", e)} />
         </div>
       </form>
     </div>
@@ -395,65 +313,60 @@ const Profile = () => {
 };
 
 const Section = ({ title, children }) => (
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+  <div style={{ marginBottom: 20 }}>
+    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>{title}</div>
     {children}
   </div>
 );
 
 const InfoBadge = ({ icon, label, value }) => (
-  <div className="min-w-[130px] rounded-xl border border-slate-200 bg-slate-50 p-3">
-    <p className="flex items-center gap-1 text-xs text-slate-500">
-      {icon}
-      {label}
-    </p>
-    <p className="text-slate-800 font-medium text-xs truncate mt-1">
+  <div style={{ borderRadius: 10, border: "1px solid var(--border-muted)", background: "var(--surface-soft)", padding: "10px 12px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
+      {icon}{label}
+    </div>
+    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
       {value || "-"}
-    </p>
+    </div>
   </div>
 );
 
-const InputField = ({
-  icon,
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  required = false,
-  fullWidth = false,
-}) => (
-  <label className={`space-y-1 ${fullWidth ? "md:col-span-2" : ""}`}>
-    <span className="text-xs text-slate-500">{label}</span>
-    <div className="flex items-center rounded-lg border border-slate-300 px-3 py-2 gap-2 focus-within:ring-2 focus-within:ring-indigo-100">
-      <span className="text-slate-400">{icon}</span>
+const fieldStyle = {
+  display: "flex", alignItems: "center",
+  border: "1px solid var(--border-muted)",
+  borderRadius: 8, padding: "8px 12px", gap: 8,
+  background: "var(--surface)",
+};
+
+const InputField = ({ icon, label, name, value, onChange, type = "text", required = false }) => (
+  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+    <div style={fieldStyle}>
+      <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{icon}</span>
       <input
         type={type}
         name={name}
         value={value || ""}
         onChange={onChange}
-        className="w-full outline-none text-sm bg-transparent"
         required={required}
+        style={{ flex: 1, border: "none", outline: "none", fontSize: 13, background: "transparent", color: "var(--text-primary)" }}
       />
     </div>
   </label>
 );
 
 const SelectField = ({ label, name, value, onChange, options }) => (
-  <label className="space-y-1">
-    <span className="text-xs text-slate-500">{label}</span>
-    <div className="rounded-lg border border-slate-300 px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-100">
+  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+    <div style={fieldStyle}>
       <select
         name={name}
         value={value || ""}
         onChange={onChange}
-        className="w-full outline-none text-sm bg-transparent"
+        style={{ flex: 1, border: "none", outline: "none", fontSize: 13, background: "transparent", color: "var(--text-primary)" }}
       >
         <option value="">Select {label}</option>
         {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
+          <option key={opt} value={opt}>{opt}</option>
         ))}
       </select>
     </div>
@@ -461,33 +374,15 @@ const SelectField = ({ label, name, value, onChange, options }) => (
 );
 
 const GuardianCard = ({ title, data, onChange }) => (
-  <div className="bg-white rounded-2xl border p-4 shadow-sm space-y-3">
-    <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-      <Users className="h-4 w-4" /> {title}
-    </h3>
-
-    <InputField
-      icon={<User className="h-4 w-4" />}
-      label="Name"
-      name="name"
-      value={data?.name}
-      onChange={onChange}
-    />
-    <InputField
-      icon={<Phone className="h-4 w-4" />}
-      label="Mobile"
-      name="mobile"
-      value={data?.mobile}
-      onChange={onChange}
-    />
-    <InputField
-      icon={<Mail className="h-4 w-4" />}
-      label="Email"
-      name="email"
-      value={data?.email}
-      onChange={onChange}
-      type="email"
-    />
+  <div style={{ ...pageCard, padding: "16px 20px" }}>
+    <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+      <Users style={{ width: 14, height: 14 }} /> {title}
+    </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <InputField icon={<User style={{ width: 14, height: 14 }} />} label="Name" name="name" value={data?.name} onChange={onChange} />
+      <InputField icon={<Phone style={{ width: 14, height: 14 }} />} label="Mobile" name="mobile" value={data?.mobile} onChange={onChange} />
+      <InputField icon={<Mail style={{ width: 14, height: 14 }} />} label="Email" name="email" value={data?.email} onChange={onChange} type="email" />
+    </div>
   </div>
 );
 

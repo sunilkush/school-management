@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Layout,
-  Breadcrumb,
   Table,
   Button,
   Space,
@@ -10,15 +8,21 @@ import {
   Input,
   InputNumber,
   message,
-  Card,
-  Row,
-  Col,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined, CarOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { createRoute, deleteRoute, fetchRoutes, updateRoute } from "../../../features/transportSlice";
-
-const { Content } = Layout;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  statGrid,
+  statCard,
+  statLabel,
+  statValue,
+  tableHeadCss,
+  toolbarRow,
+} from "../../../styles/pageStyles";
 
 const RoutesPage = () => {
   const dispatch = useDispatch();
@@ -89,6 +93,7 @@ const RoutesPage = () => {
       content: `Do you want to delete ${route.name}?`,
       okText: "Yes",
       cancelText: "No",
+      centered: true,
       onOk: async () => {
         try {
           await dispatch(deleteRoute(route._id)).unwrap();
@@ -126,44 +131,59 @@ const RoutesPage = () => {
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Transport</Breadcrumb.Item>
-        <Breadcrumb.Item>Routes</Breadcrumb.Item>
-      </Breadcrumb>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("routes-tbl")}</style>
+      <PageHeader
+        title="Bus Routes"
+        subtitle="Manage transport routes, stops and bus assignments"
+        icon={<CarOutlined />}
+      />
 
-      <Content>
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}>
-            <Card title="Total Routes" bordered={false}>
-              {totalRoutes}
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="Total Buses" bordered={false}>
-              {totalBuses}
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="Total Students" bordered={false}>
-              {totalStudents}
-            </Card>
-          </Col>
-        </Row>
+      <div style={{ padding: "20px" }}>
+        <div className="stat-grid" style={statGrid(160)}>
+          <div style={statCard({ color: "var(--primary)" })}>
+            <div>
+              <div style={statLabel("var(--primary)")}>Total Routes</div>
+              <div style={statValue("var(--primary)")}>{totalRoutes}</div>
+            </div>
+          </div>
+          <div style={statCard({ color: "#059669" })}>
+            <div>
+              <div style={statLabel("#059669")}>Total Buses</div>
+              <div style={statValue("#059669")}>{totalBuses}</div>
+            </div>
+          </div>
+          <div style={statCard({ color: "#d97706" })}>
+            <div>
+              <div style={statLabel("#d97706")}>Total Students</div>
+              <div style={statValue("#d97706")}>{totalStudents}</div>
+            </div>
+          </div>
+        </div>
 
-        <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2>Bus Routes</h2>
+        <div className="page-toolbar" style={toolbarRow}>
+          <div style={{ flex: 1, fontWeight: 700, fontSize: 16, color: "var(--text-primary)" }}>Bus Routes</div>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
             Add Route
           </Button>
         </div>
 
-        <Table columns={columns} dataSource={dataSource} loading={loading} pagination={{ pageSize: 5 }} rowKey="key" />
+        <div style={pageCard}>
+          <Table
+            className="routes-tbl"
+            columns={columns}
+            dataSource={dataSource}
+            loading={loading}
+            pagination={{ pageSize: 5 }}
+            rowKey="key"
+            scroll={{ x: "max-content" }}
+          />
+        </div>
 
         <Modal
           title={editingRoute ? "Edit Route" : "Add Route"}
           open={modalVisible}
+          centered
           onCancel={() => {
             setModalVisible(false);
             setEditingRoute(null);
@@ -206,8 +226,8 @@ const RoutesPage = () => {
             </Form.Item>
           </Form>
         </Modal>
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 };
 
