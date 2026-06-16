@@ -285,6 +285,7 @@ const ITSupportProfile = lazy(() =>
 );
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
+const StyleGuide = lazy(() => import("./pages/StyleGuide.jsx"));
 
 const ChangePassword = lazy(()=> import("./pages/Auth/ResetPasswordPage.jsx"));
 const AttendanceDashboardPage = lazy(() => import("./pages/Attendance/AttendanceDashboard.jsx"));
@@ -307,6 +308,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <LoginPage /> },
       { path: "/login", element: <LoginPage /> },
+      { path: "/style-guide", element: <StyleGuide /> },
       { path: "/forgot-password", element: <ForgetPasswordPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
@@ -472,6 +474,7 @@ const router = createBrowserRouter([
               { path: "support/contact", element: <ContactSupport/> },
               { path: "support/documentation", element: <Documentation/> },
               { path: "support/faqs", element: <Faqs/> },
+              { path: "style-guide", element: <StyleGuide /> },
             ],
           },
           {
