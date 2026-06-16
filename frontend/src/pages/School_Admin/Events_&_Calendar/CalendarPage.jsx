@@ -1,39 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Badge,
-  Breadcrumb,
-  Button,
-  Calendar as AntCalendar,
-  Card,
-  Col,
-  DatePicker,
-  Empty,
-  Form,
-  Input,
-  Layout,
-  List,
-  Modal,
-  Popconfirm,
-  Row,
-  Select,
-  Space,
-  Tag,
-  Typography,
-  message,
+  Badge, Button, Calendar as AntCalendar, Card, Col, DatePicker, Empty, Form,
+  Input, List, Modal, Popconfirm, Row, Select, Space, Tag, Typography, message,
 } from "antd";
-import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  CalendarOutlined, DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
-  EVENT_AUDIENCES,
-  EVENT_STATUSES,
-  EVENT_TYPES,
-  createSchoolEvent,
-  deleteSchoolEvent,
-  fetchSchoolEvents,
-  updateSchoolEvent,
+  EVENT_AUDIENCES, EVENT_STATUSES, EVENT_TYPES,
+  createSchoolEvent, deleteSchoolEvent, fetchSchoolEvents, updateSchoolEvent,
 } from "../../../services/schoolEventApi";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, sectionPanel, pill, iconWell } from "../../../styles/pageStyles";
 
-const { Content } = Layout;
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
 
@@ -46,6 +26,15 @@ const BADGE_STATUS = {
   Reminder: "processing",
 };
 
+const TYPE_STYLE = {
+  Event:    { color: "#7c3aed", bg: "#ede9fe" },
+  Holiday:  { color: "#059669", bg: "#d1fae5" },
+  Meeting:  { color: "#0284c7", bg: "#e0f2fe" },
+  Exam:     { color: "#dc2626", bg: "#fee2e2" },
+  Activity: { color: "#f97316", bg: "#fff7ed" },
+  Reminder: { color: "#0e7490", bg: "#ecfeff" },
+};
+
 const toPayload = (values) => ({
   title: values.title?.trim(),
   type: values.type,
@@ -56,19 +45,22 @@ const toPayload = (values) => ({
   allDay: true,
   startDate: values.dateRange?.[0]?.startOf("day").toISOString(),
   endDate: values.dateRange?.[1]?.endOf("day").toISOString(),
-  color: values.color || "#1677ff",
+  color: values.color || "#7c3aed",
 });
 
 const occursOnDate = (event, date) => {
   const selected = date.startOf("day");
-  return selected.isSame(dayjs(event.startDate), "day") || selected.isSame(dayjs(event.endDate), "day") ||
-    (selected.isAfter(dayjs(event.startDate), "day") && selected.isBefore(dayjs(event.endDate), "day"));
+  return (
+    selected.isSame(dayjs(event.startDate), "day") ||
+    selected.isSame(dayjs(event.endDate), "day") ||
+    (selected.isAfter(dayjs(event.startDate), "day") && selected.isBefore(dayjs(event.endDate), "day"))
+  );
 };
 
 const formatEventDate = (event) => {
   const start = dayjs(event.startDate).format("DD MMM YYYY");
   const end = dayjs(event.endDate).format("DD MMM YYYY");
-  return start === end ? start : `${start} - ${end}`;
+  return start === end ? start : `${start} – ${end}`;
 };
 
 const CalendarPage = () => {
@@ -97,9 +89,7 @@ const CalendarPage = () => {
     }
   }, [calendarDate]);
 
-  useEffect(() => {
-    loadEvents(calendarDate);
-  }, [calendarDate, loadEvents]);
+  useEffect(() => { loadEvents(calendarDate); }, [calendarDate, loadEvents]);
 
   const selectedDateEvents = useMemo(
     () => events.filter((event) => occursOnDate(event, selectedDate)),
@@ -117,14 +107,14 @@ const CalendarPage = () => {
             location: event.location,
             audience: event.audience,
             status: event.status,
-            color: event.color || "#1677ff",
+            color: event.color || "#7c3aed",
             dateRange: [dayjs(event.startDate), dayjs(event.endDate)],
           }
         : {
             type: "Event",
             audience: "All",
             status: "scheduled",
-            color: "#1677ff",
+            color: "#7c3aed",
             dateRange: [date, date],
           }
     );
@@ -174,106 +164,135 @@ const CalendarPage = () => {
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {dayEvents.slice(0, 3).map((item) => (
           <li key={item._id}>
-            <Badge status={BADGE_STATUS[item.type] || "default"} text={<span style={{ fontSize: 12 }}>{item.title}</span>} />
+            <Badge
+              status={BADGE_STATUS[item.type] || "default"}
+              text={<span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{item.title}</span>}
+            />
           </li>
         ))}
-        {dayEvents.length > 3 ? <li><Text type="secondary">+{dayEvents.length - 3} more</Text></li> : null}
+        {dayEvents.length > 3 ? (
+          <li><Text type="secondary" style={{ fontSize: 11 }}>+{dayEvents.length - 3} more</Text></li>
+        ) : null}
       </ul>
     );
   };
 
-  const handleSelectDate = (value) => {
-    setSelectedDate(value);
-    setDayModalOpen(true);
-  };
-
-  const handlePanelChange = (value) => {
-    setCalendarDate(value);
+  const EventListItem = ({ event, onEdit, onDelete }) => {
+    const s = TYPE_STYLE[event.type] || { color: "#64748b", bg: "#f1f5f9" };
+    return (
+      <List.Item
+        actions={[
+          <Button key="edit" type="link" size="small" icon={<EditOutlined />} onClick={() => onEdit(event)}>Edit</Button>,
+          <Popconfirm
+            key="delete"
+            title="Delete event?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => onDelete(event)}
+          >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>Delete</Button>
+          </Popconfirm>,
+        ]}
+      >
+        <List.Item.Meta
+          title={
+            <Space size={6}>
+              <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{event.title}</span>
+              <span style={pill(s.color, s.bg)}>{event.type}</span>
+            </Space>
+          }
+          description={
+            <Space direction="vertical" size={0}>
+              <Text type="secondary" style={{ fontSize: 12 }}>{formatEventDate(event)}</Text>
+              {event.location ? <Text type="secondary" style={{ fontSize: 12 }}>{event.location}</Text> : null}
+            </Space>
+          }
+        />
+      </List.Item>
+    );
   };
 
   return (
-    <Layout style={{ padding: 24, minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }} items={[{ title: "Dashboard" }, { title: "Calendar" }]} />
+    <>
+      <PageHeader
+        title="School Calendar"
+        subtitle="View and manage all scheduled events by date"
+        icon={<CalendarOutlined />}
+        extra={
+          <Space size={8}>
+            <Button icon={<ReloadOutlined />} onClick={() => loadEvents(calendarDate)} loading={loading}>Refresh</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null, selectedDate)}>Add Event</Button>
+          </Space>
+        }
+      />
 
-      <Content>
-        <Card
-          title="School Calendar"
-          extra={
-            <Space wrap>
-              <Button icon={<ReloadOutlined />} onClick={() => loadEvents(calendarDate)} loading={loading}>Refresh</Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null, selectedDate)}>Add Event</Button>
-            </Space>
-          }
-        >
-          <Row gutter={[16, 16]}>
-            <Col xs={24} lg={18}>
+      <div style={pageWrapper}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={18}>
+            <div style={{
+              background: "var(--surface)",
+              borderRadius: 18,
+              border: "1px solid var(--border-muted)",
+              overflow: "hidden",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+            }}>
               <AntCalendar
                 value={calendarDate}
                 cellRender={(current, info) => (info.type === "date" ? dateCellRender(current) : info.originNode)}
-                onSelect={handleSelectDate}
-                onPanelChange={handlePanelChange}
+                onSelect={(value) => { setSelectedDate(value); setDayModalOpen(true); }}
+                onPanelChange={(value) => setCalendarDate(value)}
               />
-            </Col>
-            <Col xs={24} lg={6}>
-              <Card size="small" title={`Events on ${selectedDate.format("DD MMM YYYY")}`}>
-                {selectedDateEvents.length ? (
-                  <List
-                    dataSource={selectedDateEvents}
-                    renderItem={(event) => (
-                      <List.Item
-                        actions={[
-                          <Button key="edit" type="link" icon={<EditOutlined />} onClick={() => openModal(event)}>Edit</Button>,
-                          <Popconfirm
-                            key="delete"
-                            title="Delete event?"
-                            okText="Delete"
-                            okButtonProps={{ danger: true }}
-                            onConfirm={() => handleDeleteEvent(event)}
-                          >
-                            <Button type="link" danger icon={<DeleteOutlined />}>Delete</Button>
-                          </Popconfirm>,
-                        ]}
-                      >
-                        <List.Item.Meta
-                          title={<Space><span>{event.title}</span><Tag>{event.type}</Tag></Space>}
-                          description={
-                            <Space direction="vertical" size={0}>
-                              <Text type="secondary">{formatEventDate(event)}</Text>
-                              {event.location ? <Text type="secondary">{event.location}</Text> : null}
-                            </Space>
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No events for selected date" />
-                )}
-              </Card>
-            </Col>
-          </Row>
-        </Card>
+            </div>
+          </Col>
 
+          <Col xs={24} lg={6}>
+            <div style={sectionPanel}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>
+                {selectedDate.format("DD MMM YYYY")}
+              </div>
+              {selectedDateEvents.length ? (
+                <List
+                  dataSource={selectedDateEvents}
+                  renderItem={(event) => (
+                    <EventListItem key={event._id} event={event} onEdit={openModal} onDelete={handleDeleteEvent} />
+                  )}
+                />
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={<span style={{ fontSize: 12, color: "var(--text-muted)" }}>No events for this date</span>}
+                />
+              )}
+              <Button
+                type="dashed"
+                block
+                icon={<PlusOutlined />}
+                style={{ marginTop: 12 }}
+                onClick={() => openModal(null, selectedDate)}
+              >
+                Add Event Here
+              </Button>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Day detail modal (mobile tap) */}
         <Modal
-          title={`Events on ${selectedDate.format("DD MMM YYYY")}`}
+          title={`Events · ${selectedDate.format("DD MMM YYYY")}`}
           open={dayModalOpen}
           onCancel={() => setDayModalOpen(false)}
-          footer={<Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null, selectedDate)}>Add Event</Button>}
+          footer={
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null, selectedDate)}>
+              Add Event
+            </Button>
+          }
+          centered
         >
           {selectedDateEvents.length ? (
             <List
               dataSource={selectedDateEvents}
               renderItem={(event) => (
-                <List.Item
-                  actions={[
-                    <Button key="edit" type="link" icon={<EditOutlined />} onClick={() => openModal(event)}>Edit</Button>,
-                    <Popconfirm key="delete" title="Delete event?" okText="Delete" okButtonProps={{ danger: true }} onConfirm={() => handleDeleteEvent(event)}>
-                      <Button type="link" danger icon={<DeleteOutlined />}>Delete</Button>
-                    </Popconfirm>,
-                  ]}
-                >
-                  <List.Item.Meta title={<Space><span>{event.title}</span><Tag>{event.type}</Tag></Space>} description={event.description || formatEventDate(event)} />
-                </List.Item>
+                <EventListItem key={event._id} event={event} onEdit={openModal} onDelete={handleDeleteEvent} />
               )}
             />
           ) : (
@@ -281,19 +300,37 @@ const CalendarPage = () => {
           )}
         </Modal>
 
-        <Modal title={editingEvent ? "Edit Event" : "Add Event"} open={modalOpen} onCancel={closeModal} footer={null} destroyOnClose>
-          <Form form={form} layout="vertical" onFinish={handleSaveEvent}>
+        {/* Add / Edit event modal */}
+        <Modal
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={iconWell("var(--primary)", 34)}><CalendarOutlined /></div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                  {editingEvent ? "Edit Event" : "Add Event"}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the event details</div>
+              </div>
+            </div>
+          }
+          open={modalOpen}
+          onCancel={closeModal}
+          footer={null}
+          destroyOnClose
+          centered
+        >
+          <Form form={form} layout="vertical" onFinish={handleSaveEvent} style={{ marginTop: 8 }}>
             <Form.Item label="Event Title" name="title" rules={[{ required: true, message: "Please enter event title" }]}>
               <Input placeholder="Enter event title" />
             </Form.Item>
             <Row gutter={12}>
               <Col span={12}>
-                <Form.Item label="Event Type" name="type" rules={[{ required: true, message: "Select event type" }]}>
+                <Form.Item label="Event Type" name="type" rules={[{ required: true }]}>
                   <Select options={EVENT_TYPES.map((type) => ({ label: type, value: type }))} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Audience" name="audience" rules={[{ required: true, message: "Select audience" }]}>
+                <Form.Item label="Audience" name="audience" rules={[{ required: true }]}>
                   <Select options={EVENT_AUDIENCES.map((audience) => ({ label: audience, value: audience }))} />
                 </Form.Item>
               </Col>
@@ -303,13 +340,13 @@ const CalendarPage = () => {
             </Form.Item>
             <Row gutter={12}>
               <Col span={12}>
-                <Form.Item label="Status" name="status" rules={[{ required: true, message: "Select status" }]}>
+                <Form.Item label="Status" name="status" rules={[{ required: true }]}>
                   <Select options={EVENT_STATUSES.map((status) => ({ label: status, value: status }))} />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item label="Color" name="color">
-                  <Input type="color" />
+                  <Input type="color" style={{ height: 32, padding: 2 }} />
                 </Form.Item>
               </Col>
             </Row>
@@ -322,13 +359,15 @@ const CalendarPage = () => {
             <Form.Item style={{ textAlign: "right", marginBottom: 0 }}>
               <Space>
                 <Button onClick={closeModal}>Cancel</Button>
-                <Button type="primary" htmlType="submit" loading={saving}>{editingEvent ? "Update" : "Add"}</Button>
+                <Button type="primary" htmlType="submit" loading={saving}>
+                  {editingEvent ? "Update" : "Add"}
+                </Button>
               </Space>
             </Form.Item>
           </Form>
         </Modal>
-      </Content>
-    </Layout>
+      </div>
+    </>
   );
 };
 

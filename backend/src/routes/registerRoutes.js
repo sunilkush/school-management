@@ -44,6 +44,7 @@ import superAdminBillingRoutes from "./superAdminBilling.routes.js";
 import systemBackupRoutes from "./systemBackup.routes.js";
 import backupScheduleRoutes from "./backupSchedule.routes.js";
 import restoreJobRoutes from "./restoreJob.routes.js";
+import schoolEventRoutes from "./schoolEvent.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -92,6 +93,7 @@ export const apiV1Routes = [
   ["/system-backups", systemBackupRoutes],
   ["/backup-schedules", backupScheduleRoutes],
   ["/restore-jobs", restoreJobRoutes],
+  ["/events", schoolEventRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {
