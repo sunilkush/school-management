@@ -76,7 +76,7 @@ export const fetchSchoolReports = createAsyncThunk(
       const res = await apiClient.get(
         `/report/school/${schoolId}/academic-year/${academicYearId}`,
       );
-       
+
       return res.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: error.message });
@@ -89,7 +89,7 @@ const reportSlice = createSlice({
   name: 'reports',
   initialState: {
     items: [],
-    schoolReports: [], // FIXED
+    schoolReports: [],
     loading: false,
     error: null,
   },
@@ -103,7 +103,7 @@ const reportSlice = createSlice({
       })
       .addCase(fetchReports.fulfilled, (state, action) => {
         state.loading = false;
-        state.reports = Array.isArray(action.payload)
+        state.items = Array.isArray(action.payload)
           ? action.payload
           : Array.isArray(action.payload?.reports)
           ? action.payload.reports

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Table,
   Modal,
@@ -6,45 +6,162 @@ import {
   Input,
   Select,
   Button,
-  Tag,
+  Space,
+  Spin,
+  Empty,
   Popconfirm,
+  message,
 } from "antd";
-import { UserCog, Edit, Trash2, Plus } from "lucide-react";
+import {
+  PlusOutlined,
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
+  UserOutlined,
+  IdcardOutlined,
+} from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchDesignations,
+  createDesignation,
+  updateDesignation,
+  deleteDesignation,
+} from "../../../features/designationSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  toolbarRow,
+  tableHeadCss,
+  statGrid,
+  statCard,
+  statLabel,
+  statValue,
+  pill,
+  iconWell,
+  modalTitle,
+} from "../../../styles/pageStyles";
 
 const { Option } = Select;
+const { TextArea } = Input;
 
-const Designations = () => {
-  const [designations, setDesignations] = useState([
-    { id: 1, name: "Principal", level: "Senior", status: "Active" },
-    { id: 2, name: "Teacher", level: "Mid", status: "Active" },
-    { id: 3, name: "Accountant", level: "Junior", status: "Inactive" },
-  ]);
+/* ── Level badge colours ─────────────────────────────────────────── */
+const LEVEL_STYLE = {
+  Senior: { color: "#7c3aed", bg: "#ede9fe" },
+  Mid: { color: "#0284c7", bg: "#e0f2fe" },
+  Junior: { color: "#059669", bg: "#d1fae5" },
+};
 
+function LevelBadge({ level }) {
+  const style = LEVEL_STYLE[level] || { color: "#64748b", bg: "#f1f5f9" };
+  return (
+    <span style={pill(style.color, style.bg)}>
+      {level || "—"}
+    </span>
+  );
+}
+
+function StatusBadge({ status }) {
+  const isActive = status === "Active" || status === "active";
+  return (
+    <span style={pill(isActive ? "#16a34a" : "#dc2626", isActive ? "#f0fdf4" : "#fef2f2")}>
+      <span
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: isActive ? "#16a34a" : "#dc2626",
+          display: "inline-block",
+          marginRight: 5,
+        }}
+      />
+      {isActive ? "Active" : "Inactive"}
+    </span>
+  );
+}
+
+function DesignationCell({ title }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={iconWell("var(--primary)", 32)}>
+        <IdcardOutlined style={{ fontSize: 14 }} />
+      </div>
+      <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{title}</span>
+    </div>
+  );
+}
+
+/* ── Main component ──────────────────────────────────────────────── */
+export default function Designations() {
+  const dispatch = useDispatch();
+  const { designations, loading, error } = useSelector((s) => s.designations);
+
+  const [search, setSearch] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
-  const [selectedId, setSelectedId] = useState(null);
 
-  // -----------------------------
-  // MODAL HANDLERS
-  // -----------------------------
-  const openAddModal = () => {
+  /* Fetch on mount */
+  useEffect(() => {
+    dispatch(fetchDesignations());
+  }, [dispatch]);
+
+  /* Show API errors */
+  useEffect(() => {
+    if (error) message.error(error);
+  }, [error]);
+
+  /* Filtered list */
+  const filtered = useMemo(() => {
+    const list = Array.isArray(designations) ? designations : [];
+    return list.filter((d) => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        !q ||
+        d.title?.toLowerCase().includes(q) ||
+        d.description?.toLowerCase().includes(q);
+      const matchLevel = !levelFilter || d.level === levelFilter;
+      const matchStatus =
+        !statusFilter ||
+        d.status?.toLowerCase() === statusFilter.toLowerCase();
+      return matchSearch && matchLevel && matchStatus;
+    });
+  }, [designations, search, levelFilter, statusFilter]);
+
+  /* Stat counts */
+  const total = Array.isArray(designations) ? designations.length : 0;
+  const active = Array.isArray(designations)
+    ? designations.filter((d) => d.status === "Active" || d.status === "active").length
+    : 0;
+  const inactive = total - active;
+  const seniorCount = Array.isArray(designations)
+    ? designations.filter((d) => d.level === "Senior").length
+    : 0;
+
+  /* ── Modal helpers ── */
+  const openAdd = () => {
     setIsEdit(false);
-    setSelectedId(null);
+    setEditingId(null);
     form.resetFields();
+    form.setFieldsValue({ status: "Active", level: "Mid" });
     setOpen(true);
   };
 
-  const openEditModal = (record) => {
+  const openEdit = (record) => {
     setIsEdit(true);
-    setSelectedId(record.id);
-
+    setEditingId(record._id);
     form.setFieldsValue({
-      name: record.name,
+      title: record.title,
       level: record.level,
+      description: record.description,
       status: record.status,
     });
-
     setOpen(true);
   };
 
@@ -53,157 +170,305 @@ const Designations = () => {
     form.resetFields();
   };
 
-  // -----------------------------
-  // SAVE / UPDATE
-  // -----------------------------
-  const onFinish = (values) => {
-    if (isEdit) {
-      // UPDATE
-      setDesignations((prev) =>
-        prev.map((d) =>
-          d.id === selectedId ? { ...values, id: selectedId } : d
-        )
-      );
-    } else {
-      // ADD
-      setDesignations((prev) => [
-        ...prev,
-        { ...values, id: Date.now() },
-      ]);
+  /* ── Submit ── */
+  const onFinish = async (values) => {
+    setSubmitting(true);
+    try {
+      if (isEdit) {
+        await dispatch(updateDesignation({ id: editingId, data: values })).unwrap();
+        message.success("Designation updated successfully");
+      } else {
+        await dispatch(createDesignation(values)).unwrap();
+        message.success("Designation created successfully");
+      }
+      closeModal();
+    } catch (err) {
+      message.error(err || "Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
-
-    closeModal();
   };
 
-  // -----------------------------
-  // DELETE
-  // -----------------------------
-  const handleDelete = (id) => {
-    setDesignations((prev) => prev.filter((d) => d.id !== id));
+  /* ── Delete ── */
+  const handleDelete = async (id) => {
+    try {
+      await dispatch(deleteDesignation(id)).unwrap();
+      message.success("Designation deleted");
+    } catch (err) {
+      message.error(err || "Failed to delete designation");
+    }
   };
 
-  // -----------------------------
-  // TABLE COLUMNS
-  // -----------------------------
+  /* ── Table columns ── */
   const columns = [
     {
       title: "#",
-      render: (_, __, index) => index + 1,
-      width: 60,
+      width: 52,
+      render: (_, __, i) => (
+        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{i + 1}</span>
+      ),
     },
     {
       title: "Designation",
-      dataIndex: "name",
+      render: (_, record) => <DesignationCell title={record.title} />,
     },
     {
       title: "Level",
       dataIndex: "level",
+      width: 110,
+      render: (level) => <LevelBadge level={level} />,
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      ellipsis: true,
+      render: (v) =>
+        v ? (
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v}</span>
+        ) : (
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+        ),
     },
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) =>
-        status === "Active" ? (
-          <Tag color="green">Active</Tag>
-        ) : (
-          <Tag color="red">Inactive</Tag>
-        ),
+      width: 110,
+      render: (status) => <StatusBadge status={status} />,
     },
     {
       title: "Actions",
       align: "center",
-      width: 120,
+      width: 100,
       render: (_, record) => (
-        <div className="flex justify-center gap-3">
+        <Space size={4}>
           <button
-            onClick={() => openEditModal(record)}
-            className="text-blue-600 hover:text-blue-800"
+            onClick={() => openEdit(record)}
+            style={{
+              background: "var(--primary-light)",
+              border: "none",
+              borderRadius: 8,
+              width: 30,
+              height: 30,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--primary)",
+            }}
+            title="Edit"
           >
-            <Edit size={18} />
+            <EditOutlined style={{ fontSize: 13 }} />
           </button>
-
           <Popconfirm
-            title="Delete designation?"
-            description="Are you sure to delete this designation?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            title="Delete Designation"
+            description="Are you sure you want to delete this designation?"
+            onConfirm={() => handleDelete(record._id)}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
           >
-            <button className="text-red-600 hover:text-red-800">
-              <Trash2 size={18} />
+            <button
+              style={{
+                background: "#fef2f2",
+                border: "none",
+                borderRadius: 8,
+                width: 30,
+                height: 30,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#dc2626",
+              }}
+              title="Delete"
+            >
+              <DeleteOutlined style={{ fontSize: 13 }} />
             </button>
           </Popconfirm>
-        </div>
+        </Space>
       ),
     },
   ];
 
   return (
-    <div className="p-6 space-y-4 bg-gray-50 min-h-screen">
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("desig-table")}</style>
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-          <UserCog />
-          Designations
-        </h1>
+      {/* Header */}
+      <PageHeader
+        title="Designations"
+        subtitle="Manage job titles and seniority levels"
+        icon={<IdcardOutlined />}
+        extra={
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openAdd}
+            style={{ fontWeight: 600, borderRadius: 10 }}
+          >
+            Add Designation
+          </Button>
+        }
+      />
 
-        <Button
-          type="primary"
-          icon={<Plus size={16} />}
-          onClick={openAddModal}
-          className="!flex !items-center"
+      {/* Stat cards */}
+      <div style={{ ...statGrid(160), marginTop: 20 }}>
+        <div style={statCard({ color: "var(--primary)" })}>
+          <div>
+            <div style={statLabel("var(--primary)")}>Total</div>
+            <div style={statValue("var(--primary)")}>{total}</div>
+          </div>
+          <UserOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
+        </div>
+        <div style={statCard({ color: "#16a34a" })}>
+          <div>
+            <div style={statLabel("#16a34a")}>Active</div>
+            <div style={statValue("#16a34a")}>{active}</div>
+          </div>
+          <CheckCircleOutlined style={{ fontSize: 26, color: "#16a34a", opacity: 0.4 }} />
+        </div>
+        <div style={statCard({ color: "#dc2626" })}>
+          <div>
+            <div style={statLabel("#dc2626")}>Inactive</div>
+            <div style={statValue("#dc2626")}>{inactive}</div>
+          </div>
+          <StopOutlined style={{ fontSize: 26, color: "#dc2626", opacity: 0.4 }} />
+        </div>
+        <div style={statCard({ color: "#7c3aed" })}>
+          <div>
+            <div style={statLabel("#7c3aed")}>Senior Level</div>
+            <div style={statValue("#7c3aed")}>{seniorCount}</div>
+          </div>
+          <IdcardOutlined style={{ fontSize: 26, color: "#7c3aed", opacity: 0.4 }} />
+        </div>
+      </div>
+
+      {/* Table card */}
+      <div style={pageCard}>
+        {/* Toolbar */}
+        <div
+          style={{
+            ...toolbarRow,
+            padding: "14px 20px",
+            borderBottom: "1px solid var(--border-muted)",
+            marginBottom: 0,
+            justifyContent: "space-between",
+          }}
         >
-          Add Designation
-        </Button>
+          <Space wrap>
+            <Input
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder="Search designations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: 240 }}
+              allowClear
+            />
+            <Select
+              placeholder="All Levels"
+              allowClear
+              value={levelFilter || undefined}
+              onChange={(v) => setLevelFilter(v ?? "")}
+              style={{ width: 140 }}
+            >
+              <Option value="Senior">Senior</Option>
+              <Option value="Mid">Mid</Option>
+              <Option value="Junior">Junior</Option>
+            </Select>
+            <Select
+              placeholder="All Status"
+              allowClear
+              value={statusFilter || undefined}
+              onChange={(v) => setStatusFilter(v ?? "")}
+              style={{ width: 140 }}
+            >
+              <Option value="Active">Active</Option>
+              <Option value="Inactive">Inactive</Option>
+            </Select>
+          </Space>
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            Showing <strong>{filtered.length}</strong> of <strong>{total}</strong>
+          </span>
+        </div>
+
+        {/* Table */}
+        <Spin spinning={loading}>
+          {!loading && filtered.length === 0 ? (
+            <div style={{ padding: "48px 24px" }}>
+              <Empty description="No designations found" />
+            </div>
+          ) : (
+            <Table
+              className="desig-table"
+              rowKey="_id"
+              columns={columns}
+              dataSource={filtered}
+              loading={false}
+              scroll={{ x: "max-content" }}
+              pagination={{
+                pageSize: 10,
+                size: "small",
+                showSizeChanger: false,
+                style: { padding: "12px 20px" },
+              }}
+            />
+          )}
+        </Spin>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={designations}
-          bordered
-          pagination={{ pageSize: 5 }}
-        />
-      </div>
-
-      {/* MODAL FORM */}
+      {/* Add / Edit Modal */}
       <Modal
         open={open}
-        title={isEdit ? "Update Designation" : "Add Designation"}
+        title={modalTitle(
+          <IdcardOutlined />,
+          isEdit ? "Update Designation" : "Add Designation",
+          isEdit ? "Edit designation details" : "Create a new designation"
+        )}
         onCancel={closeModal}
         footer={null}
         destroyOnClose
+        width={480}
       >
         <Form
-          form={form}
           layout="vertical"
+          form={form}
           onFinish={onFinish}
-          className="mt-4 space-y-3"
+          style={{ marginTop: 16 }}
+          initialValues={{ status: "Active", level: "Mid" }}
         >
           <Form.Item
-            name="name"
-            label="Designation"
-            rules={[{ required: true, message: "Please enter designation" }]}
+            name="title"
+            label="Designation Title"
+            rules={[{ required: true, message: "Designation title is required" }]}
           >
-            <Input placeholder="Enter designation" />
+            <Input placeholder="e.g. Principal, Teacher, Accountant" />
           </Form.Item>
 
           <Form.Item
             name="level"
             label="Level"
-            rules={[{ required: true, message: "Please enter level" }]}
+            rules={[{ required: true, message: "Level is required" }]}
           >
-            <Input placeholder="Senior / Mid / Junior" />
+            <Select placeholder="Select level">
+              <Option value="Senior">Senior</Option>
+              <Option value="Mid">Mid</Option>
+              <Option value="Junior">Junior</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="description" label="Description">
+            <TextArea
+              rows={3}
+              placeholder="Brief description of the designation..."
+              showCount
+              maxLength={200}
+            />
           </Form.Item>
 
           <Form.Item
             name="status"
             label="Status"
-            initialValue="Active"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Status is required" }]}
           >
             <Select>
               <Option value="Active">Active</Option>
@@ -211,17 +476,21 @@ const Designations = () => {
             </Select>
           </Form.Item>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button onClick={closeModal}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
+            <Button onClick={closeModal} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={submitting}
+              style={{ fontWeight: 600 }}
+            >
               {isEdit ? "Update" : "Save"}
             </Button>
           </div>
         </Form>
       </Modal>
-
     </div>
   );
-};
-
-export default Designations;
+}

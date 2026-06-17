@@ -45,6 +45,11 @@ import systemBackupRoutes from "./systemBackup.routes.js";
 import backupScheduleRoutes from "./backupSchedule.routes.js";
 import restoreJobRoutes from "./restoreJob.routes.js";
 import schoolEventRoutes from "./schoolEvent.routes.js";
+import departmentRoutes from "./department.routes.js";
+import designationRoutes from "./designation.routes.js";
+import globalConfigRoutes from "./globalConfig.routes.js";
+import faqRoutes from "./faq.routes.js";
+import analyticsRoutes from "./analytics.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -94,6 +99,11 @@ export const apiV1Routes = [
   ["/backup-schedules", backupScheduleRoutes],
   ["/restore-jobs", restoreJobRoutes],
   ["/events", schoolEventRoutes],
+  ["/departments", departmentRoutes],
+  ["/designations", designationRoutes],
+  ["/global-config", globalConfigRoutes],
+  ["/faqs", faqRoutes],
+  ["/analytics", analyticsRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

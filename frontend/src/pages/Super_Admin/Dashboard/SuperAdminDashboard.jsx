@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Card,
@@ -22,6 +22,7 @@ import {
   message,
   Spin,
   Alert,
+  Empty,
 } from "antd";
 import {
   BankOutlined,
@@ -45,64 +46,30 @@ import {
   LinkOutlined,
   DashboardOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   useGetSuperAdminDashboardSummaryQuery,
   useGetSuperAdminSchoolsQuery,
 } from "../../../services/schoolDashboardApi";
+import { fetchActivityLogs } from "../../../features/activitySlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 
 const { Content } = Layout;
 const { Text } = Typography;
 
-const activityLog = [
-  {
-    id: 1,
-    color: "var(--success)",
-    icon: <BankOutlined />,
-    text: "Green Valley School registered",
-    sub: "New school onboarded",
-    time: "2 min ago",
-  },
-  {
-    id: 2,
-    color: "var(--primary)",
-    icon: <DollarOutlined />,
-    text: "Subscription renewed — DPS Noida",
-    sub: "₹4,20,000 received",
-    time: "18 min ago",
-  },
-  {
-    id: 3,
-    color: "var(--purple)",
-    icon: <UserOutlined />,
-    text: "New admin added — Sunrise School",
-    sub: "Rahul Sharma assigned",
-    time: "1 hr ago",
-  },
-  {
-    id: 4,
-    color: "var(--cyan)",
-    icon: <ThunderboltFilled />,
-    text: "System backup completed",
-    sub: "All data secured",
-    time: "3 hr ago",
-  },
-  {
-    id: 5,
-    color: "var(--warning)",
-    icon: <WarningOutlined />,
-    text: "Subscription expiring — EduStar Chennai",
-    sub: "Expires in 7 days",
-    time: "5 hr ago",
-  },
-];
-
+// ---------------------------------------------------------------------------
+// Status config
+// ---------------------------------------------------------------------------
 const statusConfig = {
   active: { color: "success", label: "Active" },
   suspended: { color: "error", label: "Suspended" },
   pending: { color: "warning", label: "Pending" },
 };
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 const formatMoney = (value = 0) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -110,6 +77,34 @@ const formatMoney = (value = 0) =>
     maximumFractionDigits: 0,
   }).format(Number(value) || 0);
 
+// Map an activity-log action string to a reasonable icon + color
+const getActivityMeta = (action = "") => {
+  const a = action.toLowerCase();
+  if (a.includes("school") || a.includes("register"))
+    return { icon: <BankOutlined />, color: "var(--success, #16a34a)" };
+  if (a.includes("subscri") || a.includes("payment") || a.includes("fee"))
+    return { icon: <DollarOutlined />, color: "var(--primary, #1677ff)" };
+  if (a.includes("user") || a.includes("admin") || a.includes("teacher"))
+    return { icon: <UserOutlined />, color: "var(--purple, #722ed1)" };
+  if (a.includes("backup") || a.includes("system"))
+    return { icon: <ThunderboltFilled />, color: "var(--cyan, #13c2c2)" };
+  if (a.includes("warn") || a.includes("expir") || a.includes("suspend"))
+    return { icon: <WarningOutlined />, color: "var(--warning, #fa8c16)" };
+  return { icon: <ThunderboltFilled />, color: "var(--textMuted, #94a3b8)" };
+};
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return "";
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+};
+
+// ---------------------------------------------------------------------------
+// StatCard
+// ---------------------------------------------------------------------------
 const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
   <Card
     bordered={false}
@@ -201,9 +196,64 @@ const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
   </Card>
 );
 
+// ---------------------------------------------------------------------------
+// Quick-action route map
+// ---------------------------------------------------------------------------
+const QUICK_ACTIONS = [
+  {
+    label: "Add New School",
+    icon: <BankOutlined />,
+    color: "var(--primary, #1677ff)",
+    route: "/dashboard/superadmin/schools",
+  },
+  {
+    label: "Manage Subscriptions",
+    icon: <SafetyCertificateOutlined />,
+    color: "var(--purple, #722ed1)",
+    route: "/dashboard/superadmin/subscriptions",
+  },
+  {
+    label: "View All Users",
+    icon: <TeamOutlined />,
+    color: "var(--cyan, #13c2c2)",
+    route: "/dashboard/superadmin/users",
+  },
+  {
+    label: "Financial Reports",
+    icon: <DollarOutlined />,
+    color: "var(--success, #16a34a)",
+    route: "/dashboard/superadmin/reports/revenue",
+  },
+  {
+    label: "System Logs",
+    icon: <ThunderboltFilled />,
+    color: "var(--orange, #fa8c16)",
+    route: "/dashboard/superadmin/settings/audit",
+  },
+  {
+    label: "Send Notification",
+    icon: <BellOutlined />,
+    color: "var(--danger, #ff4d4f)",
+    route: "/dashboard/superadmin/notifications",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 const SuperAdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Activity slice
+  const {
+    logs: activityLogs = [],
+    loading: activityLoading,
+  } = useSelector((state) => state.activity || {});
+
+  // School dashboard API (RTK Query)
   const {
     data: summaryData,
     isLoading: summaryLoading,
@@ -220,6 +270,14 @@ const SuperAdminDashboard = () => {
     refetch: refetchSchools,
   } = useGetSuperAdminSchoolsQuery({ page: 1, limit: 100 });
 
+  // Fetch activity logs on mount
+  useEffect(() => {
+    dispatch(fetchActivityLogs());
+  }, [dispatch]);
+
+  // ---------------------------------------------------------------------------
+  // Derived data
+  // ---------------------------------------------------------------------------
   const schoolsData = useMemo(() => {
     return (schoolsApiData?.schools || []).map((school, index) => {
       const plan = school?.subscriptionPlan?.name || "Unassigned";
@@ -227,6 +285,7 @@ const SuperAdminDashboard = () => {
 
       return {
         key: school?._id || String(index),
+        _id: school?._id,
         name: school?.name || "School",
         city: school?.address || "N/A",
         students: Number(school?.studentsCount || 0),
@@ -322,6 +381,9 @@ const SuperAdminDashboard = () => {
     [schoolsData]
   );
 
+  // ---------------------------------------------------------------------------
+  // Table columns — with navigation handlers
+  // ---------------------------------------------------------------------------
   const columns = [
     {
       title: "School",
@@ -450,13 +512,31 @@ const SuperAdminDashboard = () => {
     {
       title: "",
       key: "actions",
-      render: () => (
+      render: (_, row) => (
         <Space size={4}>
           <Tooltip title="View Details">
-            <Button type="text" size="small" icon={<EyeOutlined />} />
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() =>
+                navigate(`/dashboard/superadmin/schools`, {
+                  state: { schoolId: row._id || row.key },
+                })
+              }
+            />
           </Tooltip>
           <Tooltip title="Edit">
-            <Button type="text" size="small" icon={<EditOutlined />} />
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate(`/dashboard/superadmin/schools`, {
+                  state: { schoolId: row._id || row.key, mode: "edit" },
+                })
+              }
+            />
           </Tooltip>
           <Dropdown
             menu={{
@@ -475,9 +555,13 @@ const SuperAdminDashboard = () => {
     },
   ];
 
+  // ---------------------------------------------------------------------------
+  // Refresh handler
+  // ---------------------------------------------------------------------------
   const handleRefresh = async () => {
     try {
       await Promise.all([refetchSummary(), refetchSchools()]);
+      dispatch(fetchActivityLogs());
       message.success("Dashboard refreshed");
     } catch {
       message.error("Refresh failed");
@@ -488,6 +572,9 @@ const SuperAdminDashboard = () => {
   const isFetching = summaryFetching || schoolsFetching;
   const hasError = summaryError || schoolsError;
 
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
   return (
     <Layout
       style={{
@@ -531,6 +618,7 @@ const SuperAdminDashboard = () => {
             />
           )}
 
+          {/* Stat cards */}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             <Col xs={24} sm={12} lg={4}>
               <StatCard
@@ -602,6 +690,7 @@ const SuperAdminDashboard = () => {
             </Col>
           </Row>
 
+          {/* System Health / Subscription / Top Schools row */}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             <Col xs={24} md={8}>
               <Card
@@ -623,26 +712,10 @@ const SuperAdminDashboard = () => {
               >
                 <Space direction="vertical" style={{ width: "100%" }} size={16}>
                   {[
-                    {
-                      label: "API Server",
-                      val: 99,
-                      color: "var(--success)",
-                    },
-                    {
-                      label: "Database",
-                      val: 97,
-                      color: "var(--success)",
-                    },
-                    {
-                      label: "File Storage",
-                      val: 92,
-                      color: "var(--success)",
-                    },
-                    {
-                      label: "Email Service",
-                      val: 85,
-                      color: "var(--warning)",
-                    },
+                    { label: "API Server", val: 99, color: "var(--success)" },
+                    { label: "Database", val: 97, color: "var(--success)" },
+                    { label: "File Storage", val: 92, color: "var(--success)" },
+                    { label: "Email Service", val: 85, color: "var(--warning)" },
                   ].map((item) => (
                     <div key={item.label}>
                       <Space
@@ -652,12 +725,7 @@ const SuperAdminDashboard = () => {
                           marginBottom: 4,
                         }}
                       >
-                        <Text
-                          style={{
-                            fontSize: 13,
-                            color: "var(--text-primary)",
-                          }}
-                        >
+                        <Text style={{ fontSize: 13, color: "var(--text-primary)" }}>
                           {item.label}
                         </Text>
                         <Text
@@ -809,6 +877,7 @@ const SuperAdminDashboard = () => {
             </Col>
           </Row>
 
+          {/* Schools table + Activity log */}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             <Col xs={24} xl={16}>
               <Card
@@ -844,6 +913,7 @@ const SuperAdminDashboard = () => {
                       size="small"
                       type="primary"
                       icon={<PlusOutlined />}
+                      onClick={() => navigate("/dashboard/superadmin/schools")}
                     >
                       Add School
                     </Button>
@@ -859,6 +929,7 @@ const SuperAdminDashboard = () => {
                 <Table
                   columns={columns}
                   dataSource={filteredSchools}
+                  loading={isLoading}
                   pagination={{ pageSize: 5, size: "small" }}
                   size="small"
                   scroll={{ x: 900 }}
@@ -878,10 +949,19 @@ const SuperAdminDashboard = () => {
                 }
                 extra={
                   <Space size={6}>
-                    <Tag color="orange">Static Preview</Tag>
-                    <Button type="link" size="small">
-                      View All
-                    </Button>
+                    {activityLoading ? (
+                      <Spin size="small" />
+                    ) : (
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() =>
+                          navigate("/dashboard/superadmin/reports/activity")
+                        }
+                      >
+                        View All
+                      </Button>
+                    )}
                   </Space>
                 }
                 bordered={false}
@@ -891,64 +971,89 @@ const SuperAdminDashboard = () => {
                   height: "100%",
                 }}
               >
-                <Timeline
-                  items={activityLog.map((item) => ({
-                    dot: (
-                      <div
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: "50%",
-                          background: `${item.color}18`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: item.color,
-                          fontSize: 13,
-                        }}
-                      >
-                        {item.icon}
-                      </div>
-                    ),
-                    children: (
-                      <div style={{ paddingBottom: 6 }}>
-                        <Text
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 500,
-                            display: "block",
-                            color: "var(--text-primary)",
-                          }}
-                        >
-                          {item.text}
-                        </Text>
-                        <Space size={8}>
-                          <Text
+                {activityLoading ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      padding: "40px 0",
+                    }}
+                  >
+                    <Spin tip="Loading activity..." />
+                  </div>
+                ) : activityLogs.length === 0 ? (
+                  <Empty
+                    description="No recent activity"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                ) : (
+                  <Timeline
+                    items={activityLogs.slice(0, 8).map((item) => {
+                      const meta = getActivityMeta(item.action || item.type || "");
+                      return {
+                        dot: (
+                          <div
                             style={{
-                              fontSize: 12,
-                              color: "var(--textMuted)",
+                              width: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              background: `${meta.color}18`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: meta.color,
+                              fontSize: 13,
                             }}
                           >
-                            {item.sub}
-                          </Text>
-                          <Divider type="vertical" style={{ margin: 0 }} />
-                          <Text
-                            style={{
-                              fontSize: 11,
-                              color: "var(--textMuted)",
-                            }}
-                          >
-                            {item.time}
-                          </Text>
-                        </Space>
-                      </div>
-                    ),
-                  }))}
-                />
+                            {meta.icon}
+                          </div>
+                        ),
+                        children: (
+                          <div style={{ paddingBottom: 6 }}>
+                            <Text
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 500,
+                                display: "block",
+                                color: "var(--text-primary)",
+                              }}
+                            >
+                              {item.action || item.type || "Activity"}
+                            </Text>
+                            <Space size={8}>
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  color: "var(--textMuted)",
+                                }}
+                              >
+                                {item.message || item.description || ""}
+                              </Text>
+                              {(item.createdAt || item.timestamp) && (
+                                <>
+                                  <Divider type="vertical" style={{ margin: 0 }} />
+                                  <Text
+                                    style={{
+                                      fontSize: 11,
+                                      color: "var(--textMuted)",
+                                    }}
+                                  >
+                                    {timeAgo(item.createdAt || item.timestamp)}
+                                  </Text>
+                                </>
+                              )}
+                            </Space>
+                          </div>
+                        ),
+                      };
+                    })}
+                  />
+                )}
               </Card>
             </Col>
           </Row>
 
+          {/* Revenue by School + Quick Actions */}
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
               <Card
@@ -970,6 +1075,7 @@ const SuperAdminDashboard = () => {
                   dataSource={schoolsData
                     .filter((s) => s.revenue > 0)
                     .sort((a, b) => b.revenue - a.revenue)}
+                  locale={{ emptyText: "No revenue data" }}
                   renderItem={(school) => (
                     <List.Item style={{ padding: "10px 0", border: "none" }}>
                       <Space
@@ -1041,38 +1147,7 @@ const SuperAdminDashboard = () => {
                 }}
               >
                 <Row gutter={[10, 10]}>
-                  {[
-                    {
-                      label: "Add New School",
-                      icon: <BankOutlined />,
-                      color: "var(--primary)",
-                    },
-                    {
-                      label: "Manage Subscriptions",
-                      icon: <SafetyCertificateOutlined />,
-                      color: "var(--purple)",
-                    },
-                    {
-                      label: "View All Users",
-                      icon: <TeamOutlined />,
-                      color: "var(--cyan)",
-                    },
-                    {
-                      label: "Financial Reports",
-                      icon: <DollarOutlined />,
-                      color: "var(--success)",
-                    },
-                    {
-                      label: "System Logs",
-                      icon: <ThunderboltFilled />,
-                      color: "var(--orange)",
-                    },
-                    {
-                      label: "Send Notification",
-                      icon: <BellOutlined />,
-                      color: "var(--danger)",
-                    },
-                  ].map((action) => (
+                  {QUICK_ACTIONS.map((action) => (
                     <Col span={12} key={action.label}>
                       <Button
                         block
@@ -1091,6 +1166,7 @@ const SuperAdminDashboard = () => {
                           fontSize: 13,
                           border: "1px solid var(--border)",
                         }}
+                        onClick={() => navigate(action.route)}
                       >
                         {action.label}
                       </Button>

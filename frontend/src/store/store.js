@@ -55,6 +55,12 @@ import systemBackupReducer from "../features/systemBackupSlice";
 import timetableReducer from "../features/timetableSlice";
 import notificationReducer from "../features/notificationSlice";
 import messageReducer from "../features/messageSlice";
+import departmentReducer from "../features/departmentSlice";
+import designationReducer from "../features/designationSlice";
+import globalConfigReducer from "../features/globalConfigSlice";
+import faqReducer from "../features/faqSlice";
+import supportTicketReducer from "../features/supportTicketSlice";
+import analyticsReducer from "../features/analyticsSlice";
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -105,6 +111,12 @@ const rootReducer = combineReducers({
   timetable: timetableReducer,
   messages: messageReducer,
   notification: notificationReducer,
+  departments: departmentReducer,
+  designations: designationReducer,
+  globalConfig: globalConfigReducer,
+  faqs: faqReducer,
+  supportTickets: supportTicketReducer,
+  analytics: analyticsReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

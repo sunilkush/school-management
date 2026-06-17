@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchSchools, deleteSchool } from "../../../features/schoolSlice";
 import AddSchoolForm from "../../../components/forms/AddSchoolForm";
+import apiClient from "../../../api/httpClient";
 import {
   Button,
   Modal,
@@ -21,6 +22,9 @@ import {
   Badge,
   Divider,
   Card,
+  Form,
+  Select,
+  Pagination,
 } from "antd";
 import {
   PlusOutlined,
@@ -35,10 +39,12 @@ import {
   CloseCircleFilled,
   TeamOutlined,
   ApartmentOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 
 
 const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
 
 // ─── Color tokens ──────────────────────────────────────────────────────────────
 const COLOR = {
@@ -64,7 +70,7 @@ const COLOR = {
 };
 
 // ─── SchoolCard ────────────────────────────────────────────────────────────────
-const SchoolCard = ({ school, onDelete }) => {
+const SchoolCard = ({ school, onDelete, onEdit }) => {
   const dateStr = school.createdAt
     ? new Date(school.createdAt).toLocaleDateString(undefined, {
         day: "2-digit",
@@ -162,29 +168,44 @@ const SchoolCard = ({ school, onDelete }) => {
             </div>
           </Space>
 
-          <Popconfirm
-            title="Delete this school?"
-            description="This action cannot be undone."
-            okText="Delete"
-            cancelText="Cancel"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => onDelete(school._id)}
-            placement="topRight"
-          >
-            <Tooltip title="Delete school">
+          <Space size={4}>
+            <Tooltip title="Edit school">
               <Button
                 type="text"
                 size="small"
-                icon={<DeleteOutlined />}
+                icon={<EditOutlined />}
+                onClick={() => onEdit(school)}
                 style={{
-                  color: COLOR.textMuted,
+                  color: COLOR.primary,
                   borderRadius: 8,
                   flexShrink: 0,
                 }}
-                danger
               />
             </Tooltip>
-          </Popconfirm>
+            <Popconfirm
+              title="Delete this school?"
+              description="This action cannot be undone."
+              okText="Delete"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => onDelete(school._id)}
+              placement="topRight"
+            >
+              <Tooltip title="Delete school">
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  style={{
+                    color: COLOR.textMuted,
+                    borderRadius: 8,
+                    flexShrink: 0,
+                  }}
+                  danger
+                />
+              </Tooltip>
+            </Popconfirm>
+          </Space>
         </div>
 
         <Divider style={{ margin: "10px 0", borderColor: COLOR.border }} />
@@ -320,12 +341,21 @@ const SchoolCard = ({ school, onDelete }) => {
 };
 
 // ─── Schools Page ──────────────────────────────────────────────────────────────
+const PAGE_SIZE = 9;
+
 const Schools = () => {
   const dispatch = useDispatch();
   const { schools, loading, error } = useSelector((state) => state.school);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingSchool, setEditingSchool] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm] = Form.useForm();
 
   useEffect(() => {
     dispatch(fetchSchools());
@@ -343,6 +373,44 @@ const Schools = () => {
     },
     [dispatch]
   );
+
+  const handleOpenEdit = useCallback((school) => {
+    setEditingSchool(school);
+    editForm.setFieldsValue({
+      name: school.name || "",
+      address: school.address || "",
+      email: school.email || "",
+      phone: school.phone || "",
+      website: school.website || "",
+      isActive: school.isActive ? "active" : "inactive",
+    });
+    setEditModalOpen(true);
+  }, [editForm]);
+
+  const handleCloseEdit = useCallback(() => {
+    setEditModalOpen(false);
+    setEditingSchool(null);
+    editForm.resetFields();
+  }, [editForm]);
+
+  const handleEditSubmit = useCallback(async (values) => {
+    if (!editingSchool?._id) return;
+    try {
+      setEditSaving(true);
+      const payload = {
+        ...values,
+        isActive: values.isActive === "active",
+      };
+      await apiClient.post(`/school/update/${editingSchool._id}`, payload);
+      message.success("School updated successfully");
+      dispatch(fetchSchools());
+      handleCloseEdit();
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Failed to update school");
+    } finally {
+      setEditSaving(false);
+    }
+  }, [editingSchool, dispatch, handleCloseEdit]);
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);
@@ -364,6 +432,22 @@ const Schools = () => {
       (filterStatus === "Active" ? school.isActive : !school.isActive);
     return matchSearch && matchStatus;
   });
+
+  // Paginated list
+  const paginatedSchools = filteredSchools?.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  // Reset to page 1 when filters change
+  const handleSearch = (e) => {
+    setSearchText(e.target.value);
+    setCurrentPage(1);
+  };
+  const handleFilterStatus = (val) => {
+    setFilterStatus(val);
+    setCurrentPage(1);
+  };
 
   return (
     <div
@@ -411,9 +495,9 @@ const Schools = () => {
             </Title>
              <Text style={{ color: COLOR.textSecondary, fontSize: 13 }}>
             Manage all registered institutions and their subscriptions
-          </Text>         
+          </Text>
           </Space>
-           
+
         </div>
 
         <Button
@@ -542,7 +626,7 @@ const Schools = () => {
           prefix={<SearchOutlined style={{ color: COLOR.textMuted }} />}
           placeholder="Search schools by name or city..."
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={handleSearch}
           allowClear
           style={{
             maxWidth: 320,
@@ -556,7 +640,7 @@ const Schools = () => {
         <Segmented
           options={["All", "Active", "Inactive"]}
           value={filterStatus}
-          onChange={setFilterStatus}
+          onChange={handleFilterStatus}
           style={{
             background: "#E8EDEB",
             borderRadius: 10,
@@ -641,15 +725,32 @@ const Schools = () => {
       ) : (
         <>
           <Text style={{ fontSize: 12, color: COLOR.textMuted, display: "block", marginBottom: 12 }}>
-            Showing {filteredSchools.length} of {totalSchools} schools
+            Showing {Math.min((currentPage - 1) * PAGE_SIZE + 1, filteredSchools.length)}–{Math.min(currentPage * PAGE_SIZE, filteredSchools.length)} of {filteredSchools.length} schools
           </Text>
           <Row gutter={[14, 14]}>
-            {filteredSchools.map((school) => (
+            {paginatedSchools.map((school) => (
               <Col key={school._id} xs={24} sm={12} lg={8}>
-                <SchoolCard school={school} onDelete={handleDeleteSchool} />
+                <SchoolCard
+                  school={school}
+                  onDelete={handleDeleteSchool}
+                  onEdit={handleOpenEdit}
+                />
               </Col>
             ))}
           </Row>
+
+          {filteredSchools.length > PAGE_SIZE && (
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+              <Pagination
+                current={currentPage}
+                pageSize={PAGE_SIZE}
+                total={filteredSchools.length}
+                onChange={setCurrentPage}
+                showSizeChanger={false}
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              />
+            </div>
+          )}
         </>
       )}
 
@@ -695,6 +796,142 @@ const Schools = () => {
         }
       >
         <AddSchoolForm onClose={closeModal} />
+      </Modal>
+
+      {/* ══════════ EDIT SCHOOL MODAL ══════════ */}
+      <Modal
+        open={editModalOpen}
+        onCancel={handleCloseEdit}
+        onOk={() => editForm.submit()}
+        okText="Save Changes"
+        okButtonProps={{
+          loading: editSaving,
+          style: {
+            background: COLOR.primary,
+            borderColor: COLOR.primary,
+            borderRadius: 8,
+            fontWeight: 600,
+          },
+        }}
+        cancelButtonProps={{ style: { borderRadius: 8 } }}
+        centered
+        width={560}
+        destroyOnClose
+        styles={{
+          content: { borderRadius: 16, padding: 0, overflow: "hidden" },
+          header: {
+            background: COLOR.primaryLight,
+            borderBottom: `1px solid ${COLOR.primaryBorder}`,
+            borderRadius: "16px 16px 0 0",
+            padding: "16px 24px",
+            margin: 0,
+          },
+          body: { padding: 24 },
+        }}
+        title={
+          <Space align="center" size={10}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 7,
+                background: COLOR.surface,
+                border: `1px solid ${COLOR.primaryBorder}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <EditOutlined style={{ color: COLOR.primary, fontSize: 13 }} />
+            </div>
+            <Title level={4} style={{ margin: 0, color: COLOR.primary, fontSize: 16 }}>
+              Edit School
+            </Title>
+          </Space>
+        }
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleEditSubmit}
+          style={{ marginTop: 4 }}
+        >
+          <Row gutter={[14, 0]}>
+            <Col xs={24}>
+              <Form.Item
+                name="name"
+                label={<Text strong style={{ fontSize: 13 }}>School Name</Text>}
+                rules={[{ required: true, message: "School name is required" }]}
+              >
+                <Input
+                  placeholder="e.g. Sunrise Public School"
+                  style={{ borderRadius: 8, height: 38 }}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24}>
+              <Form.Item
+                name="address"
+                label={<Text strong style={{ fontSize: 13 }}>Address</Text>}
+              >
+                <Input
+                  placeholder="e.g. 123 Main Street, Mumbai"
+                  style={{ borderRadius: 8, height: 38 }}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="email"
+                label={<Text strong style={{ fontSize: 13 }}>Email</Text>}
+                rules={[{ type: "email", message: "Enter a valid email" }]}
+              >
+                <Input
+                  placeholder="school@example.com"
+                  style={{ borderRadius: 8, height: 38 }}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="phone"
+                label={<Text strong style={{ fontSize: 13 }}>Phone</Text>}
+              >
+                <Input
+                  placeholder="+91 9XXXXXXXXX"
+                  style={{ borderRadius: 8, height: 38 }}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="website"
+                label={<Text strong style={{ fontSize: 13 }}>Website</Text>}
+              >
+                <Input
+                  placeholder="https://school.edu"
+                  style={{ borderRadius: 8, height: 38 }}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="isActive"
+                label={<Text strong style={{ fontSize: 13 }}>Status</Text>}
+              >
+                <Select style={{ borderRadius: 8, height: 38 }}>
+                  <Option value="active">Active</Option>
+                  <Option value="inactive">Inactive</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
       </Modal>
     </div>
   );

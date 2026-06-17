@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchSchoolReports } from "../../../features/reportSlice.js";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice.js";
 import { fetchSchools } from "../../../features/schoolSlice.js";
-import { Select, Table, Button, Empty, Tooltip } from "antd";
+import { Select, Table, Button, Empty, Tooltip, Drawer, Descriptions, Tag } from "antd";
 import {
   UserOutlined,
   TeamOutlined,
@@ -14,6 +14,7 @@ import {
   BarChartOutlined,
   CalendarOutlined,
   LoadingOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 
 const { Option } = Select;
@@ -132,6 +133,8 @@ const SchoolReports = () => {
 
   const [schoolId, setSchoolId] = useState(null);
   const [selectedSchoolName, setSelectedSchoolName] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerRecord, setDrawerRecord] = useState(null);
 
   useEffect(() => {
     dispatch(fetchSchools());
@@ -151,6 +154,11 @@ const SchoolReports = () => {
     } catch (err) {
       console.error("Error fetching report:", err);
     }
+  };
+
+  const handleViewRecord = (record) => {
+    setDrawerRecord(record);
+    setDrawerOpen(true);
   };
 
   const summary = schoolReports?.summary;
@@ -212,7 +220,7 @@ const SchoolReports = () => {
       render: (_, record) => (
         <Tooltip title="View full report">
           <Button
-            onClick={() => console.log(record)}
+            onClick={() => handleViewRecord(record)}
             style={{
               background: t.purpleLight,
               border: `1px solid ${t.purpleMid}`,
@@ -404,6 +412,154 @@ const SchoolReports = () => {
           style={{ background: "transparent" }}
         />
       </div>
+
+      {/* ── Detail Drawer ── */}
+      <Drawer
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: t.purpleLight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: t.purple,
+                fontSize: 16,
+                flexShrink: 0,
+              }}
+            >
+              <BarChartOutlined />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 15, color: t.textPrimary }}>
+              School Report Details
+            </span>
+          </div>
+        }
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        width={440}
+        closeIcon={<CloseOutlined />}
+        styles={{ body: { padding: "24px 20px" } }}
+      >
+        {drawerRecord && (
+          <>
+            {/* School name */}
+            {selectedSchoolName && (
+              <div
+                style={{
+                  background: t.purpleLight,
+                  border: `1px solid ${t.purpleMid}`,
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  marginBottom: 20,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <BankOutlined style={{ color: t.purple, fontSize: 16 }} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: t.purple }}>
+                  {selectedSchoolName}
+                </span>
+              </div>
+            )}
+
+            {/* Academic Year */}
+            <Descriptions
+              column={1}
+              size="small"
+              bordered
+              style={{ marginBottom: 20 }}
+              labelStyle={{ fontWeight: 600, color: t.textSecondary, width: 140 }}
+              contentStyle={{ color: t.textPrimary }}
+            >
+              <Descriptions.Item label={<span><CalendarOutlined style={{ marginRight: 6 }} />Academic Year</span>}>
+                <Tag color="purple" style={{ borderRadius: 6, fontWeight: 600 }}>
+                  {drawerRecord.academicYear || "—"}
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+
+            {/* Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div
+                style={{
+                  background: t.purpleLight,
+                  border: `1px solid ${t.purpleMid}`,
+                  borderRadius: 10,
+                  padding: "16px 14px",
+                  textAlign: "center",
+                }}
+              >
+                <UserOutlined style={{ fontSize: 20, color: t.purple, marginBottom: 6, display: "block" }} />
+                <div style={{ fontSize: 24, fontWeight: 700, color: t.purple, lineHeight: 1 }}>
+                  {(drawerRecord.summary?.adminCount ?? 0).toLocaleString()}
+                </div>
+                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Admins
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: t.blueLight,
+                  border: `1px solid ${t.blue}55`,
+                  borderRadius: 10,
+                  padding: "16px 14px",
+                  textAlign: "center",
+                }}
+              >
+                <SolutionOutlined style={{ fontSize: 20, color: t.blue, marginBottom: 6, display: "block" }} />
+                <div style={{ fontSize: 24, fontWeight: 700, color: t.blue, lineHeight: 1 }}>
+                  {(drawerRecord.summary?.teacherCount ?? 0).toLocaleString()}
+                </div>
+                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Teachers
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: t.greenLight,
+                  border: `1px solid ${t.green}55`,
+                  borderRadius: 10,
+                  padding: "16px 14px",
+                  textAlign: "center",
+                }}
+              >
+                <BookOutlined style={{ fontSize: 20, color: t.green, marginBottom: 6, display: "block" }} />
+                <div style={{ fontSize: 24, fontWeight: 700, color: t.green, lineHeight: 1 }}>
+                  {(drawerRecord.summary?.studentCount ?? 0).toLocaleString()}
+                </div>
+                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Students
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: t.pinkLight,
+                  border: `1px solid ${t.pink}55`,
+                  borderRadius: 10,
+                  padding: "16px 14px",
+                  textAlign: "center",
+                }}
+              >
+                <TeamOutlined style={{ fontSize: 20, color: t.pink, marginBottom: 6, display: "block" }} />
+                <div style={{ fontSize: 24, fontWeight: 700, color: t.pink, lineHeight: 1 }}>
+                  {(drawerRecord.summary?.parentCount ?? 0).toLocaleString()}
+                </div>
+                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Parents
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </Drawer>
     </div>
   );
 };

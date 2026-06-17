@@ -143,8 +143,8 @@ const SchoolBoards = () => {
   const [assignForm] = Form.useForm();
 
   /* ── Role ── */
- const createdByRole = user?.role?.name || null;
-   console.log(createdByRole)
+  const createdByRole = user?.role?.name || null;
+
   /* ── Fetch ── */
   useEffect(() => {
     dispatch(currentUser())

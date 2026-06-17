@@ -15,6 +15,7 @@ import {
   Empty,
   Tooltip,
   message,
+  Popconfirm,
 } from "antd";
 import {
   PlusOutlined,
@@ -26,9 +27,16 @@ import {
   CloseCircleOutlined,
   GlobalOutlined,
   HomeOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { createClass, fetchAllClasses } from "../../../features/classSlice";
+import {
+  createClass,
+  fetchAllClasses,
+  updateClass,
+  deleteClass,
+} from "../../../features/classSlice";
 
 const { Title, Text } = Typography;
 
@@ -133,12 +141,21 @@ export default function ClassPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
 
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editData, setEditData] = useState(INIT);
+  const [editingId, setEditingId] = useState(null);
+
   useEffect(() => {
     dispatch(fetchAllClasses());
   }, [dispatch]);
 
   const handleChange = (field, value) =>
     setFormData((p) => ({ ...p, [field]: value }));
+
+  const handleEditChange = (field, value) =>
+    setEditData((p) => ({ ...p, [field]: value }));
 
   const resetForm = () => setFormData(INIT);
 
@@ -149,12 +166,57 @@ export default function ClassPage() {
     }
 
     setSaving(true);
-    await dispatch(createClass(formData));
-    await dispatch(fetchAllClasses());
-    setSaving(false);
-    resetForm();
-    setOpen(false);
-    message.success("Class created successfully");
+    try {
+      await dispatch(createClass(formData)).unwrap();
+      await dispatch(fetchAllClasses());
+      message.success("Class created successfully");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to create class");
+    } finally {
+      setSaving(false);
+      resetForm();
+      setOpen(false);
+    }
+  };
+
+  const handleOpenEdit = (record) => {
+    setEditingId(record._id);
+    setEditData({
+      name: record.name || "",
+      code: record.code || "",
+      description: record.description || "",
+      status: record.status || "active",
+      isActive: record.isActive ?? true,
+      isGlobal: record.isGlobal ?? false,
+    });
+    setEditOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editData.name?.trim()) {
+      message.error("Class name is required");
+      return;
+    }
+    setEditSaving(true);
+    try {
+      await dispatch(updateClass({ id: editingId, data: editData })).unwrap();
+      message.success("Class updated successfully");
+      setEditOpen(false);
+      setEditingId(null);
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to update class");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await dispatch(deleteClass(id)).unwrap();
+      message.success("Class deleted successfully");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to delete class");
+    }
   };
 
   const filteredClasses = useMemo(() => {
@@ -241,6 +303,55 @@ export default function ClassPage() {
             Local
           </Tag>
         ),
+    },
+    {
+      title: "Actions",
+      align: "right",
+      render: (_, record) => (
+        <Space size={8}>
+          <Tooltip title="Edit class">
+            <Button
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => handleOpenEdit(record)}
+              style={{
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: 12,
+                background: "#e0e7ff",
+                borderColor: "#c7d2fe",
+                color: "#4f46e5",
+              }}
+            >
+              Edit
+            </Button>
+          </Tooltip>
+          <Popconfirm
+            title="Delete this class?"
+            description="This action cannot be undone."
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDelete(record._id)}
+            placement="topRight"
+          >
+            <Tooltip title="Delete class">
+              <Button
+                icon={<DeleteOutlined />}
+                size="small"
+                danger
+                style={{
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  fontSize: 12,
+                }}
+              >
+                Delete
+              </Button>
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
     },
   ];
 
@@ -381,7 +492,7 @@ export default function ClassPage() {
             dataSource={filteredClasses}
             loading={classLoading}
             rowKey="_id"
-            scroll={{ x: 750 }}
+            scroll={{ x: 850 }}
             locale={{ emptyText: <Empty description="No classes found" /> }}
             pagination={{
               pageSize: 8,
@@ -392,6 +503,7 @@ export default function ClassPage() {
         </Card>
       </div>
 
+      {/* ── Create Modal ── */}
       <Modal
         title={
           <Space>
@@ -494,6 +606,112 @@ export default function ClassPage() {
 
           <Button type="primary" loading={saving} onClick={handleSave}>
             Save Class
+          </Button>
+        </Space>
+      </Modal>
+
+      {/* ── Edit Modal ── */}
+      <Modal
+        title={
+          <Space>
+            <EditOutlined style={{ color: "#4f46e5" }} />
+            <span>Edit Class</span>
+          </Space>
+        }
+        open={editOpen}
+        footer={null}
+        onCancel={() => {
+          setEditOpen(false);
+          setEditingId(null);
+        }}
+        className="class-modal"
+        width={620}
+        destroyOnClose
+      >
+        <Row gutter={[14, 10]} style={{ marginTop: 16 }}>
+          <Col xs={24} md={12}>
+            <Text strong>Class Name</Text>
+            <Input
+              size="large"
+              placeholder="e.g. Class 10"
+              value={editData.name}
+              onChange={(e) => handleEditChange("name", e.target.value)}
+              style={{ marginTop: 6 }}
+            />
+          </Col>
+
+          <Col xs={24} md={12}>
+            <Text strong>Class Code</Text>
+            <Input
+              size="large"
+              placeholder="e.g. CLS-10"
+              value={editData.code}
+              onChange={(e) => handleEditChange("code", e.target.value)}
+              style={{ marginTop: 6 }}
+            />
+          </Col>
+
+          <Col xs={24}>
+            <Text strong>Description</Text>
+            <Input.TextArea
+              placeholder="Short description about this class..."
+              value={editData.description}
+              onChange={(e) => handleEditChange("description", e.target.value)}
+              rows={3}
+              style={{ marginTop: 6 }}
+            />
+          </Col>
+
+          <Col xs={24} md={12}>
+            <Text strong>Status</Text>
+            <Select
+              size="large"
+              style={{ width: "100%", marginTop: 6 }}
+              value={editData.status}
+              onChange={(v) => handleEditChange("status", v)}
+              options={[
+                { label: "Active", value: "active" },
+                { label: "Inactive", value: "inactive" },
+              ]}
+            />
+          </Col>
+
+          <Col xs={24} md={12}>
+            <Text strong>Scope</Text>
+            <div
+              style={{
+                marginTop: 6,
+                height: 40,
+                border: "1px solid #e2e8f0",
+                borderRadius: 10,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 12px",
+                background: "#f8fafc",
+              }}
+            >
+              <Text type="secondary">Make global</Text>
+              <Switch
+                checked={editData.isGlobal}
+                onChange={(v) => handleEditChange("isGlobal", v)}
+              />
+            </div>
+          </Col>
+        </Row>
+
+        <Space style={{ width: "100%", justifyContent: "flex-end", marginTop: 22 }}>
+          <Button
+            onClick={() => {
+              setEditOpen(false);
+              setEditingId(null);
+            }}
+          >
+            Cancel
+          </Button>
+
+          <Button type="primary" loading={editSaving} onClick={handleEditSave}>
+            Update Class
           </Button>
         </Space>
       </Modal>

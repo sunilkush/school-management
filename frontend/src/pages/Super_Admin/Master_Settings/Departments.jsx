@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Table,
   Modal,
@@ -6,45 +6,149 @@ import {
   Input,
   Select,
   Button,
-  Tag,
+  Space,
+  Spin,
+  Empty,
   Popconfirm,
+  message,
 } from "antd";
-import { Building2, Edit, Trash2, Plus } from "lucide-react";
+import {
+  PlusOutlined,
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
+  ApartmentOutlined,
+} from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+} from "../../../features/departmentSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  pageCard,
+  toolbarRow,
+  tableHeadCss,
+  statGrid,
+  statCard,
+  statLabel,
+  statValue,
+  pill,
+  iconWell,
+  modalTitle,
+} from "../../../styles/pageStyles";
 
 const { Option } = Select;
+const { TextArea } = Input;
 
-const Departments = () => {
-  const [departments, setDepartments] = useState([
-    { id: 1, name: "Science", head: "Mr. Sharma", status: "Active" },
-    { id: 2, name: "Mathematics", head: "Ms. Gupta", status: "Active" },
-    { id: 3, name: "Commerce", head: "Mr. Singh", status: "Inactive" },
-  ]);
+/* ── Status badge ──────────────────────────────────────────────────── */
+function StatusBadge({ status }) {
+  const isActive = status === "Active" || status === "active";
+  return (
+    <span style={pill(isActive ? "#16a34a" : "#dc2626", isActive ? "#f0fdf4" : "#fef2f2")}>
+      <span
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: isActive ? "#16a34a" : "#dc2626",
+          display: "inline-block",
+          marginRight: 5,
+        }}
+      />
+      {isActive ? "Active" : "Inactive"}
+    </span>
+  );
+}
 
+/* ── Department name cell ──────────────────────────────────────────── */
+function DeptCell({ name, code }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={iconWell("var(--primary)", 32)}>
+        <ApartmentOutlined style={{ fontSize: 14 }} />
+      </div>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{name}</div>
+        {code && (
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{code}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Main component ────────────────────────────────────────────────── */
+export default function Departments() {
+  const dispatch = useDispatch();
+  const { departments, loading, error } = useSelector((s) => s.departments);
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
 
-  // -------------------------
-  // MODAL HANDLERS
-  // -------------------------
-  const openAddModal = () => {
+  /* Fetch on mount */
+  useEffect(() => {
+    dispatch(fetchDepartments());
+  }, [dispatch]);
+
+  /* Show API errors */
+  useEffect(() => {
+    if (error) message.error(error);
+  }, [error]);
+
+  /* Derived / filtered list */
+  const filtered = useMemo(() => {
+    const list = Array.isArray(departments) ? departments : [];
+    return list.filter((d) => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        !q ||
+        d.name?.toLowerCase().includes(q) ||
+        d.code?.toLowerCase().includes(q) ||
+        d.head?.toLowerCase().includes(q);
+      const matchStatus =
+        !statusFilter ||
+        d.status?.toLowerCase() === statusFilter.toLowerCase();
+      return matchSearch && matchStatus;
+    });
+  }, [departments, search, statusFilter]);
+
+  /* Stat counts */
+  const total = Array.isArray(departments) ? departments.length : 0;
+  const active = Array.isArray(departments)
+    ? departments.filter((d) => d.status === "Active" || d.status === "active").length
+    : 0;
+  const inactive = total - active;
+
+  /* ── Modal helpers ── */
+  const openAdd = () => {
     setIsEdit(false);
-    setSelectedId(null);
+    setEditingId(null);
     form.resetFields();
+    form.setFieldsValue({ status: "Active" });
     setOpen(true);
   };
 
-  const openEditModal = (record) => {
+  const openEdit = (record) => {
     setIsEdit(true);
-    setSelectedId(record.id);
-
+    setEditingId(record._id);
     form.setFieldsValue({
       name: record.name,
+      code: record.code,
       head: record.head,
+      description: record.description,
       status: record.status,
     });
-
     setOpen(true);
   };
 
@@ -53,140 +157,271 @@ const Departments = () => {
     form.resetFields();
   };
 
-  // -------------------------
-  // SAVE / UPDATE
-  // -------------------------
-  const onFinish = (values) => {
-    if (isEdit) {
-      setDepartments((prev) =>
-        prev.map((d) =>
-          d.id === selectedId ? { ...values, id: selectedId } : d
-        )
-      );
-    } else {
-      setDepartments((prev) => [
-        ...prev,
-        { ...values, id: Date.now() },
-      ]);
+  /* ── Submit ── */
+  const onFinish = async (values) => {
+    setSubmitting(true);
+    try {
+      if (isEdit) {
+        await dispatch(updateDepartment({ id: editingId, data: values })).unwrap();
+        message.success("Department updated successfully");
+      } else {
+        await dispatch(createDepartment(values)).unwrap();
+        message.success("Department created successfully");
+      }
+      closeModal();
+    } catch (err) {
+      message.error(err || "Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
-    closeModal();
   };
 
-  // -------------------------
-  // DELETE
-  // -------------------------
-  const handleDelete = (id) => {
-    setDepartments((prev) => prev.filter((d) => d.id !== id));
+  /* ── Delete ── */
+  const handleDelete = async (id) => {
+    try {
+      await dispatch(deleteDepartment(id)).unwrap();
+      message.success("Department deleted");
+    } catch (err) {
+      message.error(err || "Failed to delete department");
+    }
   };
 
-  // -------------------------
-  // TABLE COLUMNS
-  // -------------------------
+  /* ── Table columns ── */
   const columns = [
     {
       title: "#",
-      width: 60,
-      render: (_, __, index) => index + 1,
+      width: 52,
+      render: (_, __, i) => (
+        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{i + 1}</span>
+      ),
     },
     {
       title: "Department",
-      dataIndex: "name",
+      render: (_, record) => <DeptCell name={record.name} code={record.code} />,
     },
     {
       title: "Head",
       dataIndex: "head",
+      render: (v) =>
+        v ? (
+          <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{v}</span>
+        ) : (
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+        ),
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      ellipsis: true,
+      render: (v) =>
+        v ? (
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v}</span>
+        ) : (
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+        ),
     },
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) =>
-        status === "Active" ? (
-          <Tag color="green">Active</Tag>
-        ) : (
-          <Tag color="red">Inactive</Tag>
-        ),
+      width: 110,
+      render: (status) => <StatusBadge status={status} />,
     },
     {
       title: "Actions",
       align: "center",
-      width: 120,
+      width: 100,
       render: (_, record) => (
-        <div className="flex justify-center gap-3">
+        <Space size={4}>
           <button
-            onClick={() => openEditModal(record)}
-            className="text-blue-600 hover:text-blue-800"
+            onClick={() => openEdit(record)}
+            style={{
+              background: "var(--primary-light)",
+              border: "none",
+              borderRadius: 8,
+              width: 30,
+              height: 30,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--primary)",
+            }}
+            title="Edit"
           >
-            <Edit size={18} />
+            <EditOutlined style={{ fontSize: 13 }} />
           </button>
-
           <Popconfirm
-            title="Delete Department?"
+            title="Delete Department"
             description="Are you sure you want to delete this department?"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record._id)}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
           >
-            <button className="text-red-600 hover:text-red-800">
-              <Trash2 size={18} />
+            <button
+              style={{
+                background: "#fef2f2",
+                border: "none",
+                borderRadius: 8,
+                width: 30,
+                height: 30,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#dc2626",
+              }}
+              title="Delete"
+            >
+              <DeleteOutlined style={{ fontSize: 13 }} />
             </button>
           </Popconfirm>
-        </div>
+        </Space>
       ),
     },
   ];
 
   return (
-    <div className="p-6 space-y-4 bg-gray-50 min-h-screen">
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("dept-table")}</style>
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-          <Building2 />
-          Departments
-        </h1>
+      {/* Header */}
+      <PageHeader
+        title="Departments"
+        subtitle="Manage all academic and administrative departments"
+        icon={<ApartmentOutlined />}
+        extra={
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openAdd}
+            style={{ fontWeight: 600, borderRadius: 10 }}
+          >
+            Add Department
+          </Button>
+        }
+      />
 
-        <Button
-          type="primary"
-          icon={<Plus size={16} />}
-          onClick={openAddModal}
-          className="!flex !items-center"
+      {/* Stat cards */}
+      <div style={{ ...statGrid(160), marginTop: 20 }}>
+        <div style={statCard({ color: "var(--primary)" })}>
+          <div>
+            <div style={statLabel("var(--primary)")}>Total</div>
+            <div style={statValue("var(--primary)")}>{total}</div>
+          </div>
+          <ApartmentOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
+        </div>
+        <div style={statCard({ color: "#16a34a" })}>
+          <div>
+            <div style={statLabel("#16a34a")}>Active</div>
+            <div style={statValue("#16a34a")}>{active}</div>
+          </div>
+          <CheckCircleOutlined style={{ fontSize: 26, color: "#16a34a", opacity: 0.4 }} />
+        </div>
+        <div style={statCard({ color: "#dc2626" })}>
+          <div>
+            <div style={statLabel("#dc2626")}>Inactive</div>
+            <div style={statValue("#dc2626")}>{inactive}</div>
+          </div>
+          <StopOutlined style={{ fontSize: 26, color: "#dc2626", opacity: 0.4 }} />
+        </div>
+      </div>
+
+      {/* Table card */}
+      <div style={pageCard}>
+        {/* Toolbar */}
+        <div
+          style={{
+            ...toolbarRow,
+            padding: "14px 20px",
+            borderBottom: "1px solid var(--border-muted)",
+            marginBottom: 0,
+            justifyContent: "space-between",
+          }}
         >
-          Add Department
-        </Button>
+          <Space wrap>
+            <Input
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder="Search departments..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: 240 }}
+              allowClear
+            />
+            <Select
+              placeholder="All Status"
+              allowClear
+              value={statusFilter || undefined}
+              onChange={(v) => setStatusFilter(v ?? "")}
+              style={{ width: 140 }}
+            >
+              <Option value="Active">Active</Option>
+              <Option value="Inactive">Inactive</Option>
+            </Select>
+          </Space>
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            Showing <strong>{filtered.length}</strong> of <strong>{total}</strong>
+          </span>
+        </div>
+
+        {/* Table */}
+        <Spin spinning={loading}>
+          {!loading && filtered.length === 0 ? (
+            <div style={{ padding: "48px 24px" }}>
+              <Empty description="No departments found" />
+            </div>
+          ) : (
+            <Table
+              className="dept-table"
+              rowKey="_id"
+              columns={columns}
+              dataSource={filtered}
+              loading={false}
+              scroll={{ x: "max-content" }}
+              pagination={{
+                pageSize: 10,
+                size: "small",
+                showSizeChanger: false,
+                style: { padding: "12px 20px" },
+              }}
+            />
+          )}
+        </Spin>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={departments}
-          pagination={{ pageSize: 5 }}
-          bordered
-        />
-      </div>
-
-      {/* MODAL FORM */}
+      {/* Add / Edit Modal */}
       <Modal
         open={open}
-        title={isEdit ? "Update Department" : "Add Department"}
+        title={modalTitle(
+          <ApartmentOutlined />,
+          isEdit ? "Update Department" : "Add Department",
+          isEdit ? "Edit department details" : "Create a new department"
+        )}
         onCancel={closeModal}
         footer={null}
         destroyOnClose
+        width={480}
       >
         <Form
           layout="vertical"
           form={form}
           onFinish={onFinish}
-          className="space-y-3"
-          initialValues={{
-            status: "Active",
-          }}
+          style={{ marginTop: 16 }}
+          initialValues={{ status: "Active" }}
         >
           <Form.Item
             name="name"
             label="Department Name"
-            rules={[{ required: true, message: "Department is required" }]}
+            rules={[{ required: true, message: "Department name is required" }]}
           >
-            <Input placeholder="Enter department name" />
+            <Input placeholder="e.g. Science, Mathematics" />
+          </Form.Item>
+
+          <Form.Item
+            name="code"
+            label="Department Code"
+          >
+            <Input placeholder="e.g. SCI, MATH" style={{ textTransform: "uppercase" }} />
           </Form.Item>
 
           <Form.Item
@@ -194,13 +429,22 @@ const Departments = () => {
             label="Department Head"
             rules={[{ required: true, message: "Head name is required" }]}
           >
-            <Input placeholder="Enter department head" />
+            <Input placeholder="e.g. Mr. Sharma" />
+          </Form.Item>
+
+          <Form.Item name="description" label="Description">
+            <TextArea
+              rows={3}
+              placeholder="Brief description of the department..."
+              showCount
+              maxLength={200}
+            />
           </Form.Item>
 
           <Form.Item
             name="status"
             label="Status"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Status is required" }]}
           >
             <Select>
               <Option value="Active">Active</Option>
@@ -208,17 +452,21 @@ const Departments = () => {
             </Select>
           </Form.Item>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button onClick={closeModal}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
+            <Button onClick={closeModal} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={submitting}
+              style={{ fontWeight: 600 }}
+            >
               {isEdit ? "Update" : "Save"}
             </Button>
           </div>
         </Form>
       </Modal>
-
     </div>
   );
-};
-
-export default Departments;
+}

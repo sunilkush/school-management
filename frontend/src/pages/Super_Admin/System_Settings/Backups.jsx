@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -9,6 +9,7 @@ import {
   Input,
   InputNumber,
   message,
+  Modal,
   Popconfirm,
   Row,
   Select,
@@ -89,6 +90,11 @@ const Backups = () => {
   const [manualForm] = Form.useForm();
   const [scheduleForm] = Form.useForm();
   const [restoreForm] = Form.useForm();
+
+  // MFA token state for restore approval — replaces the hardcoded "123456"
+  const [mfaToken, setMfaToken] = useState("");
+  const [approveModalOpen, setApproveModalOpen] = useState(false);
+  const [pendingApproveId, setPendingApproveId] = useState(null);
 
   const bootstrap = useCallback(() => {
     dispatch(fetchBackupSummary());
@@ -269,6 +275,24 @@ const Backups = () => {
     },
   ];
 
+  // Open the MFA approval modal for a specific restore job
+  const openApproveModal = (id) => {
+    setPendingApproveId(id);
+    setMfaToken("");
+    setApproveModalOpen(true);
+  };
+
+  const submitApproval = () => {
+    if (!mfaToken || mfaToken.trim().length === 0) {
+      message.warning("Please enter your MFA verification code.");
+      return;
+    }
+    dispatch(approveRestoreJob({ id: pendingApproveId, mfaToken: mfaToken.trim() }));
+    setApproveModalOpen(false);
+    setPendingApproveId(null);
+    setMfaToken("");
+  };
+
   const restoreColumns = [
     {
       title: "Backup",
@@ -299,9 +323,7 @@ const Backups = () => {
           <Button
             size="small"
             disabled={!row?._id || row.status === "success"}
-            onClick={() =>
-              dispatch(approveRestoreJob({ id: row._id, mfaToken: "123456" }))
-            }
+            onClick={() => openApproveModal(row._id)}
           >
             Approve
           </Button>
@@ -717,6 +739,45 @@ const Backups = () => {
           },
         ]}
       />
+
+      {/* MFA Verification Modal for Restore Approval */}
+      <Modal
+        open={approveModalOpen}
+        title="MFA Verification Required"
+        okText="Confirm Approval"
+        onOk={submitApproval}
+        onCancel={() => {
+          setApproveModalOpen(false);
+          setPendingApproveId(null);
+          setMfaToken("");
+        }}
+        destroyOnClose
+      >
+        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          <Alert
+            type="warning"
+            showIcon
+            message="Restore operations are irreversible. Enter your MFA code to confirm."
+          />
+          <div>
+            <label
+              htmlFor="mfa-token-input"
+              style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+            >
+              Verification Code
+            </label>
+            <Input.Password
+              id="mfa-token-input"
+              placeholder="Enter verification code"
+              value={mfaToken}
+              onChange={(e) => setMfaToken(e.target.value)}
+              onPressEnter={submitApproval}
+              autoFocus
+              maxLength={8}
+            />
+          </div>
+        </Space>
+      </Modal>
     </div>
   );
 };
