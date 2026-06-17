@@ -123,7 +123,7 @@ const LoginForm = () => {
 
         {/* Logo */}
         <div style={{ position: "relative", zIndex: 1 }}>
-          <img src={logo} style={{ height: 40, filter: "brightness(0) invert(1)" }} alt="Logo" />
+          <img src={logo} style={{ height: 60, filter: "brightness(0) invert(1)" }} alt="Logo" />
         </div>
 
         {/* Headline */}
@@ -189,7 +189,7 @@ const LoginForm = () => {
           <div className="login-mobile-logo" style={{ textAlign: "center", marginBottom: 32 }}>
             <img
               src={logo}
-              style={{ height: 36, filter: "var(--logo)", margin: "0 auto" }}
+              style={{ height: 60, filter: "var(--logo)", margin: "0 auto" }}
               alt="Logo"
             />
           </div>
