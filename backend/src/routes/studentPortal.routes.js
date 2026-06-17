@@ -17,6 +17,10 @@ import {
   submitHomework,
   updateMyProfile,
   updateTeacherHomework,
+  getChildHomework,
+  getChildTransport,
+  getChildHostel,
+  getChildLibrary,
 } from "../controllers/studentPortal.controllers.js";
 import {
   getMyChildren,
@@ -64,6 +68,12 @@ router.put(
   gradeSubmission
 );
 router.get("/me/hostel", auth, roleMiddleware(STUDENT_ONLY), getMyHostel);
+
+// Parent child endpoints
+router.get("/child/:childId/homework",  auth, roleMiddleware(["Parent"]), getChildHomework);
+router.get("/child/:childId/transport", auth, roleMiddleware(["Parent"]), getChildTransport);
+router.get("/child/:childId/hostel",    auth, roleMiddleware(["Parent"]), getChildHostel);
+router.get("/child/:childId/library",   auth, roleMiddleware(["Parent"]), getChildLibrary);
 
 router.post(
   "/timetable",

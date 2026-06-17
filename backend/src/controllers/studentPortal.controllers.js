@@ -679,3 +679,146 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, submission, "Submission graded successfully"));
 });
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  PARENT CHILD ENDPOINTS                                                      */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+const getChildEnrollment = async (childUserId, schoolId) => {
+  const student = await Student.findOne({ userId: childUserId }).select("_id");
+  if (!student) throw new ApiError(404, "Child student profile not found");
+
+  const activeYear = await AcademicYear.findOne({ schoolId, isActive: true }).select("_id name");
+
+  let enrollment = await StudentEnrollment.findOne({
+    studentId: student._id,
+    schoolId,
+    ...(activeYear ? { academicYearId: activeYear._id } : {}),
+  })
+    .select("_id schoolClassId sectionId registrationNumber academicYearId")
+    .sort({ createdAt: -1 });
+
+  if (!enrollment) {
+    enrollment = await StudentEnrollment.findOne({ studentId: student._id, schoolId })
+      .select("_id schoolClassId sectionId registrationNumber academicYearId")
+      .sort({ createdAt: -1 });
+  }
+
+  if (!enrollment) throw new ApiError(404, "Child enrollment not found");
+
+  const academicYear =
+    activeYear ||
+    (await AcademicYear.findById(enrollment.academicYearId).select("_id name"));
+
+  return { student, enrollment, academicYear };
+};
+
+const verifyParentChild = async (parentId, childUserId) => {
+  const child = await Student.findOne({
+    userId: childUserId,
+    $or: [{ fatherId: parentId }, { motherId: parentId }, { guardianId: parentId }],
+  }).select("_id");
+  if (!child) throw new ApiError(403, "You are not authorized to access this child's data");
+  return child;
+};
+
+export const getChildHomework = asyncHandler(async (req, res) => {
+  const { childId } = req.params;
+  await verifyParentChild(req.user._id, childId);
+  const { enrollment, academicYear } = await getChildEnrollment(childId, req.user.schoolId);
+
+  const homework = await Assignment.find({
+    schoolId: req.user.schoolId,
+    academicYearId: academicYear._id,
+    schoolClassId: enrollment.schoolClassId,
+    $or: [
+      { sectionId: enrollment.sectionId },
+      { sectionId: { $exists: false } },
+      { sectionId: null },
+    ],
+  })
+    .populate("subjectId", "name code")
+    .sort({ dueDate: 1, createdAt: -1 })
+    .lean();
+
+  const submissions = await AssignmentSubmission.find({
+    schoolId: req.user.schoolId,
+    academicYearId: academicYear._id,
+    studentEnrollmentId: enrollment._id,
+  })
+    .select("assignmentId submittedAt grade feedback")
+    .lean();
+
+  const submissionMap = new Map(submissions.map((s) => [String(s.assignmentId), s]));
+
+  const result = homework.map((item) => {
+    const submission = submissionMap.get(String(item._id));
+    return { ...item, submission: submission || null };
+  });
+
+  return res.status(200).json(
+    new ApiResponse(200, { enrollmentId: enrollment._id, homework: result }, "Child homework fetched")
+  );
+});
+
+export const getChildTransport = asyncHandler(async (req, res) => {
+  const { childId } = req.params;
+  await verifyParentChild(req.user._id, childId);
+  const { enrollment, academicYear } = await getChildEnrollment(childId, req.user.schoolId);
+
+  const assignment = await StudentTransportAssignment.findOne({
+    schoolId: req.user.schoolId,
+    academicYearId: academicYear._id,
+    studentEnrollmentId: enrollment._id,
+    isActive: true,
+  })
+    .populate("routeId")
+    .populate("vehicleId")
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, { enrollmentId: enrollment._id, assignment }, "Child transport fetched")
+  );
+});
+
+export const getChildHostel = asyncHandler(async (req, res) => {
+  const { childId } = req.params;
+  await verifyParentChild(req.user._id, childId);
+
+  const hostel = await Hostel.findOne({
+    studentId: childId,
+    schoolId: req.user.schoolId,
+  }).lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, hostel, "Child hostel details fetched")
+  );
+});
+
+export const getChildLibrary = asyncHandler(async (req, res) => {
+  const { childId } = req.params;
+  await verifyParentChild(req.user._id, childId);
+  const { student } = await getChildEnrollment(childId, req.user.schoolId);
+
+  const issuedBooks = await IssuedBook.find({
+    studentId: student._id,
+    schoolId: req.user.schoolId,
+  })
+    .populate("bookId", "title author isbn")
+    .sort({ dueDate: 1, createdAt: -1 })
+    .lean();
+
+  const now = new Date();
+  const booksWithFine = issuedBooks.map((book) => {
+    let fineAmount = 0;
+    if (book.status === "Overdue" && book.dueDate) {
+      const overdueDays = Math.max(0, Math.ceil((now - new Date(book.dueDate)) / (1000 * 60 * 60 * 24)));
+      fineAmount = overdueDays * (book.finePerDay || 2);
+    }
+    return { ...book, fineAmount };
+  });
+
+  return res.status(200).json(
+    new ApiResponse(200, booksWithFine, "Child library books fetched")
+  );
+});

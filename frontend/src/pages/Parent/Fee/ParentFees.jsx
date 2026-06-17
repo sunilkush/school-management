@@ -24,6 +24,7 @@ import {
 import {
   CreditCardOutlined,
   DownloadOutlined,
+  PrinterOutlined,
   ReloadOutlined,
   UserOutlined,
   WalletOutlined,
@@ -181,6 +182,32 @@ const ParentFees = () => {
     setSelectedInstallment(installment);
     setAmountPaid(due);
     setPaymentOpen(true);
+  };
+
+  const handlePrintReceipt = (installment) => {
+    const child = children.find((c) => c.userId === selectedChildId);
+    const w = window.open("", "_blank", "width=700,height=600");
+    w.document.write(`
+      <html><head><title>Fee Receipt</title>
+      <style>body{font-family:Arial,sans-serif;padding:30px}table{width:100%;border-collapse:collapse}
+      td,th{border:1px solid #ddd;padding:8px 12px}th{background:#f4f4f4}h2{text-align:center}</style>
+      </head><body>
+      <h2>Fee Payment Receipt</h2>
+      <p><strong>Student:</strong> ${child?.name || "—"} &nbsp;&nbsp;
+         <strong>Class:</strong> ${child?.className || "—"} ${child?.sectionName || ""}</p>
+      <table>
+        <tr><th>Field</th><th>Details</th></tr>
+        <tr><td>Installment</td><td>${installment.installmentName || "—"}</td></tr>
+        <tr><td>Amount</td><td>₹${Number(installment.amount || 0).toLocaleString("en-IN")}</td></tr>
+        <tr><td>Paid</td><td>₹${Number(installment.paidAmount || 0).toLocaleString("en-IN")}</td></tr>
+        <tr><td>Due Date</td><td>${installment.dueDate ? new Date(installment.dueDate).toLocaleDateString("en-IN") : "—"}</td></tr>
+        <tr><td>Status</td><td>${String(installment.status || "—").toUpperCase()}</td></tr>
+        <tr><td>Printed On</td><td>${new Date().toLocaleString("en-IN")}</td></tr>
+      </table>
+      </body></html>
+    `);
+    w.document.close();
+    w.print();
   };
 
 const handleGenerateInstallments = async () => {
@@ -361,13 +388,19 @@ const handleGenerateInstallments = async () => {
       fixed: "right",
       render: (_, r) => {
         const due = Number(r.amount || 0) - Number(r.paidAmount || 0);
-
-        return r.status !== "paid" && due > 0 ? (
-          <Button type="primary" size="small" onClick={() => openPayModal(r)}>
-            Pay Now
-          </Button>
-        ) : (
-          <Tag color="success">Paid</Tag>
+        return (
+          <Space size={4}>
+            {r.status !== "paid" && due > 0 ? (
+              <Button type="primary" size="small" onClick={() => openPayModal(r)}>Pay Now</Button>
+            ) : (
+              <Tag color="success">Paid</Tag>
+            )}
+            {r.status === "paid" && (
+              <Button size="small" icon={<PrinterOutlined />} onClick={() => handlePrintReceipt(r)}>
+                Receipt
+              </Button>
+            )}
+          </Space>
         );
       },
     },

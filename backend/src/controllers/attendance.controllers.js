@@ -443,6 +443,19 @@ export const getMyAttendance = asyncHandler(async (req, res) => {
     if (!childId) {
       throw new ApiError(400, "childId is required for parent attendance view");
     }
+    // Verify this child actually belongs to the requesting parent
+    const { Student } = await import("../models/student.model.js");
+    const child = await Student.findOne({
+      userId: childId,
+      $or: [
+        { fatherId: req.user._id },
+        { motherId: req.user._id },
+        { guardianId: req.user._id },
+      ],
+    }).select("_id");
+    if (!child) {
+      throw new ApiError(403, "You are not authorized to view this child's attendance");
+    }
     targetUserId = childId;
   }
 

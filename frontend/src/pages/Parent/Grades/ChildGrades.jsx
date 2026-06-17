@@ -1,93 +1,170 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Collapse, Empty, Select, Space, Table, Tag, Typography } from "antd";
+import { Button, Col, Collapse, Empty, Row, Select, Space, Table, Tag } from "antd";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
+import {
+  CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, TrophyOutlined,
+} from "@ant-design/icons";
 import { getParentResults } from "../../../features/examSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const { Title } = Typography;
+const STAT_COLORS = ["#7c3aed", "#059669", "#dc2626", "#f97316"];
 
 const ChildGrades = () => {
   const dispatch = useDispatch();
-  const { children = [] } = useSelector((state) => state.studentPortal || {});
-  const { results = [], loading } = useSelector((state) => state.exams || {});
+  const { children = [], loading: childLoading } = useSelector((s) => s.studentPortal || {});
+  const { results = [], loading } = useSelector((s) => s.exams || {});
   const [selectedChildId, setSelectedChildId] = useState(null);
 
-  useEffect(() => {
-    dispatch(fetchMyChildren());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchMyChildren()); }, [dispatch]);
 
   useEffect(() => {
-    if (!selectedChildId && children.length) {
-      setSelectedChildId(children[0].userId);
-    }
+    if (!selectedChildId && children.length) setSelectedChildId(children[0].userId);
   }, [children, selectedChildId]);
 
   useEffect(() => {
-    if (selectedChildId) {
-      dispatch(getParentResults({ studentId: selectedChildId }));
-    }
+    if (selectedChildId) dispatch(getParentResults({ studentId: selectedChildId }));
   }, [dispatch, selectedChildId]);
 
   const summary = useMemo(() => {
-    const total = results.length;
-    const passed = results.filter((item) => item.resultStatus === "PASS").length;
-    return { total, passed, failed: total - passed };
+    const total  = results.length;
+    const passed = results.filter((r) => r.resultStatus === "PASS").length;
+    const scores = results.map((r) => Number(r.percentage || 0)).filter(Boolean);
+    const avg    = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+    return { total, passed, failed: total - passed, avg };
   }, [results]);
 
+  // Chart data: one bar per exam showing percentage
+  const chartData = useMemo(() =>
+    results.map((r) => ({
+      name: (r.examId?.title || "Exam").substring(0, 12),
+      percentage: Number(r.percentage || 0),
+    })),
+  [results]);
+
   const subjectColumns = [
-    { title: "Subject", dataIndex: "subjectName", key: "subjectName" },
+    { title: "Subject",  dataIndex: "subjectName", key: "subjectName", render: (v, r) => v || r.subjectId?.name || "—" },
     { title: "Obtained", dataIndex: "obtainedMarks", key: "obtainedMarks" },
-    { title: "Total", dataIndex: "totalMarks", key: "totalMarks" },
+    { title: "Total",    dataIndex: "totalMarks",    key: "totalMarks" },
     {
       title: "Status",
-      render: (_, row) => <Tag color={row.isPassed ? "green" : "red"}>{row.isPassed ? "PASS" : "FAIL"}</Tag>,
+      render: (_, r) => (
+        <Tag color={r.isPassed ? "green" : "red"} icon={r.isPassed ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
+          {r.isPassed ? "PASS" : "FAIL"}
+        </Tag>
+      ),
     },
   ];
 
+  const statMeta = [
+    { key: "total",  label: "Total Exams",   value: summary.total,  icon: <TrophyOutlined /> },
+    { key: "passed", label: "Passed",         value: summary.passed, icon: <CheckCircleOutlined /> },
+    { key: "failed", label: "Failed",         value: summary.failed, icon: <CloseCircleOutlined /> },
+    { key: "avg",    label: "Average %",      value: summary.avg !== null ? `${summary.avg}%` : "—", icon: <TrophyOutlined /> },
+  ];
+
   return (
-    <Card loading={loading} style={{ margin: "24px" }}>
-      <Space direction="vertical" style={{ width: "100%", }}>
-        <Title level={4} style={{ margin: 0 }}>Child Grades</Title>
-
-        <Select
-          placeholder="Select child"
-          value={selectedChildId}
-          onChange={setSelectedChildId}
-          style={{ maxWidth: 320 }}
-          options={children.map((child) => ({ label: child.name, value: child.userId }))}
-        />
-
-        {selectedChildId && (
+    <>
+      <PageHeader
+        title="Child Grades"
+        subtitle="View published exam results and subject-wise performance."
+        icon={<TrophyOutlined />}
+        extra={
           <Space>
-            <Tag color="blue">Total Exams: {summary.total}</Tag>
-            <Tag color="green">Passed: {summary.passed}</Tag>
-            <Tag color="red">Failed: {summary.failed}</Tag>
+            <Select
+              placeholder="Select child"
+              value={selectedChildId}
+              onChange={setSelectedChildId}
+              loading={childLoading}
+              style={{ minWidth: 200 }}
+              options={children.map((c) => ({ label: c.name, value: c.userId }))}
+            />
+            <Button
+              icon={<ReloadOutlined />}
+              loading={loading}
+              onClick={() => selectedChildId && dispatch(getParentResults({ studentId: selectedChildId }))}
+            >
+              Refresh
+            </Button>
           </Space>
+        }
+      />
+      <div style={pageWrapper}>
+        {/* Stats */}
+        <div className="stat-grid" style={statGrid(160)}>
+          {statMeta.map(({ key, label, icon, value }, i) => (
+            <div key={key} style={statCard({ color: STAT_COLORS[i] })}>
+              <div>
+                <div style={statLabel(STAT_COLORS[i])}>{label}</div>
+                <div style={statValue(STAT_COLORS[i])}>{value}</div>
+              </div>
+              <div style={{ fontSize: 26, color: STAT_COLORS[i], opacity: 0.5 }}>{icon}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Chart */}
+        {chartData.length > 0 && (
+          <Row gutter={[16, 16]}>
+            <Col xs={24}>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
+                  Exam Performance
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={chartData} margin={{ top: 4, right: 20, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+                    <Tooltip formatter={(v) => [`${v}%`, "Score"]} />
+                    <Legend />
+                    <Bar dataKey="percentage" name="Score %" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Col>
+          </Row>
         )}
 
-        {!selectedChildId ? (
-          <Empty description="No child selected" />
-        ) : !results.length ? (
-          <Empty description="No published grades found" />
-        ) : (
-          <Collapse
-            items={results.map((result) => ({
-              key: result._id,
-              label: `${result.examId?.title || "Exam"} • ${result.percentage}% • Grade ${result.grade}`,
-              children: (
-                <Table
-                  rowKey={(row) => `${row.subjectId || row.subjectName}`}
-                  columns={subjectColumns}
-                  dataSource={result.subjects || []}
-                  pagination={false}
-                  size="small"
-                />
-              ),
-            }))}
-          />
-        )}
-      </Space>
-    </Card>
+        {/* Exam Collapse */}
+        <div style={sectionPanel}>
+          {!selectedChildId ? (
+            <Empty description="Select a child to view grades" />
+          ) : !results.length ? (
+            <Empty description="No published results found" />
+          ) : (
+            <Collapse
+              items={results.map((result) => ({
+                key: result._id,
+                label: (
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 600 }}>{result.examId?.title || "Exam"}</span>
+                    <span style={pill(result.resultStatus === "PASS" ? "#059669" : "#dc2626", result.resultStatus === "PASS" ? "#d1fae5" : "#fee2e2")}>
+                      {result.resultStatus}
+                    </span>
+                    <span style={pill("#7c3aed", "#ede9fe")}>{result.percentage}%</span>
+                    <span style={pill("#0284c7", "#e0f2fe")}>Grade {result.grade}</span>
+                  </div>
+                ),
+                children: (
+                  <Table
+                    rowKey={(r) => r.subjectId || r.subjectName}
+                    columns={subjectColumns}
+                    dataSource={result.subjects || []}
+                    pagination={false}
+                    size="small"
+                  />
+                ),
+              }))}
+            />
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 

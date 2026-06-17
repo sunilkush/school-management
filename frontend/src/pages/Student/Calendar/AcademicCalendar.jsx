@@ -78,9 +78,7 @@ const AcademicCalendar = () => {
         {list.slice(0, 2).map((ev) => (
           <li key={ev._id} style={{ marginBottom: 2 }}>
             <Badge
-              color={EVENT_TYPE_COLOR[ev.eventType] === "default" ? "#666" : undefined}
-              status={EVENT_TYPE_COLOR[ev.eventType] !== "default" ? "processing" : undefined}
-              color={EVENT_TYPE_COLOR[ev.eventType]}
+              color={EVENT_TYPE_COLOR[ev.eventType] === "default" ? "#666" : EVENT_TYPE_COLOR[ev.eventType]}
               text={<span style={{ fontSize: 11, color: "var(--text-primary)" }}>{ev.title}</span>}
             />
           </li>

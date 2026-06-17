@@ -266,13 +266,16 @@ const StudentGrades = lazy(() => import("./pages/Student/Grades/StudentGrades.js
 const StudentProfile = lazy(()=>import("./pages/Student/Profile/Profile.jsx"))
 
 // Parent
-const MyChildren = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
-const ChildAttendance = lazy(() => import("./pages/Parent/Attendance/ChildAttendance.jsx"));
-const ChildGrades = lazy(() => import("./pages/Parent/Grades/ChildGrades.jsx"));
-const ChildHomework = lazy(() => import("./pages/Parent/Homework/ChildHomework.jsx"));
-/* const ChildMessages = lazy(() => import("./pages/Parent/Messages/ChildMessages.jsx")); */
+const MyChildren      = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
+const ChildGrades     = lazy(() => import("./pages/Parent/Grades/ChildGrades.jsx"));
+const ChildHomework   = lazy(() => import("./pages/Parent/Homework/ChildHomework.jsx"));
 const ParentExamsPage = lazy(() => import("./pages/Parent/Exams/ParentExamsPage.jsx"));
-const ParentFees = lazy(() => import("./pages/Parent/Fee/ParentFees.jsx"));
+const ParentFees      = lazy(() => import("./pages/Parent/Fee/ParentFees.jsx"));
+const ChildTransport  = lazy(() => import("./pages/Parent/Transport/ChildTransport.jsx"));
+const ChildHostel     = lazy(() => import("./pages/Parent/Hostel/ChildHostel.jsx"));
+const ChildLibrary    = lazy(() => import("./pages/Parent/Library/ChildLibrary.jsx"));
+const ChildLeave      = lazy(() => import("./pages/Parent/Leave/ChildLeave.jsx"));
+const ChildProgress   = lazy(() => import("./pages/Parent/Progress/ChildProgress.jsx"));
 // Accountant
 const CollectFees = lazy(() => import("./pages/Accountant/Fees_Management/CollectFees.jsx"));
 // Other
@@ -661,19 +664,25 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <ParentDashboard /> },
-              { path: "children", element: <MyChildren /> },
+              { path: "children",   element: <MyChildren /> },
               { path: "attendance", element: <ChildAttendancePage /> },
-              { path: "grades", element: <ChildGrades /> },
-              { path: "homework", element: <ChildHomework /> },
-               { path: "fees", element: <ParentFees /> },
-              { path: "exams", element: <ParentExamsPage /> },
-              { path: "settings", element: <SettingsPage /> },
-              { path: "message", element: <Message /> },
-              { path: "profile", element: <Profile /> },
+              { path: "grades",     element: <ChildGrades /> },
+              { path: "homework",   element: <ChildHomework /> },
+              { path: "fees",       element: <ParentFees /> },
+              { path: "exams",      element: <ParentExamsPage /> },
+              { path: "timetable",  element: <ParentChildTimetablePage /> },
+              { path: "transport",  element: <ChildTransport /> },
+              { path: "hostel",     element: <ChildHostel /> },
+              { path: "library",    element: <ChildLibrary /> },
+              { path: "leave",      element: <ChildLeave /> },
+              { path: "calendar",   element: <AcademicCalendar /> },
+              { path: "progress",   element: <ChildProgress /> },
+              { path: "settings",   element: <SettingsPage /> },
+              { path: "message",    element: <Message /> },
+              { path: "profile",    element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "reports", element: <ExamReports /> },
-               { path: "timetable", element: <ParentChildTimetablePage /> },
-              { path: "communication/send", element: <SendNotification /> },
+              { path: "reports",    element: <ExamReports /> },
+              { path: "communication/send",    element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],
           },
