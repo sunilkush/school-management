@@ -2,541 +2,541 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import {
-  Card,
-  Table,
   Select,
   Button,
-  Row,
-  Col,
-  Typography,
-  Tag,
   DatePicker,
-  message,
-  Space,
-  Radio,
-  Statistic,
-  Divider,
   Input,
-  Progress,
+  Table,
+  message,
+  Spin,
   Empty,
+  Progress,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SaveOutlined,
+  SearchOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 
-import { fetchStudentsBySchoolId } from "../../../features/studentSlice.js";
-import { submitAttendance } from "../../../features/attendanceSlice.js";
-import { fetchAssignedClasses } from "../../../features/classSlice.js";
+import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
+import { markBulkAttendance } from "../../../features/attendanceSlice";
+import { fetchAssignedClasses } from "../../../features/classSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  statGrid,
+  iconWell,
+  tableHeadCss,
+  sectionPanel,
+} from "../../../styles/pageStyles";
 
-const { Title, Text } = Typography;
+/* ── Status config ───────────────────────────────────────────────── */
+const STATUS_OPTIONS = [
+  { value: "present", label: "P",  fullLabel: "Present",  color: "#16a34a" },
+  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#dc2626" },
+  { value: "late",    label: "L",  fullLabel: "Late",     color: "#d97706" },
+  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "#f97316" },
+  { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "#0891b2" },
+];
 
-const getId = (value) => {
-  if (!value) return null;
-  if (typeof value === "string") return value;
-  if (typeof value === "object") return value?._id || value?.id || null;
-  return null;
+const TABLE_CLS      = "teacher-att-tbl";
+const DEFAULT_STATUS = "present";
+
+const getId = (v) => {
+  if (!v) return null;
+  if (typeof v === "string") return v;
+  return v?._id || v?.id || null;
 };
 
-const getStudentUserId = (student) => {
-  return (
-    getId(student?.user) ||
-    getId(student?.student) ||
-    getId(student?.userId) ||
-    getId(student?.studentId) ||
-    null
-  );
-};
-
-const getStudentName = (student) => {
-  return (
-    student?.user?.name ||
-    student?.student?.name ||
-    student?.name ||
-    student?.fullName ||
-    "-"
-  );
-};
-
-const getStudentMobile = (student) => {
-  return (
-    student?.mobileNumber ||
-    student?.user?.mobileNumber ||
-    student?.student?.mobileNumber ||
-    "-"
-  );
-};
-
-const getStudentClassId = (student) => {
-  return (
-    getId(student?.class) ||
-    getId(student?.schoolClass) ||
-    getId(student?.schoolClassId) ||
-    null
-  );
-};
-
-const getStudentSectionId = (student) => {
-  return (
-    getId(student?.section) ||
-    getId(student?.sectionId) ||
-    null
-  );
-};
+const StatusBtn = ({ opt, active, onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: "4px 10px",
+      borderRadius: 6,
+      border: `1.5px solid ${active ? opt.color : "var(--border-muted)"}`,
+      background: active ? `${opt.color}18` : "transparent",
+      color: active ? opt.color : "var(--text-muted)",
+      fontWeight: active ? 700 : 500,
+      cursor: "pointer",
+      fontSize: 12,
+      lineHeight: 1.4,
+      transition: "all 0.15s",
+    }}
+  >
+    {opt.label}
+  </button>
+);
 
 const StudentAttendance = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
-  const studentState = useSelector((state) => state.students || {});
-  const attendanceState = useSelector((state) => state.attendance || {});
-  const classState = useSelector((state) => state.class || {});
-  const { user } = useSelector((state) => state.auth || {});
-  const { selectedAcademicYear } = useSelector(
-    (state) => state.academicYear || {}
+  const { schoolStudents = [], loading: studLoading } = useSelector(
+    (s) => s.students || {}
   );
+  const { loading: attLoading }      = useSelector((s) => s.attendance || {});
+  const { classAssignTeacher = [] }  = useSelector((s) => s.class || {});
+  const { user }                     = useSelector((s) => s.auth || {});
+  const { selectedAcademicYear }     = useSelector((s) => s.academicYear || {});
 
-  const studentsLoading = studentState?.loading || false;
-  const attendanceLoading = attendanceState?.loading || false;
-  const attendanceList = Array.isArray(attendanceState?.list)
-    ? attendanceState.list
-    : [];
-  const classAssignTeacher = Array.isArray(classState?.classAssignTeacher)
-    ? classState.classAssignTeacher
-    : [];
-
-  const schoolStudents = Array.isArray(studentState?.schoolStudents)
-    ? studentState.schoolStudents
-    : Array.isArray(studentState?.schoolStudents?.students)
-    ? studentState.schoolStudents.students
-    : Array.isArray(studentState?.students)
-    ? studentState.students
-    : [];
-
-  const schoolId = user?.school?._id || user?.schoolId || null;
+  const schoolId       = user?.school?._id || user?.schoolId || null;
   const academicYearId = selectedAcademicYear?._id || null;
 
-  const [selectedClassObj, setSelectedClassObj] = useState(null);
+  const [selectedKey,    setSelectedKey]    = useState(null);
   const [attendanceDate, setAttendanceDate] = useState(dayjs());
-  const [attendance, setAttendance] = useState({});
-  const [searchText, setSearchText] = useState("");
-  const [statusFilter, setStatusFilter] = useState(null);
+  const [searchText,     setSearchText]     = useState("");
+  const [filterStatus,   setFilterStatus]   = useState(null);
+  const [attendance,     setAttendance]     = useState({});
 
-  const query = useMemo(
+  const query          = useMemo(
     () => new URLSearchParams(location.search),
     [location.search]
   );
-
   const prefilledClassId = query.get("classId");
 
+  /* ── Fetch ── */
   useEffect(() => {
     if (!schoolId || !academicYearId || !user?._id) return;
-
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
     dispatch(
-      fetchAssignedClasses({
-        schoolId,
-        academicYearId,
-        teacherId: user._id,
-      })
+      fetchAssignedClasses({ schoolId, academicYearId, teacherId: user._id })
     );
   }, [dispatch, schoolId, academicYearId, user?._id]);
 
-  const assignedClassSections = useMemo(() => {
-    if (!Array.isArray(classAssignTeacher)) return [];
+  /* ── Normalise students ── */
+  const students = useMemo(() => {
+    if (Array.isArray(schoolStudents)) return schoolStudents;
+    if (Array.isArray(schoolStudents?.students)) return schoolStudents.students;
+    return [];
+  }, [schoolStudents]);
 
+  /* ── Build class-section list from teacher assignments ── */
+  const classSections = useMemo(() => {
     const result = [];
+    const seen   = new Set();
 
-    classAssignTeacher.forEach((item) => {
-      const classId = getId(item);
-      const className = item?.name || "Class";
-      const sections = Array.isArray(item?.sections) ? item.sections : [];
-      const subjects = Array.isArray(item?.subjects) ? item.subjects : [];
+    (Array.isArray(classAssignTeacher) ? classAssignTeacher : []).forEach(
+      (item) => {
+        const classId   = getId(item);
+        const className = item?.name || "Class";
 
-      sections.forEach((section) => {
-        const sectionId = getId(section?.sectionId) || getId(section);
-        const sectionName =
-          section?.sectionId?.name || section?.name || "Section";
+        (Array.isArray(item?.sections) ? item.sections : []).forEach(
+          (section) => {
+            const sectionId   =
+              getId(section?.sectionId) || getId(section);
+            const sectionName =
+              section?.sectionId?.name || section?.name || "Section";
 
-        if (!classId || !sectionId) return;
-
-        result.push({
-          key: `${classId}-${sectionId}`,
-          schoolClassId: classId,
-          sectionId,
-          className,
-          sectionName,
-          isClassTeacher: Boolean(section?.isClassTeacher),
-          type: "class",
-        });
-
-        subjects.forEach((sub) => {
-          const subjectId = getId(sub?.subjectId) || getId(sub);
-          const subjectName =
-            sub?.subjectId?.name || sub?.name || "Subject";
-
-          if (!subjectId) return;
-
-          result.push({
-            key: `${classId}-${sectionId}-${subjectId}`,
-            schoolClassId: classId,
-            sectionId,
-            className,
-            sectionName,
-            subjectId,
-            subjectName,
-            isClassTeacher: Boolean(section?.isClassTeacher),
-            type: "subject",
-          });
-        });
-      });
-    });
-
-    const uniqueMap = new Map();
-    result.forEach((item) => {
-      if (!uniqueMap.has(item.key)) {
-        uniqueMap.set(item.key, item);
+            if (!classId || !sectionId) return;
+            const key = `${classId}-${sectionId}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            result.push({ key, classId, sectionId, className, sectionName });
+          }
+        );
       }
-    });
-
-    return Array.from(uniqueMap.values());
+    );
+    return result;
   }, [classAssignTeacher]);
 
+  /* ── Auto-select first or prefilled class ── */
   useEffect(() => {
-    if (!assignedClassSections.length) {
-      setSelectedClassObj(null);
-      return;
-    }
-
-    const prefilledClass = prefilledClassId
-      ? assignedClassSections.find(
-          (item) => item.schoolClassId === prefilledClassId
-        )
+    if (!classSections.length) return;
+    if (selectedKey) return; // already set
+    const prefilled = prefilledClassId
+      ? classSections.find((c) => c.classId === prefilledClassId)
       : null;
+    setSelectedKey((prefilled || classSections[0]).key);
+  }, [classSections, selectedKey, prefilledClassId]);
 
-    if (!selectedClassObj) {
-      setSelectedClassObj(prefilledClass || assignedClassSections[0]);
-      return;
-    }
+  const selectedClassObj = useMemo(
+    () => classSections.find((c) => c.key === selectedKey) || null,
+    [classSections, selectedKey]
+  );
 
-    const stillExists = assignedClassSections.find(
-      (item) => item.key === selectedClassObj?.key
-    );
-
-    if (!stillExists) {
-      setSelectedClassObj(prefilledClass || assignedClassSections[0]);
-    }
-  }, [assignedClassSections, selectedClassObj, prefilledClassId]);
-
+  /* ── Filter students to selected class-section ── */
   const classStudents = useMemo(() => {
-    if (!selectedClassObj || !Array.isArray(schoolStudents)) return [];
-
-    return schoolStudents.filter((student) => {
-      const studentClassId = getStudentClassId(student);
-      const studentSectionId = getStudentSectionId(student);
-
+    if (!selectedClassObj || !students.length) return [];
+    return students.filter((s) => {
+      const cid =
+        getId(s?.class) ||
+        getId(s?.schoolClass) ||
+        getId(s?.schoolClassId);
+      const sid = getId(s?.section) || getId(s?.sectionId);
       return (
-        studentClassId === selectedClassObj.schoolClassId &&
-        studentSectionId === selectedClassObj.sectionId
+        cid === selectedClassObj.classId &&
+        sid === selectedClassObj.sectionId
       );
     });
-  }, [schoolStudents, selectedClassObj]);
+  }, [students, selectedClassObj]);
 
-  const existingAttendanceMap = useMemo(() => {
-    const map = {};
-
-    attendanceList.forEach((record) => {
-      const linkedId =
-        getId(record?.studentId) ||
-        getId(record?.userId) ||
-        getId(record?.student) ||
-        getId(record?.user);
-
-      if (linkedId && record?.status) {
-        map[linkedId] = record.status;
-      }
-    });
-
-    return map;
-  }, [attendanceList]);
-
+  /* ── Seed default status ── */
   useEffect(() => {
-    if (!Array.isArray(classStudents)) return;
-
     setAttendance((prev) => {
       const next = { ...prev };
-
-      classStudents.forEach((student) => {
-        const localKey = student?._id;
-        const userId = getStudentUserId(student);
-
-        if (next[localKey]) return;
-
-        next[localKey] =
-          existingAttendanceMap[userId] ||
-          existingAttendanceMap[localKey] ||
-          "present";
+      classStudents.forEach((s) => {
+        if (!next[s._id]) next[s._id] = DEFAULT_STATUS;
       });
-
       return next;
     });
-  }, [classStudents, existingAttendanceMap]);
+  }, [classStudents]);
 
+  /* ── Filtered view ── */
   const filteredStudents = useMemo(() => {
-    if (!selectedClassObj) return [];
-
-    const queryText = searchText.trim().toLowerCase();
-
-    return classStudents.filter((student) => {
-      const currentStatus = attendance[student._id] || "present";
-      const statusMatch = statusFilter ? currentStatus === statusFilter : true;
-
-      const name = getStudentName(student).toLowerCase();
-      const regNo = String(student?.registrationNumber || "").toLowerCase();
-      const mobile = String(getStudentMobile(student)).toLowerCase();
-
-      const textMatch =
-        !queryText ||
-        name.includes(queryText) ||
-        regNo.includes(queryText) ||
-        mobile.includes(queryText);
-
-      return statusMatch && textMatch;
+    const q = searchText.toLowerCase();
+    return classStudents.filter((s) => {
+      const status = attendance[s._id] || DEFAULT_STATUS;
+      if (filterStatus && status !== filterStatus) return false;
+      const name = (s?.user?.name || s?.name || "").toLowerCase();
+      const reg  = `${s?.registrationNumber || ""}`.toLowerCase();
+      if (q && !name.includes(q) && !reg.includes(q)) return false;
+      return true;
     });
-  }, [selectedClassObj, classStudents, searchText, statusFilter, attendance]);
+  }, [classStudents, searchText, filterStatus, attendance]);
 
+  /* ── Live summary ── */
   const summary = useMemo(() => {
-    let present = 0;
-    let absent = 0;
-
-    filteredStudents.forEach((student) => {
-      if ((attendance[student._id] || "present") === "absent") {
-        absent += 1;
-      } else {
-        present += 1;
-      }
+    const counts = {
+      present: 0, absent: 0, late: 0, halfday: 0, leave: 0,
+    };
+    filteredStudents.forEach((s) => {
+      const st = attendance[s._id] || DEFAULT_STATUS;
+      if (counts[st] !== undefined) counts[st]++;
     });
-
     const total = filteredStudents.length;
-    const presentRate = total ? Math.round((present / total) * 100) : 0;
-
-    return { present, absent, total, presentRate };
+    return {
+      ...counts,
+      total,
+      rate: total ? Math.round((counts.present / total) * 100) : 0,
+    };
   }, [filteredStudents, attendance]);
 
-  const handleAttendanceChange = (studentId, value) => {
-    setAttendance((prev) => ({
-      ...prev,
-      [studentId]: value,
-    }));
-  };
+  /* ── Actions ── */
+  const handleChange = (id, value) =>
+    setAttendance((p) => ({ ...p, [id]: value }));
 
   const markAll = (status) => {
     const updated = {};
-    filteredStudents.forEach((student) => {
-      updated[student._id] = status;
-    });
-
-    setAttendance((prev) => ({
-      ...prev,
-      ...updated,
-    }));
+    filteredStudents.forEach((s) => (updated[s._id] = status));
+    setAttendance((p) => ({ ...p, ...updated }));
   };
 
   const handleSubmit = async () => {
-    if (!selectedClassObj) {
-      message.warning("Please select class");
-      return;
-    }
-
-    if (!attendanceDate) {
-      message.warning("Please select attendance date");
-      return;
-    }
+    if (!selectedClassObj) return message.warning("Please select a class");
 
     const records = classStudents
-      .map((student) => ({
-        userId: getStudentUserId(student),
-        status: attendance[student._id] || "present",
-      }))
-      .filter((record) => record.userId);
+      .map((s) => {
+        const userId =
+          getId(s?.user) || getId(s?.userId) || s?._id;
+        return { userId, status: attendance[s._id] || DEFAULT_STATUS };
+      })
+      .filter((r) => r.userId);
 
-    if (!records.length) {
-      message.error("No valid student records found.");
-      return;
-    }
+    if (!records.length) return message.warning("No students found");
 
     try {
       await dispatch(
-        submitAttendance({
+        markBulkAttendance({
           schoolId,
           records,
           role: "student",
           date: attendanceDate.startOf("day").toISOString(),
-          classId: selectedClassObj.schoolClassId,
+          classId:   selectedClassObj.classId,
           sectionId: selectedClassObj.sectionId,
-          subjectId: selectedClassObj.subjectId || undefined,
           academicYearId,
         })
       ).unwrap();
-
       message.success("Attendance saved successfully");
-    } catch (error) {
+    } catch (err) {
       message.error(
-        typeof error === "string"
-          ? error
-          : error?.message || "Failed to save attendance."
+        typeof err === "string" ? err : err?.message || "Failed to save attendance"
       );
     }
   };
 
+  /* ── Table columns ── */
   const columns = [
     {
       title: "Student",
-      key: "student",
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 600 }}>{getStudentName(record)}</div>
-          <Text type="secondary">
-            Reg No: {record?.registrationNumber || "-"}
-          </Text>
-          <br />
-          <Text type="secondary">
-            Mobile: {getStudentMobile(record)}
-          </Text>
-        </div>
-      ),
+      render: (_, r) => {
+        const name = r?.user?.name || r?.name || "—";
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: "var(--primary-light)", color: "var(--primary)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 700, fontSize: 13, flexShrink: 0,
+              }}
+            >
+              {name[0]?.toUpperCase() || "S"}
+            </div>
+            <div>
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: "var(--text-primary)",
+                  lineHeight: 1.3,
+                }}
+              >
+                {name}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Reg: {r?.registrationNumber || "—"}
+              </div>
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: "Attendance",
-      key: "attendance",
-      render: (_, record) => (
-        <Radio.Group
-          value={attendance[record._id] || "present"}
-          onChange={(e) => handleAttendanceChange(record._id, e.target.value)}
-        >
-          <Space>
-            <Radio value="present">
-              <Tag color="green">Present</Tag>
-            </Radio>
-            <Radio value="absent">
-              <Tag color="red">Absent</Tag>
-            </Radio>
-          </Space>
-        </Radio.Group>
-      ),
+      render: (_, r) => {
+        const current = attendance[r._id] || DEFAULT_STATUS;
+        return (
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            {STATUS_OPTIONS.map((opt) => (
+              <StatusBtn
+                key={opt.value}
+                opt={opt}
+                active={current === opt.value}
+                onClick={() => handleChange(r._id, opt.value)}
+              />
+            ))}
+          </div>
+        );
+      },
     },
   ];
 
+  /* ── Render ── */
   return (
-    <Card bordered={false}>
-      <Title level={4} style={{ marginBottom: 20 }}>
-        Student Attendance
-      </Title>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss(TABLE_CLS)}</style>
 
-      <Row gutter={16} style={{ marginBottom: 20 }}>
-        <Col xs={24} sm={12} md={6}>
-          <Statistic title="Present" value={summary.present} />
-        </Col>
+      <PageHeader
+        title="Student Attendance"
+        subtitle="Mark attendance for your assigned classes"
+        icon={<TeamOutlined />}
+        extra={
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={attLoading}
+            onClick={handleSubmit}
+            disabled={!selectedClassObj}
+          >
+            Save Attendance
+          </Button>
+        }
+      />
 
-        <Col xs={24} sm={12} md={6}>
-          <Statistic title="Absent" value={summary.absent} />
-        </Col>
-
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Text type="secondary">Present Rate</Text>
-            <Progress percent={summary.presentRate} size="small" />
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} md={6}>
-          <DatePicker
-            value={attendanceDate}
-            onChange={(date) => setAttendanceDate(date || dayjs())}
-            style={{ width: "100%" }}
-            disabledDate={(current) =>
-              current && current > dayjs().endOf("day")
-            }
-          />
-        </Col>
-      </Row>
-
-      <Divider />
-
-      <Row gutter={16} style={{ marginBottom: 20 }}>
-        <Col xs={24} md={8}>
+      {/* ── Filters ── */}
+      <div style={{ ...sectionPanel, marginTop: 20 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 10,
+          }}
+        >
           <Select
             placeholder="Select Class & Section"
-            style={{ width: "100%" }}
-            value={selectedClassObj?.key}
-            onChange={(value) => {
-              const selected = assignedClassSections.find(
-                (item) => item.key === value
-              );
-              setSelectedClassObj(selected || null);
-            }}
+            value={selectedKey}
+            onChange={(v) => setSelectedKey(v)}
+            options={classSections.map((c) => ({
+              value: c.key,
+              label: `${c.className} — ${c.sectionName}`,
+            }))}
             showSearch
             optionFilterProp="label"
-            options={assignedClassSections.map((cls) => ({
-              value: cls.key,
-              label: `${cls.className} - ${cls.sectionName}${
-                cls.subjectName ? ` (${cls.subjectName})` : ""
-              }`,
-            }))}
-          />
-        </Col>
-
-        <Col xs={24} md={8}>
-          <Select
-            placeholder="Filter by status"
-            allowClear
-            value={statusFilter}
-            onChange={setStatusFilter}
             style={{ width: "100%" }}
-            options={[
-              { value: "present", label: "Present" },
-              { value: "absent", label: "Absent" },
-            ]}
           />
-        </Col>
-
-        <Col xs={24} md={8}>
+          <DatePicker
+            value={attendanceDate}
+            onChange={(d) => setAttendanceDate(d || dayjs())}
+            disabledDate={(c) => c && c > dayjs().endOf("day")}
+            style={{ width: "100%" }}
+          />
+          <Select
+            placeholder="Filter by Status"
+            allowClear
+            value={filterStatus}
+            onChange={(v) => setFilterStatus(v || null)}
+            options={STATUS_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.fullLabel,
+            }))}
+            style={{ width: "100%" }}
+          />
           <Input
-            placeholder="Search by student / reg no. / mobile"
+            placeholder="Search name / reg no"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            allowClear
           />
-        </Col>
-      </Row>
+        </div>
 
-      <Row justify="space-between" style={{ marginBottom: 16 }}>
-        <Space wrap>
-          <Button onClick={() => markAll("present")}>Mark All Present</Button>
-          <Button danger onClick={() => markAll("absent")}>
-            Mark All Absent
-          </Button>
-        </Space>
-
-        <Button
-          type="primary"
-          onClick={handleSubmit}
-          loading={attendanceLoading}
-          disabled={!selectedClassObj || !classStudents.length}
+        {/* Mark-All row */}
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginTop: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
         >
-          Save Attendance
-        </Button>
-      </Row>
+          <span
+            style={{
+              fontSize: 12,
+              color: "var(--text-muted)",
+              fontWeight: 600,
+              marginRight: 2,
+            }}
+          >
+            Mark All:
+          </span>
+          {STATUS_OPTIONS.map((opt) => (
+            <Button
+              key={opt.value}
+              size="small"
+              onClick={() => markAll(opt.value)}
+              style={{
+                borderColor: opt.color,
+                color: opt.color,
+                fontWeight: 600,
+                fontSize: 12,
+              }}
+            >
+              {opt.fullLabel}
+            </Button>
+          ))}
+        </div>
+      </div>
 
-      <Table
-        rowKey={(record) => record?._id}
-        columns={columns}
-        dataSource={filteredStudents}
-        loading={studentsLoading || attendanceLoading}
-        pagination={{ pageSize: 10 }}
-        locale={{
-          emptyText: <Empty description="No students found" />,
+      {/* ── Stats ── */}
+      <div style={statGrid(120)}>
+        {[
+          { key: "total",   label: "Total",   color: "var(--primary)" },
+          { key: "present", label: "Present", color: "#16a34a"        },
+          { key: "absent",  label: "Absent",  color: "#dc2626"        },
+          { key: "late",    label: "Late",    color: "#d97706"        },
+          { key: "leave",   label: "Leave",   color: "#0891b2"        },
+        ].map(({ key, label, color }) => (
+          <div
+            key={key}
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border-muted)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <div style={iconWell(color, 34)}>
+              <UserOutlined style={{ fontSize: 14 }} />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                }}
+              >
+                {label}
+              </div>
+              <div
+                style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}
+              >
+                {summary[key]}
+              </div>
+            </div>
+          </div>
+        ))}
+        {/* Rate */}
+        <div
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border-muted)",
+            borderRadius: 12,
+            padding: "14px 16px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              marginBottom: 8,
+            }}
+          >
+            Rate
+          </div>
+          <Progress
+            percent={summary.rate}
+            strokeColor="#16a34a"
+            trailColor="var(--border-muted)"
+            size="small"
+            format={(p) => (
+              <span
+                style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}
+              >
+                {p}%
+              </span>
+            )}
+          />
+        </div>
+      </div>
+
+      {/* ── Table ── */}
+      <div
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border-muted)",
+          borderRadius: 14,
+          overflow: "hidden",
         }}
-      />
-    </Card>
+      >
+        <Spin spinning={studLoading}>
+          {filteredStudents.length > 0 ? (
+            <Table
+              className={TABLE_CLS}
+              rowKey="_id"
+              columns={columns}
+              dataSource={filteredStudents}
+              pagination={{ pageSize: 20, showSizeChanger: false }}
+              scroll={{ x: 460 }}
+            />
+          ) : (
+            <div style={{ padding: "48px 24px", textAlign: "center" }}>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span style={{ color: "var(--text-muted)" }}>
+                    {!selectedClassObj
+                      ? "Select a class to begin"
+                      : "No students match the current filters"}
+                  </span>
+                }
+              />
+            </div>
+          )}
+        </Spin>
+      </div>
+    </div>
   );
 };
 

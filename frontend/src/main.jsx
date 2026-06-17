@@ -173,8 +173,13 @@ const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_&_Grades/Page
 const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/AdmitCardPage.jsx"));
 const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/SeatPlanPage.jsx"));
 const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamAnalyticsPage.jsx"));
-const AllStudentsAttendance = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
-const StaffAttendance = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
+const AllStudentsAttendance     = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
+const StaffAttendance           = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
+const SATeacherAttendance       = lazy(() => import("./pages/School_Admin/Attendance/TeacherAttendance.jsx"));
+const SALeaveManagement         = lazy(() => import("./pages/School_Admin/Attendance/LeaveManagement.jsx"));
+const SAAttendanceReports       = lazy(() => import("./pages/School_Admin/Attendance/AttendanceReports.jsx"));
+const SAAttendanceAnalytics     = lazy(() => import("./pages/School_Admin/Attendance/AttendanceAnalytics.jsx"));
+const SAAttendanceDashboard     = lazy(() => import("./pages/School_Admin/Attendance/AttendanceDashboard.jsx"));
 
 const Books = lazy(() => import("./pages/School_Admin/Library/Books.jsx"));
 const IssueBook = lazy(() => import("./pages/School_Admin/Library/IssueBook.jsx"));
@@ -493,12 +498,16 @@ const router = createBrowserRouter([
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
               { path: "subjects", element: <Subjects /> },
-              { path: "attendance/students", element: <AllStudentsAttendance /> },
-              { path: "attendance/staff", element: <StaffAttendance /> },
-               { path: "attendance/mark", element: <MarkAttendancePage /> },
-              { path: "attendance/table", element: <AttendanceTablePage /> },
-              { path: "attendance/dashboard", element: <AttendanceDashboardPage /> },
-              { path: "attendance/monthly", element: <MonthlyReportPage /> },
+              { path: "attendance/students",  element: <AllStudentsAttendance /> },
+              { path: "attendance/staff",     element: <StaffAttendance /> },
+              { path: "attendance/teachers",  element: <SATeacherAttendance /> },
+              { path: "attendance/leave",     element: <SALeaveManagement /> },
+              { path: "attendance/reports",   element: <SAAttendanceReports /> },
+              { path: "attendance/analytics", element: <SAAttendanceAnalytics /> },
+              { path: "attendance/dashboard", element: <SAAttendanceDashboard /> },
+              { path: "attendance/mark",      element: <MarkAttendancePage /> },
+              { path: "attendance/table",     element: <AttendanceTablePage /> },
+              { path: "attendance/monthly",   element: <MonthlyReportPage /> },
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
               { path: "library/card", element: <LibraryCard /> },

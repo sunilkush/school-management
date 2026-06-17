@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Select,
   Button,
   DatePicker,
   Input,
@@ -41,8 +40,9 @@ const STATUS_OPTIONS = [
   { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "#0891b2" },
 ];
 
-const TABLE_CLS = "staff-att-tbl";
+const TABLE_CLS = "teacher-att-tbl";
 
+/* ── Inline status button ────────────────────────────────────────── */
 const StatusBtn = ({ opt, active, onClick }) => (
   <button
     onClick={onClick}
@@ -63,19 +63,29 @@ const StatusBtn = ({ opt, active, onClick }) => (
   </button>
 );
 
-const StaffAttendance = () => {
-  const dispatch = useDispatch();
-  const { users = [], user: currentUser } = useSelector((s) => s.auth || {});
-  const { loading: attLoading }           = useSelector((s) => s.attendance || {});
+/* ── Working-hours helper ────────────────────────────────────────── */
+const calcWorkingHours = (inTime, outTime) => {
+  if (!inTime || !outTime) return null;
+  const diff = outTime.diff(inTime, "minute");
+  if (diff <= 0) return null;
+  const h = Math.floor(diff / 60);
+  const m = diff % 60;
+  return `${h}h ${m}m`;
+};
+
+const TeacherAttendance = () => {
+  const dispatch   = useDispatch();
+  const { users = [], loading: usersLoading, user: currentUser } =
+    useSelector((s) => s.auth || {});
+  const { loading: attLoading } = useSelector((s) => s.attendance || {});
 
   const schoolId = currentUser?.school?._id;
 
-  const [attendance,    setAttendance]    = useState({});  // id → status
-  const [checkIns,      setCheckIns]      = useState({});  // id → dayjs
-  const [checkOuts,     setCheckOuts]     = useState({});  // id → dayjs
-  const [filterRole,    setFilterRole]    = useState(null);
-  const [searchText,    setSearchText]    = useState("");
-  const [selectedDate,  setSelectedDate]  = useState(dayjs());
+  const [attendance,   setAttendance]   = useState({});
+  const [checkIns,     setCheckIns]     = useState({});
+  const [checkOuts,    setCheckOuts]    = useState({});
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [searchText,   setSearchText]   = useState("");
 
   /* ── Fetch ── */
   useEffect(() => {
@@ -86,28 +96,23 @@ const StaffAttendance = () => {
   /* ── Helpers ── */
   const getRole = (u) => u?.role?.name || u?.roleId?.name || "";
 
-  const staffList = useMemo(() => {
-    const excluded = ["Student", "Parent"];
-    return users.filter((u) => !excluded.includes(getRole(u)));
-  }, [users]);
+  const teacherList = useMemo(
+    () =>
+      users.filter(
+        (u) => u?.role?.name === "Teacher" || getRole(u) === "Teacher"
+      ),
+    [users]
+  );
 
-  const roleOptions = useMemo(() => {
-    const roles = [...new Set(staffList.map((u) => getRole(u)).filter(Boolean))];
-    return roles.map((r) => ({ value: r, label: r }));
-  }, [staffList]);
-
-  const filteredStaff = useMemo(() => {
+  const filteredTeachers = useMemo(() => {
     const q = searchText.toLowerCase();
-    return staffList.filter((u) => {
-      const role = getRole(u);
+    if (!q) return teacherList;
+    return teacherList.filter((u) => {
       const name = (u.name || "").toLowerCase();
       const emp  = `${u.employeeId || ""}`.toLowerCase();
-      return (
-        (!filterRole || role === filterRole) &&
-        (!q || name.includes(q) || emp.includes(q))
-      );
+      return name.includes(q) || emp.includes(q);
     });
-  }, [staffList, filterRole, searchText]);
+  }, [teacherList, searchText]);
 
   /* ── Live summary ── */
   const summary = useMemo(() => {
@@ -115,8 +120,8 @@ const StaffAttendance = () => {
     Object.values(attendance).forEach((v) => {
       if (v && counts[v] !== undefined) { counts[v]++; counts.marked++; }
     });
-    return { ...counts, total: filteredStaff.length };
-  }, [attendance, filteredStaff]);
+    return { ...counts, total: teacherList.length };
+  }, [attendance, teacherList]);
 
   /* ── Actions ── */
   const handleChange = (id, value) =>
@@ -124,7 +129,7 @@ const StaffAttendance = () => {
 
   const markAll = (status) => {
     const updated = {};
-    filteredStaff.forEach((s) => (updated[s._id] = status));
+    filteredTeachers.forEach((t) => (updated[t._id] = status));
     setAttendance((p) => ({ ...p, ...updated }));
   };
 
@@ -146,18 +151,18 @@ const StaffAttendance = () => {
         return rec;
       });
 
-    if (!records.length) return message.warning("Mark attendance first");
+    if (!records.length) return message.warning("Mark attendance for at least one teacher");
 
     try {
       await dispatch(
         markBulkAttendance({
           schoolId,
           date: selectedDate.startOf("day").toISOString(),
-          role: "staff",
+          role: "teacher",
           records,
         })
       ).unwrap();
-      message.success(`Attendance saved for ${records.length} staff`);
+      message.success(`Attendance saved for ${records.length} teachers`);
     } catch (e) {
       message.error(typeof e === "string" ? e : "Failed to save attendance");
     }
@@ -166,7 +171,7 @@ const StaffAttendance = () => {
   /* ── Table columns ── */
   const columns = [
     {
-      title: "Staff",
+      title: "Teacher",
       render: (_, r) => {
         const name = r?.name || "—";
         return (
@@ -179,12 +184,10 @@ const StaffAttendance = () => {
                 fontWeight: 700, fontSize: 13, flexShrink: 0,
               }}
             >
-              {name[0]?.toUpperCase() || "S"}
+              {name[0]?.toUpperCase() || "T"}
             </div>
             <div>
-              <div
-                style={{ fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}
-              >
+              <div style={{ fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
                 {name}
               </div>
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
@@ -196,16 +199,10 @@ const StaffAttendance = () => {
       },
     },
     {
-      title: "Role",
+      title: "Department",
       render: (_, r) => (
-        <span
-          style={{
-            fontSize: 12, padding: "2px 9px",
-            background: "var(--primary-light)", color: "var(--primary)",
-            borderRadius: 6, fontWeight: 600,
-          }}
-        >
-          {getRole(r) || "—"}
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {r?.department || "—"}
         </span>
       ),
     },
@@ -230,29 +227,36 @@ const StaffAttendance = () => {
     {
       title: "Check In / Out",
       render: (_, r) => {
-        const st = attendance[r._id];
+        const st      = attendance[r._id];
+        const inVal   = checkIns[r._id]  || null;
+        const outVal  = checkOuts[r._id] || null;
+        const working = calcWorkingHours(inVal, outVal);
+
         return st === "present" || st === "late" ? (
-          <div style={{ display: "flex", gap: 6 }}>
-            <TimePicker
-              size="small"
-              format="HH:mm"
-              placeholder="In"
-              value={checkIns[r._id] || null}
-              onChange={(t) =>
-                setCheckIns((p) => ({ ...p, [r._id]: t }))
-              }
-              style={{ width: 80 }}
-            />
-            <TimePicker
-              size="small"
-              format="HH:mm"
-              placeholder="Out"
-              value={checkOuts[r._id] || null}
-              onChange={(t) =>
-                setCheckOuts((p) => ({ ...p, [r._id]: t }))
-              }
-              style={{ width: 80 }}
-            />
+          <div>
+            <div style={{ display: "flex", gap: 6, marginBottom: working ? 4 : 0 }}>
+              <TimePicker
+                size="small"
+                format="HH:mm"
+                placeholder="In"
+                value={inVal}
+                onChange={(t) => setCheckIns((p) => ({ ...p, [r._id]: t }))}
+                style={{ width: 80 }}
+              />
+              <TimePicker
+                size="small"
+                format="HH:mm"
+                placeholder="Out"
+                value={outVal}
+                onChange={(t) => setCheckOuts((p) => ({ ...p, [r._id]: t }))}
+                style={{ width: 80 }}
+              />
+            </div>
+            {working && (
+              <div style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>
+                {working} worked
+              </div>
+            )}
           </div>
         ) : (
           <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
@@ -267,8 +271,8 @@ const StaffAttendance = () => {
       <style>{tableHeadCss(TABLE_CLS)}</style>
 
       <PageHeader
-        title="Staff Attendance"
-        subtitle="Mark daily attendance for all school staff members"
+        title="Teacher Attendance"
+        subtitle="Mark daily attendance for all teachers"
         icon={<TeamOutlined />}
         extra={
           <Button
@@ -287,7 +291,7 @@ const StaffAttendance = () => {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
             gap: 10,
           }}
         >
@@ -295,14 +299,6 @@ const StaffAttendance = () => {
             value={selectedDate}
             onChange={(d) => setSelectedDate(d || dayjs())}
             disabledDate={(c) => c && c > dayjs().endOf("day")}
-            style={{ width: "100%" }}
-          />
-          <Select
-            placeholder="Filter by Role"
-            allowClear
-            value={filterRole}
-            onChange={(v) => setFilterRole(v || null)}
-            options={roleOptions}
             style={{ width: "100%" }}
           />
           <Input
@@ -325,12 +321,7 @@ const StaffAttendance = () => {
           }}
         >
           <span
-            style={{
-              fontSize: 12,
-              color: "var(--text-muted)",
-              fontWeight: 600,
-              marginRight: 2,
-            }}
+            style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, marginRight: 2 }}
           >
             Mark All:
           </span>
@@ -339,12 +330,7 @@ const StaffAttendance = () => {
               key={opt.value}
               size="small"
               onClick={() => markAll(opt.value)}
-              style={{
-                borderColor: opt.color,
-                color: opt.color,
-                fontWeight: 600,
-                fontSize: 12,
-              }}
+              style={{ borderColor: opt.color, color: opt.color, fontWeight: 600, fontSize: 12 }}
             >
               {opt.fullLabel}
             </Button>
@@ -368,7 +354,6 @@ const StaffAttendance = () => {
           { key: "present", label: "Present",  color: "#16a34a"        },
           { key: "absent",  label: "Absent",   color: "#dc2626"        },
           { key: "late",    label: "Late",     color: "#d97706"        },
-          { key: "leave",   label: "Leave",    color: "#0891b2"        },
         ].map(({ key, label, color }) => (
           <div
             key={key}
@@ -388,25 +373,20 @@ const StaffAttendance = () => {
             <div>
               <div
                 style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "var(--text-muted)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.07em",
+                  fontSize: 10, fontWeight: 700, color: "var(--text-muted)",
+                  textTransform: "uppercase", letterSpacing: "0.07em",
                 }}
               >
                 {label}
               </div>
-              <div
-                style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}
-              >
+              <div style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}>
                 {summary[key]}
               </div>
             </div>
           </div>
         ))}
 
-        {/* Marked rate */}
+        {/* Present rate */}
         <div
           style={{
             background: "var(--surface)",
@@ -417,12 +397,8 @@ const StaffAttendance = () => {
         >
           <div
             style={{
-              fontSize: 10,
-              fontWeight: 700,
-              color: "var(--text-muted)",
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              marginBottom: 8,
+              fontSize: 10, fontWeight: 700, color: "var(--text-muted)",
+              textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8,
             }}
           >
             Present Rate
@@ -437,9 +413,7 @@ const StaffAttendance = () => {
             trailColor="var(--border-muted)"
             size="small"
             format={(p) => (
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}>
-                {p}%
-              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}>{p}%</span>
             )}
           />
         </div>
@@ -454,28 +428,32 @@ const StaffAttendance = () => {
           overflow: "hidden",
         }}
       >
-        {filteredStaff.length > 0 ? (
-          <Table
-            className={TABLE_CLS}
-            rowKey="_id"
-            columns={columns}
-            dataSource={filteredStaff}
-            pagination={{ pageSize: 20, showSizeChanger: false }}
-            scroll={{ x: 600 }}
-          />
-        ) : (
-          <div style={{ padding: "48px 24px", textAlign: "center" }}>
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <span style={{ color: "var(--text-muted)" }}>No staff found</span>
-              }
+        <Spin spinning={usersLoading}>
+          {filteredTeachers.length > 0 ? (
+            <Table
+              className={TABLE_CLS}
+              rowKey="_id"
+              columns={columns}
+              dataSource={filteredTeachers}
+              pagination={{ pageSize: 20, showSizeChanger: false }}
+              scroll={{ x: 640 }}
             />
-          </div>
-        )}
+          ) : (
+            <div style={{ padding: "48px 24px", textAlign: "center" }}>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span style={{ color: "var(--text-muted)" }}>
+                    {usersLoading ? "Loading teachers…" : "No teachers found"}
+                  </span>
+                }
+              />
+            </div>
+          )}
+        </Spin>
       </div>
     </div>
   );
 };
 
-export default StaffAttendance;
+export default TeacherAttendance;

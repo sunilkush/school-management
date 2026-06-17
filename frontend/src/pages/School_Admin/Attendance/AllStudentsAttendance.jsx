@@ -1,52 +1,97 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
-  Table,
   Select,
   Button,
-  Typography,
-  Tag,
   DatePicker,
-  message,
-  Space,
-  Radio,
   Input,
+  Spin,
+  Empty,
+  Table,
+  message,
   Progress,
-  Divider,
 } from "antd";
 import {
-  CheckCircleOutlined,
   SaveOutlined,
   SearchOutlined,
+  TeamOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { markBulkAttendance } from "../../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  statGrid,
+  iconWell,
+  tableHeadCss,
+  sectionPanel,
+} from "../../../styles/pageStyles";
 
-const { Title, Text } = Typography;
+/* ── Status config ───────────────────────────────────────────────── */
+const STATUS_OPTIONS = [
+  { value: "present", label: "P",  fullLabel: "Present",  color: "#16a34a" },
+  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#dc2626" },
+  { value: "late",    label: "L",  fullLabel: "Late",     color: "#d97706" },
+  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "#f97316" },
+  { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "#0891b2" },
+];
+
+const TABLE_CLS    = "stud-att-tbl";
+const DEFAULT_STATUS = "present";
+
+/* ── Inline status button ────────────────────────────────────────── */
+const StatusBtn = ({ opt, active, onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: "4px 10px",
+      borderRadius: 6,
+      border: `1.5px solid ${active ? opt.color : "var(--border-muted)"}`,
+      background: active ? `${opt.color}18` : "transparent",
+      color: active ? opt.color : "var(--text-muted)",
+      fontWeight: active ? 700 : 500,
+      cursor: "pointer",
+      fontSize: 12,
+      lineHeight: 1.4,
+      transition: "all 0.15s",
+    }}
+  >
+    {opt.label}
+  </button>
+);
 
 const AllStudentsAttendance = () => {
   const dispatch = useDispatch();
 
-  const { schoolStudents = [], loading } = useSelector((s) => s.students || {});
-  const { loading: attendanceLoading } = useSelector((s) => s.attendance || {});
-  const { user: currentUser } = useSelector((s) => s.auth || {});
-  const { schoolClasses = [] } = useSelector((s) =>  s.schoolClass || {});
-  const { selectedAcademicYear} = useSelector((s) => s.academicYear || {});
-  const schoolId = currentUser?.school?._id;
-  const academicYearId = selectedAcademicYear?._id;
- 
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
-  const [filterStatus, setFilterStatus] = useState(null);
-  const [attendanceDate, setAttendanceDate] = useState(dayjs());
-  const [searchText, setSearchText] = useState("");
-  const [attendance, setAttendance] = useState({});
+  const { schoolStudents = [], loading: studLoading } = useSelector(
+    (s) => s.students || {}
+  );
+  const { loading: attLoading } = useSelector((s) => s.attendance || {});
+  const { user: currentUser }   = useSelector((s) => s.auth || {});
+  const { schoolClasses = [] }  = useSelector((s) => s.schoolClass || {});
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
-  /* ---------------- DATA ---------------- */
+  const schoolId       = currentUser?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
+
+  const [selectedClassId, setSelectedClassId]   = useState(null);
+  const [selectedSectionId, setSelectedSectionId] = useState(null);
+  const [attendanceDate, setAttendanceDate]       = useState(dayjs());
+  const [searchText, setSearchText]               = useState("");
+  const [filterStatus, setFilterStatus]           = useState(null);
+  const [attendance, setAttendance]               = useState({});
+
+  /* ── Normalise data ── */
+  const classes = useMemo(() => {
+    if (Array.isArray(schoolClasses)) return schoolClasses;
+    if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
+    return [];
+  }, [schoolClasses]);
+
   const students = useMemo(() => {
     if (Array.isArray(schoolStudents)) return schoolStudents;
     if (Array.isArray(schoolStudents?.students)) return schoolStudents.students;
@@ -55,77 +100,73 @@ const AllStudentsAttendance = () => {
     return [];
   }, [schoolStudents]);
 
-  const classes = useMemo(() => {
-    if (Array.isArray(schoolClasses)) return schoolClasses;
-    if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
-    return [];
-  }, [schoolClasses]);
-
-  /* ---------------- FETCH ---------------- */
+  /* ── Fetch ── */
   useEffect(() => {
     if (!schoolId) return;
-
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
   }, [schoolId, academicYearId, dispatch]);
 
-  /* ---------------- FILTER ---------------- */
+  /* ── Derived ── */
+  const selectedClassObj = useMemo(
+    () => classes.find((c) => c._id === selectedClassId) || null,
+    [classes, selectedClassId]
+  );
+
+  const sectionOptions = useMemo(
+    () =>
+      (selectedClassObj?.sections || []).map((s) => ({
+        value: s._id,
+        label: s.name,
+      })),
+    [selectedClassObj]
+  );
+
+  const handleClassChange = (val) => {
+    setSelectedClassId(val || null);
+    setSelectedSectionId(null);
+  };
+
+  /* ── Filtered students ── */
   const filteredStudents = useMemo(() => {
     const q = searchText.toLowerCase();
-
     return students.filter((s) => {
-      const name = s?.user?.name?.toLowerCase() || "";
-      const roll =
-        `${s?.rollNumber || s?.registrationNumber || ""}`.toLowerCase();
+      const classId   = s?.schoolClass?._id || s?.schoolClassId;
+      const sectionId = s?.section?._id     || s?.sectionId;
 
-      const classMatch = selectedClass
-        ? s?.schoolClass?.name === selectedClass
-        : true;
+      if (selectedClassId   && classId   !== selectedClassId)   return false;
+      if (selectedSectionId && sectionId !== selectedSectionId) return false;
 
-      const sectionMatch = selectedSection
-        ? s?.section?._id === selectedSection
-        : true;
+      if (filterStatus) {
+        const currentStatus = attendance[s._id] || DEFAULT_STATUS;
+        if (currentStatus !== filterStatus) return false;
+      }
 
-      const statusMatch = filterStatus
-        ? attendance[s._id] === filterStatus
-        : true;
-
-      const searchMatch = !q || name.includes(q) || roll.includes(q);
-
-      return classMatch && sectionMatch && statusMatch && searchMatch;
+      const name = (s?.user?.name || "").toLowerCase();
+      const roll = `${s?.rollNumber || s?.registrationNumber || ""}`.toLowerCase();
+      if (q && !name.includes(q) && !roll.includes(q)) return false;
+      return true;
     });
-  }, [
-    students,
-    selectedClass,
-    selectedSection,
-    filterStatus,
-    searchText,
-    attendance,
-  ]);
+  }, [students, selectedClassId, selectedSectionId, filterStatus, searchText, attendance]);
 
-  /* ---------------- SUMMARY ---------------- */
+  /* ── Live summary ── */
   const summary = useMemo(() => {
-    let present = 0,
-      absent = 0;
-
+    const counts = { present: 0, absent: 0, late: 0, halfday: 0, leave: 0 };
     filteredStudents.forEach((s) => {
-      if (attendance[s._id] === "absent") absent++;
-      else present++;
+      const st = attendance[s._id] || DEFAULT_STATUS;
+      if (counts[st] !== undefined) counts[st]++;
     });
-
     const total = filteredStudents.length;
     return {
-      present,
-      absent,
+      ...counts,
       total,
-      rate: total ? Math.round((present / total) * 100) : 0,
+      rate: total ? Math.round((counts.present / total) * 100) : 0,
     };
   }, [filteredStudents, attendance]);
 
-  /* ---------------- ACTIONS ---------------- */
-  const handleChange = (id, value) => {
+  /* ── Actions ── */
+  const handleChange = (id, value) =>
     setAttendance((p) => ({ ...p, [id]: value }));
-  };
 
   const markAll = (status) => {
     const updated = {};
@@ -134,170 +175,322 @@ const AllStudentsAttendance = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedClass || !selectedSection)
-      return message.warning("Select class & section");
+    if (!selectedClassId)   return message.warning("Please select a class first");
+    if (!selectedSectionId) return message.warning("Please select a section first");
 
-    const payload = {
-      schoolId,
-      role: "student",
-      classId: classes.find((c) => c.name === selectedClass)?._id,
-      sectionId: selectedSection,
-      date: attendanceDate.startOf("day").toISOString(),
-      records: filteredStudents.map((s) => ({
+    const records = filteredStudents
+      .map((s) => ({
         userId: s?.user?._id,
-        status: attendance[s._id] || "present",
-      })),
-    };
+        status: attendance[s._id] || DEFAULT_STATUS,
+      }))
+      .filter((r) => r.userId);
 
-    const res = await dispatch(markBulkAttendance(payload));
+    if (!records.length) return message.warning("No students found");
+
+    const res = await dispatch(
+      markBulkAttendance({
+        schoolId,
+        role: "student",
+        classId:   selectedClassId,
+        sectionId: selectedSectionId,
+        date: attendanceDate.startOf("day").toISOString(),
+        records,
+      })
+    );
 
     if (res?.meta?.requestStatus === "fulfilled") {
-      message.success("Attendance saved");
+      message.success(`Attendance saved for ${records.length} students`);
     } else {
-      message.error("Failed to save attendance");
+      message.error(res?.payload || "Failed to save attendance");
     }
   };
 
-  /* ---------------- TABLE ---------------- */
+  /* ── Table columns ── */
   const columns = [
     {
       title: "Student",
+      render: (_, r) => {
+        const name = r?.user?.name || "—";
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: "var(--primary-light)", color: "var(--primary)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 700, fontSize: 13, flexShrink: 0,
+              }}
+            >
+              {name[0]?.toUpperCase() || "S"}
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
+                {name}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Roll: {r?.rollNumber || r?.registrationNumber || "—"}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Class / Section",
       render: (_, r) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{r?.user?.name}</span>
-          <span className="text-xs text-gray-500">
-            Roll: {r?.rollNumber || "-"}
-          </span>
-        </div>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {r?.schoolClass?.name || "—"}
+          {r?.section?.name && ` • ${r.section.name}`}
+        </span>
       ),
     },
     {
-      title: "Class",
-      render: (_, r) => (
-        <Tag color="blue">
-          {r?.schoolClass?.name} {r?.section?.name && `• ${r.section.name}`}
-        </Tag>
-      ),
-    },
-    {
-      title: "Status",
-      render: (_, r) => (
-        <Radio.Group
-          value={attendance[r._id]}
-          onChange={(e) => handleChange(r._id, e.target.value)}
-          buttonStyle="solid"
-          size="small"
-        >
-          <Radio.Button value="present">P</Radio.Button>
-          <Radio.Button value="absent">A</Radio.Button>
-        </Radio.Group>
-      ),
+      title: "Attendance",
+      render: (_, r) => {
+        const current = attendance[r._id] || DEFAULT_STATUS;
+        return (
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            {STATUS_OPTIONS.map((opt) => (
+              <StatusBtn
+                key={opt.value}
+                opt={opt}
+                active={current === opt.value}
+                onClick={() => handleChange(r._id, opt.value)}
+              />
+            ))}
+          </div>
+        );
+      },
     },
   ];
 
+  /* ── Render ── */
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      {/* HEADER */}
-      <div className="mb-4">
-        <Title level={4} className="!mb-0">
-          Attendance Management 01
-        </Title>
-        <Text type="secondary">
-          Simple class-wise attendance tracking system
-        </Text>
-      </div>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss(TABLE_CLS)}</style>
 
-      {/* FILTER BAR */}
-      <Card className="mb-4 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+      <PageHeader
+        title="Student Attendance"
+        subtitle="Mark class-wise student attendance for today"
+        icon={<TeamOutlined />}
+        extra={
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={attLoading}
+            onClick={handleSubmit}
+            disabled={!selectedClassId || !selectedSectionId}
+          >
+            Save Attendance
+          </Button>
+        }
+      />
+
+      {/* ── Filters ── */}
+      <div style={{ ...sectionPanel, marginTop: 20 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 10,
+          }}
+        >
           <Select
-            placeholder="Class"
-            value={selectedClass}
-            onChange={setSelectedClass}
-            options={classes.map((c) => ({ value: c.name, label: c.name }))}
+            placeholder="Select Class"
+            value={selectedClassId}
+            onChange={handleClassChange}
+            options={classes.map((c) => ({ value: c._id, label: c.name }))}
+            allowClear
+            style={{ width: "100%" }}
           />
-
           <Select
-            placeholder="Section"
-            value={selectedSection}
-            onChange={setSelectedSection}
-            disabled={!selectedClass}
-            options={
-              classes
-                .find((c) => c.name === selectedClass)
-                ?.sections?.map((s) => ({
-                  value: s._id,
-                  label: s.name,
-                })) || []
-            }
+            placeholder="Select Section"
+            value={selectedSectionId}
+            onChange={(v) => setSelectedSectionId(v || null)}
+            options={sectionOptions}
+            allowClear
+            disabled={!selectedClassId}
+            style={{ width: "100%" }}
           />
-
           <DatePicker
             value={attendanceDate}
-            onChange={setAttendanceDate}
-            className="w-full"
+            onChange={(d) => setAttendanceDate(d || dayjs())}
+            disabledDate={(c) => c && c > dayjs().endOf("day")}
+            style={{ width: "100%" }}
           />
-
           <Select
+            placeholder="Filter by Status"
             allowClear
-            placeholder="Status"
-            onChange={setFilterStatus}
-            options={[
-              { value: "present", label: "Present" },
-              { value: "absent", label: "Absent" },
-            ]}
+            value={filterStatus}
+            onChange={(v) => setFilterStatus(v || null)}
+            options={STATUS_OPTIONS.map((o) => ({
+              value: o.value,
+              label: o.fullLabel,
+            }))}
+            style={{ width: "100%" }}
           />
-
           <Input
-            placeholder="Search"
+            placeholder="Search name / roll no"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            allowClear
           />
         </div>
-      </Card>
 
-      {/* SUMMARY */}
-      <Card className="mb-4">
-        <div className="flex flex-col md:flex-row justify-between gap-4">
-          <div className="w-full md:w-1/2">
-            <Progress percent={summary.rate} />
-            <div className="flex gap-2 mt-2">
-              <Tag color="green">Present {summary.present}</Tag>
-              <Tag color="red">Absent {summary.absent}</Tag>
-              <Tag>Total {summary.total}</Tag>
+        {/* Mark-All row */}
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginTop: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              color: "var(--text-muted)",
+              fontWeight: 600,
+              marginRight: 2,
+            }}
+          >
+            Mark All:
+          </span>
+          {STATUS_OPTIONS.map((opt) => (
+            <Button
+              key={opt.value}
+              size="small"
+              onClick={() => markAll(opt.value)}
+              style={{
+                borderColor: opt.color,
+                color: opt.color,
+                fontWeight: 600,
+                fontSize: 12,
+              }}
+            >
+              {opt.fullLabel}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Stats ── */}
+      <div style={statGrid(130)}>
+        {[
+          { key: "total",   label: "Total",    color: "var(--primary)" },
+          { key: "present", label: "Present",  color: "#16a34a"        },
+          { key: "absent",  label: "Absent",   color: "#dc2626"        },
+          { key: "late",    label: "Late",     color: "#d97706"        },
+          { key: "leave",   label: "Leave",    color: "#0891b2"        },
+        ].map(({ key, label, color }) => (
+          <div
+            key={key}
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border-muted)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <div style={iconWell(color, 36)}>
+              <UserOutlined />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                }}
+              >
+                {label}
+              </div>
+              <div
+                style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1 }}
+              >
+                {summary[key]}
+              </div>
             </div>
           </div>
+        ))}
 
-          <div className="flex gap-2 items-center">
-            <Button onClick={() => markAll("present")}>
-              All Present
-            </Button>
-            <Button danger onClick={() => markAll("absent")}>
-              All Absent
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={attendanceLoading}
-              onClick={handleSubmit}
-            >
-              Save
-            </Button>
+        {/* Attendance Rate */}
+        <div
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border-muted)",
+            borderRadius: 12,
+            padding: "14px 16px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              marginBottom: 8,
+            }}
+          >
+            Attendance Rate
           </div>
+          <Progress
+            percent={summary.rate}
+            strokeColor="#16a34a"
+            trailColor="var(--border-muted)"
+            size="small"
+            format={(p) => (
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#16a34a" }}>
+                {p}%
+              </span>
+            )}
+          />
         </div>
-      </Card>
+      </div>
 
-      {/* TABLE */}
-      <Card className="shadow-sm">
-        <Table
-          rowKey="_id"
-          columns={columns}
-          dataSource={filteredStudents}
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-        />
-      </Card>
+      {/* ── Table ── */}
+      <div
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border-muted)",
+          borderRadius: 14,
+          overflow: "hidden",
+        }}
+      >
+        <Spin spinning={studLoading}>
+          {filteredStudents.length > 0 ? (
+            <Table
+              className={TABLE_CLS}
+              rowKey="_id"
+              columns={columns}
+              dataSource={filteredStudents}
+              pagination={{ pageSize: 20, showSizeChanger: false }}
+              scroll={{ x: 500 }}
+            />
+          ) : (
+            <div style={{ padding: "48px 24px", textAlign: "center" }}>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span style={{ color: "var(--text-muted)" }}>
+                    {!selectedClassId
+                      ? "Select a class to view students"
+                      : "No students found with current filters"}
+                  </span>
+                }
+              />
+            </div>
+          )}
+        </Spin>
+      </div>
     </div>
   );
 };

@@ -50,6 +50,7 @@ import designationRoutes from "./designation.routes.js";
 import globalConfigRoutes from "./globalConfig.routes.js";
 import faqRoutes from "./faq.routes.js";
 import analyticsRoutes from "./analytics.routes.js";
+import leaveRequestRoutes from "./leaveRequest.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -104,6 +105,7 @@ export const apiV1Routes = [
   ["/global-config", globalConfigRoutes],
   ["/faqs", faqRoutes],
   ["/analytics", analyticsRoutes],
+  ["/leave-requests", leaveRequestRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {
