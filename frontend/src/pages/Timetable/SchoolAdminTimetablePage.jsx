@@ -202,7 +202,7 @@ export default function SchoolAdminTimetablePage() {
 
   const type = Form.useWatch("type", form) || "regular";
   return (
-    <Space direction="vertical" size="large" className="w-full">
+    <Space direction="vertical" size="large" className="w-full px-6 py-6">
       <Card className="shadow-sm">
         <Row justify="space-between" gutter={[16, 16]}>
           <Col>

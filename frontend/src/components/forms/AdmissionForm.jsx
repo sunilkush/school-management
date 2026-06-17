@@ -3,65 +3,100 @@ import { Form, Input, Select, DatePicker, InputNumber, message, Modal } from "an
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastRegisteredStudent, createStudent } from "../../features/studentSlice";
 import { getClassData } from "../../features/schoolClassSlice";
+import {
+  UserOutlined,
+  ProfileOutlined,
+  ManOutlined,
+  WomanOutlined,
+  CheckOutlined,
+  LeftOutlined,
+  RightOutlined,
+  InfoCircleOutlined,
+} from "@ant-design/icons";
+import { pageWrapper } from "../../styles/pageStyles.js";
 
 const { TextArea } = Input;
 
 const TABS = [
-  { key: "student", label: "Student", icon: "👤", step: 1 },
-  { key: "other", label: "Details", icon: "📋", step: 2 },
-  { key: "father", label: "Father", icon: "👨", step: 3 },
-  { key: "mother", label: "Mother", icon: "👩", step: 4 },
+  { key: "student", label: "Student",  icon: <UserOutlined />,    step: 1 },
+  { key: "other",   label: "Details",  icon: <ProfileOutlined />, step: 2 },
+  { key: "father",  label: "Father",   icon: <ManOutlined />,     step: 3 },
+  { key: "mother",  label: "Mother",   icon: <WomanOutlined />,   step: 4 },
 ];
 
+const TAB_KEYS = TABS.map(t => t.key);
 
-const renderCredentialLine = (label, creds) => {
+/* ── Credential block inside success modal ── */
+const CredentialBlock = ({ label, creds }) => {
   if (!creds) return null;
   return (
-    <div key={label} style={{ marginBottom: 16, padding: "5px", background: "#f8f7ff", borderRadius: 10, borderLeft: "3px solid #1677ff" }}>
-      <div style={{ fontWeight: 600, color: "#4a3fa8", marginBottom: 6, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
-      <div style={{ fontSize: 13, color: "#555", marginBottom: 2 }}>Login ID: <span style={{ fontWeight: 500, color: "#222" }}>{creds.loginId || "—"}</span></div>
-      <div style={{ fontSize: 13, color: "#555" }}>Password: <span style={{ fontWeight: 500, color: "#222" }}>{creds.password || "Already exists (unchanged)"}</span></div>
+    <div style={{
+      marginBottom: 12,
+      padding: "12px 14px",
+      background: "var(--primary-light)",
+      borderRadius: 10,
+      borderLeft: "3px solid var(--primary)",
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 2 }}>
+        Login ID: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{creds.loginId || "—"}</span>
+      </div>
+      <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+        Password: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{creds.password || "Already exists (unchanged)"}</span>
+      </div>
     </div>
   );
 };
 
-
-
+/* ── Section heading ── */
 const SectionHeading = ({ children }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, color: "#b0a8f5", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 20, marginTop: 4, paddingBottom: 8, borderBottom: "1px solid #f0eeff" }}>
+  <div style={{
+    fontSize: 11, fontWeight: 700,
+    color: "var(--text-muted)",
+    textTransform: "uppercase",
+    letterSpacing: "0.1em",
+    marginBottom: 18, marginTop: 6,
+    paddingBottom: 8,
+    borderBottom: "1px solid var(--border-muted)",
+  }}>
     {children}
   </div>
 );
 
-const inputStyle = {
-  borderRadius: 5,
-  border: "1.5px solid #69b1ff",
-  fontSize: 12,
-  height: 30,
-  background: "#fdfcff",
-  color: "#1a1a2e",
-};
-
-const selectStyle = {
-  width: "100%",
-};
+/* ── Info hint banner ── */
+const InfoHint = ({ children }) => (
+  <div style={{
+    display: "flex", alignItems: "flex-start", gap: 10,
+    padding: "12px 16px",
+    background: "var(--primary-light)",
+    border: "1px solid rgba(124,58,237,0.15)",
+    borderRadius: 10,
+    marginTop: 10,
+  }}>
+    <InfoCircleOutlined style={{ color: "var(--primary)", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
+    <span style={{ fontSize: 13, color: "var(--primary)", lineHeight: 1.5 }}>{children}</span>
+  </div>
+);
 
 const AdmissionForm = () => {
   const [form] = Form.useForm();
- 
   const dispatch = useDispatch();
-  const tabKeys = ["student", "other", "father", "mother"];
-  const [activeTab, setActiveTab] = useState("student");
-  const currentIndex = tabKeys.indexOf(activeTab);
 
-  const { lastStudent = [], registrationNumber } = useSelector((state) => state.students);
-  const { user } = useSelector((state) => state.auth);
-  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
-  const schoolId = user?.school?._id;
-  const { selectedAcademicYear } = useSelector((state) => state.academicYear);
-  const academicYearId = selectedAcademicYear?._id;
-  const [sections, setSections] = useState([]);
+  const [activeTab, setActiveTab]   = useState("student");
+  const [sections, setSections]     = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const currentIndex = TAB_KEYS.indexOf(activeTab);
+
+  const { lastStudent = [], registrationNumber } = useSelector(s => s.students);
+  const { user }                                 = useSelector(s => s.auth);
+  const { schoolClasses = [] }                   = useSelector(s => s.schoolClass || {});
+  const { selectedAcademicYear }                 = useSelector(s => s.academicYear);
+
+  const schoolId       = user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
   useEffect(() => {
     if (schoolId && academicYearId) {
@@ -71,14 +106,12 @@ const AdmissionForm = () => {
   }, [schoolId, academicYearId, dispatch]);
 
   useEffect(() => {
-    if (registrationNumber) {
-      form.setFieldsValue({ registrationNumber });
-    }
+    if (registrationNumber) form.setFieldsValue({ registrationNumber });
   }, [registrationNumber, form]);
 
   const handleClassChange = (schoolClassId) => {
-    const selectedClass = schoolClasses.find((c) => c._id === schoolClassId);
-    setSections(selectedClass?.sections || []);
+    const cls = schoolClasses.find(c => c._id === schoolClassId);
+    setSections(cls?.sections || []);
     form.setFieldsValue({ sectionId: undefined });
   };
 
@@ -91,19 +124,19 @@ const AdmissionForm = () => {
     try {
       const payload = {
         studentData: {
-          name: values.studentName,
-          email: values.email,
+          name:        values.studentName,
+          email:       values.email,
           dateOfBirth: values.dateOfBirth?.format("YYYY-MM-DD"),
-          gender: values.gender,
-          address: values.address,
-          bloodGroup: values.bloodGroup,
+          gender:      values.gender,
+          address:     values.address,
+          bloodGroup:  values.bloodGroup,
         },
         fatherData: { name: values.fatherName, email: values.fatherEmail, mobile: values.fatherMobile },
         motherData: { name: values.motherName, email: values.motherEmail, mobile: values.motherMobile },
         schoolId,
         academicYearId,
         schoolClassId: values.schoolClassId,
-        sectionId: values.sectionId,
+        sectionId:     values.sectionId,
       };
 
       const res = await dispatch(createStudent(payload));
@@ -114,17 +147,17 @@ const AdmissionForm = () => {
         if (credentials) {
           Modal.success({
             title: (
-              <span style={{ fontFamily: "'Clash Display', sans-serif", fontSize: 18, color: "#3b35a8" }}>
+              <span style={{ fontSize: 17, fontWeight: 700, color: "var(--primary)" }}>
                 Login Credentials Created
               </span>
             ),
-            width: 520,
+            width: 480,
             icon: null,
             content: (
-              <div style={{ marginTop: 16 }}>
-                {renderCredentialLine("Student", credentials.student)}
-                {renderCredentialLine("Father", credentials.father)}
-                {renderCredentialLine("Mother", credentials.mother)}
+              <div style={{ marginTop: 14 }}>
+                <CredentialBlock label="Student" creds={credentials.student} />
+                <CredentialBlock label="Father"  creds={credentials.father} />
+                <CredentialBlock label="Mother"  creds={credentials.mother} />
               </div>
             ),
           });
@@ -142,41 +175,28 @@ const AdmissionForm = () => {
     }
   };
 
-  const formItemStyle = {
-    marginBottom: 18,
-  };
-
-  //const labelStyle = { fontSize: 12, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.06em" };
-
   return (
-    <div style={{
-      minHeight: "100vh",
-      //background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
-      padding: "24px",
-      fontFamily: "'Inter', -apple-system, sans-serif",
-    }}>
+    <div style={{ ...pageWrapper }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
+        /* ── Form controls ── */
         .adm-form .ant-form-item-label > label {
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          color: #888 !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          color: var(--text-muted) !important;
           text-transform: uppercase !important;
-          letter-spacing: 0.06em !important;
+          letter-spacing: 0.07em !important;
           height: auto !important;
         }
         .adm-form .ant-input,
         .adm-form .ant-input-number,
         .adm-form .ant-input-number-input,
         .adm-form .ant-picker {
-          border-radius: 5px !important;
-          border: 1.5px solid #69b1ff !important;
-          font-size: 14px !important;
-          height: 30px !important;
-          background: #fdfcff !important;
-          color: #1a1a2e !important;
-          width: 100% !important;
+          border-radius: 8px !important;
+          border: 1px solid var(--border-color) !important;
+          font-size: 13px !important;
+          background: var(--surface) !important;
+          color: var(--text-primary) !important;
+          transition: border-color 0.18s, box-shadow 0.18s !important;
         }
         .adm-form .ant-input:focus,
         .adm-form .ant-input-number:focus-within,
@@ -184,468 +204,465 @@ const AdmissionForm = () => {
         .adm-form .ant-input:hover,
         .adm-form .ant-input-number:hover,
         .adm-form .ant-picker:hover {
-          border-color: #1677ff !important;
-          box-shadow: 0 0 0 3px rgba(124, 111, 247, 0.1) !important;
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 2px var(--primary-light) !important;
         }
         .adm-form textarea.ant-input {
           height: auto !important;
           min-height: 80px !important;
-          padding-top: 10px !important;
+          padding-top: 8px !important;
         }
         .adm-form .ant-select .ant-select-selector {
-          border-radius: 5px !important;
-          border: 1.5px solid #69b1ff !important;
-          font-size: 12px !important;
-          height: 30px !important;
-          background: #fdfcff !important;
-          align-items: center !important;
+          border-radius: 8px !important;
+          border: 1px solid var(--border-color) !important;
+          font-size: 13px !important;
+          background: var(--surface) !important;
+          color: var(--text-primary) !important;
         }
         .adm-form .ant-select:hover .ant-select-selector,
         .adm-form .ant-select-focused .ant-select-selector {
-          border-color: #1677ff !important;
-          box-shadow: 0 0 0 3px rgba(124, 111, 247, 0.1) !important;
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 2px var(--primary-light) !important;
         }
+        .adm-form .ant-picker { width: 100% !important; }
+        .adm-form .ant-input-number { width: 100% !important; }
         .adm-form .ant-form-item-explain-error {
           font-size: 11px !important;
           margin-top: 3px !important;
         }
         .adm-form .ant-input[disabled] {
-          background: #f3f0ff !important;
-          color: #1677ff !important;
-          font-weight: 600 !important;
-          border-color: #ddd8ff !important;
+          background: var(--primary-light) !important;
+          color: var(--primary) !important;
+          font-weight: 700 !important;
+          border-color: var(--border-muted) !important;
+          cursor: default !important;
         }
-        .tab-btn {
+        /* ── Step tabs ── */
+        .adm-tab {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 6px;
-          padding: 14px 20px;
+          gap: 5px;
+          padding: 13px 18px;
           border: none;
           background: transparent;
           cursor: pointer;
           position: relative;
-          transition: all 0.2s;
-          min-width: 90px;
+          transition: opacity 0.2s;
+          min-width: 72px;
         }
-        .tab-btn .step-circle {
-          width: 36px;
-          height: 36px;
+        .adm-tab .step-circle {
+          width: 34px; height: 34px;
           border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          font-weight: 700;
-          transition: all 0.2s;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; font-weight: 700;
+          transition: all 0.22s;
         }
-        .tab-btn .step-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.06em;
+        .adm-tab .step-label {
+          font-size: 10px; font-weight: 700;
+          letter-spacing: 0.07em;
           text-transform: uppercase;
-          transition: all 0.2s;
+          transition: color 0.2s;
         }
-        .tab-btn.active .step-circle {
-          background: #1677ff;
+        .adm-tab.active .step-circle {
+          background: var(--primary);
           color: #fff;
-          box-shadow: 0 4px 14px rgba(124, 111, 247, 0.4);
+          box-shadow: 0 4px 12px rgba(124,58,237,0.35);
         }
-        .tab-btn.active .step-label { color: #5a50c9; }
-        .tab-btn.done .step-circle {
-          background: #d4f0e8;
-          color: #1d9e75;
-          border: 2px solid #5DCAA5;
+        .adm-tab.active .step-label { color: var(--primary); }
+        .adm-tab.done .step-circle {
+          background: var(--success-light);
+          color: var(--success);
+          border: 2px solid var(--success);
         }
-        .tab-btn.done .step-label { color: #1d9e75; }
-        .tab-btn.idle .step-circle {
-          background: #f0eeff;
-          color: #c5bef5;
-          border: 2px solid #e4dfff;
+        .adm-tab.done .step-label { color: var(--success); }
+        .adm-tab.idle .step-circle {
+          background: var(--surface-soft);
+          color: var(--text-disabled);
+          border: 2px solid var(--border-color);
         }
-        .tab-btn.idle .step-label { color: #c5bef5; }
-        .tab-btn::after {
+        .adm-tab.idle .step-label { color: var(--text-disabled); }
+        .adm-tab::after {
           content: '';
           position: absolute;
-          bottom: 0;
-          left: 50%;
+          bottom: 0; left: 50%;
           transform: translateX(-50%);
-          height: 3px;
-          width: 0;
-          background: #1677ff;
+          height: 2px; width: 0;
+          background: var(--primary);
           border-radius: 2px 2px 0 0;
-          transition: width 0.2s;
+          transition: width 0.25s;
         }
-        .tab-btn.active::after { width: 60%; }
-        .progress-connector {
-          flex: 1;
-          height: 2px;
-          background: #69b1ff;
-          margin-top: -20px;
-          position: relative;
-          top: -6px;
+        .adm-tab.active::after { width: 52%; }
+        .adm-connector {
+          flex: 1; height: 2px;
+          background: var(--border-color);
+          position: relative; top: -10px;
+          transition: background 0.3s;
         }
-        .progress-connector.done { background: #5DCAA5; }
-        .nav-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 0 28px;
-          height: 30px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 400;
-          cursor: pointer;
-          border: none;
+        .adm-connector.done { background: var(--success); }
+        /* ── Nav buttons ── */
+        .adm-btn {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 0 22px; height: 40px;
+          border-radius: 10px;
+          font-size: 13px; font-weight: 600;
+          cursor: pointer; border: none;
           transition: all 0.2s;
-          letter-spacing: 0.02em;
         }
-        .nav-btn:disabled {
-          opacity: 0.35;
-          cursor: not-allowed;
+        .adm-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .adm-btn.secondary {
+          background: var(--surface-soft);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-color);
         }
-        .nav-btn.secondary {
-          background: #f0eeff;
-          color: #1677ff;
-        }
-        .nav-btn.secondary:not(:disabled):hover {
-          background: #e4dfff;
-          transform: translateX(-2px);
-        }
-        .nav-btn.primary {
-          background: linear-gradient(135deg, #1677ff 0%, #5a50c9 100%);
+        .adm-btn.secondary:not(:disabled):hover { background: var(--surface-soft-hover); }
+        .adm-btn.primary {
+          background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
           color: #fff;
-          box-shadow: 0 4px 14px rgba(124, 111, 247, 0.35);
+          box-shadow: 0 4px 12px rgba(124,58,237,0.3);
         }
-        .nav-btn.primary:not(:disabled):hover {
+        .adm-btn.primary:not(:disabled):hover {
+          box-shadow: 0 6px 18px rgba(124,58,237,0.4);
           transform: translateX(2px);
-          box-shadow: 0 6px 20px rgba(124, 111, 247, 0.45);
         }
-        .nav-btn.submit {
-          background: linear-gradient(135deg, #1d9e75 0%, #0f6e56 100%);
+        .adm-btn.submit {
+          background: linear-gradient(135deg, #10b981 0%, #0d9488 100%);
           color: #fff;
-          box-shadow: 0 4px 14px rgba(29, 158, 117, 0.35);
+          box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+          padding: 0 28px;
         }
-        .nav-btn.submit:not(:disabled):hover {
-          box-shadow: 0 6px 20px rgba(29, 158, 117, 0.45);
+        .adm-btn.submit:not(:disabled):hover {
+          box-shadow: 0 6px 18px rgba(16,185,129,0.42);
         }
-        .field-row {
+        /* ── Field grid ── */
+        .adm-row {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 0 20px;
         }
-        .adm-card {
-          background: #fff;
-          border-radius: 20px;
-          box-shadow: 0 8px 40px rgba(124, 111, 247, 0.1), 0 2px 8px rgba(0,0,0,0.04);
-          overflow: hidden;
-          width: 100%;
-         
+        .adm-row-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0 20px;
         }
-        .info-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 3px 10px;
-          background: #f3f0ff;
-          border-radius: 20px;
-          font-size: 11px;
-          font-weight: 600;
-          color: #1677ff;
+        @media (max-width: 580px) {
+          .adm-row, .adm-row-2 { grid-template-columns: 1fr; }
+          .adm-tab { min-width: 56px; padding: 10px 8px; }
+          .adm-tab .step-label { display: none; }
         }
       `}</style>
 
-      <div className="adm-card">
-        {/* Header */}
+      <div style={{
+        background: "var(--surface)",
+        borderRadius: 20,
+        border: "1px solid var(--border-muted)",
+        boxShadow: "var(--shadow-strong)",
+        overflow: "hidden",
+      }}>
+
+        {/* ── Card Header ── */}
         <div style={{
-          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
-          padding: "10px",
+          background: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
+          padding: "18px 24px",
           position: "relative",
           overflow: "hidden",
         }}>
-          <div style={{
-            position: "absolute", top: -30, right: -30, width: 140, height: 140,
-            borderRadius: "50%", background: "rgba(255,255,255,0.07)",
-          }} />
-          <div style={{
-            position: "absolute", bottom: -50, right: 80, width: 200, height: 200,
-            borderRadius: "50%", background: "rgba(255,255,255,0.05)",
-          }} />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
+          <div style={{ position: "absolute", top: -28, right: -28, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+          <div style={{ position: "absolute", bottom: -40, right: 90, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
                 School Management
               </div>
-              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
+              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
                 New Student Admission
               </h1>
             </div>
-            {lastStudent && lastStudent.registrationNumber && (
-              <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "8px 16px", backdropFilter: "blur(10px)" }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Last Reg No.</div>
-                <div style={{ fontSize: 16, color: "#fff", fontWeight: 700 }}>{lastStudent.registrationNumber}</div>
+            {lastStudent?.registrationNumber && (
+              <div style={{
+                background: "rgba(255,255,255,0.14)",
+                borderRadius: 12, padding: "8px 16px",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                textAlign: "right",
+              }}>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.65)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Last Reg. No.
+                </div>
+                <div style={{ fontSize: 16, color: "#fff", fontWeight: 700 }}>
+                  {lastStudent.registrationNumber}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Tab Navigation */}
+        {/* ── Step Tabs ── */}
         <div style={{
           display: "flex",
           alignItems: "center",
-          padding: "0 24px",
-          borderBottom: "1px solid #f0eeff",
-          background: "#fefefe",
+          padding: "0 16px",
+          borderBottom: "1px solid var(--border-muted)",
+          background: "var(--surface)",
         }}>
           {TABS.map((tab, i) => (
             <React.Fragment key={tab.key}>
               <button
-                className={`tab-btn ${activeTab === tab.key ? "active" : currentIndex > i ? "done" : "idle"}`}
-                onClick={() => setActiveTab(tab.key)}
                 type="button"
+                className={`adm-tab ${activeTab === tab.key ? "active" : currentIndex > i ? "done" : "idle"}`}
+                onClick={() => setActiveTab(tab.key)}
               >
                 <div className="step-circle">
-                  {currentIndex > i ? "✓" : tab.step}
+                  {currentIndex > i ? <CheckOutlined style={{ fontSize: 13 }} /> : tab.step}
                 </div>
                 <span className="step-label">{tab.label}</span>
               </button>
               {i < TABS.length - 1 && (
-                <div className={`progress-connector ${currentIndex > i ? "done" : ""}`} />
+                <div className={`adm-connector ${currentIndex > i ? "done" : ""}`} />
               )}
             </React.Fragment>
           ))}
         </div>
 
-        {/* Form Body */}
-        <div style={{ padding: "20px" }}>
-        <Form className="adm-form" layout="vertical" form={form} onFinish={() => onFinish(form.getFieldsValue(true))}>
+        {/* ── Form Body ── */}
+        <div style={{ padding: "24px" }}>
+          <Form
+            className="adm-form"
+            layout="vertical"
+            form={form}
+            onFinish={() => onFinish(form.getFieldsValue(true))}
+          >
 
-            {/* ── STUDENT INFO ── */}
+            {/* ── STUDENT ── */}
             {activeTab === "student" && (
               <div>
                 <SectionHeading>Basic Information</SectionHeading>
-                <div className="field-row">
-                  <Form.Item name="studentName" label="Student Name" rules={[{ required: true, message: "Required" }]} style={formItemStyle}>
-                    <Input placeholder="Full name" style={inputStyle} />
+                <div className="adm-row">
+                  <Form.Item name="studentName" label="Student Name" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
+                    <Input placeholder="Full name" />
                   </Form.Item>
-                  <Form.Item name="email" label="Student Email" rules={[{ required: true, type: "email", message: "Valid email required" }]} style={formItemStyle}>
-                    <Input placeholder="student@email.com" style={inputStyle} />
+                  <Form.Item name="email" label="Student Email" rules={[{ required: true, type: "email", message: "Valid email required" }]} style={{ marginBottom: 18 }}>
+                    <Input placeholder="student@email.com" />
                   </Form.Item>
-                  <Form.Item name="mobileNumber" label="Student Mobile" rules={[{ required: true, message: "Required" }]} style={formItemStyle}>
-                    <Input placeholder="10-digit number" maxLength={10} style={inputStyle} />
+                  <Form.Item name="mobileNumber" label="Student Mobile" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
+                    <Input placeholder="10-digit number" maxLength={10} />
                   </Form.Item>
                 </div>
 
                 <SectionHeading>Class & Enrollment</SectionHeading>
-                <div className="field-row">
-                  <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Select a class" }]} style={formItemStyle}>
+                <div className="adm-row">
+                  <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Select a class" }]} style={{ marginBottom: 18 }}>
                     <Select
                       placeholder="Select class"
                       onChange={handleClassChange}
-                      style={selectStyle}
-                      options={schoolClasses.map((c) => ({ label: c.name, value: c._id }))}
+                      options={schoolClasses.map(c => ({ label: c.name, value: c._id }))}
                     />
                   </Form.Item>
-                  <Form.Item name="sectionId" label="Section" rules={[{ required: true, message: "Select a section" }]} style={formItemStyle}>
+                  <Form.Item name="sectionId" label="Section" rules={[{ required: true, message: "Select a section" }]} style={{ marginBottom: 18 }}>
                     <Select
                       placeholder="Select section"
                       disabled={!sections.length}
-                      style={selectStyle}
-                      options={sections.map((s) => ({ label: s.name, value: s._id }))}
+                      options={sections.map(s => ({ label: s.name, value: s._id }))}
                     />
                   </Form.Item>
-                  <Form.Item name="admissionDate" label="Admission Date" rules={[{ required: true, message: "Required" }]} style={formItemStyle}>
-                    <DatePicker style={{ width: "100%" }} placeholder="Select date" />
+                  <Form.Item name="admissionDate" label="Admission Date" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
+                    <DatePicker placeholder="Select date" />
                   </Form.Item>
                 </div>
 
-                <div className="field-row">
-                  <Form.Item name="registrationNumber" label="Registration No." style={formItemStyle}>
+                <div className="adm-row">
+                  <Form.Item name="registrationNumber" label="Registration No." style={{ marginBottom: 18 }}>
                     <Input disabled />
                   </Form.Item>
-                  <Form.Item name="smsMobile" label="SMS Mobile" style={formItemStyle}>
+                  <Form.Item name="smsMobile" label="SMS Mobile" style={{ marginBottom: 18 }}>
                     <Input placeholder="For SMS alerts" maxLength={10} />
                   </Form.Item>
-                  <Form.Item name="feeDiscount" label="Fee Discount (%)" style={formItemStyle}>
-                    <InputNumber style={{ width: "100%" }} placeholder="0" min={0} max={100} />
+                  <Form.Item name="feeDiscount" label="Fee Discount (%)" style={{ marginBottom: 18 }}>
+                    <InputNumber placeholder="0" min={0} max={100} />
                   </Form.Item>
                 </div>
               </div>
             )}
 
-            {/* ── OTHER INFO ── */}
+            {/* ── DETAILS ── */}
             {activeTab === "other" && (
               <div>
                 <SectionHeading>Personal Details</SectionHeading>
-                <div className="field-row">
-                  <Form.Item name="dateOfBirth" label="Date of Birth" rules={[{ required: true, message: "Required" }]} style={formItemStyle}>
-                    <DatePicker style={{ width: "100%" }} />
+                <div className="adm-row">
+                  <Form.Item name="dateOfBirth" label="Date of Birth" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
+                    <DatePicker />
                   </Form.Item>
-                  <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Required" }]} style={formItemStyle}>
-                    <Select placeholder="Select" style={selectStyle} options={[{ value: "Male", label: "Male" }, { value: "Female", label: "Female" }]} />
+                  <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
+                    <Select placeholder="Select" options={[{ value: "Male" }, { value: "Female" }]} />
                   </Form.Item>
-                  <Form.Item name="bloodGroup" label="Blood Group" style={formItemStyle}>
-                    <Select placeholder="Select" style={selectStyle} options={["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(b => ({ value: b }))} />
+                  <Form.Item name="bloodGroup" label="Blood Group" style={{ marginBottom: 18 }}>
+                    <Select placeholder="Select" options={["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(b => ({ value: b }))} />
                   </Form.Item>
                 </div>
 
-                <div className="field-row">
-                  <Form.Item name="cast" label="Caste" style={formItemStyle}>
-                    <Select placeholder="Select" style={selectStyle} options={["General", "OBC", "SC", "ST", "Other"].map(c => ({ value: c }))} />
+                <div className="adm-row">
+                  <Form.Item name="cast" label="Caste" style={{ marginBottom: 18 }}>
+                    <Select placeholder="Select" options={["General","OBC","SC","ST","Other"].map(c => ({ value: c }))} />
                   </Form.Item>
-                  <Form.Item name="religion" label="Religion" style={formItemStyle}>
-                    <Select placeholder="Select" style={selectStyle} options={["Hindu", "Muslim", "Christian", "Sikh", "Other"].map(r => ({ value: r }))} />
+                  <Form.Item name="religion" label="Religion" style={{ marginBottom: 18 }}>
+                    <Select placeholder="Select" options={["Hindu","Muslim","Christian","Sikh","Other"].map(r => ({ value: r }))} />
                   </Form.Item>
-                  <Form.Item name="birthFormId" label="Birth Form ID" style={formItemStyle}>
+                  <Form.Item name="birthFormId" label="Birth Form ID" style={{ marginBottom: 18 }}>
                     <Input placeholder="Official birth form ID" />
                   </Form.Item>
                 </div>
 
-                <div className="field-row">
-                  <Form.Item name="siblings" label="No. of Siblings" style={formItemStyle}>
-                    <InputNumber style={{ width: "100%" }} min={0} placeholder="0" />
+                <div className="adm-row">
+                  <Form.Item name="siblings" label="No. of Siblings" style={{ marginBottom: 18 }}>
+                    <InputNumber placeholder="0" min={0} />
                   </Form.Item>
-                  <Form.Item name="orphan" label="Orphan" style={formItemStyle}>
-                    <Select placeholder="Select" style={selectStyle} options={[{ value: "Yes" }, { value: "No" }]} />
+                  <Form.Item name="orphan" label="Orphan" style={{ marginBottom: 18 }}>
+                    <Select placeholder="Select" options={[{ value: "Yes" }, { value: "No" }]} />
                   </Form.Item>
-                  <Form.Item name="osc" label="OSC" style={formItemStyle}>
-                    <Select placeholder="Select" style={selectStyle} options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
+                  <Form.Item name="osc" label="OSC" style={{ marginBottom: 18 }}>
+                    <Select placeholder="Select" options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
                   </Form.Item>
                 </div>
 
-                <Form.Item name="identificationMark" label="Identification Mark" style={formItemStyle}>
+                <Form.Item name="identificationMark" label="Identification Mark" style={{ marginBottom: 18 }}>
                   <Input placeholder="Any visible identification mark" />
                 </Form.Item>
 
                 <SectionHeading>Additional Information</SectionHeading>
-                <div className="field-row" style={{ gridTemplateColumns: "1fr 1fr" }}>
-                  <Form.Item name="address" label="Address" style={formItemStyle}>
+                <div className="adm-row-2">
+                  <Form.Item name="address" label="Address" style={{ marginBottom: 18 }}>
                     <TextArea rows={3} placeholder="Residential address" />
                   </Form.Item>
-                  <Form.Item name="disease" label="Medical Conditions" style={formItemStyle}>
+                  <Form.Item name="disease" label="Medical Conditions" style={{ marginBottom: 18 }}>
                     <TextArea rows={3} placeholder="Any known medical conditions" />
                   </Form.Item>
-                  <Form.Item name="family" label="Family Info" style={formItemStyle}>
+                  <Form.Item name="family" label="Family Info" style={{ marginBottom: 18 }}>
                     <TextArea rows={3} placeholder="Additional family information" />
                   </Form.Item>
-                  <Form.Item name="notes" label="Notes" style={formItemStyle}>
+                  <Form.Item name="notes" label="Notes" style={{ marginBottom: 18 }}>
                     <TextArea rows={3} placeholder="Any other notes" />
                   </Form.Item>
                 </div>
               </div>
             )}
 
-            {/* ── FATHER INFO ── */}
+            {/* ── FATHER ── */}
             {activeTab === "father" && (
               <div>
                 <SectionHeading>Father's Information</SectionHeading>
-                <div className="field-row">
-                  <Form.Item name="fatherName" label="Father Name" rules={[{ required: true, message: "Required" }]} style={formItemStyle}>
+                <div className="adm-row">
+                  <Form.Item name="fatherName" label="Father Name" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
                     <Input placeholder="Full name" />
                   </Form.Item>
-                  <Form.Item name="fatherMobile" label="Mobile Number" rules={[{ required: true, message: "Required" }]} style={formItemStyle}>
+                  <Form.Item name="fatherMobile" label="Mobile Number" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
                     <Input placeholder="10-digit number" />
                   </Form.Item>
-                  <Form.Item name="fatherEmail" label="Email Address" style={formItemStyle}>
+                  <Form.Item name="fatherEmail" label="Email Address" style={{ marginBottom: 18 }}>
                     <Input placeholder="father@email.com" />
                   </Form.Item>
                 </div>
-                <div className="field-row">
-                  <Form.Item name="fatherOccupation" label="Occupation" style={formItemStyle}>
+                <div className="adm-row">
+                  <Form.Item name="fatherOccupation" label="Occupation" style={{ marginBottom: 18 }}>
                     <Input placeholder="e.g. Engineer, Teacher" />
                   </Form.Item>
-                  <Form.Item name="fatherEducation" label="Education Qualification" style={formItemStyle}>
+                  <Form.Item name="fatherEducation" label="Education" style={{ marginBottom: 18 }}>
                     <Input placeholder="e.g. B.Tech, MBA" />
                   </Form.Item>
-                  <Form.Item name="fatherIncome" label="Annual Income (₹)" style={formItemStyle}>
-                    <InputNumber style={{ width: "100%" }} placeholder="0" min={0} />
+                  <Form.Item name="fatherIncome" label="Annual Income (₹)" style={{ marginBottom: 18 }}>
+                    <InputNumber placeholder="0" min={0} />
                   </Form.Item>
                 </div>
-                <div style={{ marginTop: 8, padding: "14px 18px", background: "#f8f7ff", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>💡</span>
-                  <span style={{ fontSize: 13, color: "#1677ff" }}>Father's login credentials will be auto-generated after successful admission.</span>
-                </div>
+                <InfoHint>
+                  Father's login credentials will be auto-generated after successful admission.
+                </InfoHint>
               </div>
             )}
 
-            {/* ── MOTHER INFO ── */}
+            {/* ── MOTHER ── */}
             {activeTab === "mother" && (
               <div>
                 <SectionHeading>Mother's Information</SectionHeading>
-                <div className="field-row">
-                  <Form.Item name="motherName" label="Mother Name" style={formItemStyle}>
+                <div className="adm-row">
+                  <Form.Item name="motherName" label="Mother Name" style={{ marginBottom: 18 }}>
                     <Input placeholder="Full name" />
                   </Form.Item>
-                  <Form.Item name="motherMobile" label="Mobile Number" style={formItemStyle}>
+                  <Form.Item name="motherMobile" label="Mobile Number" style={{ marginBottom: 18 }}>
                     <Input placeholder="10-digit number" />
                   </Form.Item>
-                  <Form.Item name="motherEmail" label="Email Address" style={formItemStyle}>
+                  <Form.Item name="motherEmail" label="Email Address" style={{ marginBottom: 18 }}>
                     <Input placeholder="mother@email.com" />
                   </Form.Item>
                 </div>
-                <div className="field-row">
-                  <Form.Item name="motherOccupation" label="Occupation" style={formItemStyle}>
+                <div className="adm-row">
+                  <Form.Item name="motherOccupation" label="Occupation" style={{ marginBottom: 18 }}>
                     <Input placeholder="e.g. Doctor, Homemaker" />
                   </Form.Item>
-                  <Form.Item name="motherEducation" label="Education Qualification" style={formItemStyle}>
+                  <Form.Item name="motherEducation" label="Education" style={{ marginBottom: 18 }}>
                     <Input placeholder="e.g. M.A., B.Ed" />
                   </Form.Item>
-                  <Form.Item name="motherIncome" label="Annual Income (₹)" style={formItemStyle}>
-                    <InputNumber style={{ width: "100%" }} placeholder="0" min={0} />
+                  <Form.Item name="motherIncome" label="Annual Income (₹)" style={{ marginBottom: 18 }}>
+                    <InputNumber placeholder="0" min={0} />
                   </Form.Item>
                 </div>
-                <div style={{ marginTop: 8, padding: "14px 18px", background: "#f8f7ff", borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 20 }}>💡</span>
-                  <span style={{ fontSize: 13, color: "#1677ff" }}>Mother's login credentials will be auto-generated after successful admission.</span>
-                </div>
+                <InfoHint>
+                  Mother's login credentials will be auto-generated after successful admission.
+                </InfoHint>
               </div>
             )}
 
-            {/* Navigation */}
+            {/* ── Navigation ── */}
             <div style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: 36,
-              paddingTop: 24,
-              borderTop: "1px solid #f0eeff",
+              marginTop: 32,
+              paddingTop: 20,
+              borderTop: "1px solid var(--border-muted)",
             }}>
               <button
                 type="button"
-                className="nav-btn secondary"
+                className="adm-btn secondary"
                 disabled={currentIndex === 0}
-                onClick={() => setActiveTab(tabKeys[currentIndex - 1])}
+                onClick={() => setActiveTab(TAB_KEYS[currentIndex - 1])}
               >
-                ← Previous
+                <LeftOutlined style={{ fontSize: 11 }} /> Previous
               </button>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {tabKeys.map((_, i) => (
-                  <div key={i} style={{
-                    width: i === currentIndex ? 24 : 8,
-                    height: 8,
-                    borderRadius: 4,
-                    background: i === currentIndex ? "#1677ff" : i < currentIndex ? "#5DCAA5" : "#69b1ff",
-                    transition: "all 0.3s",
-                  }} />
+              {/* Step dots */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {TAB_KEYS.map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width:      i === currentIndex ? 22 : 7,
+                      height:     7,
+                      borderRadius: 4,
+                      background: i === currentIndex ? "var(--primary)"
+                                : i < currentIndex  ? "var(--success)"
+                                : "var(--border-color)",
+                      transition: "all 0.3s",
+                    }}
+                  />
                 ))}
               </div>
 
-              {currentIndex < tabKeys.length - 1 ? (
+              {currentIndex < TAB_KEYS.length - 1 ? (
                 <button
                   type="button"
-                  className="nav-btn primary"
-                  onClick={() => setActiveTab(tabKeys[currentIndex + 1])}
+                  className="adm-btn primary"
+                  onClick={() => setActiveTab(TAB_KEYS[currentIndex + 1])}
                 >
-                  Next →
+                  Next <RightOutlined style={{ fontSize: 11 }} />
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="nav-btn submit"
+                  className="adm-btn submit"
                   disabled={submitting}
                 >
-                  {submitting ? "Submitting…" : "✓ Submit Admission"}
+                  <CheckOutlined style={{ fontSize: 13 }} />
+                  {submitting ? "Submitting…" : "Submit Admission"}
                 </button>
               )}
             </div>

@@ -56,7 +56,7 @@ export default function TimeSlotManager() {
     }
   };
   return (
-    <Space direction="vertical" className="w-full" size="large">
+    <Space direction="vertical" className="w-full px-6 py-6" size="large">
       <Card className="shadow-sm">
         <Space className="w-full" direction="vertical">
           <Typography.Title level={3}>Time Slot Manager</Typography.Title>
