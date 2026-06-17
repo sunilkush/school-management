@@ -167,7 +167,8 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
 /* ── Main component ──────────────────────────────────────────────── */
 const LeaveManagement = () => {
   const dispatch = useDispatch();
-  const { requests = [], loading, saving } = useSelector((s) => s.leaveRequests || {});
+  const { requests: _raw = [], loading, saving } = useSelector((s) => s.leaveRequests || {});
+  const requests = Array.isArray(_raw) ? _raw : [];
   const { user: currentUser }              = useSelector((s) => s.auth || {});
 
   const schoolId = currentUser?.school?._id;

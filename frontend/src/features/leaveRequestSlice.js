@@ -97,12 +97,11 @@ const leaveRequestSlice = createSlice({
       })
       .addCase(fetchLeaveRequests.fulfilled, (state, action) => {
         state.loading = false;
-        const payload = action.payload;
-        state.requests = payload.requests ?? payload;
-        state.total =
-          payload.total !== undefined
-            ? payload.total
-            : (payload.requests ?? payload).length;
+        // ApiResponse wraps real data under .data: { requests, total, page, limit }
+        const inner = action.payload?.data ?? action.payload;
+        const arr   = inner?.requests ?? (Array.isArray(inner) ? inner : []);
+        state.requests = Array.isArray(arr) ? arr : [];
+        state.total    = inner?.total ?? state.requests.length;
       })
       .addCase(fetchLeaveRequests.rejected, (state, action) => {
         state.loading = false;
@@ -117,7 +116,8 @@ const leaveRequestSlice = createSlice({
       })
       .addCase(getMyLeaveRequests.fulfilled, (state, action) => {
         state.loading = false;
-        state.myRequests = action.payload;
+        const inner = action.payload?.data ?? action.payload;
+        state.myRequests = Array.isArray(inner) ? inner : [];
       })
       .addCase(getMyLeaveRequests.rejected, (state, action) => {
         state.loading = false;
@@ -132,8 +132,9 @@ const leaveRequestSlice = createSlice({
       })
       .addCase(createLeaveRequest.fulfilled, (state, action) => {
         state.saving = false;
-        state.requests.unshift(action.payload);
-        state.myRequests.unshift(action.payload);
+        const newRequest = action.payload?.data ?? action.payload;
+        state.requests.unshift(newRequest);
+        state.myRequests.unshift(newRequest);
       })
       .addCase(createLeaveRequest.rejected, (state, action) => {
         state.saving = false;
@@ -142,14 +143,14 @@ const leaveRequestSlice = createSlice({
 
     // approveLeaveRequest
     builder.addCase(approveLeaveRequest.fulfilled, (state, action) => {
-      const updated = action.payload;
+      const updated = action.payload?.data ?? action.payload;
       const idx = state.requests.findIndex((r) => r._id === updated._id);
       if (idx !== -1) state.requests[idx] = updated;
     });
 
     // rejectLeaveRequest
     builder.addCase(rejectLeaveRequest.fulfilled, (state, action) => {
-      const updated = action.payload;
+      const updated = action.payload?.data ?? action.payload;
       const idx = state.requests.findIndex((r) => r._id === updated._id);
       if (idx !== -1) state.requests[idx] = updated;
     });
