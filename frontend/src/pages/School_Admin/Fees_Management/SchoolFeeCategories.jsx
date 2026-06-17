@@ -1,176 +1,231 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
-  Select,
-  Table,
-  Button,
-  Modal,
-  Form,
-  Switch,
-  message,
+  Table, Button, Modal, Form, Select, Switch, Popconfirm, Tag, message,
 } from "antd";
-import { Plus } from "lucide-react";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
-import { fetchSchools } from "../../../features/schoolSlice.js";
 import {
-  fetchFeeHeads,
-  createFeeHead,
+  fetchFeeHeads, createFeeHead, updateFeeHead, deleteFeeHead,
 } from "../../../features/headSlice.js";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import { pageWrapper, sectionPanel, tableHeadCss, pill } from "../../../styles/pageStyles";
 
-const { Option } = Select;
+const TABLE_CLS = "fee-cat-tbl";
 
 const FEE_HEAD_TYPES = [
-  "Admission Fee",
-  "Tuition Fee",
-  "Registration Fee",
-  "Transport Fee",
-  "Exam Fee",
-  "Library Fee",
-  "Computer Fee",
-  "Hostel Fee",
-  "Mess Fee",
-  "Sports Fee",
-  "Books Fee",
-  "Uniform Fee",
-  "Fine",
-  "Late Fee Fine",
+  "Admission Fee", "Tuition Fee", "Registration Fee", "Transport Fee",
+  "Exam Fee", "Library Fee", "Computer Fee", "Hostel Fee", "Mess Fee",
+  "Sports Fee", "Books Fee", "Uniform Fee", "Fine", "Late Fee Fine",
 ];
+
+const TYPE_META = {
+  recurring: { color: "#0891b2", label: "Recurring" },
+  "one-time": { color: "#7c3aed", label: "One-Time" },
+  penalty:   { color: "#dc2626", label: "Penalty"  },
+};
 
 const SchoolFeeCategories = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-  const { schools = [] } = useSelector((s) => s.school);
   const { feeHeads = [], loading } = useSelector((s) => s.feeHead);
-  const { user } = useSelector((state) => state.auth); // ✅ current user
+  const { user }                   = useSelector((s) => s.auth);
 
-  const [schoolId, setSchoolId] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  // School Admin always uses their own school — no picker shown
+  const schoolId = user?.school?._id;
 
-  /* ================= LOAD SCHOOLS ================= */
+  const [modalOpen,  setModalOpen]  = useState(false);
+  const [editTarget, setEditTarget] = useState(null); // null = create, object = edit
+  const [saving,     setSaving]     = useState(false);
+
+  /* ── Load fee heads on mount ── */
   useEffect(() => {
-    dispatch(fetchSchools());
-  }, [dispatch]);
-
-  /* ================= SET DEFAULT SCHOOL (CURRENT USER) ================= */
-  useEffect(() => {
-    if (user?.school?._id) {
-      setSchoolId(user.school._id);
-    }
-  }, [user]);
-
-  /* ================= LOAD FEE HEADS ================= */
-  useEffect(() => {
-    if (schoolId) {
-      dispatch(fetchFeeHeads({ schoolId }));
-    }
+    if (schoolId) dispatch(fetchFeeHeads({ schoolId }));
   }, [schoolId, dispatch]);
 
-  /* ================= SUBMIT ================= */
-  const handleSubmit = async (values) => {
-    if (!schoolId) {
-      return message.warning("School not selected");
-    }
+  /* ── Open create modal ── */
+  const openCreate = () => {
+    setEditTarget(null);
+    form.resetFields();
+    form.setFieldsValue({ isEditable: true });
+    setModalOpen(true);
+  };
+
+  /* ── Open edit modal ── */
+  const openEdit = (record) => {
+    setEditTarget(record);
+    form.setFieldsValue({
+      name:       record.name,
+      type:       record.type,
+      isEditable: record.isEditable,
+    });
+    setModalOpen(true);
+  };
+
+  /* ── Submit create / update ── */
+  const handleSubmit = async () => {
     try {
-      setSubmitting(true);
-      await dispatch(
-        createFeeHead({
-          schoolId, // ✅ auto from current user
-          name: values.name,
-          type: values.type,
-          isEditable: values.isEditable,
-        })
-      ).unwrap();
-      message.success("Fee Head Created Successfully");
-      setOpenModal(false);
+      const vals = await form.validateFields();
+      if (!schoolId) return message.error("School not found. Please re-login.");
+      setSaving(true);
+
+      if (editTarget) {
+        await dispatch(updateFeeHead({ id: editTarget._id, data: vals })).unwrap();
+        message.success("Fee head updated");
+      } else {
+        await dispatch(createFeeHead({ schoolId, ...vals })).unwrap();
+        message.success("Fee head created");
+        dispatch(fetchFeeHeads({ schoolId }));
+      }
+      setModalOpen(false);
       form.resetFields();
-      dispatch(fetchFeeHeads({ schoolId }));
     } catch (err) {
-      message.error(err?.message || "Failed to create fee head");
+      if (err?.errorFields) return;
+      message.error(typeof err === "string" ? err : "Operation failed");
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   };
 
-  /* ================= TABLE ================= */
+  /* ── Delete ── */
+  const handleDelete = async (id) => {
+    try {
+      await dispatch(deleteFeeHead(id)).unwrap();
+      message.success("Fee head deleted");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Delete failed");
+    }
+  };
+
+  /* ── Columns ── */
   const columns = [
-    { title: "Fee Head", dataIndex: "name" },
-    { title: "Type", dataIndex: "type" },
     {
-      title: "Editable",
-      render: (r) => (r.isEditable ? "Yes" : "No"),
+      title:  "#",
+      render: (_, __, i) => (
+        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{i + 1}</span>
+      ),
+      width: 44,
+    },
+    {
+      title:     "Fee Head",
+      dataIndex: "name",
+      render:    (v) => (
+        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v || "—"}</span>
+      ),
+    },
+    {
+      title:  "Type",
+      dataIndex: "type",
+      width:  130,
+      render: (v) => {
+        const m = TYPE_META[v];
+        return m ? (
+          <span style={pill(m.color)}>{m.label}</span>
+        ) : (
+          <span style={{ color: "var(--text-muted)" }}>—</span>
+        );
+      },
+    },
+    {
+      title:  "Editable",
+      dataIndex: "isEditable",
+      width:  90,
+      align:  "center",
+      render: (v) => (
+        <Tag color={v ? "green" : "default"}>{v ? "Yes" : "No"}</Tag>
+      ),
+    },
+    {
+      title:  "Actions",
+      width:  110,
+      align:  "center",
+      render: (_, record) => (
+        <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openEdit(record)}
+            style={{ borderColor: "var(--primary)", color: "var(--primary)" }}
+          />
+          <Popconfirm
+            title="Delete this fee head?"
+            description="This cannot be undone."
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDelete(record._id)}
+          >
+            <Button size="small" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </div>
+      ),
     },
   ];
 
-  /* ================= UI ================= */
   return (
-    <div className="p-6 space-y-5 bg-gray-50">
-      {/* HEADER */}
-      <Card>
-        <div className="flex gap-4 items-center">
-          <Select
-            placeholder="Select School"
-            value={schoolId}
-            onChange={setSchoolId}
-            style={{ width: 260 }}
-            disabled={user?.role?.name !== "Super Admin"} // ✅ optional security
-          >
-            {schools.map((s) => (
-              <Option key={s._id} value={s._id}>
-                {s.name}
-              </Option>
-            ))}
-          </Select>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss(TABLE_CLS)}</style>
 
+      <PageHeader
+        title="Fee Categories"
+        subtitle="Manage fee heads for your school"
+        extra={
           <Button
             type="primary"
-            icon={<Plus size={18} />}
+            icon={<PlusOutlined />}
+            onClick={openCreate}
             disabled={!schoolId}
-            onClick={() => setOpenModal(true)}
+            style={{ background: "var(--primary)", borderColor: "var(--primary)" }}
           >
             Add Fee Head
           </Button>
-        </div>
-      </Card>
+        }
+      />
 
-      {/* TABLE */}
-      <Card title="Fee Heads">
+      {/* ── Table ── */}
+      <div style={{ ...sectionPanel, marginTop: 20 }}>
         <Table
+          className={TABLE_CLS}
           rowKey="_id"
           columns={columns}
           dataSource={feeHeads}
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 15, showSizeChanger: false }}
+          scroll={{ x: 560 }}
+          locale={{
+            emptyText: (
+              <div style={{ padding: "32px 0", color: "var(--text-muted)" }}>
+                No fee heads yet. Click "Add Fee Head" to create one.
+              </div>
+            ),
+          }}
         />
-      </Card>
+      </div>
 
-      {/* MODAL */}
+      {/* ── Create / Edit modal ── */}
       <Modal
-        title="Create Fee Head"
-        open={openModal}
-        onCancel={() => setOpenModal(false)}
-        onOk={() => form.submit()}
-        confirmLoading={submitting}
-        okText="Create"
+        open={modalOpen}
+        title={
+          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+            {editTarget ? "Edit Fee Head" : "Create Fee Head"}
+          </span>
+        }
+        onOk={handleSubmit}
+        onCancel={() => { setModalOpen(false); form.resetFields(); }}
+        okText={editTarget ? "Update" : "Create"}
+        confirmLoading={saving}
+        okButtonProps={{ style: { background: "var(--primary)", borderColor: "var(--primary)" } }}
+        width={420}
       >
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={handleSubmit}
-          initialValues={{ isEditable: true }}
-        >
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
             name="name"
             label="Fee Head Name"
-            rules={[{ required: true, message: "Select fee head" }]}
+            rules={[{ required: true, message: "Please select a fee head" }]}
           >
-            <Select placeholder="Select Fee Head">
+            <Select placeholder="Select fee head type" showSearch>
               {FEE_HEAD_TYPES.map((t) => (
-                <Option key={t} value={t}>
-                  {t}
-                </Option>
+                <Select.Option key={t} value={t}>{t}</Select.Option>
               ))}
             </Select>
           </Form.Item>
@@ -178,20 +233,16 @@ const SchoolFeeCategories = () => {
           <Form.Item
             name="type"
             label="Fee Type"
-            rules={[{ required: true, message: "Select fee type" }]}
+            rules={[{ required: true, message: "Please select a type" }]}
           >
-            <Select placeholder="Select Type">
-              <Option value="recurring">Recurring</Option>
-              <Option value="one-time">One Time</Option>
-              <Option value="penalty">Penalty</Option>
+            <Select placeholder="Select type">
+              <Select.Option value="recurring">Recurring (monthly/quarterly)</Select.Option>
+              <Select.Option value="one-time">One-Time (annual/admission)</Select.Option>
+              <Select.Option value="penalty">Penalty / Fine</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="isEditable"
-            label="Is Editable?"
-            valuePropName="checked"
-          >
+          <Form.Item name="isEditable" label="Editable at Structure Level?" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

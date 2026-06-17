@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Table,
   Tag,
@@ -10,7 +10,7 @@ import {
   Radio,
   Space,
 } from "antd";
-import { DollarOutlined } from "@ant-design/icons";
+import { DollarOutlined, PrinterOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 
 import { fetchMyFees } from "../../../features/studentFeeSlice";
@@ -55,6 +55,8 @@ const FeeStudent = () => {
 
   const [frequencyModalOpen, setFrequencyModalOpen] = useState(false);
   const [selectedFrequency, setSelectedFrequency] = useState("monthly");
+  const [receiptInstallment, setReceiptInstallment] = useState(null);
+  const receiptRef = useRef(null);
 
   useEffect(() => {
     dispatch(fetchMyStudentEnrollment());
@@ -155,6 +157,27 @@ const FeeStudent = () => {
     }
   };
 
+  const handlePrintReceipt = () => {
+    const content = receiptRef.current?.innerHTML;
+    if (!content) return;
+    const win = window.open("", "_blank");
+    win.document.write(`
+      <html><head><title>Fee Receipt</title>
+      <style>body{font-family:sans-serif;padding:24px;max-width:480px;margin:auto;}
+      h2{text-align:center;margin-bottom:4px;}
+      .sub{text-align:center;color:#666;font-size:13px;margin-bottom:16px;}
+      table{width:100%;border-collapse:collapse;}
+      td,th{padding:8px 10px;border:1px solid #ddd;font-size:13px;}
+      th{background:#f5f5f5;font-weight:600;}
+      .total{font-weight:700;}
+      .footer{text-align:center;color:#888;font-size:11px;margin-top:24px;}
+      </style></head>
+      <body onload="window.print();window.close()">
+      ${content}
+      </body></html>`);
+    win.document.close();
+  };
+
   const feeColumns = [
     {
       title: "Fee Head",
@@ -194,12 +217,18 @@ const FeeStudent = () => {
     },
     {
       title: "Action",
-      render: (_, r) =>
-        r.status !== "paid" && (
-          <Button type="primary" size="small" onClick={() => openPayModal(r)}>
-            Pay
-          </Button>
-        ),
+      render: (_, r) => (
+        <Space>
+          {r.status !== "paid" && (
+            <Button type="primary" size="small" onClick={() => openPayModal(r)}>Pay</Button>
+          )}
+          {r.status === "paid" && (
+            <Button size="small" icon={<PrinterOutlined />} onClick={() => setReceiptInstallment(r)}>
+              Receipt
+            </Button>
+          )}
+        </Space>
+      ),
     },
   ];
 
@@ -301,6 +330,62 @@ const FeeStudent = () => {
               onChange={setAmountPaid}
             />
           </>
+        )}
+      </Modal>
+
+      {/* ── Receipt Modal ── */}
+      <Modal
+        title="Fee Receipt"
+        open={!!receiptInstallment}
+        onCancel={() => setReceiptInstallment(null)}
+        footer={[
+          <Button key="print" type="primary" icon={<PrinterOutlined />} onClick={handlePrintReceipt}>
+            Print
+          </Button>,
+          <Button key="close" onClick={() => setReceiptInstallment(null)}>Close</Button>,
+        ]}
+        centered
+      >
+        {receiptInstallment && (
+          <div ref={receiptRef}>
+            <h2 style={{ textAlign: "center", marginBottom: 4 }}>Fee Receipt</h2>
+            <div style={{ textAlign: "center", color: "#666", fontSize: 13, marginBottom: 16 }}>
+              Official Payment Receipt
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <tbody>
+                <tr>
+                  <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>Installment</th>
+                  <td style={{ padding: "8px 10px", border: "1px solid #ddd" }}>{receiptInstallment.installmentName}</td>
+                </tr>
+                <tr>
+                  <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>Total Amount</th>
+                  <td style={{ padding: "8px 10px", border: "1px solid #ddd" }}>₹{receiptInstallment.amount}</td>
+                </tr>
+                <tr>
+                  <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>Amount Paid</th>
+                  <td style={{ padding: "8px 10px", border: "1px solid #ddd", fontWeight: 700, color: "#16a34a" }}>₹{receiptInstallment.paidAmount}</td>
+                </tr>
+                <tr>
+                  <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>Status</th>
+                  <td style={{ padding: "8px 10px", border: "1px solid #ddd", textTransform: "uppercase", color: "#16a34a", fontWeight: 700 }}>
+                    {receiptInstallment.status}
+                  </td>
+                </tr>
+                {receiptInstallment.paidAt && (
+                  <tr>
+                    <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>Paid On</th>
+                    <td style={{ padding: "8px 10px", border: "1px solid #ddd" }}>
+                      {new Date(receiptInstallment.paidAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <div style={{ textAlign: "center", color: "#888", fontSize: 11, marginTop: 24 }}>
+              This is a computer-generated receipt. No signature required.
+            </div>
+          </div>
         )}
       </Modal>
     </div>

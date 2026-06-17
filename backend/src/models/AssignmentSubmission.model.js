@@ -1,4 +1,5 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
+const { Schema } = mongoose;
 
 const assignmentSubmissionSchema = new Schema(
   {
@@ -42,6 +43,10 @@ const assignmentSubmissionSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    grade:    { type: Number, default: null },
+    feedback: { type: String, trim: true, default: "" },
+    gradedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    gradedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

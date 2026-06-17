@@ -1,291 +1,363 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  DatePicker,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Tag,
-  Typography,
-  Progress,
-  List,
-  Button,
-  Empty,
-  Space,
-  Input,
-  message,
-} from "antd";
-import dayjs from "dayjs";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMonthlyReport } from "../../features/attendanceSlice";
+import { useNavigate } from "react-router-dom";
+import {
+  Select, Button, Spin, Empty, Table, DatePicker, Progress, Alert,
+} from "antd";
+import {
+  BarChartOutlined, TeamOutlined, UserOutlined, ClockCircleOutlined,
+  PercentageOutlined, ReloadOutlined, WarningOutlined,
+  EditOutlined, UnorderedListOutlined, FileTextOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
+import { fetchAttendanceSummary } from "../../features/analyticsSlice";
+import { fetchSchools }           from "../../features/schoolSlice";
+import PageHeader                 from "../../components/layout/PageHeader";
+import {
+  pageWrapper, statGrid, iconWell, toolbarRow, tableHeadCss, pill,
+} from "../../styles/pageStyles";
 
-const { Title, Text } = Typography;
+const TABLE_CLS   = "sa-dash-tbl";
+const LOW         = 75;
 
+/* ── KPI card ───────────────────────────────────────────────────────── */
+const KpiCard = ({ icon, label, value, color, suffix }) => (
+  <div style={{
+    background: "var(--surface)", border: "1px solid var(--border-muted)",
+    borderRadius: 14, padding: "18px 20px",
+    display: "flex", alignItems: "center", gap: 14,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+  }}>
+    <div style={iconWell(color, 46)}>{icon}</div>
+    <div>
+      <div style={{
+        fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+        textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4,
+      }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>
+        {value ?? "—"}
+        {suffix && <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 3 }}>{suffix}</span>}
+      </div>
+    </div>
+  </div>
+);
+
+/* ── Quick action button ─────────────────────────────────────────────── */
+const QuickBtn = ({ icon, label, color, onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      flex: "1 1 160px", padding: "14px 18px",
+      background: "var(--surface)", border: `1.5px solid ${color}28`,
+      borderRadius: 12, cursor: "pointer", display: "flex",
+      alignItems: "center", gap: 10, fontWeight: 600, fontSize: 13,
+      color: "var(--text-primary)", transition: "border-color 0.15s, background 0.15s",
+      boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.borderColor = color;
+      e.currentTarget.style.background  = `${color}09`;
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.borderColor = `${color}28`;
+      e.currentTarget.style.background  = "var(--surface)";
+    }}
+  >
+    <div style={iconWell(color, 34)}>{icon}</div>
+    {label}
+  </button>
+);
+
+/* ── Main component ─────────────────────────────────────────────────── */
 const AttendanceDashboard = () => {
-  const dispatch = useDispatch();
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
 
-  const { monthlyReport = [], reportLoading } = useSelector(
-    (s) => s.attendance
+  const { attendance, loading: loadingMap, error } = useSelector((s) => s.analytics || {});
+  const { schools = [] }                           = useSelector((s) => s.school   || {});
+  const loading = (typeof loadingMap === "object" ? loadingMap?.attendance : loadingMap) || false;
+
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const [selectedDate,   setSelectedDate]   = useState(null);
+
+  const schoolOptions = useMemo(
+    () => schools.map((s) => ({ value: s._id, label: s.name })).filter((s) => s.label),
+    [schools],
   );
 
-  const { user } = useSelector((s) => s.auth);
+  /* ── Fetch ── */
+  const doFetch = useCallback(
+    (schoolId, date) => {
+      const params = {};
+      if (schoolId) params.schoolId = schoolId;
+      if (date)     params.date     = date.format("YYYY-MM-DD");
+      dispatch(fetchAttendanceSummary(params));
+    },
+    [dispatch],
+  );
 
-  const schoolId = user?.schoolId || user?.school?._id;
-
-  const now = dayjs();
-  const [month, setMonth] = useState(now.month() + 1);
-  const [year, setYear] = useState(now.year());
-
-  const [queue, setQueue] = useState([]);
-  const [notes, setNotes] = useState({});
-
-  /* ---------------- FETCH ---------------- */
   useEffect(() => {
-    if (!schoolId) return;
+    dispatch(fetchSchools());
+    doFetch("", null);
+  }, [dispatch]);
 
-    dispatch(fetchMonthlyReport({ schoolId, month, year }));
-  }, [month, year]);
+  /* ── Derived ── */
+  const stats       = attendance || {};
+  const schoolStats = stats.schoolStats || [];
 
-  /* ---------------- HELPERS ---------------- */
-  const getStreak = (daily = {}) => {
-    const values = Object.values(daily || {});
-    let streak = 0;
-    for (let i = values.length - 1; i >= 0; i--) {
-      if (values[i] === "absent") streak++;
-      else break;
-    }
-    return streak;
-  };
+  const lowSchools = useMemo(
+    () => schoolStats.filter((s) => s.attendanceRate != null && Number(s.attendanceRate) < LOW),
+    [schoolStats],
+  );
 
-  /* ---------------- ANALYTICS ---------------- */
-  const analytics = useMemo(() => {
-    if (!monthlyReport.length) {
-      return {
-        total: 0,
-        avg: 0,
-        risk: 0,
-        alerts: [],
-        highRisk: [],
-      };
-    }
+  const avgRate =
+    stats.attendanceRate != null ? Number(stats.attendanceRate).toFixed(1) : "—";
 
-    const total = monthlyReport.length;
+  /* ── Quick actions ── */
+  const QUICK_ACTIONS = [
+    {
+      label: "Mark Attendance",
+      icon:  <EditOutlined />,
+      color: "var(--primary)",
+      path:  "dashboard/superadmin/attendance/mark",
+    },
+    {
+      label: "Attendance Table",
+      icon:  <UnorderedListOutlined />,
+      color: "#0891b2",
+      path:  "dashboard/superadmin/attendance/table",
+    },
+    {
+      label: "Monthly Report",
+      icon:  <FileTextOutlined />,
+      color: "#16a34a",
+      path:  "dashboard/superadmin/attendance/monthly",
+    },
+  ];
 
-    const avg =
-      monthlyReport.reduce(
-        (a, b) => a + Number(b.attendancePercentage || 0),
-        0
-      ) / total;
-
-    const enriched = monthlyReport.map((r) => {
-      const streak = getStreak(r.dailyStatus || {});
-      const att = Number(r.attendancePercentage || 0);
-
-      return {
-        id: r.userId,
-        name: r.name,
-        attendance: att,
-        streak,
-        risk: Math.max(0, 75 - att) + streak * 8,
-      };
-    });
-
-    const highRisk = enriched.filter(
-      (r) => r.attendance < 75 || r.streak >= 3
-    );
-
-    const alerts = enriched.filter((r) => r.streak >= 3);
-
-    return {
-      total,
-      avg: Number(avg.toFixed(1)),
-      risk: highRisk.length,
-      alerts,
-      highRisk,
-    };
-  }, [monthlyReport]);
-
-  /* ---------------- QUEUE ---------------- */
-  const addToQueue = (item) => {
-    if (queue.find((q) => q.id === item.id)) {
-      message.info("Already in queue");
-      return;
-    }
-
-    setQueue((prev) => [
-      {
-        ...item,
-        status: "pending",
-        note: "",
-        updatedAt: new Date().toISOString(),
+  /* ── Table columns ── */
+  const schoolColumns = [
+    {
+      title:     "School",
+      dataIndex: "schoolName",
+      render:    (n) => (
+        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{n || "—"}</span>
+      ),
+    },
+    {
+      title:  "Present",
+      dataIndex: "present",
+      align:  "right",
+      width:  80,
+      render: (v) => <span style={{ color: "#16a34a", fontWeight: 600 }}>{v ?? "—"}</span>,
+    },
+    {
+      title:  "Absent",
+      dataIndex: "absent",
+      align:  "right",
+      width:  80,
+      render: (v) => <span style={{ color: "#dc2626", fontWeight: 600 }}>{v ?? "—"}</span>,
+    },
+    {
+      title:  "Late",
+      dataIndex: "late",
+      align:  "right",
+      width:  80,
+      render: (v) => <span style={{ color: "#d97706", fontWeight: 600 }}>{v ?? "—"}</span>,
+    },
+    {
+      title:     "Attendance Rate",
+      dataIndex: "attendanceRate",
+      width:     200,
+      render:    (v) => {
+        if (v == null) return "—";
+        const pct = Number(v).toFixed(1);
+        const low = Number(v) < LOW;
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Progress
+              percent={Number(pct)}
+              size="small"
+              strokeColor={low ? "#dc2626" : "#16a34a"}
+              trailColor="var(--border-muted)"
+              showInfo={false}
+              style={{ flex: 1, minWidth: 80 }}
+            />
+            <span style={{
+              fontWeight: 700, fontSize: 13,
+              color: low ? "#dc2626" : "#16a34a",
+              minWidth: 44, textAlign: "right",
+            }}>
+              {pct}%
+            </span>
+          </div>
+        );
       },
-      ...prev,
-    ]);
-  };
+    },
+  ];
 
-  const saveNote = (id) => {
-    if (!notes[id]) return message.warning("Enter note first");
-
-    setQueue((prev) =>
-      prev.map((q) =>
-        q.id === id
-          ? {
-              ...q,
-              note: notes[id],
-              status: "done",
-              updatedAt: new Date().toISOString(),
-            }
-          : q
-      )
-    );
-
-    message.success("Saved");
-  };
-
-  /* ---------------- UI ---------------- */
+  /* ── Render ── */
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen space-y-4">
-      {/* HEADER */}
-      <div>
-        <Title level={4} className="!mb-0">
-          Attendance Analytics
-        </Title>
-        <Text type="secondary">
-          Risk detection, trends & teacher follow-ups
-        </Text>
-      </div>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss(TABLE_CLS)}</style>
 
-      {/* MONTH SELECT */}
-      <Card>
-        <DatePicker
-          picker="month"
-          value={dayjs(`${year}-${month}-01`)}
-          onChange={(v) => {
-            const d = v || dayjs();
-            setMonth(d.month() + 1);
-            setYear(d.year());
+      <PageHeader
+        title="Attendance Overview"
+        subtitle="Platform-wide student attendance across all schools"
+        icon={<BarChartOutlined />}
+        extra={
+          <Button
+            icon={<ReloadOutlined />}
+            loading={loading}
+            onClick={() => doFetch(selectedSchool, selectedDate)}
+            style={{ borderColor: "var(--border-muted)" }}
+          >
+            Refresh
+          </Button>
+        }
+      />
+
+      {/* ── Toolbar ── */}
+      <div style={{ ...toolbarRow, marginTop: 20 }}>
+        <Select
+          placeholder="All Schools"
+          allowClear
+          showSearch
+          style={{ width: 240 }}
+          value={selectedSchool || undefined}
+          options={schoolOptions}
+          filterOption={(input, opt) =>
+            opt.label.toLowerCase().includes(input.toLowerCase())
+          }
+          onChange={(val) => {
+            setSelectedSchool(val || "");
+            doFetch(val || "", selectedDate);
           }}
         />
-      </Card>
-
-      {/* KPI CARDS */}
-      <Row gutter={[12, 12]}>
-        <Col xs={12} md={6}>
-          <Card>
-            <Statistic title="Students" value={analytics.total} />
-          </Card>
-        </Col>
-
-        <Col xs={12} md={6}>
-          <Card>
-            <Statistic title="Avg Attendance" value={analytics.avg} suffix="%" />
-          </Card>
-        </Col>
-
-        <Col xs={12} md={6}>
-          <Card>
-            <Statistic title="Risk Students" value={analytics.risk} />
-          </Card>
-        </Col>
-
-        <Col xs={12} md={6}>
-          <Card>
-            <Progress percent={analytics.avg} />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ALERTS */}
-      <Card title="🚨 Risk Alerts">
-        {analytics.alerts.length ? (
-          <List
-            dataSource={analytics.alerts}
-            renderItem={(i) => (
-              <List.Item
-                actions={[
-                  <Button key="add" size="small" onClick={() => addToQueue(i)}>
-                    Add
-                  </Button>,
-                ]}
-              >
-                <List.Item.Meta
-                  title={i.name}
-                  description={`Attendance: ${i.attendance}% | Streak: ${i.streak}`}
-                />
-              </List.Item>
-            )}
-          />
-        ) : (
-          <Empty description="No alerts" />
-        )}
-      </Card>
-
-      {/* HIGH RISK TABLE */}
-      <Card title="High Risk Students">
-        <Table
-          rowKey="id"
-          dataSource={analytics.highRisk}
-          pagination={{ pageSize: 6 }}
-          columns={[
-            { title: "Name", dataIndex: "name" },
-            {
-              title: "Attendance",
-              dataIndex: "attendance",
-              render: (v) => <Tag color={v < 75 ? "red" : "green"}>{v}%</Tag>,
-            },
-            {
-              title: "Streak",
-              dataIndex: "streak",
-              render: (v) => <Tag color="orange">{v}</Tag>,
-            },
-            {
-              title: "Action",
-              render: (_, r) => (
-                <Button size="small" onClick={() => addToQueue(r)}>
-                  Add to Queue
-                </Button>
-              ),
-            },
-          ]}
+        <DatePicker
+          placeholder="Select date (today)"
+          value={selectedDate}
+          onChange={(date) => {
+            setSelectedDate(date);
+            doFetch(selectedSchool, date);
+          }}
+          style={{ width: 190 }}
+          allowClear
         />
-      </Card>
+      </div>
 
-      {/* QUEUE */}
-      <Card title="Teacher Action Queue">
-        {!queue.length ? (
-          <Empty description="No pending follow-ups" />
-        ) : (
-          <List
-            dataSource={queue}
-            renderItem={(item) => (
-              <List.Item>
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Space wrap>
-                    <Tag>{item.name}</Tag>
-                    <Tag color={item.status === "done" ? "green" : "gold"}>
-                      {item.status}
-                    </Tag>
-                  </Space>
+      {/* ── Error banner ── */}
+      {error && (
+        <div style={{
+          padding: "13px 18px",
+          background: "#dc262610", border: "1px solid #dc262630",
+          borderRadius: 10, color: "#dc2626", marginBottom: 16,
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          <span>{error}</span>
+          <Button size="small" danger onClick={() => doFetch(selectedSchool, selectedDate)}>
+            Retry
+          </Button>
+        </div>
+      )}
 
-                  <Input.TextArea
-                    rows={2}
-                    value={notes[item.id] || item.note}
-                    onChange={(e) =>
-                      setNotes((p) => ({ ...p, [item.id]: e.target.value }))
-                    }
-                    placeholder="Follow-up note"
-                  />
+      <Spin spinning={loading}>
+        {/* ── KPI cards ── */}
+        <div style={statGrid(155)}>
+          <KpiCard icon={<TeamOutlined />}          label="Total Students"  value={stats.totalStudents} color="var(--primary)" />
+          <KpiCard icon={<UserOutlined />}           label="Present Today"   value={stats.presentToday}  color="#16a34a" />
+          <KpiCard icon={<UserOutlined />}           label="Absent Today"    value={stats.absentToday}   color="#dc2626" />
+          <KpiCard icon={<ClockCircleOutlined />}    label="Late Today"      value={stats.lateToday}     color="#d97706" />
+          <KpiCard icon={<PercentageOutlined />}     label="Attendance Rate" value={avgRate}             color="var(--primary)" suffix="%" />
+        </div>
 
-                  <Button size="small" type="primary" onClick={() => saveNote(item.id)}>
-                    Save
-                  </Button>
-                </Space>
-              </List.Item>
-            )}
+        {/* ── Quick actions ── */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+          {QUICK_ACTIONS.map(({ label, icon, color, path }) => (
+            <QuickBtn
+              key={path}
+              label={label}
+              icon={icon}
+              color={color}
+              onClick={() => navigate(`/${path}`)}
+            />
+          ))}
+        </div>
+
+        {/* ── Low-attendance alert ── */}
+        {lowSchools.length > 0 && (
+          <Alert
+            type="warning"
+            showIcon
+            icon={<WarningOutlined />}
+            style={{ marginBottom: 16, borderRadius: 10 }}
+            message={
+              <span style={{ fontWeight: 600 }}>
+                {lowSchools.length} school{lowSchools.length > 1 ? "s" : ""} below {LOW}% attendance
+              </span>
+            }
+            description={
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+                {lowSchools.map((s) => (
+                  <span key={s.schoolId || s.schoolName} style={pill("#dc2626")}>
+                    {s.schoolName} — {Number(s.attendanceRate).toFixed(1)}%
+                  </span>
+                ))}
+              </div>
+            }
           />
         )}
-      </Card>
+
+        {/* ── School-wise table ── */}
+        {schoolStats.length > 0 ? (
+          <div style={{
+            background: "var(--surface)", border: "1px solid var(--border-muted)",
+            borderRadius: 14, overflow: "hidden",
+          }}>
+            <div style={{
+              padding: "14px 20px",
+              borderBottom: "1px solid var(--border-muted)",
+              fontWeight: 700, fontSize: 14, color: "var(--text-primary)",
+            }}>
+              School-wise Breakdown
+            </div>
+            <Table
+              className={TABLE_CLS}
+              rowKey={(r) => r.schoolId || r.schoolName}
+              columns={schoolColumns}
+              dataSource={schoolStats}
+              pagination={false}
+              scroll={{ x: 640 }}
+            />
+          </div>
+        ) : (
+          !loading && (
+            <div style={{
+              background: "var(--surface)", border: "1px solid var(--border-muted)",
+              borderRadius: 14, padding: "52px 24px", textAlign: "center",
+            }}>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span style={{ color: "var(--text-muted)" }}>
+                    {attendance
+                      ? "No school-wise breakdown available for the selected filters"
+                      : "Click Refresh to load attendance data"}
+                  </span>
+                }
+              >
+                {!attendance && (
+                  <Button type="primary" onClick={() => doFetch(selectedSchool, selectedDate)}>
+                    Load Data
+                  </Button>
+                )}
+              </Empty>
+            </div>
+          )
+        )}
+      </Spin>
     </div>
   );
 };

@@ -10,7 +10,11 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 /* ── ATTENDANCE SUMMARY ──────────────────────────────────────────────────── */
 export const getAttendanceSummary = asyncHandler(async (req, res) => {
-  const { schoolId, date } = req.query;
+  const userRole = req.userRole?.name || req.user?.role?.name;
+  const isSchoolScoped = userRole && userRole !== "Super Admin";
+  const schoolId = req.query.schoolId || (isSchoolScoped ? (req.user.school?._id || req.user.schoolId)?.toString() : null);
+
+  const { date } = req.query;
   const targetDate = date ? new Date(date) : new Date();
   const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
   const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
@@ -67,6 +71,24 @@ export const getAttendanceSummary = asyncHandler(async (req, res) => {
   const attendanceRate =
     totalMarked > 0 ? Math.round((statsMap.present / totalMarked) * 100) : 0;
 
+  /* Normalize schoolStats into flat objects for the frontend table */
+  const normalizedSchoolStats = schoolStats.map((school) => {
+    const breakdown = { present: 0, absent: 0, late: 0, leave: 0 };
+    (school.attendanceBreakdown || []).forEach((b) => {
+      if (breakdown[b._id] !== undefined) breakdown[b._id] = b.count;
+    });
+    const totalM = Object.values(breakdown).reduce((a, b) => a + b, 0);
+    const rate   = totalM > 0 ? Math.round((breakdown.present / totalM) * 100) : 0;
+    return {
+      schoolId:       school._id,
+      schoolName:     school.name,
+      present:        breakdown.present,
+      absent:         breakdown.absent,
+      late:           breakdown.late,
+      attendanceRate: rate,
+    };
+  });
+
   res.status(200).json(
     new ApiResponse(200, {
       date: startOfDay,
@@ -75,10 +97,11 @@ export const getAttendanceSummary = asyncHandler(async (req, res) => {
       absentToday: statsMap.absent,
       lateToday: statsMap.late,
       halfdayToday: statsMap.halfday,
+      leaveToday: statsMap.leave,
       onLeave: statsMap.leave,
       totalMarked,
       attendanceRate,
-      schoolStats,
+      schoolStats: normalizedSchoolStats,
     }, "Attendance summary fetched")
   );
 });

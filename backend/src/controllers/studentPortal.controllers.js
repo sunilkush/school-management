@@ -3,6 +3,7 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Assignment } from "../models/AssignmentsAndHomework.model.js";
 import { AssignmentSubmission } from "../models/AssignmentSubmission.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
+import { Hostel } from "../models/Hostel.model.js";
 import { IssuedBook } from "../models/IssuedBooks.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
@@ -573,7 +574,108 @@ export const getMyLibraryBooks = asyncHandler(async (req, res) => {
     .sort({ dueDate: 1, createdAt: -1 })
     .lean();
 
+  const now = new Date();
+  const booksWithFine = issuedBooks.map((book) => {
+    let fineAmount = 0;
+    if (book.status === "Overdue" && book.dueDate) {
+      const overdueDays = Math.max(0, Math.ceil((now - new Date(book.dueDate)) / (1000 * 60 * 60 * 24)));
+      fineAmount = overdueDays * (book.finePerDay || 2);
+    }
+    return { ...book, fineAmount };
+  });
+
   return res.status(200).json(
-    new ApiResponse(200, issuedBooks, "Student issued books fetched successfully")
+    new ApiResponse(200, booksWithFine, "Student issued books fetched successfully")
   );
+});
+
+/* ── GET MY HOSTEL ALLOCATION ────────────────────────────────────────────── */
+export const getMyHostel = asyncHandler(async (req, res) => {
+  const hostel = await Hostel.findOne({
+    studentId: req.user._id,
+    schoolId: req.user.schoolId,
+  }).lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, hostel, "Hostel details fetched successfully")
+  );
+});
+
+/* ── UPDATE TEACHER HOMEWORK ─────────────────────────────────────────────── */
+export const updateTeacherHomework = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title, description, dueDate, attachments, status } = req.body;
+
+  const assignment = await Assignment.findOne({
+    _id: id,
+    schoolId: req.user.schoolId,
+    teacherId: req.user._id,
+  });
+
+  if (!assignment) throw new ApiError(404, "Assignment not found");
+
+  if (title)       assignment.title       = title;
+  if (description) assignment.description = description;
+  if (dueDate)     assignment.dueDate     = new Date(dueDate);
+  if (attachments) assignment.attachments = attachments;
+  if (status)      assignment.status      = status;
+  assignment.updatedBy = req.user._id;
+
+  await assignment.save();
+
+  const updated = await Assignment.findById(assignment._id)
+    .populate("schoolClassId", "className classNum")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name code")
+    .lean();
+
+  return res.status(200).json(new ApiResponse(200, updated, "Assignment updated successfully"));
+});
+
+/* ── DELETE TEACHER HOMEWORK ─────────────────────────────────────────────── */
+export const deleteTeacherHomework = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const assignment = await Assignment.findOne({
+    _id: id,
+    schoolId: req.user.schoolId,
+    teacherId: req.user._id,
+  });
+
+  if (!assignment) throw new ApiError(404, "Assignment not found");
+
+  await AssignmentSubmission.deleteMany({ assignmentId: assignment._id });
+  await assignment.deleteOne();
+
+  return res.status(200).json(new ApiResponse(200, null, "Assignment deleted successfully"));
+});
+
+/* ── GRADE A SUBMISSION ──────────────────────────────────────────────────── */
+export const gradeSubmission = asyncHandler(async (req, res) => {
+  const { submissionId } = req.params;
+  const { grade, feedback } = req.body;
+
+  if (grade === undefined) throw new ApiError(400, "Grade is required");
+
+  const submission = await AssignmentSubmission.findOne({
+    _id: submissionId,
+    schoolId: req.user.schoolId,
+  });
+
+  if (!submission) throw new ApiError(404, "Submission not found");
+
+  const assignment = await Assignment.findOne({
+    _id: submission.assignmentId,
+    teacherId: req.user._id,
+  });
+
+  if (!assignment) throw new ApiError(403, "Not authorized to grade this submission");
+
+  submission.grade     = Number(grade);
+  submission.feedback  = feedback?.trim() || "";
+  submission.gradedBy  = req.user._id;
+  submission.gradedAt  = new Date();
+  await submission.save();
+
+  return res.status(200).json(new ApiResponse(200, submission, "Submission graded successfully"));
 });

@@ -1,41 +1,54 @@
-import React, { useEffect, useMemo } from "react";
-import {
-  Card,
-  DatePicker,
-  Input,
-  Select,
-  Button,
-  Row,
-  Col,
-  Typography,
-  message,
-} from "antd";
-import dayjs from "dayjs";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import BulkAttendanceTable from "../../components/attendance/BulkAttendanceTable";
+import { Select, DatePicker, Button, Spin, Empty, message } from "antd";
+import {
+  EditOutlined, BankOutlined, TeamOutlined, CalendarOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
 
 import {
-  fetchAttendance,
-  markBulkAttendance,
-  setAttendanceFilters,
-  setDraftAttendanceStatus,
+  fetchAttendance, markBulkAttendance,
+  setAttendanceFilters, setDraftAttendanceStatus,
 } from "../../features/attendanceSlice";
-import { fetchSchoolClasses } from "../../features/schoolClassSlice";
+import { fetchSchoolClasses }     from "../../features/schoolClassSlice";
+import { fetchSchools }           from "../../features/schoolSlice";
+import BulkAttendanceTable        from "../../components/attendance/BulkAttendanceTable";
 import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
+import PageHeader                 from "../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, 
+} from "../../styles/pageStyles";
 
-const { Title, Text } = Typography;
+/* ── Filter label ───────────────────────────────────────────────────── */
+const FilterLabel = ({ children }) => (
+  <div style={{
+    fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+    textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5,
+  }}>
+    {children}
+  </div>
+);
 
+/* ── Main component ─────────────────────────────────────────────────── */
 const MarkAttendancePage = () => {
-  const dispatch = useDispatch();  
-  const { list, draftRecords, loading, filters } = useSelector(
-    (s) => s.attendance
+  const dispatch = useDispatch();
+
+  const { list, draftRecords, loading, filters } = useSelector((s) => s.attendance);
+  const { user }                = useSelector((s) => s.auth || {});
+  const { schoolClasses = [] }  = useSelector((s) => s.schoolClass || {});
+  const { schools = [] }        = useSelector((s) => s.school || {});
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+
+  const isSuperAdmin    = user?.role?.name === "Super Admin";
+  const [saSchoolId, setSaSchoolId] = useState(null);
+
+  const schoolId     = isSuperAdmin ? saSchoolId : (user?.school?._id || null);
+  const academicYearId = selectedAcademicYear?._id || selectedAcademicYear || null;
+
+  const schoolOptions = useMemo(
+    () => schools.map((s) => ({ value: s._id, label: s.name })).filter((s) => s.label),
+    [schools],
   );
-  const { user } = useSelector((s) => s.auth || {});
-  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
-  const {selectedAcademicYear} = useSelector((s) => s.academicYear || {});
-  const schoolId = user?.school?._id || null;
-  const academicYearId =
-    selectedAcademicYear?._id || selectedAcademicYear || null;
 
   const classes = useMemo(() => {
     if (Array.isArray(schoolClasses)) return schoolClasses;
@@ -43,183 +56,225 @@ const MarkAttendancePage = () => {
     return [];
   }, [schoolClasses]);
 
+  /* ── On mount ── */
+  useEffect(() => {
+    if (isSuperAdmin) dispatch(fetchSchools());
+  }, [isSuperAdmin, dispatch]);
+
+  /* ── When schoolId changes ── */
   useEffect(() => {
     if (!schoolId) return;
-
-    dispatch(
-      setAttendanceFilters({
-        schoolId,
-      })
-    );
-
+    dispatch(setAttendanceFilters({ schoolId }));
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
-  }, [dispatch, schoolId, academicYearId]);
-  /* ---------------- ROWS ---------------- */
-  const rows = useMemo(() => {
-    return list.map((item) => ({
-      userId: item.userId?._id || item.userId,
-      name: item.userId?.name,
-      email: item.userId?.email,
-      status: item.status,
-    }));
-  }, [list]);
+  }, [schoolId, academicYearId, dispatch]);
 
-  /* ---------------- LOAD ---------------- */
+  /* ── Rows ── */
+  const rows = useMemo(
+    () => list.map((item) => ({
+      userId: item.userId?._id || item.userId,
+      name:   item.userId?.name,
+      email:  item.userId?.email,
+      status: item.status,
+    })),
+    [list],
+  );
+
+  /* ── Load data ── */
   const handleLoad = () => {
-    if (!filters.schoolId) {
-      return message.warning("Please enter School ID");
-    }
+    if (!filters.schoolId) return message.warning("Please select a school first");
     dispatch(fetchAttendance(filters));
   };
 
-  /* ---------------- SAVE ---------------- */
+  /* ── Save ── */
   const handleSave = async () => {
     const records = rows.map((r) => ({
       userId: r.userId,
       status: draftRecords[r.userId] || "present",
     }));
-
     if (!records.length) return message.warning("No data to save");
 
     try {
-      const res = await dispatch(
-        markBulkAttendance({
-          ...filters,
-          date: filters.date || new Date().toISOString(),
-          role: filters.role || "student",
-          records,
-        })
-      );
-
+      const res = await dispatch(markBulkAttendance({
+        ...filters,
+        date:    filters.date || new Date().toISOString(),
+        role:    filters.role || "student",
+        records,
+      }));
       if (res.meta.requestStatus === "fulfilled") {
         message.success("Attendance saved successfully");
         dispatch(fetchAttendance(filters));
       } else {
         message.error("Failed to save attendance");
       }
-    } catch (e) {
-      message.error("Server error", e.message);
+    } catch {
+      message.error("Server error");
     }
   };
 
+  /* ── Render ── */
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      {/* HEADER */}
-      <div className="mb-4">
-        <Title level={4} className="!mb-0">
-          Bulk Attendance Management
-        </Title>
-        <Text type="secondary">
-          Load users, mark attendance, and save in bulk
-        </Text>
-      </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Mark Attendance"
+        subtitle="Load users, bulk-mark status and save in one click"
+        icon={<EditOutlined />}
+      />
 
-      {/* FILTER PANEL */}
-      <Card className="mb-4">
-        <Row gutter={[12, 12]}>
-          <Col xs={24} md={5}>
-            <Input placeholder="School" value={user?.school?.name || ""} disabled />
-          </Col>
+      {/* ── Filter panel ── */}
+      <div style={{ ...sectionPanel, marginTop: 20 }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+          gap: 16,
+        }}>
 
-          <Col xs={24} md={5}>
+          {/* School selector — Super Admin only */}
+          {isSuperAdmin && (
+            <div>
+              <FilterLabel>School</FilterLabel>
+              <Select
+                showSearch
+                placeholder="Select school"
+                style={{ width: "100%" }}
+                value={saSchoolId || undefined}
+                options={schoolOptions}
+                filterOption={(inp, opt) =>
+                  opt.label.toLowerCase().includes(inp.toLowerCase())
+                }
+                onChange={(val) => {
+                  setSaSchoolId(val || null);
+                  dispatch(setAttendanceFilters({ schoolId: val || null, classId: null, sectionId: null }));
+                }}
+                suffixIcon={<BankOutlined />}
+              />
+            </div>
+          )}
+
+          {/* Class */}
+          <div>
+            <FilterLabel>Class</FilterLabel>
             <Select
-              className="w-full"
-              placeholder="Select Class"
+              placeholder="Select class"
+              style={{ width: "100%" }}
               value={filters.classId || undefined}
-              options={classes.map((cls) => ({
-                value: cls._id,
-                label: cls.name,
-              }))}
-              onChange={(value) =>
-                dispatch(setAttendanceFilters({ classId: value || null, sectionId: null }))
+              allowClear
+              disabled={!schoolId}
+              options={classes.map((c) => ({ value: c._id, label: c.name }))}
+              onChange={(val) =>
+                dispatch(setAttendanceFilters({ classId: val || null, sectionId: null }))
               }
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={5}>
+          {/* Section */}
+          <div>
+            <FilterLabel>Section</FilterLabel>
             <Select
-              className="w-full"
-              placeholder="Select Section"
+              placeholder="Select section"
+              style={{ width: "100%" }}
               value={filters.sectionId || undefined}
+              allowClear
               disabled={!filters.classId}
               options={
                 classes
-                  .find((cls) => cls._id === filters.classId)
-                  ?.sections?.map((section) => ({
-                    value: section._id,
-                    label: section.name,
-                  })) || []
+                  .find((c) => c._id === filters.classId)
+                  ?.sections?.map((s) => ({ value: s._id, label: s.name })) || []
               }
-              onChange={(value) =>
-                dispatch(setAttendanceFilters({ sectionId: value || null }))
+              onChange={(val) =>
+                dispatch(setAttendanceFilters({ sectionId: val || null }))
               }
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={5}>
+          {/* Date */}
+          <div>
+            <FilterLabel>Date</FilterLabel>
             <DatePicker
-              className="w-full"
+              style={{ width: "100%" }}
               value={filters.date ? dayjs(filters.date) : dayjs()}
               onChange={(v) =>
-                dispatch(
-                  setAttendanceFilters({
-                    date: v?.toISOString() || null,
-                  })
-                )
+                dispatch(setAttendanceFilters({ date: v?.toISOString() || null }))
               }
+              suffixIcon={<CalendarOutlined />}
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={4}>
+          {/* Role */}
+          <div>
+            <FilterLabel>Role</FilterLabel>
             <Select
-              className="w-full"
+              style={{ width: "100%" }}
               value={filters.role || "student"}
               options={ATTENDANCE_ROLE_OPTIONS}
-              onChange={(v) =>
-                dispatch(setAttendanceFilters({ role: v }))
+              onChange={(v) => dispatch(setAttendanceFilters({ role: v }))}
+              suffixIcon={<TeamOutlined />}
+            />
+          </div>
+        </div>
+
+        {/* Load button */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+          <Button
+            type="primary"
+            onClick={handleLoad}
+            loading={loading}
+            disabled={!schoolId}
+            icon={<TeamOutlined />}
+          >
+            Load Users
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Attendance table ── */}
+      <div style={sectionPanel}>
+        {rows.length === 0 && !loading ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <span style={{ color: "var(--text-muted)" }}>
+                {schoolId
+                  ? 'Click "Load Users" to fetch attendance records'
+                  : "Select a school first to load attendance data"}
+              </span>
+            }
+          />
+        ) : (
+          <Spin spinning={loading}>
+            <BulkAttendanceTable
+              rows={rows}
+              draftMap={draftRecords}
+              loading={loading}
+              onStatusChange={(userId, status) =>
+                dispatch(setDraftAttendanceStatus({ userId, status }))
               }
             />
-          </Col>
+          </Spin>
+        )}
+      </div>
 
-          <Col xs={24}>
-            <div className="flex justify-end">
-              <Button type="primary" onClick={handleLoad} loading={loading}>
-                Load Data
-              </Button>
-            </div>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* TABLE SECTION */}
-      <Card className="mb-4">
-        <BulkAttendanceTable
-          rows={rows}
-          draftMap={draftRecords}
-          loading={loading}
-          onStatusChange={(userId, status) =>
-            dispatch(setDraftAttendanceStatus({ userId, status }))
-          }
-        />
-      </Card>
-
-      {/* ACTION FOOTER */}
-      <Card>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-3">
-          <Text type="secondary">
-            {rows.length} records loaded
-          </Text>
-
+      {/* ── Footer ── */}
+      {rows.length > 0 && (
+        <div style={{
+          ...sectionPanel,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexWrap: "wrap", gap: 12,
+        }}>
+          <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+            <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{rows.length}</span>
+            {" "}records loaded
+          </span>
           <Button
             type="primary"
             size="large"
             onClick={handleSave}
             disabled={!rows.length || loading}
+            loading={loading}
           >
             Save Attendance
           </Button>
         </div>
-      </Card>
+      )}
     </div>
   );
 };

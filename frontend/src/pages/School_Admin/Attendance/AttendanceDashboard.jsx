@@ -8,7 +8,6 @@ import {
   Table,
   Select,
   Progress,
-  Tag,
 } from "antd";
 import {
   TeamOutlined,
@@ -130,7 +129,7 @@ const AttendanceDashboard = () => {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
 
-  const { attendance, loading: analyticsLoading } = useSelector(
+  const { attendance, loading: analyticsLoadingMap } = useSelector(
     (s) => s.analytics || {}
   );
   const { monthlyReport, reportLoading } = useSelector(
@@ -265,7 +264,7 @@ const AttendanceDashboard = () => {
     },
   ];
 
-  const loading = analyticsLoading?.attendance || false;
+  const loading = (typeof analyticsLoadingMap === "object" ? analyticsLoadingMap?.attendance : analyticsLoadingMap) || false;
 
   /* ── Render ── */
   return (

@@ -106,6 +106,9 @@ const StudentHomework = () => {
           description: item?.description || "No description available",
           dueDate: item?.dueDate ? dayjs(item.dueDate).format("YYYY-MM-DD") : "",
           status: normalizeStatus(baseStatus, item?.dueDate),
+          grade: item?.submission?.grade ?? null,
+          feedback: item?.submission?.feedback || "",
+          submissionId: item?.submission?._id || null,
         };
       });
 
@@ -283,6 +286,9 @@ const StudentHomework = () => {
                         Due: {item.dueDate || "Not specified"}
                       </span>
                       <span style={pill(sc.color, sc.bg)}>{item.status}</span>
+                      {item.grade !== null && item.grade !== undefined && (
+                        <span style={pill("#059669", "#f0fdf4")}>Grade: {item.grade}/100</span>
+                      )}
                     </Space>
                   </div>
                   <Button type="link" style={{ padding: 0 }} onClick={() => openDetails(item)}>
@@ -349,7 +355,22 @@ const StudentHomework = () => {
                 </Button>
               </>
             ) : (
-              <Tag color="green">Already Submitted</Tag>
+              <Space direction="vertical" style={{ width: "100%" }} size={8}>
+                <Tag color="green">Already Submitted</Tag>
+                {selectedHomework.grade !== null && selectedHomework.grade !== undefined && (
+                  <div style={{ ...sectionPanel, padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "#059669", marginBottom: 6 }}>Teacher Feedback</div>
+                    <Space wrap>
+                      <Tag color="blue" style={{ fontSize: 14, padding: "2px 12px" }}>
+                        Grade: {selectedHomework.grade}/100
+                      </Tag>
+                    </Space>
+                    {selectedHomework.feedback && (
+                      <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>{selectedHomework.feedback}</div>
+                    )}
+                  </div>
+                )}
+              </Space>
             )}
           </Space>
         )}

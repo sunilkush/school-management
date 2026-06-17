@@ -16,8 +16,14 @@ import {
   PercentageOutlined,
   EditOutlined,
 } from "@ant-design/icons";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell,
+} from "recharts";
 import dayjs from "dayjs";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 import { useDispatch, useSelector } from "react-redux";
+
+dayjs.extend(weekOfYear);
 
 import {
   fetchMyAttendance,
@@ -137,6 +143,17 @@ const MyAttendancePage = () => {
       icon: <CalendarOutlined />,
     },
   ];
+
+  /* ── Weekly breakdown for BarChart ── */
+  const weeklyData = useMemo(() => {
+    const weeks = {};
+    myAttendance.forEach((item) => {
+      const week = `W${dayjs(item.date).week()}`;
+      if (!weeks[week]) weeks[week] = { week, present: 0, absent: 0, late: 0, leave: 0 };
+      if (weeks[week][item.status] !== undefined) weeks[week][item.status]++;
+    });
+    return Object.values(weeks).sort((a, b) => a.week.localeCompare(b.week));
+  }, [myAttendance]);
 
   /* ── Table columns ── */
   const columns = [
@@ -356,6 +373,39 @@ const MyAttendancePage = () => {
           />
         </div>
       </div>
+
+      {/* ── Weekly BarChart ── */}
+      {weeklyData.length > 0 && (
+        <div style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border-muted)",
+          borderRadius: 14,
+          padding: "16px 20px",
+          marginTop: 8,
+        }}>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14, marginBottom: 14 }}>
+            Weekly Attendance Breakdown
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={weeklyData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
+              <XAxis dataKey="week" tick={{ fontSize: 12, fill: "var(--text-muted)" }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--text-muted)" }} />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--surface)", border: "1px solid var(--border-muted)",
+                  borderRadius: 10, fontSize: 12,
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar dataKey="present" name="Present" fill="#16a34a" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="absent"  name="Absent"  fill="#dc2626" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="late"    name="Late"    fill="#d97706" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="leave"   name="Leave"   fill="#0891b2" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* ── History Table ── */}
       <Spin spinning={loading}>

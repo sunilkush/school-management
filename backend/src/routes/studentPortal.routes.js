@@ -3,17 +3,20 @@ import {
   assignStudentTransport,
   createTeacherHomework,
   createTimetableEntry,
+  deleteTeacherHomework,
   getHomeworkSubmissions,
   getMyGrades,
   getMyHomework,
+  getMyHostel,
   getMyProfile,
   getMyLibraryBooks,
   getMyTimetable,
   getMyTransport,
   getTeacherHomework,
+  gradeSubmission,
   submitHomework,
   updateMyProfile,
-
+  updateTeacherHomework,
 } from "../controllers/studentPortal.controllers.js";
 import {
   getMyChildren,
@@ -52,7 +55,15 @@ router.get(
   roleMiddleware(ADMIN_AND_TEACHER),
   getHomeworkSubmissions
 );
-
+router.put("/teacher/homework/:id", auth, roleMiddleware(ADMIN_AND_TEACHER), updateTeacherHomework);
+router.delete("/teacher/homework/:id", auth, roleMiddleware(ADMIN_AND_TEACHER), deleteTeacherHomework);
+router.put(
+  "/teacher/homework/submissions/:submissionId/grade",
+  auth,
+  roleMiddleware(ADMIN_AND_TEACHER),
+  gradeSubmission
+);
+router.get("/me/hostel", auth, roleMiddleware(STUDENT_ONLY), getMyHostel);
 
 router.post(
   "/timetable",

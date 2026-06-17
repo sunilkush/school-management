@@ -62,6 +62,7 @@ import faqReducer from "../features/faqSlice";
 import supportTicketReducer from "../features/supportTicketSlice";
 import analyticsReducer from "../features/analyticsSlice";
 import leaveRequestReducer from "../features/leaveRequestSlice";
+import admissionInquiryReducer from "../features/admissionInquirySlice";
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -119,6 +120,7 @@ const rootReducer = combineReducers({
   supportTickets: supportTicketReducer,
   analytics: analyticsReducer,
   leaveRequests: leaveRequestReducer,
+  admissionInquiry: admissionInquiryReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

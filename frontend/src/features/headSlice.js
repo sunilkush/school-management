@@ -46,6 +46,30 @@ export const fetchFeeHeads = createAsyncThunk(
     }}
 );
 
+export const updateFeeHead = createAsyncThunk(
+  "feeHeads/update",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/fee-heads/${id}`, data);
+      return res.data?.data || res.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to update fee head");
+    }
+  }
+);
+
+export const deleteFeeHead = createAsyncThunk(
+  "feeHeads/delete",
+  async (id, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/fee-heads/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to delete fee head");
+    }
+  }
+);
+
 export const fetchFeeHeadsBySchool = createAsyncThunk(
   "feeHeads/fetchBySchool",
   async (params, { rejectWithValue }) => {
@@ -117,6 +141,15 @@ const headSlice = createSlice({
         .addCase(fetchFeeHeads.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload;
+        })
+
+      .addCase(updateFeeHead.fulfilled, (state, action) => {
+          state.loading = false;
+          const updated = action.payload;
+          state.feeHeads = state.feeHeads.map((h) => h._id === updated._id ? updated : h);
+        })
+      .addCase(deleteFeeHead.fulfilled, (state, action) => {
+          state.feeHeads = state.feeHeads.filter((h) => h._id !== action.payload);
         })
 
         .addCase(fetchFeeHeadsBySchool.pending, (state) => {

@@ -1,7 +1,11 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Alert, Button, Col, Empty, List, Row, Skeleton, Space } from "antd";
-import { BookOutlined, CalendarOutlined, ReloadOutlined, TrophyOutlined, UserOutlined } from "@ant-design/icons";
+import { Alert, Button, Col, Empty, List, Row, Skeleton, Space, Progress } from "antd";
+import {
+  BookOutlined, CalendarOutlined, ReloadOutlined, TrophyOutlined, UserOutlined,
+  CheckCircleOutlined, PercentageOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import {
   fetchStudentEnrollment,
@@ -10,6 +14,8 @@ import {
   fetchStudentTimetable,
   fetchStudentTransport,
 } from "../../../features/studentPortalSlice";
+import { fetchMyAttendance } from "../../../features/attendanceSlice";
+import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
@@ -23,10 +29,13 @@ const getGradeScore = (grade = {}) => {
 const STAT_COLORS = ["#7c3aed", "#0284c7", "#f97316", "#059669"];
 
 const StudentDashboard = () => {
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
+  const { user }  = useSelector((state) => state.auth);
   const { enrollment, grades, timetable, transportAssignment, libraryBooks, loading, error } =
     useSelector((state) => state.studentPortal);
+  const { myAttendance = [] } = useSelector((state) => state.attendance || {});
+  const [pendingHomework, setPendingHomework] = useState(0);
 
   const loadDashboardData = useCallback(() => {
     dispatch(fetchStudentEnrollment());
@@ -34,9 +43,22 @@ const StudentDashboard = () => {
     dispatch(fetchStudentTimetable());
     dispatch(fetchStudentLibraryBooks());
     dispatch(fetchStudentTransport());
+    dispatch(fetchMyAttendance({ month: dayjs().month() + 1, year: dayjs().year() }));
+    apiClient.get("/student-portal/me/homework")
+      .then((res) => {
+        const hw = res.data?.data?.homework || [];
+        setPendingHomework(hw.filter((h) => !h.submission).length);
+      })
+      .catch(() => {});
   }, [dispatch]);
 
   useEffect(() => { loadDashboardData(); }, [loadDashboardData]);
+
+  const attendancePercent = useMemo(() => {
+    if (!myAttendance.length) return null;
+    const present = myAttendance.filter((a) => a.status === "present").length;
+    return Math.round((present / myAttendance.length) * 100);
+  }, [myAttendance]);
 
   const stats = useMemo(() => {
     const gradeScores = (grades || []).map(getGradeScore).filter((value) => value !== null);
@@ -46,10 +68,10 @@ const StudentDashboard = () => {
     return {
       subjects: grades?.length || 0,
       weeklyClasses: timetable?.length || 0,
-      issuedBooks: libraryBooks?.length || 0,
+      pendingHw: pendingHomework,
       avgScore: averageScore,
     };
-  }, [grades, timetable, libraryBooks]);
+  }, [grades, timetable, pendingHomework]);
 
   const todayClasses = useMemo(() => {
     const todayName = dayjs().format("dddd").toLowerCase();
@@ -62,10 +84,10 @@ const StudentDashboard = () => {
   }, [timetable]);
 
   const statMeta = [
-    { key: "subjects",     label: "Subjects",       icon: <BookOutlined /> },
-    { key: "weeklyClasses",label: "Weekly Classes",  icon: <CalendarOutlined /> },
-    { key: "issuedBooks",  label: "Issued Books",    icon: <BookOutlined /> },
-    { key: "avgScore",     label: "Average Score",   icon: <TrophyOutlined />, suffix: stats.avgScore !== null ? "%" : "" },
+    { key: "subjects",     label: "Subjects",         icon: <BookOutlined /> },
+    { key: "weeklyClasses",label: "Weekly Classes",   icon: <CalendarOutlined /> },
+    { key: "pendingHw",    label: "Pending Homework", icon: <CheckCircleOutlined /> },
+    { key: "avgScore",     label: "Average Score",    icon: <TrophyOutlined />, suffix: stats.avgScore !== null ? "%" : "" },
   ];
 
   if (loading && !enrollment) {
@@ -166,7 +188,41 @@ const StudentDashboard = () => {
           </Col>
         </Row>
 
-        <div style={{ ...sectionPanel, marginTop: 16 }}>
+        {/* Attendance Progress */}
+        {attendancePercent !== null && (
+          <Row gutter={[16, 16]} style={{ marginTop: 0 }}>
+            <Col xs={24} md={12}>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>
+                  <PercentageOutlined style={{ marginRight: 8 }} />Monthly Attendance
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
+                  {myAttendance.filter((a) => a.status === "present").length} present out of {myAttendance.length} days
+                </div>
+                <Progress
+                  percent={attendancePercent}
+                  strokeColor={attendancePercent >= 75 ? "#059669" : attendancePercent >= 60 ? "#d97706" : "#dc2626"}
+                  status="active"
+                />
+              </div>
+            </Col>
+            <Col xs={24} md={12}>
+              <div style={sectionPanel}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 12 }}>Quick Links</div>
+                <Space wrap>
+                  <Button size="small" onClick={() => navigate("/dashboard/student/homework")}>Homework</Button>
+                  <Button size="small" onClick={() => navigate("/dashboard/student/study-materials")}>Study Materials</Button>
+                  <Button size="small" onClick={() => navigate("/dashboard/student/leave")}>Apply Leave</Button>
+                  <Button size="small" onClick={() => navigate("/dashboard/student/calendar")}>Calendar</Button>
+                  <Button size="small" onClick={() => navigate("/dashboard/student/fees")}>Fee Status</Button>
+                  <Button size="small" onClick={() => navigate("/dashboard/student/exams")}>My Exams</Button>
+                </Space>
+              </div>
+            </Col>
+          </Row>
+        )}
+
+        <div style={{ ...sectionPanel, marginTop: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Today at a Glance</div>
           {todayClasses.length ? (
             <List

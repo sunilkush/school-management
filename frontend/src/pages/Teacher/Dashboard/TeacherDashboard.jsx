@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Row, Col, Card, List, Button, Space, Progress, Empty, Spin, Tag,
+  Row, Col, List, Button, Space, Progress, Empty, Spin,
 } from "antd";
 import {
-  UserOutlined, BookOutlined, CalendarOutlined, CheckCircleOutlined,
-  FileTextOutlined, DashboardOutlined,
+  UserOutlined, BookOutlined, CalendarOutlined,
+  FileTextOutlined, DashboardOutlined, CalendarFilled,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -12,8 +12,9 @@ import dayjs from "dayjs";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import { fetchMyAttendance } from "../../../features/attendanceSlice";
 import { getExams } from "../../../features/examSlice";
+import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pageCard, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const STAT_COLORS = ["#7c3aed", "#0284c7", "#f97316", "#dc2626"];
 
@@ -26,12 +27,16 @@ const TeacherDashboard = () => {
   const { classAssignTeacher = [], loading: classLoading } = useSelector((state) => state.class || {});
   const { myAttendance = [], loading: attendanceLoading } = useSelector((state) => state.attendance || {});
   const { exams = [], loading: examLoading } = useSelector((state) => state.exams || {});
+  const [assignmentCount, setAssignmentCount] = useState(0);
 
   useEffect(() => {
     if (!selectedAcademicYear?._id) return;
     dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
     dispatch(fetchMyAttendance({ academicYearId: selectedAcademicYear._id, limit: 31 }));
     dispatch(getExams({ academicYearId: selectedAcademicYear._id, limit: 20 }));
+    apiClient.get("/student-portal/teacher/homework", { params: { academicYearId: selectedAcademicYear._id } })
+      .then((res) => setAssignmentCount((res.data?.data || []).length))
+      .catch(() => {});
   }, [dispatch, selectedAcademicYear?._id]);
 
   const dashboardData = useMemo(() => {
@@ -86,8 +91,8 @@ const TeacherDashboard = () => {
   const stats = [
     { title: "Assigned Classes", value: dashboardData.totalClasses,    icon: <BookOutlined /> },
     { title: "Students",          value: dashboardData.totalStudents,   icon: <UserOutlined /> },
+    { title: "Assignments",       value: assignmentCount,               icon: <FileTextOutlined /> },
     { title: "Today Exams",       value: dashboardData.todayExamsCount, icon: <CalendarOutlined /> },
-    { title: "Pending Tasks",     value: dashboardData.pendingTasks,    icon: <FileTextOutlined /> },
   ];
 
   const isLoading = classLoading || attendanceLoading || examLoading;
@@ -143,14 +148,20 @@ const TeacherDashboard = () => {
               <div style={sectionPanel}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Quick Actions</div>
                 <Space direction="vertical" style={{ width: "100%" }}>
-                  <Button type="primary" block onClick={() => navigate("/dashboard/teacher/attendance")}>
+                  <Button type="primary" block onClick={() => navigate("/dashboard/teacher/attendance/students")}>
                     Mark Attendance
                   </Button>
                   <Button block onClick={() => navigate("/dashboard/teacher/assignments")}>
-                    Upload Homework
+                    Assignments
                   </Button>
-                  <Button block onClick={() => navigate("/dashboard/teacher/exams/list")}>
-                    Enter Marks
+                  <Button block onClick={() => navigate("/dashboard/teacher/resources")}>
+                    Upload Resources
+                  </Button>
+                  <Button block onClick={() => navigate("/dashboard/teacher/lesson-plans")}>
+                    Lesson Plans
+                  </Button>
+                  <Button block onClick={() => navigate("/dashboard/teacher/leave")}>
+                    Apply Leave
                   </Button>
                   <Button block onClick={() => navigate("/dashboard/teacher/students")}>
                     View Students

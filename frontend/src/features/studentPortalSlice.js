@@ -123,6 +123,18 @@ export const fetchStudentEnrollment = createAsyncThunk(
   }
 );
 
+export const fetchStudentHostel = createAsyncThunk(
+  "studentPortal/fetchStudentHostel",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/student-portal/me/hostel");
+      return res.data?.data || null;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch hostel details"));
+    }
+  }
+);
+
 export const fetchMyChildren = createAsyncThunk(
   "studentPortal/fetchMyChildren",
   async (_, { rejectWithValue }) => {
@@ -143,6 +155,8 @@ const initialState = {
   timetable: [],
   transportAssignment: null,
   libraryBooks: [],
+  hostel: null,
+  hostelLoading: false,
   loading: false,
   pendingRequests: 0,
   error: null,
@@ -227,7 +241,14 @@ const studentPortalSlice = createSlice({
         setFulfilled(state);
         state.enrollment = action.payload;
       })
-      .addCase(fetchStudentEnrollment.rejected, setRejected);
+      .addCase(fetchStudentEnrollment.rejected, setRejected)
+
+      .addCase(fetchStudentHostel.pending, (state) => { state.hostelLoading = true; })
+      .addCase(fetchStudentHostel.fulfilled, (state, action) => {
+        state.hostelLoading = false;
+        state.hostel = action.payload;
+      })
+      .addCase(fetchStudentHostel.rejected, (state) => { state.hostelLoading = false; });
   },
 });
 

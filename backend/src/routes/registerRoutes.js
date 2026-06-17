@@ -51,6 +51,9 @@ import globalConfigRoutes from "./globalConfig.routes.js";
 import faqRoutes from "./faq.routes.js";
 import analyticsRoutes from "./analytics.routes.js";
 import leaveRequestRoutes from "./leaveRequest.routes.js";
+import admissionInquiryRoutes from "./admissionInquiry.routes.js";
+import studyMaterialRoutes from "./studyMaterial.routes.js";
+import lessonPlanRoutes from "./lessonPlan.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -106,6 +109,9 @@ export const apiV1Routes = [
   ["/faqs", faqRoutes],
   ["/analytics", analyticsRoutes],
   ["/leave-requests", leaveRequestRoutes],
+  ["/admission-inquiries", admissionInquiryRoutes],
+  ["/study-materials", studyMaterialRoutes],
+  ["/lesson-plans", lessonPlanRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {
