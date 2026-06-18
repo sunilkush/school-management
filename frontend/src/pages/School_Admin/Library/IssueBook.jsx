@@ -1,19 +1,12 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Form,
-  DatePicker,
-  Select,
-  Table,
-  Button,
-  message,
-  Row,
-  Col,
+  Button, Col, DatePicker, Empty, Form, Input, Modal,
+  Popconfirm, Row, Select, Spin, Table, Tag, message,
 } from "antd";
 import {
-  PlusOutlined,
-  RollbackOutlined,
-  DeleteOutlined,
-  BookOutlined,
+  AlertOutlined, BookOutlined, CheckCircleOutlined,
+  DeleteOutlined, DollarOutlined, FileTextOutlined,
+  PlusOutlined, RollbackOutlined, SearchOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,289 +18,406 @@ import {
   issueLibraryBook,
   returnLibraryBook,
 } from "../../../features/librarySlice";
+import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
-  pageWrapper,
-  pageCard,
-  sectionPanel,
-  tableHeadCss,
-  pill,
+  iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss,
 } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
-const normalizeIssuedRecord = (entry) => ({
-  key: entry._id,
-  _id: entry._id,
-  studentId: entry.studentId?._id || entry.studentId,
-  studentName: entry.studentName || entry.studentEmail || "Unknown",
-  bookId: entry.bookId?._id || entry.bookId,
-  bookTitle: entry.bookId?.title || "Unknown",
-  issueDate: entry.issueDate ? dayjs(entry.issueDate).format("DD-MM-YYYY") : "-",
-  returnDate: entry.returnDate ? dayjs(entry.returnDate).format("DD-MM-YYYY") : "-",
-  status: entry.status || "Issued",
-});
+const STATUS_COLORS = {
+  Issued:   { color: "#d97706", bg: "#fef3c7" },
+  Returned: { color: "#059669", bg: "#d1fae5" },
+  Overdue:  { color: "#dc2626", bg: "#fee2e2" },
+  Lost:     { color: "#7c3aed", bg: "#ede9fe" },
+};
+
+const StatusBadge = ({ status }) => {
+  const s = STATUS_COLORS[status] || { color: "#64748b", bg: "#f1f5f9" };
+  return (
+    <span style={{ ...pill(s.color, s.bg), whiteSpace: "nowrap" }}>{status}</span>
+  );
+};
 
 const IssueBook = () => {
   const dispatch = useDispatch();
   const [issueForm] = Form.useForm();
   const [returnForm] = Form.useForm();
 
-  const { user } = useSelector((state) => state.auth || {});
+  const { user } = useSelector((s) => s.auth || {});
   const {
-    books = [],
-    issuedBooks: rawIssuedBooks = [],
-    students = [],
-    booksLoading,
-    issuedLoading,
-    studentsLoading,
-    actionLoading,
-  } = useSelector((state) => state.library || {});
+    books = [], issuedBooks: raw = [], students = [],
+    booksLoading, issuedLoading, studentsLoading, actionLoading,
+  } = useSelector((s) => s.library || {});
 
   const schoolId = user?.school?._id || user?.schoolId;
 
-  const issuedBooks = useMemo(
-    () => rawIssuedBooks.map(normalizeIssuedRecord),
-    [rawIssuedBooks]
-  );
+  /* ── extra member lists ─────────────────────────────────────────── */
+  const [allUsers, setAllUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [memberType, setMemberType] = useState("Student");
+  const [searchText, setSearchText] = useState("");
 
-  const fetchSeedData = useCallback(async () => {
+  /* ── return modal ─────────────────────────────────────────────────- */
+  const [returnModal, setReturnModal] = useState(false);
+  const [returningRecord, setReturningRecord] = useState(null);
+  const [returnStatus, setReturnStatus] = useState("Returned");
+
+  /* ── fetch all users (Teachers / Staff) ─────────────────────────── */
+  const loadUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const res = await apiClient.get("/user/all");
+      setAllUsers(Array.isArray(res?.data?.data) ? res.data.data : []);
+    } catch {
+      /* silent */
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  const loadAll = useCallback(async () => {
     try {
       await Promise.all([
         dispatch(fetchLibraryBooks()).unwrap(),
         dispatch(fetchIssuedBooks()).unwrap(),
         schoolId
-          ? dispatch(fetchLibraryStudents({ schoolId, limit: 100 })).unwrap()
+          ? dispatch(fetchLibraryStudents({ schoolId, limit: 300 })).unwrap()
           : Promise.resolve(),
+        loadUsers(),
       ]);
-    } catch (error) {
-      message.error(error || "Failed to load issue/return data");
+    } catch (e) {
+      message.error(e || "Failed to load data");
     }
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId, loadUsers]);
 
-  useEffect(() => {
-    fetchSeedData();
-  }, [fetchSeedData]);
+  useEffect(() => { loadAll(); }, [loadAll]);
 
-  const handleIssueBook = async (values) => {
-    if (!schoolId) {
-      message.error("School context not found. Please re-login.");
-      return;
+  /* ── normalise issued rows ─────────────────────────────────────── */
+  const issuedRows = useMemo(() =>
+    raw.map((e) => ({
+      key: e._id, _id: e._id,
+      borrowerName: e.borrowerName || e.studentName || e.issuedToUserId?.name || "Unknown",
+      memberType:   e.memberType || "Student",
+      bookTitle:    e.bookId?.title || "Unknown",
+      bookId:       e.bookId?._id || e.bookId,
+      issueDate:    e.issueDate ? dayjs(e.issueDate).format("DD MMM YYYY") : "-",
+      dueDate:      e.dueDate   ? dayjs(e.dueDate).format("DD MMM YYYY")   : "-",
+      dueDateRaw:   e.dueDate,
+      status:       e.status || "Issued",
+      fine:         e.fine || 0,
+      fineStatus:   e.fineStatus || "Pending",
+    })), [raw]);
+
+  const filteredRows = useMemo(() => {
+    const q = searchText.toLowerCase();
+    return issuedRows.filter((r) =>
+      r.borrowerName.toLowerCase().includes(q) ||
+      r.bookTitle.toLowerCase().includes(q) ||
+      r.status.toLowerCase().includes(q)
+    );
+  }, [issuedRows, searchText]);
+
+  const activeIssued = useMemo(() =>
+    issuedRows.filter((r) => r.status === "Issued" || r.status === "Overdue"),
+    [issuedRows]);
+
+  /* ── member options based on memberType ─────────────────────────── */
+  const memberOptions = useMemo(() => {
+    if (memberType === "Student") {
+      return students.map((s) => {
+        const id   = s?.studentId || s?.student?._id || s?._id;
+        const name = s?.userDetails?.name || s?.user?.name || s?.studentName || s?.registrationNumber;
+        return { value: id, label: name };
+      });
     }
+    const roles = memberType === "Teacher" ? ["Teacher"] : ["Staff", "Accountant", "HR"];
+    return allUsers.filter((u) => roles.includes(u.role)).map((u) => ({ value: u._id, label: u.name }));
+  }, [memberType, students, allUsers]);
 
+  /* ── issue handler ──────────────────────────────────────────────── */
+  const handleIssue = async (values) => {
+    if (!schoolId) { message.error("School context missing — re-login."); return; }
     const payload = {
       schoolId,
-      studentId: values.studentId,
-      bookId: values.bookId,
-      issueDate: values.issueDate?.toISOString(),
-      dueDate: values.returnDate?.toISOString(),
+      bookId:       values.bookId,
+      memberType:   values.memberType,
+      issuedToUserId: values.issuedToUserId,
+      issueDate:    values.issueDate?.toISOString(),
     };
-
     try {
       await dispatch(issueLibraryBook(payload)).unwrap();
       message.success("Book issued successfully");
       issueForm.resetFields();
-      fetchSeedData();
-    } catch (error) {
-      message.error(error || "Unable to issue book");
+      loadAll();
+    } catch (e) {
+      message.error(e || "Unable to issue book");
     }
   };
 
-  const handleReturnBook = async (values) => {
+  /* ── open return modal ──────────────────────────────────────────── */
+  const openReturn = (record) => {
+    setReturningRecord(record);
+    setReturnStatus("Returned");
+    setReturnModal(true);
+  };
+
+  /* ── confirm return ─────────────────────────────────────────────── */
+  const handleReturn = async () => {
     try {
-      await dispatch(returnLibraryBook(values.issueId)).unwrap();
-      message.success("Book returned successfully");
-      returnForm.resetFields();
-      fetchSeedData();
-    } catch (error) {
-      message.error(error || "Unable to return book");
+      await dispatch(returnLibraryBook({ id: returningRecord._id, status: returnStatus })).unwrap();
+      message.success(`Book marked as ${returnStatus}`);
+      setReturnModal(false);
+      setReturningRecord(null);
+      loadAll();
+    } catch (e) {
+      message.error(e || "Unable to return book");
     }
   };
 
-  const handleDelete = async (issueId) => {
+  /* ── delete ─────────────────────────────────────────────────────── */
+  const handleDelete = async (id) => {
     try {
-      await dispatch(deleteIssuedBook(issueId)).unwrap();
+      await dispatch(deleteIssuedBook(id)).unwrap();
       message.success("Record deleted");
-      fetchSeedData();
-    } catch (error) {
-      message.error(error || "Unable to delete record");
+      loadAll();
+    } catch (e) {
+      message.error(e || "Unable to delete record");
     }
   };
 
+  /* ── summary counts ─────────────────────────────────────────────── */
+  const summaryStats = useMemo(() => ({
+    total:   issuedRows.length,
+    issued:  issuedRows.filter((r) => r.status === "Issued").length,
+    overdue: issuedRows.filter((r) => r.status === "Overdue").length,
+    fines:   issuedRows.reduce((s, r) => s + (r.fineStatus === "Pending" ? r.fine : 0), 0),
+  }), [issuedRows]);
+
+  /* ── table columns ──────────────────────────────────────────────── */
   const columns = [
-    { title: "Student", dataIndex: "studentName" },
-    { title: "Book", dataIndex: "bookTitle" },
-    { title: "Issue Date", dataIndex: "issueDate" },
-    { title: "Return Date", dataIndex: "returnDate" },
+    {
+      title: "Borrower",
+      render: (_, r) => (
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 13 }}>{r.borrowerName}</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.memberType}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Book",
+      dataIndex: "bookTitle",
+      render: (t) => <span style={{ fontWeight: 500 }}>{t}</span>,
+    },
+    { title: "Issue Date", dataIndex: "issueDate", width: 110 },
+    {
+      title: "Due Date",
+      dataIndex: "dueDate",
+      width: 110,
+      render: (d, r) => (
+        <span style={{ color: (r.status === "Overdue") ? "#dc2626" : "inherit", fontWeight: r.status === "Overdue" ? 700 : 400 }}>
+          {d}
+        </span>
+      ),
+    },
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) => {
-        const normalized = String(status || "").toLowerCase();
-        return normalized === "issued" ? (
-          <span style={pill("#d97706", "#fef3c7")}>Issued</span>
-        ) : (
-          <span style={pill("#059669", "#d1fae5")}>Returned</span>
-        );
-      },
+      width: 100,
+      render: (s) => <StatusBadge status={s} />,
     },
     {
-      title: "Action",
-      render: (_, record) => (
-        <Button
-          danger
-          type="link"
-          icon={<DeleteOutlined />}
-          onClick={() => handleDelete(record._id)}
-        >
-          Delete
-        </Button>
+      title: "Fine",
+      width: 90,
+      render: (_, r) => r.fine > 0 ? (
+        <Tag color={r.fineStatus === "Paid" ? "green" : r.fineStatus === "Waived" ? "default" : "red"}>
+          ₹{r.fine} {r.fineStatus !== "Pending" ? `(${r.fineStatus})` : ""}
+        </Tag>
+      ) : null,
+    },
+    {
+      title: "Actions",
+      width: 130,
+      render: (_, r) => (
+        <div style={{ display: "flex", gap: 4 }}>
+          {(r.status === "Issued" || r.status === "Overdue") && (
+            <Button
+              size="small" type="primary" ghost
+              icon={<RollbackOutlined />}
+              onClick={() => openReturn(r)}
+            >
+              Return
+            </Button>
+          )}
+          <Popconfirm title="Delete this record?" onConfirm={() => handleDelete(r._id)} okText="Yes" cancelText="No">
+            <Button size="small" danger type="text" icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </div>
       ),
     },
   ];
 
-  const issuedOnlyRecords = useMemo(
-    () => issuedBooks.filter((book) => String(book.status || "").toLowerCase() === "issued"),
-    [issuedBooks]
-  );
-
   return (
     <div style={pageWrapper}>
-      <style>{tableHeadCss("issue-book-tbl")}</style>
+      <style>{tableHeadCss("issue-tbl")}</style>
       <PageHeader
-        title="Issue / Return Book"
-        subtitle="Manage book issue and return records"
+        title="Issue / Return Books"
+        subtitle="Manage book circulation for students, teachers, and staff"
         icon={<BookOutlined />}
       />
 
-      <div style={{ padding: "20px" }}>
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={12}>
-            <div style={sectionPanel}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Issue Book</div>
-              <Form form={issueForm} layout="vertical" onFinish={handleIssueBook}>
-                <Form.Item
-                  label="Student"
-                  name="studentId"
-                  rules={[{ required: true, message: "Please select student" }]}
+      {/* ── KPI summary ───────────────────────────────────────────── */}
+      <div style={statGrid(150)}>
+        {[
+          { label: "Total Records", value: summaryStats.total,   icon: <FileTextOutlined />, color: "#0891b2" },
+          { label: "Currently Issued", value: summaryStats.issued, icon: <BookOutlined />,   color: "#7c3aed" },
+          { label: "Overdue",          value: summaryStats.overdue, icon: <AlertOutlined />, color: "#dc2626" },
+          { label: "Pending Fines",    value: `₹${summaryStats.fines}`, icon: <DollarOutlined />, color: "#f97316" },
+        ].map(({ label, value, icon, color }) => (
+          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+            <div style={iconWell(color, 40)}>{icon}</div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Issue form ─────────────────────────────────────────────── */}
+      <div style={sectionPanel}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 16 }}>Issue a Book</div>
+        <Form form={issueForm} layout="vertical" onFinish={handleIssue}>
+          <Row gutter={16}>
+            <Col xs={24} sm={8}>
+              <Form.Item label="Member Type" name="memberType" initialValue="Student" rules={[{ required: true }]}>
+                <Select onChange={(v) => { setMemberType(v); issueForm.setFieldValue("issuedToUserId", undefined); }}>
+                  <Option value="Student">Student</Option>
+                  <Option value="Teacher">Teacher</Option>
+                  <Option value="Staff">Staff</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item label="Member" name="issuedToUserId" rules={[{ required: true, message: "Select a member" }]}>
+                <Select
+                  showSearch
+                  placeholder="Search member..."
+                  optionFilterProp="label"
+                  loading={studentsLoading || usersLoading}
+                  options={memberOptions}
+                  notFoundContent={<Empty description="No members found" />}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item label="Book" name="bookId" rules={[{ required: true, message: "Select a book" }]}>
+                <Select
+                  showSearch
+                  placeholder="Search book title..."
+                  optionFilterProp="children"
+                  loading={booksLoading}
+                  notFoundContent={<Empty description="No available books" />}
                 >
-                  <Select
-                    placeholder="Select student"
-                    showSearch
-                    optionFilterProp="children"
-                    loading={studentsLoading}
-                  >
-                    {students.map((student) => {
-                      const resolvedStudentId =
-                        student?.studentId ||
-                        student?.student?._id ||
-                        student?._id;
-                      const label =
-                        student?.userDetails?.name ||
-                        student?.user?.name ||
-                        student?.studentName ||
-                        student?.registrationNumber;
-
-                      return (
-                        <Option key={resolvedStudentId} value={resolvedStudentId}>
-                          {label}
-                        </Option>
-                      );
-                    })}
-                  </Select>
-                </Form.Item>
-
-                <Form.Item
-                  label="Book Title"
-                  name="bookId"
-                  rules={[{ required: true, message: "Please select book" }]}
-                >
-                  <Select
-                    placeholder="Select book"
-                    showSearch
-                    optionFilterProp="children"
-                    loading={booksLoading}
-                  >
-                    {books.map((book) => (
-                      <Option key={book._id} value={book._id}>
-                        {book.title}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-
-                <Row gutter={12}>
-                  <Col span={12}>
-                    <Form.Item label="Issue Date" name="issueDate" rules={[{ required: true }]}>
-                      <DatePicker style={{ width: "100%" }} />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item label="Expected Return Date" name="returnDate" rules={[{ required: true }]}>
-                      <DatePicker style={{ width: "100%" }} />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<PlusOutlined />}
-                  block
-                  loading={actionLoading}
-                >
+                  {books.filter((b) => (b.availableCopies || 0) > 0).map((b) => (
+                    <Option key={b._id} value={b._id}>
+                      {b.title} <span style={{ color: "var(--text-muted)", fontSize: 11 }}>({b.availableCopies} left)</span>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item label="Issue Date" name="issueDate" rules={[{ required: true }]}>
+                <DatePicker style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8} style={{ display: "flex", alignItems: "flex-end" }}>
+              <Form.Item style={{ width: "100%", marginBottom: 0 }}>
+                <Button type="primary" htmlType="submit" icon={<PlusOutlined />} block loading={actionLoading}>
                   Issue Book
                 </Button>
-              </Form>
-            </div>
-          </Col>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </div>
 
-          <Col xs={24} md={12}>
-            <div style={sectionPanel}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Return Book</div>
-              <Form form={returnForm} layout="vertical" onFinish={handleReturnBook}>
-                <Form.Item
-                  label="Issued Book Record"
-                  name="issueId"
-                  rules={[{ required: true }]}
-                >
-                  <Select placeholder="Select issued book" showSearch optionFilterProp="children">
-                    {issuedOnlyRecords.map((book) => (
-                      <Option key={book._id} value={book._id}>
-                        {book.studentName} - {book.bookTitle}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-
-                <Button
-                  type="primary"
-                  danger
-                  htmlType="submit"
-                  icon={<RollbackOutlined />}
-                  block
-                  loading={actionLoading}
-                >
-                  Return Book
-                </Button>
-              </Form>
-            </div>
-          </Col>
-        </Row>
-
-        <div style={{ ...pageCard, marginTop: 24, padding: 24 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Issued Book Records</div>
-          <Table
-            className="issue-book-tbl"
-            columns={columns}
-            dataSource={issuedBooks}
-            pagination={{ pageSize: 5 }}
-            rowKey="_id"
-            loading={issuedLoading || actionLoading}
-            scroll={{ x: "max-content" }}
+      {/* ── Records table ──────────────────────────────────────────── */}
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Issue Records</div>
+          <Input
+            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            placeholder="Search borrower, book, status..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 260, borderRadius: 8 }}
+            allowClear
           />
         </div>
+        <Table
+          className="issue-tbl"
+          rowKey="_id"
+          columns={columns}
+          dataSource={filteredRows}
+          loading={issuedLoading || actionLoading}
+          pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: ["10", "25", "50"] }}
+          scroll={{ x: 800 }}
+          rowClassName={(r) => r.status === "Overdue" ? "overdue-row" : ""}
+          locale={{ emptyText: <Empty description="No issue records" /> }}
+        />
       </div>
+
+      {/* ── Return modal ────────────────────────────────────────────── */}
+      <Modal
+        title="Return / Mark Book"
+        open={returnModal}
+        onCancel={() => setReturnModal(false)}
+        onOk={handleReturn}
+        okText="Confirm"
+        confirmLoading={actionLoading}
+        destroyOnClose
+      >
+        {returningRecord && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ ...sectionPanel, padding: 14, marginBottom: 0 }}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>{returningRecord.bookTitle}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Borrower: <strong>{returningRecord.borrowerName}</strong> &nbsp;|&nbsp;
+                Due: <strong style={{ color: returningRecord.status === "Overdue" ? "#dc2626" : "inherit" }}>{returningRecord.dueDate}</strong>
+              </div>
+              {returningRecord.status === "Overdue" && (
+                <div style={{ marginTop: 8, padding: "6px 10px", background: "#fee2e2", borderRadius: 8, fontSize: 12, color: "#dc2626", fontWeight: 600 }}>
+                  <AlertOutlined /> This book is overdue. Fine will be calculated on return.
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13 }}>Return Status</div>
+              <Select value={returnStatus} onChange={setReturnStatus} style={{ width: "100%" }}>
+                <Option value="Returned">
+                  <CheckCircleOutlined style={{ color: "#059669", marginRight: 6 }} />
+                  Returned — Book is back in good condition
+                </Option>
+                <Option value="Lost">
+                  <AlertOutlined style={{ color: "#7c3aed", marginRight: 6 }} />
+                  Lost — Borrower reports book is lost
+                </Option>
+              </Select>
+            </div>
+
+            {returnStatus === "Lost" && (
+              <div style={{ padding: "8px 12px", background: "#ede9fe", borderRadius: 8, fontSize: 12, color: "#7c3aed", fontWeight: 600 }}>
+                <DollarOutlined /> A lost book fine from library settings will be applied.
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

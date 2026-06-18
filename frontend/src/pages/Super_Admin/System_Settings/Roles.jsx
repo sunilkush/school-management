@@ -13,6 +13,7 @@ import {
   Row,
   Select,
   Space,
+  Spin,
   Statistic,
   Table,
   Tag,
@@ -28,7 +29,11 @@ import {
   UserSwitchOutlined,
   LockOutlined,
   DeleteOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchRoles } from "../../../features/roleSlice";
+import apiClient from "../../../api/httpClient";
 import AddRoleForm from "../../../components/forms/AddRoleForm";
 
 const { Title, Text } = Typography;
@@ -36,8 +41,6 @@ const { Title, Text } = Typography;
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const LS_KEY = "tempAccessGrants";
-
 const ROLE_TEMPLATES = {
   small: ["School Admin", "Teacher", "Accountant", "Receptionist"],
   medium: [
@@ -85,32 +88,6 @@ const templateMeta = {
 const statusConfig = {
   Active: "success",
   Expired: "default",
-};
-
-// ---------------------------------------------------------------------------
-// Helpers — localStorage persistence
-// TODO: Replace localStorage fallback with a real API call once the backend
-//       endpoint POST /api/v1/role/temp-access is available.
-//       Example call:
-//         await httpClient.post('/role/temp-access', {
-//           userId, roleId, scope, validTill, reason
-//         });
-// ---------------------------------------------------------------------------
-const loadFromStorage = () => {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveToStorage = (records) => {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify(records));
-  } catch {
-    // storage quota exceeded — ignore silently
-  }
 };
 
 // ---------------------------------------------------------------------------
@@ -189,73 +166,79 @@ const css = `
 // Component
 // ---------------------------------------------------------------------------
 const Roles = () => {
+  const dispatch = useDispatch();
+  const { roles = [] } = useSelector((state) => state.role);
+
   const [selectedTemplate, setSelectedTemplate] = useState("small");
   const [tempAccessOpen, setTempAccessOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingAccess, setLoadingAccess] = useState(false);
+  const [temporaryAccess, setTemporaryAccess] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [form] = Form.useForm();
-
-  // Initialise from localStorage so data survives page refresh
-  const [temporaryAccess, setTemporaryAccess] = useState(() => loadFromStorage());
 
   const templateRoles = useMemo(
     () => ROLE_TEMPLATES[selectedTemplate] || [],
     [selectedTemplate]
   );
 
-  // Persist to localStorage whenever records change
+  // Load roles and temp access records on mount
   useEffect(() => {
-    saveToStorage(temporaryAccess);
-  }, [temporaryAccess]);
+    dispatch(fetchRoles());
+    loadTempAccess();
+  }, [dispatch]);
+
+  const loadTempAccess = async () => {
+    setLoadingAccess(true);
+    try {
+      const res = await apiClient.get("/role/temp-access");
+      setTemporaryAccess(res.data?.data || []);
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Failed to load temporary access records");
+    } finally {
+      setLoadingAccess(false);
+    }
+  };
+
+  // Fetch users when the modal opens
+  const handleOpenModal = async () => {
+    setTempAccessOpen(true);
+    if (allUsers.length) return;
+    try {
+      const res = await apiClient.get("/user/all");
+      const users = res.data?.data?.users || res.data?.data || [];
+      setAllUsers(Array.isArray(users) ? users : []);
+    } catch {
+      // modal will still open; user can type manually
+    }
+  };
 
   // ---------------------------------------------------------------------------
-  // Grant temporary access — persists to localStorage
-  // TODO: Swap the localStorage write below for an API call when the backend
-  //       endpoint is ready (POST /api/v1/role/temp-access).
+  // Grant temporary access via API
   // ---------------------------------------------------------------------------
   const createTemporaryAccess = async () => {
     try {
       setSubmitting(true);
       const values = await form.validateFields();
 
-      const row = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        user: values.user,
-        role: values.role,
-        scope: values.scope,
-        validTill: values.validTill
-          ? values.validTill.format("YYYY-MM-DD")
-          : "-",
+      await apiClient.post("/role/temp-access", {
+        userId: values.userId,
+        roleId: values.roleId,
+        scope: values.scope || "global",
         reason: values.reason,
-        status: "Active",
-        createdAt: new Date().toISOString(),
-      };
-
-      // TODO: Replace this block with httpClient call once endpoint exists:
-      // import httpClient from "../../../api/httpClient";
-      // await httpClient.post('/role/temp-access', {
-      //   userId: values.user,
-      //   roleId: values.role,
-      //   scope: values.scope,
-      //   validTill: row.validTill,
-      //   reason: values.reason,
-      // });
-
-      setTemporaryAccess((prev) => {
-        const updated = [row, ...prev];
-        saveToStorage(updated);
-        return updated;
+        validTill: values.validTill ? values.validTill.format("YYYY-MM-DD") : undefined,
       });
 
+      message.success("Temporary access granted successfully.");
       form.resetFields();
       setTempAccessOpen(false);
-      message.success("Temporary access granted and saved locally.");
+      loadTempAccess();
     } catch (err) {
-      // Ant Design form validation throws an object — ignore those; show real errors
       if (err && err.errorFields) return;
       message.error(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to grant temporary access. Please try again."
+          "Failed to grant temporary access."
       );
     } finally {
       setSubmitting(false);
@@ -263,15 +246,29 @@ const Roles = () => {
   };
 
   // ---------------------------------------------------------------------------
+  // Revoke a temporary-access record
+  // ---------------------------------------------------------------------------
+  const revokeTempAccess = async (id) => {
+    try {
+      await apiClient.patch(`/role/temp-access/${id}/revoke`);
+      message.success("Temporary access revoked.");
+      loadTempAccess();
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Failed to revoke access.");
+    }
+  };
+
+  // ---------------------------------------------------------------------------
   // Delete a temporary-access record
   // ---------------------------------------------------------------------------
-  const deleteTemporaryAccess = (id) => {
-    setTemporaryAccess((prev) => {
-      const updated = prev.filter((r) => r.id !== id);
-      saveToStorage(updated);
-      return updated;
-    });
-    message.success("Temporary access record removed.");
+  const deleteTemporaryAccess = async (id) => {
+    try {
+      await apiClient.delete(`/role/temp-access/${id}`);
+      message.success("Temporary access record deleted.");
+      loadTempAccess();
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Failed to delete record.");
+    }
   };
 
   // ---------------------------------------------------------------------------
@@ -280,15 +277,15 @@ const Roles = () => {
   const columns = [
     {
       title: "User",
-      dataIndex: "user",
-      render: (value) => <Text strong>{value}</Text>,
+      dataIndex: "userId",
+      render: (user) => <Text strong>{user?.name || user?.email || "—"}</Text>,
     },
     {
       title: "Role",
-      dataIndex: "role",
+      dataIndex: "roleId",
       render: (role) => (
         <Tag color="blue" className="role-chip">
-          {role}
+          {role?.name || "—"}
         </Tag>
       ),
     },
@@ -302,7 +299,7 @@ const Roles = () => {
       dataIndex: "validTill",
       render: (value) => (
         <Tag icon={<ClockCircleOutlined />} color="warning">
-          {value}
+          {value ? new Date(value).toLocaleDateString() : "—"}
         </Tag>
       ),
     },
@@ -323,22 +320,39 @@ const Roles = () => {
     {
       title: "Action",
       key: "action",
-      width: 90,
+      width: 120,
       render: (_, record) => (
-        <Popconfirm
-          title="Remove this temporary access grant?"
-          okText="Remove"
-          okButtonProps={{ danger: true }}
-          onConfirm={() => deleteTemporaryAccess(record.id)}
-        >
-          <Button
-            danger
-            type="text"
-            size="small"
-            icon={<DeleteOutlined />}
-            title="Delete"
-          />
-        </Popconfirm>
+        <Space>
+          {record.status === "Active" && (
+            <Popconfirm
+              title="Revoke this temporary access?"
+              okText="Revoke"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => revokeTempAccess(record._id)}
+            >
+              <Button
+                type="text"
+                size="small"
+                icon={<StopOutlined />}
+                title="Revoke"
+              />
+            </Popconfirm>
+          )}
+          <Popconfirm
+            title="Delete this record permanently?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => deleteTemporaryAccess(record._id)}
+          >
+            <Button
+              danger
+              type="text"
+              size="small"
+              icon={<DeleteOutlined />}
+              title="Delete"
+            />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -376,7 +390,7 @@ const Roles = () => {
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
-                  onClick={() => setTempAccessOpen(true)}
+                  onClick={handleOpenModal}
                 >
                   Grant Temporary Access
                 </Button>
@@ -394,15 +408,6 @@ const Roles = () => {
           description="Role templates + time-bound access yahan manage hoga. Permission diff aur high-risk approvals Permissions module me handle honge."
         />
 
-        {/* LocalStorage notice */}
-        <Alert
-          type="warning"
-          showIcon
-          closable
-          style={{ borderRadius: 16, marginBottom: 18 }}
-          message="Offline Persistence Mode"
-          description="Temporary access grants are currently stored in browser localStorage. They persist across page refreshes but are device-specific. A dedicated backend endpoint will be used once available."
-        />
 
         {/* Stat cards */}
         <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
@@ -553,16 +558,17 @@ const Roles = () => {
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
-                  onClick={() => setTempAccessOpen(true)}
+                  onClick={handleOpenModal}
                 >
                   Grant Access
                 </Button>
               }
             >
               <Table
-                rowKey="id"
+                rowKey="_id"
                 columns={columns}
                 dataSource={temporaryAccess}
+                loading={loadingAccess}
                 scroll={{ x: 900 }}
                 pagination={{ pageSize: 6 }}
                 locale={{
@@ -599,31 +605,51 @@ const Roles = () => {
             <Row gutter={12}>
               <Col xs={24} md={12}>
                 <Form.Item
-                  name="user"
+                  name="userId"
                   label="User"
                   rules={[{ required: true, message: "User is required" }]}
                 >
-                  <Input placeholder="Name or email" />
+                  <Select
+                    showSearch
+                    placeholder="Select user"
+                    optionFilterProp="label"
+                    options={allUsers.map((u) => ({
+                      label: `${u.name || u.email} (${u.email})`,
+                      value: u._id,
+                    }))}
+                    notFoundContent={allUsers.length === 0 ? <Spin size="small" /> : "No users"}
+                  />
                 </Form.Item>
               </Col>
 
               <Col xs={24} md={12}>
                 <Form.Item
-                  name="role"
+                  name="roleId"
                   label="Role"
                   rules={[{ required: true, message: "Role is required" }]}
                 >
-                  <Input placeholder="Exam Coordinator" />
+                  <Select
+                    showSearch
+                    placeholder="Select role"
+                    optionFilterProp="label"
+                    options={roles.map((r) => ({ label: r.name, value: r._id }))}
+                    notFoundContent={roles.length === 0 ? <Spin size="small" /> : "No roles"}
+                  />
                 </Form.Item>
               </Col>
 
               <Col xs={24} md={12}>
-                <Form.Item
-                  name="scope"
-                  label="Scope"
-                  rules={[{ required: true, message: "Scope is required" }]}
-                >
-                  <Input placeholder="Exam Week Access" />
+                <Form.Item name="scope" label="Scope (optional)">
+                  <Select
+                    placeholder="Select scope"
+                    allowClear
+                    options={[
+                      { label: "Global", value: "global" },
+                      { label: "School Level", value: "school" },
+                      { label: "Exam Week", value: "exam-week" },
+                      { label: "Event Only", value: "event" },
+                    ]}
+                  />
                 </Form.Item>
               </Col>
 

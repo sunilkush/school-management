@@ -16,8 +16,9 @@ import {
   Flex,
   Space,
   message,
+  Popconfirm,
 } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined, CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
 import { FaUserCircle } from "react-icons/fa";
 
 const { Option } = Select;
@@ -31,13 +32,15 @@ const Teachers = () => {
   const { schools = [] } = useSelector((state) => state.school);
 
   const [selectedSchool, setSelectedSchool] = useState("All");
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [clearToggle, setClearToggle] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAllUser());
     dispatch(fetchSchools());
   }, [dispatch]);
 
-  // ✅ Only teachers
   const teachers = useMemo(() => {
     let data = users.filter((u) => u?.role?.name === "Teacher");
     if (selectedSchool !== "All") {
@@ -51,13 +54,11 @@ const Teachers = () => {
     ...new Set(schools.map((s) => s.name).filter(Boolean)),
   ];
 
-  // ✅ Toggle status (Self-protection)
   const handleToggleStatus = (user) => {
     if (user._id === currentUser?._id) {
       message.warning("You cannot change your own status");
       return;
     }
-
     dispatch(
       user.isActive
         ? deleteUser({ id: user._id, isActive: false })
@@ -65,7 +66,34 @@ const Teachers = () => {
     ).then(() => dispatch(fetchAllUser()));
   };
 
-  // ✅ Table Columns
+  const handleBulkAction = async (activate) => {
+    const targets = selectedRows.filter((r) => r._id !== currentUser?._id);
+    if (!targets.length) {
+      message.warning("No eligible rows selected");
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(
+        targets.map((r) =>
+          dispatch(
+            activate
+              ? activeUser({ id: r._id, isActive: true })
+              : deleteUser({ id: r._id, isActive: false })
+          )
+        )
+      );
+      message.success(`${targets.length} teacher(s) ${activate ? "activated" : "deactivated"}`);
+      setClearToggle((v) => !v);
+      setSelectedRows([]);
+      dispatch(fetchAllUser());
+    } catch {
+      message.error("Bulk action failed");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const columns = [
     {
       name: "#",
@@ -125,7 +153,6 @@ const Teachers = () => {
 
   return (
     <div style={{ padding: 16 }}>
-      {/* ✅ Header */}
       <Card bordered={false} style={{ marginBottom: 16 }}>
         <Flex justify="space-between" align="center" wrap="wrap">
           <div>
@@ -160,8 +187,51 @@ const Teachers = () => {
         </Flex>
       </Card>
 
-      {/* ✅ Table */}
       <Card bordered={false}>
+        {selectedRows.length > 0 && (
+          <Flex
+            align="center"
+            gap={8}
+            style={{
+              background: "#f0f5ff",
+              borderRadius: 8,
+              padding: "8px 14px",
+              marginBottom: 12,
+            }}
+          >
+            <Text strong>{selectedRows.length} selected</Text>
+            <Popconfirm
+              title={`Activate ${selectedRows.length} teacher(s)?`}
+              onConfirm={() => handleBulkAction(true)}
+              okText="Activate"
+            >
+              <Button
+                size="small"
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                loading={bulkLoading}
+              >
+                Activate Selected
+              </Button>
+            </Popconfirm>
+            <Popconfirm
+              title={`Deactivate ${selectedRows.length} teacher(s)?`}
+              onConfirm={() => handleBulkAction(false)}
+              okText="Deactivate"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                size="small"
+                danger
+                icon={<StopOutlined />}
+                loading={bulkLoading}
+              >
+                Deactivate Selected
+              </Button>
+            </Popconfirm>
+          </Flex>
+        )}
+
         <DataTable
           columns={columns}
           data={teachers}
@@ -170,6 +240,9 @@ const Teachers = () => {
           highlightOnHover
           striped
           responsive
+          selectableRows
+          onSelectedRowsChange={({ selectedRows: rows }) => setSelectedRows(rows)}
+          clearSelectedRows={clearToggle}
           noDataComponent="No teachers found"
           customStyles={{
             headCells: {

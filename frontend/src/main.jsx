@@ -184,6 +184,12 @@ const SAAttendanceDashboard     = lazy(() => import("./pages/School_Admin/Attend
 const Books = lazy(() => import("./pages/School_Admin/Library/Books.jsx"));
 const IssueBook = lazy(() => import("./pages/School_Admin/Library/IssueBook.jsx"));
 const LibraryCard = lazy(() => import("./pages/School_Admin/Library/LibraryCard.jsx"));
+// Librarian Portal pages
+const LibraryDashboard = lazy(() => import("./pages/Librarian/LibraryDashboard.jsx"));
+const LibraryMembers   = lazy(() => import("./pages/Librarian/LibraryMembers.jsx"));
+const LibraryReports   = lazy(() => import("./pages/Librarian/LibraryReports.jsx"));
+const FineManagement   = lazy(() => import("./pages/Librarian/FineManagement.jsx"));
+const LibrarySettings  = lazy(() => import("./pages/Librarian/LibrarySettings.jsx"));
 
 const SchoolAdminTimetablePage = lazy(() => import("./pages/Timetable/SchoolAdminTimetablePage.jsx"));
 const TimeSlotManager = lazy(() => import("./pages/Timetable/TimeSlotManager.jsx"));
@@ -863,20 +869,26 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "librarian/payroll",
+            path: "librarian",
             element: (
               <ProtectedRoute allowedRoles={["Librarian"]}>
-                <PayrollSelfServicePage />
+                <Outlet />
               </ProtectedRoute>
             ),
-          },
-          {
-            path: "librarian/*",
-            element: (
-              <ProtectedRoute allowedRoles={["Librarian"]}>
-                <RoleDynamicPortal />
-              </ProtectedRoute>
-            ),
+            children: [
+              { index: true,              element: <LibraryDashboard /> },
+              { path: "book-catalog",     element: <Books /> },
+              { path: "issue-return",     element: <IssueBook /> },
+              { path: "members",          element: <LibraryMembers /> },
+              { path: "reports",          element: <LibraryReports /> },
+              { path: "fines",            element: <FineManagement /> },
+              { path: "settings",         element: <LibrarySettings /> },
+              { path: "payroll",          element: <PayrollSelfServicePage /> },
+              { path: "profile",          element: <Profile /> },
+              { path: "message",          element: <Message /> },
+              { path: "notification",     element: <Notification /> },
+              { path: "workspace",        element: <RoleDynamicPortal /> },
+            ],
           },
           {
             path: "hostelwarden",

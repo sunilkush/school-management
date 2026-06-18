@@ -57,6 +57,24 @@ const globalConfigSchema = new Schema(
       type: Number,
       default: 0,
     },
+    // Email / SMTP
+    smtpHost:     { type: String, trim: true },
+    smtpPort:     { type: Number },
+    smtpUser:     { type: String, trim: true },
+    smtpPassword:  { type: String, trim: true },
+    smtpFromEmail: { type: String, trim: true },
+    smtpFromName:  { type: String, trim: true },
+
+    // SMS Gateway
+    smsProvider:  { type: String, enum: ["twilio", "msg91", "textlocal", "none"], default: "none" },
+    smsApiKey:    { type: String, trim: true },
+    smsSenderId:  { type: String, trim: true },
+
+    // Payment Gateway
+    razorpayKeyId:     { type: String, trim: true },
+    razorpayKeySecret: { type: String, trim: true },
+    paymentGateway:    { type: String, enum: ["razorpay", "stripe", "none"], default: "none" },
+
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

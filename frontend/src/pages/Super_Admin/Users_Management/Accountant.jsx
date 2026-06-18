@@ -16,8 +16,9 @@ import {
   Flex,
   Space,
   message,
+  Popconfirm,
 } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined, CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
 import { FaUserCircle } from "react-icons/fa";
 
 const { Option } = Select;
@@ -31,13 +32,15 @@ const Accountant = () => {
   const { schools = [] } = useSelector((state) => state.school);
 
   const [selectedSchool, setSelectedSchool] = useState("All");
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [clearToggle, setClearToggle] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAllUser());
     dispatch(fetchSchools());
   }, [dispatch]);
 
-  // ✅ Filter Accountants
   const accountants = useMemo(() => {
     let data = users.filter((u) => u?.role?.name === "Accountant");
     if (selectedSchool !== "All") {
@@ -51,13 +54,11 @@ const Accountant = () => {
     ...new Set(schools.map((s) => s.name).filter(Boolean)),
   ];
 
-  // ✅ Toggle status (Self-protection)
   const handleToggleStatus = (user) => {
     if (user._id === currentUser?._id) {
       message.warning("You cannot change your own status");
       return;
     }
-
     dispatch(
       user.isActive
         ? deleteUser({ id: user._id, isActive: false })
@@ -65,22 +66,41 @@ const Accountant = () => {
     ).then(() => dispatch(fetchAllUser()));
   };
 
-  // ✅ Table Columns
+  const handleBulkAction = async (activate) => {
+    const targets = selectedRows.filter((r) => r._id !== currentUser?._id);
+    if (!targets.length) {
+      message.warning("No eligible rows selected");
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      await Promise.all(
+        targets.map((r) =>
+          dispatch(
+            activate
+              ? activeUser({ id: r._id, isActive: true })
+              : deleteUser({ id: r._id, isActive: false })
+          )
+        )
+      );
+      message.success(`${targets.length} accountant(s) ${activate ? "activated" : "deactivated"}`);
+      setClearToggle((v) => !v);
+      setSelectedRows([]);
+      dispatch(fetchAllUser());
+    } catch {
+      message.error("Bulk action failed");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const columns = [
-    {
-      name: "#",
-      selector: (_, index) => index + 1,
-      width: "60px",
-    },
+    { name: "#", selector: (_, index) => index + 1, width: "60px" },
     {
       name: "Avatar",
       cell: (row) =>
         row.avatar ? (
-          <img
-            src={row.avatar}
-            alt="avatar"
-            style={{ width: 36, height: 36, borderRadius: "50%" }}
-          />
+          <img src={row.avatar} alt="avatar" style={{ width: 36, height: 36, borderRadius: "50%" }} />
         ) : (
           <FaUserCircle size={28} color="#9CA3AF" />
         ),
@@ -88,10 +108,7 @@ const Accountant = () => {
     },
     { name: "Name", selector: (row) => row.name, sortable: true },
     { name: "Email", selector: (row) => row.email, sortable: true },
-    {
-      name: "School",
-      selector: (row) => row.school?.name || "—",
-    },
+    { name: "School", selector: (row) => row.school?.name || "—" },
     {
       name: "Status",
       cell: (row) => (
@@ -117,51 +134,56 @@ const Accountant = () => {
   ];
 
   if (error)
-    return (
-      <Text type="danger" className="block text-center mt-6">
-        {error}
-      </Text>
-    );
+    return <Text type="danger" className="block text-center mt-6">{error}</Text>;
 
   return (
     <div style={{ padding: 16 }}>
-      {/* ✅ Header */}
       <Card bordered={false} style={{ marginBottom: 16 }}>
         <Flex justify="space-between" align="center" wrap="wrap">
           <div>
-            <Title level={4} style={{ marginBottom: 0 }}>
-              Accountant Management
-            </Title>
-            <Text type="secondary">
-              Super Admin can manage accountants across all schools
-            </Text>
+            <Title level={4} style={{ marginBottom: 0 }}>Accountant Management</Title>
+            <Text type="secondary">Super Admin can manage accountants across all schools</Text>
           </div>
-
           <Space>
-            <Select
-              value={selectedSchool}
-              onChange={setSelectedSchool}
-              style={{ width: 220 }}
-            >
+            <Select value={selectedSchool} onChange={setSelectedSchool} style={{ width: 220 }}>
               {schoolNames.map((name) => (
-                <Option key={name} value={name}>
-                  {name}
-                </Option>
+                <Option key={name} value={name}>{name}</Option>
               ))}
             </Select>
-
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => dispatch(fetchAllUser())}
-            >
-              Refresh
-            </Button>
+            <Button icon={<ReloadOutlined />} onClick={() => dispatch(fetchAllUser())}>Refresh</Button>
           </Space>
         </Flex>
       </Card>
 
-      {/* ✅ Table */}
       <Card bordered={false}>
+        {selectedRows.length > 0 && (
+          <Flex
+            align="center"
+            gap={8}
+            style={{ background: "#f0f5ff", borderRadius: 8, padding: "8px 14px", marginBottom: 12 }}
+          >
+            <Text strong>{selectedRows.length} selected</Text>
+            <Popconfirm
+              title={`Activate ${selectedRows.length} accountant(s)?`}
+              onConfirm={() => handleBulkAction(true)}
+              okText="Activate"
+            >
+              <Button size="small" type="primary" icon={<CheckCircleOutlined />} loading={bulkLoading}>
+                Activate Selected
+              </Button>
+            </Popconfirm>
+            <Popconfirm
+              title={`Deactivate ${selectedRows.length} accountant(s)?`}
+              onConfirm={() => handleBulkAction(false)}
+              okText="Deactivate"
+              okButtonProps={{ danger: true }}
+            >
+              <Button size="small" danger icon={<StopOutlined />} loading={bulkLoading}>
+                Deactivate Selected
+              </Button>
+            </Popconfirm>
+          </Flex>
+        )}
         <DataTable
           columns={columns}
           data={accountants}
@@ -170,15 +192,11 @@ const Accountant = () => {
           highlightOnHover
           striped
           responsive
+          selectableRows
+          onSelectedRowsChange={({ selectedRows: rows }) => setSelectedRows(rows)}
+          clearSelectedRows={clearToggle}
           noDataComponent="No accountants found"
-          customStyles={{
-            headCells: {
-              style: {
-                fontWeight: 600,
-                backgroundColor: "#F9FAFB",
-              },
-            },
-          }}
+          customStyles={{ headCells: { style: { fontWeight: 600, backgroundColor: "#F9FAFB" } } }}
         />
       </Card>
     </div>

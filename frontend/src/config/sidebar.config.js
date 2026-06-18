@@ -468,11 +468,13 @@ export const sidebarMenu = {
 
   /* ================= LIBRARIAN ================= */
   librarian: [
-    { title: "Overview", path: "librarian", icon: LayoutDashboard },
+    { title: "Dashboard", path: "librarian", icon: LayoutDashboard },
     { title: "Book Catalog", path: "librarian/book-catalog", icon: Book },
     { title: "Issue / Return", path: "librarian/issue-return", icon: ClipboardCheck },
     { title: "Members", path: "librarian/members", icon: Users },
+    { title: "Fine Management", path: "librarian/fines", icon: CreditCard },
     { title: "Reports", path: "librarian/reports", icon: FileBarChart2 },
+    { title: "Library Settings", path: "librarian/settings", icon: Settings },
     { title: "My Payroll", path: "librarian/payroll", icon: IndianRupee },
     roleWorkspaceItem,
     ...commonSelfService("librarian"),

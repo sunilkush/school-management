@@ -23,6 +23,9 @@ import {
   BulbOutlined,
   SafetyOutlined,
   PictureOutlined,
+  MessageOutlined,
+  CreditCardOutlined,
+  CloudServerOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -84,6 +87,21 @@ export default function GlobalConfig() {
         maintenanceMode: config.maintenanceMode ?? false,
         allowRegistration: config.allowRegistration ?? true,
         maxSchools: config.maxSchools ?? 100,
+        // SMTP
+        smtpHost: config.smtpHost ?? "",
+        smtpPort: config.smtpPort ?? 587,
+        smtpUser: config.smtpUser ?? "",
+        smtpPassword: config.smtpPassword ?? "",
+        smtpFromEmail: config.smtpFromEmail ?? "",
+        smtpFromName: config.smtpFromName ?? "",
+        // SMS
+        smsProvider: config.smsProvider ?? "none",
+        smsApiKey: config.smsApiKey ?? "",
+        smsSenderId: config.smsSenderId ?? "",
+        // Payment
+        paymentGateway: config.paymentGateway ?? "none",
+        razorpayKeyId: config.razorpayKeyId ?? "",
+        razorpayKeySecret: config.razorpayKeySecret ?? "",
       });
       if (config.logoUrl) {
         setLogoPreview(config.logoUrl);
@@ -416,6 +434,92 @@ export default function GlobalConfig() {
             </div>
           </div>
 
+          {/* ── Email / SMTP ── */}
+          <div style={{ ...sectionPanel }}>
+            <SectionHead
+              icon={<CloudServerOutlined />}
+              title="Email / SMTP Settings"
+              subtitle="Configure outgoing email server for notifications and alerts"
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              <Form.Item name="smtpHost" label="SMTP Host">
+                <Input placeholder="smtp.gmail.com" size="large" />
+              </Form.Item>
+              <Form.Item name="smtpPort" label="SMTP Port">
+                <InputNumber placeholder="587" min={1} max={65535} size="large" style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item name="smtpUser" label="SMTP Username">
+                <Input placeholder="user@example.com" size="large" />
+              </Form.Item>
+              <Form.Item name="smtpPassword" label="SMTP Password">
+                <Input.Password placeholder="••••••••" size="large" />
+              </Form.Item>
+              <Form.Item
+                name="smtpFromEmail"
+                label="From Email"
+                rules={[{ type: "email", message: "Enter a valid email" }]}
+              >
+                <Input
+                  prefix={<MailOutlined style={{ color: "var(--text-muted)" }} />}
+                  placeholder="noreply@school.com"
+                  size="large"
+                />
+              </Form.Item>
+              <Form.Item name="smtpFromName" label="From Name">
+                <Input placeholder="School Management System" size="large" />
+              </Form.Item>
+            </div>
+          </div>
+
+          {/* ── SMS Gateway ── */}
+          <div style={{ ...sectionPanel }}>
+            <SectionHead
+              icon={<MessageOutlined />}
+              title="SMS Gateway"
+              subtitle="Configure SMS provider for OTPs and notifications"
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              <Form.Item name="smsProvider" label="SMS Provider">
+                <Select size="large">
+                  <Option value="none">None (disabled)</Option>
+                  <Option value="twilio">Twilio</Option>
+                  <Option value="msg91">MSG91</Option>
+                  <Option value="textlocal">TextLocal</Option>
+                </Select>
+              </Form.Item>
+              <Form.Item name="smsApiKey" label="API Key / Auth Token">
+                <Input.Password placeholder="Enter API key" size="large" />
+              </Form.Item>
+              <Form.Item name="smsSenderId" label="Sender ID">
+                <Input placeholder="SCHOOL" maxLength={11} size="large" />
+              </Form.Item>
+            </div>
+          </div>
+
+          {/* ── Payment Gateway ── */}
+          <div style={{ ...sectionPanel }}>
+            <SectionHead
+              icon={<CreditCardOutlined />}
+              title="Payment Gateway"
+              subtitle="Configure online fee collection and payment processing"
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              <Form.Item name="paymentGateway" label="Payment Gateway">
+                <Select size="large">
+                  <Option value="none">None (disabled)</Option>
+                  <Option value="razorpay">Razorpay</Option>
+                  <Option value="stripe">Stripe</Option>
+                </Select>
+              </Form.Item>
+              <Form.Item name="razorpayKeyId" label="Razorpay Key ID">
+                <Input placeholder="rzp_live_XXXXXXXX" size="large" />
+              </Form.Item>
+              <Form.Item name="razorpayKeySecret" label="Razorpay Key Secret">
+                <Input.Password placeholder="Enter secret key" size="large" />
+              </Form.Item>
+            </div>
+          </div>
+
           {/* ── Save footer ── */}
           <div
             style={{
@@ -439,6 +543,18 @@ export default function GlobalConfig() {
                     maintenanceMode: config.maintenanceMode ?? false,
                     allowRegistration: config.allowRegistration ?? true,
                     maxSchools: config.maxSchools ?? 100,
+                    smtpHost: config.smtpHost ?? "",
+                    smtpPort: config.smtpPort ?? 587,
+                    smtpUser: config.smtpUser ?? "",
+                    smtpPassword: config.smtpPassword ?? "",
+                    smtpFromEmail: config.smtpFromEmail ?? "",
+                    smtpFromName: config.smtpFromName ?? "",
+                    smsProvider: config.smsProvider ?? "none",
+                    smsApiKey: config.smsApiKey ?? "",
+                    smsSenderId: config.smsSenderId ?? "",
+                    paymentGateway: config.paymentGateway ?? "none",
+                    razorpayKeyId: config.razorpayKeyId ?? "",
+                    razorpayKeySecret: config.razorpayKeySecret ?? "",
                   });
                   setLogoPreview(config.logoUrl || null);
                   setLogoFile(null);

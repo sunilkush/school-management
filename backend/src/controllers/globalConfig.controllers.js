@@ -20,37 +20,32 @@ export const getGlobalConfig = asyncHandler(async (req, res) => {
 /* ── UPDATE CONFIG ───────────────────────────────────────────────────────── */
 export const updateGlobalConfig = asyncHandler(async (req, res) => {
   const {
-    platformName,
-    currency,
-    currencySymbol,
-    timezone,
-    theme,
-    logoUrl,
-    supportEmail,
-    supportPhone,
-    maintenanceMode,
-    allowRegistration,
-    maxSchools,
+    platformName, currency, currencySymbol, timezone, theme,
+    logoUrl, supportEmail, supportPhone, maintenanceMode, allowRegistration, maxSchools,
+    // SMTP
+    smtpHost, smtpPort, smtpUser, smtpPassword, smtpFromEmail, smtpFromName,
+    // SMS
+    smsProvider, smsApiKey, smsSenderId,
+    // Payment
+    paymentGateway, razorpayKeyId, razorpayKeySecret,
   } = req.body;
+
+  const fields = {
+    platformName, currency, currencySymbol, timezone, theme,
+    logoUrl, supportEmail, supportPhone, maintenanceMode, allowRegistration, maxSchools,
+    smtpHost, smtpPort, smtpUser, smtpPassword, smtpFromEmail, smtpFromName,
+    smsProvider, smsApiKey, smsSenderId,
+    paymentGateway, razorpayKeyId, razorpayKeySecret,
+  };
+
+  const $set = { updatedBy: req.user._id };
+  for (const [k, v] of Object.entries(fields)) {
+    if (v !== undefined) $set[k] = v;
+  }
 
   const config = await GlobalConfig.findOneAndUpdate(
     { key: "global" },
-    {
-      $set: {
-        ...(platformName !== undefined && { platformName }),
-        ...(currency !== undefined && { currency }),
-        ...(currencySymbol !== undefined && { currencySymbol }),
-        ...(timezone !== undefined && { timezone }),
-        ...(theme !== undefined && { theme }),
-        ...(logoUrl !== undefined && { logoUrl }),
-        ...(supportEmail !== undefined && { supportEmail }),
-        ...(supportPhone !== undefined && { supportPhone }),
-        ...(maintenanceMode !== undefined && { maintenanceMode }),
-        ...(allowRegistration !== undefined && { allowRegistration }),
-        ...(maxSchools !== undefined && { maxSchools }),
-        updatedBy: req.user._id,
-      },
-    },
+    { $set },
     { upsert: true, new: true }
   );
 

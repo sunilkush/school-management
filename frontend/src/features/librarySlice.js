@@ -1,17 +1,15 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 
-const API_PREFIX = (import.meta.env.VITE_API_URL || "/api/v1").includes("/v1")
-  ? ""
-  : "/v1";
+const getError = (err, fallback) =>
+  err?.response?.data?.message || err?.message || fallback;
 
-const getError = (err, fallback) => err?.response?.data?.message || err?.message || fallback;
-
+// ── Books ─────────────────────────────────────────────────────────────────────
 export const fetchLibraryBooks = createAsyncThunk(
   "library/fetchBooks",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/books`);
+      const res = await apiClient.get("/books");
       return Array.isArray(res?.data?.data) ? res.data.data : [];
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch books"));
@@ -23,7 +21,7 @@ export const createLibraryBook = createAsyncThunk(
   "library/createBook",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/books`, payload);
+      const res = await apiClient.post("/books", payload);
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to create book"));
@@ -55,11 +53,12 @@ export const deleteLibraryBook = createAsyncThunk(
   }
 );
 
+// ── Issued Books ──────────────────────────────────────────────────────────────
 export const fetchIssuedBooks = createAsyncThunk(
   "library/fetchIssuedBooks",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/issuedBooks`);
+      const res = await apiClient.get("/issuedBooks");
       return Array.isArray(res?.data?.data) ? res.data.data : [];
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch issued books"));
@@ -71,7 +70,7 @@ export const issueLibraryBook = createAsyncThunk(
   "library/issueBook",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/issuedBooks/issue`, payload);
+      const res = await apiClient.post("/issuedBooks/issue", payload);
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to issue book"));
@@ -81,12 +80,24 @@ export const issueLibraryBook = createAsyncThunk(
 
 export const returnLibraryBook = createAsyncThunk(
   "library/returnBook",
-  async (id, { rejectWithValue }) => {
+  async ({ id, status }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`/issuedBooks/return/${id}`);
+      const res = await apiClient.put(`/issuedBooks/return/${id}`, { status });
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Unable to return book"));
+    }
+  }
+);
+
+export const collectLibraryFine = createAsyncThunk(
+  "library/collectFine",
+  async ({ id, action, note }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.patch(`/issuedBooks/${id}/fine`, { action, note });
+      return res?.data?.data;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Unable to update fine"));
     }
   }
 );
@@ -103,14 +114,75 @@ export const deleteIssuedBook = createAsyncThunk(
   }
 );
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+export const fetchLibraryDashboard = createAsyncThunk(
+  "library/fetchDashboard",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/issuedBooks/dashboard");
+      return res?.data?.data;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch dashboard"));
+    }
+  }
+);
+
+export const fetchOverdueBooks = createAsyncThunk(
+  "library/fetchOverdue",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/issuedBooks/overdue");
+      return Array.isArray(res?.data?.data) ? res.data.data : [];
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch overdue books"));
+    }
+  }
+);
+
+export const fetchFineSummary = createAsyncThunk(
+  "library/fetchFines",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/issuedBooks/fines");
+      return res?.data?.data;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch fines"));
+    }
+  }
+);
+
+// ── Library Settings ──────────────────────────────────────────────────────────
+export const fetchLibrarySettings = createAsyncThunk(
+  "library/fetchSettings",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/library-settings");
+      return res?.data?.data;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Failed to fetch settings"));
+    }
+  }
+);
+
+export const updateLibrarySettings = createAsyncThunk(
+  "library/updateSettings",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put("/library-settings", payload);
+      return res?.data?.data;
+    } catch (err) {
+      return rejectWithValue(getError(err, "Unable to update settings"));
+    }
+  }
+);
+
+// ── Students ──────────────────────────────────────────────────────────────────
 export const fetchLibraryStudents = createAsyncThunk(
   "library/fetchStudents",
-  async ({ schoolId, limit = 100 }, { rejectWithValue }) => {
+  async ({ schoolId, limit = 200 }, { rejectWithValue }) => {
     try {
       if (!schoolId) return [];
-      const res = await apiClient.get(`/student/school`, {
-        params: { schoolId, limit },
-      });
+      const res = await apiClient.get("/student/school", { params: { schoolId, limit } });
       return res?.data?.data?.students || [];
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch students"));
@@ -118,104 +190,87 @@ export const fetchLibraryStudents = createAsyncThunk(
   }
 );
 
+// ── Slice ─────────────────────────────────────────────────────────────────────
 const initialState = {
-  books: [],
-  issuedBooks: [],
-  students: [],
-  booksLoading: false,
-  issuedLoading: false,
+  books:        [],
+  issuedBooks:  [],
+  overdueBooks: [],
+  students:     [],
+  dashboard:    null,
+  fines:        null,
+  settings:     null,
+
+  booksLoading:    false,
+  issuedLoading:   false,
+  overdueLoading:  false,
   studentsLoading: false,
-  actionLoading: false,
-  error: null,
+  dashboardLoading:false,
+  finesLoading:    false,
+  settingsLoading: false,
+  actionLoading:   false,
+  error:           null,
 };
 
 const librarySlice = createSlice({
   name: "library",
   initialState,
   reducers: {
-    clearLibraryError: (state) => {
-      state.error = null;
-    },
+    clearLibraryError: (state) => { state.error = null; },
   },
   extraReducers: (builder) => {
+    // Books
     builder
-      .addCase(fetchLibraryBooks.pending, (state) => {
-        state.booksLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchLibraryBooks.fulfilled, (state, action) => {
-        state.booksLoading = false;
-        state.books = action.payload;
-      })
-      .addCase(fetchLibraryBooks.rejected, (state, action) => {
-        state.booksLoading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchLibraryBooks.pending,    (s) => { s.booksLoading = true;  s.error = null; })
+      .addCase(fetchLibraryBooks.fulfilled,  (s, a) => { s.booksLoading = false; s.books = a.payload; })
+      .addCase(fetchLibraryBooks.rejected,   (s, a) => { s.booksLoading = false; s.error = a.payload; })
 
-      .addCase(fetchIssuedBooks.pending, (state) => {
-        state.issuedLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchIssuedBooks.fulfilled, (state, action) => {
-        state.issuedLoading = false;
-        state.issuedBooks = action.payload;
-      })
-      .addCase(fetchIssuedBooks.rejected, (state, action) => {
-        state.issuedLoading = false;
-        state.error = action.payload;
-      })
+    // Issued
+      .addCase(fetchIssuedBooks.pending,     (s) => { s.issuedLoading = true;  s.error = null; })
+      .addCase(fetchIssuedBooks.fulfilled,   (s, a) => { s.issuedLoading = false; s.issuedBooks = a.payload; })
+      .addCase(fetchIssuedBooks.rejected,    (s, a) => { s.issuedLoading = false; s.error = a.payload; })
 
-      .addCase(fetchLibraryStudents.pending, (state) => {
-        state.studentsLoading = true;
-      })
-      .addCase(fetchLibraryStudents.fulfilled, (state, action) => {
-        state.studentsLoading = false;
-        state.students = action.payload;
-      })
-      .addCase(fetchLibraryStudents.rejected, (state, action) => {
-        state.studentsLoading = false;
-        state.error = action.payload;
-      })
+    // Overdue
+      .addCase(fetchOverdueBooks.pending,    (s) => { s.overdueLoading = true; })
+      .addCase(fetchOverdueBooks.fulfilled,  (s, a) => { s.overdueLoading = false; s.overdueBooks = a.payload; })
+      .addCase(fetchOverdueBooks.rejected,   (s, a) => { s.overdueLoading = false; s.error = a.payload; })
 
+    // Students
+      .addCase(fetchLibraryStudents.pending,   (s) => { s.studentsLoading = true; })
+      .addCase(fetchLibraryStudents.fulfilled, (s, a) => { s.studentsLoading = false; s.students = a.payload; })
+      .addCase(fetchLibraryStudents.rejected,  (s, a) => { s.studentsLoading = false; s.error = a.payload; })
+
+    // Dashboard
+      .addCase(fetchLibraryDashboard.pending,    (s) => { s.dashboardLoading = true; })
+      .addCase(fetchLibraryDashboard.fulfilled,  (s, a) => { s.dashboardLoading = false; s.dashboard = a.payload; })
+      .addCase(fetchLibraryDashboard.rejected,   (s, a) => { s.dashboardLoading = false; s.error = a.payload; })
+
+    // Fines
+      .addCase(fetchFineSummary.pending,    (s) => { s.finesLoading = true; })
+      .addCase(fetchFineSummary.fulfilled,  (s, a) => { s.finesLoading = false; s.fines = a.payload; })
+      .addCase(fetchFineSummary.rejected,   (s, a) => { s.finesLoading = false; s.error = a.payload; })
+
+    // Settings
+      .addCase(fetchLibrarySettings.pending,    (s) => { s.settingsLoading = true; })
+      .addCase(fetchLibrarySettings.fulfilled,  (s, a) => { s.settingsLoading = false; s.settings = a.payload; })
+      .addCase(fetchLibrarySettings.rejected,   (s, a) => { s.settingsLoading = false; s.error = a.payload; })
+      .addCase(updateLibrarySettings.fulfilled, (s, a) => { s.settings = a.payload; })
+
+    // Action matcher (create/update/delete/issue/return/fine)
       .addMatcher(
-        (action) =>
-          action.type.startsWith("library/") &&
-          action.type.endsWith("/pending") &&
-          ![
-            "library/fetchBooks/pending",
-            "library/fetchIssuedBooks/pending",
-            "library/fetchStudents/pending",
-          ].includes(action.type),
-        (state) => {
-          state.actionLoading = true;
-          state.error = null;
-        }
+        (a) => a.type.startsWith("library/") && a.type.endsWith("/pending") &&
+          !["library/fetchBooks", "library/fetchIssuedBooks", "library/fetchOverdue",
+            "library/fetchStudents", "library/fetchDashboard", "library/fetchFines",
+            "library/fetchSettings"].some((p) => a.type.startsWith(p)),
+        (s) => { s.actionLoading = true; s.error = null; }
       )
       .addMatcher(
-        (action) =>
-          action.type.startsWith("library/") &&
-          action.type.endsWith("/fulfilled") &&
-          ![
-            "library/fetchBooks/fulfilled",
-            "library/fetchIssuedBooks/fulfilled",
-            "library/fetchStudents/fulfilled",
-          ].includes(action.type),
-        (state) => {
-          state.actionLoading = false;
-        }
-      )
-      .addMatcher(
-        (action) =>
-          action.type.startsWith("library/") &&
-          action.type.endsWith("/rejected") &&
-          ![
-            "library/fetchBooks/rejected",
-            "library/fetchIssuedBooks/rejected",
-            "library/fetchStudents/rejected",
-          ].includes(action.type),
-        (state, action) => {
-          state.actionLoading = false;
-          state.error = action.payload;
+        (a) => a.type.startsWith("library/") && (a.type.endsWith("/fulfilled") || a.type.endsWith("/rejected")) &&
+          !["library/fetchBooks", "library/fetchIssuedBooks", "library/fetchOverdue",
+            "library/fetchStudents", "library/fetchDashboard", "library/fetchFines",
+            "library/fetchSettings"].some((p) => a.type.startsWith(p)),
+        (s, a) => {
+          s.actionLoading = false;
+          if (a.type.endsWith("/rejected")) s.error = a.payload;
         }
       );
   },
