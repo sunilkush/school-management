@@ -18,21 +18,21 @@ import {
 } from "../../../styles/pageStyles";
 
 const bloodGroupColor = {
-  "A+":  { bg: "#fef2f2", color: "#dc2626" },
+  "A+":  { bg: "rgba(255,202,212,0.2)", color: "#D96B7A" },
   "A-":  { bg: "#fff7ed", color: "#c2410c" },
-  "B+":  { bg: "#fef9ec", color: "#d97706" },
+  "B+":  { bg: "#fef9ec", color: "#D4922A" },
   "B-":  { bg: "#fefce8", color: "#ca8a04" },
-  "AB+": { bg: "#eff6ff", color: "#2563eb" },
+  "AB+": { bg: "rgba(167,199,231,0.2)", color: "#5B9EC9" },
   "AB-": { bg: "#eef2ff", color: "#4338ca" },
-  "O+":  { bg: "#f0fdf8", color: "#059669" },
-  "O-":  { bg: "#f0fdf4", color: "#16a34a" },
+  "O+":  { bg: "#f0fdf8", color: "#5BA89A" },
+  "O-":  { bg: "rgba(184,224,210,0.2)", color: "#5BA89A" },
 };
 
 const STAT_META = [
-  { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "#7c3aed" },
+  { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "#9B87B8" },
   { key: "active",  label: "Active",          icon: <CheckCircleOutlined />, color: "#10b981" },
-  { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "#0284c7" },
-  { key: "showing", label: "Showing",         icon: <EyeOutlined />,         color: "#f97316" },
+  { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "#5B9EC9" },
+  { key: "showing", label: "Showing",         icon: <EyeOutlined />,         color: "#D4922A" },
 ];
 
 const StudentList = () => {
@@ -130,13 +130,13 @@ const StudentList = () => {
       title: "Class",
       dataIndex: "schoolClass",
       width: 110,
-      render: (v) => <span style={pill("#7c3aed")}>{v}</span>,
+      render: (v) => <span style={pill("#9B87B8")}>{v}</span>,
     },
     {
       title: "Section",
       dataIndex: "section",
       width: 90,
-      render: (v) => <span style={pill("#059669")}>{v}</span>,
+      render: (v) => <span style={pill("#5BA89A")}>{v}</span>,
     },
     {
       title: "Blood Group",
@@ -174,7 +174,7 @@ const StudentList = () => {
       title: "Academic Year",
       dataIndex: "academicYear",
       width: 130,
-      render: (v) => <span style={pill("#f97316")}>{v}</span>,
+      render: (v) => <span style={pill("#D4922A")}>{v}</span>,
     },
     {
       title: "Status",

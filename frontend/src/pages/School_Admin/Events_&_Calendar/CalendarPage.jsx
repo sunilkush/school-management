@@ -27,11 +27,11 @@ const BADGE_STATUS = {
 };
 
 const TYPE_STYLE = {
-  Event:    { color: "#7c3aed", bg: "#ede9fe" },
-  Holiday:  { color: "#059669", bg: "#d1fae5" },
-  Meeting:  { color: "#0284c7", bg: "#e0f2fe" },
-  Exam:     { color: "#dc2626", bg: "#fee2e2" },
-  Activity: { color: "#f97316", bg: "#fff7ed" },
+  Event:    { color: "#9B87B8", bg: "rgba(205,180,219,0.2)" },
+  Holiday:  { color: "#5BA89A", bg: "#d1fae5" },
+  Meeting:  { color: "#5B9EC9", bg: "#e0f2fe" },
+  Exam:     { color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
+  Activity: { color: "#D4922A", bg: "#fff7ed" },
   Reminder: { color: "#0e7490", bg: "#ecfeff" },
 };
 
@@ -45,7 +45,7 @@ const toPayload = (values) => ({
   allDay: true,
   startDate: values.dateRange?.[0]?.startOf("day").toISOString(),
   endDate: values.dateRange?.[1]?.endOf("day").toISOString(),
-  color: values.color || "#7c3aed",
+  color: values.color || "#9B87B8",
 });
 
 const occursOnDate = (event, date) => {
@@ -107,14 +107,14 @@ const CalendarPage = () => {
             location: event.location,
             audience: event.audience,
             status: event.status,
-            color: event.color || "#7c3aed",
+            color: event.color || "#9B87B8",
             dateRange: [dayjs(event.startDate), dayjs(event.endDate)],
           }
         : {
             type: "Event",
             audience: "All",
             status: "scheduled",
-            color: "#7c3aed",
+            color: "#9B87B8",
             dateRange: [date, date],
           }
     );
@@ -178,7 +178,7 @@ const CalendarPage = () => {
   };
 
   const EventListItem = ({ event, onEdit, onDelete }) => {
-    const s = TYPE_STYLE[event.type] || { color: "#64748b", bg: "#f1f5f9" };
+    const s = TYPE_STYLE[event.type] || { color: "#6B7890", bg: "#f1f5f9" };
     return (
       <List.Item
         actions={[

@@ -60,9 +60,17 @@ const ActionTile = ({ icon, label, path, color, navigate }) => (
 );
 
 const activityTypeTag = (type) => {
-  const map = { fee_payment: ["Fee", "#059669"], income: ["Income", "#0891b2"], expense: ["Expense", "#dc2626"] };
-  const [label, color] = map[type] || ["Other", "#64748b"];
-  return <Tag color={color} style={{ fontSize: 10 }}>{label}</Tag>;
+  const map = {
+    fee_payment: { label: "Fee",     color: "#2E7A6E", bg: "rgba(184,224,210,0.25)", border: "rgba(184,224,210,0.5)" },
+    income:      { label: "Income",  color: "#2E6A9A", bg: "rgba(167,199,231,0.22)", border: "rgba(167,199,231,0.4)" },
+    expense:     { label: "Expense", color: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
+  };
+  const s = map[type] || { label: "Other", color: "#6B7890", bg: "rgba(228,234,246,0.3)", border: "rgba(228,234,246,0.5)" };
+  return (
+    <span style={{ fontSize: 10, fontWeight: 700, color: s.color, background: s.bg, border: `1px solid ${s.border}`, padding: "2px 8px", borderRadius: 99 }}>
+      {s.label}
+    </span>
+  );
 };
 
 const AccountantDashboard = () => {
@@ -76,7 +84,7 @@ const AccountantDashboard = () => {
   const monthlyChart  = dashboard?.monthlyChart  || [];
   const recentActivity = dashboard?.recentActivity || [];
 
-  const netColor = (kpis.netProfitLoss || 0) >= 0 ? "#059669" : "#dc2626";
+  const netColor = (kpis.netProfitLoss || 0) >= 0 ? "#5BA89A" : "#D96B7A";
   const netLabel = (kpis.netProfitLoss || 0) >= 0 ? "Net Profit" : "Net Loss";
 
   const activityColumns = useMemo(() => [
@@ -85,7 +93,7 @@ const AccountantDashboard = () => {
     {
       title: "Amount", width: 130,
       render: (_, r) => (
-        <span style={{ fontWeight: 700, fontSize: 13, color: r.amount < 0 ? "#dc2626" : "#059669" }}>
+        <span style={{ fontWeight: 700, fontSize: 13, color: r.amount < 0 ? "#D96B7A" : "#5BA89A" }}>
           {r.amount < 0 ? "-" : "+"}{money(Math.abs(r.amount))}
         </span>
       ),
@@ -121,26 +129,26 @@ const AccountantDashboard = () => {
 
       {/* ── KPI Row ──────────────────────────────────────────────── */}
       <div style={statGrid(160)}>
-        <KpiCard label="Total Revenue"        value={money(kpis.totalRevenue)}          icon={<RiseOutlined />}       color="#059669" sub="Fee + manual income" />
-        <KpiCard label="Total Expenses"       value={money(kpis.totalExpenses)}         icon={<ArrowDownOutlined />}  color="#dc2626" />
-        <KpiCard label={netLabel}             value={money(Math.abs(kpis.netProfitLoss))} icon={<BarChartOutlined />} color={netColor} />
-        <KpiCard label="Fee Collected"        value={money(kpis.totalFeeCollected)}     icon={<WalletOutlined />}     color="#7c3aed" onClick={() => navigate("accountant/fees/collect")} />
-        <KpiCard label="Pending Fees"         value={money(kpis.pendingFees)}           icon={<AlertOutlined />}      color="#f97316" sub={`${kpis.pendingFeeCount || 0} students`} onClick={() => navigate("accountant/fees/reports")} />
-        <KpiCard label="This Month Income"    value={money(kpis.thisMonthIncome)}       icon={<DollarOutlined />}     color="#0891b2" />
-        <KpiCard label="This Month Expense"   value={money(kpis.thisMonthExpense)}      icon={<FileTextOutlined />}   color="#d97706" />
-        <KpiCard label="Payroll This Month"   value={money(kpis.payrollThisMonth)}      icon={<TeamOutlined />}       color="#8b5cf6" onClick={() => navigate("accountant/salary")} />
+        <KpiCard label="Total Revenue"       value={money(kpis.totalRevenue)}                  icon={<RiseOutlined />}       color="#5BA89A" sub="Fee + manual income" />
+        <KpiCard label="Total Expenses"      value={money(kpis.totalExpenses)}                 icon={<ArrowDownOutlined />}  color="#D96B7A" />
+        <KpiCard label={netLabel}            value={money(Math.abs(kpis.netProfitLoss))}        icon={<BarChartOutlined />}   color={netColor} />
+        <KpiCard label="Fee Collected"       value={money(kpis.totalFeeCollected)}             icon={<WalletOutlined />}     color="#5B9EC9" onClick={() => navigate("accountant/fees/collect")} />
+        <KpiCard label="Pending Fees"        value={money(kpis.pendingFees)}                   icon={<AlertOutlined />}      color="#D4922A" sub={`${kpis.pendingFeeCount || 0} students`} onClick={() => navigate("accountant/fees/reports")} />
+        <KpiCard label="This Month Income"   value={money(kpis.thisMonthIncome)}               icon={<DollarOutlined />}     color="#5B9EC9" />
+        <KpiCard label="This Month Expense"  value={money(kpis.thisMonthExpense)}              icon={<FileTextOutlined />}   color="#D4922A" />
+        <KpiCard label="Payroll This Month"  value={money(kpis.payrollThisMonth)}              icon={<TeamOutlined />}       color="#9B87B8" onClick={() => navigate("accountant/salary")} />
       </div>
 
       {/* ── Quick Actions ─────────────────────────────────────────── */}
       <div style={{ ...sectionPanel, padding: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>Quick Actions</div>
         <div style={statGrid(110)}>
-          <ActionTile icon={<WalletOutlined />}   label="Collect Fee"   path="accountant/fees/collect"  color="#7c3aed" navigate={navigate} />
-          <ActionTile icon={<DollarOutlined />}   label="Add Income"    path="accountant/income"        color="#059669" navigate={navigate} />
-          <ActionTile icon={<FileTextOutlined />} label="Add Expense"   path="accountant/expenses"      color="#dc2626" navigate={navigate} />
-          <ActionTile icon={<BarChartOutlined />} label="Reports"       path="accountant/reports"       color="#0891b2" navigate={navigate} />
-          <ActionTile icon={<TeamOutlined />}     label="Payroll"       path="accountant/salary"        color="#8b5cf6" navigate={navigate} />
-          <ActionTile icon={<AlertOutlined />}    label="Fee Reports"   path="accountant/fees/reports"  color="#f97316" navigate={navigate} />
+          <ActionTile icon={<WalletOutlined />}   label="Collect Fee"   path="accountant/fees/collect"  color="#5B9EC9" navigate={navigate} />
+          <ActionTile icon={<DollarOutlined />}   label="Add Income"    path="accountant/income"        color="#5BA89A" navigate={navigate} />
+          <ActionTile icon={<FileTextOutlined />} label="Add Expense"   path="accountant/expenses"      color="#D96B7A" navigate={navigate} />
+          <ActionTile icon={<BarChartOutlined />} label="Reports"       path="accountant/reports"       color="#9B87B8" navigate={navigate} />
+          <ActionTile icon={<TeamOutlined />}     label="Payroll"       path="accountant/salary"        color="#9B87B8" navigate={navigate} />
+          <ActionTile icon={<AlertOutlined />}    label="Fee Reports"   path="accountant/fees/reports"  color="#D4922A" navigate={navigate} />
         </div>
       </div>
 
@@ -156,12 +164,12 @@ const AccountantDashboard = () => {
                 <AreaChart data={monthlyChart} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="incGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#059669" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#059669" stopOpacity={0.02} />
+                      <stop offset="5%"  stopColor="#B8E0D2" stopOpacity={0.5} />
+                      <stop offset="95%" stopColor="#B8E0D2" stopOpacity={0.02} />
                     </linearGradient>
                     <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#dc2626" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#dc2626" stopOpacity={0.02} />
+                      <stop offset="5%"  stopColor="#FFCAD4" stopOpacity={0.5} />
+                      <stop offset="95%" stopColor="#FFCAD4" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
@@ -169,8 +177,8 @@ const AccountantDashboard = () => {
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v, name) => [money(v), name]} />
                   <Legend />
-                  <Area type="monotone" dataKey="income"  stroke="#059669" fill="url(#incGrad)" name="Income"  strokeWidth={2} />
-                  <Area type="monotone" dataKey="expense" stroke="#dc2626" fill="url(#expGrad)" name="Expense" strokeWidth={2} />
+                  <Area type="monotone" dataKey="income"  stroke="#5BA89A" fill="url(#incGrad)" name="Income"  strokeWidth={2.5} dot={false} />
+                  <Area type="monotone" dataKey="expense" stroke="#D96B7A" fill="url(#expGrad)" name="Expense" strokeWidth={2.5} dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -189,7 +197,7 @@ const AccountantDashboard = () => {
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v) => [money(v), "Collected"]} />
-                  <Bar dataKey="feeCollection" fill="#7c3aed" radius={[5, 5, 0, 0]} name="Fee Collected" />
+                  <Bar dataKey="feeCollection" fill="#A7C7E7" radius={[6, 6, 0, 0]} name="Fee Collected" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -200,15 +208,15 @@ const AccountantDashboard = () => {
       {/* ── P&L Summary tiles ─────────────────────────────────────── */}
       <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
         {[
-          { label: "Total Revenue",  value: money(kpis.totalRevenue),                   color: "#059669", bg: "#d1fae5" },
-          { label: "Total Expenses", value: money(kpis.totalExpenses),                  color: "#dc2626", bg: "#fee2e2" },
-          { label: netLabel,         value: money(Math.abs(kpis.netProfitLoss || 0)),   color: netColor,  bg: `${netColor}15` },
-          { label: "Pending Fees",   value: money(kpis.pendingFees),                    color: "#f97316", bg: "#fef3c7" },
-        ].map(({ label, value, color, bg }) => (
+          { label: "Total Revenue",  value: money(kpis.totalRevenue),                 color: "#2E7A6E", bg: "rgba(184,224,210,0.22)", border: "rgba(184,224,210,0.45)" },
+          { label: "Total Expenses", value: money(kpis.totalExpenses),                color: "#9E3A4A", bg: "rgba(255,202,212,0.22)", border: "rgba(255,202,212,0.45)" },
+          { label: netLabel,         value: money(Math.abs(kpis.netProfitLoss || 0)), color: (kpis.netProfitLoss || 0) >= 0 ? "#2E7A6E" : "#9E3A4A", bg: (kpis.netProfitLoss || 0) >= 0 ? "rgba(184,224,210,0.22)" : "rgba(255,202,212,0.22)", border: (kpis.netProfitLoss || 0) >= 0 ? "rgba(184,224,210,0.45)" : "rgba(255,202,212,0.45)" },
+          { label: "Pending Fees",   value: money(kpis.pendingFees),                  color: "#8A5E10", bg: "rgba(253,226,167,0.30)", border: "rgba(253,226,167,0.55)" },
+        ].map(({ label, value, color, bg, border }) => (
           <Col xs={12} sm={6} key={label}>
-            <div style={{ background: bg, borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>
+            <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 14, padding: "16px 18px", textAlign: "center" }}>
               <div style={{ fontSize: 18, fontWeight: 800, color }}>{value}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>{label}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>{label}</div>
             </div>
           </Col>
         ))}

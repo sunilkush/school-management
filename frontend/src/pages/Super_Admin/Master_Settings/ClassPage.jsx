@@ -53,25 +53,24 @@ const css = `
 .class-page {
   min-height: 100vh;
   padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 45%, #fdf2f8 100%);
+  background: #F7F8FC;
 }
 
 .class-hero {
-  background: #ffffffcc;
-  backdrop-filter: blur(14px);
-  border: 1px solid #e2e8f0;
-  border-radius: 26px;
+  background: #ffffff;
+  border: 1px solid rgba(167,199,231,0.3);
+  border-radius: 20px;
   padding: 22px;
   margin-bottom: 18px;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+  box-shadow: 0 4px 20px rgba(91,158,201,0.08);
 }
 
 .class-icon {
   width: 54px;
   height: 54px;
   border-radius: 18px;
-  background: #e0e7ff;
-  color: #4f46e5;
+  background: rgba(167,199,231,0.2);
+  color: #5B9EC9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,8 +78,8 @@ const css = `
 }
 
 .metric-card {
-  border-radius: 22px !important;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(91,158,201,0.08);
 }
 
 .metric-icon {
@@ -94,16 +93,16 @@ const css = `
 }
 
 .table-card {
-  border-radius: 24px !important;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(91,158,201,0.08);
 }
 
 .class-avatar {
   width: 36px;
   height: 36px;
   border-radius: 13px;
-  background: #e0f2fe;
-  color: #0369a1;
+  background: rgba(167,199,231,0.2);
+  color: #5B9EC9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,11 +111,11 @@ const css = `
 
 .code-pill {
   font-family: monospace;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: rgba(167,199,231,0.1);
+  border: 1px solid rgba(167,199,231,0.3);
   padding: 4px 10px;
   border-radius: 999px;
-  color: #475569;
+  color: #5B9EC9;
 }
 
 .class-modal .ant-modal-content {
@@ -395,7 +394,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "#dbeafe", color: "#2563eb" }}>
+                <div className="metric-icon" style={{ background: "rgba(167,199,231,0.2)", color: "#5B9EC9" }}>
                   <BookOutlined />
                 </div>
                 <div>
@@ -409,7 +408,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "#dcfce7", color: "#16a34a" }}>
+                <div className="metric-icon" style={{ background: "rgba(184,224,210,0.2)", color: "#5BA89A" }}>
                   <CheckCircleOutlined />
                 </div>
                 <div>
@@ -423,7 +422,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                <div className="metric-icon" style={{ background: "rgba(255,202,212,0.2)", color: "#D96B7A" }}>
                   <CloseCircleOutlined />
                 </div>
                 <div>
@@ -437,7 +436,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "#ede9fe", color: "#7c3aed" }}>
+                <div className="metric-icon" style={{ background: "rgba(205,180,219,0.2)", color: "#9B87B8" }}>
                   <GlobalOutlined />
                 </div>
                 <div>

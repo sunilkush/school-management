@@ -12,7 +12,14 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#7c3aed", "#0284c7", "#059669", "#dc2626"];
+const STAT_COLORS = ["#5B9EC9", "#5BA89A", "#9B87B8", "#D4922A"];
+const STAT_BARS   = ["#A7C7E7", "#B8E0D2", "#CDB4DB", "#FDE2A7"];
+const STAT_BG     = [
+  "rgba(167,199,231,0.14)",
+  "rgba(184,224,210,0.14)",
+  "rgba(205,180,219,0.14)",
+  "rgba(253,226,167,0.18)",
+];
 
 const ParentDashboard = () => {
   const dispatch  = useDispatch();
@@ -118,12 +125,19 @@ const ParentDashboard = () => {
         {/* KPI stats */}
         <div className="stat-grid" style={statGrid(175)}>
           {statMeta.map(({ key, label, icon, value }, i) => (
-            <div key={key} style={statCard({ color: STAT_COLORS[i] })}>
+            <div key={key} style={statCard({ color: STAT_COLORS[i], bg: "#ffffff", accentBar: STAT_BARS[i] })}>
               <div>
                 <div style={statLabel(STAT_COLORS[i])}>{label}</div>
                 <div style={statValue(STAT_COLORS[i])}>{isLoading ? "…" : value}</div>
               </div>
-              <div style={{ fontSize: 26, color: STAT_COLORS[i], opacity: 0.5 }}>{icon}</div>
+              <div style={{
+                fontSize: 20,
+                color: STAT_COLORS[i],
+                background: STAT_BG[i],
+                borderRadius: 12,
+                padding: 10,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>{icon}</div>
             </div>
           ))}
         </div>
@@ -158,10 +172,11 @@ const ParentDashboard = () => {
                   <div style={{ ...sectionPanel, marginBottom: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                       <div style={{
-                        width: 44, height: 44, borderRadius: "50%",
-                        background: "var(--primary)", display: "flex",
-                        alignItems: "center", justifyContent: "center",
+                        width: 46, height: 46, borderRadius: "50%",
+                        background: "linear-gradient(135deg, #A7C7E7, #CDB4DB)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
                         color: "#fff", fontSize: 18, fontWeight: 700, flexShrink: 0,
+                        boxShadow: "0 2px 10px rgba(91,158,201,0.25)",
                       }}>
                         {(child.name || "?")[0].toUpperCase()}
                       </div>
@@ -177,14 +192,24 @@ const ParentDashboard = () => {
 
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
                       {cs.attPct !== undefined && cs.attPct !== null && (
-                        <Tag color={cs.attPct >= 75 ? "green" : cs.attPct >= 60 ? "orange" : "red"}>
+                        <span style={{
+                          padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
+                          background: cs.attPct >= 75 ? "rgba(184,224,210,0.25)" : cs.attPct >= 60 ? "rgba(253,226,167,0.35)" : "rgba(255,202,212,0.3)",
+                          color: cs.attPct >= 75 ? "#2E7A6E" : cs.attPct >= 60 ? "#8A5E10" : "#9E3A4A",
+                          border: `1px solid ${cs.attPct >= 75 ? "rgba(184,224,210,0.5)" : cs.attPct >= 60 ? "rgba(253,226,167,0.6)" : "rgba(255,202,212,0.5)"}`,
+                        }}>
                           Attendance: {cs.attPct}%
-                        </Tag>
+                        </span>
                       )}
                       {cs.pending !== undefined && (
-                        <Tag color={cs.pending > 0 ? "orange" : "green"}>
+                        <span style={{
+                          padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
+                          background: cs.pending > 0 ? "rgba(253,226,167,0.35)" : "rgba(184,224,210,0.25)",
+                          color: cs.pending > 0 ? "#8A5E10" : "#2E7A6E",
+                          border: `1px solid ${cs.pending > 0 ? "rgba(253,226,167,0.6)" : "rgba(184,224,210,0.5)"}`,
+                        }}>
                           {cs.pending > 0 ? `${cs.pending} Pending HW` : "All HW Done"}
-                        </Tag>
+                        </span>
                       )}
                     </div>
 

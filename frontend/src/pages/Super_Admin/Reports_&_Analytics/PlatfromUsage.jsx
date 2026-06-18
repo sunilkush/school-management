@@ -107,8 +107,8 @@ const KpiCard = ({ icon, label, value, accent, change }) => (
         </Title>
         {change && (
           <Space size={4}>
-            <ArrowUpOutlined style={{ color: "#52c41a", fontSize: 11 }} />
-            <Text style={{ color: "#52c41a", fontSize: 12 }}>{change}</Text>
+            <ArrowUpOutlined style={{ color: "#5BA89A", fontSize: 11 }} />
+            <Text style={{ color: "#5BA89A", fontSize: 12 }}>{change}</Text>
           </Space>
         )}
       </div>
@@ -214,7 +214,7 @@ const PlatformUsage = () => {
         title: `${row.school} updated`,
         desc: `${row.users.toLocaleString()} users onboarded on ${row.plan} plan`,
         icon: <BankOutlined />,
-        color: idx % 2 === 0 ? "#1677ff" : "#13c2c2",
+        color: idx % 2 === 0 ? "#5B9EC9" : "#13c2c2",
         time: new Date(row.createdAt).toLocaleDateString(),
       }));
 
@@ -273,7 +273,7 @@ const PlatformUsage = () => {
           <Avatar
             size={28}
             icon={<BankOutlined />}
-            style={{ background: "#e8f4ff", color: "#1677ff" }}
+            style={{ background: "#e8f4ff", color: "#5B9EC9" }}
           />
           <Text strong style={{ fontSize: 13 }}>
             {name}
@@ -314,7 +314,7 @@ const PlatformUsage = () => {
             percent={val}
             size="small"
             strokeColor={
-              val >= 75 ? "#52c41a" : val >= 40 ? "#1677ff" : "#faad14"
+              val >= 75 ? "#5BA89A" : val >= 40 ? "#5B9EC9" : "#D4922A"
             }
             showInfo={false}
           />
@@ -361,7 +361,7 @@ const PlatformUsage = () => {
     <div
       style={{
         padding: "24px 28px",
-        background: "#f5f6fa",
+        background: "#F7F8FC",
         minHeight: "100vh",
       }}
     >
@@ -395,7 +395,7 @@ const PlatformUsage = () => {
               letterSpacing: -0.5,
             }}
           >
-            <RocketOutlined style={{ marginRight: 10, color: "#1677ff" }} />
+            <RocketOutlined style={{ marginRight: 10, color: "#5B9EC9" }} />
             Super Admin Analytics
           </Title>
           <Text type="secondary" style={{ fontSize: 14 }}>
@@ -432,7 +432,7 @@ const PlatformUsage = () => {
               label="Total Schools"
               value={stats.schools}
               change="+8 this month"
-              accent="#1677ff"
+              accent="#5B9EC9"
             />
           </Col>
           <Col xs={24} sm={12} lg={6}>
@@ -450,7 +450,7 @@ const PlatformUsage = () => {
               label="Active Users"
               value={stats.active.toLocaleString()}
               change="59% of total"
-              accent="#52c41a"
+              accent="#5BA89A"
             />
           </Col>
           <Col xs={24} sm={12} lg={6}>
@@ -492,12 +492,12 @@ const PlatformUsage = () => {
             >
               <defs>
                 <linearGradient id="gradUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1677ff" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#5B9EC9" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#5B9EC9" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradActive" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#52c41a" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#52c41a" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#5BA89A" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#5BA89A" stopOpacity={0} />
                 </linearGradient>
               </defs>
 
@@ -517,20 +517,20 @@ const PlatformUsage = () => {
               <Area
                 type="monotone"
                 dataKey="users"
-                stroke="#1677ff"
+                stroke="#5B9EC9"
                 strokeWidth={2.5}
                 fill="url(#gradUsers)"
                 name="Total Users"
-                dot={{ r: 4, fill: "#1677ff" }}
+                dot={{ r: 4, fill: "#5B9EC9" }}
               />
               <Area
                 type="monotone"
                 dataKey="active"
-                stroke="#52c41a"
+                stroke="#5BA89A"
                 strokeWidth={2}
                 fill="url(#gradActive)"
                 name="Active Users"
-                dot={{ r: 3, fill: "#52c41a" }}
+                dot={{ r: 3, fill: "#5BA89A" }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -543,7 +543,7 @@ const PlatformUsage = () => {
               style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
               title={
                 <Space>
-                  <BankOutlined style={{ color: "#1677ff" }} />
+                  <BankOutlined style={{ color: "#5B9EC9" }} />
                   <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
                     School Usage
                   </span>

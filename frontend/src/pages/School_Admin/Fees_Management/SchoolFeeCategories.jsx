@@ -21,8 +21,8 @@ const FEE_HEAD_TYPES = [
 
 const TYPE_META = {
   recurring: { color: "#0891b2", label: "Recurring" },
-  "one-time": { color: "#7c3aed", label: "One-Time" },
-  penalty:   { color: "#dc2626", label: "Penalty"  },
+  "one-time": { color: "#9B87B8", label: "One-Time" },
+  penalty:   { color: "#D96B7A", label: "Penalty"  },
 };
 
 const SchoolFeeCategories = () => {

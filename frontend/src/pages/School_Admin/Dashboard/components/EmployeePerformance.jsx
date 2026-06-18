@@ -9,7 +9,7 @@ const performanceConfig = {
   EXCELLENT: { color: "#0ea472", bg: "rgba(14,164,114,0.08)", border: "rgba(14,164,114,0.2)", dot: "#0ea472" },
   GOOD: { color: "#1677ff", bg: "rgba(22,119,255,0.08)", border: "rgba(22,119,255,0.2)", dot: "#1677ff" },
   AVERAGE: { color: "#ea580c", bg: "rgba(234,88,12,0.08)", border: "rgba(234,88,12,0.2)", dot: "#ea580c" },
-  POOR: { color: "#dc2626", bg: "rgba(220,38,38,0.08)", border: "rgba(220,38,38,0.2)", dot: "#dc2626" },
+  POOR: { color: "#D96B7A", bg: "rgba(217,107,122,0.08)", border: "rgba(217,107,122,0.2)", dot: "#D96B7A" },
 };
 
 const EmployeePerformance = ({ employees = [] }) => {

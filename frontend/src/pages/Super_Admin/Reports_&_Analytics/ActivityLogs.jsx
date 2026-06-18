@@ -34,7 +34,7 @@ const TOKEN = {
 
 const AVATAR_PALETTES = [
   { bg: "#EEEDFE", color: "#534AB7" },
-  { bg: "#E1F5EE", color: "#0F6E56" },
+  { bg: "rgba(184,224,210,0.2)", color: "#5BA89A" },
   { bg: "#FAECE7", color: "#993C1D" },
   { bg: "#E6F1FB", color: "#185FA5" },
   { bg: "#FAEEDA", color: "#854F0B" },
@@ -42,7 +42,7 @@ const AVATAR_PALETTES = [
 
 const ROLE_STYLES = {
   Parent:   { bg: "#EEEDFE", color: "#534AB7" },
-  Teacher: { bg: "#E1F5EE", color: "#0F6E56" },
+  Teacher: { bg: "rgba(184,224,210,0.2)", color: "#5BA89A" },
   Student: { bg: "#E6F1FB", color: "#185FA5" },
   "Super Admin": { bg: "#FDECF7", color: "#9B2C6A" },
   "School Admin": { bg: "#E8F0FE", color: "#1F4E8C" },

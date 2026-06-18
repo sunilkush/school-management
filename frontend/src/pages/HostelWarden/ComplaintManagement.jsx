@@ -18,8 +18,8 @@ import { iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss } fro
 const { Option } = Select;
 const { TextArea } = Input;
 
-const STATUS_COLORS  = { open: "#dc2626", in_progress: "#d97706", resolved: "#059669", closed: "#64748b", rejected: "#9333ea" };
-const PRIORITY_COLORS= { low: "#64748b", medium: "#0891b2", high: "#d97706", urgent: "#dc2626" };
+const STATUS_COLORS  = { open: "#D96B7A", in_progress: "#D4922A", resolved: "#5BA89A", closed: "#6B7890", rejected: "#9333ea" };
+const PRIORITY_COLORS= { low: "#6B7890", medium: "#0891b2", high: "#D4922A", urgent: "#D96B7A" };
 const TYPE_LIST      = ["room", "food", "maintenance", "safety", "electricity", "plumbing", "furniture", "cleanliness", "other"];
 const STATUS_LIST    = ["open", "in_progress", "resolved", "closed", "rejected"];
 
@@ -109,7 +109,7 @@ const ComplaintManagement = () => {
         </div>
       ),
     },
-    { title: "Priority", dataIndex: "priority", render: (v) => <span style={pill(PRIORITY_COLORS[v] || "#64748b", `${PRIORITY_COLORS[v] || "#64748b"}18`)}>{v}</span> },
+    { title: "Priority", dataIndex: "priority", render: (v) => <span style={pill(PRIORITY_COLORS[v] || "#6B7890", `${PRIORITY_COLORS[v] || "#6B7890"}18`)}>{v}</span> },
     { title: "Status",   dataIndex: "status",   render: (s) => <Badge status={s === "open" ? "error" : s === "in_progress" ? "warning" : s === "resolved" ? "success" : "default"} text={<span style={{ fontWeight: 600, textTransform: "capitalize" }}>{s.replace("_", " ")}</span>} /> },
     { title: "Student",  render: (_, r) => r.studentId?.name || "—" },
     { title: "Room",     dataIndex: "roomNumber", render: (v) => v || "—" },
@@ -146,7 +146,7 @@ const ComplaintManagement = () => {
       <div style={statGrid(130)}>
         {Object.entries(summary).map(([status, count]) => (
           <div key={status} style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "12px 16px" }}>
-            <div style={iconWell(STATUS_COLORS[status] || "#64748b", 36)}><WarningOutlined /></div>
+            <div style={iconWell(STATUS_COLORS[status] || "#6B7890", 36)}><WarningOutlined /></div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: STATUS_COLORS[status], textTransform: "uppercase" }}>{status.replace("_", " ")}</div>
               <div style={{ fontSize: 20, fontWeight: 800 }}>{count}</div>
@@ -263,8 +263,8 @@ const ComplaintManagement = () => {
           <div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
               <Tag color="red">{detailModal.complaintNo}</Tag>
-              <span style={pill(PRIORITY_COLORS[detailModal.priority] || "#64748b", `${PRIORITY_COLORS[detailModal.priority] || "#64748b"}18`)}>{detailModal.priority}</span>
-              <span style={pill(STATUS_COLORS[detailModal.status] || "#64748b", `${STATUS_COLORS[detailModal.status] || "#64748b"}18`)}>{detailModal.status.replace("_", " ")}</span>
+              <span style={pill(PRIORITY_COLORS[detailModal.priority] || "#6B7890", `${PRIORITY_COLORS[detailModal.priority] || "#6B7890"}18`)}>{detailModal.priority}</span>
+              <span style={pill(STATUS_COLORS[detailModal.status] || "#6B7890", `${STATUS_COLORS[detailModal.status] || "#6B7890"}18`)}>{detailModal.status.replace("_", " ")}</span>
             </div>
             <p><strong>Title:</strong> {detailModal.title}</p>
             <p><strong>Type:</strong> {detailModal.type}</p>

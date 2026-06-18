@@ -81,9 +81,9 @@ const StatusTag = ({ record, activeYear }) => {
       <Tag
         icon={<CheckCircleFilled />}
         style={{
-          background: "#ECFDF5",
-          color: "#059669",
-          border: "1px solid #A7F3D0",
+          background: "rgba(184,224,210,0.2)",
+          color: "#5BA89A",
+          border: "1px solid rgba(184,224,210,0.5)",
           borderRadius: 20,
           fontWeight: 600,
           padding: "2px 10px",
@@ -236,11 +236,11 @@ const AcademicYearPage = () => {
               width: 34,
               height: 34,
               borderRadius: 10,
-              background: activeYear?._id === record._id ? "#ECFDF5" : "var(--surface-soft)",
+              background: activeYear?._id === record._id ? "rgba(184,224,210,0.2)" : "var(--surface-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: activeYear?._id === record._id ? "#059669" : "var(--primary)",
+              color: activeYear?._id === record._id ? "#5BA89A" : "var(--primary)",
               fontSize: 16,
             }}
           >
@@ -251,7 +251,7 @@ const AcademicYearPage = () => {
               {name}
             </span>
             {activeYear?._id === record._id && (
-              <span style={{ fontSize: 11, color: "#059669" }}>Currently active</span>
+              <span style={{ fontSize: 11, color: "#5BA89A" }}>Currently active</span>
             )}
           </div>
         </Space>
@@ -295,7 +295,7 @@ const AcademicYearPage = () => {
                   type="text"
                   size="small"
                   icon={<SafetyCertificateOutlined />}
-                  style={{ color: "#059669", fontWeight: 600 }}
+                  style={{ color: "#5BA89A", fontWeight: 600 }}
                   onClick={() => handleSetActive(record._id)}
                 >
                   Set Active
@@ -377,17 +377,17 @@ const AcademicYearPage = () => {
         <Alert
           type="success"
           showIcon
-          icon={<CheckCircleFilled style={{ color: "#059669" }} />}
+          icon={<CheckCircleFilled style={{ color: "#5BA89A" }} />}
           message={
             <span>
-              Active Year: <strong style={{ color: "#059669" }}>{activeYear.name}</strong>
+              Active Year: <strong style={{ color: "#5BA89A" }}>{activeYear.name}</strong>
               {"  "}
               <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
                 {dayjs(activeYear.startDate).format("DD MMM YYYY")} → {dayjs(activeYear.endDate).format("DD MMM YYYY")}
               </span>
             </span>
           }
-          style={{ borderRadius: 12, marginBottom: 20, background: "#ECFDF5", border: "1.5px solid #A7F3D0" }}
+          style={{ borderRadius: 12, marginBottom: 20, background: "rgba(184,224,210,0.2)", border: "1.5px solid rgba(184,224,210,0.5)" }}
         />
       )}
 
@@ -400,21 +400,21 @@ const AcademicYearPage = () => {
           </div>
           <CalendarOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#059669" })}>
+        <div style={statCard({ color: "#5BA89A" })}>
           <div>
-            <div style={statLabel("#059669")}>Active Year</div>
-            <div style={{ ...statValue("#059669"), fontSize: 18 }}>{activeYear?.name || "—"}</div>
+            <div style={statLabel("#5BA89A")}>Active Year</div>
+            <div style={{ ...statValue("#5BA89A"), fontSize: 18 }}>{activeYear?.name || "—"}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>{activeYear ? "Currently running" : "None set"}</div>
           </div>
-          <CheckCircleFilled style={{ fontSize: 26, color: "#059669", opacity: 0.4 }} />
+          <CheckCircleFilled style={{ fontSize: 26, color: "#5BA89A", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#d97706" })}>
+        <div style={statCard({ color: "#D4922A" })}>
           <div>
-            <div style={statLabel("#d97706")}>Archived</div>
-            <div style={statValue("#d97706")}>{archivedTotal}</div>
+            <div style={statLabel("#D4922A")}>Archived</div>
+            <div style={statValue("#D4922A")}>{archivedTotal}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>Historical records</div>
           </div>
-          <InboxOutlined style={{ fontSize: 26, color: "#d97706", opacity: 0.4 }} />
+          <InboxOutlined style={{ fontSize: 26, color: "#D4922A", opacity: 0.4 }} />
         </div>
       </div>
 

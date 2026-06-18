@@ -276,7 +276,7 @@ const LoginForm = () => {
         /* ── Root ── */
         .lp-root {
           min-height: 100vh;
-          background: #070714;
+          background: #F7F8FC;
           overflow: hidden;
           position: relative;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -288,35 +288,35 @@ const LoginForm = () => {
         .lp-grid {
           position: absolute; inset: 0;
           background-image:
-            linear-gradient(rgba(99,102,241,.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(99,102,241,.06) 1px, transparent 1px);
+            linear-gradient(rgba(167,199,231,.12) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(167,199,231,.12) 1px, transparent 1px);
           background-size: 44px 44px;
         }
 
         .lp-orb {
           position: absolute; border-radius: 50%; filter: blur(90px);
-          animation: orbDrift 12s ease-in-out infinite;
+          animation: orbDrift 14s ease-in-out infinite;
         }
         .lp-orb-1 {
           width: 640px; height: 640px;
-          background: radial-gradient(circle, rgba(109,40,217,.45), transparent 68%);
-          top: -200px; left: -180px; animation-delay: 0s;
+          background: radial-gradient(circle, rgba(167,199,231,.38), transparent 68%);
+          top: -220px; left: -180px; animation-delay: 0s;
         }
         .lp-orb-2 {
           width: 520px; height: 520px;
-          background: radial-gradient(circle, rgba(6,182,212,.28), transparent 68%);
-          bottom: -160px; left: 32%; animation-delay: 4s;
+          background: radial-gradient(circle, rgba(205,180,219,.28), transparent 68%);
+          bottom: -160px; left: 28%; animation-delay: 5s;
         }
         .lp-orb-3 {
           width: 440px; height: 440px;
-          background: radial-gradient(circle, rgba(236,72,153,.22), transparent 68%);
-          top: 25%; right: -130px; animation-delay: 7.5s;
+          background: radial-gradient(circle, rgba(255,202,212,.22), transparent 68%);
+          top: 20%; right: -130px; animation-delay: 9s;
         }
         @keyframes orbDrift {
           0%,100% { transform: translate(0,0); }
-          25%  { transform: translate(24px,-32px); }
-          50%  { transform: translate(-18px, 22px); }
-          75%  { transform: translate(28px, 10px); }
+          25%  { transform: translate(20px,-28px); }
+          50%  { transform: translate(-16px, 20px); }
+          75%  { transform: translate(24px, 8px); }
         }
 
         /* ── Layout ── */
@@ -330,11 +330,12 @@ const LoginForm = () => {
           flex: 0 0 52%; display: none;
           padding: 64px 56px; flex-direction: column;
           justify-content: center; position: relative;
+          background: linear-gradient(145deg, #EEF6FF 0%, #F0EBF8 50%, #FEF0F3 100%);
         }
         .lp-left::after {
           content: ''; position: absolute; right: 0; top: 8%; height: 84%;
           width: 1px;
-          background: linear-gradient(to bottom, transparent, rgba(255,255,255,.09) 25%, rgba(255,255,255,.09) 75%, transparent);
+          background: linear-gradient(to bottom, transparent, rgba(167,199,231,.35) 25%, rgba(167,199,231,.35) 75%, transparent);
         }
         @media (min-width: 1024px) { .lp-left { display: flex; } }
 
@@ -344,21 +345,21 @@ const LoginForm = () => {
           margin-bottom: 44px;
           animation: slideRight .6s .05s ease both;
         }
-        .lp-brand-logo { height: 54px; filter: brightness(0) invert(1); }
+        .lp-brand-logo { height: 54px; }
 
         .lp-headline {
-          font-size: 42px; font-weight: 900; color: #fff;
+          font-size: 42px; font-weight: 900; color: #1E2A3A;
           line-height: 1.18; margin: 0 0 14px;
           animation: slideRight .6s .12s ease both;
         }
         .lp-headline-grad {
-          background: linear-gradient(135deg, #818cf8 0%, #c084fc 55%, #f472b6 100%);
+          background: linear-gradient(135deg, #5B9EC9 0%, #9B87B8 55%, #D96B7A 100%);
           -webkit-background-clip: text; -webkit-text-fill-color: transparent;
           background-clip: text;
         }
 
         .lp-tagline {
-          color: rgba(255,255,255,.52); font-size: 14.5px; line-height: 1.72;
+          color: #6B7E9A; font-size: 14.5px; line-height: 1.72;
           margin: 0 0 38px;
           animation: slideRight .6s .18s ease both;
         }
@@ -367,18 +368,19 @@ const LoginForm = () => {
         .lp-features { list-style: none; padding: 0; margin: 0 0 40px; display: flex; flex-direction: column; gap: 14px; }
         .lp-feature {
           display: flex; align-items: center; gap: 12px;
-          color: rgba(255,255,255,.7); font-size: 13.5px; line-height: 1.5;
+          color: #4A5E78; font-size: 13.5px; line-height: 1.5;
           animation: slideRight .6s ease both; opacity: 0;
         }
-        .lp-check-icon { color: #a78bfa; font-size: 17px; flex-shrink: 0; }
+        .lp-check-icon { color: #5B9EC9; font-size: 17px; flex-shrink: 0; }
 
         /* Stats */
         .lp-stats {
           display: flex; gap: 0; margin-bottom: 28px;
-          background: rgba(255,255,255,.045);
-          border: 1px solid rgba(255,255,255,.09);
+          background: rgba(255,255,255,.7);
+          border: 1px solid rgba(167,199,231,.35);
           border-radius: 14px; overflow: hidden;
           animation: slideRight .6s ease both; opacity: 0;
+          box-shadow: 0 2px 12px rgba(91,158,201,.08);
         }
         .lp-stat {
           flex: 1; padding: 18px 22px;
@@ -388,33 +390,33 @@ const LoginForm = () => {
         }
         .lp-stat + .lp-stat::before {
           content: ''; position: absolute; left: 0; top: 18%; height: 64%;
-          width: 1px; background: rgba(255,255,255,.09);
+          width: 1px; background: rgba(167,199,231,.35);
         }
-        .lp-stat-val { color: #fff; font-size: 22px; font-weight: 800; line-height: 1; }
+        .lp-stat-val { color: #1E2A3A; font-size: 22px; font-weight: 800; line-height: 1; }
         .lp-stat-lbl {
-          color: rgba(255,255,255,.42); font-size: 11px;
+          color: #7B8EA8; font-size: 11px;
           text-transform: uppercase; letter-spacing: .9px; font-weight: 500;
         }
 
         /* Trust badge */
         .lp-trust {
           display: inline-flex; align-items: center; gap: 8px;
-          background: rgba(255,255,255,.07);
-          border: 1px solid rgba(255,255,255,.12);
+          background: rgba(167,199,231,.15);
+          border: 1px solid rgba(167,199,231,.4);
           border-radius: 99px; padding: 7px 15px;
-          color: rgba(255,255,255,.65); font-size: 12px; font-weight: 600;
+          color: #4A6E8A; font-size: 12px; font-weight: 600;
           animation: slideRight .6s .6s ease both; opacity: 0;
         }
         .lp-trust-dot {
           width: 8px; height: 8px; border-radius: 50%;
-          background: #4ade80;
-          box-shadow: 0 0 0 3px rgba(74,222,128,.3);
+          background: #5BA89A;
+          box-shadow: 0 0 0 3px rgba(91,168,154,.25);
           flex-shrink: 0;
           animation: pulse 2.5s ease infinite;
         }
         @keyframes pulse {
-          0%,100% { box-shadow: 0 0 0 3px rgba(74,222,128,.3); }
-          50% { box-shadow: 0 0 0 5px rgba(74,222,128,.12); }
+          0%,100% { box-shadow: 0 0 0 3px rgba(91,168,154,.25); }
+          50% { box-shadow: 0 0 0 5px rgba(91,168,154,.1); }
         }
 
         /* ── Right panel ── */
@@ -422,6 +424,7 @@ const LoginForm = () => {
           flex: 1; display: flex; flex-direction: column;
           align-items: center; justify-content: center;
           padding: 40px 20px;
+          background: #F7F8FC;
         }
 
         .lp-mob-logo {
@@ -433,25 +436,23 @@ const LoginForm = () => {
         /* ── Card ── */
         .lp-card {
           width: 100%; max-width: 430px;
-          background: rgba(255,255,255,.04);
-          border: 1px solid rgba(255,255,255,.1);
+          background: #ffffff;
+          border: 1px solid rgba(167,199,231,.3);
           border-radius: 22px; overflow: hidden;
-          backdrop-filter: blur(28px);
           box-shadow:
-            0 0 0 1px rgba(255,255,255,.04),
-            0 28px 56px rgba(0,0,0,.55),
-            0 0 80px rgba(99,102,241,.12);
+            0 4px 20px rgba(91,158,201,.1),
+            0 1px 4px rgba(91,158,201,.06);
           opacity: 0; transform: translateY(18px);
           transition: opacity .5s ease, transform .5s ease;
         }
         .lp-card--in { opacity: 1; transform: translateY(0); }
 
-        /* Animated rainbow top bar */
+        /* Animated pastel top bar */
         .lp-card-bar {
           height: 3px;
-          background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #06b6d4, #6366f1);
+          background: linear-gradient(90deg, #A7C7E7, #CDB4DB, #FFCAD4, #B8E0D2, #A7C7E7);
           background-size: 300% 100%;
-          animation: barShimmer 4s linear infinite;
+          animation: barShimmer 5s linear infinite;
         }
         @keyframes barShimmer {
           0%   { background-position: 0% 50%; }
@@ -462,49 +463,49 @@ const LoginForm = () => {
 
         .lp-card-head { margin-bottom: 28px; }
         .lp-card-title {
-          font-size: 24px; font-weight: 800; color: #fff;
+          font-size: 24px; font-weight: 800; color: #1E2A3A;
           margin: 0 0 5px; line-height: 1.2;
         }
-        .lp-card-sub { color: rgba(255,255,255,.42); font-size: 13px; margin: 0; }
+        .lp-card-sub { color: #7B8EA8; font-size: 13px; margin: 0; }
 
         /* Form item labels */
         .lp-fi.ant-form-item { margin-bottom: 18px; }
         .lp-fi .ant-form-item-label > label {
-          color: rgba(255,255,255,.68) !important;
+          color: #4A5E78 !important;
           font-size: 12.5px !important; font-weight: 600 !important;
           height: auto !important;
         }
         .lp-fi .ant-form-item-explain-error {
-          color: #f87171 !important; font-size: 12px !important; margin-top: 4px !important;
+          color: #D96B7A !important; font-size: 12px !important; margin-top: 4px !important;
         }
 
         /* Inputs */
         .lp-inp.ant-input-affix-wrapper,
         .lp-inp.ant-input {
-          background: rgba(255,255,255,.07) !important;
-          border: 1.5px solid rgba(255,255,255,.12) !important;
-          border-radius: 11px !important; color: #fff !important;
+          background: #F7F9FC !important;
+          border: 1.5px solid rgba(167,199,231,.45) !important;
+          border-radius: 11px !important; color: #2E2E2E !important;
           transition: border-color .22s, box-shadow .22s, background .22s !important;
         }
         .lp-inp.ant-input-affix-wrapper:hover,
         .lp-inp.ant-input:hover {
-          border-color: rgba(129,140,248,.55) !important;
-          background: rgba(255,255,255,.09) !important;
+          border-color: rgba(91,158,201,.55) !important;
+          background: #ffffff !important;
         }
         .lp-inp.ant-input-affix-wrapper-focused,
         .lp-inp.ant-input-affix-wrapper:focus-within,
         .lp-inp.ant-input:focus {
-          border-color: #818cf8 !important;
-          background: rgba(129,140,248,.09) !important;
-          box-shadow: 0 0 0 3px rgba(129,140,248,.18) !important;
+          border-color: #5B9EC9 !important;
+          background: #ffffff !important;
+          box-shadow: 0 0 0 3px rgba(167,199,231,.3) !important;
         }
         .lp-inp .ant-input {
-          background: transparent !important; color: #fff !important;
+          background: transparent !important; color: #2E2E2E !important;
         }
-        .lp-inp .ant-input::placeholder { color: rgba(255,255,255,.22) !important; }
-        .lp-pfx { color: rgba(255,255,255,.35) !important; margin-right: 6px; }
-        .lp-inp .ant-input-password-icon.anticon { color: rgba(255,255,255,.35) !important; }
-        .lp-inp .ant-input-password-icon.anticon:hover { color: rgba(255,255,255,.65) !important; }
+        .lp-inp .ant-input::placeholder { color: #A8B8CC !important; }
+        .lp-pfx { color: #A7C7E7 !important; margin-right: 6px; }
+        .lp-inp .ant-input-password-icon.anticon { color: #A8B8CC !important; }
+        .lp-inp .ant-input-password-icon.anticon:hover { color: #5B9EC9 !important; }
 
         /* Remember / Forgot row */
         .lp-row {
@@ -512,28 +513,28 @@ const LoginForm = () => {
           align-items: center; margin-bottom: 22px;
         }
         .lp-chk.ant-checkbox-wrapper {
-          color: rgba(255,255,255,.52) !important; font-size: 13px !important;
+          color: #6B7E9A !important; font-size: 13px !important;
         }
         .lp-chk .ant-checkbox-inner {
-          background: rgba(255,255,255,.08) !important;
-          border-color: rgba(255,255,255,.22) !important;
+          background: #F7F9FC !important;
+          border-color: rgba(167,199,231,.6) !important;
           border-radius: 5px !important;
         }
         .lp-chk .ant-checkbox-checked .ant-checkbox-inner {
-          background: #6366f1 !important; border-color: #6366f1 !important;
+          background: #5B9EC9 !important; border-color: #5B9EC9 !important;
         }
         .lp-forgot {
-          font-size: 13px; color: #818cf8 !important; font-weight: 600;
+          font-size: 13px; color: #5B9EC9 !important; font-weight: 600;
           text-decoration: none; transition: color .2s;
         }
-        .lp-forgot:hover { color: #a5b4fc !important; text-decoration: underline; }
+        .lp-forgot:hover { color: #9B87B8 !important; text-decoration: underline; }
 
         /* Error banner */
         .lp-err {
-          background: rgba(239,68,68,.1);
-          border: 1px solid rgba(239,68,68,.28);
+          background: rgba(255,202,212,.18);
+          border: 1px solid rgba(217,107,122,.25);
           border-radius: 10px; padding: 10px 14px;
-          color: #fca5a5; font-size: 13px; margin-bottom: 18px;
+          color: #9E3A4A; font-size: 13px; margin-bottom: 18px;
           animation: fadeUp .3s ease;
         }
 
@@ -542,14 +543,13 @@ const LoginForm = () => {
           height: 48px !important; border-radius: 11px !important;
           font-weight: 700 !important; font-size: 15px !important;
           border: none !important; letter-spacing: .3px !important;
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #a855f7 100%) !important;
-          box-shadow: 0 6px 22px rgba(99,102,241,.42) !important;
-          transition: transform .22s ease, box-shadow .22s ease, background .22s ease !important;
+          background: linear-gradient(135deg, #5B9EC9 0%, #9B87B8 100%) !important;
+          box-shadow: 0 6px 22px rgba(91,158,201,.3) !important;
+          transition: transform .22s ease, box-shadow .22s ease !important;
         }
         .lp-btn.ant-btn-primary:not(:disabled):hover {
           transform: translateY(-2px) !important;
-          box-shadow: 0 10px 30px rgba(99,102,241,.55) !important;
-          background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #9333ea 100%) !important;
+          box-shadow: 0 10px 30px rgba(91,158,201,.4) !important;
         }
         .lp-btn.ant-btn-primary:not(:disabled):active {
           transform: translateY(0) !important;
@@ -562,7 +562,7 @@ const LoginForm = () => {
         .lp-footer {
           text-align: center; margin: 0;
           padding: 18px 36px 22px;
-          color: rgba(255,255,255,.22); font-size: 11.5px;
+          color: #A8B8CC; font-size: 11.5px;
         }
 
         /* ── Keyframes ── */

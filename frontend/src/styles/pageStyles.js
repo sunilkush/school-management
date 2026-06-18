@@ -86,42 +86,44 @@ export const tableHeadCss = (cls) => `
   .${cls} .ant-pagination-item-active a { color: var(--primary) !important; }
 `;
 
-/* ── KPI stat card ───────────────────────────────────────────────── */
-export const statCard = ({ color, bg }) => ({
-  padding: "16px 20px",
-  background: bg || `${color}12`,
-  borderRadius: 14,
-  border: `1px solid ${color}22`,
+/* ── KPI stat card (pastel design) ──────────────────────────────── */
+export const statCard = ({ color, bg, accentBar }) => ({
+  padding: "18px 20px",
+  background: bg || "#ffffff",
+  borderRadius: 16,
+  border: "1px solid var(--border)",
+  borderLeft: `4px solid ${accentBar || color}`,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  boxShadow: "0 2px 8px rgba(91,158,201,0.07), 0 4px 16px rgba(91,158,201,0.05)",
+  transition: "transform 0.2s ease, box-shadow 0.2s ease",
 });
 
 export const statLabel = (color) => ({
   fontSize: 11,
   fontWeight: 700,
-  color,
-  opacity: 0.8,
+  color: "var(--text-muted)",
   textTransform: "uppercase",
-  letterSpacing: "0.08em",
+  letterSpacing: "0.07em",
   marginBottom: 4,
 });
 
 export const statValue = (color) => ({
   fontSize: 26,
   fontWeight: 800,
-  color,
-  lineHeight: 1,
+  color: "var(--text)",
+  lineHeight: 1.1,
 });
 
-/* ── Avatar initials ─────────────────────────────────────────────── */
+/* ── Avatar initials (pastel palette) ───────────────────────────── */
 const PALETTE = [
-  { bg: "#ede9fe", color: "#7c3aed" },
-  { bg: "#d1fae5", color: "#059669" },
-  { bg: "#fef3c7", color: "#d97706" },
-  { bg: "#fce7f3", color: "#db2777" },
-  { bg: "#e0f2fe", color: "#0284c7" },
-  { bg: "#fef9ec", color: "#f97316" },
+  { bg: "#D4E9F7", color: "#2E6A9A" },
+  { bg: "#E6D9F3", color: "#6B4F96" },
+  { bg: "#D4F0E8", color: "#2E7A6E" },
+  { bg: "#FDDDE4", color: "#9E3A4A" },
+  { bg: "#FDF2D6", color: "#8A5E10" },
+  { bg: "#D4E9F7", color: "#2E6A9A" },
 ];
 
 export const avatarColor = (name = "") => {
@@ -140,13 +142,16 @@ export const avatarStyle = (name = "", size = 38) => {
   };
 };
 
-/* ── Status dot + text ───────────────────────────────────────────── */
+/* ── Status dot + text (pastel) ──────────────────────────────────── */
 export const STATUS = {
-  active:    { dot: "#22c55e", text: "#15803d", bg: "#f0fdf4" },
-  inactive:  { dot: "#94a3b8", text: "#64748b", bg: "#f8fafc" },
-  pending:   { dot: "#f59e0b", text: "#92400e", bg: "#fffbeb" },
-  overdue:   { dot: "#ef4444", text: "#991b1b", bg: "#fff1f2" },
-  suspended: { dot: "#6b7280", text: "#374151", bg: "#f9fafb" },
+  active:    { dot: "#5BA89A", text: "#2E7A6E", bg: "rgba(184,224,210,0.22)", border: "rgba(184,224,210,0.5)" },
+  inactive:  { dot: "#B0B8C8", text: "#6B7890", bg: "rgba(228,234,246,0.4)",  border: "rgba(228,234,246,0.8)" },
+  pending:   { dot: "#D4922A", text: "#8A5E10", bg: "rgba(253,226,167,0.30)", border: "rgba(253,226,167,0.6)" },
+  overdue:   { dot: "#D96B7A", text: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
+  suspended: { dot: "#9B87B8", text: "#6B4F96", bg: "rgba(205,180,219,0.20)", border: "rgba(205,180,219,0.4)" },
+  paid:      { dot: "#5BA89A", text: "#2E7A6E", bg: "rgba(184,224,210,0.22)", border: "rgba(184,224,210,0.5)" },
+  unpaid:    { dot: "#D96B7A", text: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
+  partial:   { dot: "#D4922A", text: "#8A5E10", bg: "rgba(253,226,167,0.30)", border: "rgba(253,226,167,0.6)" },
 };
 
 export const statusDot = (key = "active") => {
@@ -177,13 +182,14 @@ export const emptyState = {
   background: "var(--surface-soft)",
 };
 
-/* ── Icon well ───────────────────────────────────────────────────── */
-export const iconWell = (color = "var(--primary)", size = 36) => ({
-  width: size, height: size, borderRadius: 10,
-  background: `${color}15`,
+/* ── Icon well (pastel-aware) ────────────────────────────────────── */
+export const iconWell = (color = "var(--primary)", size = 36, extraStyle = {}) => ({
+  width: size, height: size, borderRadius: Math.round(size * 0.28),
+  background: `${color}22`,
   color,
   display: "flex", alignItems: "center", justifyContent: "center",
   fontSize: size * 0.44, flexShrink: 0,
+  ...extraStyle,
 });
 
 /* ── Modal title ─────────────────────────────────────────────────── */

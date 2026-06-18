@@ -230,7 +230,7 @@ const ExamSchedule = () => {
           borderRadius: 14,
           border: "1px solid var(--border-muted)",
           background: "var(--surface)",
-          boxShadow: "0 4px 14px rgba(15, 23, 42, 0.04)",
+          boxShadow: "0 4px 14px rgba(91, 158, 201, 0.04)",
           marginBottom: 8,
         }}
       >
@@ -361,9 +361,9 @@ const ExamSchedule = () => {
         <div className="stat-grid" style={statGrid(160)}>
           {[
             { key: "total", title: "Total Exams", value: stats.total, color: "var(--primary)", icon: <AppstoreOutlined /> },
-            { key: "upcoming", title: "Upcoming", value: stats.upcoming, color: "#0284c7", icon: <CalendarOutlined /> },
-            { key: "today", title: "Today", value: stats.today, color: "#d97706", icon: <ClockCircleOutlined /> },
-            { key: "completed", title: "Completed", value: stats.completed, color: "#059669", icon: <CheckCircleOutlined /> },
+            { key: "upcoming", title: "Upcoming", value: stats.upcoming, color: "#5B9EC9", icon: <CalendarOutlined /> },
+            { key: "today", title: "Today", value: stats.today, color: "#D4922A", icon: <ClockCircleOutlined /> },
+            { key: "completed", title: "Completed", value: stats.completed, color: "#5BA89A", icon: <CheckCircleOutlined /> },
           ].map((item) => (
             <div key={item.key} style={statCard({ color: item.color })}>
               <div>

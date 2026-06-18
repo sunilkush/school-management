@@ -200,7 +200,7 @@ const TeacherTimetable = () => {
           <Col xs={24} sm={12} lg={8}>
             <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
               <Space>
-                <TeamOutlined style={{ color: "#52c41a", fontSize: 22 }} />
+                <TeamOutlined style={{ color: "#5BA89A", fontSize: 22 }} />
                 <div>
                   <Text type="secondary">Classes Handled</Text>
                   <Title level={4} style={{ margin: 0 }}>

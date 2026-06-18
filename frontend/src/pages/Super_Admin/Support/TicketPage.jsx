@@ -43,7 +43,7 @@ const PRIORITY_COLOR = {
   low:      { color: "var(--success)",  label: "Low" },
   medium:   { color: "var(--warning)",  label: "Medium" },
   high:     { color: "var(--danger)",   label: "High" },
-  critical: { color: "#7c3aed",         label: "Critical" },
+  critical: { color: "#9B87B8",         label: "Critical" },
 };
 
 const STATUS_COLOR = {

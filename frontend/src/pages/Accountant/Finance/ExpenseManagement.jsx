@@ -35,13 +35,13 @@ const PAYMENT_MODES = ["cash", "cheque", "bank_transfer", "upi", "online", "dd"]
 const EXPENSE_STATUSES = ["paid", "pending", "approved", "rejected"];
 
 const CAT_COLORS = {
-  "Staff Salary": "#7c3aed", "Teacher Salary": "#7c3aed",
-  "Utility Bills": "#d97706", "Rent": "#0891b2",
-  "Maintenance": "#f97316", "Stationery": "#64748b", "Miscellaneous": "#94a3b8",
+  "Staff Salary": "#9B87B8", "Teacher Salary": "#9B87B8",
+  "Utility Bills": "#D4922A", "Rent": "#0891b2",
+  "Maintenance": "#D4922A", "Stationery": "#6B7890", "Miscellaneous": "#A8B8CC",
 };
-const catColor = (cat) => CAT_COLORS[cat] || "#dc2626";
+const catColor = (cat) => CAT_COLORS[cat] || "#D96B7A";
 
-const statusColor = { paid: "#059669", pending: "#d97706", approved: "#0891b2", rejected: "#dc2626" };
+const statusColor = { paid: "#5BA89A", pending: "#D4922A", approved: "#0891b2", rejected: "#D96B7A" };
 
 const ExpenseManagement = () => {
   const dispatch = useDispatch();
@@ -165,7 +165,7 @@ const ExpenseManagement = () => {
       title: "Amount",
       dataIndex: "amount",
       sorter: (a, b) => a.amount - b.amount,
-      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "#dc2626" }}>{money(v)}</span>,
+      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "#D96B7A" }}>{money(v)}</span>,
     },
     {
       title: "Date",
@@ -181,7 +181,7 @@ const ExpenseManagement = () => {
       title: "Status",
       dataIndex: "status",
       render: (s) => (
-        <span style={pill(statusColor[s] || "#64748b", `${statusColor[s] || "#64748b"}15`)}>
+        <span style={pill(statusColor[s] || "#6B7890", `${statusColor[s] || "#6B7890"}15`)}>
           {s}
         </span>
       ),
@@ -223,11 +223,11 @@ const ExpenseManagement = () => {
       {/* ── Summary KPIs ─────────────────────────────────────────── */}
       <div style={statGrid(150)}>
         {[
-          { label: "Total Expenses", value: money(expenseTotalAmount), color: "#dc2626", icon: <FileTextOutlined /> },
+          { label: "Total Expenses", value: money(expenseTotalAmount), color: "#D96B7A", icon: <FileTextOutlined /> },
           { label: "Total Records",  value: expenseTotal,              color: "#0891b2", icon: <FilterOutlined /> },
           { label: "Pending",
             value: money(expenseSummary?.byStatus?.find((s) => s._id === "pending")?.total),
-            color: "#d97706", icon: <FileTextOutlined /> },
+            color: "#D4922A", icon: <FileTextOutlined /> },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>

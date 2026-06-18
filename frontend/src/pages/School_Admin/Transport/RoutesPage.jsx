@@ -147,16 +147,16 @@ const RoutesPage = () => {
               <div style={statValue("var(--primary)")}>{totalRoutes}</div>
             </div>
           </div>
-          <div style={statCard({ color: "#059669" })}>
+          <div style={statCard({ color: "#5BA89A" })}>
             <div>
-              <div style={statLabel("#059669")}>Total Buses</div>
-              <div style={statValue("#059669")}>{totalBuses}</div>
+              <div style={statLabel("#5BA89A")}>Total Buses</div>
+              <div style={statValue("#5BA89A")}>{totalBuses}</div>
             </div>
           </div>
-          <div style={statCard({ color: "#d97706" })}>
+          <div style={statCard({ color: "#D4922A" })}>
             <div>
-              <div style={statLabel("#d97706")}>Total Students</div>
-              <div style={statValue("#d97706")}>{totalStudents}</div>
+              <div style={statLabel("#D4922A")}>Total Students</div>
+              <div style={statValue("#D4922A")}>{totalStudents}</div>
             </div>
           </div>
         </div>

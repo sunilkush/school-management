@@ -1,11 +1,9 @@
 import React, { lazy, memo, Suspense } from "react";
-import { Layout, Typography, Spin, Avatar, Badge, Divider } from "antd";
+import { Layout, Typography, Spin, Avatar, Badge } from "antd";
 import {
-  HomeOutlined,
   LoadingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BankOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { useTheme } from "../../context/ThemeContext";
@@ -13,52 +11,78 @@ import { useTheme } from "../../context/ThemeContext";
 const SidebarMenu = lazy(() => import("./SidebarMenu"));
 
 const { Sider } = Layout;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 /* ─────────────────────────────────────────
-   Token helpers — centralised so nothing
-   is hardcoded twice.
+   Pastel role-color map — each role gets a
+   signature pastel accent for its sidebar.
 ───────────────────────────────────────── */
-const tokens = (isDark) => ({
-  bg: isDark ? "#0f172a" : "#ffffff",
-  border: isDark ? "#1e293b" : "#f1f5f9",
-  headerBg: isDark
-    ? "linear-gradient(135deg, #13102b 0%, #1a1535 100%)"
-    : "linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)",
-  iconBg: isDark ? "#2d1f5e" : "#ede9fe",
-  iconColor: isDark ? "#a78bfa" : "#7c3aed",
-  accent: isDark ? "#a78bfa" : "#7c3aed",
-  textPrimary: isDark ? "#e2e8f0" : "#0f172a",
-  textSecondary: isDark ? "#64748b" : "#94a3b8",
-  scrollbarThumb: isDark ? "#1e293b" : "#e5e7eb",
-  shimmer: isDark ? "#1e293b" : "#f8fafc",
+const ROLE_COLORS = {
+  "super admin":    { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
+  "school admin":   { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
+  principal:        { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
+  "vice principal": { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
+  teacher:          { accent: "#5BA89A", light: "#B8E0D2", bg: "rgba(184,224,210,0.12)", text: "#2E7A6E" },
+  student:          { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
+  parent:           { accent: "#D4922A", light: "#FDE2A7", bg: "rgba(253,226,167,0.12)", text: "#8A5E10" },
+  accountant:       { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
+  librarian:        { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
+  "hostel warden":  { accent: "#5BA89A", light: "#B8E0D2", bg: "rgba(184,224,210,0.12)", text: "#2E7A6E" },
+  "transport manager": { accent: "#D4922A", light: "#FDE2A7", bg: "rgba(253,226,167,0.12)", text: "#8A5E10" },
+  "exam coordinator":  { accent: "#D96B7A", light: "#FFCAD4", bg: "rgba(255,202,212,0.12)", text: "#9E3A4A" },
+  default:          { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
+};
+
+const getRoleColor = (role) =>
+  ROLE_COLORS[role?.toLowerCase()] ?? ROLE_COLORS.default;
+
+/* ─────────────────────────────────────────
+   Design tokens (light / dark)
+───────────────────────────────────────── */
+const tokens = (isDark, roleColor) => ({
+  bg:           isDark ? "#1A2235" : "#ffffff",
+  border:       isDark ? "#2A3550" : "#E4EAF6",
+  headerBg:     isDark
+    ? `linear-gradient(135deg, #1E2A3E, #232D44)`
+    : `linear-gradient(135deg, ${roleColor.bg.replace("0.12)", "0.22)")}, rgba(255,255,255,0) 80%)`,
+  iconBg:       isDark ? roleColor.bg.replace("0.12)", "0.2)") : roleColor.bg,
+  iconColor:    roleColor.accent,
+  accent:       roleColor.accent,
+  accentLight:  roleColor.light,
+  accentText:   roleColor.text,
+  textPrimary:  isDark ? "#E8EDF7" : "#2E2E2E",
+  textSecondary:isDark ? "#6B7890" : "#8A94A6",
+  scrollbarThumb: isDark ? "#2A3550" : "#D4E9F7",
+  shimmer:      isDark ? "#1E2A3E" : "#F2F6FD",
+  navActiveBg:  isDark
+    ? `rgba(${roleColor.accent.replace("#","").match(/.{2}/g).map(h=>parseInt(h,16)).join(",")}, 0.15)`
+    : roleColor.bg,
 });
 
 /* ─────────────────────────────────────────
-   Skeleton loader shown while SidebarMenu
-   is lazy-loading.
+   Skeleton loader
 ───────────────────────────────────────── */
 const MenuSkeleton = ({ isDark }) => {
-  const t = tokens(isDark);
-  const items = [1, 2, 3, 4, 5];
+  const shimmer = isDark ? "#1E2A3E" : "#F2F6FD";
   return (
     <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-      {items.map((i) => (
+      {[1, 0.9, 0.95, 0.85, 0.9, 0.88].map((op, i) => (
         <div
           key={i}
           style={{
             height: 40,
-            borderRadius: 8,
-            background: t.shimmer,
-            opacity: 1 - i * 0.12,
-            animation: "pulse 1.6s ease-in-out infinite",
+            borderRadius: 10,
+            background: shimmer,
+            opacity: 1 - i * 0.1,
+            animation: "sidebarPulse 1.5s ease-in-out infinite",
+            animationDelay: `${i * 0.07}s`,
           }}
         />
       ))}
       <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.6; }
-          50%       { opacity: 1;   }
+        @keyframes sidebarPulse {
+          0%, 100% { opacity: 0.55; }
+          50%       { opacity: 1; }
         }
       `}</style>
     </div>
@@ -66,11 +90,11 @@ const MenuSkeleton = ({ isDark }) => {
 };
 
 /* ─────────────────────────────────────────
-   Auth-loading state shown when there's
-   no access token yet.
+   Auth-loading state
 ───────────────────────────────────────── */
 const AuthLoadingState = ({ isDark }) => {
-  const t = tokens(isDark);
+  const rc = getRoleColor("default");
+  const t = tokens(isDark, rc);
   return (
     <Sider
       width={260}
@@ -84,45 +108,28 @@ const AuthLoadingState = ({ isDark }) => {
         justifyContent: "center",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 16,
-          padding: 24,
-        }}
-      >
-        {/* Animated ring */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: 24 }}>
         <div
           style={{
-            width: 56,
-            height: 56,
+            width: 52,
+            height: 52,
             borderRadius: "50%",
             background: t.iconBg,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: `0 0 0 8px ${isDark ? "rgba(77,163,255,0.06)" : "rgba(22,119,255,0.08)"}`,
-            animation: "ringPulse 2s ease-in-out infinite",
           }}
         >
           <Spin indicator={<LoadingOutlined style={{ fontSize: 22, color: t.accent }} spin />} />
         </div>
         <div style={{ textAlign: "center" }}>
           <Text style={{ display: "block", color: t.textPrimary, fontWeight: 600, fontSize: 13 }}>
-            Authenticating
+            Loading…
           </Text>
           <Text style={{ display: "block", color: t.textSecondary, fontSize: 11, marginTop: 4 }}>
-            Please wait a moment…
+            Please wait a moment
           </Text>
         </div>
-        <style>{`
-          @keyframes ringPulse {
-            0%, 100% { box-shadow: 0 0 0 8px ${isDark ? "rgba(77,163,255,0.06)" : "rgba(22,119,255,0.08)"}; }
-            50%       { box-shadow: 0 0 0 14px transparent; }
-          }
-        `}</style>
       </div>
     </Sider>
   );
@@ -134,10 +141,12 @@ const AuthLoadingState = ({ isDark }) => {
 const Sidebar = ({ isOpen, onToggle }) => {
   const { user, accessToken } = useSelector((state) => state.auth);
   const { isDark } = useTheme();
-  const t = tokens(isDark);
 
-  const role = user?.role?.name?.toLowerCase();
-  const schoolName = user?.school?.name || "Super Admin";
+  const roleName = user?.role?.name;
+  const roleColor = getRoleColor(roleName);
+  const t = tokens(isDark, roleColor);
+
+  const schoolName = user?.school?.name || "EduManage";
   const initials = schoolName
     .split(" ")
     .slice(0, 2)
@@ -149,7 +158,6 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
   return (
     <>
-      {/* ── Global sidebar styles ── */}
       <style>{`
         .sidebar-root {
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -161,31 +169,28 @@ const Sidebar = ({ isOpen, onToggle }) => {
           height: 100%;
           overflow: hidden;
         }
-        /* Custom thin scrollbar */
         .sidebar-scroll::-webkit-scrollbar        { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track  { background: transparent; }
         .sidebar-scroll::-webkit-scrollbar-thumb  {
           background: ${t.scrollbarThumb};
           border-radius: 4px;
         }
-        /* Toggle button hover */
         .sidebar-toggle-btn:hover {
-          background: ${isDark ? "#1f1f1f" : "#f0f7ff"} !important;
+          background: ${t.iconBg} !important;
           color: ${t.accent} !important;
           transform: scale(1.08);
         }
-        /* Role badge */
-        .role-badge {
+        .sidebar-role-badge {
           display: inline-block;
-          padding: 2px 8px;
+          padding: 2px 9px;
           border-radius: 99px;
           font-size: 10px;
           font-weight: 600;
           letter-spacing: 0.5px;
-          text-transform: uppercase;
-          background: ${isDark ? "rgba(77,163,255,0.12)" : "rgba(22,119,255,0.08)"};
-          color: ${t.accent};
-          border: 1px solid ${isDark ? "rgba(77,163,255,0.2)" : "rgba(22,119,255,0.15)"};
+          text-transform: capitalize;
+          background: ${t.iconBg};
+          color: ${t.accentText};
+          border: 1px solid ${t.accentLight}66;
         }
       `}</style>
 
@@ -205,8 +210,8 @@ const Sidebar = ({ isOpen, onToggle }) => {
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           boxShadow: isOpen
             ? isDark
-              ? "4px 0 24px rgba(0,0,0,0.5)"
-              : "4px 0 24px rgba(0,0,0,0.08)"
+              ? "4px 0 32px rgba(0,0,0,0.45)"
+              : `4px 0 32px rgba(91,158,201,0.10)`
             : "none",
         }}
       >
@@ -223,23 +228,23 @@ const Sidebar = ({ isOpen, onToggle }) => {
             flexShrink: 0,
           }}
         >
-          {/* Left: icon + name */}
+          {/* Left: avatar + school name */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <Badge
               dot
-              color={isDark ? "#22c55e" : "#16a34a"}
+              color="#5BA89A"
               offset={[-2, 2]}
               style={{ boxShadow: `0 0 0 2px ${t.bg}` }}
             >
               <Avatar
                 size={36}
                 style={{
-                  background: `linear-gradient(135deg, ${t.accent}, ${isDark ? "#06b6d4" : "#06b6d4"})`,
+                  background: `linear-gradient(135deg, ${t.accent}, ${t.accentLight})`,
                   color: "#fff",
                   fontSize: 13,
                   fontWeight: 700,
                   flexShrink: 0,
-                  boxShadow: `0 2px 8px ${isDark ? "rgba(167,139,250,0.35)" : "rgba(124,58,237,0.28)"}`,
+                  boxShadow: `0 2px 10px ${t.accent}40`,
                 }}
               >
                 {initials}
@@ -261,16 +266,16 @@ const Sidebar = ({ isOpen, onToggle }) => {
                 >
                   {schoolName}
                 </Text>
-                {role && (
-                  <span className="role-badge" style={{ marginTop: 3 }}>
-                    {role}
+                {roleName && (
+                  <span className="sidebar-role-badge" style={{ marginTop: 3 }}>
+                    {roleName}
                   </span>
                 )}
               </div>
             )}
           </div>
 
-          {/* Collapse / expand toggle */}
+          {/* Toggle button */}
           {onToggle && (
             <button
               className="sidebar-toggle-btn"
@@ -282,7 +287,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
                 cursor: "pointer",
                 width: 28,
                 height: 28,
-                borderRadius: 6,
+                borderRadius: 7,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -300,14 +305,9 @@ const Sidebar = ({ isOpen, onToggle }) => {
           )}
         </div>
 
-        {/* ── NAV LABEL ── */}
+        {/* ── NAV SECTION LABEL ── */}
         {isOpen && (
-          <div
-            style={{
-              padding: "14px 20px 6px",
-              flexShrink: 0,
-            }}
-          >
+          <div style={{ padding: "14px 20px 4px", flexShrink: 0 }}>
             <Text
               style={{
                 fontSize: 10,
@@ -333,19 +333,20 @@ const Sidebar = ({ isOpen, onToggle }) => {
           }}
         >
           <Suspense fallback={<MenuSkeleton isDark={isDark} />}>
-            <SidebarMenu role={role} />
+            <SidebarMenu role={roleName?.toLowerCase()} accentColor={t.accent} accentBg={t.iconBg} />
           </Suspense>
         </div>
 
-        {/* ── FOOTER ── */}
+        {/* ── FOOTER STATUS ── */}
         <div
           style={{
             flexShrink: 0,
             borderTop: `1px solid ${t.border}`,
-            padding: "12px 16px",
+            padding: "10px 16px",
             display: "flex",
             alignItems: "center",
             gap: 8,
+            background: isDark ? "transparent" : "rgba(247,248,252,0.6)",
           }}
         >
           <div
@@ -353,22 +354,23 @@ const Sidebar = ({ isOpen, onToggle }) => {
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: "#22c55e",
+              background: "#5BA89A",
               flexShrink: 0,
-              boxShadow: "0 0 0 3px rgba(34,197,94,0.15)",
+              boxShadow: "0 0 0 3px rgba(91,168,154,0.2)",
+              animation: "onlinePulse 3s ease-in-out infinite",
             }}
           />
           {isOpen && (
-            <Text
-              style={{
-                fontSize: 11,
-                color: t.textSecondary,
-                fontWeight: 500,
-              }}
-            >
+            <Text style={{ fontSize: 11, color: t.textSecondary, fontWeight: 500 }}>
               System Online
             </Text>
           )}
+          <style>{`
+            @keyframes onlinePulse {
+              0%, 100% { box-shadow: 0 0 0 3px rgba(91,168,154,0.2); }
+              50%       { box-shadow: 0 0 0 5px rgba(91,168,154,0.08); }
+            }
+          `}</style>
         </div>
       </Sider>
     </>

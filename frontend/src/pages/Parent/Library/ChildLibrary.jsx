@@ -8,7 +8,7 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#7c3aed", "#dc2626", "#f97316"];
+const STAT_COLORS = ["#9B87B8", "#D96B7A", "#D4922A"];
 
 const ChildLibrary = () => {
   const dispatch = useDispatch();
@@ -73,7 +73,7 @@ const ChildLibrary = () => {
       render: (v) => {
         if (!v) return "—";
         const overdue = dayjs(v).isBefore(dayjs(), "day");
-        return <span style={{ color: overdue ? "#dc2626" : "inherit" }}>{dayjs(v).format("DD MMM YYYY")}</span>;
+        return <span style={{ color: overdue ? "#D96B7A" : "inherit" }}>{dayjs(v).format("DD MMM YYYY")}</span>;
       },
     },
     {
@@ -84,7 +84,7 @@ const ChildLibrary = () => {
     {
       title: "Fine",
       dataIndex: "fineAmount",
-      render: (v) => v > 0 ? <span style={pill("#dc2626", "#fee2e2")}>₹{v}</span> : "—",
+      render: (v) => v > 0 ? <span style={pill("#D96B7A", "rgba(255,202,212,0.2)")}>₹{v}</span> : "—",
     },
   ];
 

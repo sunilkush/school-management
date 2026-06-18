@@ -13,8 +13,8 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
-const PIE_COLORS = ["#059669", "#dc2626", "#f97316"];
-const STAT_COLORS = ["#7c3aed", "#0284c7", "#059669", "#f97316"];
+const PIE_COLORS = ["#5BA89A", "#D96B7A", "#D4922A"];
+const STAT_COLORS = ["#9B87B8", "#5B9EC9", "#5BA89A", "#D4922A"];
 
 const ChildProgress = () => {
   const dispatch = useDispatch();
@@ -179,14 +179,14 @@ const ChildProgress = () => {
                           </div>
                           <Space direction="vertical" style={{ width: "100%" }}>
                             {[
-                              { label: "Total Days",  value: attStats.total,   color: "#7c3aed" },
-                              { label: "Present",     value: attStats.present, color: "#059669" },
-                              { label: "Absent",      value: attStats.absent,  color: "#dc2626" },
-                              { label: "Late",        value: attStats.late,    color: "#f97316" },
+                              { label: "Total Days",  value: attStats.total,   color: "#9B87B8" },
+                              { label: "Present",     value: attStats.present, color: "#5BA89A" },
+                              { label: "Absent",      value: attStats.absent,  color: "#D96B7A" },
+                              { label: "Late",        value: attStats.late,    color: "#D4922A" },
                             ].map(({ label, value, color }) => (
                               <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-muted)" }}>
                                 <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{label}</span>
-                                <Tag color={color === "#059669" ? "green" : color === "#dc2626" ? "red" : color === "#f97316" ? "orange" : "purple"}>
+                                <Tag color={color === "#5BA89A" ? "green" : color === "#D96B7A" ? "red" : color === "#D4922A" ? "orange" : "purple"}>
                                   {value}
                                 </Tag>
                               </div>
@@ -212,7 +212,7 @@ const ChildProgress = () => {
                           <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 11 }} />
                           <Tooltip formatter={(v) => [`${v}%`, "Score"]} />
                           <Legend />
-                          <Line type="monotone" dataKey="percentage" name="Score %" stroke="#7c3aed" strokeWidth={2} dot={{ r: 4 }} />
+                          <Line type="monotone" dataKey="percentage" name="Score %" stroke="#9B87B8" strokeWidth={2} dot={{ r: 4 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>

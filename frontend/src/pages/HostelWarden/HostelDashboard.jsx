@@ -15,7 +15,7 @@ import { fetchHostelDashboard } from "../../features/hostelWardenSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../styles/pageStyles";
 
-const COMPLAINT_COLORS = ["#dc2626", "#f97316", "#0891b2", "#7c3aed", "#059669"];
+const COMPLAINT_COLORS = ["#FFCAD4", "#FDE2A7", "#A7C7E7", "#CDB4DB", "#B8E0D2"];
 
 const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
   <div
@@ -80,16 +80,16 @@ const HostelDashboard = () => {
 
       {/* ── KPI Grid ─────────────────────────────────────────── */}
       <div style={statGrid(160)}>
-        <KpiCard icon={<HomeOutlined />}         label="Total Rooms"       value={kpis.totalRooms}          color="#7c3aed" onClick={() => navigate("hostelwarden/rooms")} />
-        <KpiCard icon={<TeamOutlined />}          label="Total Capacity"    value={kpis.totalCapacity}        color="#0891b2" />
-        <KpiCard icon={<CheckCircleOutlined />}   label="Occupied Beds"     value={kpis.totalOccupied}        color="#059669" />
-        <KpiCard icon={<ClockCircleOutlined />}   label="Vacant Beds"       value={kpis.vacantBeds}           color="#64748b" />
-        <KpiCard icon={<UserOutlined />}          label="Students"          value={kpis.totalStudents}         color="#8b5cf6" onClick={() => navigate("hostelwarden/allocations")} />
-        <KpiCard icon={<ClockCircleOutlined />}   label="Pending Leaves"    value={kpis.pendingLeaves}         color="#d97706" sub="Awaiting approval" onClick={() => navigate("hostelwarden/leaves")} />
-        <KpiCard icon={<AlertOutlined />}         label="On Leave Today"    value={kpis.leavesToday}           color="#f97316" />
-        <KpiCard icon={<UserOutlined />}          label="Visitors Today"    value={kpis.visitorsToday}         color="#0891b2" onClick={() => navigate("hostelwarden/visitors")} />
-        <KpiCard icon={<WarningOutlined />}       label="Open Complaints"   value={kpis.openComplaints}        color="#dc2626" onClick={() => navigate("hostelwarden/complaints")} sub={kpis.urgentComplaints > 0 ? `${kpis.urgentComplaints} urgent` : undefined} />
-        <KpiCard icon={<CheckCircleOutlined />}   label="New Admissions"    value={kpis.newAdmissionsThisMonth} color="#059669" sub="This month" />
+        <KpiCard icon={<HomeOutlined />}         label="Total Rooms"       value={kpis.totalRooms}               color="#9B87B8" onClick={() => navigate("hostelwarden/rooms")} />
+        <KpiCard icon={<TeamOutlined />}          label="Total Capacity"    value={kpis.totalCapacity}            color="#5B9EC9" />
+        <KpiCard icon={<CheckCircleOutlined />}   label="Occupied Beds"     value={kpis.totalOccupied}            color="#5BA89A" />
+        <KpiCard icon={<ClockCircleOutlined />}   label="Vacant Beds"       value={kpis.vacantBeds}               color="#8A94A6" />
+        <KpiCard icon={<UserOutlined />}          label="Students"          value={kpis.totalStudents}            color="#9B87B8" onClick={() => navigate("hostelwarden/allocations")} />
+        <KpiCard icon={<ClockCircleOutlined />}   label="Pending Leaves"    value={kpis.pendingLeaves}            color="#D4922A" sub="Awaiting approval" onClick={() => navigate("hostelwarden/leaves")} />
+        <KpiCard icon={<AlertOutlined />}         label="On Leave Today"    value={kpis.leavesToday}              color="#D4922A" />
+        <KpiCard icon={<UserOutlined />}          label="Visitors Today"    value={kpis.visitorsToday}            color="#5B9EC9" onClick={() => navigate("hostelwarden/visitors")} />
+        <KpiCard icon={<WarningOutlined />}       label="Open Complaints"   value={kpis.openComplaints}           color="#D96B7A" onClick={() => navigate("hostelwarden/complaints")} sub={kpis.urgentComplaints > 0 ? `${kpis.urgentComplaints} urgent` : undefined} />
+        <KpiCard icon={<CheckCircleOutlined />}   label="New Admissions"    value={kpis.newAdmissionsThisMonth}   color="#5BA89A" sub="This month" />
       </div>
 
       {/* ── Occupancy Progress ───────────────────────────────── */}
@@ -103,7 +103,13 @@ const HostelDashboard = () => {
         </div>
         <Progress
           percent={kpis.occupancyRate || 0}
-          strokeColor={kpis.occupancyRate > 90 ? "#dc2626" : kpis.occupancyRate > 70 ? "#f97316" : "#059669"}
+          strokeColor={
+            kpis.occupancyRate > 90
+              ? { from: "#FFCAD4", to: "#D96B7A" }
+              : kpis.occupancyRate > 70
+                ? { from: "#FDE2A7", to: "#D4922A" }
+                : { from: "#A7C7E7", to: "#B8E0D2" }
+          }
           showInfo={false}
         />
       </div>
@@ -112,12 +118,12 @@ const HostelDashboard = () => {
       <div style={{ ...sectionPanel, padding: 20, marginBottom: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>Quick Actions</div>
         <div style={statGrid(120)}>
-          <ActionTile icon={<ClockCircleOutlined />} label="Leave Requests" path="hostelwarden/leaves"       color="#d97706" navigate={navigate} />
-          <ActionTile icon={<UserOutlined />}         label="Log Visitor"   path="hostelwarden/visitors"     color="#0891b2" navigate={navigate} />
-          <ActionTile icon={<WarningOutlined />}      label="Complaints"    path="hostelwarden/complaints"   color="#dc2626" navigate={navigate} />
-          <ActionTile icon={<CheckCircleOutlined />}  label="Attendance"    path="hostelwarden/hostel-attendance"  color="#059669" navigate={navigate} />
-          <ActionTile icon={<HomeOutlined />}         label="Rooms"         path="hostelwarden/rooms"        color="#7c3aed" navigate={navigate} />
-          <ActionTile icon={<TeamOutlined />}         label="Allocations"   path="hostelwarden/allocations"  color="#8b5cf6" navigate={navigate} />
+          <ActionTile icon={<ClockCircleOutlined />} label="Leave Requests" path="hostelwarden/leaves"      color="#D4922A" navigate={navigate} />
+          <ActionTile icon={<UserOutlined />}         label="Log Visitor"   path="hostelwarden/visitors"    color="#5B9EC9" navigate={navigate} />
+          <ActionTile icon={<WarningOutlined />}      label="Complaints"    path="hostelwarden/complaints"  color="#D96B7A" navigate={navigate} />
+          <ActionTile icon={<CheckCircleOutlined />}  label="Attendance"    path="hostelwarden/hostel-attendance" color="#5BA89A" navigate={navigate} />
+          <ActionTile icon={<HomeOutlined />}         label="Rooms"         path="hostelwarden/rooms"       color="#9B87B8" navigate={navigate} />
+          <ActionTile icon={<TeamOutlined />}         label="Allocations"   path="hostelwarden/allocations" color="#9B87B8" navigate={navigate} />
         </div>
       </div>
 
@@ -135,7 +141,7 @@ const HostelDashboard = () => {
                   <XAxis dataKey="_id" tick={{ fontSize: 12 }} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#7c3aed" radius={[5, 5, 0, 0]} name="Leaves" />
+                  <Bar dataKey="count" fill="#A7C7E7" radius={[6, 6, 0, 0]} name="Leaves" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -164,13 +170,13 @@ const HostelDashboard = () => {
       {/* ── Status Summary ───────────────────────────────────── */}
       <Row gutter={[12, 12]}>
         {[
-          { label: "Occupancy",       value: `${kpis.occupancyRate || 0}%`,        color: "#7c3aed", bg: "#ede9fe" },
-          { label: "Pending Leaves",  value: kpis.pendingLeaves || 0,             color: "#d97706", bg: "#fef3c7" },
-          { label: "Open Complaints", value: kpis.openComplaints || 0,            color: "#dc2626", bg: "#fee2e2" },
-          { label: "Visitors Today",  value: kpis.visitorsToday || 0,             color: "#0891b2", bg: "#dbeafe" },
-        ].map(({ label, value, color, bg }) => (
+          { label: "Occupancy",       value: `${kpis.occupancyRate || 0}%`,  color: "#6B4F96", bg: "rgba(205,180,219,0.22)", border: "rgba(205,180,219,0.4)" },
+          { label: "Pending Leaves",  value: kpis.pendingLeaves || 0,        color: "#8A5E10", bg: "rgba(253,226,167,0.30)", border: "rgba(253,226,167,0.55)" },
+          { label: "Open Complaints", value: kpis.openComplaints || 0,       color: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
+          { label: "Visitors Today",  value: kpis.visitorsToday || 0,        color: "#2E6A9A", bg: "rgba(167,199,231,0.22)", border: "rgba(167,199,231,0.4)" },
+        ].map(({ label, value, color, bg, border }) => (
           <Col xs={12} sm={6} key={label}>
-            <div style={{ background: bg, borderRadius: 12, padding: "14px 18px", textAlign: "center" }}>
+            <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 14, padding: "16px 18px", textAlign: "center" }}>
               <div style={{ fontSize: 22, fontWeight: 800, color }}>{value}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 4 }}>{label}</div>
             </div>

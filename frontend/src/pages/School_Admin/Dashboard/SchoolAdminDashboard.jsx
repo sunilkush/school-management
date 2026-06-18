@@ -36,20 +36,20 @@ const { Title, Text } = Typography;
 ───────────────────────────────────────── */
 const tokens = (isDark) => ({
   pageBg:       "var(--surface-page)",
-  cardBg:       isDark ? "#141414" : "#ffffff",
-  cardBorder:   isDark ? "#1f1f1f" : "#f0f0f0",
-  sectionBg:    isDark ? "#0f0f0f" : "#ffffff",
-  sectionBorder:isDark ? "#1f1f1f" : "#e8eef8",
-  textPrimary:  isDark ? "#e8e8e8" : "#1a1a2e",
-  textSecondary:isDark ? "#6b7280" : "#9ca3af",
-  accent:       isDark ? "#a78bfa" : "#7c3aed",
-  accentBg:     isDark ? "rgba(167,139,250,0.10)" : "rgba(124,58,237,0.08)",
+  cardBg:       isDark ? "#1A2235" : "#ffffff",
+  cardBorder:   isDark ? "#2A3550" : "#E4EAF6",
+  sectionBg:    isDark ? "#1A2235" : "#ffffff",
+  sectionBorder:isDark ? "#2A3550" : "#E4EAF6",
+  textPrimary:  isDark ? "#E8EDF7" : "#2E2E2E",
+  textSecondary:isDark ? "#6B7890" : "#8A94A6",
+  accent:       isDark ? "#7FBAD6" : "#5B9EC9",
+  accentBg:     isDark ? "rgba(167,199,231,0.12)" : "rgba(167,199,231,0.18)",
   shadow:       isDark
     ? "0 2px 12px rgba(0,0,0,0.4)"
-    : "0 2px 12px rgba(0,0,0,0.06)",
+    : "0 2px 8px rgba(91,158,201,0.07), 0 4px 20px rgba(91,158,201,0.05)",
   shadowHover:  isDark
     ? "0 6px 24px rgba(0,0,0,0.5)"
-    : "0 6px 24px rgba(0,0,0,0.1)",
+    : "0 6px 24px rgba(91,158,201,0.14)",
 });
 
 /* ─────────────────────────────────────────

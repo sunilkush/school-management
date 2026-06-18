@@ -44,30 +44,30 @@ import PlanLogs from "./PlanLogs.jsx";
 
 const { Text, Title } = Typography;
 
-// ─── Color tokens (same system) ───────────────────────────────
+// ─── Color tokens (pastel system) ────────────────────────────
 const C = {
-  primary: "#0F6E56",
-  primaryLight: "#E1F5EE",
-  primaryMid: "#1D9E75",
-  primaryBorder: "#9FE1CB",
+  primary: "#5B9EC9",
+  primaryLight: "#D4E9F7",
+  primaryMid: "#5B9EC9",
+  primaryBorder: "#A7C7E7",
   surface: "#ffffff",
-  bg: "#F4F6F5",
-  border: "#E8EDEB",
-  text: "#111827",
-  textSec: "#6B7280",
-  textMuted: "#9CA3AF",
-  blue: "#1D4ED8",
-  blueLight: "#EFF6FF",
-  blueBorder: "#BFDBFE",
-  purple: "#6D28D9",
-  purpleLight: "#F5F3FF",
-  purpleBorder: "#DDD6FE",
-  gold: "#B45309",
-  goldLight: "#FFFBEB",
-  goldBorder: "#FDE68A",
-  danger: "#DC2626",
-  dangerLight: "#FEF2F2",
-  dangerBorder: "#FECACA",
+  bg: "#F7F8FC",
+  border: "rgba(167,199,231,0.35)",
+  text: "#1E2A3A",
+  textSec: "#6B7890",
+  textMuted: "#A8B8CC",
+  blue: "#5B9EC9",
+  blueLight: "#D4E9F7",
+  blueBorder: "rgba(167,199,231,0.5)",
+  purple: "#9B87B8",
+  purpleLight: "rgba(205,180,219,0.2)",
+  purpleBorder: "rgba(205,180,219,0.5)",
+  gold: "#D4922A",
+  goldLight: "rgba(253,226,167,0.25)",
+  goldBorder: "rgba(253,226,167,0.5)",
+  danger: "#D96B7A",
+  dangerLight: "rgba(255,202,212,0.2)",
+  dangerBorder: "rgba(255,202,212,0.5)",
 };
 
 // ─── Plan tier colors by index ────────────────────────────────

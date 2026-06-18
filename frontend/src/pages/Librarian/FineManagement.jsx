@@ -134,7 +134,7 @@ const FineManagement = () => {
       width: 120,
       render: (_, r) => (
         <div>
-          <div style={{ fontSize: 12 }}>Due: <span style={{ color: "#dc2626", fontWeight: 600 }}>{r.dueDate}</span></div>
+          <div style={{ fontSize: 12 }}>Due: <span style={{ color: "#D96B7A", fontWeight: 600 }}>{r.dueDate}</span></div>
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Returned: {r.returnDate}</div>
         </div>
       ),
@@ -153,7 +153,7 @@ const FineManagement = () => {
       dataIndex: "fine",
       width: 110,
       sorter: (a, b) => a.fine - b.fine,
-      render: (f) => <span style={{ fontWeight: 700, fontSize: 15, color: "#dc2626" }}>₹{f}</span>,
+      render: (f) => <span style={{ fontWeight: 700, fontSize: 15, color: "#D96B7A" }}>₹{f}</span>,
     },
     {
       title: "Fine Status",
@@ -204,9 +204,9 @@ const FineManagement = () => {
       <div style={statGrid(150)}>
         {[
           { label: "Total Records",    value: summary.totalRecords,   color: "#0891b2", icon: <FilterOutlined /> },
-          { label: "Pending Fines",    value: `₹${summary.totalPending}`,   color: "#dc2626", icon: <DollarOutlined /> },
-          { label: "Collected",        value: `₹${summary.totalCollected}`, color: "#059669", icon: <CheckCircleOutlined /> },
-          { label: "Waived",           value: `₹${summary.totalWaived}`,    color: "#64748b", icon: <CloseCircleOutlined /> },
+          { label: "Pending Fines",    value: `₹${summary.totalPending}`,   color: "#D96B7A", icon: <DollarOutlined /> },
+          { label: "Collected",        value: `₹${summary.totalCollected}`, color: "#5BA89A", icon: <CheckCircleOutlined /> },
+          { label: "Waived",           value: `₹${summary.totalWaived}`,    color: "#6B7890", icon: <CloseCircleOutlined /> },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>
@@ -272,7 +272,7 @@ const FineManagement = () => {
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
                 Borrower: <strong>{selectedRecord.borrowerName}</strong>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "#dc2626", marginTop: 8 }}>₹{selectedRecord.fine}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#D96B7A", marginTop: 8 }}>₹{selectedRecord.fine}</div>
             </div>
             <div>
               <div style={{ fontWeight: 600, marginBottom: 6, fontSize: 13 }}>Reason for waiver (optional)</div>

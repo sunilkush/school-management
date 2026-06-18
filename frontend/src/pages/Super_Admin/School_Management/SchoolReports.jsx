@@ -21,31 +21,31 @@ const { Option } = Select;
 
 /* ─── Design Tokens ───────────────────────────────────────────── */
 const t = {
-  bg:           "#f5f6fa",
+  bg:           "#F7F8FC",
   surface:      "#ffffff",
   surfaceAlt:   "#f0f2f8",
   border:       "1px solid #e4e7ef",
   borderColor:  "#e4e7ef",
 
-  purple:       "#5b52e8",
-  purpleLight:  "#ededfd",
-  purpleMid:    "#c7c4f8",
+  purple:       "#9B87B8",
+  purpleLight:  "rgba(205,180,219,0.2)",
+  purpleMid:    "rgba(205,180,219,0.5)",
 
-  blue:         "#2563eb",
-  blueLight:    "#dbeafe",
+  blue:         "#5B9EC9",
+  blueLight:    "rgba(167,199,231,0.2)",
 
-  green:        "#16a34a",
-  greenLight:   "#dcfce7",
+  green:        "#5BA89A",
+  greenLight:   "rgba(184,224,210,0.2)",
 
-  pink:         "#db2777",
-  pinkLight:    "#fce7f3",
+  pink:         "#D96B7A",
+  pinkLight:    "rgba(255,202,212,0.2)",
 
-  amber:        "#d97706",
-  amberLight:   "#fef3c7",
+  amber:        "#D4922A",
+  amberLight:   "rgba(253,226,167,0.25)",
 
-  textPrimary:   "#0f172a",
-  textSecondary: "#64748b",
-  textMuted:     "#94a3b8",
+  textPrimary:   "#1E2A3A",
+  textSecondary: "#6B7890",
+  textMuted:     "#A8B8CC",
 
   radius:   "14px",
   radiusSm: "8px",

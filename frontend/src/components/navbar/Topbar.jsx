@@ -1,10 +1,10 @@
 import React, { useState, memo, lazy, Suspense } from "react";
-import { Layout, Input, Button, Space, Grid, Drawer, Spin, Badge, Tooltip, Dropdown } from "antd";
+import { Layout, Input, Button, Space, Grid, Drawer, Spin, Badge, Tooltip, Dropdown, Avatar } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   SearchOutlined,
-  MessageOutlined,
+  BellOutlined,
   MoonOutlined,
   SunOutlined,
   LaptopOutlined,
@@ -19,62 +19,8 @@ const AcademicYearSwitcher = lazy(() => import("../layout/AcademicYearSwitcher")
 const { Header } = Layout;
 const { useBreakpoint } = Grid;
 
-/* ─── Inline styles (no extra CSS file needed) ─────────────────────── */
-const styles = {
-  header: () => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 20px",
-    height: 64,
-    position: "sticky",
-    top: 0,
-    zIndex: 100,
-    background: "var(--surface-elevated)",
-    backdropFilter: "blur(14px)",
-    WebkitBackdropFilter: "blur(14px)",
-    borderBottom: "1px solid var(--border-muted)",
-    boxShadow: "var(--header-shadow)",
-    transition: "background 0.3s, border-color 0.3s",
-  }),
-
-  iconBtn: () => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    border: "none",
-    background: "var(--surface-soft)",
-    color: "var(--text-secondary)",
-    transition: "background 0.2s, color 0.2s, transform 0.15s",
-    cursor: "pointer",
-  }),
-
-  searchInput: () => ({
-    width: 260,
-    borderRadius: 10,
-    background: "var(--surface-soft)",
-    border: "1px solid var(--border-muted)",
-    boxShadow: "none",
-  }),
-
-  divider: () => ({
-    width: 1,
-    height: 22,
-    background: "var(--divider)",
-    margin: "0 4px",
-    borderRadius: 1,
-  }),
-
-  badge: {
-    fontSize: 10,
-  },
-};
-
-/* ─── Small reusable icon button ───────────────────────────────────── */
-const IconBtn = memo(({ icon, tooltip, onClick, badge, isDark, ariaLabel }) => {
+/* ─── Small icon button ─────────────────────────────────────────────── */
+const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark }) => {
   const [hovered, setHovered] = useState(false);
 
   const btn = (
@@ -84,16 +30,35 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, isDark, ariaLabel }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        ...styles.iconBtn(isDark),
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        border: "none",
         background: hovered
-          ? "var(--surface-soft-hover)"
-          : styles.iconBtn(isDark).background,
-        transform: hovered ? "scale(1.08)" : "scale(1)",
+          ? isDark ? "#243047" : "rgba(167,199,231,0.15)"
+          : isDark ? "#1E2A3E" : "#F2F6FD",
+        color: isDark ? "#9BA8C0" : "#5A6376",
+        transition: "all 0.18s ease",
+        cursor: "pointer",
+        transform: hovered ? "scale(1.07)" : "scale(1)",
         fontSize: 16,
       }}
     >
       {badge !== undefined ? (
-        <Badge count={badge} size="small" offset={[4, -4]} style={styles.badge}>
+        <Badge
+          count={badge}
+          size="small"
+          offset={[4, -4]}
+          style={{
+            fontSize: 9,
+            background: "#D96B7A",
+            boxShadow: "none",
+            border: "none",
+          }}
+        >
           {icon}
         </Badge>
       ) : (
@@ -116,21 +81,59 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
   const { isDark, toggleTheme, themeMode, setThemeMode } = useTheme();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-   const isMobile = !screens.md;
-  const loader = (
-    <Spin size="small" style={{ display: "flex", alignItems: "center" }} />
-  );
+  const isMobile = !screens.md;
 
-  const handleSearch = (_value) => {
-    // TODO: implement global search
-  };
+  const loader = <Spin size="small" style={{ display: "flex", alignItems: "center" }} />;
 
   return (
     <>
-      <Header style={styles.header(isDark)}>
+      {/* ── Top bar styles ── */}
+      <style>{`
+        .topbar-search-input .ant-input {
+          background: transparent !important;
+          color: ${isDark ? "#E8EDF7" : "#2E2E2E"} !important;
+          font-size: 13px;
+        }
+        .topbar-search-input .ant-input::placeholder {
+          color: ${isDark ? "#6B7890" : "#A0AABA"} !important;
+        }
+        .topbar-search-input.ant-input-affix-wrapper {
+          border-color: ${isDark ? "#2A3550" : "#E4EAF6"} !important;
+          background: ${isDark ? "#1E2A3E" : "#F2F6FD"} !important;
+          border-radius: 10px !important;
+          box-shadow: none !important;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .topbar-search-input.ant-input-affix-wrapper:hover,
+        .topbar-search-input.ant-input-affix-wrapper-focused {
+          border-color: ${isDark ? "#5B9EC9" : "#A7C7E7"} !important;
+          box-shadow: 0 0 0 3px rgba(167,199,231,0.18) !important;
+        }
+        .topbar-year-switcher { max-width: 180px; }
+      `}</style>
 
+      <Header
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 20px",
+          height: 64,
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          background: isDark ? "#1A2235" : "#ffffff",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderBottom: `1px solid ${isDark ? "#2A3550" : "#EEF2FB"}`,
+          boxShadow: isDark
+            ? "0 1px 0 #222E44"
+            : "0 1px 0 #EEF2FB, 0 2px 12px rgba(91,158,201,0.05)",
+          transition: "background 0.3s",
+        }}
+      >
         {/* ── LEFT ── */}
-       <Space align="center" size={isMobile ? 8 : 12}>
+        <Space align="center" size={isMobile ? 8 : 12}>
           {/* Sidebar toggle */}
           <Tooltip title={isOpen ? "Collapse sidebar" : "Expand sidebar"} placement="bottom">
             <Button
@@ -149,8 +152,9 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                color: "var(--text-secondary)",
-                background: "var(--surface-soft)",
+                color: isDark ? "#9BA8C0" : "#5A6376",
+                background: isDark ? "#1E2A3E" : "#F2F6FD",
+                border: "none",
               }}
             />
           </Tooltip>
@@ -158,34 +162,23 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           {/* Desktop search */}
           {screens.md && (
             <Input
+              className="topbar-search-input"
               placeholder="Search anything…"
               allowClear
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              onPressEnter={() => handleSearch(searchValue)}
               prefix={
-                <SearchOutlined
-                  style={{
-                    color:"var(--text-primary)",
-                    fontSize: 14,
-                  }}
-                />
+                <SearchOutlined style={{ color: isDark ? "#6B7890" : "#A0AABA", fontSize: 14 }} />
               }
-              style={styles.searchInput(isDark)}
-              styles={{
-                input: {
-                  background: "transparent",
-                  color:"var(--text-primary)",
-                },
-              }}
+              style={{ width: 260 }}
             />
           )}
         </Space>
 
         {/* ── RIGHT ── */}
-         <Space size={isMobile ? 4 : 6} align="center">
+        <Space size={isMobile ? 4 : 6} align="center">
 
-          {/* Mobile search */}
+          {/* Mobile search toggle */}
           {isMobile && (
             <IconBtn
               icon={<SearchOutlined style={{ fontSize: 16 }} />}
@@ -197,15 +190,22 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
 
           {/* Academic Year Switcher */}
           {!isMobile && screens.sm && user?.role?.name !== "Super Admin" && (
-            <Suspense fallback={loader}>
-              <AcademicYearSwitcher />
-            </Suspense>
+            <div className="topbar-year-switcher">
+              <Suspense fallback={loader}>
+                <AcademicYearSwitcher />
+              </Suspense>
+            </div>
           )}
 
-          {/* Vertical divider */}
-            {!isMobile && screens.sm && <span style={styles.divider(isDark)} />}
+          {/* Divider */}
+          {!isMobile && (
+            <span style={{
+              width: 1, height: 22,
+              background: isDark ? "#2A3550" : "#E4EAF6",
+              borderRadius: 1,
+            }} />
+          )}
 
-          
           {/* Theme toggle */}
           <Dropdown
             trigger={["click"]}
@@ -213,25 +213,27 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               selectedKeys: [themeMode],
               onClick: ({ key }) => setThemeMode(key),
               items: [
-                { key: "light", label: "☀️ Light" },
-                { key: "dark", label: "🌙 Dark" },
-                { key: "system", label: "💻 System" },
+                { key: "light", label: "Light" },
+                { key: "dark",  label: "Dark" },
+                { key: "system",label: "System" },
               ],
+              style: { borderRadius: 12, padding: "4px" },
             }}
+            overlayStyle={{ borderRadius: 12 }}
           >
             <span>
               <IconBtn
+                isDark={isDark}
+                tooltip={`Theme: ${themeMode}`}
+                onClick={toggleTheme}
+                ariaLabel="Theme controls"
                 icon={
                   themeMode === "system"
                     ? <LaptopOutlined style={{ fontSize: 16 }} />
                     : isDark
-                      ? <SunOutlined style={{ fontSize: 16, color: "#facc15" }} />
-                      : <MoonOutlined style={{ fontSize: 16 }} />
+                      ? <SunOutlined style={{ fontSize: 16, color: "#FDE2A7" }} />
+                      : <MoonOutlined style={{ fontSize: 16, color: "#9B87B8" }} />
                 }
-                tooltip={`Theme: ${themeMode} (click for options)`}
-                onClick={toggleTheme}
-                isDark={isDark}
-                ariaLabel="Theme controls"
               />
             </span>
           </Dropdown>
@@ -241,11 +243,16 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
             <NotificationDropdown />
           </Suspense>
 
-          {/* Vertical divider */}
-         {!isMobile && <span style={styles.divider(isDark)} />}
+          {/* Divider */}
+          {!isMobile && (
+            <span style={{
+              width: 1, height: 22,
+              background: isDark ? "#2A3550" : "#E4EAF6",
+              borderRadius: 1,
+            }} />
+          )}
 
-
-          {/* User */}
+          {/* User dropdown */}
           <Suspense fallback={loader}>
             <UserDropdown />
           </Suspense>
@@ -255,13 +262,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
       {/* ── Mobile Search Drawer ── */}
       <Drawer
         title={
-          <span
-            style={{
-              fontWeight: 600,
-              fontSize: 15,
-              color: isDark ? "rgba(255,255,255,0.85)" : "inherit",
-            }}
-          >
+          <span style={{ fontWeight: 600, fontSize: 15, color: isDark ? "#E8EDF7" : "#2E2E2E" }}>
             Search
           </span>
         }
@@ -270,22 +271,16 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
         onClose={() => setMobileSearchOpen(false)}
         open={mobileSearchOpen}
         closable
-        closeIcon={
-          <span style={{ fontSize: 13, color: isDark ? "rgba(255,255,255,0.5)" : undefined }}>
-            ✕
-          </span>
-        }
+        closeIcon={<span style={{ fontSize: 13, color: isDark ? "#9BA8C0" : "#8A94A6" }}>✕</span>}
         styles={{
           header: {
             padding: "10px 16px",
-            background: isDark ? "#11131c" : "#fff",
-            borderBottom: isDark
-              ? "1px solid rgba(255,255,255,0.06)"
-              : "1px solid #f0f0f0",
+            background: isDark ? "#1A2235" : "#fff",
+            borderBottom: `1px solid ${isDark ? "#2A3550" : "#EEF2FB"}`,
           },
           body: {
             padding: "10px 16px",
-            background: isDark ? "#11131c" : "#fff",
+            background: isDark ? "#1A2235" : "#fff",
           },
         }}
       >
@@ -295,17 +290,11 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           allowClear
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          onPressEnter={(e) => {
-            handleSearch(e.target.value);
-            setMobileSearchOpen(false);
-          }}
-          prefix={<SearchOutlined style={{ color: "rgba(0,0,0,0.3)", fontSize: 14 }} />}
+          prefix={<SearchOutlined style={{ color: isDark ? "#6B7890" : "#A0AABA", fontSize: 14 }} />}
           style={{
             borderRadius: 10,
-            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-            border: isDark
-              ? "1px solid rgba(255,255,255,0.1)"
-              : "1px solid rgba(0,0,0,0.09)",
+            background: isDark ? "rgba(255,255,255,0.06)" : "#F2F6FD",
+            border: `1px solid ${isDark ? "#2A3550" : "#E4EAF6"}`,
           }}
         />
       </Drawer>

@@ -18,7 +18,7 @@ import { BarChartOutlined } from "@ant-design/icons";
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-const CHART_COLORS = ["#7c3aed", "#dc2626", "#059669", "#d97706", "#0891b2", "#f97316"];
+const CHART_COLORS = ["#9B87B8", "#D96B7A", "#5BA89A", "#D4922A", "#0891b2", "#D4922A"];
 
 const ReportCard = ({ title, children, extra }) => (
   <div style={{ ...sectionPanel, marginBottom: 0 }}>
@@ -118,12 +118,12 @@ const HostelReports = () => {
       {/* ── Overview KPIs ─────────────────────────────────────── */}
       <div style={statGrid(140)}>
         {[
-          { label: "Total Rooms",     value: kpis.totalRooms,     color: "#7c3aed" },
+          { label: "Total Rooms",     value: kpis.totalRooms,     color: "#9B87B8" },
           { label: "Total Capacity",  value: kpis.totalCapacity,  color: "#0891b2" },
-          { label: "Occupied Beds",   value: kpis.totalOccupied,  color: "#059669" },
-          { label: "Occupancy Rate",  value: `${kpis.occupancyRate || 0}%`, color: "#d97706" },
+          { label: "Occupied Beds",   value: kpis.totalOccupied,  color: "#5BA89A" },
+          { label: "Occupancy Rate",  value: `${kpis.occupancyRate || 0}%`, color: "#D4922A" },
           { label: "Students",        value: kpis.totalStudents,  color: "#8b5cf6" },
-          { label: "Open Complaints", value: kpis.openComplaints, color: "#dc2626" },
+          { label: "Open Complaints", value: kpis.openComplaints, color: "#D96B7A" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ ...sectionPanel, marginBottom: 0, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
             <div style={iconWell(color, 36)}><FileTextOutlined /></div>
@@ -140,11 +140,11 @@ const HostelReports = () => {
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Occupancy Rate</div>
         <Progress
           percent={kpis.occupancyRate || 0}
-          strokeColor={kpis.occupancyRate > 90 ? "#dc2626" : kpis.occupancyRate > 70 ? "#f97316" : "#059669"}
+          strokeColor={kpis.occupancyRate > 90 ? "#D96B7A" : kpis.occupancyRate > 70 ? "#D4922A" : "#5BA89A"}
         />
         <div style={{ display: "flex", gap: 24, marginTop: 10, fontSize: 12 }}>
-          <span style={{ color: "#059669" }}>Occupied: <strong>{kpis.totalOccupied}</strong></span>
-          <span style={{ color: "#64748b" }}>Vacant: <strong>{(kpis.totalCapacity || 0) - (kpis.totalOccupied || 0)}</strong></span>
+          <span style={{ color: "#5BA89A" }}>Occupied: <strong>{kpis.totalOccupied}</strong></span>
+          <span style={{ color: "#6B7890" }}>Vacant: <strong>{(kpis.totalCapacity || 0) - (kpis.totalOccupied || 0)}</strong></span>
           <span style={{ color: "#0891b2" }}>Capacity: <strong>{kpis.totalCapacity}</strong></span>
         </div>
       </div>
@@ -162,7 +162,7 @@ const HostelReports = () => {
                   <XAxis dataKey="_id" tick={{ fontSize: 11 }} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Leaves" />
+                  <Bar dataKey="count" fill="#9B87B8" radius={[4, 4, 0, 0]} name="Leaves" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -200,7 +200,7 @@ const HostelReports = () => {
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
                   <YAxis dataKey="_id" type="category" tick={{ fontSize: 11 }} width={80} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#dc2626" radius={[0, 4, 4, 0]} name="Complaints" />
+                  <Bar dataKey="count" fill="#D96B7A" radius={[0, 4, 4, 0]} name="Complaints" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -237,9 +237,9 @@ const HostelReports = () => {
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
               <Legend />
-              <Area type="monotone" dataKey="Present" fill="#d1fae5" stroke="#059669" strokeWidth={2} />
-              <Area type="monotone" dataKey="Absent"  fill="#fee2e2" stroke="#dc2626" strokeWidth={2} />
-              <Area type="monotone" dataKey="Leave"   fill="#fef3c7" stroke="#d97706" strokeWidth={2} />
+              <Area type="monotone" dataKey="Present" fill="#d1fae5" stroke="#5BA89A" strokeWidth={2} />
+              <Area type="monotone" dataKey="Absent"  fill="rgba(255,202,212,0.2)" stroke="#D96B7A" strokeWidth={2} />
+              <Area type="monotone" dataKey="Leave"   fill="rgba(253,226,167,0.25)" stroke="#D4922A" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         )}

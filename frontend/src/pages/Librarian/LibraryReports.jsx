@@ -21,7 +21,7 @@ import {
 } from "../../styles/pageStyles";
 
 const { Text } = Typography;
-const PIE_COLORS = ["#7c3aed", "#0891b2", "#059669", "#f97316", "#dc2626", "#8b5cf6", "#d97706", "#14b8a6"];
+const PIE_COLORS = ["#9B87B8", "#0891b2", "#5BA89A", "#D4922A", "#D96B7A", "#8b5cf6", "#D4922A", "#14b8a6"];
 
 const LibraryReports = () => {
   const dispatch = useDispatch();
@@ -112,14 +112,14 @@ const LibraryReports = () => {
       <html><head><title>Library Report</title>
       <style>
         body { font-family: Arial, sans-serif; padding: 20px; color: #1a1a2e; }
-        h2 { border-bottom: 2px solid #7c3aed; padding-bottom: 8px; }
+        h2 { border-bottom: 2px solid #9B87B8; padding-bottom: 8px; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { background: #7c3aed; color: white; padding: 8px; text-align: left; }
+        th { background: #9B87B8; color: white; padding: 8px; text-align: left; }
         td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
         .kpi { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
         .kpi-val { font-size: 24px; font-weight: 800; }
-        .kpi-label { font-size: 11px; text-transform: uppercase; color: #64748b; }
+        .kpi-label { font-size: 11px; text-transform: uppercase; color: #6B7890; }
         @media print { button { display: none; } }
       </style></head><body>
       <h2>Library Report — ${dayjs().format("DD MMM YYYY")}</h2>
@@ -168,13 +168,13 @@ const LibraryReports = () => {
           {/* ── KPI row ─────────────────────────────────────────────── */}
           <div style={statGrid(150)}>
             {[
-              { label: "Book Titles",     value: summary.totalTitles,     color: "#7c3aed", icon: <BookOutlined /> },
+              { label: "Book Titles",     value: summary.totalTitles,     color: "#9B87B8", icon: <BookOutlined /> },
               { label: "Total Copies",    value: summary.totalCopies,     color: "#0891b2", icon: <FileTextOutlined /> },
-              { label: "Available",       value: summary.availableCopies, color: "#059669", icon: <CheckCircleOutlined /> },
-              { label: "Issued",          value: summary.issuedActive,    color: "#d97706", icon: <BookOutlined /> },
-              { label: "Overdue",         value: summary.overdueCount,    color: "#dc2626", icon: <AlertOutlined /> },
-              { label: "Lost",            value: summary.lostCount,       color: "#7c3aed", icon: <AlertOutlined /> },
-              { label: "Pending Fines",   value: `₹${summary.pendingFines}`, color: "#f97316", icon: <DollarOutlined /> },
+              { label: "Available",       value: summary.availableCopies, color: "#5BA89A", icon: <CheckCircleOutlined /> },
+              { label: "Issued",          value: summary.issuedActive,    color: "#D4922A", icon: <BookOutlined /> },
+              { label: "Overdue",         value: summary.overdueCount,    color: "#D96B7A", icon: <AlertOutlined /> },
+              { label: "Lost",            value: summary.lostCount,       color: "#9B87B8", icon: <AlertOutlined /> },
+              { label: "Pending Fines",   value: `₹${summary.pendingFines}`, color: "#D4922A", icon: <DollarOutlined /> },
             ].map(({ label, value, color, icon }) => (
               <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
                 <div style={iconWell(color, 38)}>{icon}</div>
@@ -195,7 +195,7 @@ const LibraryReports = () => {
               </Text>
               <Text strong style={{ fontSize: 12 }}>{summary.utilization}%</Text>
             </div>
-            <Progress percent={summary.utilization} strokeColor="#7c3aed" status="active" showInfo={false} />
+            <Progress percent={summary.utilization} strokeColor="#9B87B8" status="active" showInfo={false} />
           </div>
 
           {/* ── Charts row ───────────────────────────────────────────── */}
@@ -212,8 +212,8 @@ const LibraryReports = () => {
                       <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="issued"   fill="#7c3aed" radius={[4, 4, 0, 0]} name="Issued" />
-                      <Bar dataKey="returned" fill="#059669" radius={[4, 4, 0, 0]} name="Returned" />
+                      <Bar dataKey="issued"   fill="#9B87B8" radius={[4, 4, 0, 0]} name="Issued" />
+                      <Bar dataKey="returned" fill="#5BA89A" radius={[4, 4, 0, 0]} name="Returned" />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -273,7 +273,7 @@ const LibraryReports = () => {
               className="report-tbl"
               rowKey="key"
               columns={[
-                { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#7c3aed" }}>{i + 1}</span>, width: 40 },
+                { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#9B87B8" }}>{i + 1}</span>, width: 40 },
                 { title: "Book Title", dataIndex: "title", render: (t) => <Text strong>{t}</Text> },
                 {
                   title: "Times Issued",
@@ -284,7 +284,7 @@ const LibraryReports = () => {
                   render: (c) => (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Tag color="blue">{c}</Tag>
-                      <Progress percent={topBorrowed.length > 0 ? Math.round((c / topBorrowed[0]?.count) * 100) : 0} size="small" showInfo={false} style={{ width: 80 }} strokeColor="#7c3aed" />
+                      <Progress percent={topBorrowed.length > 0 ? Math.round((c / topBorrowed[0]?.count) * 100) : 0} size="small" showInfo={false} style={{ width: 80 }} strokeColor="#9B87B8" />
                     </div>
                   ),
                 },
@@ -299,10 +299,10 @@ const LibraryReports = () => {
           {/* ── Status breakdown summary ──────────────────────────────── */}
           <Row gutter={[12, 12]}>
             {[
-              { label: "Issued",   count: summary.issuedActive,    color: "#d97706", bg: "#fef3c7" },
-              { label: "Returned", count: summary.returnedCount,   color: "#059669", bg: "#d1fae5" },
-              { label: "Overdue",  count: summary.overdueCount,    color: "#dc2626", bg: "#fee2e2" },
-              { label: "Lost",     count: summary.lostCount,       color: "#7c3aed", bg: "#ede9fe" },
+              { label: "Issued",   count: summary.issuedActive,    color: "#D4922A", bg: "rgba(253,226,167,0.25)" },
+              { label: "Returned", count: summary.returnedCount,   color: "#5BA89A", bg: "#d1fae5" },
+              { label: "Overdue",  count: summary.overdueCount,    color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
+              { label: "Lost",     count: summary.lostCount,       color: "#9B87B8", bg: "rgba(205,180,219,0.2)" },
             ].map(({ label, count, color, bg }) => (
               <Col xs={12} sm={6} key={label}>
                 <div style={{ background: bg, borderRadius: 12, padding: "16px 12px", textAlign: "center" }}>

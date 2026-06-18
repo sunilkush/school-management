@@ -74,7 +74,7 @@ const MetricCard = ({ title, value, icon, color, bg, sub }) => (
     style={{
       borderRadius: 22,
       background: "#fff",
-      boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+      boxShadow: "0 10px 30px rgba(91,158,201,0.08)",
       height: "100%",
       overflow: "hidden",
       position: "relative",
@@ -95,18 +95,18 @@ const MetricCard = ({ title, value, icon, color, bg, sub }) => (
 
     <Space align="start" style={{ justifyContent: "space-between", width: "100%" }}>
       <div>
-        <Text style={{ color: "#64748b", fontWeight: 600 }}>{title}</Text>
+        <Text style={{ color: "#6B7890", fontWeight: 600 }}>{title}</Text>
         <Statistic
           value={value}
           valueStyle={{
             marginTop: 6,
             fontSize: 26,
             fontWeight: 800,
-            color: "#0f172a",
+            color: "#1E2A3A",
           }}
         />
         {sub && (
-          <Text style={{ color: "#94a3b8", fontSize: 12 }}>
+          <Text style={{ color: "#A8B8CC", fontSize: 12 }}>
             {sub}
           </Text>
         )}
@@ -301,7 +301,7 @@ export default function RevenuePage() {
     {
       title: "Due Date",
       dataIndex: "dueDate",
-      render: (value) => <Text style={{ color: "#64748b" }}>{value}</Text>,
+      render: (value) => <Text style={{ color: "#6B7890" }}>{value}</Text>,
     },
     {
       title: "Status",
@@ -346,19 +346,18 @@ export default function RevenuePage() {
       style={{
         minHeight: "100vh",
         background:
-          "linear-gradient(135deg, #f8fafc 0%, #eef2ff 45%, #fdf2f8 100%)",
+          "#F7F8FC",
         padding: 24,
       }}
     >
       <div
         style={{
-          background: "#ffffffcc",
-          backdropFilter: "blur(12px)",
-          border: "1px solid #e2e8f0",
-          borderRadius: 26,
+          background: "#ffffff",
+          border: "1px solid rgba(167,199,231,0.3)",
+          borderRadius: 20,
           padding: 22,
           marginBottom: 18,
-          boxShadow: "0 12px 36px rgba(15,23,42,0.07)",
+          boxShadow: "0 12px 36px rgba(91,158,201,0.08)",
         }}
       >
         <Row gutter={[16, 16]} align="middle" justify="space-between">
@@ -369,8 +368,8 @@ export default function RevenuePage() {
                   width: 54,
                   height: 54,
                   borderRadius: 18,
-                  background: "#dcfce7",
-                  color: "#16a34a",
+                  background: "rgba(184,224,210,0.25)",
+                  color: "#5BA89A",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -381,10 +380,10 @@ export default function RevenuePage() {
               </div>
 
               <div>
-                <Title level={3} style={{ margin: 0, color: "#0f172a" }}>
+                <Title level={3} style={{ margin: 0, color: "#1E2A3A" }}>
                   Revenue Dashboard
                 </Title>
-                <Text style={{ color: "#64748b" }}>
+                <Text style={{ color: "#6B7890" }}>
                   Super Admin billing, invoices, payments aur revenue tracking.
                 </Text>
               </div>
@@ -426,8 +425,8 @@ export default function RevenuePage() {
             title="Total Invoiced"
             value={formatCurrency(revenueSummary.totalInvoiced)}
             icon={<FileTextOutlined />}
-            color="#2563eb"
-            bg="#dbeafe"
+            color="#5B9EC9"
+            bg="rgba(167,199,231,0.2)"
             sub="All generated invoices"
           />
         </Col>
@@ -437,8 +436,8 @@ export default function RevenuePage() {
             title="Total Paid"
             value={formatCurrency(revenueSummary.totalPaid)}
             icon={<CheckCircleOutlined />}
-            color="#16a34a"
-            bg="#dcfce7"
+            color="#5BA89A"
+            bg="rgba(184,224,210,0.2)"
             sub="Received payments"
           />
         </Col>
@@ -448,8 +447,8 @@ export default function RevenuePage() {
             title="Outstanding"
             value={formatCurrency(revenueSummary.totalOutstanding)}
             icon={<ClockCircleOutlined />}
-            color="#d97706"
-            bg="#fef3c7"
+            color="#D4922A"
+            bg="rgba(253,226,167,0.25)"
             sub="Pending collection"
           />
         </Col>
@@ -459,8 +458,8 @@ export default function RevenuePage() {
             title="Overdue"
             value={formatCurrency(revenueSummary.overdue)}
             icon={<WarningOutlined />}
-            color="#dc2626"
-            bg="#fee2e2"
+            color="#D96B7A"
+            bg="rgba(255,202,212,0.2)"
             sub="Needs follow-up"
           />
         </Col>
@@ -470,7 +469,7 @@ export default function RevenuePage() {
         bordered={false}
         style={{
           borderRadius: 24,
-          boxShadow: "0 12px 36px rgba(15,23,42,0.07)",
+          boxShadow: "0 12px 36px rgba(91,158,201,0.08)",
         }}
         bodyStyle={{ padding: 18 }}
       >
@@ -479,7 +478,7 @@ export default function RevenuePage() {
             <Space wrap>
               <Input
                 allowClear
-                prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
+                prefix={<SearchOutlined style={{ color: "#A8B8CC" }} />}
                 placeholder="Search by school or invoice no."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -525,7 +524,7 @@ export default function RevenuePage() {
       <Modal
         title={
           <Space>
-            <FileTextOutlined style={{ color: "#2563eb" }} />
+            <FileTextOutlined style={{ color: "#5B9EC9" }} />
             <span>Create Invoice</span>
           </Space>
         }
@@ -599,7 +598,7 @@ export default function RevenuePage() {
       <Modal
         title={
           <Space>
-            <WalletOutlined style={{ color: "#16a34a" }} />
+            <WalletOutlined style={{ color: "#5BA89A" }} />
             <span>
               Add Payment
               {selectedInvoice?.invoiceNumber

@@ -86,15 +86,29 @@ const PageHeader = ({
         justifyContent: "space-between",
         gap: 12,
         flexWrap: "wrap",
+        position: "relative",
       }}
     >
+      {/* Subtle top-left gradient accent */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: 0, left: 0,
+          width: 180, height: "100%",
+          background: "linear-gradient(90deg, rgba(167,199,231,0.06), transparent)",
+          pointerEvents: "none",
+          borderRadius: "0 0 0 0",
+        }}
+      />
+
       {/* Left: breadcrumb + title + subtitle */}
-      <div style={{ minWidth: 0, flex: "1 1 200px" }}>
+      <div style={{ minWidth: 0, flex: "1 1 200px", position: "relative" }}>
         {!isMobile && (
           <Breadcrumb
             items={breadcrumbItems}
             separator={<RightOutlined style={{ fontSize: 10, color: "var(--text-muted)" }} />}
-            style={{ marginBottom: compact ? 6 : 10 }}
+            style={{ marginBottom: compact ? 6 : 8 }}
           />
         )}
 
@@ -105,13 +119,14 @@ const PageHeader = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: isMobile ? 30 : 36,
-                height: isMobile ? 30 : 36,
-                borderRadius: 10,
-                background: "var(--primary-light)",
+                width: isMobile ? 32 : 38,
+                height: isMobile ? 32 : 38,
+                borderRadius: 11,
+                background: "rgba(167,199,231,0.18)",
                 color: "var(--primary)",
                 fontSize: isMobile ? 15 : 18,
                 flexShrink: 0,
+                boxShadow: "0 2px 6px rgba(91,158,201,0.12)",
               }}
             >
               {icon}
@@ -124,8 +139,9 @@ const PageHeader = ({
                 margin: 0,
                 color: "var(--text-primary)",
                 fontWeight: 700,
-                fontSize: compact ? 16 : isMobile ? 16 : 20,
+                fontSize: compact ? 16 : isMobile ? 17 : 21,
                 lineHeight: 1.3,
+                letterSpacing: "-0.01em",
               }}
             >
               {title}
@@ -136,7 +152,7 @@ const PageHeader = ({
                   color: "var(--text-muted)",
                   fontSize: isMobile ? 12 : 13,
                   display: "block",
-                  marginTop: 2,
+                  marginTop: 3,
                 }}
               >
                 {subtitle}
@@ -154,6 +170,7 @@ const PageHeader = ({
             flexShrink: 0,
             alignSelf: isMobile ? "stretch" : "center",
             width: isMobile ? "100%" : "auto",
+            position: "relative",
           }}
         >
           <Space wrap size={8} style={{ width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "flex-start" : "flex-end" }}>

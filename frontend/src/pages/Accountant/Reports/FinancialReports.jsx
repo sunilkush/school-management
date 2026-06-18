@@ -25,7 +25,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
-const PIE_COLORS = ["#7c3aed", "#0891b2", "#059669", "#f97316", "#dc2626", "#8b5cf6", "#d97706", "#14b8a6"];
+const PIE_COLORS = ["#9B87B8", "#0891b2", "#5BA89A", "#D4922A", "#D96B7A", "#8b5cf6", "#D4922A", "#14b8a6"];
 
 const FinancialReports = () => {
   const dispatch = useDispatch();
@@ -110,9 +110,9 @@ const FinancialReports = () => {
       <html><head><title>Financial Report</title>
       <style>
         body { font-family: Arial, sans-serif; padding: 20px; color: #1a1a2e; }
-        h2 { border-bottom: 2px solid #7c3aed; padding-bottom: 8px; }
+        h2 { border-bottom: 2px solid #9B87B8; padding-bottom: 8px; }
         table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-        th { background: #7c3aed; color: white; padding: 8px; text-align: left; font-size: 12px; }
+        th { background: #9B87B8; color: white; padding: 8px; text-align: left; font-size: 12px; }
         td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
         .kpi { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
@@ -132,23 +132,23 @@ const FinancialReports = () => {
   // P&L table
   const plColumns = [
     { title: "Month",    dataIndex: "month" },
-    { title: "Income",   dataIndex: "income",  render: (v) => <Text style={{ color: "#059669", fontWeight: 600 }}>{money(v)}</Text> },
-    { title: "Expense",  dataIndex: "expense", render: (v) => <Text style={{ color: "#dc2626", fontWeight: 600 }}>{money(v)}</Text> },
-    { title: "Net P/L",  dataIndex: "profit",  render: (v) => <Text style={{ color: v >= 0 ? "#059669" : "#dc2626", fontWeight: 700 }}>{v >= 0 ? "+" : "-"}{money(Math.abs(v))}</Text> },
+    { title: "Income",   dataIndex: "income",  render: (v) => <Text style={{ color: "#5BA89A", fontWeight: 600 }}>{money(v)}</Text> },
+    { title: "Expense",  dataIndex: "expense", render: (v) => <Text style={{ color: "#D96B7A", fontWeight: 600 }}>{money(v)}</Text> },
+    { title: "Net P/L",  dataIndex: "profit",  render: (v) => <Text style={{ color: v >= 0 ? "#5BA89A" : "#D96B7A", fontWeight: 700 }}>{v >= 0 ? "+" : "-"}{money(Math.abs(v))}</Text> },
   ];
 
   const incColumns = [
-    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#7c3aed" }}>{i + 1}</span>, width: 40 },
+    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#9B87B8" }}>{i + 1}</span>, width: 40 },
     { title: "Category",  dataIndex: "_id" },
     { title: "Records",   dataIndex: "count",  width: 80 },
-    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "#059669" }}>{money(v)}</Text> },
+    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "#5BA89A" }}>{money(v)}</Text> },
   ];
 
   const expColumns = [
-    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#dc2626" }}>{i + 1}</span>, width: 40 },
+    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#D96B7A" }}>{i + 1}</span>, width: 40 },
     { title: "Category",  dataIndex: "_id" },
     { title: "Records",   dataIndex: "count",  width: 80 },
-    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "#dc2626" }}>{money(v)}</Text> },
+    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "#D96B7A" }}>{money(v)}</Text> },
   ];
 
   return (
@@ -182,12 +182,12 @@ const FinancialReports = () => {
           {/* ── Summary KPIs ──────────────────────────────────────── */}
           <div style={statGrid(150)}>
             {[
-              { label: "Total Revenue",  value: money(kpis.totalRevenue),    color: "#059669", icon: <RiseOutlined /> },
-              { label: "Total Expenses", value: money(kpis.totalExpenses),   color: "#dc2626", icon: <FileTextOutlined /> },
+              { label: "Total Revenue",  value: money(kpis.totalRevenue),    color: "#5BA89A", icon: <RiseOutlined /> },
+              { label: "Total Expenses", value: money(kpis.totalExpenses),   color: "#D96B7A", icon: <FileTextOutlined /> },
               { label: "Net Profit",     value: money(Math.abs(kpis.netProfitLoss)),
-                color: (kpis.netProfitLoss || 0) >= 0 ? "#059669" : "#dc2626",
+                color: (kpis.netProfitLoss || 0) >= 0 ? "#5BA89A" : "#D96B7A",
                 icon: <BarChartOutlined /> },
-              { label: "Pending Fees",   value: money(kpis.pendingFees),     color: "#f97316", icon: <FileTextOutlined /> },
+              { label: "Pending Fees",   value: money(kpis.pendingFees),     color: "#D4922A", icon: <FileTextOutlined /> },
             ].map(({ label, value, color, icon }) => (
               <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
                 <div style={iconWell(color, 40)}>{icon}</div>
@@ -209,8 +209,8 @@ const FinancialReports = () => {
                 <AreaChart data={profitLossData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#059669" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#059669" stopOpacity={0.02} />
+                      <stop offset="5%"  stopColor="#5BA89A" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#5BA89A" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
@@ -218,9 +218,9 @@ const FinancialReports = () => {
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v, n) => [money(v), n]} />
                   <Legend />
-                  <Area type="monotone" dataKey="income"  stroke="#059669" fill="url(#profitGrad)" name="Income"  strokeWidth={2} />
-                  <Area type="monotone" dataKey="expense" stroke="#dc2626" fill="none" name="Expense" strokeWidth={2} strokeDasharray="4 2" />
-                  <Bar dataKey="profit"  fill="#7c3aed" name="Net P/L" />
+                  <Area type="monotone" dataKey="income"  stroke="#5BA89A" fill="url(#profitGrad)" name="Income"  strokeWidth={2} />
+                  <Area type="monotone" dataKey="expense" stroke="#D96B7A" fill="none" name="Expense" strokeWidth={2} strokeDasharray="4 2" />
+                  <Bar dataKey="profit"  fill="#9B87B8" name="Net P/L" />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -244,9 +244,9 @@ const FinancialReports = () => {
                 return (
                   <Table.Summary.Row style={{ fontWeight: 700, background: "var(--surface-soft)" }}>
                     <Table.Summary.Cell>Total</Table.Summary.Cell>
-                    <Table.Summary.Cell><Text style={{ color: "#059669", fontWeight: 700 }}>{money(totInc)}</Text></Table.Summary.Cell>
-                    <Table.Summary.Cell><Text style={{ color: "#dc2626", fontWeight: 700 }}>{money(totExp)}</Text></Table.Summary.Cell>
-                    <Table.Summary.Cell><Text style={{ color: net >= 0 ? "#059669" : "#dc2626", fontWeight: 700 }}>{net >= 0 ? "+" : "-"}{money(Math.abs(net))}</Text></Table.Summary.Cell>
+                    <Table.Summary.Cell><Text style={{ color: "#5BA89A", fontWeight: 700 }}>{money(totInc)}</Text></Table.Summary.Cell>
+                    <Table.Summary.Cell><Text style={{ color: "#D96B7A", fontWeight: 700 }}>{money(totExp)}</Text></Table.Summary.Cell>
+                    <Table.Summary.Cell><Text style={{ color: net >= 0 ? "#5BA89A" : "#D96B7A", fontWeight: 700 }}>{net >= 0 ? "+" : "-"}{money(Math.abs(net))}</Text></Table.Summary.Cell>
                   </Table.Summary.Row>
                 );
               }}
@@ -290,7 +290,7 @@ const FinancialReports = () => {
                         <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                         <Tooltip formatter={(v) => money(v)} />
-                        <Bar dataKey="total" fill="#dc2626" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="total" fill="#D96B7A" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                     <Table className="rep-tbl" rowKey="_id" columns={expColumns} dataSource={expenseByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
@@ -303,12 +303,12 @@ const FinancialReports = () => {
           {/* ── Financial summary grid ────────────────────────────── */}
           <Row gutter={[12, 12]}>
             {[
-              { label: "Total Revenue",  v: money(kpis.totalRevenue),  color: "#059669", bg: "#d1fae5" },
-              { label: "Total Expenses", v: money(kpis.totalExpenses), color: "#dc2626", bg: "#fee2e2" },
+              { label: "Total Revenue",  v: money(kpis.totalRevenue),  color: "#5BA89A", bg: "#d1fae5" },
+              { label: "Total Expenses", v: money(kpis.totalExpenses), color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
               { label: "Net Profit",     v: money(Math.abs(kpis.netProfitLoss || 0)),
-                color: (kpis.netProfitLoss || 0) >= 0 ? "#059669" : "#dc2626",
-                bg: (kpis.netProfitLoss || 0) >= 0 ? "#d1fae5" : "#fee2e2" },
-              { label: "Fee Pending",    v: money(kpis.pendingFees),   color: "#f97316", bg: "#fef3c7" },
+                color: (kpis.netProfitLoss || 0) >= 0 ? "#5BA89A" : "#D96B7A",
+                bg: (kpis.netProfitLoss || 0) >= 0 ? "#d1fae5" : "rgba(255,202,212,0.2)" },
+              { label: "Fee Pending",    v: money(kpis.pendingFees),   color: "#D4922A", bg: "rgba(253,226,167,0.25)" },
             ].map(({ label, v, color, bg }) => (
               <Col xs={12} sm={6} key={label}>
                 <div style={{ background: bg, borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>

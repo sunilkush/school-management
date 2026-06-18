@@ -18,7 +18,7 @@ import { iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss } fro
 const { Option } = Select;
 const { TextArea } = Input;
 
-const RELATION_COLORS = { father: "#7c3aed", mother: "#dc2626", guardian: "#0891b2", sibling: "#059669", relative: "#f97316", friend: "#8b5cf6", other: "#64748b" };
+const RELATION_COLORS = { father: "#9B87B8", mother: "#D96B7A", guardian: "#0891b2", sibling: "#5BA89A", relative: "#D4922A", friend: "#8b5cf6", other: "#6B7890" };
 
 const VisitorLog = () => {
   const dispatch = useDispatch();
@@ -82,7 +82,7 @@ const VisitorLog = () => {
   };
 
   const columns = [
-    { title: "Pass No.", dataIndex: "passNumber", render: (v) => <span style={{ fontWeight: 600, color: "#7c3aed" }}>{v}</span> },
+    { title: "Pass No.", dataIndex: "passNumber", render: (v) => <span style={{ fontWeight: 600, color: "#9B87B8" }}>{v}</span> },
     {
       title: "Visitor",
       render: (_, r) => (
@@ -92,7 +92,7 @@ const VisitorLog = () => {
         </div>
       ),
     },
-    { title: "Relation", dataIndex: "relation", render: (v) => <span style={pill(RELATION_COLORS[v] || "#64748b", `${RELATION_COLORS[v] || "#64748b"}18`)}>{v}</span> },
+    { title: "Relation", dataIndex: "relation", render: (v) => <span style={pill(RELATION_COLORS[v] || "#6B7890", `${RELATION_COLORS[v] || "#6B7890"}18`)}>{v}</span> },
     { title: "Purpose",  dataIndex: "purpose" },
     { title: "Student",  render: (_, r) => r.studentId?.name || "—" },
     { title: "Entry",    dataIndex: "entryTime", render: (d) => dayjs(d).format("DD MMM, hh:mm A") },
@@ -130,23 +130,23 @@ const VisitorLog = () => {
       {/* ── KPIs ─────────────────────────────────────────────── */}
       <div style={statGrid(160)}>
         <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
-          <div style={iconWell("#7c3aed", 40)}><UserOutlined /></div>
+          <div style={iconWell("#9B87B8", 40)}><UserOutlined /></div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase" }}>Visitors Today</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#9B87B8", textTransform: "uppercase" }}>Visitors Today</div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{visitorsToday}</div>
           </div>
         </div>
         <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
-          <div style={iconWell("#d97706", 40)}><LoginOutlined /></div>
+          <div style={iconWell("#D4922A", 40)}><LoginOutlined /></div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#d97706", textTransform: "uppercase" }}>Currently Visiting</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#D4922A", textTransform: "uppercase" }}>Currently Visiting</div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{visitors.filter((v) => v.status === "visiting").length}</div>
           </div>
         </div>
         <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
-          <div style={iconWell("#059669", 40)}><LogoutOutlined /></div>
+          <div style={iconWell("#5BA89A", 40)}><LogoutOutlined /></div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#059669", textTransform: "uppercase" }}>Total Records</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#5BA89A", textTransform: "uppercase" }}>Total Records</div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{visitorsTotal}</div>
           </div>
         </div>

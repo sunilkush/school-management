@@ -80,8 +80,8 @@ const ExamAnalyticsPage = () => {
             <div className="stat-grid" style={statGrid(200)}>
               {[
                 { key: "attempts", title: "Total Attempts", value: stats.totalAttempts, color: "var(--primary)", icon: <TeamOutlined /> },
-                { key: "avg", title: "Average Score", value: `${stats.averageScore.toFixed(2)}%`, color: "#0284c7", icon: <TrophyOutlined /> },
-                { key: "pass", title: "Pass Rate", value: `${stats.passRate.toFixed(2)}%`, color: "#059669", icon: <BarChartOutlined /> },
+                { key: "avg", title: "Average Score", value: `${stats.averageScore.toFixed(2)}%`, color: "#5B9EC9", icon: <TrophyOutlined /> },
+                { key: "pass", title: "Pass Rate", value: `${stats.passRate.toFixed(2)}%`, color: "#5BA89A", icon: <BarChartOutlined /> },
               ].map((item) => (
                 <div key={item.key} style={statCard({ color: item.color })}>
                   <div>

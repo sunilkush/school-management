@@ -67,20 +67,20 @@ const ROLE_TEMPLATES = {
 const templateMeta = {
   small: {
     title: "Small School",
-    color: "#2563eb",
-    bg: "#dbeafe",
+    color: "#5B9EC9",
+    bg: "rgba(167,199,231,0.2)",
     desc: "Basic school operations ke liye recommended roles.",
   },
   medium: {
     title: "Medium School",
-    color: "#7c3aed",
-    bg: "#ede9fe",
+    color: "#9B87B8",
+    bg: "rgba(205,180,219,0.2)",
     desc: "Growing school ke liye admin + operation roles.",
   },
   enterprise: {
     title: "Enterprise School",
-    color: "#16a34a",
-    bg: "#dcfce7",
+    color: "#5BA89A",
+    bg: "rgba(184,224,210,0.2)",
     desc: "Large schools ke liye complete governance roles.",
   },
 };
@@ -97,25 +97,24 @@ const css = `
 .roles-page {
   min-height: 100vh;
   padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #fdf2f8 100%);
+  background: #F7F8FC;
 }
 
 .roles-hero {
-  background: #ffffffcc;
-  backdrop-filter: blur(14px);
-  border: 1px solid #e2e8f0;
-  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(167,199,231,0.3);
+  border-radius: 20px;
   padding: 24px;
   margin-bottom: 18px;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+  box-shadow: 0 4px 20px rgba(91,158,201,0.08);
 }
 
 .roles-icon {
   width: 56px;
   height: 56px;
   border-radius: 20px;
-  background: #ede9fe;
-  color: #7c3aed;
+  background: rgba(205,180,219,0.2);
+  color: #9B87B8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,25 +122,25 @@ const css = `
 }
 
 .roles-card {
-  border-radius: 24px !important;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(91,158,201,0.08);
 }
 
 .template-card {
   cursor: pointer;
-  border-radius: 20px !important;
+  border-radius: 16px !important;
   transition: 0.2s ease;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid rgba(167,199,231,0.3) !important;
 }
 
 .template-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 30px rgba(15,23,42,0.1);
+  box-shadow: 0 8px 24px rgba(91,158,201,0.12);
 }
 
 .template-card.active {
-  border-color: #7c3aed !important;
-  box-shadow: 0 0 0 4px #ede9fe;
+  border-color: #9B87B8 !important;
+  box-shadow: 0 0 0 4px rgba(205,180,219,0.2);
 }
 
 .role-chip {
@@ -416,7 +415,7 @@ const Roles = () => {
               <Statistic
                 title="Selected Template Roles"
                 value={templateRoles.length}
-                prefix={<CrownOutlined style={{ color: "var(--purple, #7c3aed)" }} />}
+                prefix={<CrownOutlined style={{ color: "var(--secondary, #9B87B8)" }} />}
               />
             </Card>
           </Col>
@@ -426,7 +425,7 @@ const Roles = () => {
               <Statistic
                 title="Temporary Grants"
                 value={temporaryAccess.length}
-                prefix={<UserSwitchOutlined style={{ color: "var(--primary, #2563eb)" }} />}
+                prefix={<UserSwitchOutlined style={{ color: "var(--primary, #5B9EC9)" }} />}
               />
             </Card>
           </Col>
@@ -436,7 +435,7 @@ const Roles = () => {
               <Statistic
                 title="Security Mode"
                 value="RBAC"
-                prefix={<LockOutlined style={{ color: "var(--success, #16a34a)" }} />}
+                prefix={<LockOutlined style={{ color: "var(--success, #5BA89A)" }} />}
               />
             </Card>
           </Col>
@@ -449,7 +448,7 @@ const Roles = () => {
           style={{ marginBottom: 18 }}
           title={
             <Space>
-              <TeamOutlined style={{ color: "var(--purple, #7c3aed)" }} />
+              <TeamOutlined style={{ color: "var(--secondary, #9B87B8)" }} />
               <span>Role Templates by School Size</span>
             </Space>
           }
@@ -527,7 +526,7 @@ const Roles = () => {
               className="roles-card"
               title={
                 <Space>
-                  <PlusOutlined style={{ color: "var(--primary, #2563eb)" }} />
+                  <PlusOutlined style={{ color: "var(--primary, #5B9EC9)" }} />
                   <span>Create / Manage Roles</span>
                 </Space>
               }
@@ -549,7 +548,7 @@ const Roles = () => {
               className="roles-card"
               title={
                 <Space>
-                  <ClockCircleOutlined style={{ color: "#d97706" }} />
+                  <ClockCircleOutlined style={{ color: "#D4922A" }} />
                   <span>Time-bound Temporary Access</span>
                   <Tag color="blue">{temporaryAccess.length}</Tag>
                 </Space>
@@ -586,7 +585,7 @@ const Roles = () => {
           open={tempAccessOpen}
           title={
             <Space>
-              <UserSwitchOutlined style={{ color: "#7c3aed" }} />
+              <UserSwitchOutlined style={{ color: "#9B87B8" }} />
               <span>Grant Temporary Access</span>
             </Space>
           }

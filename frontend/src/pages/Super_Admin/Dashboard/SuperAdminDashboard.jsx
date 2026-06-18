@@ -81,7 +81,7 @@ const formatMoney = (value = 0) =>
 const getActivityMeta = (action = "") => {
   const a = action.toLowerCase();
   if (a.includes("school") || a.includes("register"))
-    return { icon: <BankOutlined />, color: "var(--success, #16a34a)" };
+    return { icon: <BankOutlined />, color: "var(--success, #5BA89A)" };
   if (a.includes("subscri") || a.includes("payment") || a.includes("fee"))
     return { icon: <DollarOutlined />, color: "var(--primary, #1677ff)" };
   if (a.includes("user") || a.includes("admin") || a.includes("teacher"))
@@ -103,52 +103,49 @@ const timeAgo = (dateStr) => {
 };
 
 // ---------------------------------------------------------------------------
-// StatCard
+// PastelStatCard — pastel left-accent KPI card design
 // ---------------------------------------------------------------------------
-const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
+const StatCard = ({ title, value, icon, color, iconBg, cardAccent, delta, deltaType, suffix }) => (
   <Card
     bordered={false}
     style={{
       borderRadius: 16,
-      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      boxShadow: "0 2px 8px rgba(91,158,201,0.07), 0 4px 20px rgba(91,158,201,0.05)",
       height: "100%",
       position: "relative",
       overflow: "hidden",
+      borderLeft: `4px solid ${cardAccent || color}`,
+      background: "#ffffff",
     }}
-    bodyStyle={{ padding: "20px 24px" }}
+    bodyStyle={{ padding: "20px 22px" }}
   >
+    {/* Background glow */}
     <div
       style={{
         position: "absolute",
-        top: -20,
-        right: -20,
-        width: 90,
-        height: 90,
+        top: -30, right: -30,
+        width: 100, height: 100,
         borderRadius: "50%",
-        background: color,
-        opacity: 0.07,
+        background: cardAccent || color,
+        opacity: 0.05,
+        pointerEvents: "none",
       }}
     />
     <Space direction="vertical" size={4} style={{ width: "100%" }}>
-      <Space
-        align="center"
-        style={{ justifyContent: "space-between", width: "100%" }}
-      >
-        <Text
-          style={{ fontSize: 13, color: "var(--textMuted)", fontWeight: 500 }}
-        >
+      <Space align="center" style={{ justifyContent: "space-between", width: "100%" }}>
+        <Text style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, letterSpacing: "0.02em", textTransform: "uppercase" }}>
           {title}
         </Text>
         <div
           style={{
             width: 38,
             height: 38,
-            borderRadius: 10,
-            background: `${color}18`,
+            borderRadius: 11,
+            background: iconBg || `${color}18`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color,
+            color: color,
             fontSize: 18,
           }}
         >
@@ -160,35 +157,22 @@ const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
         value={value}
         suffix={suffix}
         valueStyle={{
-          fontSize: 28,
+          fontSize: 26,
           fontWeight: 700,
           color: "var(--text)",
-          lineHeight: 1.2,
+          lineHeight: 1.25,
         }}
       />
 
       {delta && (
         <Space size={4}>
           {deltaType === "up" ? (
-            <ArrowUpOutlined
-              style={{ color: "var(--success)", fontSize: 12 }}
-            />
+            <ArrowUpOutlined style={{ color: "var(--success)", fontSize: 11 }} />
           ) : (
-            <ArrowDownOutlined
-              style={{ color: "var(--danger)", fontSize: 12 }}
-            />
+            <ArrowDownOutlined style={{ color: "var(--danger)", fontSize: 11 }} />
           )}
-          <Text
-            style={{
-              fontSize: 12,
-              color:
-                deltaType === "up" ? "var(--success)" : "var(--danger)",
-            }}
-          >
+          <Text style={{ fontSize: 11, color: deltaType === "up" ? "var(--success)" : "var(--danger)" }}>
             {delta}
-          </Text>
-          <Text style={{ fontSize: 12, color: "var(--textMuted)" }}>
-            vs last month
           </Text>
         </Space>
       )}
@@ -197,43 +181,49 @@ const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
 );
 
 // ---------------------------------------------------------------------------
-// Quick-action route map
+// Quick-action route map (pastel accents)
 // ---------------------------------------------------------------------------
 const QUICK_ACTIONS = [
   {
     label: "Add New School",
     icon: <BankOutlined />,
-    color: "var(--primary, #1677ff)",
+    color: "#5B9EC9",
+    iconBg: "rgba(167,199,231,0.22)",
     route: "/dashboard/superadmin/schools",
   },
   {
     label: "Manage Subscriptions",
     icon: <SafetyCertificateOutlined />,
-    color: "var(--purple, #722ed1)",
+    color: "#9B87B8",
+    iconBg: "rgba(205,180,219,0.22)",
     route: "/dashboard/superadmin/subscriptions",
   },
   {
     label: "View All Users",
     icon: <TeamOutlined />,
-    color: "var(--cyan, #13c2c2)",
+    color: "#5BA89A",
+    iconBg: "rgba(184,224,210,0.22)",
     route: "/dashboard/superadmin/users",
   },
   {
     label: "Financial Reports",
     icon: <DollarOutlined />,
-    color: "var(--success, #16a34a)",
+    color: "#5BA89A",
+    iconBg: "rgba(184,224,210,0.22)",
     route: "/dashboard/superadmin/reports/revenue",
   },
   {
     label: "System Logs",
     icon: <ThunderboltFilled />,
-    color: "var(--orange, #fa8c16)",
+    color: "#D4922A",
+    iconBg: "rgba(253,226,167,0.30)",
     route: "/dashboard/superadmin/settings/audit",
   },
   {
     label: "Send Notification",
     icon: <BellOutlined />,
-    color: "var(--danger, #ff4d4f)",
+    color: "#D96B7A",
+    iconBg: "rgba(255,202,212,0.25)",
     route: "/dashboard/superadmin/notifications",
   },
 ];
@@ -345,7 +335,7 @@ const SuperAdminDashboard = () => {
       .slice(0, 4)
       .map((school, index) => ({
         ...school,
-        color: ["#1677ff", "#722ed1", "#13c2c2", "#fa8c16"][index],
+        color: ["#5B9EC9", "#9B87B8", "#5BA89A", "#D4922A"][index],
       }));
   }, [schoolsData]);
 
@@ -356,26 +346,34 @@ const SuperAdminDashboard = () => {
       {
         label: "Premium Plans",
         count: schoolsData.filter((s) => s.subscription === "Premium").length,
-        color: "geekblue",
-        bg: "#e6f4ff",
+        color: "#5B9EC9",
+        textColor: "#2E6A9A",
+        bg: "rgba(167,199,231,0.18)",
+        border: "rgba(167,199,231,0.4)",
       },
       {
         label: "Standard Plans",
         count: schoolsData.filter((s) => s.subscription === "Standard").length,
-        color: "cyan",
-        bg: "#e6fffb",
+        color: "#9B87B8",
+        textColor: "#6B4F96",
+        bg: "rgba(205,180,219,0.18)",
+        border: "rgba(205,180,219,0.4)",
       },
       {
         label: "Trial Active",
         count: schoolsData.filter((s) => s.subscription === "Trial").length,
-        color: "purple",
-        bg: "#f9f0ff",
+        color: "#5BA89A",
+        textColor: "#2E7A6E",
+        bg: "rgba(184,224,210,0.18)",
+        border: "rgba(184,224,210,0.4)",
       },
       {
         label: "Suspended",
         count: schoolsData.filter((s) => s.status === "suspended").length,
-        color: "red",
-        bg: "#fff1f0",
+        color: "#D96B7A",
+        textColor: "#9E3A4A",
+        bg: "rgba(255,202,212,0.18)",
+        border: "rgba(255,202,212,0.4)",
       },
     ],
     [schoolsData]
@@ -602,7 +600,7 @@ const SuperAdminDashboard = () => {
             )
           }
         />
-        <Content style={{ padding: "24px", overflow: "auto" }}>
+        <Content style={{ padding: "24px 28px", overflow: "auto", background: "var(--bg)" }}>
           {hasError && (
             <Alert
               type="error"
@@ -618,72 +616,77 @@ const SuperAdminDashboard = () => {
             />
           )}
 
-          {/* Stat cards */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-            <Col xs={24} sm={12} lg={4}>
+          {/* KPI cards */}
+          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+            <Col xs={12} sm={12} lg={4}>
               <StatCard
                 title="Total Schools"
                 value={metrics.totalSchools}
                 icon={<BankOutlined />}
-                color="var(--primary)"
+                color="#5B9EC9"
+                iconBg="rgba(167,199,231,0.22)"
+                cardAccent="#A7C7E7"
                 delta="Live"
                 deltaType="up"
               />
             </Col>
-
-            <Col xs={24} sm={12} lg={4}>
+            <Col xs={12} sm={12} lg={4}>
               <StatCard
                 title="Active Schools"
                 value={metrics.activeSchools}
                 icon={<CheckCircleFilled />}
-                color="var(--success)"
-                delta={`${Math.round(
-                  (metrics.activeSchools / Math.max(metrics.totalSchools, 1)) * 100
-                )}% active`}
+                color="#5BA89A"
+                iconBg="rgba(184,224,210,0.25)"
+                cardAccent="#B8E0D2"
+                delta={`${Math.round((metrics.activeSchools / Math.max(metrics.totalSchools, 1)) * 100)}% active`}
                 deltaType="up"
               />
             </Col>
-
-            <Col xs={24} sm={12} lg={4}>
+            <Col xs={12} sm={12} lg={4}>
               <StatCard
                 title="Total Students"
                 value={metrics.totalStudents}
                 icon={<TeamOutlined />}
-                color="var(--purple)"
-                delta="Auto-calculated"
+                color="#9B87B8"
+                iconBg="rgba(205,180,219,0.25)"
+                cardAccent="#CDB4DB"
+                delta="Live count"
                 deltaType="up"
               />
             </Col>
-
-            <Col xs={24} sm={12} lg={4}>
+            <Col xs={12} sm={12} lg={4}>
               <StatCard
                 title="Revenue (YTD)"
                 value={formatMoney(metrics.totalRevenue)}
                 icon={<DollarOutlined />}
-                color="var(--orange)"
-                delta="Auto-calculated"
+                color="#5BA89A"
+                iconBg="rgba(184,224,210,0.25)"
+                cardAccent="#B8E0D2"
+                delta="Collected"
                 deltaType="up"
               />
             </Col>
-
-            <Col xs={24} sm={12} lg={4}>
+            <Col xs={12} sm={12} lg={4}>
               <StatCard
                 title="Expiring Soon"
                 value={Math.max(metrics.expiringSoon, 0)}
                 icon={<WarningOutlined />}
-                color="var(--danger)"
+                color="#D4922A"
+                iconBg="rgba(253,226,167,0.35)"
+                cardAccent="#FDE2A7"
                 delta="Needs follow-up"
                 deltaType="down"
               />
             </Col>
-
-            <Col xs={24} sm={12} lg={4}>
+            <Col xs={12} sm={12} lg={4}>
               <StatCard
                 title="System Health"
                 value={metrics.avgHealth}
                 suffix="%"
                 icon={<ThunderboltFilled />}
-                color="var(--cyan)"
+                color="#5B9EC9"
+                iconBg="rgba(167,199,231,0.22)"
+                cardAccent="#A7C7E7"
                 delta="Live average"
                 deltaType="up"
               />
@@ -769,7 +772,7 @@ const SuperAdminDashboard = () => {
                   height: "100%",
                 }}
               >
-                <Space direction="vertical" style={{ width: "100%" }} size={14}>
+                <Space direction="vertical" style={{ width: "100%" }} size={10}>
                   {subscriptionCounts.map((item) => (
                     <div
                       key={item.label}
@@ -777,18 +780,27 @@ const SuperAdminDashboard = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        padding: "8px 12px",
+                        padding: "10px 14px",
                         background: item.bg,
-                        borderRadius: 8,
+                        border: `1px solid ${item.border}`,
+                        borderRadius: 10,
+                        transition: "transform 0.15s",
                       }}
                     >
-                      <Text style={{ fontSize: 13 }}>{item.label}</Text>
-                      <Tag
-                        color={item.color}
-                        style={{ fontWeight: 700, fontSize: 13, margin: 0 }}
+                      <Text style={{ fontSize: 13, color: "var(--text)", fontWeight: 500 }}>{item.label}</Text>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 14,
+                          color: item.textColor,
+                          background: "#ffffff",
+                          padding: "2px 10px",
+                          borderRadius: 99,
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                        }}
                       >
                         {item.count}
-                      </Tag>
+                      </span>
                     </div>
                   ))}
                 </Space>

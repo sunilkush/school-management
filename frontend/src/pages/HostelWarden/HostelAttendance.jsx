@@ -14,9 +14,9 @@ import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../
 const { Option } = Select;
 
 const STATUS_STYLE = {
-  present: { color: "#059669", bg: "#d1fae5" },
-  absent:  { color: "#dc2626", bg: "#fee2e2" },
-  leave:   { color: "#d97706", bg: "#fef3c7" },
+  present: { color: "#5BA89A", bg: "#d1fae5" },
+  absent:  { color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
+  leave:   { color: "#D4922A", bg: "rgba(253,226,167,0.25)" },
 };
 
 const HostelAttendance = () => {
@@ -107,9 +107,9 @@ const HostelAttendance = () => {
           buttonStyle="solid"
           size="small"
         >
-          <Radio.Button value="present" style={{ color: markedStatus[r.studentId] === "present" ? "#fff" : "#059669", borderColor: "#059669", background: markedStatus[r.studentId] === "present" ? "#059669" : "transparent" }}>P</Radio.Button>
-          <Radio.Button value="absent"  style={{ color: markedStatus[r.studentId] === "absent"  ? "#fff" : "#dc2626", borderColor: "#dc2626", background: markedStatus[r.studentId] === "absent"  ? "#dc2626" : "transparent" }}>A</Radio.Button>
-          <Radio.Button value="leave"   style={{ color: markedStatus[r.studentId] === "leave"   ? "#fff" : "#d97706", borderColor: "#d97706", background: markedStatus[r.studentId] === "leave"   ? "#d97706" : "transparent" }}>L</Radio.Button>
+          <Radio.Button value="present" style={{ color: markedStatus[r.studentId] === "present" ? "#fff" : "#5BA89A", borderColor: "#5BA89A", background: markedStatus[r.studentId] === "present" ? "#5BA89A" : "transparent" }}>P</Radio.Button>
+          <Radio.Button value="absent"  style={{ color: markedStatus[r.studentId] === "absent"  ? "#fff" : "#D96B7A", borderColor: "#D96B7A", background: markedStatus[r.studentId] === "absent"  ? "#D96B7A" : "transparent" }}>A</Radio.Button>
+          <Radio.Button value="leave"   style={{ color: markedStatus[r.studentId] === "leave"   ? "#fff" : "#D4922A", borderColor: "#D4922A", background: markedStatus[r.studentId] === "leave"   ? "#D4922A" : "transparent" }}>L</Radio.Button>
         </Radio.Group>
       ),
     },
@@ -118,13 +118,13 @@ const HostelAttendance = () => {
   const historyColumns = [
     { title: "Date",    dataIndex: "date",    render: (d) => dayjs(d).format("DD MMM YYYY") },
     { title: "Session", dataIndex: "session", render: (s) => <Tag>{s}</Tag> },
-    { title: "Present", dataIndex: "totalPresent", render: (v) => <span style={{ color: "#059669", fontWeight: 700 }}>{v}</span> },
-    { title: "Absent",  dataIndex: "totalAbsent",  render: (v) => <span style={{ color: "#dc2626", fontWeight: 700 }}>{v}</span> },
-    { title: "Leave",   dataIndex: "totalOnLeave", render: (v) => <span style={{ color: "#d97706", fontWeight: 700 }}>{v}</span> },
+    { title: "Present", dataIndex: "totalPresent", render: (v) => <span style={{ color: "#5BA89A", fontWeight: 700 }}>{v}</span> },
+    { title: "Absent",  dataIndex: "totalAbsent",  render: (v) => <span style={{ color: "#D96B7A", fontWeight: 700 }}>{v}</span> },
+    { title: "Leave",   dataIndex: "totalOnLeave", render: (v) => <span style={{ color: "#D4922A", fontWeight: 700 }}>{v}</span> },
     { title: "Rate",    render: (_, r) => {
       const t = (r.totalPresent || 0) + (r.totalAbsent || 0) + (r.totalOnLeave || 0);
       const pct = t > 0 ? Math.round((r.totalPresent / t) * 100) : 0;
-      return <Progress percent={pct} size="small" strokeColor={pct >= 80 ? "#059669" : pct >= 60 ? "#d97706" : "#dc2626"} />;
+      return <Progress percent={pct} size="small" strokeColor={pct >= 80 ? "#5BA89A" : pct >= 60 ? "#D4922A" : "#D96B7A"} />;
     }, width: 140 },
   ];
 
@@ -164,10 +164,10 @@ const HostelAttendance = () => {
           {/* ── Stats ───────────────────────────────────────────── */}
           <div style={statGrid(130)}>
             {[
-              { label: "Total",   value: total,        color: "#7c3aed" },
-              { label: "Present", value: presentCount, color: "#059669" },
-              { label: "Absent",  value: absentCount,  color: "#dc2626" },
-              { label: "On Leave",value: leaveCount,   color: "#d97706" },
+              { label: "Total",   value: total,        color: "#9B87B8" },
+              { label: "Present", value: presentCount, color: "#5BA89A" },
+              { label: "Absent",  value: absentCount,  color: "#D96B7A" },
+              { label: "On Leave",value: leaveCount,   color: "#D4922A" },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "12px 16px" }}>
                 <div style={iconWell(color, 36)}><CheckCircleOutlined /></div>
@@ -186,14 +186,14 @@ const HostelAttendance = () => {
                 <span style={{ fontWeight: 700, fontSize: 13 }}>Attendance Rate — {date.format("DD MMM YYYY")} ({session})</span>
                 <span style={{ fontWeight: 700 }}>{attendancePct}%</span>
               </div>
-              <Progress percent={attendancePct} strokeColor={attendancePct >= 80 ? "#059669" : attendancePct >= 60 ? "#d97706" : "#dc2626"} showInfo={false} />
+              <Progress percent={attendancePct} strokeColor={attendancePct >= 80 ? "#5BA89A" : attendancePct >= 60 ? "#D4922A" : "#D96B7A"} showInfo={false} />
             </div>
           )}
 
           {/* ── Bulk actions ─────────────────────────────────────── */}
           {sheetStudents.length > 0 && (
             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <Button size="small" icon={<CheckOutlined />} onClick={() => setAll("present")} style={{ color: "#059669", borderColor: "#059669" }}>Mark All Present</Button>
+              <Button size="small" icon={<CheckOutlined />} onClick={() => setAll("present")} style={{ color: "#5BA89A", borderColor: "#5BA89A" }}>Mark All Present</Button>
               <Button size="small" icon={<CloseOutlined />} onClick={() => setAll("absent")}  danger>Mark All Absent</Button>
             </div>
           )}

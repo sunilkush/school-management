@@ -43,14 +43,14 @@ const { Option } = Select;
 
 /* ─── Avatar colour palette ─── */
 const AV_COLORS = [
-  { bg: "#f0eeff", color: "#6c5ce7" },
-  { bg: "#e3f2fd", color: "#0984e3" },
-  { bg: "#e8f5e9", color: "#00897b" },
-  { bg: "#fff8e1", color: "#e65100" },
-  { bg: "#fce4ec", color: "#880e4f" },
-  { bg: "#e0f2f1", color: "#00695c" },
-  { bg: "#f3e5f5", color: "#6a1b9a" },
-  { bg: "#fff3e0", color: "#bf360c" },
+  { bg: "#D4E9F7", color: "#2E6A9A" },
+  { bg: "#E6D9F3", color: "#6B4F96" },
+  { bg: "#D4F0E8", color: "#2E7A6E" },
+  { bg: "#FDDDE4", color: "#9E3A4A" },
+  { bg: "#FDF2D6", color: "#8A5E10" },
+  { bg: "#D4E9F7", color: "#2E6A9A" },
+  { bg: "#E6D9F3", color: "#6B4F96" },
+  { bg: "#D4F0E8", color: "#2E7A6E" },
 ];
 
 function initials(name = "") {
@@ -62,14 +62,14 @@ function StatusBadge({ isActive }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
-      background: isActive ? "#f6ffed" : "#fff2f0",
-      color: isActive ? "#52c41a" : "#ff4d4f",
-      border: `1px solid ${isActive ? "#b7eb8f" : "#ffa39e"}`,
+      background: isActive ? "rgba(184,224,210,0.22)" : "rgba(255,202,212,0.22)",
+      color: isActive ? "#2E7A6E" : "#9E3A4A",
+      border: `1px solid ${isActive ? "rgba(184,224,210,0.5)" : "rgba(255,202,212,0.5)"}`,
       borderRadius: 20, padding: "3px 11px", fontSize: 12, fontWeight: 500,
     }}>
       <span style={{
         width: 6, height: 6, borderRadius: "50%",
-        background: isActive ? "#52c41a" : "#ff4d4f",
+        background: isActive ? "#5BA89A" : "#D96B7A",
         display: "inline-block",
       }} />
       {isActive ? "Active" : "Inactive"}
@@ -86,7 +86,7 @@ function StatCard({ label, value, icon, accentColor }) {
       style={{
         borderRadius: 16,
         borderTop: `3px solid ${accentColor}`,
-        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.12)" : "0 2px 12px rgba(0,0,0,0.06)",
+        boxShadow: hovered ? "0 8px 24px rgba(91,158,201,0.15)" : "0 2px 12px rgba(91,158,201,0.07)",
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
         transition: "all 0.2s ease",
         cursor: "default",
@@ -235,8 +235,8 @@ const Admins = () => {
       dataIndex: ["role", "name"],
       render: (role) => (
         <span style={{
-          background: "#f0eeff", color: "#6c5ce7",
-          border: "1px solid #d3cdf7",
+          background: "rgba(205,180,219,0.2)", color: "#6B4F96",
+          border: "1px solid rgba(205,180,219,0.5)",
           borderRadius: 6, padding: "3px 10px",
           fontSize: 12, fontWeight: 500,
         }}>
@@ -275,14 +275,14 @@ const Admins = () => {
             fontSize: 12,
             ...(record.isActive
               ? {
-                  background: "#fff2f0",
-                  borderColor: "#ffa39e",
-                  color: "#ff4d4f",
+                  background: "rgba(255,202,212,0.2)",
+                  borderColor: "rgba(255,202,212,0.5)",
+                  color: "#9E3A4A",
                 }
               : {
-                  background: "#f6ffed",
-                  borderColor: "#b7eb8f",
-                  color: "#52c41a",
+                  background: "rgba(184,224,210,0.2)",
+                  borderColor: "rgba(184,224,210,0.5)",
+                  color: "#2E7A6E",
                 }),
           }}
           icon={record.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
@@ -297,23 +297,24 @@ const Admins = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: "#6c5ce7",
+          colorPrimary: "#5B9EC9",
           borderRadius: 12,
           fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
         },
       }}
     >
-      <Layout style={{ background: "#f5f6fa", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+      <Layout style={{ background: "#F7F8FC", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* ── Page Header ── */}
         <div style={{
-          background: "linear-gradient(135deg, #0f0c29 0%, #302b63 60%, #24243e 100%)",
+          background: "#ffffff",
+          borderBottom: "1px solid rgba(167,199,231,0.3)",
           padding: "20px 32px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div>
-            <div style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>School Admin Management</div>
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>
+            <div style={{ color: "#1E2A3A", fontSize: 18, fontWeight: 700 }}>School Admin Management</div>
+            <div style={{ color: "#8A94A6", fontSize: 12, marginTop: 2 }}>
               Manage and monitor all school administrators
             </div>
           </div>
@@ -322,8 +323,8 @@ const Admins = () => {
             icon={<PlusOutlined />}
             onClick={() => setIsModalOpen(true)}
             style={{
-              background: "#6c5ce7",
-              borderColor: "#6c5ce7",
+              background: "linear-gradient(135deg, #5B9EC9, #9B87B8)",
+              borderColor: "transparent",
               borderRadius: 10,
               fontWeight: 600,
               height: 38,
@@ -343,18 +344,18 @@ const Admins = () => {
             gap: 16,
             marginBottom: 24,
           }}>
-            <StatCard label="Total Admins"   value={totalAdmins} icon={<TeamOutlined />}              accentColor="#6c5ce7" />
-            <StatCard label="Active"          value={activeCount} icon={<CheckCircleOutlined />}        accentColor="#00b894" />
-            <StatCard label="Inactive"        value={inactiveCount} icon={<StopOutlined />}             accentColor="#e17055" />
-            <StatCard label="Schools Covered" value={schoolCount} icon={<SafetyCertificateOutlined />}  accentColor="#0984e3" />
+            <StatCard label="Total Admins"   value={totalAdmins} icon={<TeamOutlined />}              accentColor="#9B87B8" />
+            <StatCard label="Active"          value={activeCount} icon={<CheckCircleOutlined />}        accentColor="#5BA89A" />
+            <StatCard label="Inactive"        value={inactiveCount} icon={<StopOutlined />}             accentColor="#D96B7A" />
+            <StatCard label="Schools Covered" value={schoolCount} icon={<SafetyCertificateOutlined />}  accentColor="#5B9EC9" />
           </div>
 
           {/* ── Error ── */}
           {error && (
             <div style={{
-              background: "#fff2f0", border: "1px solid #ffa39e",
+              background: "rgba(255,202,212,0.2)", border: "1px solid rgba(255,202,212,0.5)",
               borderRadius: 10, padding: "10px 16px",
-              color: "#ff4d4f", fontSize: 13, marginBottom: 16,
+              color: "#9E3A4A", fontSize: 13, marginBottom: 16,
             }}>
               {error}
             </div>
@@ -416,7 +417,7 @@ const Admins = () => {
                   background: index % 2 === 0 ? "#fff" : "#fafafa",
                   transition: "background 0.15s",
                 },
-                onMouseEnter: (e) => (e.currentTarget.style.background = "#f0eeff22"),
+                onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(167,199,231,0.08)"),
                 onMouseLeave: (e) => (e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"),
               })}
               style={{ borderRadius: 0 }}
@@ -430,10 +431,10 @@ const Admins = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: 10,
-                background: "#f0eeff", display: "flex",
+                background: "rgba(205,180,219,0.2)", display: "flex",
                 alignItems: "center", justifyContent: "center",
               }}>
-                <UserSwitchOutlined style={{ color: "#6c5ce7", fontSize: 16 }} />
+                <UserSwitchOutlined style={{ color: "#9B87B8", fontSize: 16 }} />
               </div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>Register New School Admin</div>

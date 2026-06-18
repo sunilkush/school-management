@@ -26,7 +26,14 @@ const getGradeScore = (grade = {}) => {
   return Number.isFinite(numeric) ? numeric : null;
 };
 
-const STAT_COLORS = ["#7c3aed", "#0284c7", "#f97316", "#059669"];
+const STAT_COLORS     = ["#5B9EC9", "#9B87B8", "#D4922A", "#5BA89A"];
+const STAT_BARS       = ["#A7C7E7", "#CDB4DB", "#FDE2A7", "#B8E0D2"];
+const STAT_BG         = [
+  "rgba(167,199,231,0.12)",
+  "rgba(205,180,219,0.12)",
+  "rgba(253,226,167,0.15)",
+  "rgba(184,224,210,0.12)",
+];
 
 const StudentDashboard = () => {
   const dispatch  = useDispatch();
@@ -118,14 +125,21 @@ const StudentDashboard = () => {
         {/* KPI stats */}
         <div className="stat-grid" style={statGrid(180)}>
           {statMeta.map(({ key, label, icon, suffix }, i) => (
-            <div key={key} style={statCard({ color: STAT_COLORS[i] })}>
+            <div key={key} style={statCard({ color: STAT_COLORS[i], bg: "#ffffff", accentBar: STAT_BARS[i] })}>
               <div>
                 <div style={statLabel(STAT_COLORS[i])}>{label}</div>
                 <div style={statValue(STAT_COLORS[i])}>
                   {stats[key] ?? "—"}{suffix && stats[key] !== null ? suffix : ""}
                 </div>
               </div>
-              <div style={{ fontSize: 26, color: STAT_COLORS[i], opacity: 0.5 }}>{icon}</div>
+              <div style={{
+                fontSize: 20,
+                color: STAT_COLORS[i],
+                background: STAT_BG[i],
+                borderRadius: 12,
+                padding: 10,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>{icon}</div>
             </div>
           ))}
         </div>
@@ -147,7 +161,7 @@ const StudentDashboard = () => {
                           {grade?.examName || grade?.exam?.title || "Assessment"}
                         </div>
                       </div>
-                      <span style={pill("#7c3aed", "#ede9fe")}>{getGradeScore(grade) ?? "NA"}</span>
+                      <span style={pill("#9B87B8", "rgba(205,180,219,0.22)")}>{getGradeScore(grade) ?? "NA"}</span>
                     </List.Item>
                   )}
                 />
@@ -201,7 +215,13 @@ const StudentDashboard = () => {
                 </div>
                 <Progress
                   percent={attendancePercent}
-                  strokeColor={attendancePercent >= 75 ? "#059669" : attendancePercent >= 60 ? "#d97706" : "#dc2626"}
+                  strokeColor={
+                    attendancePercent >= 75
+                      ? { from: "#A7C7E7", to: "#B8E0D2" }
+                      : attendancePercent >= 60
+                        ? { from: "#FDE2A7", to: "#FDE2A7" }
+                        : { from: "#FFCAD4", to: "#FFCAD4" }
+                  }
                   status="active"
                 />
               </div>

@@ -387,7 +387,7 @@ const ChaptersTopics = () => {
   const boardCount = treeData.length;
 
   return (
-    <div style={{ padding: "24px 28px", background: "#f5f6fa", minHeight: "100vh" }}>
+    <div style={{ padding: "24px 28px", background: "#F7F8FC", minHeight: "100vh" }}>
       {/* ── Header ── */}
       <div style={{ marginBottom: 24 }}>
         <Title level={3} style={{ margin: 0, color: "#1a1a2e", fontWeight: 700, letterSpacing: -0.5 }}>

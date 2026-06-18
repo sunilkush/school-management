@@ -47,25 +47,24 @@ const css = `
 .permissions-page {
   min-height: 100vh;
   padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #fdf2f8 100%);
+  background: #F7F8FC;
 }
 
 .permissions-hero {
-  background: #ffffffcc;
-  backdrop-filter: blur(14px);
-  border: 1px solid #e2e8f0;
-  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(167,199,231,0.3);
+  border-radius: 20px;
   padding: 24px;
   margin-bottom: 18px;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+  box-shadow: 0 4px 20px rgba(91,158,201,0.08);
 }
 
 .permissions-icon {
   width: 56px;
   height: 56px;
   border-radius: 20px;
-  background: #ede9fe;
-  color: #7c3aed;
+  background: rgba(205,180,219,0.2);
+  color: #9B87B8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,13 +72,13 @@ const css = `
 }
 
 .gov-card {
-  border-radius: 24px !important;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(91,158,201,0.08);
 }
 
 .metric-card {
-  border-radius: 22px !important;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+  border-radius: 18px !important;
+  box-shadow: 0 4px 16px rgba(91,158,201,0.06);
 }
 
 .metric-icon {
@@ -168,8 +167,8 @@ const Permissions = () => {
               width: 34,
               height: 34,
               borderRadius: 12,
-              background: "#e0f2fe",
-              color: "#0369a1",
+              background: "rgba(167,199,231,0.2)",
+              color: "#5B9EC9",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -430,7 +429,7 @@ const Permissions = () => {
               <Statistic
                 title="Roles"
                 value={roles.length}
-                prefix={<SafetyCertificateOutlined style={{ color: "#7c3aed" }} />}
+                prefix={<SafetyCertificateOutlined style={{ color: "#9B87B8" }} />}
               />
             </Card>
           </Col>
@@ -440,7 +439,7 @@ const Permissions = () => {
               <Statistic
                 title="Permission Modules"
                 value={modules.length}
-                prefix={<ApartmentOutlined style={{ color: "#2563eb" }} />}
+                prefix={<ApartmentOutlined style={{ color: "#5B9EC9" }} />}
               />
             </Card>
           </Col>
@@ -453,7 +452,7 @@ const Permissions = () => {
                   approvalQueue.filter((item) => item.status !== "Approved")
                     .length
                 }
-                prefix={<WarningOutlined style={{ color: "#d97706" }} />}
+                prefix={<WarningOutlined style={{ color: "#D4922A" }} />}
               />
             </Card>
           </Col>
@@ -465,7 +464,7 @@ const Permissions = () => {
           style={{ marginBottom: 18 }}
           title={
             <Space>
-              <SafetyCertificateOutlined style={{ color: "#7c3aed" }} />
+              <SafetyCertificateOutlined style={{ color: "#9B87B8" }} />
               <span>Role Permission Matrix</span>
               <Tag color="blue">{dataSource.length} modules</Tag>
             </Space>
@@ -495,7 +494,7 @@ const Permissions = () => {
           style={{ marginBottom: 18 }}
           title={
             <Space>
-              <DiffOutlined style={{ color: "#2563eb" }} />
+              <DiffOutlined style={{ color: "#5B9EC9" }} />
               <span>Permission Diff Viewer</span>
             </Space>
           }
@@ -544,7 +543,7 @@ const Permissions = () => {
               className="gov-card"
               title={
                 <Space>
-                  <WarningOutlined style={{ color: "#d97706" }} />
+                  <WarningOutlined style={{ color: "#D4922A" }} />
                   <span>High-Risk Approval Queue</span>
                   <Tag color="orange">{approvalQueue.length}</Tag>
                 </Space>
@@ -603,7 +602,7 @@ const Permissions = () => {
               className="gov-card"
               title={
                 <Space>
-                  <AuditOutlined style={{ color: "#16a34a" }} />
+                  <AuditOutlined style={{ color: "#5BA89A" }} />
                   <span>Audit Trail</span>
                   <Tag color="green">{auditTrail.length}</Tag>
                 </Space>

@@ -49,14 +49,14 @@ function StatusBadge({ isActive }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
-      background: isActive ? "#f6ffed" : "#fff2f0",
-      color: isActive ? "#52c41a" : "#ff4d4f",
-      border: `1px solid ${isActive ? "#b7eb8f" : "#ffa39e"}`,
+      background: isActive ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)",
+      color: isActive ? "#5BA89A" : "#D96B7A",
+      border: `1px solid ${isActive ? "rgba(184,224,210,0.5)" : "rgba(255,202,212,0.5)"}`,
       borderRadius: 20, padding: "3px 11px", fontSize: 12, fontWeight: 500,
     }}>
       <span style={{
         width: 6, height: 6, borderRadius: "50%",
-        background: isActive ? "#52c41a" : "#ff4d4f",
+        background: isActive ? "#5BA89A" : "#D96B7A",
         display: "inline-block",
       }} />
       {isActive ? "Active" : "Inactive"}
@@ -110,8 +110,8 @@ function CodeChip({ code }) {
   if (!code) return <span style={{ color: "#bfbfbf", fontSize: 12 }}>—</span>;
   return (
     <span style={{
-      background: "#f0eeff", color: "#6c5ce7",
-      border: "1px solid #d3cdf7",
+      background: "rgba(205,180,219,0.2)", color: "#9B87B8",
+      border: "1px solid rgba(205,180,219,0.5)",
       borderRadius: 6, padding: "2px 9px",
       fontSize: 12, fontWeight: 600,
       fontFamily: "monospace", letterSpacing: 0.5,
@@ -242,11 +242,11 @@ const SchoolBoards = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 8,
-            background: "#f0eeff",
+            background: "rgba(205,180,219,0.2)",
             display: "flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0,
           }}>
-            <BookOutlined style={{ color: "#6c5ce7", fontSize: 14 }} />
+            <BookOutlined style={{ color: "#9B87B8", fontSize: 14 }} />
           </div>
           <span style={{ fontSize: 13, fontWeight: 600, color: "#141414" }}>{name}</span>
         </div>
@@ -285,7 +285,7 @@ const SchoolBoards = () => {
             onClick={() => handleEditBoard(record)}
             style={{
               borderRadius: 8, fontWeight: 600, fontSize: 12,
-              background: "#f0eeff", borderColor: "#d3cdf7", color: "#6c5ce7",
+              background: "rgba(205,180,219,0.2)", borderColor: "rgba(205,180,219,0.5)", color: "#9B87B8",
             }}
           >
             Edit
@@ -305,7 +305,7 @@ const SchoolBoards = () => {
             }}
             style={{
               borderRadius: 8, fontWeight: 600, fontSize: 12,
-              background: "#fff2f0", borderColor: "#ffa39e", color: "#ff4d4f",
+              background: "rgba(255,202,212,0.2)", borderColor: "rgba(255,202,212,0.5)", color: "#D96B7A",
             }}
           >
             Delete
@@ -319,23 +319,24 @@ const SchoolBoards = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: "#6c5ce7",
+          colorPrimary: "#9B87B8",
           borderRadius: 12,
           fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
         },
       }}
     >
-      <Layout style={{ background: "#f5f6fa", minHeight: "100vh" }}>
+      <Layout style={{ background: "#F7F8FC", minHeight: "100vh" }}>
 
         {/* ── Page Header ── */}
         <div style={{
-          background: "linear-gradient(135deg, #0f0c29 0%, #302b63 60%, #24243e 100%)",
+          background: "#ffffff",
+          borderBottom: "1px solid rgba(167,199,231,0.3)",
           padding: "20px 32px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div>
-            <div style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>School Exam Boards</div>
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>
+            <div style={{ color: "#1E2A3A", fontSize: 18, fontWeight: 700 }}>School Exam Boards</div>
+            <div style={{ color: "#8A94A6", fontSize: 12, marginTop: 2 }}>
               Manage boards and assign them to schools
             </div>
           </div>
@@ -345,9 +346,9 @@ const SchoolBoards = () => {
               onClick={handleOpenAssignModal}
               style={{
                 borderRadius: 10, fontWeight: 600, height: 38,
-                background: "rgba(255,255,255,0.1)",
-                borderColor: "rgba(255,255,255,0.25)",
-                color: "#fff",
+                background: "rgba(167,199,231,0.15)",
+                borderColor: "rgba(167,199,231,0.4)",
+                color: "#5B9EC9",
               }}
             >
               Assign School Boards
@@ -357,7 +358,7 @@ const SchoolBoards = () => {
               icon={<PlusOutlined />}
               onClick={handleAddBoard}
               style={{
-                background: "#6c5ce7", borderColor: "#6c5ce7",
+                background: "linear-gradient(135deg, #5B9EC9, #9B87B8)", borderColor: "transparent",
                 borderRadius: 10, fontWeight: 600, height: 38,
               }}
             >
@@ -370,10 +371,10 @@ const SchoolBoards = () => {
 
           {/* ── Stats ── */}
           <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-            <StatCard label="Total Boards"    value={totalBoards}   icon={<ApartmentOutlined />}    accentColor="#6c5ce7" />
-            <StatCard label="Active Boards"   value={activeBoards}  icon={<CheckCircleOutlined />}  accentColor="#00b894" />
-            <StatCard label="Inactive Boards" value={inactiveBoards} icon={<StopOutlined />}        accentColor="#e17055" />
-            <StatCard label="Schools Covered" value={schools.length} icon={<BookOutlined />}        accentColor="#0984e3" />
+            <StatCard label="Total Boards"    value={totalBoards}   icon={<ApartmentOutlined />}    accentColor="#9B87B8" />
+            <StatCard label="Active Boards"   value={activeBoards}  icon={<CheckCircleOutlined />}  accentColor="#5BA89A" />
+            <StatCard label="Inactive Boards" value={inactiveBoards} icon={<StopOutlined />}        accentColor="#D96B7A" />
+            <StatCard label="Schools Covered" value={schools.length} icon={<BookOutlined />}        accentColor="#5B9EC9" />
           </div>
 
           {/* ── Table Card ── */}
@@ -429,7 +430,7 @@ const SchoolBoards = () => {
               }}
               onRow={(_, index) => ({
                 style: { background: index % 2 === 0 ? "#fff" : "#fafafa" },
-                onMouseEnter: (e) => (e.currentTarget.style.background = "#f0eeff22"),
+                onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(205,180,219,0.2)22"),
                 onMouseLeave: (e) => (e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"),
               })}
               style={{ borderRadius: 0 }}
@@ -443,12 +444,12 @@ const SchoolBoards = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: 10,
-                background: "#f0eeff",
+                background: "rgba(205,180,219,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 {editingBoard
-                  ? <EditOutlined style={{ color: "#6c5ce7", fontSize: 15 }} />
-                  : <PlusOutlined style={{ color: "#6c5ce7", fontSize: 15 }} />
+                  ? <EditOutlined style={{ color: "#9B87B8", fontSize: 15 }} />
+                  : <PlusOutlined style={{ color: "#9B87B8", fontSize: 15 }} />
                 }
               </div>
               <div>
@@ -466,7 +467,7 @@ const SchoolBoards = () => {
           onOk={() => form.submit()}
           okText={editingBoard ? "Update Board" : "Create Board"}
           okButtonProps={{
-            style: { background: "#6c5ce7", borderColor: "#6c5ce7", borderRadius: 10, fontWeight: 600 },
+            style: { background: "#9B87B8", borderColor: "#9B87B8", borderRadius: 10, fontWeight: 600 },
           }}
           cancelButtonProps={{ style: { borderRadius: 10 } }}
           destroyOnClose
@@ -512,12 +513,12 @@ const SchoolBoards = () => {
             <Form.Item name="isActive" valuePropName="checked">
               <div style={{
                 display: "flex", alignItems: "center", gap: 10,
-                background: "#f6ffed", border: "1px solid #b7eb8f",
+                background: "rgba(184,224,210,0.2)", border: "1px solid rgba(184,224,210,0.5)",
                 borderRadius: 10, padding: "10px 14px",
               }}>
                 <Checkbox />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#52c41a" }}>Mark as Active</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#5BA89A" }}>Mark as Active</div>
                   <div style={{ fontSize: 11, color: "#8c8c8c" }}>Active boards are visible to schools</div>
                 </div>
               </div>
@@ -534,7 +535,7 @@ const SchoolBoards = () => {
                 background: "#e3f2fd",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <LinkOutlined style={{ color: "#0984e3", fontSize: 15 }} />
+                <LinkOutlined style={{ color: "#5B9EC9", fontSize: 15 }} />
               </div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>Assign School Boards</div>
@@ -547,7 +548,7 @@ const SchoolBoards = () => {
           onOk={() => assignForm.submit()}
           okText="Assign Boards"
           okButtonProps={{
-            style: { background: "#0984e3", borderColor: "#0984e3", borderRadius: 10, fontWeight: 600 },
+            style: { background: "#5B9EC9", borderColor: "#5B9EC9", borderRadius: 10, fontWeight: 600 },
           }}
           cancelButtonProps={{ style: { borderRadius: 10 } }}
           destroyOnClose

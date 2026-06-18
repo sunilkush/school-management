@@ -16,7 +16,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const { TextArea } = Input;
-const STAT_COLORS  = ["#7c3aed", "#f97316", "#059669", "#dc2626"];
+const STAT_COLORS  = ["#9B87B8", "#D4922A", "#5BA89A", "#D96B7A"];
 const LEAVE_TYPES  = ["sick", "personal", "family", "other"];
 
 const statusColor = { pending: "orange", approved: "green", rejected: "red" };

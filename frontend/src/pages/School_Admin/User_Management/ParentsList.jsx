@@ -10,9 +10,9 @@ import {
 } from "../../../styles/pageStyles";
 
 const STAT_META = [
-  { key: "total",   label: "Total Parents", color: "#7c3aed", icon: <TeamOutlined /> },
-  { key: "active",  label: "Active",        color: "#059669", icon: <CheckCircleOutlined /> },
-  { key: "showing", label: "Showing",       color: "#0284c7", icon: <EyeOutlined /> },
+  { key: "total",   label: "Total Parents", color: "#9B87B8", icon: <TeamOutlined /> },
+  { key: "active",  label: "Active",        color: "#5BA89A", icon: <CheckCircleOutlined /> },
+  { key: "showing", label: "Showing",       color: "#5B9EC9", icon: <EyeOutlined /> },
 ];
 
 const ParentsList = () => {
@@ -99,7 +99,7 @@ const ParentsList = () => {
     {
       title: "Role",
       key: "role",
-      render: () => <span style={pill("#7c3aed", "#ede9fe")}>Parent</span>,
+      render: () => <span style={pill("#9B87B8", "rgba(205,180,219,0.2)")}>Parent</span>,
     },
   ];
 

@@ -16,7 +16,14 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#7c3aed", "#0284c7", "#f97316", "#dc2626"];
+const STAT_COLORS = ["#5B9EC9", "#9B87B8", "#5BA89A", "#D4922A"];
+const STAT_ACCENT_BARS = ["#A7C7E7", "#CDB4DB", "#B8E0D2", "#FDE2A7"];
+const STAT_BG = [
+  "rgba(167,199,231,0.12)",
+  "rgba(205,180,219,0.12)",
+  "rgba(184,224,210,0.12)",
+  "rgba(253,226,167,0.15)",
+];
 
 const TeacherDashboard = () => {
   const dispatch = useDispatch();
@@ -109,12 +116,21 @@ const TeacherDashboard = () => {
           {/* KPI stats */}
           <div className="stat-grid" style={statGrid(180)}>
             {stats.map((item, i) => (
-              <div key={item.title} style={statCard({ color: STAT_COLORS[i] })}>
+              <div key={item.title} style={statCard({ color: STAT_COLORS[i], bg: "#ffffff", accentBar: STAT_ACCENT_BARS[i] })}>
                 <div>
                   <div style={statLabel(STAT_COLORS[i])}>{item.title}</div>
                   <div style={statValue(STAT_COLORS[i])}>{item.value}</div>
                 </div>
-                <div style={{ fontSize: 26, color: STAT_COLORS[i], opacity: 0.5 }}>{item.icon}</div>
+                <div style={{
+                  fontSize: 22,
+                  color: STAT_COLORS[i],
+                  background: STAT_BG[i],
+                  borderRadius: 12,
+                  padding: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>{item.icon}</div>
               </div>
             ))}
           </div>
@@ -179,7 +195,10 @@ const TeacherDashboard = () => {
                 <Progress
                   percent={dashboardData.attendancePercent}
                   status="active"
-                  strokeColor="#059669"
+                  strokeColor={{
+                    from: "#A7C7E7",
+                    to: "#B8E0D2",
+                  }}
                 />
               </div>
             </Col>
@@ -193,7 +212,10 @@ const TeacherDashboard = () => {
                     renderItem={(item, index) => (
                       <List.Item key={`${item.className}-${item.sectionName}-${index}`} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-muted)" }}>
                         <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{item.className} — {item.sectionName}</span>
-                        <span style={pill(item.role === "Class Teacher" ? "#059669" : "#0284c7", item.role === "Class Teacher" ? "#d1fae5" : "#e0f2fe")}>
+                        <span style={pill(
+                          item.role === "Class Teacher" ? "#2E7A6E" : "#2E6A9A",
+                          item.role === "Class Teacher" ? "rgba(184,224,210,0.25)" : "rgba(167,199,231,0.22)"
+                        )}>
                           {item.role}
                         </span>
                       </List.Item>

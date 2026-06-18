@@ -483,13 +483,13 @@ const handleGenerateInstallments = async () => {
 
         <Col xs={24} sm={12} xl={6}>
           <Card bordered={false} style={{ borderRadius: 20 }}>
-            <Statistic title="Paid" value={paidFees} formatter={money} valueStyle={{ color: "#16a34a" }} prefix={<CheckCircleOutlined />} />
+            <Statistic title="Paid" value={paidFees} formatter={money} valueStyle={{ color: "#5BA89A" }} prefix={<CheckCircleOutlined />} />
           </Card>
         </Col>
 
         <Col xs={24} sm={12} xl={6}>
           <Card bordered={false} style={{ borderRadius: 20 }}>
-            <Statistic title="Pending" value={dueFees} formatter={money} valueStyle={{ color: "#dc2626" }} prefix={<ClockCircleOutlined />} />
+            <Statistic title="Pending" value={dueFees} formatter={money} valueStyle={{ color: "#D96B7A" }} prefix={<ClockCircleOutlined />} />
           </Card>
         </Col>
 
@@ -606,7 +606,7 @@ const handleGenerateInstallments = async () => {
 
             <Card
               bordered={false}
-              style={{ background: "#f8fafc", borderRadius: 18 }}
+              style={{ background: "#F7F8FC", borderRadius: 18 }}
             >
               <Descriptions column={1}>
                 <Descriptions.Item label="Installment">

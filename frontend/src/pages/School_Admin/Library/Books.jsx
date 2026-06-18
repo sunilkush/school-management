@@ -35,9 +35,9 @@ const normalizeBook = (book) => ({
 });
 
 const STAT_META = [
-  { key: "total",     label: "Total Books", color: "#7c3aed" },
-  { key: "available", label: "Available",   color: "#059669" },
-  { key: "issued",    label: "Issued",      color: "#dc2626" },
+  { key: "total",     label: "Total Books", color: "#9B87B8" },
+  { key: "available", label: "Available",   color: "#5BA89A" },
+  { key: "issued",    label: "Issued",      color: "#D96B7A" },
 ];
 
 const Books = () => {
@@ -148,7 +148,7 @@ const Books = () => {
       ),
     },
     { title: "Category", dataIndex: "category", key: "category",
-      render: (v) => <span style={pill("#7c3aed", "#ede9fe")}>{v}</span>,
+      render: (v) => <span style={pill("#9B87B8", "rgba(205,180,219,0.2)")}>{v}</span>,
     },
     { title: "ISBN", dataIndex: "isbn", key: "isbn",
       render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v || "—"}</span>,
@@ -158,16 +158,16 @@ const Books = () => {
       dataIndex: "quantity",
       key: "quantity",
       render: (q) => q > 0
-        ? <span style={pill("#059669", "#d1fae5")}>{q} / {books.find((b) => b.quantity === q)?.totalCopies ?? q}</span>
-        : <span style={pill("#dc2626", "#fee2e2")}>Out of stock</span>,
+        ? <span style={pill("#5BA89A", "#d1fae5")}>{q} / {books.find((b) => b.quantity === q)?.totalCopies ?? q}</span>
+        : <span style={pill("#D96B7A", "rgba(255,202,212,0.2)")}>Out of stock</span>,
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status) => status === "Available"
-        ? <span style={pill("#059669", "#d1fae5")}>Available</span>
-        : <span style={pill("#f97316", "#fff7ed")}>Issued</span>,
+        ? <span style={pill("#5BA89A", "#d1fae5")}>Available</span>
+        : <span style={pill("#D4922A", "#fff7ed")}>Issued</span>,
     },
     {
       title: "Shelf",
