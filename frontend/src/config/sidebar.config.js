@@ -294,7 +294,7 @@ export const sidebarMenu = {
       icon: BookOpen,
       subMenu: [
         { title: "Assigned Classes", path: "teacher/classes" },
-        { title: "My Students", path: "teacher/students" },
+       /*  { title: "My Students", path: "teacher/students" }, */
         { title: "Assignments", path: "teacher/assignments" },
         { title: "Subject Resources", path: "teacher/resources" },
         { title: "Lesson Plans", path: "teacher/lesson-plans" },
