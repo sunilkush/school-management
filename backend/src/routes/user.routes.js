@@ -24,7 +24,7 @@ const router = Router();
 
 // Role-Based Access Control
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
-const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant"];
+const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant", "Librarian"];
 
 const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent", "Accountant", "Librarian"];
 //
