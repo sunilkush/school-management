@@ -93,7 +93,11 @@ const SuperAdminDashboard = lazy(() => import("./pages/Super_Admin/Dashboard/Sup
 const SchoolAdminDashboard = lazy(() => import("./pages/School_Admin/Dashboard/SchoolAdminDashboard.jsx"));
 const StudentDashboard = lazy(() => import("./pages/Student/Dashboard/StudentDashboard.jsx"));
 const TeacherDashboard = lazy(() => import("./pages/Teacher/Dashboard/TeacherDashboard.jsx"));
-const AccountantDashboard = lazy(() => import("./pages/Accountant/Dashboard/AccountantDashboard.jsx"));
+const AccountantDashboard  = lazy(() => import("./pages/Accountant/Dashboard/AccountantDashboard.jsx"));
+const IncomeManagement     = lazy(() => import("./pages/Accountant/Finance/IncomeManagement.jsx"));
+const ExpenseManagement    = lazy(() => import("./pages/Accountant/Finance/ExpenseManagement.jsx"));
+const FinancialReports     = lazy(() => import("./pages/Accountant/Reports/FinancialReports.jsx"));
+const FeeReports           = lazy(() => import("./pages/Accountant/Reports/FeeReports.jsx"));
 const StaffDashboard = lazy(() => import("./pages/Staff/Dashboard/StaffDashboard.jsx"));
 const ParentDashboard = lazy(() => import("./pages/Parent/Dashboard/ParentDashboard.jsx"));
 
@@ -707,7 +711,10 @@ const router = createBrowserRouter([
               { path: "salary/create-employee", element: <CreateEmployee /> },
               { path: "salary/payslips", element: <GeneratePayslip /> },
               { path: "salary/reports/monthly", element: <MonthlyPayrollReport /> },
-              { path: "reports", element: <Reports /> },
+              { path: "income",           element: <IncomeManagement /> },
+              { path: "expenses",         element: <ExpenseManagement /> },
+              { path: "reports",          element: <FinancialReports /> },
+              { path: "fees/reports",     element: <FeeReports /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },

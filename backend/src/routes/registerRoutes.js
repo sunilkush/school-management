@@ -56,6 +56,8 @@ import studyMaterialRoutes from "./studyMaterial.routes.js";
 import lessonPlanRoutes from "./lessonPlan.routes.js";
 import tempAccessRoutes from "./tempAccess.routes.js";
 import librarySettingRoutes from "./librarySetting.routes.js";
+import incomeRoutes from "./income.routes.js";
+import expenseRoutes from "./expense.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -116,6 +118,8 @@ export const apiV1Routes = [
   ["/lesson-plans", lessonPlanRoutes],
   ["/role/temp-access", tempAccessRoutes],
   ["/library-settings", librarySettingRoutes],
+  ["/income", incomeRoutes],
+  ["/expenses", expenseRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {
