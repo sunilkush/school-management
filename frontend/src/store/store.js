@@ -64,6 +64,7 @@ import analyticsReducer from "../features/analyticsSlice";
 import leaveRequestReducer from "../features/leaveRequestSlice";
 import admissionInquiryReducer from "../features/admissionInquirySlice";
 import financeReducer from "../features/financeSlice";
+import hostelWardenReducer from "../features/hostelWardenSlice";
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -123,6 +124,7 @@ const rootReducer = combineReducers({
   leaveRequests: leaveRequestReducer,
   admissionInquiry: admissionInquiryReducer,
   finance: financeReducer,
+  hostelWarden: hostelWardenReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

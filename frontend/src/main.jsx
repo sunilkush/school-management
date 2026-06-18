@@ -213,6 +213,12 @@ const AdmissionInquiryPage = lazy(() => import("./pages/School_Admin/Teachers_&_
 
 const HostelManagement = lazy(() => import("./pages/School_Admin/Hostel/HostelManagement.jsx"));
 const RoomAllocation = lazy(() => import("./pages/School_Admin/Hostel/RoomAllocation.jsx"));
+const HostelDashboard      = lazy(() => import("./pages/HostelWarden/HostelDashboard.jsx"));
+const LeaveManagement      = lazy(() => import("./pages/HostelWarden/LeaveManagement.jsx"));
+const VisitorLog           = lazy(() => import("./pages/HostelWarden/VisitorLog.jsx"));
+const ComplaintManagement  = lazy(() => import("./pages/HostelWarden/ComplaintManagement.jsx"));
+const HostelAttendance     = lazy(() => import("./pages/HostelWarden/HostelAttendance.jsx"));
+const HostelReports        = lazy(() => import("./pages/HostelWarden/HostelReports.jsx"));
 
 const RoutesPage = lazy(() => import("./pages/School_Admin/Transport/RoutesPage.jsx"));
 const Vehicles = lazy(() => import("./pages/School_Admin/Transport/Vehicles.jsx"));
@@ -905,15 +911,19 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
             children: [
-              { index: true, element: <RoleDynamicPortal /> },
-              { path: "rooms", element: <HostelManagement /> },
-              { path: "allocations", element: <HostelManagement /> },
-              { path: "attendance", element: <AllStudentsAttendance /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
-              { path: "profile", element: <Profile /> },
-              { path: "message", element: <Message /> },
-              { path: "notification", element: <Notification /> },
-              { path: "settings", element: <SettingsPage /> },
+              { index: true,                    element: <HostelDashboard /> },
+              { path: "rooms",                  element: <HostelManagement /> },
+              { path: "allocations",            element: <HostelManagement /> },
+              { path: "leaves",                 element: <LeaveManagement /> },
+              { path: "visitors",               element: <VisitorLog /> },
+              { path: "complaints",             element: <ComplaintManagement /> },
+              { path: "hostel-attendance",      element: <HostelAttendance /> },
+              { path: "hostel-reports",         element: <HostelReports /> },
+              { path: "payroll",                element: <PayrollSelfServicePage /> },
+              { path: "profile",                element: <Profile /> },
+              { path: "message",                element: <Message /> },
+              { path: "notification",           element: <Notification /> },
+              { path: "settings",               element: <SettingsPage /> },
             ],
           },
           {

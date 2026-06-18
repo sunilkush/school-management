@@ -485,12 +485,15 @@ export const sidebarMenu = {
 
   /* ================= HOSTEL WARDEN ================= */
   "hostel warden": [
-    { title: "Overview", path: "hostelwarden", icon: LayoutDashboard },
-    { title: "Hostel Rooms", path: "hostelwarden/rooms", icon: BookOpen },
-    { title: "Student Allocation", path: "hostelwarden/allocations", icon: Users },
-    { title: "Hostel Attendance", path: "hostelwarden/attendance", icon: UserCheck },
-    { title: "My Payroll", path: "hostelwarden/payroll", icon: IndianRupee },
-    roleWorkspaceItem,
+    { title: "Dashboard",         path: "hostelwarden",                    icon: LayoutDashboard },
+    { title: "Rooms",             path: "hostelwarden/rooms",              icon: BookOpen },
+    { title: "Allocations",       path: "hostelwarden/allocations",        icon: Users },
+    { title: "Leave Requests",    path: "hostelwarden/leaves",             icon: ClipboardCheck },
+    { title: "Visitor Log",       path: "hostelwarden/visitors",           icon: UserPlus },
+    { title: "Complaints",        path: "hostelwarden/complaints",         icon: MessageCircle },
+    { title: "Attendance",        path: "hostelwarden/hostel-attendance",  icon: UserCheck },
+    { title: "Reports",           path: "hostelwarden/hostel-reports",     icon: FileBarChart2 },
+    { title: "My Payroll",        path: "hostelwarden/payroll",            icon: IndianRupee },
     ...commonSelfService("hostelwarden"),
   ],
 
