@@ -96,7 +96,7 @@ export const statCard = ({ color, bg, accentBar }) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  boxShadow: "0 2px 8px rgba(91,158,201,0.07), 0 4px 16px rgba(91,158,201,0.05)",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
   transition: "transform 0.2s ease, box-shadow 0.2s ease",
 });
 
@@ -116,14 +116,14 @@ export const statValue = (color) => ({
   lineHeight: 1.1,
 });
 
-/* ── Avatar initials (pastel palette) ───────────────────────────── */
+/* ── Avatar initials palette ────────────────────────────────────── */
 const PALETTE = [
-  { bg: "#D4E9F7", color: "#2E6A9A" },
-  { bg: "#E6D9F3", color: "#6B4F96" },
-  { bg: "#D4F0E8", color: "#2E7A6E" },
-  { bg: "#FDDDE4", color: "#9E3A4A" },
-  { bg: "#FDF2D6", color: "#8A5E10" },
-  { bg: "#D4E9F7", color: "#2E6A9A" },
+  { bg: "#DBEAFE", color: "#1D4ED8" },
+  { bg: "#CCFBF1", color: "#0D9488" },
+  { bg: "#DCFCE7", color: "#15803D" },
+  { bg: "#FEE2E2", color: "#DC2626" },
+  { bg: "#FEF3C7", color: "#B45309" },
+  { bg: "#EDE9FE", color: "#6D28D9" },
 ];
 
 export const avatarColor = (name = "") => {
@@ -142,16 +142,16 @@ export const avatarStyle = (name = "", size = 38) => {
   };
 };
 
-/* ── Status dot + text (pastel) ──────────────────────────────────── */
+/* ── Status dot + text ───────────────────────────────────────────── */
 export const STATUS = {
-  active:    { dot: "#5BA89A", text: "#2E7A6E", bg: "rgba(184,224,210,0.22)", border: "rgba(184,224,210,0.5)" },
-  inactive:  { dot: "#B0B8C8", text: "#6B7890", bg: "rgba(228,234,246,0.4)",  border: "rgba(228,234,246,0.8)" },
-  pending:   { dot: "#D4922A", text: "#8A5E10", bg: "rgba(253,226,167,0.30)", border: "rgba(253,226,167,0.6)" },
-  overdue:   { dot: "#D96B7A", text: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
-  suspended: { dot: "#9B87B8", text: "#6B4F96", bg: "rgba(205,180,219,0.20)", border: "rgba(205,180,219,0.4)" },
-  paid:      { dot: "#5BA89A", text: "#2E7A6E", bg: "rgba(184,224,210,0.22)", border: "rgba(184,224,210,0.5)" },
-  unpaid:    { dot: "#D96B7A", text: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
-  partial:   { dot: "#D4922A", text: "#8A5E10", bg: "rgba(253,226,167,0.30)", border: "rgba(253,226,167,0.6)" },
+  active:    { dot: "#22C55E", text: "#15803D", bg: "rgba(220,252,231,0.5)",  border: "rgba(34,197,94,0.3)"  },
+  inactive:  { dot: "#94A3B8", text: "#64748B", bg: "rgba(241,245,249,0.6)",  border: "rgba(148,163,184,0.4)" },
+  pending:   { dot: "#F59E0B", text: "#B45309", bg: "rgba(254,243,199,0.5)",  border: "rgba(245,158,11,0.3)" },
+  overdue:   { dot: "#EF4444", text: "#DC2626", bg: "rgba(254,226,226,0.5)",  border: "rgba(239,68,68,0.3)"  },
+  suspended: { dot: "#8B5CF6", text: "#6D28D9", bg: "rgba(237,233,254,0.5)",  border: "rgba(139,92,246,0.3)" },
+  paid:      { dot: "#22C55E", text: "#15803D", bg: "rgba(220,252,231,0.5)",  border: "rgba(34,197,94,0.3)"  },
+  unpaid:    { dot: "#EF4444", text: "#DC2626", bg: "rgba(254,226,226,0.5)",  border: "rgba(239,68,68,0.3)"  },
+  partial:   { dot: "#F59E0B", text: "#B45309", bg: "rgba(254,243,199,0.5)",  border: "rgba(245,158,11,0.3)" },
 };
 
 export const statusDot = (key = "active") => {

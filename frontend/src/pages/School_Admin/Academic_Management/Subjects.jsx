@@ -17,12 +17,12 @@ const toDisplayText = (value, fallback = "—") => {
 
 const SUBJECT_ACCENTS = [
   { a: "#6EE7F7", b: "#3B82F6", glow: "rgba(59,130,246,0.35)" },
-  { a: "#A78BFA", b: "#9B87B8", glow: "rgba(124,58,237,0.35)" },
-  { a: "#6EE7B7", b: "#5BA89A", glow: "rgba(5,150,105,0.35)" },
-  { a: "rgba(255,202,212,0.5)", b: "#D96B7A", glow: "rgba(220,38,38,0.3)"  },
-  { a: "#FCD34D", b: "#D4922A", glow: "rgba(217,119,6,0.3)"  },
+  { a: "#A78BFA", b: "#14B8A6", glow: "rgba(124,58,237,0.35)" },
+  { a: "#6EE7B7", b: "#22C55E", glow: "rgba(5,150,105,0.35)" },
+  { a: "rgba(254,226,226,0.5)", b: "#EF4444", glow: "rgba(220,38,38,0.3)"  },
+  { a: "#FCD34D", b: "#F59E0B", glow: "rgba(217,119,6,0.3)"  },
   { a: "#F9A8D4", b: "#DB2777", glow: "rgba(219,39,119,0.3)" },
-  { a: "#86EFAC", b: "#5BA89A", glow: "rgba(22,163,74,0.3)"  },
+  { a: "#86EFAC", b: "#22C55E", glow: "rgba(22,163,74,0.3)"  },
   { a: "#FDA4AF", b: "#E11D48", glow: "rgba(225,29,72,0.3)"  },
 ];
 const getAccent = (name = "") => SUBJECT_ACCENTS[name.charCodeAt(0) % SUBJECT_ACCENTS.length];
@@ -91,7 +91,7 @@ const Ico = ({ children, size = 16, stroke = "currentColor", sw = 2 }) => (
 );
 
 const SearchIco = () => (
-  <Ico stroke="#6B7890">
+  <Ico stroke="#64748B">
     <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.35" y2="16.35"/>
   </Ico>
 );
@@ -124,7 +124,7 @@ const StatCard = ({ label, value, icon, accent, delay = 0, dark }) => (
     borderRadius: 20, padding: "18px 20px",
     background: dark
       ? "linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))"
-      : "linear-gradient(145deg,#ffffff,#F7F8FC)",
+      : "linear-gradient(145deg,#ffffff,#F8FAFC)",
     border: `1px solid ${dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.06)"}`,
     backdropFilter: "blur(20px)",
     boxShadow: dark
@@ -147,10 +147,10 @@ const StatCard = ({ label, value, icon, accent, delay = 0, dark }) => (
     }}>
       {icon}
     </div>
-    <div style={{ fontSize:28, fontWeight:800, fontFamily:"'Syne',sans-serif", color:dark?"#F7F8FC":"#1E2A3A", lineHeight:1 }}>
+    <div style={{ fontSize:28, fontWeight:800, fontFamily:"'Syne',sans-serif", color:dark?"#F8FAFC":"#0F172A", lineHeight:1 }}>
       {value}
     </div>
-    <div style={{ fontSize:12, color:"#6B7890", marginTop:4, fontWeight:500 }}>{label}</div>
+    <div style={{ fontSize:12, color:"#64748B", marginTop:4, fontWeight:500 }}>{label}</div>
   </div>
 );
 
@@ -204,13 +204,13 @@ const SubjectCard = ({ item, idx, dark }) => {
           <div style={{ flex:1, minWidth:0, paddingTop:2 }}>
             <div style={{
               fontSize:15, fontWeight:700, fontFamily:"'Syne',sans-serif",
-              color:dark?"#f1f5f9":"#1E2A3A",
+              color:dark?"#f1f5f9":"#0F172A",
               whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
               letterSpacing:"-0.2px",
             }}>
               {name}
             </div>
-            <div style={{ fontSize:12, color:"#6B7890", marginTop:2, fontWeight:500 }}>
+            <div style={{ fontSize:12, color:"#64748B", marginTop:2, fontWeight:500 }}>
               {toDisplayText(item?.category)} · {toDisplayText(item?.type)}
             </div>
           </div>
@@ -235,9 +235,9 @@ const SubjectCard = ({ item, idx, dark }) => {
             padding:"5px 11px", borderRadius:30,
             background:dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.04)",
             border:`1px solid ${dark?"rgba(255,255,255,0.09)":"rgba(0,0,0,0.06)"}`,
-            fontSize:12, fontWeight:500, color:dark?"#A8B8CC":"#6B7890",
+            fontSize:12, fontWeight:500, color:dark?"#94A3B8":"#64748B",
           }}>
-            <BookIco c={dark?"#A8B8CC":"#6B7890"}/>
+            <BookIco c={dark?"#94A3B8":"#64748B"}/>
             <span>Pass / Max</span>
             <span style={{
               padding:"1px 8px", borderRadius:20,
@@ -352,16 +352,16 @@ const Subjects = () => {
               border:`1px dashed ${isDark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.09)"}`,
             }}>
               <div style={{ fontSize:52, marginBottom:14 }}>📚</div>
-              <div style={{ fontSize:18, fontWeight:700, fontFamily:"'Syne',sans-serif", color:isDark?"#f1f5f9":"#1E2A3A" }}>
+              <div style={{ fontSize:18, fontWeight:700, fontFamily:"'Syne',sans-serif", color:isDark?"#f1f5f9":"#0F172A" }}>
                 No subjects found
               </div>
-              <div style={{ fontSize:13, color:"#6B7890", marginTop:6 }}>
+              <div style={{ fontSize:13, color:"#64748B", marginTop:6 }}>
                 {searchText ? `No results for "${searchText}"` : "No subjects added yet"}
               </div>
             </div>
           ) : (
             <>
-              <div style={{ fontSize:12, color:"#6B7890", fontWeight:500, marginBottom:16 }}>
+              <div style={{ fontSize:12, color:"#64748B", fontWeight:500, marginBottom:16 }}>
                 Showing{" "}
                 <strong style={{ color:isDark?"#a5b4fc":"#4f46e5" }}>{filtered.length}</strong>
                 {" "}of {safe.length} subjects

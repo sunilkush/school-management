@@ -67,11 +67,11 @@ const Profile = () => {
                 {user?.name || "—"}
               </div>
               <Space size={6} wrap>
-                <span style={pill(user?.isActive ? "#5BA89A" : "#D96B7A", user?.isActive ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)")}>
+                <span style={pill(user?.isActive ? "#22C55E" : "#EF4444", user?.isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
                   {user?.isActive ? "Active" : "Inactive"}
                 </span>
-                {user?.role?.name && <span style={pill("#9B87B8", "rgba(205,180,219,0.2)")}>{user.role.name}</span>}
-                {user?.school?.name && <span style={pill("#5B9EC9", "#e0f2fe")}>{user.school.name}</span>}
+                {user?.role?.name && <span style={pill("#14B8A6", "rgba(20,184,166,0.2)")}>{user.role.name}</span>}
+                {user?.school?.name && <span style={pill("#2563EB", "#e0f2fe")}>{user.school.name}</span>}
               </Space>
             </div>
             {!screens.xs && (

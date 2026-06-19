@@ -208,10 +208,10 @@ const AttendanceDashboard = () => {
   const QUICK_ACTIONS = [
     { icon: <EditOutlined />,    label: "Mark Students",  color: "var(--primary)", path: "/dashboard/schooladmin/attendance/students" },
     { icon: <TeamOutlined />,    label: "Mark Teachers",  color: "#0891b2",        path: "/dashboard/schooladmin/attendance/teachers" },
-    { icon: <UserOutlined />,    label: "Mark Staff",     color: "#D4922A",        path: "/dashboard/schooladmin/attendance/staff"    },
-    { icon: <CalendarOutlined />,label: "Leave Requests", color: "#9B87B8",        path: "/dashboard/schooladmin/attendance/leave"    },
-    { icon: <FileTextOutlined />,label: "Reports",        color: "#5BA89A",        path: "/dashboard/schooladmin/attendance/reports"  },
-    { icon: <BarChartOutlined />,label: "Analytics",      color: "#D4922A",        path: "/dashboard/schooladmin/attendance/analytics"},
+    { icon: <UserOutlined />,    label: "Mark Staff",     color: "#F59E0B",        path: "/dashboard/schooladmin/attendance/staff"    },
+    { icon: <CalendarOutlined />,label: "Leave Requests", color: "#14B8A6",        path: "/dashboard/schooladmin/attendance/leave"    },
+    { icon: <FileTextOutlined />,label: "Reports",        color: "#22C55E",        path: "/dashboard/schooladmin/attendance/reports"  },
+    { icon: <BarChartOutlined />,label: "Analytics",      color: "#F59E0B",        path: "/dashboard/schooladmin/attendance/analytics"},
   ];
 
   /* ── Low attendance table columns ── */
@@ -235,7 +235,7 @@ const AttendanceDashboard = () => {
             <Progress
               percent={pct}
               size="small"
-              strokeColor={pct < 60 ? "#D96B7A" : "#D4922A"}
+              strokeColor={pct < 60 ? "#EF4444" : "#F59E0B"}
               trailColor="var(--border-muted)"
               showInfo={false}
               style={{ flex: 1, minWidth: 60 }}
@@ -244,7 +244,7 @@ const AttendanceDashboard = () => {
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: pct < 60 ? "#D96B7A" : "#D4922A",
+                color: pct < 60 ? "#EF4444" : "#F59E0B",
                 minWidth: 36,
               }}
             >
@@ -257,7 +257,7 @@ const AttendanceDashboard = () => {
     {
       title: "Absences",
       render: (_, r) => (
-        <span style={{ color: "#D96B7A", fontWeight: 600 }}>
+        <span style={{ color: "#EF4444", fontWeight: 600 }}>
           {r.statusBreakdown?.absent ?? "—"}
         </span>
       ),
@@ -327,7 +327,7 @@ const AttendanceDashboard = () => {
             icon={<CheckCircleOutlined />}
             label="Present Today"
             value={presentToday}
-            color="#5BA89A"
+            color="#22C55E"
             sub={
               totalStudents > 0
                 ? Math.round((presentToday / totalStudents) * 100)
@@ -338,13 +338,13 @@ const AttendanceDashboard = () => {
             icon={<CloseCircleOutlined />}
             label="Absent Today"
             value={absentToday}
-            color="#D96B7A"
+            color="#EF4444"
           />
           <KpiCard
             icon={<ClockCircleOutlined />}
             label="Late Today"
             value={lateToday}
-            color="#D4922A"
+            color="#F59E0B"
           />
           <KpiCard
             icon={<CalendarOutlined />}
@@ -461,19 +461,19 @@ const AttendanceDashboard = () => {
                   <Bar
                     dataKey="present"
                     name="Present"
-                    fill="#5BA89A"
+                    fill="#22C55E"
                     radius={[3, 3, 0, 0]}
                   />
                   <Bar
                     dataKey="absent"
                     name="Absent"
-                    fill="#D96B7A"
+                    fill="#EF4444"
                     radius={[3, 3, 0, 0]}
                   />
                   <Bar
                     dataKey="late"
                     name="Late"
-                    fill="#D4922A"
+                    fill="#F59E0B"
                     radius={[3, 3, 0, 0]}
                   />
                 </BarChart>
@@ -520,7 +520,7 @@ const AttendanceDashboard = () => {
                 gap: 6,
               }}
             >
-              <WarningOutlined style={{ color: "#D4922A" }} />
+              <WarningOutlined style={{ color: "#F59E0B" }} />
               Low Attendance
             </div>
             <Button
@@ -549,7 +549,7 @@ const AttendanceDashboard = () => {
           ) : (
             <div style={{ padding: "24px 0", textAlign: "center" }}>
               <CheckCircleOutlined
-                style={{ fontSize: 32, color: "#5BA89A", marginBottom: 8 }}
+                style={{ fontSize: 32, color: "#22C55E", marginBottom: 8 }}
               />
               <div
                 style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}

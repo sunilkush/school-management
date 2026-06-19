@@ -43,7 +43,7 @@ const SummaryCards = ({ summary }) => {
       percentage: Math.abs(Math.round(dynamic?.totalTeachers?.growth || 0)),
       trend: (dynamic?.totalTeachers?.growth || 0) < 0 ? "decrease" : "increase",
       icon: SolutionOutlined,
-      accent: "#9B87B8",
+      accent: "#14B8A6",
       accentBg: "rgba(155,135,184,0.08)",
       desc: "active staff",
     },
@@ -53,7 +53,7 @@ const SummaryCards = ({ summary }) => {
       percentage: Math.abs(Math.round(dynamic?.totalIncome?.growth || 0)),
       trend: (dynamic?.totalIncome?.growth || 0) < 0 ? "decrease" : "increase",
       icon: DollarOutlined,
-      accent: "#D96B7A",
+      accent: "#EF4444",
       accentBg: "rgba(217,107,122,0.08)",
       desc: "revenue this month",
     },
@@ -70,7 +70,7 @@ const SummaryCards = ({ summary }) => {
         {cardData.map((item, i) => {
           const isDown = item.trend === "decrease";
           const Icon = item.icon;
-          const trendColor = isDown ? "#D96B7A" : "#0ea472";
+          const trendColor = isDown ? "#EF4444" : "#0ea472";
           const trendBg = isDown ? "rgba(217,107,122,0.08)" : "rgba(14,164,114,0.08)";
 
           return (

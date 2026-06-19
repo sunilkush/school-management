@@ -33,10 +33,10 @@ import {
 
 /* ── Status config ───────────────────────────────────────────────── */
 const STATUS_OPTIONS = [
-  { value: "present", label: "P",  fullLabel: "Present",  color: "#5BA89A" },
-  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#D96B7A" },
-  { value: "late",    label: "L",  fullLabel: "Late",     color: "#D4922A" },
-  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "#D4922A" },
+  { value: "present", label: "P",  fullLabel: "Present",  color: "#22C55E" },
+  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#EF4444" },
+  { value: "late",    label: "L",  fullLabel: "Late",     color: "#F59E0B" },
+  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "#F59E0B" },
   { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "#0891b2" },
 ];
 
@@ -253,7 +253,7 @@ const TeacherAttendance = () => {
               />
             </div>
             {working && (
-              <div style={{ fontSize: 11, color: "#5BA89A", fontWeight: 600 }}>
+              <div style={{ fontSize: 11, color: "#22C55E", fontWeight: 600 }}>
                 {working} worked
               </div>
             )}
@@ -350,10 +350,10 @@ const TeacherAttendance = () => {
       <div style={statGrid(120)}>
         {[
           { key: "total",   label: "Total",    color: "var(--primary)" },
-          { key: "marked",  label: "Marked",   color: "#9B87B8"        },
-          { key: "present", label: "Present",  color: "#5BA89A"        },
-          { key: "absent",  label: "Absent",   color: "#D96B7A"        },
-          { key: "late",    label: "Late",     color: "#D4922A"        },
+          { key: "marked",  label: "Marked",   color: "#14B8A6"        },
+          { key: "present", label: "Present",  color: "#22C55E"        },
+          { key: "absent",  label: "Absent",   color: "#EF4444"        },
+          { key: "late",    label: "Late",     color: "#F59E0B"        },
         ].map(({ key, label, color }) => (
           <div
             key={key}
@@ -409,11 +409,11 @@ const TeacherAttendance = () => {
                 ? Math.round((summary.present / summary.total) * 100)
                 : 0
             }
-            strokeColor="#5BA89A"
+            strokeColor="#22C55E"
             trailColor="var(--border-muted)"
             size="small"
             format={(p) => (
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#5BA89A" }}>{p}%</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#22C55E" }}>{p}%</span>
             )}
           />
         </div>

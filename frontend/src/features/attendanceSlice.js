@@ -93,6 +93,91 @@ export const updateAttendanceRecord = createAsyncThunk(
   }
 );
 
+/* ── Self Attendance (GPS) ── */
+export const fetchSelfStatus = createAsyncThunk(
+  "attendance/fetchSelfStatus",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/attendance/self/status");
+      return res.data?.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.message || "Failed");
+    }
+  }
+);
+
+export const selfCheckIn = createAsyncThunk(
+  "attendance/selfCheckIn",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/attendance/self/check-in", payload);
+      return res.data?.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.message || "Check-in failed");
+    }
+  }
+);
+
+export const selfCheckOut = createAsyncThunk(
+  "attendance/selfCheckOut",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/attendance/self/check-out", payload);
+      return res.data?.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.message || "Check-out failed");
+    }
+  }
+);
+
+export const fetchSelfHistory = createAsyncThunk(
+  "attendance/fetchSelfHistory",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/attendance/self/history", { params });
+      return res.data?.data || [];
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.message || "Failed");
+    }
+  }
+);
+
+export const fetchGeofenceSettings = createAsyncThunk(
+  "attendance/fetchGeofenceSettings",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/attendance/self/geofence");
+      return res.data?.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.message || "Failed");
+    }
+  }
+);
+
+export const updateGeofenceSettings = createAsyncThunk(
+  "attendance/updateGeofenceSettings",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put("/attendance/self/geofence", payload);
+      return res.data?.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.message || "Failed");
+    }
+  }
+);
+
+export const fetchLiveDashboard = createAsyncThunk(
+  "attendance/fetchLiveDashboard",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/attendance/self/live-dashboard");
+      return res.data?.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.message || "Failed");
+    }
+  }
+);
+
 export const deleteAttendanceRecord = createAsyncThunk(
   "attendance/deleteAttendanceRecord",
   async (id, { rejectWithValue }) => {
@@ -119,6 +204,11 @@ const attendanceSlice = createSlice({
     reportLoading: false,
     error: null,
     successMessage: null,
+    selfStatus: null,
+    selfHistory: [],
+    selfLoading: false,
+    geofenceSettings: null,
+    liveDashboard: null,
   },
   reducers: {
     setAttendanceFilters: (state, action) => {
@@ -210,6 +300,45 @@ const attendanceSlice = createSlice({
       })
       .addCase(deleteAttendanceRecord.fulfilled, (state, action) => {
         state.list = state.list.filter((item) => item._id !== action.payload);
+      })
+      .addCase(fetchSelfStatus.pending, (state) => { state.selfLoading = true; })
+      .addCase(fetchSelfStatus.fulfilled, (state, action) => {
+        state.selfLoading = false;
+        state.selfStatus = action.payload?.record;
+        state.geofenceSettings = action.payload?.school;
+      })
+      .addCase(fetchSelfStatus.rejected, (state) => { state.selfLoading = false; })
+      .addCase(selfCheckIn.pending, (state) => { state.selfLoading = true; state.error = null; })
+      .addCase(selfCheckIn.fulfilled, (state, action) => {
+        state.selfLoading = false;
+        state.error = null;
+        state.selfStatus = action.payload;
+      })
+      .addCase(selfCheckIn.rejected, (state, action) => {
+        state.selfLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(selfCheckOut.pending, (state) => { state.selfLoading = true; state.error = null; })
+      .addCase(selfCheckOut.fulfilled, (state, action) => {
+        state.selfLoading = false;
+        state.error = null;
+        state.selfStatus = action.payload?.record;
+      })
+      .addCase(selfCheckOut.rejected, (state, action) => {
+        state.selfLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchSelfHistory.fulfilled, (state, action) => {
+        state.selfHistory = action.payload;
+      })
+      .addCase(fetchGeofenceSettings.fulfilled, (state, action) => {
+        state.geofenceSettings = action.payload;
+      })
+      .addCase(updateGeofenceSettings.fulfilled, (state, action) => {
+        state.geofenceSettings = action.payload;
+      })
+      .addCase(fetchLiveDashboard.fulfilled, (state, action) => {
+        state.liveDashboard = action.payload;
       });
   },
 });

@@ -43,14 +43,14 @@ const { Option } = Select;
 
 /* ─── Avatar colour palette ─── */
 const AV_COLORS = [
-  { bg: "#D4E9F7", color: "#2E6A9A" },
-  { bg: "#E6D9F3", color: "#6B4F96" },
-  { bg: "#D4F0E8", color: "#2E7A6E" },
-  { bg: "#FDDDE4", color: "#9E3A4A" },
-  { bg: "#FDF2D6", color: "#8A5E10" },
-  { bg: "#D4E9F7", color: "#2E6A9A" },
-  { bg: "#E6D9F3", color: "#6B4F96" },
-  { bg: "#D4F0E8", color: "#2E7A6E" },
+  { bg: "#DBEAFE", color: "#2E6A9A" },
+  { bg: "#EDE9FE", color: "#6D28D9" },
+  { bg: "#DCFCE7", color: "#15803D" },
+  { bg: "#FEE2E2", color: "#DC2626" },
+  { bg: "#FEF3C7", color: "#B45309" },
+  { bg: "#DBEAFE", color: "#2E6A9A" },
+  { bg: "#EDE9FE", color: "#6D28D9" },
+  { bg: "#DCFCE7", color: "#15803D" },
 ];
 
 function initials(name = "") {
@@ -62,14 +62,14 @@ function StatusBadge({ isActive }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
-      background: isActive ? "rgba(184,224,210,0.22)" : "rgba(255,202,212,0.22)",
-      color: isActive ? "#2E7A6E" : "#9E3A4A",
-      border: `1px solid ${isActive ? "rgba(184,224,210,0.5)" : "rgba(255,202,212,0.5)"}`,
+      background: isActive ? "rgba(220,252,231,0.22)" : "rgba(254,226,226,0.22)",
+      color: isActive ? "#15803D" : "#DC2626",
+      border: `1px solid ${isActive ? "rgba(220,252,231,0.5)" : "rgba(254,226,226,0.5)"}`,
       borderRadius: 20, padding: "3px 11px", fontSize: 12, fontWeight: 500,
     }}>
       <span style={{
         width: 6, height: 6, borderRadius: "50%",
-        background: isActive ? "#5BA89A" : "#D96B7A",
+        background: isActive ? "#22C55E" : "#EF4444",
         display: "inline-block",
       }} />
       {isActive ? "Active" : "Inactive"}
@@ -86,7 +86,7 @@ function StatCard({ label, value, icon, accentColor }) {
       style={{
         borderRadius: 16,
         borderTop: `3px solid ${accentColor}`,
-        boxShadow: hovered ? "0 8px 24px rgba(91,158,201,0.15)" : "0 2px 12px rgba(91,158,201,0.07)",
+        boxShadow: hovered ? "0 8px 24px rgba(37,99,235,0.15)" : "0 2px 12px rgba(37,99,235,0.07)",
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
         transition: "all 0.2s ease",
         cursor: "default",
@@ -235,8 +235,8 @@ const Admins = () => {
       dataIndex: ["role", "name"],
       render: (role) => (
         <span style={{
-          background: "rgba(205,180,219,0.2)", color: "#6B4F96",
-          border: "1px solid rgba(205,180,219,0.5)",
+          background: "rgba(20,184,166,0.2)", color: "#6D28D9",
+          border: "1px solid rgba(20,184,166,0.5)",
           borderRadius: 6, padding: "3px 10px",
           fontSize: 12, fontWeight: 500,
         }}>
@@ -275,14 +275,14 @@ const Admins = () => {
             fontSize: 12,
             ...(record.isActive
               ? {
-                  background: "rgba(255,202,212,0.2)",
-                  borderColor: "rgba(255,202,212,0.5)",
-                  color: "#9E3A4A",
+                  background: "rgba(254,226,226,0.2)",
+                  borderColor: "rgba(254,226,226,0.5)",
+                  color: "#DC2626",
                 }
               : {
-                  background: "rgba(184,224,210,0.2)",
-                  borderColor: "rgba(184,224,210,0.5)",
-                  color: "#2E7A6E",
+                  background: "rgba(220,252,231,0.2)",
+                  borderColor: "rgba(220,252,231,0.5)",
+                  color: "#15803D",
                 }),
           }}
           icon={record.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
@@ -297,24 +297,24 @@ const Admins = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: "#5B9EC9",
+          colorPrimary: "#2563EB",
           borderRadius: 12,
           fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
         },
       }}
     >
-      <Layout style={{ background: "#F7F8FC", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+      <Layout style={{ background: "#F8FAFC", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* ── Page Header ── */}
         <div style={{
           background: "#ffffff",
-          borderBottom: "1px solid rgba(167,199,231,0.3)",
+          borderBottom: "1px solid rgba(219,234,254,0.3)",
           padding: "20px 32px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div>
-            <div style={{ color: "#1E2A3A", fontSize: 18, fontWeight: 700 }}>School Admin Management</div>
-            <div style={{ color: "#8A94A6", fontSize: 12, marginTop: 2 }}>
+            <div style={{ color: "#0F172A", fontSize: 18, fontWeight: 700 }}>School Admin Management</div>
+            <div style={{ color: "#94A3B8", fontSize: 12, marginTop: 2 }}>
               Manage and monitor all school administrators
             </div>
           </div>
@@ -323,7 +323,7 @@ const Admins = () => {
             icon={<PlusOutlined />}
             onClick={() => setIsModalOpen(true)}
             style={{
-              background: "linear-gradient(135deg, #5B9EC9, #9B87B8)",
+              background: "linear-gradient(135deg, #2563EB, #14B8A6)",
               borderColor: "transparent",
               borderRadius: 10,
               fontWeight: 600,
@@ -344,18 +344,18 @@ const Admins = () => {
             gap: 16,
             marginBottom: 24,
           }}>
-            <StatCard label="Total Admins"   value={totalAdmins} icon={<TeamOutlined />}              accentColor="#9B87B8" />
-            <StatCard label="Active"          value={activeCount} icon={<CheckCircleOutlined />}        accentColor="#5BA89A" />
-            <StatCard label="Inactive"        value={inactiveCount} icon={<StopOutlined />}             accentColor="#D96B7A" />
-            <StatCard label="Schools Covered" value={schoolCount} icon={<SafetyCertificateOutlined />}  accentColor="#5B9EC9" />
+            <StatCard label="Total Admins"   value={totalAdmins} icon={<TeamOutlined />}              accentColor="#14B8A6" />
+            <StatCard label="Active"          value={activeCount} icon={<CheckCircleOutlined />}        accentColor="#22C55E" />
+            <StatCard label="Inactive"        value={inactiveCount} icon={<StopOutlined />}             accentColor="#EF4444" />
+            <StatCard label="Schools Covered" value={schoolCount} icon={<SafetyCertificateOutlined />}  accentColor="#2563EB" />
           </div>
 
           {/* ── Error ── */}
           {error && (
             <div style={{
-              background: "rgba(255,202,212,0.2)", border: "1px solid rgba(255,202,212,0.5)",
+              background: "rgba(254,226,226,0.2)", border: "1px solid rgba(254,226,226,0.5)",
               borderRadius: 10, padding: "10px 16px",
-              color: "#9E3A4A", fontSize: 13, marginBottom: 16,
+              color: "#DC2626", fontSize: 13, marginBottom: 16,
             }}>
               {error}
             </div>
@@ -417,7 +417,7 @@ const Admins = () => {
                   background: index % 2 === 0 ? "#fff" : "#fafafa",
                   transition: "background 0.15s",
                 },
-                onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(167,199,231,0.08)"),
+                onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(219,234,254,0.08)"),
                 onMouseLeave: (e) => (e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"),
               })}
               style={{ borderRadius: 0 }}
@@ -431,10 +431,10 @@ const Admins = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: 10,
-                background: "rgba(205,180,219,0.2)", display: "flex",
+                background: "rgba(20,184,166,0.2)", display: "flex",
                 alignItems: "center", justifyContent: "center",
               }}>
-                <UserSwitchOutlined style={{ color: "#9B87B8", fontSize: 16 }} />
+                <UserSwitchOutlined style={{ color: "#14B8A6", fontSize: 16 }} />
               </div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>Register New School Admin</div>

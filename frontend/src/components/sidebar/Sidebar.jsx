@@ -18,19 +18,19 @@ const { Text } = Typography;
    signature pastel accent for its sidebar.
 ───────────────────────────────────────── */
 const ROLE_COLORS = {
-  "super admin":    { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
-  "school admin":   { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
-  principal:        { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
-  "vice principal": { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
-  teacher:          { accent: "#5BA89A", light: "#B8E0D2", bg: "rgba(184,224,210,0.12)", text: "#2E7A6E" },
-  student:          { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
-  parent:           { accent: "#D4922A", light: "#FDE2A7", bg: "rgba(253,226,167,0.12)", text: "#8A5E10" },
-  accountant:       { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
-  librarian:        { accent: "#9B87B8", light: "#CDB4DB", bg: "rgba(205,180,219,0.12)", text: "#6B4F96" },
-  "hostel warden":  { accent: "#5BA89A", light: "#B8E0D2", bg: "rgba(184,224,210,0.12)", text: "#2E7A6E" },
-  "transport manager": { accent: "#D4922A", light: "#FDE2A7", bg: "rgba(253,226,167,0.12)", text: "#8A5E10" },
-  "exam coordinator":  { accent: "#D96B7A", light: "#FFCAD4", bg: "rgba(255,202,212,0.12)", text: "#9E3A4A" },
-  default:          { accent: "#5B9EC9", light: "#A7C7E7", bg: "rgba(167,199,231,0.12)", text: "#2E6A9A" },
+  "super admin":    { accent: "#2563EB", light: "#DBEAFE", bg: "rgba(219,234,254,0.12)", text: "#2E6A9A" },
+  "school admin":   { accent: "#14B8A6", light: "rgba(20,184,166,0.15)", bg: "rgba(20,184,166,0.12)", text: "#6D28D9" },
+  principal:        { accent: "#14B8A6", light: "rgba(20,184,166,0.15)", bg: "rgba(20,184,166,0.12)", text: "#6D28D9" },
+  "vice principal": { accent: "#14B8A6", light: "rgba(20,184,166,0.15)", bg: "rgba(20,184,166,0.12)", text: "#6D28D9" },
+  teacher:          { accent: "#22C55E", light: "#DCFCE7", bg: "rgba(220,252,231,0.12)", text: "#15803D" },
+  student:          { accent: "#2563EB", light: "#DBEAFE", bg: "rgba(219,234,254,0.12)", text: "#2E6A9A" },
+  parent:           { accent: "#F59E0B", light: "#FEF3C7", bg: "rgba(254,243,199,0.12)", text: "#B45309" },
+  accountant:       { accent: "#2563EB", light: "#DBEAFE", bg: "rgba(219,234,254,0.12)", text: "#2E6A9A" },
+  librarian:        { accent: "#14B8A6", light: "rgba(20,184,166,0.15)", bg: "rgba(20,184,166,0.12)", text: "#6D28D9" },
+  "hostel warden":  { accent: "#22C55E", light: "#DCFCE7", bg: "rgba(220,252,231,0.12)", text: "#15803D" },
+  "transport manager": { accent: "#F59E0B", light: "#FEF3C7", bg: "rgba(254,243,199,0.12)", text: "#B45309" },
+  "exam coordinator":  { accent: "#EF4444", light: "#FEE2E2", bg: "rgba(254,226,226,0.12)", text: "#DC2626" },
+  default:          { accent: "#2563EB", light: "#DBEAFE", bg: "rgba(219,234,254,0.12)", text: "#2E6A9A" },
 };
 
 const getRoleColor = (role) =>
@@ -41,7 +41,7 @@ const getRoleColor = (role) =>
 ───────────────────────────────────────── */
 const tokens = (isDark, roleColor) => ({
   bg:           isDark ? "#1A2235" : "#ffffff",
-  border:       isDark ? "#2A3550" : "#E4EAF6",
+  border:       isDark ? "#2A3550" : "#E2E8F0",
   headerBg:     isDark
     ? `linear-gradient(135deg, #1E2A3E, #232D44)`
     : `linear-gradient(135deg, ${roleColor.bg.replace("0.12)", "0.22)")}, rgba(255,255,255,0) 80%)`,
@@ -50,9 +50,9 @@ const tokens = (isDark, roleColor) => ({
   accent:       roleColor.accent,
   accentLight:  roleColor.light,
   accentText:   roleColor.text,
-  textPrimary:  isDark ? "#E8EDF7" : "#2E2E2E",
-  textSecondary:isDark ? "#6B7890" : "#8A94A6",
-  scrollbarThumb: isDark ? "#2A3550" : "#D4E9F7",
+  textPrimary:  isDark ? "#E8EDF7" : "#0F172A",
+  textSecondary:isDark ? "#64748B" : "#94A3B8",
+  scrollbarThumb: isDark ? "#2A3550" : "#DBEAFE",
   shimmer:      isDark ? "#1E2A3E" : "#F2F6FD",
   navActiveBg:  isDark
     ? `rgba(${roleColor.accent.replace("#","").match(/.{2}/g).map(h=>parseInt(h,16)).join(",")}, 0.15)`
@@ -211,7 +211,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
           boxShadow: isOpen
             ? isDark
               ? "4px 0 32px rgba(0,0,0,0.45)"
-              : `4px 0 32px rgba(91,158,201,0.10)`
+              : `4px 0 32px rgba(37,99,235,0.10)`
             : "none",
         }}
       >
@@ -232,7 +232,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <Badge
               dot
-              color="#5BA89A"
+              color="#22C55E"
               offset={[-2, 2]}
               style={{ boxShadow: `0 0 0 2px ${t.bg}` }}
             >
@@ -354,7 +354,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: "#5BA89A",
+              background: "#22C55E",
               flexShrink: 0,
               boxShadow: "0 0 0 3px rgba(91,168,154,0.2)",
               animation: "onlinePulse 3s ease-in-out infinite",

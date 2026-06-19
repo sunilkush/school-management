@@ -23,13 +23,13 @@ const TABLE_CLS = "ai-tbl";
 
 /* ── Status config ───────────────────────────────────────────────── */
 const STATUS_MAP = {
-  new:             { color: "#5B9EC9", label: "New",            order: 0 },
-  contacted:       { color: "#9B87B8", label: "Contacted",      order: 1 },
-  visit_scheduled: { color: "#D4922A", label: "Visit Scheduled",order: 2 },
+  new:             { color: "#2563EB", label: "New",            order: 0 },
+  contacted:       { color: "#14B8A6", label: "Contacted",      order: 1 },
+  visit_scheduled: { color: "#F59E0B", label: "Visit Scheduled",order: 2 },
   docs_submitted:  { color: "#0891b2", label: "Docs Submitted", order: 3 },
-  approved:        { color: "#5BA89A", label: "Approved",       order: 4 },
-  enrolled:        { color: "#5BA89A", label: "Enrolled",       order: 5 },
-  rejected:        { color: "#D96B7A", label: "Rejected",       order: 6 },
+  approved:        { color: "#22C55E", label: "Approved",       order: 4 },
+  enrolled:        { color: "#22C55E", label: "Enrolled",       order: 5 },
+  rejected:        { color: "#EF4444", label: "Rejected",       order: 6 },
   waitlist:        { color: "#6b7280", label: "Waitlist",       order: 7 },
 };
 
@@ -314,10 +314,10 @@ const AdmissionInquiry = () => {
 
       {/* ── Stats ── */}
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard label="Total" value={Object.values(stats).reduce((a, b) => a + b, 0)} color="#9B87B8" />
-        <StatCard label="New"       value={stats.new}       color="#5B9EC9" />
-        <StatCard label="Approved"  value={stats.approved}  color="#5BA89A" />
-        <StatCard label="Enrolled"  value={stats.enrolled}  color="#5BA89A" />
+        <StatCard label="Total" value={Object.values(stats).reduce((a, b) => a + b, 0)} color="#14B8A6" />
+        <StatCard label="New"       value={stats.new}       color="#2563EB" />
+        <StatCard label="Approved"  value={stats.approved}  color="#22C55E" />
+        <StatCard label="Enrolled"  value={stats.enrolled}  color="#22C55E" />
       </div>
 
       {/* ── Table panel ── */}

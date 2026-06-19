@@ -48,25 +48,25 @@ const { Option } = Select;
 
 // ─── Color tokens ──────────────────────────────────────────────────────────────
 const COLOR = {
-  primary: "#5B9EC9",
-  primaryLight: "#D4E9F7",
-  primaryMid: "#5B9EC9",
-  primaryBorder: "#A7C7E7",
+  primary: "#2563EB",
+  primaryLight: "#DBEAFE",
+  primaryMid: "#2563EB",
+  primaryBorder: "#DBEAFE",
   surface: "#ffffff",
-  bg: "#F7F8FC",
-  border: "rgba(167,199,231,0.35)",
-  textPrimary: "#1E2A3A",
-  textSecondary: "#6B7890",
-  textMuted: "#A8B8CC",
-  danger: "#D96B7A",
-  dangerLight: "rgba(255,202,212,0.2)",
-  dangerBorder: "rgba(255,202,212,0.5)",
-  gold: "#D4922A",
-  goldLight: "rgba(253,226,167,0.25)",
-  blue: "#5B9EC9",
-  blueLight: "#D4E9F7",
-  purple: "#9B87B8",
-  purpleLight: "rgba(205,180,219,0.2)",
+  bg: "#F8FAFC",
+  border: "rgba(219,234,254,0.35)",
+  textPrimary: "#0F172A",
+  textSecondary: "#64748B",
+  textMuted: "#94A3B8",
+  danger: "#EF4444",
+  dangerLight: "rgba(254,226,226,0.2)",
+  dangerBorder: "rgba(254,226,226,0.5)",
+  gold: "#F59E0B",
+  goldLight: "rgba(254,243,199,0.25)",
+  blue: "#2563EB",
+  blueLight: "#DBEAFE",
+  purple: "#14B8A6",
+  purpleLight: "rgba(20,184,166,0.2)",
 };
 
 // ─── SchoolCard ────────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ const SchoolCard = ({ school, onDelete, onEdit }) => {
         },
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "0 8px 24px rgba(91,158,201,0.12)";
+        e.currentTarget.style.boxShadow = "0 8px 24px rgba(37,99,235,0.12)";
         e.currentTarget.style.borderColor = COLOR.primaryBorder;
         e.currentTarget.style.transform = "translateY(-2px)";
       }}
@@ -229,7 +229,7 @@ const SchoolCard = ({ school, onDelete, onEdit }) => {
                     fontWeight: 500,
                     background: COLOR.blueLight,
                     color: COLOR.blue,
-                    border: "1px solid rgba(167,199,231,0.5)",
+                    border: "1px solid rgba(219,234,254,0.5)",
                     margin: 0,
                     padding: "1px 8px",
                   }}
@@ -512,7 +512,7 @@ const Schools = () => {
             fontWeight: 600,
             height: 40,
             paddingInline: 20,
-            boxShadow: "0 2px 8px rgba(91,158,201,0.2)",
+            boxShadow: "0 2px 8px rgba(37,99,235,0.2)",
           }}
         >
           Add School
@@ -534,17 +534,17 @@ const Schools = () => {
             title: "Active",
             value: activeSchools,
             icon: <CheckCircleFilled />,
-            color: "#5BA89A",
-            bg: "rgba(184,224,210,0.2)",
-            border: "rgba(184,224,210,0.5)",
+            color: "#22C55E",
+            bg: "rgba(220,252,231,0.2)",
+            border: "rgba(220,252,231,0.5)",
           },
           {
             title: "Inactive",
             value: inactiveSchools,
             icon: <CloseCircleFilled />,
-            color: "#D96B7A",
-            bg: "rgba(255,202,212,0.2)",
-            border: "rgba(255,202,212,0.5)",
+            color: "#EF4444",
+            bg: "rgba(254,226,226,0.2)",
+            border: "rgba(254,226,226,0.5)",
           },
           {
             title: "Board Types",
@@ -642,7 +642,7 @@ const Schools = () => {
           value={filterStatus}
           onChange={handleFilterStatus}
           style={{
-            background: "rgba(167,199,231,0.15)",
+            background: "rgba(219,234,254,0.15)",
             borderRadius: 10,
             padding: 3,
           }}

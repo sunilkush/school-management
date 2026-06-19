@@ -71,7 +71,7 @@ const MetricCard = ({ title, value, icon, bg, color, sub }) => (
     style={{
       borderRadius: 22,
       height: "100%",
-      boxShadow: "0 10px 30px rgba(91,158,201,0.08)",
+      boxShadow: "0 10px 30px rgba(37,99,235,0.08)",
       overflow: "hidden",
       position: "relative",
     }}
@@ -91,17 +91,17 @@ const MetricCard = ({ title, value, icon, bg, color, sub }) => (
 
     <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
       <div>
-        <Text style={{ color: "#6B7890", fontWeight: 600 }}>{title}</Text>
+        <Text style={{ color: "#64748B", fontWeight: 600 }}>{title}</Text>
         <Statistic
           value={value}
           valueStyle={{
             marginTop: 4,
-            color: "#1E2A3A",
+            color: "#0F172A",
             fontWeight: 800,
             fontSize: 26,
           }}
         />
-        {sub ? <Text style={{ color: "#A8B8CC", fontSize: 12 }}>{sub}</Text> : null}
+        {sub ? <Text style={{ color: "#94A3B8", fontSize: 12 }}>{sub}</Text> : null}
       </div>
 
       <div
@@ -262,17 +262,17 @@ export default function PaymentsPage() {
         minHeight: "100vh",
         padding: 24,
         background:
-          "#F7F8FC",
+          "#F8FAFC",
       }}
     >
       <div
         style={{
           background: "#ffffff",
-          border: "1px solid rgba(167,199,231,0.3)",
+          border: "1px solid rgba(219,234,254,0.3)",
           borderRadius: 20,
           padding: 22,
           marginBottom: 18,
-          boxShadow: "0 12px 36px rgba(91,158,201,0.08)",
+          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
         }}
       >
         <Row gutter={[16, 16]} justify="space-between" align="middle">
@@ -283,8 +283,8 @@ export default function PaymentsPage() {
                   width: 54,
                   height: 54,
                   borderRadius: 18,
-                  background: "rgba(184,224,210,0.25)",
-                  color: "#5BA89A",
+                  background: "rgba(220,252,231,0.25)",
+                  color: "#22C55E",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -295,10 +295,10 @@ export default function PaymentsPage() {
               </div>
 
               <div>
-                <Title level={3} style={{ margin: 0, color: "#1E2A3A" }}>
+                <Title level={3} style={{ margin: 0, color: "#0F172A" }}>
                   Subscription Payments
                 </Title>
-                <Text style={{ color: "#6B7890" }}>
+                <Text style={{ color: "#64748B" }}>
                   Super Admin billing, invoices aur manual payment tracking.
                 </Text>
               </div>
@@ -343,8 +343,8 @@ export default function PaymentsPage() {
             title="Total Invoiced"
             value={formatCurrency(stats.totalInvoiced)}
             icon={<FileTextOutlined />}
-            bg="rgba(167,199,231,0.2)"
-            color="#5B9EC9"
+            bg="rgba(219,234,254,0.2)"
+            color="#2563EB"
             sub="All generated invoices"
           />
         </Col>
@@ -354,8 +354,8 @@ export default function PaymentsPage() {
             title="Total Collected"
             value={formatCurrency(stats.totalCollected)}
             icon={<CheckCircleOutlined />}
-            bg="rgba(184,224,210,0.2)"
-            color="#5BA89A"
+            bg="rgba(220,252,231,0.2)"
+            color="#22C55E"
             sub="Successful payments"
           />
         </Col>
@@ -365,8 +365,8 @@ export default function PaymentsPage() {
             title="Pending Invoices"
             value={stats.pendingInvoices}
             icon={<ClockCircleOutlined />}
-            bg="rgba(253,226,167,0.25)"
-            color="#D4922A"
+            bg="rgba(254,243,199,0.25)"
+            color="#F59E0B"
             sub="Unpaid + overdue"
           />
         </Col>
@@ -376,8 +376,8 @@ export default function PaymentsPage() {
             title="Payment Records"
             value={stats.totalPayments}
             icon={<CreditCardOutlined />}
-            bg="rgba(205,180,219,0.2)"
-            color="#9B87B8"
+            bg="rgba(20,184,166,0.2)"
+            color="#14B8A6"
             sub="Total payment entries"
           />
         </Col>
@@ -388,12 +388,12 @@ export default function PaymentsPage() {
         style={{
           borderRadius: 24,
           marginBottom: 18,
-          boxShadow: "0 12px 36px rgba(91,158,201,0.08)",
+          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
         }}
         bodyStyle={{ padding: 18 }}
         title={
           <Space>
-            <FileTextOutlined style={{ color: "#5B9EC9" }} />
+            <FileTextOutlined style={{ color: "#2563EB" }} />
             <span>Invoices</span>
             <Tag color="blue">{filteredInvoices.length}</Tag>
           </Space>
@@ -404,7 +404,7 @@ export default function PaymentsPage() {
             <Space wrap>
               <Input
                 allowClear
-                prefix={<SearchOutlined style={{ color: "#A8B8CC" }} />}
+                prefix={<SearchOutlined style={{ color: "#94A3B8" }} />}
                 placeholder="Search invoice or school"
                 value={invoiceSearch}
                 onChange={(e) => setInvoiceSearch(e.target.value)}
@@ -479,7 +479,7 @@ export default function PaymentsPage() {
               dataIndex: "dueDate",
               render: (date) =>
                 date ? (
-                  <Text style={{ color: "#6B7890" }}>
+                  <Text style={{ color: "#64748B" }}>
                     {new Date(date).toLocaleDateString("en-IN", {
                       day: "2-digit",
                       month: "short",
@@ -553,12 +553,12 @@ export default function PaymentsPage() {
         bordered={false}
         style={{
           borderRadius: 24,
-          boxShadow: "0 12px 36px rgba(91,158,201,0.08)",
+          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
         }}
         bodyStyle={{ padding: 18 }}
         title={
           <Space>
-            <CreditCardOutlined style={{ color: "#9B87B8" }} />
+            <CreditCardOutlined style={{ color: "#14B8A6" }} />
             <span>Payment History</span>
             <Tag color="purple">{filteredPayments.length}</Tag>
           </Space>
@@ -566,7 +566,7 @@ export default function PaymentsPage() {
       >
         <Input
           allowClear
-          prefix={<SearchOutlined style={{ color: "#A8B8CC" }} />}
+          prefix={<SearchOutlined style={{ color: "#94A3B8" }} />}
           placeholder="Search invoice, school or transaction ID"
           value={paymentSearch}
           onChange={(e) => setPaymentSearch(e.target.value)}
@@ -631,7 +631,7 @@ export default function PaymentsPage() {
       <Modal
         title={
           <Space>
-            <EyeOutlined style={{ color: "#5B9EC9" }} />
+            <EyeOutlined style={{ color: "#2563EB" }} />
             <span>Invoice Details</span>
           </Space>
         }
@@ -688,7 +688,7 @@ export default function PaymentsPage() {
       <Modal
         title={
           <Space>
-            <WalletOutlined style={{ color: "#5BA89A" }} />
+            <WalletOutlined style={{ color: "#22C55E" }} />
             <span>Manual Payment Entry</span>
           </Space>
         }

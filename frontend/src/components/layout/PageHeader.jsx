@@ -96,7 +96,7 @@ const PageHeader = ({
           position: "absolute",
           top: 0, left: 0,
           width: 180, height: "100%",
-          background: "linear-gradient(90deg, rgba(167,199,231,0.06), transparent)",
+          background: "linear-gradient(90deg, rgba(219,234,254,0.06), transparent)",
           pointerEvents: "none",
           borderRadius: "0 0 0 0",
         }}
@@ -122,11 +122,11 @@ const PageHeader = ({
                 width: isMobile ? 32 : 38,
                 height: isMobile ? 32 : 38,
                 borderRadius: 11,
-                background: "rgba(167,199,231,0.18)",
+                background: "rgba(219,234,254,0.18)",
                 color: "var(--primary)",
                 fontSize: isMobile ? 15 : 18,
                 flexShrink: 0,
-                boxShadow: "0 2px 6px rgba(91,158,201,0.12)",
+                boxShadow: "0 2px 6px rgba(37,99,235,0.12)",
               }}
             >
               {icon}

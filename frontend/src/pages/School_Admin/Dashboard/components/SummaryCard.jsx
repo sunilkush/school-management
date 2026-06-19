@@ -6,12 +6,12 @@ import { useTheme } from "../../../../context/ThemeContext";
 const { Text } = Typography;
 
 const colorMap = {
-  blue:   { accent: "#5B9EC9", bg: "rgba(167,199,231,0.20)", glow: "rgba(167,199,231,0.25)", bar: "#A7C7E7" },
-  purple: { accent: "#9B87B8", bg: "rgba(205,180,219,0.20)", glow: "rgba(205,180,219,0.25)", bar: "#CDB4DB" },
-  green:  { accent: "#5BA89A", bg: "rgba(184,224,210,0.22)", glow: "rgba(184,224,210,0.28)", bar: "#B8E0D2" },
-  orange: { accent: "#D4922A", bg: "rgba(253,226,167,0.30)", glow: "rgba(253,226,167,0.38)", bar: "#FDE2A7" },
-  teal:   { accent: "#5BA89A", bg: "rgba(184,224,210,0.22)", glow: "rgba(184,224,210,0.28)", bar: "#B8E0D2" },
-  pink:   { accent: "#D96B7A", bg: "rgba(255,202,212,0.22)", glow: "rgba(255,202,212,0.28)", bar: "#FFCAD4" },
+  blue:   { accent: "#2563EB", bg: "rgba(219,234,254,0.20)", glow: "rgba(219,234,254,0.25)", bar: "#DBEAFE" },
+  purple: { accent: "#14B8A6", bg: "rgba(20,184,166,0.20)", glow: "rgba(20,184,166,0.25)", bar: "rgba(20,184,166,0.15)" },
+  green:  { accent: "#22C55E", bg: "rgba(220,252,231,0.22)", glow: "rgba(220,252,231,0.28)", bar: "#DCFCE7" },
+  orange: { accent: "#F59E0B", bg: "rgba(254,243,199,0.30)", glow: "rgba(254,243,199,0.38)", bar: "#FEF3C7" },
+  teal:   { accent: "#22C55E", bg: "rgba(220,252,231,0.22)", glow: "rgba(220,252,231,0.28)", bar: "#DCFCE7" },
+  pink:   { accent: "#EF4444", bg: "rgba(254,226,226,0.22)", glow: "rgba(254,226,226,0.28)", bar: "#FEE2E2" },
 };
 
 const SummaryCard = ({
@@ -27,13 +27,13 @@ const SummaryCard = ({
   const isDecrease = trend.toLowerCase().includes("decrease");
 
   const cardBg  = isDark ? "#1A2235" : "#ffffff";
-  const border  = isDark ? "#2A3550" : "#E4EAF6";
-  const textPri = isDark ? "#E8EDF7" : "#2E2E2E";
-  const textSec = isDark ? "#6B7890" : "#8A94A6";
-  const trackBg = isDark ? "#243047" : "#EFF3FB";
+  const border  = isDark ? "#2A3550" : "#E2E8F0";
+  const textPri = isDark ? "#E8EDF7" : "#0F172A";
+  const textSec = isDark ? "#64748B" : "#94A3B8";
+  const trackBg = isDark ? "#243047" : "#F1F5F9";
 
-  const trendColor = isDecrease ? "#D96B7A" : "#5BA89A";
-  const trendBg    = isDecrease ? "rgba(255,202,212,0.20)" : "rgba(184,224,210,0.22)";
+  const trendColor = isDecrease ? "#EF4444" : "#22C55E";
+  const trendBg    = isDecrease ? "rgba(254,226,226,0.20)" : "rgba(220,252,231,0.22)";
 
   return (
     <div style={{
@@ -47,20 +47,20 @@ const SummaryCard = ({
       transition: "transform 0.22s ease, box-shadow 0.22s ease",
       boxShadow: isDark
         ? "0 2px 8px rgba(0,0,0,0.3)"
-        : "0 2px 8px rgba(91,158,201,0.07), 0 4px 20px rgba(91,158,201,0.04)",
+        : "0 2px 8px rgba(37,99,235,0.07), 0 4px 20px rgba(37,99,235,0.04)",
       cursor: "default",
     }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-3px)";
         e.currentTarget.style.boxShadow = isDark
           ? `0 12px 32px rgba(0,0,0,0.4)`
-          : `0 8px 28px rgba(91,158,201,0.14)`;
+          : `0 8px 28px rgba(37,99,235,0.14)`;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.boxShadow = isDark
           ? "0 2px 8px rgba(0,0,0,0.3)"
-          : "0 2px 8px rgba(91,158,201,0.07), 0 4px 20px rgba(91,158,201,0.04)";
+          : "0 2px 8px rgba(37,99,235,0.07), 0 4px 20px rgba(37,99,235,0.04)";
       }}
     >
       {/* Decorative glow orb */}

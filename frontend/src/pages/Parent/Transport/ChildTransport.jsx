@@ -73,7 +73,7 @@ const ChildTransport = () => {
             <Col xs={24} md={12}>
               <div style={sectionPanel}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                  <div style={iconWell("#9B87B8", 40)}><CarOutlined /></div>
+                  <div style={iconWell("#14B8A6", 40)}><CarOutlined /></div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Route Details</div>
                 </div>
                 <Descriptions column={1} size="small" bordered>
@@ -99,7 +99,7 @@ const ChildTransport = () => {
             <Col xs={24} md={12}>
               <div style={sectionPanel}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                  <div style={iconWell("#5B9EC9", 40)}><EnvironmentOutlined /></div>
+                  <div style={iconWell("#2563EB", 40)}><EnvironmentOutlined /></div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Vehicle Details</div>
                 </div>
                 <Descriptions column={1} size="small" bordered>

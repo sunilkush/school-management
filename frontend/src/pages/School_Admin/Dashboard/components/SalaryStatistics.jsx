@@ -13,7 +13,7 @@ const SalaryStatistics = ({ stats = [] }) => {
     ? stats
     : [
         { title: "Teaching", value: 0, color: "#1677ff" },
-        { title: "Administration", value: 0, color: "#9B87B8" },
+        { title: "Administration", value: 0, color: "#14B8A6" },
       ];
 
   const maxValue = Math.max(...dynamicStats.map((s) => s.value), 1);

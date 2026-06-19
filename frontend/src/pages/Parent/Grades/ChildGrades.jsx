@@ -12,7 +12,7 @@ import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#9B87B8", "#5BA89A", "#D96B7A", "#D4922A"];
+const STAT_COLORS = ["#14B8A6", "#22C55E", "#EF4444", "#F59E0B"];
 
 const ChildGrades = () => {
   const dispatch = useDispatch();
@@ -122,7 +122,7 @@ const ChildGrades = () => {
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
                     <Tooltip formatter={(v) => [`${v}%`, "Score"]} />
                     <Legend />
-                    <Bar dataKey="percentage" name="Score %" fill="#9B87B8" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="percentage" name="Score %" fill="#14B8A6" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -143,11 +143,11 @@ const ChildGrades = () => {
                 label: (
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 600 }}>{result.examId?.title || "Exam"}</span>
-                    <span style={pill(result.resultStatus === "PASS" ? "#5BA89A" : "#D96B7A", result.resultStatus === "PASS" ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)")}>
+                    <span style={pill(result.resultStatus === "PASS" ? "#22C55E" : "#EF4444", result.resultStatus === "PASS" ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
                       {result.resultStatus}
                     </span>
-                    <span style={pill("#9B87B8", "rgba(205,180,219,0.2)")}>{result.percentage}%</span>
-                    <span style={pill("#5B9EC9", "#e0f2fe")}>Grade {result.grade}</span>
+                    <span style={pill("#14B8A6", "rgba(20,184,166,0.2)")}>{result.percentage}%</span>
+                    <span style={pill("#2563EB", "#e0f2fe")}>Grade {result.grade}</span>
                   </div>
                 ),
                 children: (

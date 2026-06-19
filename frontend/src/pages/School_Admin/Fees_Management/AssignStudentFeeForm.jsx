@@ -536,7 +536,7 @@ const onFinish = async (values) => {
           bordered={false}
           style={{
             borderRadius: 18,
-            boxShadow: "0 10px 30px rgba(91, 158, 201, 0.06)",
+            boxShadow: "0 10px 30px rgba(37, 99, 235, 0.06)",
           }}
           bodyStyle={{ padding: 24 }}
         >
@@ -582,7 +582,7 @@ const onFinish = async (values) => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={6}>
-              <Card bordered={false} style={{ background: "#F7F8FC" }}>
+              <Card bordered={false} style={{ background: "#F8FAFC" }}>
                 <Statistic
                   title="Target Students"
                   value={targetStudentCount}
@@ -592,7 +592,7 @@ const onFinish = async (values) => {
             </Col>
 
             <Col xs={24} sm={12} lg={6}>
-              <Card bordered={false} style={{ background: "#F7F8FC" }}>
+              <Card bordered={false} style={{ background: "#F8FAFC" }}>
                 <Statistic
                   title="Selected Fees"
                   value={selectedFeeIds.length}
@@ -602,7 +602,7 @@ const onFinish = async (values) => {
             </Col>
 
             <Col xs={24} sm={12} lg={6}>
-              <Card bordered={false} style={{ background: "#F7F8FC" }}>
+              <Card bordered={false} style={{ background: "#F8FAFC" }}>
                 <Statistic
                   title="Default Total"
                   value={money(totalDefaultAmount)}
@@ -611,7 +611,7 @@ const onFinish = async (values) => {
             </Col>
 
             <Col xs={24} sm={12} lg={6}>
-              <Card bordered={false} style={{ background: "#F7F8FC" }}>
+              <Card bordered={false} style={{ background: "#F8FAFC" }}>
                 <Statistic title="Final Total" value={money(totalFinalAmount)} />
               </Card>
             </Col>
@@ -630,7 +630,7 @@ const onFinish = async (values) => {
               bordered={false}
               style={{
                 borderRadius: 18,
-                boxShadow: "0 10px 30px rgba(91, 158, 201, 0.06)",
+                boxShadow: "0 10px 30px rgba(37, 99, 235, 0.06)",
               }}
             >
               <Form.Item label="Assignment Mode">
@@ -757,7 +757,7 @@ const onFinish = async (values) => {
               bordered={false}
               style={{
                 borderRadius: 18,
-                boxShadow: "0 10px 30px rgba(91, 158, 201, 0.06)",
+                boxShadow: "0 10px 30px rgba(37, 99, 235, 0.06)",
               }}
             >
               {!effectiveClassId ? (

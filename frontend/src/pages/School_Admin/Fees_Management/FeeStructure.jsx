@@ -20,9 +20,9 @@ import {
 const { Option } = Select;
 
 const FREQ_STYLE = {
-  monthly:   { color: "#9B87B8", bg: "rgba(205,180,219,0.2)" },
-  quarterly: { color: "#5B9EC9", bg: "#e0f2fe" },
-  yearly:    { color: "#5BA89A", bg: "#d1fae5" },
+  monthly:   { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
+  quarterly: { color: "#2563EB", bg: "#e0f2fe" },
+  yearly:    { color: "#22C55E", bg: "#d1fae5" },
 };
 
 const FeeStructure = () => {
@@ -106,7 +106,7 @@ const FeeStructure = () => {
     {
       title: "Class",
       render: (r) => r.schoolClassId?.name
-        ? <span style={pill("#9B87B8", "rgba(205,180,219,0.2)")}>{r.schoolClassId.name}</span>
+        ? <span style={pill("#14B8A6", "rgba(20,184,166,0.2)")}>{r.schoolClassId.name}</span>
         : <span style={{ color: "var(--text-muted)" }}>—</span>,
     },
     {
@@ -121,7 +121,7 @@ const FeeStructure = () => {
       title: "Amount",
       dataIndex: "amount",
       render: (value) => (
-        <span style={{ fontWeight: 700, fontSize: 14, color: "#5BA89A" }}>
+        <span style={{ fontWeight: 700, fontSize: 14, color: "#22C55E" }}>
           ₹{Number(value || 0).toLocaleString("en-IN")}
         </span>
       ),
@@ -131,7 +131,7 @@ const FeeStructure = () => {
       dataIndex: "frequency",
       render: (v) => {
         if (!v) return <span style={{ color: "var(--text-muted)" }}>—</span>;
-        const s = FREQ_STYLE[v.toLowerCase()] || { color: "#6B7890", bg: "#f1f5f9" };
+        const s = FREQ_STYLE[v.toLowerCase()] || { color: "#64748B", bg: "#f1f5f9" };
         return <span style={pill(s.color, s.bg)}>{v.toUpperCase()}</span>;
       },
     },

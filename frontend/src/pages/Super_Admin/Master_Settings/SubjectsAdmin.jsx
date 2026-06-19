@@ -44,14 +44,14 @@ function StatusBadge({ isActive }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
-      background: isActive ? "#f6ffed" : "rgba(255,202,212,0.2)",
-      color: isActive ? "#5BA89A" : "#D96B7A",
-      border: `1px solid ${isActive ? "#b7eb8f" : "rgba(255,202,212,0.5)"}`,
+      background: isActive ? "#f6ffed" : "rgba(254,226,226,0.2)",
+      color: isActive ? "#22C55E" : "#EF4444",
+      border: `1px solid ${isActive ? "#b7eb8f" : "rgba(254,226,226,0.5)"}`,
       borderRadius: 20, padding: "3px 11px", fontSize: 12, fontWeight: 500,
     }}>
       <span style={{
         width: 6, height: 6, borderRadius: "50%",
-        background: isActive ? "#5BA89A" : "#D96B7A",
+        background: isActive ? "#22C55E" : "#EF4444",
         display: "inline-block",
       }} />
       {isActive ? "Active" : "Inactive"}
@@ -106,11 +106,11 @@ function SubjectCell({ name }) {
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div style={{
         width: 30, height: 30, borderRadius: 8,
-        background: "rgba(205,180,219,0.2)",
+        background: "rgba(20,184,166,0.2)",
         display: "flex", alignItems: "center", justifyContent: "center",
         flexShrink: 0,
       }}>
-        <BookOutlined style={{ color: "#9B87B8", fontSize: 13 }} />
+        <BookOutlined style={{ color: "#14B8A6", fontSize: 13 }} />
       </div>
       <span style={{ fontSize: 13, fontWeight: 600, color: "#141414" }}>{name}</span>
     </div>
@@ -158,7 +158,7 @@ function MarksCell({ max, pass }) {
     <div>
       <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: "#141414" }}>{max ?? "—"}</span>
       <span style={{ color: "#bfbfbf", fontSize: 11, margin: "0 4px" }}>/</span>
-      <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5BA89A", fontWeight: 600 }}>{pass ?? "—"}</span>
+      <span style={{ fontFamily: "monospace", fontSize: 12, color: "#22C55E", fontWeight: 600 }}>{pass ?? "—"}</span>
     </div>
   );
 }
@@ -345,7 +345,7 @@ const SubjectsAdmin = () => {
             onClick={() => handleEdit(record)}
             style={{
               borderRadius: 8, fontWeight: 600, fontSize: 12,
-              background: "rgba(205,180,219,0.2)", borderColor: "rgba(205,180,219,0.5)", color: "#9B87B8",
+              background: "rgba(20,184,166,0.2)", borderColor: "rgba(20,184,166,0.5)", color: "#14B8A6",
             }}
           >
             Edit
@@ -363,7 +363,7 @@ const SubjectsAdmin = () => {
               size="small"
               style={{
                 borderRadius: 8, fontWeight: 600, fontSize: 12,
-                background: "rgba(255,202,212,0.2)", borderColor: "rgba(255,202,212,0.5)", color: "#D96B7A",
+                background: "rgba(254,226,226,0.2)", borderColor: "rgba(254,226,226,0.5)", color: "#EF4444",
               }}
             >
               Delete
@@ -378,25 +378,25 @@ const SubjectsAdmin = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: "#9B87B8",
+          colorPrimary: "#14B8A6",
           borderRadius: 12,
           fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
         },
       }}
     >
-      <Layout style={{ background: "#F7F8FC", minHeight: "100vh" }}>
+      <Layout style={{ background: "#F8FAFC", minHeight: "100vh" }}>
 
         {/* ── Page Header ── */}
         <div style={{
           background: "#ffffff",
-          borderBottom: "1px solid rgba(167,199,231,0.3)",
+          borderBottom: "1px solid rgba(219,234,254,0.3)",
           padding: "20px 32px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           flexWrap: "wrap", gap: 12,
         }}>
           <div>
-            <div style={{ color: "#1E2A3A", fontSize: 18, fontWeight: 700 }}>Subjects Management</div>
-            <div style={{ color: "#8A94A6", fontSize: 12, marginTop: 2 }}>
+            <div style={{ color: "#0F172A", fontSize: 18, fontWeight: 700 }}>Subjects Management</div>
+            <div style={{ color: "#94A3B8", fontSize: 12, marginTop: 2 }}>
               Manage subjects for your school or global context
             </div>
           </div>
@@ -406,9 +406,9 @@ const SubjectsAdmin = () => {
               onClick={handleExport}
               style={{
                 borderRadius: 10, fontWeight: 600, height: 38,
-                background: "rgba(167,199,231,0.15)",
-                borderColor: "rgba(167,199,231,0.4)",
-                color: "#5B9EC9",
+                background: "rgba(219,234,254,0.15)",
+                borderColor: "rgba(219,234,254,0.4)",
+                color: "#2563EB",
               }}
             >
               Export Excel
@@ -418,7 +418,7 @@ const SubjectsAdmin = () => {
               icon={<PlusOutlined />}
               onClick={() => setIsModalOpen(true)}
               style={{
-                background: "linear-gradient(135deg, #5B9EC9, #9B87B8)", borderColor: "transparent",
+                background: "linear-gradient(135deg, #2563EB, #14B8A6)", borderColor: "transparent",
                 borderRadius: 10, fontWeight: 600, height: 38, paddingInline: 20,
               }}
             >
@@ -431,7 +431,7 @@ const SubjectsAdmin = () => {
 
           {/* ── Stats ── */}
           <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-            <StatCard label="Total Subjects"    value={total}         icon={<ReadOutlined />}         accentColor="#9B87B8" />
+            <StatCard label="Total Subjects"    value={total}         icon={<ReadOutlined />}         accentColor="#14B8A6" />
             <StatCard label="Active Subjects"   value={activeCount}   icon={<CheckCircleOutlined />}  accentColor="#00b894" />
             <StatCard label="Global Subjects"   value={globalCount}   icon={<GlobalOutlined />}       accentColor="#0984e3" />
             <StatCard label="Teacher Assigned"  value={assignedCount} icon={<TeamOutlined />}         accentColor="#e17055" />
@@ -519,7 +519,7 @@ const SubjectsAdmin = () => {
                 }}
                 onRow={(_, index) => ({
                   style: { background: index % 2 === 0 ? "#fff" : "#fafafa" },
-                  onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(205,180,219,0.2)22"),
+                  onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(20,184,166,0.2)22"),
                   onMouseLeave: (e) => (e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"),
                 })}
                 style={{ borderRadius: 0 }}

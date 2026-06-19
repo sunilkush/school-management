@@ -18,21 +18,21 @@ import {
 } from "../../../styles/pageStyles";
 
 const bloodGroupColor = {
-  "A+":  { bg: "rgba(255,202,212,0.2)", color: "#D96B7A" },
+  "A+":  { bg: "rgba(254,226,226,0.2)", color: "#EF4444" },
   "A-":  { bg: "#fff7ed", color: "#c2410c" },
-  "B+":  { bg: "#fef9ec", color: "#D4922A" },
+  "B+":  { bg: "#fef9ec", color: "#F59E0B" },
   "B-":  { bg: "#fefce8", color: "#ca8a04" },
-  "AB+": { bg: "rgba(167,199,231,0.2)", color: "#5B9EC9" },
+  "AB+": { bg: "rgba(219,234,254,0.2)", color: "#2563EB" },
   "AB-": { bg: "#eef2ff", color: "#4338ca" },
-  "O+":  { bg: "#f0fdf8", color: "#5BA89A" },
-  "O-":  { bg: "rgba(184,224,210,0.2)", color: "#5BA89A" },
+  "O+":  { bg: "#f0fdf8", color: "#22C55E" },
+  "O-":  { bg: "rgba(220,252,231,0.2)", color: "#22C55E" },
 };
 
 const STAT_META = [
-  { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "#9B87B8" },
+  { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "#14B8A6" },
   { key: "active",  label: "Active",          icon: <CheckCircleOutlined />, color: "#10b981" },
-  { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "#5B9EC9" },
-  { key: "showing", label: "Showing",         icon: <EyeOutlined />,         color: "#D4922A" },
+  { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "#2563EB" },
+  { key: "showing", label: "Showing",         icon: <EyeOutlined />,         color: "#F59E0B" },
 ];
 
 const StudentList = () => {
@@ -130,13 +130,13 @@ const StudentList = () => {
       title: "Class",
       dataIndex: "schoolClass",
       width: 110,
-      render: (v) => <span style={pill("#9B87B8")}>{v}</span>,
+      render: (v) => <span style={pill("#14B8A6")}>{v}</span>,
     },
     {
       title: "Section",
       dataIndex: "section",
       width: 90,
-      render: (v) => <span style={pill("#5BA89A")}>{v}</span>,
+      render: (v) => <span style={pill("#22C55E")}>{v}</span>,
     },
     {
       title: "Blood Group",
@@ -174,7 +174,7 @@ const StudentList = () => {
       title: "Academic Year",
       dataIndex: "academicYear",
       width: 130,
-      render: (v) => <span style={pill("#D4922A")}>{v}</span>,
+      render: (v) => <span style={pill("#F59E0B")}>{v}</span>,
     },
     {
       title: "Status",

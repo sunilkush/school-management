@@ -53,24 +53,24 @@ const css = `
 .class-page {
   min-height: 100vh;
   padding: 24px;
-  background: #F7F8FC;
+  background: #F8FAFC;
 }
 
 .class-hero {
   background: #ffffff;
-  border: 1px solid rgba(167,199,231,0.3);
+  border: 1px solid rgba(219,234,254,0.3);
   border-radius: 20px;
   padding: 22px;
   margin-bottom: 18px;
-  box-shadow: 0 4px 20px rgba(91,158,201,0.08);
+  box-shadow: 0 4px 20px rgba(37,99,235,0.08);
 }
 
 .class-icon {
   width: 54px;
   height: 54px;
   border-radius: 18px;
-  background: rgba(167,199,231,0.2);
-  color: #5B9EC9;
+  background: rgba(219,234,254,0.2);
+  color: #2563EB;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,7 +79,7 @@ const css = `
 
 .metric-card {
   border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(91,158,201,0.08);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.08);
 }
 
 .metric-icon {
@@ -94,15 +94,15 @@ const css = `
 
 .table-card {
   border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(91,158,201,0.08);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.08);
 }
 
 .class-avatar {
   width: 36px;
   height: 36px;
   border-radius: 13px;
-  background: rgba(167,199,231,0.2);
-  color: #5B9EC9;
+  background: rgba(219,234,254,0.2);
+  color: #2563EB;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,11 +111,11 @@ const css = `
 
 .code-pill {
   font-family: monospace;
-  background: rgba(167,199,231,0.1);
-  border: 1px solid rgba(167,199,231,0.3);
+  background: rgba(219,234,254,0.1);
+  border: 1px solid rgba(219,234,254,0.3);
   padding: 4px 10px;
   border-radius: 999px;
-  color: #5B9EC9;
+  color: #2563EB;
 }
 
 .class-modal .ant-modal-content {
@@ -394,7 +394,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "rgba(167,199,231,0.2)", color: "#5B9EC9" }}>
+                <div className="metric-icon" style={{ background: "rgba(219,234,254,0.2)", color: "#2563EB" }}>
                   <BookOutlined />
                 </div>
                 <div>
@@ -408,7 +408,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "rgba(184,224,210,0.2)", color: "#5BA89A" }}>
+                <div className="metric-icon" style={{ background: "rgba(220,252,231,0.2)", color: "#22C55E" }}>
                   <CheckCircleOutlined />
                 </div>
                 <div>
@@ -422,7 +422,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "rgba(255,202,212,0.2)", color: "#D96B7A" }}>
+                <div className="metric-icon" style={{ background: "rgba(254,226,226,0.2)", color: "#EF4444" }}>
                   <CloseCircleOutlined />
                 </div>
                 <div>
@@ -436,7 +436,7 @@ export default function ClassPage() {
           <Col xs={24} sm={12} lg={6}>
             <Card bordered={false} className="metric-card">
               <Space>
-                <div className="metric-icon" style={{ background: "rgba(205,180,219,0.2)", color: "#9B87B8" }}>
+                <div className="metric-icon" style={{ background: "rgba(20,184,166,0.2)", color: "#14B8A6" }}>
                   <GlobalOutlined />
                 </div>
                 <div>

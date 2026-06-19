@@ -23,7 +23,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
-const PIE_COLORS = ["#9B87B8", "#5BA89A", "#D4922A", "#D96B7A", "#0891b2"];
+const PIE_COLORS = ["#14B8A6", "#22C55E", "#F59E0B", "#EF4444", "#0891b2"];
 
 const PAYMENT_MODES = ["cash", "online", "cheque", "bank_transfer", "upi", "razorpay"];
 
@@ -93,9 +93,9 @@ const FeeReports = () => {
 
   // Fee status pie data
   const feeStatusPie = useMemo(() => [
-    { name: "Paid",    value: feeStats.paid,    color: "#5BA89A" },
-    { name: "Partial", value: feeStats.partial, color: "#D4922A" },
-    { name: "Pending", value: feeStats.pending, color: "#D96B7A" },
+    { name: "Paid",    value: feeStats.paid,    color: "#22C55E" },
+    { name: "Partial", value: feeStats.partial, color: "#F59E0B" },
+    { name: "Pending", value: feeStats.pending, color: "#EF4444" },
   ].filter((d) => d.value > 0), [feeStats]);
 
   const handleExport = () => {
@@ -122,7 +122,7 @@ const FeeReports = () => {
     const win = window.open("", "_blank");
     win.document.write(`<html><head><title>Fee Report</title>
       <style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0}
-      th{background:#9B87B8;color:white;padding:7px;font-size:11px}td{padding:5px 7px;border-bottom:1px solid #e2e8f0;font-size:11px}
+      th{background:#14B8A6;color:white;padding:7px;font-size:11px}td{padding:5px 7px;border-bottom:1px solid #e2e8f0;font-size:11px}
       @media print{button{display:none}}</style></head><body>
       <h2>Fee Collection Report — ${dayjs().format("DD MMMM YYYY")}</h2>${content}</body></html>`);
     win.document.close();
@@ -134,14 +134,14 @@ const FeeReports = () => {
 
   const paymentColumns = [
     { title: "Student",    render: (_, r) => r.studentId?.name || "—" },
-    { title: "Amount",     dataIndex: "amountPaid",  render: (v) => <span style={{ fontWeight: 700, color: "#5BA89A" }}>{money(v)}</span> },
+    { title: "Amount",     dataIndex: "amountPaid",  render: (v) => <span style={{ fontWeight: 700, color: "#22C55E" }}>{money(v)}</span> },
     { title: "Mode",       dataIndex: "paymentMode", render: (m) => <Tag style={{ textTransform: "capitalize" }}>{m}</Tag> },
     { title: "Receipt No", dataIndex: "receiptNo",   render: (r) => r || "—" },
     { title: "Date",       dataIndex: "paymentDate", render: (d) => dayjs(d).format("DD MMM YYYY") },
     {
       title: "Status", dataIndex: "status",
       render: (s) => (
-        <span style={pill(s === "success" ? "#5BA89A" : "#D96B7A", s === "success" ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)")}>
+        <span style={pill(s === "success" ? "#22C55E" : "#EF4444", s === "success" ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
           {s}
         </span>
       ),
@@ -177,11 +177,11 @@ const FeeReports = () => {
         {/* ── Summary KPIs ─────────────────────────────────────────── */}
         <div style={statGrid(155)}>
           {[
-            { label: "Total Collected",    value: money(feeStats.totalPaid),    color: "#5BA89A", icon: <CheckCircleOutlined /> },
-            { label: "Total Pending",      value: money(feeStats.totalPending), color: "#D96B7A", icon: <ClockCircleOutlined /> },
-            { label: "Paid Students",      value: feeStats.paid,                color: "#5BA89A", icon: <CheckCircleOutlined /> },
-            { label: "Partial Payments",   value: feeStats.partial,             color: "#D4922A", icon: <WalletOutlined /> },
-            { label: "Pending Students",   value: feeStats.pending,             color: "#D96B7A", icon: <ClockCircleOutlined /> },
+            { label: "Total Collected",    value: money(feeStats.totalPaid),    color: "#22C55E", icon: <CheckCircleOutlined /> },
+            { label: "Total Pending",      value: money(feeStats.totalPending), color: "#EF4444", icon: <ClockCircleOutlined /> },
+            { label: "Paid Students",      value: feeStats.paid,                color: "#22C55E", icon: <CheckCircleOutlined /> },
+            { label: "Partial Payments",   value: feeStats.partial,             color: "#F59E0B", icon: <WalletOutlined /> },
+            { label: "Pending Students",   value: feeStats.pending,             color: "#EF4444", icon: <ClockCircleOutlined /> },
           ].map(({ label, value, color, icon }) => (
             <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
               <div style={iconWell(color, 40)}>{icon}</div>
@@ -202,7 +202,7 @@ const FeeReports = () => {
             </Text>
             <Text strong style={{ fontSize: 12 }}>{collectUtilization}%</Text>
           </div>
-          <Progress percent={collectUtilization} strokeColor="#9B87B8" showInfo={false} />
+          <Progress percent={collectUtilization} strokeColor="#14B8A6" showInfo={false} />
         </div>
 
         {/* ── Charts ────────────────────────────────────────────────── */}
@@ -219,7 +219,7 @@ const FeeReports = () => {
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                     <Tooltip formatter={(v) => [money(v), "Collected"]} />
-                    <Bar dataKey="total" fill="#9B87B8" radius={[5, 5, 0, 0]} name="Collected" />
+                    <Bar dataKey="total" fill="#14B8A6" radius={[5, 5, 0, 0]} name="Collected" />
                   </BarChart>
                 </ResponsiveContainer>
               )}

@@ -109,10 +109,10 @@ const AcademicCalendar = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<CalendarOutlined />} label="Total Events" value={stats.total}    color="#9B87B8" />
+        <StatCard icon={<CalendarOutlined />} label="Total Events" value={stats.total}    color="#14B8A6" />
         <StatCard icon={<CalendarOutlined />} label="Upcoming"     value={stats.upcoming} color="#0891b2" />
-        <StatCard icon={<CalendarOutlined />} label="Holidays"     value={stats.holidays} color="#D96B7A" />
-        <StatCard icon={<CalendarOutlined />} label="Exams"        value={stats.exams}    color="#5BA89A" />
+        <StatCard icon={<CalendarOutlined />} label="Holidays"     value={stats.holidays} color="#EF4444" />
+        <StatCard icon={<CalendarOutlined />} label="Exams"        value={stats.exams}    color="#22C55E" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 0 }}>

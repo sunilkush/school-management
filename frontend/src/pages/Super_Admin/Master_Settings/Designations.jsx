@@ -49,9 +49,9 @@ const { TextArea } = Input;
 
 /* ── Level badge colours ─────────────────────────────────────────── */
 const LEVEL_STYLE = {
-  Senior: { color: "#9B87B8", bg: "rgba(205,180,219,0.2)" },
-  Mid: { color: "#5B9EC9", bg: "rgba(167,199,231,0.2)" },
-  Junior: { color: "#5BA89A", bg: "rgba(184,224,210,0.2)" },
+  Senior: { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
+  Mid: { color: "#2563EB", bg: "rgba(219,234,254,0.2)" },
+  Junior: { color: "#22C55E", bg: "rgba(220,252,231,0.2)" },
 };
 
 function LevelBadge({ level }) {
@@ -66,13 +66,13 @@ function LevelBadge({ level }) {
 function StatusBadge({ status }) {
   const isActive = status === "Active" || status === "active";
   return (
-    <span style={pill(isActive ? "#5BA89A" : "#D96B7A", isActive ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)")}>
+    <span style={pill(isActive ? "#22C55E" : "#EF4444", isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
       <span
         style={{
           width: 6,
           height: 6,
           borderRadius: "50%",
-          background: isActive ? "#5BA89A" : "#D96B7A",
+          background: isActive ? "#22C55E" : "#EF4444",
           display: "inline-block",
           marginRight: 5,
         }}
@@ -269,7 +269,7 @@ export default function Designations() {
           >
             <button
               style={{
-                background: "rgba(255,202,212,0.2)",
+                background: "rgba(254,226,226,0.2)",
                 border: "none",
                 borderRadius: 8,
                 width: 30,
@@ -278,7 +278,7 @@ export default function Designations() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#D96B7A",
+                color: "#EF4444",
               }}
               title="Delete"
             >
@@ -320,26 +320,26 @@ export default function Designations() {
           </div>
           <UserOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#5BA89A" })}>
+        <div style={statCard({ color: "#22C55E" })}>
           <div>
-            <div style={statLabel("#5BA89A")}>Active</div>
-            <div style={statValue("#5BA89A")}>{active}</div>
+            <div style={statLabel("#22C55E")}>Active</div>
+            <div style={statValue("#22C55E")}>{active}</div>
           </div>
-          <CheckCircleOutlined style={{ fontSize: 26, color: "#5BA89A", opacity: 0.4 }} />
+          <CheckCircleOutlined style={{ fontSize: 26, color: "#22C55E", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#D96B7A" })}>
+        <div style={statCard({ color: "#EF4444" })}>
           <div>
-            <div style={statLabel("#D96B7A")}>Inactive</div>
-            <div style={statValue("#D96B7A")}>{inactive}</div>
+            <div style={statLabel("#EF4444")}>Inactive</div>
+            <div style={statValue("#EF4444")}>{inactive}</div>
           </div>
-          <StopOutlined style={{ fontSize: 26, color: "#D96B7A", opacity: 0.4 }} />
+          <StopOutlined style={{ fontSize: 26, color: "#EF4444", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#9B87B8" })}>
+        <div style={statCard({ color: "#14B8A6" })}>
           <div>
-            <div style={statLabel("#9B87B8")}>Senior Level</div>
-            <div style={statValue("#9B87B8")}>{seniorCount}</div>
+            <div style={statLabel("#14B8A6")}>Senior Level</div>
+            <div style={statValue("#14B8A6")}>{seniorCount}</div>
           </div>
-          <IdcardOutlined style={{ fontSize: 26, color: "#9B87B8", opacity: 0.4 }} />
+          <IdcardOutlined style={{ fontSize: 26, color: "#14B8A6", opacity: 0.4 }} />
         </div>
       </div>
 

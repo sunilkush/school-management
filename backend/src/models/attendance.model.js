@@ -86,6 +86,18 @@ const attendanceSchema = new Schema(
       type: Date,
       default: null,
     },
+    checkInGps: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      accuracy: { type: Number, default: null },
+    },
+    checkOutGps: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      accuracy: { type: Number, default: null },
+    },
+    gpsVerified: { type: Boolean, default: false },
+    distanceFromSchool: { type: Number, default: null },
   },
   { timestamps: true }
 );

@@ -43,9 +43,9 @@ const LEAVE_TYPE_COLOR = {
 };
 
 const STATUS_COLOR = {
-  pending:  "#D4922A",
-  approved: "#5BA89A",
-  rejected: "#D96B7A",
+  pending:  "#F59E0B",
+  approved: "#22C55E",
+  rejected: "#EF4444",
 };
 
 const fmtDate = (d) => (d ? dayjs(d).format("DD MMM YYYY") : "—");
@@ -140,7 +140,7 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
                 icon={<CheckOutlined />}
                 onClick={() => onApprove(r._id, r?.userId?.name, r?.totalDays)}
                 style={{
-                  borderColor: "#5BA89A", color: "#5BA89A",
+                  borderColor: "#22C55E", color: "#22C55E",
                   fontWeight: 600, fontSize: 12,
                 }}
               >
@@ -151,7 +151,7 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
                 icon={<CloseOutlined />}
                 onClick={() => onReject(r._id)}
                 style={{
-                  borderColor: "#D96B7A", color: "#D96B7A",
+                  borderColor: "#EF4444", color: "#EF4444",
                   fontWeight: 600, fontSize: 12,
                 }}
               >
@@ -273,7 +273,7 @@ const LeaveManagement = () => {
           {pending.length > 0 && (
             <Badge
               count={pending.length}
-              style={{ backgroundColor: "#D4922A", marginLeft: 4 }}
+              style={{ backgroundColor: "#F59E0B", marginLeft: 4 }}
             />
           )}
         </span>
@@ -326,9 +326,9 @@ const LeaveManagement = () => {
         }}
       >
         {[
-          { label: "Pending",  count: pending.length,  color: "#D4922A" },
-          { label: "Approved", count: approved.length, color: "#5BA89A" },
-          { label: "Rejected", count: rejected.length, color: "#D96B7A" },
+          { label: "Pending",  count: pending.length,  color: "#F59E0B" },
+          { label: "Approved", count: approved.length, color: "#22C55E" },
+          { label: "Rejected", count: rejected.length, color: "#EF4444" },
           { label: "Total",    count: requests.length, color: "var(--primary)" },
         ].map(({ label, count, color }) => (
           <div
@@ -375,7 +375,7 @@ const LeaveManagement = () => {
         onOk={handleApprove}
         onCancel={() => setApproveModal({ open: false, id: null, name: "", days: 0 })}
         okText="Approve"
-        okButtonProps={{ style: { background: "#5BA89A", borderColor: "#5BA89A" } }}
+        okButtonProps={{ style: { background: "#22C55E", borderColor: "#22C55E" } }}
         confirmLoading={loading}
         width={400}
       >
@@ -410,7 +410,7 @@ const LeaveManagement = () => {
               fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8,
             }}
           >
-            Rejection Reason <span style={{ color: "#D96B7A" }}>*</span>
+            Rejection Reason <span style={{ color: "#EF4444" }}>*</span>
           </div>
           <TextArea
             rows={4}

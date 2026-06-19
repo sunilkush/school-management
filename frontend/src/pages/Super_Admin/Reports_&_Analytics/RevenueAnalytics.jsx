@@ -117,8 +117,8 @@ const KpiCard = ({ icon, label, value, sub, accent }) => (
         </Title>
         {sub && (
           <Space size={4}>
-            <ArrowUpOutlined style={{ color: "#5BA89A", fontSize: 11 }} />
-            <Text style={{ color: "#5BA89A", fontSize: 12 }}>{sub}</Text>
+            <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
+            <Text style={{ color: "#22C55E", fontSize: 12 }}>{sub}</Text>
           </Space>
         )}
       </div>
@@ -244,8 +244,8 @@ const RevenueAnalytics = () => {
       dataIndex: "growth",
       render: (g) => (
         <Space size={4}>
-          <ArrowUpOutlined style={{ color: "#5BA89A", fontSize: 11 }} />
-          <Text style={{ color: "#5BA89A", fontWeight: 600 }}>{g}</Text>
+          <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
+          <Text style={{ color: "#22C55E", fontWeight: 600 }}>{g}</Text>
         </Space>
       ),
     },
@@ -268,7 +268,7 @@ const RevenueAnalytics = () => {
   ];
 
   return (
-    <div style={{ padding: "24px 28px", background: "#F7F8FC", minHeight: "100vh" }}>
+    <div style={{ padding: "24px 28px", background: "#F8FAFC", minHeight: "100vh" }}>
       <div
         style={{
           display: "flex",
@@ -309,7 +309,7 @@ const RevenueAnalytics = () => {
           <KpiCard icon={<FundOutlined />} label={periodLabel} value={formatCurrency(stats.currentPeriodRevenue)} sub="latest period" accent="#722ed1" />
         </Col>
         <Col xs={24} sm={8}>
-          <KpiCard icon={<RiseOutlined />} label="Growth Rate" value={`${stats.growth.toFixed(1)}%`} sub="period-over-period" accent="#5BA89A" />
+          <KpiCard icon={<RiseOutlined />} label="Growth Rate" value={`${stats.growth.toFixed(1)}%`} sub="period-over-period" accent="#22C55E" />
         </Col>
       </Row>
 

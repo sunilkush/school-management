@@ -47,24 +47,24 @@ const css = `
 .permissions-page {
   min-height: 100vh;
   padding: 24px;
-  background: #F7F8FC;
+  background: #F8FAFC;
 }
 
 .permissions-hero {
   background: #ffffff;
-  border: 1px solid rgba(167,199,231,0.3);
+  border: 1px solid rgba(219,234,254,0.3);
   border-radius: 20px;
   padding: 24px;
   margin-bottom: 18px;
-  box-shadow: 0 4px 20px rgba(91,158,201,0.08);
+  box-shadow: 0 4px 20px rgba(37,99,235,0.08);
 }
 
 .permissions-icon {
   width: 56px;
   height: 56px;
   border-radius: 20px;
-  background: rgba(205,180,219,0.2);
-  color: #9B87B8;
+  background: rgba(20,184,166,0.2);
+  color: #14B8A6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,12 +73,12 @@ const css = `
 
 .gov-card {
   border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(91,158,201,0.08);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.08);
 }
 
 .metric-card {
   border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(91,158,201,0.06);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.06);
 }
 
 .metric-icon {
@@ -167,8 +167,8 @@ const Permissions = () => {
               width: 34,
               height: 34,
               borderRadius: 12,
-              background: "rgba(167,199,231,0.2)",
-              color: "#5B9EC9",
+              background: "rgba(219,234,254,0.2)",
+              color: "#2563EB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -429,7 +429,7 @@ const Permissions = () => {
               <Statistic
                 title="Roles"
                 value={roles.length}
-                prefix={<SafetyCertificateOutlined style={{ color: "#9B87B8" }} />}
+                prefix={<SafetyCertificateOutlined style={{ color: "#14B8A6" }} />}
               />
             </Card>
           </Col>
@@ -439,7 +439,7 @@ const Permissions = () => {
               <Statistic
                 title="Permission Modules"
                 value={modules.length}
-                prefix={<ApartmentOutlined style={{ color: "#5B9EC9" }} />}
+                prefix={<ApartmentOutlined style={{ color: "#2563EB" }} />}
               />
             </Card>
           </Col>
@@ -452,7 +452,7 @@ const Permissions = () => {
                   approvalQueue.filter((item) => item.status !== "Approved")
                     .length
                 }
-                prefix={<WarningOutlined style={{ color: "#D4922A" }} />}
+                prefix={<WarningOutlined style={{ color: "#F59E0B" }} />}
               />
             </Card>
           </Col>
@@ -464,7 +464,7 @@ const Permissions = () => {
           style={{ marginBottom: 18 }}
           title={
             <Space>
-              <SafetyCertificateOutlined style={{ color: "#9B87B8" }} />
+              <SafetyCertificateOutlined style={{ color: "#14B8A6" }} />
               <span>Role Permission Matrix</span>
               <Tag color="blue">{dataSource.length} modules</Tag>
             </Space>
@@ -494,7 +494,7 @@ const Permissions = () => {
           style={{ marginBottom: 18 }}
           title={
             <Space>
-              <DiffOutlined style={{ color: "#5B9EC9" }} />
+              <DiffOutlined style={{ color: "#2563EB" }} />
               <span>Permission Diff Viewer</span>
             </Space>
           }
@@ -543,7 +543,7 @@ const Permissions = () => {
               className="gov-card"
               title={
                 <Space>
-                  <WarningOutlined style={{ color: "#D4922A" }} />
+                  <WarningOutlined style={{ color: "#F59E0B" }} />
                   <span>High-Risk Approval Queue</span>
                   <Tag color="orange">{approvalQueue.length}</Tag>
                 </Space>
@@ -602,7 +602,7 @@ const Permissions = () => {
               className="gov-card"
               title={
                 <Space>
-                  <AuditOutlined style={{ color: "#5BA89A" }} />
+                  <AuditOutlined style={{ color: "#22C55E" }} />
                   <span>Audit Trail</span>
                   <Tag color="green">{auditTrail.length}</Tag>
                 </Space>

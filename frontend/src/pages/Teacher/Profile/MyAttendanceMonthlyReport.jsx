@@ -191,7 +191,7 @@ const MyAttendanceMonthlyReport = () => {
         bordered={false}
         style={{
           borderRadius: 20,
-          boxShadow: "0 12px 28px rgba(91, 158, 201, 0.06)",
+          boxShadow: "0 12px 28px rgba(37, 99, 235, 0.06)",
           border: "1px solid #edf2f7",
           background:
             "linear-gradient(135deg, #ffffff 0%, #f8fbff 45%, #eef5ff 100%)",
@@ -204,7 +204,7 @@ const MyAttendanceMonthlyReport = () => {
                 size={54}
                 icon={<CalendarOutlined />}
                 style={{
-                  background: "linear-gradient(135deg, #5B9EC9 0%, #4f46e5 100%)",
+                  background: "linear-gradient(135deg, #2563EB 0%, #4f46e5 100%)",
                 }}
               />
               <div>
@@ -262,14 +262,14 @@ const MyAttendanceMonthlyReport = () => {
           style={{
             marginTop: 16,
             borderRadius: 18,
-            boxShadow: "0 10px 24px rgba(91, 158, 201, 0.05)",
+            boxShadow: "0 10px 24px rgba(37, 99, 235, 0.05)",
             border: "1px solid #edf2f7",
           }}
         >
           <Row justify="space-between" align="middle" gutter={[12, 12]}>
             <Col xs={24} lg={14}>
               <Space align="center">
-                <DashboardOutlined style={{ fontSize: 18, color: "#5B9EC9" }} />
+                <DashboardOutlined style={{ fontSize: 18, color: "#2563EB" }} />
                 <div>
                   <Text strong style={{ display: "block" }}>
                     Quick Daily Attendance
@@ -317,7 +317,7 @@ const MyAttendanceMonthlyReport = () => {
             bordered={false}
             style={{
               borderRadius: 16,
-              boxShadow: "0 8px 22px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 8px 22px rgba(37, 99, 235, 0.05)",
             }}
           >
             <Statistic title="Marked Days" value={summary.totalDays} />
@@ -329,7 +329,7 @@ const MyAttendanceMonthlyReport = () => {
             bordered={false}
             style={{
               borderRadius: 16,
-              boxShadow: "0 8px 22px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 8px 22px rgba(37, 99, 235, 0.05)",
             }}
           >
             <Statistic
@@ -345,7 +345,7 @@ const MyAttendanceMonthlyReport = () => {
             bordered={false}
             style={{
               borderRadius: 16,
-              boxShadow: "0 8px 22px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 8px 22px rgba(37, 99, 235, 0.05)",
             }}
           >
             <Statistic
@@ -361,7 +361,7 @@ const MyAttendanceMonthlyReport = () => {
             bordered={false}
             style={{
               borderRadius: 16,
-              boxShadow: "0 8px 22px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 8px 22px rgba(37, 99, 235, 0.05)",
             }}
           >
             <Statistic
@@ -377,7 +377,7 @@ const MyAttendanceMonthlyReport = () => {
             bordered={false}
             style={{
               borderRadius: 16,
-              boxShadow: "0 8px 22px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 8px 22px rgba(37, 99, 235, 0.05)",
             }}
           >
             <Statistic title="Leave" value={summary.leave} />
@@ -389,7 +389,7 @@ const MyAttendanceMonthlyReport = () => {
             bordered={false}
             style={{
               borderRadius: 16,
-              boxShadow: "0 8px 22px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 8px 22px rgba(37, 99, 235, 0.05)",
             }}
           >
             <Statistic title="Attendance %" value={summary.attendancePercent} suffix="%" />
@@ -404,7 +404,7 @@ const MyAttendanceMonthlyReport = () => {
             loading={loading}
             style={{
               borderRadius: 18,
-              boxShadow: "0 10px 24px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 10px 24px rgba(37, 99, 235, 0.05)",
               border: "1px solid #edf2f7",
             }}
             bodyStyle={{ padding: 16 }}
@@ -427,7 +427,7 @@ const MyAttendanceMonthlyReport = () => {
             bordered={false}
             style={{
               borderRadius: 18,
-              boxShadow: "0 10px 24px rgba(91, 158, 201, 0.05)",
+              boxShadow: "0 10px 24px rgba(37, 99, 235, 0.05)",
               border: "1px solid #edf2f7",
               height: "100%",
             }}

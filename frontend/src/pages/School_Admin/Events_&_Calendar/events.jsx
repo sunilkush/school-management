@@ -21,25 +21,25 @@ import {
 const { RangePicker } = DatePicker;
 
 const TYPE_STYLE = {
-  Event:    { color: "#9B87B8", bg: "rgba(205,180,219,0.2)" },
-  Holiday:  { color: "#5BA89A", bg: "#d1fae5" },
-  Meeting:  { color: "#5B9EC9", bg: "#e0f2fe" },
-  Exam:     { color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
-  Activity: { color: "#D4922A", bg: "#fff7ed" },
+  Event:    { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
+  Holiday:  { color: "#22C55E", bg: "#d1fae5" },
+  Meeting:  { color: "#2563EB", bg: "#e0f2fe" },
+  Exam:     { color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
+  Activity: { color: "#F59E0B", bg: "#fff7ed" },
   Reminder: { color: "#0e7490", bg: "#ecfeff" },
 };
 
 const STATUS_STYLE = {
-  scheduled: { color: "#5B9EC9", bg: "#e0f2fe" },
-  cancelled:  { color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
-  completed:  { color: "#5BA89A", bg: "#d1fae5" },
+  scheduled: { color: "#2563EB", bg: "#e0f2fe" },
+  cancelled:  { color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
+  completed:  { color: "#22C55E", bg: "#d1fae5" },
 };
 
 const STAT_META = [
-  { key: "total",    label: "Total Events", color: "#9B87B8" },
-  { key: "upcoming", label: "Upcoming",     color: "#5B9EC9" },
-  { key: "past",     label: "Past",         color: "#6B7890" },
-  { key: "cancelled",label: "Cancelled",    color: "#D96B7A" },
+  { key: "total",    label: "Total Events", color: "#14B8A6" },
+  { key: "upcoming", label: "Upcoming",     color: "#2563EB" },
+  { key: "past",     label: "Past",         color: "#64748B" },
+  { key: "cancelled",label: "Cancelled",    color: "#EF4444" },
 ];
 
 const toDate = (value) => (value ? dayjs(value).format("YYYY-MM-DD") : "-");
@@ -54,7 +54,7 @@ const toPayload = (values) => ({
   allDay: values.allDay ?? true,
   startDate: values.dateRange?.[0]?.startOf("day").toISOString(),
   endDate: values.dateRange?.[1]?.endOf("day").toISOString(),
-  color: values.color || "#9B87B8",
+  color: values.color || "#14B8A6",
 });
 
 const Events = () => {
@@ -93,7 +93,7 @@ const Events = () => {
             location: event.location,
             audience: event.audience,
             status: event.status,
-            color: event.color || "#9B87B8",
+            color: event.color || "#14B8A6",
             allDay: event.allDay,
             dateRange: [dayjs(event.startDate), dayjs(event.endDate)],
           }
@@ -101,7 +101,7 @@ const Events = () => {
             type: "Event",
             audience: "All",
             status: "scheduled",
-            color: "#9B87B8",
+            color: "#14B8A6",
             allDay: true,
             dateRange: [dayjs(), dayjs()],
           }
@@ -170,7 +170,7 @@ const Events = () => {
       dataIndex: "type",
       key: "type",
       render: (type) => {
-        const s = TYPE_STYLE[type] || { color: "#6B7890", bg: "#f1f5f9" };
+        const s = TYPE_STYLE[type] || { color: "#64748B", bg: "#f1f5f9" };
         return <span style={pill(s.color, s.bg)}>{type}</span>;
       },
     },
@@ -185,7 +185,7 @@ const Events = () => {
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        const s = STATUS_STYLE[status] || { color: "#6B7890", bg: "#f1f5f9" };
+        const s = STATUS_STYLE[status] || { color: "#64748B", bg: "#f1f5f9" };
         return <span style={pill(s.color, s.bg)}>{status}</span>;
       },
     },

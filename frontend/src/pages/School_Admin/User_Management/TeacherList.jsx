@@ -18,23 +18,23 @@ import {
 } from "../../../styles/pageStyles";
 
 const ROLE_COLORS = {
-  teacher:            { color: "#9B87B8", bg: "rgba(205,180,219,0.2)" },
-  "school admin":     { color: "#5B9EC9", bg: "rgba(167,199,231,0.2)" },
-  principal:          { color: "#5BA89A", bg: "#d1fae5" },
-  accountant:         { color: "#5B9EC9", bg: "#e0f2fe" },
-  staff:              { color: "#6B7890", bg: "#f1f5f9" },
+  teacher:            { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
+  "school admin":     { color: "#2563EB", bg: "rgba(219,234,254,0.2)" },
+  principal:          { color: "#22C55E", bg: "#d1fae5" },
+  accountant:         { color: "#2563EB", bg: "#e0f2fe" },
+  staff:              { color: "#64748B", bg: "#f1f5f9" },
   librarian:          { color: "#be123c", bg: "#fff1f2" },
   "hostel warden":    { color: "#7c2d12", bg: "#fff7ed" },
   "transport manager":{ color: "#0e7490", bg: "#ecfeff" },
   receptionist:       { color: "#6d28d9", bg: "#f5f3ff" },
 };
 
-const getRoleStyle = (name = "") => ROLE_COLORS[name.toLowerCase()] || { color: "#6B7890", bg: "#f1f5f9" };
+const getRoleStyle = (name = "") => ROLE_COLORS[name.toLowerCase()] || { color: "#64748B", bg: "#f1f5f9" };
 
 const STAT_META = [
-  { key: "total",  label: "Total Staff", icon: <TeamOutlined />,         color: "#9B87B8" },
+  { key: "total",  label: "Total Staff", icon: <TeamOutlined />,         color: "#14B8A6" },
   { key: "active", label: "Active",       icon: <CheckCircleOutlined />,  color: "#10b981" },
-  { key: "roles",  label: "Roles",        icon: <TagOutlined />,          color: "#D4922A" },
+  { key: "roles",  label: "Roles",        icon: <TagOutlined />,          color: "#F59E0B" },
 ];
 
 const TeacherList = () => {

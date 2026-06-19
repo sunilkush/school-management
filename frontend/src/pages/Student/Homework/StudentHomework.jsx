@@ -65,9 +65,9 @@ const normalizeStatus = (status, dueDate) => {
 };
 
 const statusColor = (status) => {
-  if (status === "Submitted") return { color: "#5BA89A", bg: "rgba(184,224,210,0.15)" };
-  if (status === "Late") return { color: "#D96B7A", bg: "#fff1f2" };
-  return { color: "#D4922A", bg: "#fffbeb" };
+  if (status === "Submitted") return { color: "#22C55E", bg: "rgba(220,252,231,0.15)" };
+  if (status === "Late") return { color: "#EF4444", bg: "#fff1f2" };
+  return { color: "#F59E0B", bg: "#fffbeb" };
 };
 
 const StudentHomework = () => {
@@ -203,9 +203,9 @@ const StudentHomework = () => {
 
   const STAT_ITEMS = [
     { label: "Total", value: stats.total, color: "var(--primary)" },
-    { label: "Submitted", value: stats.submitted, color: "#5BA89A" },
-    { label: "Pending", value: stats.pending, color: "#D4922A" },
-    { label: "Late", value: stats.late, color: "#D96B7A" },
+    { label: "Submitted", value: stats.submitted, color: "#22C55E" },
+    { label: "Pending", value: stats.pending, color: "#F59E0B" },
+    { label: "Late", value: stats.late, color: "#EF4444" },
   ];
 
   return (
@@ -287,7 +287,7 @@ const StudentHomework = () => {
                       </span>
                       <span style={pill(sc.color, sc.bg)}>{item.status}</span>
                       {item.grade !== null && item.grade !== undefined && (
-                        <span style={pill("#5BA89A", "rgba(184,224,210,0.15)")}>Grade: {item.grade}/100</span>
+                        <span style={pill("#22C55E", "rgba(220,252,231,0.15)")}>Grade: {item.grade}/100</span>
                       )}
                     </Space>
                   </div>
@@ -358,8 +358,8 @@ const StudentHomework = () => {
               <Space direction="vertical" style={{ width: "100%" }} size={8}>
                 <Tag color="green">Already Submitted</Tag>
                 {selectedHomework.grade !== null && selectedHomework.grade !== undefined && (
-                  <div style={{ ...sectionPanel, padding: "12px 16px", background: "rgba(184,224,210,0.15)", border: "1px solid #bbf7d0" }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: "#5BA89A", marginBottom: 6 }}>Teacher Feedback</div>
+                  <div style={{ ...sectionPanel, padding: "12px 16px", background: "rgba(220,252,231,0.15)", border: "1px solid #bbf7d0" }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "#22C55E", marginBottom: 6 }}>Teacher Feedback</div>
                     <Space wrap>
                       <Tag color="blue" style={{ fontSize: 14, padding: "2px 12px" }}>
                         Grade: {selectedHomework.grade}/100

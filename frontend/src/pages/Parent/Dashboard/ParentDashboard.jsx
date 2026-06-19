@@ -12,13 +12,13 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#5B9EC9", "#5BA89A", "#9B87B8", "#D4922A"];
-const STAT_BARS   = ["#A7C7E7", "#B8E0D2", "#CDB4DB", "#FDE2A7"];
+const STAT_COLORS = ["#2563EB", "#22C55E", "#14B8A6", "#F59E0B"];
+const STAT_BARS   = ["#DBEAFE", "#DCFCE7", "rgba(20,184,166,0.15)", "#FEF3C7"];
 const STAT_BG     = [
-  "rgba(167,199,231,0.14)",
-  "rgba(184,224,210,0.14)",
-  "rgba(205,180,219,0.14)",
-  "rgba(253,226,167,0.18)",
+  "rgba(219,234,254,0.14)",
+  "rgba(220,252,231,0.14)",
+  "rgba(20,184,166,0.14)",
+  "rgba(254,243,199,0.18)",
 ];
 
 const ParentDashboard = () => {
@@ -173,10 +173,10 @@ const ParentDashboard = () => {
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                       <div style={{
                         width: 46, height: 46, borderRadius: "50%",
-                        background: "linear-gradient(135deg, #A7C7E7, #CDB4DB)",
+                        background: "linear-gradient(135deg, #DBEAFE, rgba(20,184,166,0.15))",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         color: "#fff", fontSize: 18, fontWeight: 700, flexShrink: 0,
-                        boxShadow: "0 2px 10px rgba(91,158,201,0.25)",
+                        boxShadow: "0 2px 10px rgba(37,99,235,0.25)",
                       }}>
                         {(child.name || "?")[0].toUpperCase()}
                       </div>
@@ -194,9 +194,9 @@ const ParentDashboard = () => {
                       {cs.attPct !== undefined && cs.attPct !== null && (
                         <span style={{
                           padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-                          background: cs.attPct >= 75 ? "rgba(184,224,210,0.25)" : cs.attPct >= 60 ? "rgba(253,226,167,0.35)" : "rgba(255,202,212,0.3)",
-                          color: cs.attPct >= 75 ? "#2E7A6E" : cs.attPct >= 60 ? "#8A5E10" : "#9E3A4A",
-                          border: `1px solid ${cs.attPct >= 75 ? "rgba(184,224,210,0.5)" : cs.attPct >= 60 ? "rgba(253,226,167,0.6)" : "rgba(255,202,212,0.5)"}`,
+                          background: cs.attPct >= 75 ? "rgba(220,252,231,0.25)" : cs.attPct >= 60 ? "rgba(254,243,199,0.35)" : "rgba(254,226,226,0.3)",
+                          color: cs.attPct >= 75 ? "#15803D" : cs.attPct >= 60 ? "#B45309" : "#DC2626",
+                          border: `1px solid ${cs.attPct >= 75 ? "rgba(220,252,231,0.5)" : cs.attPct >= 60 ? "rgba(254,243,199,0.6)" : "rgba(254,226,226,0.5)"}`,
                         }}>
                           Attendance: {cs.attPct}%
                         </span>
@@ -204,9 +204,9 @@ const ParentDashboard = () => {
                       {cs.pending !== undefined && (
                         <span style={{
                           padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-                          background: cs.pending > 0 ? "rgba(253,226,167,0.35)" : "rgba(184,224,210,0.25)",
-                          color: cs.pending > 0 ? "#8A5E10" : "#2E7A6E",
-                          border: `1px solid ${cs.pending > 0 ? "rgba(253,226,167,0.6)" : "rgba(184,224,210,0.5)"}`,
+                          background: cs.pending > 0 ? "rgba(254,243,199,0.35)" : "rgba(220,252,231,0.25)",
+                          color: cs.pending > 0 ? "#B45309" : "#15803D",
+                          border: `1px solid ${cs.pending > 0 ? "rgba(254,243,199,0.6)" : "rgba(220,252,231,0.5)"}`,
                         }}>
                           {cs.pending > 0 ? `${cs.pending} Pending HW` : "All HW Done"}
                         </span>

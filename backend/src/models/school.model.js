@@ -116,6 +116,15 @@ const schoolSchema = new Schema(
       ref: "AcademicYear",
       index: true,
     },
+    /* ================= GPS / GEOFENCE ================= */
+
+    location: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      geofenceRadius: { type: Number, default: 200 }, // metres
+      address: { type: String, trim: true, default: "" },
+    },
+
     /* ================= META ================= */
 
     createdBy: {

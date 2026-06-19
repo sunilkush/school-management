@@ -199,14 +199,14 @@ const MessagePage = () => {
         title: "Messages",
         value: stats.total,
         icon: <Mail size={22} />,
-        color: "#5B9EC9",
+        color: "#2563EB",
         background: "#eaf3ff",
       },
       {
         title: "Unread",
         value: stats.unread,
         icon: <MailOpen size={22} />,
-        color: "#5BA89A",
+        color: "#22C55E",
         background: "#eefbea",
       },
       {
@@ -482,9 +482,9 @@ const sendReply = async (values) => {
                     style={{
                       borderRadius: 18,
                       cursor: "pointer",
-                      border: isUnreadInbox ? "1px solid rgba(184,224,210,0.5)" : "1px solid #eef2f7",
-                      borderLeft: isUnreadInbox ? "5px solid #5BA89A" : "1px solid #eef2f7",
-                      background: isUnreadInbox ? "linear-gradient(135deg, rgba(184,224,210,0.15) 0%, #ffffff 72%)" : "#ffffff",
+                      border: isUnreadInbox ? "1px solid rgba(220,252,231,0.5)" : "1px solid #eef2f7",
+                      borderLeft: isUnreadInbox ? "5px solid #22C55E" : "1px solid #eef2f7",
+                      background: isUnreadInbox ? "linear-gradient(135deg, rgba(220,252,231,0.15) 0%, #ffffff 72%)" : "#ffffff",
                     }}
                     styles={{ body: { padding: isMobile ? 14 : 18 } }}
                   >
@@ -588,7 +588,7 @@ const sendReply = async (values) => {
                       <Space direction="vertical" size={10} style={{ width: "100%" }}>
                         <Flex vertical={isMobile} gap={8} justify="space-between" align={isMobile ? "flex-start" : "center"}>
                           <Space wrap>
-                            <MessageSquareText size={16} color="#5B9EC9" />
+                            <MessageSquareText size={16} color="#2563EB" />
                             <Text strong>{getSenderName(item)}</Text>
                             <Tag>{getSenderRole(item)}</Tag>
                           </Space>

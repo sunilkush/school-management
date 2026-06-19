@@ -11,7 +11,7 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#9B87B8", "#5B9EC9", "#D4922A", "#5BA89A"];
+const STAT_COLORS = ["#14B8A6", "#2563EB", "#F59E0B", "#22C55E"];
 
 const statusTag = (hw) => {
   if (!hw.submission) return <Tag color="orange">Pending</Tag>;
@@ -82,7 +82,7 @@ const ChildHomework = () => {
         if (!v) return "—";
         const d = dayjs(v);
         const overdue = d.isBefore(dayjs(), "day");
-        return <span style={{ color: overdue ? "#D96B7A" : "inherit" }}>{d.format("DD MMM YYYY")}</span>;
+        return <span style={{ color: overdue ? "#EF4444" : "inherit" }}>{d.format("DD MMM YYYY")}</span>;
       },
     },
     {
@@ -93,7 +93,7 @@ const ChildHomework = () => {
       title: "Grade",
       render: (_, r) =>
         r.grade !== null && r.grade !== undefined
-          ? <span style={pill("#5BA89A", "rgba(184,224,210,0.2)")}>{r.grade}/100</span>
+          ? <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{r.grade}/100</span>
           : "—",
     },
     {
@@ -193,7 +193,7 @@ const ChildHomework = () => {
               {detailHw.grade !== null && detailHw.grade !== undefined && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 4 }}>Grade</div>
-                  <span style={pill("#5BA89A", "rgba(184,224,210,0.2)")}>{detailHw.grade}/100</span>
+                  <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{detailHw.grade}/100</span>
                 </div>
               )}
               {detailHw.feedback && (

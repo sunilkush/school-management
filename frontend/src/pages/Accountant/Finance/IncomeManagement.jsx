@@ -33,9 +33,9 @@ const INCOME_CATEGORIES = [
 const PAYMENT_MODES = ["cash", "cheque", "bank_transfer", "upi", "online", "dd"];
 
 const CAT_COLORS = {
-  "Tuition Fee": "#9B87B8", "Admission Fee": "#0891b2", "Donation": "#5BA89A",
-  "Grant": "#5BA89A", "Transport Income": "#D4922A", "Hostel Income": "#9B87B8",
-  "Miscellaneous": "#6B7890",
+  "Tuition Fee": "#14B8A6", "Admission Fee": "#0891b2", "Donation": "#22C55E",
+  "Grant": "#22C55E", "Transport Income": "#F59E0B", "Hostel Income": "#14B8A6",
+  "Miscellaneous": "#64748B",
 };
 const catColor = (cat) => CAT_COLORS[cat] || "#0891b2";
 
@@ -166,7 +166,7 @@ const IncomeManagement = () => {
       title: "Amount",
       dataIndex: "amount",
       sorter: (a, b) => a.amount - b.amount,
-      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "#5BA89A" }}>{money(v)}</span>,
+      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "#22C55E" }}>{money(v)}</span>,
     },
     {
       title: "Date",
@@ -215,9 +215,9 @@ const IncomeManagement = () => {
       {/* ── Summary KPIs ─────────────────────────────────────────── */}
       <div style={statGrid(150)}>
         {[
-          { label: "Total Income",   value: money(incomeTotalAmount), color: "#5BA89A", icon: <DollarOutlined /> },
+          { label: "Total Income",   value: money(incomeTotalAmount), color: "#22C55E", icon: <DollarOutlined /> },
           { label: "Total Records",  value: incomeTotal,              color: "#0891b2", icon: <FilterOutlined /> },
-          { label: "This Month",     value: money(incomeSummary?.total), color: "#9B87B8", icon: <DollarOutlined /> },
+          { label: "This Month",     value: money(incomeSummary?.total), color: "#14B8A6", icon: <DollarOutlined /> },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>

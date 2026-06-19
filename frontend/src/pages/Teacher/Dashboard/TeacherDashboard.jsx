@@ -16,13 +16,13 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#5B9EC9", "#9B87B8", "#5BA89A", "#D4922A"];
-const STAT_ACCENT_BARS = ["#A7C7E7", "#CDB4DB", "#B8E0D2", "#FDE2A7"];
+const STAT_COLORS = ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B"];
+const STAT_ACCENT_BARS = ["#DBEAFE", "rgba(20,184,166,0.15)", "#DCFCE7", "#FEF3C7"];
 const STAT_BG = [
-  "rgba(167,199,231,0.12)",
-  "rgba(205,180,219,0.12)",
-  "rgba(184,224,210,0.12)",
-  "rgba(253,226,167,0.15)",
+  "rgba(219,234,254,0.12)",
+  "rgba(20,184,166,0.12)",
+  "rgba(220,252,231,0.12)",
+  "rgba(254,243,199,0.15)",
 ];
 
 const TeacherDashboard = () => {
@@ -196,8 +196,8 @@ const TeacherDashboard = () => {
                   percent={dashboardData.attendancePercent}
                   status="active"
                   strokeColor={{
-                    from: "#A7C7E7",
-                    to: "#B8E0D2",
+                    from: "#DBEAFE",
+                    to: "#DCFCE7",
                   }}
                 />
               </div>
@@ -213,8 +213,8 @@ const TeacherDashboard = () => {
                       <List.Item key={`${item.className}-${item.sectionName}-${index}`} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-muted)" }}>
                         <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{item.className} — {item.sectionName}</span>
                         <span style={pill(
-                          item.role === "Class Teacher" ? "#2E7A6E" : "#2E6A9A",
-                          item.role === "Class Teacher" ? "rgba(184,224,210,0.25)" : "rgba(167,199,231,0.22)"
+                          item.role === "Class Teacher" ? "#15803D" : "#2E6A9A",
+                          item.role === "Class Teacher" ? "rgba(220,252,231,0.25)" : "rgba(219,234,254,0.22)"
                         )}>
                           {item.role}
                         </span>

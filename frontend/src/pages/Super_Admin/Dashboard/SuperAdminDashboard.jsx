@@ -81,7 +81,7 @@ const formatMoney = (value = 0) =>
 const getActivityMeta = (action = "") => {
   const a = action.toLowerCase();
   if (a.includes("school") || a.includes("register"))
-    return { icon: <BankOutlined />, color: "var(--success, #5BA89A)" };
+    return { icon: <BankOutlined />, color: "var(--success, #22C55E)" };
   if (a.includes("subscri") || a.includes("payment") || a.includes("fee"))
     return { icon: <DollarOutlined />, color: "var(--primary, #1677ff)" };
   if (a.includes("user") || a.includes("admin") || a.includes("teacher"))
@@ -110,7 +110,7 @@ const StatCard = ({ title, value, icon, color, iconBg, cardAccent, delta, deltaT
     bordered={false}
     style={{
       borderRadius: 16,
-      boxShadow: "0 2px 8px rgba(91,158,201,0.07), 0 4px 20px rgba(91,158,201,0.05)",
+      boxShadow: "0 2px 8px rgba(37,99,235,0.07), 0 4px 20px rgba(37,99,235,0.05)",
       height: "100%",
       position: "relative",
       overflow: "hidden",
@@ -187,43 +187,43 @@ const QUICK_ACTIONS = [
   {
     label: "Add New School",
     icon: <BankOutlined />,
-    color: "#5B9EC9",
-    iconBg: "rgba(167,199,231,0.22)",
+    color: "#2563EB",
+    iconBg: "rgba(219,234,254,0.22)",
     route: "/dashboard/superadmin/schools",
   },
   {
     label: "Manage Subscriptions",
     icon: <SafetyCertificateOutlined />,
-    color: "#9B87B8",
-    iconBg: "rgba(205,180,219,0.22)",
+    color: "#14B8A6",
+    iconBg: "rgba(20,184,166,0.22)",
     route: "/dashboard/superadmin/subscriptions",
   },
   {
     label: "View All Users",
     icon: <TeamOutlined />,
-    color: "#5BA89A",
-    iconBg: "rgba(184,224,210,0.22)",
+    color: "#22C55E",
+    iconBg: "rgba(220,252,231,0.22)",
     route: "/dashboard/superadmin/users",
   },
   {
     label: "Financial Reports",
     icon: <DollarOutlined />,
-    color: "#5BA89A",
-    iconBg: "rgba(184,224,210,0.22)",
+    color: "#22C55E",
+    iconBg: "rgba(220,252,231,0.22)",
     route: "/dashboard/superadmin/reports/revenue",
   },
   {
     label: "System Logs",
     icon: <ThunderboltFilled />,
-    color: "#D4922A",
-    iconBg: "rgba(253,226,167,0.30)",
+    color: "#F59E0B",
+    iconBg: "rgba(254,243,199,0.30)",
     route: "/dashboard/superadmin/settings/audit",
   },
   {
     label: "Send Notification",
     icon: <BellOutlined />,
-    color: "#D96B7A",
-    iconBg: "rgba(255,202,212,0.25)",
+    color: "#EF4444",
+    iconBg: "rgba(254,226,226,0.25)",
     route: "/dashboard/superadmin/notifications",
   },
 ];
@@ -335,7 +335,7 @@ const SuperAdminDashboard = () => {
       .slice(0, 4)
       .map((school, index) => ({
         ...school,
-        color: ["#5B9EC9", "#9B87B8", "#5BA89A", "#D4922A"][index],
+        color: ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B"][index],
       }));
   }, [schoolsData]);
 
@@ -346,34 +346,34 @@ const SuperAdminDashboard = () => {
       {
         label: "Premium Plans",
         count: schoolsData.filter((s) => s.subscription === "Premium").length,
-        color: "#5B9EC9",
+        color: "#2563EB",
         textColor: "#2E6A9A",
-        bg: "rgba(167,199,231,0.18)",
-        border: "rgba(167,199,231,0.4)",
+        bg: "rgba(219,234,254,0.18)",
+        border: "rgba(219,234,254,0.4)",
       },
       {
         label: "Standard Plans",
         count: schoolsData.filter((s) => s.subscription === "Standard").length,
-        color: "#9B87B8",
-        textColor: "#6B4F96",
-        bg: "rgba(205,180,219,0.18)",
-        border: "rgba(205,180,219,0.4)",
+        color: "#14B8A6",
+        textColor: "#6D28D9",
+        bg: "rgba(20,184,166,0.18)",
+        border: "rgba(20,184,166,0.4)",
       },
       {
         label: "Trial Active",
         count: schoolsData.filter((s) => s.subscription === "Trial").length,
-        color: "#5BA89A",
-        textColor: "#2E7A6E",
-        bg: "rgba(184,224,210,0.18)",
-        border: "rgba(184,224,210,0.4)",
+        color: "#22C55E",
+        textColor: "#15803D",
+        bg: "rgba(220,252,231,0.18)",
+        border: "rgba(220,252,231,0.4)",
       },
       {
         label: "Suspended",
         count: schoolsData.filter((s) => s.status === "suspended").length,
-        color: "#D96B7A",
-        textColor: "#9E3A4A",
-        bg: "rgba(255,202,212,0.18)",
-        border: "rgba(255,202,212,0.4)",
+        color: "#EF4444",
+        textColor: "#DC2626",
+        bg: "rgba(254,226,226,0.18)",
+        border: "rgba(254,226,226,0.4)",
       },
     ],
     [schoolsData]
@@ -623,9 +623,9 @@ const SuperAdminDashboard = () => {
                 title="Total Schools"
                 value={metrics.totalSchools}
                 icon={<BankOutlined />}
-                color="#5B9EC9"
-                iconBg="rgba(167,199,231,0.22)"
-                cardAccent="#A7C7E7"
+                color="#2563EB"
+                iconBg="rgba(219,234,254,0.22)"
+                cardAccent="#DBEAFE"
                 delta="Live"
                 deltaType="up"
               />
@@ -635,9 +635,9 @@ const SuperAdminDashboard = () => {
                 title="Active Schools"
                 value={metrics.activeSchools}
                 icon={<CheckCircleFilled />}
-                color="#5BA89A"
-                iconBg="rgba(184,224,210,0.25)"
-                cardAccent="#B8E0D2"
+                color="#22C55E"
+                iconBg="rgba(220,252,231,0.25)"
+                cardAccent="#DCFCE7"
                 delta={`${Math.round((metrics.activeSchools / Math.max(metrics.totalSchools, 1)) * 100)}% active`}
                 deltaType="up"
               />
@@ -647,9 +647,9 @@ const SuperAdminDashboard = () => {
                 title="Total Students"
                 value={metrics.totalStudents}
                 icon={<TeamOutlined />}
-                color="#9B87B8"
-                iconBg="rgba(205,180,219,0.25)"
-                cardAccent="#CDB4DB"
+                color="#14B8A6"
+                iconBg="rgba(20,184,166,0.25)"
+                cardAccent="rgba(20,184,166,0.15)"
                 delta="Live count"
                 deltaType="up"
               />
@@ -659,9 +659,9 @@ const SuperAdminDashboard = () => {
                 title="Revenue (YTD)"
                 value={formatMoney(metrics.totalRevenue)}
                 icon={<DollarOutlined />}
-                color="#5BA89A"
-                iconBg="rgba(184,224,210,0.25)"
-                cardAccent="#B8E0D2"
+                color="#22C55E"
+                iconBg="rgba(220,252,231,0.25)"
+                cardAccent="#DCFCE7"
                 delta="Collected"
                 deltaType="up"
               />
@@ -671,9 +671,9 @@ const SuperAdminDashboard = () => {
                 title="Expiring Soon"
                 value={Math.max(metrics.expiringSoon, 0)}
                 icon={<WarningOutlined />}
-                color="#D4922A"
-                iconBg="rgba(253,226,167,0.35)"
-                cardAccent="#FDE2A7"
+                color="#F59E0B"
+                iconBg="rgba(254,243,199,0.35)"
+                cardAccent="#FEF3C7"
                 delta="Needs follow-up"
                 deltaType="down"
               />
@@ -684,9 +684,9 @@ const SuperAdminDashboard = () => {
                 value={metrics.avgHealth}
                 suffix="%"
                 icon={<ThunderboltFilled />}
-                color="#5B9EC9"
-                iconBg="rgba(167,199,231,0.22)"
-                cardAccent="#A7C7E7"
+                color="#2563EB"
+                iconBg="rgba(219,234,254,0.22)"
+                cardAccent="#DBEAFE"
                 delta="Live average"
                 deltaType="up"
               />

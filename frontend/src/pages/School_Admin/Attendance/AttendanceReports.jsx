@@ -248,7 +248,7 @@ const AttendanceReports = () => {
         <span
           style={{
             fontSize: 12,
-            color: workingHours(r) !== "—" ? "#5BA89A" : "var(--text-muted)",
+            color: workingHours(r) !== "—" ? "#22C55E" : "var(--text-muted)",
             fontWeight: workingHours(r) !== "—" ? 600 : 400,
           }}
         >
@@ -359,9 +359,9 @@ const AttendanceReports = () => {
       {/* ── Summary stat cards ── */}
       <div style={statGrid(130)}>
         {[
-          { key: "present", label: "Present", color: "#5BA89A" },
-          { key: "absent",  label: "Absent",  color: "#D96B7A" },
-          { key: "late",    label: "Late",    color: "#D4922A" },
+          { key: "present", label: "Present", color: "#22C55E" },
+          { key: "absent",  label: "Absent",  color: "#EF4444" },
+          { key: "late",    label: "Late",    color: "#F59E0B" },
           { key: "leave",   label: "Leave",   color: "#0891b2" },
         ].map(({ key, label, color }) => (
           <div

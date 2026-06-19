@@ -218,7 +218,7 @@ const Profile = () => {
   if (portalError) {
     return (
       <div style={{ ...pageWrapper }}>
-        <div style={{ border: "1px solid #fca5a5", background: "#fff1f2", borderRadius: 12, padding: 16, color: "#D96B7A" }}>
+        <div style={{ border: "1px solid #fca5a5", background: "#fff1f2", borderRadius: 12, padding: 16, color: "#EF4444" }}>
           <p style={{ fontWeight: 600, margin: "0 0 4px" }}>Error</p>
           <p style={{ fontSize: 13, margin: 0 }}>{portalError}</p>
         </div>
@@ -245,7 +245,7 @@ const Profile = () => {
                 {profileForm.name || "Student Profile"}
               </div>
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{profileForm.email || "No email"}</div>
-              <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "rgba(184,224,210,0.2)", color: "#5BA89A", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
+              <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "rgba(220,252,231,0.2)", color: "#22C55E", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
                 Active Student
               </span>
             </div>
@@ -297,7 +297,7 @@ const Profile = () => {
           </Section>
 
           {saveState.message && (
-            <p style={{ fontSize: 13, color: saveState.isError ? "#D96B7A" : "#5BA89A", margin: "8px 0 0" }}>
+            <p style={{ fontSize: 13, color: saveState.isError ? "#EF4444" : "#22C55E", margin: "8px 0 0" }}>
               {saveState.message}
             </p>
           )}

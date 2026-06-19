@@ -28,9 +28,9 @@ const METHOD_OPTIONS = [
 ];
 
 const STATUS_META = {
-  paid:    { color: "#5BA89A", bg: "#f0fdf4", label: "Paid",    icon: <CheckCircleOutlined /> },
-  unpaid:  { color: "#D96B7A", bg: "#fff1f2", label: "Unpaid",  icon: <ExclamationCircleOutlined /> },
-  partial: { color: "#D4922A", bg: "#fffbeb", label: "Partial", icon: <ClockCircleOutlined /> },
+  paid:    { color: "#22C55E", bg: "#f0fdf4", label: "Paid",    icon: <CheckCircleOutlined /> },
+  unpaid:  { color: "#EF4444", bg: "#fff1f2", label: "Unpaid",  icon: <ExclamationCircleOutlined /> },
+  partial: { color: "#F59E0B", bg: "#fffbeb", label: "Partial", icon: <ClockCircleOutlined /> },
 };
 
 const fmtCurrency = (n) =>
@@ -60,7 +60,7 @@ const Receipt = React.forwardRef(({ fee, student, payment, school }, ref) => (
       <div><b>Class:</b></div>           <div>{fee?.schoolClassId?.name || "—"}</div>
       <div><b>Fee Head:</b></div>        <div>{fee?.feeHeadId?.name || fee?.headName || "—"}</div>
       <div><b>Total Amount:</b></div>    <div>{fmtCurrency(fee?.amount)}</div>
-      <div><b>Amount Paid:</b></div>     <div style={{ fontWeight: 700, color: "#5BA89A" }}>{fmtCurrency(payment?.amount)}</div>
+      <div><b>Amount Paid:</b></div>     <div style={{ fontWeight: 700, color: "#22C55E" }}>{fmtCurrency(payment?.amount)}</div>
       <div><b>Payment Method:</b></div>  <div style={{ textTransform: "capitalize" }}>{(payment?.method || "").replace("_", " ")}</div>
       {payment?.reference && <><div><b>Reference:</b></div><div>{payment.reference}</div></>}
     </div>
@@ -209,14 +209,14 @@ const FeeCollection = () => {
       title:  "Paid",
       dataIndex: "paidAmount",
       align:  "right",
-      render: (v) => <span style={{ color: "#5BA89A", fontWeight: 700 }}>{fmtCurrency(v)}</span>,
+      render: (v) => <span style={{ color: "#22C55E", fontWeight: 700 }}>{fmtCurrency(v)}</span>,
     },
     {
       title:  "Balance",
       align:  "right",
       render: (_, r) => {
         const bal = (r.amount || 0) - (r.paidAmount || 0);
-        return <span style={{ color: bal > 0 ? "#D96B7A" : "#5BA89A", fontWeight: 700 }}>{fmtCurrency(bal)}</span>;
+        return <span style={{ color: bal > 0 ? "#EF4444" : "#22C55E", fontWeight: 700 }}>{fmtCurrency(bal)}</span>;
       },
     },
     {
@@ -316,8 +316,8 @@ const FeeCollection = () => {
         <div style={{ ...statGrid(160), marginBottom: 0 }}>
           {[
             { label: "Total Fees",   value: summary.total,   color: "var(--primary)" },
-            { label: "Amount Paid",  value: summary.paid,    color: "#5BA89A" },
-            { label: "Balance Due",  value: summary.pending, color: "#D96B7A" },
+            { label: "Amount Paid",  value: summary.paid,    color: "#22C55E" },
+            { label: "Balance Due",  value: summary.pending, color: "#EF4444" },
           ].map(({ label, value, color }) => (
             <div key={label} style={{
               background: "var(--surface)", border: "1px solid var(--border-muted)",
@@ -392,7 +392,7 @@ const FeeCollection = () => {
       >
         <div style={{ marginBottom: 12, padding: "10px 14px", background: "#f8f5ff", borderRadius: 8 }}>
           <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Balance Due</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#D96B7A" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#EF4444" }}>
             {fmtCurrency((payModal.fee?.amount || 0) - (payModal.fee?.paidAmount || 0))}
           </div>
         </div>

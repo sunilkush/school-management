@@ -1,275 +1,445 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Layout,
-  Breadcrumb,
-  Table,
-  Button,
-  Space,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  message,
-  Tag,
-  Card,
-  Row,
-  Col,
-  Select,
+  Button, Form, Input, InputNumber, Modal, Select, Space, Table, message,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined, EditOutlined, DeleteOutlined,
+  CarOutlined, UserOutlined, NodeIndexOutlined,
+  ToolOutlined, TeamOutlined, PhoneOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { createVehicle, deleteVehicle, fetchRoutes, fetchVehicles, updateVehicle } from "../../../features/transportSlice";
+import {
+  createVehicle, deleteVehicle, fetchRoutes, fetchVehicles, updateVehicle,
+} from "../../../features/transportSlice";
 import { fetchAllUser } from "../../../features/authSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
-const { Content } = Layout;
-const { Option } = Select;
+const C = {
+  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
+  accent: "#14B8A6", accentLight: "#CCFBF1",
+  warning: "#F59E0B", warningLight: "#FEF3C7",
+  success: "#22C55E", successLight: "#DCFCE7",
+  danger: "#EF4444", dangerLight: "#FEE2E2",
+  purple: "#7C3AED", purpleLight: "#F5F3FF",
+  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
+  surface: "#FFFFFF",
+};
+
+const VEHICLE_TYPE_CFG = {
+  Bus: { color: C.primary,  bg: C.primaryLighter, border: C.primaryLight,  icon: "🚌" },
+  Van: { color: C.accent,   bg: C.accentLight,    border: "#99F6E4",        icon: "🚐" },
+  Car: { color: C.purple,   bg: C.purpleLight,    border: "#DDD6FE",        icon: "🚗" },
+};
+
+const STATUS_CFG = {
+  "Available":   { color: "#15803D", bg: C.successLight, border: "#86EFAC", dot: C.success },
+  "In Use":      { color: "#B45309", bg: C.warningLight,  border: "#FDE68A", dot: C.warning },
+  "Maintenance": { color: C.textSub, bg: "#F1F5F9",       border: C.border,  dot: C.textMuted },
+};
+
+const StatusBadge = ({ status }) => {
+  const cfg = STATUS_CFG[status] || STATUS_CFG["Maintenance"];
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "3px 11px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+      background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+    }}>
+      <span style={{
+        width: 6, height: 6, borderRadius: "50%",
+        background: cfg.dot, display: "inline-block",
+      }} />
+      {status}
+    </span>
+  );
+};
 
 const Vehicles = () => {
   const dispatch = useDispatch();
-   const { vehicles, routes, loading } = useSelector((state) => state.transport);
-  const { users = [] } = useSelector((state) => state.auth);
+  const { vehicles, routes, loading } = useSelector((s) => s.transport);
+  const { users = [] }                = useSelector((s) => s.auth);
 
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible]   = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
-      dispatch(fetchVehicles());
+    dispatch(fetchVehicles());
     dispatch(fetchRoutes());
     dispatch(fetchAllUser());
   }, [dispatch]);
+
   const driverOptions = useMemo(
-    () =>
-      users
-        .filter((user) => user?.role?.name === "Driver")
-        .map((user) => ({
-          value: user.name,
-          label: user.name,
-          contact: user.phone || user.mobile || user.contactNumber || user.email || "",
-        })),
-    [users]
+    () => users
+      .filter((u) => u?.role?.name === "Driver")
+      .map((u) => ({
+        value: u.name,
+        label: u.name,
+        contact: u.phone || u.mobile || u.contactNumber || u.email || "",
+      })),
+    [users],
   );
 
   const routeOptions = useMemo(
-    () =>
-      routes.map((route) => ({
-        value: route.name,
-        label: route.name,
-      })),
-    [routes]
+    () => routes.map((r) => ({ value: r.name, label: r.name })),
+    [routes],
   );
+
   const dataSource = useMemo(
-    () =>
-      vehicles.map((vehicle) => ({
-        key: vehicle._id,
-        _id: vehicle._id,
-        type: vehicle.vehicleType,
-        number: vehicle.busNumber,
-        driver: vehicle.driverName,
-        driverContact: vehicle.driverContact,
-        drivingLicense: vehicle.drivingLicense,
-        capacity: vehicle.capacity,
-        status: vehicle.status,
-        route: vehicle.route,
-      })),
-    [vehicles]
+    () => vehicles.map((v) => ({
+      key: v._id, _id: v._id,
+      type:           v.vehicleType,
+      number:         v.busNumber,
+      driver:         v.driverName,
+      driverContact:  v.driverContact,
+      drivingLicense: v.drivingLicense,
+      capacity:       v.capacity,
+      status:         v.status,
+      route:          v.route,
+    })),
+    [vehicles],
   );
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setEditingVehicle(null);
+    form.resetFields();
+  };
 
   const handleSaveVehicle = async (values) => {
-    const payload = {
-      type: values.type,
-      number: values.number,
-      driver: values.driver,
-      driverContact: values.driverContact,
-      drivingLicense: values.drivingLicense,
-      capacity: values.capacity,
-      status: values.status,
-      route: values.route,
-    };
-
     try {
       if (editingVehicle?._id) {
-        await dispatch(updateVehicle({ id: editingVehicle._id, payload })).unwrap();
-        message.success("Vehicle updated successfully!");
+        await dispatch(updateVehicle({ id: editingVehicle._id, payload: values })).unwrap();
+        message.success("Vehicle updated successfully");
       } else {
-        await dispatch(createVehicle(payload)).unwrap();
-        message.success("Vehicle added successfully!");
+        await dispatch(createVehicle(values)).unwrap();
+        message.success("Vehicle added successfully");
       }
-      setModalVisible(false);
-      setEditingVehicle(null);
-      form.resetFields();
-    } catch (error) {
-      message.error(error || "Unable to save vehicle");
+      closeModal();
+    } catch (err) {
+      message.error(err || "Unable to save vehicle");
     }
   };
 
-  const handleEditVehicle = (vehicle) => {
+  const handleEdit = (vehicle) => {
     setEditingVehicle(vehicle);
     form.setFieldsValue(vehicle);
     setModalVisible(true);
   };
-  const handleDriverChange = (selectedDriver) => {
-    const selectedDriverInfo = driverOptions.find((driver) => driver.value === selectedDriver);
 
-    form.setFieldsValue({
-      driver: selectedDriver,
-      driverContact: selectedDriverInfo?.contact || "",
-    });
+  const handleDriverChange = (name) => {
+    const info = driverOptions.find((d) => d.value === name);
+    form.setFieldsValue({ driver: name, driverContact: info?.contact || "" });
   };
-  const handleDeleteVehicle = (vehicle) => {
+
+  const handleDelete = (vehicle) =>
     Modal.confirm({
-      title: "Are you sure?",
-      content: `Do you want to delete vehicle ${vehicle.number}?`,
-      okText: "Yes",
-      cancelText: "No",
+      title: "Delete vehicle?",
+      content: `Remove vehicle ${vehicle.number} from the fleet?`,
+      okText: "Delete", okButtonProps: { danger: true },
       onOk: async () => {
         try {
           await dispatch(deleteVehicle(vehicle._id)).unwrap();
-          message.success("Vehicle deleted successfully!");
-        } catch (error) {
-          message.error(error || "Unable to delete vehicle");
+          message.success("Vehicle deleted");
+        } catch (err) {
+          message.error(err || "Unable to delete vehicle");
         }
       },
     });
+
+  const stats = {
+    total:     dataSource.length,
+    inUse:     dataSource.filter((v) => v.status === "In Use").length,
+    available: dataSource.filter((v) => v.status === "Available").length,
+    maintenance: dataSource.filter((v) => v.status === "Maintenance").length,
   };
 
-  const totalVehicles = dataSource.length;
-  const totalInUse = dataSource.filter((vehicle) => vehicle.status === "In Use").length;
-  const totalAvailable = dataSource.filter((vehicle) => vehicle.status === "Available").length;
-
   const columns = [
-    { title: "Type", dataIndex: "type", key: "type" },
-    { title: "Vehicle Number", dataIndex: "number", key: "number" },
-    { title: "Driver", dataIndex: "driver", key: "driver" },
-    { title: "Capacity", dataIndex: "capacity", key: "capacity" },
+    {
+      title: "Vehicle",
+      render: (_, r) => {
+        const cfg = VEHICLE_TYPE_CFG[r.type] || { color: C.textSub, bg: "#F1F5F9", border: C.border, icon: "🚗" };
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+              background: cfg.bg, border: "1.5px solid " + cfg.border,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18,
+            }}>
+              {cfg.icon}
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, color: C.text, fontSize: 14, letterSpacing: "0.01em" }}>
+                {r.number}
+              </div>
+              <span style={{
+                fontSize: 11, padding: "1px 8px", borderRadius: 20,
+                background: cfg.bg, color: cfg.color,
+                border: `1px solid ${cfg.border}`, fontWeight: 700,
+              }}>
+                {r.type}
+              </span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Driver",
+      render: (_, r) => (
+        <div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6, marginBottom: 2,
+          }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: "50%",
+              background: `linear-gradient(135deg, ${C.primary}, ${C.accent})`,
+              color: "#fff", fontSize: 9, fontWeight: 800,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              {(r.driver || "?")[0]?.toUpperCase()}
+            </div>
+            <span style={{ fontWeight: 600, color: C.text, fontSize: 13 }}>{r.driver || "—"}</span>
+          </div>
+          {r.driverContact && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 4,
+              fontSize: 11, color: C.textMuted,
+            }}>
+              <PhoneOutlined style={{ fontSize: 9 }} />
+              {r.driverContact}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "Capacity",
+      dataIndex: "capacity",
+      render: (v) => (
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 5,
+          padding: "3px 11px", borderRadius: 20,
+          background: "#F8FAFC", border: "1px solid " + C.border,
+          fontSize: 12, fontWeight: 700, color: C.textSub,
+        }}>
+          <TeamOutlined style={{ fontSize: 10 }} />
+          {v} seats
+        </span>
+      ),
+    },
     {
       title: "Status",
       dataIndex: "status",
-      key: "status",
-      render: (status) => <Tag color={status === "In Use" ? "red" : "green"}>{status}</Tag>,
+      filters: ["Available", "In Use", "Maintenance"].map((s) => ({ text: s, value: s })),
+      onFilter: (value, record) => record.status === value,
+      render: (v) => <StatusBadge status={v} />,
     },
-    { title: "Route Assigned", dataIndex: "route", key: "route" },
+    {
+      title: "Route",
+      dataIndex: "route",
+      render: (v) => v ? (
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 5,
+          padding: "3px 11px", borderRadius: 20,
+          background: C.accentLight, color: "#0F766E",
+          border: "1px solid #99F6E4",
+          fontSize: 12, fontWeight: 700,
+        }}>
+          <NodeIndexOutlined style={{ fontSize: 10 }} />
+          {v}
+        </span>
+      ) : <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>,
+    },
     {
       title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleEditVehicle(record)}>
-            Edit
-          </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteVehicle(record)}>
-            Delete
-          </Button>
+      width: 110,
+      render: (_, r) => (
+        <Space size={6}>
+          <Button
+            size="small" icon={<EditOutlined />}
+            onClick={() => handleEdit(r)}
+            style={{ borderRadius: 7, borderColor: C.primary, color: C.primary, background: C.primaryLighter }}
+          />
+          <Button
+            size="small" icon={<DeleteOutlined />}
+            onClick={() => handleDelete(r)}
+            style={{ borderRadius: 7, borderColor: C.danger, color: C.danger, background: C.dangerLight }}
+          />
         </Space>
       ),
     },
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Transport</Breadcrumb.Item>
-        <Breadcrumb.Item>Vehicles</Breadcrumb.Item>
-      </Breadcrumb>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("veh-tbl")}</style>
 
-      <Content>
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}>
-            <Card title="Total Vehicles">{totalVehicles}</Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="In Use">{totalInUse}</Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="Available">{totalAvailable}</Card>
-          </Col>
-        </Row>
-
-        <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2>School Vehicles</h2>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
+      <PageHeader
+        title="School Vehicles"
+        subtitle="Manage your fleet — buses, vans, and driver assignments"
+        icon={<CarOutlined />}
+        extra={
+          <Button
+            icon={<PlusOutlined />}
+            onClick={() => setModalVisible(true)}
+            style={{
+              background: C.primary, borderColor: C.primary,
+              color: "#fff", borderRadius: 10, fontWeight: 600,
+            }}
+          >
             Add Vehicle
           </Button>
+        }
+      />
+
+      {/* Stats */}
+      <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
+        {[
+          { icon: <CarOutlined />,    label: "Total Vehicles", value: stats.total,       color: C.primary },
+          { icon: <CarOutlined />,    label: "In Use",         value: stats.inUse,        color: C.warning },
+          { icon: <CarOutlined />,    label: "Available",      value: stats.available,    color: C.success },
+          { icon: <ToolOutlined />,   label: "Maintenance",    value: stats.maintenance,  color: C.textSub },
+        ].map((s) => (
+          <div key={s.label} style={{
+            background: C.surface, borderRadius: 14,
+            border: "1px solid " + C.border,
+            padding: "16px 20px",
+            display: "flex", alignItems: "center", gap: 14,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+          }}>
+            <div style={iconWell(s.color, 42)}>{s.icon}</div>
+            <div>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: s.color,
+                textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2,
+              }}>
+                {s.label}
+              </div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: C.text, lineHeight: 1 }}>
+                {s.value}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+        <div style={{
+          padding: "14px 20px", borderBottom: "1px solid " + C.border,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>Fleet</span>
+          <span style={{
+            fontSize: 12, padding: "2px 9px", borderRadius: 20,
+            background: C.primaryLighter, color: C.primary,
+            border: "1px solid " + C.primaryLight, fontWeight: 600,
+          }}>
+            {vehicles.length}
+          </span>
         </div>
+        <Table
+          className="veh-tbl"
+          columns={columns}
+          dataSource={dataSource}
+          loading={loading}
+          pagination={{ pageSize: 8, showTotal: (t) => `${t} vehicles` }}
+          rowKey="key"
+          scroll={{ x: "max-content" }}
+          locale={{ emptyText: "No vehicles added yet. Click 'Add Vehicle' to get started." }}
+        />
+      </div>
 
-        <Table columns={columns} dataSource={dataSource} loading={loading} pagination={{ pageSize: 5 }} rowKey="key" />
-
-        <Modal
-          title={editingVehicle ? "Edit Vehicle" : "Add Vehicle"}
-          open={modalVisible}
-          onCancel={() => {
-            setModalVisible(false);
-            setEditingVehicle(null);
-            form.resetFields();
-          }}
-          footer={null}
-        >
-          <Form form={form} layout="vertical" onFinish={handleSaveVehicle}>
-            <Form.Item label="Type" name="type" rules={[{ required: true, message: "Enter vehicle type" }]}>
-              <Select placeholder="Select vehicle type">
-                <Option value="Bus">Bus</Option>
-                <Option value="Van">Van</Option>
-                <Option value="Car">Car</Option>
+      {/* Modal */}
+      <Modal
+        title={
+          <Space>
+            <CarOutlined style={{ color: C.primary }} />
+            <span style={{ fontWeight: 700 }}>
+              {editingVehicle ? "Edit Vehicle" : "Add Vehicle"}
+            </span>
+          </Space>
+        }
+        open={modalVisible}
+        onCancel={closeModal}
+        footer={[
+          <Button key="cancel" onClick={closeModal}
+            style={{ borderRadius: 8, borderColor: C.border, color: C.textSub }}>
+            Cancel
+          </Button>,
+          <Button key="save" onClick={() => form.submit()}
+            style={{ borderRadius: 8, background: C.primary, borderColor: C.primary, color: "#fff", fontWeight: 600 }}>
+            {editingVehicle ? "Update" : "Add"}
+          </Button>,
+        ]}
+        destroyOnClose
+        width={520}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSaveVehicle} style={{ marginTop: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Form.Item label="Vehicle Type" name="type" rules={[{ required: true, message: "Required" }]}>
+              <Select placeholder="Select type">
+                <Select.Option value="Bus">🚌 Bus</Select.Option>
+                <Select.Option value="Van">🚐 Van</Select.Option>
+                <Select.Option value="Car">🚗 Car</Select.Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Vehicle Number" name="number" rules={[{ required: true, message: "Enter vehicle number" }]}>
-              <Input placeholder="Enter vehicle number" />
+            <Form.Item label="Vehicle Number" name="number" rules={[{ required: true, message: "Required" }]}>
+              <Input placeholder="e.g. MH-12-AB-1234" />
             </Form.Item>
-           <Form.Item label="Driver Name" name="driver" rules={[{ required: true, message: "Select driver" }]}>
-              <Select
-                placeholder="Select driver"
-                showSearch
-                optionFilterProp="label"
-                options={driverOptions}
-                onChange={handleDriverChange}
-              />
-            </Form.Item>
+          </div>
+
+          <Form.Item label="Driver Name" name="driver" rules={[{ required: true, message: "Select driver" }]}>
+            <Select
+              showSearch optionFilterProp="label"
+              placeholder="Search driver…"
+              options={driverOptions}
+              onChange={handleDriverChange}
+              suffixIcon={<UserOutlined style={{ color: C.textMuted }} />}
+            />
+          </Form.Item>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item label="Driver Contact" name="driverContact">
-               <Input placeholder="Auto-fetched from driver profile" readOnly />
+              <Input
+                placeholder="Auto-filled from profile"
+                readOnly
+                prefix={<PhoneOutlined style={{ color: C.textMuted, fontSize: 12 }} />}
+              />
             </Form.Item>
             <Form.Item label="Driving License" name="drivingLicense">
-              <Input placeholder="Enter driving license" />
+              <Input placeholder="License number" />
             </Form.Item>
-            <Form.Item label="Capacity" name="capacity" rules={[{ required: true, message: "Enter capacity" }]}>
-              <InputNumber min={1} style={{ width: "100%" }} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Form.Item label="Capacity" name="capacity" rules={[{ required: true, message: "Required" }]}>
+              <InputNumber min={1} style={{ width: "100%" }} placeholder="0" addonAfter="seats" />
             </Form.Item>
-            <Form.Item label="Status" name="status" rules={[{ required: true, message: "Select status" }]}>
+            <Form.Item label="Status" name="status" rules={[{ required: true, message: "Required" }]}>
               <Select placeholder="Select status">
-                <Option value="In Use">In Use</Option>
-                <Option value="Available">Available</Option>
-                <Option value="Maintenance">Maintenance</Option>
+                <Select.Option value="Available">Available</Select.Option>
+                <Select.Option value="In Use">In Use</Select.Option>
+                <Select.Option value="Maintenance">Maintenance</Select.Option>
               </Select>
             </Form.Item>
-             <Form.Item label="Route Assigned" name="route">
-              <Select
-                placeholder="Select route"
-                allowClear
-                showSearch
-                optionFilterProp="label"
-                options={routeOptions}
-              />
-            </Form.Item>
-            <Form.Item style={{ textAlign: "right" }}>
-              <Space>
-                <Button
-                  onClick={() => {
-                    setModalVisible(false);
-                    setEditingVehicle(null);
-                    form.resetFields();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="primary" htmlType="submit">
-                  {editingVehicle ? "Update" : "Add"}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-      </Content>
-    </Layout>
+          </div>
+
+          <Form.Item label="Route Assigned" name="route">
+            <Select
+              allowClear showSearch optionFilterProp="label"
+              placeholder="Select route (optional)"
+              options={routeOptions}
+              suffixIcon={<NodeIndexOutlined style={{ color: C.textMuted }} />}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
   );
 };
 

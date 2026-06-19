@@ -58,11 +58,16 @@ import tempAccessRoutes from "./tempAccess.routes.js";
 import librarySettingRoutes from "./librarySetting.routes.js";
 import incomeRoutes from "./income.routes.js";
 import expenseRoutes from "./expense.routes.js";
+import advanceRoutes from "./advance.routes.js";
+import bonusRoutes from "./bonus.routes.js";
+import reimbursementRoutes from "./reimbursement.routes.js";
+import selfAttendanceRoutes from "./selfAttendance.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
   ["/user", userRoutes],
   ["/class", classRoutes],
+  ["/attendance/self", selfAttendanceRoutes],
   ["/attendance", attendanceRoutes],
   ["/subject", subjectRoutes],
   ["/books", booksRoutes],
@@ -120,6 +125,9 @@ export const apiV1Routes = [
   ["/library-settings", librarySettingRoutes],
   ["/income", incomeRoutes],
   ["/expenses", expenseRoutes],
+  ["/advance", advanceRoutes],
+  ["/bonus", bonusRoutes],
+  ["/reimbursements", reimbursementRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

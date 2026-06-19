@@ -378,9 +378,9 @@ const Assignments = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<FileTextOutlined />} label="Total"   value={stats.total}   color="#9B87B8" />
-        <StatCard icon={<FileTextOutlined />} label="Active"  value={stats.active}  color="#5BA89A" />
-        <StatCard icon={<FileTextOutlined />} label="Overdue" value={stats.overdue} color="#D96B7A" />
+        <StatCard icon={<FileTextOutlined />} label="Total"   value={stats.total}   color="#14B8A6" />
+        <StatCard icon={<FileTextOutlined />} label="Active"  value={stats.active}  color="#22C55E" />
+        <StatCard icon={<FileTextOutlined />} label="Overdue" value={stats.overdue} color="#EF4444" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 0 }}>

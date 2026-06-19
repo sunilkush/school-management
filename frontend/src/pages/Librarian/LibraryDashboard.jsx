@@ -62,12 +62,12 @@ const ActionTile = ({ icon, label, path, color, navigate }) => (
 /* ── Status tag (pastel) ─────────────────────────────────────────── */
 const StatusTag = ({ status }) => {
   const map = {
-    Issued:   { color: "#8A5E10", bg: "rgba(253,226,167,0.32)", border: "rgba(253,226,167,0.6)" },
-    Returned: { color: "#2E7A6E", bg: "rgba(184,224,210,0.25)", border: "rgba(184,224,210,0.5)" },
-    Overdue:  { color: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
-    Lost:     { color: "#6B4F96", bg: "rgba(205,180,219,0.22)", border: "rgba(205,180,219,0.4)" },
+    Issued:   { color: "#B45309", bg: "rgba(254,243,199,0.32)", border: "rgba(254,243,199,0.6)" },
+    Returned: { color: "#15803D", bg: "rgba(220,252,231,0.25)", border: "rgba(220,252,231,0.5)" },
+    Overdue:  { color: "#DC2626", bg: "rgba(254,226,226,0.25)", border: "rgba(254,226,226,0.5)" },
+    Lost:     { color: "#6D28D9", bg: "rgba(20,184,166,0.22)", border: "rgba(20,184,166,0.4)" },
   };
-  const s = map[status] || { color: "#6B7890", bg: "rgba(228,234,246,0.35)", border: "rgba(228,234,246,0.6)" };
+  const s = map[status] || { color: "#64748B", bg: "rgba(228,234,246,0.35)", border: "rgba(228,234,246,0.6)" };
   return (
     <span style={{ fontSize: 11, fontWeight: 700, color: s.color, background: s.bg, border: `1px solid ${s.border}`, padding: "2px 9px", borderRadius: 99 }}>
       {status}
@@ -116,7 +116,7 @@ const LibraryDashboard = () => {
     return Object.entries(map).slice(-6).map(([month, count]) => ({ month, count }));
   }, [issuedBooks]);
 
-  const PIE_COLORS = ["#A7C7E7", "#CDB4DB", "#B8E0D2", "#FDE2A7", "#FFCAD4", "#C8B8E0"];
+  const PIE_COLORS = ["#DBEAFE", "rgba(20,184,166,0.15)", "#DCFCE7", "#FEF3C7", "#FEE2E2", "#C8B8E0"];
 
   const recentActivity = stats?.recentActivity || issuedBooks.slice(0, 10).map((r) => ({
     _id: r._id, bookTitle: r.bookId?.title || "Unknown",
@@ -141,7 +141,7 @@ const LibraryDashboard = () => {
       title: "Due",
       dataIndex: "dueDate",
       render: (d) => d ? (
-        <span style={{ fontSize: 11, color: new Date(d) < new Date() ? "#D96B7A" : "var(--text-muted)" }}>
+        <span style={{ fontSize: 11, color: new Date(d) < new Date() ? "#EF4444" : "var(--text-muted)" }}>
           {dayjs(d).format("DD MMM")}
         </span>
       ) : "—",
@@ -150,7 +150,7 @@ const LibraryDashboard = () => {
       title: "Fine",
       dataIndex: "fine",
       render: (f) => f > 0 ? (
-        <span style={{ fontSize: 11, fontWeight: 700, color: "#9E3A4A", background: "rgba(255,202,212,0.28)", border: "1px solid rgba(255,202,212,0.5)", padding: "2px 8px", borderRadius: 99 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#DC2626", background: "rgba(254,226,226,0.28)", border: "1px solid rgba(254,226,226,0.5)", padding: "2px 8px", borderRadius: 99 }}>
           ₹{f}
         </span>
       ) : null,
@@ -183,25 +183,25 @@ const LibraryDashboard = () => {
 
       {/* ── KPI Row ─────────────────────────────────────────────── */}
       <div style={statGrid(170)}>
-        <KpiCard icon={<BookOutlined />}         label="Total Books"      value={stats?.totalBooks ?? books.length}                                           color="#9B87B8" onClick={() => navigate("librarian/book-catalog")} />
-        <KpiCard icon={<CheckCircleOutlined />}  label="Available Copies" value={stats?.availableCopies}                                                      color="#5BA89A" />
-        <KpiCard icon={<FileTextOutlined />}     label="Currently Issued" value={stats?.issuedCount}                                                          color="#5B9EC9" onClick={() => navigate("librarian/issue-return")} />
-        <KpiCard icon={<AlertOutlined />}        label="Overdue"          value={stats?.overdueCount}                color="#D96B7A" sub={stats?.overdueCount > 0 ? "Needs attention" : undefined} onClick={() => navigate("librarian/overdue")} />
-        <KpiCard icon={<DollarOutlined />}       label="Pending Fines"    value={stats?.pendingFinesAmount != null ? `₹${stats.pendingFinesAmount}` : "₹0"}  color="#D4922A" onClick={() => navigate("librarian/fines")} />
-        <KpiCard icon={<TeamOutlined />}         label="Members"          value={stats?.totalMembers ?? "—"}                                                  color="#9B87B8" onClick={() => navigate("librarian/members")} />
+        <KpiCard icon={<BookOutlined />}         label="Total Books"      value={stats?.totalBooks ?? books.length}                                           color="#14B8A6" onClick={() => navigate("librarian/book-catalog")} />
+        <KpiCard icon={<CheckCircleOutlined />}  label="Available Copies" value={stats?.availableCopies}                                                      color="#22C55E" />
+        <KpiCard icon={<FileTextOutlined />}     label="Currently Issued" value={stats?.issuedCount}                                                          color="#2563EB" onClick={() => navigate("librarian/issue-return")} />
+        <KpiCard icon={<AlertOutlined />}        label="Overdue"          value={stats?.overdueCount}                color="#EF4444" sub={stats?.overdueCount > 0 ? "Needs attention" : undefined} onClick={() => navigate("librarian/overdue")} />
+        <KpiCard icon={<DollarOutlined />}       label="Pending Fines"    value={stats?.pendingFinesAmount != null ? `₹${stats.pendingFinesAmount}` : "₹0"}  color="#F59E0B" onClick={() => navigate("librarian/fines")} />
+        <KpiCard icon={<TeamOutlined />}         label="Members"          value={stats?.totalMembers ?? "—"}                                                  color="#14B8A6" onClick={() => navigate("librarian/members")} />
       </div>
 
       {/* ── Quick Actions ──────────────────────────────────────── */}
       <div style={{ ...sectionPanel, padding: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quick Actions</div>
         <div style={statGrid(120)}>
-          <ActionTile icon={<BookOutlined />}        label="Add Book"       path="librarian/book-catalog" color="#9B87B8" navigate={navigate} />
-          <ActionTile icon={<FileTextOutlined />}     label="Issue Book"     path="librarian/issue-return" color="#5B9EC9" navigate={navigate} />
-          <ActionTile icon={<AlertOutlined />}        label="Overdue Books"  path="librarian/overdue"      color="#D96B7A" navigate={navigate} />
-          <ActionTile icon={<DollarOutlined />}       label="Fine Management" path="librarian/fines"      color="#D4922A" navigate={navigate} />
-          <ActionTile icon={<TeamOutlined />}         label="Members"        path="librarian/members"      color="#5BA89A" navigate={navigate} />
-          <ActionTile icon={<ClockCircleOutlined />}  label="Reports"        path="librarian/reports"      color="#9B87B8" navigate={navigate} />
-          <ActionTile icon={<SettingOutlined />}      label="Settings"       path="librarian/settings"     color="#8A94A6" navigate={navigate} />
+          <ActionTile icon={<BookOutlined />}        label="Add Book"       path="librarian/book-catalog" color="#14B8A6" navigate={navigate} />
+          <ActionTile icon={<FileTextOutlined />}     label="Issue Book"     path="librarian/issue-return" color="#2563EB" navigate={navigate} />
+          <ActionTile icon={<AlertOutlined />}        label="Overdue Books"  path="librarian/overdue"      color="#EF4444" navigate={navigate} />
+          <ActionTile icon={<DollarOutlined />}       label="Fine Management" path="librarian/fines"      color="#F59E0B" navigate={navigate} />
+          <ActionTile icon={<TeamOutlined />}         label="Members"        path="librarian/members"      color="#22C55E" navigate={navigate} />
+          <ActionTile icon={<ClockCircleOutlined />}  label="Reports"        path="librarian/reports"      color="#14B8A6" navigate={navigate} />
+          <ActionTile icon={<SettingOutlined />}      label="Settings"       path="librarian/settings"     color="#94A3B8" navigate={navigate} />
         </div>
       </div>
 
@@ -236,7 +236,7 @@ const LibraryDashboard = () => {
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#CDB4DB" radius={[6, 6, 0, 0]} name="Books Issued" />
+                  <Bar dataKey="count" fill="rgba(20,184,166,0.15)" radius={[6, 6, 0, 0]} name="Books Issued" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -247,10 +247,10 @@ const LibraryDashboard = () => {
       {/* ── Status summary tiles ────────────────────────────────── */}
       <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
         {[
-          { label: "Issued",   count: issuedBooks.filter((b) => b.status === "Issued").length,   color: "#8A5E10", bg: "rgba(253,226,167,0.30)", border: "rgba(253,226,167,0.55)" },
-          { label: "Returned", count: issuedBooks.filter((b) => b.status === "Returned").length, color: "#2E7A6E", bg: "rgba(184,224,210,0.25)", border: "rgba(184,224,210,0.5)" },
-          { label: "Overdue",  count: issuedBooks.filter((b) => b.status === "Overdue").length,  color: "#9E3A4A", bg: "rgba(255,202,212,0.25)", border: "rgba(255,202,212,0.5)" },
-          { label: "Lost",     count: issuedBooks.filter((b) => b.status === "Lost").length,     color: "#6B4F96", bg: "rgba(205,180,219,0.22)", border: "rgba(205,180,219,0.4)" },
+          { label: "Issued",   count: issuedBooks.filter((b) => b.status === "Issued").length,   color: "#B45309", bg: "rgba(254,243,199,0.30)", border: "rgba(254,243,199,0.55)" },
+          { label: "Returned", count: issuedBooks.filter((b) => b.status === "Returned").length, color: "#15803D", bg: "rgba(220,252,231,0.25)", border: "rgba(220,252,231,0.5)" },
+          { label: "Overdue",  count: issuedBooks.filter((b) => b.status === "Overdue").length,  color: "#DC2626", bg: "rgba(254,226,226,0.25)", border: "rgba(254,226,226,0.5)" },
+          { label: "Lost",     count: issuedBooks.filter((b) => b.status === "Lost").length,     color: "#6D28D9", bg: "rgba(20,184,166,0.22)", border: "rgba(20,184,166,0.4)" },
         ].map(({ label, count, color, bg, border }) => (
           <Col xs={12} sm={6} key={label}>
             <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 14, padding: "16px 18px", textAlign: "center" }}>
@@ -282,7 +282,7 @@ const LibraryDashboard = () => {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {stats.topBorrowedBooks.map((book, i) => (
               <div key={book._id || i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(205,180,219,0.2)", color: "#9B87B8", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(20,184,166,0.2)", color: "#14B8A6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
                   {i + 1}
                 </div>
                 <div style={{ flex: 1 }}>

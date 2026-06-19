@@ -21,7 +21,7 @@ const TotalSalaryByUnit = ({ data }) => {
     ? data.units
     : [
         { key: "Teaching", color: "#1677ff", label: "Teaching" },
-        { key: "Administration", color: "#9B87B8", label: "Administration" },
+        { key: "Administration", color: "#14B8A6", label: "Administration" },
       ];
   const chartData = data?.chartData?.length ? data.chartData : [{ month: "Jan", [units[0].key]: 0, [units[1].key]: 0 }];
 

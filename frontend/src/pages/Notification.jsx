@@ -202,23 +202,23 @@ const Notification = () => {
       title: "Visible",
       value: visibleNotifications.length,
       icon: <InboxOutlined />,
-      color: "#9B87B8",
-      background: "linear-gradient(135deg, rgba(205,180,219,0.2) 0%, var(--surface) 100%)",
+      color: "#14B8A6",
+      background: "linear-gradient(135deg, rgba(20,184,166,0.2) 0%, var(--surface) 100%)",
       helper: "Assigned to you",
     },
     {
       title: "Unread",
       value: unreadCount,
       icon: <BellOutlined />,
-      color: "#D4922A",
-      background: "linear-gradient(135deg, rgba(253,226,167,0.25) 0%, var(--surface) 100%)",
+      color: "#F59E0B",
+      background: "linear-gradient(135deg, rgba(254,243,199,0.25) 0%, var(--surface) 100%)",
       helper: "Needs attention",
     },
     {
       title: "Scheduled",
       value: analytics.scheduled || 0,
       icon: <CalendarOutlined />,
-      color: "#5B9EC9",
+      color: "#2563EB",
       background: "linear-gradient(135deg, #e0f2fe 0%, var(--surface) 100%)",
       helper: "Planned delivery",
     },
@@ -226,8 +226,8 @@ const Notification = () => {
       title: "Opened",
       value: analytics.opened || 0,
       icon: <EyeOutlined />,
-      color: "#5BA89A",
-      background: "linear-gradient(135deg, rgba(184,224,210,0.2) 0%, var(--surface) 100%)",
+      color: "#22C55E",
+      background: "linear-gradient(135deg, rgba(220,252,231,0.2) 0%, var(--surface) 100%)",
       helper: "Engagement",
     },
   ];
@@ -298,7 +298,7 @@ const Notification = () => {
             overflow: "hidden",
             background: "var(--surface)",
             border: "1px solid var(--border-muted)",
-            boxShadow: "0 12px 32px rgba(91, 158, 201, 0.06)",
+            boxShadow: "0 12px 32px rgba(37, 99, 235, 0.06)",
           }}
           styles={{ body: { padding: isMobile ? 18 : 28 } }}
         >
@@ -352,7 +352,7 @@ const Notification = () => {
             <Col xs={12} md={6} key={stat.title}>
               <Card
                 bordered={false}
-                style={{ borderRadius: 18, background: stat.background, boxShadow: "0 8px 24px rgba(91, 158, 201, 0.05)", height: "100%" }}
+                style={{ borderRadius: 18, background: stat.background, boxShadow: "0 8px 24px rgba(37, 99, 235, 0.05)", height: "100%" }}
                 styles={{ body: { padding: isMobile ? 14 : 18 } }}
               >
                 <Space direction="vertical" size={isMobile ? 8 : 12} style={{ width: "100%" }}>
@@ -386,7 +386,7 @@ const Notification = () => {
         {canCreateNotification && (
           <Card
             bordered={false}
-            style={{ borderRadius: 20, boxShadow: "0 10px 28px rgba(91, 158, 201, 0.05)" }}
+            style={{ borderRadius: 20, boxShadow: "0 10px 28px rgba(37, 99, 235, 0.05)" }}
             styles={{ body: { padding: isMobile ? 16 : 24 } }}
           >
             <Space direction="vertical" size={18} style={{ width: "100%" }}>
@@ -473,7 +473,7 @@ const Notification = () => {
 
         <Card
           bordered={false}
-          style={{ borderRadius: 20, boxShadow: "0 10px 28px rgba(91, 158, 201, 0.05)" }}
+          style={{ borderRadius: 20, boxShadow: "0 10px 28px rgba(37, 99, 235, 0.05)" }}
           styles={{ body: { padding: isMobile ? 16 : 24 } }}
         >
           <Space direction="vertical" size={18} style={{ width: "100%" }}>
@@ -545,10 +545,10 @@ const Notification = () => {
                         style={{
                           width: "100%",
                           cursor: item.isRead ? "default" : "pointer",
-                          background: item.isRead ? "var(--surface)" : "linear-gradient(90deg, rgba(205,180,219,0.2) 0%, var(--surface) 100%)",
+                          background: item.isRead ? "var(--surface)" : "linear-gradient(90deg, rgba(20,184,166,0.2) 0%, var(--surface) 100%)",
                           borderLeft: item.isRead ? "4px solid transparent" : "4px solid var(--primary)",
                           borderRadius: 16,
-                          boxShadow: item.isRead ? "0 4px 16px rgba(91, 158, 201, 0.04)" : "0 8px 24px rgba(124, 58, 237, 0.10)",
+                          boxShadow: item.isRead ? "0 4px 16px rgba(37, 99, 235, 0.04)" : "0 8px 24px rgba(124, 58, 237, 0.10)",
                         }}
                         styles={{ body: { padding: isMobile ? 14 : 18 } }}
                       >

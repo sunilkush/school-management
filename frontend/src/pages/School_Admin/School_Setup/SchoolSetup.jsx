@@ -23,7 +23,7 @@ const SchoolClassSectionTeacher = lazy(() => import("./SchoolClassSectionTeacher
    Design tokens
 ───────────────────────────────────────── */
 const tokens = (isDark) => ({
-  pageBg:      isDark ? "#0d0d0d"  : "#F7F8FC",
+  pageBg:      isDark ? "#0d0d0d"  : "#F8FAFC",
   cardBg:      isDark ? "#141414"  : "#ffffff",
   border:      isDark ? "#1f1f1f"  : "#f0f0f0",
   sectionBg:   isDark ? "#0f0f0f"  : "#f8faff",
@@ -54,7 +54,7 @@ const STEPS = [
     title: "Boards",
     desc: "Define examination boards",
     icon: ApartmentOutlined,
-    color: "#9B87B8",
+    color: "#14B8A6",
   },
   {
     key: "3",

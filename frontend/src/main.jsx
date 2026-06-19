@@ -230,6 +230,11 @@ const GeneratePayslip = lazy(() => import("./pages/School_Admin/Payroll/Generate
 const MonthlyPayrollReport = lazy(() => import("./pages/School_Admin/Payroll/MonthlyPayrollReport.jsx"));
 const PayrollSelfServicePage = lazy(() => import("./pages/Employee/PayrollSelfServicePage.jsx"));
 const CreateEmployee = lazy(()=>import('./pages/School_Admin/Payroll/CreateEmployee.jsx'));
+const SalaryAdvance = lazy(() => import("./pages/School_Admin/Payroll/SalaryAdvance.jsx"));
+const BonusIncentivePage = lazy(() => import("./pages/School_Admin/Payroll/BonusIncentivePage.jsx"));
+const ReimbursementsPage = lazy(() => import("./pages/School_Admin/Payroll/ReimbursementsPage.jsx"));
+const EmployeeSelfAttendance = lazy(() => import("./pages/Attendance/EmployeeSelfAttendance.jsx"));
+const GeofenceSettings = lazy(() => import("./pages/School_Admin/Attendance/GeofenceSettings.jsx"));
 
 const SendNotification = lazy(() => import("./pages/School_Admin/Communication/SendNotification.jsx"));
 const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"));
@@ -262,7 +267,7 @@ const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports
 const TeacherLeave = lazy(() => import("./pages/Teacher/Leave/TeacherLeave.jsx"));
 const SubjectResources = lazy(() => import("./pages/Teacher/StudyMaterials/SubjectResources.jsx"));
 const LessonPlans = lazy(() => import("./pages/Teacher/LessonPlans/LessonPlans.jsx"));
-const MyAttendanceMonthlyReport = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
+const MyAttendanceMonthlyReport = lazy(() => import("./pages/Attendance/MyAttendanceMonthlyReport.jsx"));
 
 // Student
 const StudentHostel = lazy(() => import("./pages/Student/Hostel/StudentHostel.jsx"));
@@ -536,6 +541,8 @@ const router = createBrowserRouter([
               { path: "attendance/mark",      element: <MarkAttendancePage /> },
               { path: "attendance/table",     element: <AttendanceTablePage /> },
               { path: "attendance/monthly",   element: <MonthlyReportPage /> },
+              { path: "attendance/geofence",  element: <GeofenceSettings /> },
+              { path: "attendance/live",      element: <GeofenceSettings /> },
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },
               { path: "library/card", element: <LibraryCard /> },
@@ -556,6 +563,9 @@ const router = createBrowserRouter([
               { path: "payroll/create-employee", element: <CreateEmployee/> },
               { path: "payroll/payslips", element: <GeneratePayslip /> },
               { path: "payroll/reports/monthly", element: <MonthlyPayrollReport /> },
+              { path: "payroll/advance", element: <SalaryAdvance /> },
+              { path: "payroll/bonus", element: <BonusIncentivePage /> },
+              { path: "payroll/reimbursements", element: <ReimbursementsPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports", element: <SchoolAdminReport /> },
@@ -609,6 +619,7 @@ const router = createBrowserRouter([
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
               { path: "attendance/my/monthly", element: <MyAttendanceMonthlyReport /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
              // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
@@ -717,6 +728,9 @@ const router = createBrowserRouter([
               { path: "salary/create-employee", element: <CreateEmployee /> },
               { path: "salary/payslips", element: <GeneratePayslip /> },
               { path: "salary/reports/monthly", element: <MonthlyPayrollReport /> },
+              { path: "salary/advance", element: <SalaryAdvance /> },
+              { path: "salary/bonus", element: <BonusIncentivePage /> },
+              { path: "salary/reimbursements", element: <ReimbursementsPage /> },
               { path: "income",           element: <IncomeManagement /> },
               { path: "expenses",         element: <ExpenseManagement /> },
               { path: "reports",          element: <FinancialReports /> },
@@ -1074,6 +1088,7 @@ const router = createBrowserRouter([
               { index: true, element: <StaffDashboard /> },
               { path: "tasks", element: <Schedule /> },
               { path: "attendance", element: <MyAttendancePage /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },

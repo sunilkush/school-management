@@ -452,8 +452,8 @@ const EnterGrades = () => {
 
           {summary && (
             <Space style={{ marginBottom: 12 }}>
-              <span style={pill("#5B9EC9")}>Marks Entered: {summary.entered}</span>
-              <span style={pill("#5BA89A")}>Average: {summary.average}</span>
+              <span style={pill("#2563EB")}>Marks Entered: {summary.entered}</span>
+              <span style={pill("#22C55E")}>Average: {summary.average}</span>
             </Space>
           )}
 

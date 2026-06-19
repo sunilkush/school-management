@@ -296,7 +296,7 @@ const handleGenerateInstallments = async () => {
           setPaymentOpen(false);
           refreshFeeData();
         },
-        theme: { color: "#5B9EC9" },
+        theme: { color: "#2563EB" },
       };
 
       new window.Razorpay(options).open();
@@ -422,7 +422,7 @@ const handleGenerateInstallments = async () => {
         style={{
           borderRadius: 24,
           marginBottom: 18,
-          boxShadow: "0 10px 30px rgba(91,158,201,0.06)",
+          boxShadow: "0 10px 30px rgba(37,99,235,0.06)",
         }}
       >
         <Row gutter={[18, 18]} align="middle">
@@ -483,13 +483,13 @@ const handleGenerateInstallments = async () => {
 
         <Col xs={24} sm={12} xl={6}>
           <Card bordered={false} style={{ borderRadius: 20 }}>
-            <Statistic title="Paid" value={paidFees} formatter={money} valueStyle={{ color: "#5BA89A" }} prefix={<CheckCircleOutlined />} />
+            <Statistic title="Paid" value={paidFees} formatter={money} valueStyle={{ color: "#22C55E" }} prefix={<CheckCircleOutlined />} />
           </Card>
         </Col>
 
         <Col xs={24} sm={12} xl={6}>
           <Card bordered={false} style={{ borderRadius: 20 }}>
-            <Statistic title="Pending" value={dueFees} formatter={money} valueStyle={{ color: "#D96B7A" }} prefix={<ClockCircleOutlined />} />
+            <Statistic title="Pending" value={dueFees} formatter={money} valueStyle={{ color: "#EF4444" }} prefix={<ClockCircleOutlined />} />
           </Card>
         </Col>
 
@@ -512,7 +512,7 @@ const handleGenerateInstallments = async () => {
         style={{
           borderRadius: 24,
           marginBottom: 18,
-          boxShadow: "0 10px 30px rgba(91,158,201,0.06)",
+          boxShadow: "0 10px 30px rgba(37,99,235,0.06)",
         }}
       >
         {noChild ? (
@@ -536,7 +536,7 @@ const handleGenerateInstallments = async () => {
         bordered={false}
         style={{
           borderRadius: 24,
-          boxShadow: "0 10px 30px rgba(91,158,201,0.06)",
+          boxShadow: "0 10px 30px rgba(37,99,235,0.06)",
         }}
         extra={
          <Button
@@ -606,7 +606,7 @@ const handleGenerateInstallments = async () => {
 
             <Card
               bordered={false}
-              style={{ background: "#F7F8FC", borderRadius: 18 }}
+              style={{ background: "#F8FAFC", borderRadius: 18 }}
             >
               <Descriptions column={1}>
                 <Descriptions.Item label="Installment">

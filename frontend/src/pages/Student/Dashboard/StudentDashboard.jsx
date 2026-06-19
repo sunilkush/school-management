@@ -26,13 +26,13 @@ const getGradeScore = (grade = {}) => {
   return Number.isFinite(numeric) ? numeric : null;
 };
 
-const STAT_COLORS     = ["#5B9EC9", "#9B87B8", "#D4922A", "#5BA89A"];
-const STAT_BARS       = ["#A7C7E7", "#CDB4DB", "#FDE2A7", "#B8E0D2"];
+const STAT_COLORS     = ["#2563EB", "#14B8A6", "#F59E0B", "#22C55E"];
+const STAT_BARS       = ["#DBEAFE", "rgba(20,184,166,0.15)", "#FEF3C7", "#DCFCE7"];
 const STAT_BG         = [
-  "rgba(167,199,231,0.12)",
-  "rgba(205,180,219,0.12)",
-  "rgba(253,226,167,0.15)",
-  "rgba(184,224,210,0.12)",
+  "rgba(219,234,254,0.12)",
+  "rgba(20,184,166,0.12)",
+  "rgba(254,243,199,0.15)",
+  "rgba(220,252,231,0.12)",
 ];
 
 const StudentDashboard = () => {
@@ -161,7 +161,7 @@ const StudentDashboard = () => {
                           {grade?.examName || grade?.exam?.title || "Assessment"}
                         </div>
                       </div>
-                      <span style={pill("#9B87B8", "rgba(205,180,219,0.22)")}>{getGradeScore(grade) ?? "NA"}</span>
+                      <span style={pill("#14B8A6", "rgba(20,184,166,0.22)")}>{getGradeScore(grade) ?? "NA"}</span>
                     </List.Item>
                   )}
                 />
@@ -217,10 +217,10 @@ const StudentDashboard = () => {
                   percent={attendancePercent}
                   strokeColor={
                     attendancePercent >= 75
-                      ? { from: "#A7C7E7", to: "#B8E0D2" }
+                      ? { from: "#DBEAFE", to: "#DCFCE7" }
                       : attendancePercent >= 60
-                        ? { from: "#FDE2A7", to: "#FDE2A7" }
-                        : { from: "#FFCAD4", to: "#FFCAD4" }
+                        ? { from: "#FEF3C7", to: "#FEF3C7" }
+                        : { from: "#FEE2E2", to: "#FEE2E2" }
                   }
                   status="active"
                 />

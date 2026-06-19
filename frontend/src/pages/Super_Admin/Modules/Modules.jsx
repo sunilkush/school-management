@@ -19,12 +19,12 @@ import {
 const { Title, Text } = Typography;
 
 const PALETTES = [
-  { bg: "rgba(167,199,231,0.2)", text: "#5B9EC9", ring: "rgba(167,199,231,0.5)" },
-  { bg: "rgba(184,224,210,0.2)", text: "#5BA89A", ring: "rgba(184,224,210,0.5)" },
-  { bg: "rgba(205,180,219,0.2)", text: "#9B87B8", ring: "rgba(205,180,219,0.5)" },
-  { bg: "rgba(167,199,231,0.15)", text: "#5B9EC9", ring: "rgba(167,199,231,0.4)" },
-  { bg: "rgba(253,226,167,0.25)", text: "#D4922A", ring: "rgba(253,226,167,0.5)" },
-  { bg: "rgba(255,202,212,0.2)", text: "#D96B7A", ring: "rgba(255,202,212,0.5)" },
+  { bg: "rgba(219,234,254,0.2)", text: "#2563EB", ring: "rgba(219,234,254,0.5)" },
+  { bg: "rgba(220,252,231,0.2)", text: "#22C55E", ring: "rgba(220,252,231,0.5)" },
+  { bg: "rgba(20,184,166,0.2)", text: "#14B8A6", ring: "rgba(20,184,166,0.5)" },
+  { bg: "rgba(219,234,254,0.15)", text: "#2563EB", ring: "rgba(219,234,254,0.4)" },
+  { bg: "rgba(254,243,199,0.25)", text: "#F59E0B", ring: "rgba(254,243,199,0.5)" },
+  { bg: "rgba(254,226,226,0.2)", text: "#EF4444", ring: "rgba(254,226,226,0.5)" },
 ];
 
 const css = `
@@ -315,7 +315,7 @@ const AllModules = () => {
               <Statistic
                 title="Access Granted"
                 value={accessCount}
-                prefix={<ShieldCheck size={18} color="#5BA89A" />}
+                prefix={<ShieldCheck size={18} color="#22C55E" />}
               />
             </Card>
           </Col>
@@ -325,7 +325,7 @@ const AllModules = () => {
               <Statistic
                 title="Locked Modules"
                 value={lockedCount}
-                prefix={<Lock size={18} color="#D96B7A" />}
+                prefix={<Lock size={18} color="#EF4444" />}
               />
             </Card>
           </Col>

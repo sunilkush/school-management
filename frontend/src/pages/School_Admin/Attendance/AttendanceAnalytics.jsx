@@ -49,10 +49,10 @@ const TABLE_CLS = "analytics-tbl";
 const MONTHS    = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const PIE_COLORS = {
-  present: "#5BA89A",
-  absent:  "#D96B7A",
-  late:    "#D4922A",
-  halfday: "#D4922A",
+  present: "#22C55E",
+  absent:  "#EF4444",
+  late:    "#F59E0B",
+  halfday: "#F59E0B",
   leave:   "#0891b2",
 };
 
@@ -202,7 +202,7 @@ const AttendanceAnalytics = () => {
           <Progress
             percent={r.rate}
             size="small"
-            strokeColor={r.rate < 50 ? "#D96B7A" : "#D4922A"}
+            strokeColor={r.rate < 50 ? "#EF4444" : "#F59E0B"}
             trailColor="var(--border-muted)"
             showInfo={false}
             style={{ flex: 1 }}
@@ -211,7 +211,7 @@ const AttendanceAnalytics = () => {
             style={{
               fontWeight: 700,
               fontSize: 12,
-              color: r.rate < 50 ? "#D96B7A" : "#D4922A",
+              color: r.rate < 50 ? "#EF4444" : "#F59E0B",
               minWidth: 36,
             }}
           >
@@ -309,10 +309,10 @@ const AttendanceAnalytics = () => {
         {/* ── Summary stat cards ── */}
         <div style={statGrid(120)}>
           {[
-            { key: "present",  label: "Present",   color: "#5BA89A" },
-            { key: "absent",   label: "Absent",    color: "#D96B7A" },
-            { key: "late",     label: "Late",      color: "#D4922A" },
-            { key: "halfday",  label: "Half Day",  color: "#D4922A" },
+            { key: "present",  label: "Present",   color: "#22C55E" },
+            { key: "absent",   label: "Absent",    color: "#EF4444" },
+            { key: "late",     label: "Late",      color: "#F59E0B" },
+            { key: "halfday",  label: "Half Day",  color: "#F59E0B" },
             { key: "leave",    label: "Leave",     color: "#0891b2" },
           ].map(({ key, label, color }) => (
             <div
@@ -463,7 +463,7 @@ const AttendanceAnalytics = () => {
                     type="monotone"
                     dataKey="present"
                     name="Present"
-                    stroke="#5BA89A"
+                    stroke="#22C55E"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -471,7 +471,7 @@ const AttendanceAnalytics = () => {
                     type="monotone"
                     dataKey="absent"
                     name="Absent"
-                    stroke="#D96B7A"
+                    stroke="#EF4444"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -479,7 +479,7 @@ const AttendanceAnalytics = () => {
                     type="monotone"
                     dataKey="late"
                     name="Late"
-                    stroke="#D4922A"
+                    stroke="#F59E0B"
                     strokeWidth={2}
                     dot={false}
                     strokeDasharray="4 2"
@@ -535,7 +535,7 @@ const AttendanceAnalytics = () => {
                       {pieData.map((entry) => (
                         <Cell
                           key={entry.key}
-                          fill={PIE_COLORS[entry.key] || "#A8B8CC"}
+                          fill={PIE_COLORS[entry.key] || "#94A3B8"}
                         />
                       ))}
                     </Pie>
@@ -668,7 +668,7 @@ const AttendanceAnalytics = () => {
                   dataKey="rate"
                   name="Attendance %"
                   radius={[0, 4, 4, 0]}
-                  fill="#9B87B8"
+                  fill="#14B8A6"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -693,7 +693,7 @@ const AttendanceAnalytics = () => {
               gap: 8,
             }}
           >
-            <WarningOutlined style={{ color: "#D4922A" }} />
+            <WarningOutlined style={{ color: "#F59E0B" }} />
             <span
               style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}
             >
@@ -704,11 +704,11 @@ const AttendanceAnalytics = () => {
                 marginLeft: 8,
                 fontSize: 12,
                 padding: "1px 8px",
-                background: "#D96B7A15",
-                color: "#D96B7A",
+                background: "#EF444415",
+                color: "#EF4444",
                 borderRadius: 99,
                 fontWeight: 600,
-                border: "1px solid #D96B7A25",
+                border: "1px solid #EF444425",
               }}
             >
               {chronicAbsentees.length}

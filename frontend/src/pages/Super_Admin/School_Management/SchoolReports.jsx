@@ -21,31 +21,31 @@ const { Option } = Select;
 
 /* ─── Design Tokens ───────────────────────────────────────────── */
 const t = {
-  bg:           "#F7F8FC",
+  bg:           "#F8FAFC",
   surface:      "#ffffff",
   surfaceAlt:   "#f0f2f8",
   border:       "1px solid #e4e7ef",
   borderColor:  "#e4e7ef",
 
-  purple:       "#9B87B8",
-  purpleLight:  "rgba(205,180,219,0.2)",
-  purpleMid:    "rgba(205,180,219,0.5)",
+  purple:       "#14B8A6",
+  purpleLight:  "rgba(20,184,166,0.2)",
+  purpleMid:    "rgba(20,184,166,0.5)",
 
-  blue:         "#5B9EC9",
-  blueLight:    "rgba(167,199,231,0.2)",
+  blue:         "#2563EB",
+  blueLight:    "rgba(219,234,254,0.2)",
 
-  green:        "#5BA89A",
-  greenLight:   "rgba(184,224,210,0.2)",
+  green:        "#22C55E",
+  greenLight:   "rgba(220,252,231,0.2)",
 
-  pink:         "#D96B7A",
-  pinkLight:    "rgba(255,202,212,0.2)",
+  pink:         "#EF4444",
+  pinkLight:    "rgba(254,226,226,0.2)",
 
-  amber:        "#D4922A",
-  amberLight:   "rgba(253,226,167,0.25)",
+  amber:        "#F59E0B",
+  amberLight:   "rgba(254,243,199,0.25)",
 
-  textPrimary:   "#1E2A3A",
-  textSecondary: "#6B7890",
-  textMuted:     "#A8B8CC",
+  textPrimary:   "#0F172A",
+  textSecondary: "#64748B",
+  textMuted:     "#94A3B8",
 
   radius:   "14px",
   radiusSm: "8px",

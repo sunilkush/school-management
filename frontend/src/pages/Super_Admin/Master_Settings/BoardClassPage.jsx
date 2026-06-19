@@ -36,8 +36,8 @@ const { Option } = Select;
 function StatusBadge({ status }) {
   const isActive = status === "active";
   return (
-    <span style={pill(isActive ? "#5BA89A" : "#D96B7A", isActive ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)")}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "#5BA89A" : "#D96B7A", display: "inline-block", marginRight: 5 }} />
+    <span style={pill(isActive ? "#22C55E" : "#EF4444", isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "#22C55E" : "#EF4444", display: "inline-block", marginRight: 5 }} />
       {isActive ? "Active" : "Inactive"}
     </span>
   );
@@ -141,19 +141,19 @@ export default function BoardClassPage() {
           </div>
           <AppstoreOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#5BA89A" })}>
+        <div style={statCard({ color: "#22C55E" })}>
           <div>
-            <div style={statLabel("#5BA89A")}>Active Classes</div>
-            <div style={statValue("#5BA89A")}>{activeClasses}</div>
+            <div style={statLabel("#22C55E")}>Active Classes</div>
+            <div style={statValue("#22C55E")}>{activeClasses}</div>
           </div>
-          <CheckCircleOutlined style={{ fontSize: 26, color: "#5BA89A", opacity: 0.4 }} />
+          <CheckCircleOutlined style={{ fontSize: 26, color: "#22C55E", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#D96B7A" })}>
+        <div style={statCard({ color: "#EF4444" })}>
           <div>
-            <div style={statLabel("#D96B7A")}>Inactive Classes</div>
-            <div style={statValue("#D96B7A")}>{inactiveClasses}</div>
+            <div style={statLabel("#EF4444")}>Inactive Classes</div>
+            <div style={statValue("#EF4444")}>{inactiveClasses}</div>
           </div>
-          <StopOutlined style={{ fontSize: 26, color: "#D96B7A", opacity: 0.4 }} />
+          <StopOutlined style={{ fontSize: 26, color: "#EF4444", opacity: 0.4 }} />
         </div>
         <div style={statCard({ color: "#0984e3" })}>
           <div>

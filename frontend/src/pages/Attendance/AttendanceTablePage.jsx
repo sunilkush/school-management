@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Select, DatePicker, Button, Table, Tag, Space,
-  Spin, Empty, Popconfirm, message,
+  Select, DatePicker, Button, Tag, Spin, Empty, Popconfirm,
+  message, Drawer, Form, Input, TimePicker, Tooltip,
 } from "antd";
 import {
-  BankOutlined, CalendarOutlined, TeamOutlined,
-  UnorderedListOutlined, SearchOutlined,
+  BankOutlined, CalendarOutlined, TeamOutlined, UnorderedListOutlined,
+  SearchOutlined, EditOutlined, DeleteOutlined, LoginOutlined,
+  LogoutOutlined, AimOutlined, ClockCircleOutlined, CheckCircleOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -14,192 +16,314 @@ import {
   fetchAttendance, deleteAttendanceRecord, updateAttendanceRecord,
   setAttendanceFilters,
 } from "../../features/attendanceSlice";
-import { fetchSchoolClasses }        from "../../features/schoolClassSlice";
-import { fetchSchools }              from "../../features/schoolSlice";
-import { fetchActiveAcademicYear }   from "../../features/academicYearSlice";
-import StatusTag                     from "../../components/attendance/StatusTag";
-import PageHeader                    from "../../components/layout/PageHeader";
+import { fetchSchoolClasses }      from "../../features/schoolClassSlice";
+import { fetchSchools }            from "../../features/schoolSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
+import PageHeader                  from "../../components/layout/PageHeader";
 import {
-  pageWrapper, sectionPanel, toolbarRow, tableHeadCss,
+  pageWrapper, sectionPanel, tableHeadCss,
 } from "../../styles/pageStyles";
 
-const TABLE_CLS = "sa-table-tbl";
+const TABLE_CLS = "sa-att-tbl";
+
+/* ── theme ── */
+const C = {
+  primary:    "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
+  success:    "#22C55E", successLight: "#DCFCE7",
+  warning:    "#F59E0B", warningLight: "#FEF3C7",
+  danger:     "#EF4444", dangerLight:  "#FEE2E2",
+  purple:     "#8B5CF6", purpleLight:  "#EDE9FE",
+  cyan:       "#06B6D4", cyanLight:    "#CFFAFE",
+  accent:     "#14B8A6", accentLight:  "#CCFBF1",
+  border:     "#E2E8F0", text:         "#0F172A",
+  textSub:    "#64748B", textMuted:    "#94A3B8",
+  surface:    "#FFFFFF", surfaceSoft:  "#F8FAFC",
+};
+
+const STATUS_CFG = {
+  present: { color: C.success,  bg: C.successLight, border: "#86EFAC", label: "Present"  },
+  absent:  { color: C.danger,   bg: C.dangerLight,  border: "#FCA5A5", label: "Absent"   },
+  late:    { color: C.warning,  bg: C.warningLight, border: "#FCD34D", label: "Late"     },
+  halfday: { color: C.purple,   bg: C.purpleLight,  border: "#C4B5FD", label: "Half Day" },
+  leave:   { color: C.cyan,     bg: C.cyanLight,    border: "#67E8F9", label: "On Leave" },
+};
 
 const ROLE_OPTIONS = [
-  { value: "student", label: "Student" },
-  { value: "teacher", label: "Teacher" },
-  { value: "staff",   label: "Staff"   },
+  { value: "student",          label: "Student"          },
+  { value: "teacher",          label: "Teacher"          },
+  { value: "staff",            label: "Staff"            },
+  { value: "support_staff",    label: "Support Staff"    },
+  { value: "accountant",       label: "Accountant"       },
+  { value: "principal",        label: "Principal"        },
+  { value: "vice_principal",   label: "Vice Principal"   },
+  { value: "librarian",        label: "Librarian"        },
+  { value: "hostel_warden",    label: "Hostel Warden"    },
+  { value: "transport_manager",label: "Transport Manager"},
 ];
 
-/* ── Filter label ───────────────────────────────────────────────────── */
+/* ── helpers ── */
 const FL = ({ children }) => (
-  <div style={{
-    fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
-    textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5,
-  }}>
+  <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
     {children}
   </div>
 );
 
-/* ── Main component ─────────────────────────────────────────────────── */
+function fmtTime(d) { return d ? dayjs(d).format("hh:mm A") : null; }
+
+function workingHrs(ci, co) {
+  if (!ci || !co) return null;
+  const diff = new Date(co) - new Date(ci);
+  if (diff <= 0) return null;
+  return `${Math.floor(diff / 3600000)}h ${Math.floor((diff % 3600000) / 60000)}m`;
+}
+
+const StatusBadge = ({ status }) => {
+  const cfg = STATUS_CFG[status];
+  if (!cfg) return <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>;
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px",
+      borderRadius: 20, fontWeight: 700, fontSize: 11, whiteSpace: "nowrap",
+      background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+    }}>
+      {cfg.label}
+    </span>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════ */
 const AttendanceTablePage = () => {
   const dispatch = useDispatch();
+  const [form] = Form.useForm();
 
   const { list, filters, pagination, loading } = useSelector((s) => s.attendance);
-  const { user }                = useSelector((s) => s.auth || {});
-  const { schoolClasses = [] }  = useSelector((s) => s.schoolClass || {});
-  const { schools = [] }        = useSelector((s) => s.school || {});
+  const { user }               = useSelector((s) => s.auth || {});
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
+  const { schools = [] }       = useSelector((s) => s.school || {});
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
   const isSuperAdmin = user?.role?.name === "Super Admin";
+
   const [saSchoolId,       setSaSchoolId]       = useState(null);
   const [saAcademicYearId, setSaAcademicYearId] = useState(null);
   const [yearLoading,      setYearLoading]       = useState(false);
+  const [editRecord,       setEditRecord]        = useState(null);
+  const [editLoading,      setEditLoading]       = useState(false);
 
   const schoolId       = isSuperAdmin ? saSchoolId       : (user?.school?._id || null);
-  const academicYearId = isSuperAdmin ? saAcademicYearId : (selectedAcademicYear?._id || selectedAcademicYear || null);
+  const academicYearId = isSuperAdmin ? saAcademicYearId : (selectedAcademicYear?._id || null);
 
-  const schoolOptions = useMemo(
-    () => schools.map((s) => ({ value: s._id, label: s.name })).filter((s) => s.label),
-    [schools],
-  );
+  const schoolOptions = useMemo(() => schools.map((s) => ({ value: s._id, label: s.name })).filter((s) => s.label), [schools]);
+  const classes = useMemo(() => { if (Array.isArray(schoolClasses)) return schoolClasses; if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes; return []; }, [schoolClasses]);
+  const classOptions   = useMemo(() => classes.map((c) => ({ value: c._id, label: c.name })), [classes]);
+  const sectionOptions = useMemo(() => { const sel = classes.find((c) => c._id === filters.classId); return sel?.sections?.map((s) => ({ value: s._id, label: s.name })) || []; }, [classes, filters.classId]);
 
-  const classes = useMemo(() => {
-    if (Array.isArray(schoolClasses)) return schoolClasses;
-    if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
-    return [];
-  }, [schoolClasses]);
+  useEffect(() => { if (isSuperAdmin) dispatch(fetchSchools()); }, [isSuperAdmin, dispatch]);
 
-  const classOptions = useMemo(
-    () => classes.map((c) => ({ value: c._id, label: c.name })),
-    [classes],
-  );
-
-  const sectionOptions = useMemo(() => {
-    const sel = classes.find((c) => c._id === filters.classId);
-    return sel?.sections?.map((s) => ({ value: s._id, label: s.name })) || [];
-  }, [classes, filters.classId]);
-
-  /* ── Init ── */
-  useEffect(() => {
-    if (isSuperAdmin) dispatch(fetchSchools());
-  }, [isSuperAdmin, dispatch]);
-
-  /* ── Non-SA: load classes when school/year from global state changes ── */
   useEffect(() => {
     if (isSuperAdmin || !schoolId) return;
     dispatch(setAttendanceFilters({ schoolId }));
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
   }, [isSuperAdmin, schoolId, academicYearId, dispatch]);
 
-  /* ── SA: fetch active year + classes when school is selected ── */
   const handleSASchoolChange = async (val) => {
     setSaSchoolId(val || null);
     setSaAcademicYearId(null);
     dispatch(setAttendanceFilters({ schoolId: val || null, classId: null, sectionId: null, page: 1 }));
-
     if (!val) return;
-
     setYearLoading(true);
     try {
       const result = await dispatch(fetchActiveAcademicYear(val)).unwrap();
       const yearId = result?._id || null;
       setSaAcademicYearId(yearId);
       dispatch(fetchSchoolClasses({ schoolId: val, academicYearId: yearId }));
-    } catch {
-      // No active year — still load classes without a year filter
-      dispatch(fetchSchoolClasses({ schoolId: val }));
-    } finally {
-      setYearLoading(false);
-    }
+    } catch { dispatch(fetchSchoolClasses({ schoolId: val })); }
+    finally { setYearLoading(false); }
   };
 
-  /* ── Re-fetch when filters change ── */
-  useEffect(() => {
-    if (!filters.schoolId) return;
-    dispatch(fetchAttendance(filters));
-  }, [filters, dispatch]);
+  useEffect(() => { if (filters.schoolId) dispatch(fetchAttendance(filters)); }, [filters, dispatch]);
 
-  /* ── Update status ── */
-  const handleStatus = (id, status) => {
-    dispatch(updateAttendanceRecord({ id, payload: { status } }));
+  /* ── Summary stats from loaded list ── */
+  const stats = useMemo(() => {
+    const s = { total: list.length, present: 0, absent: 0, late: 0, gpsVerified: 0 };
+    list.forEach((r) => {
+      if (r.status === "present") s.present++;
+      if (r.status === "absent")  s.absent++;
+      if (r.status === "late")    s.late++;
+      if (r.gpsVerified)          s.gpsVerified++;
+    });
+    return s;
+  }, [list]);
+
+  /* ── Edit drawer ── */
+  const openEdit = (record) => {
+    setEditRecord(record);
+    form.setFieldsValue({
+      status:    record.status,
+      checkInAt:  record.checkInAt  ? dayjs(record.checkInAt)  : null,
+      checkOutAt: record.checkOutAt ? dayjs(record.checkOutAt) : null,
+      remarks:   record.remarks || "",
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    let values;
+    try { values = await form.validateFields(); } catch { return; }
+    setEditLoading(true);
+    try {
+      await dispatch(updateAttendanceRecord({
+        id: editRecord._id,
+        payload: {
+          status:    values.status,
+          remarks:   values.remarks || "",
+          checkInAt:  values.checkInAt  ? values.checkInAt.toISOString()  : null,
+          checkOutAt: values.checkOutAt ? values.checkOutAt.toISOString() : null,
+        },
+      })).unwrap();
+      message.success("Attendance record updated");
+      setEditRecord(null);
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Failed to update record");
+    } finally { setEditLoading(false); }
   };
 
   /* ── Delete ── */
-  const handleDelete = (id) => {
-    dispatch(deleteAttendanceRecord(id));
+  const handleDelete = async (id) => {
+    await dispatch(deleteAttendanceRecord(id));
     message.success("Record deleted");
   };
 
   /* ── Table columns ── */
   const columns = [
     {
-      title:  "Date",
+      title: "Date",
       dataIndex: "date",
-      width:  110,
+      width: 110,
       render: (v) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>
           {dayjs(v).format("DD MMM YYYY")}
-        </span>
-      ),
-    },
-    {
-      title:  "User",
-      render: (_, row) => (
-        <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
-            {row?.userId?.name || "—"}
-          </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-            {row?.userId?.email || ""}
+          <div style={{ fontSize: 10, color: C.textMuted, fontWeight: 400 }}>
+            {dayjs(v).format("ddd")}
           </div>
         </div>
       ),
     },
     {
-      title:  "Role",
+      title: "User",
+      render: (_, row) => {
+        const name  = row?.userId?.name  || "—";
+        const email = row?.userId?.email || "";
+        const initial = name[0]?.toUpperCase() || "?";
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+              background: C.primaryLighter, color: C.primary,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontWeight: 800, fontSize: 13,
+            }}>
+              {initial}
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>{name}</div>
+              <div style={{ fontSize: 11, color: C.textMuted }}>{email}</div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Role",
       dataIndex: "role",
-      width:  100,
+      width: 120,
       render: (v) => (
-        <Tag color="geekblue" style={{ fontSize: 11, textTransform: "capitalize" }}>
-          {v || "—"}
+        <Tag color="geekblue" style={{ fontSize: 11, textTransform: "capitalize", borderRadius: 6 }}>
+          {(v || "—").replace(/_/g, " ")}
         </Tag>
       ),
     },
     {
-      title:  "Status",
+      title: "Status",
       dataIndex: "status",
-      width:  110,
-      render: (status) => <StatusTag status={status} />,
+      width: 110,
+      render: (v) => <StatusBadge status={v} />,
     },
     {
-      title:  "Actions",
-      width:  200,
+      title: "Check-In",
+      width: 100,
+      render: (_, row) => {
+        const t = fmtTime(row.checkInAt);
+        return t ? (
+          <span style={{ display: "flex", alignItems: "center", gap: 5, color: C.success, fontFamily: "monospace", fontSize: 12, fontWeight: 700 }}>
+            <LoginOutlined style={{ fontSize: 11 }} /> {t}
+          </span>
+        ) : <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>;
+      },
+    },
+    {
+      title: "Check-Out",
+      width: 100,
+      render: (_, row) => {
+        const t = fmtTime(row.checkOutAt);
+        return t ? (
+          <span style={{ display: "flex", alignItems: "center", gap: 5, color: C.danger, fontFamily: "monospace", fontSize: 12, fontWeight: 700 }}>
+            <LogoutOutlined style={{ fontSize: 11 }} /> {t}
+          </span>
+        ) : <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>;
+      },
+    },
+    {
+      title: "Working Hrs",
+      width: 105,
+      render: (_, row) => {
+        const wh = workingHrs(row.checkInAt, row.checkOutAt);
+        return wh ? (
+          <span style={{ color: C.accent, fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+            <ClockCircleOutlined style={{ fontSize: 11 }} /> {wh}
+          </span>
+        ) : <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>;
+      },
+    },
+    {
+      title: "GPS",
+      width: 80,
+      render: (_, row) =>
+        row.gpsVerified ? (
+          <Tooltip title={row.distanceFromSchool != null ? `${row.distanceFromSchool}m from school` : "GPS Verified"}>
+            <span style={{ color: C.accent, fontWeight: 700, fontSize: 11, display: "flex", alignItems: "center", gap: 3 }}>
+              <AimOutlined /> Verified
+            </span>
+          </Tooltip>
+        ) : <span style={{ color: C.textMuted, fontSize: 11 }}>—</span>,
+    },
+    {
+      title: "Actions",
+      width: 100,
       render: (_, row) => (
-        <Space size={4} wrap>
+        <div style={{ display: "flex", gap: 6 }}>
           <Button
             size="small"
-            onClick={() => handleStatus(row._id, "present")}
-            style={{ fontSize: 11, borderColor: "#5BA89A", color: "#5BA89A" }}
+            icon={<EditOutlined />}
+            onClick={() => openEdit(row)}
+            style={{ borderColor: C.primary, color: C.primary, borderRadius: 6, fontSize: 12 }}
           >
-            Present
-          </Button>
-          <Button
-            size="small"
-            onClick={() => handleStatus(row._id, "absent")}
-            style={{ fontSize: 11, borderColor: "#D96B7A", color: "#D96B7A" }}
-          >
-            Absent
+            Edit
           </Button>
           <Popconfirm
             title="Delete this record?"
+            description="This action cannot be undone."
             okText="Delete"
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(row._id)}
           >
-            <Button danger size="small" style={{ fontSize: 11 }}>Delete</Button>
+            <Button
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              style={{ borderRadius: 6, fontSize: 12 }}
+            />
           </Popconfirm>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -211,116 +335,77 @@ const AttendanceTablePage = () => {
 
       <PageHeader
         title="Attendance Records"
-        subtitle="Browse, filter, update and delete attendance entries"
+        subtitle="View, edit and manage all attendance entries with check-in/out times"
         icon={<UnorderedListOutlined />}
       />
 
       {/* ── Filters ── */}
       <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))",
-          gap: 14,
-          alignItems: "end",
-        }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 14, alignItems: "end" }}>
 
-          {/* School — Super Admin only */}
           {isSuperAdmin && (
             <div>
               <FL>School</FL>
               <Select
-                showSearch
-                placeholder="Select school"
-                style={{ width: "100%" }}
-                value={saSchoolId || undefined}
-                options={schoolOptions}
-                allowClear
-                loading={yearLoading}
-                filterOption={(inp, opt) =>
-                  opt.label.toLowerCase().includes(inp.toLowerCase())
-                }
+                showSearch placeholder="Select school" style={{ width: "100%" }}
+                value={saSchoolId || undefined} options={schoolOptions}
+                allowClear loading={yearLoading}
+                filterOption={(inp, opt) => opt.label.toLowerCase().includes(inp.toLowerCase())}
                 onChange={handleSASchoolChange}
                 suffixIcon={<BankOutlined />}
               />
               {saAcademicYearId === null && saSchoolId && !yearLoading && (
-                <div style={{ fontSize: 11, color: "#D4922A", marginTop: 4 }}>
-                  No active academic year found for this school
-                </div>
+                <div style={{ fontSize: 11, color: C.warning, marginTop: 4 }}>No active academic year</div>
               )}
             </div>
           )}
 
-          {/* Role */}
           <div>
             <FL>Role</FL>
             <Select
-              style={{ width: "100%" }}
-              placeholder="All roles"
-              allowClear
-              value={filters.role || undefined}
-              options={ROLE_OPTIONS}
+              style={{ width: "100%" }} placeholder="All roles" allowClear
+              value={filters.role || undefined} options={ROLE_OPTIONS}
               onChange={(v) => dispatch(setAttendanceFilters({ role: v || null, page: 1 }))}
               suffixIcon={<TeamOutlined />}
             />
           </div>
 
-          {/* Class */}
           <div>
             <FL>Class</FL>
             <Select
-              style={{ width: "100%" }}
-              placeholder="All classes"
-              allowClear
-              disabled={!schoolId}
-              value={filters.classId || undefined}
-              options={classOptions}
-              onChange={(v) =>
-                dispatch(setAttendanceFilters({ classId: v || null, sectionId: null, page: 1 }))
-              }
+              style={{ width: "100%" }} placeholder="All classes" allowClear
+              disabled={!schoolId} value={filters.classId || undefined} options={classOptions}
+              onChange={(v) => dispatch(setAttendanceFilters({ classId: v || null, sectionId: null, page: 1 }))}
             />
           </div>
 
-          {/* Section */}
           <div>
             <FL>Section</FL>
             <Select
-              style={{ width: "100%" }}
-              placeholder="All sections"
-              allowClear
-              disabled={!filters.classId}
-              value={filters.sectionId || undefined}
-              options={sectionOptions}
-              onChange={(v) =>
-                dispatch(setAttendanceFilters({ sectionId: v || null, page: 1 }))
-              }
+              style={{ width: "100%" }} placeholder="All sections" allowClear
+              disabled={!filters.classId} value={filters.sectionId || undefined} options={sectionOptions}
+              onChange={(v) => dispatch(setAttendanceFilters({ sectionId: v || null, page: 1 }))}
             />
           </div>
 
-          {/* Date */}
           <div>
             <FL>Date</FL>
             <DatePicker
               style={{ width: "100%" }}
               value={filters.date ? dayjs(filters.date) : null}
-              allowClear
-              placeholder="Any date"
-              onChange={(v) =>
-                dispatch(setAttendanceFilters({ date: v?.toISOString() || null, page: 1 }))
-              }
+              allowClear placeholder="Any date"
+              onChange={(v) => dispatch(setAttendanceFilters({ date: v?.toISOString() || null, page: 1 }))}
               suffixIcon={<CalendarOutlined />}
             />
           </div>
 
-          {/* Search button */}
           <div>
             <FL>&nbsp;</FL>
             <Button
-              type="primary"
-              icon={<SearchOutlined />}
+              type="primary" icon={<SearchOutlined />}
               style={{ width: "100%" }}
-              disabled={!schoolId}
+              disabled={!schoolId} loading={loading}
               onClick={() => dispatch(fetchAttendance(filters))}
-              loading={loading}
             >
               Search
             </Button>
@@ -328,47 +413,230 @@ const AttendanceTablePage = () => {
         </div>
       </div>
 
+      {/* ── Stats bar ── */}
+      {list.length > 0 && (
+        <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+          {[
+            { key: "total",       label: "Total",         color: C.primary,  bg: C.primaryLighter, icon: <UnorderedListOutlined /> },
+            { key: "present",     label: "Present",       color: C.success,  bg: C.successLight,   icon: <CheckCircleOutlined />  },
+            { key: "absent",      label: "Absent",        color: C.danger,   bg: C.dangerLight,    icon: <CloseCircleOutlined />  },
+            { key: "late",        label: "Late",          color: C.warning,  bg: C.warningLight,   icon: <ClockCircleOutlined />  },
+            { key: "gpsVerified", label: "GPS Verified",  color: C.accent,   bg: C.accentLight,    icon: <AimOutlined />          },
+          ].map(({ key, label, color, bg, icon }) => (
+            <div key={key} style={{
+              background: bg, borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 100,
+              border: `1px solid ${color}30`, display: "flex", alignItems: "center", gap: 10,
+            }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: color + "22", display: "flex", alignItems: "center", justifyContent: "center", color, fontSize: 14 }}>
+                {icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{stats[key]}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Table ── */}
-      <div style={sectionPanel}>
+      <div style={{ ...sectionPanel, marginTop: 14, overflow: "hidden", padding: 0 }}>
         {!schoolId && !loading ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <span style={{ color: "var(--text-muted)" }}>
-                {isSuperAdmin
-                  ? "Select a school to view attendance records"
-                  : "No school associated with your account"}
-              </span>
-            }
-          />
+          <div style={{ padding: 40 }}>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={<span style={{ color: C.textMuted }}>{isSuperAdmin ? "Select a school to view attendance records" : "No school associated with your account"}</span>}
+            />
+          </div>
         ) : (
           <Spin spinning={loading}>
-            <Table
-              className={TABLE_CLS}
-              rowKey="_id"
-              columns={columns}
-              dataSource={list}
-              pagination={{
-                current:  pagination.page,
-                pageSize: pagination.limit,
-                total:    pagination.total,
-                showSizeChanger: true,
-                showTotal: (total) => `${total} records`,
-                onChange: (page, limit) =>
-                  dispatch(setAttendanceFilters({ page, limit })),
-              }}
-              scroll={{ x: 680 }}
-              locale={{
-                emptyText: (
-                  <div style={{ padding: "32px 0", color: "var(--text-muted)" }}>
-                    No attendance records found
-                  </div>
-                ),
-              }}
-            />
+            <div style={{ overflowX: "auto" }}>
+              <table className={TABLE_CLS} style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: C.surfaceSoft }}>
+                    {columns.map((col) => (
+                      <th key={col.title} style={{
+                        padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 700,
+                        color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em",
+                        borderBottom: `2px solid ${C.border}`, whiteSpace: "nowrap",
+                        width: col.width,
+                      }}>
+                        {col.title}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.length === 0 ? (
+                    <tr>
+                      <td colSpan={columns.length} style={{ padding: "40px 0", textAlign: "center", color: C.textMuted }}>
+                        No attendance records found
+                      </td>
+                    </tr>
+                  ) : list.map((row) => (
+                    <tr
+                      key={row._id}
+                      style={{ borderBottom: `1px solid ${C.border}`, transition: "background 0.12s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = C.surfaceSoft)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      {columns.map((col) => (
+                        <td key={col.title} style={{ padding: "11px 14px" }}>
+                          {col.render ? col.render(row[col.dataIndex], row) : row[col.dataIndex]}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {pagination.total > pagination.limit && (
+              <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 12, color: C.textMuted }}>
+                  Showing {((pagination.page - 1) * pagination.limit) + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
+                </span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <Button
+                    size="small" disabled={pagination.page <= 1}
+                    onClick={() => dispatch(setAttendanceFilters({ page: pagination.page - 1 }))}
+                    style={{ borderRadius: 6 }}
+                  >
+                    Prev
+                  </Button>
+                  <span style={{ padding: "0 12px", lineHeight: "24px", fontSize: 12, color: C.textSub }}>
+                    {pagination.page} / {pagination.totalPages || Math.ceil(pagination.total / pagination.limit)}
+                  </span>
+                  <Button
+                    size="small" disabled={pagination.page >= (pagination.totalPages || 1)}
+                    onClick={() => dispatch(setAttendanceFilters({ page: pagination.page + 1 }))}
+                    style={{ borderRadius: 6 }}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </Spin>
         )}
       </div>
+
+      {/* ── Edit Drawer ── */}
+      <Drawer
+        title={
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: C.text }}>Edit Attendance Record</div>
+            {editRecord && (
+              <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 400, marginTop: 2 }}>
+                {editRecord?.userId?.name || "—"} · {dayjs(editRecord?.date).format("DD MMM YYYY")}
+              </div>
+            )}
+          </div>
+        }
+        open={!!editRecord}
+        onClose={() => setEditRecord(null)}
+        width={400}
+        footer={
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Button onClick={() => setEditRecord(null)}>Cancel</Button>
+            <Button type="primary" loading={editLoading} onClick={handleSaveEdit} style={{ background: C.primary, borderColor: C.primary }}>
+              Save Changes
+            </Button>
+          </div>
+        }
+      >
+        <Form form={form} layout="vertical" requiredMark={false}>
+
+          <Form.Item label={<span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>STATUS</span>} name="status" rules={[{ required: true, message: "Status is required" }]}>
+            <Select size="large" style={{ borderRadius: 8 }}>
+              {Object.entries(STATUS_CFG).map(([val, cfg]) => (
+                <Select.Option key={val} value={val}>
+                  <span style={{ color: cfg.color, fontWeight: 700 }}>● {cfg.label}</span>
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Form.Item
+              label={<span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>CHECK-IN TIME</span>}
+              name="checkInAt"
+            >
+              <TimePicker
+                format="hh:mm A"
+                use12Hours
+                size="large"
+                style={{ width: "100%", borderRadius: 8 }}
+                placeholder="Select time"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>CHECK-OUT TIME</span>}
+              name="checkOutAt"
+            >
+              <TimePicker
+                format="hh:mm A"
+                use12Hours
+                size="large"
+                style={{ width: "100%", borderRadius: 8 }}
+                placeholder="Select time"
+              />
+            </Form.Item>
+          </div>
+
+          {/* Live working hours preview */}
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.checkInAt !== curr.checkInAt || prev.checkOutAt !== curr.checkOutAt}>
+            {({ getFieldValue }) => {
+              const ci = getFieldValue("checkInAt");
+              const co = getFieldValue("checkOutAt");
+              const wh = ci && co ? workingHrs(ci.toDate(), co.toDate()) : null;
+              return wh ? (
+                <div style={{
+                  background: C.accentLight, borderRadius: 8, padding: "8px 12px",
+                  marginBottom: 16, display: "flex", alignItems: "center", gap: 8,
+                  color: C.accent, fontWeight: 700, fontSize: 13,
+                  border: `1px solid ${C.accent}30`,
+                }}>
+                  <ClockCircleOutlined /> Working Hours: {wh}
+                </div>
+              ) : null;
+            }}
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>REMARKS</span>}
+            name="remarks"
+          >
+            <Input.TextArea
+              rows={3} placeholder="Optional remarks..."
+              maxLength={300} showCount
+              style={{ borderRadius: 8 }}
+            />
+          </Form.Item>
+
+          {/* Record info */}
+          {editRecord && (
+            <div style={{ background: C.surfaceSoft, borderRadius: 8, padding: "10px 14px", border: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>Record Info</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {[
+                  { label: "Date",   value: dayjs(editRecord.date).format("DD MMM YYYY")   },
+                  { label: "Role",   value: (editRecord.role || "—").replace(/_/g, " ")     },
+                  { label: "GPS",    value: editRecord.gpsVerified ? `Yes · ${editRecord.distanceFromSchool ?? ""}m` : "No" },
+                  { label: "Marked By", value: editRecord?.markedBy?.name || "—"            },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase" }}>{label}</div>
+                    <div style={{ fontSize: 12, color: C.text, fontWeight: 600 }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Form>
+      </Drawer>
     </div>
   );
 };

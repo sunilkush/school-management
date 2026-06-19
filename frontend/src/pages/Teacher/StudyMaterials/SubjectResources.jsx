@@ -244,10 +244,10 @@ const SubjectResources = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<BookOutlined />} label="Total"  value={stats.total}  color="#9B87B8" />
+        <StatCard icon={<BookOutlined />} label="Total"  value={stats.total}  color="#14B8A6" />
         <StatCard icon={<BookOutlined />} label="Notes"  value={stats.notes}  color="#0891b2" />
-        <StatCard icon={<BookOutlined />} label="Videos" value={stats.videos} color="#5BA89A" />
-        <StatCard icon={<BookOutlined />} label="Books"  value={stats.books}  color="#D4922A" />
+        <StatCard icon={<BookOutlined />} label="Videos" value={stats.videos} color="#22C55E" />
+        <StatCard icon={<BookOutlined />} label="Books"  value={stats.books}  color="#F59E0B" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 0 }}>

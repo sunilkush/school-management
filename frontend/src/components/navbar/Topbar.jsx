@@ -38,9 +38,9 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark }) => {
         borderRadius: 10,
         border: "none",
         background: hovered
-          ? isDark ? "#243047" : "rgba(167,199,231,0.15)"
+          ? isDark ? "#243047" : "rgba(219,234,254,0.15)"
           : isDark ? "#1E2A3E" : "#F2F6FD",
-        color: isDark ? "#9BA8C0" : "#5A6376",
+        color: isDark ? "#9BA8C0" : "#64748B",
         transition: "all 0.18s ease",
         cursor: "pointer",
         transform: hovered ? "scale(1.07)" : "scale(1)",
@@ -54,7 +54,7 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark }) => {
           offset={[4, -4]}
           style={{
             fontSize: 9,
-            background: "#D96B7A",
+            background: "#EF4444",
             boxShadow: "none",
             border: "none",
           }}
@@ -91,14 +91,14 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
       <style>{`
         .topbar-search-input .ant-input {
           background: transparent !important;
-          color: ${isDark ? "#E8EDF7" : "#2E2E2E"} !important;
+          color: ${isDark ? "#E8EDF7" : "#0F172A"} !important;
           font-size: 13px;
         }
         .topbar-search-input .ant-input::placeholder {
-          color: ${isDark ? "#6B7890" : "#A0AABA"} !important;
+          color: ${isDark ? "#64748B" : "#A0AABA"} !important;
         }
         .topbar-search-input.ant-input-affix-wrapper {
-          border-color: ${isDark ? "#2A3550" : "#E4EAF6"} !important;
+          border-color: ${isDark ? "#2A3550" : "#E2E8F0"} !important;
           background: ${isDark ? "#1E2A3E" : "#F2F6FD"} !important;
           border-radius: 10px !important;
           box-shadow: none !important;
@@ -106,8 +106,8 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
         }
         .topbar-search-input.ant-input-affix-wrapper:hover,
         .topbar-search-input.ant-input-affix-wrapper-focused {
-          border-color: ${isDark ? "#5B9EC9" : "#A7C7E7"} !important;
-          box-shadow: 0 0 0 3px rgba(167,199,231,0.18) !important;
+          border-color: ${isDark ? "#2563EB" : "#DBEAFE"} !important;
+          box-shadow: 0 0 0 3px rgba(219,234,254,0.18) !important;
         }
         .topbar-year-switcher { max-width: 180px; }
       `}</style>
@@ -125,10 +125,10 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           background: isDark ? "#1A2235" : "#ffffff",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          borderBottom: `1px solid ${isDark ? "#2A3550" : "#EEF2FB"}`,
+          borderBottom: `1px solid ${isDark ? "#2A3550" : "#F1F5F9"}`,
           boxShadow: isDark
             ? "0 1px 0 #222E44"
-            : "0 1px 0 #EEF2FB, 0 2px 12px rgba(91,158,201,0.05)",
+            : "0 1px 0 #F1F5F9, 0 2px 12px rgba(37,99,235,0.05)",
           transition: "background 0.3s",
         }}
       >
@@ -152,7 +152,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                color: isDark ? "#9BA8C0" : "#5A6376",
+                color: isDark ? "#9BA8C0" : "#64748B",
                 background: isDark ? "#1E2A3E" : "#F2F6FD",
                 border: "none",
               }}
@@ -168,7 +168,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               prefix={
-                <SearchOutlined style={{ color: isDark ? "#6B7890" : "#A0AABA", fontSize: 14 }} />
+                <SearchOutlined style={{ color: isDark ? "#64748B" : "#A0AABA", fontSize: 14 }} />
               }
               style={{ width: 260 }}
             />
@@ -201,7 +201,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           {!isMobile && (
             <span style={{
               width: 1, height: 22,
-              background: isDark ? "#2A3550" : "#E4EAF6",
+              background: isDark ? "#2A3550" : "#E2E8F0",
               borderRadius: 1,
             }} />
           )}
@@ -231,8 +231,8 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
                   themeMode === "system"
                     ? <LaptopOutlined style={{ fontSize: 16 }} />
                     : isDark
-                      ? <SunOutlined style={{ fontSize: 16, color: "#FDE2A7" }} />
-                      : <MoonOutlined style={{ fontSize: 16, color: "#9B87B8" }} />
+                      ? <SunOutlined style={{ fontSize: 16, color: "#FEF3C7" }} />
+                      : <MoonOutlined style={{ fontSize: 16, color: "#14B8A6" }} />
                 }
               />
             </span>
@@ -247,7 +247,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           {!isMobile && (
             <span style={{
               width: 1, height: 22,
-              background: isDark ? "#2A3550" : "#E4EAF6",
+              background: isDark ? "#2A3550" : "#E2E8F0",
               borderRadius: 1,
             }} />
           )}
@@ -262,7 +262,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
       {/* ── Mobile Search Drawer ── */}
       <Drawer
         title={
-          <span style={{ fontWeight: 600, fontSize: 15, color: isDark ? "#E8EDF7" : "#2E2E2E" }}>
+          <span style={{ fontWeight: 600, fontSize: 15, color: isDark ? "#E8EDF7" : "#0F172A" }}>
             Search
           </span>
         }
@@ -271,12 +271,12 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
         onClose={() => setMobileSearchOpen(false)}
         open={mobileSearchOpen}
         closable
-        closeIcon={<span style={{ fontSize: 13, color: isDark ? "#9BA8C0" : "#8A94A6" }}>✕</span>}
+        closeIcon={<span style={{ fontSize: 13, color: isDark ? "#9BA8C0" : "#94A3B8" }}>✕</span>}
         styles={{
           header: {
             padding: "10px 16px",
             background: isDark ? "#1A2235" : "#fff",
-            borderBottom: `1px solid ${isDark ? "#2A3550" : "#EEF2FB"}`,
+            borderBottom: `1px solid ${isDark ? "#2A3550" : "#F1F5F9"}`,
           },
           body: {
             padding: "10px 16px",
@@ -290,11 +290,11 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           allowClear
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          prefix={<SearchOutlined style={{ color: isDark ? "#6B7890" : "#A0AABA", fontSize: 14 }} />}
+          prefix={<SearchOutlined style={{ color: isDark ? "#64748B" : "#A0AABA", fontSize: 14 }} />}
           style={{
             borderRadius: 10,
             background: isDark ? "rgba(255,255,255,0.06)" : "#F2F6FD",
-            border: `1px solid ${isDark ? "#2A3550" : "#E4EAF6"}`,
+            border: `1px solid ${isDark ? "#2A3550" : "#E2E8F0"}`,
           }}
         />
       </Drawer>

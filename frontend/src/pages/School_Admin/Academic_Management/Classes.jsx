@@ -26,20 +26,20 @@ import {
 const { Option } = Select;
 
 const CLASS_ACCENTS = [
-  { from: "#9B87B8", to: "#5B9EC9" },
-  { from: "#5BA89A", to: "#0d9488" },
-  { from: "#D96B7A", to: "#D4922A" },
-  { from: "#5B9EC9", to: "#9B87B8" },
-  { from: "#0d9488", to: "#5BA89A" },
-  { from: "#D4922A", to: "#D96B7A" },
+  { from: "#14B8A6", to: "#2563EB" },
+  { from: "#22C55E", to: "#0d9488" },
+  { from: "#EF4444", to: "#F59E0B" },
+  { from: "#2563EB", to: "#14B8A6" },
+  { from: "#0d9488", to: "#22C55E" },
+  { from: "#F59E0B", to: "#EF4444" },
 ];
 
 const SECTION_COLORS = [
-  { color: "#9B87B8", bg: "rgba(124,58,237,0.08)" },
-  { color: "#5B9EC9", bg: "rgba(37,99,235,0.08)" },
-  { color: "#5BA89A", bg: "rgba(5,150,105,0.08)" },
-  { color: "#D4922A", bg: "rgba(217,119,6,0.08)" },
-  { color: "#D96B7A", bg: "rgba(220,38,38,0.08)" },
+  { color: "#14B8A6", bg: "rgba(124,58,237,0.08)" },
+  { color: "#2563EB", bg: "rgba(37,99,235,0.08)" },
+  { color: "#22C55E", bg: "rgba(5,150,105,0.08)" },
+  { color: "#F59E0B", bg: "rgba(217,119,6,0.08)" },
+  { color: "#EF4444", bg: "rgba(220,38,38,0.08)" },
   { color: "#0d9488", bg: "rgba(13,148,136,0.08)" },
 ];
 
@@ -447,7 +447,7 @@ const Classes = () => {
         >
           {/* Modal header */}
           <div style={{
-            background: "linear-gradient(135deg, #9B87B8 0%, #5B9EC9 100%)",
+            background: "linear-gradient(135deg, #14B8A6 0%, #2563EB 100%)",
             padding: "22px 24px 18px",
             position: "relative",
           }}>
@@ -563,7 +563,7 @@ const Classes = () => {
                 onClick={handleFinish}
                 style={{
                   flex: 2, height: 44, borderRadius: 11,
-                  background: "linear-gradient(135deg, #9B87B8 0%, #5B9EC9 100%)",
+                  background: "linear-gradient(135deg, #14B8A6 0%, #2563EB 100%)",
                   border: "none", color: "#fff",
                   fontSize: 13, fontWeight: 700, cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
