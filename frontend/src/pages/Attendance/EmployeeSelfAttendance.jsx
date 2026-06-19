@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchSelfStatus, fetchSelfHistory, selfCheckIn, selfCheckOut,
-  clearAttendanceFeedback,
+  clearAttendanceFeedback, fetchMyAttendance,
 } from "../../features/attendanceSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { pageWrapper } from "../../styles/pageStyles";
@@ -149,17 +149,6 @@ const EmployeeSelfAttendance = () => {
   const [calMonth, setCalMonth] = useState(dayjs());
   const watchRef = useRef(null);
 
-  /* ── load on mount ── */
-  useEffect(() => {
-    dispatch(clearAttendanceFeedback());
-    dispatch(fetchSelfStatus());
-    dispatch(fetchSelfHistory({ month: dayjs().format("YYYY-MM") }));
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (calMonth) dispatch(fetchSelfHistory({ month: calMonth.format("YYYY-MM") }));
-  }, [calMonth, dispatch]);
-
   /* ── GPS ── */
   const startGPS = useCallback(() => {
     if (!navigator.geolocation) {
@@ -184,6 +173,18 @@ const EmployeeSelfAttendance = () => {
     setGpsState(GPS_STATE.IDLE);
     setPosition(null);
   }, []);
+
+  /* ── load on mount + auto-start GPS ── */
+  useEffect(() => {
+    dispatch(clearAttendanceFeedback());
+    dispatch(fetchSelfStatus());
+    dispatch(fetchSelfHistory({ month: dayjs().format("YYYY-MM") }));
+    startGPS();
+  }, [dispatch, startGPS]);
+
+  useEffect(() => {
+    if (calMonth) dispatch(fetchSelfHistory({ month: calMonth.format("YYYY-MM") }));
+  }, [calMonth, dispatch]);
 
   useEffect(() => () => { if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current); }, []);
 
@@ -226,8 +227,11 @@ const EmployeeSelfAttendance = () => {
         await dispatch(selfCheckOut(position)).unwrap();
         message.success("Punched Out successfully!");
       }
+      // Refresh GPS page data
       dispatch(fetchSelfStatus());
       dispatch(fetchSelfHistory({ month: calMonth.format("YYYY-MM") }));
+      // Also refresh myAttendance so the "My Attendance" table shows updated times immediately
+      dispatch(fetchMyAttendance({ month: calMonth.month() + 1, year: calMonth.year() }));
     } catch (err) {
       const msg = typeof err === "string" ? err : err?.message || "Punch failed. Please try again.";
       message.error(msg);
