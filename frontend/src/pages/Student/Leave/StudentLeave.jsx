@@ -135,10 +135,10 @@ const StudentLeave = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<CalendarOutlined />} label="Total"    value={stats.total}    color="#7c3aed" />
-        <StatCard icon={<CalendarOutlined />} label="Pending"  value={stats.pending}  color="#d97706" />
-        <StatCard icon={<CalendarOutlined />} label="Approved" value={stats.approved} color="#059669" />
-        <StatCard icon={<CalendarOutlined />} label="Rejected" value={stats.rejected} color="#dc2626" />
+        <StatCard icon={<CalendarOutlined />} label="Total"    value={stats.total}    color="#9B87B8" />
+        <StatCard icon={<CalendarOutlined />} label="Pending"  value={stats.pending}  color="#D4922A" />
+        <StatCard icon={<CalendarOutlined />} label="Approved" value={stats.approved} color="#5BA89A" />
+        <StatCard icon={<CalendarOutlined />} label="Rejected" value={stats.rejected} color="#D96B7A" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 0 }}>

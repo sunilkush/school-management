@@ -191,9 +191,9 @@ const FeeStudent = () => {
       dataIndex: "status",
       render: (s) =>
         s === "paid" ? (
-          <span style={pill("#16a34a", "#f0fdf4")}>PAID</span>
+          <span style={pill("#5BA89A", "rgba(184,224,210,0.15)")}>PAID</span>
         ) : (
-          <span style={pill("#dc2626", "#fff1f2")}>DUE</span>
+          <span style={pill("#D96B7A", "#fff1f2")}>DUE</span>
         ),
     },
   ];
@@ -210,7 +210,7 @@ const FeeStudent = () => {
       title: "Status",
       dataIndex: "status",
       render: (s) => (
-        <span style={pill(s === "paid" ? "#16a34a" : "#d97706", s === "paid" ? "#f0fdf4" : "#fffbeb")}>
+        <span style={pill(s === "paid" ? "#5BA89A" : "#D4922A", s === "paid" ? "rgba(184,224,210,0.15)" : "#fffbeb")}>
           {s}
         </span>
       ),
@@ -364,11 +364,11 @@ const FeeStudent = () => {
                 </tr>
                 <tr>
                   <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>Amount Paid</th>
-                  <td style={{ padding: "8px 10px", border: "1px solid #ddd", fontWeight: 700, color: "#16a34a" }}>₹{receiptInstallment.paidAmount}</td>
+                  <td style={{ padding: "8px 10px", border: "1px solid #ddd", fontWeight: 700, color: "#5BA89A" }}>₹{receiptInstallment.paidAmount}</td>
                 </tr>
                 <tr>
                   <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>Status</th>
-                  <td style={{ padding: "8px 10px", border: "1px solid #ddd", textTransform: "uppercase", color: "#16a34a", fontWeight: 700 }}>
+                  <td style={{ padding: "8px 10px", border: "1px solid #ddd", textTransform: "uppercase", color: "#5BA89A", fontWeight: 700 }}>
                     {receiptInstallment.status}
                   </td>
                 </tr>

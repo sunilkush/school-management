@@ -171,14 +171,14 @@ const MonthlyReportPage = () => {
       dataIndex: "presentDays",
       align:     "center",
       width:     80,
-      render:    (v) => <span style={{ color: "#16a34a", fontWeight: 700 }}>{v ?? 0}</span>,
+      render:    (v) => <span style={{ color: "#5BA89A", fontWeight: 700 }}>{v ?? 0}</span>,
     },
     {
       title:  "Absent",
       align:  "center",
       width:  80,
       render: (_, r) => (
-        <span style={{ color: "#dc2626", fontWeight: 700 }}>
+        <span style={{ color: "#D96B7A", fontWeight: 700 }}>
           {r?.statusBreakdown?.absent ?? 0}
         </span>
       ),
@@ -188,7 +188,7 @@ const MonthlyReportPage = () => {
       align:  "center",
       width:  70,
       render: (_, r) => (
-        <span style={{ color: "#d97706", fontWeight: 700 }}>
+        <span style={{ color: "#D4922A", fontWeight: 700 }}>
           {r?.statusBreakdown?.late ?? 0}
         </span>
       ),
@@ -218,7 +218,7 @@ const MonthlyReportPage = () => {
       sorter:    (a, b) => (a.attendancePercentage || 0) - (b.attendancePercentage || 0),
       render:    (v) => {
         const n = Number(v || 0);
-        const color = n >= 90 ? "#16a34a" : n >= 75 ? "#d97706" : "#dc2626";
+        const color = n >= 90 ? "#5BA89A" : n >= 75 ? "#D4922A" : "#D96B7A";
         return (
           <Tag
             style={{
@@ -365,8 +365,8 @@ const MonthlyReportPage = () => {
         <div style={{ ...statGrid(140), marginBottom: 16 }}>
           <MiniStat label="Total"         value={summary.total} color="var(--primary)" />
           <MiniStat label={`Avg ${summary.avg}%`} value={null} color="#0891b2" />
-          <MiniStat label="Below 75%"     value={summary.low}  color="#dc2626" />
-          <MiniStat label="Above 90%"     value={summary.high} color="#16a34a" />
+          <MiniStat label="Below 75%"     value={summary.low}  color="#D96B7A" />
+          <MiniStat label="Above 90%"     value={summary.high} color="#5BA89A" />
         </div>
       )}
 

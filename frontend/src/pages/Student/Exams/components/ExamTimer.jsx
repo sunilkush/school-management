@@ -41,15 +41,15 @@ const ExamTimer = ({ duration, onTimeUp }) => {
         size="small"
         bordered={false}
         style={{
-          background: isWarning ? "#fff1f0" : "#f6ffed",
+          background: isWarning ? "#fff1f0" : "rgba(184,224,210,0.15)",
           boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
         }}
       >
         <Space>
           <ClockCircleOutlined
-            style={{ color: isWarning ? "#ff4d4f" : "#52c41a" }}
+            style={{ color: isWarning ? "#D96B7A" : "#5BA89A" }}
           />
-          <Text strong style={{ color: isWarning ? "#ff4d4f" : "#389e0d" }}>
+          <Text strong style={{ color: isWarning ? "#D96B7A" : "#389e0d" }}>
             Time Left:
           </Text>
           <Tag color={isWarning ? "red" : "green"}>

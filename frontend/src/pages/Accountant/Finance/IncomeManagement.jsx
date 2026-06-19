@@ -34,7 +34,7 @@ const PAYMENT_MODES = ["cash", "cheque", "bank_transfer", "upi", "online", "dd"]
 
 const CAT_COLORS = {
   "Tuition Fee": "#9B87B8", "Admission Fee": "#0891b2", "Donation": "#5BA89A",
-  "Grant": "#5BA89A", "Transport Income": "#D4922A", "Hostel Income": "#8b5cf6",
+  "Grant": "#5BA89A", "Transport Income": "#D4922A", "Hostel Income": "#9B87B8",
   "Miscellaneous": "#6B7890",
 };
 const catColor = (cat) => CAT_COLORS[cat] || "#0891b2";

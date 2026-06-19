@@ -143,7 +143,7 @@ const ChildGrades = () => {
                 label: (
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 600 }}>{result.examId?.title || "Exam"}</span>
-                    <span style={pill(result.resultStatus === "PASS" ? "#5BA89A" : "#D96B7A", result.resultStatus === "PASS" ? "#d1fae5" : "rgba(255,202,212,0.2)")}>
+                    <span style={pill(result.resultStatus === "PASS" ? "#5BA89A" : "#D96B7A", result.resultStatus === "PASS" ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)")}>
                       {result.resultStatus}
                     </span>
                     <span style={pill("#9B87B8", "rgba(205,180,219,0.2)")}>{result.percentage}%</span>

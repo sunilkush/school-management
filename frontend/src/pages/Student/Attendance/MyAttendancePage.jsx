@@ -121,19 +121,19 @@ const MyAttendancePage = () => {
     {
       label: "Present",
       value: summary.present,
-      color: "#16a34a",
+      color: "#5BA89A",
       icon: <CheckCircleOutlined />,
     },
     {
       label: "Absent",
       value: summary.absent,
-      color: "#dc2626",
+      color: "#D96B7A",
       icon: <CloseCircleOutlined />,
     },
     {
       label: "Late",
       value: summary.late,
-      color: "#d97706",
+      color: "#D4922A",
       icon: <ClockCircleOutlined />,
     },
     {
@@ -398,9 +398,9 @@ const MyAttendancePage = () => {
                 }}
               />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="present" name="Present" fill="#16a34a" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="absent"  name="Absent"  fill="#dc2626" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="late"    name="Late"    fill="#d97706" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="present" name="Present" fill="#5BA89A" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="absent"  name="Absent"  fill="#D96B7A" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="late"    name="Late"    fill="#D4922A" radius={[4, 4, 0, 0]} />
               <Bar dataKey="leave"   name="Leave"   fill="#0891b2" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

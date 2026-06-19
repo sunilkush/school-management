@@ -25,7 +25,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
-const PIE_COLORS = ["#9B87B8", "#0891b2", "#5BA89A", "#D4922A", "#D96B7A", "#8b5cf6", "#D4922A", "#14b8a6"];
+const PIE_COLORS = ["#9B87B8", "#0891b2", "#5BA89A", "#D4922A", "#D96B7A", "#9B87B8", "#D4922A", "#14b8a6"];
 
 const FinancialReports = () => {
   const dispatch = useDispatch();
@@ -303,11 +303,11 @@ const FinancialReports = () => {
           {/* ── Financial summary grid ────────────────────────────── */}
           <Row gutter={[12, 12]}>
             {[
-              { label: "Total Revenue",  v: money(kpis.totalRevenue),  color: "#5BA89A", bg: "#d1fae5" },
+              { label: "Total Revenue",  v: money(kpis.totalRevenue),  color: "#5BA89A", bg: "rgba(184,224,210,0.2)" },
               { label: "Total Expenses", v: money(kpis.totalExpenses), color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
               { label: "Net Profit",     v: money(Math.abs(kpis.netProfitLoss || 0)),
                 color: (kpis.netProfitLoss || 0) >= 0 ? "#5BA89A" : "#D96B7A",
-                bg: (kpis.netProfitLoss || 0) >= 0 ? "#d1fae5" : "rgba(255,202,212,0.2)" },
+                bg: (kpis.netProfitLoss || 0) >= 0 ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)" },
               { label: "Fee Pending",    v: money(kpis.pendingFees),   color: "#D4922A", bg: "rgba(253,226,167,0.25)" },
             ].map(({ label, v, color, bg }) => (
               <Col xs={12} sm={6} key={label}>

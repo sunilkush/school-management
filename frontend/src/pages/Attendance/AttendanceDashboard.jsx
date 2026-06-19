@@ -132,7 +132,7 @@ const AttendanceDashboard = () => {
     {
       label: "Monthly Report",
       icon:  <FileTextOutlined />,
-      color: "#16a34a",
+      color: "#5BA89A",
       path:  "dashboard/superadmin/attendance/monthly",
     },
   ];
@@ -151,21 +151,21 @@ const AttendanceDashboard = () => {
       dataIndex: "present",
       align:  "right",
       width:  80,
-      render: (v) => <span style={{ color: "#16a34a", fontWeight: 600 }}>{v ?? "—"}</span>,
+      render: (v) => <span style={{ color: "#5BA89A", fontWeight: 600 }}>{v ?? "—"}</span>,
     },
     {
       title:  "Absent",
       dataIndex: "absent",
       align:  "right",
       width:  80,
-      render: (v) => <span style={{ color: "#dc2626", fontWeight: 600 }}>{v ?? "—"}</span>,
+      render: (v) => <span style={{ color: "#D96B7A", fontWeight: 600 }}>{v ?? "—"}</span>,
     },
     {
       title:  "Late",
       dataIndex: "late",
       align:  "right",
       width:  80,
-      render: (v) => <span style={{ color: "#d97706", fontWeight: 600 }}>{v ?? "—"}</span>,
+      render: (v) => <span style={{ color: "#D4922A", fontWeight: 600 }}>{v ?? "—"}</span>,
     },
     {
       title:     "Attendance Rate",
@@ -180,14 +180,14 @@ const AttendanceDashboard = () => {
             <Progress
               percent={Number(pct)}
               size="small"
-              strokeColor={low ? "#dc2626" : "#16a34a"}
+              strokeColor={low ? "#D96B7A" : "#5BA89A"}
               trailColor="var(--border-muted)"
               showInfo={false}
               style={{ flex: 1, minWidth: 80 }}
             />
             <span style={{
               fontWeight: 700, fontSize: 13,
-              color: low ? "#dc2626" : "#16a34a",
+              color: low ? "#D96B7A" : "#5BA89A",
               minWidth: 44, textAlign: "right",
             }}>
               {pct}%
@@ -252,8 +252,8 @@ const AttendanceDashboard = () => {
       {error && (
         <div style={{
           padding: "13px 18px",
-          background: "#dc262610", border: "1px solid #dc262630",
-          borderRadius: 10, color: "#dc2626", marginBottom: 16,
+          background: "#D96B7A10", border: "1px solid #D96B7A30",
+          borderRadius: 10, color: "#D96B7A", marginBottom: 16,
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <span>{error}</span>
@@ -267,9 +267,9 @@ const AttendanceDashboard = () => {
         {/* ── KPI cards ── */}
         <div style={statGrid(155)}>
           <KpiCard icon={<TeamOutlined />}          label="Total Students"  value={stats.totalStudents} color="var(--primary)" />
-          <KpiCard icon={<UserOutlined />}           label="Present Today"   value={stats.presentToday}  color="#16a34a" />
-          <KpiCard icon={<UserOutlined />}           label="Absent Today"    value={stats.absentToday}   color="#dc2626" />
-          <KpiCard icon={<ClockCircleOutlined />}    label="Late Today"      value={stats.lateToday}     color="#d97706" />
+          <KpiCard icon={<UserOutlined />}           label="Present Today"   value={stats.presentToday}  color="#5BA89A" />
+          <KpiCard icon={<UserOutlined />}           label="Absent Today"    value={stats.absentToday}   color="#D96B7A" />
+          <KpiCard icon={<ClockCircleOutlined />}    label="Late Today"      value={stats.lateToday}     color="#D4922A" />
           <KpiCard icon={<PercentageOutlined />}     label="Attendance Rate" value={avgRate}             color="var(--primary)" suffix="%" />
         </div>
 
@@ -301,7 +301,7 @@ const AttendanceDashboard = () => {
             description={
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
                 {lowSchools.map((s) => (
-                  <span key={s.schoolId || s.schoolName} style={pill("#dc2626")}>
+                  <span key={s.schoolId || s.schoolName} style={pill("#D96B7A")}>
                     {s.schoolName} — {Number(s.attendanceRate).toFixed(1)}%
                   </span>
                 ))}

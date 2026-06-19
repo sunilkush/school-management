@@ -21,7 +21,7 @@ const AutosaveIndicator = ({ status }) => {
       case "saved":
         return (
           <Space>
-            <CheckCircleOutlined style={{ color: "#52c41a" }} />
+            <CheckCircleOutlined style={{ color: "#5BA89A" }} />
             <Text type="success">All changes saved</Text>
           </Space>
         );

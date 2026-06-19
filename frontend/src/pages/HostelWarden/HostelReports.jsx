@@ -122,7 +122,7 @@ const HostelReports = () => {
           { label: "Total Capacity",  value: kpis.totalCapacity,  color: "#0891b2" },
           { label: "Occupied Beds",   value: kpis.totalOccupied,  color: "#5BA89A" },
           { label: "Occupancy Rate",  value: `${kpis.occupancyRate || 0}%`, color: "#D4922A" },
-          { label: "Students",        value: kpis.totalStudents,  color: "#8b5cf6" },
+          { label: "Students",        value: kpis.totalStudents,  color: "#9B87B8" },
           { label: "Open Complaints", value: kpis.openComplaints, color: "#D96B7A" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ ...sectionPanel, marginBottom: 0, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -237,7 +237,7 @@ const HostelReports = () => {
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
               <Legend />
-              <Area type="monotone" dataKey="Present" fill="#d1fae5" stroke="#5BA89A" strokeWidth={2} />
+              <Area type="monotone" dataKey="Present" fill="rgba(184,224,210,0.2)" stroke="#5BA89A" strokeWidth={2} />
               <Area type="monotone" dataKey="Absent"  fill="rgba(255,202,212,0.2)" stroke="#D96B7A" strokeWidth={2} />
               <Area type="monotone" dataKey="Leave"   fill="rgba(253,226,167,0.25)" stroke="#D4922A" strokeWidth={2} />
             </AreaChart>

@@ -152,10 +152,10 @@ const StudyMaterials = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<BookOutlined />}       label="Total"  value={stats.total}  color="#7c3aed" />
+        <StatCard icon={<BookOutlined />}       label="Total"  value={stats.total}  color="#9B87B8" />
         <StatCard icon={<FileTextOutlined />}   label="Notes"  value={stats.notes}  color="#0891b2" />
-        <StatCard icon={<VideoCameraOutlined />} label="Videos" value={stats.videos} color="#059669" />
-        <StatCard icon={<BookOutlined />}        label="Books"  value={stats.books}  color="#d97706" />
+        <StatCard icon={<VideoCameraOutlined />} label="Videos" value={stats.videos} color="#5BA89A" />
+        <StatCard icon={<BookOutlined />}        label="Books"  value={stats.books}  color="#D4922A" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 0 }}>

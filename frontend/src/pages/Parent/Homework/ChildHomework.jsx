@@ -93,7 +93,7 @@ const ChildHomework = () => {
       title: "Grade",
       render: (_, r) =>
         r.grade !== null && r.grade !== undefined
-          ? <span style={pill("#5BA89A", "#d1fae5")}>{r.grade}/100</span>
+          ? <span style={pill("#5BA89A", "rgba(184,224,210,0.2)")}>{r.grade}/100</span>
           : "—",
     },
     {
@@ -193,7 +193,7 @@ const ChildHomework = () => {
               {detailHw.grade !== null && detailHw.grade !== undefined && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 4 }}>Grade</div>
-                  <span style={pill("#5BA89A", "#d1fae5")}>{detailHw.grade}/100</span>
+                  <span style={pill("#5BA89A", "rgba(184,224,210,0.2)")}>{detailHw.grade}/100</span>
                 </div>
               )}
               {detailHw.feedback && (

@@ -14,7 +14,7 @@ import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../
 const { Option } = Select;
 
 const STATUS_STYLE = {
-  present: { color: "#5BA89A", bg: "#d1fae5" },
+  present: { color: "#5BA89A", bg: "rgba(184,224,210,0.2)" },
   absent:  { color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
   leave:   { color: "#D4922A", bg: "rgba(253,226,167,0.25)" },
 };

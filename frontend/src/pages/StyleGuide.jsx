@@ -33,7 +33,7 @@ const Section = ({ id, title, children }) => (
     }}>
       <div style={{
         width: 4, height: 32, borderRadius: 2,
-        background: "linear-gradient(180deg, #7c3aed, #06b6d4)",
+        background: "linear-gradient(180deg, #9B87B8, #06b6d4)",
       }} />
       <Title level={2} style={{ margin: 0, color: "var(--text-primary)", fontWeight: 800 }}>
         {title}
@@ -87,7 +87,7 @@ const TokenRow = ({ name, value, desc }) => (
   }}>
     <code style={{
       flex: "0 0 220px", fontSize: 12, background: "var(--surface-soft)",
-      padding: "2px 8px", borderRadius: 6, color: "#7c3aed",
+      padding: "2px 8px", borderRadius: 6, color: "#9B87B8",
     }}>
       {name}
     </code>
@@ -117,9 +117,9 @@ const NAV = [
 /* ─── Role badge colours ──────────────────────────────────────────── */
 const ROLE_COLORS = {
   "Super Admin":    { bg: "#faf5ff", color: "#6d28d9", border: "#ddd6fe" },
-  "School Admin":   { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" },
-  "Principal":      { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
-  "Teacher":        { bg: "#fff7ed", color: "#c2410c", border: "#fed7aa" },
+  "School Admin":   { bg: "rgba(167,199,231,0.2)", color: "#1d4ed8", border: "rgba(167,199,231,0.4)" },
+  "Principal":      { bg: "rgba(184,224,210,0.15)", color: "#15803d", border: "#bbf7d0" },
+  "Teacher":        { bg: "rgba(253,226,167,0.25)", color: "#c2410c", border: "#fed7aa" },
   "Student":        { bg: "#f0f9ff", color: "#0369a1", border: "#bae6fd" },
   "Parent":         { bg: "#fdf4ff", color: "#a21caf", border: "#f0abfc" },
   "Accountant":     { bg: "#fefce8", color: "#a16207", border: "#fde68a" },
@@ -199,7 +199,7 @@ const StyleGuide = () => {
         <div style={{ padding: "0 16px 20px" }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10, marginBottom: 10,
-            background: "linear-gradient(135deg,#7c3aed,#06b6d4)",
+            background: "linear-gradient(135deg,#9B87B8,#06b6d4)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <BookOutlined style={{ color: "#fff", fontSize: 16 }} />
@@ -221,7 +221,7 @@ const StyleGuide = () => {
                   ? "rgba(124,58,237,0.08)" : "transparent",
                 border: "none", cursor: "pointer",
                 padding: "8px 12px", borderRadius: 8,
-                color: activeSection === item.id ? "#7c3aed" : "var(--text-secondary)",
+                color: activeSection === item.id ? "#9B87B8" : "var(--text-secondary)",
                 fontSize: 13, fontWeight: activeSection === item.id ? 600 : 400,
                 marginBottom: 2, transition: "all 0.15s",
               }}
@@ -270,13 +270,13 @@ const StyleGuide = () => {
           <Demo label="Brand Palette">
             <Row gutter={[16, 16]}>
               {[
-                { name: "Primary",   value: "#7c3aed", light: "rgba(124,58,237,0.08)" },
+                { name: "Primary",   value: "#9B87B8", light: "rgba(124,58,237,0.08)" },
                 { name: "Secondary", value: "#06b6d4", light: "rgba(6,182,212,0.08)" },
-                { name: "Success",   value: "#10b981", light: "rgba(16,185,129,0.10)" },
-                { name: "Warning",   value: "#f59e0b", light: "rgba(245,158,11,0.10)" },
-                { name: "Danger",    value: "#ef4444", light: "rgba(239,68,68,0.10)" },
-                { name: "Purple",    value: "#7c3aed", light: "rgba(124,58,237,0.10)" },
-                { name: "Orange",    value: "#f97316", light: "rgba(249,115,22,0.10)" },
+                { name: "Success",   value: "#5BA89A", light: "rgba(16,185,129,0.10)" },
+                { name: "Warning",   value: "#D4922A", light: "rgba(245,158,11,0.10)" },
+                { name: "Danger",    value: "#D96B7A", light: "rgba(239,68,68,0.10)" },
+                { name: "Purple",    value: "#9B87B8", light: "rgba(124,58,237,0.10)" },
+                { name: "Orange",    value: "#D4922A", light: "rgba(249,115,22,0.10)" },
                 { name: "Cyan",      value: "#06b6d4", light: "rgba(6,182,212,0.10)" },
               ].map((s) => (
                 <Col key={s.name} xs={12} sm={8} md={6} lg={3}>
@@ -289,16 +289,16 @@ const StyleGuide = () => {
           <Demo label="Neutral / Greyscale">
             <Row gutter={[12, 12]}>
               {[
-                { name: "slate-50",  value: "#f8fafc" },
+                { name: "slate-50",  value: "#F7F8FC" },
                 { name: "slate-100", value: "#f1f5f9" },
                 { name: "slate-200", value: "#e2e8f0" },
                 { name: "slate-300", value: "#cbd5e1" },
-                { name: "slate-400", value: "#94a3b8" },
-                { name: "slate-500", value: "#64748b" },
+                { name: "slate-400", value: "#A8B8CC" },
+                { name: "slate-500", value: "#6B7890" },
                 { name: "slate-600", value: "#475569" },
                 { name: "slate-700", value: "#334155" },
-                { name: "slate-800", value: "#1e293b" },
-                { name: "slate-900", value: "#0f172a" },
+                { name: "slate-800", value: "#1E2A3A" },
+                { name: "slate-900", value: "#1E2A3A" },
                 { name: "slate-950", value: "#020617" },
               ].map((s) => (
                 <Col key={s.name} xs={12} sm={6} md={4} lg={2}>
@@ -310,18 +310,18 @@ const StyleGuide = () => {
 
           <Demo label="CSS Variables — Light Theme">
             <div>
-              <TokenRow name="--primary"          value="#7c3aed"  desc="Main brand colour, buttons, links, active states" />
+              <TokenRow name="--primary"          value="#9B87B8"  desc="Main brand colour, buttons, links, active states" />
               <TokenRow name="--primary-hover"     value="#6d28d9"  desc="Button hover / pressed" />
               <TokenRow name="--primary-light"     value="rgba(124,58,237,0.08)" desc="Chip backgrounds, icon wells" />
               <TokenRow name="--secondary"         value="#06b6d4"  desc="Accent for data viz, secondary actions" />
-              <TokenRow name="--success"           value="#10b981"  desc="Success states, positive values" />
-              <TokenRow name="--warning"           value="#f59e0b"  desc="Warning alerts, caution states" />
-              <TokenRow name="--danger"            value="#ef4444"  desc="Error states, delete actions" />
-              <TokenRow name="--text-primary"      value="#0f172a"  desc="Headings, body text" />
+              <TokenRow name="--success"           value="#5BA89A"  desc="Success states, positive values" />
+              <TokenRow name="--warning"           value="#D4922A"  desc="Warning alerts, caution states" />
+              <TokenRow name="--danger"            value="#D96B7A"  desc="Error states, delete actions" />
+              <TokenRow name="--text-primary"      value="#1E2A3A"  desc="Headings, body text" />
               <TokenRow name="--text-secondary"    value="#475569"  desc="Labels, descriptions" />
-              <TokenRow name="--text-muted"        value="#64748b"  desc="Placeholders, metadata" />
+              <TokenRow name="--text-muted"        value="#6B7890"  desc="Placeholders, metadata" />
               <TokenRow name="--surface"           value="#ffffff"  desc="Card / panel background" />
-              <TokenRow name="--surface-page"      value="#f8fafc"  desc="Page background" />
+              <TokenRow name="--surface-page"      value="#F7F8FC"  desc="Page background" />
               <TokenRow name="--surface-soft"      value="#f1f5f9"  desc="Input backgrounds, hover fills" />
               <TokenRow name="--border"            value="#e2e8f0"  desc="Standard border" />
               <TokenRow name="--border-muted"      value="#f1f5f9"  desc="Subtle dividers" />
@@ -331,10 +331,10 @@ const StyleGuide = () => {
           <Demo label="Dark Mode Overrides (applied automatically via [data-theme='dark'])">
             <div>
               <TokenRow name="--bg"              value="#020617"  desc="Page background" />
-              <TokenRow name="--surface"         value="#0f172a"  desc="Card / panel" />
-              <TokenRow name="--surface-soft"    value="#1e293b"  desc="Input / hover fill" />
+              <TokenRow name="--surface"         value="#1E2A3A"  desc="Card / panel" />
+              <TokenRow name="--surface-soft"    value="#1E2A3A"  desc="Input / hover fill" />
               <TokenRow name="--text-primary"    value="#e2e8f0"  desc="Headings, body" />
-              <TokenRow name="--border"          value="#1e293b"  desc="Standard border" />
+              <TokenRow name="--border"          value="#1E2A3A"  desc="Standard border" />
               <TokenRow name="--primary-light"   value="rgba(124,58,237,0.15)" desc="Chip backgrounds" />
             </div>
           </Demo>
@@ -414,7 +414,7 @@ const StyleGuide = () => {
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                     <div style={{
                       width: size, height: size, flexShrink: 0,
-                      background: "linear-gradient(135deg,#7c3aed,#06b6d4)",
+                      background: "linear-gradient(135deg,#9B87B8,#06b6d4)",
                       borderRadius: 3,
                     }} />
                     <Text style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "monospace" }}>{label}</Text>
@@ -505,11 +505,11 @@ const StyleGuide = () => {
           <Demo label="Gradient Buttons (custom CSS)">
             <Space wrap size={10}>
               {[
-                { label: "Sign In",     bg: "linear-gradient(135deg,#7c3aed,#6d28d9)", shadow: "rgba(124,58,237,0.4)" },
-                { label: "Confirm",     bg: "linear-gradient(135deg,#10b981,#059669)", shadow: "rgba(16,185,129,0.4)" },
+                { label: "Sign In",     bg: "linear-gradient(135deg,#9B87B8,#6d28d9)", shadow: "rgba(124,58,237,0.4)" },
+                { label: "Confirm",     bg: "linear-gradient(135deg,#5BA89A,#5BA89A)", shadow: "rgba(16,185,129,0.4)" },
                 { label: "Send",        bg: "linear-gradient(135deg,#06b6d4,#0891b2)", shadow: "rgba(6,182,212,0.4)" },
-                { label: "Warning",     bg: "linear-gradient(135deg,#f59e0b,#d97706)", shadow: "rgba(245,158,11,0.4)" },
-                { label: "Delete",      bg: "linear-gradient(135deg,#ef4444,#dc2626)", shadow: "rgba(239,68,68,0.4)" },
+                { label: "Warning",     bg: "linear-gradient(135deg,#D4922A,#D4922A)", shadow: "rgba(245,158,11,0.4)" },
+                { label: "Delete",      bg: "linear-gradient(135deg,#D96B7A,#D96B7A)", shadow: "rgba(239,68,68,0.4)" },
               ].map(({ label, bg, shadow }) => (
                 <button
                   key={label}
@@ -639,7 +639,7 @@ const StyleGuide = () => {
             <Col xs={24} md={8}>
               <Demo label="Hoverable Card">
                 <Card hoverable cover={
-                  <div style={{ height: 100, background: "linear-gradient(135deg,#7c3aed,#06b6d4)", borderRadius: "14px 14px 0 0" }} />
+                  <div style={{ height: 100, background: "linear-gradient(135deg,#9B87B8,#06b6d4)", borderRadius: "14px 14px 0 0" }} />
                 }>
                   <Card.Meta title="Class 10-A" description="42 students enrolled" />
                 </Card>
@@ -653,13 +653,13 @@ const StyleGuide = () => {
                 }}>
                   <div style={{
                     position: "absolute", top: -20, right: -20, width: 80, height: 80,
-                    borderRadius: "50%", background: "#7c3aed", opacity: 0.07,
+                    borderRadius: "50%", background: "#9B87B8", opacity: 0.07,
                   }} />
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <Text style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 500 }}>Total Revenue</Text>
                     <div style={{
                       width: 36, height: 36, borderRadius: 10, background: "rgba(124,58,237,0.1)",
-                      display: "flex", alignItems: "center", justifyContent: "center", color: "#7c3aed",
+                      display: "flex", alignItems: "center", justifyContent: "center", color: "#9B87B8",
                     }}>
                       <DollarOutlined />
                     </div>
@@ -676,9 +676,9 @@ const StyleGuide = () => {
           <Demo label="KPI Grid — School Dashboard Pattern">
             <Row gutter={[12, 12]}>
               {[
-                { title: "Total Students", value: "1,284", delta: "+24", icon: <Users size={18} />, color: "#7c3aed" },
-                { title: "Teachers",       value: "86",    delta: "+3",  icon: <Award size={18} />,  color: "#10b981" },
-                { title: "Fee Collected",  value: "₹42L",  delta: "+8%", icon: <TrendingUp size={18} />, color: "#f59e0b" },
+                { title: "Total Students", value: "1,284", delta: "+24", icon: <Users size={18} />, color: "#9B87B8" },
+                { title: "Teachers",       value: "86",    delta: "+3",  icon: <Award size={18} />,  color: "#5BA89A" },
+                { title: "Fee Collected",  value: "₹42L",  delta: "+8%", icon: <TrendingUp size={18} />, color: "#D4922A" },
                 { title: "Attendance",     value: "94.2%", delta: "+1.2%", icon: <CheckCircle size={18} />, color: "#06b6d4" },
               ].map(({ title, value, delta, icon, color }) => (
                 <Col key={title} xs={12} lg={6}>
@@ -763,7 +763,7 @@ const StyleGuide = () => {
           <Demo label="Pill Tags (Rounded) — Used in Academic Pages">
             <Space wrap size={8}>
               {["Mathematics", "Science", "English", "History", "Physics", "Chemistry", "Biology", "Computer Science"].map((sub, i) => {
-                const colors = ["#7c3aed", "#10b981", "#f59e0b", "#06b6d4", "#ef4444", "#8b5cf6", "#14b8a6", "#f97316"];
+                const colors = ["#9B87B8", "#5BA89A", "#D4922A", "#06b6d4", "#D96B7A", "#9B87B8", "#14b8a6", "#D4922A"];
                 return (
                   <Tag
                     key={sub}
@@ -828,29 +828,29 @@ const StyleGuide = () => {
                 <Text style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, display: "block" }}>
                   Fee Collection — 78%
                 </Text>
-                <Progress percent={78} strokeColor="#7c3aed" />
+                <Progress percent={78} strokeColor="#9B87B8" />
               </div>
               <div>
                 <Text style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, display: "block" }}>
                   Attendance — 94%
                 </Text>
-                <Progress percent={94} strokeColor="#10b981" />
+                <Progress percent={94} strokeColor="#5BA89A" />
               </div>
               <div>
                 <Text style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, display: "block" }}>
                   Syllabus Completion — 62% (Warning)
                 </Text>
-                <Progress percent={62} strokeColor="#f59e0b" />
+                <Progress percent={62} strokeColor="#D4922A" />
               </div>
               <Row gutter={16}>
                 <Col span={6}>
-                  <Progress type="circle" percent={78} strokeColor="#7c3aed" size={80} />
+                  <Progress type="circle" percent={78} strokeColor="#9B87B8" size={80} />
                 </Col>
                 <Col span={6}>
-                  <Progress type="circle" percent={94} strokeColor="#10b981" size={80} />
+                  <Progress type="circle" percent={94} strokeColor="#5BA89A" size={80} />
                 </Col>
                 <Col span={6}>
-                  <Progress type="dashboard" percent={62} strokeColor="#f59e0b" size={80} />
+                  <Progress type="dashboard" percent={62} strokeColor="#D4922A" size={80} />
                 </Col>
                 <Col span={6}>
                   <Progress type="circle" percent={100} size={80} />
@@ -882,10 +882,10 @@ const StyleGuide = () => {
                     <Space>
                       <Progress
                         percent={v} size="small" showInfo={false}
-                        strokeColor={v >= 75 ? "#10b981" : v >= 50 ? "#f59e0b" : "#ef4444"}
+                        strokeColor={v >= 75 ? "#5BA89A" : v >= 50 ? "#D4922A" : "#D96B7A"}
                         style={{ width: 80 }}
                       />
-                      <Text style={{ fontSize: 12, color: v >= 75 ? "#10b981" : v >= 50 ? "#f59e0b" : "#ef4444", fontWeight: 600 }}>
+                      <Text style={{ fontSize: 12, color: v >= 75 ? "#5BA89A" : v >= 50 ? "#D4922A" : "#D96B7A", fontWeight: 600 }}>
                         {v}%
                       </Text>
                     </Space>
@@ -916,12 +916,12 @@ const StyleGuide = () => {
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Row gutter={[12, 12]}>
                 {[
-                  { label: "Active",     bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0", dot: "#22c55e" },
-                  { label: "Pending",    bg: "#fffbeb", color: "#92400e", border: "#fde68a", dot: "#f59e0b" },
-                  { label: "Overdue",    bg: "#fff1f2", color: "#be123c", border: "#fecdd3", dot: "#ef4444" },
+                  { label: "Active",     bg: "rgba(184,224,210,0.15)", color: "#15803d", border: "#bbf7d0", dot: "#5BA89A" },
+                  { label: "Pending",    bg: "#fffbeb", color: "#92400e", border: "#fde68a", dot: "#D4922A" },
+                  { label: "Overdue",    bg: "#fff1f2", color: "#be123c", border: "#fecdd3", dot: "#D96B7A" },
                   { label: "Suspended",  bg: "#fafafa", color: "#525252", border: "#e5e5e5", dot: "#a3a3a3" },
-                  { label: "Processing", bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe", dot: "#3b82f6" },
-                  { label: "Graduated",  bg: "#faf5ff", color: "#6d28d9", border: "#ddd6fe", dot: "#8b5cf6" },
+                  { label: "Processing", bg: "rgba(167,199,231,0.2)", color: "#1d4ed8", border: "rgba(167,199,231,0.4)", dot: "#5B9EC9" },
+                  { label: "Graduated",  bg: "#faf5ff", color: "#6d28d9", border: "#ddd6fe", dot: "#9B87B8" },
                 ].map(({ label, bg, color, border, dot }) => (
                   <Col key={label} xs={12} sm={8} md={4}>
                     <div style={{
@@ -941,11 +941,11 @@ const StyleGuide = () => {
           <Demo label="Fee Status Indicators">
             <Row gutter={[12, 12]}>
               {[
-                { label: "Paid",        icon: <CheckCircleOutlined />, color: "#10b981" },
-                { label: "Partially Paid", icon: <InfoCircleOutlined />, color: "#f59e0b" },
-                { label: "Unpaid",      icon: <CloseCircleOutlined />, color: "#ef4444" },
-                { label: "Waived",      icon: <StarOutlined />, color: "#7c3aed" },
-                { label: "Overdue",     icon: <WarningOutlined />, color: "#f97316" },
+                { label: "Paid",        icon: <CheckCircleOutlined />, color: "#5BA89A" },
+                { label: "Partially Paid", icon: <InfoCircleOutlined />, color: "#D4922A" },
+                { label: "Unpaid",      icon: <CloseCircleOutlined />, color: "#D96B7A" },
+                { label: "Waived",      icon: <StarOutlined />, color: "#9B87B8" },
+                { label: "Overdue",     icon: <WarningOutlined />, color: "#D4922A" },
               ].map(({ label, icon, color }) => (
                 <Col key={label}>
                   <Tag
@@ -965,7 +965,7 @@ const StyleGuide = () => {
                 { plan: "Trial",    bg: "#f9f0ff", color: "#722ed1", border: "#d3adf7", icon: <BookOutlined /> },
                 { plan: "Standard", bg: "#e6f7ff", color: "#0050b3", border: "#91d5ff", icon: <SafetyCertificateOutlined /> },
                 { plan: "Premium",  bg: "#fff7e6", color: "#ad4e00", border: "#ffd591", icon: <CrownOutlined /> },
-                { plan: "Enterprise",bg:"#f6ffed", color: "#135200", border: "#b7eb8f", icon: <GlobalOutlined /> },
+                { plan: "Enterprise",bg:"rgba(184,224,210,0.15)", color: "#135200", border: "rgba(184,224,210,0.5)", icon: <GlobalOutlined /> },
               ].map(({ plan, bg, color, border, icon }) => (
                 <div
                   key={plan}
@@ -1202,7 +1202,7 @@ const StyleGuide = () => {
                 <Timeline
                   items={[
                     {
-                      color: "#7c3aed",
+                      color: "#9B87B8",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>New student admitted</Text>
@@ -1212,7 +1212,7 @@ const StyleGuide = () => {
                       ),
                     },
                     {
-                      color: "#10b981",
+                      color: "#5BA89A",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Fee collected</Text>
@@ -1222,7 +1222,7 @@ const StyleGuide = () => {
                       ),
                     },
                     {
-                      color: "#f59e0b",
+                      color: "#D4922A",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Exam scheduled</Text>
@@ -1232,7 +1232,7 @@ const StyleGuide = () => {
                       ),
                     },
                     {
-                      color: "#ef4444",
+                      color: "#D96B7A",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Attendance below threshold</Text>
@@ -1250,12 +1250,12 @@ const StyleGuide = () => {
                 <Row gutter={[12, 12]}>
                   <Col span={12}>
                     <Card style={{ borderRadius: 12 }}>
-                      <Statistic title="Fee Collected" value="₹42,85,000" valueStyle={{ color: "#10b981", fontSize: 22 }} />
+                      <Statistic title="Fee Collected" value="₹42,85,000" valueStyle={{ color: "#5BA89A", fontSize: 22 }} />
                     </Card>
                   </Col>
                   <Col span={12}>
                     <Card style={{ borderRadius: 12 }}>
-                      <Statistic title="Attendance" value={94.2} suffix="%" valueStyle={{ color: "#7c3aed", fontSize: 22 }} />
+                      <Statistic title="Attendance" value={94.2} suffix="%" valueStyle={{ color: "#9B87B8", fontSize: 22 }} />
                     </Card>
                   </Col>
                   <Col span={12}>
@@ -1265,7 +1265,7 @@ const StyleGuide = () => {
                   </Col>
                   <Col span={12}>
                     <Card style={{ borderRadius: 12 }}>
-                      <Statistic title="Teachers" value={86} prefix={<UserOutlined />} valueStyle={{ color: "#f59e0b", fontSize: 22 }} />
+                      <Statistic title="Teachers" value={86} prefix={<UserOutlined />} valueStyle={{ color: "#D4922A", fontSize: 22 }} />
                     </Card>
                   </Col>
                 </Row>
@@ -1274,9 +1274,9 @@ const StyleGuide = () => {
               <Demo label="Avatar + User Info Pattern">
                 <Space direction="vertical" style={{ width: "100%" }} size={12}>
                   {[
-                    { name: "Aryan Sharma", role: "Student", class: "Class 10-A", color: "#7c3aed" },
-                    { name: "Priya Verma",  role: "Teacher",  class: "Mathematics", color: "#10b981" },
-                    { name: "Rahul Singh",  role: "Parent",   class: "2 children",  color: "#f59e0b" },
+                    { name: "Aryan Sharma", role: "Student", class: "Class 10-A", color: "#9B87B8" },
+                    { name: "Priya Verma",  role: "Teacher",  class: "Mathematics", color: "#5BA89A" },
+                    { name: "Rahul Singh",  role: "Parent",   class: "2 children",  color: "#D4922A" },
                   ].map(({ name, role, class: cls, color }) => (
                     <div key={name} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1330,7 +1330,7 @@ const StyleGuide = () => {
             </Text>
           </div>
           <Space size={8}>
-            <Tag color="purple" style={{ borderRadius: 99 }}>Primary: #7c3aed</Tag>
+            <Tag color="purple" style={{ borderRadius: 99 }}>Primary: #9B87B8</Tag>
             <Tag color="cyan"   style={{ borderRadius: 99 }}>Secondary: #06b6d4</Tag>
             <Tag color="success" style={{ borderRadius: 99 }}>Font: Noto Sans</Tag>
           </Space>

@@ -141,7 +141,7 @@ const FeeReports = () => {
     {
       title: "Status", dataIndex: "status",
       render: (s) => (
-        <span style={pill(s === "success" ? "#5BA89A" : "#D96B7A", s === "success" ? "#d1fae5" : "rgba(255,202,212,0.2)")}>
+        <span style={pill(s === "success" ? "#5BA89A" : "#D96B7A", s === "success" ? "rgba(184,224,210,0.2)" : "rgba(255,202,212,0.2)")}>
           {s}
         </span>
       ),

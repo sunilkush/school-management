@@ -21,7 +21,7 @@ import {
 } from "../../styles/pageStyles";
 
 const { Text } = Typography;
-const PIE_COLORS = ["#9B87B8", "#0891b2", "#5BA89A", "#D4922A", "#D96B7A", "#8b5cf6", "#D4922A", "#14b8a6"];
+const PIE_COLORS = ["#9B87B8", "#0891b2", "#5BA89A", "#D4922A", "#D96B7A", "#9B87B8", "#D4922A", "#14b8a6"];
 
 const LibraryReports = () => {
   const dispatch = useDispatch();
@@ -300,7 +300,7 @@ const LibraryReports = () => {
           <Row gutter={[12, 12]}>
             {[
               { label: "Issued",   count: summary.issuedActive,    color: "#D4922A", bg: "rgba(253,226,167,0.25)" },
-              { label: "Returned", count: summary.returnedCount,   color: "#5BA89A", bg: "#d1fae5" },
+              { label: "Returned", count: summary.returnedCount,   color: "#5BA89A", bg: "rgba(184,224,210,0.2)" },
               { label: "Overdue",  count: summary.overdueCount,    color: "#D96B7A", bg: "rgba(255,202,212,0.2)" },
               { label: "Lost",     count: summary.lostCount,       color: "#9B87B8", bg: "rgba(205,180,219,0.2)" },
             ].map(({ label, count, color, bg }) => (

@@ -180,14 +180,14 @@ const AttendanceTablePage = () => {
           <Button
             size="small"
             onClick={() => handleStatus(row._id, "present")}
-            style={{ fontSize: 11, borderColor: "#16a34a", color: "#16a34a" }}
+            style={{ fontSize: 11, borderColor: "#5BA89A", color: "#5BA89A" }}
           >
             Present
           </Button>
           <Button
             size="small"
             onClick={() => handleStatus(row._id, "absent")}
-            style={{ fontSize: 11, borderColor: "#dc2626", color: "#dc2626" }}
+            style={{ fontSize: 11, borderColor: "#D96B7A", color: "#D96B7A" }}
           >
             Absent
           </Button>
@@ -243,7 +243,7 @@ const AttendanceTablePage = () => {
                 suffixIcon={<BankOutlined />}
               />
               {saAcademicYearId === null && saSchoolId && !yearLoading && (
-                <div style={{ fontSize: 11, color: "#d97706", marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: "#D4922A", marginTop: 4 }}>
                   No active academic year found for this school
                 </div>
               )}

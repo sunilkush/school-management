@@ -18,7 +18,7 @@ import { iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss } fro
 const { Option } = Select;
 const { TextArea } = Input;
 
-const RELATION_COLORS = { father: "#9B87B8", mother: "#D96B7A", guardian: "#0891b2", sibling: "#5BA89A", relative: "#D4922A", friend: "#8b5cf6", other: "#6B7890" };
+const RELATION_COLORS = { father: "#9B87B8", mother: "#D96B7A", guardian: "#0891b2", sibling: "#5BA89A", relative: "#D4922A", friend: "#9B87B8", other: "#6B7890" };
 
 const VisitorLog = () => {
   const dispatch = useDispatch();

@@ -296,7 +296,7 @@ const handleGenerateInstallments = async () => {
           setPaymentOpen(false);
           refreshFeeData();
         },
-        theme: { color: "#1677ff" },
+        theme: { color: "#5B9EC9" },
       };
 
       new window.Razorpay(options).open();
@@ -422,7 +422,7 @@ const handleGenerateInstallments = async () => {
         style={{
           borderRadius: 24,
           marginBottom: 18,
-          boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+          boxShadow: "0 10px 30px rgba(91,158,201,0.06)",
         }}
       >
         <Row gutter={[18, 18]} align="middle">
@@ -512,7 +512,7 @@ const handleGenerateInstallments = async () => {
         style={{
           borderRadius: 24,
           marginBottom: 18,
-          boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+          boxShadow: "0 10px 30px rgba(91,158,201,0.06)",
         }}
       >
         {noChild ? (
@@ -536,7 +536,7 @@ const handleGenerateInstallments = async () => {
         bordered={false}
         style={{
           borderRadius: 24,
-          boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+          boxShadow: "0 10px 30px rgba(91,158,201,0.06)",
         }}
         extra={
          <Button

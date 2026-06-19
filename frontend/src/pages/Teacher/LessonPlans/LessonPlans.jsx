@@ -209,9 +209,9 @@ const LessonPlans = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<BookOutlined />} label="Total"     value={stats.total}     color="#7c3aed" />
-        <StatCard icon={<BookOutlined />} label="Draft"     value={stats.draft}     color="#d97706" />
-        <StatCard icon={<BookOutlined />} label="Approved"  value={stats.approved}  color="#059669" />
+        <StatCard icon={<BookOutlined />} label="Total"     value={stats.total}     color="#9B87B8" />
+        <StatCard icon={<BookOutlined />} label="Draft"     value={stats.draft}     color="#D4922A" />
+        <StatCard icon={<BookOutlined />} label="Approved"  value={stats.approved}  color="#5BA89A" />
         <StatCard icon={<BookOutlined />} label="Completed" value={stats.completed} color="#0891b2" />
       </div>
 
