@@ -81,7 +81,8 @@ export const requireRoles = (allowedRoles = []) =>
   asyncHandler(async (req, _res, next) => {
     const role = req.userRole?.name ? req.userRole : await fetchRole(req.user);
 
-    if (!allowedRoles.includes(role.name)) {
+    const normalizedAllowed = allowedRoles.map((r) => r.toLowerCase().trim());
+    if (!normalizedAllowed.includes((role.name || "").toLowerCase().trim())) {
       throw new ApiError(403, "Forbidden. Insufficient role access.");
     }
 

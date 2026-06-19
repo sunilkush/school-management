@@ -103,11 +103,12 @@ export const getMyLeaveRequests = asyncHandler(async (req, res) => {
 
 /* ── APPROVE LEAVE REQUEST ───────────────────────────────────────────────── */
 export const approveLeaveRequest = asyncHandler(async (req, res) => {
+  const isSuperAdmin = (req.userRole?.name || "").toLowerCase() === "super admin";
   const schoolId = req.user.school?._id || req.user.schoolId;
 
   const leaveRequest = await LeaveRequest.findById(req.params.id);
   if (!leaveRequest) throw new ApiError(404, "Leave request not found");
-  if (leaveRequest.schoolId.toString() !== schoolId?.toString())
+  if (!isSuperAdmin && leaveRequest.schoolId.toString() !== schoolId?.toString())
     throw new ApiError(403, "Access denied");
   if (leaveRequest.status !== "pending")
     throw new ApiError(400, "Request already processed");
@@ -127,11 +128,12 @@ export const rejectLeaveRequest = asyncHandler(async (req, res) => {
   const { rejectionReason } = req.body;
   if (!rejectionReason?.trim()) throw new ApiError(400, "Rejection reason is required");
 
+  const isSuperAdmin = (req.userRole?.name || "").toLowerCase() === "super admin";
   const schoolId = req.user.school?._id || req.user.schoolId;
 
   const leaveRequest = await LeaveRequest.findById(req.params.id);
   if (!leaveRequest) throw new ApiError(404, "Leave request not found");
-  if (leaveRequest.schoolId.toString() !== schoolId?.toString())
+  if (!isSuperAdmin && leaveRequest.schoolId.toString() !== schoolId?.toString())
     throw new ApiError(403, "Access denied");
   if (leaveRequest.status !== "pending")
     throw new ApiError(400, "Request already processed");

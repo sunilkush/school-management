@@ -18,13 +18,11 @@ const { RangePicker } = DatePicker;
 const STATUS_COLOR = { pending: "orange", approved: "green", rejected: "red" };
 
 const LEAVE_TYPES = [
-  { value: "sick",        label: "Sick Leave" },
-  { value: "casual",      label: "Casual Leave" },
-  { value: "earned",      label: "Earned Leave" },
-  { value: "maternity",   label: "Maternity Leave" },
-  { value: "paternity",   label: "Paternity Leave" },
-  { value: "personal",    label: "Personal Leave" },
-  { value: "other",       label: "Other" },
+  { value: "sick",      label: "Sick Leave" },
+  { value: "casual",    label: "Casual Leave" },
+  { value: "paid",      label: "Paid / Earned Leave" },
+  { value: "emergency", label: "Emergency Leave" },
+  { value: "other",     label: "Other" },
 ];
 
 const StatCard = ({ icon, label, value, color }) => (
@@ -48,12 +46,14 @@ const TeacherLeave = () => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     const [from, to] = values.dateRange;
+    const totalDays = to.diff(from, "day") + 1;
     const result = await dispatch(createLeaveRequest({
       role: "teacher",
       leaveType: values.leaveType,
       reason: values.reason,
       startDate: from.toISOString(),
       endDate: to.toISOString(),
+      totalDays,
     }));
     if (createLeaveRequest.fulfilled.match(result)) {
       message.success("Leave request submitted.");

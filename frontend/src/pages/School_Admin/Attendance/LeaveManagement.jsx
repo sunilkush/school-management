@@ -443,9 +443,13 @@ const LeaveManagement = () => {
             <Select
               placeholder="Select role"
               options={[
-                { value: "Teacher", label: "Teacher" },
-                { value: "Staff",   label: "Staff"   },
-                { value: "Student", label: "Student" },
+                { value: "teacher",       label: "Teacher"        },
+                { value: "staff",         label: "Staff"          },
+                { value: "student",       label: "Student"        },
+                { value: "accountant",    label: "Accountant"     },
+                { value: "librarian",     label: "Librarian"      },
+                { value: "hostel_warden", label: "Hostel Warden"  },
+                { value: "principal",     label: "Principal"      },
               ]}
             />
           </Form.Item>

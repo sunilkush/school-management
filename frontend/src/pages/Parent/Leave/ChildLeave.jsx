@@ -17,7 +17,7 @@ import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pi
 
 const { TextArea } = Input;
 const STAT_COLORS  = ["#9B87B8", "#D4922A", "#5BA89A", "#D96B7A"];
-const LEAVE_TYPES  = ["sick", "personal", "family", "other"];
+const LEAVE_TYPES  = ["sick", "casual", "emergency", "other"];
 
 const statusColor = { pending: "orange", approved: "green", rejected: "red" };
 
@@ -64,13 +64,16 @@ const ChildLeave = () => {
   const handleSubmit = async (values) => {
     if (!selectedChildId) { message.warning("Select a child first"); return; }
     try {
+      const [from, to] = values.dateRange;
+      const totalDays = to.diff(from, "day") + 1;
       await dispatch(createLeaveRequest({
         role:      "student",
         userId:    selectedChildId,
         leaveType: values.leaveType,
         reason:    values.reason,
-        startDate: values.dateRange[0].toISOString(),
-        endDate:   values.dateRange[1].toISOString(),
+        startDate: from.toISOString(),
+        endDate:   to.toISOString(),
+        totalDays,
       })).unwrap();
       message.success("Leave request submitted successfully");
       setModalOpen(false);
