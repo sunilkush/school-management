@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   BookOpen,
   CalendarDays,
+  Camera,
   Droplets,
   GraduationCap,
   Loader2,
@@ -13,14 +14,16 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { Spin } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import {
   fetchStudentEnrollment,
   fetchStudentProfile,
   updateStudentProfile,
 } from "../../../features/studentPortalSlice";
+import { updateUser } from "../../../features/authSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pageCard, sectionPanel, avatarStyle } from "../../../styles/pageStyles";
+import { pageWrapper, pageCard, sectionPanel, avatarStyle, avatarColor } from "../../../styles/pageStyles";
 
 const defaultStudentDetails = {
   dateOfBirth: "",
@@ -74,6 +77,32 @@ const Profile = () => {
     message: "",
     isError: false,
   });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setSaveState({ saving: false, message: "Please select an image file", isError: true });
+      return;
+    }
+    try {
+      setUploadingPhoto(true);
+      await dispatch(updateUser({
+        name:  user?.name  || profileForm.name || "",
+        email: user?.email || profileForm.email || "",
+        phone: user?.phone || profileForm.phone,
+        avatarFile: file,
+      })).unwrap();
+      setSaveState({ saving: false, message: "Profile photo updated!", isError: false });
+    } catch (err) {
+      setSaveState({ saving: false, message: typeof err === "string" ? err : "Failed to update photo", isError: true });
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -237,8 +266,31 @@ const Profile = () => {
       <div style={{ ...pageCard, marginTop: 16, padding: "20px 24px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={avatarStyle(profileForm.name || "S", 56)}>
-              {initials}
+            {/* Clickable avatar with camera badge */}
+            <div
+              style={{ position: "relative", flexShrink: 0, cursor: "pointer" }}
+              onClick={() => !uploadingPhoto && fileInputRef.current?.click()}
+              title="Click to change photo"
+            >
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user?.name}
+                  style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--border-muted)", display: "block" }}
+                />
+              ) : (
+                <div style={avatarStyle(profileForm.name || "S", 56)}>{initials}</div>
+              )}
+              {uploadingPhoto ? (
+                <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Spin size="small" />
+                </div>
+              ) : (
+                <div style={{ position: "absolute", bottom: 0, right: 0, width: 20, height: 20, borderRadius: "50%", background: "var(--primary, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
+                  <Camera style={{ width: 10, height: 10, color: "#fff" }} />
+                </div>
+              )}
             </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>

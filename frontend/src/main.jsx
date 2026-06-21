@@ -103,6 +103,7 @@ const ParentDashboard = lazy(() => import("./pages/Parent/Dashboard/ParentDashbo
 
 // Common
 const Profile = lazy(() => import("./pages/Profile.jsx"));
+const SAProfile = lazy(() => import("./pages/School_Admin/Profile/Profile.jsx"));
 const Notification = lazy(() => import("./pages/Notification.jsx"));
 const Message = lazy(() => import("./pages/Message.jsx"));
 const Settings = lazy(() => import("./pages/Settings.jsx"));
@@ -237,6 +238,8 @@ const EmployeeSelfAttendance = lazy(() => import("./pages/Attendance/EmployeeSel
 const GeofenceSettings = lazy(() => import("./pages/School_Admin/Attendance/GeofenceSettings.jsx"));
 
 const SendNotification = lazy(() => import("./pages/School_Admin/Communication/SendNotification.jsx"));
+const TaskManagement = lazy(() => import("./pages/School_Admin/Tasks/TaskManagement.jsx"));
+const MyTasks = lazy(() => import("./pages/Tasks/MyTasks.jsx"));
 const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"));
 
 const Supplies = lazy(() => import("./pages/School_Admin/Inventory/supplies.jsx"));
@@ -571,7 +574,7 @@ const router = createBrowserRouter([
               { path: "reports", element: <SchoolAdminReport /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element: <Profile /> },
+              { path: "profile", element: <SAProfile /> },
               { path: "notification", element: <Notification /> },
               { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
@@ -598,7 +601,7 @@ const router = createBrowserRouter([
               { path: "fees/feestructure", element: <FeeStructure /> },
               { path: "fees/assign", element: <StudentAssignFees /> },
               { path: "school-setup", element: <SchoolSetup /> },
-              
+              { path: "tasks", element: <TaskManagement /> },
 
             ],
           },
@@ -633,10 +636,6 @@ const router = createBrowserRouter([
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
-              { path: "settings", element: <SettingsPage /> },
-              { path: "message", element: <Message /> },
-              { path: "profile", element: <Profile /> },
-              { path: "notification", element: <Notification /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
                { path: "attendance", element: <MyAttendancePage /> },
               { path: "attendance/table", element: <AttendanceTablePage /> },
@@ -648,6 +647,7 @@ const router = createBrowserRouter([
               { path: "leave", element: <TeacherLeave /> },
               { path: "resources", element: <SubjectResources /> },
               { path: "lesson-plans", element: <LessonPlans /> },
+              { path: "tasks", element: <MyTasks /> },
             ],
           },
           {
@@ -674,7 +674,6 @@ const router = createBrowserRouter([
               { path: "exams/attempt-review", element: <AttemptReview /> },
               { path: "exams/exam-live", element: <ExamLive /> },
               { path: "exams", element: <StudentExamsPage /> },
-              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
@@ -704,7 +703,6 @@ const router = createBrowserRouter([
               { path: "leave",      element: <ChildLeave /> },
               { path: "calendar",   element: <AcademicCalendar /> },
               { path: "progress",   element: <ChildProgress /> },
-              { path: "settings",   element: <SettingsPage /> },
               { path: "message",    element: <Message /> },
               { path: "profile",    element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -735,7 +733,6 @@ const router = createBrowserRouter([
               { path: "expenses",         element: <ExpenseManagement /> },
               { path: "reports",          element: <FinancialReports /> },
               { path: "fees/reports",     element: <FeeReports /> },
-              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -745,6 +742,7 @@ const router = createBrowserRouter([
               { path: "attendance/monthly", element: <MonthlyReportPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
+              { path: "tasks", element: <MyTasks /> },
             ],
           },
 
@@ -776,14 +774,22 @@ const router = createBrowserRouter([
               { path: "library", element: <LibraryCard /> },
               { path: "transport", element: <RoutesPage /> },
               { path: "timetable", element: <PrincipalTimetableOverview /> },
-              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
+              { path: "tasks", element: <MyTasks /> },
             ],
           },
            {
+            path: "viceprincipal/tasks",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <MyTasks />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "viceprincipal/payroll",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
@@ -872,6 +878,14 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "viceprincipal/profile",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <Profile />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "viceprincipal/*",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
@@ -880,10 +894,26 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "subjectcoordinator/tasks",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <MyTasks />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "subjectcoordinator/payroll",
             element: (
               <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
                 <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/profile",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <Profile />
               </ProtectedRoute>
             ),
           },
@@ -914,6 +944,7 @@ const router = createBrowserRouter([
               { path: "profile",          element: <Profile /> },
               { path: "message",          element: <Message /> },
               { path: "notification",     element: <Notification /> },
+              { path: "tasks",            element: <MyTasks /> },
               { path: "workspace",        element: <RoleDynamicPortal /> },
             ],
           },
@@ -937,14 +968,30 @@ const router = createBrowserRouter([
               { path: "profile",                element: <Profile /> },
               { path: "message",                element: <Message /> },
               { path: "notification",           element: <Notification /> },
-              { path: "settings",               element: <SettingsPage /> },
+              { path: "tasks",                  element: <MyTasks /> },
             ],
+          },
+          {
+            path: "transportmanager/tasks",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <MyTasks />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "transportmanager/payroll",
             element: (
               <ProtectedRoute allowedRoles={["Transport Manager"]}>
                 <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "transportmanager/profile",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <Profile />
               </ProtectedRoute>
             ),
           },
@@ -980,16 +1027,32 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "message", element: <Message /> },
               { path: "notification", element: <Notification /> },
-              { path: "settings", element: <SettingsPage /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
+              { path: "tasks", element: <MyTasks /> },
             ],
+          },
+          {
+            path: "receptionist/tasks",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <MyTasks />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "receptionist/payroll",
             element: (
               <ProtectedRoute allowedRoles={["Receptionist"]}>
                 <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "receptionist/profile",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <Profile />
               </ProtectedRoute>
             ),
           },
@@ -1020,13 +1083,30 @@ const router = createBrowserRouter([
               { path: "notification", element: <Notification /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
+              { path: "tasks", element: <MyTasks /> },
             ],
+          },
+          {
+            path: "counselor/tasks",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <MyTasks />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "counselor/payroll",
             element: (
               <ProtectedRoute allowedRoles={["Counselor"]}>
                 <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "counselor/profile",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <Profile />
               </ProtectedRoute>
             ),
           },
@@ -1039,10 +1119,26 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "security/tasks",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <MyTasks />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "security/payroll",
             element: (
               <ProtectedRoute allowedRoles={["Security"]}>
                 <PayrollSelfServicePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/profile",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <Profile />
               </ProtectedRoute>
             ),
           },
@@ -1086,11 +1182,10 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <StaffDashboard /> },
-              { path: "tasks", element: <Schedule /> },
+              { path: "tasks", element: <MyTasks /> },
               { path: "attendance", element: <MyAttendancePage /> },
               { path: "attendance/self", element: <EmployeeSelfAttendance /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
-              { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },

@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Button,
   DatePicker,
+  Empty,
   Select,
   Spin,
   Table,
@@ -17,7 +19,7 @@ import {
   EditOutlined,
 } from "@ant-design/icons";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
@@ -36,7 +38,6 @@ import {
   statGrid,
   iconWell,
   tableHeadCss,
-  sectionPanel,
 } from "../../../styles/pageStyles";
 
 const TABLE_CLS = "my-att-tbl";
@@ -44,8 +45,8 @@ const TABLE_CLS = "my-att-tbl";
 const MyAttendancePage = () => {
   const dispatch = useDispatch();
 
-  const { myAttendance = [], loading } = useSelector((s) => s.attendance);
-  const { user }                       = useSelector((s) => s.auth);
+  const { myAttendance = [], loading, error } = useSelector((s) => s.attendance);
+  const { user }                              = useSelector((s) => s.auth);
 
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [todayStatus,   setTodayStatus]   = useState("present");
@@ -220,6 +221,18 @@ const MyAttendancePage = () => {
           />
         }
       />
+
+      {/* ── Error alert ── */}
+      {error && (
+        <Alert
+          type="error"
+          message="Failed to load attendance data"
+          description={typeof error === "string" ? error : "Please try again or contact support."}
+          showIcon
+          style={{ marginTop: 16, borderRadius: 12 }}
+          closable
+        />
+      )}
 
       {/* ── Teacher self-mark panel ── */}
       {isTeacher && (
@@ -458,6 +471,18 @@ const MyAttendancePage = () => {
             columns={columns}
             pagination={{ pageSize: 10, showSizeChanger: false }}
             scroll={{ x: 400 }}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                      No attendance records for {selectedMonth.format("MMMM YYYY")}
+                    </span>
+                  }
+                />
+              ),
+            }}
           />
         </div>
       </Spin>

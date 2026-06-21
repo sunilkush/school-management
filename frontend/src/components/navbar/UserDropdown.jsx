@@ -19,7 +19,11 @@ const UserDropdown = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
-  const rolePath = user?.role?.name?.toLowerCase().replace(/\s+/g, "") || "";
+  const rolePathMap = {
+    "Support Staff": "staff",
+  };
+  const roleName = user?.role?.name || "";
+  const rolePath = rolePathMap[roleName] ?? roleName.toLowerCase().replace(/\s+/g, "");
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -77,11 +81,11 @@ const UserDropdown = () => {
       icon: <BellOutlined />,
       label: <Link to={`/dashboard/${rolePath}/notification`} style={{ color: "inherit" }}>Notifications</Link>,
     },
-    {
+    ...(rolePath === "schooladmin" ? [{
       key: "settings",
       icon: <SettingOutlined />,
       label: <Link to={`/dashboard/${rolePath}/settings`} style={{ color: "inherit" }}>Settings</Link>,
-    },
+    }] : []),
     { type: "divider" },
     {
       key: "logout",

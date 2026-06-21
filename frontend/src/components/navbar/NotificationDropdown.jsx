@@ -1,307 +1,356 @@
-import { BellOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import {
-  Avatar,
-  Badge,
-  Button,
-  Dropdown,
-  Empty,
-  Grid,
-  List,
-  Skeleton,
-  Space,
-  Typography,
-} from "antd";
+  BellOutlined,
+  CheckOutlined,
+  ClockCircleOutlined,
+  InfoCircleOutlined,
+  WarningOutlined,
+  TrophyOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { Badge, Dropdown, Grid, Skeleton, Tooltip } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   getNotifications,
+  markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "../../utils/notifications";
 import { getRoleName, getRolePath } from "../../utils/roles";
 
-const { Text, Title } = Typography;
 const { useBreakpoint } = Grid;
 
+/* ── relative time ─────────────────────────────────────────── */
+const timeAgo = (dateStr) => {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7)  return `${d}d ago`;
+  return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+};
+
+/* ── icon config by notification level ─────────────────────── */
+const levelConfig = {
+  all:        { icon: <BellOutlined />,       bg: "#EDE9FE", color: "#7C3AED" },
+  role:       { icon: <TeamOutlined />,       bg: "#DCFCE7", color: "#16A34A" },
+  "user-level": { icon: <InfoCircleOutlined />, bg: "#DBEAFE", color: "#2563EB" },
+  user:       { icon: <UserOutlined />,       bg: "#FEF3C7", color: "#D97706" },
+  warning:    { icon: <WarningOutlined />,    bg: "#FEE2E2", color: "#DC2626" },
+  achievement:{ icon: <TrophyOutlined />,     bg: "#FEF3C7", color: "#CA8A04" },
+};
+const getLevel = (item) => levelConfig[item?.level] || levelConfig.all;
+
+/* ── single notification row ────────────────────────────────── */
+const NotifItem = ({ item, onClick }) => {
+  const { icon, bg, color } = getLevel(item);
+  const unread = !item.isRead;
+
+  return (
+    <div
+      onClick={() => onClick(item)}
+      style={{
+        display: "flex",
+        gap: 12,
+        padding: "12px 14px",
+        borderRadius: 12,
+        cursor: "pointer",
+        background: unread ? "rgba(124,58,237,0.04)" : "transparent",
+        borderLeft: unread ? "3px solid var(--primary,#7c3aed)" : "3px solid transparent",
+        transition: "background 0.15s",
+        position: "relative",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-soft,#f8fafc)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = unread ? "rgba(124,58,237,0.04)" : "transparent")}
+    >
+      {/* icon circle */}
+      <div style={{
+        flexShrink: 0,
+        width: 38, height: 38,
+        borderRadius: "50%",
+        background: bg,
+        color,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 16,
+      }}>
+        {icon}
+      </div>
+
+      {/* content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6, marginBottom: 3 }}>
+          <span style={{
+            fontSize: 13,
+            fontWeight: unread ? 700 : 500,
+            color: "var(--text-primary,#111)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            maxWidth: 200,
+          }}>
+            {item.title || "Notification"}
+          </span>
+          {unread && (
+            <span style={{
+              width: 8, height: 8, borderRadius: "50%",
+              background: "var(--primary,#7c3aed)",
+              flexShrink: 0, marginTop: 4,
+            }} />
+          )}
+        </div>
+
+        <p style={{
+          fontSize: 12,
+          color: "var(--text-muted,#6b7280)",
+          margin: 0,
+          lineHeight: 1.45,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}>
+          {item.message || "No message"}
+        </p>
+
+        <span style={{ fontSize: 11, color: "var(--text-muted,#9ca3af)", marginTop: 4, display: "block" }}>
+          <ClockCircleOutlined style={{ marginRight: 4, fontSize: 10 }} />
+          {timeAgo(item.createdAt || item.updatedAt)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/* ── main component ─────────────────────────────────────────── */
 const NotificationDropdown = () => {
-  const navigate = useNavigate();
-  const screens = useBreakpoint();
-  const { user } = useSelector((state) => state.auth);
+  const navigate  = useNavigate();
+  const screens   = useBreakpoint();
+  const { user }  = useSelector((state) => state.auth);
 
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications]   = useState([]);
+  const [loading, setLoading]               = useState(false);
+  const [markingAll, setMarkingAll]         = useState(false);
+  const [open, setOpen]                     = useState(false);
 
-  const roleName = getRoleName(user);
-
-  const notificationPath = useMemo(
+  const roleName          = getRoleName(user);
+  const notificationPath  = useMemo(
     () => `/dashboard/${getRolePath(roleName)}/notification`,
     [roleName]
   );
 
   const unreadCount = useMemo(
-    () => notifications.filter((item) => !item.isRead).length,
+    () => notifications.filter((n) => !n.isRead).length,
     [notifications]
   );
 
+  /* fetch on open */
   useEffect(() => {
-    let mounted = true;
-
-    const loadNotifications = async () => {
-      setLoading(true);
-
-      try {
-        const rows = await getNotifications();
-
-        if (!mounted) return;
-
-        setNotifications(Array.isArray(rows) ? rows.slice(0, 5) : []);
-      } catch (error) {
-        if (!mounted) return;
-        setNotifications([]);
-        console.error("Failed to load notifications:", error);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    loadNotifications();
-
-    return () => {
-      mounted = false;
-    };
-  }, [user?._id]);
+    if (!open) return;
+    let alive = true;
+    setLoading(true);
+    getNotifications()
+      .then((rows) => { if (alive) setNotifications(Array.isArray(rows) ? rows.slice(0, 6) : []); })
+      .catch(() => { if (alive) setNotifications([]); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [open, user?._id]);
 
   const openNotification = async (item) => {
-    if (!item) return;
-
     if (item?._id && !item.isRead) {
       try {
         const updated = await markNotificationAsRead(item._id);
-
         setNotifications((prev) =>
-          prev.map((row) =>
-            row._id === item._id ? { ...row, ...updated, isRead: true } : row
-          )
+          prev.map((n) => (n._id === item._id ? { ...n, ...updated, isRead: true } : n))
         );
-      } catch {
-        // Navigation should still work.
-      }
+      } catch { /* still navigate */ }
     }
-
+    setOpen(false);
     navigate(notificationPath);
   };
 
-  const goToAllNotifications = () => {
-    navigate(notificationPath);
+  const handleMarkAll = async () => {
+    if (markingAll || unreadCount === 0) return;
+    setMarkingAll(true);
+    try {
+      await markAllNotificationsAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch { /* silent */ } finally {
+      setMarkingAll(false);
+    }
   };
 
-  const dropdownWidth = screens.xs ? "calc(100vw - 24px)" : 390;
+  const panelWidth = screens.xs ? "calc(100vw - 20px)" : 380;
 
-  const notificationMenu = (
-    <div
-      style={{
-        width: dropdownWidth,
-        maxHeight: screens.xs ? "72vh" : 460,
-        overflow: "hidden",
-        background: "var(--card, #ffffff)",
-        border: "1px solid var(--border, #eef0f4)",
-        borderRadius: 18,
-        boxShadow: "0 18px 45px rgba(15, 23, 42, 0.16)",
-      }}
-    >
-      <div
-        style={{
-          padding: "16px 18px 12px",
-          borderBottom: "1px solid var(--border, #eef0f4)",
-          background:
-            "linear-gradient(135deg, rgba(24,144,255,0.10), rgba(82,196,26,0.08))",
-        }}
-      >
-        <Space
-          align="center"
-          style={{
-            width: "100%",
-            justifyContent: "space-between",
-          }}
-        >
+  const panel = (
+    <div style={{
+      width: panelWidth,
+      background: "var(--card,#fff)",
+      borderRadius: 16,
+      boxShadow: "0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06)",
+      border: "1px solid var(--border-muted,#e5e7eb)",
+      overflow: "hidden",
+    }}>
+
+      {/* ── Header ── */}
+      <div style={{
+        padding: "14px 16px 12px",
+        borderBottom: "1px solid var(--border-muted,#f0f0f0)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <BellOutlined style={{ color: "#fff", fontSize: 15 }} />
+          </div>
           <div>
-            <Title level={5} style={{ margin: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary,#111)", lineHeight: 1.2 }}>
               Notifications
-            </Title>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Latest school updates
-            </Text>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted,#6b7280)" }}>
+              {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+            </div>
           </div>
+        </div>
 
-          <Badge
-            count={unreadCount}
-            showZero
-            style={{
-              backgroundColor: unreadCount ? "#1677ff" : "#d9d9d9",
-            }}
-          />
-        </Space>
-      </div>
-
-      <div
-        style={{
-          maxHeight: screens.xs ? "55vh" : 320,
-          overflowY: "auto",
-          padding: 8,
-        }}
-      >
-        {loading ? (
-          <div style={{ padding: 12 }}>
-            <Skeleton active avatar paragraph={{ rows: 2 }} />
-            <Skeleton active avatar paragraph={{ rows: 2 }} />
-          </div>
-        ) : notifications.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="No notifications"
-            style={{ padding: "30px 0" }}
-          />
-        ) : (
-          <List
-            dataSource={notifications}
-            renderItem={(item) => (
-              <List.Item
-                onClick={() => openNotification(item)}
-                style={{
-                  padding: "12px",
-                  marginBottom: 8,
-                  cursor: "pointer",
-                  borderRadius: 14,
-                  border: item.isRead
-                    ? "1px solid transparent"
-                    : "1px solid rgba(22,119,255,0.18)",
-                  background: item.isRead
-                    ? "transparent"
-                    : "linear-gradient(135deg, rgba(22,119,255,0.08), rgba(82,196,26,0.06))",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                <List.Item.Meta
-                  avatar={
-                    <Avatar
-                      size={42}
-                      style={{
-                        background: item.isRead ? "#f5f5f5" : "#e6f4ff",
-                        color: item.isRead ? "#8c8c8c" : "#1677ff",
-                      }}
-                      icon={item.isRead ? <CheckCircleOutlined /> : <BellOutlined />}
-                    />
-                  }
-                  title={
-                    <Space
-                      align="start"
-                      style={{
-                        width: "100%",
-                        justifyContent: "space-between",
-                        gap: 8,
-                      }}
-                    >
-                      <Text
-                        strong={!item.isRead}
-                        ellipsis
-                        style={{
-                          maxWidth: screens.xs ? 190 : 250,
-                          fontSize: 14,
-                        }}
-                      >
-                        {item.title || "Notification"}
-                      </Text>
-
-                      {!item.isRead && (
-                        <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            flex: "0 0 8px",
-                            marginTop: 7,
-                            borderRadius: "50%",
-                            background: "#1677ff",
-                          }}
-                        />
-                      )}
-                    </Space>
-                  }
-                  description={
-                    <Text
-                      type="secondary"
-                      style={{
-                        display: "block",
-                        fontSize: 12,
-                        lineHeight: 1.45,
-                      }}
-                      ellipsis={{
-                        rows: 2,
-                      }}
-                    >
-                      {item.message || "No message available"}
-                    </Text>
-                  }
-                />
-              </List.Item>
-            )}
-          />
+        {unreadCount > 0 && (
+          <Tooltip title="Mark all as read">
+            <button
+              onClick={handleMarkAll}
+              disabled={markingAll}
+              style={{
+                display: "flex", alignItems: "center", gap: 4,
+                padding: "5px 10px", borderRadius: 8,
+                border: "1px solid var(--border-muted,#e5e7eb)",
+                background: "transparent", cursor: "pointer",
+                fontSize: 11, fontWeight: 600,
+                color: "var(--primary,#7c3aed)",
+                opacity: markingAll ? 0.5 : 1,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(124,58,237,0.06)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <CheckOutlined style={{ fontSize: 10 }} />
+              Mark all read
+            </button>
+          </Tooltip>
         )}
       </div>
 
-      <div
-        style={{
-          padding: 12,
-          borderTop: "1px solid var(--border, #eef0f4)",
-          background: "var(--card, #ffffff)",
-        }}
-      >
-        <Button
-          block
-          type="primary"
-          size="middle"
-          onClick={goToAllNotifications}
-          style={{
-            height: 40,
-            borderRadius: 12,
-            fontWeight: 600,
-          }}
-        >
-          See all notifications
-        </Button>
+      {/* ── List ── */}
+      <div style={{
+        maxHeight: screens.xs ? "55vh" : 340,
+        overflowY: "auto",
+        padding: "6px 6px",
+      }}>
+        {loading ? (
+          <div style={{ padding: "12px 8px", display: "flex", flexDirection: "column", gap: 12 }}>
+            {[1, 2, 3].map((k) => (
+              <div key={k} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <Skeleton.Avatar active size={38} />
+                <Skeleton active title={{ width: "60%" }} paragraph={{ rows: 1 }} style={{ flex: 1 }} />
+              </div>
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div style={{ padding: "40px 0", textAlign: "center" }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              background: "#F3F4F6",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 12px",
+            }}>
+              <BellOutlined style={{ fontSize: 24, color: "#9CA3AF" }} />
+            </div>
+            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary,#374151)", marginBottom: 4 }}>
+              No notifications yet
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-muted,#6b7280)" }}>
+              You're all caught up!
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {notifications.map((item) => (
+              <NotifItem key={item._id} item={item} onClick={openNotification} />
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* ── Footer ── */}
+      {!loading && (
+        <div style={{
+          padding: "10px 12px",
+          borderTop: "1px solid var(--border-muted,#f0f0f0)",
+        }}>
+          <button
+            onClick={() => { setOpen(false); navigate(notificationPath); }}
+            style={{
+              width: "100%", padding: "9px 0",
+              borderRadius: 10,
+              border: "1px solid var(--primary,#7c3aed)",
+              background: "transparent",
+              color: "var(--primary,#7c3aed)",
+              fontWeight: 600, fontSize: 13,
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--primary,#7c3aed)";
+              e.currentTarget.style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--primary,#7c3aed)";
+            }}
+          >
+            View all notifications
+          </button>
+        </div>
+      )}
     </div>
   );
 
   return (
     <Dropdown
-      dropdownRender={() => notificationMenu}
+      dropdownRender={() => panel}
       trigger={["click"]}
       placement="bottomRight"
-      arrow
+      open={open}
+      onOpenChange={setOpen}
     >
       <button
         type="button"
         aria-label="Open notifications"
         style={{
-          width: 37,
-          height: 37,
-          border: "1px solid var(--border, #eef0f4)",
+          width: 37, height: 37,
+          border: "1px solid var(--border-muted,#e5e7eb)",
           borderRadius: 10,
-          background: "var(--card, #ffffff)",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
+          background: "var(--card,#fff)",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer",
-          boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          transition: "all 0.15s",
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--primary,#7c3aed)")}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border-muted,#e5e7eb)")}
       >
-        <Badge count={unreadCount} size="small" offset={[-2, 3]}>
-          <BellOutlined
-            style={{
-              fontSize: 19,
-              color: "var(--text-primary, #1f2937)",
-            }}
-          />
+        <Badge
+          count={unreadCount}
+          size="small"
+          offset={[-2, 3]}
+          style={{ backgroundColor: "var(--primary,#7c3aed)" }}
+        >
+          <BellOutlined style={{ fontSize: 18, color: "var(--text-primary,#374151)" }} />
         </Badge>
       </button>
     </Dropdown>

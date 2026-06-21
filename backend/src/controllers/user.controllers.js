@@ -247,6 +247,7 @@ const loginUser = asyncHandler(async (req, res) => {
         _id: 1,
         name: 1,
         email: 1,
+        phone: 1,
         avatar: 1,
         isActive: 1,
 
@@ -312,19 +313,40 @@ const loginUser = asyncHandler(async (req, res) => {
  * @route PUT /api/users/update
  */
 const updateUser = asyncHandler(async (req, res) => {
-  const { name, email } = req.body
-  if (!name || !email) throw new ApiError(400, 'All fields are required')
+  const { name, email, phone } = req.body
+  if (!name || !email) throw new ApiError(400, 'Name and email are required')
 
   const user = await User.findOne({ _id: req.user?._id, isActive: true, isDeleted: { $ne: true } })
   if (!user) throw new ApiError(404, 'User not found')
 
   user.name = name
   user.email = email
+  if (phone !== undefined) user.phone = phone
+
+  const avatarLocalPath = req.files?.avatar?.[0]?.path
+  if (avatarLocalPath) {
+    const uploaded = await uploadOnCloudinary(avatarLocalPath)
+    if (uploaded?.secure_url) user.avatar = uploaded.secure_url
+  }
+
   await user.save()
+
+  // Re-fetch with populated role + school so frontend state stays complete
+  const updated = await User.findById(user._id)
+    .select('-password -refreshToken')
+    .populate('roleId', 'name permissions')
+    .populate('schoolId', 'name isActive')
+    .lean()
+
+  const result = {
+    ...updated,
+    role:   updated.roleId  || null,
+    school: updated.schoolId || null,
+  }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, 'User updated successfully'))
+    .json(new ApiResponse(200, result, 'User updated successfully'))
 })
 
 /**
@@ -410,6 +432,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
         _id: 1,
         name: 1,
         email: 1,
+        phone: 1,
         avatar: 1,
         isActive: 1,
 

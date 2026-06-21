@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -11,6 +11,7 @@ import {
   Row,
   Select,
   Space,
+  Spin,
   Statistic,
   Switch,
   Table,
@@ -18,7 +19,9 @@ import {
   Typography,
   message,
 } from "antd";
-import { CheckCircleOutlined, ClockCircleOutlined, WarningOutlined } from "@ant-design/icons";
+import { CameraOutlined, CheckCircleOutlined, ClockCircleOutlined, WarningOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { currentUser, updateUser } from "../../features/authSlice";
 
 const { Title, Text } = Typography;
 
@@ -259,55 +262,109 @@ export const SystemLogs = () => {
 };
 
 export const ITSupportProfile = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth || {});
   const [form] = Form.useForm();
+  const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const saveProfile = (values) => {
-    message.success(`Profile updated for ${values.name}`);
+  useEffect(() => { dispatch(currentUser()); }, [dispatch]);
+
+  useEffect(() => {
+    if (!user) return;
+    form.setFieldsValue({
+      name:  user.name  || "",
+      email: user.email || "",
+      phone: user.phone || "",
+    });
+  }, [user, form]);
+
+  const initials = user?.name
+    ? user.name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()
+    : "IT";
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { message.error("Please select an image file"); return; }
+    try {
+      setUploadingPhoto(true);
+      await dispatch(updateUser({ name: user?.name || "", email: user?.email || "", phone: user?.phone, avatarFile: file })).unwrap();
+      message.success("Profile photo updated!");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to update photo");
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleSave = async (values) => {
+    setSaving(true);
+    try {
+      await dispatch(updateUser({ name: values.name, email: values.email, phone: values.phone })).unwrap();
+      message.success("Profile updated successfully!");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <Card title="IT Support Profile">
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{
-          name: "IT Helpdesk Team",
-          email: "it-support@school.com",
-          phone: "+1 555 123 4567",
-          escalation: "Level 2",
-        }}
-        onFinish={saveProfile}
-      >
+    <Card title="My Profile" style={{ maxWidth: 700 }}>
+      {/* Avatar section */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+        <div
+          style={{ position: "relative", flexShrink: 0, cursor: "pointer" }}
+          onClick={() => !uploadingPhoto && fileInputRef.current?.click()}
+          title="Click to change photo"
+        >
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+          {user?.avatar ? (
+            <img src={user.avatar} alt={user.name} style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "2px solid #e5e7eb", display: "block" }} />
+          ) : (
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#06b6d4)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700 }}>
+              {initials}
+            </div>
+          )}
+          {uploadingPhoto ? (
+            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Spin size="small" />
+            </div>
+          ) : (
+            <div style={{ position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: "50%", background: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
+              <CameraOutlined style={{ color: "#fff", fontSize: 11 }} />
+            </div>
+          )}
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{user?.name || "IT Support"}</div>
+          <div style={{ color: "#6b7280", fontSize: 13 }}>{user?.role?.name || "IT Support"}</div>
+          {user?.school?.name && <div style={{ color: "#6b7280", fontSize: 12 }}>{user.school.name}</div>}
+        </div>
+      </div>
+
+      <Form form={form} layout="vertical" onFinish={handleSave}>
         <Row gutter={16}>
           <Col xs={24} md={12}>
-            <Form.Item name="name" label="Team Name" rules={[{ required: true }]}>
+            <Form.Item name="name" label="Full Name" rules={[{ required: true, message: "Name is required" }]}>
               <Input />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]}>
+            <Form.Item name="email" label="Email" rules={[{ required: true, type: "email", message: "Valid email required" }]}>
               <Input />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="phone" label="Phone" rules={[{ required: true }]}>
+            <Form.Item name="phone" label="Phone">
               <Input />
-            </Form.Item>
-          </Col>
-          <Col xs={24} md={12}>
-            <Form.Item name="escalation" label="Escalation Level" rules={[{ required: true }]}>
-              <Select
-                options={[
-                  { value: "Level 1", label: "Level 1" },
-                  { value: "Level 2", label: "Level 2" },
-                  { value: "Level 3", label: "Level 3" },
-                ]}
-              />
             </Form.Item>
           </Col>
         </Row>
-
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" htmlType="submit" loading={saving}>
           Save Changes
         </Button>
       </Form>

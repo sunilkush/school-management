@@ -3,6 +3,7 @@ import { Layout, Drawer, Skeleton } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate, Outlet } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
+import Loader from "../Loader/Loader";
 
 const Sidebar = lazy(() => import("../sidebar/Sidebar"));
 const Topbar = lazy(() => import("../navbar/Topbar"));
@@ -105,7 +106,7 @@ const ContentFallback = ({ isDark }) => (
 ───────────────────────────────────────── */
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthInitialized, isLoggingOut } = useSelector((state) => state.auth);
   const { activeYear } = useSelector((state) => state.academicYear);
   const { isDark: isDarkMode } = useTheme();
   const t = tokens();
@@ -143,6 +144,10 @@ const Dashboard = () => {
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   const sidebarVisible = !isMobile && isSidebarOpen;
+
+  if (!isAuthInitialized || isLoggingOut) {
+    return <Loader />;
+  }
 
   return (
     <>

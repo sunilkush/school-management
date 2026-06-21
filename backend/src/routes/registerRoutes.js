@@ -51,6 +51,7 @@ import globalConfigRoutes from "./globalConfig.routes.js";
 import faqRoutes from "./faq.routes.js";
 import analyticsRoutes from "./analytics.routes.js";
 import leaveRequestRoutes from "./leaveRequest.routes.js";
+import taskRoutes from "./task.routes.js";
 import admissionInquiryRoutes from "./admissionInquiry.routes.js";
 import studyMaterialRoutes from "./studyMaterial.routes.js";
 import lessonPlanRoutes from "./lessonPlan.routes.js";
@@ -128,6 +129,7 @@ export const apiV1Routes = [
   ["/advance", advanceRoutes],
   ["/bonus", bonusRoutes],
   ["/reimbursements", reimbursementRoutes],
+  ["/tasks", taskRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

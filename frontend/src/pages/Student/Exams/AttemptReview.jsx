@@ -1,164 +1,294 @@
 import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
-import { Alert, Card, Col, Divider, Empty, List, Progress, Row, Space, Spin, Statistic, Tag, Typography } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Alert, Button, Empty, Progress, Spin, Tag } from "antd";
+import {
+  ArrowLeftOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
+  FileTextOutlined,
+  TrophyOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getAttemptById } from "../../../features/attemptSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles";
 
-const { Title, Text } = Typography;
-
-const resolveQuestionText = (answer, index) => {
-  const snapshot = answer?.snapshot || answer?.questionSnapshot || answer?.questionRef || {};
-  return snapshot?.statement || snapshot?.questionText || snapshot?.title || `Question ${index + 1}`;
+/* ── helpers ── */
+const resolveQuestionText = (ans, idx) => {
+  const snap = ans?.snapshot || ans?.questionSnapshot || ans?.questionRef || {};
+  return snap?.statement || snap?.questionText || snap?.title || `Question ${idx + 1}`;
 };
 
-const formatAttemptAnswer = (answer) => {
-  const raw = answer?.answer ?? answer?.response;
-  if (Array.isArray(raw)) return raw.filter(Boolean).join(", ") || "-";
-  if (raw && typeof raw === "object") {
-    if (raw.text || raw.value) return `${raw.text || raw.value}`;
-    return JSON.stringify(raw);
-  }
-  return raw?.toString?.().trim() || "-";
+const resolveMaxMarks = (ans) => {
+  const snap = ans?.snapshot || ans?.questionSnapshot || ans?.questionRef || {};
+  return Number(ans?.maxMarks ?? snap?.marks ?? snap?.points ?? 0) || 0;
 };
 
-const resolveAttemptStatus = (attempt) => {
-  const status = attempt?.status || "in_progress";
-  if (status === "evaluated") return { color: "green", label: "Evaluated" };
-  if (status === "submitted") return { color: "blue", label: "Submitted" };
-  return { color: "gold", label: "In Progress" };
+const formatAnswer = (ans) => {
+  const raw = ans?.answer ?? ans?.response;
+  if (raw === null || raw === undefined) return "—";
+  if (Array.isArray(raw))   return raw.filter(Boolean).join(", ") || "—";
+  if (typeof raw === "object") return raw.text || raw.value || JSON.stringify(raw);
+  return `${raw}`.trim() || "—";
 };
 
-const resolveMaxMarks = (answer) => {
-  const snapshot = answer?.snapshot || answer?.questionSnapshot || answer?.questionRef || {};
-  return Number(answer?.maxMarks ?? snapshot?.marks ?? snapshot?.points ?? 0) || 0;
+const GRADE_COLOR = {
+  "A+": "#7C3AED", A: "#0891B2", B: "#15803D",
+  C:  "#B45309",   D: "#DC2626", F: "#7F1D1D",
 };
 
+const StatusMeta = (status) => {
+  if (status === "evaluated") return { color: "#15803D", bg: "#DCFCE7", label: "Evaluated" };
+  if (status === "submitted") return { color: "#1D4ED8", bg: "#DBEAFE", label: "Submitted" };
+  return { color: "#B45309", bg: "#FEF3C7", label: "In Progress" };
+};
+
+const StatCard = ({ icon, label, value, color, sub }) => (
+  <div style={{
+    background: "var(--surface)", border: "1px solid var(--border-muted)",
+    borderRadius: 14, padding: "14px 16px",
+    display: "flex", alignItems: "center", gap: 12,
+  }}>
+    <div style={iconWell(color, 40)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 18, fontWeight: 800, color, lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{sub}</div>}
+    </div>
+  </div>
+);
+
+/* ── Main ── */
 const AttemptReview = () => {
-  const dispatch = useDispatch();
-  const location = useLocation();
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const attemptId = useMemo(() => new URLSearchParams(location.search).get("attemptId"), [location.search]);
-
-  const { currentAttempt: attempt, loading, error } = useSelector((state) => state.attempts || {});
+  const { currentAttempt: attempt, loading, error } = useSelector((s) => s.attempts || {});
 
   useEffect(() => {
-    if (attemptId) {
-      dispatch(getAttemptById(attemptId));
-    }
+    if (attemptId) dispatch(getAttemptById(attemptId));
   }, [attemptId, dispatch]);
 
-  const answers = Array.isArray(attempt?.answers) ? attempt.answers : [];
-  const statusMeta = resolveAttemptStatus(attempt);
+  const answers   = Array.isArray(attempt?.answers) ? attempt.answers : [];
+  const sm        = StatusMeta(attempt?.status);
 
-  const reviewStats = useMemo(() => {
+  const stats = useMemo(() => {
     if (!attempt) return null;
-
-    const evaluatedAnswers = answers.filter((ans) => ans?.isCorrect !== null && ans?.isCorrect !== undefined);
-    const correct = evaluatedAnswers.filter((ans) => ans.isCorrect).length;
-    const answered = answers.filter((ans) => {
-      const value = ans?.answer ?? ans?.response;
-      if (Array.isArray(value)) return value.length > 0;
-      if (value && typeof value === "object") return Object.keys(value).length > 0;
-      return value !== null && value !== undefined && `${value}`.trim() !== "";
+    const evaled   = answers.filter((a) => a?.isCorrect !== null && a?.isCorrect !== undefined);
+    const correct  = evaled.filter((a) => a.isCorrect).length;
+    const answered = answers.filter((a) => {
+      const v = a?.answer ?? a?.response;
+      if (Array.isArray(v)) return v.length > 0;
+      if (v && typeof v === "object") return Object.keys(v).length > 0;
+      return v !== null && v !== undefined && `${v}`.trim() !== "";
     }).length;
-
-    const totalPossible = answers.reduce((sum, ans) => sum + resolveMaxMarks(ans), 0);
-    const obtained = Number(attempt?.totalMarksObtained ?? attempt?.totalObtainedMarks ?? 0) || 0;
-    const percentage = totalPossible ? Math.round((obtained / totalPossible) * 100) : 0;
-
-    return {
-      totalQuestions: answers.length,
-      answered,
-      correct,
-      evaluatedCount: evaluatedAnswers.length,
-      totalPossible,
-      obtained,
-      percentage,
-    };
+    const possible  = answers.reduce((s, a) => s + resolveMaxMarks(a), 0);
+    const obtained  = Number(attempt?.totalMarksObtained ?? attempt?.totalObtainedMarks ?? 0) || 0;
+    const pct       = possible ? Math.round((obtained / possible) * 100) : 0;
+    return { total: answers.length, answered, correct, evaled: evaled.length, possible, obtained, pct };
   }, [attempt, answers]);
 
-  if (!attemptId) {
-    return <Empty description="Attempt ID missing. Open review from Exam Hub." />;
-  }
+  /* ── States ── */
+  if (!attemptId) return (
+    <div style={{ padding: 48, textAlign: "center" }}>
+      <Empty description="Attempt ID missing. Open review from Exam Hub." />
+    </div>
+  );
 
-  if (loading && !attempt) {
-    return (
-      <div style={{ padding: 24, textAlign: "center" }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
+  if (loading && !attempt) return (
+    <div style={{ minHeight: "60vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+      <Spin size="large" />
+    </div>
+  );
 
-  if (!attempt) {
-    return <Empty description="Attempt not found" />;
-  }
+  if (!attempt) return (
+    <div style={pageWrapper}>
+      <Empty description="Attempt not found" />
+    </div>
+  );
+
+  const grade = attempt?.grade;
+  const gc    = GRADE_COLOR[grade] || "#64748B";
+  const pct   = stats?.pct ?? 0;
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Card>
-        <Space direction="vertical" size={6} style={{ width: "100%" }}>
-          <Title level={3} style={{ margin: 0 }}>Attempt Review</Title>
-          <Text type="secondary">Exam: {attempt?.examId?.title || "N/A"}</Text>
-          <Space wrap>
-            <Tag color={statusMeta.color}>{statusMeta.label}</Tag>
-            <Tag color="purple">Attempt ID: {attemptId}</Tag>
-          </Space>
-          {error ? <Alert type="warning" showIcon message={error} /> : null}
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Attempt Review"
+        subtitle={attempt?.examId?.title || "Exam Review"}
+        icon={<FileTextOutlined />}
+        extra={
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard/student/exams")}>
+            Back to Hub
+          </Button>
+        }
+      />
 
-          <Row gutter={[12, 12]}>
-            <Col xs={24} sm={12} md={8}><Card size="small"><Statistic title="Total Score" value={reviewStats?.obtained ?? 0} /></Card></Col>
-            <Col xs={24} sm={12} md={8}><Card size="small"><Statistic title="Possible Marks" value={reviewStats?.totalPossible ?? 0} /></Card></Col>
-            <Col xs={24} sm={12} md={8}><Card size="small"><Statistic title="Score %" value={reviewStats?.percentage ?? 0} suffix="%" /></Card></Col>
-            <Col xs={24} sm={12} md={8}><Card size="small"><Statistic title="Answered" value={reviewStats?.answered ?? 0} suffix={`/${reviewStats?.totalQuestions ?? 0}`} /></Card></Col>
-            <Col xs={24} sm={12} md={8}><Card size="small"><Statistic title="Correct" value={reviewStats?.correct ?? 0} suffix={`/${reviewStats?.evaluatedCount ?? 0}`} /></Card></Col>
-            <Col xs={24} sm={12} md={8}><Card size="small"><Statistic title="Submitted" value={attempt?.submittedAt ? dayjs(attempt.submittedAt).format("DD MMM, hh:mm A") : "Pending"} /></Card></Col>
-          </Row>
+      {error && (
+        <Alert type="warning" showIcon message={error} style={{ marginTop: 16, borderRadius: 12 }} closable />
+      )}
 
-          <Text type="secondary">
-            Started: {attempt?.startedAt ? dayjs(attempt.startedAt).format("DD MMM YYYY, hh:mm A") : "-"}
-          </Text>
-          <Progress percent={reviewStats?.percentage ?? 0} showInfo strokeColor="#1677ff" />
-        </Space>
-      </Card>
+      {/* ── Score card ── */}
+      <div style={{
+        ...sectionPanel, marginTop: 20,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        flexWrap: "wrap", gap: 20,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
+          {/* Circle progress */}
+          <Progress
+            type="circle"
+            percent={pct}
+            size={110}
+            strokeColor={pct >= 60 ? "#22C55E" : pct >= 40 ? "#F59E0B" : "#EF4444"}
+            trailColor="var(--border-muted)"
+            format={() => (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>{pct}%</div>
+                {grade && (
+                  <div style={{ fontSize: 13, fontWeight: 700, color: gc, marginTop: 4 }}>{grade}</div>
+                )}
+              </div>
+            )}
+          />
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
+              {attempt?.examId?.title || "Exam"}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700,
+                background: sm.bg, color: sm.color, padding: "3px 10px", borderRadius: 99,
+              }}>
+                {sm.label}
+              </span>
+              {grade && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700,
+                  background: gc + "22", color: gc, padding: "3px 10px", borderRadius: 99,
+                }}>
+                  Grade {grade}
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 8 }}>
+              {stats?.obtained ?? 0} / {stats?.possible ?? 0} marks obtained
+            </div>
+          </div>
+        </div>
 
-      <Card>
-        <Divider orientation="left" style={{ marginTop: 0 }}>Question-wise Review</Divider>
+        {/* Overall progress bar */}
+        <div style={{ flex: "1 1 200px", minWidth: 180 }}>
+          <div style={{ marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>Score</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>{pct}%</span>
+          </div>
+          <Progress
+            percent={pct} showInfo={false}
+            strokeColor={pct >= 60 ? "#22C55E" : pct >= 40 ? "#F59E0B" : "#EF4444"}
+            trailColor="var(--border-muted)"
+          />
+        </div>
+      </div>
 
-        {answers.length ? (
-          <List
-            itemLayout="vertical"
-            dataSource={answers}
-            renderItem={(ans, index) => {
-              const marksObtained = Number(ans?.marksObtained ?? 0) || 0;
-              const maxMarks = resolveMaxMarks(ans);
-              const hasEvaluation = ans?.isCorrect !== null && ans?.isCorrect !== undefined;
+      {/* ── Stat cards ── */}
+      <div style={{ ...statGrid(130), marginTop: 0 }}>
+        <StatCard icon={<FileTextOutlined />}    label="Questions"  value={stats?.total ?? 0}    color="#7C3AED" />
+        <StatCard icon={<CheckCircleOutlined />} label="Answered"   value={stats?.answered ?? 0} color="#0891B2" sub={`${(stats?.total ?? 0) - (stats?.answered ?? 0)} skipped`} />
+        <StatCard icon={<TrophyOutlined />}      label="Correct"    value={`${stats?.correct ?? 0}/${stats?.evaled ?? 0}`} color="#15803D" />
+        <StatCard icon={<ClockCircleOutlined />} label="Submitted"  value={attempt?.submittedAt ? dayjs(attempt.submittedAt).format("hh:mm A") : "Pending"} color="#B45309" sub={attempt?.submittedAt ? dayjs(attempt.submittedAt).format("DD MMM YYYY") : ""} />
+      </div>
+
+      {/* ── Question-wise Review ── */}
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <div style={iconWell("var(--primary)", 34)}><FileTextOutlined /></div>
+          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+            Question-wise Review
+          </span>
+        </div>
+
+        {!answers.length ? (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No answers found" />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {answers.map((ans, i) => {
+              const maxMks  = resolveMaxMarks(ans);
+              const gotMks  = Number(ans?.marksObtained ?? 0) || 0;
+              const hasEval = ans?.isCorrect !== null && ans?.isCorrect !== undefined;
+              const correct = Boolean(ans?.isCorrect);
+              const text    = resolveQuestionText(ans, i);
+              const snap    = ans?.snapshot || ans?.questionSnapshot || ans?.questionRef || {};
+              const type    = snap?.questionType || snap?.type || "subjective";
 
               return (
-                <List.Item key={ans?._id || `${index}-${resolveQuestionText(ans, index)}`}>
-                  <Card style={{ width: "100%" }}>
-                    <Space direction="vertical" size={4} style={{ width: "100%" }}>
-                      <Text strong>Q{index + 1}. {resolveQuestionText(ans, index)}</Text>
-                      <Text>Answer: {formatAttemptAnswer(ans)}</Text>
-                      <Space wrap>
-                        <Tag color="blue">Marks: {marksObtained}/{maxMarks}</Tag>
-                        {hasEvaluation ? (
-                          <Tag color={ans.isCorrect ? "green" : "red"}>{ans.isCorrect ? "Correct" : "Incorrect"}</Tag>
-                        ) : (
-                          <Tag color="default">Pending evaluation</Tag>
-                        )}
-                        {ans?.flagged ? <Tag color="orange">Flagged</Tag> : null}
-                      </Space>
-                    </Space>
-                  </Card>
-                </List.Item>
+                <div
+                  key={ans?._id || i}
+                  style={{
+                    border: `1px solid ${hasEval ? (correct ? "#BBF7D0" : "#FECACA") : "var(--border-muted)"}`,
+                    borderLeft: `4px solid ${hasEval ? (correct ? "#22C55E" : "#EF4444") : "var(--border-muted)"}`,
+                    borderRadius: 12, padding: "14px 16px",
+                    background: hasEval ? (correct ? "rgba(220,252,231,0.1)" : "rgba(254,226,226,0.1)") : "var(--surface)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{
+                        width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                        background: "var(--primary)", color: "#fff",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontWeight: 800, fontSize: 12,
+                      }}>
+                        {i + 1}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(124,58,237,0.1)", color: "var(--primary)", padding: "2px 7px", borderRadius: 99 }}>
+                        {type}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
+                        {gotMks} / {maxMks} marks
+                      </span>
+                      {hasEval ? (
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 700,
+                          background: correct ? "#DCFCE7" : "#FEE2E2",
+                          color:      correct ? "#15803D" : "#DC2626",
+                          padding: "2px 10px", borderRadius: 99,
+                        }}>
+                          {correct ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                          {correct ? "Correct" : "Incorrect"}
+                        </span>
+                      ) : (
+                        <Tag color="default" style={{ margin: 0 }}>Pending</Tag>
+                      )}
+                      {ans?.flagged && <Tag color="orange" style={{ margin: 0 }}>Flagged</Tag>}
+                    </div>
+                  </div>
+
+                  <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)", marginBottom: 8, lineHeight: 1.5 }}>
+                    {text}
+                  </div>
+
+                  <div style={{
+                    fontSize: 13, color: "var(--text-muted)", padding: "8px 12px",
+                    background: "var(--surface-soft, var(--surface-page))", borderRadius: 8,
+                  }}>
+                    <span style={{ fontWeight: 700, color: "var(--text-primary)", marginRight: 6 }}>Your answer:</span>
+                    {formatAnswer(ans)}
+                  </div>
+                </div>
               );
-            }}
-          />
-        ) : (
-          <Empty description="No answers found" />
+            })}
+          </div>
         )}
-      </Card>
-    </Space>
+      </div>
+    </div>
   );
 };
 

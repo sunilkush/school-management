@@ -11,7 +11,6 @@ import {
   Input,
   Select,
   Switch,
-  InputNumber,
   Button,
   Upload,
   Card,
@@ -42,9 +41,6 @@ const DEFAULT_SETTINGS = {
   language: "english",
   timezone: "UTC",
   notifications: true,
-  approvalRequired: true,
-  maxSchools: 10,
-  twoFactor: false,
   autoBackup: true,
   backupFreq: "Weekly",
 };
@@ -61,6 +57,7 @@ const Settings = () => {
   const [razorpayForm] = Form.useForm();
   const [isSaving, setIsSaving] = useState(false);
   const [isRazorpaySaving, setIsRazorpaySaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
 
   const safeRoles = Array.isArray(roles) ? roles : [];
   const safeSchools = Array.isArray(schools) ? schools : [];
@@ -159,6 +156,7 @@ const Settings = () => {
             name: values.fullName,
             email: values.email,
             phone: values.phone,
+            ...(avatarFile ? { avatarFile } : {}),
           })
         ).unwrap(),
       ];
@@ -298,7 +296,13 @@ const Settings = () => {
 
           <Col xs={24} md={12}>
             <Form.Item label="Profile Image">
-              <Upload maxCount={1} listType="picture" beforeUpload={() => false}>
+              <Upload
+                maxCount={1}
+                listType="picture"
+                beforeUpload={(file) => { setAvatarFile(file); return false; }}
+                onRemove={() => setAvatarFile(null)}
+                accept="image/*"
+              >
                 <Button icon={<UploadOutlined />}>Upload</Button>
               </Upload>
             </Form.Item>
@@ -398,22 +402,6 @@ const Settings = () => {
                   label: year,
                 }))}
               />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} md={12}>
-            <Form.Item
-              label="Approval Required"
-              name="approvalRequired"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} md={12}>
-            <Form.Item label="Max Schools" name="maxSchools">
-              <InputNumber min={1} style={{ width: "100%" }} />
             </Form.Item>
           </Col>
 
@@ -525,9 +513,15 @@ const Settings = () => {
           </Col>
 
           <Col span={24}>
-            <Form.Item label="Enable 2FA" name="twoFactor" valuePropName="checked">
-              <Switch />
-            </Form.Item>
+            <div style={{
+              background: "#f8fafc", border: "1px dashed #d1d5db",
+              borderRadius: 10, padding: "12px 16px",
+              display: "flex", alignItems: "center", gap: 10,
+              color: "#6b7280", fontSize: 13,
+            }}>
+              <LockOutlined />
+              <span><strong>Two-Factor Authentication</strong> — Coming soon. You will be able to secure your account with an authenticator app.</span>
+            </div>
           </Col>
         </Row>
       ),
@@ -557,6 +551,17 @@ const Settings = () => {
                 ]}
               />
             </Form.Item>
+          </Col>
+
+          <Col span={24}>
+            <div style={{
+              background: "#f8fafc", border: "1px dashed #d1d5db",
+              borderRadius: 10, padding: "12px 16px",
+              color: "#6b7280", fontSize: 13,
+            }}>
+              <DatabaseOutlined style={{ marginRight: 8 }} />
+              Backup preferences are saved locally. Automated cloud backups are managed by your system administrator.
+            </div>
           </Col>
         </Row>
       ),

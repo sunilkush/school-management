@@ -50,7 +50,7 @@ router.post(
 
 router.get("/me", auth, roleMiddleware(ALL_USERS), getCurrentUser);
 router.get("/my-permissions", auth, roleMiddleware(ALL_USERS), getMyPermissions);
-router.put("/update", auth, roleMiddleware(ALL_USERS), updateUser);
+router.put("/update", auth, roleMiddleware(ALL_USERS), upload.fields([{ name: "avatar", maxCount: 1 }]), updateUser);
 router.put("/change-password", auth, roleMiddleware(ALL_USERS), changeCurrentPassword);
 router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);
 router.get("/all", auth, roleMiddleware(ADMIN_AND_ACCOUNTANT_ROLE), getAllUsers);

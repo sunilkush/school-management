@@ -6,6 +6,7 @@ const colorMap = {
   absent: "red",
   late: "orange",
   halfday: "gold",
+  leave: "blue",
 };
 
 const StatusTag = ({ status }) => {

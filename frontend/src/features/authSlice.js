@@ -127,7 +127,16 @@ export const currentUser = createAsyncThunk(
 
 export const updateUser = createAsyncThunk("user/updateUser", async (data, { rejectWithValue }) => {
   try {
-    const res = await apiClient.put("/user/update", data);
+    let payload = data;
+    if (data?.avatarFile) {
+      const fd = new FormData();
+      if (data.name)  fd.append("name",  data.name);
+      if (data.email) fd.append("email", data.email);
+      if (data.phone !== undefined) fd.append("phone", data.phone);
+      fd.append("avatar", data.avatarFile);
+      payload = fd;
+    }
+    const res = await apiClient.put("/user/update", payload);
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
@@ -199,6 +208,7 @@ const initialState = {
   success: false,
   hasFetchedUsers: false,
   isAuthInitialized: false,
+  isLoggingOut: false,
 };
 
 const authSlice = createSlice({
@@ -255,6 +265,24 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.profile = action.payload;
       })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        if (action.payload) {
+          const { name, email, phone, avatar, role, school, isActive } = action.payload;
+          const patch = {};
+          if (name   !== undefined) patch.name   = name;
+          if (email  !== undefined) patch.email  = email;
+          if (phone  !== undefined) patch.phone  = phone;
+          if (avatar !== undefined) patch.avatar = avatar;
+          if (role)                 patch.role   = role;
+          if (school)               patch.school = school;
+          if (isActive !== undefined) patch.isActive = isActive;
+          state.user    = { ...state.user,    ...patch };
+          state.profile = { ...state.profile, ...patch };
+        }
+      })
+      .addCase(logoutUser.pending, (state) => {
+        state.isLoggingOut = true;
+      })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
@@ -262,6 +290,7 @@ const authSlice = createSlice({
         state.permissions = [];
         state.success = false;
         state.isAuthInitialized = true;
+        state.isLoggingOut = false;
       })
       .addCase(logoutUser.rejected, (state) => {
         state.user = null;
@@ -270,6 +299,7 @@ const authSlice = createSlice({
         state.permissions = [];
         state.success = false;
         state.isAuthInitialized = true;
+        state.isLoggingOut = false;
       })
       .addCase(fetchAllUser.fulfilled, (state, action) => {
         state.users = action.payload;

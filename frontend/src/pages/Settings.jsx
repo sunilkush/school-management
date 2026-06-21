@@ -41,6 +41,7 @@ const Settings = () => {
   const { roles = [] } = useSelector((state) => state.role || {});
   const { schools = [] } = useSelector((state) => state.school || {});
 
+  const [avatarFile, setAvatarFile] = useState(null);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -153,12 +154,13 @@ const Settings = () => {
           name: form.fullName,
           email: form.email,
           phone: form.phone,
+          ...(avatarFile ? { avatarFile } : {}),
         })
-      );
+      ).unwrap();
 
       message.success("Settings saved successfully");
     } catch (error) {
-      message.error(error?.message || "Failed to save settings");
+      message.error(error?.message || typeof error === "string" ? error : "Failed to save settings");
     }
   };
 
@@ -233,7 +235,13 @@ const Settings = () => {
 
                   <Col xs={24} md={12}>
                     <Form.Item label="Profile Image">
-                      <Upload maxCount={1} beforeUpload={() => false}>
+                      <Upload
+                        maxCount={1}
+                        listType="picture"
+                        beforeUpload={(file) => { setAvatarFile(file); return false; }}
+                        onRemove={() => setAvatarFile(null)}
+                        accept="image/*"
+                      >
                         <Button icon={<UploadOutlined />}>Upload</Button>
                       </Upload>
                     </Form.Item>
