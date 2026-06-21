@@ -67,6 +67,11 @@ import financeReducer from "../features/financeSlice";
 import hostelWardenReducer from "../features/hostelWardenSlice";
 import advanceReducer from "../features/advanceSlice";
 import taskReducer from "../features/taskSlice";
+import gateEntryReducer from "../features/gateEntrySlice";
+import callLogReducer from "../features/callLogSlice";
+import vehicleMaintenanceReducer from "../features/vehicleMaintenanceSlice";
+import counselingSessionReducer from "../features/counselingSessionSlice";
+import emergencyAlertReducer from "../features/emergencyAlertSlice";
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -129,6 +134,11 @@ const rootReducer = combineReducers({
   hostelWarden: hostelWardenReducer,
   advance: advanceReducer,
   tasks: taskReducer,
+  gateEntries: gateEntryReducer,
+  callLogs: callLogReducer,
+  vehicleMaintenance: vehicleMaintenanceReducer,
+  counselingSessions: counselingSessionReducer,
+  emergencyAlerts: emergencyAlertReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

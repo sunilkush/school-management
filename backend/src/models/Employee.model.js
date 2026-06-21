@@ -22,28 +22,28 @@ const employeeSchema = new Schema(
     // Basic Info
     phoneNo: {
       type: String,
-      required: true,
+      required: [true, "Phone number is required"],
       match: [/^\+?[0-9]{10,13}$/, "Invalid phone number"],
     },
-    maritalStatus: { 
-      type: String, 
-      enum: ["Single", "Married", "Divorced", "Widowed"] 
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other"],
+      required: [true, "Gender is required"],
     },
-    gender: { 
-      type: String, 
-      enum: ["Male", "Female", "Other"], 
-      required: true 
+    dateOfBirth: {
+      type: Date,
     },
-    dateOfBirth: { 
-      type: Date 
+    maritalStatus: {
+      type: String,
+      enum: ["Single", "Married", "Divorced", "Widowed"],
     },
-    bloodType: { 
-      type: String, 
-      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] 
+    bloodType: {
+      type: String,
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
     },
     religion: {
       type: String,
-      enum: ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"]
+      enum: ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"],
     },
     // Address
     address: {
@@ -57,13 +57,13 @@ const employeeSchema = new Schema(
     // ID Proof
     idProof: {
       type: String,
-      required: true,
+      default: null,
     },
 
     citizenAddress: {
       type: String,
-      required: true,
       maxlength: 200,
+      default: null,
     },
     // Employment
     employeeCode: {
@@ -85,16 +85,15 @@ const employeeSchema = new Schema(
     designation: { 
       type: String 
     }, // or ObjectId ref
-    employeeStatus: {
-      type: String,
-      enum: ["Full-Time", "Part-Time", "Contract", "Permanent", "Intern"],
-    },
     employmentType: {
       type: String,
-      enum: ["Permanent", "Contract", "Part Time", "Intern", "Full Time"],
+      enum: ["Permanent", "Contract", "Part Time", "Full Time", "Intern"],
       default: "Permanent",
     },
-    joinDate: { type: Date },
+    joinDate: {
+      type: Date,
+      required: [true, "Join date is required"],
+    },
     shift: {
       name: { type: String, trim: true },
       startTime: { type: String, trim: true },
@@ -107,7 +106,7 @@ const employeeSchema = new Schema(
     // Salary
     salaryId: {
       type: Schema.Types.ObjectId,
-      ref: "Salary",
+      ref: "PayrollStructure",
       default: null,
     },
 
@@ -118,8 +117,8 @@ const employeeSchema = new Schema(
       default: 0,
     },
     qualification: {
-      type: [String], // array of strings
-      required: true,
+      type: [String],
+      default: [],
     },
     subjects: [
       {

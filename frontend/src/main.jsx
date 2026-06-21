@@ -337,6 +337,33 @@ const MonthlyReportPage = lazy(() => import("./pages/Attendance/MonthlyReportPag
 const ChildAttendancePage = lazy(() => import("./pages/Attendance/ChildAttendancePage.jsx"));
 const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage.jsx"));
 
+// Vice Principal
+const VicePrincipalReports = lazy(() => import("./pages/Vice_Principal/VicePrincipalReports.jsx"));
+
+// Role-specific pages (Receptionist, Counselor, Security, Transport)
+const VisitorManagement  = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.VisitorManagement })));
+const Enquiries          = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.Enquiries })));
+const CallLog            = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.CallLog })));
+const Broadcasts         = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.Broadcasts })));
+
+const CounselorStudents  = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselorStudents })));
+const CounselingSessions = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselingSessions })));
+const Appointments       = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.Appointments })));
+const CounselorReports   = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselorReports })));
+
+const EntryRegister      = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.EntryRegister })));
+const GateLogs           = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.GateLogs })));
+const EmergencyAlerts    = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.EmergencyAlerts })));
+
+const DriversPage             = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.DriversPage })));
+const VehicleMaintenance      = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.VehicleMaintenance })));
+const TransportManagerDashboard = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.TransportManagerDashboard })));
+const ReceptionistDashboard   = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.ReceptionistDashboard })));
+const CounselorDashboard      = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselorDashboard })));
+const SecurityDashboard       = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.SecurityDashboard })));
+const ExamCoordinatorDashboard = lazy(() => import("./pages/Exam_Coordinator/ExamCoordinatorDashboard.jsx"));
+const SubjectCoordinatorDashboard = lazy(() => import("./pages/Subject_Coordinator/SubjectCoordinatorDashboard.jsx"));
+
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
@@ -782,6 +809,22 @@ const router = createBrowserRouter([
             ],
           },
            {
+            path: "viceprincipal/reports",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <VicePrincipalReports />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/academics",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <ExamsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "viceprincipal/tasks",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
@@ -878,6 +921,30 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "viceprincipal/attendance/students",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <AllStudentsAttendance />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/attendance/staff",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <StaffAttendance />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "viceprincipal/attendance/table",
+            element: (
+              <ProtectedRoute allowedRoles={["Vice Principal"]}>
+                <AttendanceTablePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "viceprincipal/profile",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
@@ -890,6 +957,54 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
                 <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <SubjectCoordinatorDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/subjects",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <Subjects />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/teachers",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <TeacherList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/classes",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <Classes />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/assessments",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <ExamsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "subjectcoordinator/reports",
+            element: (
+              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
+                <ExamReports />
               </ProtectedRoute>
             ),
           },
@@ -972,6 +1087,46 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: "transportmanager",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <TransportManagerDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "transportmanager/routes",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <RoutesPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "transportmanager/vehicles",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <Vehicles />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "transportmanager/drivers",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <DriversPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "transportmanager/maintenance",
+            element: (
+              <ProtectedRoute allowedRoles={["Transport Manager"]}>
+                <VehicleMaintenance />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "transportmanager/tasks",
             element: (
               <ProtectedRoute allowedRoles={["Transport Manager"]}>
@@ -1011,7 +1166,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
             children: [
-              { index: true, element: <RoleDynamicPortal /> },
+              { index: true, element: <ExamCoordinatorDashboard /> },
               { path: "exams", element: <ExamsPage /> },
               { path: "exams/create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
@@ -1031,6 +1186,46 @@ const router = createBrowserRouter([
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "tasks", element: <MyTasks /> },
             ],
+          },
+          {
+            path: "receptionist",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <ReceptionistDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "receptionist/visitors",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <VisitorManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "receptionist/enquiries",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <Enquiries />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "receptionist/calls",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <CallLog />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "receptionist/broadcasts",
+            element: (
+              <ProtectedRoute allowedRoles={["Receptionist"]}>
+                <Broadcasts />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "receptionist/tasks",
@@ -1087,6 +1282,46 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: "counselor",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <CounselorDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "counselor/students",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <CounselorStudents />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "counselor/sessions",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <CounselingSessions />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "counselor/appointments",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <Appointments />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "counselor/reports",
+            element: (
+              <ProtectedRoute allowedRoles={["Counselor"]}>
+                <CounselorReports />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "counselor/tasks",
             element: (
               <ProtectedRoute allowedRoles={["Counselor"]}>
@@ -1115,6 +1350,46 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={["Counselor"]}>
                 <RoleDynamicPortal />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <SecurityDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/entry-register",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <EntryRegister />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/gate-logs",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <GateLogs />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/shift-attendance",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <MyAttendancePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security/alerts",
+            element: (
+              <ProtectedRoute allowedRoles={["Security"]}>
+                <EmergencyAlerts />
               </ProtectedRoute>
             ),
           },

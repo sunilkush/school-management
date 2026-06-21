@@ -39,8 +39,12 @@ const sendVerificationEmail = async (user) => {
   const token = user.generateEmailVerificationToken();
   await user.save({ validateBeforeSave: false });
 
-  const verifyUrl = buildClientUrl(`/verify-email/${token}`);
-  await sendEmail(user.email, 'Verify your email', `Please verify your email by clicking this link: ${verifyUrl}`);
+  const verifyUrl = buildClientUrl(`/verify-email?token=${token}`);
+  await sendEmail(
+    user.email,
+    'Verify your email — School Management',
+    `Hi ${user.name},\n\nPlease verify your email address by clicking the link below:\n\n${verifyUrl}\n\nThis link expires in 24 hours.\n\nIf you did not create an account, please ignore this email.`
+  );
 };
 
 
@@ -892,17 +896,21 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const token = user.generateResetPasswordToken();
   await user.save({ validateBeforeSave: false });
 
-  const resetUrl = buildClientUrl(`/reset-password/${token}`);
-  await sendEmail(user.email, 'Reset your password', `Reset your password using this link: ${resetUrl}`);
+  const resetUrl = buildClientUrl(`/reset-password?token=${token}`);
+  await sendEmail(
+    user.email,
+    'Reset your password — School Management',
+    `Hi ${user.name},\n\nYou requested a password reset. Click the link below to set a new password:\n\n${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you did not request this, please ignore this email.`
+  );
 
   return res.status(200).json(new ApiResponse(200, {}, 'Password reset link sent successfully'));
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
   const { token } = req.params;
-  const { newPassword } = req.body;
+  const newPassword = req.body.newPassword || req.body.password;
 
-  if (!token || !newPassword) throw new ApiError(400, 'Token and newPassword are required');
+  if (!token || !newPassword) throw new ApiError(400, 'Token and password are required');
 
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
