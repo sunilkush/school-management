@@ -33,7 +33,7 @@ const SubjectCoordinatorDashboard = () => {
     setPlansLoading(true);
     apiClient
       .get("/lesson-plans")
-      .then((r) => setPlans(r.data?.data || []))
+      .then((r) => setPlans(r.data?.data?.items || r.data?.data || []))
       .catch(() => setPlans([]))
       .finally(() => setPlansLoading(false));
   }, [reduxDispatch]);

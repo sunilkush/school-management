@@ -27,8 +27,11 @@ const ExamCoordinatorDashboard = () => {
   useEffect(() => {
     dispatch(getExams({}));
     apiClient
-      .get("/questions/getQuestions", { params: { limit: 1 } })
-      .then((r) => setQCount(r.data?.total ?? r.data?.data?.total ?? (r.data?.data?.questions?.length || 0)))
+      .get("/questions/getQuestions", { params: { limit: 100 } })
+      .then((r) => {
+        const d = r.data?.data;
+        setQCount(d?.pagination?.total ?? d?.questions?.length ?? 0);
+      })
       .catch(() => setQCount(0));
   }, [dispatch]);
 

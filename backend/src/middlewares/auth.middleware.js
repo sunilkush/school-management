@@ -64,6 +64,7 @@ export const allowPublic = (req, _res, next) => {
   /^\/user\/reset-password\/[^/]+$/,
   /^\/user\/verify-email\/[^/]+$/,
   /^\/user\/resend-verification$/,
+  /^\/health$/,
 ];
 
 const isPublicApiRoute = (req) => {

@@ -15,7 +15,7 @@ const maintenanceTaskSchema = new mongoose.Schema(
       default: "medium",
     },
     dueDate: { type: Date, default: null },
-    school: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
+    school: { type: mongoose.Schema.Types.ObjectId, ref: "School", default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }

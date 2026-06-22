@@ -2,7 +2,8 @@ import MaintenanceTask from "../models/MaintenanceTask.model.js";
 
 export const listMaintenanceTasks = async (req, res) => {
   try {
-    const tasks = await MaintenanceTask.find({ school: req.user.school })
+    const schoolFilter = req.user.school ? { school: req.user.school } : {};
+    const tasks = await MaintenanceTask.find(schoolFilter)
       .populate("createdBy", "name")
       .sort({ createdAt: -1 });
     res.json({ success: true, data: tasks });
@@ -32,8 +33,9 @@ export const createMaintenanceTask = async (req, res) => {
 
 export const updateMaintenanceTask = async (req, res) => {
   try {
+    const schoolFilter = req.user.school ? { school: req.user.school } : {};
     const task = await MaintenanceTask.findOneAndUpdate(
-      { _id: req.params.id, school: req.user.school },
+      { _id: req.params.id, ...schoolFilter },
       { $set: req.body },
       { new: true }
     );
@@ -46,7 +48,8 @@ export const updateMaintenanceTask = async (req, res) => {
 
 export const deleteMaintenanceTask = async (req, res) => {
   try {
-    const task = await MaintenanceTask.findOneAndDelete({ _id: req.params.id, school: req.user.school });
+    const schoolFilter = req.user.school ? { school: req.user.school } : {};
+    const task = await MaintenanceTask.findOneAndDelete({ _id: req.params.id, ...schoolFilter });
     if (!task) return res.status(404).json({ success: false, message: "Task not found" });
     res.json({ success: true, message: "Task deleted" });
   } catch (err) {
