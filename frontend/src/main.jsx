@@ -169,15 +169,15 @@ const StudentPromotion = lazy(() => import("./pages/School_Admin/Teachers_&_Stud
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
 
-const ExamSchedule = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamSchedule.jsx"));
-const EnterGrades = lazy(() => import("./pages/School_Admin/Exams_&_Grades/EnterGrades.jsx"));
-const ExamReports = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamReport.jsx"));
-const ExamsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamPage.jsx"));
-const ExamCreate = lazy(() => import("./pages/School_Admin/Exams_&_Grades/CreateExam.jsx"));
-const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_&_Grades/PageBuilder.jsx"));
-const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/AdmitCardPage.jsx"));
-const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/SeatPlanPage.jsx"));
-const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_&_Grades/ExamAnalyticsPage.jsx"));
+const ExamSchedule = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamSchedule.jsx"));
+const EnterGrades = lazy(() => import("./pages/School_Admin/Exams_and_Grades/EnterGrades.jsx"));
+const ExamReports = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamReport.jsx"));
+const ExamsPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamPage.jsx"));
+const ExamCreate = lazy(() => import("./pages/School_Admin/Exams_and_Grades/CreateExam.jsx"));
+const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_and_Grades/PageBuilder.jsx"));
+const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/AdmitCardPage.jsx"));
+const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/SeatPlanPage.jsx"));
+const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamAnalyticsPage.jsx"));
 const AllStudentsAttendance     = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
 const StaffAttendance           = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
 const SATeacherAttendance       = lazy(() => import("./pages/School_Admin/Attendance/TeacherAttendance.jsx"));
