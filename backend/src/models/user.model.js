@@ -105,6 +105,51 @@ const userSchema = new Schema(
     lastLoginAt: {
         type:Date
     },
+
+    // 🔹 Employee / Staff Details
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other", ""],
+      default: "",
+    },
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
+    address: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    joiningDate: {
+      type: Date,
+      default: null,
+    },
+    qualification: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    emergencyContactName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    emergencyContactPhone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    departmentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Department",
+      default: null,
+    },
+    designationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Designation",
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -318,15 +318,31 @@ const loginUser = asyncHandler(async (req, res) => {
  * @route PUT /api/users/update
  */
 const updateUser = asyncHandler(async (req, res) => {
-  const { name, email, phone } = req.body
+  const {
+    name, email, phone,
+    gender, dateOfBirth, address, joiningDate, qualification,
+    emergencyContactName, emergencyContactPhone,
+    departmentId, designationId,
+  } = req.body
   if (!name || !email) throw new ApiError(400, 'Name and email are required')
 
   const user = await User.findOne({ _id: req.user?._id, isActive: true, isDeleted: { $ne: true } })
   if (!user) throw new ApiError(404, 'User not found')
 
-  user.name = name
+  user.name  = name
   user.email = email
   if (phone !== undefined) user.phone = phone
+
+  // Employee fields — save if provided
+  if (gender             !== undefined) user.gender               = gender
+  if (dateOfBirth        !== undefined) user.dateOfBirth          = dateOfBirth || null
+  if (address            !== undefined) user.address              = address
+  if (joiningDate        !== undefined) user.joiningDate          = joiningDate || null
+  if (qualification      !== undefined) user.qualification        = qualification
+  if (emergencyContactName  !== undefined) user.emergencyContactName  = emergencyContactName
+  if (emergencyContactPhone !== undefined) user.emergencyContactPhone = emergencyContactPhone
+  if (departmentId       !== undefined) user.departmentId         = departmentId || null
+  if (designationId      !== undefined) user.designationId        = designationId || null
 
   const avatarLocalPath = req.files?.avatar?.[0]?.path
   if (avatarLocalPath) {
@@ -336,17 +352,21 @@ const updateUser = asyncHandler(async (req, res) => {
 
   await user.save()
 
-  // Re-fetch with populated role + school so frontend state stays complete
+  // Re-fetch with all populated fields so frontend state stays complete
   const updated = await User.findById(user._id)
     .select('-password -refreshToken')
-    .populate('roleId', 'name permissions')
-    .populate('schoolId', 'name isActive')
+    .populate('roleId',        'name permissions')
+    .populate('schoolId',      'name isActive')
+    .populate('departmentId',  'name code')
+    .populate('designationId', 'title level')
     .lean()
 
   const result = {
     ...updated,
-    role:   updated.roleId  || null,
-    school: updated.schoolId || null,
+    role:        updated.roleId        || null,
+    school:      updated.schoolId      || null,
+    department:  updated.departmentId  || null,
+    designation: updated.designationId || null,
   }
 
   return res
@@ -431,6 +451,28 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
 
+    // ===== DEPARTMENT =====
+    {
+      $lookup: {
+        from: "departments",
+        localField: "departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } },
+
+    // ===== DESIGNATION =====
+    {
+      $lookup: {
+        from: "designations",
+        localField: "designationId",
+        foreignField: "_id",
+        as: "designation",
+      },
+    },
+    { $unwind: { path: "$designation", preserveNullAndEmptyArrays: true } },
+
     // ===== PROJECTION =====
     {
       $project: {
@@ -440,6 +482,17 @@ const getCurrentUser = asyncHandler(async (req, res) => {
         phone: 1,
         avatar: 1,
         isActive: 1,
+        regId: 1,
+        createdAt: 1,
+
+        // Employee fields
+        gender: 1,
+        dateOfBirth: 1,
+        address: 1,
+        joiningDate: 1,
+        qualification: 1,
+        emergencyContactName: 1,
+        emergencyContactPhone: 1,
 
         role: {
           _id: "$role._id",
@@ -459,6 +512,18 @@ const getCurrentUser = asyncHandler(async (req, res) => {
           startDate: "$academicYear.startDate",
           endDate: "$academicYear.endDate",
           isActive: "$academicYear.isActive",
+        },
+
+        department: {
+          _id: "$department._id",
+          name: "$department.name",
+          code: "$department.code",
+        },
+
+        designation: {
+          _id: "$designation._id",
+          title: "$designation.title",
+          level: "$designation.level",
         },
       },
     },

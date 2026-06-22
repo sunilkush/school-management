@@ -103,7 +103,6 @@ const ParentDashboard = lazy(() => import("./pages/Parent/Dashboard/ParentDashbo
 
 // Common
 const Profile = lazy(() => import("./pages/Profile.jsx"));
-const SAProfile = lazy(() => import("./pages/School_Admin/Profile/Profile.jsx"));
 const Notification = lazy(() => import("./pages/Notification.jsx"));
 const Message = lazy(() => import("./pages/Message.jsx"));
 const Settings = lazy(() => import("./pages/Settings.jsx"));
@@ -287,7 +286,6 @@ const StudentTimetable = lazy(() => import("./pages/Timetable/StudentTimetablePa
 const StudentAttendancePage = lazy(() => import("./pages/Student/Attendance/MyAttendancePage.jsx"));
 const StudentTransport = lazy(() => import("./pages/Student/Transport/StudentTransport.jsx"));
 const StudentGrades = lazy(() => import("./pages/Student/Grades/StudentGrades.jsx"));
-const StudentProfile = lazy(()=>import("./pages/Student/Profile/Profile.jsx"))
 
 // Parent
 const MyChildren      = lazy(() => import("./pages/Parent/Children/MyChildren.jsx"));
@@ -320,9 +318,6 @@ const NetworkStatus = lazy(() =>
 );
 const SystemLogs = lazy(() =>
   import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemLogs }))
-);
-const ITSupportProfile = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportProfile }))
 );
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
@@ -602,7 +597,7 @@ const router = createBrowserRouter([
               { path: "reports", element: <SchoolAdminReport /> },
               { path: "settings", element: <SettingsPage /> },
               { path: "message", element: <Message /> },
-              { path: "profile", element: <SAProfile /> },
+              { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "admission", element: <AddStudent /> },
               { path: "studentList", element: <StudentList /> },
@@ -687,7 +682,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <StudentDashboard /> },
-              { path: "profile", element: <StudentProfile /> },
+              { path: "profile", element: <Profile /> },
               { path: "homework", element: <StudentHomework /> },
               { path: "attendance", element: <StudentAttendancePage /> },
               { path: "grades", element: <StudentGrades /> },
@@ -993,7 +988,7 @@ const router = createBrowserRouter([
               { path: "tickets", element: <UserSupportTickets /> },
               { path: "network", element: <NetworkStatus /> },
               { path: "logs", element: <SystemLogs /> },
-              { path: "profile", element: <ITSupportProfile /> },
+              { path: "profile", element: <Profile /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
               { path: "message", element: <Message /> },
               { path: "notification", element: <Notification /> },
