@@ -68,6 +68,8 @@ import callLogRoutes from "./callLog.routes.js";
 import vehicleMaintenanceRoutes from "./vehicleMaintenance.routes.js";
 import counselingSessionRoutes from "./counselingSession.routes.js";
 import emergencyAlertRoutes from "./emergencyAlert.routes.js";
+import maintenanceTaskRoutes from "./maintenanceTask.routes.js";
+import healthRoutes from "./health.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -140,6 +142,8 @@ export const apiV1Routes = [
   ["/vehicle-maintenance", vehicleMaintenanceRoutes],
   ["/counseling-sessions", counselingSessionRoutes],
   ["/emergency-alerts", emergencyAlertRoutes],
+  ["/maintenance-tasks", maintenanceTaskRoutes],
+  ["/health", healthRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

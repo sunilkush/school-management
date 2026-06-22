@@ -10,7 +10,7 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-const TEACHER_AND_ABOVE = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher"];
+const TEACHER_AND_ABOVE = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher", "Subject Coordinator", "Exam Coordinator"];
 
 router.get("/",    auth, roleMiddleware(TEACHER_AND_ABOVE), getLessonPlans);
 router.post("/",   auth, roleMiddleware(TEACHER_AND_ABOVE), createLessonPlan);

@@ -13,21 +13,23 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+const QUESTION_ROLES = ["Teacher", "School Admin", "Super Admin", "Exam Coordinator", "Principal", "Vice Principal"];
+
 // Create
-router.post("/create",auth,roleMiddleware(["Teacher", "School Admin"]), createQuestion);
-router.post("/bulk",auth,roleMiddleware(["Teacher", "School Admin"]),upload.single("file"), bulkCreateQuestionsFromExcel );
+router.post("/create",auth,roleMiddleware(QUESTION_ROLES), createQuestion);
+router.post("/bulk",auth,roleMiddleware(QUESTION_ROLES),upload.single("file"), bulkCreateQuestionsFromExcel );
 
 // Read
-router.get("/getQuestions",auth,roleMiddleware(["Teacher", "School Admin"]), getQuestions);
-router.get("/:id",auth,roleMiddleware(["Teacher", "School Admin"]), getQuestionById);
+router.get("/getQuestions",auth,roleMiddleware(QUESTION_ROLES), getQuestions);
+router.get("/:id",auth,roleMiddleware(QUESTION_ROLES), getQuestionById);
 
 // Update
-router.put("/:id",auth,roleMiddleware(["Teacher", "School Admin"]), updateQuestion);
+router.put("/:id",auth,roleMiddleware(QUESTION_ROLES), updateQuestion);
 
 // Delete
-router.delete("/:id",auth,roleMiddleware(["Teacher", "School Admin"]), deleteQuestion);
+router.delete("/:id",auth,roleMiddleware(QUESTION_ROLES), deleteQuestion);
 
 // Toggle Active
-router.patch("/:id/toggle",auth,roleMiddleware(["Teacher", "School Admin"]), toggleQuestionStatus);
+router.patch("/:id/toggle",auth,roleMiddleware(QUESTION_ROLES), toggleQuestionStatus);
 
 export default router;
