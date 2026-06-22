@@ -366,6 +366,7 @@ const SubjectCoordinatorDashboard = lazy(() => import("./pages/Subject_Coordinat
 
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import PublicOnlyRoute from "./routes/PublicOnlyRoute.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import Register from "./components/forms/RegisterForm.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
@@ -375,17 +376,16 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      { path: "/", element: <LoginPage /> },
-      { path: "/login", element: <LoginPage /> },
+      { path: "/", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
+      { path: "/login", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
       { path: "/style-guide", element: <StyleGuide /> },
-      { path: "/forgot-password", element: <ForgetPasswordPage /> },
+      { path: "/forgot-password", element: <PublicOnlyRoute><ForgetPasswordPage /></PublicOnlyRoute> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
       { path: "/resend-verification", element: <ResendVerificationPage /> },
       { path: "/no-active-year", element: <NoActiveYear /> },
       { path: "unauthorized", element: <Unauthorized /> },
-      { path: "*", element: <Unauthorized /> },
-      { path: "NotFoundPage", element:<NotFoundPage/> },
+      { path: "*", element: <NotFoundPage /> },
       {
         path: "dashboard",
         element: <Dashboard />,
@@ -809,237 +809,59 @@ const router = createBrowserRouter([
               { path: "tasks", element: <MyTasks /> },
             ],
           },
-           {
-            path: "viceprincipal/reports",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <VicePrincipalReports />
-              </ProtectedRoute>
-            ),
-          },
           {
-            path: "viceprincipal/academics",
+            path: "viceprincipal",
             element: (
               <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <ExamsPage />
+                <Outlet />
               </ProtectedRoute>
             ),
-          },
-          {
-            path: "viceprincipal/tasks",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <MyTasks />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/payroll",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <PayrollSelfServicePage />
-              </ProtectedRoute>
-            ),
-          },
-           {
-            path: "viceprincipal/timetable",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <PrincipalTimetableOverview />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <ExamsPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/create",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <ExamCreate />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/edit/:id",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <ExamCreate />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/schedule",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <ExamSchedule />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/grades",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <EnterGrades />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/paper-builder",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <PaperBuilder />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/admit-card",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <AdmitCardPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/seat-plan",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <SeatPlanPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/exams/analytics",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <ExamAnalyticsPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/attendance/students",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <AllStudentsAttendance />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/attendance/staff",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <StaffAttendance />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/attendance/table",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <AttendanceTablePage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/profile",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <Profile />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "viceprincipal/*",
-            element: (
-              <ProtectedRoute allowedRoles={["Vice Principal"]}>
-                <RoleDynamicPortal />
-              </ProtectedRoute>
-            ),
+            children: [
+              { index: true,                      element: <SchoolAdminDashboard /> },
+              { path: "reports",                  element: <VicePrincipalReports /> },
+              { path: "academics",                element: <ExamsPage /> },
+              { path: "tasks",                    element: <MyTasks /> },
+              { path: "payroll",                  element: <PayrollSelfServicePage /> },
+              { path: "timetable",                element: <PrincipalTimetableOverview /> },
+              { path: "exams",                    element: <ExamsPage /> },
+              { path: "exams/create",             element: <ExamCreate /> },
+              { path: "exams/edit/:id",           element: <ExamCreate /> },
+              { path: "exams/schedule",           element: <ExamSchedule /> },
+              { path: "exams/grades",             element: <EnterGrades /> },
+              { path: "exams/paper-builder",      element: <PaperBuilder /> },
+              { path: "exams/admit-card",         element: <AdmitCardPage /> },
+              { path: "exams/seat-plan",          element: <SeatPlanPage /> },
+              { path: "exams/analytics",          element: <ExamAnalyticsPage /> },
+              { path: "attendance/students",      element: <AllStudentsAttendance /> },
+              { path: "attendance/staff",         element: <StaffAttendance /> },
+              { path: "attendance/table",         element: <AttendanceTablePage /> },
+              { path: "profile",                  element: <Profile /> },
+              { path: "message",                  element: <Message /> },
+              { path: "notification",             element: <Notification /> },
+              { path: "*",                        element: <RoleDynamicPortal /> },
+            ],
           },
           {
             path: "subjectcoordinator",
             element: (
               <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <SubjectCoordinatorDashboard />
+                <Outlet />
               </ProtectedRoute>
             ),
-          },
-          {
-            path: "subjectcoordinator/subjects",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <Subjects />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/teachers",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <TeacherList />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/classes",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <Classes />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/assessments",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <ExamsPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/reports",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <ExamReports />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/tasks",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <MyTasks />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/payroll",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <PayrollSelfServicePage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/profile",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <Profile />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "subjectcoordinator/*",
-            element: (
-              <ProtectedRoute allowedRoles={["Subject Coordinator"]}>
-                <RoleDynamicPortal />
-              </ProtectedRoute>
-            ),
+            children: [
+              { index: true,             element: <SubjectCoordinatorDashboard /> },
+              { path: "subjects",        element: <Subjects /> },
+              { path: "teachers",        element: <TeacherList /> },
+              { path: "classes",         element: <Classes /> },
+              { path: "assessments",     element: <ExamsPage /> },
+              { path: "reports",         element: <ExamReports /> },
+              { path: "tasks",           element: <MyTasks /> },
+              { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "profile",         element: <Profile /> },
+              { path: "message",         element: <Message /> },
+              { path: "notification",    element: <Notification /> },
+              { path: "*",               element: <RoleDynamicPortal /> },
+            ],
           },
           {
             path: "librarian",
@@ -1091,73 +913,22 @@ const router = createBrowserRouter([
             path: "transportmanager",
             element: (
               <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <TransportManagerDashboard />
+                <Outlet />
               </ProtectedRoute>
             ),
-          },
-          {
-            path: "transportmanager/routes",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <RoutesPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "transportmanager/vehicles",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <Vehicles />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "transportmanager/drivers",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <DriversPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "transportmanager/maintenance",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <VehicleMaintenance />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "transportmanager/tasks",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <MyTasks />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "transportmanager/payroll",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <PayrollSelfServicePage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "transportmanager/profile",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <Profile />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "transportmanager/*",
-            element: (
-              <ProtectedRoute allowedRoles={["Transport Manager"]}>
-                <RoleDynamicPortal />
-              </ProtectedRoute>
-            ),
+            children: [
+              { index: true,             element: <TransportManagerDashboard /> },
+              { path: "routes",          element: <RoutesPage /> },
+              { path: "vehicles",        element: <Vehicles /> },
+              { path: "drivers",         element: <DriversPage /> },
+              { path: "maintenance",     element: <VehicleMaintenance /> },
+              { path: "tasks",           element: <MyTasks /> },
+              { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "profile",         element: <Profile /> },
+              { path: "message",         element: <Message /> },
+              { path: "notification",    element: <Notification /> },
+              { path: "*",               element: <RoleDynamicPortal /> },
+            ],
           },
            {
             path: "examcoordinator",
@@ -1192,76 +963,25 @@ const router = createBrowserRouter([
             path: "receptionist",
             element: (
               <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <ReceptionistDashboard />
+                <Outlet />
               </ProtectedRoute>
             ),
+            children: [
+              { index: true,          element: <ReceptionistDashboard /> },
+              { path: "visitors",     element: <VisitorManagement /> },
+              { path: "enquiries",    element: <Enquiries /> },
+              { path: "calls",        element: <CallLog /> },
+              { path: "broadcasts",   element: <Broadcasts /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
           },
           {
-            path: "receptionist/visitors",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <VisitorManagement />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "receptionist/enquiries",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <Enquiries />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "receptionist/calls",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <CallLog />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "receptionist/broadcasts",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <Broadcasts />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "receptionist/tasks",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <MyTasks />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "receptionist/payroll",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <PayrollSelfServicePage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "receptionist/profile",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <Profile />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "receptionist/*",
-            element: (
-              <ProtectedRoute allowedRoles={["Receptionist"]}>
-                <RoleDynamicPortal />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "itsupport/*",
+            path: "itsupport",
             element: (
               <ProtectedRoute allowedRoles={["IT Support"]}>
                 <Outlet />
@@ -1286,145 +1006,43 @@ const router = createBrowserRouter([
             path: "counselor",
             element: (
               <ProtectedRoute allowedRoles={["Counselor"]}>
-                <CounselorDashboard />
+                <Outlet />
               </ProtectedRoute>
             ),
-          },
-          {
-            path: "counselor/students",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <CounselorStudents />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "counselor/sessions",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <CounselingSessions />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "counselor/appointments",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <Appointments />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "counselor/reports",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <CounselorReports />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "counselor/tasks",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <MyTasks />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "counselor/payroll",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <PayrollSelfServicePage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "counselor/profile",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <Profile />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "counselor/*",
-            element: (
-              <ProtectedRoute allowedRoles={["Counselor"]}>
-                <RoleDynamicPortal />
-              </ProtectedRoute>
-            ),
+            children: [
+              { index: true,            element: <CounselorDashboard /> },
+              { path: "students",       element: <CounselorStudents /> },
+              { path: "sessions",       element: <CounselingSessions /> },
+              { path: "appointments",   element: <Appointments /> },
+              { path: "reports",        element: <CounselorReports /> },
+              { path: "tasks",          element: <MyTasks /> },
+              { path: "payroll",        element: <PayrollSelfServicePage /> },
+              { path: "profile",        element: <Profile /> },
+              { path: "message",        element: <Message /> },
+              { path: "notification",   element: <Notification /> },
+              { path: "*",              element: <RoleDynamicPortal /> },
+            ],
           },
           {
             path: "security",
             element: (
               <ProtectedRoute allowedRoles={["Security"]}>
-                <SecurityDashboard />
+                <Outlet />
               </ProtectedRoute>
             ),
-          },
-          {
-            path: "security/entry-register",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <EntryRegister />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "security/gate-logs",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <GateLogs />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "security/shift-attendance",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <MyAttendancePage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "security/alerts",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <EmergencyAlerts />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "security/tasks",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <MyTasks />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "security/payroll",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <PayrollSelfServicePage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "security/profile",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <Profile />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "security/*",
-            element: (
-              <ProtectedRoute allowedRoles={["Security"]}>
-                <RoleDynamicPortal />
-              </ProtectedRoute>
-            ),
+            children: [
+              { index: true,               element: <SecurityDashboard /> },
+              { path: "entry-register",    element: <EntryRegister /> },
+              { path: "gate-logs",         element: <GateLogs /> },
+              { path: "shift-attendance",  element: <MyAttendancePage /> },
+              { path: "alerts",            element: <EmergencyAlerts /> },
+              { path: "tasks",             element: <MyTasks /> },
+              { path: "payroll",           element: <PayrollSelfServicePage /> },
+              { path: "profile",           element: <Profile /> },
+              { path: "message",           element: <Message /> },
+              { path: "notification",      element: <Notification /> },
+              { path: "*",                 element: <RoleDynamicPortal /> },
+            ],
           },
           {
             path: "workspace",

@@ -8,7 +8,14 @@ const router = Router();
 // Role-Based Access Control
 const ADMIN_ROLE = ['Super Admin', 'School Admin'];
 const TEACHER_ROLE = ['Super Admin', 'School Admin', 'Teacher'];
-const ALL_USERS = ['Super Admin', 'School Admin', 'Teacher', 'Student', 'Parent'];
+const ALL_USERS = [
+  'Super Admin', 'School Admin', 'Principal', 'Vice Principal',
+  'Teacher', 'Subject Coordinator', 'Exam Coordinator',
+  'Student', 'Parent',
+  'Accountant', 'Staff', 'Support Staff',
+  'Librarian', 'Hostel Warden', 'Transport Manager',
+  'Receptionist', 'IT Support', 'Counselor', 'Security',
+];
 // Create Login Log
 router.post('/', auth, roleMiddleware(ALL_USERS), createLoginLog);
 // Get Login Logs by User

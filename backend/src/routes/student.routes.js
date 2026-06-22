@@ -40,7 +40,7 @@ router.post(
 router.get(
   "/all",
   auth,
-  roleMiddleware(["Super Admin, School Admin", "Teacher", "Accountant"]),
+  roleMiddleware(["Super Admin", "School Admin", "Teacher", "Accountant", "Principal", "Vice Principal"]),
   checkActiveAcademicYear,
   getStudentsSuperAdmin
 );

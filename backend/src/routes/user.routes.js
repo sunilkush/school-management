@@ -26,7 +26,14 @@ const router = Router();
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant", "Librarian"];
 
-const ALL_USERS = ["Super Admin", "School Admin", "Teacher", "Student", "Parent", "Accountant", "Librarian","Receptionist","Bus Driver","Hostel Manager","Nurse","Counselor","IT Support","Sports Coach","Music Teacher","Art Instructor","Language Teacher","Special Education Teacher","Guidance Counselor","School Psychologist","Speech Therapist","Occupational Therapist","Physical Therapist","School Nurse","School Counselor","School Social Worker","School Librarian","School Administrator  "];
+const ALL_USERS = [
+  "Super Admin", "School Admin", "Principal", "Vice Principal",
+  "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Student", "Parent",
+  "Accountant", "Staff", "Support Staff",
+  "Librarian", "Hostel Warden", "Transport Manager",
+  "Receptionist", "IT Support", "Counselor", "Security",
+];
 //
 
 // ✅ Public Routes
