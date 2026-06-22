@@ -36,12 +36,7 @@ const UserDropdown = () => {
       label: (
         <div style={{ padding: "4px 0 8px" }}>
           <Text strong style={{ display: "block", fontSize: 14, color: "var(--text-primary)" }}>
-            {user?.name || "User"}
-          </Text>
-          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            {user?.email || ""}
-          </Text>
-          {user?.role?.name && (
+            {user?.name || "User"}<br></br>{user?.role?.name && (
             <span
               style={{
                 display: "inline-flex",
@@ -61,6 +56,12 @@ const UserDropdown = () => {
               {user.role.name}
             </span>
           )}
+          </Text>
+          
+          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {user?.email || ""}
+          </Text>
+          
         </div>
       ),
       disabled: true,

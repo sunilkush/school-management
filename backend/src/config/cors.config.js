@@ -12,12 +12,10 @@ const configuredOrigins = [
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const devOrigins =
-  process.env.NODE_ENV !== "production"
-    ? ["http://localhost:5173", "http://localhost:3000"]
-    : [];
+// Always allow localhost for local development
+const localOrigins = ["http://localhost:5173", "http://localhost:3000", "http://localhost:4173"];
 
-const allowedOrigins = new Set([...devOrigins, ...configuredOrigins]);
+const allowedOrigins = new Set([...localOrigins, ...configuredOrigins]);
 
 const vercelPreviewPattern = /^https:\/\/[a-z0-9-]+-[a-z0-9]+-[a-z0-9-]+\.vercel\.app$/i;
 

@@ -190,7 +190,7 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
 
           {/* Academic Year Switcher */}
           {!isMobile && screens.sm && user?.role?.name !== "Super Admin" && (
-            <div className="topbar-year-switcher">
+            <div className="topbar-year-switcher mr-8">
               <Suspense fallback={loader}>
                 <AcademicYearSwitcher />
               </Suspense>
