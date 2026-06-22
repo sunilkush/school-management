@@ -6,12 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser, resetState } from "../../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Checkbox } from "antd";
-import {
-  MailOutlined,
-  LockOutlined,
-  ArrowRightOutlined,
-  CheckCircleFilled,
-} from "@ant-design/icons";
+import { MailOutlined, LockOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import logo from "/logo.png";
 
 const roleRoutes = {
@@ -37,36 +32,19 @@ const roleRoutes = {
 };
 
 const loginSchema = z.object({
-  email: z
-    .string({ required_error: "Email is required" })
-    .min(1, "Email is required")
-    .email("Enter a valid email address"),
-  password: z
-    .string({ required_error: "Password is required" })
-    .min(1, "Password is required"),
+  email:    z.string({ required_error: "Email is required" }).min(1, "Email is required").email("Enter a valid email address"),
+  password: z.string({ required_error: "Password is required" }).min(1, "Password is required"),
   remember: z.boolean().optional(),
 });
-
-const features = [
-  "Multi-role access — Students, Teachers, Admin & more",
-  "Real-time analytics, fee tracking & smart reports",
-  "Enterprise-grade security with 99.9% uptime",
-];
-
-const stats = [
-  { value: "10K+", label: "Students" },
-  { value: "500+", label: "Educators" },
-  { value: "99.9%", label: "Uptime" },
-];
 
 const LoginForm = () => {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
   const { loading, error } = useSelector((s) => s.auth);
-  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 60);
+    const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
   }, []);
 
@@ -100,72 +78,106 @@ const LoginForm = () => {
 
   return (
     <div className="lp-root">
-      {/* ── Animated background ── */}
-      <div className="lp-bg">
-        <div className="lp-orb lp-orb-1" />
-        <div className="lp-orb lp-orb-2" />
-        <div className="lp-orb lp-orb-3" />
-        <div className="lp-grid" />
-      </div>
-
       <div className="lp-layout">
 
-        {/* ════════════════ LEFT BRANDING PANEL ════════════════ */}
+        {/* ══ LEFT — dark branding panel ══ */}
         <aside className="lp-left">
-          <div className="lp-left-inner">
+          <div className="lp-blob lp-blob-1" />
+          <div className="lp-blob lp-blob-2" />
+          <div className="lp-blob lp-blob-3" />
 
-            <div className="lp-brand-logo-wrap">
-              <img src={logo} alt="Logo" className="lp-brand-logo" />
+          <div className="lp-left-inner">
+            {/* Logo */}
+            <div className="lp-logo-wrap">
+              <img src={logo} alt="Logo" className="lp-logo-img" />
+              <span className="lp-logo-name">EduManage</span>
             </div>
 
+            {/* Headline */}
             <h1 className="lp-headline">
-              Smart School.<br />
-              <span className="lp-headline-grad">Smarter Management.</span>
+              One platform for<br />
+              <span className="lp-hl-accent">every school role</span>
             </h1>
             <p className="lp-tagline">
-              The all-in-one platform trusted by thousands of educators,
-              administrators, and students every day.
+              Manage students, staff, fees, attendance, and reports — all from a single, secure dashboard.
             </p>
 
-            <ul className="lp-features">
-              {features.map((f, i) => (
-                <li key={i} className="lp-feature" style={{ animationDelay: `${0.15 + i * 0.12}s` }}>
-                  <CheckCircleFilled className="lp-check-icon" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="lp-stats">
-              {stats.map((s, i) => (
-                <div key={s.label} className="lp-stat" style={{ animationDelay: `${0.5 + i * 0.08}s` }}>
-                  <span className="lp-stat-val">{s.value}</span>
-                  <span className="lp-stat-lbl">{s.label}</span>
+            {/* Dashboard mockup */}
+            <div className="lp-mock">
+              <div className="lp-mock-topbar">
+                <div className="lp-mock-search" />
+                <div style={{ display: "flex", gap: 6, marginLeft: "auto", alignItems: "center" }}>
+                  <div className="lp-mock-notif" />
+                  <div className="lp-mock-avatar" />
                 </div>
-              ))}
+              </div>
+
+              <div className="lp-mock-cards">
+                {[
+                  { label: "Students", val: "10,482", clr: "#A78BFA" },
+                  { label: "Teachers", val: "542", clr: "#38BDF8" },
+                  { label: "Fee Collected", val: "₹4.2M", clr: "#34D399" },
+                  { label: "Attendance", val: "94.8%", clr: "#FBBF24" },
+                ].map((c) => (
+                  <div key={c.label} className="lp-mock-card">
+                    <div className="lp-mock-card-dot" style={{ background: c.clr }} />
+                    <div className="lp-mock-card-val" style={{ color: c.clr }}>{c.val}</div>
+                    <div className="lp-mock-card-lbl">{c.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="lp-mock-chart">
+                <div className="lp-mock-chart-title">Monthly Attendance</div>
+                <div className="lp-mock-bars">
+                  {[55, 72, 63, 88, 79, 91, 84, 76, 93, 68, 85, 90].map((h, i) => (
+                    <div key={i} className="lp-mock-bar-wrap">
+                      <div
+                        className="lp-mock-bar"
+                        style={{
+                          height: `${h}%`,
+                          background: i === 11
+                            ? "linear-gradient(180deg,#7C3AED,#A855F7)"
+                            : "rgba(167,139,250,0.2)",
+                          animationDelay: `${i * 0.05}s`,
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lp-mock-list">
+                {["Fee payment received — Class 10A", "New student enrolled — Priya S.", "Exam schedule updated — Board Prep"].map((txt, i) => (
+                  <div key={i} className="lp-mock-row">
+                    <div className="lp-mock-row-dot" />
+                    <span className="lp-mock-row-txt">{txt}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Trust badge */}
-            <div className="lp-trust">
-              <span className="lp-trust-dot" />
-              <span>Secure · Reliable · Always-on</span>
+            {/* Stats */}
+            <div className="lp-stats">
+              {[{ v: "10K+", l: "Students" }, { v: "500+", l: "Educators" }, { v: "99.9%", l: "Uptime" }].map((s) => (
+                <div key={s.l} className="lp-stat">
+                  <span className="lp-stat-v">{s.v}</span>
+                  <span className="lp-stat-l">{s.l}</span>
+                </div>
+              ))}
             </div>
           </div>
         </aside>
 
-        {/* ════════════════ RIGHT FORM PANEL ════════════════ */}
+        {/* ══ RIGHT — login form ══ */}
         <main className="lp-right">
-
-          {/* Mobile-only logo */}
           <div className="lp-mob-logo">
-            <img src={logo} alt="Logo" className="lp-brand-logo lp-brand-logo-mob" />
+            <img src={logo} alt="Logo" className="lp-logo-img" style={{ height: 40 }} />
+            <span className="lp-logo-name" style={{ color: "#0F172A" }}>EduManage</span>
           </div>
 
-          {/* Card */}
-          <div className={`lp-card${visible ? " lp-card--in" : ""}`}>
-
-            {/* Rainbow top bar */}
-            <div className="lp-card-bar" />
+          <div className={`lp-card${mounted ? " lp-card--in" : ""}`}>
+            <div className="lp-stripe" />
 
             <div className="lp-card-body">
               <div className="lp-card-head">
@@ -174,8 +186,6 @@ const LoginForm = () => {
               </div>
 
               <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-
-                {/* Email */}
                 <Form.Item
                   label="Email address"
                   validateStatus={errors.email ? "error" : ""}
@@ -190,7 +200,7 @@ const LoginForm = () => {
                         {...field}
                         size="large"
                         prefix={<MailOutlined className="lp-pfx" />}
-                        placeholder="you@school.com"
+                        placeholder="Enter your email id"
                         autoComplete="email"
                         className="lp-inp"
                         onChange={(e) => { clearError(); field.onChange(e); }}
@@ -199,7 +209,6 @@ const LoginForm = () => {
                   />
                 </Form.Item>
 
-                {/* Password */}
                 <Form.Item
                   label="Password"
                   validateStatus={errors.password ? "error" : ""}
@@ -223,7 +232,6 @@ const LoginForm = () => {
                   />
                 </Form.Item>
 
-                {/* Remember + Forgot */}
                 <div className="lp-row">
                   <Controller
                     name="remember"
@@ -238,17 +246,11 @@ const LoginForm = () => {
                       </Checkbox>
                     )}
                   />
-                  <Link to="/forgot-password" className="lp-forgot">
-                    Forgot password?
-                  </Link>
+                  <Link to="/forgot-password" className="lp-forgot">Forgot password?</Link>
                 </div>
 
-                {/* Error */}
-                {showError && (
-                  <div className="lp-err">{error}</div>
-                )}
+                {showError && <div className="lp-err">{error}</div>}
 
-                {/* Submit */}
                 <Button
                   type="primary"
                   htmlType="submit"
@@ -262,6 +264,11 @@ const LoginForm = () => {
                   {loading ? "Signing in…" : "Sign In"}
                 </Button>
               </Form>
+
+              <div className="lp-trust">
+                <span className="lp-trust-dot" />
+                <span>Secured with 256-bit encryption</span>
+              </div>
             </div>
 
             <p className="lp-footer">
@@ -271,308 +278,227 @@ const LoginForm = () => {
         </main>
       </div>
 
-      {/* ══════════════════════════════════════════════════════ */}
       <style>{`
-        /* ── Root ── */
+        * { box-sizing: border-box; }
+
         .lp-root {
           min-height: 100vh;
-          background: #F8FAFC;
-          overflow: hidden;
-          position: relative;
+          background: #F1F5F9;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
+        .lp-layout { display: flex; min-height: 100vh; }
 
-        /* ── Animated BG ── */
-        .lp-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-        .lp-grid {
-          position: absolute; inset: 0;
-          background-image:
-            linear-gradient(rgba(219,234,254,.12) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(219,234,254,.12) 1px, transparent 1px);
-          background-size: 44px 44px;
-        }
-
-        .lp-orb {
-          position: absolute; border-radius: 50%; filter: blur(90px);
-          animation: orbDrift 14s ease-in-out infinite;
-        }
-        .lp-orb-1 {
-          width: 640px; height: 640px;
-          background: radial-gradient(circle, rgba(219,234,254,.38), transparent 68%);
-          top: -220px; left: -180px; animation-delay: 0s;
-        }
-        .lp-orb-2 {
-          width: 520px; height: 520px;
-          background: radial-gradient(circle, rgba(20,184,166,.28), transparent 68%);
-          bottom: -160px; left: 28%; animation-delay: 5s;
-        }
-        .lp-orb-3 {
-          width: 440px; height: 440px;
-          background: radial-gradient(circle, rgba(254,226,226,.22), transparent 68%);
-          top: 20%; right: -130px; animation-delay: 9s;
-        }
-        @keyframes orbDrift {
-          0%,100% { transform: translate(0,0); }
-          25%  { transform: translate(20px,-28px); }
-          50%  { transform: translate(-16px, 20px); }
-          75%  { transform: translate(24px, 8px); }
-        }
-
-        /* ── Layout ── */
-        .lp-layout {
-          display: flex; min-height: 100vh;
-          width: 100%; position: relative; z-index: 1;
-        }
-
-        /* ── Left panel ── */
+        /* ══ LEFT PANEL ══ */
         .lp-left {
-          flex: 0 0 52%; display: none;
-          padding: 64px 56px; flex-direction: column;
-          justify-content: center; position: relative;
-          background: linear-gradient(145deg, #EEF6FF 0%, #F0EBF8 50%, #FEF0F3 100%);
-        }
-        .lp-left::after {
-          content: ''; position: absolute; right: 0; top: 8%; height: 84%;
-          width: 1px;
-          background: linear-gradient(to bottom, transparent, rgba(219,234,254,.35) 25%, rgba(219,234,254,.35) 75%, transparent);
+          display: none;
+          flex: 0 0 54%;
+          position: relative;
+          background: #0D0F1A;
+          overflow: hidden;
+          padding: 44px 52px;
+          flex-direction: column;
+          justify-content: center;
         }
         @media (min-width: 1024px) { .lp-left { display: flex; } }
 
-        .lp-left-inner { max-width: 460px; }
-
-        .lp-brand-logo-wrap {
-          margin-bottom: 44px;
-          animation: slideRight .6s .05s ease both;
+        .lp-blob {
+          position: absolute; border-radius: 50%; filter: blur(110px);
+          pointer-events: none; animation: blobFloat 18s ease-in-out infinite;
         }
-        .lp-brand-logo { height: 54px; }
+        .lp-blob-1 { width: 480px; height: 480px; background: rgba(124,58,237,0.25); top: -160px; left: -130px; animation-delay: 0s; }
+        .lp-blob-2 { width: 360px; height: 360px; background: rgba(6,182,212,0.15); bottom: -100px; right: -80px; animation-delay: 7s; }
+        .lp-blob-3 { width: 260px; height: 260px; background: rgba(16,185,129,0.12); top: 45%; left: 58%; animation-delay: 13s; }
+        @keyframes blobFloat {
+          0%,100% { transform: translate(0,0); }
+          33% { transform: translate(18px,-22px); }
+          66% { transform: translate(-14px,16px); }
+        }
+
+        .lp-left-inner { position: relative; z-index: 1; max-width: 500px; }
+
+        .lp-logo-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+        .lp-logo-img { height: 38px; border-radius: 8px; }
+        .lp-logo-name { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
 
         .lp-headline {
-          font-size: 42px; font-weight: 900; color: #0F172A;
-          line-height: 1.18; margin: 0 0 14px;
-          animation: slideRight .6s .12s ease both;
+          font-size: 36px; font-weight: 900; color: #F8FAFC;
+          line-height: 1.18; margin: 0 0 12px;
         }
-        .lp-headline-grad {
-          background: linear-gradient(135deg, #2563EB 0%, #14B8A6 55%, #EF4444 100%);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-          background-clip: text;
+        .lp-hl-accent {
+          background: linear-gradient(135deg,#A78BFA 0%,#38BDF8 55%,#34D399 100%);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .lp-tagline { color: #94A3B8; font-size: 13.5px; line-height: 1.7; margin: 0 0 24px; }
+
+        /* ── Mockup ── */
+        .lp-mock {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 14px; padding: 12px;
+          margin-bottom: 24px;
+          animation: mockIn .7s .15s ease both;
+        }
+        @keyframes mockIn {
+          from { opacity: 0; transform: translateY(18px) scale(.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .lp-tagline {
-          color: #6B7E9A; font-size: 14.5px; line-height: 1.72;
-          margin: 0 0 38px;
-          animation: slideRight .6s .18s ease both;
+        .lp-mock-topbar {
+          display: flex; align-items: center; gap: 8px;
+          background: rgba(255,255,255,0.05);
+          border-radius: 7px; padding: 6px 10px; margin-bottom: 8px;
         }
+        .lp-mock-search { height: 6px; width: 110px; border-radius: 3px; background: rgba(255,255,255,0.09); }
+        .lp-mock-notif { width: 18px; height: 18px; border-radius: 4px; background: rgba(255,255,255,0.07); }
+        .lp-mock-avatar { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg,#7C3AED,#06B6D4); }
 
-        /* Features */
-        .lp-features { list-style: none; padding: 0; margin: 0 0 40px; display: flex; flex-direction: column; gap: 14px; }
-        .lp-feature {
-          display: flex; align-items: center; gap: 12px;
-          color: #4A5E78; font-size: 13.5px; line-height: 1.5;
-          animation: slideRight .6s ease both; opacity: 0;
+        .lp-mock-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin-bottom: 8px; }
+        .lp-mock-card {
+          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 7px; padding: 7px;
         }
-        .lp-check-icon { color: #2563EB; font-size: 17px; flex-shrink: 0; }
+        .lp-mock-card-dot { width: 5px; height: 5px; border-radius: 50%; margin-bottom: 4px; opacity: .85; }
+        .lp-mock-card-val { font-size: 10px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+        .lp-mock-card-lbl { font-size: 7.5px; color: #475569; text-transform: uppercase; letter-spacing: .5px; }
 
-        /* Stats */
+        .lp-mock-chart { background: rgba(255,255,255,0.03); border-radius: 7px; padding: 7px 9px 5px; margin-bottom: 7px; }
+        .lp-mock-chart-title { font-size: 8px; color: #64748B; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px; }
+        .lp-mock-bars { display: flex; align-items: flex-end; gap: 3px; height: 38px; }
+        .lp-mock-bar-wrap { flex: 1; display: flex; align-items: flex-end; height: 100%; }
+        .lp-mock-bar { width: 100%; border-radius: 2px 2px 0 0; animation: barGrow .5s ease both; }
+        @keyframes barGrow { from { height: 0 !important; } }
+
+        .lp-mock-list { display: flex; flex-direction: column; gap: 5px; }
+        .lp-mock-row { display: flex; align-items: center; gap: 6px; }
+        .lp-mock-row-dot { width: 5px; height: 5px; border-radius: 50%; background: #7C3AED; flex-shrink: 0; }
+        .lp-mock-row-txt { font-size: 9px; color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
         .lp-stats {
-          display: flex; gap: 0; margin-bottom: 28px;
-          background: rgba(255,255,255,.7);
-          border: 1px solid rgba(219,234,254,.35);
-          border-radius: 14px; overflow: hidden;
-          animation: slideRight .6s ease both; opacity: 0;
-          box-shadow: 0 2px 12px rgba(37,99,235,.08);
+          display: flex;
+          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 11px; overflow: hidden;
         }
-        .lp-stat {
-          flex: 1; padding: 18px 22px;
-          display: flex; flex-direction: column; gap: 4px;
-          position: relative;
-          animation: fadeUp .5s ease both; opacity: 0;
-        }
+        .lp-stat { flex: 1; padding: 13px 14px; display: flex; flex-direction: column; gap: 3px; position: relative; }
         .lp-stat + .lp-stat::before {
-          content: ''; position: absolute; left: 0; top: 18%; height: 64%;
-          width: 1px; background: rgba(219,234,254,.35);
+          content: ''; position: absolute; left: 0; top: 20%; height: 60%;
+          width: 1px; background: rgba(255,255,255,0.07);
         }
-        .lp-stat-val { color: #0F172A; font-size: 22px; font-weight: 800; line-height: 1; }
-        .lp-stat-lbl {
-          color: #7B8EA8; font-size: 11px;
-          text-transform: uppercase; letter-spacing: .9px; font-weight: 500;
-        }
+        .lp-stat-v { font-size: 17px; font-weight: 800; color: #F8FAFC; line-height: 1; }
+        .lp-stat-l { font-size: 9.5px; color: #64748B; text-transform: uppercase; letter-spacing: .7px; }
 
-        /* Trust badge */
-        .lp-trust {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: rgba(219,234,254,.15);
-          border: 1px solid rgba(219,234,254,.4);
-          border-radius: 99px; padding: 7px 15px;
-          color: #4A6E8A; font-size: 12px; font-weight: 600;
-          animation: slideRight .6s .6s ease both; opacity: 0;
-        }
-        .lp-trust-dot {
-          width: 8px; height: 8px; border-radius: 50%;
-          background: #22C55E;
-          box-shadow: 0 0 0 3px rgba(91,168,154,.25);
-          flex-shrink: 0;
-          animation: pulse 2.5s ease infinite;
-        }
-        @keyframes pulse {
-          0%,100% { box-shadow: 0 0 0 3px rgba(91,168,154,.25); }
-          50% { box-shadow: 0 0 0 5px rgba(91,168,154,.1); }
-        }
-
-        /* ── Right panel ── */
+        /* ══ RIGHT PANEL ══ */
         .lp-right {
           flex: 1; display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 40px 20px;
-          background: #F8FAFC;
+          padding: 40px 20px; background: #F1F5F9;
         }
 
-        .lp-mob-logo {
-          display: flex; justify-content: center; margin-bottom: 24px;
-        }
-        .lp-brand-logo-mob { height: 50px; }
+        .lp-mob-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
         @media (min-width: 1024px) { .lp-mob-logo { display: none; } }
 
         /* ── Card ── */
         .lp-card {
-          width: 100%; max-width: 430px;
-          background: #ffffff;
-          border: 1px solid rgba(219,234,254,.3);
-          border-radius: 22px; overflow: hidden;
-          box-shadow:
-            0 4px 20px rgba(37,99,235,.1),
-            0 1px 4px rgba(37,99,235,.06);
-          opacity: 0; transform: translateY(18px);
-          transition: opacity .5s ease, transform .5s ease;
+          width: 100%; max-width: 420px;
+          background: #fff; border-radius: 20px;
+          border: 1px solid #E2E8F0;
+          box-shadow: 0 4px 6px rgba(0,0,0,.04), 0 20px 40px rgba(0,0,0,.07);
+          overflow: hidden;
+          opacity: 0; transform: translateY(14px);
+          transition: opacity .4s ease, transform .4s ease;
         }
         .lp-card--in { opacity: 1; transform: translateY(0); }
 
-        /* Animated pastel top bar */
-        .lp-card-bar {
-          height: 3px;
-          background: linear-gradient(90deg, #DBEAFE, rgba(20,184,166,0.15), #FEE2E2, #DCFCE7, #DBEAFE);
-          background-size: 300% 100%;
-          animation: barShimmer 5s linear infinite;
-        }
-        @keyframes barShimmer {
-          0%   { background-position: 0% 50%; }
-          100% { background-position: 300% 50%; }
+        .lp-stripe {
+          height: 4px;
+          background: linear-gradient(90deg,#7C3AED 0%,#A855F7 35%,#38BDF8 70%,#34D399 100%);
         }
 
-        .lp-card-body { padding: 32px 36px 8px; }
+        .lp-card-body { padding: 30px 34px 18px; }
 
-        .lp-card-head { margin-bottom: 28px; }
-        .lp-card-title {
-          font-size: 24px; font-weight: 800; color: #0F172A;
-          margin: 0 0 5px; line-height: 1.2;
-        }
-        .lp-card-sub { color: #7B8EA8; font-size: 13px; margin: 0; }
+        .lp-card-head { margin-bottom: 24px; }
+        .lp-card-title { font-size: 22px; font-weight: 800; color: #0F172A; margin: 0 0 4px; }
+        .lp-card-sub { color: #94A3B8; font-size: 13px; margin: 0; }
 
-        /* Form item labels */
-        .lp-fi.ant-form-item { margin-bottom: 18px; }
+        .lp-fi.ant-form-item { margin-bottom: 16px; }
         .lp-fi .ant-form-item-label > label {
-          color: #4A5E78 !important;
-          font-size: 12.5px !important; font-weight: 600 !important;
-          height: auto !important;
+          color: #475569 !important; font-size: 12.5px !important;
+          font-weight: 600 !important; height: auto !important;
         }
         .lp-fi .ant-form-item-explain-error {
-          color: #EF4444 !important; font-size: 12px !important; margin-top: 4px !important;
+          color: #EF4444 !important; font-size: 12px !important; margin-top: 3px !important;
         }
 
-        /* Inputs */
         .lp-inp.ant-input-affix-wrapper,
         .lp-inp.ant-input {
-          background: #F7F9FC !important;
-          border: 1.5px solid rgba(219,234,254,.45) !important;
-          border-radius: 11px !important; color: #0F172A !important;
-          transition: border-color .22s, box-shadow .22s, background .22s !important;
+          background: #F8FAFC !important; border: 1.5px solid #E2E8F0 !important;
+          border-radius: 10px !important; color: #0F172A !important; transition: all .2s !important;
         }
         .lp-inp.ant-input-affix-wrapper:hover,
-        .lp-inp.ant-input:hover {
-          border-color: rgba(37,99,235,.55) !important;
-          background: #ffffff !important;
-        }
+        .lp-inp.ant-input:hover { border-color: #C4B5FD !important; background: #fff !important; }
         .lp-inp.ant-input-affix-wrapper-focused,
         .lp-inp.ant-input-affix-wrapper:focus-within,
         .lp-inp.ant-input:focus {
-          border-color: #2563EB !important;
-          background: #ffffff !important;
-          box-shadow: 0 0 0 3px rgba(219,234,254,.3) !important;
+          border-color: #7C3AED !important; background: #fff !important;
+          box-shadow: 0 0 0 3px rgba(124,58,237,.12) !important;
         }
-        .lp-inp .ant-input {
-          background: transparent !important; color: #0F172A !important;
-        }
-        .lp-inp .ant-input::placeholder { color: #94A3B8 !important; }
-        .lp-pfx { color: #DBEAFE !important; margin-right: 6px; }
+        .lp-inp .ant-input { background: transparent !important; color: #0F172A !important; }
+        .lp-inp .ant-input::placeholder { color: #CBD5E1 !important; }
+        .lp-pfx { color: #C4B5FD !important; margin-right: 6px; }
         .lp-inp .ant-input-password-icon.anticon { color: #94A3B8 !important; }
-        .lp-inp .ant-input-password-icon.anticon:hover { color: #2563EB !important; }
+        .lp-inp .ant-input-password-icon.anticon:hover { color: #7C3AED !important; }
 
-        /* Remember / Forgot row */
-        .lp-row {
-          display: flex; justify-content: space-between;
-          align-items: center; margin-bottom: 22px;
-        }
-        .lp-chk.ant-checkbox-wrapper {
-          color: #6B7E9A !important; font-size: 13px !important;
-        }
-        .lp-chk .ant-checkbox-inner {
-          background: #F7F9FC !important;
-          border-color: rgba(219,234,254,.6) !important;
-          border-radius: 5px !important;
-        }
-        .lp-chk .ant-checkbox-checked .ant-checkbox-inner {
-          background: #2563EB !important; border-color: #2563EB !important;
-        }
-        .lp-forgot {
-          font-size: 13px; color: #2563EB !important; font-weight: 600;
-          text-decoration: none; transition: color .2s;
-        }
-        .lp-forgot:hover { color: #14B8A6 !important; text-decoration: underline; }
+        .lp-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .lp-chk.ant-checkbox-wrapper { color: #64748B !important; font-size: 13px !important; }
+        .lp-chk .ant-checkbox-inner { border-color: #CBD5E1 !important; border-radius: 5px !important; }
+        .lp-chk .ant-checkbox-checked .ant-checkbox-inner { background: #7C3AED !important; border-color: #7C3AED !important; }
+        .lp-forgot { font-size: 13px; color: #7C3AED !important; font-weight: 600; text-decoration: none; transition: color .2s; }
+        .lp-forgot:hover { color: #6D28D9 !important; text-decoration: underline; }
 
-        /* Error banner */
         .lp-err {
-          background: rgba(254,226,226,.18);
-          border: 1px solid rgba(217,107,122,.25);
-          border-radius: 10px; padding: 10px 14px;
-          color: #DC2626; font-size: 13px; margin-bottom: 18px;
-          animation: fadeUp .3s ease;
+          background: #FEF2F2; border: 1px solid #FECACA;
+          border-radius: 8px; padding: 10px 14px;
+          color: #DC2626; font-size: 13px; margin-bottom: 14px;
+          animation: errIn .25s ease;
+        }
+        @keyframes errIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Submit button */
         .lp-btn.ant-btn-primary {
-          height: 48px !important; border-radius: 11px !important;
-          font-weight: 700 !important; font-size: 15px !important;
-          border: none !important; letter-spacing: .3px !important;
-          background: linear-gradient(135deg, #2563EB 0%, #14B8A6 100%) !important;
-          box-shadow: 0 6px 22px rgba(37,99,235,.3) !important;
-          transition: transform .22s ease, box-shadow .22s ease !important;
+          height: 46px !important; border-radius: 10px !important;
+          font-weight: 700 !important; font-size: 14.5px !important;
+          border: none !important; letter-spacing: .2px !important;
+          background: linear-gradient(135deg,#7C3AED 0%,#A855F7 100%) !important;
+          box-shadow: 0 4px 18px rgba(124,58,237,.35) !important;
+          transition: transform .2s ease, box-shadow .2s ease !important;
         }
         .lp-btn.ant-btn-primary:not(:disabled):hover {
           transform: translateY(-2px) !important;
-          box-shadow: 0 10px 30px rgba(37,99,235,.4) !important;
+          box-shadow: 0 8px 26px rgba(124,58,237,.45) !important;
+          background: linear-gradient(135deg,#6D28D9 0%,#9333EA 100%) !important;
         }
-        .lp-btn.ant-btn-primary:not(:disabled):active {
-          transform: translateY(0) !important;
+        .lp-btn.ant-btn-primary:not(:disabled):active { transform: translateY(0) !important; }
+
+        .lp-trust {
+          display: flex; align-items: center; justify-content: center;
+          gap: 7px; margin-top: 18px; color: #94A3B8; font-size: 12px;
         }
-        .lp-btn.ant-btn-loading {
-          opacity: .85 !important;
+        .lp-trust-dot {
+          width: 7px; height: 7px; border-radius: 50%; background: #10B981;
+          box-shadow: 0 0 0 3px rgba(16,185,129,.2);
+          animation: trustPulse 2.8s ease infinite;
+        }
+        @keyframes trustPulse {
+          0%,100% { box-shadow: 0 0 0 3px rgba(16,185,129,.2); }
+          50% { box-shadow: 0 0 0 5px rgba(16,185,129,.08); }
         }
 
-        /* Card footer */
         .lp-footer {
           text-align: center; margin: 0;
-          padding: 18px 36px 22px;
-          color: #94A3B8; font-size: 11.5px;
-        }
-
-        /* ── Keyframes ── */
-        @keyframes slideRight {
-          from { opacity: 0; transform: translateX(-18px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
+          padding: 12px 34px 18px;
+          color: #CBD5E1; font-size: 11px;
+          border-top: 1px solid #F1F5F9;
         }
       `}</style>
     </div>
