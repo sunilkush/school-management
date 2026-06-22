@@ -10,6 +10,7 @@ import crypto from 'crypto'
 import { sendEmail } from '../utils/mailServices.js'
 import { Role } from '../models/Roles.model.js'
 import { Student } from '../models/student.model.js'
+import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
 import { Employee } from '../models/Employee.model.js'
 import { Teacher } from '../models/teacherAssignment.model.js'
 // ✅ Generate Access & Refresh Token
@@ -527,8 +528,31 @@ const getAllUsers = asyncHandler(async (req, res) => {
   }
 
   // ✅ Academic Year filter
+  // For Parents: resolve through StudentEnrollment → Student to get valid parent IDs
+  const roleNames = roleName ? (Array.isArray(roleName) ? roleName : [roleName]).map(r => r.toLowerCase()) : [];
+  const isParentQuery = roleNames.includes("parent");
+
   if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
-    matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
+    if (isParentQuery) {
+      const ayObjId = new mongoose.Types.ObjectId(academicYearId);
+      const enrollFilter = { academicYearId: ayObjId };
+      if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) {
+        enrollFilter.schoolId = new mongoose.Types.ObjectId(schoolId);
+      }
+      const enrollments = await StudentEnrollment.find(enrollFilter).select("studentId").lean();
+      const studentIds = enrollments.map(e => e.studentId);
+      const studentProfiles = await Student.find({ _id: { $in: studentIds } }).select("fatherId motherId guardianId").lean();
+      const parentIds = [];
+      studentProfiles.forEach(s => {
+        if (s.fatherId) parentIds.push(s.fatherId);
+        if (s.motherId) parentIds.push(s.motherId);
+        if (s.guardianId) parentIds.push(s.guardianId);
+      });
+      const uniqueParentIds = [...new Map(parentIds.map(id => [id.toString(), id])).values()];
+      matchStage._id = { $in: uniqueParentIds };
+    } else {
+      matchStage.academicYearId = new mongoose.Types.ObjectId(academicYearId);
+    }
   }
 
   // ✅ Class filter

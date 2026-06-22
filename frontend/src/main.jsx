@@ -368,6 +368,7 @@ const SubjectCoordinatorDashboard = lazy(() => import("./pages/Subject_Coordinat
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect.jsx";
 import Register from "./components/forms/RegisterForm.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 const router = createBrowserRouter([
   {
@@ -1488,6 +1489,7 @@ mountNode[ROOT_INSTANCE_KEY] = root;
 
 const renderApp = () => {
   root.render(
+    <ErrorBoundary>
     <Provider store={store}>
       <PersistGate loading={<Loader />} persistor={persistor}>
         <ThemeProvider>
@@ -1511,6 +1513,7 @@ const renderApp = () => {
         </ThemeProvider>
       </PersistGate>
     </Provider>
+    </ErrorBoundary>
   );
 };
 

@@ -2,20 +2,28 @@ import { ApiError } from "../utils/ApiError.js";
 
 const configuredOrigins = [
   process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  process.env.ORIGIN_URI,
   process.env.CLIENT_ORIGIN,
   process.env.CORS_ORIGIN,
   process.env.CORS_ORIGINS,
 ]
-  .flatMap((value) => (value ? value.split(",") : []))
+  .flatMap((value) => (value && value !== "*" ? value.split(",") : []))
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const fallbackOrigins = ["http://localhost:5173", "http://localhost:3000"];
-const allowedOrigins = new Set([...fallbackOrigins, ...configuredOrigins]);
-const vercelPreviewPattern = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+const devOrigins =
+  process.env.NODE_ENV !== "production"
+    ? ["http://localhost:5173", "http://localhost:3000"]
+    : [];
+
+const allowedOrigins = new Set([...devOrigins, ...configuredOrigins]);
+
+const vercelPreviewPattern = /^https:\/\/[a-z0-9-]+-[a-z0-9]+-[a-z0-9-]+\.vercel\.app$/i;
 
 export const corsOptions = {
   origin(origin, callback) {
+    // Allow server-to-server requests (no origin header)
     if (!origin) {
       return callback(null, true);
     }

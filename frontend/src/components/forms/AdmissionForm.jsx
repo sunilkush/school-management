@@ -4,16 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchLastRegisteredStudent, createStudent } from "../../features/studentSlice";
 import { getClassData } from "../../features/schoolClassSlice";
 import {
-  UserOutlined,
-  ProfileOutlined,
-  ManOutlined,
-  WomanOutlined,
-  CheckOutlined,
-  LeftOutlined,
-  RightOutlined,
-  InfoCircleOutlined,
+  UserOutlined, ProfileOutlined, ManOutlined, WomanOutlined,
+  CheckOutlined, LeftOutlined, RightOutlined, InfoCircleOutlined,
 } from "@ant-design/icons";
-import { pageWrapper } from "../../styles/pageStyles.js";
 
 const { TextArea } = Input;
 
@@ -26,61 +19,60 @@ const TABS = [
 
 const TAB_KEYS = TABS.map(t => t.key);
 
-/* ── Credential block inside success modal ── */
+// Fields to validate before leaving each step
+const STEP_RULES = {
+  student: ["studentName", "email", "mobileNumber", "schoolClassId", "sectionId", "admissionDate"],
+  other:   ["dateOfBirth", "gender"],
+  father:  ["fatherName", "fatherMobile"],
+  mother:  [],
+};
+
 const CredentialBlock = ({ label, creds }) => {
   if (!creds) return null;
   return (
     <div style={{
-      marginBottom: 12,
-      padding: "12px 14px",
-      background: "var(--primary-light)",
-      borderRadius: 10,
-      borderLeft: "3px solid var(--primary)",
+      marginBottom: 12, padding: "12px 14px",
+      background: "rgba(124,58,237,0.06)",
+      borderRadius: 10, borderLeft: "3px solid #7c3aed",
     }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
         {label}
       </div>
-      <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 2 }}>
-        Login ID: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{creds.loginId || "—"}</span>
+      <div style={{ fontSize: 13, color: "#374151", marginBottom: 2 }}>
+        Login ID: <span style={{ fontWeight: 600 }}>{creds.loginId || "—"}</span>
       </div>
-      <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-        Password: <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{creds.password || "Already exists (unchanged)"}</span>
+      <div style={{ fontSize: 13, color: "#374151" }}>
+        Password: <span style={{ fontWeight: 600 }}>{creds.password || "Already exists (unchanged)"}</span>
       </div>
     </div>
   );
 };
 
-/* ── Section heading ── */
 const SectionHeading = ({ children }) => (
   <div style={{
-    fontSize: 11, fontWeight: 700,
-    color: "var(--text-muted)",
-    textTransform: "uppercase",
-    letterSpacing: "0.1em",
+    fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+    textTransform: "uppercase", letterSpacing: "0.1em",
     marginBottom: 18, marginTop: 6,
-    paddingBottom: 8,
-    borderBottom: "1px solid var(--border-muted)",
+    paddingBottom: 8, borderBottom: "1px solid var(--border-muted)",
   }}>
     {children}
   </div>
 );
 
-/* ── Info hint banner ── */
 const InfoHint = ({ children }) => (
   <div style={{
     display: "flex", alignItems: "flex-start", gap: 10,
     padding: "12px 16px",
-    background: "var(--primary-light)",
+    background: "rgba(124,58,237,0.05)",
     border: "1px solid rgba(124,58,237,0.15)",
-    borderRadius: 10,
-    marginTop: 10,
+    borderRadius: 10, marginTop: 12,
   }}>
-    <InfoCircleOutlined style={{ color: "var(--primary)", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
-    <span style={{ fontSize: 13, color: "var(--primary)", lineHeight: 1.5 }}>{children}</span>
+    <InfoCircleOutlined style={{ color: "#7c3aed", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
+    <span style={{ fontSize: 13, color: "#5b21b6", lineHeight: 1.55 }}>{children}</span>
   </div>
 );
 
-const AdmissionForm = () => {
+const AdmissionForm = ({ onClose }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
@@ -111,8 +103,21 @@ const AdmissionForm = () => {
 
   const handleClassChange = (schoolClassId) => {
     const cls = schoolClasses.find(c => c._id === schoolClassId);
-    setSections(cls?.sections || []);
+    const secs = (cls?.sections || []).map(s => s.sectionId ? { ...s, _id: s.sectionId._id || s.sectionId, name: s.sectionId.name || s.name } : s);
+    setSections(secs);
     form.setFieldsValue({ sectionId: undefined });
+  };
+
+  const goNext = async () => {
+    const fieldsToValidate = STEP_RULES[activeTab] || [];
+    if (fieldsToValidate.length) {
+      try {
+        await form.validateFields(fieldsToValidate);
+      } catch {
+        return; // validation failed — stay on current step
+      }
+    }
+    setActiveTab(TAB_KEYS[currentIndex + 1]);
   };
 
   const onFinish = async (values) => {
@@ -146,12 +151,8 @@ const AdmissionForm = () => {
         const credentials = res?.payload?.credentials;
         if (credentials) {
           Modal.success({
-            title: (
-              <span style={{ fontSize: 17, fontWeight: 700, color: "var(--primary)" }}>
-                Login Credentials Created
-              </span>
-            ),
-            width: 480,
+            title: <span style={{ fontSize: 17, fontWeight: 700, color: "#7c3aed" }}>Login Credentials Created</span>,
+            width: 460,
             icon: null,
             content: (
               <div style={{ marginTop: 14 }}>
@@ -160,7 +161,10 @@ const AdmissionForm = () => {
                 <CredentialBlock label="Mother"  creds={credentials.mother} />
               </div>
             ),
+            onOk: onClose,
           });
+        } else {
+          onClose?.();
         }
         form.resetFields();
         setActiveTab("student");
@@ -176,15 +180,12 @@ const AdmissionForm = () => {
   };
 
   return (
-    <div style={{ ...pageWrapper }}>
+    <>
       <style>{`
-        /* ── Form controls ── */
         .adm-form .ant-form-item-label > label {
-          font-size: 11px !important;
-          font-weight: 700 !important;
-          color: var(--text-muted) !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.07em !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          color: var(--text-secondary, #4b5563) !important;
           height: auto !important;
         }
         .adm-form .ant-input,
@@ -192,20 +193,23 @@ const AdmissionForm = () => {
         .adm-form .ant-input-number-input,
         .adm-form .ant-picker {
           border-radius: 8px !important;
-          border: 1px solid var(--border-color) !important;
+          border: 1.5px solid #e5e7eb !important;
           font-size: 13px !important;
-          background: var(--surface) !important;
-          color: var(--text-primary) !important;
+          background: #fff !important;
+          color: #111827 !important;
           transition: border-color 0.18s, box-shadow 0.18s !important;
+          height: 38px !important;
         }
         .adm-form .ant-input:focus,
         .adm-form .ant-input-number:focus-within,
-        .adm-form .ant-picker:focus-within,
+        .adm-form .ant-picker:focus-within {
+          border-color: #7c3aed !important;
+          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
+        }
         .adm-form .ant-input:hover,
         .adm-form .ant-input-number:hover,
         .adm-form .ant-picker:hover {
-          border-color: var(--primary) !important;
-          box-shadow: 0 0 0 2px var(--primary-light) !important;
+          border-color: #a78bfa !important;
         }
         .adm-form textarea.ant-input {
           height: auto !important;
@@ -214,15 +218,19 @@ const AdmissionForm = () => {
         }
         .adm-form .ant-select .ant-select-selector {
           border-radius: 8px !important;
-          border: 1px solid var(--border-color) !important;
+          border: 1.5px solid #e5e7eb !important;
           font-size: 13px !important;
-          background: var(--surface) !important;
-          color: var(--text-primary) !important;
+          background: #fff !important;
+          color: #111827 !important;
+          height: 38px !important;
+          align-items: center !important;
         }
-        .adm-form .ant-select:hover .ant-select-selector,
+        .adm-form .ant-select:hover .ant-select-selector {
+          border-color: #a78bfa !important;
+        }
         .adm-form .ant-select-focused .ant-select-selector {
-          border-color: var(--primary) !important;
-          box-shadow: 0 0 0 2px var(--primary-light) !important;
+          border-color: #7c3aed !important;
+          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
         }
         .adm-form .ant-picker { width: 100% !important; }
         .adm-form .ant-input-number { width: 100% !important; }
@@ -231,113 +239,81 @@ const AdmissionForm = () => {
           margin-top: 3px !important;
         }
         .adm-form .ant-input[disabled] {
-          background: var(--primary-light) !important;
-          color: var(--primary) !important;
+          background: #f5f3ff !important;
+          color: #7c3aed !important;
           font-weight: 700 !important;
-          border-color: var(--border-muted) !important;
+          border-color: #ddd6fe !important;
           cursor: default !important;
         }
-        /* ── Step tabs ── */
+        .adm-form .ant-form-item {
+          margin-bottom: 16px !important;
+        }
+
+        /* Step tabs */
         .adm-tab {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 5px;
-          padding: 13px 18px;
+          gap: 4px;
+          padding: 14px 20px 12px;
           border: none;
           background: transparent;
           cursor: pointer;
           position: relative;
-          transition: opacity 0.2s;
-          min-width: 72px;
+          min-width: 80px;
+          transition: background 0.2s;
         }
-        .adm-tab .step-circle {
-          width: 34px; height: 34px;
+        .adm-tab:hover { background: rgba(124,58,237,0.03); }
+        .adm-tab .step-num {
+          width: 32px; height: 32px;
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-size: 14px; font-weight: 700;
+          font-size: 13px; font-weight: 700;
           transition: all 0.22s;
         }
-        .adm-tab .step-label {
+        .adm-tab .step-lbl {
           font-size: 10px; font-weight: 700;
           letter-spacing: 0.07em;
           text-transform: uppercase;
-          transition: color 0.2s;
         }
-        .adm-tab.active .step-circle {
-          background: var(--primary);
+        .adm-tab.active .step-num {
+          background: #7c3aed;
           color: #fff;
-          box-shadow: 0 4px 12px rgba(124,58,237,0.35);
+          box-shadow: 0 3px 10px rgba(124,58,237,0.4);
         }
-        .adm-tab.active .step-label { color: var(--primary); }
-        .adm-tab.done .step-circle {
-          background: var(--success-light);
-          color: var(--success);
-          border: 2px solid var(--success);
-        }
-        .adm-tab.done .step-label { color: var(--success); }
-        .adm-tab.idle .step-circle {
-          background: var(--surface-soft);
-          color: var(--text-disabled);
-          border: 2px solid var(--border-color);
-        }
-        .adm-tab.idle .step-label { color: var(--text-disabled); }
-        .adm-tab::after {
+        .adm-tab.active .step-lbl { color: #7c3aed; }
+        .adm-tab.active::after {
           content: '';
           position: absolute;
-          bottom: 0; left: 50%;
-          transform: translateX(-50%);
-          height: 2px; width: 0;
-          background: var(--primary);
+          bottom: 0; left: 0; right: 0;
+          height: 2px;
+          background: #7c3aed;
           border-radius: 2px 2px 0 0;
-          transition: width 0.25s;
         }
-        .adm-tab.active::after { width: 52%; }
+        .adm-tab.done .step-num {
+          background: #d1fae5;
+          color: #059669;
+          border: 2px solid #10b981;
+        }
+        .adm-tab.done .step-lbl { color: #059669; }
+        .adm-tab.idle .step-num {
+          background: #f3f4f6;
+          color: #9ca3af;
+          border: 1.5px solid #e5e7eb;
+        }
+        .adm-tab.idle .step-lbl { color: #9ca3af; }
         .adm-connector {
-          flex: 1; height: 2px;
-          background: var(--border-color);
-          position: relative; top: -10px;
+          flex: 1; height: 1.5px;
+          background: #e5e7eb;
+          margin-top: -10px;
           transition: background 0.3s;
         }
-        .adm-connector.done { background: var(--success); }
-        /* ── Nav buttons ── */
-        .adm-btn {
-          display: inline-flex; align-items: center; gap: 7px;
-          padding: 0 22px; height: 40px;
-          border-radius: 10px;
-          font-size: 13px; font-weight: 600;
-          cursor: pointer; border: none;
-          transition: all 0.2s;
-        }
-        .adm-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-        .adm-btn.secondary {
-          background: var(--surface-soft);
-          color: var(--text-secondary);
-          border: 1px solid var(--border-color);
-        }
-        .adm-btn.secondary:not(:disabled):hover { background: var(--surface-soft-hover); }
-        .adm-btn.primary {
-          background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
-          color: #fff;
-          box-shadow: 0 4px 12px rgba(124,58,237,0.3);
-        }
-        .adm-btn.primary:not(:disabled):hover {
-          box-shadow: 0 6px 18px rgba(124,58,237,0.4);
-          transform: translateX(2px);
-        }
-        .adm-btn.submit {
-          background: linear-gradient(135deg, #10b981 0%, #0d9488 100%);
-          color: #fff;
-          box-shadow: 0 4px 12px rgba(16,185,129,0.3);
-          padding: 0 28px;
-        }
-        .adm-btn.submit:not(:disabled):hover {
-          box-shadow: 0 6px 18px rgba(16,185,129,0.42);
-        }
-        /* ── Field grid ── */
+        .adm-connector.done { background: #10b981; }
+
+        /* Grid layouts */
         .adm-row {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 0 20px;
         }
         .adm-row-2 {
@@ -345,331 +321,350 @@ const AdmissionForm = () => {
           grid-template-columns: 1fr 1fr;
           gap: 0 20px;
         }
-        @media (max-width: 580px) {
-          .adm-row, .adm-row-2 { grid-template-columns: 1fr; }
+        @media (max-width: 640px) {
+          .adm-row { grid-template-columns: 1fr 1fr; }
+          .adm-row-2 { grid-template-columns: 1fr; }
           .adm-tab { min-width: 56px; padding: 10px 8px; }
-          .adm-tab .step-label { display: none; }
+          .adm-tab .step-lbl { display: none; }
+        }
+        @media (max-width: 420px) {
+          .adm-row { grid-template-columns: 1fr; }
         }
       `}</style>
 
+      {/* ── Gradient Header ── */}
       <div style={{
-        background: "var(--surface)",
-        borderRadius: 20,
-        border: "1px solid var(--border-muted)",
-        boxShadow: "var(--shadow-strong)",
+        background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)",
+        padding: "20px 28px 18px",
+        position: "relative",
         overflow: "hidden",
       }}>
+        {/* Decorative circles */}
+        <div style={{ position: "absolute", top: -30, right: -20, width: 130, height: 130, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
+        <div style={{ position: "absolute", bottom: -50, right: 80, width: 170, height: 170, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
 
-        {/* ── Card Header ── */}
-        <div style={{
-          background: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)",
-          padding: "18px 24px",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          <div style={{ position: "absolute", top: -28, right: -28, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-          <div style={{ position: "absolute", bottom: -40, right: 90, width: 160, height: 160, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(8px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 22, border: "1px solid rgba(255,255,255,0.2)",
+            }}>🎓</div>
             <div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
-                School Management
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 3 }}>
+                New Admission
               </div>
-              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
-                New Student Admission
-              </h1>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                Student Admission Form
+              </h2>
             </div>
-            {lastStudent?.registrationNumber && (
-              <div style={{
-                background: "rgba(255,255,255,0.14)",
-                borderRadius: 12, padding: "8px 16px",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                textAlign: "right",
-              }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.65)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Last Reg. No.
-                </div>
-                <div style={{ fontSize: 16, color: "#fff", fontWeight: 700 }}>
-                  {lastStudent.registrationNumber}
-                </div>
-              </div>
-            )}
           </div>
+          {lastStudent?.registrationNumber && (
+            <div style={{
+              background: "rgba(255,255,255,0.12)",
+              borderRadius: 10, padding: "8px 14px",
+              border: "1px solid rgba(255,255,255,0.2)",
+              textAlign: "right",
+            }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>
+                Last Reg. No.
+              </div>
+              <div style={{ fontSize: 15, color: "#fff", fontWeight: 700 }}>
+                {lastStudent.registrationNumber}
+              </div>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* ── Step Tabs ── */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "0 16px",
-          borderBottom: "1px solid var(--border-muted)",
-          background: "var(--surface)",
-        }}>
-          {TABS.map((tab, i) => (
-            <React.Fragment key={tab.key}>
-              <button
-                type="button"
-                className={`adm-tab ${activeTab === tab.key ? "active" : currentIndex > i ? "done" : "idle"}`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                <div className="step-circle">
-                  {currentIndex > i ? <CheckOutlined style={{ fontSize: 13 }} /> : tab.step}
-                </div>
-                <span className="step-label">{tab.label}</span>
-              </button>
-              {i < TABS.length - 1 && (
-                <div className={`adm-connector ${currentIndex > i ? "done" : ""}`} />
-              )}
-            </React.Fragment>
+      {/* ── Step Tabs ── */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "0 8px",
+        borderBottom: "1px solid #f3f4f6",
+        background: "#fafafa",
+      }}>
+        {TABS.map((tab, i) => (
+          <React.Fragment key={tab.key}>
+            <button
+              type="button"
+              className={`adm-tab ${activeTab === tab.key ? "active" : currentIndex > i ? "done" : "idle"}`}
+              onClick={() => {
+                // Only allow going back or to already-completed steps
+                if (i < currentIndex) setActiveTab(tab.key);
+              }}
+            >
+              <div className="step-num">
+                {currentIndex > i ? <CheckOutlined style={{ fontSize: 12 }} /> : tab.step}
+              </div>
+              <span className="step-lbl">{tab.label}</span>
+            </button>
+            {i < TABS.length - 1 && (
+              <div className={`adm-connector ${currentIndex > i ? "done" : ""}`} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* ── Form Body ── */}
+      <div style={{ padding: "24px 28px 8px", maxHeight: "55vh", overflowY: "auto" }}>
+        <Form
+          className="adm-form"
+          layout="vertical"
+          form={form}
+          onFinish={() => onFinish(form.getFieldsValue(true))}
+        >
+          {/* STEP 1 — Student */}
+          {activeTab === "student" && (
+            <>
+              <SectionHeading>Basic Information</SectionHeading>
+              <div className="adm-row">
+                <Form.Item name="studentName" label="Student Name" rules={[{ required: true, message: "Required" }]}>
+                  <Input placeholder="Full name" />
+                </Form.Item>
+                <Form.Item name="email" label="Email" rules={[{ required: true, type: "email", message: "Valid email required" }]}>
+                  <Input placeholder="student@email.com" />
+                </Form.Item>
+                <Form.Item name="mobileNumber" label="Mobile" rules={[{ required: true, message: "Required" }]}>
+                  <Input placeholder="10-digit number" maxLength={10} />
+                </Form.Item>
+              </div>
+
+              <SectionHeading>Class & Enrollment</SectionHeading>
+              <div className="adm-row">
+                <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Select a class" }]}>
+                  <Select
+                    placeholder="Select class"
+                    onChange={handleClassChange}
+                    showSearch
+                    filterOption={(inp, opt) => opt.label?.toLowerCase().includes(inp.toLowerCase())}
+                    options={schoolClasses.map(c => ({ label: c.name, value: c._id }))}
+                  />
+                </Form.Item>
+                <Form.Item name="sectionId" label="Section" rules={[{ required: true, message: "Select a section" }]}>
+                  <Select
+                    placeholder={sections.length ? "Select section" : "Select class first"}
+                    disabled={!sections.length}
+                    options={sections.map(s => ({ label: s.name || s.sectionId?.name || "—", value: s._id || s.sectionId?._id || s.sectionId }))}
+                  />
+                </Form.Item>
+                <Form.Item name="admissionDate" label="Admission Date" rules={[{ required: true, message: "Required" }]}>
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
+              </div>
+
+              <div className="adm-row">
+                <Form.Item name="registrationNumber" label="Registration No.">
+                  <Input disabled />
+                </Form.Item>
+                <Form.Item name="smsMobile" label="SMS Mobile">
+                  <Input placeholder="For SMS alerts" maxLength={10} />
+                </Form.Item>
+                <Form.Item name="feeDiscount" label="Fee Discount (%)">
+                  <InputNumber placeholder="0" min={0} max={100} style={{ width: "100%" }} />
+                </Form.Item>
+              </div>
+            </>
+          )}
+
+          {/* STEP 2 — Details */}
+          {activeTab === "other" && (
+            <>
+              <SectionHeading>Personal Details</SectionHeading>
+              <div className="adm-row">
+                <Form.Item name="dateOfBirth" label="Date of Birth" rules={[{ required: true, message: "Required" }]}>
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
+                <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Required" }]}>
+                  <Select placeholder="Select" options={[{ value: "Male", label: "Male" }, { value: "Female", label: "Female" }, { value: "Other", label: "Other" }]} />
+                </Form.Item>
+                <Form.Item name="bloodGroup" label="Blood Group">
+                  <Select placeholder="Select" options={["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(b => ({ value: b, label: b }))} />
+                </Form.Item>
+              </div>
+
+              <div className="adm-row">
+                <Form.Item name="cast" label="Caste">
+                  <Select placeholder="Select" options={["General","OBC","SC","ST","Other"].map(c => ({ value: c, label: c }))} />
+                </Form.Item>
+                <Form.Item name="religion" label="Religion">
+                  <Select placeholder="Select" options={["Hindu","Muslim","Christian","Sikh","Other"].map(r => ({ value: r, label: r }))} />
+                </Form.Item>
+                <Form.Item name="birthFormId" label="Birth Form ID">
+                  <Input placeholder="Official birth form ID" />
+                </Form.Item>
+              </div>
+
+              <div className="adm-row">
+                <Form.Item name="siblings" label="No. of Siblings">
+                  <InputNumber placeholder="0" min={0} style={{ width: "100%" }} />
+                </Form.Item>
+                <Form.Item name="orphan" label="Orphan">
+                  <Select placeholder="Select" options={[{ value: "Yes", label: "Yes" }, { value: "No", label: "No" }]} />
+                </Form.Item>
+                <Form.Item name="identificationMark" label="Identification Mark">
+                  <Input placeholder="Any visible mark" />
+                </Form.Item>
+              </div>
+
+              <SectionHeading>Additional Info</SectionHeading>
+              <div className="adm-row-2">
+                <Form.Item name="address" label="Address">
+                  <TextArea rows={3} placeholder="Residential address" />
+                </Form.Item>
+                <Form.Item name="disease" label="Medical Conditions">
+                  <TextArea rows={3} placeholder="Any known medical conditions" />
+                </Form.Item>
+              </div>
+            </>
+          )}
+
+          {/* STEP 3 — Father */}
+          {activeTab === "father" && (
+            <>
+              <SectionHeading>Father's Information</SectionHeading>
+              <div className="adm-row">
+                <Form.Item name="fatherName" label="Father Name" rules={[{ required: true, message: "Required" }]}>
+                  <Input placeholder="Full name" />
+                </Form.Item>
+                <Form.Item name="fatherMobile" label="Mobile Number" rules={[{ required: true, message: "Required" }]}>
+                  <Input placeholder="10-digit number" maxLength={10} />
+                </Form.Item>
+                <Form.Item name="fatherEmail" label="Email Address">
+                  <Input placeholder="father@email.com" />
+                </Form.Item>
+              </div>
+              <div className="adm-row">
+                <Form.Item name="fatherOccupation" label="Occupation">
+                  <Input placeholder="e.g. Engineer" />
+                </Form.Item>
+                <Form.Item name="fatherEducation" label="Education">
+                  <Input placeholder="e.g. B.Tech" />
+                </Form.Item>
+                <Form.Item name="fatherIncome" label="Annual Income (₹)">
+                  <InputNumber placeholder="0" min={0} style={{ width: "100%" }} />
+                </Form.Item>
+              </div>
+              <InfoHint>Father's login credentials will be auto-generated after successful admission.</InfoHint>
+            </>
+          )}
+
+          {/* STEP 4 — Mother */}
+          {activeTab === "mother" && (
+            <>
+              <SectionHeading>Mother's Information</SectionHeading>
+              <div className="adm-row">
+                <Form.Item name="motherName" label="Mother Name">
+                  <Input placeholder="Full name" />
+                </Form.Item>
+                <Form.Item name="motherMobile" label="Mobile Number">
+                  <Input placeholder="10-digit number" maxLength={10} />
+                </Form.Item>
+                <Form.Item name="motherEmail" label="Email Address">
+                  <Input placeholder="mother@email.com" />
+                </Form.Item>
+              </div>
+              <div className="adm-row">
+                <Form.Item name="motherOccupation" label="Occupation">
+                  <Input placeholder="e.g. Doctor" />
+                </Form.Item>
+                <Form.Item name="motherEducation" label="Education">
+                  <Input placeholder="e.g. M.A." />
+                </Form.Item>
+                <Form.Item name="motherIncome" label="Annual Income (₹)">
+                  <InputNumber placeholder="0" min={0} style={{ width: "100%" }} />
+                </Form.Item>
+              </div>
+              <InfoHint>Mother's login credentials will be auto-generated after successful admission.</InfoHint>
+            </>
+          )}
+        </Form>
+      </div>
+
+      {/* ── Footer Navigation ── */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "16px 28px 20px",
+        borderTop: "1px solid #f3f4f6",
+        background: "#fafafa",
+      }}>
+        {/* Back button */}
+        <button
+          type="button"
+          disabled={currentIndex === 0}
+          onClick={() => setActiveTab(TAB_KEYS[currentIndex - 1])}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "0 20px", height: 38, borderRadius: 8,
+            border: "1.5px solid #e5e7eb",
+            background: "#fff", color: "#374151",
+            fontSize: 13, fontWeight: 600, cursor: currentIndex === 0 ? "not-allowed" : "pointer",
+            opacity: currentIndex === 0 ? 0.4 : 1,
+          }}
+        >
+          <LeftOutlined style={{ fontSize: 11 }} /> Back
+        </button>
+
+        {/* Step dots */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {TAB_KEYS.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width:        i === currentIndex ? 24 : 7,
+                height:       7,
+                borderRadius: 4,
+                background:   i === currentIndex ? "#7c3aed"
+                            : i < currentIndex  ? "#10b981"
+                            : "#e5e7eb",
+                transition: "all 0.25s",
+              }}
+            />
           ))}
         </div>
 
-        {/* ── Form Body ── */}
-        <div style={{ padding: "24px" }}>
-          <Form
-            className="adm-form"
-            layout="vertical"
-            form={form}
-            onFinish={() => onFinish(form.getFieldsValue(true))}
+        {/* Next / Submit */}
+        {currentIndex < TAB_KEYS.length - 1 ? (
+          <button
+            type="button"
+            onClick={goNext}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "0 22px", height: 38, borderRadius: 8,
+              background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)",
+              color: "#fff", border: "none",
+              fontSize: 13, fontWeight: 600, cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(124,58,237,0.3)",
+            }}
           >
-
-            {/* ── STUDENT ── */}
-            {activeTab === "student" && (
-              <div>
-                <SectionHeading>Basic Information</SectionHeading>
-                <div className="adm-row">
-                  <Form.Item name="studentName" label="Student Name" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
-                    <Input placeholder="Full name" />
-                  </Form.Item>
-                  <Form.Item name="email" label="Student Email" rules={[{ required: true, type: "email", message: "Valid email required" }]} style={{ marginBottom: 18 }}>
-                    <Input placeholder="student@email.com" />
-                  </Form.Item>
-                  <Form.Item name="mobileNumber" label="Student Mobile" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
-                    <Input placeholder="10-digit number" maxLength={10} />
-                  </Form.Item>
-                </div>
-
-                <SectionHeading>Class & Enrollment</SectionHeading>
-                <div className="adm-row">
-                  <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Select a class" }]} style={{ marginBottom: 18 }}>
-                    <Select
-                      placeholder="Select class"
-                      onChange={handleClassChange}
-                      options={schoolClasses.map(c => ({ label: c.name, value: c._id }))}
-                    />
-                  </Form.Item>
-                  <Form.Item name="sectionId" label="Section" rules={[{ required: true, message: "Select a section" }]} style={{ marginBottom: 18 }}>
-                    <Select
-                      placeholder="Select section"
-                      disabled={!sections.length}
-                      options={sections.map(s => ({ label: s.name, value: s._id }))}
-                    />
-                  </Form.Item>
-                  <Form.Item name="admissionDate" label="Admission Date" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
-                    <DatePicker placeholder="Select date" />
-                  </Form.Item>
-                </div>
-
-                <div className="adm-row">
-                  <Form.Item name="registrationNumber" label="Registration No." style={{ marginBottom: 18 }}>
-                    <Input disabled />
-                  </Form.Item>
-                  <Form.Item name="smsMobile" label="SMS Mobile" style={{ marginBottom: 18 }}>
-                    <Input placeholder="For SMS alerts" maxLength={10} />
-                  </Form.Item>
-                  <Form.Item name="feeDiscount" label="Fee Discount (%)" style={{ marginBottom: 18 }}>
-                    <InputNumber placeholder="0" min={0} max={100} />
-                  </Form.Item>
-                </div>
-              </div>
-            )}
-
-            {/* ── DETAILS ── */}
-            {activeTab === "other" && (
-              <div>
-                <SectionHeading>Personal Details</SectionHeading>
-                <div className="adm-row">
-                  <Form.Item name="dateOfBirth" label="Date of Birth" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
-                    <DatePicker />
-                  </Form.Item>
-                  <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
-                    <Select placeholder="Select" options={[{ value: "Male" }, { value: "Female" }]} />
-                  </Form.Item>
-                  <Form.Item name="bloodGroup" label="Blood Group" style={{ marginBottom: 18 }}>
-                    <Select placeholder="Select" options={["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(b => ({ value: b }))} />
-                  </Form.Item>
-                </div>
-
-                <div className="adm-row">
-                  <Form.Item name="cast" label="Caste" style={{ marginBottom: 18 }}>
-                    <Select placeholder="Select" options={["General","OBC","SC","ST","Other"].map(c => ({ value: c }))} />
-                  </Form.Item>
-                  <Form.Item name="religion" label="Religion" style={{ marginBottom: 18 }}>
-                    <Select placeholder="Select" options={["Hindu","Muslim","Christian","Sikh","Other"].map(r => ({ value: r }))} />
-                  </Form.Item>
-                  <Form.Item name="birthFormId" label="Birth Form ID" style={{ marginBottom: 18 }}>
-                    <Input placeholder="Official birth form ID" />
-                  </Form.Item>
-                </div>
-
-                <div className="adm-row">
-                  <Form.Item name="siblings" label="No. of Siblings" style={{ marginBottom: 18 }}>
-                    <InputNumber placeholder="0" min={0} />
-                  </Form.Item>
-                  <Form.Item name="orphan" label="Orphan" style={{ marginBottom: 18 }}>
-                    <Select placeholder="Select" options={[{ value: "Yes" }, { value: "No" }]} />
-                  </Form.Item>
-                  <Form.Item name="osc" label="OSC" style={{ marginBottom: 18 }}>
-                    <Select placeholder="Select" options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
-                  </Form.Item>
-                </div>
-
-                <Form.Item name="identificationMark" label="Identification Mark" style={{ marginBottom: 18 }}>
-                  <Input placeholder="Any visible identification mark" />
-                </Form.Item>
-
-                <SectionHeading>Additional Information</SectionHeading>
-                <div className="adm-row-2">
-                  <Form.Item name="address" label="Address" style={{ marginBottom: 18 }}>
-                    <TextArea rows={3} placeholder="Residential address" />
-                  </Form.Item>
-                  <Form.Item name="disease" label="Medical Conditions" style={{ marginBottom: 18 }}>
-                    <TextArea rows={3} placeholder="Any known medical conditions" />
-                  </Form.Item>
-                  <Form.Item name="family" label="Family Info" style={{ marginBottom: 18 }}>
-                    <TextArea rows={3} placeholder="Additional family information" />
-                  </Form.Item>
-                  <Form.Item name="notes" label="Notes" style={{ marginBottom: 18 }}>
-                    <TextArea rows={3} placeholder="Any other notes" />
-                  </Form.Item>
-                </div>
-              </div>
-            )}
-
-            {/* ── FATHER ── */}
-            {activeTab === "father" && (
-              <div>
-                <SectionHeading>Father's Information</SectionHeading>
-                <div className="adm-row">
-                  <Form.Item name="fatherName" label="Father Name" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
-                    <Input placeholder="Full name" />
-                  </Form.Item>
-                  <Form.Item name="fatherMobile" label="Mobile Number" rules={[{ required: true, message: "Required" }]} style={{ marginBottom: 18 }}>
-                    <Input placeholder="10-digit number" />
-                  </Form.Item>
-                  <Form.Item name="fatherEmail" label="Email Address" style={{ marginBottom: 18 }}>
-                    <Input placeholder="father@email.com" />
-                  </Form.Item>
-                </div>
-                <div className="adm-row">
-                  <Form.Item name="fatherOccupation" label="Occupation" style={{ marginBottom: 18 }}>
-                    <Input placeholder="e.g. Engineer, Teacher" />
-                  </Form.Item>
-                  <Form.Item name="fatherEducation" label="Education" style={{ marginBottom: 18 }}>
-                    <Input placeholder="e.g. B.Tech, MBA" />
-                  </Form.Item>
-                  <Form.Item name="fatherIncome" label="Annual Income (₹)" style={{ marginBottom: 18 }}>
-                    <InputNumber placeholder="0" min={0} />
-                  </Form.Item>
-                </div>
-                <InfoHint>
-                  Father's login credentials will be auto-generated after successful admission.
-                </InfoHint>
-              </div>
-            )}
-
-            {/* ── MOTHER ── */}
-            {activeTab === "mother" && (
-              <div>
-                <SectionHeading>Mother's Information</SectionHeading>
-                <div className="adm-row">
-                  <Form.Item name="motherName" label="Mother Name" style={{ marginBottom: 18 }}>
-                    <Input placeholder="Full name" />
-                  </Form.Item>
-                  <Form.Item name="motherMobile" label="Mobile Number" style={{ marginBottom: 18 }}>
-                    <Input placeholder="10-digit number" />
-                  </Form.Item>
-                  <Form.Item name="motherEmail" label="Email Address" style={{ marginBottom: 18 }}>
-                    <Input placeholder="mother@email.com" />
-                  </Form.Item>
-                </div>
-                <div className="adm-row">
-                  <Form.Item name="motherOccupation" label="Occupation" style={{ marginBottom: 18 }}>
-                    <Input placeholder="e.g. Doctor, Homemaker" />
-                  </Form.Item>
-                  <Form.Item name="motherEducation" label="Education" style={{ marginBottom: 18 }}>
-                    <Input placeholder="e.g. M.A., B.Ed" />
-                  </Form.Item>
-                  <Form.Item name="motherIncome" label="Annual Income (₹)" style={{ marginBottom: 18 }}>
-                    <InputNumber placeholder="0" min={0} />
-                  </Form.Item>
-                </div>
-                <InfoHint>
-                  Mother's login credentials will be auto-generated after successful admission.
-                </InfoHint>
-              </div>
-            )}
-
-            {/* ── Navigation ── */}
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: 32,
-              paddingTop: 20,
-              borderTop: "1px solid var(--border-muted)",
-            }}>
-              <button
-                type="button"
-                className="adm-btn secondary"
-                disabled={currentIndex === 0}
-                onClick={() => setActiveTab(TAB_KEYS[currentIndex - 1])}
-              >
-                <LeftOutlined style={{ fontSize: 11 }} /> Previous
-              </button>
-
-              {/* Step dots */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {TAB_KEYS.map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width:      i === currentIndex ? 22 : 7,
-                      height:     7,
-                      borderRadius: 4,
-                      background: i === currentIndex ? "var(--primary)"
-                                : i < currentIndex  ? "var(--success)"
-                                : "var(--border-color)",
-                      transition: "all 0.3s",
-                    }}
-                  />
-                ))}
-              </div>
-
-              {currentIndex < TAB_KEYS.length - 1 ? (
-                <button
-                  type="button"
-                  className="adm-btn primary"
-                  onClick={() => setActiveTab(TAB_KEYS[currentIndex + 1])}
-                >
-                  Next <RightOutlined style={{ fontSize: 11 }} />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="adm-btn submit"
-                  disabled={submitting}
-                >
-                  <CheckOutlined style={{ fontSize: 13 }} />
-                  {submitting ? "Submitting…" : "Submit Admission"}
-                </button>
-              )}
-            </div>
-          </Form>
-        </div>
+            Next <RightOutlined style={{ fontSize: 11 }} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => form.submit()}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "0 28px", height: 38, borderRadius: 8,
+              background: submitting ? "#d1fae5" : "linear-gradient(135deg, #10b981 0%, #0d9488 100%)",
+              color: "#fff", border: "none",
+              fontSize: 13, fontWeight: 600,
+              cursor: submitting ? "not-allowed" : "pointer",
+              boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
+            }}
+          >
+            <CheckOutlined style={{ fontSize: 12 }} />
+            {submitting ? "Submitting…" : "Submit Admission"}
+          </button>
+        )}
       </div>
-    </div>
+    </>
   );
 };
 

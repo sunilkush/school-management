@@ -240,21 +240,19 @@ const StudentList = () => {
           open={isModalOpen}
           footer={null}
           onCancel={() => setIsModalOpen(false)}
-          width={860}
+          width={900}
           centered
           destroyOnClose
-          title={
-            <Space>
-              <div style={{
-                width: 34, height: 34, borderRadius: 9,
-                background: "var(--primary-light)", color: "var(--primary)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
-              }}>🎓</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>New Student Admission</div>
-                <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the details below</div>
-              </div>
-            </Space>
+          title={null}
+          styles={{ body: { padding: 0 }, content: { borderRadius: 16, overflow: "hidden", padding: 0 } }}
+          closeIcon={
+            <span style={{
+              position: "absolute", top: 14, right: 16, zIndex: 10,
+              width: 28, height: 28, borderRadius: "50%",
+              background: "rgba(255,255,255,0.2)", color: "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13, cursor: "pointer", backdropFilter: "blur(4px)",
+            }}>✕</span>
           }
         >
           <AdmissionForm onClose={() => setIsModalOpen(false)} />

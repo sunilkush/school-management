@@ -1,7 +1,6 @@
 import React from "react";
 
 const SummaryCards = ({ data = [] }) => {
-  console.log("SummaryCards data:", data);
   if (!data || data.length === 0) {
     return <div className="text-center text-gray-500">No summary data available</div>;
   }

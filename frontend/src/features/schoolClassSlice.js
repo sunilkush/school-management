@@ -11,7 +11,6 @@ export const createSchoolClass = createAsyncThunk(
   "schoolClass/create",
   async (data, { rejectWithValue }) => {
     try {
-      console.log(data)
       const res = await apiClient.post(`/school-class`, data, {      });
       return res.data.data;
     } catch (err) {

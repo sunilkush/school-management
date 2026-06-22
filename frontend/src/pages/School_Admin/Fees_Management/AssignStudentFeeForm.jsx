@@ -58,7 +58,6 @@ const safeId = (v) => {
 const getStudentUserId = (student) => {
   return safeId(student?.studentId);
 };
-console.log(getStudentUserId)
 const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 const getApiMessage = (err, fallback = "Something went wrong") => {

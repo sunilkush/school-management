@@ -30,7 +30,6 @@ const ContactSupport = () => {
 
     // 👉 Replace with API
     setTimeout(() => {
-      console.log(values);
       message.success("Support request submitted!");
       setLoading(false);
     }, 1000);

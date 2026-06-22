@@ -6,7 +6,6 @@
 
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -30,9 +29,9 @@ import { SchoolEvent } from "./models/SchoolEvent.model.js";
 import { Notification } from "./models/notification.model.js";
 import ActivityLog from "./models/ActivityLog.model.js";
 import MaintenanceTask from "./models/MaintenanceTask.model.js";
+import { Attendance } from "./models/attendance.model.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const hash = (pwd) => bcrypt.hash(pwd, 10);
 const ok   = (msg) => console.log(`  ✓ ${msg}`);
 const skip = (msg) => console.log(`  - ${msg}`);
 
@@ -75,14 +74,15 @@ async function seed() {
   ok(`Admin: ${admin.name}`);
   const adminId = admin._id;
 
-  // ── 4. Academic Year 2025-2026 ──────────────────────────────────────────────
-  let ay = await AcademicYear.findOne({ schoolId, name: "2025-2026" });
+  // ── 4. Active Academic Year ──────────────────────────────────────────────────
+  let ay = await AcademicYear.findOne({ schoolId, isActive: true });
   if (!ay) {
+    // Fallback: create 2025-2026 if nothing active
     ay = new AcademicYear({ schoolId, startDate: new Date("2025-04-01"), endDate: new Date("2026-03-31"), isActive: true, status: "active" });
     await ay.save();
-    ok("Academic year 2025-2026 created");
+    ok(`Academic year created: ${ay.name}`);
   } else {
-    skip("Academic year 2025-2026 already exists");
+    skip(`Using active academic year: ${ay.name}`);
   }
   const ayId = ay._id;
 
@@ -117,8 +117,8 @@ async function seed() {
   }
   ok(`Sections ready for ${targetClasses.length} classes`);
 
-  // ── 7. Demo password ─────────────────────────────────────────────────────────
-  const demoPwd = await hash("Demo@123");
+  // ── 7. Demo password — plain text; model pre-save hook hashes it ────────────
+  const demoPwd = "Demo@123";
 
   // ── 8. Teachers ──────────────────────────────────────────────────────────────
   const teacherDefs = [
@@ -211,6 +211,70 @@ async function seed() {
     }
     ok(`Students enrolled: ${studentCount} new`);
   }
+
+  // ── 10b. Student Attendance (past 30 weekdays) ───────────────────────────────
+  const stuAttendanceDefs = [];
+  for (const d of studentDefs) {
+    const cls = targetClasses[d.clsIdx];
+    if (!cls) continue;
+    const secs = sectionMap[String(cls._id)] || [];
+    const sec  = secs.find((s) => s.name === d.sec) || secs[0];
+    if (!sec) continue;
+    const stuUser = await User.findOne({ email: d.email });
+    if (!stuUser) continue;
+    stuAttendanceDefs.push({ userId: stuUser._id, schoolClassId: cls._id, sectionId: sec._id });
+  }
+
+  const ATT_WEIGHTS = [
+    { status: "present", weight: 80 },
+    { status: "absent",  weight: 8  },
+    { status: "late",    weight: 6  },
+    { status: "leave",   weight: 4  },
+    { status: "halfday", weight: 2  },
+  ];
+  function pickStatus() {
+    const total = ATT_WEIGHTS.reduce((s, w) => s + w.weight, 0);
+    let r = Math.random() * total;
+    for (const { status, weight } of ATT_WEIGHTS) {
+      r -= weight;
+      if (r <= 0) return status;
+    }
+    return "present";
+  }
+
+  // Collect the last 30 weekdays
+  const weekdays = [];
+  let cursor = new Date();
+  cursor.setDate(cursor.getDate() - 1); // start from yesterday
+  while (weekdays.length < 30) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) weekdays.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  let attCount = 0;
+  for (const stu of stuAttendanceDefs) {
+    for (const date of weekdays) {
+      const d = new Date(date);
+      d.setUTCHours(0, 0, 0, 0);
+      const exists = await Attendance.findOne({ schoolId, userId: stu.userId, date: d });
+      if (!exists) {
+        await Attendance.create({
+          schoolId,
+          userId: stu.userId,
+          role: "student",
+          schoolClassId: stu.schoolClassId,
+          sectionId: stu.sectionId,
+          date: d,
+          status: pickStatus(),
+          markedBy: adminId,
+          remarks: "",
+        });
+        attCount++;
+      }
+    }
+  }
+  ok(`Student attendance records created: ${attCount}`);
 
   // ── 11. Exams ────────────────────────────────────────────────────────────────
   const examDefs = [

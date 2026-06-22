@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Input } from "antd";
+import { Table, Input, Tag } from "antd";
 import { TeamOutlined, CheckCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { fetchAllUser } from "../../../features/authSlice";
+import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, pageCard, toolbarRow, tableHeadCss,
@@ -22,14 +23,26 @@ const ParentsList = () => {
   const { users = [], user: loggedInUser, loading } = useSelector(
     (state) => state.auth || {}
   );
+  const { activeYear, selectedAcademicYear } = useSelector(
+    (state) => state.academicYear || {}
+  );
 
   const schoolId = loggedInUser?.school?._id;
+  const currentYear = selectedAcademicYear || activeYear;
 
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchAllUser({ roleName: ["Parent"], isActive: true }));
+      if (!activeYear) dispatch(fetchActiveAcademicYear(schoolId));
     }
   }, [dispatch, schoolId]);
+
+  useEffect(() => {
+    if (schoolId) {
+      const params = { roleName: ["Parent"], isActive: true };
+      if (currentYear?._id) params.academicYearId = currentYear._id;
+      dispatch(fetchAllUser(params));
+    }
+  }, [dispatch, schoolId, currentYear?._id]);
 
   const parentsList = useMemo(() => {
     return users.filter((u) => {
@@ -111,6 +124,7 @@ const ParentsList = () => {
         title="Parents Directory"
         subtitle={loggedInUser?.school?.name ?? "School"}
         icon={<TeamOutlined />}
+        extra={currentYear ? <Tag color="blue">{currentYear.name}</Tag> : null}
       />
 
       <div style={pageWrapper}>
