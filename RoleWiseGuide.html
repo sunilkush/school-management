@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>School Management System – Role-Wise User Guide</title>
+  <style>
+    :root {
+      --primary: #1e3a5f;
+      --secondary: #2563eb;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f97316;
+      --light: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f1f5f9;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* ── COVER PAGE ── */
+    .cover {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #1d4ed8 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      padding: 60px 40px;
+      page-break-after: always;
+    }
+    .cover .logo-circle {
+      width: 100px; height: 100px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 46px;
+      margin: 0 auto 28px;
+      border: 3px solid rgba(255,255,255,0.3);
+    }
+    .cover h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .cover .subtitle { font-size: 18px; opacity: 0.85; margin-bottom: 32px; }
+    .cover .divider {
+      width: 80px; height: 4px;
+      background: var(--accent); border-radius: 2px;
+      margin: 0 auto 32px;
+    }
+    .cover .meta { font-size: 13px; opacity: 0.7; line-height: 2; }
+    .cover .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 18px; border-radius: 20px;
+      font-size: 12px; margin-top: 28px; letter-spacing: 1px;
+    }
+    .cover .roles-preview {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center; margin-top: 36px; max-width: 700px;
+    }
+    .cover .rp-tag {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 5px 14px; border-radius: 14px; font-size: 11px;
+    }
+
+    /* ── TOC ── */
+    .toc-page {
+      background: white;
+      padding: 50px 60px;
+      page-break-after: always;
+      min-height: 100vh;
+    }
+    .toc-page h2 { font-size: 26px; color: var(--primary); margin-bottom: 6px; }
+    .toc-page .toc-sub { color: var(--muted); margin-bottom: 28px; font-size: 13px; }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .toc-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--light);
+      cursor: pointer;
+    }
+    .toc-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .toc-item-text .toc-title { font-weight: 700; font-size: 13px; color: var(--primary); }
+    .toc-item-text .toc-modules { font-size: 11px; color: var(--muted); }
+
+    /* ── OVERVIEW TABLE ── */
+    .overview-page {
+      background: white;
+      padding: 50px 60px;
+      page-break-after: always;
+    }
+    .page-header { margin-bottom: 28px; }
+    .page-header h2 { font-size: 24px; color: var(--primary); font-weight: 800; }
+    .page-header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    .overview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .overview-table th {
+      background: var(--primary); color: white;
+      padding: 10px 12px; text-align: left; font-weight: 600;
+    }
+    .overview-table td {
+      padding: 9px 12px; border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .overview-table tr:nth-child(even) td { background: #f8fafc; }
+    .overview-table .role-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-weight: 700; color: var(--primary);
+    }
+    .tick { color: var(--success); font-weight: 700; }
+    .cross { color: #cbd5e1; }
+
+    /* ── ROLE PAGES ── */
+    .role-page {
+      background: white;
+      padding: 50px 60px;
+      page-break-before: always;
+    }
+
+    .role-header {
+      display: flex; align-items: center; gap: 20px;
+      padding: 24px 28px;
+      border-radius: 14px;
+      margin-bottom: 28px;
+      color: white;
+    }
+    .role-header .rh-icon {
+      width: 64px; height: 64px; background: rgba(255,255,255,0.2);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 32px; flex-shrink: 0;
+    }
+    .role-header h2 { font-size: 26px; font-weight: 800; }
+    .role-header .rh-desc { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+    .role-header .rh-level {
+      margin-left: auto;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 16px; border-radius: 20px; font-size: 12px; white-space: nowrap;
+    }
+
+    /* permission pills */
+    .perm-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .perm-pill {
+      padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    }
+    .perm-full  { background: #dcfce7; color: #166534; }
+    .perm-view  { background: #dbeafe; color: #1e40af; }
+    .perm-limit { background: #fef3c7; color: #92400e; }
+    .perm-none  { background: #fee2e2; color: #991b1b; }
+
+    /* module grid */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .module-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .module-card-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      font-weight: 700; font-size: 13px; color: white;
+    }
+    .module-card-head .mc-icon { font-size: 18px; }
+    .module-card-body { padding: 12px 16px; background: var(--light); }
+    .feature-list { list-style: none; }
+    .feature-list li {
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      display: flex; align-items: flex-start; gap: 6px;
+      color: #334155;
+    }
+    .feature-list li:last-child { border-bottom: none; }
+    .feature-list li::before { content: "→"; color: var(--secondary); font-weight: 700; flex-shrink: 0; }
+
+    /* access level note */
+    .access-note {
+      background: #eff6ff; border-left: 4px solid var(--secondary);
+      padding: 12px 16px; border-radius: 0 8px 8px 0;
+      margin: 20px 0; font-size: 12px; color: #1e40af;
+    }
+    .access-note strong { display: block; margin-bottom: 4px; font-size: 13px; }
+
+    /* workflow section */
+    .workflow-section { margin-top: 24px; }
+    .workflow-section h4 { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+    .workflow-steps {
+      display: flex; gap: 0; flex-wrap: wrap;
+    }
+    .ws-step {
+      display: flex; align-items: center; gap: 0;
+    }
+    .ws-box {
+      background: var(--light); border: 1px solid var(--border);
+      padding: 8px 14px; border-radius: 8px; font-size: 11px;
+      text-align: center; min-width: 90px;
+    }
+    .ws-box .ws-num {
+      display: block; font-weight: 800; color: var(--secondary);
+      font-size: 13px;
+    }
+    .ws-arrow { color: var(--muted); font-size: 18px; padding: 0 4px; }
+
+    /* quick ref table */
+    .qref-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 14px; }
+    .qref-table th {
+      background: #1e3a5f; color: white;
+      padding: 8px 12px; text-align: left;
+    }
+    .qref-table td { padding: 7px 12px; border-bottom: 1px solid var(--border); }
+    .qref-table tr:nth-child(even) td { background: #f8fafc; }
+
+    /* section divider */
+    .section-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 22px 0 16px;
+    }
+    .section-divider h3 { font-size: 15px; color: var(--primary); font-weight: 700; white-space: nowrap; }
+    .section-divider::after {
+      content: ""; flex: 1; height: 2px; background: var(--border);
+    }
+
+    /* footer */
+    .page-footer {
+      text-align: center; padding: 16px; color: var(--muted);
+      font-size: 11px; border-top: 1px solid var(--border);
+      margin-top: 32px;
+    }
+
+    /* print */
+    @media print {
+      body { background: white; font-size: 12px; }
+      .cover { page-break-after: always; min-height: 100vh; }
+      .role-page { page-break-before: always; }
+      .toc-page { page-break-after: always; }
+      .no-print { display: none; }
+    }
+
+    /* print button */
+    .print-btn {
+      position: fixed; bottom: 30px; right: 30px;
+      background: var(--secondary); color: white;
+      border: none; padding: 14px 24px; border-radius: 30px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.4);
+      z-index: 999;
+    }
+    .print-btn:hover { background: #1d4ed8; }
+
+    /* color themes per role */
+    .theme-superadmin { background: linear-gradient(135deg, #1e1b4b, #4338ca); }
+    .theme-schooladmin { background: linear-gradient(135deg, #1e3a5f, #2563eb); }
+    .theme-principal { background: linear-gradient(135deg, #064e3b, #059669); }
+    .theme-viceprincipal { background: linear-gradient(135deg, #065f46, #10b981); }
+    .theme-teacher { background: linear-gradient(135deg, #7c2d12, #ea580c); }
+    .theme-student { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+    .theme-parent { background: linear-gradient(135deg, #701a75, #a855f7); }
+    .theme-accountant { background: linear-gradient(135deg, #713f12, #d97706); }
+    .theme-librarian { background: linear-gradient(135deg, #1e3a5f, #0891b2); }
+    .theme-hostel { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+    .theme-transport { background: linear-gradient(135deg, #134e4a, #0d9488); }
+    .theme-exam { background: linear-gradient(135deg, #831843, #ec4899); }
+    .theme-subject { background: linear-gradient(135deg, #1c1917, #57534e); }
+    .theme-receptionist { background: linear-gradient(135deg, #0c4a6e, #0284c7); }
+    .theme-itsupport { background: linear-gradient(135deg, #052e16, #16a34a); }
+    .theme-counselor { background: linear-gradient(135deg, #500724, #be185d); }
+    .theme-security { background: linear-gradient(135deg, #422006, #92400e); }
+    .theme-staff { background: linear-gradient(135deg, #1e293b, #475569); }
+
+    .mc-sa  { background: #1e3a5f; }
+    .mc-green { background: #059669; }
+    .mc-orange { background: #ea580c; }
+    .mc-purple { background: #7c3aed; }
+    .mc-teal { background: #0891b2; }
+    .mc-pink { background: #ec4899; }
+    .mc-amber { background: #d97706; }
+    .mc-slate { background: #475569; }
+    .mc-indigo { background: #4338ca; }
+    .mc-red { background: #dc2626; }
+    .mc-cyan { background: #0e7490; }
+    .mc-lime { background: #65a30d; }
+  </style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Save as PDF</button>
+
+<!-- ══════════════════════════════════════════
+     COVER PAGE
+══════════════════════════════════════════ -->
+<div class="cover">
+  <div class="logo-circle">🏫</div>
+  <h1>School Management System</h1>
+  <div class="subtitle">Complete Role-Wise User Guide</div>
+  <div class="divider"></div>
+  <div class="meta">
+    Version 1.0 &nbsp;|&nbsp; June 2026 &nbsp;|&nbsp; Confidential<br/>
+    18 Roles &nbsp;|&nbsp; 14+ Modules &nbsp;|&nbsp; Complete Access Reference
+  </div>
+  <div class="roles-preview">
+    <span class="rp-tag">Super Admin</span>
+    <span class="rp-tag">School Admin</span>
+    <span class="rp-tag">Principal</span>
+    <span class="rp-tag">Vice Principal</span>
+    <span class="rp-tag">Teacher</span>
+    <span class="rp-tag">Student</span>
+    <span class="rp-tag">Parent</span>
+    <span class="rp-tag">Accountant</span>
+    <span class="rp-tag">Librarian</span>
+    <span class="rp-tag">Hostel Warden</span>
+    <span class="rp-tag">Transport Manager</span>
+    <span class="rp-tag">Exam Coordinator</span>
+    <span class="rp-tag">Subject Coordinator</span>
+    <span class="rp-tag">Receptionist</span>
+    <span class="rp-tag">IT Support</span>
+    <span class="rp-tag">Counselor</span>
+    <span class="rp-tag">Security</span>
+    <span class="rp-tag">Staff / Support Staff</span>
+  </div>
+  <div class="badge">INTERNAL DOCUMENT — ALL RIGHTS RESERVED</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════════════════════ -->
+<div class="toc-page">
+  <div class="page-header">
+    <h2>Table of Contents</h2>
+    <p class="toc-sub">Navigate to any role section for detailed module and feature information</p>
+  </div>
+  <div class="toc-grid">
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#ede9fe">👑</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Super Admin</div>
+        <div class="toc-modules">Platform Overview · Schools · Subscriptions · Users · Reports</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#dbeafe">🏫</div>
+      <div class="toc-item-text">
+        <div class="toc-title">School Admin</div>
+        <div class="toc-modules">14 Modules · Full school management access</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#dcfce7">🎓</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Principal</div>
+        <div class="toc-modules">Staff · Students · Exams · Attendance · Reports</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#d1fae5">📋</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Vice Principal</div>
+        <div class="toc-modules">Academics · Timetable · Exams · Attendance</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#ffedd5">👨‍🏫</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Teacher</div>
+        <div class="toc-modules">Classroom · Attendance · Exams · Leave · Payroll</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#eff6ff">🎒</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Student</div>
+        <div class="toc-modules">Homework · Grades · Timetable · Fees · Exams</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#fdf4ff">👪</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Parent</div>
+        <div class="toc-modules">Children · Attendance · Grades · Fees · Progress</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#fef3c7">💰</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Accountant</div>
+        <div class="toc-modules">Fees · Income · Expenses · Payroll · Reports</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#ecfeff">📚</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Librarian</div>
+        <div class="toc-modules">Book Catalog · Issue/Return · Members · Fines</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#f3e8ff">🏨</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Hostel Warden</div>
+        <div class="toc-modules">Rooms · Allocations · Leave · Visitors · Attendance</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#ccfbf1">🚌</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Transport Manager</div>
+        <div class="toc-modules">Routes · Vehicles · Drivers · Fuel & Maintenance</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#fce7f3">📝</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Exam Coordinator</div>
+        <div class="toc-modules">Exams · Question Bank · Schedule · Admit Cards</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#f1f5f9">📖</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Subject Coordinator</div>
+        <div class="toc-modules">Subjects · Teacher Assignment · Assessments</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#e0f2fe">🛎️</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Receptionist</div>
+        <div class="toc-modules">Visitors · Enquiries · Phone Logs · Broadcasts</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#dcfce7">💻</div>
+      <div class="toc-item-text">
+        <div class="toc-title">IT Support</div>
+        <div class="toc-modules">Maintenance · Support Tickets · System Logs</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#fce7f3">🧠</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Counselor</div>
+        <div class="toc-modules">Student Profiles · Sessions · Appointments · Reports</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#fef3c7">🛡️</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Security</div>
+        <div class="toc-modules">Entry Register · Gate Logs · Shift Attendance · Alerts</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-icon" style="background:#f1f5f9">👷</div>
+      <div class="toc-item-text">
+        <div class="toc-title">Staff / Support Staff</div>
+        <div class="toc-modules">Tasks · Attendance · Communication</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;">
+    <div class="section-divider"><h3>Module Access Overview</h3></div>
+    <table class="overview-table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Super Admin</th>
+          <th>School Admin</th>
+          <th>Principal</th>
+          <th>Vice Principal</th>
+          <th>Teacher</th>
+          <th>Student</th>
+          <th>Parent</th>
+          <th>Accountant</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Dashboard</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td></tr>
+        <tr><td>Academics</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔ View</td><td class="tick">✔ Manage</td><td class="tick">✔ Class</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td></tr>
+        <tr><td>Examinations</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔ Limited</td><td class="tick">✔ View</td><td class="tick">✔ View</td><td class="cross">—</td></tr>
+        <tr><td>Attendance</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔ View</td><td class="tick">✔ View</td><td class="tick">✔ Mark</td><td class="tick">✔ View</td><td class="tick">✔ View</td><td class="tick">✔ View</td></tr>
+        <tr><td>Fees / Finance</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✔ View</td><td class="tick">✔ View</td><td class="tick">✔ Full</td></tr>
+        <tr><td>Payroll</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">Self</td><td class="tick">Self</td><td class="tick">Self</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✔ Full</td></tr>
+        <tr><td>Library</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔ Cards</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✔ View</td><td class="tick">✔ View</td><td class="cross">—</td></tr>
+        <tr><td>Transport</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔ View</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✔ View</td><td class="tick">✔ View</td><td class="cross">—</td></tr>
+        <tr><td>Hostel</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✔ View</td><td class="tick">✔ View</td><td class="cross">—</td></tr>
+        <tr><td>Communication</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">✔</td></tr>
+        <tr><td>Reports</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">✔</td><td class="tick">✔</td><td class="tick">Limited</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✔ Finance</td></tr>
+        <tr><td>Task Management</td><td class="tick">✔ Full</td><td class="tick">✔ Full</td><td class="tick">Self</td><td class="tick">Self</td><td class="tick">Self</td><td class="cross">—</td><td class="cross">—</td><td class="tick">Self</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     1. SUPER ADMIN
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-superadmin">
+    <div class="rh-icon">👑</div>
+    <div>
+      <h2>Super Admin</h2>
+      <div class="rh-desc">Platform-wide administrator with full access across all schools and modules</div>
+    </div>
+    <div class="rh-level">Level 1 — Highest Authority</div>
+  </div>
+
+  <div class="access-note">
+    <strong>Access Summary</strong>
+    Super Admin has unrestricted access to the entire platform. Can manage multiple schools, view cross-school analytics, configure system settings, and override any school-level configuration. This role operates at the platform level, not school level.
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Full Platform Access</span>
+    <span class="perm-pill perm-full">✔ All Schools</span>
+    <span class="perm-pill perm-full">✔ System Configuration</span>
+    <span class="perm-pill perm-full">✔ Subscription Management</span>
+    <span class="perm-pill perm-full">✔ Audit Logs</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">📊</span> Platform Overview</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Platform-wide dashboard & KPIs</li>
+          <li>Total schools, users, revenue stats</li>
+          <li>System health monitoring</li>
+          <li>Recent activity feed</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🏫</span> Schools Management</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Create & onboard new schools</li>
+          <li>Edit school profiles & settings</li>
+          <li>View school-wise reports</li>
+          <li>Activate / deactivate schools</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💳</span> Subscription & Billing</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Manage subscription plans</li>
+          <li>View payments & invoices</li>
+          <li>Revenue analytics dashboard</li>
+          <li>Upgrade / downgrade plans</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">👥</span> Users Management</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Manage admins, teachers, staff</li>
+          <li>Manage students, parents, accountants</li>
+          <li>Manage librarians & transport users</li>
+          <li>Bulk user operations</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">📚</span> Academics (Global)</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Classes, sections, subjects</li>
+          <li>Academic years management</li>
+          <li>Boards, board classes</li>
+          <li>Chapters & topics</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📈</span> Reports & Analytics</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>School-wise performance reports</li>
+          <li>Finance & academic analytics</li>
+          <li>Platform usage statistics</li>
+          <li>Activity logs & audit trails</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-red"><span class="mc-icon">⚙️</span> Master Configurations</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Fee categories management</li>
+          <li>Departments & designations</li>
+          <li>Global system configuration</li>
+          <li>Platform-wide settings</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-slate"><span class="mc-icon">🔧</span> System Control</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Roles & permissions management</li>
+          <li>Module enable/disable</li>
+          <li>System backup & restore</li>
+          <li>Attendance & full audit logs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     2. SCHOOL ADMIN
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-schooladmin">
+    <div class="rh-icon">🏫</div>
+    <div>
+      <h2>School Admin</h2>
+      <div class="rh-desc">School-level administrator managing all operations within their assigned school</div>
+    </div>
+    <div class="rh-level">Level 2 — School Authority</div>
+  </div>
+
+  <div class="access-note">
+    <strong>Access Summary</strong>
+    School Admin has complete control over their school. They manage all users, academics, finances, payroll, attendance, and settings. They cannot access other schools or platform-level configurations.
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Full School Access</span>
+    <span class="perm-pill perm-full">✔ All Modules</span>
+    <span class="perm-pill perm-full">✔ Payroll Full</span>
+    <span class="perm-pill perm-full">✔ Fee Management</span>
+    <span class="perm-pill perm-limit">⚡ School Scope Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">📊</span> Dashboard</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>School overview & KPIs</li>
+          <li>Attendance, fees, exam summary</li>
+          <li>Quick action shortcuts</li>
+          <li>Notifications & alerts</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">👥</span> Users Management</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Student admission & inquiries</li>
+          <li>Student list & promotion</li>
+          <li>Parent management</li>
+          <li>Teachers & staff management</li>
+          <li>User creation (all roles)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">📚</span> Academics</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Classes & sections management</li>
+          <li>Subjects configuration</li>
+          <li>Timetable planner & time slots</li>
+          <li>Room management</li>
+          <li>Teacher timetable</li>
+          <li>Events & academic calendar</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📝</span> Examinations</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Create & manage exams</li>
+          <li>Exam schedule management</li>
+          <li>Grade entry & report cards</li>
+          <li>Paper builder (question bank)</li>
+          <li>Admit cards & seat planning</li>
+          <li>Exam analytics & reports</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">✅</span> Attendance</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Student, teacher & staff attendance</li>
+          <li>Leave management & approvals</li>
+          <li>Attendance reports & analytics</li>
+          <li>Geofence settings for GPS check-in</li>
+          <li>Live attendance dashboard</li>
+          <li>Monthly attendance views</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💰</span> Fees Management</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Fee categories setup</li>
+          <li>Fee collection & receipts</li>
+          <li>Fee structures creation</li>
+          <li>Assign fees to students</li>
+          <li>Fee reports & outstanding</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">💵</span> Payroll</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Employee creation for payroll</li>
+          <li>Salary structures management</li>
+          <li>Monthly payroll run (Generate → Lock → Pay)</li>
+          <li>Payslip generation & preview</li>
+          <li>Monthly payroll reports</li>
+          <li>Salary advance management</li>
+          <li>Bonus & incentives</li>
+          <li>Reimbursements approval</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">📖</span> Library</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Book catalog management</li>
+          <li>Issue & return management</li>
+          <li>Library cards</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">🚌</span> Transport</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Route management</li>
+          <li>Vehicle management</li>
+          <li>Student/staff transport assignment</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-purple"><span class="mc-icon">🏨</span> Hostel</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Hostel rooms management</li>
+          <li>Room allocations</li>
+          <li>Hostel leave management</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">📦</span> Inventory</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Supplies management</li>
+          <li>Assets tracking</li>
+        </ul>
+      </div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">💬</span> Communication</div>
+      <div class="module-card-body">
+        <ul class="feature-list">
+          <li>Send messages & notifications</li>
+          <li>Broadcast to groups/roles</li>
+          <li>Message history</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     3. PRINCIPAL
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-principal">
+    <div class="rh-icon">🎓</div>
+    <div>
+      <h2>Principal</h2>
+      <div class="rh-desc">Academic and administrative head of the school with oversight across all departments</div>
+    </div>
+    <div class="rh-level">Level 2 — School Leadership</div>
+  </div>
+
+  <div class="access-note">
+    <strong>Access Summary</strong>
+    Principal has broad view access across the school. Can manage exams fully, review attendance, oversee staff & students, and access their own payroll. Cannot manage fees, payroll for others, or system settings.
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Exams Full</span>
+    <span class="perm-pill perm-view">👁 Staff & Student View</span>
+    <span class="perm-pill perm-view">👁 Attendance View</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+    <span class="perm-pill perm-none">✗ Fee Management</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">📊</span> Dashboard</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>School overview KPIs</li>
+        <li>Quick stats: students, staff, attendance</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">👨‍💼</span> Staff Management</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View all staff members</li>
+        <li>View staff profiles</li>
+        <li>Department-wise staff view</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🎒</span> Student Management</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View student list</li>
+        <li>Student profiles & details</li>
+        <li>Academic records view</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📝</span> Examinations</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Create & edit exams</li>
+        <li>Exam scheduling</li>
+        <li>Grade entry & report cards</li>
+        <li>Paper builder & question bank</li>
+        <li>Admit cards & seat planning</li>
+        <li>Exam analytics</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">✅</span> Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Mark student attendance</li>
+        <li>View attendance table</li>
+        <li>Attendance reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">📖</span> Library</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Library card management</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">🚌</span> Transport</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View transport routes</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>View salary breakdown</li>
+        <li>View payroll attendance</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     4. VICE PRINCIPAL
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-viceprincipal">
+    <div class="rh-icon">📋</div>
+    <div>
+      <h2>Vice Principal</h2>
+      <div class="rh-desc">Academic coordinator with timetable and examination management responsibilities</div>
+    </div>
+    <div class="rh-level">Level 2 — School Leadership</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Academics Manage</span>
+    <span class="perm-pill perm-full">✔ Timetable Manage</span>
+    <span class="perm-pill perm-full">✔ Exams Full</span>
+    <span class="perm-pill perm-view">👁 Attendance View</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">📚</span> Academics</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Manage classes & subjects</li>
+        <li>Academic structure oversight</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🗓️</span> Timetable</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Full timetable management</li>
+        <li>Time slot configuration</li>
+        <li>Teacher timetable assignment</li>
+        <li>Room allocation</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📝</span> Examinations</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Create, edit & schedule exams</li>
+        <li>Grade entry & report cards</li>
+        <li>Paper builder & question bank</li>
+        <li>Admit cards & seat planning</li>
+        <li>Exam analytics & reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">✅</span> Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View student attendance</li>
+        <li>View teacher attendance</li>
+        <li>Attendance table view</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">📊</span> Reports</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Academic performance reports</li>
+        <li>Exam result summaries</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary structure view</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     5. TEACHER
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-teacher">
+    <div class="rh-icon">👨‍🏫</div>
+    <div>
+      <h2>Teacher</h2>
+      <div class="rh-desc">Classroom instructor managing classes, attendance, assignments, and examinations</div>
+    </div>
+    <div class="rh-level">Level 3 — Academic Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Mark Attendance</span>
+    <span class="perm-pill perm-full">✔ Class Management</span>
+    <span class="perm-pill perm-full">✔ Questions & Exams</span>
+    <span class="perm-pill perm-limit">⚡ Assigned Classes Only</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">🏫</span> Classroom</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View assigned classes</li>
+        <li>Assignments management</li>
+        <li>Subject resources & study materials</li>
+        <li>Lesson plans creation</li>
+        <li>View class timetable</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">✅</span> Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Mark student attendance</li>
+        <li>Student monthly reports</li>
+        <li>My daily attendance (GPS check-in/out)</li>
+        <li>My monthly attendance reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📝</span> Exams & Questions</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View exam list</li>
+        <li>Question bank management</li>
+        <li>Create & bulk upload questions</li>
+        <li>Student evaluation</li>
+        <li>Exam reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">🗓️</span> Leave & Tasks</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Submit leave requests</li>
+        <li>View leave status</li>
+        <li>My tasks management</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary breakdown</li>
+        <li>Payroll attendance history</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">💬</span> Communication</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Send & receive messages</li>
+        <li>Notifications</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     6. STUDENT
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-student">
+    <div class="rh-icon">🎒</div>
+    <div>
+      <h2>Student</h2>
+      <div class="rh-desc">Student portal with access to academics, attendance, fees, and exam information</div>
+    </div>
+    <div class="rh-level">Level 4 — Student</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-view">👁 Own Data Only</span>
+    <span class="perm-pill perm-view">👁 Attendance View</span>
+    <span class="perm-pill perm-view">👁 Grades View</span>
+    <span class="perm-pill perm-full">✔ Exam Attempt</span>
+    <span class="perm-pill perm-full">✔ Leave Request</span>
+    <span class="perm-pill perm-none">✗ Admin Functions</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">📊</span> Dashboard</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Personalized student dashboard</li>
+        <li>Today's schedule & homework</li>
+        <li>Quick attendance summary</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📖</span> Homework</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View assigned homework</li>
+        <li>Submit assignments</li>
+        <li>Track submission status</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">✅</span> Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own attendance records</li>
+        <li>Monthly attendance summary</li>
+        <li>Attendance percentage</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📊</span> Grades</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View exam results</li>
+        <li>Subject-wise grades</li>
+        <li>Report cards</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🗓️</span> Timetable</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Class timetable view</li>
+        <li>Subject-wise schedule</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💰</span> Fees</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View fee structure</li>
+        <li>Payment history</li>
+        <li>Outstanding fees</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📝</span> Exams</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View exam list & schedule</li>
+        <li>Attempt online exams</li>
+        <li>Review exam attempts</li>
+        <li>Download admit cards</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">🌿</span> Leave Requests</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Submit leave application</li>
+        <li>Track leave status</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">📖</span> Library</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View allowed books</li>
+        <li>Issued books status</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">📚</span> Study Materials</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Access subject resources</li>
+        <li>Chapter-wise materials</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     7. PARENT
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-parent">
+    <div class="rh-icon">👪</div>
+    <div>
+      <h2>Parent</h2>
+      <div class="rh-desc">Parent portal to monitor children's academics, attendance, fees, and school activities</div>
+    </div>
+    <div class="rh-level">Level 4 — Parent</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-view">👁 Children Data Only</span>
+    <span class="perm-pill perm-view">👁 Attendance View</span>
+    <span class="perm-pill perm-view">👁 Grades View</span>
+    <span class="perm-pill perm-full">✔ Leave Request</span>
+    <span class="perm-pill perm-none">✗ Admin Functions</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-purple"><span class="mc-icon">👨‍👩‍👧</span> My Children</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Children list & profiles</li>
+        <li>Academic year summary per child</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">✅</span> Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Children daily attendance</li>
+        <li>Monthly attendance summary</li>
+        <li>Absence notifications</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📊</span> Grades & Results</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Children exam results</li>
+        <li>Report cards</li>
+        <li>Progress tracking</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📖</span> Homework</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Children homework overview</li>
+        <li>Submission status</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💰</span> Fees</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Fee details per child</li>
+        <li>Payment history</li>
+        <li>Outstanding dues</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">📝</span> Exams</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Upcoming exam schedule</li>
+        <li>Children exam results</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">🚌</span> Transport</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Children transport assignment</li>
+        <li>Route & timing info</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">🌿</span> Leave Requests</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Apply leave for children</li>
+        <li>Track leave status</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">📈</span> Progress Report</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Overall academic progress</li>
+        <li>Subject-wise performance</li>
+        <li>Comparative reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-slate"><span class="mc-icon">📅</span> Academic Calendar</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>School events & holidays</li>
+        <li>Exam schedule overview</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     8. ACCOUNTANT
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-accountant">
+    <div class="rh-icon">💰</div>
+    <div>
+      <h2>Accountant</h2>
+      <div class="rh-desc">Finance manager handling fee collection, payroll processing, income and expense records</div>
+    </div>
+    <div class="rh-level">Level 4 — Finance Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Fee Collection Full</span>
+    <span class="perm-pill perm-full">✔ Payroll Full</span>
+    <span class="perm-pill perm-full">✔ Financial Reports</span>
+    <span class="perm-pill perm-view">👁 Attendance View</span>
+    <span class="perm-pill perm-none">✗ Academic Functions</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💳</span> Fee Collection</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Collect fees from students</li>
+        <li>Generate fee receipts</li>
+        <li>View outstanding fees</li>
+        <li>Fee waiver management</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📊</span> Fee Reports</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Fee collection reports</li>
+        <li>Student-wise fee details</li>
+        <li>Class-wise fee summary</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">📈</span> Income Management</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Record income entries</li>
+        <li>Income categories</li>
+        <li>Income reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-red"><span class="mc-icon">📉</span> Expenses</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Record expense entries</li>
+        <li>Expense categories</li>
+        <li>Expense reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">💵</span> Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Salary structures management</li>
+        <li>Monthly payroll run</li>
+        <li>Generate & view payslips</li>
+        <li>Payroll reports</li>
+        <li>Salary advance approval</li>
+        <li>Bonus & incentives</li>
+        <li>Reimbursements management</li>
+        <li>Own payroll (self-service)</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">📋</span> Financial Reports</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Profit & loss overview</li>
+        <li>Monthly financial summary</li>
+        <li>Export financial data</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">✅</span> Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View staff attendance</li>
+        <li>Monthly attendance reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">✔️</span> Tasks</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>My tasks management</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     9. LIBRARIAN
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-librarian">
+    <div class="rh-icon">📚</div>
+    <div>
+      <h2>Librarian</h2>
+      <div class="rh-desc">Library manager handling books, issue/return transactions, and member management</div>
+    </div>
+    <div class="rh-level">Level 4 — Support Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Book Catalog Full</span>
+    <span class="perm-pill perm-full">✔ Issue/Return Full</span>
+    <span class="perm-pill perm-full">✔ Fine Management</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">📖</span> Book Catalog</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Add & edit books</li>
+        <li>Book categories & subjects</li>
+        <li>Inventory tracking</li>
+        <li>Book search & filter</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🔄</span> Issue / Return</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Issue books to members</li>
+        <li>Process returns</li>
+        <li>Due date tracking</li>
+        <li>Overdue notifications</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">👥</span> Members</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View library members</li>
+        <li>Issue library cards</li>
+        <li>Member borrowing history</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-red"><span class="mc-icon">💸</span> Fine Management</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Calculate overdue fines</li>
+        <li>Collect & record fines</li>
+        <li>Fine history reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📊</span> Reports</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Issue/return reports</li>
+        <li>Popular books analytics</li>
+        <li>Fine collection reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     10. HOSTEL WARDEN
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-hostel">
+    <div class="rh-icon">🏨</div>
+    <div>
+      <h2>Hostel Warden</h2>
+      <div class="rh-desc">Hostel operations manager handling rooms, allocations, student leave and complaints</div>
+    </div>
+    <div class="rh-level">Level 4 — Support Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Room Management Full</span>
+    <span class="perm-pill perm-full">✔ Allocations Full</span>
+    <span class="perm-pill perm-full">✔ Leave Requests</span>
+    <span class="perm-pill perm-full">✔ Visitor Log</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-purple"><span class="mc-icon">🛏️</span> Rooms</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Add & configure rooms</li>
+        <li>Room capacity management</li>
+        <li>Room type & facilities</li>
+        <li>Room availability status</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🔑</span> Allocations</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Allocate rooms to students</li>
+        <li>View occupied/available rooms</li>
+        <li>Move/transfer students</li>
+        <li>Vacate room</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">🌿</span> Leave Requests</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Review hostel leave requests</li>
+        <li>Approve / reject leave</li>
+        <li>Leave history tracking</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">👁</span> Visitor Log</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Log visitor entries</li>
+        <li>Track visitor check-in/out</li>
+        <li>Visitor history</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-red"><span class="mc-icon">📢</span> Complaints</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Receive student complaints</li>
+        <li>Track complaint resolution</li>
+        <li>Complaint reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">✅</span> Hostel Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Mark hostel attendance</li>
+        <li>Attendance reports</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     11. TRANSPORT MANAGER
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-transport">
+    <div class="rh-icon">🚌</div>
+    <div>
+      <h2>Transport Manager</h2>
+      <div class="rh-desc">Manages school transport including routes, vehicles, drivers, and fuel/maintenance records</div>
+    </div>
+    <div class="rh-level">Level 4 — Support Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Routes Full</span>
+    <span class="perm-pill perm-full">✔ Vehicles Full</span>
+    <span class="perm-pill perm-full">✔ Drivers Full</span>
+    <span class="perm-pill perm-full">✔ Fuel & Maintenance</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">🗺️</span> Routes</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Create & edit transport routes</li>
+        <li>Stops & timing management</li>
+        <li>Route assignment to vehicles</li>
+        <li>Student/staff route mapping</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">🚐</span> Vehicles</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Vehicle registration & details</li>
+        <li>Vehicle capacity management</li>
+        <li>Vehicle status tracking</li>
+        <li>License & insurance records</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">👨‍✈️</span> Drivers</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Driver profiles management</li>
+        <li>License verification</li>
+        <li>Driver-vehicle assignment</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">⛽</span> Fuel & Maintenance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Fuel consumption records</li>
+        <li>Maintenance schedules</li>
+        <li>Repair history</li>
+        <li>Cost tracking reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     12. EXAM COORDINATOR
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-exam">
+    <div class="rh-icon">📝</div>
+    <div>
+      <h2>Exam Coordinator</h2>
+      <div class="rh-desc">Dedicated examination management specialist with full exam operations access</div>
+    </div>
+    <div class="rh-level">Level 3 — Academic Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Full Exam Operations</span>
+    <span class="perm-pill perm-full">✔ Question Bank</span>
+    <span class="perm-pill perm-full">✔ Admit Cards</span>
+    <span class="perm-pill perm-full">✔ Seat Planning</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">📝</span> Exam Management</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Create & configure exams</li>
+        <li>Exam list & overview</li>
+        <li>Edit exam details</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">📅</span> Exam Schedule</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Set exam dates & times</li>
+        <li>Subject-wise scheduling</li>
+        <li>Conflict detection</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📊</span> Grade Entry</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Enter & edit marks</li>
+        <li>Grade calculation</li>
+        <li>Report card generation</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">❓</span> Paper Builder</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Question bank management</li>
+        <li>Create question papers</li>
+        <li>Question categorization</li>
+        <li>Bulk upload questions</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">🪪</span> Admit Cards</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Generate admit cards</li>
+        <li>Bulk print admit cards</li>
+        <li>Student verification</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-sa"><span class="mc-icon">💺</span> Seat Planning</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Auto seat allocation</li>
+        <li>Manual seat arrangement</li>
+        <li>Room-wise seating plan</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">📈</span> Analytics & Reports</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Exam performance analytics</li>
+        <li>Subject-wise result analysis</li>
+        <li>Pass/fail statistics</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-slate"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     13. SUBJECT COORDINATOR
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-subject">
+    <div class="rh-icon">📖</div>
+    <div>
+      <h2>Subject Coordinator</h2>
+      <div class="rh-desc">Curriculum manager responsible for subject coordination, teacher assignment, and assessments</div>
+    </div>
+    <div class="rh-level">Level 3 — Academic Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Subject Management</span>
+    <span class="perm-pill perm-full">✔ Teacher Assignment</span>
+    <span class="perm-pill perm-full">✔ Assessments</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-slate"><span class="mc-icon">📚</span> Subjects Overview</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Manage subject catalog</li>
+        <li>Subject details & curriculum</li>
+        <li>Chapter & topic management</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">👨‍🏫</span> Teacher Assignment</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Assign teachers to subjects</li>
+        <li>View teacher workload</li>
+        <li>Teaching coverage tracking</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🏫</span> Class Assignment</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Subject-class mapping</li>
+        <li>Class-wise subject assignment</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📋</span> Assessments</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Assessment planning</li>
+        <li>Assessment tracking</li>
+        <li>Performance monitoring</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">📊</span> Reports</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Subject performance reports</li>
+        <li>Teacher effectiveness metrics</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     14. RECEPTIONIST
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-receptionist">
+    <div class="rh-icon">🛎️</div>
+    <div>
+      <h2>Receptionist</h2>
+      <div class="rh-desc">Front-desk operations including visitor management, enquiries, and communications</div>
+    </div>
+    <div class="rh-level">Level 4 — Support Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Visitor Management</span>
+    <span class="perm-pill perm-full">✔ Enquiries</span>
+    <span class="perm-pill perm-full">✔ Phone Logs</span>
+    <span class="perm-pill perm-full">✔ Broadcasts</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">👁</span> Visitor Management</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Log visitor entries</li>
+        <li>Check-in / check-out tracking</li>
+        <li>Visitor badge generation</li>
+        <li>Visitor history</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">❓</span> Enquiries</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Admission enquiry management</li>
+        <li>Follow-up tracking</li>
+        <li>Enquiry status updates</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">📞</span> Phone Call Log</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Log incoming & outgoing calls</li>
+        <li>Call tracking & history</li>
+        <li>Call type categorization</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">📢</span> Broadcasts</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Send broadcast messages</li>
+        <li>Announcements to groups</li>
+        <li>Broadcast history</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     15. IT SUPPORT
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-itsupport">
+    <div class="rh-icon">💻</div>
+    <div>
+      <h2>IT Support</h2>
+      <div class="rh-desc">Technical support staff managing system maintenance, user tickets, and network monitoring</div>
+    </div>
+    <div class="rh-level">Level 4 — Support Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ System Maintenance</span>
+    <span class="perm-pill perm-full">✔ Support Tickets</span>
+    <span class="perm-pill perm-full">✔ System Logs</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-lime"><span class="mc-icon">🔧</span> System Maintenance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Schedule maintenance tasks</li>
+        <li>System health checks</li>
+        <li>Maintenance logs</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">🎫</span> User Support Tickets</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View & manage support tickets</li>
+        <li>Ticket assignment & resolution</li>
+        <li>Ticket status tracking</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">🌐</span> Network Status</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Network connectivity monitoring</li>
+        <li>Status alerts</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-slate"><span class="mc-icon">📋</span> System Logs</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View system activity logs</li>
+        <li>Error & event tracking</li>
+        <li>Log export</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     16. COUNSELOR
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-counselor">
+    <div class="rh-icon">🧠</div>
+    <div>
+      <h2>Counselor</h2>
+      <div class="rh-desc">Student counseling specialist managing sessions, appointments, and student well-being</div>
+    </div>
+    <div class="rh-level">Level 4 — Support Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Student Profiles</span>
+    <span class="perm-pill perm-full">✔ Sessions Management</span>
+    <span class="perm-pill perm-full">✔ Appointments</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-pink"><span class="mc-icon">👨‍🎓</span> Student Profiles</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View student profiles</li>
+        <li>Academic & behavioral history</li>
+        <li>Counseling notes</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-purple"><span class="mc-icon">💬</span> Counseling Sessions</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Schedule sessions</li>
+        <li>Session notes & records</li>
+        <li>Session history</li>
+        <li>Follow-up tracking</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">📅</span> Appointments</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Appointment scheduling</li>
+        <li>Parent-counselor meetings</li>
+        <li>Appointment reminders</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-teal"><span class="mc-icon">📊</span> Reports</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Counseling activity reports</li>
+        <li>Student well-being overview</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     17. SECURITY
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-security">
+    <div class="rh-icon">🛡️</div>
+    <div>
+      <h2>Security</h2>
+      <div class="rh-desc">Campus security personnel managing entry logs, gate access, and emergency alerts</div>
+    </div>
+    <div class="rh-level">Level 4 — Support Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ Entry Register</span>
+    <span class="perm-pill perm-full">✔ Gate Logs</span>
+    <span class="perm-pill perm-full">✔ Shift Attendance</span>
+    <span class="perm-pill perm-full">✔ Emergency Alerts</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">📋</span> Entry Register</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Log all campus entries</li>
+        <li>Person identification records</li>
+        <li>Entry purpose tracking</li>
+        <li>Entry history reports</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-red"><span class="mc-icon">🚪</span> Gate Logs</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Gate access logs</li>
+        <li>Student/staff exit tracking</li>
+        <li>Unauthorized exit alerts</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">⏰</span> Shift Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Mark own shift attendance</li>
+        <li>Shift timing records</li>
+        <li>Duty handover log</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-red"><span class="mc-icon">🚨</span> Emergency Alerts</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Trigger emergency alerts</li>
+        <li>Alert notification to admins</li>
+        <li>Incident reporting</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details</li>
+      </ul></div>
+    </div>
+  </div>
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     18. STAFF / SUPPORT STAFF
+══════════════════════════════════════════ -->
+<div class="role-page">
+  <div class="role-header theme-staff">
+    <div class="rh-icon">👷</div>
+    <div>
+      <h2>Staff / Support Staff</h2>
+      <div class="rh-desc">General school staff with access to tasks, attendance, and basic communication features</div>
+    </div>
+    <div class="rh-level">Level 4 — General Staff</div>
+  </div>
+
+  <div class="perm-row">
+    <span class="perm-pill perm-full">✔ My Tasks</span>
+    <span class="perm-pill perm-full">✔ Own Attendance (GPS)</span>
+    <span class="perm-pill perm-full">✔ Communication</span>
+    <span class="perm-pill perm-limit">⚡ Own Payroll Only</span>
+    <span class="perm-pill perm-none">✗ Admin Functions</span>
+  </div>
+
+  <div class="section-divider"><h3>Modules & Features</h3></div>
+  <div class="modules-grid">
+    <div class="module-card">
+      <div class="module-card-head mc-slate"><span class="mc-icon">📊</span> Dashboard</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Personalized dashboard</li>
+        <li>Today's tasks overview</li>
+        <li>Quick notifications</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-green"><span class="mc-icon">✔️</span> Tasks & Schedule</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View assigned tasks</li>
+        <li>Mark tasks as complete</li>
+        <li>Task history</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-orange"><span class="mc-icon">✅</span> My Attendance</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>GPS-based check-in/out (Staff)</li>
+        <li>View own attendance records</li>
+        <li>Monthly attendance summary</li>
+        <li>Submit leave requests</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-amber"><span class="mc-icon">💵</span> My Payroll</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>View own payslips</li>
+        <li>Salary details & breakdown</li>
+        <li>Salary advance requests</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-cyan"><span class="mc-icon">💬</span> Communication</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Receive messages & notifications</li>
+        <li>Send messages to allowed contacts</li>
+      </ul></div>
+    </div>
+    <div class="module-card">
+      <div class="module-card-head mc-indigo"><span class="mc-icon">🔧</span> Role Workspace</div>
+      <div class="module-card-body"><ul class="feature-list">
+        <li>Support Staff: Dynamic workspace</li>
+        <li>Role-specific tools</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <!-- PAYROLL WORKFLOW SECTION -->
+  <div class="section-divider" style="margin-top:32px;"><h3>Payroll Workflow (School Admin / Accountant)</h3></div>
+  <div class="workflow-section">
+    <div class="workflow-steps">
+      <div class="ws-step">
+        <div class="ws-box"><span class="ws-num">1</span>Generate</div>
+        <span class="ws-arrow">→</span>
+      </div>
+      <div class="ws-step">
+        <div class="ws-box"><span class="ws-num">2</span>Review Entries</div>
+        <span class="ws-arrow">→</span>
+      </div>
+      <div class="ws-step">
+        <div class="ws-box"><span class="ws-num">3</span>Lock Cycle</div>
+        <span class="ws-arrow">→</span>
+      </div>
+      <div class="ws-step">
+        <div class="ws-box"><span class="ws-num">4</span>Mark Paid</div>
+        <span class="ws-arrow">→</span>
+      </div>
+      <div class="ws-step">
+        <div class="ws-box"><span class="ws-num">5</span>Payslips Ready</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#64748b;margin-top:10px;">Generate creates draft → Review attendance & amounts → Lock prevents changes → Mark Paid releases payslips to employees</p>
+  </div>
+
+  <div class="page-footer">School Management System — Role-Wise Guide v1.0 | June 2026</div>
+</div>
+
+</body>
+</html>
