@@ -114,7 +114,7 @@ const EmptyMenuState = ({ isDark }) => {
 /* ─────────────────────────────────────────
    Main SidebarMenu
 ───────────────────────────────────────── */
-const SidebarMenu = ({ role }) => {
+const SidebarMenu = ({ role, collapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isDark: isDarkMode } = useTheme();
@@ -296,10 +296,11 @@ const SidebarMenu = ({ role }) => {
       <Menu
         className="sidebar-nav"
         mode="inline"
+        inlineCollapsed={collapsed}
         items={antMenuItems}
         selectedKeys={[selectedKey]}
-        openKeys={openKeys}
-        onOpenChange={onOpenChange}
+        openKeys={collapsed ? [] : openKeys}
+        onOpenChange={collapsed ? undefined : onOpenChange}
         onClick={({ key }) => key && navigate(`/dashboard/${key}`)}
         theme={isDarkMode ? "dark" : "light"}
         style={{

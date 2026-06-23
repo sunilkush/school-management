@@ -6,77 +6,56 @@ import { useTheme } from "../../context/ThemeContext";
 import Loader from "../Loader/Loader";
 
 const Sidebar = lazy(() => import("../sidebar/Sidebar"));
-const Topbar = lazy(() => import("../navbar/Topbar"));
+const Topbar  = lazy(() => import("../navbar/Topbar"));
 
-const { Header, Content } = Layout;
+const { Content } = Layout;
 
-/* ─────────────────────────────────────────
-   SSR-safe window width
-───────────────────────────────────────── */
+const SIDEBAR_EXPANDED  = 240;
+const SIDEBAR_COLLAPSED = 68;
+
 const getWindowWidth = () =>
-  typeof window !== "undefined" ? window.innerWidth : 1024;
+  typeof window !== "undefined" ? window.innerWidth : 1280;
 
-/* ─────────────────────────────────────────
-   Design tokens
-───────────────────────────────────────── */
-const tokens = () => ({
-  layoutBg: "var(--surface-page)",
-  headerBg: "var(--surface-header)",
-  headerBorder: "var(--border-color)",
-  contentBg: "var(--surface-page)",
-  drawerBg: "var(--surface-sidebar)",
-  sidebarWidth: 260,
-});
-
-/* ─────────────────────────────────────────
-   Skeleton fallbacks
-───────────────────────────────────────── */
-const SidebarFallback = ({ isDark }) => (
-  <div
-    style={{
-      width: 260,
-      height: "100vh",
-      background: isDark ? "#0d0d0d" : "#ffffff",
-      borderRight: `1px solid ${isDark ? "#1f1f1f" : "#f0f0f0"}`,
-      padding: "20px 16px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12,
-      flexShrink: 0,
-    }}
-  >
-    {/* Header shimmer */}
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-      <Skeleton.Avatar active size={36} />
-      <Skeleton.Input active size="small" style={{ width: 140, borderRadius: 6 }} />
+/* ── Skeleton fallbacks ─────────────────────────────────────────── */
+const SidebarFallback = ({ isDark, collapsed }) => (
+  <div style={{
+    width: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
+    height: "100vh",
+    background: isDark ? "#111827" : "#ffffff",
+    borderRight: `1px solid ${isDark ? "#1f2937" : "#e2e8f0"}`,
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    padding: "20px 10px",
+    flexShrink: 0,
+    transition: "width 0.25s ease",
+  }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, padding: "0 4px" }}>
+      <Skeleton.Avatar active size={38} shape="square" style={{ borderRadius: 10, flexShrink: 0 }} />
+      {!collapsed && <Skeleton.Input active size="small" style={{ width: 130, borderRadius: 6 }} />}
     </div>
-    <div style={{ borderBottom: `1px solid ${isDark ? "#1f1f1f" : "#f0f0f0"}`, margin: "4px 0 8px" }} />
-    {/* Menu item shimmers */}
-    {[1, 0.9, 0.95, 0.85, 0.9].map((op, i) => (
-      <Skeleton.Input
-        key={i}
-        active
-        size="small"
-        style={{ width: `${op * 100}%`, height: 36, borderRadius: 8, opacity: op }}
-      />
+    {[1, 0.9, 0.95, 0.85, 0.9, 0.88, 0.82].map((op, i) => (
+      <Skeleton.Button key={i} active block style={{
+        height: 38, borderRadius: 9, opacity: op,
+        width: collapsed ? 44 : "100%",
+      }} />
     ))}
   </div>
 );
 
 const TopbarFallback = ({ isDark }) => (
-  <div
-    style={{
-      height: 64,
-      display: "flex",
-      alignItems: "center",
-      padding: "0 20px",
-      gap: 16,
-      background: isDark ? "#0d0d0d" : "#ffffff",
-    }}
-  >
-    <Skeleton.Button active size="small" style={{ width: 28, borderRadius: 6 }} />
-    <Skeleton.Input active size="small" style={{ width: 180, borderRadius: 8 }} />
-    <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
+  <div style={{
+    height: 60,
+    display: "flex",
+    alignItems: "center",
+    padding: "0 20px",
+    gap: 14,
+    background: isDark ? "#111827" : "#ffffff",
+    borderBottom: `1px solid ${isDark ? "#1f2937" : "#e2e8f0"}`,
+  }}>
+    <Skeleton.Button active size="small" style={{ width: 32, borderRadius: 8 }} />
+    <Skeleton.Input active size="small" style={{ width: 200, borderRadius: 10 }} />
+    <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
       <Skeleton.Button active size="small" shape="circle" />
       <Skeleton.Button active size="small" shape="circle" />
       <Skeleton.Avatar active size={32} />
@@ -84,182 +63,153 @@ const TopbarFallback = ({ isDark }) => (
   </div>
 );
 
-// eslint-disable-next-line no-unused-vars
-const ContentFallback = ({ isDark }) => (
-  <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-    <Skeleton.Input active style={{ width: 240, height: 28, borderRadius: 8 }} />
-    <div style={{ display: "flex", gap: 16 }}>
-      {[1, 2, 3, 4].map((i) => (
-        <Skeleton.Button
-          key={i}
-          active
-          style={{ width: 160, height: 90, borderRadius: 12, flex: 1 }}
-        />
-      ))}
-    </div>
-    <Skeleton active paragraph={{ rows: 5 }} />
-  </div>
-);
-
-/* ─────────────────────────────────────────
-   Dashboard
-───────────────────────────────────────── */
+/* ── Dashboard ──────────────────────────────────────────────────── */
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, isAuthInitialized, isLoggingOut } = useSelector((state) => state.auth);
-  const { activeYear } = useSelector((state) => state.academicYear);
-  const { isDark: isDarkMode } = useTheme();
-  const t = tokens();
+  const { user, isAuthInitialized, isLoggingOut } = useSelector((s) => s.auth);
+  const { activeYear }  = useSelector((s) => s.academicYear);
+  const { isDark }      = useTheme();
 
   const role = user?.role?.name;
-  const resizeTimerRef = useRef(null);
+  const resizeRef = useRef(null);
 
-  const [isMobile, setIsMobile] = useState(() => getWindowWidth() < 1024);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => getWindowWidth() >= 1024);
+  const [isMobile,         setIsMobile]         = useState(() => getWindowWidth() < 1024);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => getWindowWidth() < 1280);
+  const [drawerOpen,       setDrawerOpen]       = useState(false);
 
-  /* Redirect non-Super-Admin without active year */
   useEffect(() => {
-    if (role !== "Super Admin" && !activeYear?._id) {
-      // navigate("/no-active-year");
-    }
-  }, [role, activeYear, navigate]);
-
-  /* Debounced resize handler */
-  useEffect(() => {
-    const handleResize = () => {
-      clearTimeout(resizeTimerRef.current);
-      resizeTimerRef.current = setTimeout(() => {
-        const mobile = getWindowWidth() < 1024;
+    const handle = () => {
+      clearTimeout(resizeRef.current);
+      resizeRef.current = setTimeout(() => {
+        const w = getWindowWidth();
+        const mobile = w < 1024;
         setIsMobile(mobile);
-        setIsSidebarOpen(!mobile);
-      }, 150);
+        if (!mobile) {
+          setSidebarCollapsed(w < 1280);
+          setDrawerOpen(false);
+        }
+      }, 120);
     };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(resizeTimerRef.current);
-    };
+    window.addEventListener("resize", handle);
+    return () => { window.removeEventListener("resize", handle); clearTimeout(resizeRef.current); };
   }, []);
 
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const toggleSidebar = () => {
+    if (isMobile) setDrawerOpen((p) => !p);
+    else setSidebarCollapsed((p) => !p);
+  };
 
-  const sidebarVisible = !isMobile && isSidebarOpen;
+  const sidebarW  = sidebarCollapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED;
+  const mainShift = isMobile ? 0 : sidebarW;
 
-  if (!isAuthInitialized || isLoggingOut) {
-    return <Loader />;
-  }
+  if (!isAuthInitialized || isLoggingOut) return <Loader />;
 
   return (
     <>
-      {/* ── Global layout styles ── */}
       <style>{`
-        /* Smooth sidebar-driven margin shift */
-        .dashboard-main {
-          transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .dash-main {
+          transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
         }
-
-        /* Mobile drawer: remove default body padding */
-        .sidebar-drawer .ant-drawer-body {
+        .dash-drawer .ant-drawer-body {
           padding: 0 !important;
           overflow: hidden !important;
         }
-        .sidebar-drawer .ant-drawer-content {
-          background: ${t.drawerBg} !important;
+        .dash-drawer .ant-drawer-content-wrapper {
+          box-shadow: 4px 0 32px rgba(0,0,0,0.15) !important;
         }
-
-        /* Content area scroll */
-        .dashboard-content {
-          overflow-x: hidden;
-          overflow-y: auto;
+        .dash-outlet {
+          animation: outletFadeIn 0.22s ease forwards;
         }
-
-        /* Subtle page-load fade-in for content */
-        @keyframes contentFadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .dashboard-outlet {
-          animation: contentFadeIn 0.25s ease forwards;
+        @keyframes outletFadeIn {
+          from { opacity:0; transform:translateY(5px); }
+          to   { opacity:1; transform:translateY(0);   }
         }
       `}</style>
 
-      <Layout style={{ minHeight: "100vh", background: t.layoutBg }}>
+      <div style={{ display: "flex", minHeight: "100vh", background: "var(--surface-page)" }}>
 
         {/* ── DESKTOP SIDEBAR ── */}
         {!isMobile && (
-          <Suspense fallback={<SidebarFallback isDark={isDarkMode} />}>
-            <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
-          </Suspense>
+          <div style={{
+            width: sidebarW,
+            flexShrink: 0,
+            transition: "width 0.28s cubic-bezier(0.4,0,0.2,1)",
+            position: "relative",
+            zIndex: 100,
+          }}>
+            <Suspense fallback={<SidebarFallback isDark={isDark} collapsed={sidebarCollapsed} />}>
+              <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+            </Suspense>
+          </div>
         )}
 
         {/* ── MOBILE DRAWER SIDEBAR ── */}
-        <Drawer
-          className="sidebar-drawer"
-          placement="left"
-          closable={false}
-          open={isMobile && isSidebarOpen}
-          onClose={toggleSidebar}
-          width={t.sidebarWidth}
-          styles={{ body: { padding: 0, overflow: "hidden" } }}
-        >
-          <Suspense fallback={<SidebarFallback isDark={isDarkMode} />}>
-            <Sidebar isOpen onToggle={toggleSidebar} />
-          </Suspense>
-        </Drawer>
-
-        {/* ── MAIN AREA ── */}
-        <Layout
-          className="dashboard-main"
-          style={{
-            marginLeft: sidebarVisible ? t.sidebarWidth : 0,
-            background: t.layoutBg,
-            minHeight: "100vh",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {/* TOPBAR */}
-          <Header
-            style={{
-              padding: 0,
-              height: 64,
-              lineHeight: "64px",
-              background: t.headerBg,
-              borderBottom: `1px solid ${t.headerBorder}`,
-              position: "sticky",
-              top: 0,
-              zIndex: 999,
-              flexShrink: 0,
-              boxShadow: isDarkMode
-                ? "0 1px 0 #1f1f1f"
-                : "0 1px 0 #f0f0f0",
-            }}
+        {isMobile && (
+          <Drawer
+            className="dash-drawer"
+            placement="left"
+            closable={false}
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            width={SIDEBAR_EXPANDED}
+            styles={{ body: { padding: 0, overflow: "hidden" } }}
           >
-            <Suspense fallback={<TopbarFallback isDark={isDarkMode} />}>
-              <Topbar toggleSidebar={toggleSidebar} isOpen={isSidebarOpen} />
+            <Suspense fallback={<SidebarFallback isDark={isDark} collapsed={false} />}>
+              <Sidebar collapsed={false} onToggle={() => setDrawerOpen(false)} />
             </Suspense>
-          </Header>
+          </Drawer>
+        )}
 
-          {/* PAGE CONTENT */}
-          <Content
-            className="dashboard-content"
-            style={{
-              flex: 1,
-              padding: isMobile ? 12 : 0,
-              background: t.contentBg,
-              color: "var(--text-primary)",
-              minHeight: "calc(100vh - 64px)",
-              
-            }}
-          >
-            <div className="dashboard-outlet">
-              <Suspense fallback={<ContentFallback isDark={isDarkMode} />}>
+        {/* ── MAIN CONTENT AREA ── */}
+        <div className="dash-main" style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
+          minHeight: "100vh",
+        }}>
+
+          {/* TOPBAR */}
+          <div style={{
+            height: 60,
+            position: "sticky",
+            top: 0,
+            zIndex: 99,
+            flexShrink: 0,
+          }}>
+            <Suspense fallback={<TopbarFallback isDark={isDark} />}>
+              <Topbar
+                toggleSidebar={toggleSidebar}
+                sidebarCollapsed={sidebarCollapsed}
+                isMobile={isMobile}
+              />
+            </Suspense>
+          </div>
+
+          {/* PAGE */}
+          <div style={{
+            flex: 1,
+            overflow: "auto",
+            background: "var(--surface-page)",
+          }}>
+            <div className="dash-outlet">
+              <Suspense fallback={
+                <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+                  <Skeleton.Input active style={{ width: 220, height: 26, borderRadius: 8 }} />
+                  <div style={{ display: "flex", gap: 14 }}>
+                    {[1,2,3,4].map((i) => (
+                      <Skeleton.Button key={i} active style={{ width: 150, height: 88, borderRadius: 12, flex: 1 }} />
+                    ))}
+                  </div>
+                  <Skeleton active paragraph={{ rows: 6 }} />
+                </div>
+              }>
                 <Outlet />
               </Suspense>
             </div>
-          </Content>
-        </Layout>
-      </Layout>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

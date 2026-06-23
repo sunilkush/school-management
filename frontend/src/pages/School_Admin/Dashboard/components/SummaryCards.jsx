@@ -49,10 +49,11 @@ const SummaryCards = ({ summary }) => {
     },
     {
       title: "Total Income",
-      formatted: `$${Number(dynamic?.totalIncome?.value || 0).toLocaleString()}`,
+      formatted: `₹${Number(dynamic?.totalIncome?.value || 0).toLocaleString()}`,
       percentage: Math.abs(Math.round(dynamic?.totalIncome?.growth || 0)),
       trend: (dynamic?.totalIncome?.growth || 0) < 0 ? "decrease" : "increase",
-      icon: accent: "#EF4444",
+      icon: RupeeIcon,
+      accent: "#EF4444",
       accentBg: "rgba(217,107,122,0.08)",
       desc: "revenue this month",
     },

@@ -1,34 +1,35 @@
 import React, { useState, memo, lazy, Suspense } from "react";
-import { Layout, Input, Button, Space, Grid, Drawer, Spin, Badge, Tooltip, Dropdown, Avatar } from "antd";
+import { Input, Space, Grid, Drawer, Spin, Badge, Tooltip, Dropdown } from "antd";
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
   SearchOutlined,
   BellOutlined,
   MoonOutlined,
   SunOutlined,
   LaptopOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../context/ThemeContext";
 import { useSelector } from "react-redux";
 
-const UserDropdown = lazy(() => import("./UserDropdown"));
+const UserDropdown         = lazy(() => import("./UserDropdown"));
 const NotificationDropdown = lazy(() => import("./NotificationDropdown"));
 const AcademicYearSwitcher = lazy(() => import("../layout/AcademicYearSwitcher"));
 
-const { Header } = Layout;
 const { useBreakpoint } = Grid;
 
-/* ─── Small icon button ─────────────────────────────────────────────── */
-const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark }) => {
-  const [hovered, setHovered] = useState(false);
+const loader = <Spin size="small" style={{ display: "flex", alignItems: "center" }} />;
+
+/* ── Icon button ────────────────────────────────────────────────── */
+const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark, active }) => {
+  const [hov, setHov] = useState(false);
 
   const btn = (
     <button
       aria-label={ariaLabel ?? tooltip}
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
       style={{
         display: "flex",
         alignItems: "center",
@@ -36,173 +37,169 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark }) => {
         width: 36,
         height: 36,
         borderRadius: 10,
-        border: "none",
-        background: hovered
-          ? isDark ? "#243047" : "rgba(219,234,254,0.15)"
-          : isDark ? "#1E2A3E" : "#F2F6FD",
-        color: isDark ? "#9BA8C0" : "#64748B",
+        border: `1px solid ${
+          active
+            ? isDark ? "#2563EB66" : "#2563EB22"
+            : isDark ? "#1E2A3B" : "#E8EEF6"
+        }`,
+        background: active
+          ? isDark ? "#1E3A6E" : "#EFF6FF"
+          : hov
+            ? isDark ? "#1A2438" : "#F0F4FF"
+            : isDark ? "#111827" : "#F8FAFF",
+        color: active ? "#2563EB" : isDark ? "#94A3B8" : "#64748B",
         transition: "all 0.18s ease",
         cursor: "pointer",
-        transform: hovered ? "scale(1.07)" : "scale(1)",
+        transform: hov ? "scale(1.05)" : "scale(1)",
         fontSize: 16,
       }}
     >
       {badge !== undefined ? (
-        <Badge
-          count={badge}
-          size="small"
-          offset={[4, -4]}
-          style={{
-            fontSize: 9,
-            background: "#EF4444",
-            boxShadow: "none",
-            border: "none",
-          }}
-        >
+        <Badge count={badge} size="small" offset={[4, -4]}
+          style={{ fontSize: 9, background: "#EF4444", boxShadow: "none", border: "none" }}>
           {icon}
         </Badge>
-      ) : (
-        icon
-      )}
+      ) : icon}
     </button>
   );
 
   return tooltip ? (
-    <Tooltip title={tooltip} placement="bottom">
-      {btn}
-    </Tooltip>
+    <Tooltip title={tooltip} placement="bottom">{btn}</Tooltip>
   ) : btn;
 });
 
-/* ─── Main Topbar ───────────────────────────────────────────────────── */
-const Topbar = ({ toggleSidebar, isOpen }) => {
-  const { user } = useSelector((state) => state.auth);
-  const screens = useBreakpoint();
+/* ── Topbar ─────────────────────────────────────────────────────── */
+const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
+  const { user }                                 = useSelector((s) => s.auth);
+  const screens                                  = useBreakpoint();
   const { isDark, toggleTheme, themeMode, setThemeMode } = useTheme();
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const isMobile = !screens.md;
+  const [mobileSearch, setMobileSearch]          = useState(false);
+  const [searchVal, setSearchVal]                = useState("");
+  const mobile = !screens.md;
 
-  const loader = <Spin size="small" style={{ display: "flex", alignItems: "center" }} />;
+  const topbarBg     = isDark
+    ? "rgba(17,24,39,0.96)"
+    : "rgba(255,255,255,0.95)";
+  const topbarBorder = isDark ? "#1E2A3B" : "#E8EEF6";
+  const topbarShadow = isDark
+    ? "0 1px 0 #1E2A3B, 0 2px 16px rgba(0,0,0,0.25)"
+    : "0 1px 0 #E8EEF6, 0 2px 16px rgba(37,99,235,0.06)";
 
   return (
     <>
-      {/* ── Top bar styles ── */}
       <style>{`
-        .topbar-search-input .ant-input {
-          background: transparent !important;
-          color: ${isDark ? "#E8EDF7" : "#0F172A"} !important;
-          font-size: 13px;
-        }
-        .topbar-search-input .ant-input::placeholder {
-          color: ${isDark ? "#64748B" : "#A0AABA"} !important;
-        }
-        .topbar-search-input.ant-input-affix-wrapper {
-          border-color: ${isDark ? "#2A3550" : "#E2E8F0"} !important;
-          background: ${isDark ? "#1E2A3E" : "#F2F6FD"} !important;
+        .tb-search.ant-input-affix-wrapper {
+          background: ${isDark ? "#1A2438" : "#F4F7FF"} !important;
+          border-color: ${isDark ? "#1E2A3B" : "#E2E9F8"} !important;
           border-radius: 10px !important;
           box-shadow: none !important;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition: border-color 0.2s, box-shadow 0.2s !important;
         }
-        .topbar-search-input.ant-input-affix-wrapper:hover,
-        .topbar-search-input.ant-input-affix-wrapper-focused {
-          border-color: ${isDark ? "#2563EB" : "#DBEAFE"} !important;
-          box-shadow: 0 0 0 3px rgba(219,234,254,0.18) !important;
+        .tb-search.ant-input-affix-wrapper:hover,
+        .tb-search.ant-input-affix-wrapper-focused {
+          border-color: ${isDark ? "#3B82F6" : "#93C5FD"} !important;
+          box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important;
         }
-        .topbar-year-switcher { max-width: 180px; }
+        .tb-search .ant-input {
+          background: transparent !important;
+          color: ${isDark ? "#E8EDF7" : "#0F172A"} !important;
+          font-size: 13px !important;
+        }
+        .tb-search .ant-input::placeholder {
+          color: ${isDark ? "#4B5875" : "#A0AABA"} !important;
+        }
       `}</style>
 
-      <Header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 20px",
-          height: 64,
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          background: isDark ? "#1A2235" : "#ffffff",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderBottom: `1px solid ${isDark ? "#2A3550" : "#F1F5F9"}`,
-          boxShadow: isDark
-            ? "0 1px 0 #222E44"
-            : "0 1px 0 #F1F5F9, 0 2px 12px rgba(37,99,235,0.05)",
-          transition: "background 0.3s",
-        }}
-      >
+      {/* Topbar */}
+      <div style={{
+        height: 60,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: mobile ? "0 14px" : "0 20px",
+        background: topbarBg,
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: `1px solid ${topbarBorder}`,
+        boxShadow: topbarShadow,
+        transition: "background 0.3s",
+        position: "relative",
+        zIndex: 99,
+      }}>
+
         {/* ── LEFT ── */}
-        <Space align="center" size={isMobile ? 8 : 12}>
+        <div style={{ display: "flex", alignItems: "center", gap: mobile ? 10 : 14 }}>
+
           {/* Sidebar toggle */}
-          <Tooltip title={isOpen ? "Collapse sidebar" : "Expand sidebar"} placement="bottom">
-            <Button
-              type="text"
+          <Tooltip title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} placement="bottom">
+            <button
               onClick={toggleSidebar}
-              aria-label="Toggle Sidebar"
-              icon={
-                isOpen
-                  ? <MenuFoldOutlined style={{ fontSize: 18 }} />
-                  : <MenuUnfoldOutlined style={{ fontSize: 18 }} />
-              }
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                color: isDark ? "#9BA8C0" : "#64748B",
-                background: isDark ? "#1E2A3E" : "#F2F6FD",
-                border: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 36, height: 36, borderRadius: 10,
+                border: `1px solid ${isDark ? "#1E2A3B" : "#E8EEF6"}`,
+                background: isDark ? "#111827" : "#F8FAFF",
+                color: isDark ? "#94A3B8" : "#64748B",
+                cursor: "pointer", transition: "all 0.18s ease",
+                flexShrink: 0,
               }}
-            />
+            >
+              {(isMobile || sidebarCollapsed)
+                ? <MenuUnfoldOutlined style={{ fontSize: 16 }} />
+                : <MenuFoldOutlined   style={{ fontSize: 16 }} />
+              }
+            </button>
           </Tooltip>
 
-          {/* Desktop search */}
-          {screens.md && (
+          {/* Search — desktop */}
+          {!mobile && (
             <Input
-              className="topbar-search-input"
-              placeholder="Search anything…"
+              className="tb-search"
+              placeholder="Search…"
               allowClear
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              prefix={
-                <SearchOutlined style={{ color: isDark ? "#64748B" : "#A0AABA", fontSize: 14 }} />
+              value={searchVal}
+              onChange={(e) => setSearchVal(e.target.value)}
+              prefix={<SearchOutlined style={{ color: isDark ? "#4B5875" : "#A0AABA", fontSize: 14 }} />}
+              suffix={
+                <span style={{
+                  fontSize: 10, fontWeight: 600, letterSpacing: "0.03em",
+                  color: isDark ? "#4B5875" : "#CBD5E1",
+                  background: isDark ? "#1E2A3B" : "#EDF0F7",
+                  padding: "1px 5px", borderRadius: 5,
+                }}>
+                  ⌘K
+                </span>
               }
-              style={{ width: 260 }}
+              style={{ width: 240 }}
             />
           )}
-        </Space>
+        </div>
 
         {/* ── RIGHT ── */}
-        <Space size={isMobile ? 4 : 6} align="center">
+        <div style={{ display: "flex", alignItems: "center", gap: mobile ? 6 : 8 }}>
 
-          {/* Mobile search toggle */}
-          {isMobile && (
+          {/* Mobile search */}
+          {mobile && (
             <IconBtn
+              isDark={isDark}
               icon={<SearchOutlined style={{ fontSize: 16 }} />}
               tooltip="Search"
-              isDark={isDark}
-              onClick={() => setMobileSearchOpen(true)}
+              onClick={() => setMobileSearch(true)}
             />
           )}
 
-          {/* Academic Year Switcher */}
-          {!isMobile && screens.sm && user?.role?.name !== "Super Admin" && (
-            <div className="topbar-year-switcher mr-8">
-              <Suspense fallback={loader}>
-                <AcademicYearSwitcher />
-              </Suspense>
-            </div>
+          {/* Academic Year */}
+          {!mobile && user?.role?.name !== "Super Admin" && (
+            <Suspense fallback={loader}>
+              <AcademicYearSwitcher />
+            </Suspense>
           )}
 
           {/* Divider */}
-          {!isMobile && (
+          {!mobile && (
             <span style={{
-              width: 1, height: 22,
-              background: isDark ? "#2A3550" : "#E2E8F0",
-              borderRadius: 1,
+              width: 1, height: 20,
+              background: isDark ? "#1E2A3B" : "#E2E8F0",
             }} />
           )}
 
@@ -213,26 +210,24 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
               selectedKeys: [themeMode],
               onClick: ({ key }) => setThemeMode(key),
               items: [
-                { key: "light", label: "Light" },
-                { key: "dark",  label: "Dark" },
-                { key: "system",label: "System" },
+                { key: "light",  label: "Light"  },
+                { key: "dark",   label: "Dark"   },
+                { key: "system", label: "System" },
               ],
-              style: { borderRadius: 12, padding: "4px" },
+              style: { borderRadius: 12, padding: "4px", minWidth: 110 },
             }}
-            overlayStyle={{ borderRadius: 12 }}
           >
             <span>
               <IconBtn
                 isDark={isDark}
                 tooltip={`Theme: ${themeMode}`}
-                onClick={toggleTheme}
-                ariaLabel="Theme controls"
+                ariaLabel="Switch theme"
                 icon={
                   themeMode === "system"
                     ? <LaptopOutlined style={{ fontSize: 16 }} />
                     : isDark
-                      ? <SunOutlined style={{ fontSize: 16, color: "#FEF3C7" }} />
-                      : <MoonOutlined style={{ fontSize: 16, color: "#14B8A6" }} />
+                      ? <SunOutlined  style={{ fontSize: 16 }} />
+                      : <MoonOutlined style={{ fontSize: 16 }} />
                 }
               />
             </span>
@@ -244,20 +239,19 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           </Suspense>
 
           {/* Divider */}
-          {!isMobile && (
+          {!mobile && (
             <span style={{
-              width: 1, height: 22,
-              background: isDark ? "#2A3550" : "#E2E8F0",
-              borderRadius: 1,
+              width: 1, height: 20,
+              background: isDark ? "#1E2A3B" : "#E2E8F0",
             }} />
           )}
 
-          {/* User dropdown */}
+          {/* User */}
           <Suspense fallback={loader}>
             <UserDropdown />
           </Suspense>
-        </Space>
-      </Header>
+        </div>
+      </div>
 
       {/* ── Mobile Search Drawer ── */}
       <Drawer
@@ -267,20 +261,20 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           </span>
         }
         placement="top"
-        height={88}
-        onClose={() => setMobileSearchOpen(false)}
-        open={mobileSearchOpen}
+        height={90}
+        onClose={() => setMobileSearch(false)}
+        open={mobileSearch}
         closable
-        closeIcon={<span style={{ fontSize: 13, color: isDark ? "#9BA8C0" : "#94A3B8" }}>✕</span>}
+        closeIcon={<span style={{ fontSize: 14, color: isDark ? "#94A3B8" : "#94A3B8" }}>✕</span>}
         styles={{
           header: {
             padding: "10px 16px",
-            background: isDark ? "#1A2235" : "#fff",
-            borderBottom: `1px solid ${isDark ? "#2A3550" : "#F1F5F9"}`,
+            background: isDark ? "#111827" : "#fff",
+            borderBottom: `1px solid ${topbarBorder}`,
           },
           body: {
             padding: "10px 16px",
-            background: isDark ? "#1A2235" : "#fff",
+            background: isDark ? "#111827" : "#fff",
           },
         }}
       >
@@ -288,14 +282,11 @@ const Topbar = ({ toggleSidebar, isOpen }) => {
           autoFocus
           placeholder="Search anything…"
           allowClear
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          prefix={<SearchOutlined style={{ color: isDark ? "#64748B" : "#A0AABA", fontSize: 14 }} />}
-          style={{
-            borderRadius: 10,
-            background: isDark ? "rgba(255,255,255,0.06)" : "#F2F6FD",
-            border: `1px solid ${isDark ? "#2A3550" : "#E2E8F0"}`,
-          }}
+          className="tb-search"
+          value={searchVal}
+          onChange={(e) => setSearchVal(e.target.value)}
+          prefix={<SearchOutlined style={{ color: isDark ? "#4B5875" : "#A0AABA", fontSize: 14 }} />}
+          style={{ borderRadius: 10 }}
         />
       </Drawer>
     </>

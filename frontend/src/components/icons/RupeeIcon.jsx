@@ -9,7 +9,7 @@ const RupeeIcon = ({ size, style, className, strokeWidth, ...rest }) => (
       fontStyle: "normal",
       fontWeight: 700,
       lineHeight: 1,
-      fontSize: size ?? 14,
+      fontSize: size ?? style?.fontSize ?? 14,
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
