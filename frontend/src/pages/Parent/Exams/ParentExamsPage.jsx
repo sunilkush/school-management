@@ -1,40 +1,33 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Alert,
-  Card,
-  Collapse,
-  Empty,
-  Progress,
-  Select,
-  Segmented,
-  Space,
-  Statistic,
-  Table,
-  Tag,
-  Typography,
-  message,
+  Alert, Collapse, Empty, Progress, Select, Segmented, Space, Table, Tag, message,
 } from "antd";
+import {
+  BarChartOutlined, CalendarOutlined, CheckCircleOutlined,
+  CloseCircleOutlined, TrophyOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getExams, getParentResults } from "../../../features/examSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
-import ExamPageHeader from "../../../components/exams/ExamPageHeader";
-import ExamStatCards from "../../../components/exams/ExamStatCards";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel,
+  statCard, statLabel, statValue, statGrid,
+} from "../../../styles/pageStyles";
 
-const { Text } = Typography;
+const STAT_COLORS = ["#14B8A6", "#22C55E", "#EF4444", "#2563EB"];
 
 const ParentExamsPage = () => {
   const dispatch = useDispatch();
-  const { children = [], loading: childrenLoading } = useSelector((state) => state.studentPortal || {});
-  const { exams = [], results = [], loading, error } = useSelector((state) => state.exams || {});
+  const { children = [], loading: childrenLoading }  = useSelector((s) => s.studentPortal || {});
+  const { exams = [], results = [], loading, error } = useSelector((s) => s.exams || {});
 
   const [selectedChildId, setSelectedChildId] = useState(null);
-  const [scheduleFilter, setScheduleFilter] = useState("upcoming");
+  const [scheduleFilter,  setScheduleFilter]  = useState("upcoming");
 
   useEffect(() => {
-    dispatch(fetchMyChildren())
-      .unwrap()
-      .catch((err) => message.error(err || "Failed to load children"));
+    dispatch(fetchMyChildren()).unwrap().catch((err) => message.error(err || "Failed to load children"));
   }, [dispatch]);
 
   useEffect(() => {
@@ -42,7 +35,7 @@ const ParentExamsPage = () => {
   }, [children, selectedChildId]);
 
   const selectedChild = useMemo(
-    () => children.find((child) => child.userId === selectedChildId) || null,
+    () => children.find((c) => c.userId === selectedChildId) || null,
     [children, selectedChildId]
   );
 
@@ -53,172 +46,247 @@ const ParentExamsPage = () => {
 
   useEffect(() => {
     if (!selectedChild?.classId) return;
-    dispatch(
-      getExams({
-         studentId: selectedChildId,
-        schoolClassId: selectedChild.classId,
-        ...(selectedChild.sectionId ? { sectionId: selectedChild.sectionId } : {}),
-        sortBy: "examDate",
-        sortOrder: "asc",
-        status: "published",
-      })
-    ).unwrap().catch(() => null);
+    dispatch(getExams({
+      studentId: selectedChildId,
+      schoolClassId: selectedChild.classId,
+      ...(selectedChild.sectionId ? { sectionId: selectedChild.sectionId } : {}),
+      sortBy: "examDate",
+      sortOrder: "asc",
+      status: "published",
+    })).unwrap().catch(() => null);
   }, [dispatch, selectedChild, selectedChildId]);
 
   const summary = useMemo(() => {
-    const total = results.length;
-    const passed = results.filter((result) => result.resultStatus === "PASS").length;
-    const avgPercentage = total
-      ? Math.round(results.reduce((acc, result) => acc + Number(result.percentage || 0), 0) / total)
+    const total  = results.length;
+    const passed = results.filter((r) => r.resultStatus === "PASS").length;
+    const avg    = total
+      ? Math.round(results.reduce((a, r) => a + Number(r.percentage || 0), 0) / total)
       : 0;
-    return { total, passed, failed: total - passed, avgPercentage };
+    return { total, passed, failed: total - passed, avg };
   }, [results]);
 
   const nextExam = useMemo(() => {
     const now = dayjs();
     return exams
-      .filter((exam) => dayjs(exam.examDate).isAfter(now, "day") || dayjs(exam.examDate).isSame(now, "day"))
+      .filter((e) => dayjs(e.examDate).isAfter(now, "day") || dayjs(e.examDate).isSame(now, "day"))
       .sort((a, b) => dayjs(a.examDate).valueOf() - dayjs(b.examDate).valueOf())[0];
   }, [exams]);
 
   const filteredExams = useMemo(() => {
     const now = dayjs();
     if (scheduleFilter === "all") return exams;
-    return exams.filter((exam) => {
-      const examDate = dayjs(exam.examDate);
+    return exams.filter((e) => {
+      const d = dayjs(e.examDate);
       return scheduleFilter === "upcoming"
-        ? examDate.isAfter(now, "day") || examDate.isSame(now, "day")
-        : examDate.isBefore(now, "day");
+        ? d.isAfter(now, "day") || d.isSame(now, "day")
+        : d.isBefore(now, "day");
     });
   }, [exams, scheduleFilter]);
 
   const resultColumns = [
-    { title: "Subject", dataIndex: "subjectName" },
+    { title: "Subject",  dataIndex: "subjectName"   },
     { title: "Obtained", dataIndex: "obtainedMarks" },
-    { title: "Total", dataIndex: "totalMarks" },
+    { title: "Total",    dataIndex: "totalMarks"    },
     {
       title: "Status",
-      render: (_, row) => <Tag color={row.isPassed ? "green" : "red"}>{row.isPassed ? "PASS" : "FAIL"}</Tag>,
+      render: (_, r) => (
+        <Tag color={r.isPassed ? "green" : "red"}>{r.isPassed ? "PASS" : "FAIL"}</Tag>
+      ),
     },
+  ];
+
+  const statMeta = [
+    { key: "total", label: "Results Published", value: summary.total,    icon: <TrophyOutlined />      },
+    { key: "pass",  label: "Pass",              value: summary.passed,   icon: <CheckCircleOutlined /> },
+    { key: "fail",  label: "Fail",              value: summary.failed,   icon: <CloseCircleOutlined /> },
+    { key: "avg",   label: "Avg Score",         value: `${summary.avg}%`, icon: <BarChartOutlined />  },
   ];
 
   if (!childrenLoading && !children.length) {
     return (
-      <Card>
-        <Empty description="No linked children found for this parent account" />
-      </Card>
+      <>
+        <PageHeader title="Child Exam Hub" subtitle="Monitor exam schedules and results." icon={<TrophyOutlined />} />
+        <div style={pageWrapper}>
+          <div style={sectionPanel}><Empty description="No linked children found for this parent account" /></div>
+        </div>
+      </>
     );
   }
 
   return (
-    <Space direction="vertical" style={{ width: "100%", padding: "24px" }} size="middle">
-      <Card bordered={false} style={{ borderRadius: 12 }}>
-        <ExamPageHeader
-          title="Child Exam Hub"
-          subtitle="Monitor exam schedules and results with a parent-friendly, printable layout."
-          breadcrumbItems={[{ title: "Dashboard" }, { title: "Exams" }]}
-          actions={[
-            <Select
-              key="child"
-              placeholder="Select child"
-              value={selectedChildId}
-              onChange={setSelectedChildId}
-              loading={childrenLoading}
-              style={{ width: 340, maxWidth: "100%" }}
-              options={children.map((child) => ({
-                label: `${child.name}${child.className ? ` (${child.className}${child.sectionName ? ` - ${child.sectionName}` : ""})` : ""}`,
-                value: child.userId,
-              }))}
-            />,
-          ]}
-        />
-        <Tag color={nextExam ? "blue" : "default"} style={{ marginTop: 8 }}>
-          {nextExam ? `Next: ${nextExam.title || "Exam"} (${dayjs(nextExam.examDate).format("DD MMM YYYY")})` : "No upcoming exam"}
-        </Tag>
-      </Card>
-
-      <ExamStatCards
-        items={[
-          { key: "published", title: "Results Published", value: summary.total },
-          { key: "pass", title: "Pass", value: summary.passed, valueStyle: { color: "#389e0d" } },
-          { key: "fail", title: "Fail", value: summary.failed, valueStyle: { color: "#cf1322" } },
-          { key: "avg", title: "Avg %", value: summary.avgPercentage, suffix: "%" },
-        ]}
+    <>
+      <PageHeader
+        title="Child Exam Hub"
+        subtitle="Monitor exam schedules and results with a parent-friendly layout."
+        icon={<TrophyOutlined />}
+        extra={
+          <Select
+            placeholder="Select child"
+            value={selectedChildId}
+            onChange={setSelectedChildId}
+            loading={childrenLoading}
+            style={{ minWidth: 280 }}
+            options={children.map((c) => ({
+              label: `${c.name}${c.className ? ` (${c.className}${c.sectionName ? ` - ${c.sectionName}` : ""})` : ""}`,
+              value: c.userId,
+            }))}
+          />
+        }
       />
 
-      <Card>
-        <Statistic title="Performance Trend" value={summary.avgPercentage} suffix="%" />
-        <Progress percent={summary.avgPercentage} size="small" strokeColor="#1677ff" />
-      </Card>
+      <div style={pageWrapper}>
+        {/* Next exam notice */}
+        {nextExam && (
+          <div style={{
+            ...sectionPanel,
+            display: "flex", alignItems: "center", gap: 10,
+            background: "#EFF6FF", borderColor: "#BFDBFE",
+          }}>
+            <CalendarOutlined style={{ color: "#2563EB", fontSize: 18 }} />
+            <span>
+              <span style={{ fontWeight: 700, color: "#1D4ED8" }}>Next Exam: </span>
+              <span style={{ color: "#1D4ED8" }}>
+                {nextExam.title || "Exam"} — {dayjs(nextExam.examDate).format("DD MMM YYYY")}
+              </span>
+            </span>
+          </div>
+        )}
 
-      {error ? <Alert type="error" showIcon message="Some exam data failed to load" description={String(error)} /> : null}
+        {/* Stats */}
+        <div className="stat-grid" style={statGrid(160)}>
+          {statMeta.map(({ key, label, value, icon }, i) => (
+            <div key={key} style={statCard({ color: STAT_COLORS[i] })}>
+              <div>
+                <div style={statLabel(STAT_COLORS[i])}>{label}</div>
+                <div style={statValue(STAT_COLORS[i])}>{value}</div>
+              </div>
+              <div style={{ fontSize: 26, color: STAT_COLORS[i], opacity: 0.5 }}>{icon}</div>
+            </div>
+          ))}
+        </div>
 
-      <Card loading={loading}>
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <Space style={{ justifyContent: "space-between", width: "100%" }} wrap>
-            <Text strong>Exam Schedule</Text>
+        {/* Performance trend */}
+        <div style={sectionPanel}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>
+            Overall Performance
+          </div>
+          <Progress
+            percent={summary.avg}
+            strokeColor={summary.avg >= 75 ? "#22C55E" : summary.avg >= 50 ? "#F59E0B" : "#EF4444"}
+            trailColor="var(--border-muted)"
+            format={(p) => <span style={{ fontWeight: 700 }}>{p}%</span>}
+          />
+        </div>
+
+        {error && (
+          <Alert
+            type="error"
+            showIcon
+            message="Some exam data failed to load"
+            description={String(error)}
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        {/* Exam Schedule */}
+        <div style={sectionPanel}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Exam Schedule</span>
             <Segmented
               value={scheduleFilter}
               onChange={setScheduleFilter}
               options={[
-                { label: "Upcoming", value: "upcoming" },
+                { label: "Upcoming",  value: "upcoming"  },
                 { label: "Completed", value: "completed" },
-                { label: "All", value: "all" },
+                { label: "All",       value: "all"       },
               ]}
             />
-          </Space>
+          </div>
 
-          {!filteredExams.length ? (
-            <Empty description="No exams scheduled for selected child" />
+          {loading ? (
+            <div style={{ padding: "32px 0", textAlign: "center", color: "var(--text-muted)" }}>Loading exams…</div>
+          ) : !filteredExams.length ? (
+            <Empty description="No exams for the selected filter" />
           ) : (
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {filteredExams.map((exam) => (
-                <Card key={exam._id} size="small">
-                  <Space direction="vertical" size={2}>
-                    <Text strong>{exam.title || "Untitled Exam"}</Text>
-                    <Text type="secondary">{dayjs(exam.examDate).format("DD MMM YYYY")}</Text>
-                    <Text>{exam.subjectId?.name || "Subject N/A"}</Text>
-                    <Text type="secondary">Total {exam.totalMarks ?? 0} • Passing {exam.passingMarks ?? 0}</Text>
-                  </Space>
-                </Card>
+                <div
+                  key={exam._id}
+                  style={{
+                    padding: "14px 16px",
+                    background: "var(--surface-soft)",
+                    border: "1px solid var(--border-muted)",
+                    borderRadius: 10,
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+                    {exam.title || "Untitled Exam"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <CalendarOutlined style={{ marginRight: 5 }} />
+                    {dayjs(exam.examDate).format("DD MMM YYYY")}
+                    {exam.subjectId?.name && (
+                      <span style={{ marginLeft: 12 }}>📚 {exam.subjectId.name}</span>
+                    )}
+                    <span style={{ marginLeft: 12 }}>
+                      Total {exam.totalMarks ?? 0} &nbsp;·&nbsp; Passing {exam.passingMarks ?? 0}
+                    </span>
+                  </div>
+                </div>
               ))}
-            </Space>
+            </div>
           )}
-        </Space>
-      </Card>
+        </div>
 
-      <Card loading={loading}>
-        <Text strong>Published Results</Text>
-        {!results.length ? (
-          <Empty description="No published results found" style={{ marginTop: 16 }} />
-        ) : (
-          <Collapse
-            style={{ marginTop: 16 }}
-            items={results.map((result) => ({
-              key: result._id,
-              label: `${result.examId?.title || "Exam"} • ${result.percentage}% • Grade ${result.grade || "-"}`,
-              children: (
-                <>
-                  <Table
-                    rowKey={(row) => `${row.subjectId}-${row.subjectName}`}
-                    pagination={false}
-                    columns={resultColumns}
-                    dataSource={result.subjects || []}
-                  />
-                  <Space size="large" wrap style={{ marginTop: 12 }}>
-                    <Text strong>Rank: {result.rank || "-"}</Text>
-                    <Text strong>Obtained: {result.totalObtainedMarks || 0}/{result.totalMaximumMarks || 0}</Text>
-                    <Text strong>
-                      Status: <Tag color={result.resultStatus === "PASS" ? "green" : "red"}>{result.resultStatus}</Tag>
-                    </Text>
-                  </Space>
-                </>
-              ),
-            }))}
-          />
-        )}
-      </Card>
-    </Space>
+        {/* Published Results */}
+        <div style={sectionPanel}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 16 }}>
+            Published Results
+          </div>
+          {loading ? (
+            <div style={{ padding: "32px 0", textAlign: "center", color: "var(--text-muted)" }}>Loading results…</div>
+          ) : !results.length ? (
+            <Empty description="No published results found" />
+          ) : (
+            <Collapse
+              bordered={false}
+              style={{ background: "transparent" }}
+              items={results.map((result) => ({
+                key: result._id,
+                label: (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 700 }}>{result.examId?.title || "Exam"}</span>
+                    <Tag color={result.resultStatus === "PASS" ? "success" : "error"}>{result.resultStatus}</Tag>
+                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                      {result.percentage}% — Grade {result.grade || "—"}
+                    </span>
+                  </div>
+                ),
+                children: (
+                  <>
+                    <Table
+                      rowKey={(r) => `${r.subjectId}-${r.subjectName}`}
+                      pagination={false}
+                      columns={resultColumns}
+                      dataSource={result.subjects || []}
+                      size="small"
+                    />
+                    <div style={{ display: "flex", gap: 20, marginTop: 12, flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+                        Rank: {result.rank || "—"}
+                      </span>
+                      <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+                        Obtained: {result.totalObtainedMarks || 0}/{result.totalMaximumMarks || 0}
+                      </span>
+                    </div>
+                  </>
+                ),
+              }))}
+            />
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 
