@@ -916,6 +916,7 @@ const router = createBrowserRouter([
               { path: "routes",          element: <RoutesPage /> },
               { path: "vehicles",        element: <Vehicles /> },
               { path: "drivers",         element: <DriversPage /> },
+              { path: "assignments",     element: <TransportAssignments /> },
               { path: "maintenance",     element: <VehicleMaintenance /> },
               { path: "tasks",           element: <MyTasks /> },
               { path: "payroll",         element: <PayrollSelfServicePage /> },

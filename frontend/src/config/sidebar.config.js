@@ -515,6 +515,7 @@ export const sidebarMenu = {
     { title: "Routes", path: "transportmanager/routes", icon: MapPinned },
     { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
     { title: "Drivers", path: "transportmanager/drivers", icon: Users },
+    { title: "Assignments", path: "transportmanager/assignments", icon: ClipboardCheck },
     { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
     { title: "My Tasks", path: "transportmanager/tasks", icon: ClipboardList },
     { title: "My Payroll", path: "transportmanager/payroll", icon: IndianRupee },

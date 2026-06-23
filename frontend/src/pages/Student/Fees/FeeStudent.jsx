@@ -3,6 +3,7 @@ import {
   Table,
   Tag,
   Button,
+  Input,
   Modal,
   Descriptions,
   message,
@@ -52,6 +53,8 @@ const FeeStudent = () => {
   const [open, setOpen] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState(null);
   const [amountPaid, setAmountPaid] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("online");
+  const [chequeNo, setChequeNo] = useState("");
 
   const [frequencyModalOpen, setFrequencyModalOpen] = useState(false);
   const [selectedFrequency, setSelectedFrequency] = useState("monthly");
@@ -89,21 +92,30 @@ const FeeStudent = () => {
   const openPayModal = (installment) => {
     setSelectedInstallment(installment);
     setAmountPaid(installment.amount - installment.paidAmount);
+    setPaymentMethod("online");
+    setChequeNo("");
     setOpen(true);
   };
 
-  const handleCashPayment = async () => {
+  const closePayModal = () => {
+    setOpen(false);
+    setPaymentMethod("online");
+    setChequeNo("");
+  };
+
+  const handleOfflinePayment = async () => {
     try {
       await dispatch(
         createPayment({
           installmentId: selectedInstallment._id,
           amount: amountPaid,
-          paymentMode: "cash",
+          paymentMode: paymentMethod,
+          ...(paymentMethod === "cheque" && chequeNo ? { transactionId: chequeNo } : {}),
         })
       ).unwrap();
 
-      message.success("Payment successful");
-      setOpen(false);
+      message.success(`${paymentMethod === "cheque" ? "Cheque" : "Cash"} payment recorded successfully`);
+      closePayModal();
       if (studentId) dispatch(fetchMyFees(studentId));
       dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
     } catch (err) {
@@ -142,8 +154,8 @@ const FeeStudent = () => {
             })
           ).unwrap();
 
-          message.success("Payment successful");
-          setOpen(false);
+          message.success("Online payment successful");
+          closePayModal();
           if (studentId) dispatch(fetchMyFees(studentId));
           dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
         },
@@ -300,36 +312,82 @@ const FeeStudent = () => {
       <Modal
         title="Pay Installment"
         open={open}
-        onCancel={() => setOpen(false)}
+        onCancel={closePayModal}
         centered
         footer={[
-          <Button key="cash" onClick={handleCashPayment}>
-            Pay Cash
-          </Button>,
-          <Button key="online" type="primary" onClick={handleRazorpayPayment}>
-            Pay Online
-          </Button>,
+          <Button key="cancel" onClick={closePayModal}>Cancel</Button>,
+          paymentMethod === "online"
+            ? (
+              <Button key="pay" type="primary" icon={<DollarOutlined />} onClick={handleRazorpayPayment}>
+                Pay Online (Razorpay)
+              </Button>
+            ) : (
+              <Button key="pay" type="primary" icon={<DollarOutlined />} onClick={handleOfflinePayment}>
+                Confirm {paymentMethod === "cheque" ? "Cheque" : "Cash"} Payment
+              </Button>
+            ),
         ]}
       >
         {selectedInstallment && (
-          <>
-            <Descriptions bordered column={1} style={{ marginBottom: 12 }}>
+          <Space direction="vertical" style={{ width: "100%" }} size={14}>
+            <Descriptions bordered column={1} size="small">
               <Descriptions.Item label="Installment">
                 {selectedInstallment.installmentName}
               </Descriptions.Item>
-              <Descriptions.Item label="Due">
-                ₹{selectedInstallment.amount - selectedInstallment.paidAmount}
+              <Descriptions.Item label="Due Amount">
+                <span style={{ fontWeight: 700, color: "#EF4444" }}>
+                  ₹{(selectedInstallment.amount - selectedInstallment.paidAmount).toLocaleString("en-IN")}
+                </span>
               </Descriptions.Item>
             </Descriptions>
 
-            <InputNumber
-              style={{ width: "100%" }}
-              min={1}
-              max={selectedInstallment.amount - selectedInstallment.paidAmount}
-              value={amountPaid}
-              onChange={setAmountPaid}
-            />
-          </>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Amount to Pay
+              </div>
+              <InputNumber
+                style={{ width: "100%" }}
+                min={1}
+                max={selectedInstallment.amount - selectedInstallment.paidAmount}
+                value={amountPaid}
+                onChange={setAmountPaid}
+                formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                parser={(v) => v?.replace(/[₹,\s]/g, "")}
+                size="large"
+              />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Payment Method
+              </div>
+              <Radio.Group
+                value={paymentMethod}
+                onChange={(e) => { setPaymentMethod(e.target.value); setChequeNo(""); }}
+                style={{ width: "100%" }}
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Radio value="online" style={{ fontWeight: 500 }}>💳 Online (Razorpay)</Radio>
+                  <Radio value="cash"   style={{ fontWeight: 500 }}>💵 Cash</Radio>
+                  <Radio value="cheque" style={{ fontWeight: 500 }}>📋 Cheque</Radio>
+                </Space>
+              </Radio.Group>
+            </div>
+
+            {paymentMethod === "cheque" && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Cheque Number
+                </div>
+                <Input
+                  placeholder="Enter cheque number"
+                  value={chequeNo}
+                  onChange={(e) => setChequeNo(e.target.value)}
+                  size="large"
+                />
+              </div>
+            )}
+          </Space>
         )}
       </Modal>
 

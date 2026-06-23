@@ -145,11 +145,10 @@ const FeeCollection = () => {
         payStudentFee({
           id:      payModal.fee._id,
           payload: {
-            method:    vals.method,
-            amount:    vals.amount,
-            note:      vals.note,
-            reference: vals.reference,
-            date:      vals.date?.toISOString() || new Date().toISOString(),
+            paidAmount:  vals.amount,
+            paymentMode: vals.method,
+            remarks:     vals.note,
+            referenceNo: vals.reference,
           },
         }),
       ).unwrap();

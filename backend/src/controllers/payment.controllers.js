@@ -13,14 +13,19 @@ import { sendSuccess } from "../utils/response.js";
 const getRazorpayInstance = async (schoolId) => {
   if (!mongoose.Types.ObjectId.isValid(schoolId)) throw new ApiError(400, "Invalid school ID");
 
-  const school = await School.findById(schoolId).select("razorpay");
+  const school = await School.findById(schoolId).select("+razorpay.keyId +razorpay.keySecret razorpay.isEnabled");
   if (!school || !school.razorpay?.keyId || !school.razorpay?.keySecret) {
-    throw new ApiError(400, "Razorpay not configured for this school");
+    throw new ApiError(400, "Razorpay not configured for this school. Please add Key ID and Key Secret in Settings.");
+  }
+
+  if (!school.razorpay.isEnabled) {
+    throw new ApiError(400, "Razorpay is disabled for this school. Please enable it in Settings → School → Razorpay Integration.");
   }
 
   return {
     razorpay: new Razorpay({ key_id: school.razorpay.keyId, key_secret: school.razorpay.keySecret }),
     keySecret: school.razorpay.keySecret,
+    keyId: school.razorpay.keyId,
   };
 };
 
@@ -41,7 +46,7 @@ const requireSchoolId = (user) => {
   return schoolId;
 };
 export const createPayment = asyncHandler(async (req, res) => {
-  const { studentId, installmentId, amount, paymentMethod, paymentMode, razorpay } = req.body;
+  const { studentId, installmentId, amount, paymentMethod, paymentMode, transactionId, razorpay } = req.body;
   const schoolId = requireSchoolId(req.user);
 
   const installment = await ensureInstallmentAccess({ installmentId, schoolId });
@@ -82,7 +87,7 @@ export const createPayment = asyncHandler(async (req, res) => {
       });
     }
 
-    const { razorpay: razorpayClient } = await getRazorpayInstance(schoolId);
+    const { razorpay: razorpayClient, keyId } = await getRazorpayInstance(schoolId);
     const order = await razorpayClient.orders.create({
       amount: Math.round(dueAmount * 100),
       currency: "INR",
@@ -94,15 +99,13 @@ export const createPayment = asyncHandler(async (req, res) => {
       },
     });
 
-    const school = await School.findById(schoolId).select("+razorpay.keyId");
-
     return sendSuccess(res, {
       message: "Razorpay order created",
       data: {
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
-        keyId: school?.razorpay?.keyId || null,
+        keyId,
       },
     });
   }
@@ -123,6 +126,7 @@ export const createPayment = asyncHandler(async (req, res) => {
     amountPaid: numericAmount,
     paymentMode: mode,
     status: "success",
+    transactionId: transactionId || null,
     receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
   });
 
@@ -146,7 +150,7 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
 
   if (payableAmount <= 0) throw new ApiError(400, "Installment already paid");
 
-  const { razorpay } = await getRazorpayInstance(schoolId);
+  const { razorpay, keyId } = await getRazorpayInstance(schoolId);
   const order = await razorpay.orders.create({
     amount: Math.round(payableAmount * 100),
     currency: "INR",
@@ -158,10 +162,9 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
     },
   });
 
-  const school = await School.findById(schoolId).select("+razorpay.keyId");
   return sendSuccess(res, {
     message: "Razorpay order created",
-    data: { ...order, keyId: school?.razorpay?.keyId || null },
+    data: { ...order, keyId },
   });
 });
 
@@ -201,12 +204,18 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 export const getPayments = asyncHandler(async (req, res) => {
   const schoolId = requireSchoolId(req.user);
   const { id } = req.params;
-  const { page = 1, limit = 20 } = req.query;
+  const { page = 1, limit = 20, paymentMode, startDate, endDate } = req.query;
 
   const filter = { schoolId };
   if (id) filter._id = id;
   if (["Student", "Parent"].includes(req.userRole?.name)) {
     filter.studentId = req.user._id;
+  }
+  if (paymentMode) filter.paymentMode = paymentMode;
+  if (startDate || endDate) {
+    filter.createdAt = {};
+    if (startDate) filter.createdAt.$gte = new Date(startDate);
+    if (endDate)   filter.createdAt.$lte = new Date(endDate);
   }
 
   const skip = (Number(page) - 1) * Number(limit);

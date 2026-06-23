@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Button,
-  Card,
+  Col,
+  Flex,
   Form,
   Input,
   Modal,
   Popconfirm,
+  Row,
   Select,
   Space,
   Table,
@@ -14,12 +15,22 @@ import {
   Typography,
   message,
 } from "antd";
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  ReloadOutlined,
+  CustomerServiceOutlined,
+  ExclamationCircleOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  MinusCircleOutlined,
+} from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import httpClient from "../../api/httpClient";
+import PageHeader from "../../components/layout/PageHeader.jsx";
+import { pageWrapper, sectionPanel, iconWell, tableHeadCss } from "../../styles/pageStyles.js";
 
 const { TextArea } = Input;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const STATUS_OPTIONS = ["Open", "In Progress", "Resolved", "Closed"];
 const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
@@ -29,19 +40,16 @@ const supportPath = (import.meta.env.VITE_API_URL || "/api/v1").includes("/api/v
   ? "/support-tickets"
   : "/v1/support-tickets";
 
-const statusColor = {
-  Open: "gold",
-  "In Progress": "blue",
-  Resolved: "green",
-  Closed: "default",
-};
+const STATUS_COLOR = { Open: "gold", "In Progress": "blue", Resolved: "green", Closed: "default" };
+const STATUS_HEX = { Open: "#F59E0B", "In Progress": "#2563EB", Resolved: "#22C55E", Closed: "#94A3B8" };
+const PRIORITY_COLOR = { Low: "default", Medium: "processing", High: "orange", Urgent: "red" };
 
-const priorityColor = {
-  Low: "default",
-  Medium: "processing",
-  High: "orange",
-  Urgent: "red",
-};
+const STATUS_STATS = [
+  { key: "Open", label: "Open", color: "#F59E0B", icon: <ExclamationCircleOutlined /> },
+  { key: "In Progress", label: "In Progress", color: "#2563EB", icon: <ClockCircleOutlined /> },
+  { key: "Resolved", label: "Resolved", color: "#22C55E", icon: <CheckCircleOutlined /> },
+  { key: "Closed", label: "Closed", color: "#94A3B8", icon: <MinusCircleOutlined /> },
+];
 
 export default function SupportTicketsPage() {
   const [tickets, setTickets] = useState([]);
@@ -50,7 +58,6 @@ export default function SupportTicketsPage() {
   const [editingTicket, setEditingTicket] = useState(null);
   const [saving, setSaving] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
-
   const [filters, setFilters] = useState({ status: undefined, priority: undefined, category: undefined });
 
   const [createForm] = Form.useForm();
@@ -68,7 +75,6 @@ export default function SupportTicketsPage() {
         ...(filters.priority ? { priority: filters.priority } : {}),
         ...(filters.category ? { category: filters.category } : {}),
       };
-
       const response = await httpClient.get(supportPath, { params });
       const payload = response.data || {};
       setTickets(payload.data || []);
@@ -126,21 +132,17 @@ export default function SupportTicketsPage() {
 
   const handleUpdate = async () => {
     if (!editingTicket?._id) return;
-
     try {
       const values = await updateForm.validateFields();
       setSaving(true);
-
       const { status, ...rest } = values;
       await httpClient.patch(`${supportPath}/${editingTicket._id}`, rest);
-
       if (status && status !== editingTicket.status) {
         await httpClient.patch(`${supportPath}/${editingTicket._id}/status`, {
           status,
           note: values.note || "",
         });
       }
-
       message.success("Ticket updated successfully");
       setEditingTicket(null);
       fetchTickets(pagination.current, pagination.pageSize);
@@ -162,6 +164,14 @@ export default function SupportTicketsPage() {
     }
   };
 
+  const ticketCountByStatus = useMemo(() => {
+    const counts = {};
+    tickets.forEach((t) => {
+      counts[t.status] = (counts[t.status] || 0) + 1;
+    });
+    return counts;
+  }, [tickets]);
+
   const columns = useMemo(
     () => [
       {
@@ -169,11 +179,9 @@ export default function SupportTicketsPage() {
         dataIndex: "title",
         key: "title",
         render: (value, record) => (
-          <Space direction="vertical" size={0}>
-            <Text strong>{value}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              #{record._id?.slice(-6) || "------"}
-            </Text>
+          <Space direction="vertical" size={2}>
+            <Text strong style={{ color: "var(--text-primary)" }}>{value}</Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>#{record._id?.slice(-6) || "------"}</Text>
           </Space>
         ),
       },
@@ -181,174 +189,262 @@ export default function SupportTicketsPage() {
         title: "Category",
         dataIndex: "category",
         key: "category",
-        render: (value) => <Tag>{value}</Tag>,
+        render: (value) => <Tag style={{ borderRadius: 99 }}>{value}</Tag>,
       },
       {
         title: "Priority",
         dataIndex: "priority",
         key: "priority",
-        render: (value) => <Tag color={priorityColor[value] || "default"}>{value}</Tag>,
+        render: (value) => (
+          <Tag color={PRIORITY_COLOR[value] || "default"} style={{ borderRadius: 99, fontWeight: 600 }}>{value}</Tag>
+        ),
       },
       {
         title: "Status",
         dataIndex: "status",
         key: "status",
-        render: (value) => <Tag color={statusColor[value] || "default"}>{value}</Tag>,
+        render: (value) => (
+          <Tag color={STATUS_COLOR[value] || "default"} style={{ borderRadius: 99 }}>{value}</Tag>
+        ),
       },
       {
         title: "Raised By",
         dataIndex: ["createdBy", "name"],
         key: "raisedBy",
-        render: (_value, record) => record?.createdBy?.name || "-",
+        render: (_value, record) => (
+          <Text style={{ fontSize: 13 }}>{record?.createdBy?.name || "-"}</Text>
+        ),
       },
       {
-        title: "Action",
+        title: "Actions",
         key: "action",
         render: (_value, record) => (
           <Space wrap>
-            <Button size="small" onClick={() => openUpdateModal(record)}>
-              Update
-            </Button>
+            <Button size="small" onClick={() => openUpdateModal(record)}>Update</Button>
             {record.status !== "Resolved" && (
-              <Popconfirm title="Resolve this ticket?" onConfirm={() => handleResolve(record._id)}>
-                <Button size="small" type="primary" ghost>
-                  Resolve
-                </Button>
+              <Popconfirm title="Mark this ticket as resolved?" onConfirm={() => handleResolve(record._id)}>
+                <Button size="small" type="primary" ghost>Resolve</Button>
               </Popconfirm>
             )}
           </Space>
         ),
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%", padding: "24px" }}>
-      <Card>
-        <Space direction="vertical" size={4}>
-          <Title level={4} style={{ margin: 0 }}>Support Tickets</Title>
-          <Text type="secondary">
-            {roleName || "User"} can create, update and resolve tickets from this module.
-          </Text>
-        </Space>
-      </Card>
-
-      <Card>
-        <Space wrap style={{ width: "100%", justifyContent: "space-between" }}>
+    <>
+      <style>{tableHeadCss("support-tbl")}</style>
+      <PageHeader
+        title="Support Tickets"
+        subtitle={`${roleName || "User"} — create, update and resolve support tickets.`}
+        icon={<CustomerServiceOutlined />}
+        extra={
           <Space wrap>
-            <Select
-              allowClear
-              placeholder="Filter by status"
-              style={{ width: 170 }}
-              options={STATUS_OPTIONS.map((item) => ({ label: item, value: item }))}
-              value={filters.status}
-              onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-            />
-            <Select
-              allowClear
-              placeholder="Filter by priority"
-              style={{ width: 170 }}
-              options={PRIORITY_OPTIONS.map((item) => ({ label: item, value: item }))}
-              value={filters.priority}
-              onChange={(value) => setFilters((prev) => ({ ...prev, priority: value }))}
-            />
-            <Select
-              allowClear
-              placeholder="Filter by category"
-              style={{ width: 170 }}
-              options={CATEGORY_OPTIONS.map((item) => ({ label: item, value: item }))}
-              value={filters.category}
-              onChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
-            />
-          </Space>
-
-          <Space>
-            <Button icon={<ReloadOutlined />} onClick={() => fetchTickets(pagination.current, pagination.pageSize)}>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => fetchTickets(pagination.current, pagination.pageSize)}
+              loading={loading}
+            >
               Refresh
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
               Create Ticket
             </Button>
           </Space>
-        </Space>
-      </Card>
-
-      <Alert
-        type="info"
-        showIcon
-        message="Tip"
-        description="Non-privileged roles can typically manage their own tickets while admins/support roles can manage broader school tickets."
+        }
       />
 
-      <Card>
-        <Table
-          rowKey="_id"
-          columns={columns}
-          loading={loading}
-          dataSource={tickets}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            onChange: (page, pageSize) => fetchTickets(page, pageSize),
-          }}
-        />
-      </Card>
+      <div style={pageWrapper}>
+        {/* Status summary strip */}
+        <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+          {STATUS_STATS.map((s) => (
+            <Col xs={12} sm={6} key={s.key}>
+              <div
+                style={{
+                  background: "var(--surface)",
+                  borderRadius: 14,
+                  border: "1px solid var(--border-muted)",
+                  borderTop: `4px solid ${s.color}`,
+                  padding: "14px 18px",
+                  cursor: "pointer",
+                  transition: "box-shadow 0.18s ease",
+                }}
+                onClick={() => setFilters((f) => ({ ...f, status: f.status === s.key ? undefined : s.key }))}
+              >
+                <Flex align="center" gap={12}>
+                  <div style={iconWell(s.color, 40)}>
+                    <span style={{ fontSize: 18 }}>{s.icon}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
+                      {ticketCountByStatus[s.key] || 0}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>
+                      {s.label}
+                    </div>
+                  </div>
+                </Flex>
+              </div>
+            </Col>
+          ))}
+        </Row>
 
+        {/* Filters */}
+        <div style={{ ...sectionPanel, marginBottom: 16, padding: "12px 16px" }}>
+          <Flex align="center" justify="space-between" wrap="wrap" gap={10}>
+            <Flex gap={8} wrap="wrap">
+              <Select
+                allowClear
+                placeholder="Filter by status"
+                style={{ width: 155 }}
+                options={STATUS_OPTIONS.map((item) => ({ label: item, value: item }))}
+                value={filters.status}
+                onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+              />
+              <Select
+                allowClear
+                placeholder="Filter by priority"
+                style={{ width: 155 }}
+                options={PRIORITY_OPTIONS.map((item) => ({ label: item, value: item }))}
+                value={filters.priority}
+                onChange={(value) => setFilters((prev) => ({ ...prev, priority: value }))}
+              />
+              <Select
+                allowClear
+                placeholder="Filter by category"
+                style={{ width: 155 }}
+                options={CATEGORY_OPTIONS.map((item) => ({ label: item, value: item }))}
+                value={filters.category}
+                onChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
+              />
+              {(filters.status || filters.priority || filters.category) && (
+                <Button onClick={() => setFilters({ status: undefined, priority: undefined, category: undefined })}>
+                  Clear
+                </Button>
+              )}
+            </Flex>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              {pagination.total} total tickets
+            </Text>
+          </Flex>
+        </div>
+
+        {/* Table */}
+        <div style={sectionPanel}>
+          <Table
+            className="support-tbl"
+            rowKey="_id"
+            columns={columns}
+            loading={loading}
+            dataSource={tickets}
+            scroll={{ x: 700 }}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              showTotal: (t) => `${t} tickets`,
+              onChange: (page, pageSize) => fetchTickets(page, pageSize),
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Create Modal */}
       <Modal
-        title="Create Support Ticket"
+        title={
+          <Flex align="center" gap={10}>
+            <div style={iconWell("#2563EB", 34)}>
+              <PlusOutlined style={{ fontSize: 15 }} />
+            </div>
+            <Text strong style={{ fontSize: 15 }}>Create Support Ticket</Text>
+          </Flex>
+        }
         open={createOpen}
         onCancel={() => setCreateOpen(false)}
         onOk={handleCreate}
+        okText="Submit Ticket"
         okButtonProps={{ loading: saving }}
         destroyOnHidden
       >
-        <Form layout="vertical" form={createForm}>
+        <Form layout="vertical" form={createForm} style={{ marginTop: 16 }}>
           <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
             <Input placeholder="Enter ticket title" maxLength={180} />
           </Form.Item>
           <Form.Item name="description" label="Description" rules={[{ required: true, message: "Description is required" }]}>
-            <TextArea rows={4} placeholder="Describe issue" maxLength={5000} />
+            <TextArea rows={4} placeholder="Describe the issue in detail" maxLength={5000} />
           </Form.Item>
-          <Form.Item name="category" label="Category" initialValue="General">
-            <Select options={CATEGORY_OPTIONS.map((item) => ({ label: item, value: item }))} />
-          </Form.Item>
-          <Form.Item name="priority" label="Priority" initialValue="Medium">
-            <Select options={PRIORITY_OPTIONS.map((item) => ({ label: item, value: item }))} />
-          </Form.Item>
+          <Row gutter={12}>
+            <Col xs={12}>
+              <Form.Item name="category" label="Category" initialValue="General">
+                <Select options={CATEGORY_OPTIONS.map((item) => ({ label: item, value: item }))} />
+              </Form.Item>
+            </Col>
+            <Col xs={12}>
+              <Form.Item name="priority" label="Priority" initialValue="Medium">
+                <Select options={PRIORITY_OPTIONS.map((item) => ({ label: item, value: item }))} />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
+      {/* Update Modal */}
       <Modal
-        title="Update Ticket"
+        title={
+          <Flex align="center" gap={10}>
+            <div style={iconWell("#7C3AED", 34)}>
+              <CustomerServiceOutlined style={{ fontSize: 15 }} />
+            </div>
+            <div>
+              <Text strong style={{ fontSize: 15, display: "block" }}>Update Ticket</Text>
+              {editingTicket && (
+                <Text type="secondary" style={{ fontSize: 12 }}>#{editingTicket._id?.slice(-6)}</Text>
+              )}
+            </div>
+          </Flex>
+        }
         open={Boolean(editingTicket)}
         onCancel={() => setEditingTicket(null)}
         onOk={handleUpdate}
+        okText="Save Changes"
         okButtonProps={{ loading: saving }}
         destroyOnHidden
       >
-        <Form layout="vertical" form={updateForm}>
+        <Form layout="vertical" form={updateForm} style={{ marginTop: 16 }}>
           <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
             <Input maxLength={180} />
           </Form.Item>
           <Form.Item name="description" label="Description" rules={[{ required: true, message: "Description is required" }]}>
-            <TextArea rows={4} maxLength={5000} />
+            <TextArea rows={3} maxLength={5000} />
           </Form.Item>
-          <Form.Item name="category" label="Category">
-            <Select options={CATEGORY_OPTIONS.map((item) => ({ label: item, value: item }))} />
-          </Form.Item>
-          <Form.Item name="priority" label="Priority">
-            <Select options={PRIORITY_OPTIONS.map((item) => ({ label: item, value: item }))} />
-          </Form.Item>
-          <Form.Item name="status" label="Status">
-            <Select options={STATUS_OPTIONS.map((item) => ({ label: item, value: item }))} />
-          </Form.Item>
+          <Row gutter={12}>
+            <Col xs={8}>
+              <Form.Item name="category" label="Category">
+                <Select options={CATEGORY_OPTIONS.map((item) => ({ label: item, value: item }))} />
+              </Form.Item>
+            </Col>
+            <Col xs={8}>
+              <Form.Item name="priority" label="Priority">
+                <Select options={PRIORITY_OPTIONS.map((item) => ({ label: item, value: item }))} />
+              </Form.Item>
+            </Col>
+            <Col xs={8}>
+              <Form.Item name="status" label="Status">
+                <Select options={STATUS_OPTIONS.map((item) => ({
+                  label: <Tag color={STATUS_COLOR[item]} style={{ borderRadius: 99 }}>{item}</Tag>,
+                  value: item,
+                }))} />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item name="note" label="Update Note (Optional)">
-            <TextArea rows={3} maxLength={1000} placeholder="Add update note" />
+            <TextArea rows={2} maxLength={1000} placeholder="Add a note about this update" />
           </Form.Item>
         </Form>
       </Modal>
-    </Space>
+    </>
   );
 }

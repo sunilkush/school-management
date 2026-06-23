@@ -20,9 +20,9 @@ import {
 
 const router = Router();
 
-const PAYMENT_ADMIN_ROLES = ["Super Admin", "School Admin"];
-const PAYMENT_READ_ROLES = ["Super Admin", "School Admin", "Student", "Parent"];
-const PAYMENT_CREATE_ROLES = ["Super Admin", "School Admin", "Student", "Parent"];
+const PAYMENT_ADMIN_ROLES = ["Super Admin", "School Admin", "Accountant"];
+const PAYMENT_READ_ROLES = ["Super Admin", "School Admin", "Accountant", "Student", "Parent"];
+const PAYMENT_CREATE_ROLES = ["Super Admin", "School Admin", "Accountant", "Student", "Parent"];
 
 router.post("/", requireRoles(PAYMENT_CREATE_ROLES), validateRequest(createPaymentSchema), createPayment);
 router.get("/", requireRoles(PAYMENT_READ_ROLES), validateRequest(paymentListQuerySchema), getPayments);

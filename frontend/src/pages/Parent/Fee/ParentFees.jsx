@@ -8,6 +8,7 @@ import {
   Descriptions,
   Empty,
   Flex,
+  Input,
   InputNumber,
   Modal,
   Progress,
@@ -84,6 +85,8 @@ const ParentFees = () => {
   const [amountPaid, setAmountPaid] = useState(0);
 
   const [paying, setPaying] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("online");
+  const [chequeNo, setChequeNo] = useState("");
 
   const academicYearId = selectedAcademicYear?._id;
 
@@ -181,7 +184,15 @@ const ParentFees = () => {
     const due = Number(installment.amount || 0) - Number(installment.paidAmount || 0);
     setSelectedInstallment(installment);
     setAmountPaid(due);
+    setPaymentMethod("online");
+    setChequeNo("");
     setPaymentOpen(true);
+  };
+
+  const closePayModal = () => {
+    setPaymentOpen(false);
+    setPaymentMethod("online");
+    setChequeNo("");
   };
 
   const handlePrintReceipt = (installment) => {
@@ -232,7 +243,7 @@ const handleGenerateInstallments = async () => {
   }
 };
 
-  const handleCashPayment = async () => {
+  const handleOfflinePayment = async () => {
     if (!selectedInstallment?._id || !amountPaid) return;
 
     try {
@@ -242,12 +253,13 @@ const handleGenerateInstallments = async () => {
         createPayment({
           installmentId: selectedInstallment._id,
           amount: amountPaid,
-          paymentMode: "cash",
+          paymentMode: paymentMethod,
+          ...(paymentMethod === "cheque" && chequeNo ? { transactionId: chequeNo } : {}),
         })
       ).unwrap();
 
-      message.success("Cash payment saved successfully");
-      setPaymentOpen(false);
+      message.success(`${paymentMethod === "cheque" ? "Cheque" : "Cash"} payment recorded successfully`);
+      closePayModal();
       refreshFeeData();
     } catch (err) {
       message.error(getErrorMessage(err, "Payment failed"));
@@ -293,7 +305,7 @@ const handleGenerateInstallments = async () => {
           ).unwrap();
 
           message.success("Online payment successful");
-          setPaymentOpen(false);
+          closePayModal();
           refreshFeeData();
         },
         theme: { color: "#2563EB" },
@@ -589,76 +601,101 @@ const handleGenerateInstallments = async () => {
     
 
       <Modal
+        title="Pay Installment"
         open={paymentOpen}
-        onCancel={() => setPaymentOpen(false)}
-        footer={null}
+        onCancel={closePayModal}
         centered
-        width={440}
+        width={460}
+        footer={[
+          <Button key="cancel" onClick={closePayModal}>Cancel</Button>,
+          paymentMethod === "online"
+            ? (
+              <Button key="pay" type="primary" icon={<CreditCardOutlined />} loading={paying} onClick={handleRazorpayPayment}>
+                Pay Online (Razorpay)
+              </Button>
+            ) : (
+              <Button key="pay" type="primary" icon={<WalletOutlined />} loading={paying} onClick={handleOfflinePayment}>
+                Confirm {paymentMethod === "cheque" ? "Cheque" : "Cash"} Payment
+              </Button>
+            ),
+        ]}
       >
         {selectedInstallment && (
-          <Space direction="vertical" size="large" style={{ width: "100%" }}>
-            <div style={{ textAlign: "center" }}>
-              <Title level={4} style={{ marginBottom: 4 }}>
-                Pay Installment
-              </Title>
-              <Text type="secondary">Complete your fee payment securely</Text>
-            </div>
-
-            <Card
-              bordered={false}
-              style={{ background: "#F8FAFC", borderRadius: 18 }}
-            >
-              <Descriptions column={1}>
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Card bordered={false} style={{ background: "#F8FAFC", borderRadius: 14 }}>
+              <Descriptions column={1} size="small">
                 <Descriptions.Item label="Installment">
-                  {selectedInstallment.installmentName}
+                  <Text strong>{selectedInstallment.installmentName}</Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Due Amount">
-                  {money(
-                    Number(selectedInstallment.amount || 0) -
-                      Number(selectedInstallment.paidAmount || 0)
-                  )}
+                  <Text strong style={{ color: "#EF4444", fontSize: 16 }}>
+                    {money(Number(selectedInstallment.amount || 0) - Number(selectedInstallment.paidAmount || 0))}
+                  </Text>
                 </Descriptions.Item>
               </Descriptions>
             </Card>
 
-            <InputNumber
-              size="large"
-              style={{ width: "100%" }}
-              min={1}
-              max={
-                Number(selectedInstallment.amount || 0) -
-                Number(selectedInstallment.paidAmount || 0)
-              }
-              value={amountPaid}
-              onChange={setAmountPaid}
-              formatter={(value) =>
-                value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""
-              }
-              parser={(value) => value?.replace(/[₹,\s]/g, "")}
-            />
-
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Button
-                block
+            <div>
+              <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+                Amount to Pay
+              </Text>
+              <InputNumber
                 size="large"
-                type="primary"
-                icon={<CreditCardOutlined />}
-                loading={paying}
-                onClick={handleRazorpayPayment}
-              >
-                Pay Online
-              </Button>
+                style={{ width: "100%" }}
+                min={1}
+                max={Number(selectedInstallment.amount || 0) - Number(selectedInstallment.paidAmount || 0)}
+                value={amountPaid}
+                onChange={setAmountPaid}
+                formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
+                parser={(v) => v?.replace(/[₹,\s]/g, "")}
+              />
+            </div>
 
-              <Button
-                block
-                size="large"
-                icon={<DownloadOutlined />}
-                loading={paying}
-                onClick={handleCashPayment}
-              >
-                Mark Cash Payment
-              </Button>
-            </Space>
+            <div>
+              <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 8 }}>
+                Payment Method
+              </Text>
+              <Space direction="vertical" style={{ width: "100%" }}>
+                {[
+                  { value: "online", label: "💳 Pay Online (Razorpay)", desc: "Secure card / UPI / netbanking via Razorpay" },
+                  { value: "cash",   label: "💵 Cash",   desc: "Record an offline cash payment" },
+                  { value: "cheque", label: "📋 Cheque", desc: "Record a cheque payment (enter cheque no. below)" },
+                ].map((opt) => (
+                  <div
+                    key={opt.value}
+                    onClick={() => { setPaymentMethod(opt.value); setChequeNo(""); }}
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      border: `2px solid ${paymentMethod === opt.value ? "#2563EB" : "var(--border-muted)"}`,
+                      background: paymentMethod === opt.value ? "#EFF6FF" : "var(--surface)",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <Text strong style={{ color: paymentMethod === opt.value ? "#2563EB" : "var(--text-primary)" }}>
+                      {opt.label}
+                    </Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 12 }}>{opt.desc}</Text>
+                  </div>
+                ))}
+              </Space>
+            </div>
+
+            {paymentMethod === "cheque" && (
+              <div>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+                  Cheque Number
+                </Text>
+                <Input
+                  size="large"
+                  placeholder="Enter cheque number"
+                  value={chequeNo}
+                  onChange={(e) => setChequeNo(e.target.value)}
+                />
+              </div>
+            )}
           </Space>
         )}
       </Modal>

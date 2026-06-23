@@ -8,6 +8,7 @@ import {
   Col,
   DatePicker,
   Empty,
+  Flex,
   Form,
   Grid,
   Input,
@@ -16,7 +17,6 @@ import {
   Select,
   Skeleton,
   Space,
-  Statistic,
   Tag,
   Typography,
   message,
@@ -42,8 +42,10 @@ import {
   saveNotifications,
 } from "../utils/notifications";
 import { ALL_ROLE_NAMES, getRoleName } from "../utils/roles";
+import PageHeader from "../components/layout/PageHeader";
+import { pageWrapper, sectionPanel, iconWell } from "../styles/pageStyles";
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph, Title } = Typography;
 const { useBreakpoint } = Grid;
 
 const LEVEL_OPTIONS = [
@@ -84,6 +86,16 @@ const getLevelColor = (level) => {
   return "blue";
 };
 
+const NotifSkeleton = () => (
+  <Space direction="vertical" size={10} style={{ width: "100%" }}>
+    {[1, 2, 3].map((i) => (
+      <div key={i} style={{ ...sectionPanel, padding: 16, marginBottom: 0 }}>
+        <Skeleton active avatar paragraph={{ rows: 2 }} />
+      </div>
+    ))}
+  </Space>
+);
+
 const Notification = () => {
   const screens = useBreakpoint();
   const { user } = useSelector((state) => state.auth);
@@ -97,7 +109,6 @@ const Notification = () => {
 
   const isMobile = !screens.sm;
   const isTablet = screens.sm && !screens.lg;
-  const pagePadding = isMobile ? 12 : 24;
   const roleName = getRoleName(user);
   const canCreateNotification = CREATOR_ROLES.includes(roleName);
   const selectedLevel = Form.useWatch("level", form);
@@ -165,8 +176,8 @@ const Notification = () => {
 
     setSubmitting(true);
     try {
-      const createdNotification = await saveNotifications(payload);
-      setAllNotifications((prev) => [createdNotification, ...prev]);
+      const created = await saveNotifications(payload);
+      setAllNotifications((prev) => [created, ...prev]);
       form.resetFields();
       message.success("Notification created successfully.");
       loadNotifications();
@@ -177,11 +188,11 @@ const Notification = () => {
     }
   };
 
-  const handleMarkRead = async (notification) => {
-    if (!notification?._id || notification.isRead) return;
+  const handleMarkRead = async (notif) => {
+    if (!notif?._id || notif.isRead) return;
     try {
-      const updated = await markNotificationAsRead(notification._id);
-      setAllNotifications((prev) => prev.map((item) => (item._id === notification._id ? updated : item)));
+      const updated = await markNotificationAsRead(notif._id);
+      setAllNotifications((prev) => prev.map((item) => (item._id === notif._id ? updated : item)));
     } catch (error) {
       message.error(error?.response?.data?.message || "Failed to mark notification as read");
     }
@@ -203,7 +214,6 @@ const Notification = () => {
       value: visibleNotifications.length,
       icon: <InboxOutlined />,
       color: "#14B8A6",
-      background: "linear-gradient(135deg, rgba(20,184,166,0.2) 0%, var(--surface) 100%)",
       helper: "Assigned to you",
     },
     {
@@ -211,7 +221,6 @@ const Notification = () => {
       value: unreadCount,
       icon: <BellOutlined />,
       color: "#F59E0B",
-      background: "linear-gradient(135deg, rgba(254,243,199,0.25) 0%, var(--surface) 100%)",
       helper: "Needs attention",
     },
     {
@@ -219,7 +228,6 @@ const Notification = () => {
       value: analytics.scheduled || 0,
       icon: <CalendarOutlined />,
       color: "#2563EB",
-      background: "linear-gradient(135deg, #e0f2fe 0%, var(--surface) 100%)",
       helper: "Planned delivery",
     },
     {
@@ -227,7 +235,6 @@ const Notification = () => {
       value: analytics.opened || 0,
       icon: <EyeOutlined />,
       color: "#22C55E",
-      background: "linear-gradient(135deg, rgba(220,252,231,0.2) 0%, var(--surface) 100%)",
       helper: "Engagement",
     },
   ];
@@ -242,7 +249,6 @@ const Notification = () => {
         </Col>
       );
     }
-
     if (selectedLevel === "user-level") {
       return (
         <>
@@ -253,28 +259,21 @@ const Notification = () => {
           </Col>
           <Col xs={24} lg={12}>
             <Form.Item label="User levels" name="targetLevels" rules={[{ required: true, message: "Enter at least one user level" }]}>
-              <Select mode="tags" tokenSeparators={[","]} placeholder="Example: Class 10, Section A, Science" maxTagCount="responsive" />
+              <Select mode="tags" tokenSeparators={[","]} placeholder="Example: Class 10, Section A" maxTagCount="responsive" />
             </Form.Item>
           </Col>
         </>
       );
     }
-
     if (selectedLevel === "user") {
       return (
         <Col xs={24}>
           <Form.Item label="Specific users" name="targetUserIds" rules={[{ required: true, message: "Enter target users" }]}>
-            <Select
-              mode="tags"
-              tokenSeparators={[","]}
-              placeholder="Add emails, registration IDs, or user IDs separated by commas"
-              maxTagCount="responsive"
-            />
+            <Select mode="tags" tokenSeparators={[","]} placeholder="Add emails, registration IDs, or user IDs" maxTagCount="responsive" />
           </Form.Item>
         </Col>
       );
     }
-
     return (
       <Col xs={24}>
         <Alert
@@ -289,308 +288,261 @@ const Notification = () => {
   };
 
   return (
-    <div style={{ width: "100%", padding: pagePadding, background: "var(--surface-page)", minHeight: "100vh" }}>
-      <Space direction="vertical" size={isMobile ? 14 : 20} style={{ width: "100%" }}>
-        <Card
-          bordered={false}
-          style={{
-            borderRadius: 20,
-            overflow: "hidden",
-            background: "var(--surface)",
-            border: "1px solid var(--border-muted)",
-            boxShadow: "0 12px 32px rgba(37, 99, 235, 0.06)",
-          }}
-          styles={{ body: { padding: isMobile ? 18 : 28 } }}
-        >
-          <Row gutter={[20, 16]} align="middle" justify="space-between">
-            <Col xs={24} lg={16}>
-              <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                <Space align="center" wrap>
-                  <span
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 14,
-                      background: "var(--primary)",
-                      color: "#fff",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 22,
-                    }}
-                  >
-                    <NotificationOutlined />
-                  </span>
-                  <Badge count={unreadCount} overflowCount={99} offset={[4, 0]}>
-                    <Title level={isMobile ? 4 : 2} style={{ margin: 0 }}>
-                      Notifications
-                    </Title>
-                  </Badge>
-                </Space>
-                <Paragraph type="secondary" style={{ margin: 0, maxWidth: 760 }}>
-                  Modern role-wise, user-level, and user-specific notification center for every portal role.
-                </Paragraph>
-              </Space>
-            </Col>
-            <Col xs={24} lg={8}>
-              <Space direction={isMobile ? "vertical" : "horizontal"} size={12} style={{ width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
-                <Tag icon={<TeamOutlined />} color="blue" style={{ marginInlineEnd: 0, padding: "4px 10px", borderRadius: 999 }}>
-                  {safeText(roleName, "User")}
-                </Tag>
-                {canCreateNotification && (
-                  <Button type="primary" icon={<SendOutlined />} size="large" block={isMobile} onClick={() => form.scrollToField("title")}>
-                    Create Broadcast
-                  </Button>
-                )}
-              </Space>
-            </Col>
-          </Row>
-        </Card>
+    <>
+      <PageHeader
+        title="Notifications"
+        subtitle="Role-wise, user-level, and user-specific notification center for every portal role."
+        icon={<NotificationOutlined />}
+        extra={
+          <Space wrap>
+            <Tag icon={<TeamOutlined />} color="blue" style={{ padding: "4px 10px", borderRadius: 99 }}>
+              {safeText(roleName, "User")}
+            </Tag>
+            {unreadCount > 0 && (
+              <Button icon={<CheckCircleOutlined />} onClick={handleMarkAllRead}>
+                Mark all read
+              </Button>
+            )}
+            {canCreateNotification && (
+              <Button type="primary" icon={<SendOutlined />} onClick={() => form.scrollToField("title")}>
+                Create Broadcast
+              </Button>
+            )}
+          </Space>
+        }
+      />
 
-        <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}>
+      <div style={pageWrapper}>
+        {/* Stat Cards */}
+        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
           {statCards.map((stat) => (
             <Col xs={12} md={6} key={stat.title}>
               <Card
-                bordered={false}
-                style={{ borderRadius: 18, background: stat.background, boxShadow: "0 8px 24px rgba(37, 99, 235, 0.05)", height: "100%" }}
-                styles={{ body: { padding: isMobile ? 14 : 18 } }}
+                style={{
+                  borderRadius: 14,
+                  border: "1px solid var(--border-muted)",
+                  borderTop: `4px solid ${stat.color}`,
+                }}
+                styles={{ body: { padding: isMobile ? "14px 16px" : "16px 20px" } }}
               >
-                <Space direction="vertical" size={isMobile ? 8 : 12} style={{ width: "100%" }}>
-                  <span
-                    style={{
-                      width: isMobile ? 34 : 42,
-                      height: isMobile ? 34 : 42,
-                      borderRadius: 12,
-                      background: `${stat.color}18`,
-                      color: stat.color,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: isMobile ? 18 : 22,
-                    }}
-                  >
-                    {stat.icon}
-                  </span>
-                  <Statistic title={stat.title} value={stat.value} valueStyle={{ fontSize: isMobile ? 22 : 28, color: "var(--text-primary)" }} />
-                  {!isMobile && <Text type="secondary">{stat.helper}</Text>}
-                </Space>
+                <Flex align="center" gap={12}>
+                  <div style={iconWell(stat.color, isMobile ? 38 : 44)}>
+                    <span style={{ fontSize: isMobile ? 17 : 20 }}>{stat.icon}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
+                      {stat.value}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>
+                      {stat.title}
+                    </div>
+                    {!isMobile && (
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{stat.helper}</div>
+                    )}
+                  </div>
+                </Flex>
               </Card>
             </Col>
           ))}
         </Row>
 
         {!canCreateNotification && (
-          <Alert type="info" showIcon message="You can view notifications assigned to your role, level, or user account." style={{ borderRadius: 14 }} />
+          <Alert
+            type="info"
+            showIcon
+            message="You can view notifications assigned to your role, level, or user account."
+            style={{ borderRadius: 12, marginBottom: 20 }}
+          />
         )}
 
+        {/* Create / Broadcast Form */}
         {canCreateNotification && (
-          <Card
-            bordered={false}
-            style={{ borderRadius: 20, boxShadow: "0 10px 28px rgba(37, 99, 235, 0.05)" }}
-            styles={{ body: { padding: isMobile ? 16 : 24 } }}
-          >
-            <Space direction="vertical" size={18} style={{ width: "100%" }}>
-              <div>
-                <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
-                  Create / Broadcast Notification
-                </Title>
-                <Text type="secondary">Compose an announcement, choose its audience, and send now or schedule it for later.</Text>
+          <div style={{ ...sectionPanel, marginBottom: 20 }}>
+            <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+              <div style={iconWell("#7C3AED", 36)}>
+                <SendOutlined style={{ fontSize: 16 }} />
               </div>
+              <div>
+                <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block" }}>
+                  Create / Broadcast Notification
+                </Text>
+                <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  Compose an announcement, choose audience, and send now or schedule for later.
+                </Text>
+              </div>
+            </Flex>
 
-              <Form
-                layout="vertical"
-                form={form}
-                onFinish={onCreateNotification}
-                initialValues={{ level: "all", channels: ["inApp"] }}
-                requiredMark="optional"
-              >
-                <Row gutter={[16, 8]}>
-                  <Col xs={24} md={8}>
-                    <Form.Item label="Target type" name="level" rules={[{ required: true, message: "Please select target type" }]}>
-                      <Select options={LEVEL_OPTIONS} placeholder="Select audience type" size="large" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={16}>
-                    <Form.Item label="Notification title" name="title" rules={[{ required: true, message: "Please enter title" }]}>
-                      <Input placeholder="Example: Exam timetable published" size="large" />
-                    </Form.Item>
-                  </Col>
-
-                  {renderConditionalTargetFields()}
-
-                  <Col xs={24}>
-                    <Form.Item label="Message" name="message" rules={[{ required: true, message: "Please enter message" }]}>
-                      <Input.TextArea rows={isMobile ? 4 : 5} placeholder="Write a concise message with all important details for recipients..." />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} lg={12}>
-                    <Form.Item label="Delivery channels" name="channels" rules={[{ required: true, message: "Select at least one channel" }]}>
-                      <Checkbox.Group style={{ width: "100%" }}>
-                        <Row gutter={[8, 8]}>
-                          {[
-                            { label: "In App", value: "inApp" },
-                            { label: "Email", value: "email" },
-                            { label: "SMS", value: "sms" },
-                            { label: "WhatsApp", value: "whatsapp" },
-                          ].map((channel) => (
-                            <Col xs={12} sm={6} lg={12} key={channel.value}>
-                              <Checkbox value={channel.value}>{channel.label}</Checkbox>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Checkbox.Group>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} lg={12}>
-                    <Form.Item label="Schedule delivery" name="scheduledAt" extra="Leave empty to publish immediately.">
-                      <DatePicker showTime style={{ width: "100%" }} placeholder="Choose date and time" size="large" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: isMobile ? "column-reverse" : "row",
-                    gap: 12,
-                    alignItems: isMobile ? "stretch" : "center",
-                    justifyContent: "space-between",
-                    paddingTop: 8,
-                  }}
-                >
-                  <Form.Item name="saveAsDraft" valuePropName="checked" noStyle>
-                    <Checkbox>Save as draft instead of publishing now</Checkbox>
+            <Form
+              layout="vertical"
+              form={form}
+              onFinish={onCreateNotification}
+              initialValues={{ level: "all", channels: ["inApp"] }}
+              requiredMark="optional"
+            >
+              <Row gutter={[14, 0]}>
+                <Col xs={24} md={8}>
+                  <Form.Item label="Target type" name="level" rules={[{ required: true, message: "Please select target type" }]}>
+                    <Select options={LEVEL_OPTIONS} placeholder="Select audience type" />
                   </Form.Item>
-                  <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting} size="large" block={isMobile}>
-                    Publish Notification
-                  </Button>
-                </div>
-              </Form>
-            </Space>
-          </Card>
+                </Col>
+                <Col xs={24} md={16}>
+                  <Form.Item label="Notification title" name="title" rules={[{ required: true, message: "Please enter title" }]}>
+                    <Input placeholder="Example: Exam timetable published" />
+                  </Form.Item>
+                </Col>
+
+                {renderConditionalTargetFields()}
+
+                <Col xs={24}>
+                  <Form.Item label="Message" name="message" rules={[{ required: true, message: "Please enter message" }]}>
+                    <Input.TextArea rows={isMobile ? 4 : 4} placeholder="Write a concise message with all important details for recipients..." />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} lg={12}>
+                  <Form.Item label="Delivery channels" name="channels" rules={[{ required: true, message: "Select at least one channel" }]}>
+                    <Checkbox.Group style={{ width: "100%" }}>
+                      <Row gutter={[8, 8]}>
+                        {[
+                          { label: "In App", value: "inApp" },
+                          { label: "Email", value: "email" },
+                          { label: "SMS", value: "sms" },
+                          { label: "WhatsApp", value: "whatsapp" },
+                        ].map((ch) => (
+                          <Col xs={12} sm={6} lg={12} key={ch.value}>
+                            <Checkbox value={ch.value}>{ch.label}</Checkbox>
+                          </Col>
+                        ))}
+                      </Row>
+                    </Checkbox.Group>
+                  </Form.Item>
+                </Col>
+                <Col xs={24} lg={12}>
+                  <Form.Item label="Schedule delivery" name="scheduledAt" extra="Leave empty to publish immediately.">
+                    <DatePicker showTime style={{ width: "100%" }} placeholder="Choose date and time" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Flex
+                align="center"
+                justify="space-between"
+                gap={12}
+                style={{ flexDirection: isMobile ? "column-reverse" : "row", paddingTop: 4 }}
+              >
+                <Form.Item name="saveAsDraft" valuePropName="checked" noStyle>
+                  <Checkbox>Save as draft instead of publishing now</Checkbox>
+                </Form.Item>
+                <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting} block={isMobile}>
+                  Publish Notification
+                </Button>
+              </Flex>
+            </Form>
+          </div>
         )}
 
-        <Card
-          bordered={false}
-          style={{ borderRadius: 20, boxShadow: "0 10px 28px rgba(37, 99, 235, 0.05)" }}
-          styles={{ body: { padding: isMobile ? 16 : 24 } }}
-        >
-          <Space direction="vertical" size={18} style={{ width: "100%" }}>
-            <Row gutter={[16, 16]} align="middle" justify="space-between">
-              <Col xs={24} lg={10}>
-                <Space direction="vertical" size={4} style={{ width: "100%" }}>
-                  <Space align="center" wrap>
-                    <Title level={isMobile ? 5 : 4} style={{ margin: 0 }}>
-                      My Notifications
-                    </Title>
-                    <Badge count={unreadCount} overflowCount={99} />
-                  </Space>
-                  <Text type="secondary">Review assigned alerts and mark important updates as read.</Text>
-                </Space>
-              </Col>
-              <Col xs={24} lg={14}>
-                <Row gutter={[10, 10]} justify={isMobile || isTablet ? "start" : "end"}>
-                  <Col xs={24} sm={12} md={10}>
-                    <Input.Search
-                      allowClear
-                      placeholder="Search notifications"
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      style={{ width: "100%" }}
-                    />
-                  </Col>
-                  <Col xs={24} sm={12} md={7}>
-                    <Select style={{ width: "100%" }} value={filterLevel} onChange={setFilterLevel} options={FILTER_OPTIONS} />
-                  </Col>
-                  <Col xs={24} md={7}>
-                    <Button icon={<CheckCircleOutlined />} onClick={handleMarkAllRead} disabled={!unreadCount} block={isMobile || isTablet} style={{ width: "100%" }}>
-                      Mark all read
-                    </Button>
-                  </Col>
-                </Row>
-              </Col>
-            </Row>
-
-            {loading ? (
-              <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                {[1, 2, 3].map((item) => (
-                  <Card key={item} bordered={false} style={{ borderRadius: 16, background: "#fafafa" }}>
-                    <Skeleton active avatar paragraph={{ rows: 2 }} />
-                  </Card>
-                ))}
-              </Space>
-            ) : filteredNotifications.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={search || filterLevel !== "all" ? "No notifications match your search or filter." : "No notifications available for your account."}
-                style={{ padding: isMobile ? "24px 0" : "48px 0" }}
+        {/* Notifications List */}
+        <div style={sectionPanel}>
+          <Flex vertical={isMobile || isTablet} gap={12} align={isMobile || isTablet ? "stretch" : "center"} justify="space-between" style={{ marginBottom: 16 }}>
+            <Flex align="center" gap={8}>
+              <Text strong style={{ fontSize: 15, color: "var(--text-primary)" }}>
+                My Notifications
+              </Text>
+              <Badge count={unreadCount} overflowCount={99} />
+            </Flex>
+            <Flex gap={8} wrap="wrap" align="center" justify={isMobile ? "flex-start" : "flex-end"}>
+              <Input.Search
+                allowClear
+                placeholder="Search notifications"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ width: isMobile ? "100%" : 220 }}
               />
-            ) : (
-              <List
-                split={false}
-                dataSource={filteredNotifications}
-                renderItem={(item) => {
-                  const title = safeText(item?.title, "Notification");
-                  const notificationMessage = safeText(item?.message, "No message available");
-                  const createdBy = safeText(item?.createdBy, "System");
-                  const level = safeText(item?.level, "all");
-                  const status = safeText(item?.status, "sent");
-
-                  return (
-                    <List.Item key={item._id || item.id || `${title}-${item.createdAt}`} style={{ padding: "0 0 12px" }}>
-                      <Card
-                        bordered={false}
-                        onClick={() => handleMarkRead(item)}
-                        style={{
-                          width: "100%",
-                          cursor: item.isRead ? "default" : "pointer",
-                          background: item.isRead ? "var(--surface)" : "linear-gradient(90deg, rgba(20,184,166,0.2) 0%, var(--surface) 100%)",
-                          borderLeft: item.isRead ? "4px solid transparent" : "4px solid var(--primary)",
-                          borderRadius: 16,
-                          boxShadow: item.isRead ? "0 4px 16px rgba(37, 99, 235, 0.04)" : "0 8px 24px rgba(124, 58, 237, 0.10)",
-                        }}
-                        styles={{ body: { padding: isMobile ? 14 : 18 } }}
-                      >
-                        <Space direction="vertical" size={10} style={{ width: "100%" }}>
-                          <Row gutter={[12, 8]} align="top" justify="space-between">
-                            <Col xs={24} md={15}>
-                              <Space size={8} align="start">
-                                <Badge status={item.isRead ? "default" : "processing"} style={{ marginTop: 7 }} />
-                                <Space direction="vertical" size={4}>
-                                  <Text strong style={{ fontSize: isMobile ? 15 : 16 }}>
-                                    {title}
-                                  </Text>
-                                  <Text type="secondary" style={{ fontSize: 13 }}>
-                                    By {createdBy} • {formatDate(item.createdAt)}
-                                  </Text>
-                                </Space>
-                              </Space>
-                            </Col>
-                            <Col xs={24} md={9}>
-                              <Space wrap size={[6, 6]} style={{ width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
-                                <Tag color={getLevelColor(level)} style={{ marginInlineEnd: 0, borderRadius: 999 }}>
-                                  {level}
-                                </Tag>
-                                <Tag color={getStatusColor(status)} style={{ marginInlineEnd: 0, borderRadius: 999 }}>
-                                  {status}
-                                </Tag>
-                                {!item.isRead && <Tag color="processing" style={{ marginInlineEnd: 0, borderRadius: 999 }}>Unread</Tag>}
-                              </Space>
-                            </Col>
-                          </Row>
-                          <Paragraph style={{ marginBottom: 0, color: "var(--text-secondary)" }}>{notificationMessage}</Paragraph>
-                        </Space>
-                      </Card>
-                    </List.Item>
-                  );
-                }}
+              <Select
+                style={{ width: isMobile ? "100%" : 160 }}
+                value={filterLevel}
+                onChange={setFilterLevel}
+                options={FILTER_OPTIONS}
               />
-            )}
-          </Space>
-        </Card>
-      </Space>
-    </div>
+            </Flex>
+          </Flex>
+
+          {loading ? (
+            <NotifSkeleton />
+          ) : filteredNotifications.length === 0 ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                search || filterLevel !== "all"
+                  ? "No notifications match your search or filter."
+                  : "No notifications available for your account."
+              }
+              style={{ padding: isMobile ? "32px 0" : "56px 0" }}
+            />
+          ) : (
+            <List
+              split={false}
+              dataSource={filteredNotifications}
+              rowKey={(item) => item._id || item.id}
+              renderItem={(item) => {
+                const title = safeText(item?.title, "Notification");
+                const notifMsg = safeText(item?.message, "No message available");
+                const createdBy = safeText(item?.createdBy, "System");
+                const level = safeText(item?.level, "all");
+                const status = safeText(item?.status, "sent");
+
+                return (
+                  <List.Item style={{ padding: "0 0 10px" }}>
+                    <div
+                      onClick={() => handleMarkRead(item)}
+                      style={{
+                        width: "100%",
+                        cursor: item.isRead ? "default" : "pointer",
+                        background: item.isRead ? "var(--surface)" : "linear-gradient(90deg, rgba(37,99,235,0.04) 0%, var(--surface) 60%)",
+                        borderLeft: item.isRead ? "4px solid transparent" : "4px solid #2563EB",
+                        borderRadius: 14,
+                        border: "1px solid var(--border-muted)",
+                        borderLeftWidth: 4,
+                        borderLeftColor: item.isRead ? "var(--border-muted)" : "#2563EB",
+                        padding: isMobile ? 14 : 16,
+                        boxShadow: item.isRead ? "0 1px 4px rgba(0,0,0,0.03)" : "0 4px 14px rgba(37,99,235,0.08)",
+                        transition: "box-shadow 0.2s ease",
+                      }}
+                    >
+                      <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                        <Flex vertical={isMobile} gap={8} justify="space-between" align={isMobile ? "flex-start" : "center"}>
+                          <Flex align="flex-start" gap={10}>
+                            <Badge status={item.isRead ? "default" : "processing"} style={{ marginTop: 7 }} />
+                            <Space direction="vertical" size={2}>
+                              <Text strong style={{ fontSize: isMobile ? 14 : 15, color: "var(--text-primary)" }}>
+                                {title}
+                              </Text>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                By {createdBy} • {formatDate(item.createdAt)}
+                              </Text>
+                            </Space>
+                          </Flex>
+                          <Flex gap={4} wrap="wrap" align="center" justify={isMobile ? "flex-start" : "flex-end"}>
+                            <Tag color={getLevelColor(level)} style={{ borderRadius: 99, fontSize: 11 }}>{level}</Tag>
+                            <Tag color={getStatusColor(status)} style={{ borderRadius: 99, fontSize: 11 }}>{status}</Tag>
+                            {!item.isRead && (
+                              <Tag color="processing" style={{ borderRadius: 99, fontSize: 11 }}>Unread</Tag>
+                            )}
+                          </Flex>
+                        </Flex>
+                        <Paragraph style={{ marginBottom: 0, fontSize: 13, color: "var(--text-secondary)" }}>
+                          {notifMsg}
+                        </Paragraph>
+                      </Space>
+                    </div>
+                  </List.Item>
+                );
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 

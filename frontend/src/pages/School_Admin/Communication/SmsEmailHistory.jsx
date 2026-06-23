@@ -1,52 +1,56 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Table,
-  Card,
-  Row,
-  Col,
-  Select,
-  Input,
-  DatePicker,
-  Button,
-  Space,
+  Table, Row, Col, Select, Input, DatePicker, Button, Space, Tag, Flex, Typography,
 } from "antd";
-import { SearchOutlined, MailOutlined } from "@ant-design/icons";
+import { SearchOutlined, MailOutlined, ReloadOutlined, MessageOutlined, AppstoreOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchNotifications } from "../../../features/notificationSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { pageWrapper, tableHeadCss } from "../../../styles/pageStyles.js";
+import { pageWrapper, sectionPanel, iconWell, tableHeadCss } from "../../../styles/pageStyles.js";
 
+const { Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+const getChannelType = (channels = {}) => {
+  if (channels.sms && channels.email) return "SMS+Email";
+  if (channels.sms) return "SMS";
+  if (channels.email) return "Email";
+  return "App";
+};
+
+const getAudienceLabel = (n) => {
+  if (n.level === "all") return "All";
+  if (n.level === "role" && n.targetRoles?.length) return n.targetRoles.join(", ");
+  return "All";
+};
+
 const SmsEmailHistory = () => {
-  const [history] = useState([
-    {
-      key: 1,
-      type: "SMS",
-      title: "Holiday Notice",
-      message: "School will be closed tomorrow.",
-      recipients: "Students, Parents",
-      dateSent: "2026-01-01 10:00",
-    },
-    {
-      key: 2,
-      type: "Email",
-      title: "Exam Schedule",
-      message: "Final exam schedule is attached.",
-      recipients: "Students, Teachers",
-      dateSent: "2026-01-02 12:00",
-    },
-  ]);
+  const dispatch = useDispatch();
+  const { items: notifications, loading } = useSelector((s) => s.notification);
 
   const [filters, setFilters] = useState({ type: null, search: "", dateRange: null });
 
-  // Filtered data
+  useEffect(() => {
+    dispatch(fetchNotifications({ status: "sent" }));
+  }, [dispatch]);
+
+  const history = notifications
+    .filter((n) => n.channels?.sms || n.channels?.email || n.channels?.inApp)
+    .map((n) => ({
+      ...n,
+      channelType: getChannelType(n.channels),
+      audience: getAudienceLabel(n),
+      dateSent: n.createdAt,
+    }));
+
   const filteredData = history.filter((item) => {
-    const matchType = filters.type ? item.type === filters.type : true;
+    const matchType = filters.type ? item.channelType.includes(filters.type) : true;
     const matchSearch =
-      filters.search === "" ||
-      item.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-      item.message.toLowerCase().includes(filters.search.toLowerCase());
+      !filters.search ||
+      item.title?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      item.message?.toLowerCase().includes(filters.search.toLowerCase());
     const matchDate =
       !filters.dateRange ||
       (dayjs(item.dateSent).isAfter(filters.dateRange[0], "day") &&
@@ -54,74 +58,174 @@ const SmsEmailHistory = () => {
     return matchType && matchSearch && matchDate;
   });
 
-  // Summary
-  const totalSMS = history.filter((h) => h.type === "SMS").length;
-  const totalEmail = history.filter((h) => h.type === "Email").length;
+  const totalApp = history.filter((h) => h.channels?.inApp).length;
+  const totalSMS = history.filter((h) => h.channels?.sms).length;
+  const totalEmail = history.filter((h) => h.channels?.email).length;
+
+  const statCards = [
+    { label: "In-App Notifications", value: totalApp, color: "#10B981", icon: <AppstoreOutlined /> },
+    { label: "SMS Sent", value: totalSMS, color: "#2563EB", icon: <MessageOutlined /> },
+    { label: "Emails Sent", value: totalEmail, color: "#F59E0B", icon: <MailOutlined /> },
+  ];
+
+  const columns = [
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      render: (v) => <Text strong style={{ color: "var(--text-primary)" }}>{v}</Text>,
+    },
+    {
+      title: "Message",
+      dataIndex: "message",
+      key: "message",
+      ellipsis: true,
+      render: (v) => <Text style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</Text>,
+    },
+    {
+      title: "Audience",
+      key: "audience",
+      render: (_, r) => (
+        <Tag color="purple" style={{ borderRadius: 99 }}>{getAudienceLabel(r)}</Tag>
+      ),
+    },
+    {
+      title: "Channel",
+      key: "channel",
+      render: (_, r) => (
+        <Space size={4}>
+          {r.channels?.inApp && <Tag color="blue" style={{ borderRadius: 99 }}>App</Tag>}
+          {r.channels?.sms && <Tag color="green" style={{ borderRadius: 99 }}>SMS</Tag>}
+          {r.channels?.email && <Tag color="orange" style={{ borderRadius: 99 }}>Email</Tag>}
+        </Space>
+      ),
+    },
+    {
+      title: "Sent By",
+      dataIndex: "createdBy",
+      key: "createdBy",
+      render: (v) => <Text style={{ fontSize: 13 }}>{v || "—"}</Text>,
+    },
+    {
+      title: "Date Sent",
+      dataIndex: "dateSent",
+      key: "dateSent",
+      render: (v) => v ? dayjs(v).format("DD MMM YYYY, hh:mm A") : "—",
+      sorter: (a, b) => new Date(a.dateSent) - new Date(b.dateSent),
+      defaultSortOrder: "descend",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (v) => (
+        <Tag
+          color={v === "sent" ? "green" : v === "scheduled" ? "blue" : "default"}
+          style={{ borderRadius: 99 }}
+        >
+          {v}
+        </Tag>
+      ),
+    },
+  ];
 
   return (
     <>
-      <style>{tableHeadCss("sms-history-tbl")}</style>
+      <style>{tableHeadCss("comm-history-tbl")}</style>
       <PageHeader
-        title="SMS & Email History"
-        subtitle="View all sent notifications and communication history"
+        title="Communication History"
+        subtitle="View all sent notifications and broadcast history"
         icon={<MailOutlined />}
+        extra={
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => dispatch(fetchNotifications({ status: "sent" }))}
+            loading={loading}
+          >
+            Refresh
+          </Button>
+        }
       />
+
       <div style={pageWrapper}>
-        {/* Summary Cards */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={12}>
-            <Card title="Total SMS Sent">{totalSMS}</Card>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Card title="Total Emails Sent">{totalEmail}</Card>
-          </Col>
+        {/* Stat Cards */}
+        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
+          {statCards.map((s) => (
+            <Col xs={24} sm={8} key={s.label}>
+              <div style={{
+                background: "var(--surface)",
+                borderRadius: 14,
+                border: "1px solid var(--border-muted)",
+                borderTop: `4px solid ${s.color}`,
+                padding: "16px 20px",
+              }}>
+                <Flex align="center" gap={14}>
+                  <div style={iconWell(s.color, 44)}>
+                    <span style={{ fontSize: 20 }}>{s.icon}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
+                      {s.value}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>
+                      {s.label}
+                    </div>
+                  </div>
+                </Flex>
+              </div>
+            </Col>
+          ))}
         </Row>
 
         {/* Filters */}
-        <div className="page-toolbar" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
-          <Select
-            placeholder="Select Type"
-            allowClear
-            style={{ width: 150 }}
-            onChange={(value) => setFilters({ ...filters, type: value })}
-          >
-            <Option value="SMS">SMS</Option>
-            <Option value="Email">Email</Option>
-          </Select>
+        <div style={{ ...sectionPanel, marginBottom: 20, padding: "14px 20px" }}>
+          <Flex align="center" gap={10} wrap="wrap">
+            <Select
+              placeholder="Filter by Channel"
+              allowClear
+              style={{ width: 160 }}
+              onChange={(value) => setFilters((f) => ({ ...f, type: value }))}
+            >
+              <Option value="SMS">SMS</Option>
+              <Option value="Email">Email</Option>
+              <Option value="App">In-App</Option>
+            </Select>
 
-          <Input
-            placeholder="Search by title/message"
-            prefix={<SearchOutlined />}
-            style={{ width: 250 }}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-          />
+            <Input
+              placeholder="Search title or message"
+              prefix={<SearchOutlined />}
+              style={{ width: 240 }}
+              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+              allowClear
+            />
 
-          <RangePicker
-            onChange={(dates) => setFilters({ ...filters, dateRange: dates })}
-          />
+            <RangePicker
+              onChange={(dates) => setFilters((f) => ({ ...f, dateRange: dates }))}
+            />
 
-          <Button
-            onClick={() => setFilters({ type: null, search: "", dateRange: null })}
-          >
-            Reset
-          </Button>
+            <Button onClick={() => setFilters({ type: null, search: "", dateRange: null })}>
+              Reset
+            </Button>
+
+            <Text type="secondary" style={{ marginLeft: "auto", fontSize: 13 }}>
+              {filteredData.length} records
+            </Text>
+          </Flex>
         </div>
 
-        {/* History Table */}
-        <Table
-          className="sms-history-tbl"
-          scroll={{ x: 600 }}
-          columns={[
-            { title: "Type", dataIndex: "type", key: "type" },
-            { title: "Title", dataIndex: "title", key: "title" },
-            { title: "Message", dataIndex: "message", key: "message" },
-            { title: "Recipients", dataIndex: "recipients", key: "recipients" },
-            { title: "Date Sent", dataIndex: "dateSent", key: "dateSent" },
-          ]}
-          dataSource={filteredData}
-          rowKey="key"
-          pagination={{ pageSize: 5 }}
-        />
+        {/* Table */}
+        <div style={sectionPanel}>
+          <Table
+            className="comm-history-tbl"
+            scroll={{ x: 800 }}
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="_id"
+            loading={loading}
+            pagination={{ pageSize: 10, showTotal: (t) => `${t} total records` }}
+            locale={{ emptyText: "No communication history found." }}
+          />
+        </div>
       </div>
     </>
   );

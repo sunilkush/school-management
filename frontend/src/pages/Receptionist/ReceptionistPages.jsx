@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Card, Table, Button, Tag, Space, Typography, Modal, Form, Select,
-  Input, Row, Col, Statistic, Spin, App,
+  Input, Row, Col, Statistic, Spin, App, Popconfirm,
 } from "antd";
 import {
   UserAddOutlined, PhoneOutlined, BellOutlined, TeamOutlined,
@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchGateEntries, fetchGateStats, createGateEntry, markGateExit } from "../../features/gateEntrySlice";
 import { fetchCallLogs, createCallLog, deleteCallLog } from "../../features/callLogSlice";
 import { fetchInquiries, createInquiry, updateInquiry } from "../../features/admissionInquirySlice";
+import { fetchNotifications, createNotification } from "../../features/notificationSlice";
 
 const { Title, Text } = Typography;
 
@@ -263,7 +264,17 @@ export const CallLog = () => {
     { title: "Time",     dataIndex: "callTime", render: (v) => v ? new Date(v).toLocaleString() : "—" },
     {
       title: "Action",
-      render: (_, r) => <Button size="small" type="link" danger onClick={() => dispatch(deleteCallLog(r._id))}>Delete</Button>,
+      render: (_, r) => (
+        <Popconfirm
+          title="Delete this call log?"
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+          onConfirm={() => dispatch(deleteCallLog(r._id))}
+        >
+          <Button size="small" type="link" danger>Delete</Button>
+        </Popconfirm>
+      ),
     },
   ];
 
@@ -299,43 +310,122 @@ export const CallLog = () => {
    BROADCASTS
 ══════════════════════════════════════════ */
 export const Broadcasts = () => {
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
   const { message } = App.useApp();
+  const { items: notifications, loading, creating } = useSelector((s) => s.notification);
 
-  const broadcasts = [
-    { key: 1, title: "School Closed Tomorrow", audience: "All", sentAt: "2026-06-20 08:00", channel: "SMS+App" },
-    { key: 2, title: "PTM on June 28",         audience: "Parents", sentAt: "2026-06-18 09:30", channel: "App" },
-    { key: 3, title: "Exam Schedule Released",  audience: "Students", sentAt: "2026-06-15 10:00", channel: "App" },
-  ];
+  useEffect(() => {
+    dispatch(fetchNotifications({ status: "sent" }));
+  }, [dispatch]);
 
-  const cols = [
-    { title: "Title",    dataIndex: "title" },
-    { title: "Audience", dataIndex: "audience", render: (v) => <Tag color="purple">{v}</Tag> },
-    { title: "Channel",  dataIndex: "channel",  render: (v) => <Tag>{v}</Tag> },
-    { title: "Sent At",  dataIndex: "sentAt" },
-    { title: "Action",   render: () => <Button size="small" type="link" icon={<EyeOutlined />}>View</Button> },
-  ];
+  const AUDIENCE_MAP = {
+    All: { level: "all", targetRoles: [] },
+    Students: { level: "role", targetRoles: ["Student"] },
+    Parents: { level: "role", targetRoles: ["Parent"] },
+    Teachers: { level: "role", targetRoles: ["Teacher"] },
+    Staff: { level: "role", targetRoles: ["Staff", "Support Staff"] },
+  };
+
+  const CHANNEL_MAP = {
+    App:          { inApp: true,  sms: false, email: false },
+    SMS:          { inApp: false, sms: true,  email: false },
+    Email:        { inApp: false, sms: false, email: true  },
+    "SMS+App":    { inApp: true,  sms: true,  email: false },
+    "All Channels": { inApp: true, sms: true, email: true  },
+  };
+
+  const getChannelLabel = (channels = {}) => {
+    const active = [];
+    if (channels.inApp) active.push("App");
+    if (channels.sms)   active.push("SMS");
+    if (channels.email) active.push("Email");
+    return active.join("+") || "App";
+  };
+
+  const getAudienceLabel = (n) => {
+    if (n.level === "all") return "All";
+    if (n.level === "role" && n.targetRoles?.length) return n.targetRoles.join(", ");
+    return "All";
+  };
 
   const handleSend = async (values) => {
-    message.success(`Broadcast "${values.title}" sent to ${values.audience}`);
-    form.resetFields();
-    setOpen(false);
+    const audience = AUDIENCE_MAP[values.audience] || AUDIENCE_MAP.All;
+    const channels = CHANNEL_MAP[values.channel] || CHANNEL_MAP.App;
+    const res = await dispatch(createNotification({
+      title: values.title,
+      message: values.notifMessage,
+      level: audience.level,
+      targetRoles: audience.targetRoles,
+      channels,
+      status: "sent",
+    }));
+    if (res.meta.requestStatus === "fulfilled") {
+      message.success(`Broadcast "${values.title}" sent successfully`);
+      form.resetFields();
+      setOpen(false);
+      dispatch(fetchNotifications({ status: "sent" }));
+    } else {
+      message.error(res.payload || "Failed to send broadcast");
+    }
   };
+
+  const cols = [
+    { title: "Title",    dataIndex: "title", render: (v) => <strong>{v}</strong> },
+    { title: "Audience", render: (_, r) => <Tag color="purple">{getAudienceLabel(r)}</Tag> },
+    { title: "Channel",  render: (_, r) => <Tag>{getChannelLabel(r.channels)}</Tag> },
+    { title: "Sent By",  dataIndex: "createdBy", render: (v) => v || "—" },
+    {
+      title: "Status",   dataIndex: "status",
+      render: (v) => <Tag color={v === "sent" ? "green" : v === "scheduled" ? "blue" : "default"}>{v}</Tag>,
+    },
+    { title: "Sent At",  dataIndex: "createdAt", render: (v) => v ? new Date(v).toLocaleString() : "—" },
+  ];
 
   return (
     <PageWrap title="Broadcasts" icon={<BellOutlined />}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} sm={8}>
+          <Card style={{ borderTop: "4px solid #7C3AED", textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#7C3AED" }}>{notifications.length}</div>
+            <div style={{ color: "#6B7280" }}>Total Broadcasts</div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card style={{ borderTop: "4px solid #10B981", textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#10B981" }}>
+              {notifications.filter((n) => n.status === "sent").length}
+            </div>
+            <div style={{ color: "#6B7280" }}>Sent</div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card style={{ borderTop: "4px solid #2563EB", textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#2563EB" }}>
+              {notifications.filter((n) => n.status === "scheduled").length}
+            </div>
+            <div style={{ color: "#6B7280" }}>Scheduled</div>
+          </Card>
+        </Col>
+      </Row>
+
       <Card>
         <Space style={{ marginBottom: 16, justifyContent: "flex-end", display: "flex" }}>
           <Button type="primary" icon={<NotificationOutlined />} onClick={() => setOpen(true)}>New Broadcast</Button>
         </Space>
-        <Table dataSource={broadcasts} rowKey="key" columns={cols} size="middle" />
+        <Table dataSource={notifications} rowKey="_id" columns={cols} loading={loading} size="middle"
+          locale={{ emptyText: "No broadcasts sent yet." }} />
       </Card>
 
-      <Modal title="Send Broadcast" open={open} onCancel={() => setOpen(false)} footer={null} destroyOnClose>
+      <Modal title="Send Broadcast" open={open} onCancel={() => { setOpen(false); form.resetFields(); }} footer={null} destroyOnClose>
         <Form form={form} layout="vertical" onFinish={handleSend}>
-          <Form.Item label="Title" name="title" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item label="Message" name="message" rules={[{ required: true }]}><Input.TextArea rows={4} /></Form.Item>
+          <Form.Item label="Title" name="title" rules={[{ required: true, message: "Enter a title" }]}>
+            <Input placeholder="e.g. School Closed Tomorrow" />
+          </Form.Item>
+          <Form.Item label="Message" name="notifMessage" rules={[{ required: true, message: "Enter a message" }]}>
+            <Input.TextArea rows={4} placeholder="Write your announcement here..." />
+          </Form.Item>
           <Form.Item label="Audience" name="audience" initialValue="All">
             <Select options={["All","Students","Parents","Teachers","Staff"].map((v) => ({ value: v, label: v }))} />
           </Form.Item>
@@ -343,7 +433,7 @@ export const Broadcasts = () => {
             <Select options={["App","SMS","Email","SMS+App","All Channels"].map((v) => ({ value: v, label: v }))} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit">Send Now</Button>
+            <Button type="primary" htmlType="submit" loading={creating}>Send Now</Button>
           </Form.Item>
         </Form>
       </Modal>

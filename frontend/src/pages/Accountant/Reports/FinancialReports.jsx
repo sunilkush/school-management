@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  ComposedChart, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid,
 } from "recharts";
 import { fetchAccountantDashboard } from "../../../features/financeSlice";
@@ -206,7 +206,7 @@ const FinancialReports = () => {
               <Empty description="No data yet" />
             ) : (
               <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={profitLossData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <ComposedChart data={profitLossData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#22C55E" stopOpacity={0.3} />
@@ -220,8 +220,8 @@ const FinancialReports = () => {
                   <Legend />
                   <Area type="monotone" dataKey="income"  stroke="#22C55E" fill="url(#profitGrad)" name="Income"  strokeWidth={2} />
                   <Area type="monotone" dataKey="expense" stroke="#EF4444" fill="none" name="Expense" strokeWidth={2} strokeDasharray="4 2" />
-                  <Bar dataKey="profit"  fill="#14B8A6" name="Net P/L" />
-                </AreaChart>
+                  <Bar dataKey="profit"  fill="#14B8A6" name="Net P/L" barSize={16} radius={[4,4,0,0]} />
+                </ComposedChart>
               </ResponsiveContainer>
             )}
           </div>

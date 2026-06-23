@@ -11,6 +11,7 @@ export const createPaymentSchema = z.object({
       amount: z.coerce.number().positive().optional(),
       paymentMethod: paymentModeEnum.optional(),
       paymentMode: paymentModeEnum.optional(),
+      transactionId: z.string().trim().optional(),
       razorpay: z
         .object({
           razorpay_order_id: z.string().min(1),
@@ -54,6 +55,9 @@ export const paymentListQuerySchema = z.object({
   query: z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
+    paymentMode: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
   }),
 });
 

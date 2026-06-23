@@ -17,13 +17,13 @@ import {
   Select,
   Skeleton,
   Space,
-  Statistic,
   Tabs,
   Tag,
   Typography,
   message,
 } from "antd";
 import {
+  AlertTriangle,
   Archive,
   Inbox,
   Mail,
@@ -45,30 +45,17 @@ import {
   fetchMessages,
   markMessageRead,
 } from "../features/messageSlice";
+import PageHeader from "../components/layout/PageHeader";
+import { pageWrapper, sectionPanel, iconWell } from "../styles/pageStyles";
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
 
 const MESSAGE_ROLES = [
-  "Super Admin",
-  "School Admin",
-  "Principal",
-  "Vice Principal",
-  "Teacher",
-  "Student",
-  "Parent",
-  "Accountant",
-  "Receptionist",
-  "Librarian",
-  "Staff",
-  "Support Staff",
-  "Subject Coordinator",
-  "Hostel Warden",
-  "Transport Manager",
-  "Exam Coordinator",
-  "IT Support",
-  "Counselor",
-  "Security",
+  "Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher",
+  "Student", "Parent", "Accountant", "Receptionist", "Librarian", "Staff",
+  "Support Staff", "Subject Coordinator", "Hostel Warden", "Transport Manager",
+  "Exam Coordinator", "IT Support", "Counselor", "Security",
 ];
 
 const PRIORITY_OPTIONS = [
@@ -78,25 +65,18 @@ const PRIORITY_OPTIONS = [
   { label: "Urgent", value: "urgent" },
 ];
 
-const priorityColor = {
+const PRIORITY_COLOR = {
   low: "default",
   normal: "blue",
   high: "orange",
   urgent: "red",
 };
 
-const pageStyles = {
-  card: {
-    borderRadius: 20,
-    border: "1px solid #edf1f7",
-    boxShadow: "0 12px 32px rgba(15, 23, 42, 0.06)",
-  },
-  mutedCard: {
-    borderRadius: 20,
-    border: "1px solid #edf1f7",
-    background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
-    boxShadow: "0 12px 32px rgba(15, 23, 42, 0.06)",
-  },
+const PRIORITY_HEX = {
+  low: "#94A3B8",
+  normal: "#2563EB",
+  high: "#F59E0B",
+  urgent: "#EF4444",
 };
 
 const formatTime = (value) => {
@@ -140,11 +120,11 @@ const getRecipientNames = (item) => normalizeNames(item?.recipientNames || item?
 const getPriority = (item) => toText(item?.priority, "normal").toLowerCase();
 
 const MessageSkeleton = () => (
-  <Space direction="vertical" size={12} style={{ width: "100%" }}>
+  <Space direction="vertical" size={10} style={{ width: "100%" }}>
     {[1, 2, 3].map((item) => (
-      <Card key={item} style={{ borderRadius: 16 }}>
+      <div key={item} style={{ ...sectionPanel, padding: 16, marginBottom: 0 }}>
         <Skeleton active avatar paragraph={{ rows: 2 }} title={{ width: "55%" }} />
-      </Card>
+      </div>
     ))}
   </Space>
 );
@@ -193,32 +173,11 @@ const MessagePage = () => {
     return { total: rows.length, unread, urgent };
   }, [mailbox, rows]);
 
-  const statCards = useMemo(
-    () => [
-      {
-        title: "Messages",
-        value: stats.total,
-        icon: <Mail size={22} />,
-        color: "#2563EB",
-        background: "#eaf3ff",
-      },
-      {
-        title: "Unread",
-        value: stats.unread,
-        icon: <MailOpen size={22} />,
-        color: "#22C55E",
-        background: "#eefbea",
-      },
-      {
-        title: "High Priority",
-        value: stats.urgent,
-        icon: <Badge status="error" />,
-        color: "#fa541c",
-        background: "#fff1e8",
-      },
-    ],
-    [stats]
-  );
+  const statCards = [
+    { title: "Total Messages", value: stats.total, icon: <Mail size={20} />, color: "#2563EB" },
+    { title: "Unread", value: stats.unread, icon: <MailOpen size={20} />, color: "#22C55E" },
+    { title: "High Priority", value: stats.urgent, icon: <AlertTriangle size={20} />, color: "#EF4444" },
+  ];
 
   const loadRecipients = useCallback(async () => {
     await dispatch(fetchMessageRecipients()).unwrap();
@@ -226,7 +185,6 @@ const MessagePage = () => {
 
   const loadMessages = useCallback(async () => {
     if (!canUseMessages) return;
-
     try {
       await dispatch(fetchMessages({ mailbox, search })).unwrap();
     } catch (error) {
@@ -236,7 +194,6 @@ const MessagePage = () => {
 
   const loadThread = useCallback(async (messageRow) => {
     if (!messageRow?._id) return;
-
     try {
       await dispatch(fetchMessageThread(messageRow._id)).unwrap();
     } catch (error) {
@@ -246,7 +203,6 @@ const MessagePage = () => {
 
   useEffect(() => {
     if (!canUseMessages) return;
-
     loadRecipients().catch((error) => {
       message.error(error || "Failed to load recipients");
     });
@@ -260,7 +216,6 @@ const MessagePage = () => {
     setSelected(row);
     dispatch(clearMessageThread());
     loadThread(row);
-
     if (!row.isRead && mailbox === "inbox") {
       dispatch(markMessageRead(row._id));
     }
@@ -277,20 +232,17 @@ const MessagePage = () => {
       message.error(error || "Failed to send message");
     }
   };
-const sendReply = async (values) => {
-    if (!selected) return;
 
-    const recipientIds = [selected.senderId?._id, ...(selected.recipientIds || []).map((recipient) => recipient?._id)]
+  const sendReply = async (values) => {
+    if (!selected) return;
+    const recipientIds = [selected.senderId?._id, ...(selected.recipientIds || []).map((r) => r?._id)]
       .filter(Boolean)
       .filter((id) => String(id) !== String(currentUserId));
-
     if (!recipientIds.length) {
       message.warning("No recipient available for reply");
       return;
     }
-
     const selectedSubject = getMessageSubject(selected);
-
     try {
       await dispatch(createMessage({
         subject: selectedSubject.startsWith("Re:") ? selectedSubject : `Re: ${selectedSubject}`,
@@ -329,33 +281,27 @@ const sendReply = async (values) => {
   };
 
   const renderMessageActions = (item) => (
-    <Flex gap={8} wrap="wrap" justify={isMobile ? "space-between" : "flex-end"} style={{ width: isMobile ? "100%" : undefined }}>
-      {mailbox !== "archive" ? (
+    <Flex gap={8} wrap="wrap" justify={isMobile ? "flex-start" : "flex-end"}>
+      {mailbox !== "archive" && (
         <Button
-          block={isMobile}
-          icon={<Archive size={15} />}
-          onClick={(event) => {
-            event.stopPropagation();
-            archiveSelected(item);
-          }}
+          size="small"
+          icon={<Archive size={14} />}
+          onClick={(e) => { e.stopPropagation(); archiveSelected(item); }}
         >
           Archive
         </Button>
-      ) : null}
+      )}
       <Popconfirm
         title="Remove this message from your mailbox?"
         okText="Remove"
         okButtonProps={{ danger: true }}
-        onConfirm={(event) => {
-          event?.stopPropagation?.();
-          deleteSelected(item);
-        }}
+        onConfirm={(e) => { e?.stopPropagation?.(); deleteSelected(item); }}
       >
         <Button
-          block={isMobile}
+          size="small"
           danger
-          icon={<Trash2 size={15} />}
-          onClick={(event) => event.stopPropagation()}
+          icon={<Trash2 size={14} />}
+          onClick={(e) => e.stopPropagation()}
         >
           Remove
         </Button>
@@ -365,216 +311,278 @@ const sendReply = async (values) => {
 
   if (!canUseMessages) {
     return (
-      <Alert
-        type="warning"
-        showIcon
-        message="Message access not available for your role"
-        description="Please contact the administrator to enable the communication module for your role."
-      />
+      <>
+        <PageHeader
+          title="Message Center"
+          subtitle="Secure role-wise inbox, sent mail, replies, and archive."
+          icon={<MessageSquareText size={18} />}
+        />
+        <div style={pageWrapper}>
+          <Alert
+            type="warning"
+            showIcon
+            message="Message access not available for your role"
+            description="Please contact the administrator to enable the communication module for your role."
+          />
+        </div>
+      </>
     );
   }
 
   return (
-    <Space direction="vertical" size={18} style={{ width: "100%", padding: "24px" }}>
-      <Card style={pageStyles.mutedCard} styles={{ body: { padding: isMobile ? 18 : 24 } }}>
-        <Flex vertical={isMobile} gap={16} align={isMobile ? "stretch" : "center"} justify="space-between">
-          <Space direction="vertical" size={4} style={{ maxWidth: 720 }}>
-            <Text type="secondary" style={{ fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase" }}>
-              Communication Hub
-            </Text>
-            <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
-              Message Center
-            </Title>
-            <Text type="secondary">
-              Secure role-wise inbox, sent mail, replies, and archive for every application role.
-            </Text>
-          </Space>
-          <Flex vertical={isMobile} gap={10} style={{ width: isMobile ? "100%" : undefined }}>
-            <Button block={isMobile} icon={<RefreshCw size={16} />} onClick={loadMessages} loading={loading}>
+    <>
+      <PageHeader
+        title="Message Center"
+        subtitle="Secure role-wise inbox, sent mail, replies, and archive for every role."
+        icon={<MessageSquareText size={18} />}
+        extra={
+          <Space wrap>
+            <Button icon={<RefreshCw size={15} />} onClick={loadMessages} loading={loading}>
               Refresh
             </Button>
-            <Button block={isMobile} type="primary" icon={<Send size={16} />} onClick={() => setComposeOpen(true)}>
+            <Button type="primary" icon={<Send size={15} />} onClick={() => setComposeOpen(true)}>
               Compose
             </Button>
-          </Flex>
-        </Flex>
-      </Card>
+          </Space>
+        }
+      />
 
-      <Row gutter={[16, 16]}>
-        {statCards.map((stat) => (
-          <Col xs={24} md={8} key={stat.title}>
-            <Card style={pageStyles.card} styles={{ body: { padding: 20 } }}>
-              <Flex align="center" gap={16}>
-                <Flex
-                  align="center"
-                  justify="center"
-                  style={{
-                    width: 48,
-                    height: 48,
-                    color: stat.color,
-                    background: stat.background,
-                    borderRadius: 16,
-                  }}
-                >
-                  {stat.icon}
+      <div style={pageWrapper}>
+        {/* Stat Cards */}
+        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
+          {statCards.map((stat) => (
+            <Col xs={24} sm={8} key={stat.title}>
+              <Card
+                style={{
+                  borderRadius: 14,
+                  border: "1px solid var(--border-muted)",
+                  borderTop: `4px solid ${stat.color}`,
+                }}
+                styles={{ body: { padding: "16px 20px" } }}
+              >
+                <Flex align="center" gap={14}>
+                  <div style={iconWell(stat.color, 44)}>
+                    {stat.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
+                      {stat.value}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>
+                      {stat.title}
+                    </div>
+                  </div>
                 </Flex>
-                <Statistic title={stat.title} value={stat.value} valueStyle={{ fontWeight: 800 }} />
-              </Flex>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+              </Card>
+            </Col>
+          ))}
+        </Row>
 
-      <Card style={pageStyles.card} styles={{ body: { padding: isMobile ? 14 : 18 } }}>
-        <Flex vertical={isMobile} gap={12} align={isMobile ? "stretch" : "center"} justify="space-between">
-          <Tabs
-            activeKey={mailbox}
-            onChange={setMailbox}
-            style={{ width: isMobile ? "100%" : "auto",display: "flex", flexWrap: "wrap", gap: isMobile ? 12 : 24 }}
-            tabBarGutter={isMobile ? 12 : 24}
-            items={[
-              { key: "inbox", label: "Inbox", icon: <Inbox size={15} /> },
-              { key: "sent", label: "Sent", icon: <Send size={15} /> },
-              { key: "archive", label: "Archive", icon: <Archive size={15} /> },
-            ]}
-          />
-          <Input.Search
-            allowClear
-            enterButton={isMobile ? <Search size={16} /> : "Search"}
-            placeholder="Search subject or message"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            onSearch={loadMessages}
-            style={{ width: isMobile ? "100%" : isTablet ? 320 : 420 }}
-          />
-        </Flex>
-      </Card>
+        {/* Mailbox Toolbar */}
+        <div style={{ ...sectionPanel, marginBottom: 16, padding: "10px 16px" }}>
+          <Flex vertical={isMobile} gap={12} align={isMobile ? "stretch" : "center"} justify="space-between">
+            <Tabs
+              activeKey={mailbox}
+              onChange={setMailbox}
+              style={{ margin: 0 }}
+              tabBarStyle={{ margin: 0, borderBottom: "none" }}
+              tabBarGutter={isMobile ? 12 : 28}
+              items={[
+                { key: "inbox", label: <span style={{ fontWeight: 600 }}>Inbox</span>, icon: <Inbox size={14} /> },
+                { key: "sent", label: <span style={{ fontWeight: 600 }}>Sent</span>, icon: <Send size={14} /> },
+                { key: "archive", label: <span style={{ fontWeight: 600 }}>Archive</span>, icon: <Archive size={14} /> },
+              ]}
+            />
+            <Input.Search
+              allowClear
+              enterButton={isMobile ? <Search size={16} /> : "Search"}
+              placeholder="Search subject or message"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onSearch={loadMessages}
+              style={{ width: isMobile ? "100%" : isTablet ? 300 : 380 }}
+            />
+          </Flex>
+        </div>
 
-      <Card
-        title={`${mailbox.charAt(0).toUpperCase()}${mailbox.slice(1)} Messages`}
-        extra={<Text type="secondary">{stats.total} total</Text>}
-        style={pageStyles.card}
-        styles={{ body: { padding: isMobile ? 12 : 18 } }}
-      >
-        {loading ? (
-          <MessageSkeleton />
-        ) : rows.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="No messages found"
-            style={{ padding: isMobile ? "36px 12px" : "56px 16px" }}
-          />
-        ) : (
-          <List
-            itemLayout="vertical"
-            split={false}
-            dataSource={rows}
-            rowKey={(item) => item._id}
-            renderItem={(item) => {
-              const priority = getPriority(item);
-              const isUnreadInbox = !item.isRead && mailbox === "inbox";
+        {/* Messages List */}
+        <div style={sectionPanel}>
+          <Flex align="center" justify="space-between" style={{ marginBottom: 16 }}>
+            <Flex align="center" gap={8}>
+              <Text strong style={{ fontSize: 15, color: "var(--text-primary)", textTransform: "capitalize" }}>
+                {mailbox}
+              </Text>
+              <Tag color="blue" style={{ borderRadius: 99 }}>
+                {stats.total}
+              </Tag>
+            </Flex>
+          </Flex>
 
-              return (
-                <List.Item style={{ padding: 0, marginBottom: 14 }}>
-                  <Card
-                    hoverable
-                    onClick={() => openMessage(item)}
-                    style={{
-                      borderRadius: 18,
-                      cursor: "pointer",
-                      border: isUnreadInbox ? "1px solid rgba(220,252,231,0.5)" : "1px solid #eef2f7",
-                      borderLeft: isUnreadInbox ? "5px solid #22C55E" : "1px solid #eef2f7",
-                      background: isUnreadInbox ? "linear-gradient(135deg, rgba(220,252,231,0.15) 0%, #ffffff 72%)" : "#ffffff",
-                    }}
-                    styles={{ body: { padding: isMobile ? 14 : 18 } }}
-                  >
-                    <Flex vertical gap={14}>
-                      <Flex vertical={isMobile} gap={12} justify="space-between" align={isMobile ? "stretch" : "flex-start"}>
-                        <Space direction="vertical" size={8} style={{ minWidth: 0, flex: 1 }}>
-                          <Flex gap={8} align="center" wrap="wrap">
-                            {isUnreadInbox ? <Badge status="processing" /> : null}
-                            <Text strong={isUnreadInbox} style={{ fontSize: 16 }} ellipsis>
-                              {getMessageSubject(item)}
-                            </Text>
-                          </Flex>
-                          <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ margin: 0 }}>
-                            {getMessageBody(item)}
-                          </Paragraph>
-                        </Space>
-                        {renderMessageActions(item)}
+          {loading ? (
+            <MessageSkeleton />
+          ) : rows.length === 0 ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="No messages found"
+              style={{ padding: isMobile ? "32px 0" : "56px 0" }}
+            />
+          ) : (
+            <List
+              itemLayout="vertical"
+              split={false}
+              dataSource={rows}
+              rowKey={(item) => item._id}
+              renderItem={(item) => {
+                const priority = getPriority(item);
+                const isUnread = !item.isRead && mailbox === "inbox";
+                const accentColor = PRIORITY_HEX[priority] || "#2563EB";
+
+                return (
+                  <List.Item style={{ padding: 0, marginBottom: 10 }}>
+                    <Card
+                      hoverable
+                      onClick={() => openMessage(item)}
+                      style={{
+                        borderRadius: 14,
+                        cursor: "pointer",
+                        border: "1px solid var(--border-muted)",
+                        borderLeft: isUnread ? `4px solid ${accentColor}` : "1px solid var(--border-muted)",
+                        background: isUnread
+                          ? "linear-gradient(90deg, rgba(37,99,235,0.04) 0%, var(--surface) 60%)"
+                          : "var(--surface)",
+                        boxShadow: isUnread
+                          ? "0 4px 16px rgba(37,99,235,0.08)"
+                          : "0 1px 4px rgba(0,0,0,0.03)",
+                      }}
+                      styles={{ body: { padding: isMobile ? 14 : 16 } }}
+                    >
+                      <Flex vertical gap={10}>
+                        <Flex vertical={isMobile} gap={10} justify="space-between" align={isMobile ? "stretch" : "flex-start"}>
+                          <Space direction="vertical" size={6} style={{ minWidth: 0, flex: 1 }}>
+                            <Flex gap={8} align="center" wrap="wrap">
+                              {isUnread && <Badge status="processing" />}
+                              <Text
+                                strong={isUnread}
+                                style={{ fontSize: 15, color: "var(--text-primary)" }}
+                                ellipsis
+                              >
+                                {getMessageSubject(item)}
+                              </Text>
+                            </Flex>
+                            <Paragraph
+                              type="secondary"
+                              ellipsis={{ rows: 2 }}
+                              style={{ margin: 0, fontSize: 13 }}
+                            >
+                              {getMessageBody(item)}
+                            </Paragraph>
+                          </Space>
+                          {renderMessageActions(item)}
+                        </Flex>
+
+                        <Flex gap={6} wrap="wrap" align="center">
+                          <Tag
+                            color={PRIORITY_COLOR[priority] || "blue"}
+                            style={{ borderRadius: 99, fontSize: 11, fontWeight: 600 }}
+                          >
+                            {priority.toUpperCase()}
+                          </Tag>
+                          <Tag
+                            color={mailbox === "sent" ? "purple" : "geekblue"}
+                            style={{ borderRadius: 99 }}
+                          >
+                            {mailbox === "sent"
+                              ? `To: ${getRecipientNames(item)}`
+                              : `From: ${getSenderName(item)}`}
+                          </Tag>
+                          <Text type="secondary" style={{ fontSize: 12, marginLeft: "auto" }}>
+                            {formatTime(item.createdAt)}
+                          </Text>
+                        </Flex>
                       </Flex>
-                      <Flex gap={8} wrap="wrap" align="center">
-                        <Tag color={priorityColor[priority] || "blue"}>{priority.toUpperCase()}</Tag>
-                        <Tag color={mailbox === "sent" ? "purple" : "geekblue"}>
-                          {mailbox === "sent" ? `To: ${getRecipientNames(item)}` : `From: ${getSenderName(item)}`}
-                        </Tag>
-                        <Text type="secondary">{formatTime(item.createdAt)}</Text>
-                      </Flex>
-                    </Flex>
-                  </Card>
-                </List.Item>
-              );
-            }}
-          />
-        )}
-      </Card>
+                    </Card>
+                  </List.Item>
+                );
+              }}
+            />
+          )}
+        </div>
+      </div>
 
+      {/* Compose Drawer */}
       <Drawer
-        title="Compose Message"
+        title={
+          <Flex align="center" gap={10}>
+            <div style={iconWell("#2563EB", 32)}>
+              <Send size={15} />
+            </div>
+            <Text strong style={{ fontSize: 15 }}>Compose Message</Text>
+          </Flex>
+        }
         open={composeOpen}
         onClose={() => setComposeOpen(false)}
         width={composeDrawerWidth}
         destroyOnClose
         styles={{ body: { padding: isMobile ? 16 : 24 }, footer: { padding: 16 } }}
         footer={
-          <Flex vertical={isMobile} gap={10} justify="flex-end">
-            <Button block={isMobile} onClick={() => setComposeOpen(false)}>
-              Cancel
-            </Button>
-            <Button block={isMobile} type="primary" htmlType="submit" form="compose-message-form" loading={saving} icon={<Send size={16} />}>
+          <Flex gap={10} justify="flex-end" style={{ flexDirection: isMobile ? "column-reverse" : "row" }}>
+            <Button block={isMobile} onClick={() => setComposeOpen(false)}>Cancel</Button>
+            <Button block={isMobile} type="primary" htmlType="submit" form="compose-message-form" loading={saving} icon={<Send size={15} />}>
               Send Message
             </Button>
           </Flex>
         }
       >
         <Form id="compose-message-form" form={form} layout="vertical" onFinish={sendMessage} initialValues={{ priority: "normal" }}>
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
-            <Form.Item name="recipientIds" label="Recipients" rules={[{ required: true, message: "Please select at least one recipient" }]}>
-              <Select mode="multiple" showSearch optionFilterProp="label" placeholder="Select users" options={recipientOptions} loading={recipientsLoading} />
-            </Form.Item>
-            <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
-              <Select options={PRIORITY_OPTIONS} />
-            </Form.Item>
-            <Form.Item name="subject" label="Subject" rules={[{ required: true, message: "Please enter subject" }]}>
-              <Input maxLength={180} placeholder="Message subject" />
-            </Form.Item>
-            <Form.Item name="body" label="Message" rules={[{ required: true, message: "Please enter message" }]}>
-              <Input.TextArea rows={isMobile ? 6 : 8} maxLength={5000} showCount placeholder="Write your message..." />
-            </Form.Item>
-          </Space>
+          <Form.Item name="recipientIds" label="Recipients" rules={[{ required: true, message: "Please select at least one recipient" }]}>
+            <Select mode="multiple" showSearch optionFilterProp="label" placeholder="Select users" options={recipientOptions} loading={recipientsLoading} />
+          </Form.Item>
+          <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
+            <Select options={PRIORITY_OPTIONS} />
+          </Form.Item>
+          <Form.Item name="subject" label="Subject" rules={[{ required: true, message: "Please enter subject" }]}>
+            <Input maxLength={180} placeholder="Message subject" />
+          </Form.Item>
+          <Form.Item name="body" label="Message" rules={[{ required: true, message: "Please enter message" }]}>
+            <Input.TextArea rows={isMobile ? 6 : 8} maxLength={5000} showCount placeholder="Write your message..." />
+          </Form.Item>
         </Form>
       </Drawer>
 
+      {/* Detail / Thread Drawer */}
       <Drawer
-        title={selected ? getMessageSubject(selected) : "Message"}
+        title={
+          selected ? (
+            <Flex align="center" gap={10}>
+              <div style={iconWell("#7C3AED", 32)}>
+                <MessageSquareText size={15} />
+              </div>
+              <Text strong style={{ fontSize: 14, maxWidth: 300 }} ellipsis>
+                {getMessageSubject(selected)}
+              </Text>
+            </Flex>
+          ) : "Message"
+        }
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
         width={detailDrawerWidth}
-        styles={{ body: { padding: isMobile ? 16 : 24 } }}
+        styles={{ body: { padding: isMobile ? 14 : 20 } }}
       >
-        {selected ? (
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <Card style={pageStyles.mutedCard} styles={{ body: { padding: 16 } }}>
-              <Space direction="vertical" size={10} style={{ width: "100%" }}>
-                <Flex gap={8} wrap="wrap" align="center">
-                  <Tag color={priorityColor[getPriority(selected)] || "blue"}>{getPriority(selected).toUpperCase()}</Tag>
-                  <Tag color="geekblue">From: {getSenderName(selected)}</Tag>
-                  <Tag color="purple">To: {getRecipientNames(selected)}</Tag>
-                </Flex>
-                <Text type="secondary">{formatTime(selected.createdAt)}</Text>
-              </Space>
-            </Card>
+        {selected && (
+          <Space direction="vertical" size={14} style={{ width: "100%" }}>
+            {/* Message meta */}
+            <div style={{ ...sectionPanel, padding: 14, marginBottom: 0, background: "var(--surface-soft)" }}>
+              <Flex gap={6} wrap="wrap" align="center">
+                <Tag color={PRIORITY_COLOR[getPriority(selected)] || "blue"} style={{ borderRadius: 99 }}>
+                  {getPriority(selected).toUpperCase()}
+                </Tag>
+                <Tag color="geekblue" style={{ borderRadius: 99 }}>From: {getSenderName(selected)}</Tag>
+                <Tag color="purple" style={{ borderRadius: 99 }}>To: {getRecipientNames(selected)}</Tag>
+                <Text type="secondary" style={{ fontSize: 12, marginLeft: "auto" }}>{formatTime(selected.createdAt)}</Text>
+              </Flex>
+            </div>
 
+            {/* Thread */}
             {threadLoading ? (
               <MessageSkeleton />
             ) : (
@@ -583,43 +591,47 @@ const sendReply = async (values) => {
                 dataSource={thread.length ? thread : [selected]}
                 rowKey={(item) => item._id}
                 renderItem={(item) => (
-                  <List.Item style={{ padding: 0, marginBottom: 12 }}>
-                    <Card style={{ borderRadius: 18, border: "1px solid #eef2f7" }} styles={{ body: { padding: 16 } }}>
-                      <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                  <List.Item style={{ padding: 0, marginBottom: 10 }}>
+                    <div style={{ ...sectionPanel, padding: 14, marginBottom: 0, width: "100%" }}>
+                      <Space direction="vertical" size={8} style={{ width: "100%" }}>
                         <Flex vertical={isMobile} gap={8} justify="space-between" align={isMobile ? "flex-start" : "center"}>
                           <Space wrap>
-                            <MessageSquareText size={16} color="#2563EB" />
+                            <MessageSquareText size={15} color="#2563EB" />
                             <Text strong>{getSenderName(item)}</Text>
-                            <Tag>{getSenderRole(item)}</Tag>
+                            <Tag style={{ borderRadius: 99 }}>{getSenderRole(item)}</Tag>
                           </Space>
-                          <Text type="secondary">{formatTime(item.createdAt)}</Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>{formatTime(item.createdAt)}</Text>
                         </Flex>
-                        <Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
+                        <Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: 0, color: "var(--text-primary)" }}>
                           {getMessageBody(item)}
                         </Paragraph>
                       </Space>
-                    </Card>
+                    </div>
                   </List.Item>
                 )}
               />
             )}
 
-            <Card title="Reply" style={pageStyles.card} styles={{ body: { padding: isMobile ? 14 : 18 } }}>
+            {/* Reply */}
+            <div style={{ ...sectionPanel, marginBottom: 0 }}>
+              <Text strong style={{ display: "block", marginBottom: 10, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Reply
+              </Text>
               <Form form={replyForm} layout="vertical" onFinish={sendReply}>
                 <Form.Item name="body" rules={[{ required: true, message: "Please enter reply" }]}>
                   <Input.TextArea rows={isMobile ? 4 : 5} maxLength={5000} showCount placeholder="Write a reply..." />
                 </Form.Item>
                 <Flex justify="flex-end">
-                  <Button block={isMobile} type="primary" htmlType="submit" loading={saving} icon={<Send size={16} />}>
+                  <Button type="primary" htmlType="submit" loading={saving} icon={<Send size={15} />}>
                     Send Reply
                   </Button>
                 </Flex>
               </Form>
-            </Card>
+            </div>
           </Space>
-        ) : null}
+        )}
       </Drawer>
-    </Space>
+    </>
   );
 };
 
