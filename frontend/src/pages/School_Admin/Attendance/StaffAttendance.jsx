@@ -32,6 +32,27 @@ import {
   sectionPanel,
 } from "../../../styles/pageStyles";
 
+/* ── Map display role name → attendance role slug ── */
+const ROLE_TO_ATT_ROLE = {
+  "Teacher": "teacher",
+  "Staff": "staff",
+  "Support Staff": "support_staff",
+  "Librarian": "librarian",
+  "Hostel Warden": "hostel_warden",
+  "Transport Manager": "transport_manager",
+  "Exam Coordinator": "exam_coordinator",
+  "Subject Coordinator": "subject_coordinator",
+  "Receptionist": "receptionist",
+  "IT Support": "it_support",
+  "Counselor": "counselor",
+  "Security": "security",
+  "Accountant": "accountant",
+  "Principal": "principal",
+  "Vice Principal": "vice_principal",
+  "School Admin": "school_admin",
+  "Admin": "admin",
+};
+
 /* ── Status config ───────────────────────────────────────────────── */
 const STATUS_OPTIONS = [
   { value: "present", label: "P",  fullLabel: "Present",  color: "#22C55E" },
@@ -137,27 +158,37 @@ const StaffAttendance = () => {
   const handleSubmit = async () => {
     if (!schoolId) return message.error("School not found");
 
-    const records = Object.entries(attendance)
-      .filter(([, status]) => Boolean(status))
-      .map(([userId, status]) => {
-        const rec = { userId, status };
-        if (checkIns[userId])  rec.checkInAt  = checkIns[userId].toISOString();
-        if (checkOuts[userId]) rec.checkOutAt = checkOuts[userId].toISOString();
-        return rec;
-      });
+    // Group records by attendance role so each bulk call gets the correct role
+    const byRole = {};
+    filteredStaff.forEach((u) => {
+      const status = attendance[u._id];
+      if (!status) return;
+      const attRole = ROLE_TO_ATT_ROLE[getRole(u)] || "staff";
+      if (!byRole[attRole]) byRole[attRole] = [];
+      const rec = { userId: u._id, status };
+      if (checkIns[u._id])  rec.checkInAt  = checkIns[u._id].toISOString();
+      if (checkOuts[u._id]) rec.checkOutAt = checkOuts[u._id].toISOString();
+      byRole[attRole].push(rec);
+    });
 
-    if (!records.length) return message.warning("Mark attendance first");
+    const groups = Object.entries(byRole);
+    if (!groups.length) return message.warning("Mark attendance first");
 
+    const total = groups.reduce((s, [, r]) => s + r.length, 0);
     try {
-      await dispatch(
-        markBulkAttendance({
-          schoolId,
-          date: selectedDate.startOf("day").toISOString(),
-          role: "staff",
-          records,
-        })
-      ).unwrap();
-      message.success(`Attendance saved for ${records.length} staff`);
+      await Promise.all(
+        groups.map(([role, records]) =>
+          dispatch(
+            markBulkAttendance({
+              schoolId,
+              date: selectedDate.startOf("day").toISOString(),
+              role,
+              records,
+            })
+          ).unwrap()
+        )
+      );
+      message.success(`Attendance saved for ${total} staff`);
     } catch (e) {
       message.error(typeof e === "string" ? e : "Failed to save attendance");
     }

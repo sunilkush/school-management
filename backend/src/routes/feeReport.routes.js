@@ -4,15 +4,13 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+const FEE_REPORT_ROLES = [
+  "Super Admin", "School Admin", "Accountant",
+  "Principal", "Vice Principal",
+];
+
 router.use(auth);
 
-/*
-Examples:
-GET /fees/report?type=daily
-GET /fees/report?type=monthly&month=May
-GET /fees/report?type=class-wise&schoolClassId=123
-GET /fees/report?type=pending
-*/
-router.get("/", getFeeReport);
+router.get("/", roleMiddleware(FEE_REPORT_ROLES), getFeeReport);
 
 export default router;

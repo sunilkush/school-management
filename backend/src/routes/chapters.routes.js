@@ -12,28 +12,47 @@ import { validate } from "../middlewares/validate.middleware.js";
 
 const router = express.Router();
 
-const ADMIN_ROLES = ["Super Admin", "School Admin"];
-const READ_ROLES = ["Super Admin", "School Admin", "Teacher"];
+// Only admins, teachers, and subject coordinators can create/edit chapters
+const WRITE_ROLES = [
+  "Super Admin", "School Admin",
+  "Teacher", "Subject Coordinator",
+];
 
-router.post(
-  "/",
+// All academic and leadership staff can read chapters
+const READ_ROLES = [
+  "Super Admin", "School Admin",
+  "Principal", "Vice Principal",
+  "Teacher", "Subject Coordinator", "Exam Coordinator",
+];
+
+// Students/Parents see visible chapters
+const VISIBLE_ROLES = [...READ_ROLES, "Student", "Parent"];
+
+router.post("/",
   auth,
-  roleMiddleware(ADMIN_ROLES),
-  /* validate({
-    body: {
-      name: { required: true, type: "string" },
-      schoolClassId: { required: false, type: "objectId" },
-      boardClassId: { required: false, type: "objectId" },
-      subjectId: { required: true, type: "objectId" },
-    },
-  }), */
+  roleMiddleware(WRITE_ROLES),
   createChapter
 );
 
-router.get("/visible", auth, roleMiddleware(READ_ROLES), getVisibleChapters);
-router.get("/", auth, roleMiddleware(READ_ROLES), getAllChapters);
-router.get("/:id", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getChapterById);
-router.patch("/:id", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), updateChapter);
-router.delete("/:id", auth, roleMiddleware(ADMIN_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), deleteChapter);
+router.get("/visible", auth, roleMiddleware(VISIBLE_ROLES), getVisibleChapters);
+router.get("/",        auth, roleMiddleware(READ_ROLES),    getAllChapters);
+router.get("/:id",
+  auth,
+  roleMiddleware(READ_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  getChapterById
+);
+router.patch("/:id",
+  auth,
+  roleMiddleware(WRITE_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  updateChapter
+);
+router.delete("/:id",
+  auth,
+  roleMiddleware(["Super Admin", "School Admin"]),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  deleteChapter
+);
 
 export default router;

@@ -8,18 +8,21 @@ import {
   listBackupAuditLogs,
   listSystemBackups,
 } from "../controllers/systemBackup.controllers.js";
-import { auth } from "../middlewares/auth.middleware.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.use(auth);
+const SUPER_ADMIN = ["Super Admin"];
 
-router.get("/summary", getSystemBackupSummary);
-router.post("/manual", createManualBackup);
-router.get("/", listSystemBackups);
-router.get("/audit-logs", listBackupAuditLogs);
-router.get("/:id", getSystemBackupById);
-router.get("/:id/download", getSystemBackupDownloadUrl);
-router.delete("/:id", deleteSystemBackup);
+router.use(auth);
+router.use(roleMiddleware(SUPER_ADMIN));
+
+router.get("/summary",        getSystemBackupSummary);
+router.post("/manual",        createManualBackup);
+router.get("/",               listSystemBackups);
+router.get("/audit-logs",     listBackupAuditLogs);
+router.get("/:id",            getSystemBackupById);
+router.get("/:id/download",   getSystemBackupDownloadUrl);
+router.delete("/:id",         deleteSystemBackup);
 
 export default router;

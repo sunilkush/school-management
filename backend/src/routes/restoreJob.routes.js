@@ -5,15 +5,18 @@ import {
   requestRestoreJob,
   runRestoreJob,
 } from "../controllers/systemBackup.controllers.js";
-import { auth } from "../middlewares/auth.middleware.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.use(auth);
+const SUPER_ADMIN = ["Super Admin"];
 
-router.post("/request", requestRestoreJob);
+router.use(auth);
+router.use(roleMiddleware(SUPER_ADMIN));
+
+router.post("/request",      requestRestoreJob);
 router.patch("/:id/approve", approveRestoreJob);
-router.post("/:id/run", runRestoreJob);
-router.get("/", listRestoreJobs);
+router.post("/:id/run",      runRestoreJob);
+router.get("/",              listRestoreJobs);
 
 export default router;

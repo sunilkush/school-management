@@ -10,12 +10,23 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-const TEACHER_AND_ABOVE = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher", "Subject Coordinator", "Exam Coordinator"];
+// Lesson plans are created and managed by teaching staff
+const LP_WRITE = [
+  "Super Admin", "School Admin",
+  "Principal", "Vice Principal",
+  "Teacher", "Subject Coordinator",
+];
 
-router.get("/",    auth, roleMiddleware(TEACHER_AND_ABOVE), getLessonPlans);
-router.post("/",   auth, roleMiddleware(TEACHER_AND_ABOVE), createLessonPlan);
-router.get("/:id", auth, roleMiddleware(TEACHER_AND_ABOVE), getLessonPlanById);
-router.put("/:id", auth, roleMiddleware(TEACHER_AND_ABOVE), updateLessonPlan);
-router.delete("/:id", auth, roleMiddleware(TEACHER_AND_ABOVE), deleteLessonPlan);
+// Leadership + teaching staff can read lesson plans
+const LP_READ = [
+  ...LP_WRITE,
+  "Exam Coordinator",   // needs visibility for scheduling exams around syllabus
+];
+
+router.get("/",    auth, roleMiddleware(LP_READ),  getLessonPlans);
+router.post("/",   auth, roleMiddleware(LP_WRITE), createLessonPlan);
+router.get("/:id", auth, roleMiddleware(LP_READ),  getLessonPlanById);
+router.put("/:id", auth, roleMiddleware(LP_WRITE), updateLessonPlan);
+router.delete("/:id", auth, roleMiddleware(LP_WRITE), deleteLessonPlan);
 
 export default router;

@@ -1,33 +1,35 @@
-import { Router } from 'express';
-import { createLoginLog, getLoginLogsByUser, getLoginLogsBySchool, getLoginLogsByAcademicYear ,createLoginLog,
+import { Router } from "express";
+import {
+  createLoginLog,
+  getLoginLogsByUser,
+  getLoginLogsBySchool,
+  getLoginLogsByAcademicYear,
   getLoginLogs,
   setLogoutTime,
-  getLoginStats, } from '../controllers/loginLog.controllers.js';
-import { auth, roleMiddleware } from '../middlewares/auth.middleware.js';
-const router = Router();
-// Role-Based Access Control
-const ADMIN_ROLE = ['Super Admin', 'School Admin'];
-const TEACHER_ROLE = ['Super Admin', 'School Admin', 'Teacher'];
-const ALL_USERS = [
-  'Super Admin', 'School Admin', 'Principal', 'Vice Principal',
-  'Teacher', 'Subject Coordinator', 'Exam Coordinator',
-  'Student', 'Parent',
-  'Accountant', 'Staff', 'Support Staff',
-  'Librarian', 'Hostel Warden', 'Transport Manager',
-  'Receptionist', 'IT Support', 'Counselor', 'Security',
-];
-// Create Login Log
-router.post('/', auth, roleMiddleware(ALL_USERS), createLoginLog);
-// Get Login Logs by User
-router.get('/user/:userId', auth, roleMiddleware(ALL_USERS), getLoginLogsByUser);
-// Get Login Logs by School
-router.get('/school/:schoolId', auth, roleMiddleware(ADMIN_ROLE), getLoginLogsBySchool);
-// Get Login Logs by Academic Year
-router.get('/academic-year/:academicYearId', auth, roleMiddleware(ADMIN_ROLE), getLoginLogsByAcademicYear);
+  getLoginStats,
+} from "../controllers/loginLog.controllers.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
-router.post('/', createLoginLog);
-router.get('/', getLoginLogs);
-router.put('/:id/logout', setLogoutTime);
-router.get('/stats', getLoginStats);
+const router = Router();
+
+const ADMIN_ROLE = ["Super Admin", "School Admin"];
+const ALL_USERS = [
+  "Super Admin", "School Admin", "Principal", "Vice Principal",
+  "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Student", "Parent",
+  "Accountant", "Staff", "Support Staff",
+  "Librarian", "Hostel Warden", "Transport Manager",
+  "Receptionist", "IT Support", "Counselor", "Security",
+];
+
+router.use(auth);
+
+router.post("/",                             roleMiddleware(ALL_USERS),  createLoginLog);
+router.get("/user/:userId",                  roleMiddleware(ALL_USERS),  getLoginLogsByUser);
+router.put("/:id/logout",                    roleMiddleware(ALL_USERS),  setLogoutTime);
+router.get("/stats",                         roleMiddleware(ADMIN_ROLE), getLoginStats);
+router.get("/school/:schoolId",              roleMiddleware(ADMIN_ROLE), getLoginLogsBySchool);
+router.get("/academic-year/:academicYearId", roleMiddleware(ADMIN_ROLE), getLoginLogsByAcademicYear);
+router.get("/",                              roleMiddleware(ADMIN_ROLE), getLoginLogs);
+
 export default router;
-// This code defines routes for managing login logs, including creating logs and retrieving them by user,

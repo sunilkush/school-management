@@ -5,28 +5,28 @@ import {
   getSchoolClassById,
   updateSchoolClass,
   deleteSchoolClass,
-  getSchoolClassSectionSubjects
+  getSchoolClassSectionSubjects,
 } from "../controllers/schoolClass.controllers.js";
-
-import { auth,roleMiddleware } from "../middlewares/auth.middleware.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
-const ADMIN_ONLY = ["Super Admin", "School Admin","Accountant","Teacher","Student","Parent"];
-// 🔹 Create
-router.post("/",auth, roleMiddleware(ADMIN_ONLY), createSchoolClass);
 
-// 🔹 Get All (with query ?schoolId=&academicYearId=)
-router.get("/",auth, roleMiddleware(ADMIN_ONLY), getAllSchoolClasses);
-// Class full data
-router.get("/class-detailes",auth,roleMiddleware(ADMIN_ONLY), getSchoolClassSectionSubjects);
-// 🔹 Get Single
-router.get("/:id",auth, roleMiddleware(ADMIN_ONLY), getSchoolClassById);
+// Only admins can create / edit / delete classes
+const WRITE_ROLES = ["Super Admin", "School Admin"];
 
-// 🔹 Update
-router.put("/:id",auth, roleMiddleware(ADMIN_ONLY), updateSchoolClass);
+// All school members can read class info (teachers need it for scheduling, students/parents for reference)
+const READ_ROLES = [
+  "Super Admin", "School Admin", "Principal", "Vice Principal",
+  "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Accountant", "Student", "Parent",
+  "Librarian", "Hostel Warden", "Transport Manager", "Receptionist",
+];
 
-// 🔹 Delete
-router.delete("/:id",auth, roleMiddleware(ADMIN_ONLY), deleteSchoolClass);
-
+router.post("/",             auth, roleMiddleware(WRITE_ROLES), createSchoolClass);
+router.get("/",              auth, roleMiddleware(READ_ROLES),  getAllSchoolClasses);
+router.get("/class-detailes", auth, roleMiddleware(READ_ROLES), getSchoolClassSectionSubjects);
+router.get("/:id",           auth, roleMiddleware(READ_ROLES),  getSchoolClassById);
+router.put("/:id",           auth, roleMiddleware(WRITE_ROLES), updateSchoolClass);
+router.delete("/:id",        auth, roleMiddleware(WRITE_ROLES), deleteSchoolClass);
 
 export default router;

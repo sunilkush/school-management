@@ -10,21 +10,36 @@ import { requireRoles } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get("/", requireRoles(["Super Admin", "School Admin","Teacher"]), getReports);
-router.post("/", requireRoles(["Super Admin", "School Admin","Teacher"]), createReport);
+const REPORT_READ = [
+  "Super Admin", "School Admin",
+  "Principal", "Vice Principal",
+  "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Accountant",
+];
 
-// Legacy endpoints kept for backward compatibility with existing frontend calls.
-router.get("/getReport", requireRoles(["Super Admin", "School Admin", "Teacher","Accountant"]), getReports);
-router.post("/create", requireRoles(["Super Admin", "School Admin", "Teacher"]), createReport);
-router.delete("/delete/:id", requireRoles(["Super Admin"]), deleteReport);
-router.get("/view/:id", requireRoles(["Super Admin", "School Admin", "Teacher"]), viewReport);
+const REPORT_WRITE = [
+  "Super Admin", "School Admin",
+  "Principal", "Vice Principal",
+  "Teacher", "Subject Coordinator", "Exam Coordinator",
+];
+
+const REPORT_DELETE = ["Super Admin", "School Admin"];
+
+router.get("/",       requireRoles(REPORT_READ),   getReports);
+router.post("/",      requireRoles(REPORT_WRITE),  createReport);
+
+// Legacy endpoints kept for backward compatibility
+router.get("/getReport", requireRoles(REPORT_READ),  getReports);
+router.post("/create",   requireRoles(REPORT_WRITE), createReport);
+router.delete("/delete/:id", requireRoles(REPORT_DELETE), deleteReport);
+router.get("/view/:id",  requireRoles(REPORT_READ),  viewReport);
 
 router.get(
   "/school/:schoolId/academic-year/:academicYearId",
-  requireRoles(["Super Admin", "School Admin","Teacher"]),
+  requireRoles(REPORT_READ),
   getSchoolOverviewReport
 );
-router.delete("/:id", requireRoles(["Super Admin"]), deleteReport);
-router.get("/:id", requireRoles(["Super Admin", "School Admin","Teacher"]), viewReport);
+router.delete("/:id",  requireRoles(REPORT_DELETE), deleteReport);
+router.get("/:id",     requireRoles(REPORT_READ),   viewReport);
 
 export default router;
