@@ -4,8 +4,9 @@ import {
 } from "antd";
 import {
   BookOutlined, DownloadOutlined, PrinterOutlined,
-  FileTextOutlined, AlertOutlined, CheckCircleOutlined, DollarOutlined,
+  FileTextOutlined, AlertOutlined, CheckCircleOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -174,7 +175,7 @@ const LibraryReports = () => {
               { label: "Issued",          value: summary.issuedActive,    color: "#F59E0B", icon: <BookOutlined /> },
               { label: "Overdue",         value: summary.overdueCount,    color: "#EF4444", icon: <AlertOutlined /> },
               { label: "Lost",            value: summary.lostCount,       color: "#14B8A6", icon: <AlertOutlined /> },
-              { label: "Pending Fines",   value: `₹${summary.pendingFines}`, color: "#F59E0B", icon: <DollarOutlined /> },
+              { label: "Pending Fines",   value: `₹${summary.pendingFines}`, color: "#F59E0B", icon: <RupeeIcon /> },
             ].map(({ label, value, color, icon }) => (
               <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
                 <div style={iconWell(color, 38)}>{icon}</div>

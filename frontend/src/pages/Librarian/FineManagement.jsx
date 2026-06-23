@@ -4,9 +4,10 @@ import {
   Select, Spin, Table, Tag, Tooltip, Typography, message,
 } from "antd";
 import {
-  CheckCircleOutlined, CloseCircleOutlined, DollarOutlined,
+  CheckCircleOutlined, CloseCircleOutlined,
   SearchOutlined, FilterOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -197,14 +198,14 @@ const FineManagement = () => {
       <PageHeader
         title="Fine Management"
         subtitle="Collect, waive, and track library fines"
-        icon={<DollarOutlined />}
+        icon={<RupeeIcon />}
       />
 
       {/* ── Summary KPIs ──────────────────────────────────────────── */}
       <div style={statGrid(150)}>
         {[
           { label: "Total Records",    value: summary.totalRecords,   color: "#0891b2", icon: <FilterOutlined /> },
-          { label: "Pending Fines",    value: `₹${summary.totalPending}`,   color: "#EF4444", icon: <DollarOutlined /> },
+          { label: "Pending Fines",    value: `₹${summary.totalPending}`,   color: "#EF4444", icon: <RupeeIcon /> },
           { label: "Collected",        value: `₹${summary.totalCollected}`, color: "#22C55E", icon: <CheckCircleOutlined /> },
           { label: "Waived",           value: `₹${summary.totalWaived}`,    color: "#64748B", icon: <CloseCircleOutlined /> },
         ].map(({ label, value, color, icon }) => (

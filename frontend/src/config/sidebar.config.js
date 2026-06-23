@@ -43,6 +43,7 @@ import {
   ShieldAlert,
   ListChecks,
 } from "lucide-react";
+import RupeeIcon from "../components/icons/RupeeIcon";
 
 const commonSelfService = (basePath) => [
  
@@ -237,7 +238,7 @@ export const sidebarMenu = {
     },
     {
       title: "Fees",
-      icon: CreditCard,
+      icon: RupeeIcon,
       subMenu: [
         { title: "Fee Categories", path: "schooladmin/fees/categories" },
         { title: "Fee Collection", path: "schooladmin/fees/collect" },
@@ -357,7 +358,7 @@ export const sidebarMenu = {
     { title: "Study Materials", path: "student/study-materials", icon: BookOpen },
     { title: "Hostel", path: "student/hostel", icon: Building2 },
     { title: "Transport", path: "student/transport", icon: Bus },
-    { title: "Fees", path: "student/fees", icon: Receipt },
+    { title: "Fees", path: "student/fees", icon: RupeeIcon },
     { title: "Leave Requests", path: "student/leave", icon: CalendarClock },
     { title: "Exams", path: "student/exams", icon: GraduationCap },
     { title: "Academic Calendar", path: "student/calendar", icon: CalendarClock },
@@ -372,7 +373,7 @@ export const sidebarMenu = {
     { title: "Attendance",        path: "parent/attendance",   icon: UserCheck },
     { title: "Grades",            path: "parent/grades",       icon: FileCheck },
     { title: "Homework",          path: "parent/homework",     icon: ClipboardCheck },
-    { title: "Fees",              path: "parent/fees",         icon: Receipt },
+    { title: "Fees",              path: "parent/fees",         icon: RupeeIcon },
     { title: "Timetable",         path: "parent/timetable",    icon: CalendarClock },
     { title: "Exams",             path: "parent/exams",        icon: GraduationCap },
     { title: "Leave Requests",    path: "parent/leave",        icon: CalendarClock },
@@ -388,7 +389,7 @@ export const sidebarMenu = {
   /* ================= ACCOUNTANT ================= */
   accountant: [
     { title: "Dashboard",         path: "accountant",                    icon: LayoutDashboard },
-    { title: "Fee Collection",    path: "accountant/fees/collect",       icon: CreditCard },
+    { title: "Fee Collection",    path: "accountant/fees/collect",       icon: RupeeIcon  },
     { title: "Fee Reports",       path: "accountant/fees/reports",       icon: FileBarChart2 },
     { title: "Income",            path: "accountant/income",             icon: IndianRupee },
     { title: "Expenses",          path: "accountant/expenses",           icon: Receipt },
@@ -493,7 +494,7 @@ export const sidebarMenu = {
     { title: "Book Catalog", path: "librarian/book-catalog", icon: Book },
     { title: "Issue / Return", path: "librarian/issue-return", icon: ClipboardCheck },
     { title: "Members", path: "librarian/members", icon: Users },
-    { title: "Fine Management", path: "librarian/fines", icon: CreditCard },
+    { title: "Fine Management", path: "librarian/fines", icon: RupeeIcon },
     { title: "Reports", path: "librarian/reports", icon: FileBarChart2 },
     { title: "Library Settings", path: "librarian/settings", icon: Settings },
     { title: "My Tasks", path: "librarian/tasks", icon: ListChecks },

@@ -27,7 +27,6 @@ import {
 import {
   BankOutlined,
   TeamOutlined,
-  DollarOutlined,
   RiseOutlined,
   WarningOutlined,
   CheckCircleFilled,
@@ -46,6 +45,7 @@ import {
   LinkOutlined,
   DashboardOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -83,7 +83,7 @@ const getActivityMeta = (action = "") => {
   if (a.includes("school") || a.includes("register"))
     return { icon: <BankOutlined />, color: "var(--success, #22C55E)" };
   if (a.includes("subscri") || a.includes("payment") || a.includes("fee"))
-    return { icon: <DollarOutlined />, color: "var(--primary, #1677ff)" };
+    return { icon: <RupeeIcon />, color: "var(--primary, #1677ff)" };
   if (a.includes("user") || a.includes("admin") || a.includes("teacher"))
     return { icon: <UserOutlined />, color: "var(--purple, #722ed1)" };
   if (a.includes("backup") || a.includes("system"))
@@ -207,7 +207,7 @@ const QUICK_ACTIONS = [
   },
   {
     label: "Financial Reports",
-    icon: <DollarOutlined />,
+    icon: <RupeeIcon />,
     color: "#22C55E",
     iconBg: "rgba(220,252,231,0.22)",
     route: "/dashboard/superadmin/reports/revenue",
@@ -658,7 +658,7 @@ const SuperAdminDashboard = () => {
               <StatCard
                 title="Revenue (YTD)"
                 value={formatMoney(metrics.totalRevenue)}
-                icon={<DollarOutlined />}
+                icon={<RupeeIcon />}
                 color="#22C55E"
                 iconBg="rgba(220,252,231,0.25)"
                 cardAccent="#DCFCE7"
@@ -1071,7 +1071,7 @@ const SuperAdminDashboard = () => {
               <Card
                 title={
                   <Space>
-                    <DollarOutlined style={{ color: "var(--success)" }} />
+                    <RupeeIcon style={{ color: "var(--success)" }} />
                     <span style={{ color: "var(--text-primary)" }}>
                       Revenue by School
                     </span>

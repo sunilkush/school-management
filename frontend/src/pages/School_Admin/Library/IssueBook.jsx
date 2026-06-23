@@ -5,9 +5,10 @@ import {
 } from "antd";
 import {
   AlertOutlined, BookOutlined, CheckCircleOutlined,
-  DeleteOutlined, DollarOutlined, FileTextOutlined,
+  DeleteOutlined, FileTextOutlined,
   PlusOutlined, RollbackOutlined, SearchOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -274,7 +275,7 @@ const IssueBook = () => {
           { label: "Total Records", value: summaryStats.total,   icon: <FileTextOutlined />, color: "#0891b2" },
           { label: "Currently Issued", value: summaryStats.issued, icon: <BookOutlined />,   color: "#14B8A6" },
           { label: "Overdue",          value: summaryStats.overdue, icon: <AlertOutlined />, color: "#EF4444" },
-          { label: "Pending Fines",    value: `₹${summaryStats.fines}`, icon: <DollarOutlined />, color: "#F59E0B" },
+          { label: "Pending Fines",    value: `₹${summaryStats.fines}`, icon: <RupeeIcon />, color: "#F59E0B" },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>
@@ -412,7 +413,7 @@ const IssueBook = () => {
 
             {returnStatus === "Lost" && (
               <div style={{ padding: "8px 12px", background: "rgba(20,184,166,0.2)", borderRadius: 8, fontSize: 12, color: "#14B8A6", fontWeight: 600 }}>
-                <DollarOutlined /> A lost book fine from library settings will be applied.
+                <RupeeIcon /> A lost book fine from library settings will be applied.
               </div>
             )}
           </div>

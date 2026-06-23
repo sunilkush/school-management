@@ -23,13 +23,13 @@ import {
 import {
   BankOutlined,
   CheckCircleOutlined,
-  DollarOutlined,
   LoadingOutlined,
   ReloadOutlined,
   SearchOutlined,
   TeamOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useDispatch, useSelector } from "react-redux";
 
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
@@ -366,7 +366,7 @@ const CollectFees = () => {
         return (
           <Button
             type="primary"
-            icon={<DollarOutlined />}
+            icon={<RupeeIcon />}
             onClick={() => handleOpenCollectModal(record)}
             disabled={isLoadingDue || due <= 0}
           >

@@ -5,9 +5,10 @@ import {
   Modal, Popconfirm, Row, Select, Spin, Table, Tag, message,
 } from "antd";
 import {
-  DeleteOutlined, DollarOutlined, DownloadOutlined,
+  DeleteOutlined, DownloadOutlined,
   EditOutlined, FilterOutlined, PlusOutlined, SearchOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import {
   createIncome, deleteIncome, fetchIncome, fetchIncomeSummary, updateIncome,
@@ -203,7 +204,7 @@ const IncomeManagement = () => {
       <PageHeader
         title="Income Management"
         subtitle="Track all non-fee income: donations, grants, rentals, and misc"
-        icon={<DollarOutlined />}
+        icon={<RupeeIcon />}
         extra={
           <div style={{ display: "flex", gap: 8 }}>
             <Button icon={<DownloadOutlined />} onClick={handleExport}>Export CSV</Button>
@@ -215,9 +216,9 @@ const IncomeManagement = () => {
       {/* ── Summary KPIs ─────────────────────────────────────────── */}
       <div style={statGrid(150)}>
         {[
-          { label: "Total Income",   value: money(incomeTotalAmount), color: "#22C55E", icon: <DollarOutlined /> },
+          { label: "Total Income",   value: money(incomeTotalAmount), color: "#22C55E", icon: <RupeeIcon /> },
           { label: "Total Records",  value: incomeTotal,              color: "#0891b2", icon: <FilterOutlined /> },
-          { label: "This Month",     value: money(incomeSummary?.total), color: "#14B8A6", icon: <DollarOutlined /> },
+          { label: "This Month",     value: money(incomeSummary?.total), color: "#14B8A6", icon: <RupeeIcon /> },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>

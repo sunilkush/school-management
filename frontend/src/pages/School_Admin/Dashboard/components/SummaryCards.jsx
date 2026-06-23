@@ -6,8 +6,8 @@ import {
   UserAddOutlined,
   TeamOutlined,
   SolutionOutlined,
-  DollarOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../../components/icons/RupeeIcon";
 import { useTheme } from "../../../../context/ThemeContext";
 
 const { Text } = Typography;
@@ -52,8 +52,7 @@ const SummaryCards = ({ summary }) => {
       formatted: `$${Number(dynamic?.totalIncome?.value || 0).toLocaleString()}`,
       percentage: Math.abs(Math.round(dynamic?.totalIncome?.growth || 0)),
       trend: (dynamic?.totalIncome?.growth || 0) < 0 ? "decrease" : "increase",
-      icon: DollarOutlined,
-      accent: "#EF4444",
+      icon: accent: "#EF4444",
       accentBg: "rgba(217,107,122,0.08)",
       desc: "revenue this month",
     },

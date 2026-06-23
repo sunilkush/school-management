@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { Col, Empty, Row, Spin, Table, Tag, Typography } from "antd";
 import {
   AlertOutlined, ArrowDownOutlined, ArrowUpOutlined, BankOutlined,
-  BarChartOutlined, DollarOutlined, FileTextOutlined, ReloadOutlined,
+  BarChartOutlined, FileTextOutlined, ReloadOutlined,
   RiseOutlined, TeamOutlined, WalletOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -134,7 +135,7 @@ const AccountantDashboard = () => {
         <KpiCard label={netLabel}            value={money(Math.abs(kpis.netProfitLoss))}        icon={<BarChartOutlined />}   color={netColor} />
         <KpiCard label="Fee Collected"       value={money(kpis.totalFeeCollected)}             icon={<WalletOutlined />}     color="#2563EB" onClick={() => navigate("accountant/fees/collect")} />
         <KpiCard label="Pending Fees"        value={money(kpis.pendingFees)}                   icon={<AlertOutlined />}      color="#F59E0B" sub={`${kpis.pendingFeeCount || 0} students`} onClick={() => navigate("accountant/fees/reports")} />
-        <KpiCard label="This Month Income"   value={money(kpis.thisMonthIncome)}               icon={<DollarOutlined />}     color="#2563EB" />
+        <KpiCard label="This Month Income"   value={money(kpis.thisMonthIncome)}               icon={<RupeeIcon />}     color="#2563EB" />
         <KpiCard label="This Month Expense"  value={money(kpis.thisMonthExpense)}              icon={<FileTextOutlined />}   color="#F59E0B" />
         <KpiCard label="Payroll This Month"  value={money(kpis.payrollThisMonth)}              icon={<TeamOutlined />}       color="#14B8A6" onClick={() => navigate("accountant/salary")} />
       </div>
@@ -144,7 +145,7 @@ const AccountantDashboard = () => {
         <div style={{ fontWeight: 700, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>Quick Actions</div>
         <div style={statGrid(110)}>
           <ActionTile icon={<WalletOutlined />}   label="Collect Fee"   path="accountant/fees/collect"  color="#2563EB" navigate={navigate} />
-          <ActionTile icon={<DollarOutlined />}   label="Add Income"    path="accountant/income"        color="#22C55E" navigate={navigate} />
+          <ActionTile icon={<RupeeIcon />}   label="Add Income"    path="accountant/income"        color="#22C55E" navigate={navigate} />
           <ActionTile icon={<FileTextOutlined />} label="Add Expense"   path="accountant/expenses"      color="#EF4444" navigate={navigate} />
           <ActionTile icon={<BarChartOutlined />} label="Reports"       path="accountant/reports"       color="#14B8A6" navigate={navigate} />
           <ActionTile icon={<TeamOutlined />}     label="Payroll"       path="accountant/salary"        color="#14B8A6" navigate={navigate} />

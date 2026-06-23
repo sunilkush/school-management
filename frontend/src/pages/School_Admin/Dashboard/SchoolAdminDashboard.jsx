@@ -15,9 +15,9 @@ import {
   DashboardOutlined,
   RiseOutlined,
   TeamOutlined,
-  DollarOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useTheme } from "../../../context/ThemeContext.jsx";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 
@@ -267,7 +267,7 @@ const SchoolAdminDashboard = () => {
       {/* ── FINANCE ── */}
       <div className="dash-section">
         <SectionHeader
-          icon={<DollarOutlined />}
+          icon={<RupeeIcon />}
           title="Finance Overview"
           tag="This Month"
           tagColor="green"

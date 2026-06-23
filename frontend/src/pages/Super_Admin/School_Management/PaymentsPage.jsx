@@ -22,7 +22,6 @@ import {
 } from "antd";
 import {
   AppstoreOutlined,
-  DollarOutlined,
   EyeOutlined,
   WalletOutlined,
   SearchOutlined,
@@ -32,6 +31,7 @@ import {
   ReloadOutlined,
   CreditCardOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useNavigate } from "react-router-dom";
 import {
   addManualSubscriptionPayment,
@@ -318,7 +318,7 @@ export default function PaymentsPage() {
               </Button>
               <Button
                 type="primary"
-                icon={<DollarOutlined />}
+                icon={<RupeeIcon />}
                 onClick={() => navigate("/dashboard/superadmin/revenue")}
               >
                 Revenue

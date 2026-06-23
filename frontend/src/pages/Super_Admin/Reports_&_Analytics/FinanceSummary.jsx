@@ -13,8 +13,8 @@ import {
   RiseOutlined,
   ClockCircleOutlined,
   ReloadOutlined,
-  DollarOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { fetchFinanceSummary } from "../../../features/analyticsSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
@@ -146,7 +146,7 @@ const FinanceSummary = () => {
       <PageHeader
         title="Finance Summary"
         subtitle="Overview of income, payments, and financial performance across schools"
-        icon={<DollarOutlined />}
+        icon={<RupeeIcon />}
         extra={
           <Button
             icon={<ReloadOutlined />}

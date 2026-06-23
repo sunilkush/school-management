@@ -13,7 +13,6 @@ import {
   Badge,
 } from "antd";
 import {
-  DollarOutlined,
   RiseOutlined,
   FundOutlined,
   ArrowUpOutlined,
@@ -21,6 +20,7 @@ import {
   TrophyOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import {
   XAxis,
   YAxis,
@@ -281,7 +281,7 @@ const RevenueAnalytics = () => {
       >
         <div>
           <Title level={3} style={{ margin: 0, color: "#1a1a2e", fontWeight: 800, letterSpacing: -0.5 }}>
-            <DollarOutlined style={{ marginRight: 10, color: "#1677ff" }} />
+            <RupeeIcon style={{ marginRight: 10, color: "#1677ff" }} />
             Revenue Analytics
           </Title>
           <Text type="secondary" style={{ fontSize: 14 }}>
@@ -303,7 +303,7 @@ const RevenueAnalytics = () => {
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
-          <KpiCard icon={<DollarOutlined />} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub="from all schools" accent="#1677ff" />
+          <KpiCard icon={<RupeeIcon />} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub="from all schools" accent="#1677ff" />
         </Col>
         <Col xs={24} sm={8}>
           <KpiCard icon={<FundOutlined />} label={periodLabel} value={formatCurrency(stats.currentPeriodRevenue)} sub="latest period" accent="#722ed1" />

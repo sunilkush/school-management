@@ -5,9 +5,10 @@ import {
 } from "antd";
 import {
   PlusOutlined, CheckOutlined, CloseOutlined, DeleteOutlined,
-  CarOutlined, MedicineBoxOutlined, WifiOutlined, DollarOutlined,
+  CarOutlined, MedicineBoxOutlined, WifiOutlined,
   CoffeeOutlined, FileTextOutlined, BankOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import {
@@ -38,7 +39,7 @@ const TYPE_CFG = {
   internet: { label: "Internet",  icon: <WifiOutlined />,         color: C.accent,  bg: C.accentLight,    border: "#99F6E4" },
   medical:  { label: "Medical",   icon: <MedicineBoxOutlined />,  color: "#DC2626", bg: "#FEE2E2",        border: "#FCA5A5" },
   food:     { label: "Food",      icon: <CoffeeOutlined />,       color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
-  other:    { label: "Other",     icon: <DollarOutlined />,       color: C.textSub, bg: "#F1F5F9",        border: C.border  },
+  other:    { label: "Other",     icon: <RupeeIcon />,       color: C.textSub, bg: "#F1F5F9",        border: C.border  },
 };
 
 const STATUS_CFG = {
@@ -300,7 +301,7 @@ const ReimbursementsPage = () => {
           { icon: <FileTextOutlined />,   label: "Total Claims",    value: stats.total,          color: C.primary },
           { icon: <CarOutlined />,        label: "Pending",         value: stats.pending,         color: C.warning },
           { icon: <CheckOutlined />,      label: "Approved",        value: stats.approved,        color: C.success },
-          { icon: <DollarOutlined />,     label: "Approved Amount", value: fmt(stats.totalAmt),  color: C.accent, small: true },
+          { icon: <RupeeIcon />,     label: "Approved Amount", value: fmt(stats.totalAmt),  color: C.accent, small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14, border: "1px solid " + C.border,

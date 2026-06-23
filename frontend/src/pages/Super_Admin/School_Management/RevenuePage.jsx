@@ -21,7 +21,6 @@ import {
 } from "antd";
 import {
   AppstoreOutlined,
-  DollarOutlined,
   PlusOutlined,
   SearchOutlined,
   WalletOutlined,
@@ -31,6 +30,7 @@ import {
   WarningOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useNavigate } from "react-router-dom";
 import {
   addManualSubscriptionPayment,
@@ -376,7 +376,7 @@ export default function RevenuePage() {
                   fontSize: 24,
                 }}
               >
-                <DollarOutlined />
+                <RupeeIcon />
               </div>
 
               <div>

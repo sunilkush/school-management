@@ -6,9 +6,10 @@ import {
 } from "antd";
 import {
   BookOutlined, AlertOutlined, CheckCircleOutlined,
-  ClockCircleOutlined, DollarOutlined, ReloadOutlined,
+  ClockCircleOutlined, ReloadOutlined,
   FileTextOutlined, TeamOutlined, SettingOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts";
@@ -187,7 +188,7 @@ const LibraryDashboard = () => {
         <KpiCard icon={<CheckCircleOutlined />}  label="Available Copies" value={stats?.availableCopies}                                                      color="#22C55E" />
         <KpiCard icon={<FileTextOutlined />}     label="Currently Issued" value={stats?.issuedCount}                                                          color="#2563EB" onClick={() => navigate("librarian/issue-return")} />
         <KpiCard icon={<AlertOutlined />}        label="Overdue"          value={stats?.overdueCount}                color="#EF4444" sub={stats?.overdueCount > 0 ? "Needs attention" : undefined} onClick={() => navigate("librarian/overdue")} />
-        <KpiCard icon={<DollarOutlined />}       label="Pending Fines"    value={stats?.pendingFinesAmount != null ? `₹${stats.pendingFinesAmount}` : "₹0"}  color="#F59E0B" onClick={() => navigate("librarian/fines")} />
+        <KpiCard icon={<RupeeIcon />}       label="Pending Fines"    value={stats?.pendingFinesAmount != null ? `₹${stats.pendingFinesAmount}` : "₹0"}  color="#F59E0B" onClick={() => navigate("librarian/fines")} />
         <KpiCard icon={<TeamOutlined />}         label="Members"          value={stats?.totalMembers ?? "—"}                                                  color="#14B8A6" onClick={() => navigate("librarian/members")} />
       </div>
 
@@ -198,7 +199,7 @@ const LibraryDashboard = () => {
           <ActionTile icon={<BookOutlined />}        label="Add Book"       path="librarian/book-catalog" color="#14B8A6" navigate={navigate} />
           <ActionTile icon={<FileTextOutlined />}     label="Issue Book"     path="librarian/issue-return" color="#2563EB" navigate={navigate} />
           <ActionTile icon={<AlertOutlined />}        label="Overdue Books"  path="librarian/overdue"      color="#EF4444" navigate={navigate} />
-          <ActionTile icon={<DollarOutlined />}       label="Fine Management" path="librarian/fines"      color="#F59E0B" navigate={navigate} />
+          <ActionTile icon={<RupeeIcon />}       label="Fine Management" path="librarian/fines"      color="#F59E0B" navigate={navigate} />
           <ActionTile icon={<TeamOutlined />}         label="Members"        path="librarian/members"      color="#22C55E" navigate={navigate} />
           <ActionTile icon={<ClockCircleOutlined />}  label="Reports"        path="librarian/reports"      color="#14B8A6" navigate={navigate} />
           <ActionTile icon={<SettingOutlined />}      label="Settings"       path="librarian/settings"     color="#94A3B8" navigate={navigate} />

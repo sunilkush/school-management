@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Form, Input, message } from "antd";
 import {
-  DollarOutlined, TeamOutlined, CheckCircleOutlined,
+  TeamOutlined, CheckCircleOutlined,
   BarChartOutlined, SearchOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import SalaryStructureForm from "../../../components/payroll/SalaryStructureForm";
@@ -123,7 +124,7 @@ const SalaryStructures = () => {
       <PageHeader
         title="Salary Structures"
         subtitle="Define and manage employee salary components, allowances, and deductions"
-        icon={<DollarOutlined />}
+        icon={<RupeeIcon />}
       />
 
       {/* Stats */}
@@ -131,7 +132,7 @@ const SalaryStructures = () => {
         {[
           { icon: <TeamOutlined />,        label: "Employees",       value: stats.employees, color: C.primary },
           { icon: <CheckCircleOutlined />, label: "Active Structures", value: stats.active, color: C.success },
-          { icon: <DollarOutlined />,      label: "Total Structures", value: stats.total,  color: C.accent },
+          { icon: <RupeeIcon />,      label: "Total Structures", value: stats.total,  color: C.accent },
           { icon: <BarChartOutlined />,    label: "Monthly Payroll",  value: formatCurrencyINR(stats.totalGross), color: C.warning, small: true },
         ].map((s) => (
           <div key={s.label} style={{

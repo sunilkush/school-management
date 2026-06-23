@@ -24,13 +24,13 @@ import {
   ArrowUpOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  DollarOutlined,
   RocketOutlined,
   ThunderboltOutlined,
   TrophyOutlined,
   BankOutlined,
   BellOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useNavigate } from "react-router-dom";
 import {
   AreaChart,
@@ -455,7 +455,7 @@ const PlatformUsage = () => {
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <KpiCard
-              icon={<DollarOutlined />}
+              icon={<RupeeIcon />}
               label="Revenue"
               value={`₹${stats.revenue.toLocaleString()}`}
               change="+18% growth"

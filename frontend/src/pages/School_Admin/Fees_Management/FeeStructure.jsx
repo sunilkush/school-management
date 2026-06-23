@@ -4,8 +4,9 @@ import {
   Select, Table, Button, Modal, Form, InputNumber, message, Space, Tooltip, Popconfirm,
 } from "antd";
 import {
-  PlusOutlined, ReloadOutlined, DollarOutlined, EditOutlined, DeleteOutlined,
+  PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchFeeHeads } from "../../../features/headSlice.js";
 import { currentUser } from "../../../features/authSlice.js";
@@ -168,7 +169,7 @@ const FeeStructure = () => {
       <PageHeader
         title="Fee Structure"
         subtitle={`${selectedAcademicYear?.name ?? "Current Year"} · ${user?.school?.name ?? "School"}`}
-        icon={<DollarOutlined />}
+        icon={<RupeeIcon />}
         extra={
           <Space size={8}>
             <Tooltip title="Refresh">
@@ -222,7 +223,7 @@ const FeeStructure = () => {
         <Modal
           title={
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={iconWell("var(--primary)", 34)}><DollarOutlined /></div>
+              <div style={iconWell("var(--primary)", 34)}><RupeeIcon /></div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
                   {editingRecord ? "Update Fee Structure" : "Create Fee Structure"}

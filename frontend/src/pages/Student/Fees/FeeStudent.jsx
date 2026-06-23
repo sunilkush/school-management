@@ -12,12 +12,12 @@ import {
   Space,
 } from "antd";
 import {
-  DollarOutlined,
   PrinterOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useDispatch, useSelector } from "react-redux";
 
 import { fetchMyFees } from "../../../features/studentFeeSlice";
@@ -404,7 +404,7 @@ const FeeStudent = () => {
       <PageHeader
         title="My Fees"
         subtitle="View your fee structure and manage payments"
-        icon={<DollarOutlined />}
+        icon={<RupeeIcon />}
       />
 
       {/* ── Fee Summary ── */}
@@ -542,11 +542,11 @@ const FeeStudent = () => {
         footer={[
           <Button key="cancel" onClick={closePayModal}>Cancel</Button>,
           paymentMethod === "online" ? (
-            <Button key="pay" type="primary" icon={<DollarOutlined />} onClick={handleRazorpayPayment}>
+            <Button key="pay" type="primary" icon={<RupeeIcon />} onClick={handleRazorpayPayment}>
               Pay Online (Razorpay)
             </Button>
           ) : (
-            <Button key="pay" type="primary" icon={<DollarOutlined />} onClick={handleOfflinePayment}>
+            <Button key="pay" type="primary" icon={<RupeeIcon />} onClick={handleOfflinePayment}>
               Confirm {paymentMethod === "cheque" ? "Cheque" : "Cash"} Payment
             </Button>
           ),

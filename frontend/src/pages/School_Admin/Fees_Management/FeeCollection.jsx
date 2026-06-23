@@ -5,9 +5,10 @@ import {
   DatePicker, Spin, Empty, message, Divider, Radio,
 } from "antd";
 import {
-  SearchOutlined, DollarOutlined, PrinterOutlined,
+  SearchOutlined, PrinterOutlined,
   CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId }   from "../../../features/studentSlice";
@@ -248,7 +249,7 @@ const FeeCollection = () => {
           <Button
             size="small"
             type={isPaid ? "default" : "primary"}
-            icon={<DollarOutlined />}
+            icon={<RupeeIcon />}
             disabled={isPaid}
             onClick={() => {
               const balance = (r.amount || 0) - (r.paidAmount || 0);
@@ -271,7 +272,7 @@ const FeeCollection = () => {
       <PageHeader
         title="Fee Collection"
         subtitle="Search student, view assigned fees, record payments and print receipts"
-        icon={<DollarOutlined />}
+        icon={<RupeeIcon />}
       />
 
       {/* ── Search filters ── */}
@@ -324,7 +325,7 @@ const FeeCollection = () => {
               display: "flex", alignItems: "center", gap: 12,
             }}>
               <div style={iconWell(color, 40)}>
-                <DollarOutlined />
+                <RupeeIcon />
               </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>

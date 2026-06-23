@@ -18,7 +18,6 @@ import {
   GlobalOutlined,
   MailOutlined,
   PhoneOutlined,
-  DollarOutlined,
   ClockCircleOutlined,
   BulbOutlined,
   SafetyOutlined,
@@ -27,6 +26,7 @@ import {
   CreditCardOutlined,
   CloudServerOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchGlobalConfig,
@@ -286,7 +286,7 @@ export default function GlobalConfig() {
                 label="Currency"
                 rules={[{ required: true, message: "Currency is required" }]}
               >
-                <Select size="large" suffixIcon={<DollarOutlined />}>
+                <Select size="large" suffixIcon={<RupeeIcon />}>
                   <Option value="INR">INR — Indian Rupee</Option>
                   <Option value="USD">USD — US Dollar</Option>
                   <Option value="EUR">EUR — Euro</Option>

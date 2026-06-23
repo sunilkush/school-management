@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Alert, Button, Col, Empty, Row, Skeleton, Space, Tag } from "antd";
 import {
-  BellOutlined, BookOutlined, CalendarOutlined, CheckCircleOutlined,
-  DollarOutlined, ReloadOutlined, TrophyOutlined, UserOutlined,
+  BellOutlined, BookOutlined, CalendarOutlined, CheckCircleOutlined, ReloadOutlined, TrophyOutlined, UserOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
@@ -234,7 +234,7 @@ const ParentDashboard = () => {
           <Space wrap>
             <Button icon={<CalendarOutlined />} onClick={() => navigate("/dashboard/parent/timetable")}>Timetable</Button>
             <Button icon={<TrophyOutlined />}   onClick={() => navigate("/dashboard/parent/exams")}>Exams</Button>
-            <Button icon={<DollarOutlined />}   onClick={() => navigate("/dashboard/parent/fees")}>Fees</Button>
+            <Button icon={<RupeeIcon />}   onClick={() => navigate("/dashboard/parent/fees")}>Fees</Button>
             <Button icon={<CalendarOutlined />} onClick={() => navigate("/dashboard/parent/calendar")}>Calendar</Button>
             <Button icon={<BookOutlined />}     onClick={() => navigate("/dashboard/parent/leave")}>Apply Leave</Button>
             <Button icon={<CheckCircleOutlined />} onClick={() => navigate("/dashboard/parent/progress")}>Progress Report</Button>

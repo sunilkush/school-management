@@ -11,11 +11,12 @@ import {
   WarningOutlined, InfoCircleOutlined, UploadOutlined, EyeOutlined,
   DownloadOutlined, ArrowRightOutlined, StarOutlined, HeartOutlined,
   LockOutlined, MailOutlined, ThunderboltOutlined, CrownOutlined,
-  BookOutlined, TeamOutlined, DollarOutlined, CalendarOutlined,
+  BookOutlined, TeamOutlined, CalendarOutlined,
   SafetyCertificateOutlined, DashboardOutlined, SettingOutlined,
   GlobalOutlined, LinkOutlined, CopyOutlined, ReloadOutlined,
   FileTextOutlined, BankOutlined, RightOutlined,
 } from "@ant-design/icons";
+import RupeeIcon from "../components/icons/RupeeIcon";
 import {
   GraduationCap, Users, BookOpen, Calendar, Bell, Settings,
   TrendingUp, Award, CheckCircle, XCircle, Clock, AlertTriangle,
@@ -661,7 +662,7 @@ const StyleGuide = () => {
                       width: 36, height: 36, borderRadius: 10, background: "rgba(124,58,237,0.1)",
                       display: "flex", alignItems: "center", justifyContent: "center", color: "#14B8A6",
                     }}>
-                      <DollarOutlined />
+                      <RupeeIcon />
                     </div>
                   </div>
                   <div style={{ marginTop: 10 }}>
@@ -1065,7 +1066,7 @@ const StyleGuide = () => {
                 [SettingOutlined, "Settings"],
                 [DashboardOutlined, "Dashboard"],
                 [CalendarOutlined, "Calendar"],
-                [DollarOutlined, "Dollar"],
+                ["Dollar"],
                 [BookOutlined, "Book"],
                 [BankOutlined, "Bank"],
                 [GlobalOutlined, "Global"],
