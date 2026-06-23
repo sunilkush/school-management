@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Select, DatePicker, Button, Tag, Spin, Empty, Popconfirm,
+  Select, DatePicker, Button, Tag, Empty, Popconfirm,
   message, Drawer, Form, Input, TimePicker, Tooltip,
 } from "antd";
 import {
@@ -189,8 +189,12 @@ const AttendanceTablePage = () => {
 
   /* ── Delete ── */
   const handleDelete = async (id) => {
-    await dispatch(deleteAttendanceRecord(id));
-    message.success("Record deleted");
+    try {
+      await dispatch(deleteAttendanceRecord(id)).unwrap();
+      message.success("Record deleted");
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Failed to delete record");
+    }
   };
 
   /* ── Table columns ── */
@@ -449,7 +453,16 @@ const AttendanceTablePage = () => {
             />
           </div>
         ) : (
-          <Spin spinning={loading}>
+          <>
+            {/* Loading bar — non-blocking, above the table */}
+            <style>{`@keyframes att-progress{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}`}</style>
+            {loading && (
+              <div style={{
+                height: 3,
+                background: `linear-gradient(90deg, ${C.primary}, ${C.accent})`,
+                animation: "att-progress 1.2s ease-in-out infinite",
+              }} />
+            )}
             <div style={{ overflowX: "auto" }}>
               <table className={TABLE_CLS} style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
@@ -470,7 +483,7 @@ const AttendanceTablePage = () => {
                   {list.length === 0 ? (
                     <tr>
                       <td colSpan={columns.length} style={{ padding: "40px 0", textAlign: "center", color: C.textMuted }}>
-                        No attendance records found
+                        {loading ? "Loading records…" : "No attendance records found"}
                       </td>
                     </tr>
                   ) : list.map((row) => (
@@ -499,7 +512,7 @@ const AttendanceTablePage = () => {
                 </span>
                 <div style={{ display: "flex", gap: 6 }}>
                   <Button
-                    size="small" disabled={pagination.page <= 1}
+                    size="small" disabled={pagination.page <= 1 || loading}
                     onClick={() => dispatch(setAttendanceFilters({ page: pagination.page - 1 }))}
                     style={{ borderRadius: 6 }}
                   >
@@ -509,7 +522,7 @@ const AttendanceTablePage = () => {
                     {pagination.page} / {pagination.totalPages || Math.ceil(pagination.total / pagination.limit)}
                   </span>
                   <Button
-                    size="small" disabled={pagination.page >= (pagination.totalPages || 1)}
+                    size="small" disabled={pagination.page >= (pagination.totalPages || 1) || loading}
                     onClick={() => dispatch(setAttendanceFilters({ page: pagination.page + 1 }))}
                     style={{ borderRadius: 6 }}
                   >
@@ -518,7 +531,7 @@ const AttendanceTablePage = () => {
                 </div>
               </div>
             )}
-          </Spin>
+          </>
         )}
       </div>
 

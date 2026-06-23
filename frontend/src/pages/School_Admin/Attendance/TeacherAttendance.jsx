@@ -87,22 +87,13 @@ const TeacherAttendance = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [searchText,   setSearchText]   = useState("");
 
-  /* ── Fetch ── */
+  /* ── Fetch only teachers via roleName filter ── */
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(fetchAllUser({ schoolId, isActive: true }));
+    dispatch(fetchAllUser({ schoolId, isActive: true, roleName: "Teacher" }));
   }, [schoolId, dispatch]);
 
-  /* ── Helpers ── */
-  const getRole = (u) => u?.role?.name || u?.roleId?.name || "";
-
-  const teacherList = useMemo(
-    () =>
-      users.filter(
-        (u) => u?.role?.name === "Teacher" || getRole(u) === "Teacher"
-      ),
-    [users]
-  );
+  const teacherList = useMemo(() => users, [users]);
 
   const filteredTeachers = useMemo(() => {
     const q = searchText.toLowerCase();
@@ -146,8 +137,20 @@ const TeacherAttendance = () => {
       .filter(([, status]) => Boolean(status))
       .map(([userId, status]) => {
         const rec = { userId, status };
-        if (checkIns[userId])  rec.checkInAt  = checkIns[userId].toISOString();
-        if (checkOuts[userId]) rec.checkOutAt = checkOuts[userId].toISOString();
+        if (checkIns[userId]) {
+          rec.checkInAt = selectedDate
+            .hour(checkIns[userId].hour())
+            .minute(checkIns[userId].minute())
+            .second(0)
+            .toISOString();
+        }
+        if (checkOuts[userId]) {
+          rec.checkOutAt = selectedDate
+            .hour(checkOuts[userId].hour())
+            .minute(checkOuts[userId].minute())
+            .second(0)
+            .toISOString();
+        }
         return rec;
       });
 
@@ -191,7 +194,7 @@ const TeacherAttendance = () => {
                 {name}
               </div>
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                {r?.employeeId || "—"}
+                {r?.email || "—"}
               </div>
             </div>
           </div>

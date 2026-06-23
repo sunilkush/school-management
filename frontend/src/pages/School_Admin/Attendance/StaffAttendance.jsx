@@ -108,7 +108,8 @@ const StaffAttendance = () => {
   const getRole = (u) => u?.role?.name || u?.roleId?.name || "";
 
   const staffList = useMemo(() => {
-    const excluded = ["Student", "Parent"];
+    // Teacher has own page; Student/Parent don't mark attendance here
+    const excluded = ["Student", "Parent", "Teacher", "Super Admin", "School Admin"];
     return users.filter((u) => !excluded.includes(getRole(u)));
   }, [users]);
 
@@ -166,8 +167,20 @@ const StaffAttendance = () => {
       const attRole = ROLE_TO_ATT_ROLE[getRole(u)] || "staff";
       if (!byRole[attRole]) byRole[attRole] = [];
       const rec = { userId: u._id, status };
-      if (checkIns[u._id])  rec.checkInAt  = checkIns[u._id].toISOString();
-      if (checkOuts[u._id]) rec.checkOutAt = checkOuts[u._id].toISOString();
+      if (checkIns[u._id]) {
+        rec.checkInAt = selectedDate
+          .hour(checkIns[u._id].hour())
+          .minute(checkIns[u._id].minute())
+          .second(0)
+          .toISOString();
+      }
+      if (checkOuts[u._id]) {
+        rec.checkOutAt = selectedDate
+          .hour(checkOuts[u._id].hour())
+          .minute(checkOuts[u._id].minute())
+          .second(0)
+          .toISOString();
+      }
       byRole[attRole].push(rec);
     });
 
@@ -219,7 +232,7 @@ const StaffAttendance = () => {
                 {name}
               </div>
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                {r?.employeeId || "—"}
+                {r?.email || "—"}
               </div>
             </div>
           </div>
@@ -261,29 +274,42 @@ const StaffAttendance = () => {
     {
       title: "Check In / Out",
       render: (_, r) => {
-        const st = attendance[r._id];
+        const st     = attendance[r._id];
+        const inVal  = checkIns[r._id]  || null;
+        const outVal = checkOuts[r._id] || null;
+        const working = (inVal && outVal)
+          ? (() => {
+              const diff = outVal.diff(inVal, "minute");
+              if (diff <= 0) return null;
+              return `${Math.floor(diff / 60)}h ${diff % 60}m`;
+            })()
+          : null;
+
         return st === "present" || st === "late" ? (
-          <div style={{ display: "flex", gap: 6 }}>
-            <TimePicker
-              size="small"
-              format="HH:mm"
-              placeholder="In"
-              value={checkIns[r._id] || null}
-              onChange={(t) =>
-                setCheckIns((p) => ({ ...p, [r._id]: t }))
-              }
-              style={{ width: 80 }}
-            />
-            <TimePicker
-              size="small"
-              format="HH:mm"
-              placeholder="Out"
-              value={checkOuts[r._id] || null}
-              onChange={(t) =>
-                setCheckOuts((p) => ({ ...p, [r._id]: t }))
-              }
-              style={{ width: 80 }}
-            />
+          <div>
+            <div style={{ display: "flex", gap: 6, marginBottom: working ? 4 : 0 }}>
+              <TimePicker
+                size="small"
+                format="HH:mm"
+                placeholder="In"
+                value={inVal}
+                onChange={(t) => setCheckIns((p) => ({ ...p, [r._id]: t }))}
+                style={{ width: 80 }}
+              />
+              <TimePicker
+                size="small"
+                format="HH:mm"
+                placeholder="Out"
+                value={outVal}
+                onChange={(t) => setCheckOuts((p) => ({ ...p, [r._id]: t }))}
+                style={{ width: 80 }}
+              />
+            </div>
+            {working && (
+              <div style={{ fontSize: 11, color: "#22C55E", fontWeight: 600 }}>
+                {working} worked
+              </div>
+            )}
           </div>
         ) : (
           <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
