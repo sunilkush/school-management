@@ -16,10 +16,21 @@ import AutosaveIndicator from "./components/AutosaveIndicator";
 import { autosaveAnswer, getAttemptById, submitAttempt } from "../../../features/attemptSlice";
 
 /* ── helpers ── */
-const resolveQuestionId = (q) => q?.questionRef?._id || q?.questionRef || q?.questionId;
+const resolveQuestionId = (q) => {
+  const ref = q?.questionRef;
+  const qid = q?.questionId;
+  if (ref) return ref?._id || ref;
+  if (qid && typeof qid === "object") return qid._id;
+  return qid;
+};
 
 const normalizeQuestion = (answerItem) => {
-  const snap = answerItem?.snapshot || answerItem?.questionSnapshot || answerItem?.questionRef || {};
+  const populated = answerItem?.questionId;
+  const snap =
+    answerItem?.snapshot ||
+    answerItem?.questionSnapshot ||
+    (populated && typeof populated === "object" ? populated : null) ||
+    {};
   return {
     ...answerItem,
     _id:     resolveQuestionId(answerItem),

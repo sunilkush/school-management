@@ -98,7 +98,7 @@ export const startAttempt = asyncHandler(async (req, res) => {
 
   const answers = exam.questions.map((q) => ({
     questionId: q.questionId?._id,
-    questionSnapshot: q.questionId?.toObject?.(),
+    snapshot: q.questionId?.toObject?.() || q.snapshot || null,
     response: null,
     marksObtained: 0,
     isCorrect: null,

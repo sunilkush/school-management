@@ -129,9 +129,13 @@ export const getMyFees = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized user");
   }
 
+  if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+    throw new ApiError(400, "Invalid studentId");
+  }
+
   // ✅ Normalize
   const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
-  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const userObjectId   = new mongoose.Types.ObjectId(userId);
   const studentObjectId = new mongoose.Types.ObjectId(studentId);
   // ✅ Student Role
   /* if (role === "student") {

@@ -12,7 +12,10 @@ export const createExam = createAsyncThunk("exams/createExam", async (payload, {
 
 export const getExams = createAsyncThunk("exams/getExams", async (params = {}, { rejectWithValue }) => {
   try {
-    const query = new URLSearchParams(params).toString();
+    const clean = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== "")
+    );
+    const query = new URLSearchParams(clean).toString();
     const res = await apiClient.get(`/exams?${query}`);
     return res.data.data;
   } catch (error) {

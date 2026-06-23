@@ -47,8 +47,9 @@ const FeeStudent = () => {
     (state) => state.feeInstallment
   );
 
-  const enrollmentId = myEnrollment?.enrollmentId;
-  const studentId = myEnrollment?.studentId;
+  const enrollmentId   = myEnrollment?.enrollmentId;
+  const studentId      = myEnrollment?.studentId;
+  const academicYearId = myEnrollment?.academicYear?._id;
 
   const [open, setOpen] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState(null);
@@ -66,24 +67,25 @@ const FeeStudent = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (enrollmentId) {
-      if (studentId) dispatch(fetchMyFees(studentId));
-      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
+    if (enrollmentId && studentId) {
+      dispatch(fetchMyFees({ studentId, academicYearId }));
+      dispatch(fetchFeeInstallments({ studentId, academicYearId }));
     }
-  }, [dispatch, enrollmentId, studentId]);
+  }, [dispatch, enrollmentId, studentId, academicYearId]);
 
   const handleGenerateInstallments = async () => {
     try {
       await dispatch(
         generateInstallments({
-          studentId: enrollmentId,
+          studentId,
+          academicYearId,
           frequency: selectedFrequency,
         })
       ).unwrap();
 
       message.success(`Installments generated (${selectedFrequency})`);
       setFrequencyModalOpen(false);
-      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
+      dispatch(fetchFeeInstallments({ studentId, academicYearId }));
     } catch (err) {
       message.error(err || "Failed to generate installments");
     }
@@ -116,8 +118,8 @@ const FeeStudent = () => {
 
       message.success(`${paymentMethod === "cheque" ? "Cheque" : "Cash"} payment recorded successfully`);
       closePayModal();
-      if (studentId) dispatch(fetchMyFees(studentId));
-      dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
+      dispatch(fetchMyFees({ studentId, academicYearId }));
+      dispatch(fetchFeeInstallments({ studentId, academicYearId }));
     } catch (err) {
       message.error(err || "Payment failed");
     }
@@ -156,8 +158,8 @@ const FeeStudent = () => {
 
           message.success("Online payment successful");
           closePayModal();
-          if (studentId) dispatch(fetchMyFees(studentId));
-          dispatch(fetchFeeInstallments({ studentId: enrollmentId }));
+          dispatch(fetchMyFees({ studentId, academicYearId }));
+          dispatch(fetchFeeInstallments({ studentId, academicYearId }));
         },
         theme: { color: "var(--primary)" },
       };

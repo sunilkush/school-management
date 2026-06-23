@@ -39,15 +39,16 @@ export const fetchMyFees = createAsyncThunk(
     try {
       const finalStudentId = studentId || enrollmentId;
 
-      if (!finalStudentId || !academicYearId) {
-        return rejectWithValue("Student and academic year ID is required");
+      if (!finalStudentId) {
+        return rejectWithValue("Student ID is required");
       }
+
+      const params = {};
+      if (academicYearId) params.academicYearId = academicYearId;
 
       const { data } = await apiClient.get(
         `/student-fees/my/${finalStudentId}`,
-        {
-          params: { academicYearId },
-        }
+        { params }
       );
 
       return Array.isArray(data?.data) ? data.data : [];

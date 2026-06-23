@@ -22,15 +22,14 @@ export const generateInstallments = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid studentId");
   }
 
-  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
+  if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
     throw new ApiError(400, "Invalid academicYearId");
   }
 
-  const studentFees = await StudentFee.find({
-    studentId,
-    schoolId,
-    academicYearId,
-  }).populate("feeStructureId", "frequency");
+  const feeFilter = { studentId, schoolId };
+  if (academicYearId) feeFilter.academicYearId = academicYearId;
+
+  const studentFees = await StudentFee.find(feeFilter).populate("feeStructureId", "frequency");
 
   if (!studentFees.length) {
     throw new ApiError(404, "No fee records found for this student");
@@ -39,10 +38,12 @@ export const generateInstallments = asyncHandler(async (req, res) => {
   const allInstallments = [];
 
   for (const fee of studentFees) {
+    const effectiveAcademicYearId = academicYearId || fee.academicYearId;
+
     const exists = await FeeInstallment.exists({
       studentFeeId: fee._id,
       schoolId,
-      academicYearId,
+      ...(effectiveAcademicYearId ? { academicYearId: effectiveAcademicYearId } : {}),
     });
 
     if (exists) continue;
@@ -67,7 +68,7 @@ export const generateInstallments = asyncHandler(async (req, res) => {
     for (let i = 1; i <= count; i++) {
       allInstallments.push({
         schoolId,
-        academicYearId,
+        academicYearId: effectiveAcademicYearId,
         studentId,
         studentFeeId: fee._id,
         installmentType: frequency,
@@ -116,15 +117,14 @@ export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid studentId");
   }
 
-  if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
+  if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
     throw new ApiError(400, "Invalid academicYearId");
   }
 
-  const installments = await FeeInstallment.find({
-    studentId,
-    schoolId,
-    academicYearId,
-  })
+  const filter = { studentId, schoolId };
+  if (academicYearId) filter.academicYearId = academicYearId;
+
+  const installments = await FeeInstallment.find(filter)
     .populate({
       path: "studentFeeId",
       select: "totalAmount paidAmount dueAmount status feeStructureId",

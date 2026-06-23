@@ -221,15 +221,28 @@ const examAttemptSchema = new Schema(
           required: true
         },
 
+        snapshot: Schema.Types.Mixed,
+
         response: Schema.Types.Mixed,
 
         isCorrect: {
-          type: Boolean
+          type: Boolean,
+          default: null
         },
 
         marksObtained: {
           type: Number,
           default: 0
+        },
+
+        flagged: {
+          type: Boolean,
+          default: false
+        },
+
+        reviewComments: {
+          type: String,
+          default: ""
         }
       }
     ],
