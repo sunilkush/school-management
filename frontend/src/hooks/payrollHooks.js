@@ -111,6 +111,21 @@ export const usePayrollActions = ({ month, year, cycleId, cycleType, paymentMode
   return { actionLoading, generateCycle, lockCycle, payCycle };
 };
 
+export const useLatestPayrollCycle = () => {
+  const [latestMonth, setLatestMonth] = useState(null);
+
+  useEffect(() => {
+    httpClient.get("/payroll/cycle/latest")
+      .then((res) => {
+        const data = res?.data?.data;
+        if (data?.month && data?.year) setLatestMonth(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  return latestMonth;
+};
+
 export const usePayrollStructures = () => {
   const [loading, setLoading] = useState(false);
   const [structures, setStructures] = useState([]);

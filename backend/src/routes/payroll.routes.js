@@ -5,6 +5,7 @@ import {
   createPayrollStructure,
   getPayrollStructures,
   generatePayrollCycle,
+  getLatestPayrollCycle,
   getMonthlyPayrollReport,
   getMyPayrollSummary,
   getPayrollCycle,
@@ -38,6 +39,7 @@ router.post("/cycle/generate", auth, roleMiddleware(FULL_ACCESS_ROLES), validate
 router.get("/self/summary", auth, roleMiddleware(EMPLOYEE_SELF_ROLES), getMyPayrollSummary);
 router.get("/reports/monthly", auth, roleMiddleware(REVIEW_ROLES), validateRequest(payrollReportQuerySchema), getMonthlyPayrollReport);
 router.put("/structure/:id", auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(payrollStructureUpdateSchema), updatePayrollStructure);
+router.get("/cycle/latest", auth, roleMiddleware(REVIEW_ROLES), getLatestPayrollCycle);
 router.get("/cycle/:month/:year", auth, roleMiddleware(REVIEW_ROLES), validateRequest(payrollCycleQuerySchema), getPayrollCycle);
 router.post("/cycle/:id/lock", auth, roleMiddleware(REVIEW_ROLES), validateRequest(payrollCycleActionSchema), lockPayrollCycle);
 router.post("/cycle/:id/pay", auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(payrollCycleActionSchema), payPayrollCycle);

@@ -41,6 +41,8 @@ const getInitials = (name = "") => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
+const getRoleName = (e) => e.userId?.roleId?.name || e.userId?.role?.name || "Staff";
+
 const StatusBadge = ({ active }) => (
   <span style={{
     display: "inline-flex", alignItems: "center", gap: 5,
@@ -75,8 +77,8 @@ const RoleBadge = ({ role = "Staff" }) => {
 const CreateEmployee = () => {
   const dispatch = useDispatch();
   const { employees = [], loading } = useSelector((s) => s.employee);
-  const { profile } = useSelector((s) => s.auth);
-  const schoolId = profile?.school?._id;
+  const { profile, user } = useSelector((s) => s.auth);
+  const schoolId = profile?.school?._id || user?.school?._id;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
@@ -90,10 +92,10 @@ const CreateEmployee = () => {
     total: employees.length,
     active: employees.filter((e) => e.isActive !== false).length,
     teachers: employees.filter((e) =>
-      e.userId?.role?.name?.toLowerCase().includes("teacher"),
+      getRoleName(e).toLowerCase().includes("teacher"),
     ).length,
     staff: employees.filter((e) =>
-      !e.userId?.role?.name?.toLowerCase().includes("teacher"),
+      !getRoleName(e).toLowerCase().includes("teacher"),
     ).length,
   }), [employees]);
 
@@ -113,7 +115,7 @@ const CreateEmployee = () => {
         _id: e._id,
         raw: e,
         name: e.userId?.name || "—",
-        role: e.userId?.role?.name || "Staff",
+        role: getRoleName(e),
         department: e.department || "—",
         designation: e.designation || "—",
         employeeStatus: e.employeeStatus || "—",

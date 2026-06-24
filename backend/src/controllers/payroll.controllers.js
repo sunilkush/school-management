@@ -353,6 +353,20 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   });
 });
 
+export const getLatestPayrollCycle = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+
+  const cycle = await PayrollCycle.findOne({ schoolId })
+    .sort({ year: -1, month: -1 })
+    .lean();
+
+  return sendSuccess(res, {
+    message: "Latest payroll cycle fetched",
+    data: cycle ? { month: cycle.month, year: cycle.year, status: cycle.status } : null,
+  });
+});
+
 export const getPayrollCycle = asyncHandler(async (req, res) => {
   const { month, year } = req.params;
   const schoolId = getSchoolId(req);

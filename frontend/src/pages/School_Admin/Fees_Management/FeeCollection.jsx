@@ -226,7 +226,7 @@ const FeeCollection = () => {
   const { isDark } = useTheme();
 
   const { user }   = useSelector((s) => s.auth || {});
-  const { schoolStudents = [], loading: studentsLoading } = useSelector((s) => s.student || {});
+  const { schoolStudents = [], loading: studentsLoading } = useSelector((s) => s.students || {});
   const { myFees = [], loading: feesLoading }             = useSelector((s) => s.studentFee || {});
   const { academicYears = [] }    = useSelector((s) => s.academicYear || {});
 

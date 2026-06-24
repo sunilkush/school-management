@@ -52,6 +52,10 @@ import { AdmissionInquiry }    from "./models/AdmissionInquiry.model.js";
 import { Complaint }           from "./models/Complaint.model.js";
 import { StudyMaterial }       from "./models/StudyMaterial.model.js";
 import { Payroll }             from "./models/Payroll.model.js";
+import { Employee }           from "./models/Employee.model.js";
+import { PayrollStructure }   from "./models/payrollStructure.model.js";
+import { PayrollCycle }       from "./models/payrollCycle.model.js";
+import { PayrollEntry }       from "./models/payrollEntry.model.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const ok   = (msg) => console.log(`  ✓ ${msg}`);
@@ -790,7 +794,10 @@ async function seed() {
 
     for (let qi = 0; qi < 4; qi++) {
       const instName = INSTALLMENT_NAMES[qi];
-      const dueDate  = new Date(`2025-${String((qi * 3) + 4).padStart(2, "0")}-10`);
+      const dueMon   = (qi * 3) + 4;
+      const dueDate  = dueMon > 12
+        ? new Date(`2026-${String(dueMon - 12).padStart(2, "0")}-10`)
+        : new Date(`2025-${String(dueMon).padStart(2, "0")}-10`);
       const isPaid   = qi < 2;
       const exists = await FeeInstallment.findOne({ studentFeeId: sf._id, installmentName: instName });
       if (!exists) {
@@ -967,22 +974,156 @@ async function seed() {
   }
   ok(`Complaints: ${complaintCount}`);
 
-  // ── 31. Payroll (last 3 months for all staff + teachers) ─────────────────────
-  const allEmployees = [...teachers, ...Object.values(staffMap)];
+  // ── 31. Employee profiles + PayrollStructures + PayrollCycles + Entries ──────
+  const allEmployeeUsers = [...teachers, ...Object.values(staffMap)];
+
   const salaryByRole = {
-    "Teacher":           45000, "Principal":         95000, "Vice Principal":    75000,
-    "Accountant":        40000, "Librarian":         35000, "IT Support":        42000,
-    "Counselor":         38000, "Receptionist":      28000, "Security":          22000,
-    "Hostel Warden":     32000, "Transport Manager": 36000, "Exam Coordinator":  40000,
+    "Teacher":             45000, "Principal":           95000, "Vice Principal":      75000,
+    "Accountant":          40000, "Librarian":           35000, "IT Support":          42000,
+    "Counselor":           38000, "Receptionist":        28000, "Security":            22000,
+    "Hostel Warden":       32000, "Transport Manager":   36000, "Exam Coordinator":    40000,
     "Subject Coordinator": 40000,
   };
+
+  /* Build salary component breakdown from a gross figure */
+  function buildStructure(gross) {
+    const basic            = Math.round(gross * 0.40);
+    const hra              = Math.round(basic * 0.20);
+    const da               = Math.round(basic * 0.10);
+    const conveyance       = 1600;
+    const medical          = 1250;
+    const specialAllowance = Math.max(0, gross - basic - hra - da - conveyance - medical);
+    const pf               = Math.round(basic * 0.12);
+    const professionalTax  = gross > 10000 ? 200 : 0;
+    return {
+      basic, hra, da, conveyance, medical, specialAllowance,
+      deductions: { pf, esi: 0, professionalTax, tds: 0, lateFine: 0 },
+      grossMonthly: gross,
+      pfEnabled: true, esiEnabled: false,
+      professionalTaxEnabled: gross > 10000,
+      effectiveFrom: new Date("2025-04-01"),
+      status: "active", approvalStatus: "approved",
+    };
+  }
+
+  /* ── 31a. Employee records ── */
+  const employeeMap = {}; // userId string → Employee doc
+  let empCount = 0;
+  for (const u of allEmployeeUsers) {
+    let emp = await Employee.findOne({ schoolId, userId: u._id });
+    if (!emp) {
+      const deptDoc  = u.departmentId  ? await Department.findById(u.departmentId)  : null;
+      const desgDoc  = u.designationId ? await Designation.findById(u.designationId): null;
+      const roleName = roles.find((r) => String(r._id) === String(u.roleId))?.name || "Teacher";
+      emp = await Employee.create({
+        userId:         u._id,
+        schoolId,
+        academicYearId: ayId,
+        phoneNo:        u.phone || "9800000000",
+        gender:         u.gender || "Male",
+        dateOfBirth:    u.dateOfBirth || new Date("1985-01-01"),
+        employeeCode:   u.regId   || `EMP${String(empCount + 1).padStart(3, "0")}`,
+        department:     deptDoc?.name  || roleName,
+        designation:    desgDoc?.title || roleName,
+        employmentType: "Permanent",
+        joinDate:       u.joiningDate  || new Date("2018-04-01"),
+        isActive:       true,
+        schoolMappings: [{ schoolId, role: roleName, isPrimary: true }],
+      });
+      empCount++;
+    }
+    employeeMap[String(u._id)] = emp;
+  }
+  ok(`Employee profiles: ${empCount} new`);
+
+  /* ── 31b. PayrollStructure per employee ── */
+  let psCount = 0;
+  for (const [userIdStr, emp] of Object.entries(employeeMap)) {
+    const u        = allEmployeeUsers.find((u) => String(u._id) === userIdStr);
+    const roleName = roles.find((r) => String(r._id) === String(u?.roleId))?.name || "Teacher";
+    const gross    = salaryByRole[roleName] || 35000;
+    const exists   = await PayrollStructure.findOne({ schoolId, employeeId: emp._id, status: "active" });
+    if (!exists) {
+      await PayrollStructure.create({ schoolId, employeeId: emp._id, ...buildStructure(gross), approvedBy: adminId });
+      psCount++;
+    }
+  }
+  ok(`PayrollStructures: ${psCount}`);
+
+  /* ── 31c. PayrollCycles + Entries (3 months) ── */
+  const WORKING_DAYS = 26;
+  const payrollMonths = [
+    { month: 4, year: 2025, status: "paid"   },
+    { month: 5, year: 2025, status: "paid"   },
+    { month: 6, year: 2025, status: "locked" },
+  ];
+
+  let cycleCount = 0, entryCount = 0;
+  for (const pm of payrollMonths) {
+    let cycle = await PayrollCycle.findOne({ schoolId, month: pm.month, year: pm.year });
+    if (!cycle) {
+      cycle = await PayrollCycle.create({
+        schoolId, month: pm.month, year: pm.year,
+        cycleType: "monthly", status: pm.status,
+        processedBy: adminId,
+        lockedAt: pm.status !== "draft"  ? daysAgo(5) : null,
+        paidAt:   pm.status === "paid"   ? daysAgo(3) : null,
+      });
+      cycleCount++;
+    }
+
+    for (const [userIdStr, emp] of Object.entries(employeeMap)) {
+      const u        = allEmployeeUsers.find((u) => String(u._id) === userIdStr);
+      const roleName = roles.find((r) => String(r._id) === String(u?.roleId))?.name || "Teacher";
+      const gross    = salaryByRole[roleName] || 35000;
+      const s        = buildStructure(gross);
+
+      const exists = await PayrollEntry.findOne({ payrollCycleId: cycle._id, employeeId: emp._id });
+      if (!exists) {
+        const presentDays = Math.floor(Math.random() * 3) + 23; // 23–25
+        const paidLeaves  = Math.floor(Math.random() * 2);       // 0–1
+        const lopDays     = Math.max(0, WORKING_DAYS - presentDays - paidLeaves);
+        const lopDeduct   = lopDays > 0 ? Math.round((gross / WORKING_DAYS) * lopDays) : 0;
+        const grossEarnings   = Math.max(0, gross - lopDeduct);
+        const pf              = s.deductions.pf;
+        const pt              = s.deductions.professionalTax;
+        const totalDeductions = pf + pt;
+        const netPay          = grossEarnings - totalDeductions;
+
+        try {
+          await PayrollEntry.create({
+            payrollCycleId: cycle._id, schoolId, employeeId: emp._id,
+            workingDays: WORKING_DAYS, presentDays, paidLeaves, lopDays,
+            earningsBreakdown: {
+              basic: s.basic, hra: s.hra, da: s.da,
+              conveyance: s.conveyance, medical: s.medical,
+              specialAllowance: s.specialAllowance,
+            },
+            deductionsBreakdown: { pf, professionalTax: pt },
+            grossEarnings, totalDeductions, netPay,
+            warnings:      lopDays > 2 ? ["High LOP days — verify attendance"] : [],
+            paymentStatus: pm.status === "paid" ? "paid"  : "pending",
+            paymentMode:   pm.status === "paid" ? "bank"  : null,
+            paidAt:        pm.status === "paid" ? daysAgo(3) : null,
+            transactionRef: pm.status === "paid"
+              ? `SAL-${pm.year}${String(pm.month).padStart(2, "0")}-${emp._id}`
+              : null,
+          });
+          entryCount++;
+        } catch (e) { if (e.code !== 11000) throw e; }
+      }
+    }
+  }
+  ok(`PayrollCycles: ${cycleCount}, PayrollEntries: ${entryCount}`);
+
+  /* ── 31d. Legacy Payroll records (backward compat) ── */
   let payrollCount = 0;
   const payMonths = [
-    { name: "April 2025",  date: new Date("2025-04-30") },
-    { name: "May 2025",    date: new Date("2025-05-31") },
-    { name: "June 2025",   date: new Date("2025-06-30") },
+    { name: "April 2025", date: new Date("2025-04-30") },
+    { name: "May 2025",   date: new Date("2025-05-31") },
+    { name: "June 2025",  date: new Date("2025-06-30") },
   ];
-  for (const emp of allEmployees) {
+  for (const emp of allEmployeeUsers) {
     const roleName = roles.find((r) => String(r._id) === String(emp.roleId))?.name || "Teacher";
     const salary   = salaryByRole[roleName] || 35000;
     for (const month of payMonths) {
@@ -995,7 +1136,7 @@ async function seed() {
       }
     }
   }
-  ok(`Payroll records: ${payrollCount}`);
+  ok(`Legacy Payroll records: ${payrollCount}`);
 
   // ── 32. Support Tickets ───────────────────────────────────────────────────────
   const reporter  = teachers[0] || admin;
@@ -1157,7 +1298,10 @@ MODULES SEEDED:
   ✓ Inventory (15 items)
   ✓ Admission Inquiries (10)
   ✓ Complaints (6)
-  ✓ Payroll (3 months × all staff)
+  ✓ Employee profiles (17 staff + teachers)
+  ✓ PayrollStructures (salary components per employee)
+  ✓ PayrollCycles (Apr/May/Jun 2025) + PayrollEntries
+  ✓ Legacy Payroll records (backward compat)
   ✓ Support Tickets
   ✓ School Events
   ✓ Notifications

@@ -162,7 +162,7 @@ export const getAllEmployees = asyncHandler(async (req, res) => {
   if (isActive !== undefined) filter.isActive = isActive;
 
   const employees = await Employee.find(filter)
-    .populate("userId", "name email roleId regId")
+    .populate({ path: "userId", select: "name email regId", populate: { path: "roleId", select: "name" } })
     .populate("schoolId", "name")
     .populate("academicYearId", "name year");
 
@@ -176,7 +176,7 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const employee = await Employee.findById(id)
-    .populate("userId", "name email roleId regId")
+    .populate({ path: "userId", select: "name email regId", populate: { path: "roleId", select: "name" } })
     .populate("schoolId", "name")
     .populate("academicYearId", "name year");
 

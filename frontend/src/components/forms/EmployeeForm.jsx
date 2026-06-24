@@ -64,27 +64,30 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
   const dispatch = useDispatch();
 
   const selectedUserId = Form.useWatch("userId", form);
-  const { profile, users = [] } = useSelector((s) => s.auth);
+  const { profile, user, users = [] } = useSelector((s) => s.auth);
   const { activeYear } = useSelector((s) => s.academicYear);
   const { subjects = [] } = useSelector((s) => s.subject);
   const { loading } = useSelector((s) => s.employee);
 
-  const schoolId = profile?.school?._id;
+  const schoolId = profile?.school?._id || user?.school?._id;
   const academicYearId = activeYear?._id;
 
   // Determine if selected/editing employee is a Teacher
   const isTeacherRole = useMemo(() => {
+    const getRole = (userObj) =>
+      userObj?.role?.name || userObj?.roleId?.name || "";
+
     if (editingEmployee) {
       const userObj = editingEmployee.userId;
       const roleName =
         typeof userObj === "object"
-          ? userObj?.role?.name?.toLowerCase()
-          : users.find((u) => u._id === userObj)?.role?.name?.toLowerCase();
+          ? getRole(userObj).toLowerCase()
+          : (users.find((u) => u._id === userObj)?.role?.name || "").toLowerCase();
       if (roleName?.includes("teacher")) return true;
     }
     if (selectedUserId) {
-      const user = users.find((u) => u._id === selectedUserId);
-      return user?.role?.name?.toLowerCase().includes("teacher") || false;
+      const u = users.find((u) => u._id === selectedUserId);
+      return getRole(u).toLowerCase().includes("teacher");
     }
     return false;
   }, [editingEmployee, selectedUserId, users]);
@@ -148,15 +151,14 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
   const userOptions = useMemo(() => {
     const list = Array.isArray(users) ? users : [];
     return list
-      .filter(
-        (u) =>
-          u?.isActive &&
-          !["student", "parent", "super admin"].includes(u?.role?.name?.toLowerCase()),
-      )
-      .map((u) => ({
-        value: u._id,
-        label: `${u?.name || "User"} (${u?.role?.name || "No Role"})`,
-      }));
+      .filter((u) => {
+        const roleName = (u?.role?.name || u?.roleId?.name || "").toLowerCase();
+        return u?.isActive && !["student", "parent", "super admin"].includes(roleName);
+      })
+      .map((u) => {
+        const roleName = u?.role?.name || u?.roleId?.name || "No Role";
+        return { value: u._id, label: `${u?.name || "User"} (${roleName})` };
+      });
   }, [users]);
 
   const handleSubmit = async (values) => {
