@@ -1,5 +1,5 @@
 import React, { useState, memo, lazy, Suspense } from "react";
-import { Input, Space, Grid, Drawer, Spin, Badge, Tooltip, Dropdown } from "antd";
+import { Input, Grid, Drawer, Spin, Badge, Tooltip, Dropdown } from "antd";
 import {
   SearchOutlined,
   BellOutlined,
@@ -116,7 +116,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: mobile ? "0 14px" : "0 20px",
+        padding: mobile ? "0 12px" : "0 20px",
         background: topbarBg,
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
@@ -125,33 +125,52 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
         transition: "background 0.3s",
         position: "relative",
         zIndex: 99,
+        gap: mobile ? 8 : 12,
       }}>
 
         {/* ── LEFT ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: mobile ? 10 : 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: mobile ? 8 : 14, flex: mobile ? 1 : "unset" }}>
 
-          {/* Sidebar toggle */}
+          {/* Sidebar toggle — on mobile this opens drawer from BottomNav,
+              but we still show it in topbar for quick access */}
           <Tooltip title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} placement="bottom">
             <button
               onClick={toggleSidebar}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
-                width: 36, height: 36, borderRadius: 10,
+                width: 40, height: 40, borderRadius: 12,
                 border: `1px solid ${isDark ? "#1E2A3B" : "#E8EEF6"}`,
                 background: isDark ? "#111827" : "#F8FAFF",
                 color: isDark ? "#94A3B8" : "#64748B",
                 cursor: "pointer", transition: "all 0.18s ease",
                 flexShrink: 0,
+                /* Minimum touch target 44px visual area */
+                minWidth: 40,
               }}
             >
               {(isMobile || sidebarCollapsed)
-                ? <MenuUnfoldOutlined style={{ fontSize: 16 }} />
-                : <MenuFoldOutlined   style={{ fontSize: 16 }} />
+                ? <MenuUnfoldOutlined style={{ fontSize: 17 }} />
+                : <MenuFoldOutlined   style={{ fontSize: 17 }} />
               }
             </button>
           </Tooltip>
 
-          {/* Search — desktop */}
+          {/* Mobile: show school name centered */}
+          {mobile && (
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <span style={{
+                fontSize: 14, fontWeight: 700,
+                color: isDark ? "#E2E8F0" : "#0F172A",
+                letterSpacing: "-0.01em",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                display: "block",
+              }}>
+                {user?.school?.name || "EduManage"}
+              </span>
+            </div>
+          )}
+
+          {/* Search — desktop only */}
           {!mobile && (
             <Input
               className="tb-search"
@@ -176,19 +195,19 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
         </div>
 
         {/* ── RIGHT ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: mobile ? 6 : 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: mobile ? 4 : 8, flexShrink: 0 }}>
 
-          {/* Mobile search */}
+          {/* Mobile search icon */}
           {mobile && (
             <IconBtn
               isDark={isDark}
-              icon={<SearchOutlined style={{ fontSize: 16 }} />}
+              icon={<SearchOutlined style={{ fontSize: 17 }} />}
               tooltip="Search"
               onClick={() => setMobileSearch(true)}
             />
           )}
 
-          {/* Academic Year */}
+          {/* Academic Year — desktop only */}
           {!mobile && user?.role?.name !== "Super Admin" && (
             <Suspense fallback={loader}>
               <AcademicYearSwitcher />
@@ -197,10 +216,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
 
           {/* Divider */}
           {!mobile && (
-            <span style={{
-              width: 1, height: 20,
-              background: isDark ? "#1E2A3B" : "#E2E8F0",
-            }} />
+            <span style={{ width: 1, height: 20, background: isDark ? "#1E2A3B" : "#E2E8F0" }} />
           )}
 
           {/* Theme toggle */}
@@ -224,10 +240,10 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
                 ariaLabel="Switch theme"
                 icon={
                   themeMode === "system"
-                    ? <LaptopOutlined style={{ fontSize: 16 }} />
+                    ? <LaptopOutlined style={{ fontSize: 17 }} />
                     : isDark
-                      ? <SunOutlined  style={{ fontSize: 16 }} />
-                      : <MoonOutlined style={{ fontSize: 16 }} />
+                      ? <SunOutlined  style={{ fontSize: 17 }} />
+                      : <MoonOutlined style={{ fontSize: 17 }} />
                 }
               />
             </span>
@@ -240,10 +256,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
 
           {/* Divider */}
           {!mobile && (
-            <span style={{
-              width: 1, height: 20,
-              background: isDark ? "#1E2A3B" : "#E2E8F0",
-            }} />
+            <span style={{ width: 1, height: 20, background: isDark ? "#1E2A3B" : "#E2E8F0" }} />
           )}
 
           {/* User */}

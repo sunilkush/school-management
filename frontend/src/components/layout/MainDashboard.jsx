@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useNavigate, Outlet } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import Loader from "../Loader/Loader";
+import BottomNav from "../mobile/BottomNav";
 
 const Sidebar = lazy(() => import("../sidebar/Sidebar"));
 const Topbar  = lazy(() => import("../navbar/Topbar"));
@@ -191,14 +192,16 @@ const Dashboard = () => {
             flex: 1,
             overflow: "auto",
             background: "var(--surface-page)",
+            /* On mobile, add padding at bottom for the fixed BottomNav */
+            paddingBottom: isMobile ? "calc(60px + env(safe-area-inset-bottom))" : 0,
           }}>
             <div className="dash-outlet">
               <Suspense fallback={
-                <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
                   <Skeleton.Input active style={{ width: 220, height: 26, borderRadius: 8 }} />
-                  <div style={{ display: "flex", gap: 14 }}>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                     {[1,2,3,4].map((i) => (
-                      <Skeleton.Button key={i} active style={{ width: 150, height: 88, borderRadius: 12, flex: 1 }} />
+                      <Skeleton.Button key={i} active style={{ minWidth: 130, height: 88, borderRadius: 12, flex: "1 1 130px" }} />
                     ))}
                   </div>
                   <Skeleton active paragraph={{ rows: 6 }} />
@@ -210,6 +213,11 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* ── MOBILE BOTTOM NAV ── */}
+      {isMobile && (
+        <BottomNav onMenuOpen={() => setDrawerOpen(true)} />
+      )}
     </>
   );
 };

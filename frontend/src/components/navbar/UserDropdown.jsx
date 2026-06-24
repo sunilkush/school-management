@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { logoutUser } from "../../features/authSlice";
-import { Avatar, Dropdown, Typography, Divider } from "antd";
+import { Avatar, Dropdown, Typography, Divider, Grid } from "antd";
 import {
   UserOutlined,
   MailOutlined,
@@ -13,11 +13,14 @@ import {
 } from "@ant-design/icons";
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const UserDropdown = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const screens  = useBreakpoint();
+  const isMobile = !screens.md;
 
   const rolePathMap = {
     "Support Staff": "staff",
@@ -139,19 +142,21 @@ const UserDropdown = () => {
             {initials}
           </Avatar>
         )}
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: "var(--text-primary)",
-            maxWidth: 120,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {user?.name?.split(" ")[0] || "User"}
-        </Text>
+        {!isMobile && (
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              maxWidth: 120,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {user?.name?.split(" ")[0] || "User"}
+          </Text>
+        )}
       </button>
     </Dropdown>
   );

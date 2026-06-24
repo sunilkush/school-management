@@ -103,7 +103,7 @@ const PageHeader = ({
       />
 
       {/* Left: breadcrumb + title + subtitle */}
-      <div style={{ minWidth: 0, flex: "1 1 200px", position: "relative" }}>
+      <div style={{ minWidth: 0, flex: "1 1 auto", position: "relative" }}>
         {!isMobile && (
           <Breadcrumb
             items={breadcrumbItems}

@@ -1,15 +1,19 @@
 {
   "id": "/",
-  "name": "School Management",
-  "short_name": "SchoolMgmt",
-  "description": "School management platform for admins, teachers, students, and parents.",
+  "name": "EduManage — School Management",
+  "short_name": "EduManage",
+  "description": "Complete school management platform for admins, teachers, students, and parents. Manage attendance, fees, exams, timetables and more.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#1d5fd3",
+  "theme_color": "#2563EB",
   "categories": ["education", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+
   "icons": [
     {
       "src": "/favicon_io/favicon-16x16.png",
@@ -31,13 +35,52 @@
       "src": "/favicon_io/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon_io/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/favicon_io/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon_io/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Go to your dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/favicon_io/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Attendance",
+      "short_name": "Attendance",
+      "description": "Mark or view attendance",
+      "url": "/dashboard/schooladmin/attendance/students",
+      "icons": [{ "src": "/favicon_io/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+
+  "screenshots": [],
+
+  "prefer_related_applications": false,
+
+  "related_applications": [],
+
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
