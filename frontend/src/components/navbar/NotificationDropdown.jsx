@@ -8,7 +8,7 @@ import {
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Badge, Dropdown, Grid, Skeleton, Tooltip } from "antd";
+import { Badge, Drawer, Dropdown, Grid, Skeleton, Tooltip } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -184,17 +184,10 @@ const NotificationDropdown = () => {
     }
   };
 
-  const panelWidth = screens.xs ? "calc(100vw - 20px)" : 380;
+  const isMobile = !screens.md;
 
-  const panel = (
-    <div style={{
-      width: panelWidth,
-      background: "var(--card,#fff)",
-      borderRadius: 16,
-      boxShadow: "0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06)",
-      border: "1px solid var(--border-muted,#e5e7eb)",
-      overflow: "hidden",
-    }}>
+  const panelContent = (
+    <div style={{ background: "var(--card,#fff)", overflow: "hidden" }}>
 
       {/* ── Header ── */}
       <div style={{
@@ -247,7 +240,8 @@ const NotificationDropdown = () => {
 
       {/* ── List ── */}
       <div style={{
-        maxHeight: screens.xs ? "55vh" : 340,
+        flex: isMobile ? 1 : "unset",
+        maxHeight: isMobile ? "none" : 340,
         overflowY: "auto",
         padding: "6px 6px",
       }}>
@@ -320,39 +314,83 @@ const NotificationDropdown = () => {
     </div>
   );
 
+  /* ── Bell trigger button (shared) ── */
+  const bellBtn = (
+    <button
+      type="button"
+      aria-label="Open notifications"
+      onClick={() => isMobile && setOpen(true)}
+      style={{
+        width: 37, height: 37,
+        border: "1px solid var(--border-muted,#e5e7eb)",
+        borderRadius: 10,
+        background: "var(--card,#fff)",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        transition: "all 0.15s",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--primary,#7c3aed)")}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border-muted,#e5e7eb)")}
+    >
+      <Badge
+        count={unreadCount}
+        size="small"
+        offset={[-2, 3]}
+        style={{ backgroundColor: "var(--primary,#7c3aed)" }}
+      >
+        <BellOutlined style={{ fontSize: 18, color: "var(--text-primary,#374151)" }} />
+      </Badge>
+    </button>
+  );
+
+  /* ── Mobile: bottom-sheet Drawer ── */
+  if (isMobile) {
+    return (
+      <>
+        {bellBtn}
+        <Drawer
+          placement="bottom"
+          open={open}
+          onClose={() => setOpen(false)}
+          height="auto"
+          closable={false}
+          styles={{
+            body: { padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" },
+            wrapper: { borderRadius: "20px 20px 0 0", overflow: "hidden", maxHeight: "50vh" },
+          }}
+        >
+          {/* drag handle */}
+          <div style={{ padding: "12px 0 4px", display: "flex", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 4, borderRadius: 99, background: "var(--border-muted,#e5e7eb)" }} />
+          </div>
+          {panelContent}
+        </Drawer>
+      </>
+    );
+  }
+
+  /* ── Desktop: dropdown ── */
   return (
     <Dropdown
-      dropdownRender={() => panel}
+      dropdownRender={() => (
+        <div style={{
+          width: 380,
+          background: "var(--card,#fff)",
+          borderRadius: 16,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06)",
+          border: "1px solid var(--border-muted,#e5e7eb)",
+          overflow: "hidden",
+        }}>
+          {panelContent}
+        </div>
+      )}
       trigger={["click"]}
       placement="bottomRight"
       open={open}
       onOpenChange={setOpen}
     >
-      <button
-        type="button"
-        aria-label="Open notifications"
-        style={{
-          width: 37, height: 37,
-          border: "1px solid var(--border-muted,#e5e7eb)",
-          borderRadius: 10,
-          background: "var(--card,#fff)",
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          transition: "all 0.15s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--primary,#7c3aed)")}
-        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border-muted,#e5e7eb)")}
-      >
-        <Badge
-          count={unreadCount}
-          size="small"
-          offset={[-2, 3]}
-          style={{ backgroundColor: "var(--primary,#7c3aed)" }}
-        >
-          <BellOutlined style={{ fontSize: 18, color: "var(--text-primary,#374151)" }} />
-        </Badge>
-      </button>
+      {bellBtn}
     </Dropdown>
   );
 };

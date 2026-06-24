@@ -268,26 +268,19 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
 
       {/* ── Mobile Search Drawer ── */}
       <Drawer
-        title={
-          <span style={{ fontWeight: 600, fontSize: 15, color: isDark ? "#E8EDF7" : "#0F172A" }}>
-            Search
-          </span>
-        }
         placement="top"
-        height={90}
+        height={72}
         onClose={() => setMobileSearch(false)}
         open={mobileSearch}
-        closable
-        closeIcon={<span style={{ fontSize: 14, color: isDark ? "#94A3B8" : "#94A3B8" }}>✕</span>}
+        closable={false}
         styles={{
-          header: {
-            padding: "10px 16px",
-            background: isDark ? "#111827" : "#fff",
-            borderBottom: `1px solid ${topbarBorder}`,
-          },
           body: {
-            padding: "10px 16px",
+            padding: "16px",
             background: isDark ? "#111827" : "#fff",
+            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
           },
         }}
       >
@@ -298,9 +291,26 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
           className="tb-search"
           value={searchVal}
           onChange={(e) => setSearchVal(e.target.value)}
+          onPressEnter={() => setMobileSearch(false)}
           prefix={<SearchOutlined style={{ color: isDark ? "#4B5875" : "#A0AABA", fontSize: 14 }} />}
-          style={{ borderRadius: 10 }}
+          style={{ borderRadius: 10, flex: 1 }}
         />
+        <button
+          onClick={() => { setSearchVal(""); setMobileSearch(false); }}
+          style={{
+            flexShrink: 0,
+            width: 36, height: 36,
+            borderRadius: 10,
+            border: `1px solid ${topbarBorder}`,
+            background: isDark ? "#1A2438" : "#F4F7FF",
+            color: isDark ? "#94A3B8" : "#64748B",
+            cursor: "pointer",
+            fontSize: 13,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          ✕
+        </button>
       </Drawer>
     </>
   );
