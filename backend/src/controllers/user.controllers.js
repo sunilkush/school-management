@@ -41,11 +41,15 @@ const sendVerificationEmail = async (user) => {
   await user.save({ validateBeforeSave: false });
 
   const verifyUrl = buildClientUrl(`/verify-email?token=${token}`);
-  await sendEmail(
-    user.email,
-    'Verify your email — School Management',
-    `Hi ${user.name},\n\nPlease verify your email address by clicking the link below:\n\n${verifyUrl}\n\nThis link expires in 24 hours.\n\nIf you did not create an account, please ignore this email.`
-  );
+  try {
+    await sendEmail(
+      user.email,
+      'Verify your email — School Management',
+      `Hi ${user.name},\n\nPlease verify your email address by clicking the link below:\n\n${verifyUrl}\n\nThis link expires in 24 hours.\n\nIf you did not create an account, please ignore this email.`
+    );
+  } catch (err) {
+    console.error("Verification email failed (non-fatal):", err.message);
+  }
 };
 
 

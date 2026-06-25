@@ -76,7 +76,6 @@ export const registerEmployee = asyncHandler(async (req, res) => {
   } else {
     const existingUser = await User.findOne({
       _id: finalUserId,
-      isActive: true,
       isDeleted: { $ne: true },
     });
     if (!existingUser) {
@@ -96,7 +95,12 @@ export const registerEmployee = asyncHandler(async (req, res) => {
       ? qualification
       : [];
 
+  // Auto-generate unique employeeCode to avoid compound unique-index conflict
+  const empCount = await Employee.countDocuments({ schoolId });
+  const generatedEmployeeCode = `EMP${String(empCount + 1).padStart(4, "0")}`;
+
   const employee = await Employee.create({
+    employeeCode: generatedEmployeeCode,
     userId: finalUserId,
     schoolId,
     academicYearId: academicYearId || null,

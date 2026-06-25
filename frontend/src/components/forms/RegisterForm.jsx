@@ -323,7 +323,7 @@ const RegisterForm = ({ onClose }) => {
         onFinish={onFinish}
         className="reg-form"
         initialValues={{
-          isActive: false,
+          isActive: true,
           avatar: [],
           employmentType: "Permanent",
           joinDate: dayjs(),
@@ -393,15 +393,15 @@ const RegisterForm = ({ onClose }) => {
             </Upload>
           </Form.Item>
 
-          <Form.Item name="isActive" valuePropName="checked" style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 10, background: "#faf9ff", border: "1.5px solid #ede9fe", borderRadius: 10 }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e" }}>Activate Account</div>
-                <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>User can log in immediately after registration</div>
-              </div>
-              <Checkbox />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 10, background: "#faf9ff", border: "1.5px solid #ede9fe", borderRadius: 10, marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e" }}>Activate Account</div>
+              <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>User can log in immediately after registration</div>
             </div>
-          </Form.Item>
+            <Form.Item name="isActive" valuePropName="checked" noStyle>
+              <Checkbox />
+            </Form.Item>
+          </div>
 
           <button type="button" className="reg-btn reg-btn-primary" style={{ width: "100%" }} onClick={goToStep2}>
             Next: Employee Details →
