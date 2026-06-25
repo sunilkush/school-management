@@ -1,20 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Avatar, Button, DatePicker, Form, Input, Modal, Popconfirm,
-  Select, Skeleton, Tooltip, message,
+  Avatar, Button, DatePicker, Form, Input, Modal,
+  Popconfirm, Select, Skeleton, Tooltip, message,
 } from "antd";
 import {
   CheckCircleOutlined, ClockCircleOutlined, DeleteOutlined, EditOutlined,
   PlusOutlined, SnippetsOutlined, StopOutlined, SyncOutlined,
 } from "@ant-design/icons";
-import { AlertTriangle, ChevronDown, Flame, GripVertical, Minus } from "lucide-react";
-import {
-  DndContext, DragOverlay, PointerSensor, TouchSensor,
-  pointerWithin, useSensor, useSensors,
-} from "@dnd-kit/core";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
+import { AlertTriangle, ChevronDown, Flame, Minus } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
@@ -76,134 +70,100 @@ const DueChip = ({ date, status }) => {
   );
 };
 
-/* ─── Draggable Task Card ────────────────────────────────────────── */
-const DraggableCard = ({ task, col, onEdit, onDelete }) => {
+/* ─── Task Card ─────────────────────────────────────────────────── */
+const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, onDragOver, isDragOver }) => {
   const [hovered, setHovered] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: task._id,
-    data: { task },
-  });
-
   return (
     <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Translate.toString(transform),
-        opacity: isDragging ? 0.3 : 1,
-        transition: isDragging ? "none" : "opacity 0.15s",
-      }}
+      draggable
+      onDragStart={() => onDragStart(task)}
+      onDragEnd={onDragEnd}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-    >
-      <div style={{
+      style={{
         background: "#fff",
-        border: "1px solid #E8EEF6",
+        border: `1px solid #E8EEF6`,
         borderRadius: 12,
         padding: "12px 14px",
         borderTop: `3px solid ${col.color}`,
-        boxShadow: hovered
-          ? "0 6px 20px rgba(0,0,0,0.10)"
-          : "0 1px 4px rgba(0,0,0,0.05)",
-        transition: "box-shadow 0.18s",
+        boxShadow: hovered ? "0 6px 20px rgba(0,0,0,0.10)" : "0 1px 4px rgba(0,0,0,0.05)",
+        transition: "box-shadow 0.18s, opacity 0.15s",
         position: "relative",
-        cursor: "default",
+        cursor: "grab",
+        opacity: isDragOver ? 0.5 : 1,
+      }}
+    >
+      {/* Priority pill */}
+      <div style={{ marginBottom: 8 }}>
+        <PriorityPill priority={task.priority} />
+      </div>
+
+      {/* Title */}
+      <div style={{
+        fontWeight: 700, fontSize: 13, color: "#0F172A", lineHeight: 1.4,
+        marginBottom: 6, paddingRight: hovered ? 60 : 0, transition: "padding 0.15s",
       }}>
-        {/* Row 1: drag + priority */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <span
-            {...attributes}
-            {...listeners}
-            style={{
-              display: "flex", alignItems: "center",
-              color: "#CBD5E1", cursor: "grab", touchAction: "none", flexShrink: 0,
-            }}
-          >
-            <GripVertical size={14} />
-          </span>
-          <PriorityPill priority={task.priority} />
-        </div>
+        {task.title}
+      </div>
 
-        {/* Title */}
+      {/* Description */}
+      {task.description && (
         <div style={{
-          fontWeight: 700, fontSize: 13, color: "#0F172A", lineHeight: 1.4,
-          marginBottom: 6,
-          paddingRight: hovered ? 60 : 0,
-          transition: "padding 0.15s",
+          fontSize: 11.5, color: "#94A3B8", lineHeight: 1.55, marginBottom: 8,
+          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
-          {task.title}
+          {task.description}
         </div>
+      )}
 
-        {/* Description */}
-        {task.description && (
-          <div style={{
-            fontSize: 11.5, color: "#94A3B8", lineHeight: 1.55, marginBottom: 8,
-            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}>
-            {task.description}
-          </div>
-        )}
-
-        {/* Footer: due + avatars */}
-        <div style={{
-          display: "flex", alignItems: "center",
-          justifyContent: "space-between", flexWrap: "wrap", gap: 6,
-        }}>
-          <DueChip date={task.dueDate} status={task.status} />
-          {task.assignedTo?.length > 0 && (
-            <Avatar.Group maxCount={3} size={20}>
-              {task.assignedTo.map((u) => (
-                <Tooltip key={u._id} title={u.name}>
-                  <Avatar
-                    size={20} src={u.avatar}
-                    style={{ background: "#7C3AED", fontSize: 9, lineHeight: "20px" }}
-                  >
-                    {!u.avatar && u.name?.[0]?.toUpperCase()}
-                  </Avatar>
-                </Tooltip>
-              ))}
-            </Avatar.Group>
-          )}
-        </div>
-
-        {/* Hover actions */}
-        {hovered && (
-          <div style={{
-            position: "absolute", top: 10, right: 10,
-            display: "flex", gap: 4, zIndex: 2,
-          }}>
-            <button
-              onClick={() => onEdit(task)}
-              style={{
-                background: "#EFF6FF", border: "none", borderRadius: 6,
-                padding: "4px 8px", cursor: "pointer", color: "#2563EB",
-              }}
-            >
-              <EditOutlined style={{ fontSize: 11 }} />
-            </button>
-            <Popconfirm
-              title="Delete this task?"
-              onConfirm={() => onDelete(task._id)}
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-            >
-              <button style={{
-                background: "#FEF2F2", border: "none", borderRadius: 6,
-                padding: "4px 8px", cursor: "pointer", color: "#DC2626",
-              }}>
-                <DeleteOutlined style={{ fontSize: 11 }} />
-              </button>
-            </Popconfirm>
-          </div>
+      {/* Footer */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+        <DueChip date={task.dueDate} status={task.status} />
+        {task.assignedTo?.length > 0 && (
+          <Avatar.Group maxCount={3} size={20}>
+            {task.assignedTo.map((u) => (
+              <Tooltip key={u._id} title={u.name}>
+                <Avatar size={20} src={u.avatar} style={{ background: "#7C3AED", fontSize: 9, lineHeight: "20px" }}>
+                  {!u.avatar && u.name?.[0]?.toUpperCase()}
+                </Avatar>
+              </Tooltip>
+            ))}
+          </Avatar.Group>
         )}
       </div>
+
+      {/* Hover actions */}
+      {hovered && (
+        <div style={{ position: "absolute", top: 10, right: 10, display: "flex", gap: 4, zIndex: 2 }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+            style={{ background: "#EFF6FF", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: "#2563EB" }}
+          >
+            <EditOutlined style={{ fontSize: 11 }} />
+          </button>
+          <Popconfirm
+            title="Delete this task?"
+            onConfirm={() => onDelete(task._id)}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+          >
+            <button
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: "#FEF2F2", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: "#DC2626" }}
+            >
+              <DeleteOutlined style={{ fontSize: 11 }} />
+            </button>
+          </Popconfirm>
+        </div>
+      )}
     </div>
   );
 };
 
-/* ─── Droppable Kanban Column ───────────────────────────────────── */
-const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd }) => {
-  const { setNodeRef, isOver } = useDroppable({ id: col.key });
+/* ─── Kanban Column ─────────────────────────────────────────────── */
+const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragStart, onDragEnd, onDrop }) => {
+  const [over, setOver] = useState(false);
+  const isActiveCol = dragState?.task?.status === col.key;
 
   return (
     <div style={{ flex: "1 1 240px", minWidth: 240, maxWidth: 320, display: "flex", flexDirection: "column" }}>
@@ -228,44 +188,48 @@ const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd }) => {
         </span>
       </div>
 
-      {/* Cards area */}
+      {/* Drop zone */}
       <div
-        ref={setNodeRef}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={() => { setOver(false); onDrop(col.key); }}
         style={{
-          flex: 1, minHeight: 220, padding: "10px",
+          flex: 1, minHeight: 220, padding: 10,
           display: "flex", flexDirection: "column", gap: 9,
-          border: `1px solid ${col.border}`,
-          borderTop: "none", borderRadius: "0 0 0 0",
-          background: isOver ? col.bg : "#FAFBFF",
-          transition: "background 0.18s ease",
-          boxShadow: isOver ? `inset 0 0 0 2px ${col.color}55` : "none",
+          border: `1px solid ${over ? col.color : col.border}`,
+          borderTop: "none",
+          background: over ? col.bg : "#FAFBFF",
+          transition: "all 0.15s ease",
+          boxShadow: over ? `inset 0 0 0 2px ${col.color}44` : "none",
         }}
       >
-        {tasks.length === 0 && !isOver && (
+        {tasks.length === 0 && !over && (
           <div style={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
             color: "#CBD5E1", fontSize: 12, fontWeight: 500,
             borderRadius: 8, border: "2px dashed #E2E8F0",
             minHeight: 80, margin: "4px 0",
           }}>
-            No tasks
+            {dragState ? "Drop here" : "No tasks"}
           </div>
         )}
         {tasks.map((t) => (
-          <DraggableCard
+          <TaskCard
             key={t._id} task={t} col={col}
             onEdit={onEdit} onDelete={onDelete}
+            onDragStart={onDragStart} onDragEnd={onDragEnd}
+            isDragOver={dragState?.task?._id === t._id}
           />
         ))}
       </div>
 
-      {/* Add task footer button */}
-      <AddTaskBtn col={col} onAdd={onAdd} />
+      {/* Add task button */}
+      <AddBtn col={col} onAdd={onAdd} />
     </div>
   );
 };
 
-const AddTaskBtn = ({ col, onAdd }) => {
+const AddBtn = ({ col, onAdd }) => {
   const [hov, setHov] = useState(false);
   return (
     <button
@@ -302,13 +266,8 @@ const TaskManagement = () => {
   const [initStatus,     setInitStatus]     = useState("todo");
   const [filterPriority, setFilterPriority] = useState(null);
   const [search,         setSearch]         = useState("");
-  const [activeTask,     setActiveTask]     = useState(null);
+  const [dragState,      setDragState]      = useState(null);
   const [form] = Form.useForm();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 6 } }),
-  );
 
   useEffect(() => { dispatch(fetchTasks()); }, [dispatch]);
 
@@ -370,23 +329,20 @@ const TaskManagement = () => {
     }
   };
 
-  const handleDragStart = ({ active }) => {
-    setActiveTask(tasks.find((x) => x._id === active.id) || null);
-  };
+  const handleDragStart = (task) => setDragState({ task });
+  const handleDragEnd   = ()   => setDragState(null);
 
-  const handleDragEnd = useCallback(async ({ active, over }) => {
-    setActiveTask(null);
-    if (!over) return;
-    const targetStatus = over.id;
-    if (!COLUMNS.find((c) => c.key === targetStatus)) return;
-    const task = tasks.find((t) => t._id === active.id);
-    if (!task || task.status === targetStatus) return;
+  const handleDrop = async (targetStatus) => {
+    if (!dragState?.task) return;
+    const { task } = dragState;
+    setDragState(null);
+    if (task.status === targetStatus) return;
     try {
-      await dispatch(updateTask({ id: active.id, status: targetStatus })).unwrap();
+      await dispatch(updateTask({ id: task._id, status: targetStatus })).unwrap();
     } catch {
       message.error("Failed to move task");
     }
-  }, [dispatch, tasks]);
+  };
 
   const q = search.toLowerCase();
   const filtered = tasks.filter((t) => {
@@ -399,13 +355,11 @@ const TaskManagement = () => {
   );
 
   const STATS = [
-    { label: "Total Tasks",  value: tasks.length,                                       color: "#7C3AED", bg: "#F3EEFF", emoji: "📋" },
-    { label: "To Do",        value: tasks.filter((t) => t.status === "todo").length,     color: "#D97706", bg: "#FFFBEB", emoji: "🕐" },
-    { label: "In Progress",  value: tasks.filter((t) => t.status === "in_progress").length, color: "#2563EB", bg: "#EFF6FF", emoji: "⚡" },
-    { label: "Completed",    value: tasks.filter((t) => t.status === "done").length,     color: "#16A34A", bg: "#F0FDF4", emoji: "✅" },
+    { label: "Total Tasks",  value: tasks.length,                                            color: "#7C3AED", bg: "#F3EEFF", emoji: "📋" },
+    { label: "To Do",        value: tasks.filter((t) => t.status === "todo").length,          color: "#D97706", bg: "#FFFBEB", emoji: "🕐" },
+    { label: "In Progress",  value: tasks.filter((t) => t.status === "in_progress").length,   color: "#2563EB", bg: "#EFF6FF", emoji: "⚡" },
+    { label: "Completed",    value: tasks.filter((t) => t.status === "done").length,           color: "#16A34A", bg: "#F0FDF4", emoji: "✅" },
   ];
-
-  const activeCol = COLUMNS.find((c) => c.key === activeTask?.status);
 
   return (
     <>
@@ -428,14 +382,13 @@ const TaskManagement = () => {
 
       <div style={{ padding: "0 24px 28px", background: "#F4F6FA", minHeight: "calc(100vh - 118px)" }}>
 
-        {/* Stat cards */}
+        {/* Stats */}
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20, paddingTop: 4 }}>
           {STATS.map((s) => (
             <div key={s.label} style={{
               background: "#fff", border: "1px solid #E8EEF6",
               borderRadius: 14, padding: "14px 18px",
-              flex: "1 1 130px",
-              display: "flex", alignItems: "center", gap: 12,
+              flex: "1 1 130px", display: "flex", alignItems: "center", gap: 12,
               boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
             }}>
               <div style={{
@@ -446,12 +399,8 @@ const TaskManagement = () => {
                 {s.emoji}
               </div>
               <div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: s.color, lineHeight: 1.1 }}>
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginTop: 2 }}>
-                  {s.label}
-                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: s.color, lineHeight: 1.1 }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
               </div>
             </div>
           ))}
@@ -489,7 +438,7 @@ const TaskManagement = () => {
           </Select>
         </div>
 
-        {/* Kanban Board */}
+        {/* Board */}
         {loading && tasks.length === 0 ? (
           <div style={{ display: "flex", gap: 16 }}>
             {COLUMNS.map((c) => (
@@ -499,48 +448,25 @@ const TaskManagement = () => {
             ))}
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={pointerWithin}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="tm-board">
-              {COLUMNS.map((col) => (
-                <KanbanColumn
-                  key={col.key} col={col}
-                  tasks={byColumn[col.key] || []}
-                  onEdit={openEdit}
-                  onDelete={handleDelete}
-                  onAdd={openCreate}
-                />
-              ))}
-            </div>
-
-            <DragOverlay dropAnimation={{ duration: 160, easing: "ease" }}>
-              {activeTask && (
-                <div style={{
-                  background: "#fff",
-                  border: "1px solid #E8EEF6",
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  borderTop: `3px solid ${activeCol?.color || "#2563EB"}`,
-                  boxShadow: "0 16px 48px rgba(0,0,0,0.22)",
-                  opacity: 0.95,
-                  minWidth: 220,
-                }}>
-                  <PriorityPill priority={activeTask.priority} />
-                  <div style={{ fontWeight: 700, fontSize: 13, color: "#0F172A", marginTop: 8 }}>
-                    {activeTask.title}
-                  </div>
-                </div>
-              )}
-            </DragOverlay>
-          </DndContext>
+          <div className="tm-board">
+            {COLUMNS.map((col) => (
+              <KanbanColumn
+                key={col.key} col={col}
+                tasks={byColumn[col.key] || []}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                onAdd={openCreate}
+                dragState={dragState}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDrop={handleDrop}
+              />
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Create / Edit Modal */}
+      {/* Modal */}
       <Modal
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
@@ -562,11 +488,7 @@ const TaskManagement = () => {
         destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 16 }}>
-          <Form.Item
-            label="Task Title"
-            name="title"
-            rules={[{ required: true, message: "Title is required" }]}
-          >
+          <Form.Item label="Task Title" name="title" rules={[{ required: true, message: "Title is required" }]}>
             <Input placeholder="Enter task title" size="large" />
           </Form.Item>
 
@@ -584,12 +506,9 @@ const TaskManagement = () => {
                 ))}
               </Select>
             </Form.Item>
-
             <Form.Item label="Status" name="status" initialValue={initStatus} style={{ flex: 1 }}>
               <Select size="large">
-                {Object.entries(STATUS_LABEL).map(([k, v]) => (
-                  <Option key={k} value={k}>{v}</Option>
-                ))}
+                {Object.entries(STATUS_LABEL).map(([k, v]) => <Option key={k} value={k}>{v}</Option>)}
               </Select>
             </Form.Item>
           </div>

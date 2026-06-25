@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Avatar, Empty, Select, Skeleton, Tooltip, message } from "antd";
+import { Avatar, Select, Skeleton, Tooltip, message } from "antd";
 import {
   CheckCircleOutlined, ClockCircleOutlined, ReloadOutlined,
-  SnippetsOutlined, SyncOutlined, UserOutlined,
+  SnippetsOutlined, SyncOutlined,
 } from "@ant-design/icons";
 import { AlertTriangle, ChevronDown, Flame, GripVertical, Minus } from "lucide-react";
-import {
-  DndContext, DragOverlay, PointerSensor, TouchSensor,
-  pointerWithin, useSensor, useSensors,
-} from "@dnd-kit/core";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { fetchTasks, updateTask } from "../../features/taskSlice";
@@ -53,7 +47,7 @@ const DueChip = ({ date, status, isDark }) => {
   const d       = dayjs(date);
   const overdue = d.isBefore(dayjs(), "day") && status !== "done";
   const today   = d.isSame(dayjs(), "day");
-  const color   = overdue ? "#DC2626" : today ? "#D97706" : isDark ? "#64748B" : "#64748B";
+  const color   = overdue ? "#DC2626" : today ? "#D97706" : "#64748B";
   const bg      = overdue ? (isDark ? "#3B0A0A" : "#FEF2F2")
                 : today   ? (isDark ? "#3B2800" : "#FFFBEB")
                 :            (isDark ? "#1E293B" : "#F1F5F9");
@@ -75,19 +69,11 @@ const AssignedByTag = ({ task, currentUserId, isDark }) => {
   if (!assigner) return null;
   const assignerId = typeof assigner === "object" ? assigner._id?.toString() : assigner?.toString();
   if (assignerId === currentUserId?.toString()) return null;
-  const name = (typeof assigner === "object" ? assigner.name : null)
-    || (typeof assigner === "object" ? assigner.email?.split("@")[0] : null)
-    || "Unknown";
-  const hue = Math.abs((name.charCodeAt(0) || 65) * 40) % 360;
+  const name = (typeof assigner === "object" ? (assigner.name || assigner.email?.split("@")[0]) : null) || "Unknown";
+  const hue  = Math.abs((name.charCodeAt(0) || 65) * 40) % 360;
   return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 5,
-      fontSize: 10.5, color: isDark ? "#64748B" : "#94A3B8",
-    }}>
-      <Avatar
-        size={14}
-        style={{ background: `hsl(${hue},50%,50%)`, fontSize: 7, lineHeight: "14px" }}
-      >
+    <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10.5, color: isDark ? "#64748B" : "#94A3B8" }}>
+      <Avatar size={14} style={{ background: `hsl(${hue},50%,50%)`, fontSize: 7, lineHeight: "14px" }}>
         {name[0]?.toUpperCase()}
       </Avatar>
       <span>from {name}</span>
@@ -95,88 +81,54 @@ const AssignedByTag = ({ task, currentUserId, isDark }) => {
   );
 };
 
-/* ─── Draggable Card ─────────────────────────────────────────────── */
-const DraggableCard = ({ task, colColor, currentUserId, isDark, isOverlay = false }) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: task._id,
-    data: { task },
-  });
-  return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform:  CSS.Translate.toString(transform),
-        opacity:    isDragging ? 0.3 : 1,
-        transition: isDragging ? "none" : "box-shadow 0.18s",
-      }}
-    >
-      <CardContent
-        task={task} colColor={colColor} currentUserId={currentUserId}
-        isDark={isDark} dragProps={{ ...attributes, ...listeners }}
-        isOverlay={isOverlay}
-      />
-    </div>
-  );
-};
-
-const CardContent = ({ task, colColor, currentUserId, isDark, dragProps = {}, isOverlay }) => {
+/* ─── Task Card ─────────────────────────────────────────────────── */
+const TaskCard = ({ task, colColor, currentUserId, isDark, onDragStart, onDragEnd, isDragging }) => {
   const bg     = isDark ? "#1A2438" : "#ffffff";
   const border = isDark ? "#1E2A3B" : "#E8EEF6";
   return (
-    <div style={{
-      background:   bg,
-      border:       `1px solid ${border}`,
-      borderRadius: 13,
-      padding:      "12px 14px",
-      borderTop:    `3px solid ${colColor}`,
-      display:      "flex", flexDirection: "column", gap: 9,
-      boxShadow:    isOverlay
-        ? "0 16px 48px rgba(0,0,0,0.28)"
-        : isDark ? "0 1px 4px rgba(0,0,0,0.20)" : "0 1px 4px rgba(0,0,0,0.06)",
-      cursor: isOverlay ? "grabbing" : "default",
-    }}>
-      {/* Row: drag handle + priority */}
+    <div
+      draggable
+      onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart(task); }}
+      onDragEnd={onDragEnd}
+      style={{
+        background:   bg,
+        border:       `1px solid ${border}`,
+        borderRadius: 13,
+        padding:      "12px 14px",
+        borderTop:    `3px solid ${colColor}`,
+        display:      "flex", flexDirection: "column", gap: 9,
+        boxShadow:    isDark ? "0 1px 4px rgba(0,0,0,0.20)" : "0 1px 4px rgba(0,0,0,0.06)",
+        cursor:       "grab",
+        opacity:      isDragging ? 0.4 : 1,
+        transition:   "opacity 0.15s, box-shadow 0.18s",
+        userSelect:   "none",
+      }}
+    >
+      {/* Drag handle + priority */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span
-          {...dragProps}
-          style={{
-            display: "flex", alignItems: "center",
-            color: isDark ? "#374151" : "#CBD5E1",
-            cursor: "grab", touchAction: "none", padding: "2px 0", flexShrink: 0,
-          }}
-        >
+        <span style={{ display: "flex", alignItems: "center", color: isDark ? "#374151" : "#CBD5E1", flexShrink: 0 }}>
           <GripVertical size={14} />
         </span>
         <PriorityPill priority={task.priority} isDark={isDark} />
       </div>
 
       {/* Title */}
-      <div style={{
-        fontWeight: 700, fontSize: 13,
-        color: isDark ? "#E2E8F0" : "#0F172A",
-        lineHeight: 1.4,
-      }}>
+      <div style={{ fontWeight: 700, fontSize: 13, color: isDark ? "#E2E8F0" : "#0F172A", lineHeight: 1.4 }}>
         {task.title}
       </div>
 
       {/* Description */}
       {task.description && (
         <div style={{
-          fontSize: 11.5,
-          color: isDark ? "#64748B" : "#94A3B8",
-          lineHeight: 1.55,
-          display: "-webkit-box", WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical", overflow: "hidden",
+          fontSize: 11.5, color: isDark ? "#64748B" : "#94A3B8", lineHeight: 1.55,
+          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
           {task.description}
         </div>
       )}
 
       {/* Footer */}
-      <div style={{
-        display: "flex", alignItems: "center",
-        justifyContent: "space-between", gap: 6, flexWrap: "wrap",
-      }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, flexWrap: "wrap" }}>
         <DueChip date={task.dueDate} status={task.status} isDark={isDark} />
         <AssignedByTag task={task} currentUserId={currentUserId} isDark={isDark} />
       </div>
@@ -184,12 +136,9 @@ const CardContent = ({ task, colColor, currentUserId, isDark, dragProps = {}, is
   );
 };
 
-/* ─── Droppable Column ───────────────────────────────────────────── */
-const DroppableColumn = ({ col, tasks, currentUserId, isDark }) => {
-  const { setNodeRef, isOver } = useDroppable({ id: col.key });
-  const done    = col.key === "done" ? tasks.length : 0;
-  const total   = tasks.length;
-
+/* ─── Column ────────────────────────────────────────────────────── */
+const KanbanColumn = ({ col, tasks, currentUserId, isDark, dragState, onDragStart, onDragEnd, onDrop }) => {
+  const [over, setOver] = useState(false);
   return (
     <div style={{ flex: "1 1 240px", minWidth: 240, maxWidth: 340, display: "flex", flexDirection: "column" }}>
       {/* Header */}
@@ -211,41 +160,43 @@ const DroppableColumn = ({ col, tasks, currentUserId, isDark }) => {
           background: col.color, minWidth: 20, height: 20, borderRadius: "50%",
           display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px",
         }}>
-          {total}
+          {tasks.length}
         </span>
       </div>
 
-      {/* Cards area */}
+      {/* Drop zone */}
       <div
-        ref={setNodeRef}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={() => { setOver(false); onDrop(col.key); }}
         style={{
           flex: 1, minHeight: 200, padding: "10px 9px",
           display: "flex", flexDirection: "column", gap: 9,
-          border: `1px solid ${isDark ? col.color + "20" : col.border}`,
+          border: `1px solid ${over ? col.color : (isDark ? col.color + "20" : col.border)}`,
           borderTop: "none", borderRadius: "0 0 12px 12px",
-          background: isOver
+          background: over
             ? (isDark ? col.color + "14" : col.bg)
             : (isDark ? "#111827" : "#FAFBFF"),
-          transition: "background 0.18s ease",
-          boxShadow: isOver ? `inset 0 0 0 2px ${col.color}55` : "none",
+          transition: "all 0.15s ease",
+          boxShadow: over ? `inset 0 0 0 2px ${col.color}44` : "none",
         }}
       >
-        {tasks.length === 0 && !isOver && (
+        {tasks.length === 0 && !over && (
           <div style={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-            color: isDark ? "#1E293B" : "#E2E8F0",
-            fontSize: 12, fontWeight: 500,
-            borderRadius: 8,
-            border: `2px dashed ${isDark ? col.color + "20" : col.border}`,
+            color: isDark ? "#1E293B" : "#E2E8F0", fontSize: 12, fontWeight: 500,
+            borderRadius: 8, border: `2px dashed ${isDark ? col.color + "20" : col.border}`,
             minHeight: 80, margin: "4px 0",
           }}>
-            Drop here
+            {dragState ? "Drop here" : "No tasks"}
           </div>
         )}
         {tasks.map((t) => (
-          <DraggableCard
+          <TaskCard
             key={t._id} task={t} colColor={col.color}
             currentUserId={currentUserId} isDark={isDark}
+            onDragStart={onDragStart} onDragEnd={onDragEnd}
+            isDragging={dragState?.task?._id === t._id}
           />
         ))}
       </div>
@@ -259,23 +210,19 @@ const ColNav = ({ activeKey, onChange, counts, isDark, border }) => (
     {COLUMNS.map((c) => {
       const active = activeKey === c.key;
       return (
-        <button
-          key={c.key}
-          onClick={() => onChange(c.key)}
-          style={{
-            flex: "1 1 90px", padding: "8px 12px", borderRadius: 10,
-            border: `1px solid ${active ? c.color : border}`,
-            background: active ? (isDark ? c.dimBg : c.bg) : "transparent",
-            color:      active ? c.color : isDark ? "#64748B" : "#94A3B8",
-            fontWeight: 700, fontSize: 12, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            transition: "all 0.15s",
-          }}
-        >
+        <button key={c.key} onClick={() => onChange(c.key)} style={{
+          flex: "1 1 90px", padding: "8px 12px", borderRadius: 10,
+          border: `1px solid ${active ? c.color : border}`,
+          background: active ? (isDark ? c.dimBg : c.bg) : "transparent",
+          color: active ? c.color : isDark ? "#64748B" : "#94A3B8",
+          fontWeight: 700, fontSize: 12, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          transition: "all 0.15s",
+        }}>
           {c.icon} {c.label}
           <span style={{
             background: active ? c.color : (isDark ? "#1E2A3B" : "#E8EEF6"),
-            color:      active ? "#fff"  : isDark ? "#64748B" : "#94A3B8",
+            color: active ? "#fff" : isDark ? "#64748B" : "#94A3B8",
             borderRadius: 99, padding: "0 6px", fontSize: 10, fontWeight: 800,
           }}>
             {counts[c.key] || 0}
@@ -288,15 +235,15 @@ const ColNav = ({ activeKey, onChange, counts, isDark, border }) => (
 
 /* ─── Main Page ──────────────────────────────────────────────────── */
 const MyTasks = () => {
-  const dispatch        = useDispatch();
-  const { isDark }      = useTheme();
+  const dispatch      = useDispatch();
+  const { isDark }    = useTheme();
   const { items: tasks = [], loading = false } = useSelector((s) => s.tasks || {});
-  const { user }        = useSelector((s) => s.auth);
-  const currentUserId   = user?._id;
+  const { user }      = useSelector((s) => s.auth);
+  const currentUserId = user?._id;
 
   const [filterPriority, setFilterPriority] = useState("all");
   const [search,         setSearch]         = useState("");
-  const [activeTask,     setActiveTask]     = useState(null);
+  const [dragState,      setDragState]      = useState(null);
   const [mobileCol,      setMobileCol]      = useState("todo");
   const [windowW,        setWindowW]        = useState(() => window.innerWidth);
 
@@ -310,11 +257,6 @@ const MyTasks = () => {
 
   const isMobile = windowW < 640;
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 6 } }),
-  );
-
   const myTasks = useMemo(() =>
     tasks.filter((t) => {
       if (!Array.isArray(t.assignedTo)) return false;
@@ -322,23 +264,20 @@ const MyTasks = () => {
     }),
   [tasks, currentUserId]);
 
-  const handleDragStart = ({ active }) => {
-    setActiveTask(myTasks.find((x) => x._id === active.id) || null);
-  };
+  const handleDragStart = (task) => setDragState({ task });
+  const handleDragEnd   = ()    => setDragState(null);
 
-  const handleDragEnd = useCallback(async ({ active, over }) => {
-    setActiveTask(null);
-    if (!over) return;
-    const targetStatus = over.id;
-    if (!COLUMNS.find((c) => c.key === targetStatus)) return;
-    const task = myTasks.find((t) => t._id === active.id);
-    if (!task || task.status === targetStatus) return;
+  const handleDrop = useCallback(async (targetStatus) => {
+    if (!dragState?.task) return;
+    const { task } = dragState;
+    setDragState(null);
+    if (task.status === targetStatus) return;
     try {
-      await dispatch(updateTask({ id: active.id, myStatus: targetStatus })).unwrap();
+      await dispatch(updateTask({ id: task._id, myStatus: targetStatus })).unwrap();
     } catch {
       message.error("Failed to move task");
     }
-  }, [dispatch, myTasks]);
+  }, [dispatch, dragState]);
 
   const counts = useMemo(() => ({
     total:       myTasks.length,
@@ -366,14 +305,12 @@ const MyTasks = () => {
   const txtMut = isDark ? "#64748B" : "#94A3B8";
 
   const STATS = [
-    { label: "Assigned",    value: counts.total,       color: "#7C3AED", bg: isDark ? "#2D1B69" : "#F3EEFF"  },
-    { label: "To Do",       value: counts.todo,        color: "#D97706", bg: isDark ? "#3B2800" : "#FFFBEB"  },
-    { label: "In Progress", value: counts.in_progress, color: "#2563EB", bg: isDark ? "#1A2E5C" : "#EFF6FF"  },
-    { label: "Completed",   value: counts.done,        color: "#16A34A", bg: isDark ? "#0F3020" : "#F0FDF4"  },
-    { label: "Overdue",     value: counts.overdue,     color: "#DC2626", bg: isDark ? "#3B0A0A" : "#FFF1F2"  },
+    { label: "Assigned",    value: counts.total,       color: "#7C3AED", bg: isDark ? "#2D1B69" : "#F3EEFF" },
+    { label: "To Do",       value: counts.todo,        color: "#D97706", bg: isDark ? "#3B2800" : "#FFFBEB" },
+    { label: "In Progress", value: counts.in_progress, color: "#2563EB", bg: isDark ? "#1A2E5C" : "#EFF6FF" },
+    { label: "Completed",   value: counts.done,        color: "#16A34A", bg: isDark ? "#0F3020" : "#F0FDF4" },
+    { label: "Overdue",     value: counts.overdue,     color: "#DC2626", bg: isDark ? "#3B0A0A" : "#FFF1F2" },
   ];
-
-  const activeCol = COLUMNS.find((c) => c.key === activeTask?.status);
 
   return (
     <>
@@ -395,8 +332,7 @@ const MyTasks = () => {
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "7px 14px", borderRadius: 9, border: `1px solid ${border}`,
-              background: cardBg, cursor: "pointer",
-              fontSize: 13, fontWeight: 600, color: txtMut,
+              background: cardBg, cursor: "pointer", fontSize: 13, fontWeight: 600, color: txtMut,
             }}
           >
             <ReloadOutlined style={{ fontSize: 12 }} />
@@ -405,40 +341,31 @@ const MyTasks = () => {
         }
       />
 
-      <div style={{
-        padding: isMobile ? "0 12px 24px" : "0 20px 28px",
-        background: pageBg,
-        minHeight: "calc(100vh - 118px)",
-      }}>
+      <div style={{ padding: isMobile ? "0 12px 24px" : "0 20px 28px", background: pageBg, minHeight: "calc(100vh - 118px)" }}>
 
         {/* Stats */}
         <div className="mt-stats" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
           {STATS.map((s) => (
             <div key={s.label} style={{
-              background: cardBg,
-              border: `1px solid ${border}`,
+              background: cardBg, border: `1px solid ${border}`,
               borderRadius: 13, padding: "12px 14px",
               display: "flex", alignItems: "center", gap: 10,
               boxShadow: isDark ? "none" : "0 1px 4px rgba(0,0,0,0.04)",
             }}>
               <div style={{
                 width: 40, height: 40, borderRadius: 11, flexShrink: 0,
-                background: s.bg,
-                display: "flex", alignItems: "center", justifyContent: "center",
+                background: s.bg, display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 <span style={{ fontSize: 19, fontWeight: 800, color: s.color }}>{s.value}</span>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 600, color: txtMut, lineHeight: 1.3 }}>
-                {s.label}
-              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: txtMut, lineHeight: 1.3 }}>{s.label}</span>
             </div>
           ))}
         </div>
 
         {/* Filter bar */}
         <div style={{
-          background: cardBg,
-          border: `1px solid ${border}`,
+          background: cardBg, border: `1px solid ${border}`,
           borderRadius: 13, padding: "12px 14px", marginBottom: 16,
           display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
           boxShadow: isDark ? "none" : "0 1px 4px rgba(0,0,0,0.04)",
@@ -472,11 +399,8 @@ const MyTasks = () => {
         {/* Mobile column tabs */}
         {isMobile && (
           <ColNav
-            activeKey={mobileCol}
-            onChange={setMobileCol}
-            counts={counts}
-            isDark={isDark}
-            border={border}
+            activeKey={mobileCol} onChange={setMobileCol}
+            counts={counts} isDark={isDark} border={border}
           />
         )}
 
@@ -492,47 +416,29 @@ const MyTasks = () => {
         ) : myTasks.length === 0 ? (
           <div style={{
             textAlign: "center", padding: "60px 20px",
-            background: cardBg, borderRadius: 16,
-            border: `1px solid ${border}`,
+            background: cardBg, borderRadius: 16, border: `1px solid ${border}`,
           }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
             <div style={{ fontWeight: 700, fontSize: 16, color: isDark ? "#E2E8F0" : "#0F172A", marginBottom: 6 }}>
               No tasks assigned yet
             </div>
-            <div style={{ fontSize: 13, color: txtMut }}>
-              Tasks assigned to you will appear here
-            </div>
+            <div style={{ fontSize: 13, color: txtMut }}>Tasks assigned to you will appear here</div>
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={pointerWithin}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="mt-board">
-              {(isMobile ? COLUMNS.filter((c) => c.key === mobileCol) : COLUMNS).map((col) => (
-                <DroppableColumn
-                  key={col.key} col={col}
-                  tasks={byColumn[col.key] || []}
-                  currentUserId={currentUserId}
-                  isDark={isDark}
-                />
-              ))}
-            </div>
-
-            <DragOverlay dropAnimation={{ duration: 160, easing: "ease" }}>
-              {activeTask && (
-                <CardContent
-                  task={activeTask}
-                  colColor={activeCol?.color || "#2563EB"}
-                  currentUserId={currentUserId}
-                  isDark={isDark}
-                  isOverlay
-                />
-              )}
-            </DragOverlay>
-          </DndContext>
+          <div className="mt-board">
+            {(isMobile ? COLUMNS.filter((c) => c.key === mobileCol) : COLUMNS).map((col) => (
+              <KanbanColumn
+                key={col.key} col={col}
+                tasks={byColumn[col.key] || []}
+                currentUserId={currentUserId}
+                isDark={isDark}
+                dragState={dragState}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDrop={handleDrop}
+              />
+            ))}
+          </div>
         )}
       </div>
     </>
