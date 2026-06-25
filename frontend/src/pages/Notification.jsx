@@ -1,35 +1,40 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Badge,
   Button,
-  Card,
-  Checkbox,
   Col,
   DatePicker,
-  Empty,
+  Divider,
   Flex,
   Form,
   Grid,
   Input,
-  List,
   Row,
   Select,
   Skeleton,
   Space,
   Tag,
+  Tooltip,
   Typography,
   message,
 } from "antd";
 import {
+  BellFilled,
   BellOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   EyeOutlined,
+  GlobalOutlined,
   InboxOutlined,
+  MailOutlined,
+  MessageOutlined,
+  MobileOutlined,
   NotificationOutlined,
   SendOutlined,
+  SolutionOutlined,
   TeamOutlined,
+  UserOutlined,
+  UserSwitchOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import {
@@ -43,59 +48,216 @@ import {
 } from "../utils/notifications";
 import { ALL_ROLE_NAMES, getRoleName } from "../utils/roles";
 import PageHeader from "../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../styles/pageStyles";
+import { iconWell, pageWrapper, sectionPanel } from "../styles/pageStyles";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 
-const { Text, Paragraph, Title } = Typography;
+dayjs.extend(relativeTime);
+
+const { Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
 
+/* ─── Constants ──────────────────────────────────────────────────── */
 const LEVEL_OPTIONS = [
   { label: "All Roles & Users", value: "all" },
   { label: "Role-wise", value: "role" },
   { label: "User Level-wise", value: "user-level" },
   { label: "Specific Users", value: "user" },
 ];
-
-const FILTER_OPTIONS = [{ label: "All", value: "all" }, ...LEVEL_OPTIONS.slice(1)];
+const FILTER_OPTIONS = [{ label: "All Types", value: "all" }, ...LEVEL_OPTIONS.slice(1)];
 const ROLE_OPTIONS = ALL_ROLE_NAMES.map((role) => ({ label: role, value: role }));
 const CREATOR_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Receptionist", "IT Support"];
 
-const formatDate = (value) => {
-  if (!value) return "Just now";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
+const LEVEL_META = {
+  "all":        { icon: <GlobalOutlined />,    color: "#2563EB", label: "Broadcast" },
+  "role":       { icon: <SolutionOutlined />,  color: "#7C3AED", label: "Role"      },
+  "user-level": { icon: <UserSwitchOutlined />,color: "#D97706", label: "Level"     },
+  "user":       { icon: <UserOutlined />,      color: "#16A34A", label: "User"      },
 };
 
+const STATUS_COLOR = {
+  scheduled: "#D97706",
+  draft:     "#94A3B8",
+  failed:    "#DC2626",
+  sent:      "#16A34A",
+};
+
+const CHANNEL_LIST = [
+  { key: "inApp",    label: "In App",   icon: <BellFilled />,    color: "#2563EB" },
+  { key: "email",    label: "Email",    icon: <MailOutlined />,   color: "#16A34A" },
+  { key: "sms",      label: "SMS",      icon: <MobileOutlined />, color: "#D97706" },
+  { key: "whatsapp", label: "WhatsApp", icon: <MessageOutlined />,color: "#25D366" },
+];
+
+/* ─── Helpers ────────────────────────────────────────────────────── */
 const safeText = (value, fallback) => {
   if (value === null || value === undefined || value === "") return fallback;
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
-  if (Array.isArray(value)) return value.map((entry) => safeText(entry, "")).filter(Boolean).join(", ") || fallback;
+  if (Array.isArray(value)) return value.map((e) => safeText(e, "")).filter(Boolean).join(", ") || fallback;
   return fallback;
 };
 
-const getStatusColor = (status) => {
-  if (status === "scheduled") return "orange";
-  if (status === "draft") return "default";
-  if (status === "failed") return "red";
-  return "green";
+const groupByDate = (items) => {
+  const groups = { Today: [], Yesterday: [], "This Week": [], Older: [] };
+  const startOfToday     = dayjs().startOf("day");
+  const startOfYesterday = dayjs().subtract(1, "day").startOf("day");
+  const weekAgo          = dayjs().subtract(7, "day").startOf("day");
+  items.forEach((n) => {
+    const d = dayjs(n.createdAt);
+    if (d.isSame(startOfToday, "day"))     groups["Today"].push(n);
+    else if (d.isSame(startOfYesterday, "day")) groups["Yesterday"].push(n);
+    else if (d.isAfter(weekAgo))           groups["This Week"].push(n);
+    else                                   groups["Older"].push(n);
+  });
+  return Object.entries(groups).filter(([, v]) => v.length > 0);
 };
 
-const getLevelColor = (level) => {
-  if (level === "role") return "geekblue";
-  if (level === "user-level") return "purple";
-  if (level === "user") return "cyan";
-  return "blue";
+/* ─── Channel Toggle (Form-compatible) ───────────────────────────── */
+const ChannelToggle = ({ value = [], onChange }) => {
+  const toggle = (key) => {
+    onChange(value.includes(key) ? value.filter((v) => v !== key) : [...value, key]);
+  };
+  return (
+    <Flex gap={8} wrap="wrap">
+      {CHANNEL_LIST.map((ch) => {
+        const active = value.includes(ch.key);
+        return (
+          <div
+            key={ch.key}
+            onClick={() => toggle(ch.key)}
+            role="button"
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center",
+              gap: 5, padding: "10px 16px", borderRadius: 12,
+              border: `1.5px solid ${active ? ch.color : "var(--border-muted)"}`,
+              background: active ? `${ch.color}14` : "var(--surface)",
+              cursor: "pointer", transition: "all 0.18s",
+              minWidth: 72, userSelect: "none",
+            }}
+          >
+            <span style={{ fontSize: 20, color: active ? ch.color : "var(--text-muted)" }}>
+              {ch.icon}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: active ? ch.color : "var(--text-muted)" }}>
+              {ch.label}
+            </span>
+          </div>
+        );
+      })}
+    </Flex>
+  );
 };
 
+/* ─── Level Avatar ───────────────────────────────────────────────── */
+const LevelAvatar = ({ level, size = 38 }) => {
+  const m = LEVEL_META[level] || LEVEL_META["all"];
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: `${m.color}18`, border: `1.5px solid ${m.color}30`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      color: m.color, fontSize: size * 0.44, flexShrink: 0,
+    }}>
+      {m.icon}
+    </div>
+  );
+};
+
+/* ─── Notification Item ──────────────────────────────────────────── */
+const NotifItem = ({ item, isMobile, onMarkRead }) => {
+  const title    = safeText(item?.title, "Notification");
+  const notifMsg = safeText(item?.message, "No message available");
+  const createdBy = safeText(item?.createdBy, "System");
+  const level    = safeText(item?.level, "all");
+  const status   = safeText(item?.status, "sent");
+  const lm       = LEVEL_META[level] || LEVEL_META["all"];
+
+  const channels = item?.channels
+    ? CHANNEL_LIST.filter((c) => item.channels[c.key])
+    : [];
+
+  return (
+    <div
+      onClick={() => !item.isRead && onMarkRead(item)}
+      style={{
+        display: "flex", gap: 14, alignItems: "flex-start",
+        background: item.isRead ? "var(--surface)" : `linear-gradient(135deg, ${lm.color}05 0%, var(--surface) 100%)`,
+        border: `1px solid ${item.isRead ? "var(--border-muted)" : `${lm.color}30`}`,
+        borderLeft: `4px solid ${item.isRead ? "var(--border-muted)" : lm.color}`,
+        borderRadius: 14, padding: isMobile ? "12px 14px" : "14px 18px",
+        cursor: item.isRead ? "default" : "pointer",
+        transition: "box-shadow 0.18s",
+        boxShadow: item.isRead ? "none" : `0 4px 18px ${lm.color}12`,
+      }}
+    >
+      <LevelAvatar level={level} size={38} />
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Row 1: title + tags */}
+        <Flex align="center" justify="space-between" gap={8} wrap="wrap">
+          <Flex align="center" gap={6}>
+            {!item.isRead && (
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: lm.color, flexShrink: 0, display: "inline-block" }} />
+            )}
+            <Text strong style={{ fontSize: 13, color: "var(--text-primary)", lineHeight: 1.35 }}>
+              {title}
+            </Text>
+          </Flex>
+          <Flex align="center" gap={4} wrap="wrap">
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99,
+              color: lm.color, background: `${lm.color}15`, border: `1px solid ${lm.color}25`,
+            }}>
+              {lm.label}
+            </span>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99,
+              color: STATUS_COLOR[status] || "#94A3B8",
+              background: `${STATUS_COLOR[status] || "#94A3B8"}15`,
+              border: `1px solid ${STATUS_COLOR[status] || "#94A3B8"}25`,
+            }}>
+              {status}
+            </span>
+          </Flex>
+        </Flex>
+
+        {/* Row 2: message */}
+        <Paragraph style={{ margin: "5px 0 6px", fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.55 }}>
+          {notifMsg}
+        </Paragraph>
+
+        {/* Row 3: meta */}
+        <Flex align="center" justify="space-between" wrap="wrap" gap={6}>
+          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+            By {createdBy} · {dayjs(item.createdAt).fromNow()}
+          </Text>
+          {channels.length > 0 && (
+            <Flex gap={5} align="center">
+              {channels.map((c) => (
+                <Tooltip key={c.key} title={c.label}>
+                  <span style={{ color: c.color, fontSize: 12 }}>{c.icon}</span>
+                </Tooltip>
+              ))}
+            </Flex>
+          )}
+        </Flex>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Skeleton ───────────────────────────────────────────────────── */
 const NotifSkeleton = () => (
   <Space direction="vertical" size={10} style={{ width: "100%" }}>
     {[1, 2, 3].map((i) => (
-      <div key={i} style={{ ...sectionPanel, padding: 16, marginBottom: 0 }}>
+      <div key={i} style={{ ...sectionPanel, padding: 16, marginBottom: 0, borderRadius: 14 }}>
         <Skeleton active avatar paragraph={{ rows: 2 }} />
       </div>
     ))}
   </Space>
 );
 
+/* ─── Main Component ─────────────────────────────────────────────── */
 const Notification = () => {
   const screens = useBreakpoint();
   const { user } = useSelector((state) => state.auth);
@@ -108,7 +270,6 @@ const Notification = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const isMobile = !screens.sm;
-  const isTablet = screens.sm && !screens.lg;
   const roleName = getRoleName(user);
   const canCreateNotification = CREATOR_ROLES.includes(roleName);
   const selectedLevel = Form.useWatch("level", form);
@@ -123,16 +284,11 @@ const Notification = () => {
     return visibleNotifications.filter((item) => {
       const itemLevel = safeText(item?.level, "all");
       const matchesLevel = filterLevel === "all" || itemLevel === filterLevel;
-      const matchesSearch =
-        !query ||
-        [
-          safeText(item?.title, "Notification"),
-          safeText(item?.message, "No message available"),
-          safeText(item?.createdBy, "System"),
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
+      const matchesSearch = !query || [
+        safeText(item?.title, "Notification"),
+        safeText(item?.message, ""),
+        safeText(item?.createdBy, ""),
+      ].join(" ").toLowerCase().includes(query);
       return matchesLevel && matchesSearch;
     });
   }, [visibleNotifications, filterLevel, search]);
@@ -152,9 +308,7 @@ const Notification = () => {
     }
   }, []);
 
-  useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+  useEffect(() => { loadNotifications(); }, [loadNotifications]);
 
   const onCreateNotification = async (values) => {
     const payload = createNotificationPayload({
@@ -165,21 +319,20 @@ const Notification = () => {
       targetLevels: values.targetLevels || [],
       targetUserIds: values.targetUserIds || [],
       channels: {
-        inApp: values.channels?.includes("inApp") ?? true,
-        email: values.channels?.includes("email"),
-        sms: values.channels?.includes("sms"),
+        inApp:    values.channels?.includes("inApp") ?? true,
+        email:    values.channels?.includes("email"),
+        sms:      values.channels?.includes("sms"),
         whatsapp: values.channels?.includes("whatsapp"),
       },
       scheduledAt: values.scheduledAt?.toISOString?.() || null,
       status: values.saveAsDraft ? "draft" : undefined,
     });
-
     setSubmitting(true);
     try {
       const created = await saveNotifications(payload);
       setAllNotifications((prev) => [created, ...prev]);
       form.resetFields();
-      message.success("Notification created successfully.");
+      message.success("Notification published successfully.");
       loadNotifications();
     } catch (error) {
       message.error(error?.response?.data?.message || "Failed to create notification");
@@ -194,7 +347,7 @@ const Notification = () => {
       const updated = await markNotificationAsRead(notif._id);
       setAllNotifications((prev) => prev.map((item) => (item._id === notif._id ? updated : item)));
     } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to mark notification as read");
+      message.error(error?.response?.data?.message || "Failed to mark as read");
     }
   };
 
@@ -202,47 +355,17 @@ const Notification = () => {
     try {
       await markAllNotificationsAsRead();
       await loadNotifications();
-      message.success("All visible notifications marked as read.");
+      message.success("All notifications marked as read.");
     } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to mark all notifications as read");
+      message.error(error?.response?.data?.message || "Failed to mark all as read");
     }
   };
 
-  const statCards = [
-    {
-      title: "Visible",
-      value: visibleNotifications.length,
-      icon: <InboxOutlined />,
-      color: "#14B8A6",
-      helper: "Assigned to you",
-    },
-    {
-      title: "Unread",
-      value: unreadCount,
-      icon: <BellOutlined />,
-      color: "#F59E0B",
-      helper: "Needs attention",
-    },
-    {
-      title: "Scheduled",
-      value: analytics.scheduled || 0,
-      icon: <CalendarOutlined />,
-      color: "#2563EB",
-      helper: "Planned delivery",
-    },
-    {
-      title: "Opened",
-      value: analytics.opened || 0,
-      icon: <EyeOutlined />,
-      color: "#22C55E",
-      helper: "Engagement",
-    },
-  ];
-
+  /* ── Conditional target fields ──────────────────────────────────── */
   const renderConditionalTargetFields = () => {
     if (selectedLevel === "role") {
       return (
-        <Col xs={24} lg={12}>
+        <Col xs={24}>
           <Form.Item label="Target roles" name="targetRoles" rules={[{ required: true, message: "Select at least one role" }]}>
             <Select mode="multiple" options={ROLE_OPTIONS} placeholder="Choose one or more roles" maxTagCount="responsive" />
           </Form.Item>
@@ -252,14 +375,14 @@ const Notification = () => {
     if (selectedLevel === "user-level") {
       return (
         <>
-          <Col xs={24} lg={12}>
+          <Col xs={24} md={12}>
             <Form.Item label="Target roles" name="targetRoles" rules={[{ required: true, message: "Select at least one role" }]}>
-              <Select mode="multiple" options={ROLE_OPTIONS} placeholder="Choose roles for this user level" maxTagCount="responsive" />
+              <Select mode="multiple" options={ROLE_OPTIONS} placeholder="Choose roles" maxTagCount="responsive" />
             </Form.Item>
           </Col>
-          <Col xs={24} lg={12}>
-            <Form.Item label="User levels" name="targetLevels" rules={[{ required: true, message: "Enter at least one user level" }]}>
-              <Select mode="tags" tokenSeparators={[","]} placeholder="Example: Class 10, Section A" maxTagCount="responsive" />
+          <Col xs={24} md={12}>
+            <Form.Item label="User levels" name="targetLevels" rules={[{ required: true, message: "Enter at least one level" }]}>
+              <Select mode="tags" tokenSeparators={[","]} placeholder="e.g. Class 10, Section A" maxTagCount="responsive" />
             </Form.Item>
           </Col>
         </>
@@ -276,22 +399,38 @@ const Notification = () => {
     }
     return (
       <Col xs={24}>
-        <Alert
-          type="success"
-          showIcon
-          message="Broadcasting to everyone"
-          description="This notification will be visible to every role and user account in the portal."
-          style={{ borderRadius: 12 }}
-        />
+        <div style={{
+          background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 12,
+          padding: "10px 16px", display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <GlobalOutlined style={{ color: "#2563EB", fontSize: 16 }} />
+          <div>
+            <Text strong style={{ fontSize: 12, color: "#1D4ED8", display: "block" }}>Broadcasting to everyone</Text>
+            <Text style={{ fontSize: 11, color: "#3B82F6" }}>
+              Visible to every role and user account in the portal.
+            </Text>
+          </div>
+        </div>
       </Col>
     );
   };
+
+  /* ── Stat cards ─────────────────────────────────────────────────── */
+  const STAT_CARDS = [
+    { title: "Visible",   value: visibleNotifications.length, icon: <InboxOutlined />,   color: "#14B8A6", helper: "Assigned to you"    },
+    { title: "Unread",    value: unreadCount,                 icon: <BellOutlined />,    color: "#F59E0B", helper: "Needs attention"     },
+    { title: "Scheduled", value: analytics.scheduled || 0,   icon: <CalendarOutlined />, color: "#2563EB", helper: "Planned delivery"   },
+    { title: "Opened",    value: analytics.opened || 0,      icon: <EyeOutlined />,     color: "#22C55E", helper: "Engagement"          },
+  ];
+
+  /* ── Grouped notifications ──────────────────────────────────────── */
+  const groupedNotifications = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
 
   return (
     <>
       <PageHeader
         title="Notifications"
-        subtitle="Role-wise, user-level, and user-specific notification center for every portal role."
+        subtitle="Role-wise, user-level, and user-specific notification center."
         icon={<NotificationOutlined />}
         extra={
           <Space wrap>
@@ -303,45 +442,39 @@ const Notification = () => {
                 Mark all read
               </Button>
             )}
-            {canCreateNotification && (
-              <Button type="primary" icon={<SendOutlined />} onClick={() => form.scrollToField("title")}>
-                Create Broadcast
-              </Button>
-            )}
           </Space>
         }
       />
 
       <div style={pageWrapper}>
-        {/* Stat Cards */}
-        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
-          {statCards.map((stat) => (
-            <Col xs={12} md={6} key={stat.title}>
-              <Card
-                style={{
-                  borderRadius: 14,
-                  border: "1px solid var(--border-muted)",
-                  borderTop: `4px solid ${stat.color}`,
-                }}
-                styles={{ body: { padding: isMobile ? "14px 16px" : "16px 20px" } }}
-              >
+
+        {/* ── Stat cards ──────────────────────────────────────────── */}
+        <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+          {STAT_CARDS.map((s) => (
+            <Col xs={12} md={6} key={s.title}>
+              <div style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border-muted)",
+                borderTop: `4px solid ${s.color}`,
+                borderRadius: 14, padding: isMobile ? "12px 14px" : "16px 18px",
+              }}>
                 <Flex align="center" gap={12}>
-                  <div style={iconWell(stat.color, isMobile ? 38 : 44)}>
-                    <span style={{ fontSize: isMobile ? 17 : 20 }}>{stat.icon}</span>
+                  <div style={iconWell(s.color, isMobile ? 36 : 42)}>
+                    <span style={{ fontSize: isMobile ? 16 : 19 }}>{s.icon}</span>
                   </div>
                   <div>
                     <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
-                      {stat.value}
+                      {s.value}
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>
-                      {stat.title}
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>
+                      {s.title}
                     </div>
                     {!isMobile && (
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{stat.helper}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{s.helper}</div>
                     )}
                   </div>
                 </Flex>
-              </Card>
+              </div>
             </Col>
           ))}
         </Row>
@@ -355,19 +488,20 @@ const Notification = () => {
           />
         )}
 
-        {/* Create / Broadcast Form */}
+        {/* ── Create / Broadcast Form ──────────────────────────────── */}
         {canCreateNotification && (
           <div style={{ ...sectionPanel, marginBottom: 20 }}>
-            <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-              <div style={iconWell("#7C3AED", 36)}>
-                <SendOutlined style={{ fontSize: 16 }} />
+            {/* Form header */}
+            <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+              <div style={iconWell("#7C3AED", 38)}>
+                <SendOutlined style={{ fontSize: 17 }} />
               </div>
               <div>
                 <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block" }}>
                   Create / Broadcast Notification
                 </Text>
                 <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                  Compose an announcement, choose audience, and send now or schedule for later.
+                  Compose an announcement, choose audience, and send now or schedule.
                 </Text>
               </div>
             </Flex>
@@ -379,61 +513,79 @@ const Notification = () => {
               initialValues={{ level: "all", channels: ["inApp"] }}
               requiredMark="optional"
             >
+              {/* Section: Audience */}
+              <Divider orientation="left" orientationMargin={0}>
+                <Text style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Audience
+                </Text>
+              </Divider>
               <Row gutter={[14, 0]}>
                 <Col xs={24} md={8}>
-                  <Form.Item label="Target type" name="level" rules={[{ required: true, message: "Please select target type" }]}>
+                  <Form.Item label="Target type" name="level" rules={[{ required: true, message: "Select target type" }]}>
                     <Select options={LEVEL_OPTIONS} placeholder="Select audience type" />
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={16}>
-                  <Form.Item label="Notification title" name="title" rules={[{ required: true, message: "Please enter title" }]}>
-                    <Input placeholder="Example: Exam timetable published" />
-                  </Form.Item>
-                </Col>
-
                 {renderConditionalTargetFields()}
+              </Row>
 
+              {/* Section: Content */}
+              <Divider orientation="left" orientationMargin={0}>
+                <Text style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Content
+                </Text>
+              </Divider>
+              <Row gutter={[14, 0]}>
                 <Col xs={24}>
-                  <Form.Item label="Message" name="message" rules={[{ required: true, message: "Please enter message" }]}>
-                    <Input.TextArea rows={isMobile ? 4 : 4} placeholder="Write a concise message with all important details for recipients..." />
+                  <Form.Item label="Title" name="title" rules={[{ required: true, message: "Title is required" }]}>
+                    <Input placeholder="e.g. Exam timetable published" maxLength={160} size="large" />
                   </Form.Item>
                 </Col>
-
-                <Col xs={24} lg={12}>
-                  <Form.Item label="Delivery channels" name="channels" rules={[{ required: true, message: "Select at least one channel" }]}>
-                    <Checkbox.Group style={{ width: "100%" }}>
-                      <Row gutter={[8, 8]}>
-                        {[
-                          { label: "In App", value: "inApp" },
-                          { label: "Email", value: "email" },
-                          { label: "SMS", value: "sms" },
-                          { label: "WhatsApp", value: "whatsapp" },
-                        ].map((ch) => (
-                          <Col xs={12} sm={6} lg={12} key={ch.value}>
-                            <Checkbox value={ch.value}>{ch.label}</Checkbox>
-                          </Col>
-                        ))}
-                      </Row>
-                    </Checkbox.Group>
-                  </Form.Item>
-                </Col>
-                <Col xs={24} lg={12}>
-                  <Form.Item label="Schedule delivery" name="scheduledAt" extra="Leave empty to publish immediately.">
-                    <DatePicker showTime style={{ width: "100%" }} placeholder="Choose date and time" />
+                <Col xs={24}>
+                  <Form.Item label="Message" name="message" rules={[{ required: true, message: "Message is required" }]}>
+                    <Input.TextArea rows={3} placeholder="Write a concise message with all important details…" maxLength={2000} />
                   </Form.Item>
                 </Col>
               </Row>
 
+              {/* Section: Delivery */}
+              <Divider orientation="left" orientationMargin={0}>
+                <Text style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Delivery
+                </Text>
+              </Divider>
+              <Row gutter={[14, 0]}>
+                <Col xs={24} md={14}>
+                  <Form.Item
+                    label="Channels"
+                    name="channels"
+                    rules={[{ required: true, validator: (_, v) => v?.length ? Promise.resolve() : Promise.reject("Select at least one channel") }]}
+                  >
+                    <ChannelToggle />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={10}>
+                  <Form.Item label="Schedule (optional)" name="scheduledAt" extra="Leave empty to send immediately.">
+                    <DatePicker showTime style={{ width: "100%" }} placeholder="Choose date & time" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Submit row */}
               <Flex
-                align="center"
-                justify="space-between"
-                gap={12}
-                style={{ flexDirection: isMobile ? "column-reverse" : "row", paddingTop: 4 }}
+                align="center" justify="space-between" gap={12} wrap="wrap"
+                style={{ paddingTop: 4, flexDirection: isMobile ? "column-reverse" : "row" }}
               >
-                <Form.Item name="saveAsDraft" valuePropName="checked" noStyle>
-                  <Checkbox>Save as draft instead of publishing now</Checkbox>
-                </Form.Item>
-                <Button type="primary" htmlType="submit" icon={<SendOutlined />} loading={submitting} block={isMobile}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "var(--text-secondary)" }}>
+                  <Form.Item name="saveAsDraft" valuePropName="checked" noStyle>
+                    <input type="checkbox" style={{ width: 15, height: 15, accentColor: "#7C3AED" }} />
+                  </Form.Item>
+                  Save as draft instead of publishing now
+                </label>
+                <Button
+                  type="primary" htmlType="submit"
+                  icon={<SendOutlined />} loading={submitting}
+                  size="large" block={isMobile}
+                >
                   Publish Notification
                 </Button>
               </Flex>
@@ -441,19 +593,31 @@ const Notification = () => {
           </div>
         )}
 
-        {/* Notifications List */}
+        {/* ── Notifications List ───────────────────────────────────── */}
         <div style={sectionPanel}>
-          <Flex vertical={isMobile || isTablet} gap={12} align={isMobile || isTablet ? "stretch" : "center"} justify="space-between" style={{ marginBottom: 16 }}>
+
+          {/* List header */}
+          <Flex
+            vertical={isMobile} gap={10}
+            align={isMobile ? "stretch" : "center"}
+            justify="space-between"
+            style={{ marginBottom: 16 }}
+          >
             <Flex align="center" gap={8}>
-              <Text strong style={{ fontSize: 15, color: "var(--text-primary)" }}>
-                My Notifications
-              </Text>
-              <Badge count={unreadCount} overflowCount={99} />
+              <Text strong style={{ fontSize: 15, color: "var(--text-primary)" }}>My Notifications</Text>
+              {unreadCount > 0 && (
+                <span style={{
+                  background: "#2563EB", color: "#fff", fontSize: 11, fontWeight: 700,
+                  borderRadius: 99, padding: "1px 8px", lineHeight: "20px",
+                }}>
+                  {unreadCount}
+                </span>
+              )}
             </Flex>
             <Flex gap={8} wrap="wrap" align="center" justify={isMobile ? "flex-start" : "flex-end"}>
               <Input.Search
                 allowClear
-                placeholder="Search notifications"
+                placeholder="Search notifications…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ width: isMobile ? "100%" : 220 }}
@@ -467,78 +631,52 @@ const Notification = () => {
             </Flex>
           </Flex>
 
+          {/* List body */}
           {loading ? (
             <NotifSkeleton />
           ) : filteredNotifications.length === 0 ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                search || filterLevel !== "all"
-                  ? "No notifications match your search or filter."
-                  : "No notifications available for your account."
-              }
-              style={{ padding: isMobile ? "32px 0" : "56px 0" }}
-            />
+            <div style={{ textAlign: "center", padding: "48px 0 32px" }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>🔔</div>
+              <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block", marginBottom: 4 }}>
+                {search || filterLevel !== "all" ? "No matching notifications" : "You're all caught up!"}
+              </Text>
+              <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                {search || filterLevel !== "all"
+                  ? "Try adjusting your search or filter."
+                  : "No notifications available for your account right now."}
+              </Text>
+              {unreadCount === 0 && filteredNotifications.length === 0 && (search || filterLevel !== "all") && (
+                <Button size="small" style={{ marginTop: 12 }} onClick={() => { setSearch(""); setFilterLevel("all"); }}>
+                  Clear filters
+                </Button>
+              )}
+            </div>
           ) : (
-            <List
-              split={false}
-              dataSource={filteredNotifications}
-              rowKey={(item) => item._id || item.id}
-              renderItem={(item) => {
-                const title = safeText(item?.title, "Notification");
-                const notifMsg = safeText(item?.message, "No message available");
-                const createdBy = safeText(item?.createdBy, "System");
-                const level = safeText(item?.level, "all");
-                const status = safeText(item?.status, "sent");
+            <Space direction="vertical" size={20} style={{ width: "100%" }}>
+              {groupedNotifications.map(([label, items]) => (
+                <div key={label}>
+                  {/* Date group header */}
+                  <Flex align="center" gap={10} style={{ marginBottom: 10 }}>
+                    <Text style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>
+                      {label}
+                    </Text>
+                    <div style={{ flex: 1, height: 1, background: "var(--border-muted)" }} />
+                    <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{items.length}</Text>
+                  </Flex>
 
-                return (
-                  <List.Item style={{ padding: "0 0 10px" }}>
-                    <div
-                      onClick={() => handleMarkRead(item)}
-                      style={{
-                        width: "100%",
-                        cursor: item.isRead ? "default" : "pointer",
-                        background: item.isRead ? "var(--surface)" : "linear-gradient(90deg, rgba(37,99,235,0.04) 0%, var(--surface) 60%)",
-                        borderLeft: item.isRead ? "4px solid transparent" : "4px solid #2563EB",
-                        borderRadius: 14,
-                        border: "1px solid var(--border-muted)",
-                        borderLeftWidth: 4,
-                        borderLeftColor: item.isRead ? "var(--border-muted)" : "#2563EB",
-                        padding: isMobile ? 14 : 16,
-                        boxShadow: item.isRead ? "0 1px 4px rgba(0,0,0,0.03)" : "0 4px 14px rgba(37,99,235,0.08)",
-                        transition: "box-shadow 0.2s ease",
-                      }}
-                    >
-                      <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                        <Flex vertical={isMobile} gap={8} justify="space-between" align={isMobile ? "flex-start" : "center"}>
-                          <Flex align="flex-start" gap={10}>
-                            <Badge status={item.isRead ? "default" : "processing"} style={{ marginTop: 7 }} />
-                            <Space direction="vertical" size={2}>
-                              <Text strong style={{ fontSize: isMobile ? 14 : 15, color: "var(--text-primary)" }}>
-                                {title}
-                              </Text>
-                              <Text type="secondary" style={{ fontSize: 12 }}>
-                                By {createdBy} • {formatDate(item.createdAt)}
-                              </Text>
-                            </Space>
-                          </Flex>
-                          <Flex gap={4} wrap="wrap" align="center" justify={isMobile ? "flex-start" : "flex-end"}>
-                            <Tag color={getLevelColor(level)} style={{ borderRadius: 99, fontSize: 11 }}>{level}</Tag>
-                            <Tag color={getStatusColor(status)} style={{ borderRadius: 99, fontSize: 11 }}>{status}</Tag>
-                            {!item.isRead && (
-                              <Tag color="processing" style={{ borderRadius: 99, fontSize: 11 }}>Unread</Tag>
-                            )}
-                          </Flex>
-                        </Flex>
-                        <Paragraph style={{ marginBottom: 0, fontSize: 13, color: "var(--text-secondary)" }}>
-                          {notifMsg}
-                        </Paragraph>
-                      </Space>
-                    </div>
-                  </List.Item>
-                );
-              }}
-            />
+                  <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                    {items.map((item) => (
+                      <NotifItem
+                        key={item._id || item.id}
+                        item={item}
+                        isMobile={isMobile}
+                        onMarkRead={handleMarkRead}
+                      />
+                    ))}
+                  </Space>
+                </div>
+              ))}
+            </Space>
           )}
         </div>
       </div>
