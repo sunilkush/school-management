@@ -1,26 +1,41 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
-  Card,
   Col,
   Descriptions,
+  Flex,
   Form,
   Input,
   InputNumber,
-  message,
   Modal,
   Popconfirm,
   Row,
   Select,
   Space,
-  Statistic,
   Switch,
   Table,
   Tabs,
   Tag,
+  Typography,
+  message,
 } from "antd";
-import { Download, RefreshCw, ShieldCheck } from "lucide-react";
+import {
+  CalendarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloudDownloadOutlined,
+  DatabaseOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+  HistoryOutlined,
+  PlayCircleOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SafetyCertificateOutlined,
+  ScheduleOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   approveRestoreJob,
@@ -38,64 +53,79 @@ import {
   runRestoreJob,
   toggleBackupSchedule,
 } from "../../../features/systemBackupSlice";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
-const moduleOptions = [
-  "users_roles",
-  "students",
-  "fees",
-  "exams",
-  "documents",
-  "audit_logs",
+const { Text } = Typography;
+
+/* ─── Constants ──────────────────────────────────────────────────── */
+const MODULE_OPTIONS = [
+  "users_roles", "students", "fees", "exams", "documents", "audit_logs",
 ];
 
-const statusColor = {
-  queued: "default",
-  running: "processing",
-  success: "success",
-  failed: "error",
-  cancelled: "warning",
-  pending_approval: "warning",
+const STATUS_META = {
+  queued:           { color: "#94A3B8", bg: "#F1F5F9",  label: "Queued"           },
+  running:          { color: "#2563EB", bg: "#EFF6FF",  label: "Running"          },
+  success:          { color: "#16A34A", bg: "#F0FDF4",  label: "Success"          },
+  failed:           { color: "#DC2626", bg: "#FEF2F2",  label: "Failed"           },
+  cancelled:        { color: "#D97706", bg: "#FFFBEB",  label: "Cancelled"        },
+  pending_approval: { color: "#7C3AED", bg: "#F5F3FF",  label: "Pending Approval" },
+};
+
+const StatusTag = ({ status }) => {
+  const m = STATUS_META[status] || { color: "#94A3B8", bg: "#F1F5F9", label: status || "--" };
+  return (
+    <span style={{
+      fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99,
+      color: m.color, background: m.bg, border: `1px solid ${m.color}30`,
+      display: "inline-block",
+    }}>
+      {m.label}
+    </span>
+  );
 };
 
 const bytesToReadable = (bytes = 0) => {
   const size = Number(bytes || 0);
   if (!size) return "0 B";
-
   const units = ["B", "KB", "MB", "GB", "TB"];
-  const index = Math.min(
-    Math.floor(Math.log(size) / Math.log(1024)),
-    units.length - 1
-  );
-  const value = size / 1024 ** index;
-
-  return `${value.toFixed(value > 10 ? 1 : 2)} ${units[index]}`;
+  const idx = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+  const value = size / 1024 ** idx;
+  return `${value.toFixed(value > 10 ? 1 : 2)} ${units[idx]}`;
 };
 
-const Backups = () => {
+const fmtDate = (v) => (v ? dayjs(v).format("DD MMM YYYY, HH:mm") : "--");
+
+/* ─── Component ──────────────────────────────────────────────────── */
+export default function Backups() {
   const dispatch = useDispatch();
 
   const {
-    summary = {},
-    backups = [],
-    schedules = [],
+    summary     = {},
+    backups     = [],
+    schedules   = [],
     restoreJobs = [],
-    auditLogs = [],
-    loading = false,
-    actionLoading = false,
-    error = null,
+    auditLogs   = [],
+    loading        = false,
+    actionLoading  = false,
+    error          = null,
     successMessage = "",
-    downloadLink = null,
-  } = useSelector((state) => state.systemBackup || {});
+    downloadLink   = null,
+  } = useSelector((s) => s.systemBackup || {});
 
-  const [manualForm] = Form.useForm();
+  const [manualForm]   = Form.useForm();
   const [scheduleForm] = Form.useForm();
-  const [restoreForm] = Form.useForm();
+  const [restoreForm]  = Form.useForm();
 
-  // MFA token state for restore approval — replaces the hardcoded "123456"
-  const [mfaToken, setMfaToken] = useState("");
-  const [approveModalOpen, setApproveModalOpen] = useState(false);
-  const [pendingApproveId, setPendingApproveId] = useState(null);
+  const [mfaToken,         setMfaToken]         = useState("");
+  const [approveModalOpen, setApproveModalOpen]  = useState(false);
+  const [pendingApproveId, setPendingApproveId]  = useState(null);
+  const [activeTab,        setActiveTab]         = useState("manual");
 
+  /* ── Bootstrap ──────────────────────────────────────────────────── */
   const bootstrap = useCallback(() => {
     dispatch(fetchBackupSummary());
     dispatch(fetchBackups());
@@ -104,20 +134,16 @@ const Backups = () => {
     dispatch(fetchBackupAuditLogs());
   }, [dispatch]);
 
-  useEffect(() => {
-    bootstrap();
-  }, [bootstrap]);
+  useEffect(() => { bootstrap(); }, [bootstrap]);
 
   useEffect(() => {
     if (!successMessage) return;
-
     message.success(successMessage);
     dispatch(clearSystemBackupMessages());
   }, [dispatch, successMessage]);
 
   useEffect(() => {
     if (!error) return;
-
     message.error(typeof error === "string" ? error : "Something went wrong");
     dispatch(clearSystemBackupMessages());
   }, [dispatch, error]);
@@ -125,253 +151,17 @@ const Backups = () => {
   useEffect(() => {
     if (downloadLink?.downloadUrl) {
       window.open(downloadLink.downloadUrl, "_blank", "noopener,noreferrer");
+      dispatch(clearSystemBackupMessages());
     }
-  }, [downloadLink]);
+  }, [downloadLink, dispatch]);
 
-  const summaryCards = useMemo(
-    () => [
-      {
-        title: "Total Backups",
-        value: summary?.totalBackups || 0,
-      },
-      {
-        title: "Successful Backups",
-        value: summary?.successfulBackups || 0,
-      },
-      {
-        title: "Failed Backups",
-        value: summary?.failedBackups || 0,
-      },
-      {
-        title: "Storage Used",
-        value: bytesToReadable(summary?.storageUsed || 0),
-      },
-      {
-        title: "Last Backup",
-        value: summary?.lastBackupTime
-          ? new Date(summary.lastBackupTime).toLocaleString()
-          : "--",
-      },
-      {
-        title: "Next Backup",
-        value: summary?.nextScheduledBackup
-          ? new Date(summary.nextScheduledBackup).toLocaleString()
-          : "--",
-      },
-      {
-        title: "Pending Restores",
-        value: summary?.pendingRestores || 0,
-      },
-      {
-        title: "Backup Health",
-        value: summary?.backupHealthStatus || "unknown",
-        formatter: (value) => (
-          <Tag color={value === "healthy" ? "green" : "orange"}>
-            {String(value || "unknown").toUpperCase()}
-          </Tag>
-        ),
-      },
-    ],
-    [summary]
-  );
-
-  const backupColumns = [
-    {
-      title: "Backup ID",
-      dataIndex: "backupNo",
-      width: 180,
-      render: (value) => value || "--",
-    },
-    {
-      title: "Type",
-      dataIndex: "type",
-      render: (value) => <Tag>{value || "--"}</Tag>,
-    },
-    {
-      title: "Scope",
-      dataIndex: "scope",
-      render: (value) => value || "--",
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <Tag color={statusColor[status] || "default"}>{status || "--"}</Tag>
-      ),
-    },
-    {
-      title: "File Size",
-      dataIndex: "fileSize",
-      render: (value) => bytesToReadable(value),
-    },
-    {
-      title: "Created At",
-      dataIndex: "createdAt",
-      render: (value) => (value ? new Date(value).toLocaleString() : "--"),
-    },
-    {
-      title: "Actions",
-      width: 170,
-      render: (_, row) => (
-        <Space>
-          <Button
-            type="link"
-            icon={<Download size={16} />}
-            disabled={!row?._id}
-            onClick={() => dispatch(getBackupDownloadLink(row._id))}
-          />
-          <Popconfirm
-            title="Delete backup permanently?"
-            onConfirm={() => dispatch(deleteBackup(row._id))}
-            disabled={!row?._id}
-          >
-            <Button danger type="link" disabled={!row?._id}>
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
-  const scheduleColumns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      render: (value) => value || "--",
-    },
-    {
-      title: "Type",
-      dataIndex: "type",
-      render: (value) => <Tag>{value || "--"}</Tag>,
-    },
-    {
-      title: "Frequency",
-      dataIndex: "frequency",
-      render: (value) => value || "--",
-    },
-    {
-      title: "Time",
-      dataIndex: "time",
-      render: (value) => value || "--",
-    },
-    {
-      title: "Retention",
-      dataIndex: "retentionDays",
-      render: (value) => `${value || 0} days`,
-    },
-    {
-      title: "Active",
-      dataIndex: "isActive",
-      render: (value, row) => (
-        <Switch
-          checked={Boolean(value)}
-          disabled={!row?._id}
-          onChange={(checked) =>
-            dispatch(toggleBackupSchedule({ id: row._id, isActive: checked }))
-          }
-        />
-      ),
-    },
-  ];
-
-  // Open the MFA approval modal for a specific restore job
-  const openApproveModal = (id) => {
-    setPendingApproveId(id);
-    setMfaToken("");
-    setApproveModalOpen(true);
-  };
-
-  const submitApproval = () => {
-    if (!mfaToken || mfaToken.trim().length === 0) {
-      message.warning("Please enter your MFA verification code.");
-      return;
-    }
-    dispatch(approveRestoreJob({ id: pendingApproveId, mfaToken: mfaToken.trim() }));
-    setApproveModalOpen(false);
-    setPendingApproveId(null);
-    setMfaToken("");
-  };
-
-  const restoreColumns = [
-    {
-      title: "Backup",
-      dataIndex: ["backupId", "backupNo"],
-      render: (value) => value || "--",
-    },
-    {
-      title: "Type",
-      dataIndex: "restoreType",
-      render: (value) => value || "--",
-    },
-    {
-      title: "Dry Run",
-      dataIndex: "dryRun",
-      render: (value) => (value ? "Yes" : "No"),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (value) => (
-        <Tag color={statusColor[value] || "default"}>{value || "--"}</Tag>
-      ),
-    },
-    {
-      title: "Actions",
-      render: (_, row) => (
-        <Space>
-          <Button
-            size="small"
-            disabled={!row?._id || row.status === "success"}
-            onClick={() => openApproveModal(row._id)}
-          >
-            Approve
-          </Button>
-          <Button
-            size="small"
-            type="primary"
-            disabled={!row?._id || row.status === "success"}
-            onClick={() => dispatch(runRestoreJob(row._id))}
-          >
-            Run
-          </Button>
-        </Space>
-      ),
-    },
-  ];
-
-  const auditColumns = [
-    {
-      title: "Action",
-      dataIndex: "action",
-      render: (value) => <Tag>{value || "--"}</Tag>,
-    },
-    {
-      title: "Actor",
-      dataIndex: ["actorId", "name"],
-      render: (value) => value || "System",
-    },
-    {
-      title: "Message",
-      dataIndex: "message",
-      render: (value) => value || "--",
-    },
-    {
-      title: "IP / Device",
-      render: (_, row) => `${row?.ipAddress || "--"} / ${row?.userAgent || "--"}`,
-    },
-    {
-      title: "Time",
-      dataIndex: "createdAt",
-      render: (value) => (value ? new Date(value).toLocaleString() : "--"),
-    },
-  ];
-
+  /* ── Handlers ───────────────────────────────────────────────────── */
   const onManualSubmit = async (values) => {
     await dispatch(createManualBackup(values));
     dispatch(fetchBackups());
     dispatch(fetchBackupSummary());
     manualForm.resetFields();
+    setActiveTab("history");
   };
 
   const onScheduleSubmit = async (values) => {
@@ -388,398 +178,564 @@ const Backups = () => {
     dispatch(fetchBackupSummary());
   };
 
-  return (
-    <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-          <ShieldCheck className="text-indigo-600" />
-          System Backups Module (Super Admin)
-        </h1>
+  const openApproveModal = (id) => {
+    setPendingApproveId(id);
+    setMfaToken("");
+    setApproveModalOpen(true);
+  };
 
-        <Button icon={<RefreshCw size={14} />} onClick={bootstrap} loading={loading}>
-          Refresh
-        </Button>
-      </div>
+  const submitApproval = () => {
+    if (!mfaToken || mfaToken.trim().length < 6) {
+      message.warning("Enter a valid MFA verification code (min 6 digits).");
+      return;
+    }
+    dispatch(approveRestoreJob({ id: pendingApproveId, mfaToken: mfaToken.trim() }));
+    setApproveModalOpen(false);
+    setPendingApproveId(null);
+    setMfaToken("");
+    dispatch(fetchRestoreJobs());
+  };
 
-      {error ? (
-        <Alert
-          type="error"
-          message={typeof error === "string" ? error : "Something went wrong"}
-          showIcon
+  /* ── Stat cards ─────────────────────────────────────────────────── */
+  const statCards = useMemo(() => [
+    { label: "Total Backups",   value: summary.totalBackups     || 0,                         color: "#2563EB", icon: <DatabaseOutlined />,        emoji: "🗄️" },
+    { label: "Successful",      value: summary.successfulBackups || 0,                         color: "#16A34A", icon: <CheckCircleOutlined />,      emoji: "✅" },
+    { label: "Failed",          value: summary.failedBackups     || 0,                         color: "#DC2626", icon: <ExclamationCircleOutlined />, emoji: "❌" },
+    { label: "Storage Used",    value: bytesToReadable(summary.storageUsed),                   color: "#7C3AED", icon: <CloudDownloadOutlined />,     emoji: "💾" },
+    { label: "Last Backup",     value: summary.lastBackupTime    ? dayjs(summary.lastBackupTime).fromNow() : "--",    color: "#0EA5E9", icon: <HistoryOutlined />,          emoji: "🕐" },
+    { label: "Next Scheduled",  value: summary.nextScheduledBackup ? fmtDate(summary.nextScheduledBackup) : "--",     color: "#F59E0B", icon: <ScheduleOutlined />,         emoji: "📅" },
+    { label: "Pending Restores",value: summary.pendingRestores   || 0,                         color: "#D97706", icon: <ClockCircleOutlined />,      emoji: "⏳" },
+    {
+      label: "Backup Health",
+      value: (summary.backupHealthStatus || "unknown").toUpperCase(),
+      color: summary.backupHealthStatus === "healthy" ? "#16A34A" : "#D97706",
+      icon: <SafetyCertificateOutlined />,
+      emoji: summary.backupHealthStatus === "healthy" ? "🟢" : "🟡",
+    },
+  ], [summary]);
+
+  /* ── Columns ────────────────────────────────────────────────────── */
+  const backupColumns = [
+    { title: "Backup ID",  dataIndex: "backupNo",  width: 180, render: (v) => <Text code style={{ fontSize: 12 }}>{v || "--"}</Text> },
+    { title: "Type",       dataIndex: "type",       width: 100, render: (v) => <Tag style={{ borderRadius: 99 }}>{v || "--"}</Tag> },
+    { title: "Scope",      dataIndex: "scope",      width: 100, render: (v) => v || "--" },
+    { title: "Status",     dataIndex: "status",     width: 140, render: (v) => <StatusTag status={v} /> },
+    { title: "File Size",  dataIndex: "fileSize",   width: 100, render: (v) => bytesToReadable(v) },
+    { title: "Created At", dataIndex: "createdAt",  width: 160, render: fmtDate },
+    {
+      title: "Actions", width: 120,
+      render: (_, row) => (
+        <Space size={4}>
+          <Button
+            size="small" type="link" icon={<CloudDownloadOutlined />}
+            disabled={!row?._id || row.status !== "success"}
+            title="Download backup"
+            onClick={() => dispatch(getBackupDownloadLink(row._id))}
+          />
+          <Popconfirm title="Delete backup permanently?" onConfirm={() => dispatch(deleteBackup(row._id))} disabled={!row?._id}>
+            <Button size="small" danger type="link" icon={<DeleteOutlined />} disabled={!row?._id} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const scheduleColumns = [
+    { title: "Name",      dataIndex: "name",          render: (v) => v || "--" },
+    { title: "Type",      dataIndex: "type",           render: (v) => <Tag style={{ borderRadius: 99 }}>{v || "--"}</Tag> },
+    { title: "Frequency", dataIndex: "frequency",      render: (v) => v || "--" },
+    { title: "Time (UTC)",dataIndex: "time",           render: (v) => v || "--" },
+    { title: "Retention", dataIndex: "retentionDays",  render: (v) => `${v || 0} days` },
+    {
+      title: "Active", dataIndex: "isActive",
+      render: (value, row) => (
+        <Switch
+          checked={Boolean(value)} size="small"
+          disabled={!row?._id}
+          onChange={(checked) => dispatch(toggleBackupSchedule({ id: row._id, isActive: checked }))}
         />
-      ) : null}
+      ),
+    },
+    { title: "Created", dataIndex: "createdAt", render: fmtDate },
+  ];
 
-      <Row gutter={[16, 16]}>
-        {summaryCards.map((item) => (
-          <Col xs={24} sm={12} lg={6} key={item.title}>
-            <Card>
-              <Statistic
-                title={item.title}
-                value={item.value}
-                formatter={item.formatter}
-              />
-            </Card>
-          </Col>
-        ))}
-      </Row>
+  const restoreColumns = [
+    {
+      title: "Backup", dataIndex: ["backupId", "backupNo"],
+      render: (v, r) => <Text code style={{ fontSize: 12 }}>{v || r?.backupId?._id?.slice(-8) || "--"}</Text>,
+    },
+    { title: "Type",    dataIndex: "restoreType", render: (v) => v || "--" },
+    { title: "Dry Run", dataIndex: "dryRun",      render: (v) => (v ? <Tag color="orange">Dry Run</Tag> : <Tag color="green">Live</Tag>) },
+    { title: "Status",  dataIndex: "status",      render: (v) => <StatusTag status={v} /> },
+    { title: "Requested", dataIndex: "createdAt", render: fmtDate },
+    {
+      title: "Actions", width: 160,
+      render: (_, row) => {
+        const canApprove = row?.status === "pending_approval";
+        const canRun     = row?.status === "running";
+        return (
+          <Space size={4}>
+            <Button
+              size="small" icon={<SafetyCertificateOutlined />}
+              disabled={!row?._id || !canApprove}
+              title={canApprove ? "Approve restore (requires MFA)" : "Already approved or not pending"}
+              onClick={() => openApproveModal(row._id)}
+            >
+              Approve
+            </Button>
+            <Popconfirm
+              title="Execute restore job? This is irreversible."
+              disabled={!row?._id || !canRun}
+              onConfirm={() => { dispatch(runRestoreJob(row._id)); dispatch(fetchRestoreJobs()); }}
+            >
+              <Button
+                size="small" type="primary" icon={<PlayCircleOutlined />}
+                disabled={!row?._id || !canRun}
+                title={canRun ? "Run restore" : "Approve first before running"}
+              >
+                Run
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      },
+    },
+  ];
 
-      <Tabs
-        items={[
-          {
-            key: "manual",
-            label: "Create Manual Backup",
-            children: (
-              <Card>
-                <Form
-                  form={manualForm}
-                  layout="vertical"
-                  onFinish={onManualSubmit}
-                  initialValues={{
-                    type: "full",
-                    scope: "platform",
-                    storageProvider: "local",
-                    encryptionEnabled: true,
-                    retentionDays: 30,
-                  }}
-                >
-                  <Row gutter={16}>
-                    <Col md={6} xs={24}>
-                      <Form.Item name="type" label="Backup Type">
-                        <Select
-                          options={[
-                            "full",
-                            "school",
-                            "module",
-                            "academic_year",
-                          ].map((value) => ({ value, label: value }))}
-                        />
-                      </Form.Item>
-                    </Col>
+  const auditColumns = [
+    { title: "Action",   dataIndex: "action",               render: (v) => <Tag style={{ borderRadius: 99 }}>{v || "--"}</Tag> },
+    { title: "Actor",    dataIndex: ["actorId", "name"],    render: (v) => v || "System" },
+    { title: "Message",  dataIndex: "message",              render: (v) => v || "--", ellipsis: true },
+    { title: "IP",       dataIndex: "ipAddress",            render: (v) => v || "--" },
+    { title: "Time",     dataIndex: "createdAt",            render: fmtDate },
+  ];
 
-                    <Col md={6} xs={24}>
-                      <Form.Item name="scope" label="Backup Scope">
-                        <Select
-                          options={["platform", "school", "module"].map(
-                            (value) => ({ value, label: value })
-                          )}
-                        />
-                      </Form.Item>
-                    </Col>
+  /* ── Section divider label ──────────────────────────────────────── */
+  const SectionLabel = ({ children }) => (
+    <Text style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+      {children}
+    </Text>
+  );
 
-                    <Col md={6} xs={24}>
-                      <Form.Item name="storageProvider" label="Storage Provider">
-                        <Select
-                          options={["local", "s3", "spaces", "cloudinary"].map(
-                            (value) => ({
-                              value,
-                              label: value.toUpperCase(),
-                            })
-                          )}
-                        />
-                      </Form.Item>
-                    </Col>
+  /* ── Render ─────────────────────────────────────────────────────── */
+  return (
+    <>
+      <style>{tableHeadCss("bkp-tbl")}</style>
 
-                    <Col md={6} xs={24}>
-                      <Form.Item name="retentionDays" label="Retention Days">
-                        <InputNumber min={1} style={{ width: "100%" }} />
-                      </Form.Item>
-                    </Col>
-
-                    <Col md={12} xs={24}>
-                      <Form.Item name="modules" label="Modules">
-                        <Select
-                          mode="multiple"
-                          options={moduleOptions.map((value) => ({
-                            value,
-                            label: value,
-                          }))}
-                        />
-                      </Form.Item>
-                    </Col>
-
-                    <Col md={12} xs={24}>
-                      <Form.Item name="notes" label="Backup Notes">
-                        <Input placeholder="Reason for backup" />
-                      </Form.Item>
-                    </Col>
-
-                    <Col span={24}>
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        loading={actionLoading}
-                      >
-                        Create Backup
-                      </Button>
-                    </Col>
-                  </Row>
-                </Form>
-              </Card>
-            ),
-          },
-          {
-            key: "history",
-            label: "Backup History",
-            children: (
-              <Card>
-                <Table
-                  rowKey={(row) => row?._id || row?.backupNo}
-                  loading={loading}
-                  columns={backupColumns}
-                  dataSource={backups}
-                  scroll={{ x: 900 }}
-                />
-              </Card>
-            ),
-          },
-          {
-            key: "schedule",
-            label: "Backup Schedules",
-            children: (
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                <Card>
-                  <Form
-                    layout="vertical"
-                    form={scheduleForm}
-                    onFinish={onScheduleSubmit}
-                    initialValues={{
-                      frequency: "daily",
-                      type: "full",
-                      retentionDays: 30,
-                      time: "02:00",
-                      timezone: "UTC",
-                      isActive: true,
-                    }}
-                  >
-                    <Row gutter={16}>
-                      <Col md={6} xs={24}>
-                        <Form.Item
-                          name="name"
-                          label="Schedule Name"
-                          rules={[{ required: true, message: "Name is required" }]}
-                        >
-                          <Input />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={4} xs={24}>
-                        <Form.Item name="type" label="Type">
-                          <Select
-                            options={["full", "school", "module"].map((value) => ({
-                              value,
-                              label: value,
-                            }))}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={4} xs={24}>
-                        <Form.Item name="frequency" label="Frequency">
-                          <Select
-                            options={["daily", "weekly", "monthly", "custom"].map(
-                              (value) => ({ value, label: value })
-                            )}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={4} xs={24}>
-                        <Form.Item name="time" label="Time">
-                          <Input placeholder="HH:mm" />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={3} xs={24}>
-                        <Form.Item name="timezone" label="Timezone">
-                          <Input />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={3} xs={24}>
-                        <Form.Item name="retentionDays" label="Retention">
-                          <InputNumber min={1} style={{ width: "100%" }} />
-                        </Form.Item>
-                      </Col>
-
-                      <Col span={24}>
-                        <Button type="primary" htmlType="submit">
-                          Create Schedule
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Form>
-                </Card>
-
-                <Card>
-                  <Table
-                    rowKey={(row) => row?._id || row?.name}
-                    columns={scheduleColumns}
-                    dataSource={schedules}
-                    scroll={{ x: 800 }}
-                  />
-                </Card>
-              </Space>
-            ),
-          },
-          {
-            key: "restore",
-            label: "Restore Center",
-            children: (
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                <Card>
-                  <Descriptions
-                    title="Restore Security"
-                    bordered
-                    size="small"
-                    column={1}
-                  >
-                    <Descriptions.Item label="Permission">
-                      Only Super Admin can restore backups
-                    </Descriptions.Item>
-                    <Descriptions.Item label="MFA">
-                      MFA token required before approval
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Audit">
-                      All restore requests are logged with IP/device
-                    </Descriptions.Item>
-                  </Descriptions>
-                </Card>
-
-                <Card>
-                  <Form
-                    layout="vertical"
-                    form={restoreForm}
-                    onFinish={onRestoreSubmit}
-                    initialValues={{ restoreType: "full", dryRun: true }}
-                  >
-                    <Row gutter={16}>
-                      <Col md={8} xs={24}>
-                        <Form.Item
-                          name="backupId"
-                          label="Backup"
-                          rules={[
-                            { required: true, message: "Backup is required" },
-                          ]}
-                        >
-                          <Select
-                            options={backups.map((item) => ({
-                              value: item._id,
-                              label: `${item.backupNo || "Backup"} (${item.type || "--"})`,
-                            }))}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={6} xs={24}>
-                        <Form.Item name="restoreType" label="Restore Type">
-                          <Select
-                            options={["full", "school", "module"].map((value) => ({
-                              value,
-                              label: value,
-                            }))}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={6} xs={24}>
-                        <Form.Item name="modules" label="Modules">
-                          <Select
-                            mode="multiple"
-                            options={moduleOptions.map((value) => ({
-                              value,
-                              label: value,
-                            }))}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      <Col md={4} xs={24}>
-                        <Form.Item
-                          name="dryRun"
-                          label="Dry Run"
-                          valuePropName="checked"
-                        >
-                          <Switch />
-                        </Form.Item>
-                      </Col>
-
-                      <Col span={24}>
-                        <Button htmlType="submit" type="primary">
-                          Request Restore
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Form>
-                </Card>
-
-                <Card>
-                  <Table
-                    rowKey={(row) => row?._id || row?.backupId?._id}
-                    columns={restoreColumns}
-                    dataSource={restoreJobs}
-                    scroll={{ x: 800 }}
-                  />
-                </Card>
-              </Space>
-            ),
-          },
-          {
-            key: "audit",
-            label: "Backup Audit Logs",
-            children: (
-              <Card>
-                <Table
-                  rowKey={(row) => row?._id || row?.createdAt}
-                  columns={auditColumns}
-                  dataSource={auditLogs}
-                  scroll={{ x: 900 }}
-                />
-              </Card>
-            ),
-          },
-        ]}
+      <PageHeader
+        title="System Backups"
+        subtitle="Manage platform backups, schedules, restore operations, and audit logs"
+        icon={<DatabaseOutlined />}
+        extra={
+          <Button icon={<ReloadOutlined />} onClick={bootstrap} loading={loading}>
+            Refresh
+          </Button>
+        }
       />
 
-      {/* MFA Verification Modal for Restore Approval */}
+      <div style={pageWrapper}>
+
+        {error && (
+          <Alert type="error" showIcon message={typeof error === "string" ? error : "Something went wrong"} style={{ borderRadius: 12, marginBottom: 16 }} />
+        )}
+
+        {/* ── Stat cards ──────────────────────────────────────────── */}
+        <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+          {statCards.map((s) => (
+            <Col xs={12} sm={8} md={6} lg={3} key={s.label}>
+              <div style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border-muted)",
+                borderTop: `4px solid ${s.color}`,
+                borderRadius: 14, padding: "14px 16px",
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 4 }}>{s.emoji}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: s.color, lineHeight: 1, marginBottom: 3 }}>
+                  {s.value}
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  {s.label}
+                </div>
+              </div>
+            </Col>
+          ))}
+        </Row>
+
+        {/* ── Main tabs ───────────────────────────────────────────── */}
+        <div style={sectionPanel}>
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            size="small"
+            items={[
+              /* ── Create Manual Backup ── */
+              {
+                key: "manual",
+                label: (
+                  <span>
+                    <PlusOutlined /> Create Backup
+                  </span>
+                ),
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+                      <div style={iconWell("#2563EB", 38)}>
+                        <DatabaseOutlined style={{ fontSize: 17 }} />
+                      </div>
+                      <div>
+                        <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
+                          Create Manual Backup
+                        </Text>
+                        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          Trigger an immediate backup of selected data
+                        </Text>
+                      </div>
+                    </Flex>
+
+                    <Form
+                      form={manualForm}
+                      layout="vertical"
+                      onFinish={onManualSubmit}
+                      requiredMark="optional"
+                      initialValues={{
+                        type: "full",
+                        scope: "platform",
+                        storageProvider: "local",
+                        encryptionEnabled: true,
+                        retentionDays: 30,
+                      }}
+                    >
+                      <Row gutter={[14, 0]}>
+                        <Col xs={12} md={6}>
+                          <Form.Item name="type" label="Backup Type">
+                            <Select options={["full", "school", "module", "academic_year"].map((v) => ({ value: v, label: v }))} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={6}>
+                          <Form.Item name="scope" label="Scope">
+                            <Select options={["platform", "school", "module"].map((v) => ({ value: v, label: v }))} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={6}>
+                          <Form.Item name="storageProvider" label="Storage Provider">
+                            <Select options={["local", "s3", "spaces", "cloudinary"].map((v) => ({ value: v, label: v.toUpperCase() }))} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={6}>
+                          <Form.Item name="retentionDays" label="Retention (days)">
+                            <InputNumber min={1} max={365} style={{ width: "100%" }} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12}>
+                          <Form.Item name="modules" label="Modules (optional)">
+                            <Select
+                              mode="multiple" allowClear
+                              placeholder="All modules included if empty"
+                              options={MODULE_OPTIONS.map((v) => ({ value: v, label: v }))}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={12}>
+                          <Form.Item name="notes" label="Notes (optional)">
+                            <Input placeholder="Reason for this backup" maxLength={300} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Button type="primary" htmlType="submit" loading={actionLoading} icon={<DatabaseOutlined />}>
+                        Create Backup
+                      </Button>
+                    </Form>
+                  </div>
+                ),
+              },
+
+              /* ── Backup History ── */
+              {
+                key: "history",
+                label: (
+                  <span>
+                    <HistoryOutlined /> History
+                    {backups.length > 0 && (
+                      <span style={{ marginLeft: 6, background: "#2563EB", color: "#fff", fontSize: 10, borderRadius: 99, padding: "1px 6px" }}>
+                        {backups.length}
+                      </span>
+                    )}
+                  </span>
+                ),
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <Table
+                      className="bkp-tbl"
+                      rowKey={(r) => r?._id || r?.backupNo}
+                      loading={loading}
+                      columns={backupColumns}
+                      dataSource={backups}
+                      scroll={{ x: 900 }}
+                      size="small"
+                      pagination={{ pageSize: 10, showTotal: (t) => `${t} backups` }}
+                    />
+                  </div>
+                ),
+              },
+
+              /* ── Schedules ── */
+              {
+                key: "schedule",
+                label: (
+                  <span>
+                    <ScheduleOutlined /> Schedules
+                  </span>
+                ),
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+                      <div style={iconWell("#7C3AED", 38)}>
+                        <CalendarOutlined style={{ fontSize: 17 }} />
+                      </div>
+                      <div>
+                        <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
+                          Create Backup Schedule
+                        </Text>
+                        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          Automate recurring backups on a set frequency
+                        </Text>
+                      </div>
+                    </Flex>
+
+                    <Form
+                      layout="vertical"
+                      form={scheduleForm}
+                      onFinish={onScheduleSubmit}
+                      requiredMark="optional"
+                      initialValues={{ frequency: "daily", type: "full", retentionDays: 30, time: "02:00", timezone: "UTC", isActive: true }}
+                    >
+                      <Row gutter={[14, 0]}>
+                        <Col xs={24} md={6}>
+                          <Form.Item name="name" label="Schedule Name" rules={[{ required: true, message: "Name required" }]}>
+                            <Input placeholder="e.g. Nightly Full Backup" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={4}>
+                          <Form.Item name="type" label="Type">
+                            <Select options={["full", "school", "module"].map((v) => ({ value: v, label: v }))} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={4}>
+                          <Form.Item name="frequency" label="Frequency">
+                            <Select options={["daily", "weekly", "monthly", "custom"].map((v) => ({ value: v, label: v }))} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={4}>
+                          <Form.Item name="time" label="Time (HH:mm)">
+                            <Input placeholder="02:00" maxLength={5} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={3}>
+                          <Form.Item name="timezone" label="Timezone">
+                            <Input placeholder="UTC" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={3}>
+                          <Form.Item name="retentionDays" label="Retention (days)">
+                            <InputNumber min={1} max={365} style={{ width: "100%" }} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Button type="primary" htmlType="submit" loading={actionLoading} icon={<ScheduleOutlined />}>
+                        Create Schedule
+                      </Button>
+                    </Form>
+
+                    <div style={{ marginTop: 24 }}>
+                      <SectionLabel>Existing Schedules</SectionLabel>
+                      <Table
+                        className="bkp-tbl"
+                        rowKey={(r) => r?._id || r?.name}
+                        columns={scheduleColumns}
+                        dataSource={schedules}
+                        style={{ marginTop: 10 }}
+                        scroll={{ x: 800 }}
+                        size="small"
+                        pagination={{ pageSize: 10 }}
+                      />
+                    </div>
+                  </div>
+                ),
+              },
+
+              /* ── Restore Center ── */
+              {
+                key: "restore",
+                label: (
+                  <span>
+                    <SafetyCertificateOutlined /> Restore
+                    {restoreJobs.filter((j) => j.status === "pending_approval").length > 0 && (
+                      <span style={{ marginLeft: 6, background: "#D97706", color: "#fff", fontSize: 10, borderRadius: 99, padding: "1px 6px" }}>
+                        {restoreJobs.filter((j) => j.status === "pending_approval").length}
+                      </span>
+                    )}
+                  </span>
+                ),
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    {/* Security notice */}
+                    <div style={{ background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 12, padding: "12px 16px", marginBottom: 20 }}>
+                      <Flex align="flex-start" gap={10}>
+                        <WarningOutlined style={{ color: "#D97706", fontSize: 18, marginTop: 2 }} />
+                        <div>
+                          <Text strong style={{ color: "#92400E", display: "block", marginBottom: 4 }}>Restore Security Policy</Text>
+                          <Text style={{ fontSize: 12, color: "#92400E" }}>
+                            Only Super Admins can restore backups. Each restore requires MFA approval before execution. All operations are logged.
+                          </Text>
+                        </div>
+                      </Flex>
+                    </div>
+
+                    {/* Request form */}
+                    <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+                      <div style={iconWell("#DC2626", 38)}>
+                        <PlayCircleOutlined style={{ fontSize: 17 }} />
+                      </div>
+                      <div>
+                        <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
+                          Request Restore
+                        </Text>
+                        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          Select a backup and submit for MFA approval
+                        </Text>
+                      </div>
+                    </Flex>
+
+                    <Form
+                      layout="vertical"
+                      form={restoreForm}
+                      onFinish={onRestoreSubmit}
+                      requiredMark="optional"
+                      initialValues={{ restoreType: "full", dryRun: true }}
+                    >
+                      <Row gutter={[14, 0]}>
+                        <Col xs={24} md={8}>
+                          <Form.Item name="backupId" label="Select Backup" rules={[{ required: true, message: "Select a backup" }]}>
+                            <Select
+                              showSearch
+                              placeholder="Choose backup…"
+                              optionFilterProp="label"
+                              options={backups
+                                .filter((b) => b.status === "success")
+                                .map((b) => ({
+                                  value: b._id,
+                                  label: `${b.backupNo || "Backup"} — ${b.type} (${fmtDate(b.createdAt)})`,
+                                }))}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={5}>
+                          <Form.Item name="restoreType" label="Restore Type">
+                            <Select options={["full", "school", "module"].map((v) => ({ value: v, label: v }))} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={7}>
+                          <Form.Item name="modules" label="Modules (optional)">
+                            <Select mode="multiple" allowClear options={MODULE_OPTIONS.map((v) => ({ value: v, label: v }))} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={4}>
+                          <Form.Item name="dryRun" label="Mode" valuePropName="checked">
+                            <Switch checkedChildren="Dry Run" unCheckedChildren="Live" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Button htmlType="submit" type="primary" danger loading={actionLoading} icon={<PlayCircleOutlined />}>
+                        Request Restore
+                      </Button>
+                    </Form>
+
+                    <div style={{ marginTop: 24 }}>
+                      <SectionLabel>Restore Jobs</SectionLabel>
+                      <Table
+                        className="bkp-tbl"
+                        rowKey={(r) => r?._id || r?.backupId?._id}
+                        columns={restoreColumns}
+                        dataSource={restoreJobs}
+                        style={{ marginTop: 10 }}
+                        scroll={{ x: 800 }}
+                        size="small"
+                        pagination={{ pageSize: 10 }}
+                      />
+                    </div>
+                  </div>
+                ),
+              },
+
+              /* ── Audit Logs ── */
+              {
+                key: "audit",
+                label: (
+                  <span>
+                    <HistoryOutlined /> Audit Logs
+                  </span>
+                ),
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <Table
+                      className="bkp-tbl"
+                      rowKey={(r) => r?._id || r?.createdAt}
+                      columns={auditColumns}
+                      dataSource={auditLogs}
+                      scroll={{ x: 800 }}
+                      size="small"
+                      pagination={{ pageSize: 20, showTotal: (t) => `${t} log entries` }}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* ── MFA Approval Modal ───────────────────────────────────────── */}
       <Modal
         open={approveModalOpen}
-        title="MFA Verification Required"
+        title={
+          <Flex align="center" gap={10}>
+            <div style={iconWell("#D97706", 36)}>
+              <SafetyCertificateOutlined style={{ fontSize: 16 }} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>MFA Verification Required</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>Confirm your identity to approve restore</div>
+            </div>
+          </Flex>
+        }
         okText="Confirm Approval"
+        okButtonProps={{ danger: true }}
         onOk={submitApproval}
-        onCancel={() => {
-          setApproveModalOpen(false);
-          setPendingApproveId(null);
-          setMfaToken("");
-        }}
+        onCancel={() => { setApproveModalOpen(false); setPendingApproveId(null); setMfaToken(""); }}
         destroyOnClose
       >
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+        <Space direction="vertical" size={14} style={{ width: "100%" }}>
           <Alert
-            type="warning"
-            showIcon
-            message="Restore operations are irreversible. Enter your MFA code to confirm."
+            type="warning" showIcon
+            message="Restore operations are irreversible and will overwrite current data."
+            description="Make sure you have read the restore policy before proceeding."
           />
           <div>
-            <label
-              htmlFor="mfa-token-input"
-              style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
-            >
-              Verification Code
+            <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: 13 }}>
+              MFA Verification Code
             </label>
             <Input.Password
-              id="mfa-token-input"
-              placeholder="Enter verification code"
+              placeholder="Enter 6-digit verification code"
               value={mfaToken}
               onChange={(e) => setMfaToken(e.target.value)}
               onPressEnter={submitApproval}
               autoFocus
               maxLength={8}
+              size="large"
             />
           </div>
         </Space>
       </Modal>
-    </div>
+    </>
   );
-};
-
-export default Backups;
+}

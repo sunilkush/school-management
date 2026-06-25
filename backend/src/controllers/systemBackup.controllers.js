@@ -97,10 +97,11 @@ export const createManualBackup = asyncHandler(async (req, res) => {
   const completedAt = new Date(startedAt.getTime() + 5000);
   const fileSize = Math.floor(Math.random() * (200 * 1024 * 1024)) + 5 * 1024 * 1024;
   const checksum = crypto.createHash("sha256").update(`${Date.now()}-${req.user?._id}`).digest("hex");
-  const fileKey = `${createBackupNo()}.enc`;
+  const backupNo = createBackupNo();
+  const fileKey = `${backupNo}.enc`;
 
   const backup = await SystemBackup.create({
-    backupNo: createBackupNo(),
+    backupNo,
     type,
     scope,
     schoolId: effectiveSchoolId,
@@ -108,7 +109,7 @@ export const createManualBackup = asyncHandler(async (req, res) => {
     modules,
     status: "success",
     storageProvider,
-    fileUrl: `/api/v1/system-backups/${fileKey}/download`,
+    fileUrl: null, // set after creation so we can use _id
     fileKey,
     fileSize,
     checksum,
@@ -119,6 +120,10 @@ export const createManualBackup = asyncHandler(async (req, res) => {
     startedAt,
     completedAt,
   });
+
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  backup.fileUrl = `${baseUrl}/api/v1/system-backups/${backup._id}/download`;
+  await backup.save();
 
   await createAuditEntry({
     backupId: backup._id,
@@ -199,14 +204,18 @@ export const getSystemBackupDownloadUrl = asyncHandler(async (req, res) => {
   }
 
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const downloadUrl = backup.fileUrl?.startsWith("http")
+    ? backup.fileUrl
+    : `${baseUrl}/api/v1/system-backups/${backup._id}/download`;
 
   return sendSuccess(res, {
     message: "Download link generated",
     data: {
       backupId: backup._id,
       fileKey: backup.fileKey,
-      fileUrl: backup.fileUrl,
-      downloadUrl: backup.fileUrl,
+      fileUrl: downloadUrl,
+      downloadUrl,
       expiresAt,
     },
   });
