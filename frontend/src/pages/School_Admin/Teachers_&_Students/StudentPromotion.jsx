@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Alert, Form, Select, Table, message } from "antd";
+import {
+  Button, Col, Flex, Popconfirm, Row, Select, Space,
+  Spin, Table, Typography, message,
+} from "antd";
+import {
+  ArrowRightOutlined, CheckOutlined, ReloadOutlined,
+  TeamOutlined, UserOutlined, UsergroupAddOutlined,
+} from "@ant-design/icons";
 import {
   clearPromotionCandidates,
   fetchPromotionAcademicYears,
@@ -9,518 +16,552 @@ import {
   fetchPromotionSections,
   promoteStudents,
 } from "../../../features/studentPromotionSlice";
-import { GraduationCap } from "lucide-react";
-const StudentPromotion = () => {
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import {
+  avatarStyle, iconWell, pageWrapper, sectionPanel, tableHeadCss,
+} from "../../../styles/pageStyles.js";
+
+const { Text } = Typography;
+const TBL = "promo-tbl";
+
+/* ─── small label above a Select ───────────────────────────────── */
+const FL = ({ children }) => (
+  <div style={{
+    fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+    textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6,
+  }}>
+    {children}
+  </div>
+);
+
+/* ─── class / section pill ─────────────────────────────────────── */
+const Pill = ({ children, color = "#2563EB", bg = "#EFF6FF" }) => (
+  <span style={{
+    display: "inline-block", padding: "2px 10px", borderRadius: 99,
+    fontSize: 12, fontWeight: 700,
+    color, background: bg, border: `1px solid ${color}25`,
+  }}>
+    {children}
+  </span>
+);
+
+/* ─── Main ──────────────────────────────────────────────────────── */
+export default function StudentPromotion() {
   const dispatch = useDispatch();
-  const { academicYears, sourceClasses, targetClasses, sections, candidates, loading, promoting } = useSelector(
-    (state) => state.studentPromotion
-  );
-  const { user } = useSelector((state) => state.auth);
-  const schoolId = user.school?._id;
 
-  const [fromAcademicYearId, setFromAcademicYearId] = useState(null);
-  const [toAcademicYearId, setToAcademicYearId] = useState(null);
-  const [sourceClassId, setSourceClassId] = useState(null);
-  const [targetClassId, setTargetClassId] = useState(null);
-  const [targetSectionId, setTargetSectionId] = useState(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const {
+    academicYears, sourceClasses, targetClasses,
+    sections, candidates, loading, promoting,
+  } = useSelector((s) => s.studentPromotion);
+  const { user } = useSelector((s) => s.auth);
+  const schoolId = user?.school?._id;
 
+  const [fromYearId,   setFromYearId]   = useState(null);
+  const [toYearId,     setToYearId]     = useState(null);
+  const [srcClassId,   setSrcClassId]   = useState(null);
+  const [tgtClassId,   setTgtClassId]   = useState(null);
+  const [tgtSectionId, setTgtSectionId] = useState(null);
+  const [selected,     setSelected]     = useState([]);   // enrollmentIds
+
+  /* ── load years on mount ── */
   useEffect(() => {
     dispatch(fetchPromotionAcademicYears())
       .unwrap()
       .then((years) => {
         const active = years.find((y) => y.isActive);
-        if (active?._id) setFromAcademicYearId(active._id);
+        if (active?._id) setFromYearId(active._id);
       })
       .catch((err) => message.error(err || "Failed to load academic years"));
   }, [dispatch]);
 
+  /* ── source classes when from-year changes ── */
   useEffect(() => {
-    if (!fromAcademicYearId) return;
-    dispatch(fetchPromotionClasses({ academicYearId: fromAcademicYearId, mode: "source", schoolId })).catch(() => {});
-    setSourceClassId(null);
-    setSelectedRowKeys([]);
+    if (!fromYearId) return;
+    dispatch(fetchPromotionClasses({ academicYearId: fromYearId, mode: "source", schoolId }));
+    setSrcClassId(null);
+    setSelected([]);
     dispatch(clearPromotionCandidates());
-  }, [dispatch, fromAcademicYearId, schoolId]);
+  }, [fromYearId, schoolId, dispatch]);
 
+  /* ── target classes when to-year changes ── */
   useEffect(() => {
-    if (!toAcademicYearId) return;
-    dispatch(fetchPromotionClasses({ academicYearId: toAcademicYearId, mode: "target", schoolId })).catch(() => {});
-    setTargetClassId(null);
-    setTargetSectionId(null);
-  }, [dispatch, toAcademicYearId, schoolId]);
+    if (!toYearId) return;
+    dispatch(fetchPromotionClasses({ academicYearId: toYearId, mode: "target", schoolId }));
+    setTgtClassId(null);
+    setTgtSectionId(null);
+  }, [toYearId, schoolId, dispatch]);
 
+  /* ── sections when target class changes ── */
   useEffect(() => {
-    if (!targetClassId) return;
-    dispatch(fetchPromotionSections({ schoolClassId: targetClassId })).catch(() => {});
-    setTargetSectionId(null);
-  }, [dispatch, targetClassId]);
+    if (!tgtClassId) return;
+    dispatch(fetchPromotionSections({ schoolClassId: tgtClassId }));
+    setTgtSectionId(null);
+  }, [tgtClassId, dispatch]);
 
-  const handleLoadStudents = () => {
-    if (!sourceClassId || !fromAcademicYearId) {
-      message.warning("Please select source academic year and class");
-      return;
-    }
-    dispatch(fetchPromotionCandidates({ schoolClassId: sourceClassId, academicYearId: fromAcademicYearId }))
+  const canLoad    = !!srcClassId && !!fromYearId;
+  const canPromote = selected.length > 0 && !!fromYearId && !!toYearId && !!tgtClassId && !!tgtSectionId;
+
+  const handleLoad = () => {
+    if (!canLoad) { message.warning("Select source year and class first"); return; }
+    dispatch(fetchPromotionCandidates({ schoolClassId: srcClassId, academicYearId: fromYearId }))
       .unwrap()
-      .then(() => setSelectedRowKeys([]))
+      .then(() => setSelected([]))
       .catch((err) => message.error(err || "Failed to load students"));
   };
 
-  const handlePromoteStudents = () => {
-    if (!selectedRowKeys.length) {
-      message.warning("Please select at least one student");
-      return;
-    }
-    if (!fromAcademicYearId || !toAcademicYearId || !targetClassId || !targetSectionId) {
-      message.warning("Please fill all promotion details first");
-      return;
-    }
-    dispatch(
-      promoteStudents({
-        fromAcademicYearId,
-        toAcademicYearId,
-        toSchoolClassId: targetClassId,
-        toSectionId: targetSectionId,
-        enrollmentIds: selectedRowKeys,
-      })
-    )
+  const handlePromote = async () => {
+    if (!canPromote) return;
+    dispatch(promoteStudents({
+      fromAcademicYearId: fromYearId,
+      toAcademicYearId:   toYearId,
+      toSchoolClassId:    tgtClassId,
+      toSectionId:        tgtSectionId,
+      enrollmentIds:      selected,
+    }))
       .unwrap()
-      .then((result) => {
-        const promotedCount = result?.promotedCount || 0;
-        message.success(`${promotedCount} students promoted successfully`);
-        setSelectedRowKeys([]);
-        handleLoadStudents();
+      .then((res) => {
+        const n = res?.promotedCount || 0;
+        message.success(`${n} student${n !== 1 ? "s" : ""} promoted successfully`);
+        setSelected([]);
+        handleLoad();
       })
-      .catch((err) => message.error(err || "Failed to promote students"));
+      .catch((err) => message.error(err || "Promotion failed"));
   };
 
-  const canLoad = !!sourceClassId && !!fromAcademicYearId;
-  const canPromote =
-    selectedRowKeys.length > 0 &&
-    !!fromAcademicYearId &&
-    !!toAcademicYearId &&
-    !!targetClassId &&
-    !!targetSectionId;
-
-  const columns = useMemo(
-    () => [
-      {
-        title: "Reg. No",
-        dataIndex: "registrationNumber",
-        key: "registrationNumber",
-        render: (val) => (
-          <span style={{ fontFamily: "monospace", fontSize: 13, color: "#7c6ff7", fontWeight: 600 }}>{val}</span>
-        ),
-      },
-      {
-        title: "Name",
-        dataIndex: "name",
-        key: "name",
-        render: (val) => (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: "linear-gradient(135deg, #ede9fe, #ddd6fe)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 700, color: "#7c6ff7", flexShrink: 0,
-            }}>
-              {val?.charAt(0)?.toUpperCase() || "?"}
-            </div>
-            <span style={{ fontWeight: 500, color: "#1a1a2e" }}>{val}</span>
+  /* ── table columns ── */
+  const columns = useMemo(() => [
+    {
+      title: "Reg. No.",
+      dataIndex: "registrationNumber",
+      width: 140,
+      render: (v) => (
+        <Text code style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700 }}>{v || "—"}</Text>
+      ),
+    },
+    {
+      title: "Student",
+      dataIndex: "name",
+      render: (name) => (
+        <Flex align="center" gap={10}>
+          <div style={avatarStyle(name || "S", 34)}>
+            {(name || "S")[0].toUpperCase()}
           </div>
-        ),
-      },
-      {
-        title: "Email",
-        dataIndex: "email",
-        key: "email",
-        render: (val) => <span style={{ color: "#888", fontSize: 13 }}>{val}</span>,
-      },
-      {
-        title: "Current Class",
-        dataIndex: "currentClass",
-        key: "currentClass",
-        render: (val) => (
-          <span style={{
-            display: "inline-block", padding: "2px 10px",
-            background: "#f0eeff", color: "#7c6ff7",
-            borderRadius: 20, fontSize: 12, fontWeight: 600,
-          }}>{val}</span>
-        ),
-      },
-      {
-        title: "Section",
-        dataIndex: "currentSection",
-        key: "currentSection",
-        render: (val) => (
-          <span style={{
-            display: "inline-block", padding: "2px 10px",
-            background: "#f0fdf8", color: "#1d9e75",
-            borderRadius: 20, fontSize: 12, fontWeight: 600,
-          }}>{val}</span>
-        ),
-      },
-    ],
-    []
-  );
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", lineHeight: 1.3 }}>
+              {name || "—"}
+            </div>
+          </div>
+        </Flex>
+      ),
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      render: (v) => <Text style={{ color: "var(--text-muted)", fontSize: 12 }}>{v || "—"}</Text>,
+    },
+    {
+      title: "Current Class",
+      dataIndex: "currentClass",
+      width: 120,
+      render: (v) => <Pill color="#2563EB" bg="#EFF6FF">{v || "—"}</Pill>,
+    },
+    {
+      title: "Section",
+      dataIndex: "currentSection",
+      width: 100,
+      render: (v) => <Pill color="#0D9488" bg="#CCFBF1">{v || "—"}</Pill>,
+    },
+  ], []);
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      //background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f0f9ff 100%)",
-      padding: "24px",
-      fontFamily: "'Inter', -apple-system, sans-serif",
-    }}>
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-        .promo-select .ant-select-selector {
-          border-radius: 10px !important;
-          border: 1.5px solid #e8e4ff !important;
-          font-size: 12px !important;
-          height: 30px !important;
-          background: #fdfcff !important;
-          align-items: center !important;
+        ${tableHeadCss(TBL)}
+        .${TBL} .ant-table-tbody > tr.ant-table-row-selected > td {
+          background: var(--primary-tint, #EFF6FF) !important;
         }
-        .promo-select:hover .ant-select-selector,
-        .promo-select.ant-select-focused .ant-select-selector {
-          border-color: #7c6ff7 !important;
-          box-shadow: 0 0 0 3px rgba(124, 111, 247, 0.1) !important;
+        .${TBL} .ant-checkbox-checked .ant-checkbox-inner {
+          background: var(--primary) !important;
+          border-color: var(--primary) !important;
         }
-        .promo-select.ant-select-disabled .ant-select-selector {
-          background: #f9f8ff !important;
-          opacity: 0.6;
+        .promo-sel .ant-select-selector {
+          border-radius: 8px !important;
+          border: 1.5px solid var(--border-muted) !important;
+          background: var(--surface) !important;
+          color: var(--text-primary) !important;
         }
-        .promo-form .ant-form-item-label > label {
-          font-size: 11px !important;
-          font-weight: 700 !important;
-          color: #aaa !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.08em !important;
+        .promo-sel:hover .ant-select-selector {
+          border-color: var(--primary) !important;
         }
-        .promo-table .ant-table {
-          background: transparent !important;
+        .promo-sel.ant-select-focused .ant-select-selector {
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
         }
-        .promo-table .ant-table-thead > tr > th {
-          background: #f8f7ff !important;
-          color: #aaa !important;
-          font-size: 11px !important;
-          font-weight: 700 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.08em !important;
-          border-bottom: 1px solid #ede9fe !important;
-          padding: 12px 16px !important;
-        }
-        .promo-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f5f3ff !important;
-          padding: 12px 16px !important;
-        }
-        .promo-table .ant-table-tbody > tr:hover > td {
-          background: #faf8ff !important;
-        }
-        .promo-table .ant-table-tbody > tr.ant-table-row-selected > td {
-          background: #f3f0ff !important;
-        }
-        .promo-table .ant-checkbox-checked .ant-checkbox-inner {
-          background: #7c6ff7 !important;
-          border-color: #7c6ff7 !important;
-        }
-        .promo-table .ant-checkbox:hover .ant-checkbox-inner {
-          border-color: #7c6ff7 !important;
-        }
-        .promo-table .ant-pagination-item-active {
-          border-color: #7c6ff7 !important;
-        }
-        .promo-table .ant-pagination-item-active a {
-          color: #7c6ff7 !important;
-        }
-        .action-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 0 24px;
-          height: 30px;
-          border-radius: 11px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          border: none;
-          transition: all 0.2s;
-          letter-spacing: 0.01em;
-        }
-        .action-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
-        .action-btn.ghost {
-          background: #f0eeff;
-          color: #7c6ff7;
-          border: 1.5px solid #ddd8ff;
-        }
-        .action-btn.ghost:not(:disabled):hover {
-          background: #e4dfff;
-        }
-        .action-btn.promote {
-          background: linear-gradient(135deg, #1d9e75 0%, #0f6e56 100%);
-          color: #fff;
-          box-shadow: 0 4px 14px rgba(29, 158, 117, 0.3);
-        }
-        .action-btn.promote:not(:disabled):hover {
-          box-shadow: 0 6px 20px rgba(29, 158, 117, 0.4);
-          transform: translateY(-1px);
-        }
-        .divider-arrow {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          background: linear-gradient(135deg, #1677ff, #5a50c9);
-          border-radius: 50%;
-          color: #fff;
-          font-size: 14px;
-          flex-shrink: 0;
-          margin-top: 26px;
-          box-shadow: 0 3px 10px rgba(124, 111, 247, 0.35);
+        .promo-sel.ant-select-disabled .ant-select-selector {
+          opacity: 0.6 !important;
         }
       `}</style>
 
-      <div style={{
-        background: "#fff",
-        borderRadius: 20,
-        boxShadow: "0 8px 40px rgba(124, 111, 247, 0.1), 0 2px 8px rgba(0,0,0,0.04)",
-        overflow: "hidden",
-        Width: "100%",
-        margin: "0 auto",
-        padding:0
-      }}>
+      <PageHeader
+        title="Student Promotion"
+        subtitle="Promote students from one class and academic year to another"
+        icon={<UsergroupAddOutlined />}
+      />
 
-        {/* Header */}
-        <div style={{
-          background: "linear-gradient(135deg, #1677ff 0%, #5a50c9 100%)",
-          padding: "20px",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
-          <div style={{ position: "absolute", bottom: -50, right: 80, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-          <div style={{ position: "relative" }}>
-           
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>
-              Student Promotion
-            </h1>
-            <p style={{ margin: "6px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
-              Select students, choose target class &amp; section, and promote to the next academic year.
-            </p>
-          </div>
-        </div>
+      <div style={pageWrapper}>
 
-        <div style={{ padding: "20px" }}>
+        {/* ── Config panel ──────────────────────────────── */}
+        <div style={{ ...sectionPanel, marginBottom: 16 }}>
 
-          {/* Filter Panel */}
-          <div style={{
-            background: "#faf9ff",
-            border: "1px solid #ede9fe",
-            borderRadius: 16,
-            padding: "10px",
-            marginBottom: 10,
-          }}>
-
-            {/* Section label */}
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#b0a8f5", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
-              Promotion Configuration
+          {/* Panel label */}
+          <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+            <div style={iconWell("#2563EB", 38)}>
+              <UsergroupAddOutlined style={{ fontSize: 17 }} />
             </div>
-
-            <Form layout="vertical" className="promo-form">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto 1fr 1fr 1fr", gap: "0 16px", alignItems: "start" }}>
-
-                {/* FROM side */}
-                <Form.Item label="From Academic Year" style={{ marginBottom: 0 }}>
-                  <Select
-                    className="promo-select"
-                    value={fromAcademicYearId}
-                    placeholder="Source year"
-                    options={academicYears.map((y) => ({ label: y.name, value: y._id }))}
-                    onChange={setFromAcademicYearId}
-                  />
-                </Form.Item>
-
-                <Form.Item label="Current Class" style={{ marginBottom: 0 }}>
-                  <Select
-                    className="promo-select"
-                    value={sourceClassId}
-                    placeholder="Source class"
-                    options={sourceClasses.map((cls) => ({ label: cls.name, value: cls._id }))}
-                    onChange={setSourceClassId}
-                  />
-                </Form.Item>
-
-                {/* Arrow divider */}
-                <div className="divider-arrow">→</div>
-
-                {/* TO side */}
-                <Form.Item label="To Academic Year" style={{ marginBottom: 0 }}>
-                  <Select
-                    className="promo-select"
-                    value={toAcademicYearId}
-                    placeholder="Target year"
-                    options={academicYears
-                      .filter((y) => y._id !== fromAcademicYearId)
-                      .map((y) => ({ label: y.name, value: y._id }))}
-                    onChange={setToAcademicYearId}
-                  />
-                </Form.Item>
-
-                <Form.Item label="Target Class" style={{ marginBottom: 0 }}>
-                  <Select
-                    className="promo-select"
-                    value={targetClassId}
-                    placeholder="Target class"
-                    options={targetClasses.map((cls) => ({ label: cls.name, value: cls._id }))}
-                    onChange={setTargetClassId}
-                  />
-                </Form.Item>
-
-                <Form.Item label="Target Section" style={{ marginBottom: 0 }}>
-                  <Select
-                    className="promo-select"
-                    value={targetSectionId}
-                    placeholder="Target section"
-                    disabled={!sections.length}
-                    options={sections.map((sec) => ({ label: sec.name, value: sec._id }))}
-                    onChange={setTargetSectionId}
-                  />
-                </Form.Item>
-              </div>
-
-              <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  type="button"
-                  className="action-btn ghost"
-                  disabled={!canLoad}
-                  onClick={handleLoadStudents}
-                >
-                  {loading ? "Loading…" : "↓ Load Students"}
-                </button>
-              </div>
-            </Form>
-          </div>
-
-          {/* Stats bar */}
-          {candidates.length > 0 && (
-            <div style={{ display: "flex", gap: 12, marginBottom: 10 }}>
-              {[
-                { label: "Total Students", value: candidates.length, color: "#7c6ff7", bg: "#f0eeff" },
-                { label: "Selected", value: selectedRowKeys.length, color: "#1d9e75", bg: "#f0fdf8" },
-                { label: "Remaining", value: candidates.length - selectedRowKeys.length, color: "#e69020", bg: "#fef9ec" },
-              ].map((stat) => (
-                <div key={stat.label} style={{
-                  flex: 1, padding: "14px 20px",
-                  background: stat.bg, borderRadius: 12,
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: stat.color, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</span>
-                  <span style={{ fontSize: 24, fontWeight: 700, color: stat.color }}>{stat.value}</span>
-                </div>
-              ))}
+            <div>
+              <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
+                Promotion Configuration
+              </Text>
+              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                Set source and destination for the promotion
+              </Text>
             </div>
-          )}
+          </Flex>
 
-          {/* Empty state */}
-          {!loading && candidates.length === 0 && (
-            <div style={{
-              textAlign: "center", padding: "20px",
-              border: "1.5px dashed #ddd8ff", borderRadius: 16,
-              background: "#faf9ff", marginBottom: 10,
-            }}>
-              <div style={{  marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center" }}><GraduationCap size={60} /></div>
-              <div style={{ fontWeight: 600, color: "#aaa", marginBottom: 4 }}>No students loaded</div>
-              <div style={{ fontSize: 13, color: "#c5bef5" }}>Select a source year and class, then click "Load Students"</div>
-            </div>
-          )}
+          {/* FROM / TO row */}
+          <Row gutter={[0, 16]} align="middle">
 
-          {/* Table */}
-          {candidates.length > 0 && (
-            <div className="promo-table" style={{
-              borderRadius: 14,
-              overflow: "hidden",
-              border: "1px solid #ede9fe",
-              marginBottom: 10,
-            }}>
-              <Table
-                rowKey="enrollmentId"
-                loading={loading}
-                dataSource={candidates}
-                columns={columns}
-                pagination={{ pageSize: 20, size: "small" }}
-                rowSelection={{
-                  selectedRowKeys,
-                  onChange: setSelectedRowKeys,
-                }}
-                style={{ background: "#fff" }}
-              />
-            </div>
-          )}
-
-          {/* Bottom Action Bar */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px",
-            background: "#f8f7ff",
-            borderRadius: 14,
-            border: "1px solid #ede9fe",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* FROM block */}
+            <Col xs={24} md={10}>
               <div style={{
-                width: 40, height: 40, borderRadius: "50%",
-                background: selectedRowKeys.length > 0 ? "linear-gradient(135deg, #7c6ff7, #5a50c9)" : "#e8e4ff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 16, fontWeight: 700,
-                color: selectedRowKeys.length > 0 ? "#fff" : "#c5bef5",
-                transition: "all 0.2s",
+                background: "var(--surface-soft)",
+                border: "1px solid var(--border-muted)",
+                borderRadius: 12, padding: "16px 18px",
               }}>
-                {selectedRowKeys.length}
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a2e" }}>
-                  {selectedRowKeys.length === 0 ? "No students selected" : `${selectedRowKeys.length} student${selectedRowKeys.length > 1 ? "s" : ""} selected`}
+                <div style={{
+                  fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
+                  color: "#2563EB", textTransform: "uppercase", marginBottom: 14,
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2563EB" }} />
+                  FROM
                 </div>
-                {selectedRowKeys.length > 0 && (
-                  <div style={{ fontSize: 12, color: "#aaa", marginTop: 1 }}>
-                    Ready to promote
+                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                  <div>
+                    <FL>Academic Year</FL>
+                    <Select
+                      className="promo-sel"
+                      style={{ width: "100%" }}
+                      placeholder="Select source year"
+                      value={fromYearId}
+                      options={academicYears.map((y) => ({ label: y.name, value: y._id }))}
+                      onChange={setFromYearId}
+                    />
                   </div>
-                )}
+                  <div>
+                    <FL>Class</FL>
+                    <Select
+                      className="promo-sel"
+                      style={{ width: "100%" }}
+                      placeholder="Select source class"
+                      value={srcClassId}
+                      disabled={!fromYearId}
+                      options={sourceClasses.map((c) => ({ label: c.name, value: c._id }))}
+                      onChange={setSrcClassId}
+                    />
+                  </div>
+                </Space>
               </div>
-            </div>
+            </Col>
 
-            <div style={{ display: "flex", gap: 12 }}>
-              {selectedRowKeys.length > 0 && (
-                <button
-                  type="button"
-                  className="action-btn ghost"
-                  onClick={() => setSelectedRowKeys([])}
-                >
-                  Clear Selection
-                </button>
-              )}
-              <button
-                type="button"
-                className="action-btn promote"
-                disabled={!canPromote || promoting}
-                onClick={handlePromoteStudents}
-              >
-                {promoting ? "Promoting…" : `✓ Promote ${selectedRowKeys.length > 0 ? selectedRowKeys.length : ""} Student${selectedRowKeys.length !== 1 ? "s" : ""}`}
-              </button>
-            </div>
-          </div>
+            {/* Arrow */}
+            <Col xs={24} md={4}>
+              <Flex justify="center" align="center" style={{ padding: "8px 0" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%",
+                  background: "var(--primary)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", fontSize: 18,
+                  boxShadow: "0 4px 14px rgba(37,99,235,0.3)",
+                  transform: "rotate(0deg)",
+                }}>
+                  <ArrowRightOutlined />
+                </div>
+              </Flex>
+            </Col>
 
+            {/* TO block */}
+            <Col xs={24} md={10}>
+              <div style={{
+                background: "var(--surface-soft)",
+                border: "1px solid var(--border-muted)",
+                borderRadius: 12, padding: "16px 18px",
+              }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
+                  color: "#0D9488", textTransform: "uppercase", marginBottom: 14,
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0D9488" }} />
+                  TO
+                </div>
+                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                  <div>
+                    <FL>Academic Year</FL>
+                    <Select
+                      className="promo-sel"
+                      style={{ width: "100%" }}
+                      placeholder="Select target year"
+                      value={toYearId}
+                      options={academicYears
+                        .filter((y) => y._id !== fromYearId)
+                        .map((y) => ({ label: y.name, value: y._id }))}
+                      onChange={setToYearId}
+                    />
+                  </div>
+                  <Row gutter={10}>
+                    <Col span={12}>
+                      <FL>Class</FL>
+                      <Select
+                        className="promo-sel"
+                        style={{ width: "100%" }}
+                        placeholder="Target class"
+                        value={tgtClassId}
+                        disabled={!toYearId}
+                        options={targetClasses.map((c) => ({ label: c.name, value: c._id }))}
+                        onChange={setTgtClassId}
+                      />
+                    </Col>
+                    <Col span={12}>
+                      <FL>Section</FL>
+                      <Select
+                        className="promo-sel"
+                        style={{ width: "100%" }}
+                        placeholder="Section"
+                        value={tgtSectionId}
+                        disabled={!tgtClassId || !sections.length}
+                        options={sections.map((s) => ({ label: s.name, value: s._id }))}
+                        onChange={setTgtSectionId}
+                      />
+                    </Col>
+                  </Row>
+                </Space>
+              </div>
+            </Col>
+          </Row>
+
+          {/* Load button */}
+          <Flex justify="flex-end" style={{ marginTop: 20 }}>
+            <Button
+              icon={<ReloadOutlined />}
+              type="default"
+              onClick={handleLoad}
+              disabled={!canLoad}
+              loading={loading}
+              style={{ borderRadius: 8, fontWeight: 600 }}
+            >
+              Load Students
+            </Button>
+          </Flex>
         </div>
-      </div>
-    </div>
-  );
-};
 
-export default StudentPromotion;
+        {/* ── Stat cards ────────────────────────────────── */}
+        {candidates.length > 0 && (
+          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+            {[
+              {
+                label: "Total Students",
+                value: candidates.length,
+                color: "#2563EB",
+                bg: "#EFF6FF",
+                icon: <TeamOutlined />,
+              },
+              {
+                label: "Selected",
+                value: selected.length,
+                color: "#15803D",
+                bg: "#F0FDF4",
+                icon: <CheckOutlined />,
+              },
+              {
+                label: "Not Selected",
+                value: candidates.length - selected.length,
+                color: "#B45309",
+                bg: "#FFFBEB",
+                icon: <UserOutlined />,
+              },
+            ].map((s) => (
+              <Col xs={8} key={s.label}>
+                <div style={{
+                  background: s.bg,
+                  border: `1px solid ${s.color}25`,
+                  borderTop: `4px solid ${s.color}`,
+                  borderRadius: 14, padding: "14px 18px",
+                }}>
+                  <Flex align="center" gap={10}>
+                    <div style={iconWell(s.color, 36)}>
+                      <span style={{ fontSize: 16 }}>{s.icon}</span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: s.color, lineHeight: 1 }}>
+                        {s.value}
+                      </div>
+                      <div style={{
+                        fontSize: 10, fontWeight: 700, color: s.color,
+                        textTransform: "uppercase", letterSpacing: "0.06em",
+                        opacity: 0.7, marginTop: 2,
+                      }}>
+                        {s.label}
+                      </div>
+                    </div>
+                  </Flex>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        )}
+
+        {/* ── Empty state ────────────────────────────────── */}
+        {!loading && candidates.length === 0 && (
+          <div style={{
+            textAlign: "center", padding: "56px 24px",
+            background: "var(--surface-soft)",
+            border: "1.5px dashed var(--border-muted)",
+            borderRadius: 16, marginBottom: 16,
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: "50%", margin: "0 auto 16px",
+              background: "rgba(37,99,235,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 30, color: "#2563EB",
+            }}>
+              🎓
+            </div>
+            <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
+              No students loaded
+            </Text>
+            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              Select a source year and class, then click "Load Students"
+            </Text>
+          </div>
+        )}
+
+        {/* ── Table ─────────────────────────────────────── */}
+        {candidates.length > 0 && (
+          <div style={{ ...sectionPanel, padding: 0, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ padding: "16px 20px 14px", borderBottom: "1px solid var(--border-muted)" }}>
+              <Flex align="center" justify="space-between">
+                <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
+                  Student List
+                </Text>
+                <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  {selected.length > 0
+                    ? `${selected.length} of ${candidates.length} selected`
+                    : `${candidates.length} student${candidates.length !== 1 ? "s" : ""}`}
+                </Text>
+              </Flex>
+            </div>
+            <Spin spinning={loading}>
+              <Table
+                className={TBL}
+                rowKey="enrollmentId"
+                columns={columns}
+                dataSource={candidates}
+                pagination={{ pageSize: 20, size: "small", showTotal: (t) => `${t} students` }}
+                rowSelection={{
+                  selectedRowKeys: selected,
+                  onChange: setSelected,
+                  selections: [
+                    Table.SELECTION_ALL,
+                    Table.SELECTION_NONE,
+                  ],
+                }}
+                scroll={{ x: 600 }}
+              />
+            </Spin>
+          </div>
+        )}
+
+        {/* ── Action bar ────────────────────────────────── */}
+        <div style={{
+          ...sectionPanel,
+          marginBottom: 0,
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}>
+          {/* Left: selection count */}
+          <Flex align="center" gap={14}>
+            <div style={{
+              width: 44, height: 44, borderRadius: "50%",
+              background: selected.length > 0 ? "var(--primary)" : "var(--surface-soft)",
+              border: `2px solid ${selected.length > 0 ? "var(--primary)" : "var(--border-muted)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 15, fontWeight: 800,
+              color: selected.length > 0 ? "#fff" : "var(--text-muted)",
+              transition: "all 0.2s",
+              flexShrink: 0,
+            }}>
+              {selected.length}
+            </div>
+            <div>
+              <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
+                {selected.length === 0
+                  ? "No students selected"
+                  : `${selected.length} student${selected.length !== 1 ? "s" : ""} selected`}
+              </Text>
+              {selected.length > 0 && canPromote && (
+                <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  Ready to promote
+                </Text>
+              )}
+              {selected.length > 0 && !canPromote && (
+                <Text style={{ fontSize: 12, color: "#B45309" }}>
+                  Fill target year, class and section to enable promotion
+                </Text>
+              )}
+            </div>
+          </Flex>
+
+          {/* Right: actions */}
+          <Space wrap>
+            {selected.length > 0 && (
+              <Button onClick={() => setSelected([])} style={{ borderRadius: 8 }}>
+                Clear Selection
+              </Button>
+            )}
+            <Popconfirm
+              title="Promote Students"
+              description={`Promote ${selected.length} student${selected.length !== 1 ? "s" : ""} to the selected class and section?`}
+              onConfirm={handlePromote}
+              okText="Yes, Promote"
+              cancelText="Cancel"
+              disabled={!canPromote}
+              okButtonProps={{ style: { background: "#15803D", borderColor: "#15803D" } }}
+            >
+              <Button
+                type="primary"
+                icon={<CheckOutlined />}
+                disabled={!canPromote}
+                loading={promoting}
+                style={{
+                  borderRadius: 8, fontWeight: 700, height: 40,
+                  background: canPromote ? "#15803D" : undefined,
+                  borderColor: canPromote ? "#15803D" : undefined,
+                }}
+              >
+                {promoting
+                  ? "Promoting…"
+                  : `Promote ${selected.length > 0 ? selected.length : ""} Student${selected.length !== 1 ? "s" : ""}`}
+              </Button>
+            </Popconfirm>
+          </Space>
+        </div>
+
+      </div>
+    </>
+  );
+}

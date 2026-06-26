@@ -7,8 +7,8 @@ import {
 import {
   SearchOutlined, PrinterOutlined,
   CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined,
-  WalletOutlined, BankOutlined, MobileOutlined, UserOutlined,
-  CalendarOutlined, FileTextOutlined, DollarOutlined,
+  WalletOutlined, BankOutlined, MobileOutlined,
+  CalendarOutlined, FileTextOutlined,
 } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useTheme } from "../../../context/ThemeContext";
@@ -16,9 +16,9 @@ import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId }   from "../../../features/studentSlice";
 import { fetchMyFees, payStudentFee } from "../../../features/studentFeeSlice";
-import { fetchAllAcademicYears }      from "../../../features/academicYearSlice";
+import { getClassData }               from "../../../features/schoolClassSlice";
 import PageHeader                     from "../../../components/layout/PageHeader";
-import { pageWrapper, tableHeadCss, iconWell, avatarColor } from "../../../styles/pageStyles";
+import { pageWrapper, tableHeadCss, avatarColor } from "../../../styles/pageStyles";
 
 const { useBreakpoint } = Grid;
 const TABLE_CLS = "fee-collect-tbl";
@@ -143,7 +143,6 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
       borderRadius: 14, padding: "14px 16px",
       borderLeft: `4px solid ${STATUS_META[fee.status]?.color || "#EF4444"}`,
     }}>
-      {/* top row */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: isDark ? "#e2e8f0" : "#111827",
@@ -160,7 +159,6 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
         <StatusBadge status={fee.status} />
       </div>
 
-      {/* amounts row */}
       <div style={{ display: "flex", gap: 12, marginBottom: 10 }}>
         {[
           { label: "Total",   value: fee.amount,      color: isDark ? "#94A3B8" : "#374151" },
@@ -183,7 +181,6 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
         ))}
       </div>
 
-      {/* progress bar */}
       <div style={{ marginBottom: 12 }}>
         <div style={{ height: 6, background: isDark ? "#1e293b" : "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>
           <div style={{
@@ -197,7 +194,6 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
         </div>
       </div>
 
-      {/* action */}
       {!isPaid && (
         <Button
           type="primary"
@@ -216,6 +212,10 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
   );
 };
 
+/* ─── Helpers to safely read student data from enrollment record ── */
+const getStudentName = (s) => s?.user?.name || s?.name || "—";
+const getStudentId   = (s) => s?.student?._id?.toString() || s?.studentId?.toString() || s?._id?.toString();
+
 /* ─── Main component ────────────────────────────────────────────── */
 const FeeCollection = () => {
   const dispatch   = useDispatch();
@@ -225,36 +225,51 @@ const FeeCollection = () => {
   const isMobile   = !screens.md;
   const { isDark } = useTheme();
 
-  const { user }   = useSelector((s) => s.auth || {});
-  const { schoolStudents = [], loading: studentsLoading } = useSelector((s) => s.students || {});
-  const { myFees = [], loading: feesLoading }             = useSelector((s) => s.studentFee || {});
-  const { academicYears = [] }    = useSelector((s) => s.academicYear || {});
+  const { user }                                                   = useSelector((s) => s.auth || {});
+  const { schoolStudents = [], loading: studentsLoading }          = useSelector((s) => s.students || {});
+  const { myFees = [], loading: feesLoading }                      = useSelector((s) => s.studentFee || {});
+  const { schoolClasses = [] }                                     = useSelector((s) => s.schoolClass || {});
+  const { selectedAcademicYear }                                   = useSelector((s) => s.academicYear || {});
 
-  const schoolId = user?.school?._id;
+  const schoolId       = user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
-  const [selectedStudentId,      setSelectedStudentId]      = useState(null);
-  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState(null);
-  const [searchText,             setSearchText]             = useState("");
-  const [payModal,               setPayModal]               = useState({ open: false, fee: null });
-  const [receiptModal,           setReceiptModal]           = useState({ open: false, fee: null, payment: null });
-  const [paying,                 setPaying]                 = useState(false);
-  const [selectedMethod,         setSelectedMethod]         = useState("cash");
+  const [selectedClassId,   setSelectedClassId]   = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [searchText,        setSearchText]        = useState("");
+  const [payModal,          setPayModal]          = useState({ open: false, fee: null });
+  const [receiptModal,      setReceiptModal]      = useState({ open: false, fee: null, payment: null });
+  const [paying,            setPaying]            = useState(false);
+  const [selectedMethod,    setSelectedMethod]    = useState("cash");
 
-  /* ── Init ── */
+  /* ── Init — load classes ── */
   useEffect(() => {
-    if (!schoolId) return;
-    dispatch(fetchAllAcademicYears(schoolId));
-    dispatch(fetchStudentsBySchoolId({ schoolId }));
-  }, [schoolId, dispatch]);
-
-  /* ── Load fees when student + year selected ── */
-  useEffect(() => {
-    if (selectedStudentId && selectedAcademicYearId) {
-      dispatch(fetchMyFees({ studentId: selectedStudentId, academicYearId: selectedAcademicYearId }));
+    if (schoolId && academicYearId) {
+      dispatch(getClassData({ schoolId, academicYearId }));
     }
-  }, [selectedStudentId, selectedAcademicYearId, dispatch]);
+  }, [schoolId, academicYearId, dispatch]);
 
-  /* ── Computed ── */
+  /* ── Load students when class changes ── */
+  useEffect(() => {
+    if (schoolId && selectedClassId) {
+      setSelectedStudentId(null);
+      dispatch(fetchStudentsBySchoolId({
+        schoolId,
+        academicYearId,
+        schoolClassId: selectedClassId,
+        limit: 500,
+      }));
+    }
+  }, [schoolId, academicYearId, selectedClassId, dispatch]);
+
+  /* ── Load fees when student selected ── */
+  useEffect(() => {
+    if (selectedStudentId && academicYearId) {
+      dispatch(fetchMyFees({ studentId: selectedStudentId, academicYearId }));
+    }
+  }, [selectedStudentId, academicYearId, dispatch]);
+
+  /* ── Student list (filtered by search text) ── */
   const studentList = useMemo(
     () => Array.isArray(schoolStudents) ? schoolStudents : [],
     [schoolStudents],
@@ -262,23 +277,24 @@ const FeeCollection = () => {
 
   const studentOptions = useMemo(() => studentList
     .filter((s) => {
-      const name = s.name || s.studentId?.name || "";
+      const name = getStudentName(s);
       return !searchText || name.toLowerCase().includes(searchText.toLowerCase());
     })
     .map((s) => ({
-      value: s.studentId?._id || s._id,
-      label: `${s.name || s.studentId?.name || "—"} (${s.rollNo || s.admissionNo || ""})`,
+      value: getStudentId(s),
+      label: `${getStudentName(s)} (Roll: ${s.rollNumber ?? "—"} | Reg: ${s.registrationNumber || "—"})`,
     })),
     [studentList, searchText],
   );
 
-  const yearOptions = useMemo(
-    () => academicYears.map((y) => ({ value: y._id, label: y.name || y.year })),
-    [academicYears],
+  const classOptions = useMemo(
+    () => (schoolClasses || []).map((c) => ({ value: c._id, label: c.name })),
+    [schoolClasses],
   );
 
-  const selectedStudent = useMemo(
-    () => studentList.find((s) => (s.studentId?._id || s._id) === selectedStudentId),
+  /* ── Selected enrollment record ── */
+  const selectedEnrollment = useMemo(
+    () => studentList.find((s) => getStudentId(s) === selectedStudentId),
     [studentList, selectedStudentId],
   );
 
@@ -327,7 +343,7 @@ const FeeCollection = () => {
         },
       });
       form.resetFields();
-      dispatch(fetchMyFees({ studentId: selectedStudentId, academicYearId: selectedAcademicYearId }));
+      dispatch(fetchMyFees({ studentId: selectedStudentId, academicYearId }));
     } catch (err) {
       if (err?.errorFields) return;
       message.error(typeof err === "string" ? err : "Payment failed");
@@ -365,7 +381,7 @@ const FeeCollection = () => {
       dataIndex: "headName",
       render: (v, r) => (
         <span style={{ fontWeight: 600, color: txtPri }}>
-          {v || r?.feeHeadId?.name || "—"}
+          {v || r?.feeHeadId?.name || r?.feeStructureId?.feeHeadId?.name || "—"}
         </span>
       ),
     },
@@ -428,7 +444,20 @@ const FeeCollection = () => {
     },
   ];
 
-  const showContent = selectedStudentId && selectedAcademicYearId;
+  const showContent = !!selectedStudentId;
+
+  if (!academicYearId) {
+    return (
+      <div style={pageWrapper}>
+        <PageHeader title="Fee Collection" subtitle="Search student, view assigned fees and record payments" icon={<RupeeIcon />} />
+        <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 14, padding: 32, textAlign: "center" }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📅</div>
+          <div style={{ fontWeight: 600, color: txtPri }}>No active academic year selected</div>
+          <div style={{ color: txtMut, fontSize: 13, marginTop: 4 }}>Please select an academic year from the top navigation to continue.</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ ...pageWrapper, padding: isMobile ? "12px" : "clamp(12px,3vw,24px)" }}>
@@ -448,28 +477,37 @@ const FeeCollection = () => {
       }}>
         <div style={{
           display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(240px, 1fr))",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr auto",
           gap: 14, alignItems: "end",
         }}>
+          {/* Class filter */}
           <div>
-            <FL isDark={isDark}>Academic Year</FL>
+            <FL isDark={isDark}>Class</FL>
             <Select
               style={{ width: "100%" }}
-              placeholder="Select academic year"
-              options={yearOptions}
-              value={selectedAcademicYearId || undefined}
+              placeholder="Select class"
+              options={classOptions}
+              value={selectedClassId || undefined}
               onChange={(v) => {
-                setSelectedAcademicYearId(v);
+                setSelectedClassId(v);
+                setSelectedStudentId(null);
+                setSearchText("");
               }}
+              showSearch
+              optionFilterProp="label"
               size={isMobile ? "large" : "middle"}
+              allowClear
+              onClear={() => { setSelectedClassId(null); setSelectedStudentId(null); }}
             />
           </div>
+
+          {/* Student search */}
           <div>
             <FL isDark={isDark}>Student</FL>
             <Select
               showSearch
               style={{ width: "100%" }}
-              placeholder="Search by name or roll no"
+              placeholder={selectedClassId ? "Search by student name" : "Select class first"}
               value={selectedStudentId || undefined}
               options={studentOptions}
               loading={studentsLoading}
@@ -477,14 +515,27 @@ const FeeCollection = () => {
               onSearch={setSearchText}
               onChange={(v) => { setSelectedStudentId(v); setSearchText(""); }}
               suffixIcon={<SearchOutlined />}
-              notFoundContent={studentsLoading ? <Spin size="small" /> : "No students found"}
+              notFoundContent={
+                !selectedClassId
+                  ? <div style={{ padding: "8px 12px", color: txtMut }}>Select a class first</div>
+                  : studentsLoading
+                    ? <Spin size="small" />
+                    : "No students found"
+              }
+              disabled={!selectedClassId}
               size={isMobile ? "large" : "middle"}
             />
           </div>
-          {(selectedStudentId || selectedAcademicYearId) && (
+
+          {/* Clear */}
+          {(selectedClassId || selectedStudentId) && (
             <Button
-              onClick={() => { setSelectedStudentId(null); setSelectedAcademicYearId(null); }}
-              style={{ alignSelf: "end", borderRadius: 8 }}
+              onClick={() => {
+                setSelectedClassId(null);
+                setSelectedStudentId(null);
+                setSearchText("");
+              }}
+              style={{ borderRadius: 8 }}
               size={isMobile ? "large" : "middle"}
             >
               Clear
@@ -494,7 +545,7 @@ const FeeCollection = () => {
       </div>
 
       {/* ── Selected student info card ── */}
-      {selectedStudent && (
+      {selectedEnrollment && (
         <div style={{
           background: cardBg, border: `1px solid ${border}`,
           borderRadius: 14, padding: "14px 16px",
@@ -504,23 +555,24 @@ const FeeCollection = () => {
           <Avatar
             size={isMobile ? 44 : 52}
             style={{
-              background: `${avatarColor(selectedStudent?.name || selectedStudent?.studentId?.name || "S").bg}`,
-              color: `${avatarColor(selectedStudent?.name || selectedStudent?.studentId?.name || "S").color}`,
+              background: avatarColor(getStudentName(selectedEnrollment)).bg,
+              color: avatarColor(getStudentName(selectedEnrollment)).color,
               fontSize: 18, fontWeight: 700, flexShrink: 0,
             }}
           >
-            {(selectedStudent?.name || selectedStudent?.studentId?.name || "S")[0]?.toUpperCase()}
+            {getStudentName(selectedEnrollment)[0]?.toUpperCase()}
           </Avatar>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: isMobile ? 15 : 16, color: txtPri,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {selectedStudent?.name || selectedStudent?.studentId?.name || "—"}
+              {getStudentName(selectedEnrollment)}
             </div>
             <div style={{ fontSize: 12, color: txtMut, marginTop: 2 }}>
               {[
-                selectedStudent?.schoolClassId?.name || selectedStudent?.className,
-                selectedStudent?.sectionId?.name || selectedStudent?.section,
-                selectedStudent?.rollNo ? `Roll: ${selectedStudent.rollNo}` : selectedStudent?.admissionNo ? `Adm: ${selectedStudent.admissionNo}` : null,
+                selectedEnrollment?.schoolClass?.name,
+                selectedEnrollment?.section?.name ? `Section ${selectedEnrollment.section.name}` : null,
+                selectedEnrollment?.rollNumber ? `Roll: ${selectedEnrollment.rollNumber}` : null,
+                selectedEnrollment?.registrationNumber ? `Reg: ${selectedEnrollment.registrationNumber}` : null,
               ].filter(Boolean).join(" · ")}
             </div>
           </div>
@@ -541,7 +593,7 @@ const FeeCollection = () => {
       {showContent && myFees.length > 0 && (
         <div style={{
           display: "grid",
-          gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(3, 1fr)",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: isMobile ? 10 : 14,
           marginBottom: 16,
         }}>
@@ -568,7 +620,7 @@ const FeeCollection = () => {
                 letterSpacing: "-0.02em",
               }}>
                 {isMobile
-                  ? `₹${(value / 1000 >= 1 ? (value / 1000).toFixed(1) + "k" : value.toLocaleString("en-IN"))}`
+                  ? `₹${value >= 1000 ? (value / 1000).toFixed(1) + "k" : value.toLocaleString("en-IN")}`
                   : fmtCurrency(value)
                 }
               </div>
@@ -617,8 +669,8 @@ const FeeCollection = () => {
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
               <span style={{ color: txtMut }}>
-                {!selectedAcademicYearId
-                  ? "Select an academic year to get started"
+                {!selectedClassId
+                  ? "Select a class to get started"
                   : "Select a student to view fee details"}
               </span>
             }
@@ -641,7 +693,6 @@ const FeeCollection = () => {
               </span>
             </div>
 
-            {/* Mobile: cards */}
             {isMobile ? (
               myFees.length === 0 ? (
                 <div style={{ padding: "32px 0", textAlign: "center", color: txtMut }}>
@@ -655,7 +706,6 @@ const FeeCollection = () => {
                 </div>
               )
             ) : (
-              /* Desktop: table */
               <Table
                 className={TABLE_CLS}
                 rowKey="_id"
@@ -688,17 +738,15 @@ const FeeCollection = () => {
         centered={!isMobile}
       >
         <div style={{ padding: isMobile ? "20px 16px" : "24px" }}>
-          {/* modal header */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontWeight: 700, fontSize: 16, color: txtPri, marginBottom: 2 }}>
               Collect Fee
             </div>
             <div style={{ fontSize: 13, color: txtMut }}>
-              {payModal.fee?.headName || payModal.fee?.feeHeadId?.name}
+              {payModal.fee?.headName || payModal.fee?.feeHeadId?.name || payModal.fee?.feeStructureId?.feeHeadId?.name}
             </div>
           </div>
 
-          {/* balance banner */}
           <div style={{
             background: isDark ? "rgba(239,68,68,0.1)" : "#fff1f2",
             border: `1px solid ${isDark ? "rgba(239,68,68,0.2)" : "#fecdd3"}`,
@@ -724,7 +772,6 @@ const FeeCollection = () => {
           </div>
 
           <Form form={form} layout="vertical">
-            {/* Payment method — icon cards */}
             <Form.Item label={<span style={{ color: txtMut, fontSize: 12, fontWeight: 700 }}>PAYMENT METHOD</span>} name="method">
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
                 {METHOD_OPTIONS.map((m) => {
@@ -755,7 +802,6 @@ const FeeCollection = () => {
               </div>
             </Form.Item>
 
-            {/* Amount + Date */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <Form.Item
                 label={<span style={{ color: txtMut, fontSize: 12, fontWeight: 700 }}>AMOUNT</span>}
@@ -779,7 +825,6 @@ const FeeCollection = () => {
               </Form.Item>
             </div>
 
-            {/* Reference — only for non-cash */}
             {selectedMethod !== "cash" && (
               <Form.Item
                 label={<span style={{ color: txtMut, fontSize: 12, fontWeight: 700 }}>
@@ -801,7 +846,6 @@ const FeeCollection = () => {
               <Input.TextArea rows={2} placeholder="Any remarks…" />
             </Form.Item>
 
-            {/* action buttons */}
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <Button
                 block
@@ -830,9 +874,7 @@ const FeeCollection = () => {
       {/* ── Receipt modal ── */}
       <Modal
         open={receiptModal.open}
-        title={
-          <span style={{ fontWeight: 700, color: txtPri }}>Payment Receipt</span>
-        }
+        title={<span style={{ fontWeight: 700, color: txtPri }}>Payment Receipt</span>}
         onCancel={() => setReceiptModal({ open: false, fee: null, payment: null })}
         footer={[
           <Button
@@ -853,7 +895,7 @@ const FeeCollection = () => {
           ref={receiptRef}
           fee={receiptModal.fee}
           payment={receiptModal.payment}
-          student={selectedStudent?.studentId || selectedStudent}
+          student={selectedEnrollment?.user || selectedEnrollment}
           school={user?.school}
         />
       </Modal>

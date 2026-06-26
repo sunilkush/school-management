@@ -33,6 +33,11 @@ const studentEnrollmentSchema = new mongoose.Schema(
       ref: "Section",
       required: true,
     },
+    rollNumber: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
     admissionDate: {
       type: Date,
       default: Date.now,
@@ -74,6 +79,11 @@ studentEnrollmentSchema.index(
   { unique: true }
 );
 studentEnrollmentSchema.index({ createdAt: -1 });
+// Prevent duplicate roll numbers within the same class-section per academic year
+studentEnrollmentSchema.index(
+  { schoolId: 1, academicYearId: 1, schoolClassId: 1, sectionId: 1, rollNumber: 1 },
+  { unique: true, sparse: true }
+);
 
 export const StudentEnrollment = mongoose.model(
   "StudentEnrollment",

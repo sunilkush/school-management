@@ -180,6 +180,19 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       }
     );
 
+    /* 🔢 ROLL NUMBER — sequential within class + section + academic year */
+    const lastRollEnrollment = await StudentEnrollment.findOne({
+      schoolId,
+      academicYearId,
+      schoolClassId,
+      sectionId,
+      rollNumber: { $ne: null },
+    })
+      .sort({ rollNumber: -1 })
+      .session(session);
+
+    const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
+
     /* 📚 ENROLLMENT */
     const enrollment = (
       await StudentEnrollment.create(
@@ -191,6 +204,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
             schoolClassId,
             sectionId,
             registrationNumber: nextRegNo,
+            rollNumber: nextRollNumber,
             mobileNumber:
               fatherData?.mobile || motherData?.mobile || null,
           },
@@ -649,7 +663,7 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
 });
 
  const getStudentsBySchoolId = asyncHandler(async (req, res) => {
-  let { schoolId, academicYearId, search = "", page, limit } = req.query;
+  let { schoolId, academicYearId, schoolClassId, sectionId, search = "", page, limit } = req.query;
 
   const requesterSchoolId =
     req.user?.school?._id || req.user?.schoolId;
@@ -691,8 +705,15 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
 
   matchFilter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
 
+  if (schoolClassId && mongoose.Types.ObjectId.isValid(schoolClassId)) {
+    matchFilter.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
+  }
+  if (sectionId && mongoose.Types.ObjectId.isValid(sectionId)) {
+    matchFilter.sectionId = new mongoose.Types.ObjectId(sectionId);
+  }
+
   page = Number(page) || 1;
-  limit = Number(limit) || 10;
+  limit = Number(limit) || 500;
   const skip = (page - 1) * limit;
 
   const pipeline = [
@@ -1122,6 +1143,196 @@ const getMyChildren = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, children, "Parent children fetched successfully"));
 });
 
+/* ======================================================
+   🔢 ROLL NUMBER MANAGEMENT
+====================================================== */
+
+/**
+ * GET /student/roll-numbers?schoolId=&academicYearId=&schoolClassId=&sectionId=
+ * Returns all students in a class-section with their roll numbers, sorted by roll number.
+ */
+const getClassRollNumbers = asyncHandler(async (req, res) => {
+  const { academicYearId, schoolClassId, sectionId } = req.query;
+  const schoolId = req.user?.schoolId || req.query.schoolId;
+
+  if (!schoolId || !academicYearId || !schoolClassId || !sectionId) {
+    throw new ApiError(400, "schoolId, academicYearId, schoolClassId and sectionId are required");
+  }
+
+  const enrollments = await StudentEnrollment.aggregate([
+    {
+      $match: {
+        schoolId: new mongoose.Types.ObjectId(schoolId),
+        academicYearId: new mongoose.Types.ObjectId(academicYearId),
+        schoolClassId: new mongoose.Types.ObjectId(schoolClassId),
+        sectionId: new mongoose.Types.ObjectId(sectionId),
+        status: "Active",
+      },
+    },
+    {
+      $lookup: {
+        from: "students",
+        localField: "studentId",
+        foreignField: "_id",
+        as: "student",
+      },
+    },
+    { $unwind: "$student" },
+    {
+      $lookup: {
+        from: "users",
+        let: { userRef: "$student.userId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$userRef"] },
+              isActive: true,
+              isDeleted: { $ne: true },
+            },
+          },
+        ],
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    {
+      $project: {
+        _id: 1,
+        rollNumber: 1,
+        registrationNumber: 1,
+        admissionDate: 1,
+        status: 1,
+        studentId: "$student._id",
+        studentName: "$user.name",
+        email: "$user.email",
+        gender: "$student.gender",
+      },
+    },
+    { $sort: { rollNumber: 1, studentName: 1 } },
+  ]);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { students: enrollments }, "Roll numbers fetched successfully"));
+});
+
+/**
+ * PATCH /student/roll-number/:enrollmentId
+ * Update roll number for a single student enrollment.
+ */
+const updateStudentRollNumber = asyncHandler(async (req, res) => {
+  const { enrollmentId } = req.params;
+  const { rollNumber } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(enrollmentId)) {
+    throw new ApiError(400, "Invalid enrollment ID");
+  }
+  if (!rollNumber || typeof rollNumber !== "number" || rollNumber < 1) {
+    throw new ApiError(400, "rollNumber must be a positive integer");
+  }
+
+  const enrollment = await StudentEnrollment.findById(enrollmentId);
+  if (!enrollment) {
+    throw new ApiError(404, "Enrollment not found");
+  }
+
+  // Check for duplicate roll number in same class+section+year
+  const duplicate = await StudentEnrollment.findOne({
+    _id: { $ne: enrollmentId },
+    schoolId: enrollment.schoolId,
+    academicYearId: enrollment.academicYearId,
+    schoolClassId: enrollment.schoolClassId,
+    sectionId: enrollment.sectionId,
+    rollNumber,
+  });
+
+  if (duplicate) {
+    throw new ApiError(409, `Roll number ${rollNumber} is already assigned to another student in this class-section`);
+  }
+
+  enrollment.rollNumber = rollNumber;
+  enrollment.updatedBy = req.user?._id || null;
+  await enrollment.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { enrollmentId, rollNumber }, "Roll number updated successfully"));
+});
+
+/**
+ * POST /student/roll-numbers/auto-assign
+ * Bulk auto-assign sequential roll numbers (1, 2, 3...) sorted alphabetically by student name.
+ * Body: { schoolId, academicYearId, schoolClassId, sectionId }
+ */
+const bulkAutoAssignRollNumbers = asyncHandler(async (req, res) => {
+  const { academicYearId, schoolClassId, sectionId } = req.body;
+  const schoolId = req.user?.schoolId || req.body.schoolId;
+
+  if (!schoolId || !academicYearId || !schoolClassId || !sectionId) {
+    throw new ApiError(400, "schoolId, academicYearId, schoolClassId and sectionId are required");
+  }
+
+  // Get all active enrollments sorted by student name
+  const enrollments = await StudentEnrollment.aggregate([
+    {
+      $match: {
+        schoolId: new mongoose.Types.ObjectId(schoolId),
+        academicYearId: new mongoose.Types.ObjectId(academicYearId),
+        schoolClassId: new mongoose.Types.ObjectId(schoolClassId),
+        sectionId: new mongoose.Types.ObjectId(sectionId),
+        status: "Active",
+      },
+    },
+    {
+      $lookup: {
+        from: "students",
+        localField: "studentId",
+        foreignField: "_id",
+        as: "student",
+      },
+    },
+    { $unwind: "$student" },
+    {
+      $lookup: {
+        from: "users",
+        let: { userRef: "$student.userId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$_id", "$$userRef"] }, isActive: true, isDeleted: { $ne: true } } },
+        ],
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+    { $sort: { "user.name": 1 } },
+    { $project: { _id: 1, studentName: "$user.name" } },
+  ]);
+
+  if (!enrollments.length) {
+    throw new ApiError(404, "No active students found in this class-section");
+  }
+
+  // Bulk update each enrollment with sequential roll number
+  const bulkOps = enrollments.map((enr, idx) => ({
+    updateOne: {
+      filter: { _id: enr._id },
+      update: { $set: { rollNumber: idx + 1, updatedBy: req.user?._id || null } },
+    },
+  }));
+
+  await StudentEnrollment.bulkWrite(bulkOps);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        assignedCount: enrollments.length,
+        students: enrollments.map((e, i) => ({ enrollmentId: e._id, name: e.studentName, rollNumber: i + 1 })),
+      },
+      `Roll numbers auto-assigned to ${enrollments.length} students`
+    )
+  );
+});
+
 export {
   createStudentAdmission,
   getStudentById,
@@ -1133,4 +1344,7 @@ export {
   promoteStudentsToNextAcademicYear,
   getMyStudentEnrollmentId,
   getMyChildren,
+  getClassRollNumbers,
+  updateStudentRollNumber,
+  bulkAutoAssignRollNumbers,
 };

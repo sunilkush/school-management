@@ -168,12 +168,55 @@ export const fetchMyStudentEnrollment = createAsyncThunk(
   }
 );
 
+/* ── Roll Number Thunks ──────────────────────────────────── */
+export const fetchClassRollNumbers = createAsyncThunk(
+  "students/fetchClassRollNumbers",
+  async ({ schoolId, academicYearId, schoolClassId, sectionId }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/student/roll-numbers", {
+        params: { schoolId, academicYearId, schoolClassId, sectionId },
+      });
+      return res.data.data?.students || [];
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch roll numbers");
+    }
+  }
+);
+
+export const updateRollNumber = createAsyncThunk(
+  "students/updateRollNumber",
+  async ({ enrollmentId, rollNumber }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.patch(`/student/roll-number/${enrollmentId}`, { rollNumber });
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to update roll number");
+    }
+  }
+);
+
+export const autoAssignRollNumbers = createAsyncThunk(
+  "students/autoAssignRollNumbers",
+  async ({ schoolId, academicYearId, schoolClassId, sectionId }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/student/roll-numbers/auto-assign", {
+        schoolId, academicYearId, schoolClassId, sectionId,
+      });
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to auto-assign roll numbers");
+    }
+  }
+);
+
 const initialState = {
   lastStudent: null, // last stide
   student: null, // single student
   studentList: [], // list of students
   schoolStudents: [],
+  rollNumberList: [],   // students with roll numbers for a class-section
   loading: false,
+  rollLoading: false,
   error: null,
   success: false,
   registrationNumber: "",
@@ -310,6 +353,43 @@ const studentSlice = createSlice({
       })
       .addCase(fetchMyStudentEnrollment.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Roll number management
+      .addCase(fetchClassRollNumbers.pending, (state) => {
+        state.rollLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchClassRollNumbers.fulfilled, (state, action) => {
+        state.rollLoading = false;
+        state.rollNumberList = action.payload;
+      })
+      .addCase(fetchClassRollNumbers.rejected, (state, action) => {
+        state.rollLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateRollNumber.fulfilled, (state, action) => {
+        const { enrollmentId, rollNumber } = action.payload;
+        state.rollNumberList = state.rollNumberList.map((s) =>
+          s._id === enrollmentId ? { ...s, rollNumber } : s
+        );
+      })
+      .addCase(autoAssignRollNumbers.pending, (state) => {
+        state.rollLoading = true;
+      })
+      .addCase(autoAssignRollNumbers.fulfilled, (state, action) => {
+        state.rollLoading = false;
+        // Merge new roll numbers into the list
+        const updated = action.payload?.students || [];
+        const map = {};
+        updated.forEach((s) => { map[s.enrollmentId] = s.rollNumber; });
+        state.rollNumberList = state.rollNumberList.map((s) =>
+          map[s._id] !== undefined ? { ...s, rollNumber: map[s._id] } : s
+        );
+      })
+      .addCase(autoAssignRollNumbers.rejected, (state, action) => {
+        state.rollLoading = false;
         state.error = action.payload;
       });
   },

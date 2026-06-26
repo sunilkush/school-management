@@ -12,6 +12,9 @@ import {
   promoteStudentsToNextAcademicYear,
   getMyStudentEnrollmentId,
   getMyChildren,
+  getClassRollNumbers,
+  updateStudentRollNumber,
+  bulkAutoAssignRollNumbers,
 } from "../controllers/student.controllers.js";
 import { getMyProfile, updateMyProfile } from "../controllers/studentPortal.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
@@ -136,5 +139,29 @@ router.delete(
   deleteStudent
 );
 
+/* ── Roll Number Management ─────────────────────────── */
+// Get all students with roll numbers for a class-section
+router.get(
+  "/roll-numbers",
+  auth,
+  roleMiddleware(["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher"]),
+  getClassRollNumbers
+);
+
+// Update roll number for a single student
+router.patch(
+  "/roll-number/:enrollmentId",
+  auth,
+  roleMiddleware(ADMIN_ROLE),
+  updateStudentRollNumber
+);
+
+// Auto-assign roll numbers alphabetically for a class-section
+router.post(
+  "/roll-numbers/auto-assign",
+  auth,
+  roleMiddleware(ADMIN_ROLE),
+  bulkAutoAssignRollNumbers
+);
 
 export default router;

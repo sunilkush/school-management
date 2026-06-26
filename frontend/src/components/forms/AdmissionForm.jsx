@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Form, Input, Select, DatePicker, InputNumber, message, Modal } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchLastRegisteredStudent, createStudent } from "../../features/studentSlice";
+import { fetchLastRegisteredStudent, createStudent, fetchClassRollNumbers } from "../../features/studentSlice";
 import { getClassData } from "../../features/schoolClassSlice";
 import {
   UserOutlined, ProfileOutlined, ManOutlined, WomanOutlined,
@@ -76,9 +76,11 @@ const AdmissionForm = ({ onClose }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
-  const [activeTab, setActiveTab]   = useState("student");
-  const [sections, setSections]     = useState([]);
-  const [submitting, setSubmitting] = useState(false);
+  const [activeTab, setActiveTab]         = useState("student");
+  const [sections, setSections]           = useState([]);
+  const [submitting, setSubmitting]       = useState(false);
+  const [nextRollNumber, setNextRollNumber]     = useState(null);
+  const [rollPreviewLoading, setRollPreviewLoading] = useState(false);
 
   const currentIndex = TAB_KEYS.indexOf(activeTab);
 
@@ -106,6 +108,22 @@ const AdmissionForm = ({ onClose }) => {
     const secs = (cls?.sections || []).map(s => s.sectionId ? { ...s, _id: s.sectionId._id || s.sectionId, name: s.sectionId.name || s.name } : s);
     setSections(secs);
     form.setFieldsValue({ sectionId: undefined });
+    setNextRollNumber(null);
+  };
+
+  const handleSectionChange = async (sectionId) => {
+    form.setFieldsValue({ sectionId });
+    setNextRollNumber(null);
+    const schoolClassId = form.getFieldValue("schoolClassId");
+    if (!schoolClassId || !sectionId || !schoolId || !academicYearId) return;
+    setRollPreviewLoading(true);
+    const res = await dispatch(fetchClassRollNumbers({ schoolId, academicYearId, schoolClassId, sectionId }));
+    setRollPreviewLoading(false);
+    if (res.meta.requestStatus === "fulfilled") {
+      const list = res.payload || [];
+      const maxRoll = list.reduce((max, s) => Math.max(max, s.rollNumber || 0), 0);
+      setNextRollNumber(maxRoll + 1);
+    }
   };
 
   const goNext = async () => {
@@ -148,14 +166,33 @@ const AdmissionForm = ({ onClose }) => {
 
       if (res?.meta?.requestStatus === "fulfilled") {
         message.success("Student admitted successfully!");
-        const credentials = res?.payload?.credentials;
+        const { credentials, enrollment } = res?.payload || {};
         if (credentials) {
           Modal.success({
-            title: <span style={{ fontSize: 17, fontWeight: 700, color: "#7c3aed" }}>Login Credentials Created</span>,
-            width: 460,
+            title: <span style={{ fontSize: 17, fontWeight: 700, color: "#7c3aed" }}>Admission Successful</span>,
+            width: 480,
             icon: null,
             content: (
               <div style={{ marginTop: 14 }}>
+                {/* Roll Number + Registration Number summary */}
+                {enrollment && (
+                  <div style={{
+                    display: "flex", gap: 10, marginBottom: 14,
+                    padding: "12px 14px", borderRadius: 10,
+                    background: "rgba(22,163,74,0.06)",
+                    border: "1px solid rgba(22,163,74,0.2)",
+                  }}>
+                    <div style={{ flex: 1, textAlign: "center" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "#16A34A", textTransform: "uppercase", letterSpacing: "0.08em" }}>Roll Number</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: "#15803D" }}>{enrollment.rollNumber ?? "—"}</div>
+                    </div>
+                    <div style={{ width: 1, background: "rgba(22,163,74,0.2)" }} />
+                    <div style={{ flex: 1, textAlign: "center" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "#16A34A", textTransform: "uppercase", letterSpacing: "0.08em" }}>Reg. Number</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#15803D", marginTop: 4 }}>{enrollment.registrationNumber ?? "—"}</div>
+                    </div>
+                  </div>
+                )}
                 <CredentialBlock label="Student" creds={credentials.student} />
                 <CredentialBlock label="Father"  creds={credentials.father} />
                 <CredentialBlock label="Mother"  creds={credentials.mother} />
@@ -168,6 +205,8 @@ const AdmissionForm = ({ onClose }) => {
         }
         form.resetFields();
         setActiveTab("student");
+        setSections([]);
+        setNextRollNumber(null);
         dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
       } else {
         message.error(res?.payload || "Admission failed. Please try again.");
@@ -244,6 +283,19 @@ const AdmissionForm = ({ onClose }) => {
           font-weight: 700 !important;
           border-color: #ddd6fe !important;
           cursor: default !important;
+        }
+        .adm-form .roll-preview-assigned .ant-input[disabled] {
+          background: #f0fdf4 !important;
+          color: #15803D !important;
+          border-color: #86efac !important;
+          font-size: 15px !important;
+        }
+        .adm-form .roll-preview-placeholder .ant-input[disabled] {
+          background: #f8fafc !important;
+          color: #94a3b8 !important;
+          border-color: #e2e8f0 !important;
+          font-weight: 400 !important;
+          font-style: italic !important;
         }
         .adm-form .ant-form-item {
           margin-bottom: 16px !important;
@@ -449,6 +501,7 @@ const AdmissionForm = ({ onClose }) => {
                     placeholder={sections.length ? "Select section" : "Select class first"}
                     disabled={!sections.length}
                     options={sections.map(s => ({ label: s.name || s.sectionId?.name || "—", value: s._id || s.sectionId?._id || s.sectionId }))}
+                    onChange={handleSectionChange}
                   />
                 </Form.Item>
                 <Form.Item name="admissionDate" label="Admission Date" rules={[{ required: true, message: "Required" }]}>
@@ -456,10 +509,30 @@ const AdmissionForm = ({ onClose }) => {
                 </Form.Item>
               </div>
 
-              <div className="adm-row">
+              <div className="adm-row-2">
                 <Form.Item name="registrationNumber" label="Registration No.">
                   <Input disabled />
                 </Form.Item>
+                <Form.Item label="Roll No. (Auto)">
+                  <div className={
+                    nextRollNumber != null
+                      ? "roll-preview-assigned"
+                      : "roll-preview-placeholder"
+                  }>
+                    <Input
+                      disabled
+                      value={
+                        rollPreviewLoading
+                          ? "Loading..."
+                          : nextRollNumber != null
+                            ? nextRollNumber
+                            : "Select class & section"
+                      }
+                    />
+                  </div>
+                </Form.Item>
+              </div>
+              <div className="adm-row-2">
                 <Form.Item name="smsMobile" label="SMS Mobile">
                   <Input placeholder="For SMS alerts" maxLength={10} />
                 </Form.Item>
