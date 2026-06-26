@@ -123,3 +123,6 @@ dist
 
 .env.local
 .env.development.local
+
+# Generated backup files
+backups/

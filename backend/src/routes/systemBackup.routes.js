@@ -2,8 +2,8 @@ import { Router } from "express";
 import {
   createManualBackup,
   deleteSystemBackup,
+  downloadBackupFile,
   getSystemBackupById,
-  getSystemBackupDownloadUrl,
   getSystemBackupSummary,
   listBackupAuditLogs,
   listSystemBackups,
@@ -22,7 +22,7 @@ router.post("/manual",        createManualBackup);
 router.get("/",               listSystemBackups);
 router.get("/audit-logs",     listBackupAuditLogs);
 router.get("/:id",            getSystemBackupById);
-router.get("/:id/download",   getSystemBackupDownloadUrl);
+router.get("/:id/download",   downloadBackupFile);
 router.delete("/:id",         deleteSystemBackup);
 
 export default router;

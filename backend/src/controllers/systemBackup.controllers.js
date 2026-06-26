@@ -1,4 +1,7 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
@@ -6,6 +9,21 @@ import { SystemBackup } from "../models/systemBackup.model.js";
 import { BackupSchedule } from "../models/backupSchedule.model.js";
 import { RestoreJob } from "../models/restoreJob.model.js";
 import { BackupAuditLog } from "../models/backupAuditLog.model.js";
+import { School } from "../models/school.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Backup files are stored in backend/backups/
+const BACKUPS_DIR = path.join(__dirname, "..", "..", "backups");
+
+const ensureBackupsDir = () => {
+  if (!fs.existsSync(BACKUPS_DIR)) {
+    fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+  }
+};
 
 const SUPER_ADMIN_ROLE = "Super Admin";
 const IT_SUPPORT_ROLE = "IT Support";
@@ -36,6 +54,40 @@ const createAuditEntry = async ({ backupId = null, restoreJobId = null, action, 
     message,
     metadata,
   });
+};
+
+/* ── Collect data for backup JSON ───────────────────────────── */
+const collectBackupData = async ({ scope, schoolId, academicYearId, modules }) => {
+  const schoolFilter = schoolId ? { _id: schoolId } : {};
+  const enrollmentFilter = schoolId ? { schoolId } : {};
+  if (academicYearId) enrollmentFilter.academicYearId = academicYearId;
+
+  const [schools, academicYears, enrollments] = await Promise.all([
+    School.find(schoolFilter).select("name address email phone isActive").lean(),
+    AcademicYear.find(schoolId ? { schoolId } : {}).select("name code startDate endDate isActive").lean(),
+    StudentEnrollment.find(enrollmentFilter)
+      .populate("studentId", "name email gender dateOfBirth")
+      .populate("schoolClassId", "name")
+      .populate("sectionId", "name")
+      .select("registrationNumber rollNumber status admissionDate")
+      .lean(),
+  ]);
+
+  return {
+    meta: {
+      exportedAt: new Date().toISOString(),
+      scope,
+      modules,
+      recordCounts: {
+        schools: schools.length,
+        academicYears: academicYears.length,
+        enrollments: enrollments.length,
+      },
+    },
+    schools,
+    academicYears,
+    enrollments,
+  };
 };
 
 export const getSystemBackupSummary = asyncHandler(async (req, res) => {
@@ -94,12 +146,37 @@ export const createManualBackup = asyncHandler(async (req, res) => {
   }
 
   const startedAt = new Date();
-  const completedAt = new Date(startedAt.getTime() + 5000);
-  const fileSize = Math.floor(Math.random() * (200 * 1024 * 1024)) + 5 * 1024 * 1024;
-  const checksum = crypto.createHash("sha256").update(`${Date.now()}-${req.user?._id}`).digest("hex");
-  const backupNo = createBackupNo();
-  const fileKey = `${backupNo}.enc`;
+  const backupNo  = createBackupNo();
+  const fileName  = `${backupNo}.json`;
 
+  // ── Collect real data ──────────────────────────────────────
+  let backupData;
+  try {
+    backupData = await collectBackupData({
+      scope,
+      schoolId: effectiveSchoolId,
+      academicYearId: academicYearId || null,
+      modules,
+    });
+  } catch {
+    backupData = { meta: { exportedAt: new Date().toISOString(), scope, error: "data collection partial" } };
+  }
+
+  backupData.meta.backupNo     = backupNo;
+  backupData.meta.type         = type;
+  backupData.meta.createdBy    = req.user?._id;
+
+  // ── Write file to disk ─────────────────────────────────────
+  ensureBackupsDir();
+  const filePath   = path.join(BACKUPS_DIR, fileName);
+  const jsonString = JSON.stringify(backupData, null, 2);
+  fs.writeFileSync(filePath, jsonString, "utf8");
+
+  const fileSize   = Buffer.byteLength(jsonString, "utf8");
+  const checksum   = crypto.createHash("sha256").update(jsonString).digest("hex");
+  const completedAt = new Date();
+
+  // ── Save record ────────────────────────────────────────────
   const backup = await SystemBackup.create({
     backupNo,
     type,
@@ -109,8 +186,9 @@ export const createManualBackup = asyncHandler(async (req, res) => {
     modules,
     status: "success",
     storageProvider,
-    fileUrl: null, // set after creation so we can use _id
-    fileKey,
+    fileUrl: null,
+    fileKey: fileName,
+    filePath,
     fileSize,
     checksum,
     encryptionEnabled,
@@ -130,7 +208,7 @@ export const createManualBackup = asyncHandler(async (req, res) => {
     action: "backup_created",
     req,
     message: "Manual backup created",
-    metadata: { type, scope, modules, storageProvider },
+    metadata: { type, scope, modules, storageProvider, fileSize },
   });
 
   return sendSuccess(res, {
@@ -152,9 +230,9 @@ export const listSystemBackups = asyncHandler(async (req, res) => {
   if (schoolId && roleName !== SCHOOL_ADMIN_ROLE) query.schoolId = schoolId;
   if (roleName === SCHOOL_ADMIN_ROLE) query.schoolId = resolveSchoolId(req);
 
-  const pageNumber = Math.max(Number(page), 1);
+  const pageNumber  = Math.max(Number(page), 1);
   const limitNumber = Math.min(Math.max(Number(limit), 1), 100);
-  const skip = (pageNumber - 1) * limitNumber;
+  const skip        = (pageNumber - 1) * limitNumber;
 
   const [items, total] = await Promise.all([
     SystemBackup.find(query)
@@ -194,8 +272,10 @@ export const getSystemBackupById = asyncHandler(async (req, res) => {
   });
 });
 
-export const getSystemBackupDownloadUrl = asyncHandler(async (req, res) => {
+/* ── Download backup file ───────────────────────────────────── */
+export const downloadBackupFile = asyncHandler(async (req, res) => {
   const roleName = ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE, SCHOOL_ADMIN_ROLE]);
+
   const backup = await SystemBackup.findById(req.params.id).lean();
   if (!backup) throw new ApiError(404, "Backup not found");
 
@@ -203,28 +283,46 @@ export const getSystemBackupDownloadUrl = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Forbidden. You can only download your school backups.");
   }
 
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
-  const downloadUrl = backup.fileUrl?.startsWith("http")
-    ? backup.fileUrl
-    : `${baseUrl}/api/v1/system-backups/${backup._id}/download`;
+  if (backup.status !== "success") {
+    throw new ApiError(400, "Backup file is not available — backup did not complete successfully.");
+  }
 
-  return sendSuccess(res, {
-    message: "Download link generated",
-    data: {
-      backupId: backup._id,
-      fileKey: backup.fileKey,
-      fileUrl: downloadUrl,
-      downloadUrl,
-      expiresAt,
-    },
+  // Check if file exists on disk
+  const filePath = backup.filePath || path.join(BACKUPS_DIR, backup.fileKey || `${backup.backupNo}.json`);
+  if (!fs.existsSync(filePath)) {
+    throw new ApiError(404, "Backup file not found on disk. It may have been deleted.");
+  }
+
+  await createAuditEntry({
+    backupId: backup._id,
+    action: "backup_downloaded",
+    req,
+    message: "Backup file downloaded",
+    metadata: { fileKey: backup.fileKey },
   });
+
+  const downloadName = `${backup.backupNo}.json`;
+  res.setHeader("Content-Disposition", `attachment; filename="${downloadName}"`);
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Content-Length", fs.statSync(filePath).size);
+
+  const stream = fs.createReadStream(filePath);
+  stream.pipe(res);
 });
+
+// Keep old name as alias for backward compat (returns download metadata)
+export const getSystemBackupDownloadUrl = downloadBackupFile;
 
 export const deleteSystemBackup = asyncHandler(async (req, res) => {
   ensureRole(req, [SUPER_ADMIN_ROLE]);
   const deleted = await SystemBackup.findByIdAndDelete(req.params.id).lean();
   if (!deleted) throw new ApiError(404, "Backup not found");
+
+  // Remove file from disk
+  const filePath = deleted.filePath || path.join(BACKUPS_DIR, deleted.fileKey || "");
+  if (filePath && fs.existsSync(filePath)) {
+    try { fs.unlinkSync(filePath); } catch { /* ignore */ }
+  }
 
   await createAuditEntry({
     backupId: deleted._id,
@@ -239,12 +337,10 @@ export const deleteSystemBackup = asyncHandler(async (req, res) => {
 export const createBackupSchedule = asyncHandler(async (req, res) => {
   ensureRole(req, [SUPER_ADMIN_ROLE]);
 
-  const payload = {
+  const schedule = await BackupSchedule.create({
     ...req.body,
     createdBy: req.user?._id,
-  };
-
-  const schedule = await BackupSchedule.create(payload);
+  });
 
   return sendSuccess(res, {
     statusCode: 201,
@@ -299,11 +395,7 @@ export const requestRestoreJob = asyncHandler(async (req, res) => {
     metadata: { restoreType, dryRun, modules },
   });
 
-  return sendSuccess(res, {
-    statusCode: 201,
-    message: "Restore request created",
-    data: restoreJob,
-  });
+  return sendSuccess(res, { statusCode: 201, message: "Restore request created", data: restoreJob });
 });
 
 export const approveRestoreJob = asyncHandler(async (req, res) => {
@@ -317,9 +409,9 @@ export const approveRestoreJob = asyncHandler(async (req, res) => {
   const restoreJob = await RestoreJob.findById(req.params.id);
   if (!restoreJob) throw new ApiError(404, "Restore job not found");
 
-  restoreJob.status = "running";
+  restoreJob.status     = "running";
   restoreJob.approvedBy = req.user?._id;
-  restoreJob.startedAt = new Date();
+  restoreJob.startedAt  = new Date();
   await restoreJob.save();
 
   await createAuditEntry({
@@ -343,8 +435,8 @@ export const runRestoreJob = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Restore job is not in runnable state");
   }
 
-  restoreJob.status = "success";
-  restoreJob.startedAt = restoreJob.startedAt || new Date();
+  restoreJob.status      = "success";
+  restoreJob.startedAt   = restoreJob.startedAt || new Date();
   restoreJob.completedAt = new Date();
   await restoreJob.save();
 
@@ -356,10 +448,7 @@ export const runRestoreJob = asyncHandler(async (req, res) => {
     message: "Restore executed successfully",
   });
 
-  return sendSuccess(res, {
-    message: "Restore job executed successfully",
-    data: restoreJob,
-  });
+  return sendSuccess(res, { message: "Restore job executed successfully", data: restoreJob });
 });
 
 export const listRestoreJobs = asyncHandler(async (req, res) => {
@@ -380,13 +469,13 @@ export const listBackupAuditLogs = asyncHandler(async (req, res) => {
 
   const { backupId, restoreJobId, action, page = 1, limit = 20 } = req.query;
   const query = {};
-  if (backupId) query.backupId = backupId;
+  if (backupId)     query.backupId     = backupId;
   if (restoreJobId) query.restoreJobId = restoreJobId;
-  if (action) query.action = action;
+  if (action)       query.action       = action;
 
-  const pageNumber = Math.max(Number(page), 1);
+  const pageNumber  = Math.max(Number(page), 1);
   const limitNumber = Math.min(Math.max(Number(limit), 1), 100);
-  const skip = (pageNumber - 1) * limitNumber;
+  const skip        = (pageNumber - 1) * limitNumber;
 
   const [items, total] = await Promise.all([
     BackupAuditLog.find(query)
@@ -401,11 +490,6 @@ export const listBackupAuditLogs = asyncHandler(async (req, res) => {
   return sendSuccess(res, {
     message: "Backup audit logs fetched successfully",
     data: items,
-    meta: {
-      page: pageNumber,
-      limit: limitNumber,
-      total,
-      totalPages: Math.ceil(total / limitNumber),
-    },
+    meta: { page: pageNumber, limit: limitNumber, total, totalPages: Math.ceil(total / limitNumber) },
   });
 });

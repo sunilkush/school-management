@@ -52,6 +52,10 @@ const systemBackupSchema = new Schema(
       type: String,
       default: null,
     },
+    filePath: {
+      type: String,
+      default: null,
+    },
     fileSize: {
       type: Number,
       default: 0,

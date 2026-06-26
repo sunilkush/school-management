@@ -120,17 +120,31 @@ export const fetchBackupAuditLogs = createAsyncThunk("systemBackup/fetchAuditLog
   }
 });
 
-export const getBackupDownloadLink = createAsyncThunk(
-  "systemBackup/getDownloadLink",
-  async (backupId, { rejectWithValue }) => {
+export const downloadBackup = createAsyncThunk(
+  "systemBackup/download",
+  async ({ backupId, backupNo }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/system-backups/${backupId}/download`);
-      return response.data?.data;
+      const response = await apiClient.get(`/system-backups/${backupId}/download`, {
+        responseType: "blob",
+      });
+      // Trigger browser download
+      const url = URL.createObjectURL(new Blob([response.data], { type: "application/json" }));
+      const a   = document.createElement("a");
+      a.href     = url;
+      a.download = `${backupNo || backupId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return { backupId };
     } catch (error) {
-      return rejectWithValue(getMessage(error, "Failed to fetch download link"));
+      return rejectWithValue(getMessage(error, "Failed to download backup file"));
     }
   }
 );
+
+// Keep old name so existing imports don't break
+export const getBackupDownloadLink = downloadBackup;
 
 const initialState = {
   summary: {},

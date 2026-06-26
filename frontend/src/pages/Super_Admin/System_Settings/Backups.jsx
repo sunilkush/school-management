@@ -48,7 +48,7 @@ import {
   fetchBackupSchedules,
   fetchBackupSummary,
   fetchRestoreJobs,
-  getBackupDownloadLink,
+  downloadBackup,
   requestRestoreJob,
   runRestoreJob,
   toggleBackupSchedule,
@@ -113,7 +113,6 @@ export default function Backups() {
     actionLoading  = false,
     error          = null,
     successMessage = "",
-    downloadLink   = null,
   } = useSelector((s) => s.systemBackup || {});
 
   const [manualForm]   = Form.useForm();
@@ -124,6 +123,7 @@ export default function Backups() {
   const [approveModalOpen, setApproveModalOpen]  = useState(false);
   const [pendingApproveId, setPendingApproveId]  = useState(null);
   const [activeTab,        setActiveTab]         = useState("manual");
+  const [downloadingId,    setDownloadingId]     = useState(null);
 
   /* ── Bootstrap ──────────────────────────────────────────────────── */
   const bootstrap = useCallback(() => {
@@ -148,12 +148,14 @@ export default function Backups() {
     dispatch(clearSystemBackupMessages());
   }, [dispatch, error]);
 
-  useEffect(() => {
-    if (downloadLink?.downloadUrl) {
-      window.open(downloadLink.downloadUrl, "_blank", "noopener,noreferrer");
-      dispatch(clearSystemBackupMessages());
+  const handleDownload = async (row) => {
+    setDownloadingId(row._id);
+    const res = await dispatch(downloadBackup({ backupId: row._id, backupNo: row.backupNo }));
+    setDownloadingId(null);
+    if (res.meta.requestStatus === "rejected") {
+      message.error(res.payload || "Download failed");
     }
-  }, [downloadLink, dispatch]);
+  };
 
   /* ── Handlers ───────────────────────────────────────────────────── */
   const onManualSubmit = async (values) => {
@@ -229,8 +231,9 @@ export default function Backups() {
           <Button
             size="small" type="link" icon={<CloudDownloadOutlined />}
             disabled={!row?._id || row.status !== "success"}
-            title="Download backup"
-            onClick={() => dispatch(getBackupDownloadLink(row._id))}
+            loading={downloadingId === row._id}
+            title="Download backup file"
+            onClick={() => handleDownload(row)}
           />
           <Popconfirm title="Delete backup permanently?" onConfirm={() => dispatch(deleteBackup(row._id))} disabled={!row?._id}>
             <Button size="small" danger type="link" icon={<DeleteOutlined />} disabled={!row?._id} />
