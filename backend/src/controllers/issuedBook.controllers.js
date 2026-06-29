@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { IssuedBook } from "../models/IssuedBooks.model.js";
 import { Book } from "../models/Books.model.js";
 import { LibrarySetting } from "../models/LibrarySetting.model.js";
+import { Student } from "../models/student.model.js";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -117,8 +118,14 @@ export const getAllIssuedBooks = asyncHandler(async (req, res) => {
 
 // ── Get issued books for a student (student-portal) ──────────────────────────
 export const getIssuedBooksForStudent = asyncHandler(async (req, res) => {
-  const issuedBooks = await IssuedBook.find({ studentId: req.user._id })
-    .populate("bookId", "title author")
+  const student = await Student.findOne({ userId: req.user._id }).select("_id").lean();
+  if (!student) {
+    return res.status(200).json(new ApiResponse(200, [], "No student record found"));
+  }
+
+  const filter = { $or: [{ studentId: student._id }, { issuedToUserId: req.user._id }] };
+  const issuedBooks = await IssuedBook.find(filter)
+    .populate("bookId", "title author isbn")
     .populate("schoolId", "name");
 
   res.status(200).json(new ApiResponse(200, issuedBooks, "Issued books fetched"));

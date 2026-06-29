@@ -265,8 +265,7 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     .sort({ effectiveFrom: -1 })
     .lean();
 
-  console.log("employee:", employee._id);
-  console.log("structure:", structure);
+
 
   if (!structure) continue;
 

@@ -131,8 +131,8 @@ const Receipt = React.forwardRef(({ fee, student, payment, school }, ref) => (
 
 /* ─── Mobile fee card ──────────────────────────────────────────── */
 const FeeMobileCard = ({ fee, onPay, isDark }) => {
-  const balance = (fee.amount || 0) - (fee.paidAmount || 0);
-  const pct     = fee.amount ? Math.round(((fee.paidAmount || 0) / fee.amount) * 100) : 0;
+  const balance = (fee.totalAmount || 0) - (fee.paidAmount || 0);
+  const pct     = fee.totalAmount ? Math.round(((fee.paidAmount || 0) / fee.totalAmount) * 100) : 0;
   const isPaid  = fee.status === "paid";
   const bg      = isDark ? "#1a2235" : "#fff";
   const border  = isDark ? "#2a3550" : "#e2e8f0";
@@ -161,7 +161,7 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
 
       <div style={{ display: "flex", gap: 12, marginBottom: 10 }}>
         {[
-          { label: "Total",   value: fee.amount,      color: isDark ? "#94A3B8" : "#374151" },
+          { label: "Total",   value: fee.totalAmount,      color: isDark ? "#94A3B8" : "#374151" },
           { label: "Paid",    value: fee.paidAmount,  color: "#22C55E" },
           { label: "Balance", value: balance,         color: balance > 0 ? "#EF4444" : "#22C55E" },
         ].map(({ label, value, color }) => (
@@ -308,7 +308,7 @@ const FeeCollection = () => {
 
   /* ── Open pay modal ── */
   const openPay = (fee) => {
-    const balance = (fee.amount || 0) - (fee.paidAmount || 0);
+    const balance = (fee.totalAmount || 0) - (fee.paidAmount || 0);
     form.setFieldsValue({ amount: balance, date: dayjs(), method: "cash" });
     setSelectedMethod("cash");
     setPayModal({ open: true, fee });
@@ -396,7 +396,7 @@ const FeeCollection = () => {
     {
       title: "Balance", align: "right",
       render: (_, r) => {
-        const bal = (r.amount || 0) - (r.paidAmount || 0);
+        const bal = (r.totalAmount || 0) - (r.paidAmount || 0);
         return <span style={{ color: bal > 0 ? "#EF4444" : "#22C55E", fontWeight: 700 }}>{fmtCurrency(bal)}</span>;
       },
     },
@@ -407,7 +407,7 @@ const FeeCollection = () => {
     {
       title: "Progress", width: 120,
       render: (_, r) => {
-        const pct = r.amount ? Math.round(((r.paidAmount || 0) / r.amount) * 100) : 0;
+        const pct = r.totalAmount ? Math.round(((r.paidAmount || 0) / r.totalAmount) * 100) : 0;
         return (
           <div>
             <div style={{ height: 5, background: isDark ? "#1e293b" : "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>

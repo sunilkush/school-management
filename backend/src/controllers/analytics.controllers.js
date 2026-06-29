@@ -1,12 +1,28 @@
 import mongoose from "mongoose";
 import { Attendance } from "../models/attendance.model.js";
 import { User } from "../models/user.model.js";
+import { Student } from "../models/student.model.js";
+import { Employee } from "../models/Employee.model.js";
 import { School } from "../models/school.model.js";
 import { Exam } from "../models/Exam.model.js";
 import { Subject } from "../models/subject.model.js";
 import { Payment } from "../models/payment.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+
+const countByRoleName = (roleName, schoolId) =>
+  User.aggregate([
+    { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "r" } },
+    { $unwind: "$r" },
+    {
+      $match: {
+        isActive: true,
+        "r.name": roleName,
+        ...(schoolId && { schoolId: new mongoose.Types.ObjectId(schoolId) }),
+      },
+    },
+    { $count: "n" },
+  ]).then((res) => res[0]?.n || 0);
 
 /* ── ATTENDANCE SUMMARY ──────────────────────────────────────────────────── */
 export const getAttendanceSummary = asyncHandler(async (req, res) => {
@@ -32,7 +48,7 @@ export const getAttendanceSummary = asyncHandler(async (req, res) => {
         },
       },
     ]),
-    User.countDocuments({ role: "Student", isActive: true, ...(schoolId && { schoolId }) }),
+    Student.countDocuments({ ...(schoolId && { schoolId: new mongoose.Types.ObjectId(schoolId) }) }),
     School.aggregate([
       ...(schoolId ? [{ $match: { _id: new mongoose.Types.ObjectId(schoolId) } }] : []),
       {
@@ -179,8 +195,8 @@ export const getAcademicSummary = asyncHandler(async (req, res) => {
 
   const [totalStudents, totalTeachers, totalSubjects, totalExams, schoolCount] =
     await Promise.all([
-      User.countDocuments({ ...userFilter, role: "Student" }),
-      User.countDocuments({ ...userFilter, role: "Teacher" }),
+      Student.countDocuments({ ...(schoolId && { schoolId: new mongoose.Types.ObjectId(schoolId) }) }),
+      countByRoleName("Teacher", schoolId),
       Subject.countDocuments(schoolId ? { schoolId } : {}),
       Exam.countDocuments(schoolId ? { schoolId } : {}),
       School.countDocuments({ isActive: true }),
@@ -203,8 +219,8 @@ export const getPlatformOverview = asyncHandler(async (req, res) => {
     await Promise.all([
       School.countDocuments(),
       School.countDocuments({ isActive: true, status: "active" }),
-      User.countDocuments({ role: "Student", isActive: true }),
-      User.countDocuments({ role: "Teacher", isActive: true }),
+      Student.countDocuments(),
+      countByRoleName("Teacher", null),
     ]);
 
   res.status(200).json(

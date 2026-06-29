@@ -59,7 +59,7 @@ export const getStudyMaterials = asyncHandler(async (req, res) => {
   const skip  = (Number(page) - 1) * Number(limit);
   const total = await StudyMaterial.countDocuments(filter);
   const items = await StudyMaterial.find(filter)
-    .populate("schoolClassId", "className classNum")
+    .populate("schoolClassId", "name")
     .populate("subjectId", "name")
     .populate("uploadedBy", "name email")
     .sort({ createdAt: -1 })
@@ -72,7 +72,7 @@ export const getStudyMaterials = asyncHandler(async (req, res) => {
 export const getStudyMaterialById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const material = await StudyMaterial.findById(id)
-    .populate("schoolClassId", "className classNum")
+    .populate("schoolClassId", "name")
     .populate("subjectId", "name")
     .populate("uploadedBy", "name email");
 

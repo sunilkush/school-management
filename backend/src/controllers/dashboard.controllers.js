@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import { Class } from "../models/classes.model.js";
 import { User } from "../models/user.model.js";
 import { Student } from "../models/student.model.js";
-import { Fees } from "../models/fees.model.js";
 import { Role } from "../models/Roles.model.js";
 import { Attendance } from "../models/attendance.model.js";
 import { School } from "../models/school.model.js";
@@ -73,7 +72,7 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
       School.countDocuments(),
       User.countDocuments({ roleId: schoolAdminRoleId }),
       User.countDocuments(),
-      Fees.aggregate([{ $group: { _id: null, total: { $sum: "$amount" } } }]),
+      StudentFee.aggregate([{ $group: { _id: null, total: { $sum: "$paidAmount" } } }]),
     ]);
 
     response = {
@@ -93,9 +92,9 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
       Class.countDocuments({ schoolId: schoolObjectId }),
       User.countDocuments({ schoolId: schoolObjectId, roleId: teacherRoleId }),
       Student.countDocuments({ schoolId: schoolObjectId }),
-      Fees.aggregate([
+      StudentFee.aggregate([
         { $match: { schoolId: schoolObjectId } },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
+        { $group: { _id: null, total: { $sum: "$paidAmount" } } },
       ]),
     ]);
 
@@ -440,7 +439,7 @@ export const getRoleDashboardOverview = asyncHandler(async (req, res) => {
 
     const [attendance, fees, upcomingExams] = await Promise.all([
       Attendance.aggregate([
-        { $match: { userId: student.userId, role: "student" } },
+        { $match: { userId: userId, role: "student" } },
         {
           $group: {
             _id: null,

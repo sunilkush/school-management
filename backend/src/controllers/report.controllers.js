@@ -43,7 +43,7 @@ export const getSchoolOverviewReport = async (req, res, next) => {
 
     const classWise = await StudentEnrollment.aggregate([
       { $match: { schoolId: schoolObjId, academicYearId: academicObjId } },
-      { $lookup: { from: "classes", localField: "schoolClassId", foreignField: "_id", as: "classData" } },
+      { $lookup: { from: "schoolclasses", localField: "schoolClassId", foreignField: "_id", as: "classData" } },
       { $unwind: "$classData" },
       { $group: { _id: "$classData.name", count: { $sum: 1 } } },
       { $sort: { _id: 1 } },

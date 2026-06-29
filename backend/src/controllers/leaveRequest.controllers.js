@@ -47,7 +47,7 @@ export const getLeaveRequests = asyncHandler(async (req, res) => {
     limit = 20,
   } = req.query;
 
-  const isSuperAdmin = req.user.role?.name === "Super Admin";
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
   const schoolId = isSuperAdmin ? querySchoolId : req.user.school?._id || req.user.schoolId;
 
   if (!schoolId) throw new ApiError(400, "schoolId is required");
@@ -156,7 +156,7 @@ export const deleteLeaveRequest = asyncHandler(async (req, res) => {
 
   const isOwner = leaveRequest.userId.toString() === req.user._id.toString();
   const isAdmin =
-    req.user.role?.name === "Super Admin" || req.user.role?.name === "School Admin";
+    req.userRole?.name === "Super Admin" || req.userRole?.name === "School Admin";
 
   if (!isOwner && !isAdmin) throw new ApiError(403, "Access denied");
 

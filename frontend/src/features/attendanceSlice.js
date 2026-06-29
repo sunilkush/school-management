@@ -312,7 +312,7 @@ const attendanceSlice = createSlice({
       .addCase(selfCheckIn.fulfilled, (state, action) => {
         state.selfLoading = false;
         state.error = null;
-        state.selfStatus = action.payload;
+        state.selfStatus = action.payload?.record || action.payload;
       })
       .addCase(selfCheckIn.rejected, (state, action) => {
         state.selfLoading = false;

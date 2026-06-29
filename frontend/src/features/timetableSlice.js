@@ -271,7 +271,7 @@ export const fetchTimetableMasterData = createAsyncThunk(
       if (includeChildren)
         requests.push([
           "children",
-          apiClient.get("/student", query({ parentId, schoolId })),
+          apiClient.get("/student/my-children"),
         ]);
 
       const responses = await Promise.all(

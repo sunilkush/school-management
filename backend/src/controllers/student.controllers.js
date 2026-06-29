@@ -284,12 +284,18 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
     throw new ApiError(400, "schoolId and academicYearId are required");
   }
 
-    const result = await Student.find({ schoolId,academicYearId })
-    
-    return res.status(200).json(
-      new ApiResponse(200, {
-        students: result,
-      }, "Students Retrieved Successfully"));
+  const filter = { schoolId, academicYearId, status: "Active" };
+  if (schoolClassId) filter.schoolClassId = schoolClassId;
+
+  const enrollments = await StudentEnrollment.find(filter)
+    .populate({ path: "studentId", populate: { path: "userId", select: "name email phone" } })
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, { students: enrollments }, "Students Retrieved Successfully")
+  );
 });
 export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
   const { schoolClassId, page = 1, limit = 10 } = req.query;
@@ -311,7 +317,7 @@ export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
     match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   }
 
-  const result = await Student.aggregate([
+  const result = await StudentEnrollment.aggregate([
     { $match: match },
 
     {
@@ -340,11 +346,11 @@ export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
         as: "userDetails",
       },
     },
-    { $unwind: "$userDetails" },
+    { $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } },
 
     {
       $lookup: {
-        from: "classes",
+        from: "schoolclasses",
         localField: "schoolClassId",
         foreignField: "_id",
         as: "classDetails",

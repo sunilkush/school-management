@@ -237,7 +237,9 @@ export const getAttendance = asyncHandler(async (req, res) => {
 
   applyReadScope(req, filter);
 
-  const skip = (page - 1) * limit;
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNum = Math.min(parseInt(limit, 10) || 20, 200);
+  const skip = (pageNum - 1) * limitNum;
 
   const query = Attendance.find(filter)
     .populate("userId", "name email")
@@ -247,7 +249,7 @@ export const getAttendance = asyncHandler(async (req, res) => {
     .populate("markedBy", "name")
     .sort({ date: -1, createdAt: -1 })
     .skip(skip)
-    .limit(limit);
+    .limit(limitNum);
 
   if (search) {
     query.where({ remarks: { $regex: search, $options: "i" } });
@@ -259,9 +261,9 @@ export const getAttendance = asyncHandler(async (req, res) => {
     items,
     pagination: {
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
     },
   };
 

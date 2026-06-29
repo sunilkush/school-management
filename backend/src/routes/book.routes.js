@@ -11,19 +11,12 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// ✅ Create a book (Only Admin & Teacher)
-router.post("/", auth, roleMiddleware(["School Admin", "Teacher", "Librarian"]), createBook);
+const LIBRARY_STAFF = ["School Admin", "Teacher", "Librarian"];
 
-// ✅ Get all books (Accessible to all authenticated users)
+router.post("/", auth, roleMiddleware(LIBRARY_STAFF), createBook);
 router.get("/", auth, getAllBooks);
-
-// ✅ Get a book by ID (Accessible to all authenticated users)
-router.get("/:bookId", auth, getBookById);
-
-// ✅ Update a book (Only Admin & Teacher)
-router.put("/:bookId", auth, roleMiddleware(["School Admin", "Teacher", "Librarian"]), updateBook);
-
-// ✅ Delete a book (Only Admin)
-router.delete("/:bookId", auth, roleMiddleware(["School Admin"]), deleteBook);
+router.get("/:id", auth, getBookById);
+router.put("/:id", auth, roleMiddleware(LIBRARY_STAFF), updateBook);
+router.delete("/:id", auth, roleMiddleware(["School Admin", "Librarian"]), deleteBook);
 
 export default router;

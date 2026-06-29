@@ -258,7 +258,7 @@ export const getTeacherHomework = asyncHandler(async (req, res) => {
   }
 
   const homework = await Assignment.find(filters)
-    .populate("schoolClassId", "className classNum")
+    .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("subjectId", "name code")
     .sort({ dueDate: 1, createdAt: -1 })
@@ -318,7 +318,7 @@ export const createTeacherHomework = asyncHandler(async (req, res) => {
   });
 
   const assignment = await Assignment.findById(created._id)
-    .populate("schoolClassId", "className classNum")
+    .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("subjectId", "name code")
     .lean();
@@ -428,7 +428,7 @@ export const getHomeworkSubmissions = asyncHandler(async (req, res) => {
   const assignment = await Assignment.findOne({
     _id: assignmentId,
     schoolId: req.user.schoolId,
-    ...(req.user.role === "Teacher" ? { teacherId: req.user._id } : {}),
+    ...(req.userRole?.name === "Teacher" ? { teacherId: req.user._id } : {}),
   }).select("_id");
 
   if (!assignment) {
@@ -448,7 +448,7 @@ export const getHomeworkSubmissions = asyncHandler(async (req, res) => {
           select: "userId",
           populate: { path: "userId", select: "name email" },
         },
-        { path: "schoolClassId", select: "className classNum" },
+        { path: "schoolClassId", select: "name" },
         { path: "sectionId", select: "name" },
       ],
     })
@@ -624,7 +624,7 @@ export const updateTeacherHomework = asyncHandler(async (req, res) => {
   await assignment.save();
 
   const updated = await Assignment.findById(assignment._id)
-    .populate("schoolClassId", "className classNum")
+    .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .populate("subjectId", "name code")
     .lean();

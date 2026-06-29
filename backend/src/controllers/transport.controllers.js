@@ -166,7 +166,7 @@ export const getAssignableStudents = asyncHandler(async (req, res) => {
       },
       select: "userId",
     })
-    .populate("schoolClassId", "className")
+    .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .sort({ createdAt: -1 })
     .lean();
@@ -176,7 +176,7 @@ export const getAssignableStudents = asyncHandler(async (req, res) => {
     registrationNumber: enrollment.registrationNumber,
     name: enrollment.studentId?.userId?.name || "Unknown Student",
     email: enrollment.studentId?.userId?.email || "",
-    className: enrollment.schoolClassId?.className || "",
+    className: enrollment.schoolClassId?.name || "",
     sectionName: enrollment.sectionId?.name || "",
   }));
 
@@ -208,7 +208,7 @@ export const getTransportAssignments = asyncHandler(async (req, res) => {
             select: "name",
           },
         },
-        { path: "schoolClassId", select: "className" },
+        { path: "schoolClassId", select: "name" },
         { path: "sectionId", select: "name" },
       ],
     })
@@ -267,7 +267,7 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
             select: "name",
           },
         },
-        { path: "schoolClassId", select: "className" },
+        { path: "schoolClassId", select: "name" },
         { path: "sectionId", select: "name" },
       ],
     });

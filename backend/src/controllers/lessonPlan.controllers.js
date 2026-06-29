@@ -53,7 +53,7 @@ export const getLessonPlans = asyncHandler(async (req, res) => {
   const skip  = (Number(page) - 1) * Number(limit);
   const total = await LessonPlan.countDocuments(filter);
   const items = await LessonPlan.find(filter)
-    .populate("schoolClassId", "className classNum")
+    .populate("schoolClassId", "name")
     .populate("subjectId", "name")
     .populate("teacherId", "name email")
     .sort({ plannedDate: -1 })
@@ -66,7 +66,7 @@ export const getLessonPlans = asyncHandler(async (req, res) => {
 export const getLessonPlanById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const plan = await LessonPlan.findById(id)
-    .populate("schoolClassId", "className classNum")
+    .populate("schoolClassId", "name")
     .populate("subjectId", "name")
     .populate("teacherId", "name email");
 

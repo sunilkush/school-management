@@ -62,7 +62,7 @@ export const fetchStudentFees = createAsyncThunk(
   async (studentId, { rejectWithValue }) => {
     try {
 
-      const res = await apiClient.get(`/student-fees/${studentId}`);
+      const res = await apiClient.get(`/student-fees/my/${studentId}`);
 
       return res.data.data;
     } catch (e) {
@@ -103,9 +103,10 @@ const feesSlice = createSlice({
       })
       .addCase(fetchAllFees.fulfilled, (state, action) => {
         state.loading = false;
-
-        state.feesList = action.payload?.data?.data || [];
-        state.total = action.payload?.data?.total || 0;
+        // backend: ApiResponse wraps data in .data; thunk returns res.data
+        const payload = action.payload?.data;
+        state.feesList = Array.isArray(payload) ? payload : (payload?.data || payload?.fees || []);
+        state.total = action.payload?.data?.total || (Array.isArray(payload) ? payload.length : 0);
         state.page = action.payload?.data?.page || 1;
         state.limit = action.payload?.data?.limit || 10;
       })

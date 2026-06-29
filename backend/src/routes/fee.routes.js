@@ -1,57 +1,20 @@
 import express from "express";
 import {
-  createFees,
-  getAllFees,
-  updateFee,
-  deleteFee,
+  createFeeStructure,
+  getFeeStructures,
+  updateFeeStructure,
+  deleteFeeStructure,
 } from "../controllers/fee.controllers.js";
 
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-/* =====================================================
-   ✅ CREATE FEE
-   Role: super_admin, school_admin
-=====================================================*/
-router.post(
-  "/createFees",
-  auth,
-  roleMiddleware("Super Admin", "School Admin","Accountant"),
-  createFees
-);
+const FEE_ROLES = ["Super Admin", "School Admin", "Accountant"];
 
-/* =====================================================
-   ✅ GET ALL FEES (School + Academic Year)
-   Role: super_admin, school_admin
-=====================================================*/
-router.get(
-  "/allFees",
-  auth,
-  roleMiddleware("Super Admin", "School Admin","Accountant"),
-  getAllFees
-);
-
-/* =====================================================
-   ✅ UPDATE FEE
-   Role: school_admin
-=====================================================*/
-router.put(
-  "/:id",
-  auth,
-  roleMiddleware("School Admin","Accountant"),
-  updateFee
-);
-
-/* =====================================================
-   ✅ DELETE FEE
-   Role: school_admin
-=====================================================*/
-router.delete(
-  "/:id",
-  auth,
-  roleMiddleware("School Admin","Accountant"),
-  deleteFee
-);
+router.post("/createFees", auth, roleMiddleware(FEE_ROLES), createFeeStructure);
+router.get("/allFees", auth, roleMiddleware(FEE_ROLES), getFeeStructures);
+router.put("/:id", auth, roleMiddleware(["School Admin", "Accountant"]), updateFeeStructure);
+router.delete("/:id", auth, roleMiddleware(["School Admin", "Accountant"]), deleteFeeStructure);
 
 export default router;

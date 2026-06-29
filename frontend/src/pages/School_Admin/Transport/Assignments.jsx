@@ -81,7 +81,7 @@ const Assignments = () => {
       studentEnrollmentId: a.studentEnrollmentId?._id,
       studentName:     a.studentEnrollmentId?.studentId?.userId?.name || "-",
       registrationNumber: a.studentEnrollmentId?.registrationNumber || "-",
-      className:       a.studentEnrollmentId?.schoolClassId?.className || "-",
+      className:       a.studentEnrollmentId?.schoolClassId?.name || "-",
       sectionName:     a.studentEnrollmentId?.sectionId?.name || "-",
       routeName:       a.routeId?.name || "-",
       vehicleNumber:   a.vehicleId?.busNumber || "-",
