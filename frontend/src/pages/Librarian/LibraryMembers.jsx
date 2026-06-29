@@ -74,9 +74,9 @@ const LibraryMembers = () => {
 
     // Teachers & Staff from allUsers
     allUsers
-      .filter((u) => ["Teacher", "Staff", "Accountant", "HR"].includes(u.role))
+      .filter((u) => ["Teacher", "Staff", "Accountant", "HR"].includes(u.role?.name))
       .forEach((u) => {
-        list.push({ id: u._id, name: u.name, regNo: u.employeeId || "-", type: u.role === "Teacher" ? "Teacher" : "Staff", email: u.email || "" });
+        list.push({ id: u._id, name: u.name, regNo: u.employeeId || "-", type: u.role?.name === "Teacher" ? "Teacher" : "Staff", email: u.email || "" });
       });
 
     return list;

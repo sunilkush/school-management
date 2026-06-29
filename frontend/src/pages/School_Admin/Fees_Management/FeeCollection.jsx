@@ -299,7 +299,7 @@ const FeeCollection = () => {
   );
 
   const summary = useMemo(() => {
-    const total   = myFees.reduce((a, f) => a + (f.amount || 0), 0);
+    const total   = myFees.reduce((a, f) => a + (f.totalAmount || 0), 0);
     const paid    = myFees.reduce((a, f) => a + (f.paidAmount || 0), 0);
     const pending = total - paid;
     const pct     = total ? Math.round((paid / total) * 100) : 0;
@@ -386,7 +386,7 @@ const FeeCollection = () => {
       ),
     },
     {
-      title: "Total", dataIndex: "amount", align: "right",
+      title: "Total", dataIndex: "totalAmount", align: "right",
       render: (v) => <span style={{ fontWeight: 700 }}>{fmtCurrency(v)}</span>,
     },
     {
@@ -759,7 +759,7 @@ const FeeCollection = () => {
                 Balance Due
               </div>
               <div style={{ fontSize: 26, fontWeight: 800, color: "#EF4444", letterSpacing: "-0.02em" }}>
-                {fmtCurrency((payModal.fee?.amount || 0) - (payModal.fee?.paidAmount || 0))}
+                {fmtCurrency((payModal.fee?.totalAmount || 0) - (payModal.fee?.paidAmount || 0))}
               </div>
             </div>
             <div style={{
@@ -812,7 +812,7 @@ const FeeCollection = () => {
                   style={{ width: "100%" }}
                   prefix="₹"
                   min={1}
-                  max={(payModal.fee?.amount || 0) - (payModal.fee?.paidAmount || 0)}
+                  max={(payModal.fee?.totalAmount || 0) - (payModal.fee?.paidAmount || 0)}
                   size={isMobile ? "large" : "middle"}
                 />
               </Form.Item>

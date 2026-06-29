@@ -9,7 +9,7 @@ const SchoolClassSectionFilter = () => {
   const dispatch = useDispatch();
 
   const { schools, loading: schoolLoading } = useSelector((state) => state.school);
-  const { classList, loading: classLoading } = useSelector((state) => state.class);
+  const { classList = [], loading: classLoading } = useSelector((state) => state.class || {});
   const { sections, loading: sectionLoading } = useSelector((state) => state.section);
 
   const [selectedSchool, setSelectedSchool] = useState(null);

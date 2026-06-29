@@ -85,9 +85,9 @@ const Chip = ({ label, value, color }) => (
 const FeeStudent = () => {
   const dispatch = useDispatch();
 
-  const { myFees = [], loading: feeLoading } = useSelector((s) => s.studentFee);
-  const { myEnrollment }                     = useSelector((s) => s.students);
-  const { installments = [], loading: installmentLoading } = useSelector((s) => s.feeInstallment);
+  const { myFees = [], loading: feeLoading } = useSelector((s) => s.studentFee || {});
+  const { myEnrollment }                     = useSelector((s) => s.students || {});
+  const { installments = [], loading: installmentLoading } = useSelector((s) => s.feeInstallment || {});
 
   const enrollmentId   = myEnrollment?.enrollmentId;
   const studentId      = myEnrollment?.studentId;

@@ -170,7 +170,7 @@ const LessonPlans = () => {
   const columns = [
     { title: "Title", dataIndex: "title", render: (v) => <span style={{ fontWeight: 600 }}>{v}</span> },
     { title: "Subject", dataIndex: "subjectId", render: (v) => v?.name || "—" },
-    { title: "Class", dataIndex: "schoolClassId", render: (v) => v?.className || (v?.classNum ? `Class ${v.classNum}` : "—") },
+    { title: "Class", dataIndex: "schoolClassId", render: (v) => v?.name || "—" },
     {
       title: "Planned Date",
       dataIndex: "plannedDate",

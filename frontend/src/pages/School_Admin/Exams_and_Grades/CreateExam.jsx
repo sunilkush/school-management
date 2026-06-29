@@ -55,7 +55,7 @@ const CreateExam = () => {
   const [examData, setExamData] = useState(null);
   const { user = [], loading } = useSelector((state) => state.auth || {});
   const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
-  const { schoolClasses } = useSelector((state) => state.schoolClass || {});
+  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
   const { questions = [] } = useSelector((state) => state.questions || {});
 
   const academicYearId = selectedAcademicYear?._id;
