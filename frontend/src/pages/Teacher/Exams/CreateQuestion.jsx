@@ -1,226 +1,269 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
-  Form,
-  Input,
-  Select,
-  Button,
-  Row,
-  Col,
-  Divider,
-  Space,
-  InputNumber,
-  Switch,
-  message,
+  Form, Input, Select, Button, Row, Col, Divider,
+  Space, InputNumber, Switch, Tag, Tooltip,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-
+import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { getClassData } from "../../../features/schoolClassSlice";
-import { createQuestions } from "../../../features/questionSlice";
+import { createQuestions, updateQuestion } from "../../../features/questionSlice";
 import { fetchAllChapters } from "../../../features/chapterSlice";
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const CreateQuestion = () => {
+const QUESTION_TYPES = [
+  { value: "mcq_single", label: "MCQ — Single Correct"   },
+  { value: "mcq_multi",  label: "MCQ — Multiple Correct" },
+  { value: "true_false", label: "True / False"            },
+  { value: "fill_blank", label: "Fill in the Blank"       },
+  { value: "match",      label: "Match the Following"     },
+];
+
+const DIFFICULTY = [
+  { value: "easy",   label: "Easy",   color: "#15803D" },
+  { value: "medium", label: "Medium", color: "#B45309" },
+  { value: "hard",   label: "Hard",   color: "#DC2626" },
+];
+
+/**
+ * Props:
+ *  initialData  — existing question object (edit mode)
+ *  onSuccess    — callback after save (close modal / refresh list)
+ */
+const CreateQuestion = ({ initialData = null, onSuccess }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
-  const { chapters = [] } = useSelector((state) => state.chapter || {});
-  const { user = {} } = useSelector((state) => state.auth || {});
-  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+  const isEditMode = !!initialData?._id;
 
-  const [options, setOptions] = useState([]);
-  const [correctAnswers, setCorrectAnswers] = useState([]);
-  const [questionType, setQuestionType] = useState("mcq_single");
+  const { schoolClasses = [] }  = useSelector((s) => s.schoolClass || {});
+  const { chapters = [] }        = useSelector((s) => s.chapter   || {});
+  const { user = {} }            = useSelector((s) => s.auth      || {});
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+
+  const schoolId       = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+  const academicYearId = selectedAcademicYear?._id || null;
+
+  const [saving,          setSaving]          = useState(false);
+  const [options,         setOptions]         = useState([]);
+  const [correctAnswers,  setCorrectAnswers]  = useState([]);
+  const [questionType,    setQuestionType]    = useState("mcq_single");
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
 
+  /* ── Load classes & chapters ── */
   useEffect(() => {
-    if (!schoolId) return;
-    dispatch(getClassData({ schoolId }));
+    if (!schoolId || !academicYearId) return;
+    dispatch(getClassData({ schoolId, academicYearId }));
     dispatch(fetchAllChapters());
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId, academicYearId]);
 
-  const shortClass = useMemo(() => {
-    return [...schoolClasses].sort((a, b) => {
-      const numA = parseInt(String(a?.name || "").replace(/\D/g, ""), 10) || 0;
-      const numB = parseInt(String(b?.name || "").replace(/\D/g, ""), 10) || 0;
-      return numA - numB;
+  /* ── Seed form in edit mode ── */
+  useEffect(() => {
+    if (!initialData) return;
+    const classId   = initialData.schoolClassId?._id || initialData.schoolClassId;
+    const subjectId = initialData.subjectId?._id      || initialData.subjectId;
+    const chapterId = initialData.chapterId?._id      || initialData.chapterId;
+    const qType     = initialData.questionType || "mcq_single";
+
+    setSelectedClassId(classId   || null);
+    setSelectedSubjectId(subjectId || null);
+    setQuestionType(qType);
+    setOptions(Array.isArray(initialData.options) ? initialData.options : []);
+    setCorrectAnswers(Array.isArray(initialData.correctAnswers) ? initialData.correctAnswers : []);
+
+    form.setFieldsValue({
+      schoolClassId: classId,
+      subjectId,
+      chapterId,
+      questionType:  qType,
+      statement:     initialData.statement,
+      topic:         initialData.topic,
+      difficulty:    initialData.difficulty  || "medium",
+      marks:         initialData.marks       ?? 1,
+      negativeMarks: initialData.negativeMarks ?? 0,
+      isActive:      initialData.isActive    ?? true,
+      tags:          Array.isArray(initialData.tags) ? initialData.tags.join(", ") : (initialData.tags || ""),
     });
-  }, [schoolClasses]);
+  }, [initialData, form]);
 
-  const selectedClassData = useMemo(() => {
-    if (!selectedClassId) return null;
-    return (
-      schoolClasses.find((cls) => String(cls?._id) === String(selectedClassId)) || null
-    );
-  }, [schoolClasses, selectedClassId]);
+  /* ── Sorted class list ── */
+  const sortedClasses = useMemo(() =>
+    [...schoolClasses].sort((a, b) => {
+      const nA = parseInt(String(a?.name || "").replace(/\D/g, ""), 10) || 0;
+      const nB = parseInt(String(b?.name || "").replace(/\D/g, ""), 10) || 0;
+      return nA - nB;
+    }),
+    [schoolClasses]
+  );
 
-  const selectedBoardClassId = useMemo(() => {
-    return selectedClassData?.boardClass?._id || null;
-  }, [selectedClassData]);
+  const selectedClassData = useMemo(() =>
+    schoolClasses.find((c) => String(c?._id) === String(selectedClassId)) || null,
+    [schoolClasses, selectedClassId]
+  );
 
+  /* ── Subject options from class sections ── */
   const subjectOptions = useMemo(() => {
     if (!selectedClassData?.sections?.length) return [];
-
-    const subjects = selectedClassData.sections.flatMap((section) =>
-      (section?.subjects || []).map((subject) => ({
-        _id: subject?._id,
-        name: subject?.name,
-      }))
-    );
-
-    return Array.from(
-      new Map(
-        subjects
-          .filter((subject) => subject?._id && subject?.name)
-          .map((subject) => [String(subject._id), subject])
-      ).values()
-    );
+    const map = new Map();
+    selectedClassData.sections.forEach((sec) => {
+      (sec?.subjects || []).forEach((sub) => {
+        if (sub?._id && sub?.name) map.set(String(sub._id), sub);
+      });
+    });
+    return Array.from(map.values());
   }, [selectedClassData]);
 
+  /* ── Chapter options filtered by boardClass + subject ── */
+  const boardClassId = selectedClassData?.boardClass?._id || null;
   const filteredChapters = useMemo(() => {
-    if (!selectedBoardClassId || !selectedSubjectId) return [];
-
-    return chapters.filter((chapter) => {
-      const chapterBoardClassId =
-        chapter?.boardClassId?._id || chapter?.boardClassId || null;
-      const chapterSubjectId =
-        chapter?.subjectId?._id || chapter?.subjectId || null;
-
-      return (
-        String(chapterBoardClassId) === String(selectedBoardClassId) &&
-        String(chapterSubjectId) === String(selectedSubjectId)
-      );
+    if (!boardClassId || !selectedSubjectId) return [];
+    return chapters.filter((ch) => {
+      const cBoard   = ch?.boardClassId?._id || ch?.boardClassId;
+      const cSubject = ch?.subjectId?._id    || ch?.subjectId;
+      return String(cBoard) === String(boardClassId) &&
+             String(cSubject) === String(selectedSubjectId);
     });
-  }, [chapters, selectedBoardClassId, selectedSubjectId]);
+  }, [chapters, boardClassId, selectedSubjectId]);
 
-  const addOption = () => {
-    setOptions((prev) => [...prev, { key: "", text: "" }]);
-  };
-
-  const addCorrectAnswer = () => {
-    setCorrectAnswers((prev) => [...prev, ""]);
-  };
-
-  const handleClassChange = (classId) => {
-    setSelectedClassId(classId || null);
+  /* ── Handlers ── */
+  const handleClassChange = (id) => {
+    setSelectedClassId(id || null);
     setSelectedSubjectId(null);
-
-    form.setFieldsValue({
-      subjectId: undefined,
-      chapterId: undefined,
-    });
+    form.setFieldsValue({ subjectId: undefined, chapterId: undefined });
   };
 
-  const handleSubjectChange = (subjectId) => {
-    setSelectedSubjectId(subjectId || null);
-
-    form.setFieldsValue({
-      chapterId: undefined,
-    });
+  const handleSubjectChange = (id) => {
+    setSelectedSubjectId(id || null);
+    form.setFieldsValue({ chapterId: undefined });
   };
+
+  const addOption = () => setOptions((p) => [...p, { key: String.fromCharCode(65 + p.length), text: "" }]);
+  const removeOption = (i) => setOptions((p) => p.filter((_, idx) => idx !== i));
+  const updateOption = (i, field, value) =>
+    setOptions((p) => { const a = [...p]; a[i] = { ...a[i], [field]: value }; return a; });
+
+  const addCorrectAnswer = () => setCorrectAnswers((p) => [...p, ""]);
+  const removeCorrectAnswer = (i) => setCorrectAnswers((p) => p.filter((_, idx) => idx !== i));
+  const updateCorrectAnswer = (i, value) =>
+    setCorrectAnswers((p) => { const a = [...p]; a[i] = value; return a; });
 
   const onFinish = async (values) => {
+    if (["mcq_single", "mcq_multi", "match"].includes(questionType) && options.length < 2) {
+      form.setFields([{ name: "statement", errors: ["MCQ ke liye kam se kam 2 options add karein"] }]);
+      return;
+    }
+    if (correctAnswers.filter(Boolean).length === 0) {
+      form.setFields([{ name: "statement", errors: ["Kam se kam 1 correct answer add karein"] }]);
+      return;
+    }
+
+    const payload = {
+      ...values,
+      schoolId,
+      chapterId:      values.chapterId      || null,
+      options,
+      correctAnswers: correctAnswers.filter(Boolean),
+      tags: values.tags
+        ? values.tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
+        : [],
+    };
+
+    setSaving(true);
     try {
-      const payload = {
-        ...values,
-        schoolId,
-        chapterId: values.chapterId || null,
-        options,
-        correctAnswers,
-        tags: values.tags
-          ? values.tags
-              .split(",")
-              .map((t) => t.trim().toLowerCase())
-              .filter(Boolean)
-          : [],
-      };
-
-      await dispatch(createQuestions(payload)).unwrap();
-      message.success("Question created successfully");
-
-      form.resetFields();
-      setOptions([]);
-      setCorrectAnswers([]);
-      setQuestionType("mcq_single");
-      setSelectedClassId(null);
-      setSelectedSubjectId(null);
-    } catch (error) {
-      message.error(error?.message || error || "Failed to create question");
+      if (isEditMode) {
+        await dispatch(updateQuestion({ id: initialData._id, payload })).unwrap();
+      } else {
+        await dispatch(createQuestions(payload)).unwrap();
+        form.resetFields();
+        setOptions([]);
+        setCorrectAnswers([]);
+        setQuestionType("mcq_single");
+        setSelectedClassId(null);
+        setSelectedSubjectId(null);
+      }
+      onSuccess?.();
+    } catch {
+      // toast already shown by slice
+    } finally {
+      setSaving(false);
     }
   };
 
+  const needsOptions = ["mcq_single", "mcq_multi", "match"].includes(questionType);
+
+  /* ── No academic year guard ── */
+  if (!academicYearId) {
+    return (
+      <div style={{
+        padding: "32px 24px", textAlign: "center",
+        background: "#FEF3C7", borderRadius: 12,
+        border: "1px solid #F59E0B40", color: "#B45309",
+      }}>
+        <div style={{ fontSize: 20, marginBottom: 8 }}>⚠️</div>
+        <div style={{ fontWeight: 700 }}>Academic Year select karein</div>
+        <div style={{ fontSize: 13, marginTop: 4 }}>
+          Classes tabhi load hongi jab academic year select ho.
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Card bordered={false} style={{ borderRadius: 12 }}>
+    <div>
+      {/* Academic year badge */}
+      <div style={{
+        marginBottom: 16, padding: "7px 14px", borderRadius: 8,
+        background: isEditMode ? "#EDE9FE" : "#DBEAFE",
+        border: `1px solid ${isEditMode ? "#7C3AED22" : "#2563EB22"}`,
+        color: isEditMode ? "#6D28D9" : "#1D4ED8",
+        fontSize: 12, fontWeight: 600,
+        display: "flex", alignItems: "center", gap: 8,
+      }}>
+        {isEditMode ? <EditOutlined /> : <PlusOutlined />}
+        <span>{isEditMode ? "Edit Mode" : "New Question"}</span>
+        <span style={{ marginLeft: "auto", opacity: 0.7 }}>
+          {selectedAcademicYear?.name || academicYearId}
+        </span>
+      </div>
+
       <Form
         form={form}
         layout="vertical"
-        initialValues={{
-          questionType: "mcq_single",
-          difficulty: "medium",
-          marks: 1,
-          negativeMarks: 0,
-          isActive: true,
-        }}
+        initialValues={{ questionType: "mcq_single", difficulty: "medium", marks: 1, negativeMarks: 0, isActive: true }}
         onFinish={onFinish}
+        size="middle"
       >
-        <Divider orientation="left">Class & Subject</Divider>
+        {/* ── Class & Subject ── */}
+        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          Class & Subject
+        </Divider>
 
-        <Row gutter={16}>
-          <Col md={12} xs={24}>
-            <Form.Item
-              name="schoolClassId"
-              label="Class"
-              rules={[{ required: true, message: "Please select class" }]}
-            >
-              <Select
-                placeholder="Select Class"
-                onChange={handleClassChange}
-                allowClear
-              >
-                {shortClass.map((cls) => (
-                  <Option key={cls._id} value={cls._id}>
-                    {cls.name}
-                  </Option>
+        <Row gutter={12}>
+          <Col md={8} xs={24}>
+            <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Class select karein" }]}>
+              <Select placeholder="Class select karein" onChange={handleClassChange} allowClear showSearch optionFilterProp="children">
+                {sortedClasses.map((c) => (
+                  <Option key={c._id} value={c._id}>{c.name}</Option>
                 ))}
               </Select>
             </Form.Item>
           </Col>
 
-          <Col md={12} xs={24}>
-            <Form.Item
-              name="subjectId"
-              label="Subject"
-              rules={[{ required: true, message: "Please select subject" }]}
-            >
-              <Select
-                placeholder="Select Subject"
-                disabled={!selectedClassId}
-                allowClear
-                onChange={handleSubjectChange}
-              >
-                {subjectOptions.map((subject) => (
-                  <Option key={subject._id} value={subject._id}>
-                    {subject.name}
-                  </Option>
+          <Col md={8} xs={24}>
+            <Form.Item name="subjectId" label="Subject" rules={[{ required: true, message: "Subject select karein" }]}>
+              <Select placeholder="Subject select karein" disabled={!selectedClassId} onChange={handleSubjectChange} allowClear showSearch optionFilterProp="children">
+                {subjectOptions.map((s) => (
+                  <Option key={s._id} value={s._id}>{s.name}</Option>
                 ))}
               </Select>
             </Form.Item>
           </Col>
-        </Row>
 
-        <Row gutter={16}>
-          <Col md={12} xs={24}>
+          <Col md={8} xs={24}>
             <Form.Item name="chapterId" label="Chapter">
-              <Select
-                placeholder="Select Chapter"
-                allowClear
-                disabled={!selectedClassId || !selectedSubjectId}
-              >
+              <Select placeholder="Chapter (optional)" allowClear disabled={!selectedSubjectId} showSearch optionFilterProp="children">
                 {filteredChapters.map((ch) => (
                   <Option key={ch._id} value={ch._id}>
                     {ch.chapterNo ? `${ch.chapterNo}. ${ch.name}` : ch.name}
@@ -229,144 +272,174 @@ const CreateQuestion = () => {
               </Select>
             </Form.Item>
           </Col>
+        </Row>
 
+        {/* ── Question ── */}
+        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          Question
+        </Divider>
+
+        <Row gutter={12}>
+          <Col md={12} xs={24}>
+            <Form.Item name="questionType" label="Type">
+              <Select onChange={(v) => { setQuestionType(v); setOptions([]); setCorrectAnswers([]); }}>
+                {QUESTION_TYPES.map((t) => <Option key={t.value} value={t.value}>{t.label}</Option>)}
+              </Select>
+            </Form.Item>
+          </Col>
           <Col md={12} xs={24}>
             <Form.Item name="topic" label="Topic">
-              <Input placeholder="Topic name" />
+              <Input placeholder="e.g. Algebra, Photosynthesis" />
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.Item name="questionType" label="Question Type">
-          <Select
-            onChange={(val) => {
-              setQuestionType(val);
-              setOptions([]);
-              setCorrectAnswers([]);
-            }}
-          >
-            <Option value="mcq_single">MCQ (Single)</Option>
-            <Option value="mcq_multi">MCQ (Multiple)</Option>
-            <Option value="true_false">True / False</Option>
-            <Option value="fill_blank">Fill in the Blank</Option>
-            <Option value="match">Match the Following</Option>
-          </Select>
-        </Form.Item>
-
         <Form.Item
           name="statement"
           label="Question Statement"
-          rules={[{ required: true, message: "Please enter question statement" }]}
+          rules={[{ required: true, message: "Question likhein" }]}
         >
-          <TextArea rows={4} placeholder="Enter question statement" />
+          <TextArea rows={3} placeholder="Question statement yahan likhein..." />
         </Form.Item>
 
-        {(questionType === "mcq_single" ||
-          questionType === "mcq_multi" ||
-          questionType === "match") && (
+        {/* ── Options (MCQ / Match) ── */}
+        {needsOptions && (
           <>
-            <Divider orientation="left">Options</Divider>
+            <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              Options ({options.length})
+            </Divider>
 
-            <Button
-              type="dashed"
-              icon={<PlusOutlined />}
-              onClick={addOption}
-              block
-            >
-              Add Option
-            </Button>
-
-            <Space direction="vertical" style={{ width: "100%", marginTop: 12 }}>
-              {options.map((opt, index) => (
-                <Row gutter={6} key={index}>
-                  <Col span={6}>
+            <Space direction="vertical" style={{ width: "100%", marginBottom: 8 }}>
+              {options.map((opt, i) => (
+                <Row gutter={8} key={i} align="middle">
+                  <Col flex="60px">
                     <Input
-                      placeholder="Key"
                       value={opt.key}
-                      onChange={(e) => {
-                        const updated = [...options];
-                        updated[index].key = e.target.value;
-                        setOptions(updated);
-                      }}
+                      onChange={(e) => updateOption(i, "key", e.target.value)}
+                      placeholder="Key"
+                      maxLength={3}
+                      style={{ textAlign: "center", fontWeight: 700 }}
                     />
                   </Col>
-                  <Col span={18}>
+                  <Col flex="1">
                     <Input
-                      placeholder="Option Text"
                       value={opt.text}
-                      onChange={(e) => {
-                        const updated = [...options];
-                        updated[index].text = e.target.value;
-                        setOptions(updated);
-                      }}
+                      onChange={(e) => updateOption(i, "text", e.target.value)}
+                      placeholder={`Option ${i + 1} text`}
                     />
+                  </Col>
+                  <Col flex="36px">
+                    <Tooltip title="Remove option">
+                      <Button
+                        type="text" danger size="small"
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeOption(i)}
+                      />
+                    </Tooltip>
                   </Col>
                 </Row>
               ))}
             </Space>
+
+            <Button type="dashed" icon={<PlusOutlined />} onClick={addOption} block>
+              Add Option
+            </Button>
           </>
         )}
 
-        <Divider orientation="left">Correct Answers</Divider>
+        {/* ── Correct Answers ── */}
+        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          Correct Answers
+        </Divider>
 
-        <Button type="dashed" onClick={addCorrectAnswer} block>
-          Add Correct Answer
-        </Button>
-
-        <Space direction="vertical" style={{ width: "100%", marginTop: 12 }}>
-          {correctAnswers.map((ans, index) => (
-            <Input
-              key={index}
-              placeholder="Correct Answer"
-              value={ans}
-              onChange={(e) => {
-                const updated = [...correctAnswers];
-                updated[index] = e.target.value;
-                setCorrectAnswers(updated);
-              }}
-            />
+        <Space direction="vertical" style={{ width: "100%", marginBottom: 8 }}>
+          {correctAnswers.map((ans, i) => (
+            <Row gutter={8} key={i} align="middle">
+              <Col flex="1">
+                <Input
+                  value={ans}
+                  onChange={(e) => updateCorrectAnswer(i, e.target.value)}
+                  placeholder={
+                    needsOptions
+                      ? "Option key likhein (e.g. A, B)"
+                      : "Correct answer likhein"
+                  }
+                />
+              </Col>
+              <Col flex="36px">
+                <Tooltip title="Remove">
+                  <Button type="text" danger size="small" icon={<DeleteOutlined />} onClick={() => removeCorrectAnswer(i)} />
+                </Tooltip>
+              </Col>
+            </Row>
           ))}
         </Space>
 
-        <Divider orientation="left">Evaluation</Divider>
+        <Button type="dashed" onClick={addCorrectAnswer} block style={{ marginBottom: 4 }}>
+          Add Correct Answer
+        </Button>
 
-        <Row gutter={16}>
-          <Col md={8} xs={24}>
+        {needsOptions && correctAnswers.length > 0 && (
+          <div style={{ marginTop: 6, marginBottom: 12 }}>
+            {correctAnswers.filter(Boolean).map((a) => (
+              <Tag key={a} color="green">{a}</Tag>
+            ))}
+          </div>
+        )}
+
+        {/* ── Evaluation ── */}
+        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          Evaluation
+        </Divider>
+
+        <Row gutter={12}>
+          <Col md={6} xs={12}>
             <Form.Item name="difficulty" label="Difficulty">
               <Select>
-                <Option value="easy">Easy</Option>
-                <Option value="medium">Medium</Option>
-                <Option value="hard">Hard</Option>
+                {DIFFICULTY.map((d) => (
+                  <Option key={d.value} value={d.value}>
+                    <Tag color={d.color === "#15803D" ? "green" : d.color === "#B45309" ? "gold" : "red"} style={{ margin: 0 }}>
+                      {d.label}
+                    </Tag>
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
-
-          <Col md={8} xs={24}>
+          <Col md={6} xs={12}>
             <Form.Item name="marks" label="Marks">
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} step={0.5} style={{ width: "100%" }} />
             </Form.Item>
           </Col>
-
-          <Col md={8} xs={24}>
+          <Col md={6} xs={12}>
             <Form.Item name="negativeMarks" label="Negative Marks">
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} step={0.25} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+          <Col md={6} xs={12}>
+            <Form.Item name="isActive" label="Active" valuePropName="checked">
+              <Switch />
             </Form.Item>
           </Col>
         </Row>
 
         <Form.Item name="tags" label="Tags (comma separated)">
-          <Input placeholder="mcq, algebra, class-10" />
+          <Input placeholder="e.g. algebra, class-10, important" />
         </Form.Item>
 
-        <Form.Item name="isActive" label="Active" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-
-        <Button type="primary" htmlType="submit" block size="large">
-          Save Question
+        <Button
+          type="primary"
+          htmlType="submit"
+          block
+          size="large"
+          loading={saving}
+          icon={isEditMode ? <EditOutlined /> : <PlusOutlined />}
+          style={{ marginTop: 4 }}
+        >
+          {isEditMode ? "Update Question" : "Save Question"}
         </Button>
       </Form>
-    </Card>
+    </div>
   );
 };
 

@@ -17,6 +17,7 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
+const ADMIN_AND_COORDINATOR = ["Super Admin", "School Admin", "Subject Coordinator", "Exam Coordinator"];
 
 
 // ==============================
@@ -122,7 +123,7 @@ router.post(
 router.post(
   "/assign-subject-teacher",
   auth,
-  roleMiddleware(ADMIN_ONLY),
+  roleMiddleware(ADMIN_AND_COORDINATOR),
   assignSubjectTeacher
 );
 

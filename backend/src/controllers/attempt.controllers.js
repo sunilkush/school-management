@@ -69,16 +69,15 @@ export const startAttempt = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Student profile not found");
   }
 
-  const enrollment = await StudentEnrollment.findOne({
+  const enrollQuery = {
     studentId: student._id,
     schoolId: exam.schoolId,
     academicYearId: exam.academicYearId,
     schoolClassId: exam.schoolClassId,
     ...(exam.sectionId ? { sectionId: exam.sectionId } : {}),
     status: "Active",
-  })
-    .select("_id")
-    .lean();
+  };
+  const enrollment = await StudentEnrollment.findOne(enrollQuery).select("_id").lean();
 
   if (!enrollment) {
     throw new ApiError(403, "Student is not enrolled in the exam class/section for this academic year");
@@ -97,12 +96,19 @@ export const startAttempt = asyncHandler(async (req, res) => {
   }
 
   const answers = exam.questions.map((q) => ({
-    questionId: q.questionId?._id,
-    snapshot: q.questionId?.toObject?.() || q.snapshot || null,
-    response: null,
+    questionId:       q.questionId?._id,
+    questionSnapshot: {
+      statement:      q.questionId?.statement      || "",
+      questionType:   q.questionId?.questionType   || "",
+      options:        q.questionId?.options        || [],
+      marks:          q.marks                      ?? q.questionId?.marks ?? 1,
+      negativeMarks:  q.questionId?.negativeMarks  ?? 0,
+      correctAnswers: q.questionId?.correctAnswers ?? null,
+    },
+    response:      null,
     marksObtained: 0,
-    isCorrect: null,
-    flagged: false,
+    isCorrect:     null,
+    flagged:       false,
   }));
 
   const schoolId = exam.schoolId 
@@ -117,13 +123,28 @@ export const startAttempt = asyncHandler(async (req, res) => {
     attemptNumber,
   });
 
-
   return sendSuccess(res, {
     statusCode: 201,
     message: "Exam attempt started",
     data: attempt,
   });
 });
+
+/* Types that can be graded without human review */
+const AUTO_EVAL_TYPES = new Set(["mcq_single", "mcq_multi", "true_false", "fill_blank"]);
+
+const normalise  = (v) => (typeof v === "string" ? v.trim().toLowerCase() : String(v ?? "").trim().toLowerCase());
+const sortedStr  = (arr) => (Array.isArray(arr) ? [...arr].map(normalise).sort().join(",") : normalise(arr));
+
+const calcGrade = (pct) => {
+  if (pct >= 90) return "A+";
+  if (pct >= 80) return "A";
+  if (pct >= 70) return "B+";
+  if (pct >= 60) return "B";
+  if (pct >= 50) return "C";
+  if (pct >= 40) return "D";
+  return "F";
+};
 
 export const submitAttempt = asyncHandler(async (req, res) => {
   const { attemptId, answers = [] } = req.body;
@@ -134,38 +155,70 @@ export const submitAttempt = asyncHandler(async (req, res) => {
   if (attempt.studentId.toString() !== req.user._id.toString()) throw new ApiError(403, "Forbidden");
   if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt already submitted");
 
+  let allAutoEvaluatable = true;
+
   attempt.answers = attempt.answers.map((ans) => {
     const questionId = ans.questionId?.toString?.();
-    const submitted = answers.find((a) => {
-      const submittedQuestionId = a.questionRef || a.questionId;
-      return `${submittedQuestionId}` === `${questionId}`;
-    });
-    if (!submitted) return ans;
+    const submitted  = answers.find((a) => `${a.questionRef || a.questionId}` === `${questionId}`);
 
-    ans.response = submitted.answer ?? submitted.response ?? null;
-    ans.flagged = submitted.flagged ?? ans.flagged;
+    if (submitted) {
+      ans.response = submitted.answer ?? submitted.response ?? null;
+      ans.flagged  = submitted.flagged ?? ans.flagged;
+    }
 
-    const snapshot = ans.questionSnapshot || ans.snapshot || {};
-    const qType = snapshot.questionType;
-    if (["mcq_single", "mcq_multi", "true_false"].includes(qType)) {
-      const correct = Array.isArray(snapshot.correctAnswers)
-        ? [...snapshot.correctAnswers].sort().toString()
-        : snapshot.correctAnswers;
-      const userAns = Array.isArray(ans.response) ? [...ans.response].sort().toString() : ans.response;
-      ans.isCorrect = correct === userAns;
-      ans.marksObtained = ans.isCorrect ? snapshot.marks : -(snapshot.negativeMarks || 0);
+    const snapshot = ans.questionSnapshot || {};
+    const qType    = snapshot.questionType;
+
+    if (AUTO_EVAL_TYPES.has(qType)) {
+      const correctRaw = snapshot.correctAnswers;
+      const userRaw    = ans.response;
+
+      if (qType === "fill_blank") {
+        /* case-insensitive trim match */
+        ans.isCorrect     = normalise(userRaw) === normalise(correctRaw);
+      } else {
+        /* mcq_single / mcq_multi / true_false — sort so A,B === B,A */
+        const correctStr = sortedStr(correctRaw);
+        const userStr    = sortedStr(userRaw);
+        ans.isCorrect    = correctStr === userStr && correctStr !== "";
+      }
+
+      const marks    = Number(snapshot.marks        ?? 1);
+      const negMarks = Number(snapshot.negativeMarks ?? 0);
+      ans.marksObtained = ans.isCorrect ? marks : (negMarks > 0 ? -negMarks : 0);
+
+    } else {
+      /* subjective question — needs human review */
+      allAutoEvaluatable = false;
     }
 
     return ans;
   });
 
-  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (a.marksObtained || 0), 0);
-  attempt.status = "submitted";
-  attempt.submittedAt = new Date();
+  attempt.submittedAt       = new Date();
+  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
+
+  if (allAutoEvaluatable) {
+    /* fetch total marks from exam to compute percentage + grade */
+    const exam = await Exam.findById(attempt.examId).select("totalMarks").lean();
+    const total = Number(exam?.totalMarks || 0);
+    const pct   = total > 0 ? Math.round((attempt.totalMarksObtained / total) * 100) : 0;
+
+    attempt.status        = "evaluated";
+    attempt.autoEvaluated = true;
+    attempt.grade         = calcGrade(pct);
+  } else {
+    attempt.status = "submitted";
+  }
 
   await attempt.save();
 
-  return sendSuccess(res, { message: "Attempt submitted successfully", data: attempt });
+  return sendSuccess(res, {
+    message: attempt.autoEvaluated
+      ? "Attempt submitted and auto-evaluated successfully"
+      : "Attempt submitted successfully — awaiting teacher evaluation",
+    data: attempt,
+  });
 });
 export const autosaveAttemptAnswer = asyncHandler(async (req, res) => {
   const { attemptId } = req.params;

@@ -1,4 +1,3 @@
-// models/ExamAttempt.js
 import mongoose from "mongoose";
 
 const { Schema } = mongoose;
@@ -12,11 +11,8 @@ const AnswerSchema = new Schema(
     },
 
     questionSnapshot: {
-      statement: String,
-      questionType: String,
-      options: Array,
-      marks: { type: Number, default: 0 },
-      negativeMarks: { type: Number, default: 0 },
+      type: Schema.Types.Mixed,
+      default: null,
     },
 
     response: {
@@ -129,6 +125,11 @@ const ExamAttemptSchema = new Schema(
       type: String,
       trim: true,
       default: "",
+    },
+
+    autoEvaluated: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

@@ -190,8 +190,14 @@ const questionSlice = createSlice({
       })
       .addCase(getQuestions.fulfilled, (state, action) => {
         state.loading = false;
-        state.questions = action.payload.questions;
-        state.pagination = action.payload.pagination;
+        const payload = action.payload;
+        if (Array.isArray(payload)) {
+          state.questions  = payload;
+          state.pagination = null;
+        } else {
+          state.questions  = Array.isArray(payload?.questions) ? payload.questions : [];
+          state.pagination = payload?.pagination || null;
+        }
       })
       .addCase(getQuestions.rejected, (state, action) => {
         state.loading = false;
@@ -223,9 +229,11 @@ const questionSlice = createSlice({
       })
 
       // --- Delete Question ---
+      .addCase(deleteQuestion.pending, (state) => { state.loading = true; })
+      .addCase(deleteQuestion.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
       .addCase(deleteQuestion.fulfilled, (state, action) => {
         state.loading = false;
-       const deletedId = action.payload?._id || action.meta.arg;
+        const deletedId = action.payload?._id || action.meta.arg;
         state.questions = state.questions.filter((q) => q._id !== deletedId);
       })
 

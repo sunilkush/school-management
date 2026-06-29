@@ -43,6 +43,9 @@ const TeacherList = () => {
   const { users = [] } = useSelector((s) => s.auth);
   const loggedIn  = useSelector((s) => s.auth.user);
 
+  const myRole    = (loggedIn?.role?.name || "").toLowerCase();
+  const isAdmin   = ["super admin", "school admin"].includes(myRole);
+
   const [searchText,    setSearchText]    = useState("");
   const [selectedRole,  setSelectedRole]  = useState("all");
   const [isModalOpen,   setIsModalOpen]   = useState(false);
@@ -145,7 +148,7 @@ const TeacherList = () => {
         );
       },
     },
-    {
+    ...(isAdmin ? [{
       title: "Actions",
       key: "actions",
       align: "right",
@@ -182,7 +185,7 @@ const TeacherList = () => {
           </Tooltip>
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -198,16 +201,18 @@ const TeacherList = () => {
             <Tooltip title="Refresh">
               <Button icon={<ReloadOutlined />} onClick={() => dispatch(fetchAllUser({ isActive: true }))} />
             </Tooltip>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-              Add Staff
-            </Button>
+            {isAdmin && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+                Add Staff
+              </Button>
+            )}
           </Space>
         }
       />
 
       <div style={pageWrapper}>
         <Modal
-          open={isModalOpen}
+          open={isAdmin && isModalOpen}
           footer={null}
           onCancel={() => setIsModalOpen(false)}
           width={680}

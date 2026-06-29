@@ -119,28 +119,32 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
   const teacherId = req.user._id;
   const schoolId = req.user.schoolId;
   const academicYearId = req.query.academicYearId;
+  const roleName = (req.userRole?.name || "").toLowerCase();
+  const isTeacher = roleName === "teacher";
 
   if (!academicYearId) {
     throw new ApiError(400, "Academic year ID is required");
   }
 
-  const sections = await Section.find({
-    schoolId,
-    academicYearId,
-    $or: [
+  // Non-teacher roles (Exam Coordinator, Admin etc.) see all sections/classes
+  const sectionQuery = { schoolId, academicYearId };
+  if (isTeacher) {
+    sectionQuery.$or = [
       { classTeacherId: teacherId },
       { "subjects.teacherId": teacherId },
-    ],
-  })
+    ];
+  }
+
+  const sections = await Section.find(sectionQuery)
     .populate("schoolClassId", "name")
     .populate("subjects.subjectId", "name")
     .lean();
 
-  // 🔥 Group by class (IMPORTANT for your UI)
   const classMap = {};
 
   sections.forEach((sec) => {
     const classId = sec.schoolClassId?._id?.toString();
+    if (!classId) return;
 
     if (!classMap[classId]) {
       classMap[classId] = {
@@ -152,47 +156,31 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
         role: [],
       };
     }
-     const isClassTeacher = sec.classTeacherId?.toString() === teacherId.toString();
 
-   // subject filter (for subject-teacher role)
-    const teacherSubjects = sec.subjects.filter(
-      (s) => s.teacherId?.toString() === teacherId.toString()
-    );
+    const isClassTeacher = isTeacher && sec.classTeacherId?.toString() === teacherId.toString();
+    const teacherSubjects = isTeacher
+      ? sec.subjects.filter((s) => s.teacherId?.toString() === teacherId.toString())
+      : sec.subjects;
     const sectionSubjects = isClassTeacher ? sec.subjects : teacherSubjects;
 
-    // section add
     classMap[classId].sections.push({
-      sectionId: {
-        _id: sec._id,
-        name: sec.name,
-      },
+      sectionId: { _id: sec._id, name: sec.name },
       subjects: sectionSubjects.map((sub) => ({
-        subjectId: {
-          _id: sub.subjectId?._id,
-          name: sub.subjectId?.name,
-        },
+        subjectId: { _id: sub.subjectId?._id, name: sub.subjectId?.name },
       })),
-       isClassTeacher,
+      isClassTeacher,
       studentCount: sec.StudentEnrollmentId?.length || 0,
     });
 
-    // role detect
-    if (isClassTeacher) {
-      classMap[classId].role.push("class_teacher");
-    }
+    if (isClassTeacher) classMap[classId].role.push("class_teacher");
 
     sectionSubjects.forEach((sub) => {
       classMap[classId].subjects.push({
-        subjectId: {
-          _id: sub.subjectId?._id,
-          name: sub.subjectId?.name,
-        },
+        subjectId: { _id: sub.subjectId?._id, name: sub.subjectId?.name },
       });
-
-      classMap[classId].role.push("subject_teacher");
+      classMap[classId].role.push(isTeacher ? "subject_teacher" : "coordinator");
     });
 
-    // 🔥 remove duplicates
     classMap[classId].subjects = [
       ...new Map(
         classMap[classId].subjects
@@ -200,7 +188,6 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
           .map((s) => [s.subjectId._id.toString(), s])
       ).values(),
     ];
-
     classMap[classId].role = [...new Set(classMap[classId].role)];
   });
 

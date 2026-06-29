@@ -4,6 +4,7 @@ const EXAM_ROUTE_PREFIXES = [
   { match: "/dashboard/principal", prefix: "/dashboard/principal/exams", list: "", create: "create" },
   { match: "/dashboard/viceprincipal", prefix: "/dashboard/viceprincipal/exams", list: "", create: "create" },
   { match: "/dashboard/teacher", prefix: "/dashboard/teacher/exams", list: "list", create: "create" },
+  { match: "/dashboard/subjectcoordinator", prefix: "/dashboard/subjectcoordinator", list: "assessments", create: "exams/create", editBase: "exams/edit" },
 ];
 
 export const getExamRouteConfig = (pathname = "") => {
@@ -14,6 +15,6 @@ export const getExamRouteConfig = (pathname = "") => {
     ...config,
     createPath: join(config.create),
     listPath: join(config.list),
-    editPath: (id) => join(`edit/${id}`),
+    editPath: (id) => join(`${config.editBase || "edit"}/${id}`),
   };
 };

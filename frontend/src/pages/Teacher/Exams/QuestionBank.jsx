@@ -1,845 +1,732 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
-  Select,
-  Input,
-  Row,
-  Col,
-  Statistic,
-  List,
-  Tag,
-  Button,
-  Modal,
-  FloatButton,
-  Spin,
-  Empty,
-  message,
-  Typography,
-  Space,
-  Divider,
-  Avatar,
-  Tooltip,
+  Button, Select, Input, Tag, Drawer, Popconfirm,
+  Space, Empty, Spin, Table, Tooltip, Switch, Modal,
 } from "antd";
 import {
-  PlusOutlined,
-  DeleteOutlined,
-  FilterOutlined,
-  BookOutlined,
-  FileTextOutlined,
-  UploadOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  AppstoreOutlined,
-  CheckCircleOutlined,
-  EditOutlined,
+  PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined,
+  UploadOutlined, ReloadOutlined, SearchOutlined, FilterOutlined,
+  CheckCircleOutlined, CloseCircleOutlined,
 } from "@ant-design/icons";
+import { BookOpen, BarChart3, CheckSquare, AlignLeft } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
-import { getQuestions, deleteQuestion } from "../../../features/questionSlice";
+import { getQuestions, deleteQuestion, toggleQuestionStatus } from "../../../features/questionSlice";
 import { fetchAssignedClasses } from "../../../features/classSlice";
+import { fetchAllAcademicYears } from "../../../features/academicYearSlice";
 import apiClient from "../../../api/httpClient";
 
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, pageCard, tableHeadCss, statGrid,
+  statCard, statLabel, statValue, toolbarRow, iconWell, pill,
+} from "../../../styles/pageStyles";
 
-const { Title, Text } = Typography;
+/* ── colour helpers ────────────────────────────────────────────── */
+const TYPE_STYLE = {
+  mcq_single: { label: "MCQ·Single",   color: "#2563EB", bg: "#DBEAFE" },
+  mcq_multi:  { label: "MCQ·Multi",    color: "#7C3AED", bg: "#EDE9FE" },
+  true_false: { label: "True/False",   color: "#0D9488", bg: "#CCFBF1" },
+  fill_blank: { label: "Fill Blank",   color: "#D97706", bg: "#FEF3C7" },
+  match:      { label: "Match",        color: "#B91C1C", bg: "#FEE2E2" },
+};
+const DIFF_STYLE = {
+  easy:   { color: "#15803D", bg: "#DCFCE7" },
+  medium: { color: "#B45309", bg: "#FEF3C7" },
+  hard:   { color: "#DC2626", bg: "#FEE2E2" },
+};
+const typePill  = (t) => { const s = TYPE_STYLE[t] || { label: t, color: "#64748B", bg: "#F1F5F9" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11 }}>{s.label}</span>; };
+const diffPill  = (d) => { const s = DIFF_STYLE[(d||"").toLowerCase()] || { color: "#64748B", bg: "#F1F5F9" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11, textTransform: "capitalize" }}>{d || "—"}</span>; };
 
-const QuestionBank = () => {
-  const dispatch = useDispatch();
+/* ── QuestionPreviewDrawer ─────────────────────────────────────── */
+const QuestionPreviewDrawer = ({ question: q, open, onClose }) => {
+  if (!q) return null;
+  const typeStyle = TYPE_STYLE[q.questionType] || { label: q.questionType, color: "#64748B", bg: "#F1F5F9" };
+  const diffStyle = DIFF_STYLE[(q.difficulty || "").toLowerCase()] || { color: "#64748B", bg: "#F1F5F9" };
 
-  const { questions = [], loading } = useSelector((s) => s.questions || {});
-  const { classAssignTeacher = [], loading: classLoading } = useSelector(
-    (s) => s.class || {}
+  const Field = ({ label, children }) => (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 14, color: "var(--text-primary)" }}>{children}</div>
+    </div>
   );
-  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
-  const { user } = useSelector((state) => state.auth || {});
+
+  return (
+    <Drawer
+      open={open}
+      onClose={onClose}
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ ...iconWell("#2563EB", 32), borderRadius: 9 }}><EyeOutlined /></div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Question Preview</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
+              {q.schoolClassId?.name || "—"} &nbsp;·&nbsp; {q.subjectId?.name || "—"}
+            </div>
+          </div>
+        </div>
+      }
+      width={520}
+      styles={{ body: { padding: 20 } }}
+    >
+      {/* Type & Difficulty badges */}
+      <Space style={{ marginBottom: 16 }}>
+        <span style={{ ...pill(typeStyle.color, typeStyle.bg) }}>{typeStyle.label}</span>
+        <span style={{ ...pill(diffStyle.color, diffStyle.bg), textTransform: "capitalize" }}>{q.difficulty || "—"}</span>
+        <span style={{ ...pill("#15803D", "#DCFCE7") }}>+{q.marks ?? 0} marks</span>
+        {(q.negativeMarks > 0) && <span style={{ ...pill("#DC2626", "#FEE2E2") }}>−{q.negativeMarks}</span>}
+        {q.isActive
+          ? <Tag color="green" icon={<CheckCircleOutlined />}>Active</Tag>
+          : <Tag color="red"   icon={<CloseCircleOutlined />}>Inactive</Tag>
+        }
+      </Space>
+
+      {/* Statement */}
+      <div style={{
+        ...pageCard, padding: 16, marginBottom: 16,
+        fontSize: 15, fontWeight: 500, lineHeight: 1.6,
+        color: "var(--text-primary)",
+      }}>
+        {q.statement || "No statement"}
+      </div>
+
+      <Field label="Class · Subject · Chapter">
+        {[q.schoolClassId?.name, q.subjectId?.name, q.chapterId?.name || q.topic]
+          .filter(Boolean).join(" → ") || "—"}
+      </Field>
+
+      {/* Options */}
+      {Array.isArray(q.options) && q.options.length > 0 && (
+        <Field label={`Options (${q.options.length})`}>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            {q.options.map((opt, i) => {
+              const isCorrect = (q.correctAnswers || []).includes(opt.key);
+              return (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "8px 12px", borderRadius: 10,
+                  background: isCorrect ? "#DCFCE7" : "var(--surface-soft)",
+                  border: `1px solid ${isCorrect ? "#22C55E44" : "var(--border-muted)"}`,
+                }}>
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                    background: isCorrect ? "#22C55E" : "var(--border)",
+                    color: isCorrect ? "#fff" : "var(--text-muted)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 700, fontSize: 12,
+                  }}>
+                    {opt.key}
+                  </span>
+                  <span style={{ fontSize: 13, color: isCorrect ? "#15803D" : "var(--text-primary)", fontWeight: isCorrect ? 600 : 400 }}>
+                    {opt.text}
+                  </span>
+                  {isCorrect && <CheckCircleOutlined style={{ color: "#22C55E", marginLeft: "auto" }} />}
+                </div>
+              );
+            })}
+          </Space>
+        </Field>
+      )}
+
+      {/* Correct Answers (non-MCQ) */}
+      {(!Array.isArray(q.options) || !q.options.length) && Array.isArray(q.correctAnswers) && q.correctAnswers.length > 0 && (
+        <Field label="Correct Answers">
+          <Space wrap>
+            {q.correctAnswers.map((a, i) => (
+              <Tag key={i} color="green">{a}</Tag>
+            ))}
+          </Space>
+        </Field>
+      )}
+
+      {/* Tags */}
+      {Array.isArray(q.tags) && q.tags.length > 0 && (
+        <Field label="Tags">
+          <Space wrap>{q.tags.map((t) => <Tag key={t}>{t}</Tag>)}</Space>
+        </Field>
+      )}
+    </Drawer>
+  );
+};
+
+/* ════════════════════════════════════════════════════════════════
+   Main Component
+═══════════════════════════════════════════════════════════════ */
+const QuestionBank = () => {
+  const dispatch  = useDispatch();
+  const location  = useLocation();
+
+  const { questions = [], loading }         = useSelector((s) => s.questions || {});
+  const { classAssignTeacher = [], loading: classLoading } = useSelector((s) => s.class || {});
+  const { academicYears = [], selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+  const { user }                            = useSelector((s) => s.auth || {});
 
   const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+  const userRoleName = (user?.role?.name || user?.roleId?.name || "").toLowerCase();
 
-  const [modalType, setModalType] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  /* ── UI state ── */
+  const [modal,          setModal]          = useState(null);   // null | "add" | "edit" | "bulk"
+  const [editQuestion,   setEditQuestion]   = useState(null);
+  const [previewQ,       setPreviewQ]       = useState(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
-  const [filters, setFilters] = useState({
-    schoolClassId: "",
-    subjectId: "",
-    chapterId: "",
-    search: "",
-  });
+  /* ── Filters ── */
+  const [filterAyId, setFilterAyId] = useState(() => selectedAcademicYear?._id || "");
+  const [classId,    setClassId]    = useState("");
+  const [subjectId,  setSubjectId]  = useState("");
+  const [chapterId,  setChapterId]  = useState("");
+  const [search,     setSearch]     = useState("");
+  const [searchInput,setSearchInput]= useState("");
 
-  const [chapterOptions, setChapterOptions] = useState([]);
+  /* ── Chapters ── */
+  const [chapterOpts,    setChapterOpts]    = useState([]);
   const [chapterLoading, setChapterLoading] = useState(false);
 
-  useEffect(() => {
-    if (!selectedAcademicYear?._id) return;
-    dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
-  }, [dispatch, selectedAcademicYear?._id]);
+  /* ── Pagination ── */
+  const [page,     setPage]     = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
+  /* ── Sync filterAyId with global AY on first load ── */
   useEffect(() => {
-    if (!schoolId) return;
-    dispatch(getQuestions({ schoolId, limit: 1000 }));
+    if (selectedAcademicYear?._id && !filterAyId) {
+      setFilterAyId(selectedAcademicYear._id);
+    }
+  }, [selectedAcademicYear?._id]);
+
+  /* ── Fetch AY list if not loaded ── */
+  useEffect(() => {
+    if (!academicYears.length && schoolId) {
+      dispatch(fetchAllAcademicYears(schoolId));
+    }
   }, [dispatch, schoolId]);
 
-  const getId = (value) => {
-    if (!value) return "";
-    return typeof value === "object" ? value._id : value;
-  };
-
-  const selectedClass = useMemo(() => {
-    if (!filters.schoolClassId) return null;
-
-    return (
-      classAssignTeacher.find(
-        (cls) => String(getId(cls?._id)) === String(filters.schoolClassId)
-      ) || null
-    );
-  }, [classAssignTeacher, filters.schoolClassId]);
-
-  const subjectOptions = useMemo(() => {
-    if (!selectedClass) return [];
-
-    const subjectMap = new Map();
-
-    const addSubject = (subjectLike) => {
-      const subjectId = String(
-        getId(subjectLike?.subjectId || subjectLike?._id || subjectLike?.id) || ""
-      );
-
-      const subjectName =
-        subjectLike?.subjectId?.name ||
-        subjectLike?.name ||
-        subjectLike?.subjectName ||
-        "";
-
-      if (!subjectId || !subjectName) return;
-      if (subjectMap.has(subjectId)) return;
-
-      subjectMap.set(subjectId, {
-        value: subjectId,
-        label: subjectName,
-      });
-    };
-
-    (selectedClass?.subjects || []).forEach(addSubject);
-
-    (selectedClass?.sections || []).forEach((section) => {
-      (section?.subjects || []).forEach(addSubject);
-    });
-
-    return Array.from(subjectMap.values());
-  }, [selectedClass]);
-
+  /* ── Load classes by selected AY filter ── */
   useEffect(() => {
-    if (!filters.schoolClassId) {
-      setFilters((prev) => ({
-        ...prev,
-        subjectId: "",
-        chapterId: "",
-      }));
-      return;
-    }
+    if (!filterAyId) return;
+    dispatch(fetchAssignedClasses({ academicYearId: filterAyId }));
+    setClassId("");
+    setSubjectId("");
+    setChapterId("");
+  }, [dispatch, filterAyId]);
 
-    if (!subjectOptions.length) {
-      setFilters((prev) => ({
-        ...prev,
-        subjectId: "",
-        chapterId: "",
-      }));
-      return;
-    }
-
-    const currentSubjectStillValid = subjectOptions.some(
-      (subject) => String(subject.value) === String(filters.subjectId)
-    );
-
-    if (!currentSubjectStillValid) {
-      setFilters((prev) => ({
-        ...prev,
-        subjectId: "",
-        chapterId: "",
-      }));
-    }
-  }, [filters.schoolClassId, subjectOptions, filters.subjectId]);
-
+  /* ── Load questions ── */
   useEffect(() => {
-    const fetchChaptersBySubject = async () => {
-      if (!filters.schoolClassId || !filters.subjectId) {
-        setChapterOptions([]);
-        return;
-      }
+    if (!schoolId) return;
+    dispatch(getQuestions({ schoolId, limit: 500 }));
+  }, [dispatch, schoolId]);
 
-      try {
-        setChapterLoading(true);
+  /* ── Search debounce ── */
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
-        const res = await apiClient.get("/chapters", {
-          params: {
-            schoolClassId: filters.schoolClassId,
-            subjectId: filters.subjectId,
-            page: 1,
-            limit: 1000,
-          },
-        });
+  /* ── Load chapters on class+subject change ── */
+  useEffect(() => {
+    if (!classId || !subjectId) { setChapterOpts([]); return; }
+    setChapterLoading(true);
+    apiClient.get("/chapters", { params: { schoolClassId: classId, subjectId, limit: 500 } })
+      .then((r) => setChapterOpts(
+        (r?.data?.data || []).map((ch) => ({
+          value: ch._id,
+          label: ch.chapterNo ? `${ch.chapterNo}. ${ch.name}` : ch.name,
+        }))
+      ))
+      .catch(() => setChapterOpts([]))
+      .finally(() => setChapterLoading(false));
+  }, [classId, subjectId]);
 
-        const chapters = res?.data?.data || [];
+  /* ── Helper: get id from populated or plain value ── */
+  const getId = (v) => (!v ? "" : typeof v === "object" ? v._id : v);
 
-        setChapterOptions(
-          chapters.map((chapter) => ({
-            value: chapter?._id,
-            label:
-              chapter?.chapterNo && chapter?.name
-                ? `${chapter.chapterNo}. ${chapter.name}`
-                : chapter?.name || "Untitled Chapter",
-          }))
-        );
-      } catch (error) {
-        setChapterOptions([]);
-        message.error(
-          error?.response?.data?.message || "Failed to fetch chapters"
-        );
-      } finally {
-        setChapterLoading(false);
-      }
-    };
-
-    fetchChaptersBySubject();
-  }, [filters.schoolClassId, filters.subjectId]);
-
+  /* ── Permission map: only show questions for assigned classes ── */
   const permissionMap = useMemo(() => {
     const classIds = new Set();
-    const subjectIdsByClass = new Map();
-
+    const subjectsByClass = new Map();
     classAssignTeacher.forEach((cls) => {
-      const classId = String(getId(cls?._id) || "");
-      if (!classId) return;
-
-      classIds.add(classId);
-
-      const subjectIds = new Set();
-
-      (cls?.subjects || []).forEach((sub) => {
-        const subjectId = String(getId(sub?.subjectId) || "");
-        if (subjectId) subjectIds.add(subjectId);
+      const cId = String(getId(cls?._id) || "");
+      if (!cId) return;
+      classIds.add(cId);
+      const subs = new Set();
+      [...(cls?.subjects || []), ...(cls?.sections || []).flatMap((s) => s?.subjects || [])].forEach((sub) => {
+        const sId = String(getId(sub?.subjectId) || "");
+        if (sId) subs.add(sId);
       });
-
-      (cls?.sections || []).forEach((section) => {
-        (section?.subjects || []).forEach((sub) => {
-          const subjectId = String(getId(sub?.subjectId) || "");
-          if (subjectId) subjectIds.add(subjectId);
-        });
-      });
-
-      subjectIdsByClass.set(classId, subjectIds);
+      subjectsByClass.set(cId, subs);
     });
-
-    return { classIds, subjectIdsByClass };
+    return { classIds, subjectsByClass };
   }, [classAssignTeacher]);
 
-  const filteredQuestions = useMemo(() => {
-    const searchText = filters.search.trim().toLowerCase();
-
-    return questions.filter((q) => {
-      const questionClassId = String(getId(q.schoolClassId) || "");
-      const questionSubjectId = String(getId(q.subjectId) || "");
-      const questionChapterId = String(getId(q.chapterId) || "");
-
-      if (!permissionMap.classIds.has(questionClassId)) return false;
-
-      const allowedSubjects = permissionMap.subjectIdsByClass.get(questionClassId);
-      if (allowedSubjects?.size && !allowedSubjects.has(questionSubjectId)) {
-        return false;
-      }
-
-      const matchesClass =
-        !filters.schoolClassId || questionClassId === filters.schoolClassId;
-
-      const matchesSubject =
-        !filters.subjectId || questionSubjectId === filters.subjectId;
-
-      const matchesChapter =
-        !filters.chapterId || questionChapterId === filters.chapterId;
-
-      const matchesSearch =
-        !searchText || q.statement?.toLowerCase().includes(searchText);
-
-      return matchesClass && matchesSubject && matchesChapter && matchesSearch;
-    });
-  }, [questions, filters, permissionMap]);
-
-  const stats = useMemo(() => {
-    return {
-      total: filteredQuestions.length,
-      mcq: filteredQuestions.filter((q) =>
-        String(q.questionType || "").toLowerCase().includes("mcq")
-      ).length,
-      tf: filteredQuestions.filter(
-        (q) => String(q.questionType || "").toLowerCase() === "true_false"
-      ).length,
-      fill: filteredQuestions.filter(
-        (q) => String(q.questionType || "").toLowerCase() === "fill_blank"
-      ).length,
+  /* ── Subject options for selected class ── */
+  const selectedClassObj = useMemo(() =>
+    classAssignTeacher.find((c) => String(getId(c?._id)) === String(classId)) || null,
+    [classAssignTeacher, classId]
+  );
+  const subjectOptions = useMemo(() => {
+    if (!selectedClassObj) return [];
+    const map = new Map();
+    const addSub = (s) => {
+      const id   = String(getId(s?.subjectId || s?._id) || "");
+      const name = s?.subjectId?.name || s?.name || "";
+      if (id && name && !map.has(id)) map.set(id, { value: id, label: name });
     };
-  }, [filteredQuestions]);
+    (selectedClassObj?.subjects || []).forEach(addSub);
+    (selectedClassObj?.sections || []).forEach((sec) => (sec?.subjects || []).forEach(addSub));
+    return Array.from(map.values());
+  }, [selectedClassObj]);
 
-  const activeFilterCount = useMemo(() => {
-    return Object.values(filters).filter(Boolean).length;
-  }, [filters]);
-
-  const clearFilters = () => {
-    setFilters({
-      schoolClassId: "",
-      subjectId: "",
-      chapterId: "",
-      search: "",
+  /* ── Filtered questions (client-side) ── */
+  const filteredQuestions = useMemo(() => {
+    const q = search.toLowerCase();
+    return questions.filter((item) => {
+      const qClassId   = String(getId(item.schoolClassId) || "");
+      const qSubjectId = String(getId(item.subjectId)     || "");
+      const qChapterId = String(getId(item.chapterId)     || "");
+      if (!permissionMap.classIds.has(qClassId)) return false;
+      const allowedSubs = permissionMap.subjectsByClass.get(qClassId);
+      if (allowedSubs?.size && !allowedSubs.has(qSubjectId)) return false;
+      if (classId   && qClassId   !== String(classId))   return false;
+      if (subjectId && qSubjectId !== String(subjectId)) return false;
+      if (chapterId && qChapterId !== String(chapterId)) return false;
+      if (q && !item.statement?.toLowerCase().includes(q)) return false;
+      return true;
     });
-    setChapterOptions([]);
+  }, [questions, classId, subjectId, chapterId, search, permissionMap]);
+
+  /* ── Stats ── */
+  const stats = useMemo(() => ({
+    total:  filteredQuestions.length,
+    mcq:    filteredQuestions.filter((q) => q.questionType?.startsWith("mcq")).length,
+    tf:     filteredQuestions.filter((q) => q.questionType === "true_false").length,
+    fill:   filteredQuestions.filter((q) => q.questionType === "fill_blank").length,
+  }), [filteredQuestions]);
+
+  /* ── Handlers ── */
+  const handleEdit = (record) => {
+    setEditQuestion(record);
+    setModal("edit");
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = useCallback((id) => {
+    dispatch(deleteQuestion(id));
+  }, [dispatch]);
+
+  const handleBulkDelete = () => {
     Modal.confirm({
-      title: "Delete Question?",
-      content: "Are you sure you want to delete this question?",
+      title: `${selectedRowKeys.length} questions delete karein?`,
+      content: "Yeh action undo nahi ho sakta.",
       okText: "Delete",
       okType: "danger",
       centered: true,
-      onOk: async () => {
-        try {
-          setDeletingId(id);
-          await dispatch(deleteQuestion(id));
-        } finally {
-          setDeletingId(null);
-        }
+      onOk: () => {
+        selectedRowKeys.forEach((id) => dispatch(deleteQuestion(id)));
+        setSelectedRowKeys([]);
       },
     });
   };
 
-  const getQuestionTypeColor = (type) => {
-    const value = String(type || "").toLowerCase();
-    if (value.includes("mcq")) return "blue";
-    if (value === "true_false") return "green";
-    if (value === "fill_blank") return "orange";
-    return "default";
+  const handleToggle = useCallback((id) => {
+    dispatch(toggleQuestionStatus(id));
+  }, [dispatch]);
+
+  const closeModal = () => {
+    setModal(null);
+    setEditQuestion(null);
   };
 
-  const getDifficultyColor = (difficulty) => {
-    const value = String(difficulty || "").toLowerCase();
-    if (value === "easy") return "green";
-    if (value === "medium") return "gold";
-    if (value === "hard") return "red";
-    return "default";
+  const handleSuccess = () => {
+    closeModal();
+    dispatch(getQuestions({ schoolId, limit: 500 }));
   };
+
+  const clearFilters = () => {
+    setClassId(""); setSubjectId(""); setChapterId(""); setSearchInput(""); setSearch("");
+  };
+
+  const activeFilters = [classId, subjectId, chapterId, search].filter(Boolean).length;
+
+  /* ── Table columns ── */
+  const columns = [
+    {
+      title: "#",
+      key:   "idx",
+      width: 52,
+      render: (_, __, i) => (
+        <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
+          {(page - 1) * pageSize + i + 1}
+        </span>
+      ),
+    },
+    {
+      title:     "Question",
+      dataIndex: "statement",
+      key:       "statement",
+      ellipsis:  true,
+      render:    (text, r) => (
+        <div>
+          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13, lineHeight: 1.4, marginBottom: 4 }}>
+            {text || "—"}
+          </div>
+          <Space size={4} wrap>
+            {typePill(r.questionType)}
+            {diffPill(r.difficulty)}
+            {r.chapterId?.name && <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.chapterId.name}</span>}
+          </Space>
+        </div>
+      ),
+    },
+    {
+      title:  "Class",
+      key:    "class",
+      width:  110,
+      render: (_, r) => (
+        <div style={{ fontSize: 12 }}>
+          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{r.schoolClassId?.name || "—"}</div>
+          <div style={{ color: "var(--text-muted)" }}>{r.subjectId?.name || "—"}</div>
+        </div>
+      ),
+    },
+    {
+      title:  "Marks",
+      key:    "marks",
+      width:  80,
+      align:  "center",
+      render: (_, r) => (
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--primary)" }}>+{r.marks ?? 0}</div>
+          {r.negativeMarks > 0 && <div style={{ fontSize: 11, color: "#DC2626" }}>−{r.negativeMarks}</div>}
+        </div>
+      ),
+    },
+    {
+      title:  "Status",
+      key:    "status",
+      width:  80,
+      align:  "center",
+      render: (_, r) => (
+        <Tooltip title={r.isActive ? "Active — click to deactivate" : "Inactive — click to activate"}>
+          <Switch
+            size="small"
+            checked={!!r.isActive}
+            onChange={() => handleToggle(r._id)}
+          />
+        </Tooltip>
+      ),
+    },
+    {
+      title:  "Actions",
+      key:    "actions",
+      width:  110,
+      align:  "right",
+      render: (_, r) => (
+        <Space size={4}>
+          <Tooltip title="Preview">
+            <Button
+              type="text" size="small" icon={<EyeOutlined />}
+              style={{ color: "var(--primary)" }}
+              onClick={() => setPreviewQ(r)}
+            />
+          </Tooltip>
+          <Tooltip title="Edit">
+            <Button
+              type="text" size="small" icon={<EditOutlined />}
+              style={{ color: "#D97706" }}
+              onClick={() => handleEdit(r)}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Delete karein?"
+            description="Yeh question permanently delete ho jaayega."
+            okText="Delete"
+            okType="danger"
+            cancelText="Cancel"
+            onConfirm={() => handleDelete(r._id)}
+          >
+            <Tooltip title="Delete">
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const statMeta = [
+    { label: "Total Questions",  value: stats.total, color: "#2563EB", icon: <BookOpen size={18} /> },
+    { label: "MCQ",              value: stats.mcq,   color: "#7C3AED", icon: <CheckSquare size={18} /> },
+    { label: "True / False",     value: stats.tf,    color: "#0D9488", icon: <CheckSquare size={18} /> },
+    { label: "Fill in the Blank",value: stats.fill,  color: "#D97706", icon: <AlignLeft size={18} /> },
+  ];
 
   return (
-    <div
-      style={{
-        minHeight: "100%",
-        background:
-          "linear-gradient(180deg, #f8fbff 0%, #f3f6fb 55%, #eef2f7 100%)",
-        padding: 16,
-      }}
-    >
-      {/* Header */}
-      <Card
-        bordered={false}
-        style={{
-          marginBottom: 16,
-          borderRadius: 20,
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
-          overflow: "hidden",
-          background:
-            "linear-gradient(135deg, rgba(24,144,255,0.10), rgba(82,196,26,0.06), #ffffff)",
-        }}
-        bodyStyle={{ padding: 20 }}
-      >
-        <Row gutter={[16, 16]} align="middle" justify="space-between">
-          <Col xs={24} md={16}>
-            <Space align="start" size={16}>
-              <Avatar
-                size={56}
-                icon={<BookOutlined />}
-                style={{
-                  background:
-                    "linear-gradient(135deg, #1677ff 0%, #4096ff 100%)",
-                  boxShadow: "0 8px 20px rgba(22, 119, 255, 0.25)",
-                }}
-              />
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("qb-table")}</style>
+
+      <PageHeader
+        title="Question Bank"
+        subtitle="Questions manage, filter aur organize karein — class, subject, chapter ke hisab se."
+        icon={<BookOpen size={20} />}
+        extra={
+          <Space size={8}>
+            <Tooltip title="Refresh">
+              <Button icon={<ReloadOutlined />} onClick={() => dispatch(getQuestions({ schoolId, limit: 500 }))} />
+            </Tooltip>
+            <Button icon={<UploadOutlined />} onClick={() => setModal("bulk")}>
+              Bulk Upload
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModal("add")}>
+              Add Question
+            </Button>
+          </Space>
+        }
+      />
+
+      <div style={{ marginTop: 20 }}>
+        {/* ── Stat cards ── */}
+        <div style={{ ...statGrid(170), marginBottom: 20 }}>
+          {statMeta.map((s) => (
+            <div key={s.label} style={statCard({ color: s.color })}>
               <div>
-                <Title level={3} style={{ margin: 0 }}>
-                  Question Bank
-                </Title>
-                <Text type="secondary">
-                  Manage, search, filter and organize questions class-wise,
-                  subject-wise and chapter-wise.
-                </Text>
-                <div style={{ marginTop: 10 }}>
-                  <Space wrap>
-                    <Tag color="processing">
-                      Academic Year: {selectedAcademicYear?.name || "Not Selected"}
-                    </Tag>
-                    <Tag color="default">
-                      Assigned Classes: {classAssignTeacher?.length || 0}
-                    </Tag>
-                    <Tag color="success">
-                      Visible Questions: {filteredQuestions.length}
-                    </Tag>
-                  </Space>
-                </div>
+                <div style={statLabel(s.color)}>{s.label}</div>
+                <div style={statValue(s.color)}>{s.value}</div>
               </div>
-            </Space>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 10,
-                flexWrap: "wrap",
-              }}
-            >
-              <Button
-                icon={<UploadOutlined />}
-                size="large"
-                onClick={() => setModalType("bulk")}
-              >
-                Bulk Upload
-              </Button>
-
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlusOutlined />}
-                onClick={() => setModalType("single")}
-              >
-                Add Question
-              </Button>
+              <span style={{ fontSize: 28, color: s.color, opacity: 0.55 }}>{s.icon}</span>
             </div>
-          </Col>
-        </Row>
-      </Card>
+          ))}
+        </div>
 
-      {/* Filter Toolbar */}
-      <Card
-        bordered={false}
-        className="sticky top-0 z-20"
-        style={{
-          marginBottom: 16,
-          borderRadius: 18,
-          boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
-          backdropFilter: "blur(10px)",
-        }}
-        bodyStyle={{ padding: 16 }}
-      >
-        <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} md={6}>
+        {/* ── Filter toolbar ── */}
+        <div style={{ ...pageCard, padding: 16, marginBottom: 16 }}>
+          <div style={{ ...toolbarRow, marginBottom: 10 }}>
             <Select
-              size="large"
-              placeholder="Select Class"
+              placeholder="Academic Year"
+              showSearch
+              optionFilterProp="children"
+              value={filterAyId || undefined}
+              style={{ minWidth: 160 }}
+              onChange={(v) => { setFilterAyId(v || ""); }}
+            >
+              {academicYears.map((ay) => (
+                <Select.Option key={ay._id} value={ay._id}>{ay.name}</Select.Option>
+              ))}
+            </Select>
+
+            <Select
+              placeholder="Class"
               allowClear
               showSearch
               optionFilterProp="children"
               loading={classLoading}
-              style={{ width: "100%" }}
-              value={filters.schoolClassId || undefined}
-              onChange={(value) => {
-                setFilters((prev) => ({
-                  ...prev,
-                  schoolClassId: value || "",
-                  subjectId: "",
-                  chapterId: "",
-                }));
-              }}
+              value={classId || undefined}
+              style={{ minWidth: 130 }}
+              onChange={(v) => { setClassId(v || ""); setSubjectId(""); setChapterId(""); }}
             >
-              {classAssignTeacher.map((cls) => (
-                <Select.Option key={cls._id} value={cls._id}>
-                  {cls.name}
-                </Select.Option>
+              {classAssignTeacher.map((c) => (
+                <Select.Option key={c._id} value={c._id}>{c.name}</Select.Option>
               ))}
             </Select>
-          </Col>
 
-          <Col xs={24} md={6}>
             <Select
-              size="large"
-              placeholder="Select Subject"
+              placeholder="Subject"
               allowClear
               showSearch
               optionFilterProp="children"
-              disabled={!selectedClass}
-              style={{ width: "100%" }}
-              value={filters.subjectId || undefined}
-              onChange={(value) => {
-                setFilters((prev) => ({
-                  ...prev,
-                  subjectId: value || "",
-                  chapterId: "",
-                }));
-              }}
+              disabled={!classId}
+              value={subjectId || undefined}
+              style={{ minWidth: 140 }}
+              onChange={(v) => { setSubjectId(v || ""); setChapterId(""); }}
             >
-              {subjectOptions.map((subject) => (
-                <Select.Option key={subject.value} value={subject.value}>
-                  {subject.label}
-                </Select.Option>
+              {subjectOptions.map((s) => (
+                <Select.Option key={s.value} value={s.value}>{s.label}</Select.Option>
               ))}
             </Select>
-          </Col>
 
-          <Col xs={24} md={6}>
             <Select
-              size="large"
-              placeholder="Select Chapter"
+              placeholder="Chapter"
               allowClear
               showSearch
               optionFilterProp="label"
-              disabled={!filters.subjectId}
+              disabled={!subjectId}
               loading={chapterLoading}
-              style={{ width: "100%" }}
-              value={filters.chapterId || undefined}
-              onChange={(value) => {
-                setFilters((prev) => ({
-                  ...prev,
-                  chapterId: value || "",
-                }));
-              }}
-              options={chapterOptions}
+              value={chapterId || undefined}
+              style={{ minWidth: 160 }}
+              options={chapterOpts}
+              onChange={(v) => setChapterId(v || "")}
             />
-          </Col>
 
-          <Col xs={24} md={6}>
             <Input
-              size="large"
               allowClear
-              prefix={<SearchOutlined />}
-              placeholder="Search question statement..."
-              value={filters.search}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  search: e.target.value || "",
-                }))
-              }
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder="Question search karein..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              style={{ minWidth: 200, flex: 1 }}
             />
-          </Col>
 
-          <Col xs={24}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
-                alignItems: "center",
-                marginTop: 4,
-              }}
-            >
-              <Space wrap>
-                <Tag
-                  icon={<FilterOutlined />}
-                  color={activeFilterCount ? "processing" : "default"}
-                  style={{ paddingInline: 10, borderRadius: 999 }}
-                >
-                  Active Filters: {activeFilterCount}
-                </Tag>
-
-                {filters.schoolClassId && (
-                  <Tag closable onClose={() => setFilters((p) => ({ ...p, schoolClassId: "", subjectId: "", chapterId: "" }))}>
-                    Class
-                  </Tag>
-                )}
-                {filters.subjectId && (
-                  <Tag closable onClose={() => setFilters((p) => ({ ...p, subjectId: "", chapterId: "" }))}>
-                    Subject
-                  </Tag>
-                )}
-                {filters.chapterId && (
-                  <Tag closable onClose={() => setFilters((p) => ({ ...p, chapterId: "" }))}>
-                    Chapter
-                  </Tag>
-                )}
-                {filters.search && (
-                  <Tag closable onClose={() => setFilters((p) => ({ ...p, search: "" }))}>
-                    Search
-                  </Tag>
-                )}
-              </Space>
-
-              <Space wrap>
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={clearFilters}
-                  disabled={!activeFilterCount}
-                >
-                  Reset Filters
-                </Button>
-
-                <Button
-                  icon={<AppstoreOutlined />}
-                  onClick={() => dispatch(getQuestions({ schoolId, limit: 1000 }))}
-                >
-                  Refresh
-                </Button>
-              </Space>
-            </div>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Stats */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        {[
-          {
-            label: "Total Questions",
-            value: stats.total,
-            icon: <FileTextOutlined />,
-            extra: "All filtered records",
-          },
-          {
-            label: "MCQ",
-            value: stats.mcq,
-            icon: <CheckCircleOutlined />,
-            extra: "Multiple choice questions",
-          },
-          {
-            label: "True / False",
-            value: stats.tf,
-            icon: <CheckCircleOutlined />,
-            extra: "Binary answer questions",
-          },
-          {
-            label: "Fill in the Blank",
-            value: stats.fill,
-            icon: <EditOutlined />,
-            extra: "Blank-based practice",
-          },
-        ].map((item) => (
-          <Col xs={24} sm={12} lg={6} key={item.label}>
-            <Card
-              bordered={false}
-              style={{
-                borderRadius: 18,
-                boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
-                height: "100%",
-              }}
-              bodyStyle={{ padding: 18 }}
-            >
-              <Space align="start" size={14}>
-                <Avatar
-                  shape="square"
-                  size={48}
-                  icon={item.icon}
-                  style={{
-                    background: "#e6f4ff",
-                    color: "#1677ff",
-                    borderRadius: 14,
-                  }}
-                />
-                <div style={{ flex: 1 }}>
-                  <Text type="secondary">{item.label}</Text>
-                  <div style={{ marginTop: 4 }}>
-                    <Statistic value={item.value} valueStyle={{ fontSize: 28 }} />
-                  </div>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {item.extra}
-                  </Text>
-                </div>
-              </Space>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      {/* Content */}
-      <Card
-        bordered={false}
-        style={{
-          borderRadius: 20,
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
-        }}
-        bodyStyle={{ padding: 18 }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
-        >
-          <div>
-            <Title level={4} style={{ margin: 0 }}>
-              Question List
-            </Title>
-            <Text type="secondary">
-              Easily review and manage question records.
-            </Text>
+            {activeFilters > 0 && (
+              <Button icon={<FilterOutlined />} onClick={clearFilters}>
+                Clear ({activeFilters})
+              </Button>
+            )}
           </div>
 
-          <Tag color="blue" style={{ paddingInline: 12, borderRadius: 999 }}>
-            Showing {filteredQuestions.length} question(s)
-          </Tag>
+          {/* Bulk delete bar */}
+          {selectedRowKeys.length > 0 && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "8px 12px", borderRadius: 8,
+              background: "#FEE2E2", border: "1px solid #DC262630",
+            }}>
+              <span style={{ fontWeight: 600, color: "#DC2626", fontSize: 13 }}>
+                {selectedRowKeys.length} questions selected
+              </span>
+              <Button danger size="small" icon={<DeleteOutlined />} onClick={handleBulkDelete}>
+                Delete Selected
+              </Button>
+              <Button size="small" onClick={() => setSelectedRowKeys([])}>Cancel</Button>
+            </div>
+          )}
         </div>
 
-        <Divider style={{ marginTop: 12, marginBottom: 16 }} />
-
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <Spin size="large" />
-            <div style={{ marginTop: 12 }}>
-              <Text type="secondary">Loading questions...</Text>
+        {/* ── Table ── */}
+        <div style={pageCard}>
+          <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>Questions</span>
+              <span style={{
+                marginLeft: 10, fontSize: 11, fontWeight: 600,
+                background: "#DBEAFE", color: "#1D4ED8",
+                padding: "2px 8px", borderRadius: 99,
+              }}>
+                {filteredQuestions.length} records
+              </span>
+              {selectedAcademicYear?.name && (
+                <span style={{
+                  marginLeft: 8, fontSize: 11, fontWeight: 600,
+                  background: "#EDE9FE", color: "#6D28D9",
+                  padding: "2px 8px", borderRadius: 99,
+                }}>
+                  {selectedAcademicYear.name}
+                </span>
+              )}
             </div>
           </div>
-        ) : filteredQuestions.length === 0 ? (
-          <Empty
-            description="No questions found for the selected filters"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
-            <Space wrap>
-              <Button onClick={clearFilters}>Clear Filters</Button>
-              <Button type="primary" onClick={() => setModalType("single")}>
-                Add New Question
-              </Button>
-            </Space>
-          </Empty>
-        ) : (
-          <List
-            itemLayout="vertical"
-            dataSource={filteredQuestions}
-            split={false}
-            renderItem={(q, index) => {
-              const className =
-                q?.schoolClassId?.name ||
-                selectedClass?.name ||
-                "Unknown Class";
 
-              const subjectName =
-                q?.subjectId?.name || q?.subjectName || "Unknown Subject";
+          {loading ? (
+            <div style={{ padding: "60px 0", textAlign: "center" }}>
+              <Spin size="large" />
+            </div>
+          ) : filteredQuestions.length === 0 ? (
+            <div style={{ padding: "60px 24px", textAlign: "center" }}>
+              <Empty
+                description={<span style={{ color: "var(--text-muted)" }}>
+                  {activeFilters ? "Filter clear karein ya naye questions add karein" : "Koi question nahi mila"}
+                </span>}
+              >
+                <Space>
+                  {activeFilters > 0 && <Button onClick={clearFilters}>Filters Clear Karein</Button>}
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setModal("add")}>
+                    Add Question
+                  </Button>
+                </Space>
+              </Empty>
+            </div>
+          ) : (
+            <Table
+              className="qb-table"
+              rowKey="_id"
+              dataSource={filteredQuestions}
+              columns={columns}
+              loading={loading}
+              scroll={{ x: 700 }}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: setSelectedRowKeys,
+                preserveSelectedRowKeys: true,
+              }}
+              pagination={{
+                current:    page,
+                pageSize,
+                total:      filteredQuestions.length,
+                showSizeChanger: true,
+                pageSizeOptions: ["10", "20", "50", "100"],
+                showTotal:  (total, range) => (
+                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    {range[0]}–{range[1]} of {total} questions
+                  </span>
+                ),
+                onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+              }}
+              style={{ background: "transparent" }}
+            />
+          )}
+        </div>
+      </div>
 
-              const chapterName =
-                q?.chapterId?.name || "No Chapter";
-
-              return (
-                <List.Item style={{ padding: 0, marginBottom: 14 }}>
-                  <Card
-                    hoverable
-                    bordered={false}
-                    style={{
-                      borderRadius: 18,
-                      background:
-                        "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
-                      boxShadow: "0 8px 20px rgba(15, 23, 42, 0.05)",
-                      border: "1px solid #f0f0f0",
-                    }}
-                    bodyStyle={{ padding: 18 }}
-                  >
-                    <Row gutter={[16, 16]} align="top">
-                      <Col xs={24} md={18}>
-                        <Space align="start" size={12}>
-                          <Avatar
-                            shape="square"
-                            size={40}
-                            style={{
-                              background: "#1677ff",
-                              borderRadius: 12,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {index + 1}
-                          </Avatar>
-
-                          <div style={{ flex: 1 }}>
-                            <Title
-                              level={5}
-                              style={{
-                                margin: 0,
-                                lineHeight: 1.5,
-                                fontSize: 16,
-                              }}
-                            >
-                              {q.statement || "No question statement"}
-                            </Title>
-
-                            <div style={{ marginTop: 10 }}>
-                              <Space size={[8, 8]} wrap>
-                                <Tag color={getQuestionTypeColor(q.questionType)}>
-                                  {q.questionType || "Unknown Type"}
-                                </Tag>
-
-                                <Tag color={getDifficultyColor(q.difficulty)}>
-                                  {q.difficulty || "No Difficulty"}
-                                </Tag>
-
-                                <Tag color="purple">{className}</Tag>
-                                <Tag color="cyan">{subjectName}</Tag>
-                                <Tag>{chapterName}</Tag>
-                                <Tag color="gold">Marks: {q.marks ?? 0}</Tag>
-                              </Space>
-                            </div>
-                          </div>
-                        </Space>
-                      </Col>
-
-                      <Col xs={24} md={6}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            gap: 8,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <Tooltip title="Delete Question">
-                            <Button
-                              danger
-                              type="default"
-                              icon={<DeleteOutlined />}
-                              loading={deletingId === q._id}
-                              onClick={() => handleDelete(q._id)}
-                            >
-                              Delete
-                            </Button>
-                          </Tooltip>
-                        </div>
-                      </Col>
-                    </Row>
-                  </Card>
-                </List.Item>
-              );
-            }}
-          />
-        )}
-      </Card>
-
-      {/* Floating Actions */}
-      <FloatButton.Group
-        trigger="hover"
-        type="primary"
-        style={{ right: 20 }}
-        icon={<PlusOutlined />}
-      >
-        <FloatButton
-          icon={<PlusOutlined />}
-          tooltip="Add Question"
-          onClick={() => setModalType("single")}
-        />
-        <FloatButton
-          icon={<UploadOutlined />}
-          tooltip="Bulk Upload"
-          onClick={() => setModalType("bulk")}
-        />
-      </FloatButton.Group>
-
-      {/* Modal */}
+      {/* ── Add / Edit Modal ── */}
       <Modal
-        open={!!modalType}
+        open={modal === "add" || modal === "edit"}
         footer={null}
-        width={900}
+        width={780}
         destroyOnClose
         centered
-        onCancel={() => setModalType(null)}
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ ...iconWell(modal === "edit" ? "#D97706" : "#2563EB", 32), borderRadius: 9 }}>
+              {modal === "edit" ? <EditOutlined /> : <PlusOutlined />}
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>
+                {modal === "edit" ? "Question Edit Karein" : "Naya Question Add Karein"}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
+                {modal === "edit" ? "Existing question update karein" : "Question bank mein naya question add karein"}
+              </div>
+            </div>
+          </div>
+        }
+        onCancel={closeModal}
+        styles={{ body: { padding: 20, maxHeight: "80vh", overflowY: "auto" } }}
       >
-        {modalType === "single" && <CreateQuestion />}
-        {modalType === "bulk" && <BulkUploadQuestions />}
+        <CreateQuestion
+          initialData={modal === "edit" ? editQuestion : null}
+          onSuccess={handleSuccess}
+        />
       </Modal>
+
+      {/* ── Bulk Upload Modal ── */}
+      <Modal
+        open={modal === "bulk"}
+        footer={null}
+        width={720}
+        destroyOnClose
+        centered
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ ...iconWell("#7C3AED", 32), borderRadius: 9 }}><UploadOutlined /></div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>Bulk Upload Questions</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>Excel file se multiple questions ek saath add karein</div>
+            </div>
+          </div>
+        }
+        onCancel={closeModal}
+        styles={{ body: { padding: 20 } }}
+      >
+        <BulkUploadQuestions onSuccess={handleSuccess} />
+      </Modal>
+
+      {/* ── Preview Drawer ── */}
+      <QuestionPreviewDrawer
+        question={previewQ}
+        open={!!previewQ}
+        onClose={() => setPreviewQ(null)}
+      />
     </div>
   );
 };

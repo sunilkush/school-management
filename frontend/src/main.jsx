@@ -254,8 +254,6 @@ const SchoolSetup = lazy(()=>import("./pages/School_Admin/School_Setup/SchoolSet
 
 // Teacher
 const QuestionBank = lazy(() => import("./pages/Teacher/Exams/QuestionBank.jsx"));
-const CreateQuestion = lazy(() => import("./pages/Teacher/Exams/CreateQuestion.jsx"));
-const BulkUploadQuestions = lazy(() => import("./pages/Teacher/Exams/BulkUploadQuestions.jsx"));
 const TeacherExamsPage = lazy(() => import("./pages/Teacher/Exams/TeacherExamsPage.jsx"));
 const TeacherEvaluationPage = lazy(() => import("./pages/Teacher/Exams/TeacherEvaluationPage.jsx"));
 const AssignedClasses = lazy(() => import("./pages/Teacher/Classes/AssignedClasses.jsx"));
@@ -651,8 +649,6 @@ const router = createBrowserRouter([
              // { path: "exams", element: <ScheduleExams /> },
               { path: "exams/create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
-              { path: "exams/create-question", element: <CreateQuestion /> },
-              { path: "exams/bulk-upload-questions", element: <BulkUploadQuestions /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/list", element: <TeacherExamsPage /> },
@@ -851,6 +847,8 @@ const router = createBrowserRouter([
               { path: "teachers",        element: <TeacherList /> },
               { path: "classes",         element: <Classes /> },
               { path: "assessments",     element: <ExamsPage /> },
+              { path: "exams/create",    element: <ExamCreate /> },
+              { path: "exams/edit/:id",  element: <ExamCreate /> },
               { path: "reports",         element: <ExamReports /> },
               { path: "tasks",           element: <MyTasks /> },
               { path: "payroll",         element: <PayrollSelfServicePage /> },
@@ -938,12 +936,13 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <ExamCoordinatorDashboard /> },
               { path: "exams", element: <ExamsPage /> },
+              { path: "exams/list", element: <ExamsPage /> },
               { path: "exams/create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/question-bank", element: <QuestionBank /> },
               { path: "exams/schedule", element: <ExamSchedule /> },
               { path: "exams/grades", element: <EnterGrades /> },
-               { path: "exams/paper-builder", element: <PaperBuilder /> },
+              { path: "exams/paper-builder", element: <PaperBuilder /> },
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
