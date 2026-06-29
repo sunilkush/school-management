@@ -3,8 +3,10 @@ import {
   assignExamToClass,
   createExam,
   deleteExam,
+  downloadAdmitCardPdf,
+  downloadResultSheet,
   enterMarksBulk,
-  
+  evaluateAttempt,
   getClassResultSummary,
   getExamById,
   getExamAnalytics,
@@ -13,6 +15,8 @@ import {
   getStudentResult,
   publishExam,
   publishResult,
+  startExamAttempt,
+  submitExamAttempt,
   submitFinalMarks,
   updateExam,
   updateMarks,
@@ -100,7 +104,13 @@ router.post(
 router.get("/results/student", auth, roleMiddleware(STUDENT_RESULT_ROLES), getStudentResult);
 router.get("/results/parent", auth, roleMiddleware(PARENT_RESULT_ROLES), getParentViewResult);
 router.get("/results/student/:studentId", auth, roleMiddleware(STUDENT_RESULT_ROLES), getStudentResult);
+router.get("/results/export", auth, roleMiddleware(TEACHER_ROLES), downloadResultSheet);
 router.patch("/marks/:id", auth, roleMiddleware(TEACHER_ROLES), updateMarks);
+
+// Online exam attempt routes
+router.post("/attempts/start", auth, roleMiddleware([...TEACHER_ROLES, "Student"]), startExamAttempt);
+router.post("/attempts/submit", auth, roleMiddleware([...TEACHER_ROLES, "Student"]), submitExamAttempt);
+router.post("/attempts/evaluate", auth, roleMiddleware(TEACHER_ROLES), evaluateAttempt);
 
 router.get("/results/parent/:studentId", auth, roleMiddleware(PARENT_RESULT_ROLES), getParentViewResult);
 router.get(
@@ -124,6 +134,13 @@ router.get(
   roleMiddleware(READ_ROLES),
   validate({ params: { id: { required: true, type: "objectId" } } }),
   getExamAdmitCards
+);
+router.get(
+  ["/:id/admit-cards/pdf", "/:id/admit-card/pdf"],
+  auth,
+  roleMiddleware(READ_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  downloadAdmitCardPdf
 );
 router.get("/:id/seat-plan", auth, roleMiddleware(READ_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getExamSeatPlan);
 

@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Alert, Button, Empty, Input, Select, Space, Table, Tag } from "antd";
-import { FileExcelOutlined, FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
+import { Alert, Button, Empty, Input, Select, Space, Table, message } from "antd";
+import { DownloadOutlined, FileExcelOutlined, FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
 import { exportReportExcel, exportReportPDF, fetchReports } from "../../../features/examReportSlice";
 import { getExams } from "../../../features/examSlice";
+import { getClassData } from "../../../features/schoolClassSlice";
+import { getAccessToken } from "../../../api/authToken";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
@@ -21,10 +23,12 @@ const ExamReports = () => {
   const dispatch = useDispatch();
   const { reports = [], loading = false, error = null } = useSelector((state) => state.examReports || {});
   const { exams = [] } = useSelector((state) => state.exams || {});
+  const { schoolClasses = [] } = useSelector((state) => state.schoolClass || {});
   const { user = {} } = useSelector((state) => state.auth || {});
   const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
 
-  const [filters, setFilters] = useState({ examId: undefined, type: "", search: "" });
+  const [filters, setFilters] = useState({ examId: undefined, schoolClassId: undefined, type: "", search: "" });
+  const [downloading, setDownloading] = useState(null);
 
   const schoolId = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id;
@@ -32,6 +36,7 @@ const ExamReports = () => {
   useEffect(() => {
     if (!schoolId || !academicYearId) return;
     dispatch(getExams({ schoolId, academicYearId, limit: 100 }));
+    dispatch(getClassData({ schoolId, academicYearId }));
   }, [dispatch, schoolId, academicYearId]);
 
   useEffect(() => {
@@ -62,6 +67,41 @@ const ExamReports = () => {
     const payload = { examId: filters.examId, type: filters.type };
     if (format === "excel") return dispatch(exportReportExcel(payload));
     return dispatch(exportReportPDF(payload));
+  };
+
+  const handleDownloadMarksheet = async (format) => {
+    if (!filters.examId) return message.warning("Please select an exam first");
+    if (!filters.schoolClassId) return message.warning("Please select a class for marksheet download");
+
+    setDownloading(format);
+    try {
+      const token = getAccessToken();
+      const params = new URLSearchParams({ examId: filters.examId, schoolClassId: filters.schoolClassId, format });
+      const apiBase = import.meta.env.VITE_API_URL || "/api/v1";
+      const res = await fetch(`${apiBase}/exams/results/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson?.message || "Download failed");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `marksheet-${filters.examId}.${format === "pdf" ? "pdf" : "xlsx"}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      message.success("Marksheet downloaded successfully");
+    } catch (err) {
+      message.error(err.message || "Failed to download marksheet");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   return (
@@ -119,6 +159,53 @@ const ExamReports = () => {
               onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
               style={{ minWidth: 240 }}
             />
+          </div>
+
+          {/* ── Marksheet Download Panel ── */}
+          <div style={{
+            margin: "12px 16px 0",
+            padding: "14px 16px",
+            background: "var(--surface, #F8FAFC)",
+            border: "1px solid var(--border, #E2E8F0)",
+            borderRadius: 10,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-sub, #64748B)", whiteSpace: "nowrap" }}>
+              Download Marksheet:
+            </span>
+            <Select
+              allowClear
+              style={{ minWidth: 180 }}
+              placeholder="Select class"
+              value={filters.schoolClassId}
+              onChange={(value) => setFilters((prev) => ({ ...prev, schoolClassId: value }))}
+              options={schoolClasses.map((c) => ({ label: c?.name || "Class", value: c?._id }))}
+              size="small"
+            />
+            <Button
+              size="small"
+              icon={<FileExcelOutlined />}
+              loading={downloading === "excel"}
+              onClick={() => handleDownloadMarksheet("excel")}
+              style={{ borderColor: "#22C55E", color: "#16A34A" }}
+            >
+              Excel
+            </Button>
+            <Button
+              size="small"
+              icon={<FilePdfOutlined />}
+              loading={downloading === "pdf"}
+              onClick={() => handleDownloadMarksheet("pdf")}
+              danger
+            >
+              PDF
+            </Button>
+            <span style={{ fontSize: 11, color: "var(--text-muted, #94A3B8)" }}>
+              (select exam + class above)
+            </span>
           </div>
 
           {error ? (

@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js'
 import mongoose from 'mongoose'
 import { Exam } from '../models/Exam.model.js'
 import { ExamAttempt } from '../models/ExamAttempts.model.js'
+import { ExamResult } from '../models/ExamResult.model.js'
 import { AdmitCard } from '../models/AdmitCard.model.js'
 import { Question } from '../models/Questions.model.js'
 import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
@@ -19,6 +20,11 @@ import {
     submitFinalMarksService,
     updateMarksService,
 } from '../services/exam.service.js'
+import {
+    exportAdmitCardsPdf,
+    exportResultSheetExcel,
+    exportResultSheetPdf,
+} from '../utils/exportService.js'
 
 const ensureExamAccess = (exam, user) => {
     if (!exam) throw new ApiError(404, 'Exam not found')
@@ -534,4 +540,79 @@ export const getExamSeatPlan = asyncHandler(async (req, res) => {
             'Seat plan generated successfully'
         )
     )
+})
+
+export const downloadAdmitCardPdf = asyncHandler(async (req, res) => {
+    const exam = await getExamForAdmitCards(req.params.id).lean()
+    ensureExamAccess(exam, req.user)
+
+    const cards = await getStoredAdmitCards(req.params.id)
+    if (!cards.length) {
+        throw new ApiError(404, 'No admit cards found. Please generate admit cards first.')
+    }
+
+    const { studentId } = req.query
+    const filtered = studentId
+        ? cards.filter((c) => `${c.studentId}` === `${studentId}`)
+        : cards
+
+    if (!filtered.length) throw new ApiError(404, 'No admit card found for the specified student')
+
+    const pdfBuffer = await exportAdmitCardsPdf(filtered, exam)
+    const safeName = (exam.title || 'admit-cards').replace(/[^a-zA-Z0-9-_]/g, '-')
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}-admit-cards.pdf"`)
+    res.setHeader('Content-Length', pdfBuffer.length)
+    return res.end(pdfBuffer)
+})
+
+export const downloadResultSheet = asyncHandler(async (req, res) => {
+    const { examId, schoolClassId, sectionId, format = 'excel' } = req.query
+    if (!examId || !schoolClassId) {
+        throw new ApiError(400, 'examId and schoolClassId are required query parameters')
+    }
+
+    const exam = await Exam.findById(examId)
+        .populate('schoolClassId', 'name')
+        .lean()
+    if (!exam) throw new ApiError(404, 'Exam not found')
+
+    if (req.user.roleId?.name !== 'Super Admin' && `${exam.schoolId}` !== `${req.user.schoolId}`) {
+        throw new ApiError(403, 'Forbidden: exam belongs to a different school')
+    }
+
+    const filter = {
+        schoolId: exam.schoolId,
+        examId,
+        schoolClassId,
+        isPublished: true,
+    }
+    if (sectionId) filter.sectionId = sectionId
+
+    const results = await ExamResult.find(filter)
+        .populate('studentId', 'name rollNumber')
+        .sort({ rank: 1, totalObtainedMarks: -1 })
+        .lean()
+
+    if (!results.length) {
+        throw new ApiError(404, 'No published results found. Publish the results first.')
+    }
+
+    const className = exam.schoolClassId?.name || ''
+    const safeName = (exam.title || 'result-sheet').replace(/[^a-zA-Z0-9-_]/g, '-')
+
+    if (format === 'pdf') {
+        const pdfBuffer = await exportResultSheetPdf(results, exam, className)
+        res.setHeader('Content-Type', 'application/pdf')
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}-marksheet.pdf"`)
+        res.setHeader('Content-Length', pdfBuffer.length)
+        return res.end(pdfBuffer)
+    }
+
+    const xlsxBuffer = await exportResultSheetExcel(results, exam)
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}-marksheet.xlsx"`)
+    res.setHeader('Content-Length', xlsxBuffer.length)
+    return res.end(xlsxBuffer)
 })

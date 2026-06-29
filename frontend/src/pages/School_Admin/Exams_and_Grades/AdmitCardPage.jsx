@@ -7,10 +7,11 @@ import {
   DownloadOutlined, EyeOutlined, IdcardOutlined,
   ThunderboltOutlined, CheckCircleFilled,
   ClockCircleOutlined, UserOutlined, BookOutlined,
-  PrinterOutlined, TeamOutlined,
+  PrinterOutlined, TeamOutlined, FilePdfOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { generateAdmitCards, getAdmitCards, getExams } from "../../../features/examSlice";
+import { getAccessToken } from "../../../api/authToken";
 import dayjs from "dayjs";
 
 /* ── Design tokens ───────────────────────────────────────────────── */
@@ -155,11 +156,12 @@ const AdmitCardPage = () => {
   const { exams = [], loading } = useSelector((s) => s.exams || {});
   const { selectedAcademicYear }  = useSelector((s) => s.academicYear || {});
 
-  const [examId, setExamId]           = useState(null);
-  const [rows, setRows]               = useState([]);
-  const [isGenerated, setIsGenerated] = useState(false);
-  const [generating, setGenerating]   = useState(false);
+  const [examId, setExamId]             = useState(null);
+  const [rows, setRows]                 = useState([]);
+  const [isGenerated, setIsGenerated]   = useState(false);
+  const [generating, setGenerating]     = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [pdfDownloading, setPdfDownloading] = useState(false);
 
   const academicYear = useMemo(() => selectedAcademicYear?._id ? selectedAcademicYear : null, [selectedAcademicYear]);
 
@@ -200,6 +202,37 @@ const AdmitCardPage = () => {
     w.document.close();
     w.focus();
     w.print();
+  };
+
+  const handleDownloadPdf = async (studentId = null) => {
+    if (!examId) return message.warning("Please select an exam first.");
+    setPdfDownloading(true);
+    try {
+      const token = getAccessToken();
+      const apiBase = import.meta.env.VITE_API_URL || "/api/v1";
+      const url = `${apiBase}/exams/${examId}/admit-cards/pdf${studentId ? `?studentId=${studentId}` : ""}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Download failed");
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `admit-cards-${examId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      message.success("Admit card PDF downloaded successfully");
+    } catch (err) {
+      message.error(err.message || "Failed to download PDF");
+    } finally {
+      setPdfDownloading(false);
+    }
   };
 
   const selectedExam = useMemo(() => exams.find((e) => e._id === examId), [exams, examId]);
@@ -255,11 +288,18 @@ const AdmitCardPage = () => {
               style={{ borderRadius: 7, borderColor: C.primary, color: C.primary }}
             />
           </Tooltip>
-          <Tooltip title="Print / Download">
+          <Tooltip title="Print">
             <Button
               size="small" icon={<PrinterOutlined />}
               onClick={() => handlePrint(record)}
               style={{ borderRadius: 7, borderColor: C.accent, color: C.accent }}
+            />
+          </Tooltip>
+          <Tooltip title="Download PDF">
+            <Button
+              size="small" icon={<FilePdfOutlined />}
+              onClick={() => handleDownloadPdf(record.studentId)}
+              style={{ borderRadius: 7, borderColor: C.danger, color: C.danger }}
             />
           </Tooltip>
         </Space>
@@ -371,16 +411,23 @@ const AdmitCardPage = () => {
             )}
           </div>
           {rows.length > 0 && (
-            <Button
-              icon={<PrinterOutlined />} size="small"
-              onClick={() => rows.forEach((r) => handlePrint(r))}
-              style={{
-                borderRadius: 8, borderColor: C.accent,
-                color: C.accent, fontWeight: 600,
-              }}
-            >
-              Print All
-            </Button>
+            <Space size={8}>
+              <Button
+                icon={<PrinterOutlined />} size="small"
+                onClick={() => rows.forEach((r) => handlePrint(r))}
+                style={{ borderRadius: 8, borderColor: C.accent, color: C.accent, fontWeight: 600 }}
+              >
+                Print All
+              </Button>
+              <Button
+                icon={<FilePdfOutlined />} size="small"
+                loading={pdfDownloading}
+                onClick={() => handleDownloadPdf()}
+                style={{ borderRadius: 8, borderColor: C.danger, color: C.danger, fontWeight: 600 }}
+              >
+                Download PDF
+              </Button>
+            </Space>
           )}
         </div>
 
@@ -427,11 +474,19 @@ const AdmitCardPage = () => {
             Close
           </Button>,
           <Button
+            key="pdf" icon={<FilePdfOutlined />}
+            loading={pdfDownloading}
+            onClick={() => handleDownloadPdf(selectedCard?.studentId)}
+            style={{ borderRadius: 8, borderColor: C.danger, color: C.danger, fontWeight: 600 }}
+          >
+            Download PDF
+          </Button>,
+          <Button
             key="print" type="primary" icon={<PrinterOutlined />}
             onClick={() => handlePrint(selectedCard)}
             style={{ borderRadius: 8, background: C.primary, borderColor: C.primary, fontWeight: 600 }}
           >
-            Print / Download
+            Print
           </Button>,
         ]}
         width={600}
