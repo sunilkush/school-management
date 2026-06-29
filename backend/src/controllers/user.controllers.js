@@ -13,6 +13,7 @@ import { Student } from '../models/student.model.js'
 import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
 import { Employee } from '../models/Employee.model.js'
 import { Teacher } from '../models/teacherAssignment.model.js'
+import { SchoolSubscription } from '../models/schoolSubscription.model.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -207,6 +208,32 @@ const loginUser = asyncHandler(async (req, res) => {
     } */
   }
 
+  // 4b️⃣ Subscription check for school-level roles
+  let subscriptionWarning = null;
+  if (!isSuperAdmin && user.schoolId?._id) {
+    const sub = await SchoolSubscription.findOne({ schoolId: user.schoolId._id }).lean();
+    if (sub) {
+      const now = new Date();
+      const end = new Date(sub.endDate);
+      const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+
+      if (sub.status === "expired" || daysLeft <= 0) {
+        throw new ApiError(
+          403,
+          `Your school's subscription has expired on ${end.toLocaleDateString("en-IN")}. Please contact the administrator to renew.`
+        );
+      }
+
+      if (daysLeft <= 30) {
+        subscriptionWarning = {
+          daysLeft,
+          endDate: sub.endDate,
+          planId: sub.planId,
+        };
+      }
+    }
+  }
+
   // 5️⃣ Tokens
   const { accessToken, refreshToken } =
     await generateAccessAndRefreshToken(user._id);
@@ -307,6 +334,7 @@ const loginUser = asyncHandler(async (req, res) => {
           user: userWithDetails[0],
           accessToken,
           refreshToken,
+          subscriptionWarning,
         },
         "User logged in successfully"
       )

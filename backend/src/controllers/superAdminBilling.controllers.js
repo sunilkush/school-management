@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import Razorpay from "razorpay";
 import { SubscriptionPlan } from "../models/SubscriptionPlan.model.js";
 import { SchoolSubscription } from "../models/schoolSubscription.model.js";
 import { SubscriptionInvoice } from "../models/SubscriptionInvoice.model.js";
@@ -307,18 +308,83 @@ export const addManualPayment = asyncHandler(async (req, res) => {
 
 export const createGatewayPaymentIntent = asyncHandler(async (req, res) => {
   const { invoiceId } = req.params;
+
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new ApiError(500, "Razorpay credentials not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env");
+  }
+
+  const invoice = await SubscriptionInvoice.findById(invoiceId).populate("schoolId");
+  if (!invoice) throw new ApiError(404, "Invoice not found");
+  if (invoice.status === "paid") throw new ApiError(400, "Invoice is already paid");
+
+  const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+
+  // Razorpay expects amount in paisa (1 INR = 100 paisa)
+  const order = await razorpay.orders.create({
+    amount: Math.round(invoice.totalAmount * 100),
+    currency: "INR",
+    receipt: invoice.invoiceNumber,
+    notes: {
+      invoiceId: invoice._id.toString(),
+      schoolId: invoice.schoolId?._id?.toString() || invoice.schoolId?.toString(),
+      schoolName: invoice.schoolId?.name || "",
+    },
+  });
+
+  return res.status(200).json(new ApiResponse(200, {
+    orderId: order.id,
+    amount: order.amount,
+    currency: order.currency,
+    keyId: process.env.RAZORPAY_KEY_ID,
+    invoiceId: invoice._id,
+    invoiceNumber: invoice.invoiceNumber,
+    schoolName: invoice.schoolId?.name || "",
+  }, "Razorpay order created"));
+});
+
+export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
+  const { invoiceId } = req.params;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+  if (!process.env.RAZORPAY_KEY_SECRET) {
+    throw new ApiError(500, "Razorpay secret not configured");
+  }
+
+  // Verify signature
+  const crypto = await import("crypto");
+  const expectedSignature = crypto.default
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest("hex");
+
+  if (expectedSignature !== razorpay_signature) {
+    throw new ApiError(400, "Payment verification failed: invalid signature");
+  }
+
   const invoice = await SubscriptionInvoice.findById(invoiceId);
   if (!invoice) throw new ApiError(404, "Invoice not found");
 
-  const mockIntent = {
-    provider: req.body.gatewayProvider || "razorpay",
-    invoiceId,
+  // Record the payment
+  const payment = await SubscriptionPayment.create({
+    schoolId: invoice.schoolId,
+    invoiceId: invoice._id,
     amount: invoice.totalAmount,
-    intentId: `intent_${Date.now()}`,
-    status: "pending",
-  };
+    paymentMode: "gateway",
+    transactionId: razorpay_payment_id,
+    gatewayProvider: "razorpay",
+    status: "success",
+    paymentDate: new Date(),
+  });
 
-  return res.status(200).json(new ApiResponse(200, mockIntent, "Gateway payment intent created"));
+  // Mark invoice as paid
+  invoice.status = "paid";
+  invoice.paidDate = new Date();
+  await invoice.save();
+
+  return res.status(200).json(new ApiResponse(200, { payment, invoice }, "Payment verified and recorded"));
 });
 
 export const upsertSchoolUsage = asyncHandler(async (req, res) => {

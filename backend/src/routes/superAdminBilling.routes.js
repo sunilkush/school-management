@@ -5,6 +5,7 @@ import {
   cancelSubscription,
   changeSchoolPlan,
   createGatewayPaymentIntent,
+  verifyRazorpayPayment,
   createPlanV2,
   deactivatePlan,
   downloadInvoicePdf,
@@ -50,6 +51,7 @@ router.get("/invoices/:invoiceId/pdf", downloadInvoicePdf);
 
 router.post("/invoices/:invoiceId/payments/manual", addManualPayment);
 router.post("/invoices/:invoiceId/payments/gateway-intent", createGatewayPaymentIntent);
+router.post("/invoices/:invoiceId/payments/verify", verifyRazorpayPayment);
 
 router.put("/schools/:schoolId/usage", upsertSchoolUsage);
 router.get("/schools/:schoolId/usage", getSchoolUsage);

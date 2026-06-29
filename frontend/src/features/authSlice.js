@@ -209,6 +209,7 @@ const initialState = {
   hasFetchedUsers: false,
   isAuthInitialized: false,
   isLoggingOut: false,
+  subscriptionWarning: null,
 };
 
 const authSlice = createSlice({
@@ -248,6 +249,7 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
         state.profile = action.payload.user;
         state.isAuthInitialized = true;
+        state.subscriptionWarning = action.payload.subscriptionWarning || null;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.user = action.payload?.user ?? state.user;

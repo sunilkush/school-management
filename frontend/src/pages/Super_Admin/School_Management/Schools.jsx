@@ -1,6 +1,13 @@
 import React, { useEffect, useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchSchools, deleteSchool } from "../../../features/schoolSlice";
+import { fetchSubscriptionPlans } from "../../../features/subscriptionPlanSlice";
+import {
+  fetchSchoolSubscription, renewSchoolSubscription,
+  cancelSchoolSubscription, suspendSchoolSubscription,
+  reactivateSchoolSubscription, changeSchoolPlan,
+  clearBillingMessages,
+} from "../../../features/superAdminBillingSlice";
 import AddSchoolForm from "../../../components/forms/AddSchoolForm";
 import apiClient from "../../../api/httpClient";
 import {
@@ -25,6 +32,9 @@ import {
   Form,
   Select,
   Pagination,
+  Drawer,
+  Alert,
+  Descriptions,
 } from "antd";
 import {
   PlusOutlined,
@@ -40,6 +50,13 @@ import {
   TeamOutlined,
   ApartmentOutlined,
   EditOutlined,
+  ReloadOutlined,
+  StopOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  SwapOutlined,
+  SettingOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 
 
@@ -70,7 +87,7 @@ const COLOR = {
 };
 
 // ─── SchoolCard ────────────────────────────────────────────────────────────────
-const SchoolCard = ({ school, onDelete, onEdit }) => {
+const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
   const dateStr = school.createdAt
     ? new Date(school.createdAt).toLocaleDateString(undefined, {
         day: "2-digit",
@@ -331,9 +348,19 @@ const SchoolCard = ({ school, onDelete, onEdit }) => {
           </Text>
         </Space>
 
-        <Space size={4} align="center">
-          <CalendarOutlined style={{ fontSize: 10, color: COLOR.textMuted }} />
-          <Text style={{ fontSize: 11, color: COLOR.textMuted }}>{dateStr}</Text>
+        <Space size={4}>
+          <Button
+            size="small"
+            icon={<SettingOutlined />}
+            onClick={() => onManageSub(school)}
+            style={{
+              fontSize: 11, borderRadius: 7, height: 26,
+              borderColor: COLOR.primaryBorder, color: COLOR.primary,
+              background: COLOR.primaryLight,
+            }}
+          >
+            Manage Subscription
+          </Button>
         </Space>
       </div>
     </Card>
@@ -343,9 +370,21 @@ const SchoolCard = ({ school, onDelete, onEdit }) => {
 // ─── Schools Page ──────────────────────────────────────────────────────────────
 const PAGE_SIZE = 9;
 
+const STATUS_COLOR = {
+  active:    { color: "#15803D", bg: "#DCFCE7", border: "#86EFAC" },
+  trial:     { color: "#1D4ED8", bg: "#DBEAFE", border: "#93C5FD" },
+  expired:   { color: "#DC2626", bg: "#FEE2E2", border: "#FCA5A5" },
+  suspended: { color: "#D97706", bg: "#FEF3C7", border: "#FCD34D" },
+  cancelled: { color: "#64748B", bg: "#F1F5F9", border: "#CBD5E1" },
+};
+
 const Schools = () => {
   const dispatch = useDispatch();
   const { schools, loading, error } = useSelector((state) => state.school);
+  const { plans = [] } = useSelector((state) => state.subscriptionPlan);
+  const { schoolSubscription, actionLoading, successMessage, error: billingError } =
+    useSelector((state) => state.superAdminBilling);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -357,9 +396,70 @@ const Schools = () => {
   const [editSaving, setEditSaving] = useState(false);
   const [editForm] = Form.useForm();
 
+  // Subscription drawer state
+  const [subDrawerOpen, setSubDrawerOpen] = useState(false);
+  const [subSchool, setSubSchool] = useState(null);
+  const [changePlanId, setChangePlanId] = useState(null);
+  const [changePlanAction, setChangePlanAction] = useState("upgrade");
+
   useEffect(() => {
     dispatch(fetchSchools());
+    dispatch(fetchSubscriptionPlans());
   }, [dispatch]);
+
+  // Show billing success/error messages
+  useEffect(() => {
+    if (successMessage) {
+      message.success(successMessage);
+      dispatch(clearBillingMessages());
+    }
+    if (billingError) {
+      message.error(billingError);
+      dispatch(clearBillingMessages());
+    }
+  }, [successMessage, billingError, dispatch]);
+
+  const handleManageSub = useCallback((school) => {
+    setSubSchool(school);
+    setSubDrawerOpen(true);
+    dispatch(fetchSchoolSubscription(school._id));
+  }, [dispatch]);
+
+  const handleSubDrawerClose = useCallback(() => {
+    setSubDrawerOpen(false);
+    setSubSchool(null);
+    setChangePlanId(null);
+  }, []);
+
+  const handleRenew = useCallback(async () => {
+    if (!subSchool?._id) return;
+    await dispatch(renewSchoolSubscription(subSchool._id));
+    dispatch(fetchSchools());
+  }, [subSchool, dispatch]);
+
+  const handleSuspend = useCallback(async () => {
+    if (!subSchool?._id) return;
+    await dispatch(suspendSchoolSubscription(subSchool._id));
+    dispatch(fetchSchools());
+  }, [subSchool, dispatch]);
+
+  const handleReactivate = useCallback(async () => {
+    if (!subSchool?._id) return;
+    await dispatch(reactivateSchoolSubscription(subSchool._id));
+    dispatch(fetchSchools());
+  }, [subSchool, dispatch]);
+
+  const handleCancel = useCallback(async () => {
+    if (!subSchool?._id) return;
+    await dispatch(cancelSchoolSubscription(subSchool._id));
+    dispatch(fetchSchools());
+  }, [subSchool, dispatch]);
+
+  const handleChangePlan = useCallback(async () => {
+    if (!subSchool?._id || !changePlanId) return;
+    await dispatch(changeSchoolPlan({ schoolId: subSchool._id, planId: changePlanId, action: changePlanAction }));
+    dispatch(fetchSchools());
+  }, [subSchool, changePlanId, changePlanAction, dispatch]);
 
   const handleDeleteSchool = useCallback(
     async (id) => {
@@ -734,6 +834,7 @@ const Schools = () => {
                   school={school}
                   onDelete={handleDeleteSchool}
                   onEdit={handleOpenEdit}
+                  onManageSub={handleManageSub}
                 />
               </Col>
             ))}
@@ -933,6 +1034,202 @@ const Schools = () => {
           </Row>
         </Form>
       </Modal>
+
+      {/* ══════════ SUBSCRIPTION MANAGEMENT DRAWER ══════════ */}
+      <Drawer
+        open={subDrawerOpen}
+        onClose={handleSubDrawerClose}
+        title={
+          <Space>
+            <CrownOutlined style={{ color: COLOR.primary }} />
+            <span style={{ fontWeight: 700, fontSize: 15 }}>
+              Manage Subscription — {subSchool?.name}
+            </span>
+          </Space>
+        }
+        width={440}
+        destroyOnClose
+      >
+        {actionLoading && !schoolSubscription ? (
+          <div style={{ textAlign: "center", padding: 48 }}><Spin size="large" /></div>
+        ) : !schoolSubscription ? (
+          <Alert
+            type="warning"
+            showIcon
+            message="No subscription found"
+            description="This school has no subscription assigned. Go to Subscription Plans to assign one."
+          />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+            {/* ── Status badge ── */}
+            {(() => {
+              const sc = STATUS_COLOR[schoolSubscription.status] || STATUS_COLOR.cancelled;
+              const end = new Date(schoolSubscription.endDate);
+              const daysLeft = Math.ceil((end - new Date()) / 86400000);
+              return (
+                <div style={{
+                  background: sc.bg, border: `1px solid ${sc.border}`,
+                  borderRadius: 12, padding: "14px 16px",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: sc.color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      {schoolSubscription.status}
+                    </div>
+                    <div style={{ fontSize: 13, color: "#0F172A", fontWeight: 600 }}>
+                      {schoolSubscription.planId?.name || "—"}
+                    </div>
+                  </div>
+                  {["active", "trial"].includes(schoolSubscription.status) && (
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: daysLeft <= 7 ? "#DC2626" : daysLeft <= 30 ? "#D97706" : sc.color }}>
+                        {daysLeft > 0 ? daysLeft : 0}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#64748B" }}>days left</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* ── Details ── */}
+            <Descriptions column={1} size="small" bordered
+              styles={{ label: { fontWeight: 600, fontSize: 12, width: 130 }, content: { fontSize: 12 } }}>
+              <Descriptions.Item label="Plan">
+                {schoolSubscription.planId?.name || "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Price">
+                ₹{schoolSubscription.snapshot?.price?.toLocaleString("en-IN") || "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Start Date">
+                {new Date(schoolSubscription.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              </Descriptions.Item>
+              <Descriptions.Item label="End Date">
+                {new Date(schoolSubscription.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              </Descriptions.Item>
+              <Descriptions.Item label="Duration">
+                {schoolSubscription.snapshot?.durationInDays} days
+              </Descriptions.Item>
+              <Descriptions.Item label="Payment">
+                <Tag color={schoolSubscription.paymentStatus === "completed" ? "success" : schoolSubscription.paymentStatus === "failed" ? "error" : "warning"}>
+                  {schoolSubscription.paymentStatus}
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+
+            {/* ── Actions ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+              {/* Renew */}
+              <Popconfirm
+                title="Renew subscription?"
+                description={`Extends by ${schoolSubscription.snapshot?.durationInDays} days from the current end date.`}
+                onConfirm={handleRenew}
+                okText="Renew"
+                icon={<ReloadOutlined style={{ color: COLOR.primary }} />}
+              >
+                <Button
+                  block icon={<ReloadOutlined />}
+                  loading={actionLoading}
+                  style={{ borderRadius: 8, height: 38, fontWeight: 600, borderColor: COLOR.primaryBorder, color: COLOR.primary, background: COLOR.primaryLight }}
+                >
+                  Renew Subscription
+                </Button>
+              </Popconfirm>
+
+              {/* Suspend / Reactivate */}
+              {["active", "trial"].includes(schoolSubscription.status) ? (
+                <Popconfirm
+                  title="Suspend subscription?"
+                  description="School admins will be blocked from logging in."
+                  onConfirm={handleSuspend}
+                  okText="Suspend" okButtonProps={{ danger: true }}
+                  icon={<ExclamationCircleOutlined style={{ color: "#D97706" }} />}
+                >
+                  <Button block danger icon={<PauseCircleOutlined />} loading={actionLoading}
+                    style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "#FEF3C7", borderColor: "#FCD34D", color: "#92400E" }}>
+                    Suspend
+                  </Button>
+                </Popconfirm>
+              ) : schoolSubscription.status === "suspended" ? (
+                <Popconfirm
+                  title="Reactivate subscription?"
+                  onConfirm={handleReactivate}
+                  okText="Reactivate"
+                  icon={<PlayCircleOutlined style={{ color: "#15803D" }} />}
+                >
+                  <Button block icon={<PlayCircleOutlined />} loading={actionLoading}
+                    style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "#DCFCE7", borderColor: "#86EFAC", color: "#15803D" }}>
+                    Reactivate
+                  </Button>
+                </Popconfirm>
+              ) : null}
+
+              {/* Cancel */}
+              {schoolSubscription.status !== "cancelled" && (
+                <Popconfirm
+                  title="Cancel subscription?"
+                  description="This will permanently cancel the school's subscription."
+                  onConfirm={handleCancel}
+                  okText="Yes, Cancel" okButtonProps={{ danger: true }}
+                  icon={<ExclamationCircleOutlined style={{ color: "#DC2626" }} />}
+                >
+                  <Button block danger icon={<StopOutlined />} loading={actionLoading}
+                    style={{ borderRadius: 8, height: 38, fontWeight: 600 }}>
+                    Cancel Subscription
+                  </Button>
+                </Popconfirm>
+              )}
+            </div>
+
+            {/* ── Change Plan ── */}
+            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 12, padding: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#0F172A", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                <SwapOutlined style={{ color: COLOR.primary }} />
+                Change Plan
+              </div>
+              <Space.Compact style={{ width: "100%", marginBottom: 10 }}>
+                <Select
+                  placeholder="Select new plan"
+                  style={{ flex: 1 }}
+                  value={changePlanId}
+                  onChange={setChangePlanId}
+                  options={plans.filter(p => p.isActive !== false && p._id !== schoolSubscription.planId?._id).map(p => ({
+                    value: p._id,
+                    label: `${p.name} — ₹${p.price} / ${p.durationInDays}d`,
+                  }))}
+                />
+                <Select
+                  value={changePlanAction}
+                  onChange={setChangePlanAction}
+                  style={{ width: 130 }}
+                  options={[
+                    { value: "upgrade", label: "Upgrade" },
+                    { value: "downgrade", label: "Downgrade" },
+                  ]}
+                />
+              </Space.Compact>
+              <Popconfirm
+                title={`${changePlanAction === "upgrade" ? "Upgrade" : "Downgrade"} plan?`}
+                description="This will reset the subscription start/end dates."
+                onConfirm={handleChangePlan}
+                disabled={!changePlanId}
+                okText="Confirm"
+              >
+                <Button
+                  block icon={<SwapOutlined />}
+                  disabled={!changePlanId}
+                  loading={actionLoading}
+                  style={{ borderRadius: 8, height: 36, fontWeight: 600, borderColor: COLOR.primaryBorder, color: COLOR.primary }}
+                >
+                  Apply Plan Change
+                </Button>
+              </Popconfirm>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 };

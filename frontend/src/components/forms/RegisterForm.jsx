@@ -89,6 +89,15 @@ const FORM_CSS = `
   .step-status-item.error   { background: #fef2f2; color: #dc2626; }
   .step-status-item.idle    { background: #f8fafc; color: #94a3b8; }
 
+  .reg-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+  }
+  @media (max-width: 600px) {
+    .reg-grid-2 { grid-template-columns: 1fr; }
+  }
+
   .spin { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 `;
@@ -334,7 +343,7 @@ const RegisterForm = ({ onClose }) => {
             STEP 1 — Account Details
         ════════════════════════════════ */}
         <div style={{ display: currentStep === 0 ? "block" : "none" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <div className="reg-grid-2">
             <Form.Item label="Full Name" name="name" rules={[{ required: true, message: "Required" }]}>
               <Input placeholder="e.g. Rahul Sharma" />
             </Form.Item>
@@ -343,9 +352,9 @@ const RegisterForm = ({ onClose }) => {
             </Form.Item>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <div className="reg-grid-2">
             <Form.Item label="Password" name="password" rules={[{ required: true, min: 6, message: "Min 6 characters" }]}>
-              <Input.Password placeholder="Min. 6 characters" />
+              <Input.Password placeholder="Min. 6 characters" styles={{border:"none"}} />
             </Form.Item>
             <Form.Item
               label="Confirm Password" name="confirmPassword"
@@ -361,11 +370,11 @@ const RegisterForm = ({ onClose }) => {
                 }),
               ]}
             >
-              <Input.Password placeholder="Repeat password" />
+              <Input.Password placeholder="Repeat password" styles={{border:"none"}}/>
             </Form.Item>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: isSuperAdmin ? "1fr 1fr" : "1fr", gap: "0 16px" }}>
+          <div className={isSuperAdmin ? "reg-grid-2" : ""}>
             {isSuperAdmin && (
               <Form.Item label="School" name="schoolId" rules={[{ required: true, message: "Select a school" }]}>
                 <Select placeholder="Select school" options={schoolOptions} />
@@ -418,7 +427,7 @@ const RegisterForm = ({ onClose }) => {
             Employee Profile
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <div className="reg-grid-2">
             <Form.Item label="Phone Number" name="phone" rules={[{ required: true, message: "Required" }, { pattern: /^[0-9]{10,13}$/, message: "Enter valid 10-13 digit number" }]}>
               <Input placeholder="10-digit mobile number" />
             </Form.Item>
@@ -431,7 +440,7 @@ const RegisterForm = ({ onClose }) => {
             </Form.Item>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <div className="reg-grid-2">
             <Form.Item label="Department" name="department">
               <Input placeholder="e.g. Science, Admin" />
             </Form.Item>
@@ -440,7 +449,7 @@ const RegisterForm = ({ onClose }) => {
             </Form.Item>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <div className="reg-grid-2">
             <Form.Item label="Employment Type" name="employmentType">
               <Select options={[
                 { value: "Permanent",  label: "Permanent"  },

@@ -216,6 +216,29 @@ body {
   color: var(--text-muted) !important;
 }
 
+/* Remove inner input border inside affix wrappers (Password, Search, etc.) */
+.ant-input-affix-wrapper > .ant-input {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Remove focus outline on mouse click — keep keyboard :focus-visible intact */
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input-number:focus,
+.ant-input-number-focused,
+.ant-picker:focus,
+.ant-picker-focused,
+.ant-select-focused .ant-select-selector,
+.ant-select-selector:focus,
+.ant-btn:focus:not(:focus-visible),
+textarea.ant-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .ant-table-wrapper .ant-table {
   background: var(--surface) !important;
 }
