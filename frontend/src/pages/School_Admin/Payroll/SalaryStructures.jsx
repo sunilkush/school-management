@@ -19,8 +19,6 @@ const C = {
   accent: "#14B8A6", accentLight: "#CCFBF1",
   success: "#22C55E", successLight: "#DCFCE7",
   warning: "#F59E0B", warningLight: "#FEF3C7",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
 };
 
 const SalaryStructures = () => {
@@ -110,10 +108,10 @@ const SalaryStructures = () => {
   const stats = useMemo(() => {
     const active = safeStructures.filter((s) => s.status === "active");
     return {
-      total:   safeStructures.length,
-      active:  active.length,
+      total:      safeStructures.length,
+      active:     active.length,
       totalGross: active.reduce((sum, s) => sum + (s.grossMonthly || 0), 0),
-      employees: new Set(safeStructures.map((s) => s.employeeId?._id || s.employeeId)).size,
+      employees:  new Set(safeStructures.map((s) => s.employeeId?._id || s.employeeId)).size,
     };
   }, [safeStructures]);
 
@@ -130,13 +128,14 @@ const SalaryStructures = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <TeamOutlined />,        label: "Employees",       value: stats.employees, color: C.primary },
-          { icon: <CheckCircleOutlined />, label: "Active Structures", value: stats.active, color: C.success },
-          { icon: <RupeeIcon />,      label: "Total Structures", value: stats.total,  color: C.accent },
-          { icon: <BarChartOutlined />,    label: "Monthly Payroll",  value: formatCurrencyINR(stats.totalGross), color: C.warning, small: true },
+          { icon: <TeamOutlined />,        label: "Employees",         value: stats.employees,                    color: C.primary },
+          { icon: <CheckCircleOutlined />, label: "Active Structures", value: stats.active,                       color: C.success },
+          { icon: <RupeeIcon />,           label: "Total Structures",  value: stats.total,                        color: C.accent  },
+          { icon: <BarChartOutlined />,    label: "Monthly Payroll",   value: formatCurrencyINR(stats.totalGross), color: C.warning, small: true },
         ].map((s) => (
           <div key={s.label} style={{
-            background: C.surface, borderRadius: 14, border: "1px solid " + C.border,
+            background: "var(--surface)", borderRadius: 14,
+            border: "1px solid var(--border-muted)",
             padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
             boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
           }}>
@@ -145,7 +144,7 @@ const SalaryStructures = () => {
               <div style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
                 {s.label}
               </div>
-              <div style={{ fontSize: s.small ? 16 : 26, fontWeight: 800, color: C.text, lineHeight: 1 }}>
+              <div style={{ fontSize: s.small ? 16 : 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
                 {s.value}
               </div>
             </div>
@@ -178,8 +177,8 @@ const SalaryStructures = () => {
               onClick={() => { setEditingId(null); form.resetFields(); }}
               style={{
                 marginTop: 10, width: "100%", padding: "8px 0",
-                background: "transparent", border: `1px dashed ${C.border}`,
-                borderRadius: 8, cursor: "pointer", color: C.textMuted,
+                background: "transparent", border: "1px dashed var(--border-muted)",
+                borderRadius: 8, cursor: "pointer", color: "var(--text-muted)",
                 fontSize: 12, fontWeight: 600,
               }}
             >
@@ -190,25 +189,26 @@ const SalaryStructures = () => {
 
         {/* Right: Table */}
         <div style={{
-          background: C.surface, borderRadius: 14, border: "1px solid " + C.border,
+          background: "var(--surface)", borderRadius: 14,
+          border: "1px solid var(--border-muted)",
           overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
         }}>
           <div style={{
-            padding: "14px 20px", borderBottom: "1px solid " + C.border,
+            padding: "14px 20px", borderBottom: "1px solid var(--border-muted)",
             display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
           }}>
-            <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>All Structures</span>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Structures</span>
             <span style={{
               fontSize: 12, padding: "2px 9px", borderRadius: 20,
               background: C.primaryLighter, color: C.primary,
-              border: "1px solid " + C.primaryLight, fontWeight: 600,
+              border: `1px solid ${C.primaryLight}`, fontWeight: 600,
             }}>
               {filteredStructures.length}
             </span>
             <div style={{ marginLeft: "auto" }}>
               <Input
                 placeholder="Search employee…"
-                prefix={<SearchOutlined style={{ color: C.textMuted }} />}
+                prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ width: 200, borderRadius: 8 }}

@@ -27,26 +27,23 @@ const C = {
   success: "#22C55E", successLight: "#DCFCE7",
   danger: "#EF4444", dangerLight: "#FEE2E2",
   warning: "#F59E0B", warningLight: "#FEF3C7",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
   orange: "#F97316", orangeLight: "#FFF7ED",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
 };
 
 const TYPE_CFG = {
-  travel:   { label: "Travel",    icon: <CarOutlined />,          color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
-  fuel:     { label: "Fuel",      icon: "⛽",                     color: C.orange,  bg: C.orangeLight,    border: "#FED7AA",     emoji: true },
-  internet: { label: "Internet",  icon: <WifiOutlined />,         color: C.accent,  bg: C.accentLight,    border: "#99F6E4" },
-  medical:  { label: "Medical",   icon: <MedicineBoxOutlined />,  color: "#DC2626", bg: "#FEE2E2",        border: "#FCA5A5" },
-  food:     { label: "Food",      icon: <CoffeeOutlined />,       color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
-  other:    { label: "Other",     icon: <RupeeIcon />,       color: C.textSub, bg: "#F1F5F9",        border: C.border  },
+  travel:   { label: "Travel",   icon: <CarOutlined />,         color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
+  fuel:     { label: "Fuel",     icon: "⛽",                    color: C.orange,  bg: C.orangeLight,    border: "#FED7AA",     emoji: true },
+  internet: { label: "Internet", icon: <WifiOutlined />,        color: C.accent,  bg: C.accentLight,    border: "#99F6E4" },
+  medical:  { label: "Medical",  icon: <MedicineBoxOutlined />, color: "#DC2626", bg: "#FEE2E2",        border: "#FCA5A5" },
+  food:     { label: "Food",     icon: <CoffeeOutlined />,      color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
+  other:    { label: "Other",    icon: <RupeeIcon />,           color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)" },
 };
 
 const STATUS_CFG = {
-  pending_manager:  { label: "Pending Manager",  color: C.warning, bg: C.warningLight,  border: "#FDE68A" },
-  pending_finance:  { label: "Pending Finance",  color: C.orange,  bg: C.orangeLight,   border: "#FED7AA" },
-  approved:         { label: "Approved",         color: "#15803D", bg: C.successLight,  border: "#86EFAC" },
-  rejected:         { label: "Rejected",         color: "#991B1B", bg: C.dangerLight,   border: "#FCA5A5" },
+  pending_manager:  { label: "Pending Manager",  color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
+  pending_finance:  { label: "Pending Finance",  color: C.orange,  bg: C.orangeLight,    border: "#FED7AA" },
+  approved:         { label: "Approved",         color: "#15803D", bg: C.successLight,   border: "#86EFAC" },
+  rejected:         { label: "Rejected",         color: "#991B1B", bg: C.dangerLight,    border: "#FCA5A5" },
   added_to_payroll: { label: "Added to Payroll", color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
 };
 
@@ -80,12 +77,13 @@ const StatusBadge = ({ status }) => {
 const ApprovalPipeline = ({ approvals = [] }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
     {approvals.map((a, i) => {
-      const dot = a.status === "approved" ? C.success : a.status === "rejected" ? C.danger : C.border;
+      const dot = a.status === "approved" ? C.success : a.status === "rejected" ? C.danger : "var(--border-muted)";
       return (
         <Tooltip key={i} title={`${a.level === "manager" ? "Manager" : "Finance"}: ${a.status}`}>
           <div style={{
             width: 8, height: 8, borderRadius: "50%",
-            background: dot, border: `1px solid ${dot === C.border ? C.textMuted : dot}`,
+            background: dot,
+            border: `1px solid ${dot === "var(--border-muted)" ? "var(--text-muted)" : dot}`,
           }} />
         </Tooltip>
       );
@@ -151,7 +149,8 @@ const ReimbursementsPage = () => {
   const handleManagerApprove = (record) => Modal.confirm({
     title: "Approve this claim (Manager Level)?",
     content: `${record.empName} — ${fmt(record.amount)} for ${TYPE_CFG[record.type]?.label || record.type}`,
-    okText: "Approve", okButtonProps: { style: { background: C.success, borderColor: C.success, borderRadius: 8, color: "#fff" } },
+    okText: "Approve",
+    okButtonProps: { style: { background: C.success, borderColor: C.success, borderRadius: 8, color: "#fff" } },
     cancelButtonProps: { style: { borderRadius: 8 } },
     onOk: async () => {
       try { await dispatch(managerApproveReimb({ id: record._id })).unwrap(); message.success("Approved by manager"); refresh(); }
@@ -162,7 +161,8 @@ const ReimbursementsPage = () => {
   const handleFinanceApprove = (record) => Modal.confirm({
     title: "Final Finance Approval?",
     content: `This will fully approve the claim for ${fmt(record.amount)}.`,
-    okText: "Final Approve", okButtonProps: { style: { background: C.primary, borderColor: C.primary, borderRadius: 8, color: "#fff" } },
+    okText: "Final Approve",
+    okButtonProps: { style: { background: C.primary, borderColor: C.primary, borderRadius: 8, color: "#fff" } },
     cancelButtonProps: { style: { borderRadius: 8 } },
     onOk: async () => {
       try { await dispatch(financeApproveReimb({ id: record._id })).unwrap(); message.success("Claim fully approved"); refresh(); }
@@ -220,22 +220,26 @@ const ReimbursementsPage = () => {
             {getInitials(r.empName)}
           </div>
           <div>
-            <div style={{ fontWeight: 700, color: C.text, fontSize: 13 }}>{r.empName}</div>
-            {r.description && <div style={{ fontSize: 11, color: C.textMuted, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.description}</div>}
+            <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>{r.empName}</div>
+            {r.description && (
+              <div style={{ fontSize: 11, color: "var(--text-muted)", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {r.description}
+              </div>
+            )}
           </div>
         </div>
       ),
     },
-    { title: "Type", dataIndex: "type", render: (v) => <TypeBadge type={v} /> },
+    { title: "Type",   dataIndex: "type",   render: (v) => <TypeBadge type={v} /> },
     {
       title: "Amount",
       dataIndex: "amount",
-      render: (v) => <span style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>{fmt(v)}</span>,
+      render: (v) => <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{fmt(v)}</span>,
     },
     {
       title: "Claim Date",
       dataIndex: "claimDate",
-      render: (v) => v ? <span style={{ fontSize: 12, color: C.textSub }}>{dayjs(v).format("DD MMM YYYY")}</span> : "—",
+      render: (v) => v ? <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{dayjs(v).format("DD MMM YYYY")}</span> : "—",
     },
     { title: "Approval", render: (_, r) => <ApprovalPipeline approvals={r.approvals} /> },
     {
@@ -271,7 +275,7 @@ const ReimbursementsPage = () => {
           {["pending_manager", "rejected"].includes(r.status) && (
             <Tooltip title="Delete">
               <Button size="small" icon={<DeleteOutlined />} onClick={() => handleDelete(r)}
-                style={{ borderRadius: 7, borderColor: C.border, color: C.textMuted, background: C.surfaceSoft }} />
+                style={{ borderRadius: 7, borderColor: "var(--border-muted)", color: "var(--text-muted)", background: "var(--surface-soft)" }} />
             </Tooltip>
           )}
         </Space>
@@ -298,13 +302,14 @@ const ReimbursementsPage = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <FileTextOutlined />,   label: "Total Claims",    value: stats.total,          color: C.primary },
-          { icon: <CarOutlined />,        label: "Pending",         value: stats.pending,         color: C.warning },
-          { icon: <CheckOutlined />,      label: "Approved",        value: stats.approved,        color: C.success },
-          { icon: <RupeeIcon />,     label: "Approved Amount", value: fmt(stats.totalAmt),  color: C.accent, small: true },
+          { icon: <FileTextOutlined />, label: "Total Claims",    value: stats.total,          color: C.primary },
+          { icon: <CarOutlined />,      label: "Pending",         value: stats.pending,        color: C.warning },
+          { icon: <CheckOutlined />,    label: "Approved",        value: stats.approved,       color: C.success },
+          { icon: <RupeeIcon />,        label: "Approved Amount", value: fmt(stats.totalAmt),  color: C.accent, small: true },
         ].map((s) => (
           <div key={s.label} style={{
-            background: C.surface, borderRadius: 14, border: "1px solid " + C.border,
+            background: "var(--surface)", borderRadius: 14,
+            border: "1px solid var(--border-muted)",
             padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
             boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
           }}>
@@ -313,7 +318,7 @@ const ReimbursementsPage = () => {
               <div style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
                 {s.label}
               </div>
-              <div style={{ fontSize: s.small ? 18 : 26, fontWeight: 800, color: C.text, lineHeight: 1 }}>
+              <div style={{ fontSize: s.small ? 18 : 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
                 {s.value}
               </div>
             </div>
@@ -323,9 +328,12 @@ const ReimbursementsPage = () => {
 
       {/* Table */}
       <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>All Claims</span>
-          <span style={{ fontSize: 12, padding: "2px 9px", borderRadius: 20, background: C.accentLight, color: "#0F766E", border: "1px solid #99F6E4", fontWeight: 600 }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Claims</span>
+          <span style={{
+            fontSize: 12, padding: "2px 9px", borderRadius: 20,
+            background: C.accentLight, color: "#0F766E", border: "1px solid #99F6E4", fontWeight: 600,
+          }}>
             {reimbursements.length}
           </span>
         </div>
@@ -348,7 +356,7 @@ const ReimbursementsPage = () => {
         onCancel={() => { setModalOpen(false); form.resetFields(); }}
         footer={[
           <Button key="c" onClick={() => { setModalOpen(false); form.resetFields(); }}
-            style={{ borderRadius: 8, borderColor: C.border, color: C.textSub }}>Cancel</Button>,
+            style={{ borderRadius: 8, borderColor: "var(--border-muted)", color: "var(--text-muted)" }}>Cancel</Button>,
           <Button key="s" onClick={() => form.submit()} loading={loading}
             style={{ borderRadius: 8, background: C.accent, borderColor: C.accent, color: "#fff", fontWeight: 600 }}>
             Submit Claim

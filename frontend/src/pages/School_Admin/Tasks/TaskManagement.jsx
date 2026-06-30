@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Avatar, Button, DatePicker, Form, Input, Modal,
-  Popconfirm, Select, Skeleton, Tooltip, message,
+  Avatar, Button, DatePicker, Flex, Form, Input,
+  Modal, Popconfirm, Select, Skeleton, Tooltip, Typography, message,
 } from "antd";
 import {
   CheckCircleOutlined, ClockCircleOutlined, DeleteOutlined, EditOutlined,
@@ -15,54 +15,62 @@ import {
   createTask, deleteTask, fetchAssignableUsers, fetchTasks, updateTask,
 } from "../../../features/taskSlice";
 import PageHeader from "../../../components/layout/PageHeader";
+import { iconWell, modalTitle, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles";
+import { useTheme } from "../../../context/ThemeContext";
 
 dayjs.extend(relativeTime);
 
+const { Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
+/* ── Config ─────────────────────────────────────────────────────────── */
 const COLUMNS = [
-  { key: "todo",        label: "To Do",      color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", icon: <ClockCircleOutlined /> },
-  { key: "in_progress", label: "In Progress", color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", icon: <SyncOutlined />        },
-  { key: "done",        label: "Done",        color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC", icon: <CheckCircleOutlined /> },
-  { key: "cancelled",   label: "Cancelled",   color: "#6B7280", bg: "#F9FAFB", border: "#D1D5DB", icon: <StopOutlined />        },
+  { key: "todo",        label: "To Do",       color: "#F59E0B", icon: <ClockCircleOutlined /> },
+  { key: "in_progress", label: "In Progress",  color: "#2563EB", icon: <SyncOutlined />        },
+  { key: "done",        label: "Done",         color: "#16A34A", icon: <CheckCircleOutlined /> },
+  { key: "cancelled",   label: "Cancelled",    color: "#6B7280", icon: <StopOutlined />        },
 ];
 
 const PRIORITY = {
-  low:    { label: "Low",    color: "#64748B", bg: "#F1F5F9", icon: <Minus size={9}/>          },
-  medium: { label: "Medium", color: "#D97706", bg: "#FEF3C7", icon: <ChevronDown size={9}/>   },
-  high:   { label: "High",   color: "#EA580C", bg: "#FFF7ED", icon: <Flame size={9}/>          },
-  urgent: { label: "Urgent", color: "#DC2626", bg: "#FEF2F2", icon: <AlertTriangle size={9}/> },
+  low:    { label: "Low",    color: "#64748B", bg: "#F1F5F918", icon: <Minus size={9} /> },
+  medium: { label: "Medium", color: "#D97706", bg: "#FEF3C718", icon: <ChevronDown size={9} /> },
+  high:   { label: "High",   color: "#EA580C", bg: "#FFF7ED18", icon: <Flame size={9} /> },
+  urgent: { label: "Urgent", color: "#DC2626", bg: "#FEF2F218", icon: <AlertTriangle size={9} /> },
 };
-
 const PRIORITY_LABEL = { low: "Low", medium: "Medium", high: "High", urgent: "Urgent" };
 const STATUS_LABEL   = { todo: "To Do", in_progress: "In Progress", done: "Done", cancelled: "Cancelled" };
 
-/* ─── atoms ─────────────────────────────────────────────────────── */
+const AVATAR_COLORS = ["#7C3AED", "#2563EB", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
+const avatarBg = (name = "") => AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+
+/* ── Priority pill ──────────────────────────────────────────────────── */
 const PriorityPill = ({ priority }) => {
   const p = PRIORITY[priority] || PRIORITY.medium;
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 3,
-      fontSize: 10, fontWeight: 700, color: p.color, background: p.bg,
-      padding: "2px 8px", borderRadius: 99,
+      fontSize: 10, fontWeight: 700, color: p.color,
+      background: `${p.color}18`, padding: "2px 8px", borderRadius: 99,
     }}>
       {p.icon} {p.label.toUpperCase()}
     </span>
   );
 };
 
+/* ── Due date chip ──────────────────────────────────────────────────── */
 const DueChip = ({ date, status }) => {
   if (!date) return null;
   const d       = dayjs(date);
   const overdue = d.isBefore(dayjs(), "day") && status !== "done" && status !== "cancelled";
   const today   = d.isSame(dayjs(), "day");
-  const color   = overdue ? "#DC2626" : today ? "#D97706" : "#64748B";
-  const bg      = overdue ? "#FEF2F2" : today ? "#FFFBEB" : "#F1F5F9";
+  const color   = overdue ? "#EF4444" : today ? "#D97706" : "var(--text-muted)";
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
-      fontSize: 10, fontWeight: 600, color, background: bg, padding: "2px 7px", borderRadius: 6,
+      fontSize: 10, fontWeight: 600, color,
+      background: overdue ? "#FEF2F2" : today ? "#FFFBEB" : "var(--surface-soft)",
+      padding: "2px 7px", borderRadius: 6,
     }}>
       <ClockCircleOutlined style={{ fontSize: 9 }} />
       {overdue ? "Overdue · " : today ? "Today · " : ""}{d.format("DD MMM")}
@@ -70,9 +78,13 @@ const DueChip = ({ date, status }) => {
   );
 };
 
-/* ─── Task Card ─────────────────────────────────────────────────── */
-const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, onDragOver, isDragOver }) => {
+/* ── Task Card ──────────────────────────────────────────────────────── */
+const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, isDragOver }) => {
   const [hovered, setHovered] = useState(false);
+  const isOverdue = task.dueDate
+    && dayjs(task.dueDate).isBefore(dayjs(), "day")
+    && task.status !== "done" && task.status !== "cancelled";
+
   return (
     <div
       draggable
@@ -81,27 +93,39 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, onDragO
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: "#fff",
-        border: `1px solid #E8EEF6`,
+        background: "var(--surface)",
         borderRadius: 12,
         padding: "12px 14px",
-        borderTop: `3px solid ${col.color}`,
-        boxShadow: hovered ? "0 6px 20px rgba(0,0,0,0.10)" : "0 1px 4px rgba(0,0,0,0.05)",
-        transition: "box-shadow 0.18s, opacity 0.15s",
+        border: `1px solid ${hovered ? col.color + "50" : "var(--border-muted)"}`,
+        borderLeft: `3px solid ${isOverdue ? "#EF4444" : col.color}`,
+        boxShadow: hovered
+          ? `0 6px 20px ${col.color}20`
+          : "0 1px 3px rgba(0,0,0,0.06)",
+        transition: "box-shadow 0.18s, border-color 0.18s, opacity 0.15s",
         position: "relative",
         cursor: "grab",
-        opacity: isDragOver ? 0.5 : 1,
+        opacity: isDragOver ? 0.42 : 1,
       }}
     >
-      {/* Priority pill */}
-      <div style={{ marginBottom: 8 }}>
+      {/* Priority + overdue badge */}
+      <Flex align="center" justify="space-between" style={{ marginBottom: 8 }}>
         <PriorityPill priority={task.priority} />
-      </div>
+        {isOverdue && (
+          <span style={{
+            fontSize: 9, fontWeight: 700, color: "#EF4444",
+            background: "#FEF2F2", borderRadius: 99, padding: "1px 7px",
+          }}>
+            OVERDUE
+          </span>
+        )}
+      </Flex>
 
       {/* Title */}
       <div style={{
-        fontWeight: 700, fontSize: 13, color: "#0F172A", lineHeight: 1.4,
-        marginBottom: 6, paddingRight: hovered ? 60 : 0, transition: "padding 0.15s",
+        fontWeight: 700, fontSize: 13, color: "var(--text-primary)", lineHeight: 1.45,
+        marginBottom: 6,
+        paddingRight: hovered ? 60 : 0,
+        transition: "padding 0.15s",
       }}>
         {task.title}
       </div>
@@ -109,47 +133,63 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, onDragO
       {/* Description */}
       {task.description && (
         <div style={{
-          fontSize: 11.5, color: "#94A3B8", lineHeight: 1.55, marginBottom: 8,
-          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+          fontSize: 12, color: "var(--text-muted)", lineHeight: 1.55, marginBottom: 8,
+          display: "-webkit-box", WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
           {task.description}
         </div>
       )}
 
       {/* Footer */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+      <Flex align="center" justify="space-between" wrap="wrap" gap={6}>
         <DueChip date={task.dueDate} status={task.status} />
         {task.assignedTo?.length > 0 && (
-          <Avatar.Group maxCount={3} size={20}>
+          <Avatar.Group maxCount={3} size={22}>
             {task.assignedTo.map((u) => (
               <Tooltip key={u._id} title={u.name}>
-                <Avatar size={20} src={u.avatar} style={{ background: "#7C3AED", fontSize: 9, lineHeight: "20px" }}>
+                <Avatar size={22} src={u.avatar}
+                  style={{
+                    background: avatarBg(u.name), fontSize: 9,
+                    border: "1.5px solid var(--surface)",
+                  }}
+                >
                   {!u.avatar && u.name?.[0]?.toUpperCase()}
                 </Avatar>
               </Tooltip>
             ))}
           </Avatar.Group>
         )}
-      </div>
+      </Flex>
 
       {/* Hover actions */}
       {hovered && (
-        <div style={{ position: "absolute", top: 10, right: 10, display: "flex", gap: 4, zIndex: 2 }}>
+        <div style={{
+          position: "absolute", top: 10, right: 10,
+          display: "flex", gap: 4, zIndex: 2,
+        }}>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-            style={{ background: "#EFF6FF", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: "#2563EB" }}
+            style={{
+              background: "var(--surface-soft)",
+              border: "1px solid var(--border-muted)",
+              borderRadius: 7, padding: "4px 7px", cursor: "pointer",
+              color: "var(--primary)",
+            }}
           >
             <EditOutlined style={{ fontSize: 11 }} />
           </button>
           <Popconfirm
             title="Delete this task?"
             onConfirm={() => onDelete(task._id)}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
+            okText="Delete" okButtonProps={{ danger: true }}
           >
             <button
               onClick={(e) => e.stopPropagation()}
-              style={{ background: "#FEF2F2", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", color: "#DC2626" }}
+              style={{
+                background: "#FEF2F2", border: "1px solid #FECACA",
+                borderRadius: 7, padding: "4px 7px", cursor: "pointer", color: "#EF4444",
+              }}
             >
               <DeleteOutlined style={{ fontSize: 11 }} />
             </button>
@@ -160,32 +200,73 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, onDragO
   );
 };
 
-/* ─── Kanban Column ─────────────────────────────────────────────── */
+/* ── Add task button ────────────────────────────────────────────────── */
+const AddBtn = ({ col, onAdd }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={() => onAdd(col.key)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        padding: "10px 14px", width: "100%",
+        background: hov ? `${col.color}0A` : "transparent",
+        border: `1.5px dashed ${hov ? col.color + "70" : col.color + "28"}`,
+        borderTop: "none",
+        borderRadius: "0 0 14px 14px",
+        cursor: "pointer",
+        color: hov ? col.color : "var(--text-muted)",
+        fontSize: 12, fontWeight: 600,
+        display: "flex", alignItems: "center", gap: 6,
+        transition: "all 0.15s",
+      }}
+    >
+      <PlusOutlined style={{ fontSize: 10 }} /> Add task
+    </button>
+  );
+};
+
+/* ── Kanban Column ──────────────────────────────────────────────────── */
 const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragStart, onDragEnd, onDrop }) => {
   const [over, setOver] = useState(false);
-  const isActiveCol = dragState?.task?.status === col.key;
 
   return (
-    <div style={{ flex: "1 1 240px", minWidth: 240, maxWidth: 320, display: "flex", flexDirection: "column" }}>
-      {/* Header */}
+    <div style={{ flex: "1 1 260px", minWidth: 260, maxWidth: 310, display: "flex", flexDirection: "column" }}>
+      {/* Column header */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "11px 14px",
-        background: col.bg,
-        border: `1px solid ${col.border}`,
-        borderRadius: "13px 13px 0 0", borderBottom: "none",
+        padding: "12px 16px",
+        background: `${col.color}0D`,
+        border: `1px solid ${col.color}28`,
+        borderBottom: "none",
+        borderRadius: "14px 14px 0 0",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ color: col.color, fontSize: 13 }}>{col.icon}</span>
-          <span style={{ fontWeight: 700, fontSize: 13, color: "#374151" }}>{col.label}</span>
-        </div>
-        <span style={{
-          fontWeight: 800, fontSize: 10, color: "#fff",
-          background: col.color, minWidth: 20, height: 20, borderRadius: "50%",
-          display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px",
-        }}>
-          {tasks.length}
-        </span>
+        <Flex align="center" gap={8}>
+          <span style={{ color: col.color, fontSize: 14 }}>{col.icon}</span>
+          <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{col.label}</span>
+        </Flex>
+        <Flex align="center" gap={8}>
+          {tasks.length > 0 && (
+            <div style={{
+              width: 44, height: 4, borderRadius: 4,
+              background: "var(--border-muted)", overflow: "hidden",
+            }}>
+              <div style={{
+                height: "100%", borderRadius: 4, background: col.color,
+                width: col.key === "done" ? "100%" : "40%",
+                opacity: 0.7,
+              }} />
+            </div>
+          )}
+          <span style={{
+            background: col.color, color: "#fff",
+            fontSize: 11, fontWeight: 800,
+            borderRadius: 99, padding: "1px 9px", minWidth: 22,
+            textAlign: "center",
+          }}>
+            {tasks.length}
+          </span>
+        </Flex>
       </div>
 
       {/* Drop zone */}
@@ -194,23 +275,28 @@ const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragSt
         onDragLeave={() => setOver(false)}
         onDrop={() => { setOver(false); onDrop(col.key); }}
         style={{
-          flex: 1, minHeight: 220, padding: 10,
-          display: "flex", flexDirection: "column", gap: 9,
-          border: `1px solid ${over ? col.color : col.border}`,
+          flex: 1, minHeight: 240,
+          padding: "10px 10px 8px",
+          display: "flex", flexDirection: "column", gap: 8,
+          border: `1px solid ${over ? col.color + "55" : col.color + "22"}`,
           borderTop: "none",
-          background: over ? col.bg : "#FAFBFF",
-          transition: "all 0.15s ease",
-          boxShadow: over ? `inset 0 0 0 2px ${col.color}44` : "none",
+          background: over ? `${col.color}07` : "var(--surface-page)",
+          transition: "all 0.15s",
+          boxShadow: over ? `inset 0 0 0 2px ${col.color}28` : "none",
         }}
       >
-        {tasks.length === 0 && !over && (
+        {tasks.length === 0 && (
           <div style={{
-            flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#CBD5E1", fontSize: 12, fontWeight: 500,
-            borderRadius: 8, border: "2px dashed #E2E8F0",
-            minHeight: 80, margin: "4px 0",
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 6,
+            color: "var(--text-muted)", fontSize: 12, fontWeight: 500,
+            border: "1.5px dashed var(--border-muted)",
+            borderRadius: 10, minHeight: 90, margin: "2px 0",
           }}>
-            {dragState ? "Drop here" : "No tasks"}
+            <span style={{ fontSize: 20, opacity: 0.4 }}>
+              {col.key === "todo" ? "📝" : col.key === "in_progress" ? "⚡" : col.key === "done" ? "✅" : "🚫"}
+            </span>
+            <span>{dragState ? "Drop here" : "No tasks"}</span>
           </div>
         )}
         {tasks.map((t) => (
@@ -223,50 +309,29 @@ const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragSt
         ))}
       </div>
 
-      {/* Add task button */}
       <AddBtn col={col} onAdd={onAdd} />
     </div>
   );
 };
 
-const AddBtn = ({ col, onAdd }) => {
-  const [hov, setHov] = useState(false);
-  return (
-    <button
-      onClick={() => onAdd(col.key)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        marginTop: 8, padding: "8px 12px",
-        background: hov ? col.bg : "transparent",
-        border: `1px dashed ${hov ? col.color : col.border}`,
-        borderRadius: 10, cursor: "pointer",
-        color: hov ? col.color : "#94A3B8",
-        fontSize: 12, fontWeight: 600,
-        display: "flex", alignItems: "center", gap: 6, width: "100%",
-        transition: "all 0.15s",
-      }}
-    >
-      <PlusOutlined style={{ fontSize: 11 }} /> Add task
-    </button>
-  );
-};
-
-/* ─── Main Component ─────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════════════════════════ */
 const TaskManagement = () => {
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const {
     items: tasks = [], loading = false,
     assignableUsers = [], usersLoading = false,
   } = useSelector((s) => s.tasks || {});
 
-  const [modalOpen,      setModalOpen]      = useState(false);
-  const [editTask,       setEditTask]       = useState(null);
-  const [saving,         setSaving]         = useState(false);
-  const [initStatus,     setInitStatus]     = useState("todo");
-  const [filterPriority, setFilterPriority] = useState(null);
-  const [search,         setSearch]         = useState("");
-  const [dragState,      setDragState]      = useState(null);
+  const [modalOpen,   setModalOpen]   = useState(false);
+  const [editTask,    setEditTask]    = useState(null);
+  const [saving,      setSaving]      = useState(false);
+  const [initStatus,  setInitStatus]  = useState("todo");
+  const [filterPri,   setFilterPri]   = useState(null);
+  const [search,      setSearch]      = useState("");
+  const [dragState,   setDragState]   = useState(null);
   const [form] = Form.useForm();
 
   useEffect(() => { dispatch(fetchTasks()); }, [dispatch]);
@@ -329,9 +394,6 @@ const TaskManagement = () => {
     }
   };
 
-  const handleDragStart = (task) => setDragState({ task });
-  const handleDragEnd   = ()   => setDragState(null);
-
   const handleDrop = async (targetStatus) => {
     if (!dragState?.task) return;
     const { task } = dragState;
@@ -344,29 +406,36 @@ const TaskManagement = () => {
     }
   };
 
-  const q = search.toLowerCase();
+  /* ── Derived data ─────────────────────────────────────────────────── */
+  const q        = search.toLowerCase();
   const filtered = tasks.filter((t) => {
-    if (filterPriority && t.priority !== filterPriority) return false;
+    if (filterPri && t.priority !== filterPri) return false;
     if (q && !t.title?.toLowerCase().includes(q) && !t.description?.toLowerCase().includes(q)) return false;
     return true;
   });
   const byColumn = Object.fromEntries(
     COLUMNS.map((c) => [c.key, filtered.filter((t) => t.status === c.key)])
   );
+  const overdueCount = tasks.filter(
+    (t) => t.dueDate && dayjs(t.dueDate).isBefore(dayjs(), "day") && t.status !== "done" && t.status !== "cancelled"
+  ).length;
+  const doneCount = tasks.filter((t) => t.status === "done").length;
+  const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
 
-  const STATS = [
-    { label: "Total Tasks",  value: tasks.length,                                            color: "#7C3AED", bg: "#F3EEFF", emoji: "📋" },
-    { label: "To Do",        value: tasks.filter((t) => t.status === "todo").length,          color: "#D97706", bg: "#FFFBEB", emoji: "🕐" },
-    { label: "In Progress",  value: tasks.filter((t) => t.status === "in_progress").length,   color: "#2563EB", bg: "#EFF6FF", emoji: "⚡" },
-    { label: "Completed",    value: tasks.filter((t) => t.status === "done").length,           color: "#16A34A", bg: "#F0FDF4", emoji: "✅" },
+  const KPI = [
+    { label: "Total Tasks",  value: tasks.length,                                          color: "#7C3AED", icon: <SnippetsOutlined />    },
+    { label: "In Progress",  value: tasks.filter((t) => t.status === "in_progress").length, color: "#2563EB", icon: <SyncOutlined />         },
+    { label: "Completed",    value: doneCount,                                              color: "#10B981", icon: <CheckCircleOutlined /> },
+    { label: "Overdue",      value: overdueCount,                                           color: "#EF4444", icon: <ClockCircleOutlined />  },
   ];
 
   return (
     <>
       <style>{`
-        .tm-board{display:flex;gap:16px;align-items:flex-start;overflow-x:auto;padding-bottom:16px}
-        .tm-board::-webkit-scrollbar{height:5px}
-        .tm-board::-webkit-scrollbar-thumb{background:#E2E8F0;border-radius:4px}
+        .tm-board { display:flex; gap:14px; align-items:flex-start; overflow-x:auto; padding-bottom:12px; }
+        .tm-board::-webkit-scrollbar { height:5px; }
+        .tm-board::-webkit-scrollbar-thumb { background:var(--border-muted); border-radius:4px; }
+        .tm-board::-webkit-scrollbar-track { background:transparent; }
       `}</style>
 
       <PageHeader
@@ -380,70 +449,98 @@ const TaskManagement = () => {
         }
       />
 
-      <div style={{ padding: "0 24px 28px", background: "#F4F6FA", minHeight: "calc(100vh - 118px)" }}>
-
-        {/* Stats */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20, paddingTop: 4 }}>
-          {STATS.map((s) => (
-            <div key={s.label} style={{
-              background: "#fff", border: "1px solid #E8EEF6",
-              borderRadius: 14, padding: "14px 18px",
-              flex: "1 1 130px", display: "flex", alignItems: "center", gap: 12,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      <div style={pageWrapper}>
+        {/* ── KPI Cards ── */}
+        <div style={{ ...statGrid(150), marginBottom: 20 }}>
+          {KPI.map((k) => (
+            <div key={k.label} style={{
+              padding: "16px 18px", background: "var(--surface)", borderRadius: 14,
+              border: "1px solid var(--border-muted)", borderLeft: `4px solid ${k.color}`,
+              display: "flex", alignItems: "center", gap: 14,
             }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12, background: s.bg,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 20, flexShrink: 0,
-              }}>
-                {s.emoji}
+              <div style={iconWell(k.color, 42)}>
+                {React.cloneElement(k.icon, { style: { fontSize: 17 } })}
               </div>
-              <div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: s.color, lineHeight: 1.1 }}>{s.value}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
+                  {k.value}
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 5 }}>
+                  {k.label}
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Filter bar */}
-        <div style={{
-          background: "#fff", border: "1px solid #E8EEF6",
-          borderRadius: 12, padding: "12px 14px", marginBottom: 18,
-          display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-        }}>
-          <input
-            placeholder="Search tasks…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              flex: 1, minWidth: 160, padding: "8px 12px", borderRadius: 9,
-              border: "1px solid #E8EEF6", background: "#F4F6FA",
-              color: "#0F172A", fontSize: 13, outline: "none",
-            }}
-          />
-          <Select
-            allowClear
-            placeholder="All Priorities"
-            style={{ width: 160 }}
-            value={filterPriority}
-            onChange={setFilterPriority}
-          >
-            {Object.entries(PRIORITY_LABEL).map(([k, v]) => (
-              <Option key={k} value={k}>
-                <span style={{ color: PRIORITY[k].color, fontWeight: 600 }}>{v}</span>
-              </Option>
-            ))}
-          </Select>
+        {/* ── Progress + Filter toolbar ── */}
+        <div style={{ ...sectionPanel, padding: "12px 16px", marginBottom: 18 }}>
+          <Flex align="center" justify="space-between" gap={12} wrap="wrap">
+            {/* Completion progress */}
+            <Flex align="center" gap={12}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>
+                  Completion
+                </div>
+                <Flex align="center" gap={8}>
+                  <div style={{ width: 120, height: 6, background: "var(--border-muted)", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: "#10B981", borderRadius: 4, transition: "width 0.4s" }} />
+                  </div>
+                  <Text style={{ fontSize: 12, fontWeight: 700, color: "#10B981" }}>{pct}%</Text>
+                </Flex>
+              </div>
+              {overdueCount > 0 && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: "#FEF2F2", border: "1px solid #FECACA",
+                  borderRadius: 8, padding: "5px 10px",
+                }}>
+                  <ClockCircleOutlined style={{ color: "#EF4444", fontSize: 12 }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#EF4444" }}>{overdueCount} overdue</span>
+                </div>
+              )}
+            </Flex>
+
+            {/* Search + priority filter */}
+            <Flex gap={10} align="center" wrap="wrap">
+              <Input.Search
+                placeholder="Search tasks…"
+                allowClear
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onSearch={setSearch}
+                style={{ width: 220 }}
+              />
+              <Select
+                allowClear
+                placeholder="All Priorities"
+                style={{ width: 150 }}
+                value={filterPri}
+                onChange={setFilterPri}
+              >
+                {Object.entries(PRIORITY_LABEL).map(([k, v]) => (
+                  <Option key={k} value={k}>
+                    <span style={{ color: PRIORITY[k].color, fontWeight: 600 }}>{v}</span>
+                  </Option>
+                ))}
+              </Select>
+            </Flex>
+          </Flex>
         </div>
 
-        {/* Board */}
+        {/* ── Kanban Board ── */}
         {loading && tasks.length === 0 ? (
-          <div style={{ display: "flex", gap: 16 }}>
+          <div style={{ display: "flex", gap: 14 }}>
             {COLUMNS.map((c) => (
-              <div key={c.key} style={{ flex: "1 1 240px", minWidth: 240 }}>
-                <Skeleton active paragraph={{ rows: 5 }} />
+              <div key={c.key} style={{ flex: "1 1 260px", minWidth: 260 }}>
+                <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
+                  <div style={{ padding: "12px 16px", background: `${c.color}0D`, borderBottom: "1px solid var(--border-muted)" }}>
+                    <Skeleton active title={{ width: "60%" }} paragraph={false} />
+                  </div>
+                  <div style={{ padding: 12, background: "var(--surface-page)" }}>
+                    <Skeleton active paragraph={{ rows: 4 }} />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -457,8 +554,8 @@ const TaskManagement = () => {
                 onDelete={handleDelete}
                 onAdd={openCreate}
                 dragState={dragState}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
+                onDragStart={(t) => setDragState({ task: t })}
+                onDragEnd={() => setDragState(null)}
                 onDrop={handleDrop}
               />
             ))}
@@ -466,24 +563,16 @@ const TaskManagement = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* ── Create / Edit Modal ── */}
       <Modal
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         footer={null}
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8, background: "#F3EEFF",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <SnippetsOutlined style={{ color: "#7C3AED", fontSize: 14 }} />
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>
-              {editTask ? "Edit Task" : "Create New Task"}
-            </span>
-          </div>
-        }
+        title={modalTitle(
+          <SnippetsOutlined />,
+          editTask ? "Edit Task" : "Create New Task",
+          editTask ? "Update task details" : "Add a new task to the board",
+        )}
         width={560}
         destroyOnClose
       >
@@ -496,8 +585,8 @@ const TaskManagement = () => {
             <TextArea rows={3} placeholder="Describe the task (optional)" />
           </Form.Item>
 
-          <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item label="Priority" name="priority" initialValue="medium" style={{ flex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
+            <Form.Item label="Priority" name="priority" initialValue="medium">
               <Select size="large">
                 {Object.entries(PRIORITY_LABEL).map(([k, v]) => (
                   <Option key={k} value={k}>
@@ -506,9 +595,11 @@ const TaskManagement = () => {
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item label="Status" name="status" initialValue={initStatus} style={{ flex: 1 }}>
+            <Form.Item label="Status" name="status" initialValue={initStatus}>
               <Select size="large">
-                {Object.entries(STATUS_LABEL).map(([k, v]) => <Option key={k} value={k}>{v}</Option>)}
+                {Object.entries(STATUS_LABEL).map(([k, v]) => (
+                  <Option key={k} value={k}>{v}</Option>
+                ))}
               </Select>
             </Form.Item>
           </div>
@@ -522,33 +613,31 @@ const TaskManagement = () => {
               mode="multiple"
               placeholder="Search and select users…"
               showSearch
-              filterOption={(input, option) =>
-                option?.label?.toLowerCase().includes(input.toLowerCase())
-              }
+              filterOption={(input, opt) => opt?.label?.toLowerCase().includes(input.toLowerCase())}
               loading={usersLoading}
               optionLabelProp="label"
               size="large"
             >
               {assignableUsers.map((u) => (
                 <Option key={u._id} value={u._id} label={u.name}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Avatar size={20} src={u.avatar} style={{ background: "#7C3AED", fontSize: 9 }}>
+                  <Flex align="center" gap={8}>
+                    <Avatar size={20} src={u.avatar} style={{ background: avatarBg(u.name), fontSize: 9 }}>
                       {!u.avatar && u.name?.[0]?.toUpperCase()}
                     </Avatar>
                     <span style={{ fontSize: 13 }}>{u.name}</span>
-                    <span style={{ color: "#94A3B8", fontSize: 11 }}>{u.role}</span>
-                  </div>
+                    <span style={{ color: "var(--text-muted)", fontSize: 11 }}>{u.role}</span>
+                  </Flex>
                 </Option>
               ))}
             </Select>
           </Form.Item>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+          <Flex gap={10} style={{ marginTop: 12 }}>
             <Button block size="large" onClick={() => setModalOpen(false)}>Cancel</Button>
             <Button block size="large" type="primary" htmlType="submit" loading={saving}>
               {editTask ? "Save Changes" : "Create Task"}
             </Button>
-          </div>
+          </Flex>
         </Form>
       </Modal>
     </>

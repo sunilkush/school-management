@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Button, Input, Select, Space, Statistic, Table, Tag, Typography } from "antd";
+import { Button, Input, Select, Table, Tag, Typography } from "antd";
 import WarningsList from "./WarningsList";
 import { formatCurrencyINR } from "../../utils/payroll";
 
@@ -122,14 +122,25 @@ const PayrollEntriesTable = ({ entries, loading }) => {
         <Button onClick={handleExportCsv}>Export CSV</Button>
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <Space size={24} wrap>
-          <Statistic title="Filtered Employees" value={filteredEntries.length} />
-          <Statistic title="Paid in Filter" value={filteredSummary.paidCount} />
-          <Statistic title="Gross (Filter)" value={formatCurrencyINR(filteredSummary.gross)} />
-          <Statistic title="Deduction (Filter)" value={formatCurrencyINR(filteredSummary.deduction)} />
-          <Statistic title="Net Payout (Filter)" value={formatCurrencyINR(filteredSummary.netPay)} />
-        </Space>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+        {[
+          { label: "Showing",    value: filteredEntries.length,                      color: "#2563EB" },
+          { label: "Paid",       value: filteredSummary.paidCount,                   color: "#22C55E" },
+          { label: "Gross",      value: formatCurrencyINR(filteredSummary.gross),     color: "#7C3AED" },
+          { label: "Deduction",  value: formatCurrencyINR(filteredSummary.deduction), color: "#EF4444" },
+          { label: "Net Payout", value: formatCurrencyINR(filteredSummary.netPay),    color: "#10B981" },
+        ].map((s) => (
+          <div key={s.label} style={{
+            display: "flex", flexDirection: "column", alignItems: "center",
+            padding: "6px 14px", borderRadius: 10,
+            background: "var(--surface)", border: "1px solid var(--border-muted)", minWidth: 100,
+          }}>
+            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              {s.label}
+            </span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: s.color }}>{s.value}</span>
+          </div>
+        ))}
       </div>
 
       <Table

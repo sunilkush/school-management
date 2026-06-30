@@ -238,6 +238,7 @@ const EmployeeSelfAttendance = lazy(() => import("./pages/Attendance/EmployeeSel
 const GeofenceSettings = lazy(() => import("./pages/School_Admin/Attendance/GeofenceSettings.jsx"));
 
 const SendNotification = lazy(() => import("./pages/School_Admin/Communication/SendNotification.jsx"));
+const CommunicationHub = lazy(() => import("./pages/School_Admin/Communication/CommunicationHub.jsx"));
 const TaskManagement = lazy(() => import("./pages/School_Admin/Tasks/TaskManagement.jsx"));
 const MyTasks = lazy(() => import("./pages/Tasks/MyTasks.jsx"));
 const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/SmsEmailHistory.jsx"));
@@ -623,6 +624,7 @@ const router = createBrowserRouter([
               { path: "payroll/advance", element: <SalaryAdvance /> },
               { path: "payroll/bonus", element: <BonusIncentivePage /> },
               { path: "payroll/reimbursements", element: <ReimbursementsPage /> },
+              { path: "communication", element: <CommunicationHub /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "reports", element: <SchoolAdminReport /> },

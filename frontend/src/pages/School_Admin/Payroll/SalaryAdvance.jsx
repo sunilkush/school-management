@@ -6,7 +6,7 @@ import {
 import {
   PlusOutlined, CheckOutlined, CloseOutlined,
   MinusCircleOutlined, StopOutlined, ClockCircleOutlined,
-  TeamOutlined, WalletOutlined, FieldTimeOutlined, CheckCircleOutlined,
+  WalletOutlined, FieldTimeOutlined, CheckCircleOutlined,
   HistoryOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,16 +26,14 @@ const C = {
   success: "#22C55E", successLight: "#DCFCE7",
   danger: "#EF4444", dangerLight: "#FEE2E2",
   warning: "#F59E0B", warningLight: "#FEF3C7",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
+  purple: "#7C3AED",
 };
 
 const STATUS_CFG = {
-  pending:  { color: "#B45309", bg: C.warningLight, border: "#FDE68A", dot: C.warning, label: "Pending" },
-  active:   { color: "#15803D", bg: C.successLight, border: "#86EFAC", dot: C.success, label: "Active"  },
-  rejected: { color: "#991B1B", bg: C.dangerLight,  border: "#FCA5A5", dot: C.danger,  label: "Rejected" },
-  closed:   { color: C.textSub, bg: "#F1F5F9",      border: C.border,  dot: C.textMuted, label: "Closed" },
+  pending:  { color: "#B45309", bg: "#FEF3C7", border: "#FDE68A", dot: C.warning,  label: "Pending"  },
+  active:   { color: "#15803D", bg: "#DCFCE7", border: "#86EFAC", dot: C.success,  label: "Active"   },
+  rejected: { color: "#991B1B", bg: "#FEE2E2", border: "#FCA5A5", dot: C.danger,   label: "Rejected" },
+  closed:   { color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)", dot: "var(--text-muted)", label: "Closed" },
 };
 
 const StatusBadge = ({ status }) => {
@@ -116,7 +114,8 @@ const SalaryAdvance = () => {
 
   const handleApprove = (record) => Modal.confirm({
     title: `Approve ₹${record.totalAmount?.toLocaleString("en-IN")} advance for ${record.empName}?`,
-    okText: "Approve", okButtonProps: { style: { background: C.success, borderColor: C.success, borderRadius: 8, color: "#fff" } },
+    okText: "Approve",
+    okButtonProps: { style: { background: C.success, borderColor: C.success, borderRadius: 8, color: "#fff" } },
     cancelButtonProps: { style: { borderRadius: 8 } },
     onOk: async () => {
       try { await dispatch(approveAdvance({ id: record._id })).unwrap(); message.success("Advance approved"); refresh(); }
@@ -169,14 +168,14 @@ const SalaryAdvance = () => {
 
   const dataSource = useMemo(() => advances.map((a) => ({
     key: a._id, _id: a._id,
-    empName:       a.employeeId?.userId?.name || "—",
-    totalAmount:   a.totalAmount,
-    emiAmount:     a.emiAmount,
+    empName:         a.employeeId?.userId?.name || "—",
+    totalAmount:     a.totalAmount,
+    emiAmount:       a.emiAmount,
     remainingAmount: a.remainingAmount,
-    startMonth:    a.startMonth,
-    status:        a.status,
-    history:       a.history || [],
-    paidPercent:   a.totalAmount > 0
+    startMonth:      a.startMonth,
+    status:          a.status,
+    history:         a.history || [],
+    paidPercent:     a.totalAmount > 0
       ? Math.round(((a.totalAmount - a.remainingAmount) / a.totalAmount) * 100)
       : 0,
   })), [advances]);
@@ -194,7 +193,7 @@ const SalaryAdvance = () => {
           }}>
             {getInitials(r.empName)}
           </div>
-          <span style={{ fontWeight: 700, color: C.text, fontSize: 13 }}>{r.empName}</span>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>{r.empName}</span>
         </div>
       ),
     },
@@ -202,8 +201,8 @@ const SalaryAdvance = () => {
       title: "Total / EMI",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>{fmt(r.totalAmount)}</div>
-          <div style={{ fontSize: 11, color: C.textMuted }}>EMI: {fmt(r.emiAmount)}/month</div>
+          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{fmt(r.totalAmount)}</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>EMI: {fmt(r.emiAmount)}/month</div>
         </div>
       ),
     },
@@ -213,7 +212,7 @@ const SalaryAdvance = () => {
       render: (_, r) => (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 11, color: C.textSub }}>Remaining: {fmt(r.remainingAmount)}</span>
+            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Remaining: {fmt(r.remainingAmount)}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: r.paidPercent === 100 ? C.success : C.primary }}>
               {r.paidPercent}%
             </span>
@@ -222,7 +221,7 @@ const SalaryAdvance = () => {
             percent={r.paidPercent}
             showInfo={false}
             strokeColor={r.paidPercent === 100 ? C.success : C.primary}
-            trailColor={C.border}
+            trailColor="var(--border-muted)"
             size="small"
           />
         </div>
@@ -232,7 +231,7 @@ const SalaryAdvance = () => {
       title: "Start Month",
       dataIndex: "startMonth",
       render: (v) => v ? (
-        <span style={{ fontSize: 12, color: C.textSub }}>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
           {dayjs(v).format("MMM YYYY")}
         </span>
       ) : "—",
@@ -275,7 +274,7 @@ const SalaryAdvance = () => {
           )}
           <Tooltip title="View History">
             <Button size="small" icon={<HistoryOutlined />} onClick={() => setHistoryModal(r)}
-              style={{ borderRadius: 7, borderColor: C.border, color: C.textSub, background: C.surfaceSoft }} />
+              style={{ borderRadius: 7, borderColor: "var(--border-muted)", color: "var(--text-muted)", background: "var(--surface-soft)" }} />
           </Tooltip>
         </Space>
       ),
@@ -301,13 +300,14 @@ const SalaryAdvance = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <WalletOutlined />,       label: "Total Advances",    value: stats.total,                  color: C.primary },
-          { icon: <CheckCircleOutlined />,  label: "Active",            value: stats.active,                 color: C.success },
-          { icon: <ClockCircleOutlined />,  label: "Pending Approval",  value: stats.pending,                color: C.warning },
-          { icon: <FieldTimeOutlined />,    label: "Total Outstanding", value: fmt(stats.outstanding),       color: C.purple, small: true },
+          { icon: <WalletOutlined />,      label: "Total Advances",    value: stats.total,            color: C.primary },
+          { icon: <CheckCircleOutlined />, label: "Active",            value: stats.active,           color: C.success },
+          { icon: <ClockCircleOutlined />, label: "Pending Approval",  value: stats.pending,          color: C.warning },
+          { icon: <FieldTimeOutlined />,   label: "Total Outstanding", value: fmt(stats.outstanding), color: C.purple, small: true },
         ].map((s) => (
           <div key={s.label} style={{
-            background: C.surface, borderRadius: 14, border: "1px solid " + C.border,
+            background: "var(--surface)", borderRadius: 14,
+            border: "1px solid var(--border-muted)",
             padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
             boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
           }}>
@@ -316,7 +316,7 @@ const SalaryAdvance = () => {
               <div style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
                 {s.label}
               </div>
-              <div style={{ fontSize: s.small ? 18 : 26, fontWeight: 800, color: C.text, lineHeight: 1 }}>
+              <div style={{ fontSize: s.small ? 18 : 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
                 {s.value}
               </div>
             </div>
@@ -326,9 +326,13 @@ const SalaryAdvance = () => {
 
       {/* Table */}
       <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>All Advances</span>
-          <span style={{ fontSize: 12, padding: "2px 9px", borderRadius: 20, background: C.primaryLighter, color: C.primary, border: "1px solid " + C.primaryLight, fontWeight: 600 }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Advances</span>
+          <span style={{
+            fontSize: 12, padding: "2px 9px", borderRadius: 20,
+            background: C.primaryLighter, color: C.primary,
+            border: `1px solid ${C.primaryLight}`, fontWeight: 600,
+          }}>
             {advances.length}
           </span>
         </div>
@@ -351,7 +355,7 @@ const SalaryAdvance = () => {
         onCancel={() => { setModalOpen(false); form.resetFields(); }}
         footer={[
           <Button key="c" onClick={() => { setModalOpen(false); form.resetFields(); }}
-            style={{ borderRadius: 8, borderColor: C.border, color: C.textSub }}>Cancel</Button>,
+            style={{ borderRadius: 8, borderColor: "var(--border-muted)", color: "var(--text-muted)" }}>Cancel</Button>,
           <Button key="s" onClick={() => form.submit()} loading={loading}
             style={{ borderRadius: 8, background: C.primary, borderColor: C.primary, color: "#fff", fontWeight: 600 }}>
             Submit Request
@@ -366,10 +370,14 @@ const SalaryAdvance = () => {
           </Form.Item>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
             <Form.Item name="totalAmount" label="Advance Amount (₹)" rules={[{ required: true }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 25000" formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")} parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
+              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 25000"
+                formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
             </Form.Item>
             <Form.Item name="emiAmount" label="Monthly EMI (₹)" rules={[{ required: true }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 5000" formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")} parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
+              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 5000"
+                formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
             </Form.Item>
           </div>
           <Form.Item name="startMonth" label="Deduction Start Month" rules={[{ required: true }]}>
@@ -386,20 +394,20 @@ const SalaryAdvance = () => {
         title={<Space><HistoryOutlined style={{ color: C.primary }} /><span style={{ fontWeight: 700 }}>Advance History — {historyModal?.empName}</span></Space>}
         open={!!historyModal}
         onCancel={() => setHistoryModal(null)}
-        footer={<Button onClick={() => setHistoryModal(null)} style={{ borderRadius: 8, borderColor: C.border, color: C.textSub }}>Close</Button>}
+        footer={<Button onClick={() => setHistoryModal(null)} style={{ borderRadius: 8, borderColor: "var(--border-muted)", color: "var(--text-muted)" }}>Close</Button>}
         width={480}
       >
         {(historyModal?.history || []).length === 0 ? (
-          <div style={{ textAlign: "center", padding: 32, color: C.textMuted }}>No history available</div>
+          <div style={{ textAlign: "center", padding: 32, color: "var(--text-muted)" }}>No history available</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "8px 0" }}>
             {(historyModal?.history || []).map((h, i) => {
               const ACTION_CFG = {
-                created:    { color: C.primary,  bg: C.primaryLighter, label: "Created" },
-                approved:   { color: C.success,  bg: C.successLight,   label: "Approved" },
-                rejected:   { color: C.danger,   bg: C.dangerLight,    label: "Rejected" },
-                emi_deducted: { color: C.warning, bg: C.warningLight,  label: "EMI Deducted" },
-                closed:     { color: C.textSub,  bg: "#F1F5F9",        label: "Closed" },
+                created:      { color: C.primary, bg: C.primaryLighter, label: "Created"     },
+                approved:     { color: C.success, bg: C.successLight,   label: "Approved"    },
+                rejected:     { color: C.danger,  bg: C.dangerLight,    label: "Rejected"    },
+                emi_deducted: { color: C.warning, bg: C.warningLight,   label: "EMI Deducted" },
+                closed:       { color: "var(--text-muted)", bg: "var(--surface-soft)", label: "Closed" },
               };
               const cfg = ACTION_CFG[h.action] || ACTION_CFG.created;
               return (
@@ -407,9 +415,9 @@ const SalaryAdvance = () => {
                   <div style={{ flexShrink: 0, width: 8, height: 8, borderRadius: "50%", background: cfg.color, marginTop: 6 }} />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13, color: cfg.color }}>{cfg.label}</div>
-                    {h.amount > 0 && <div style={{ fontSize: 12, color: C.textSub }}>Amount: {fmt(h.amount)}</div>}
-                    {h.note && <div style={{ fontSize: 12, color: C.textSub }}>{h.note}</div>}
-                    <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>
+                    {h.amount > 0 && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Amount: {fmt(h.amount)}</div>}
+                    {h.note && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{h.note}</div>}
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
                       {h.actedAt ? dayjs(h.actedAt).format("DD MMM YYYY, hh:mm A") : ""}
                     </div>
                   </div>

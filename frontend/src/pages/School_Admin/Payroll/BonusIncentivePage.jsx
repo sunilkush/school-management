@@ -23,23 +23,21 @@ const C = {
   warning: "#F59E0B", warningLight: "#FEF3C7",
   purple: "#7C3AED", purpleLight: "#F5F3FF",
   orange: "#F97316", orangeLight: "#FFF7ED",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
 };
 
 const TYPE_CFG = {
-  festival_bonus:     { label: "Festival Bonus",     emoji: "🪔", color: C.warning,  bg: C.warningLight,  border: "#FDE68A" },
-  performance_bonus:  { label: "Performance Bonus",  emoji: "🏆", color: C.success,  bg: C.successLight,  border: "#86EFAC" },
-  incentive:          { label: "Incentive",          emoji: "⭐", color: C.primary,  bg: C.primaryLighter, border: C.primaryLight },
-  target_bonus:       { label: "Target Bonus",       emoji: "🎯", color: C.purple,   bg: C.purpleLight,   border: "#DDD6FE" },
-  one_time_payout:    { label: "One-Time Payout",    emoji: "💰", color: C.orange,   bg: C.orangeLight,   border: "#FED7AA" },
+  festival_bonus:    { label: "Festival Bonus",    emoji: "🪔", color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
+  performance_bonus: { label: "Performance Bonus", emoji: "🏆", color: C.success, bg: C.successLight,   border: "#86EFAC" },
+  incentive:         { label: "Incentive",         emoji: "⭐", color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
+  target_bonus:      { label: "Target Bonus",      emoji: "🎯", color: C.purple,  bg: C.purpleLight,    border: "#DDD6FE" },
+  one_time_payout:   { label: "One-Time Payout",   emoji: "💰", color: C.orange,  bg: C.orangeLight,    border: "#FED7AA" },
 };
 
 const STATUS_CFG = {
-  draft:     { color: C.textSub, bg: "#F1F5F9",    border: C.border,    label: "Draft"     },
-  approved:  { color: "#15803D", bg: C.successLight, border: "#86EFAC", label: "Approved"  },
-  paid:      { color: C.primary, bg: C.primaryLighter, border: C.primaryLight, label: "Paid" },
-  cancelled: { color: "#991B1B", bg: C.dangerLight, border: "#FCA5A5",  label: "Cancelled" },
+  draft:     { color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)", label: "Draft"     },
+  approved:  { color: "#15803D", bg: C.successLight,   border: "#86EFAC",        label: "Approved"  },
+  paid:      { color: C.primary, bg: C.primaryLighter, border: C.primaryLight,   label: "Paid"      },
+  cancelled: { color: "#991B1B", bg: C.dangerLight,    border: "#FCA5A5",        label: "Cancelled" },
 };
 
 const MONTHS = [
@@ -48,7 +46,7 @@ const MONTHS = [
 ];
 
 const TypeBadge = ({ type }) => {
-  const cfg = TYPE_CFG[type] || { label: type, emoji: "💼", color: C.textSub, bg: "#F1F5F9", border: C.border };
+  const cfg = TYPE_CFG[type] || { label: type, emoji: "💼", color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)" };
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
@@ -140,7 +138,8 @@ const BonusIncentivePage = () => {
 
   const handleApprove = (record) => Modal.confirm({
     title: `Approve ${fmt(record.amount)} for ${record.empName}?`,
-    okText: "Approve", okButtonProps: { style: { background: C.success, borderColor: C.success, borderRadius: 8, color: "#fff" } },
+    okText: "Approve",
+    okButtonProps: { style: { background: C.success, borderColor: C.success, borderRadius: 8, color: "#fff" } },
     cancelButtonProps: { style: { borderRadius: 8 } },
     onOk: async () => {
       try { await dispatch(approveBonus(record._id)).unwrap(); message.success("Bonus approved"); refresh(); }
@@ -190,12 +189,12 @@ const BonusIncentivePage = () => {
           }}>
             {getInitials(r.empName)}
           </div>
-          <span style={{ fontWeight: 700, color: C.text, fontSize: 13 }}>{r.empName}</span>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>{r.empName}</span>
         </div>
       ),
     },
     { title: "Type",   dataIndex: "type",   render: (v) => <TypeBadge type={v} /> },
-    { title: "Title",  dataIndex: "title",  render: (v) => <span style={{ color: C.textSub, fontSize: 13 }}>{v}</span> },
+    { title: "Title",  dataIndex: "title",  render: (v) => <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</span> },
     {
       title: "Amount",
       dataIndex: "amount",
@@ -204,7 +203,7 @@ const BonusIncentivePage = () => {
     {
       title: "Payout",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: C.textSub }}>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
           {MONTHS[(r.payoutMonth || 1) - 1]} {r.payoutYear}
         </span>
       ),
@@ -255,24 +254,23 @@ const BonusIncentivePage = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <GiftOutlined />,   label: "Total Bonuses",    value: stats.total,               color: C.primary },
-          { icon: "🪔",              label: "Festival Bonuses", value: stats.festival,             color: C.warning, emoji: true },
-          { icon: <TrophyOutlined />, label: "Performance",      value: stats.perf,                 color: C.success },
-          { icon: <StarOutlined />,   label: "Total Value",      value: fmt(stats.totalAmt),        color: C.purple, small: true },
+          { icon: <GiftOutlined />,   label: "Total Bonuses",    value: stats.total,        color: C.primary },
+          { icon: <GiftOutlined />,   label: "Festival Bonuses", value: stats.festival,     color: C.warning },
+          { icon: <TrophyOutlined />, label: "Performance",      value: stats.perf,         color: C.success },
+          { icon: <StarOutlined />,   label: "Total Value",      value: fmt(stats.totalAmt), color: C.purple, small: true },
         ].map((s) => (
           <div key={s.label} style={{
-            background: C.surface, borderRadius: 14, border: "1px solid " + C.border,
+            background: "var(--surface)", borderRadius: 14,
+            border: "1px solid var(--border-muted)",
             padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
             boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
           }}>
-            <div style={iconWell(s.color, 42)}>
-              {s.emoji ? <span style={{ fontSize: 20 }}>{s.icon}</span> : s.icon}
-            </div>
+            <div style={iconWell(s.color, 42)}>{s.icon}</div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: s.color, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
                 {s.label}
               </div>
-              <div style={{ fontSize: s.small ? 18 : 26, fontWeight: 800, color: C.text, lineHeight: 1 }}>
+              <div style={{ fontSize: s.small ? 18 : 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
                 {s.value}
               </div>
             </div>
@@ -282,9 +280,12 @@ const BonusIncentivePage = () => {
 
       {/* Table */}
       <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>All Bonuses & Incentives</span>
-          <span style={{ fontSize: 12, padding: "2px 9px", borderRadius: 20, background: C.warningLight, color: "#92400E", border: "1px solid #FDE68A", fontWeight: 600 }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Bonuses & Incentives</span>
+          <span style={{
+            fontSize: 12, padding: "2px 9px", borderRadius: 20,
+            background: C.warningLight, color: "#92400E", border: "1px solid #FDE68A", fontWeight: 600,
+          }}>
             {bonuses.length}
           </span>
         </div>
@@ -307,7 +308,7 @@ const BonusIncentivePage = () => {
         onCancel={() => { setModalOpen(false); form.resetFields(); }}
         footer={[
           <Button key="c" onClick={() => { setModalOpen(false); form.resetFields(); }}
-            style={{ borderRadius: 8, borderColor: C.border, color: C.textSub }}>Cancel</Button>,
+            style={{ borderRadius: 8, borderColor: "var(--border-muted)", color: "var(--text-muted)" }}>Cancel</Button>,
           <Button key="s" onClick={() => form.submit()} loading={loading}
             style={{ borderRadius: 8, background: C.warning, borderColor: C.warning, color: "#fff", fontWeight: 600 }}>
             {editingId ? "Update" : "Create Bonus"}

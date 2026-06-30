@@ -87,8 +87,8 @@ const EmployeeSalaries = () => {
         {cycle && (cycle.status === "paid" || cycle.status === "locked") && (
           <div style={{
             marginBottom: 16,
-            background: cycle.status === "paid" ? "#f0fdf4" : "#eff6ff",
-            border: `1px solid ${cycle.status === "paid" ? "#86efac" : "#93c5fd"}`,
+            background: cycle.status === "paid" ? "#f0fdf4" : "#EFF6FF",
+            border: `1px solid ${cycle.status === "paid" ? "#86EFAC" : "#93C5FD"}`,
             borderRadius: 12,
             padding: "14px 20px",
             display: "flex",
@@ -99,13 +99,13 @@ const EmployeeSalaries = () => {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {cycle.status === "paid"
-                ? <CheckCircleOutlined style={{ fontSize: 18, color: "#16a34a" }} />
-                : <LockOutlined style={{ fontSize: 18, color: "#2563eb" }} />}
+                ? <CheckCircleOutlined style={{ fontSize: 18, color: "#16A34A" }} />
+                : <LockOutlined style={{ fontSize: 18, color: "#2563EB" }} />}
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: cycle.status === "paid" ? "#15803d" : "#1d4ed8" }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: cycle.status === "paid" ? "#15803D" : "#1D4ED8" }}>
                   {selectedMonth.format("MMMM YYYY")} payroll is {cycle.status === "paid" ? "paid ✓" : "locked"}
                 </div>
-                <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
                   This cycle cannot be regenerated. Next payroll to run: <strong>{nextFreshMonth.format("MMMM YYYY")}</strong>
                 </div>
               </div>

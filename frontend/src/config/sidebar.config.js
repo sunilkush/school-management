@@ -50,15 +50,20 @@ const commonSelfService = (basePath) => [
   { title: "Profile", path: `${basePath}/profile`, icon: User },
 ];
 
-const communicationMenu = (basePath) => ({
-  title: "Communication",
-  icon: MessageSquare,
-  subMenu: [
-    { title: "Send Messages",   path: `${basePath}/message`,               icon: Send    },
-    { title: "Notifications",   path: `${basePath}/notification`,           icon: Bell    },
-    { title: "Message History", path: `${basePath}/communication/history`,  icon: History },
-  ],
-});
+const communicationMenu = (basePath) => {
+  if (basePath === "schooladmin") {
+    return { title: "Communication", icon: MessageSquare, path: `${basePath}/communication` };
+  }
+  return {
+    title: "Communication",
+    icon: MessageSquare,
+    subMenu: [
+      { title: "Send Messages",   path: `${basePath}/message`,               icon: Send    },
+      { title: "Notifications",   path: `${basePath}/notification`,           icon: Bell    },
+      { title: "Message History", path: `${basePath}/communication/history`,  icon: History },
+    ],
+  };
+};
 
 const supportCenterItem = { title: "Support Center", path: "support/tickets", icon: HelpCircle };
 const moduleHubItem = { title: "Module Hub", path: "modules", icon: Puzzle };
