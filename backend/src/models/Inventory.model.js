@@ -53,6 +53,13 @@ const InventorySchema = new Schema(
       min: 0,
       default: 10,
     },
+    serialNumber:   { type: String, trim: true, default: "" },
+    purchaseDate:   { type: Date, default: null },
+    purchasePrice:  { type: Number, default: 0, min: 0 },
+    warrantyExpiry: { type: Date, default: null },
+    condition:      { type: String, enum: ["new", "good", "fair", "poor", "disposed"], default: "good" },
+    vendorId:       { type: Schema.Types.ObjectId, ref: "Vendor", default: null },
+    assignedTo:     { type: String, trim: true, default: "" },
   },
   { timestamps: true }
 );

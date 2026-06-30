@@ -287,11 +287,7 @@ export default function GlobalConfig() {
                 rules={[{ required: true, message: "Currency is required" }]}
               >
                 <Select size="large" suffixIcon={<RupeeIcon />}>
-                  <Option value="INR">INR — Indian Rupee</Option>
-                  <Option value="USD">USD — US Dollar</Option>
-                  <Option value="EUR">EUR — Euro</Option>
-                  <Option value="GBP">GBP — British Pound</Option>
-                  <Option value="AED">AED — UAE Dirham</Option>
+                  <Option value="INR">INR — Indian Rupee (₹)</Option>
                 </Select>
               </Form.Item>
 

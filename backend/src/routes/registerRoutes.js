@@ -74,6 +74,10 @@ import healthRoutes from "./health.routes.js";
 import twoFactorRoutes from "./twoFactor.routes.js";
 import ipRestrictionRoutes from "./ipRestriction.routes.js";
 import loginLogRoutes from "./loginLog.routes.js";
+import vendorRoutes from "./vendor.routes.js";
+import purchaseOrderRoutes from "./purchaseOrder.routes.js";
+import stockIssueRoutes from "./stockIssue.routes.js";
+import amcTrackingRoutes from "./amcTracking.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -110,6 +114,10 @@ export const apiV1Routes = [
   ["/school-class", schoolClassRoutes],
   ["/transport", transportRoutes],
   ["/inventory", inventoryRoutes],
+  ["/vendors", vendorRoutes],
+  ["/purchase-orders", purchaseOrderRoutes],
+  ["/stock-issues", stockIssueRoutes],
+  ["/amc", amcTrackingRoutes],
   ["/hostel", hostelRoutes],
   ["/modules", moduleRoutes],
   ["/payroll", payrollRoutes],

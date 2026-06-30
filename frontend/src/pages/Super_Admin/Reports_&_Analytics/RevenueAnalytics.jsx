@@ -46,8 +46,8 @@ const getPeriodKey = (date, mode) => {
     return null;
   }
 
-  const monthShort = d.toLocaleString("en-US", { month: "short" });
-  const monthLong = d.toLocaleString("en-US", { month: "long" });
+  const monthShort = d.toLocaleString("en-IN", { month: "short" });
+  const monthLong = d.toLocaleString("en-IN", { month: "long" });
   const year = d.getFullYear();
 
   if (mode === "yearly") {

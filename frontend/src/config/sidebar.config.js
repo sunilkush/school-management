@@ -287,12 +287,9 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Inventory",
+      title: "Inventory & Store",
       icon: Briefcase,
-      subMenu: [
-        { title: "Supplies", path: "schooladmin/inventory/supplies" },
-        { title: "Assets", path: "schooladmin/inventory/assets" },
-      ],
+      path: "schooladmin/inventory",
     },
     communicationMenu("schooladmin"),
     { title: "Task Management", path: "schooladmin/tasks", icon: ListChecks },

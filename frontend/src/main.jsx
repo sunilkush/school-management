@@ -244,6 +244,7 @@ const SmsEmailHistory = lazy(() => import("./pages/School_Admin/Communication/Sm
 
 const Supplies = lazy(() => import("./pages/School_Admin/Inventory/supplies.jsx"));
 const Assets = lazy(() => import("./pages/School_Admin/Inventory/assets.jsx"));
+const InventoryStore = lazy(() => import("./pages/School_Admin/Inventory/InventoryStore.jsx"));
 
 const Events = lazy(() => import("./pages/School_Admin/Events_&_Calendar/events.jsx"));
 const CalendarPage = lazy(() => import("./pages/School_Admin/Events_&_Calendar/CalendarPage.jsx"));
@@ -652,6 +653,7 @@ const router = createBrowserRouter([
               { path: "events", element: <Events /> },
               { path: "inventory/supplies", element: <Supplies /> },
               { path: "inventory/assets", element: <Assets /> },
+              { path: "inventory", element: <InventoryStore /> },
               { path: "fees/feestructure", element: <FeeStructure /> },
               { path: "fees/assign", element: <StudentAssignFees /> },
               { path: "school-setup", element: <SchoolSetup /> },

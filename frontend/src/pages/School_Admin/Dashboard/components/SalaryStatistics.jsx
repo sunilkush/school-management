@@ -41,7 +41,7 @@ const SalaryStatistics = ({ stats = [] }) => {
           const pct = Math.round((item.value / maxValue) * 100);
           return (
             <div key={item.title} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-              <Text style={{ fontSize: 13, fontWeight: 700, color: item.color }}>${Math.round(item.value).toLocaleString()}</Text>
+              <Text style={{ fontSize: 13, fontWeight: 700, color: item.color }}>₹{Math.round(item.value).toLocaleString("en-IN")}</Text>
               <div style={{ width: "100%", height: 120, background: trackBg, borderRadius: 8, display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
                 <div style={{ width: "100%", height: `${pct}%`, background: `linear-gradient(180deg, ${item.color}cc 0%, ${item.color} 100%)` }} />
               </div>

@@ -75,6 +75,10 @@ import emergencyAlertReducer from "../features/emergencyAlertSlice";
 import twoFactorReducer from "../features/twoFactorSlice";
 import loginHistoryReducer from "../features/loginHistorySlice";
 import ipRestrictionReducer from "../features/ipRestrictionSlice";
+import vendorReducer from "../features/vendorSlice";
+import purchaseOrderReducer from "../features/purchaseOrderSlice";
+import stockIssueReducer from "../features/stockIssueSlice";
+import amcReducer from "../features/amcSlice";
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -145,6 +149,10 @@ const rootReducer = combineReducers({
   twoFactor: twoFactorReducer,
   loginHistory: loginHistoryReducer,
   ipRestriction: ipRestrictionReducer,
+  vendor: vendorReducer,
+  purchaseOrder: purchaseOrderReducer,
+  stockIssue: stockIssueReducer,
+  amc: amcReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

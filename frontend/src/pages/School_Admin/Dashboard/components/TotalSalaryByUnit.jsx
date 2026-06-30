@@ -10,7 +10,7 @@ const CustomTooltip = ({ active, payload, label, isDark, color }) => {
   return (
     <div style={{ background: isDark ? "#1f1f1f" : "#ffffff", border: `1px solid ${isDark ? "#2a2a2a" : "#e5e7eb"}`, borderRadius: 10, padding: "10px 14px" }}>
       <Text style={{ fontSize: 11, color: isDark ? "#6b7280" : "#9ca3af" }}>{label}</Text>
-      <div style={{ fontSize: 16, fontWeight: 700, color, marginTop: 2 }}>${Number(payload[0]?.value || 0).toLocaleString()}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color, marginTop: 2 }}>₹{Number(payload[0]?.value || 0).toLocaleString("en-IN")}</div>
     </div>
   );
 };
@@ -46,7 +46,7 @@ const TotalSalaryByUnit = ({ data }) => {
         <BarChart data={chartData} barSize={22} margin={{ left: -10, right: 4 }}>
           <CartesianGrid vertical={false} stroke={isDark ? "#1f1f1f" : "#f3f4f6"} strokeDasharray="0" />
           <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: isDark ? "#4b5563" : "#d1d5db" }} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: isDark ? "#4b5563" : "#d1d5db" }} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: isDark ? "#4b5563" : "#d1d5db" }} tickFormatter={(v) => `₹${Math.round(v / 1000)}k`} />
           <Tooltip cursor={{ fill: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", radius: 6 }} content={<CustomTooltip isDark={isDark} color={unit.color} />} />
           <Bar dataKey={unit.key} radius={[6, 6, 0, 0]}>
             {chartData.map((entry, i) => (
