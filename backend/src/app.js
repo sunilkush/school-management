@@ -10,6 +10,8 @@ import { sendError } from "./utils/response.js";
 import { applySecurityMiddleware } from "./middlewares/security.middleware.js";
 import { enforceApiAuthByDefault } from "./middlewares/auth.middleware.js";
 import { logError, requestContext } from "./middlewares/requestContext.middleware.js";
+import { autoAudit } from "./middlewares/autoAudit.middleware.js";
+import { checkIpRestriction } from "./middlewares/ipRestriction.middleware.js";
 
 dotenv.config();
 
@@ -27,6 +29,11 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 app.set("views", appPaths.views);
 app.use(express.static(appPaths.public));
+
+// Auto-audit all mutations (POST/PUT/PATCH/DELETE) after auth
+app.use("/api/v1", autoAudit);
+// IP restriction check (fires after auth hydrates req.user)
+app.use("/api/v1", checkIpRestriction);
 
 registerRoutes(app, enforceApiAuthByDefault);
 app.use((req, _res, next) => next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`)));

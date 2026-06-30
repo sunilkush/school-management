@@ -14,6 +14,7 @@ import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
 import { Employee } from '../models/Employee.model.js'
 import { Teacher } from '../models/teacherAssignment.model.js'
 import { SchoolSubscription } from '../models/schoolSubscription.model.js'
+import { recordLoginEvent } from './loginLog.controllers.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -237,6 +238,25 @@ const loginUser = asyncHandler(async (req, res) => {
     }
   }
 
+  // 5️⃣ Check if 2FA is required
+  if (user.twoFactorEnabled) {
+    // Send OTP email for 2FA step
+    const { OTP } = await import("../models/otpVerifications.model.js");
+    const { sendEmail } = await import("../utils/mailServices.js");
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await OTP.findOneAndUpdate(
+      { emailOrPhone: user.email, purpose: "login" },
+      { code, expiresAt, verifiedAt: null },
+      { upsert: true, new: true }
+    );
+    await sendEmail(user.email, "Login OTP — School Management", `Your login OTP is: ${code}\n\nExpires in 10 minutes.`);
+    return res.status(200).json(new ApiResponse(200, {
+      requiresTwoFactor: true,
+      userId: user._id,
+    }, "2FA required. OTP sent to your email."));
+  }
+
   // 5️⃣ Tokens
   const { accessToken, refreshToken } =
     await generateAccessAndRefreshToken(user._id);
@@ -317,7 +337,17 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "User aggregation failed");
   }
 
-  // 7️⃣ Response
+  // 7️⃣ Record login event asynchronously (non-blocking)
+  recordLoginEvent({
+    userId: user._id,
+    schoolId: user.schoolId?._id || user.schoolId,
+    userRole: user.roleId?.name || "Unknown",
+    academicYearId: user.academicYearId,
+    req,
+    status: "success",
+  });
+
+  // 8️⃣ Response
   return res
     .status(200)
     .cookie("accessToken", accessToken, {

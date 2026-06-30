@@ -6,10 +6,24 @@ export const loginUser = createAsyncThunk("user/login", async (data, { rejectWit
   try {
     const res = await apiClient.post("/user/login", data);
     const payload = res.data?.data || {};
-    setAccessToken(payload.accessToken);
+    // If 2FA is required, don't set the access token yet
+    if (!payload.requiresTwoFactor && payload.accessToken) {
+      setAccessToken(payload.accessToken);
+    }
     return payload;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || "Login failed");
+  }
+});
+
+export const verify2FALogin = createAsyncThunk("user/verify2FA", async ({ userId, otp }, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.post("/2fa/verify-login", { userId, otp });
+    const payload = res.data?.data || {};
+    if (payload.accessToken) setAccessToken(payload.accessToken);
+    return payload;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || "OTP verification failed");
   }
 });
 
@@ -210,6 +224,9 @@ const initialState = {
   isAuthInitialized: false,
   isLoggingOut: false,
   subscriptionWarning: null,
+  // 2FA state
+  requiresTwoFactor: false,
+  twoFactorUserId: null,
 };
 
 const authSlice = createSlice({
@@ -245,11 +262,25 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loginUser.fulfilled, (state, action) => {
+        if (action.payload.requiresTwoFactor) {
+          // 2FA required — don't log in yet, just store the userId for the next step
+          state.requiresTwoFactor = true;
+          state.twoFactorUserId = action.payload.userId;
+          return;
+        }
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.profile = action.payload.user;
         state.isAuthInitialized = true;
         state.subscriptionWarning = action.payload.subscriptionWarning || null;
+        state.requiresTwoFactor = false;
+        state.twoFactorUserId = null;
+      })
+      .addCase(verify2FALogin.fulfilled, (state, action) => {
+        state.accessToken = action.payload.accessToken;
+        state.requiresTwoFactor = false;
+        state.twoFactorUserId = null;
+        state.isAuthInitialized = true;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.user = action.payload?.user ?? state.user;

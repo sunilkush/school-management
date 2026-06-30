@@ -72,6 +72,9 @@ import callLogReducer from "../features/callLogSlice";
 import vehicleMaintenanceReducer from "../features/vehicleMaintenanceSlice";
 import counselingSessionReducer from "../features/counselingSessionSlice";
 import emergencyAlertReducer from "../features/emergencyAlertSlice";
+import twoFactorReducer from "../features/twoFactorSlice";
+import loginHistoryReducer from "../features/loginHistorySlice";
+import ipRestrictionReducer from "../features/ipRestrictionSlice";
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -139,6 +142,9 @@ const rootReducer = combineReducers({
   vehicleMaintenance: vehicleMaintenanceReducer,
   counselingSessions: counselingSessionReducer,
   emergencyAlerts: emergencyAlertReducer,
+  twoFactor: twoFactorReducer,
+  loginHistory: loginHistoryReducer,
+  ipRestriction: ipRestrictionReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

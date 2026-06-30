@@ -323,6 +323,7 @@ const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide.jsx"));
 
 const ChangePassword = lazy(()=> import("./pages/Auth/ResetPasswordPage.jsx"));
+const SecuritySettings = lazy(() => import("./pages/Security/SecuritySettings.jsx"));
 const AttendanceDashboardPage = lazy(() => import("./pages/Attendance/AttendanceDashboard.jsx"));
 const MarkAttendancePage = lazy(() => import("./pages/Attendance/MarkAttendancePage.jsx"));
 const AttendanceTablePage = lazy(() => import("./pages/Attendance/AttendanceTablePage.jsx"));
@@ -473,6 +474,36 @@ const router = createBrowserRouter([
                 ]}
               >
                 <SupportTicketsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "security-settings",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                ]}
+              >
+                <SecuritySettings />
               </ProtectedRoute>
             ),
           },

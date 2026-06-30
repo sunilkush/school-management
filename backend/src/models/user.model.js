@@ -92,6 +92,17 @@ const userSchema = new Schema(
        type: Date,
     },
 
+    // 🔹 Two-Factor Authentication
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorMethod: {
+      type: String,
+      enum: ["email", "none"],
+      default: "none",
+    },
+
     // 🔹 Audit Fields (Enterprise MUST)
     createdBy: {
       type: Schema.Types.ObjectId,

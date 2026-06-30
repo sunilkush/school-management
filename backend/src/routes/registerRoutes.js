@@ -71,6 +71,9 @@ import counselingSessionRoutes from "./counselingSession.routes.js";
 import emergencyAlertRoutes from "./emergencyAlert.routes.js";
 import maintenanceTaskRoutes from "./maintenanceTask.routes.js";
 import healthRoutes from "./health.routes.js";
+import twoFactorRoutes from "./twoFactor.routes.js";
+import ipRestrictionRoutes from "./ipRestriction.routes.js";
+import loginLogRoutes from "./loginLog.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -146,6 +149,9 @@ export const apiV1Routes = [
   ["/emergency-alerts", emergencyAlertRoutes],
   ["/maintenance-tasks", maintenanceTaskRoutes],
   ["/health", healthRoutes],
+  ["/2fa", twoFactorRoutes],
+  ["/ip-restrictions", ipRestrictionRoutes],
+  ["/login-logs", loginLogRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

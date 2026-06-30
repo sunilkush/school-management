@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, resetState } from "../../features/authSlice";
+import { loginUser, resetState, verify2FALogin } from "../../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Checkbox, Modal } from "antd";
 import {
@@ -59,12 +59,14 @@ const LoginForm = () => {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
   const emailRef  = useRef(null);
-  const { loading, error } = useSelector((s) => s.auth);
+  const { loading, error, requiresTwoFactor, twoFactorUserId } = useSelector((s) => s.auth);
 
   const [mounted,     setMounted]     = useState(false);
   const [shake,       setShake]       = useState(false);
   const [subWarning,  setSubWarning]  = useState(null);
   const [pendingNav,  setPendingNav]  = useState(null);
+  const [otpValue,    setOtpValue]    = useState("");
+  const [otpError,    setOtpError]    = useState("");
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 40);
@@ -93,12 +95,13 @@ const LoginForm = () => {
 
   const onSubmit = async (values) => {
     try {
-      const res  = await dispatch(loginUser(values)).unwrap();
+      const res = await dispatch(loginUser(values)).unwrap();
+      // If 2FA is required, show OTP input — navigation happens after OTP
+      if (res?.requiresTwoFactor) return;
       const role = typeof res?.user?.role === "string"
         ? res.user.role.toLowerCase()
         : res?.user?.role?.name?.toLowerCase();
       const dest = roleRoutes[role] || "/dashboard";
-
       if (res?.subscriptionWarning) {
         setSubWarning(res.subscriptionWarning);
         setPendingNav(dest);
@@ -106,6 +109,19 @@ const LoginForm = () => {
         navigate(dest, { replace: true });
       }
     } catch { /* handled via Redux error state */ }
+  };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    if (otpValue.length !== 6) { setOtpError("Enter the 6-digit OTP"); return; }
+    try {
+      const res = await dispatch(verify2FALogin({ userId: twoFactorUserId, otp: otpValue })).unwrap();
+      // After 2FA, user data is fetched by the auth initialization
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setOtpError(err || "Invalid OTP");
+      setOtpValue("");
+    }
   };
 
   const showError = typeof error === "string"
@@ -187,11 +203,56 @@ const LoginForm = () => {
                   <SafetyCertificateOutlined style={{ fontSize: 12 }} />
                   School Portal
                 </div>
-                <h2 className="lf-card-title">Welcome back</h2>
-                <p className="lf-card-sub">Sign in to access your dashboard</p>
+                <h2 className="lf-card-title">{requiresTwoFactor ? "Verify Identity" : "Welcome back"}</h2>
+                <p className="lf-card-sub">{requiresTwoFactor ? "Enter the 6-digit code sent to your email" : "Sign in to access your dashboard"}</p>
               </div>
 
-              <Form layout="vertical" onFinish={handleSubmit(onSubmit)} noValidate>
+              {/* ── 2FA OTP form ── */}
+              {requiresTwoFactor && (
+                <form onSubmit={handleOtpSubmit} style={{ padding: "8px 0" }}>
+                  <div style={{ textAlign: "center", marginBottom: 16 }}>
+                    <div style={{ fontSize: 40, marginBottom: 8 }}>🔐</div>
+                    <p style={{ fontSize: 13, color: "#6b7280" }}>A one-time code was sent to your registered email address.</p>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={otpValue}
+                      onChange={(e) => { setOtpValue(e.target.value.replace(/\D/g, "")); setOtpError(""); }}
+                      placeholder="000000"
+                      autoFocus
+                      style={{
+                        width: "100%", textAlign: "center", fontSize: 28, letterSpacing: "0.4em",
+                        padding: "12px", border: `1.5px solid ${otpError ? "#ef4444" : "#d1d5db"}`,
+                        borderRadius: 8, fontFamily: "monospace", outline: "none",
+                      }}
+                    />
+                    {otpError && <p style={{ color: "#ef4444", fontSize: 12, marginTop: 4 }}>{otpError}</p>}
+                  </div>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    disabled={otpValue.length !== 6}
+                    size="large"
+                    block
+                    style={{ marginBottom: 8 }}
+                  >
+                    Verify & Sign In
+                  </Button>
+                  <Button
+                    type="link"
+                    block
+                    onClick={() => { dispatch(resetState()); setOtpValue(""); setOtpError(""); }}
+                  >
+                    Back to login
+                  </Button>
+                </form>
+              )}
+
+              <Form layout="vertical" onFinish={handleSubmit(onSubmit)} noValidate style={{ display: requiresTwoFactor ? "none" : undefined }}>
 
                 <Form.Item
                   label="Email address"
