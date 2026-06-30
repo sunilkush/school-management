@@ -124,7 +124,10 @@ export const getAttendanceSummary = asyncHandler(async (req, res) => {
 
 /* ── FINANCE SUMMARY ─────────────────────────────────────────────────────── */
 export const getFinanceSummary = asyncHandler(async (req, res) => {
-  const { schoolId, year } = req.query;
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  // Non-Super-Admin is always locked to their school
+  const schoolId = isSuperAdmin ? req.query.schoolId : req.user.schoolId;
+  const { year } = req.query;
   const currentYear = year ? parseInt(year) : new Date().getFullYear();
   const startDate = new Date(`${currentYear}-04-01`);
   const endDate = new Date(`${currentYear + 1}-03-31`);
@@ -189,7 +192,9 @@ export const getFinanceSummary = asyncHandler(async (req, res) => {
 
 /* ── ACADEMIC SUMMARY ────────────────────────────────────────────────────── */
 export const getAcademicSummary = asyncHandler(async (req, res) => {
-  const { schoolId } = req.query;
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  // Non-Super-Admin is always locked to their school
+  const schoolId = isSuperAdmin ? req.query.schoolId : req.user.schoolId;
   const userFilter = { isActive: true };
   if (schoolId) userFilter.schoolId = new mongoose.Types.ObjectId(schoolId);
 

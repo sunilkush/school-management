@@ -88,7 +88,10 @@ export const generateNextRegId = async (schoolId) => {
  */
 // ✅ Register User Controller
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, roleId, schoolId, schoolClassId, parentId, isActive } = req.body;
+  const { name, email, password, roleId, schoolClassId, parentId, isActive } = req.body;
+  // Caller's school must come from the token; only Super Admin can target a different school
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const schoolId = isSuperAdmin ? req.body.schoolId : req.user.schoolId;
 
   if (!name || !email || !password || !roleId || !schoolId) {
     throw new ApiError(400, "All required fields must be provided");
@@ -104,8 +107,8 @@ const registerUser = asyncHandler(async (req, res) => {
     academicYearId = activeAcademicYear._id;
   }
 
-  // ✅ Email exists check
-  const existingUser = await User.findOne({ email });
+  // ✅ Email exists check — scoped to the same school to avoid cross-school collisions
+  const existingUser = await User.findOne({ email, schoolId });
   if (existingUser) {
     if (!existingUser.isActive) {
       // ✅ Reactivate user

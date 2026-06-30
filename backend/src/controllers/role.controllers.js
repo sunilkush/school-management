@@ -198,6 +198,11 @@ const allActions = [
     ================================ */
     const SYSTEM_ROLES = ["Super Admin"];
 
+    // Only Super Admin can explicitly create system roles
+    if (type === "system" && req.userRole?.name !== "Super Admin") {
+      throw new ApiError(403, "Only Super Admin can create system roles");
+    }
+
     if (!type) {
       type = SYSTEM_ROLES.includes(name) ? "system" : "custom";
     }
@@ -278,7 +283,12 @@ const allActions = [
    * ✅ Get All Roles
    */
   export const getAllRoles = asyncHandler(async (req, res) => {
-    const roles = await Role.find().sort({ level: 1 });
+    const isSuperAdmin = req.userRole?.name === "Super Admin";
+    // Non-Super-Admin only sees roles belonging to their school + system roles
+    const query = isSuperAdmin
+      ? {}
+      : { $or: [{ schoolId: req.user.schoolId }, { type: "system" }] };
+    const roles = await Role.find(query).sort({ level: 1 });
     res.status(200).json(new ApiResponse(200, roles, "Roles retrieved successfully"));
   });
 
@@ -299,6 +309,12 @@ const allActions = [
     const role = await Role.findById(req.params.id);
 
     if (!role) throw new ApiError(404, "Role not found");
+
+    // School Admin cannot modify roles from other schools
+    if (req.userRole?.name !== "Super Admin" &&
+        role.schoolId?.toString() !== req.user.schoolId?.toString()) {
+      throw new ApiError(403, "Access denied");
+    }
 
     if (role.type === "system" && name && name !== role.name) {
       throw new ApiError(403, "Cannot rename a system role");
@@ -322,6 +338,12 @@ const allActions = [
     const role = await Role.findById(req.params.id);
     if (!role) throw new ApiError(404, "Role not found");
     if (role.type === "system") throw new ApiError(403, "Cannot delete a system role");
+
+    // School Admin cannot delete roles from other schools
+    if (req.userRole?.name !== "Super Admin" &&
+        role.schoolId?.toString() !== req.user.schoolId?.toString()) {
+      throw new ApiError(403, "Access denied");
+    }
 
     await role.deleteOne();
     res.status(200).json(new ApiResponse(200, null, "Role deleted successfully"));

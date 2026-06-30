@@ -77,7 +77,10 @@ export const updateVehicle = asyncHandler(async (req, res) => {
     }
   });
 
-  const vehicle = await Transport.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+
+  const vehicle = await Transport.findOneAndUpdate({ _id: id, schoolId }, updates, { new: true, runValidators: true });
 
   if (!vehicle) throw new ApiError(404, "Vehicle not found");
 
@@ -86,7 +89,9 @@ export const updateVehicle = asyncHandler(async (req, res) => {
 
 export const deleteVehicle = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const vehicle = await Transport.findByIdAndDelete(id);
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+  const vehicle = await Transport.findOneAndDelete({ _id: id, schoolId });
 
   if (!vehicle) throw new ApiError(404, "Vehicle not found");
 
@@ -132,7 +137,10 @@ export const updateRoute = asyncHandler(async (req, res) => {
   if (stops !== undefined) updates.stops = Array.isArray(stops) ? stops : [];
   if (students !== undefined) updates.students = students;
 
-  const route = await TransportRoute.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+
+  const route = await TransportRoute.findOneAndUpdate({ _id: id, schoolId }, updates, { new: true, runValidators: true });
   if (!route) throw new ApiError(404, "Route not found");
 
   return res.status(200).json(new ApiResponse(200, route, "Route updated successfully"));
@@ -140,7 +148,9 @@ export const updateRoute = asyncHandler(async (req, res) => {
 
 export const deleteRoute = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const route = await TransportRoute.findByIdAndDelete(id);
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+  const route = await TransportRoute.findOneAndDelete({ _id: id, schoolId });
 
   if (!route) throw new ApiError(404, "Route not found");
 
@@ -277,9 +287,11 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
 
 export const deleteTransportAssignment = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
 
-  const assignment = await StudentTransportAssignment.findByIdAndUpdate(
-    id,
+  const assignment = await StudentTransportAssignment.findOneAndUpdate(
+    { _id: id, schoolId },
     { isActive: false },
     { new: true }
   );

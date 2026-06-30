@@ -38,6 +38,7 @@ if (existing) {
 
 /* ================= GET ================= */
 export const getFeeStructures = asyncHandler(async (req, res) => {
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
   const filter = {};
 
   ["schoolId", "schoolClassId", "academicYearId"].forEach((k) => {
@@ -50,6 +51,11 @@ export const getFeeStructures = asyncHandler(async (req, res) => {
     filter[k] = req.query[k];
   });
 
+  // Non-Super-Admin is always scoped to their own school
+  if (!isSuperAdmin) {
+    filter.schoolId = req.user.schoolId?.toString();
+  }
+
   const data = await FeeStructure.find(filter)
     .populate("feeHeadId", "name")
     .populate("schoolClassId", "name")
@@ -60,7 +66,10 @@ export const getFeeStructures = asyncHandler(async (req, res) => {
 
 /* ================= UPDATE ================= */
 export const updateFeeStructure = asyncHandler(async (req, res) => {
-  const fee = await FeeStructure.findById(req.params.id);
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const schoolId = isSuperAdmin ? null : req.user.schoolId;
+  const query = schoolId ? { _id: req.params.id, schoolId } : { _id: req.params.id };
+  const fee = await FeeStructure.findOne(query);
   if (!fee) throw new ApiError(404, "Not found");
 
   Object.assign(fee, req.body);
@@ -71,6 +80,10 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
 
 /* ================= DELETE ================= */
 export const deleteFeeStructure = asyncHandler(async (req, res) => {
-  await FeeStructure.findByIdAndDelete(req.params.id);
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const schoolId = isSuperAdmin ? null : req.user.schoolId;
+  const query = schoolId ? { _id: req.params.id, schoolId } : { _id: req.params.id };
+  const fee = await FeeStructure.findOneAndDelete(query);
+  if (!fee) throw new ApiError(404, "Not found");
   res.status(200).json(new ApiResponse(200, null, "Deleted"));
 });

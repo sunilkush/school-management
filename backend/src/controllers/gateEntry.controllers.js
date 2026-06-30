@@ -65,6 +65,7 @@ export const markExit = asyncHandler(async (req, res) => {
 
 export const getGateStats = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "School context not found");
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);

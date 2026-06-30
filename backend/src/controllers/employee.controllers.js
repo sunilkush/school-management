@@ -159,9 +159,15 @@ export const registerEmployee = asyncHandler(async (req, res) => {
  * Get All Employees (with optional filters)
  */
 export const getAllEmployees = asyncHandler(async (req, res) => {
-  const { schoolId, employeeType, isActive } = req.query;
+  const { employeeType, isActive } = req.query;
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
   const filter = {};
-  if (schoolId) filter.schoolId = schoolId;
+  // Super Admin may optionally filter by school; others are locked to their school
+  if (isSuperAdmin) {
+    if (req.query.schoolId) filter.schoolId = req.query.schoolId;
+  } else {
+    filter.schoolId = req.user.schoolId;
+  }
   if (employeeType) filter.employeeType = employeeType;
   if (isActive !== undefined) filter.isActive = isActive;
 
@@ -178,8 +184,10 @@ export const getAllEmployees = asyncHandler(async (req, res) => {
 // Get Single Employee
 export const getEmployeeById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const query = isSuperAdmin ? { _id: id } : { _id: id, schoolId: req.user.schoolId };
 
-  const employee = await Employee.findById(id)
+  const employee = await Employee.findOne(query)
     .populate({ path: "userId", select: "name email regId", populate: { path: "roleId", select: "name" } })
     .populate("schoolId", "name")
     .populate("academicYearId", "name year");
@@ -197,8 +205,10 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
 export const updateEmployee = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const query = isSuperAdmin ? { _id: id } : { _id: id, schoolId: req.user.schoolId };
 
-  const employee = await Employee.findByIdAndUpdate(id, updateData, {
+  const employee = await Employee.findOneAndUpdate(query, updateData, {
     new: true,
   });
 
@@ -212,7 +222,9 @@ export const updateEmployee = asyncHandler(async (req, res) => {
 // Delete Employee
 export const deleteEmployee = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const employee = await Employee.findByIdAndDelete(id);
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const query = isSuperAdmin ? { _id: id } : { _id: id, schoolId: req.user.schoolId };
+  const employee = await Employee.findOneAndDelete(query);
 
   if (!employee) throw new ApiError(404, "Employee not found");
 

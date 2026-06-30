@@ -14,7 +14,9 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
   if (!totalDays) throw new ApiError(400, "Total days is required");
   if (!reason?.trim()) throw new ApiError(400, "Reason is required");
 
-  const resolvedUserId = userId || req.user._id;
+  // Only privileged roles can submit leave on behalf of another user
+  const canActOnBehalf = ["Super Admin", "HR"].includes(req.userRole?.name);
+  const resolvedUserId = (canActOnBehalf && userId) ? userId : req.user._id;
   const schoolId = req.user.school?._id || req.user.schoolId;
 
   if (!schoolId) throw new ApiError(400, "School context not found");
@@ -155,10 +157,14 @@ export const deleteLeaveRequest = asyncHandler(async (req, res) => {
   if (!leaveRequest) throw new ApiError(404, "Leave request not found");
 
   const isOwner = leaveRequest.userId.toString() === req.user._id.toString();
-  const isAdmin =
-    req.userRole?.name === "Super Admin" || req.userRole?.name === "School Admin";
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const isSchoolAdmin = req.userRole?.name === "School Admin";
+  // School Admin can only delete leave requests within their own school
+  const isSameSchool = leaveRequest.schoolId?.toString() === req.user.schoolId?.toString();
 
-  if (!isOwner && !isAdmin) throw new ApiError(403, "Access denied");
+  if (!isOwner && !(isSuperAdmin || (isSchoolAdmin && isSameSchool))) {
+    throw new ApiError(403, "Access denied");
+  }
 
   if (leaveRequest.status !== "pending")
     throw new ApiError(400, "Cannot cancel processed request");

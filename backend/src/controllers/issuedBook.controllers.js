@@ -37,7 +37,7 @@ export const issueBook = asyncHandler(async (req, res) => {
   if (!bookId)   throw new ApiError(400, "bookId is required");
   if (!studentId && !issuedToUserId) throw new ApiError(400, "studentId or issuedToUserId is required");
 
-  const book = await Book.findById(bookId);
+  const book = await Book.findOne({ _id: bookId, schoolId });
   if (!book) throw new ApiError(404, "Book not found");
   if (book.availableCopies <= 0) throw new ApiError(400, "No available copies of this book");
 

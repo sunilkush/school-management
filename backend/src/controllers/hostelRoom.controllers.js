@@ -8,9 +8,9 @@ const resolveAcademicYearId = (req) => req.body?.academicYearId || null;
 
 export const getHostelRooms = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
-  const filter = schoolId ? { schoolId } : {};
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
 
-  const rooms = await HostelRoom.find(filter).sort({ createdAt: -1 });
+  const rooms = await HostelRoom.find({ schoolId }).sort({ createdAt: -1 });
 
   return res.status(200).json(new ApiResponse(200, rooms, "Hostel rooms fetched successfully"));
 });
@@ -38,12 +38,14 @@ export const createHostelRoom = asyncHandler(async (req, res) => {
 
 export const updateHostelRoom = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
   const updates = {};
 
   if (req.body.roomNumber !== undefined) updates.roomNumber = req.body.roomNumber;
   if (req.body.capacity !== undefined) updates.capacity = req.body.capacity;
 
-  const room = await HostelRoom.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
+  const room = await HostelRoom.findOneAndUpdate({ _id: id, schoolId }, updates, { new: true, runValidators: true });
 
   if (!room) throw new ApiError(404, "Hostel room not found");
 
@@ -52,7 +54,9 @@ export const updateHostelRoom = asyncHandler(async (req, res) => {
 
 export const deleteHostelRoom = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const room = await HostelRoom.findByIdAndDelete(id);
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+  const room = await HostelRoom.findOneAndDelete({ _id: id, schoolId });
 
   if (!room) throw new ApiError(404, "Hostel room not found");
 
@@ -62,10 +66,12 @@ export const deleteHostelRoom = asyncHandler(async (req, res) => {
 export const assignStudentToRoom = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { studentName } = req.body;
+  const schoolId = resolveSchoolId(req);
 
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
   if (!studentName) throw new ApiError(400, "studentName is required");
 
-  const room = await HostelRoom.findById(id);
+  const room = await HostelRoom.findOne({ _id: id, schoolId });
   if (!room) throw new ApiError(404, "Hostel room not found");
 
   if (room.students.length >= room.capacity) {
@@ -85,8 +91,10 @@ export const assignStudentToRoom = asyncHandler(async (req, res) => {
 
 export const removeStudentFromRoom = asyncHandler(async (req, res) => {
   const { id, studentId } = req.params;
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
 
-  const room = await HostelRoom.findById(id);
+  const room = await HostelRoom.findOne({ _id: id, schoolId });
   if (!room) throw new ApiError(404, "Hostel room not found");
 
   const initialCount = room.students.length;
