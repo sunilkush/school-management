@@ -134,7 +134,7 @@ const IssueBook = () => {
       });
     }
     const roles = memberType === "Teacher" ? ["Teacher"] : ["Staff", "Accountant", "HR"];
-    return allUsers.filter((u) => roles.includes(u.role)).map((u) => ({ value: u._id, label: u.name }));
+    return allUsers.filter((u) => roles.includes(u.role?.name)).map((u) => ({ value: u._id, label: u.name }));
   }, [memberType, students, allUsers]);
 
   /* ── issue handler ──────────────────────────────────────────────── */
