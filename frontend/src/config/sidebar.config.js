@@ -1,7 +1,7 @@
 import {
   LayoutDashboard,
   School,
-  Puzzle,
+
   FileText,
   Settings,
   Users,
@@ -74,7 +74,7 @@ const communicationMenu = (basePath) => {
 };
 
 const supportCenterItem = { title: "Support Center", path: "support/tickets", icon: HelpCircle };
-const moduleHubItem = { title: "Module Hub", path: "modules", icon: Puzzle };
+
 const roleWorkspaceItem = { title: "Role Workspace", path: "workspace", icon: ClipboardList };
 
 export const sidebarMenu = {
@@ -716,9 +716,6 @@ Object.keys(sidebarMenu).forEach((roleKey) => {
   const items = sidebarMenu[roleKey];
   if (!Array.isArray(items)) return;
  
-  if (!items.some((item) => item?.path === moduleHubItem.path)) {
-    items.push(moduleHubItem);
-  }
    //const rolePath = roleKey.replace(/\s+/g, "");
   //const hasMessage = items.some((item) => item?.path === `${rolePath}/message` || item?.path?.endsWith("/message"));
   //if (!hasMessage) items.push({ title: "Messages", path: `${rolePath}/message`, icon: MessageSquare });

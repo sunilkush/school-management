@@ -1,213 +1,193 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
-import {
-  fetchAllUser,
-  deleteUser,
-  activeUser,
-} from "../../../features/authSlice";
+import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
+import { Table, Input, Select, message, Spin, Popconfirm } from "antd";
+import { Users, UserCheck, UserX, School2, Search, RefreshCw, Filter, Briefcase } from "lucide-react";
 import {
-  Card,
-  Select,
-  Typography,
-  Button,
-  Tag,
-  Flex,
-  Space,
-  message,
-  Popconfirm,
-} from "antd";
-import { ReloadOutlined, CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
-import { FaUserCircle } from "react-icons/fa";
+  pageWrapper, sectionPanel, statGrid, statCard, statLabel, statValue,
+  pill, tableHeadCss, emptyState, avatarStyle, iconWell,
+} from "../../../styles/pageStyles";
 
-const { Option } = Select;
-const { Title, Text } = Typography;
+const ACCENT = "#8B5CF6";
+
+function initials(name = "") {
+  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+}
+
+function StatusPill({ isActive }) {
+  return (
+    <span style={pill(isActive ? "#16A34A" : "#DC2626", isActive ? "rgba(220,252,231,0.4)" : "rgba(254,226,226,0.4)")}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "#22C55E" : "#EF4444", display: "inline-block", marginRight: 5, verticalAlign: "middle" }} />
+      {isActive ? "Active" : "Inactive"}
+    </span>
+  );
+}
 
 const Staff = () => {
   const dispatch = useDispatch();
-  const { users = [], loading, error, user: currentUser } = useSelector(
-    (state) => state.auth
-  );
-  const { schools = [] } = useSelector((state) => state.school);
+  const { users = [], loading, error, user: currentUser } = useSelector((s) => s.auth);
+  const { schools = [] } = useSelector((s) => s.school);
 
   const [selectedSchool, setSelectedSchool] = useState("All");
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [clearToggle, setClearToggle] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [bulkLoading, setBulkLoading] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchAllUser());
-    dispatch(fetchSchools());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchAllUser()); dispatch(fetchSchools()); }, [dispatch]);
+
+  const refresh = () => dispatch(fetchAllUser());
+  const schoolNames = ["All", ...new Set(schools.map((s) => s.name).filter(Boolean))];
+
+  const allStaff = useMemo(() => users.filter((u) => u?.role?.name === "Staff"), [users]);
 
   const staffs = useMemo(() => {
-    let data = users.filter((u) => u?.role?.name === "Staff");
-    if (selectedSchool !== "All") {
-      data = data.filter((u) => u.school?.name === selectedSchool);
-    }
+    let data = [...allStaff];
+    if (selectedSchool !== "All") data = data.filter((u) => u.school?.name === selectedSchool);
+    if (search) data = data.filter((u) => u.name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
+    if (statusFilter === "active") data = data.filter((u) => u.isActive);
+    if (statusFilter === "inactive") data = data.filter((u) => !u.isActive);
     return data;
-  }, [users, selectedSchool]);
-
-  const schoolNames = [
-    "All",
-    ...new Set(schools.map((s) => s.name).filter(Boolean)),
-  ];
+  }, [allStaff, selectedSchool, search, statusFilter]);
 
   const handleToggleStatus = (user) => {
-    if (user._id === currentUser?._id) {
-      message.warning("You cannot change your own status");
-      return;
-    }
-    dispatch(
-      user.isActive
-        ? deleteUser({ id: user._id, isActive: false })
-        : activeUser({ id: user._id, isActive: true })
-    ).then(() => {
-      message.success("Status updated successfully");
-      dispatch(fetchAllUser());
-    });
+    if (user._id === currentUser?._id) { message.warning("You cannot change your own status"); return; }
+    dispatch(user.isActive ? deleteUser({ id: user._id, isActive: false }) : activeUser({ id: user._id, isActive: true }))
+      .then(() => { message.success("Status updated"); dispatch(fetchAllUser()); });
   };
 
   const handleBulkAction = async (activate) => {
-    const targets = selectedRows.filter((r) => r._id !== currentUser?._id);
-    if (!targets.length) {
-      message.warning("No eligible rows selected");
-      return;
-    }
+    const targets = allStaff.filter((r) => selectedRowKeys.includes(r._id) && r._id !== currentUser?._id);
+    if (!targets.length) { message.warning("No eligible rows selected"); return; }
     setBulkLoading(true);
     try {
-      await Promise.all(
-        targets.map((r) =>
-          dispatch(
-            activate
-              ? activeUser({ id: r._id, isActive: true })
-              : deleteUser({ id: r._id, isActive: false })
-          )
-        )
-      );
+      await Promise.all(targets.map((r) => dispatch(activate ? activeUser({ id: r._id, isActive: true }) : deleteUser({ id: r._id, isActive: false }))));
       message.success(`${targets.length} staff member(s) ${activate ? "activated" : "deactivated"}`);
-      setClearToggle((v) => !v);
-      setSelectedRows([]);
+      setSelectedRowKeys([]);
       dispatch(fetchAllUser());
-    } catch {
-      message.error("Bulk action failed");
-    } finally {
-      setBulkLoading(false);
-    }
+    } catch { message.error("Bulk action failed"); }
+    finally { setBulkLoading(false); }
   };
 
+  const totalCount = allStaff.length;
+  const activeCount = allStaff.filter((u) => u.isActive).length;
+  const inactiveCount = totalCount - activeCount;
+  const schoolCount = new Set(allStaff.map((u) => u.school?.name).filter(Boolean)).size;
+
   const columns = [
-    { name: "#", selector: (_, index) => index + 1, width: "60px" },
     {
-      name: "Avatar",
-      cell: (row) =>
-        row.avatar ? (
-          <img
-            src={row.avatar}
-            alt="avatar"
-            style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
-          />
-        ) : (
-          <FaUserCircle size={28} color="#9CA3AF" />
-        ),
-      width: "80px",
-    },
-    { name: "Name", selector: (row) => row.name, sortable: true },
-    { name: "Email", selector: (row) => row.email, sortable: true },
-    { name: "School", selector: (row) => row.school?.name || "—" },
-    {
-      name: "Status",
-      sortable: true,
-      cell: (row) => (
-        <Tag color={row.isActive ? "green" : "red"}>
-          {row.isActive ? "Active" : "Inactive"}
-        </Tag>
+      title: "Staff Member",
+      key: "user",
+      render: (_, record) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ ...avatarStyle(record.name, 36), borderRadius: 10, overflow: "hidden" }}>
+            {record.avatar ? <img src={record.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials(record.name)}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{record.name}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{record.email}</div>
+          </div>
+        </div>
       ),
     },
     {
-      name: "Action",
-      cell: (row) => (
-        <Button
-          size="small"
-          type="primary"
-          danger={row.isActive}
-          onClick={() => handleToggleStatus(row)}
+      title: "School",
+      dataIndex: ["school", "name"],
+      render: (v) => v ? <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{v}</span> : <span style={{ color: "var(--text-muted)" }}>—</span>,
+    },
+    { title: "Status", dataIndex: "isActive", render: (v) => <StatusPill isActive={v} /> },
+    {
+      title: "Action",
+      align: "right",
+      render: (_, record) => (
+        <button
+          onClick={() => handleToggleStatus(record)}
+          style={{ ...pill(record.isActive ? "#DC2626" : "#16A34A", record.isActive ? "rgba(254,226,226,0.3)" : "rgba(220,252,231,0.3)"), cursor: "pointer", border: `1px solid ${record.isActive ? "#FCA5A5" : "#86EFAC"}`, padding: "5px 14px", fontSize: 12, fontWeight: 600 }}
         >
-          {row.isActive ? "Deactivate" : "Activate"}
-        </Button>
+          {record.isActive ? "Deactivate" : "Activate"}
+        </button>
       ),
-      width: "150px",
     },
   ];
 
-  if (error)
-    return <Text type="danger" className="block text-center mt-6">{error}</Text>;
-
   return (
-    <div style={{ padding: 16 }}>
-      <Card bordered={false} style={{ marginBottom: 16 }}>
-        <Flex justify="space-between" align="center" wrap="wrap">
-          <div>
-            <Title level={4} style={{ marginBottom: 0 }}>Staff Management</Title>
-            <Text type="secondary">Manage all staff members across schools</Text>
-          </div>
-          <Space>
-            <Select value={selectedSchool} onChange={setSelectedSchool} style={{ width: 220 }}>
-              {schoolNames.map((name) => (
-                <Option key={name} value={name}>{name}</Option>
-              ))}
-            </Select>
-            <Button icon={<ReloadOutlined />} onClick={() => dispatch(fetchAllUser())}>Refresh</Button>
-          </Space>
-        </Flex>
-      </Card>
+    <>
+      <style>{tableHeadCss("staff-tbl")}</style>
+      <div style={pageWrapper}>
 
-      <Card bordered={false}>
-        {selectedRows.length > 0 && (
-          <Flex
-            align="center"
-            gap={8}
-            style={{ background: "#f0f5ff", borderRadius: 8, padding: "8px 14px", marginBottom: 12 }}
-          >
-            <Text strong>{selectedRows.length} selected</Text>
-            <Popconfirm
-              title={`Activate ${selectedRows.length} staff member(s)?`}
-              onConfirm={() => handleBulkAction(true)}
-              okText="Activate"
-            >
-              <Button size="small" type="primary" icon={<CheckCircleOutlined />} loading={bulkLoading}>
-                Activate Selected
-              </Button>
-            </Popconfirm>
-            <Popconfirm
-              title={`Deactivate ${selectedRows.length} staff member(s)?`}
-              onConfirm={() => handleBulkAction(false)}
-              okText="Deactivate"
-              okButtonProps={{ danger: true }}
-            >
-              <Button size="small" danger icon={<StopOutlined />} loading={bulkLoading}>
-                Deactivate Selected
-              </Button>
-            </Popconfirm>
-          </Flex>
-        )}
-        <DataTable
-          columns={columns}
-          data={staffs}
-          progressPending={loading}
-          pagination
-          highlightOnHover
-          striped
-          responsive
-          selectableRows
-          onSelectedRowsChange={({ selectedRows: rows }) => setSelectedRows(rows)}
-          clearSelectedRows={clearToggle}
-          noDataComponent="No staff found"
-          customStyles={{ headCells: { style: { fontWeight: 600, backgroundColor: "#F9FAFB" } } }}
-        />
-      </Card>
-    </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <div style={iconWell(ACCENT, 44)}><Briefcase size={22} /></div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>Staff Management</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Manage all staff members across schools</div>
+          </div>
+        </div>
+
+        <div style={statGrid(160)}>
+          {[
+            { label: "Total Staff", value: totalCount, color: ACCENT, icon: <Briefcase size={18} /> },
+            { label: "Active", value: activeCount, color: "#22C55E", icon: <UserCheck size={18} /> },
+            { label: "Inactive", value: inactiveCount, color: "#EF4444", icon: <UserX size={18} /> },
+            { label: "Schools", value: schoolCount, color: "#3B82F6", icon: <School2 size={18} /> },
+          ].map((s) => (
+            <div key={s.label} style={statCard({ color: s.color, bg: "var(--surface)", accentBar: s.color })}>
+              <div>
+                <div style={statLabel(s.color)}>{s.label}</div>
+                <div style={statValue(s.color)}>{s.value}</div>
+              </div>
+              <div style={iconWell(s.color, 40)}>{s.icon}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={sectionPanel}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <Input prefix={<Search size={13} style={{ color: "var(--text-muted)" }} />} placeholder="Search name or email..." value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 230, borderRadius: 8 }} />
+              <Select value={selectedSchool} onChange={setSelectedSchool} style={{ width: 180 }}>
+                {schoolNames.map((n) => <Select.Option key={n} value={n}>{n}</Select.Option>)}
+              </Select>
+              <Select placeholder="All Status" allowClear value={statusFilter || undefined} onChange={(v) => setStatusFilter(v ?? "")} style={{ width: 120 }} suffixIcon={<Filter size={11} />}>
+                <Select.Option value="active">Active</Select.Option>
+                <Select.Option value="inactive">Inactive</Select.Option>
+              </Select>
+              <button onClick={refresh} style={{ display: "flex", alignItems: "center", gap: 5, background: "var(--surface-soft)", border: "1px solid var(--border-muted)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "var(--text-muted)", fontSize: 12 }}>
+                <RefreshCw size={13} /> Refresh
+              </button>
+            </div>
+            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Showing <strong>{staffs.length}</strong> of <strong>{totalCount}</strong></span>
+          </div>
+
+          {selectedRowKeys.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)", borderRadius: 8, padding: "8px 14px", marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{selectedRowKeys.length} selected</span>
+              <Popconfirm title={`Activate ${selectedRowKeys.length} staff member(s)?`} onConfirm={() => handleBulkAction(true)} okText="Activate">
+                <button style={{ ...pill("#16A34A", "rgba(220,252,231,0.4)"), cursor: "pointer", padding: "4px 12px", fontSize: 12 }} disabled={bulkLoading}>Activate</button>
+              </Popconfirm>
+              <Popconfirm title={`Deactivate ${selectedRowKeys.length} staff member(s)?`} onConfirm={() => handleBulkAction(false)} okText="Deactivate" okButtonProps={{ danger: true }}>
+                <button style={{ ...pill("#DC2626", "rgba(254,226,226,0.4)"), cursor: "pointer", padding: "4px 12px", fontSize: 12 }} disabled={bulkLoading}>Deactivate</button>
+              </Popconfirm>
+            </div>
+          )}
+
+          {error && <div style={{ ...pill("#DC2626", "rgba(254,226,226,0.3)"), marginBottom: 12, padding: "8px 14px" }}>{error}</div>}
+
+          <Spin spinning={!!loading}>
+            <div className="staff-tbl">
+              <Table
+                rowKey="_id"
+                columns={columns}
+                dataSource={staffs}
+                rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys) }}
+                pagination={{ pageSize: 10, size: "small", showSizeChanger: false }}
+                locale={{ emptyText: <div style={emptyState}><Users size={32} color="var(--text-muted)" style={{ margin: "0 auto 8px" }} /><div style={{ color: "var(--text-muted)", fontSize: 13 }}>No staff found</div></div> }}
+              />
+            </div>
+          </Spin>
+        </div>
+      </div>
+    </>
   );
 };
 

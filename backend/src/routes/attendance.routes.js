@@ -62,6 +62,10 @@ const SELF_ATTENDANCE_ROLES = [
   "Counselor",
   "Security",
   "Accountant",
+  "Sports Teacher",
+  "Lab Technician",
+  "Medical Officer",
+  "Class Teacher",
 ];
 
 const REPORT_ROLES = [
@@ -88,6 +92,10 @@ const VIEW_ROLES = Array.from(new Set([
   "IT Support",
   "Counselor",
   "Security",
+  "Sports Teacher",
+  "Lab Technician",
+  "Medical Officer",
+  "Class Teacher",
 ]));
 
 const MY_ATTENDANCE_ROLES = [
