@@ -133,7 +133,7 @@ const MyAttendancePage = () => {
   /* fetch */
   useEffect(() => {
     dispatch(fetchMyAttendance({ month: month.month() + 1, year: month.year() }));
-  }, [month]);
+  }, [month, dispatch]);
 
   /* summary */
   const summary = useMemo(() => {

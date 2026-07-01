@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Select,
@@ -73,7 +73,7 @@ const AttendanceAnalytics = () => {
   const [role,    setRole]    = useState("student");
 
   /* ── Fetch ── */
-  const doFetch = () => {
+  const doFetch = useCallback(() => {
     if (!schoolId) return;
     dispatch(
       fetchMonthlyReport({
@@ -85,17 +85,17 @@ const AttendanceAnalytics = () => {
         limit: 500,
       })
     );
-  };
+  }, [schoolId, month, year, role, classId, dispatch]);
 
   useEffect(() => {
     if (!schoolId) return;
     dispatch(fetchSchoolClasses({ schoolId }));
     doFetch();
-  }, [schoolId]);
+  }, [schoolId, dispatch, doFetch]);
 
   useEffect(() => {
     doFetch();
-  }, [month, year, role, classId]);
+  }, [doFetch]);
 
   /* ── Normalise classes ── */
   const classes = useMemo(() => {

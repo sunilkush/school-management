@@ -111,7 +111,7 @@ const MyAttendanceMonthlyReport = () => {
       month: calValue.month() + 1,
       year:  calValue.year(),
     }));
-  }, [calValue.year(), calValue.month()]);
+  }, [calValue, dispatch]);
 
   /* map date → record */
   const byDate = useMemo(() => {

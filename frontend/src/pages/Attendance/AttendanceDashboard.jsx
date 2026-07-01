@@ -9,7 +9,6 @@ import {
   PercentageOutlined, ReloadOutlined, WarningOutlined,
   EditOutlined, UnorderedListOutlined, FileTextOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
 import { fetchAttendanceSummary } from "../../features/analyticsSlice";
 import { fetchSchools }           from "../../features/schoolSlice";
 import PageHeader                 from "../../components/layout/PageHeader";
@@ -101,11 +100,11 @@ const AttendanceDashboard = () => {
   useEffect(() => {
     dispatch(fetchSchools());
     doFetch("", null);
-  }, [dispatch]);
+  }, [dispatch, doFetch]);
 
   /* ── Derived ── */
   const stats       = attendance || {};
-  const schoolStats = stats.schoolStats || [];
+  const schoolStats = useMemo(() => attendance?.schoolStats || [], [attendance]);
 
   const lowSchools = useMemo(
     () => schoolStats.filter((s) => s.attendanceRate != null && Number(s.attendanceRate) < LOW),

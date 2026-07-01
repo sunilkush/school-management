@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert, Button, Form, InputNumber, Input, Spin, message, Divider, Tag,
 } from "antd";
@@ -42,10 +42,16 @@ const GeofenceSettings = () => {
   const [locating, setLocating] = useState(false);
   const [dashLoading, setDashLoading] = useState(false);
 
+  const loadDashboard = useCallback(async () => {
+    setDashLoading(true);
+    try { await dispatch(fetchLiveDashboard()).unwrap(); } catch { /* ignore — dashLoading cleared in finally */ }
+    finally { setDashLoading(false); }
+  }, [dispatch]);
+
   useEffect(() => {
     dispatch(fetchGeofenceSettings());
     loadDashboard();
-  }, [dispatch]);
+  }, [dispatch, loadDashboard]);
 
   useEffect(() => {
     if (geofenceSettings?.location) {
@@ -57,12 +63,6 @@ const GeofenceSettings = () => {
       });
     }
   }, [geofenceSettings, form]);
-
-  const loadDashboard = async () => {
-    setDashLoading(true);
-    try { await dispatch(fetchLiveDashboard()).unwrap(); } catch (_) {}
-    finally { setDashLoading(false); }
-  };
 
   const handleAutoDetect = () => {
     if (!navigator.geolocation) {

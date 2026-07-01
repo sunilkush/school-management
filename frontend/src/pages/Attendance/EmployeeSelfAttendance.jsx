@@ -1,7 +1,7 @@
 import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from "react";
-import { Alert, Button, Calendar, Progress, Spin, Tooltip, message } from "antd";
+import { Alert, Calendar, Progress, Spin, Tooltip, message } from "antd";
 import {
   AimOutlined, CheckCircleOutlined, ClockCircleOutlined, EnvironmentOutlined,
   LoginOutlined, LogoutOutlined, WarningOutlined,
@@ -57,10 +57,12 @@ const GpsPill = ({ gpsState, distanceInfo, gpsError, onEnable, onRetry }) => {
     </span>
   );
   if (gpsState === GPS_STATE.ERROR) return (
-    <span style={{ ...base, background: "#FEE2E2", color: "#EF4444", border: "1px solid #FCA5A5" }}>
-      <WarningOutlined /> GPS Error ·&nbsp;
-      <button onClick={onRetry} style={{ color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontWeight: 800, padding: 0, fontSize: 12 }}>Retry</button>
-    </span>
+    <Tooltip title={gpsError || "Unable to get location"}>
+      <span style={{ ...base, background: "#FEE2E2", color: "#EF4444", border: "1px solid #FCA5A5", cursor: "default" }}>
+        <WarningOutlined /> GPS Error ·&nbsp;
+        <button onClick={onRetry} style={{ color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontWeight: 800, padding: 0, fontSize: 12 }}>Retry</button>
+      </span>
+    </Tooltip>
   );
   if (!distanceInfo) return (
     <span style={{ ...base, background: "#DCFCE7", color: "#22C55E", border: "1px solid #86EFAC" }}>
@@ -124,9 +126,8 @@ const DayTrack = ({ checkedIn, checkedOut, checkInAt, checkOutAt }) => {
 
 /* ─── Punch Button ──────────────────────────────────────────── */
 const PunchBtn = ({ checkedIn, checkedOut, canAct, loading, onPunch }) => {
-  const done  = checkedIn && checkedOut;
-  const color = done ? "var(--text-muted)" : checkedIn ? "#EF4444" : "#22C55E";
-  const bg    = done ? "var(--surface-soft)" : checkedIn ? "#EF4444" : "#22C55E";
+  const done = checkedIn && checkedOut;
+  const bg   = done ? "var(--surface-soft)" : checkedIn ? "#EF4444" : "#22C55E";
   const label = done ? "Done for Today" : checkedIn ? "Punch Out" : "Punch In";
   const Icon  = done ? CheckCircleOutlined : checkedIn ? LogoutOutlined : LoginOutlined;
   const off   = done || !canAct;
