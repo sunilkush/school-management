@@ -172,20 +172,25 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
   const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
   const normalizedDate = normalizeDateStart(date);
 
-  const docs = records.map((record) => ({
-    schoolId: resolvedSchoolId,
-    userId: record.userId,
-    role,
-    schoolClassId: schoolClassId || null,
-    sectionId: sectionId || null,
-    subjectId: subjectId || null,
-    date: normalizedDate,
-    status: record.status,
-    markedBy: req.user._id,
-    remarks: record.remarks ?? remarks ?? "",
-    checkInAt: record.checkInAt || null,
-    checkOutAt: record.checkOutAt || null,
-  }));
+  const docs = records.map((record) => {
+    const doc = {
+      schoolId: resolvedSchoolId,
+      userId: record.userId,
+      role,
+      schoolClassId: schoolClassId || null,
+      sectionId: sectionId || null,
+      subjectId: subjectId || null,
+      date: normalizedDate,
+      status: record.status,
+      markedBy: req.user._id,
+      remarks: record.remarks ?? remarks ?? "",
+    };
+    // Only include checkInAt / checkOutAt when explicitly provided — never overwrite
+    // a teacher's GPS self-check-in data with null when admin bulk-marks attendance.
+    if (record.checkInAt != null) doc.checkInAt = record.checkInAt;
+    if (record.checkOutAt != null) doc.checkOutAt = record.checkOutAt;
+    return doc;
+  });
 
   if (SELF_ATTENDANCE_ROLES.includes(userRole) && !ADMIN_ATTENDANCE_ROLES.includes(userRole) && !canMarkStudents) {
     docs.forEach((doc) => {
@@ -196,13 +201,37 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
   }
   try {
     const result = await Attendance.bulkWrite(
-      docs.map((doc) => ({
-        updateOne: {
-          filter: { schoolId: doc.schoolId, userId: doc.userId, date: doc.date },
-          update: { $set: doc },
-          upsert: true,
-        },
-      }))
+      docs.map((doc) => {
+        // Core fields that admin always sets
+        const setFields = {
+          role: doc.role,
+          status: doc.status,
+          markedBy: doc.markedBy,
+          remarks: doc.remarks,
+          schoolClassId: doc.schoolClassId,
+          sectionId: doc.sectionId,
+          subjectId: doc.subjectId,
+        };
+        // Only update check-in/out times if admin explicitly supplied them
+        if (doc.checkInAt != null) setFields.checkInAt = doc.checkInAt;
+        if (doc.checkOutAt != null) setFields.checkOutAt = doc.checkOutAt;
+
+        return {
+          updateOne: {
+            filter: { schoolId: doc.schoolId, userId: doc.userId, date: doc.date },
+            update: {
+              $set: setFields,
+              // On insert only — set the identity fields that cannot change
+              $setOnInsert: {
+                schoolId: doc.schoolId,
+                userId: doc.userId,
+                date: doc.date,
+              },
+            },
+            upsert: true,
+          },
+        };
+      })
     );
 
     return res

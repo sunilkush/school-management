@@ -68,13 +68,15 @@ const PunchButton = ({ checkedIn, checkedOut, canAct, distOk, loading, onPunch }
     ? { bg: C.danger,   text: "#fff", border: C.danger,   glow: `0 0 24px ${C.danger}55` }
     : { bg: C.success,  text: "#fff", border: C.success,  glow: `0 0 24px ${C.success}55` };
 
-  const disabled = done || !canAct || !distOk;
+  // distOk is shown as a warning only — backend does the authoritative geofence check.
+  // GPS accuracy variance (5-30m) would otherwise block teachers who are physically inside.
+  const disabled = done || !canAct;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "4px 0 8px" }}>
       {/* outer ring pulse */}
       <div style={{ position: "relative", display: "inline-flex" }}>
-        {!done && canAct && distOk && (
+        {!done && canAct && (
           <span style={{
             position: "absolute", inset: -6, borderRadius: "50%",
             border: `2px solid ${colors.bg}`,
@@ -158,6 +160,7 @@ const EmployeeSelfAttendance = () => {
     }
     setGpsState(GPS_STATE.LOCATING);
     setGpsError(null);
+    dispatch(clearAttendanceFeedback()); // clear any stale punch rejection error
     watchRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
@@ -202,6 +205,13 @@ const EmployeeSelfAttendance = () => {
     const dist = Math.round(R * 2 * Math.asin(Math.sqrt(a)));
     return { dist, radius: geofenceRadius, inside: dist <= geofenceRadius, pct: Math.min(100, Math.round((dist / geofenceRadius) * 100)) };
   }, [position, geofenceSettings]);
+
+  /* ── Auto-clear stale rejection error once GPS confirms teacher is inside ── */
+  useEffect(() => {
+    if (reduxError && distanceInfo?.inside) {
+      dispatch(clearAttendanceFeedback());
+    }
+  }, [distanceInfo?.inside, reduxError, dispatch]);
 
   const schoolCoords = useMemo(() => {
     const loc = geofenceSettings?.location;

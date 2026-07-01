@@ -17,11 +17,12 @@ import {
   SearchOutlined,
   TeamOutlined,
   UserOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 import { fetchAllUser } from "../../../features/authSlice";
-import { markBulkAttendance } from "../../../features/attendanceSlice";
+import { markBulkAttendance, fetchAttendance } from "../../../features/attendanceSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
@@ -84,6 +85,7 @@ const TeacherAttendance = () => {
   const [attendance,   setAttendance]   = useState({});
   const [checkIns,     setCheckIns]     = useState({});
   const [checkOuts,    setCheckOuts]    = useState({});
+  const [gpsRecords,   setGpsRecords]   = useState({});   // userId → { gpsVerified, checkInAt }
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [searchText,   setSearchText]   = useState("");
 
@@ -92,6 +94,39 @@ const TeacherAttendance = () => {
     if (!schoolId) return;
     dispatch(fetchAllUser({ schoolId, isActive: true, roleName: "Teacher" }));
   }, [schoolId, dispatch]);
+
+  /* ── Load existing attendance for the selected date ── */
+  useEffect(() => {
+    if (!schoolId) return;
+    dispatch(
+      fetchAttendance({
+        schoolId,
+        date: selectedDate.startOf("day").toISOString(),
+        role: "teacher",
+        limit: 500,
+        page: 1,
+      })
+    )
+      .unwrap()
+      .then((data) => {
+        const att = {}, ci = {}, co = {}, gps = {};
+        (data?.items || []).forEach((item) => {
+          const uid = (item.userId?._id || item.userId || "").toString();
+          if (!uid) return;
+          att[uid] = item.status;
+          if (item.checkInAt)  ci[uid]  = dayjs(item.checkInAt);
+          if (item.checkOutAt) co[uid]  = dayjs(item.checkOutAt);
+          if (item.gpsVerified || item.checkInAt) {
+            gps[uid] = { gpsVerified: item.gpsVerified, checkInAt: item.checkInAt };
+          }
+        });
+        setAttendance(att);
+        setCheckIns(ci);
+        setCheckOuts(co);
+        setGpsRecords(gps);
+      })
+      .catch(() => {}); // silently skip — page still works without pre-population
+  }, [schoolId, selectedDate, dispatch]);
 
   const teacherList = useMemo(() => users, [users]);
 
@@ -128,6 +163,7 @@ const TeacherAttendance = () => {
     setAttendance({});
     setCheckIns({});
     setCheckOuts({});
+    setGpsRecords({});
   };
 
   const handleSubmit = async () => {
@@ -176,7 +212,8 @@ const TeacherAttendance = () => {
     {
       title: "Teacher",
       render: (_, r) => {
-        const name = r?.name || "—";
+        const name   = r?.name || "—";
+        const gpsRec = gpsRecords[r._id];
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
@@ -190,8 +227,23 @@ const TeacherAttendance = () => {
               {name[0]?.toUpperCase() || "T"}
             </div>
             <div>
-              <div style={{ fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
-                {name}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
+                  {name}
+                </span>
+                {gpsRec?.gpsVerified && (
+                  <span
+                    title={`GPS self check-in at ${gpsRec.checkInAt ? dayjs(gpsRec.checkInAt).format("HH:mm") : "—"}`}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 2,
+                      fontSize: 10, fontWeight: 700, color: "#22C55E",
+                      background: "#22C55E18", borderRadius: 4,
+                      padding: "1px 5px",
+                    }}
+                  >
+                    <EnvironmentOutlined style={{ fontSize: 9 }} /> GPS
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
                 {r?.email || "—"}
