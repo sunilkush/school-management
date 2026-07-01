@@ -12,6 +12,7 @@ import {
   ExclamationCircleFilled,
 } from "@ant-design/icons";
 import logo from "/logo.png";
+import { School2, BookOpen, CalendarDays, Users, Award } from "lucide-react";
 
 const roleRoutes = {
   "super admin":         "/dashboard/superadmin",
@@ -46,10 +47,10 @@ const schema = z.object({
 });
 
 const FEATURES = [
-  { icon: "👨‍🎓", title: "Student Management",  desc: "Admissions, attendance, grades & progress" },
-  { icon: "💰", title: "Fee Collection",        desc: "Invoices, payments & financial reports" },
-  { icon: "📅", title: "Smart Timetables",      desc: "Auto-scheduling for classes and exams" },
-  { icon: "📣", title: "Instant Notifications", desc: "SMS, email & in-app alerts for all roles" },
+  { Icon: BookOpen,    color: "#60A5FA", bg: "rgba(96,165,250,0.15)",  title: "Student Management",  desc: "Admissions, attendance, grades & progress" },
+  { Icon: Award,       color: "#34D399", bg: "rgba(52,211,153,0.15)",  title: "Fee Collection",       desc: "Invoices, payments & financial reports" },
+  { Icon: CalendarDays,color: "#A78BFA", bg: "rgba(167,139,250,0.15)", title: "Smart Timetables",     desc: "Auto-scheduling for classes and exams" },
+  { Icon: Users,       color: "#FB923C", bg: "rgba(251,146,60,0.15)",  title: "Instant Notifications",desc: "SMS, email & in-app alerts for all roles" },
 ];
 
 const STATS = [
@@ -140,44 +141,52 @@ const LoginForm = () => {
 
         {/* ────── LEFT: branding panel ────── */}
         <aside className="lf-left" aria-hidden="true">
+          <div className="lf-bg-dots" />
           <div className="lf-blob lf-b1" />
           <div className="lf-blob lf-b2" />
           <div className="lf-blob lf-b3" />
 
           <div className="lf-left-inner">
-            {/* Brand */}
+            {/* Brand mark */}
             <div className="lf-brand">
-              <img src={logo} alt="" className="lf-brand-logo" />
+              <div className="lf-brand-logo-wrap">
+                <img src={logo} alt="" className="lf-brand-logo" />
+              </div>
+              <div>
+                <div className="lf-brand-name">EduManage</div>
+                <div className="lf-brand-sub">School Management Platform</div>
+              </div>
             </div>
 
-            <h1 className="lf-headline">
-              The smarter way to<br />
-              <span className="lf-hl-grad">run your school</span>
-            </h1>
-            <p className="lf-tagline">
-              All roles, all modules — one unified platform built for modern schools.
-            </p>
-
-            <ul className="lf-features">
-              {FEATURES.map((f, i) => (
-                <li key={f.title} className="lf-feat" style={{ animationDelay: `${i * 0.1 + 0.2}s` }}>
-                  <div className="lf-feat-icon">{f.icon}</div>
-                  <div>
-                    <div className="lf-feat-title">{f.title}</div>
-                    <div className="lf-feat-desc">{f.desc}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            <div className="lf-quote">
-              <div className="lf-quote-stars">★★★★★</div>
-              <p className="lf-quote-text">
-                "EduManage cut our admin time by 60%. Fee collection, attendance — everything just works."
+            {/* Hero */}
+            <div className="lf-hero">
+              <div className="lf-platform-badge">
+                <School2 size={11} />
+                All-in-One Platform
+              </div>
+              <h1 className="lf-headline">
+                The smarter way to<br />
+                <span className="lf-hl-grad">run your school</span>
+              </h1>
+              <p className="lf-tagline">
+                All roles, all modules — one unified platform built for modern schools.
               </p>
-              <div className="lf-quote-author">— Principal, Delhi Public School</div>
             </div>
 
+            {/* Feature cards — 2×2 grid */}
+            <div className="lf-feat-grid">
+              {FEATURES.map((f, i) => (
+                <div key={f.title} className="lf-feat-card" style={{ animationDelay: `${i * 0.1 + 0.2}s` }}>
+                  <div className="lf-feat-ico" style={{ background: f.bg, color: f.color }}>
+                    <f.Icon size={16} />
+                  </div>
+                  <div className="lf-feat-title">{f.title}</div>
+                  <div className="lf-feat-desc">{f.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Stats */}
             <div className="lf-stats">
               {STATS.map((s, i) => (
                 <div key={s.l} className="lf-stat">
@@ -186,6 +195,23 @@ const LoginForm = () => {
                   <div className="lf-stat-l">{s.l}</div>
                 </div>
               ))}
+            </div>
+
+            {/* Testimonial */}
+            <div className="lf-quote">
+              <div className="lf-quote-body">
+                <span className="lf-quote-mark">"</span>
+                <p className="lf-quote-text">
+                  EduManage cut our admin time by 60%. Fee collection, attendance — everything just works.
+                </p>
+              </div>
+              <div className="lf-quote-footer">
+                <div className="lf-quote-avatar">P</div>
+                <div className="lf-quote-meta">
+                  <div className="lf-quote-author">Principal, Delhi Public School</div>
+                  <div className="lf-quote-stars">★★★★★</div>
+                </div>
+              </div>
             </div>
           </div>
         </aside>
@@ -474,85 +500,125 @@ const CSS = `
     display: none;
     flex: 0 0 52%;
     position: relative;
-    background: var(--secondary);
+    background: linear-gradient(160deg, #0D1526 0%, #111827 45%, #0F1F33 100%);
     overflow: hidden;
-    padding: 52px 56px;
+    padding: 48px 52px;
     flex-direction: column;
     justify-content: center;
   }
   @media (min-width: 1024px) { .lf-left { display: flex; } }
 
+  /* subtle dot grid */
+  .lf-bg-dots {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: 26px 26px;
+    pointer-events: none;
+  }
+
   /* ambient blobs */
   .lf-blob {
     position: absolute; border-radius: 50%;
-    filter: blur(110px); pointer-events: none;
+    filter: blur(120px); pointer-events: none;
     animation: lfBlobDrift 22s ease-in-out infinite;
   }
-  .lf-b1 { width: 500px; height: 500px; background: rgba(37,99,235,0.22); top: -150px; left: -120px; }
-  .lf-b2 { width: 360px; height: 360px; background: rgba(20,184,166,0.15); bottom: -100px; right: -60px; animation-delay: 9s; }
-  .lf-b3 { width: 260px; height: 260px; background: rgba(139,92,246,0.10); top: 45%; left: 54%; animation-delay: 16s; }
+  .lf-b1 { width: 480px; height: 480px; background: rgba(37,99,235,0.18); top: -160px; left: -100px; }
+  .lf-b2 { width: 320px; height: 320px; background: rgba(20,184,166,0.14); bottom: -80px; right: -40px; animation-delay: 9s; }
+  .lf-b3 { width: 240px; height: 240px; background: rgba(139,92,246,0.10); top: 42%; left: 52%; animation-delay: 16s; }
   @keyframes lfBlobDrift {
     0%,100% { transform: translate(0,0) scale(1); }
     33%     { transform: translate(18px,-22px) scale(1.04); }
     66%     { transform: translate(-14px,16px) scale(0.97); }
   }
 
-  .lf-left-inner { position: relative; z-index: 1; max-width: 480px; }
+  .lf-left-inner { position: relative; z-index: 1; max-width: 480px; display: flex; flex-direction: column; gap: 22px; }
 
-  .lf-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 38px; }
-  .lf-brand-logo { height: 100px; border-radius: 8px; filter: brightness(0) invert(1); }
-  .lf-brand-name { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+  /* brand */
+  .lf-brand { display: flex; align-items: center; gap: 13px; }
+  .lf-brand-logo-wrap {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .lf-brand-logo { height: 38px; width: 38px; object-fit: contain; filter: brightness(0) invert(1); }
+  .lf-brand-name { font-size: 19px; font-weight: 800; color: #F1F5F9; letter-spacing: -0.4px; }
+  .lf-brand-sub  { font-size: 11px; color: #475569; margin-top: 2px; letter-spacing: 0.02em; }
 
+  /* platform badge above headline */
+  .lf-platform-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(99,102,241,0.14); border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 99px; padding: 4px 12px;
+    font-size: 11px; font-weight: 600; color: #A5B4FC; letter-spacing: 0.04em;
+    margin-bottom: 12px;
+  }
+
+  /* headline */
   .lf-headline {
-    font-size: 38px; font-weight: 900;
-    color: #F1F5F9; line-height: 1.18; margin: 0 0 14px; letter-spacing: -0.8px;
+    font-size: 36px; font-weight: 900;
+    color: #F1F5F9; line-height: 1.18; margin: 0 0 10px; letter-spacing: -0.8px;
   }
   .lf-hl-grad {
-    background: linear-gradient(100deg, #60A5FA 0%, #34D399 60%, #14B8A6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(100deg, #60A5FA 0%, #34D399 55%, #14B8A6 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  .lf-tagline { color: #94A3B8; font-size: 14px; line-height: 1.7; margin: 0 0 28px; }
+  .lf-tagline { color: #94A3B8; font-size: 13.5px; line-height: 1.7; margin: 0; }
 
-  /* features list */
-  .lf-features { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 13px; }
-  .lf-feat { display: flex; align-items: flex-start; gap: 13px; animation: lfFeatIn 0.45s ease both; }
+  /* feature 2×2 grid */
+  .lf-feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .lf-feat-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 14px;
+    animation: lfFeatIn 0.45s ease both;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .lf-feat-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.14); }
   @keyframes lfFeatIn {
-    from { opacity: 0; transform: translateX(-14px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  .lf-feat-icon {
-    width: 38px; height: 38px; border-radius: 10px;
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09);
+  .lf-feat-ico {
+    width: 34px; height: 34px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
+    margin-bottom: 9px; flex-shrink: 0;
   }
-  .lf-feat-title { font-size: 13.5px; font-weight: 700; color: #E2E8F0; margin-bottom: 2px; }
-  .lf-feat-desc  { font-size: 12px; color: #64748B; line-height: 1.5; }
-
-  /* testimonial */
-  .lf-quote {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-left: 3px solid var(--primary);
-    border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
-  }
-  .lf-quote-stars  { color: var(--warning); font-size: 12px; margin-bottom: 6px; letter-spacing: 1px; }
-  .lf-quote-text   { color: #CBD5E1; font-size: 13px; line-height: 1.65; margin: 0 0 7px; font-style: italic; }
-  .lf-quote-author { font-size: 11px; color: #64748B; font-weight: 600; }
+  .lf-feat-title { font-size: 12.5px; font-weight: 700; color: #E2E8F0; margin-bottom: 3px; }
+  .lf-feat-desc  { font-size: 11px; color: #64748B; line-height: 1.5; }
 
   /* stats bar */
   .lf-stats {
     display: flex;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px; overflow: hidden;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; overflow: hidden;
   }
   .lf-stat { flex: 1; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
-  .lf-stat-sep { position: absolute; left: 0; top: 20%; height: 60%; width: 1px; background: rgba(255,255,255,0.07); }
+  .lf-stat-sep { position: absolute; left: 0; top: 20%; height: 60%; width: 1px; background: rgba(255,255,255,0.08); }
   .lf-stat-v { font-size: 18px; font-weight: 800; color: #F8FAFC; line-height: 1; }
   .lf-stat-l { font-size: 9px; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; }
+
+  /* testimonial */
+  .lf-quote {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 16px 18px;
+  }
+  .lf-quote-body { position: relative; margin-bottom: 12px; }
+  .lf-quote-mark {
+    font-size: 52px; line-height: 1;
+    color: rgba(99,102,241,0.45); font-family: Georgia, serif;
+    position: absolute; top: -12px; left: -2px; pointer-events: none;
+  }
+  .lf-quote-text { color: #CBD5E1; font-size: 13px; line-height: 1.65; margin: 0; padding-left: 22px; font-style: italic; }
+  .lf-quote-footer { display: flex; align-items: center; gap: 10px; }
+  .lf-quote-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366F1, #14B8A6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .lf-quote-meta { flex: 1; }
+  .lf-quote-author { font-size: 12px; font-weight: 600; color: #94A3B8; }
+  .lf-quote-stars  { font-size: 11px; color: #F59E0B; letter-spacing: 1px; margin-top: 2px; }
 
   /* ── Right panel ── */
   .lf-right {
