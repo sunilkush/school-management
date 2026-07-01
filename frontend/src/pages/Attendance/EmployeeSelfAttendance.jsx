@@ -82,6 +82,7 @@ const PunchButton = ({ checkedIn, checkedOut, canAct, distOk, loading, onPunch }
             border: `2px solid ${colors.bg}`,
             animation: "punching 2s ease-in-out infinite",
             opacity: 0.6,
+            pointerEvents: "none",
           }} />
         )}
         <button
