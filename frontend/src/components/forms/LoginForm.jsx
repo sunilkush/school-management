@@ -33,6 +33,10 @@ const roleRoutes = {
   "it support":          "/dashboard/itsupport",
   counselor:             "/dashboard/counselor",
   security:              "/dashboard/security",
+  "sports teacher":      "/dashboard/sportsteacher",
+  "lab technician":      "/dashboard/labtechnician",
+  "medical officer":     "/dashboard/medicalofficer",
+  "class teacher":       "/dashboard/classteacher",
 };
 
 const schema = z.object({

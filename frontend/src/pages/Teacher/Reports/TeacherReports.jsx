@@ -1,224 +1,250 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Button, Input, Select, Spin, Table, Tooltip } from "antd";
+import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Empty,
-  Input,
-  Layout,
-  Row,
-  Select,
-  Space,
-  Spin,
-  Statistic,
-  Table,
-  Tag,
-  Typography,
-} from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+  FileText, Users, CalendarCheck, BarChart3, Clock, FolderOpen,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import { fetchDashboardSummary } from "../../../features/dashboardSlice";
 import { fetchReports } from "../../../features/reportSlice";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import {
+  pageWrapper, sectionPanel, statGrid, statCard, statLabel, statValue,
+  pill, tableHeadCss, emptyState,
+} from "../../../styles/pageStyles.js";
 
-
-const { Content } = Layout;
-const { Title, Text } = Typography;
-
+/* ── Helpers ─────────────────────────────────────────────────────── */
 const normalizeUserContext = (rawUser) => {
   const roleName =
-    (typeof rawUser?.role === "string" ? rawUser?.role : rawUser?.role?.name) ||
-    "";
-
+    (typeof rawUser?.role === "string" ? rawUser?.role : rawUser?.role?.name) || "";
   return {
-    role: roleName,
-    teacherId: rawUser?._id || "",
-    schoolId: rawUser?.school?._id || rawUser?.schoolId || "",
-    teacherName: rawUser?.name || "Teacher",
+    role:        roleName,
+    teacherId:   rawUser?._id       || "",
+    schoolId:    rawUser?.school?._id || rawUser?.schoolId || "",
+    teacherName: rawUser?.name      || "Teacher",
   };
 };
 
+const typeColor = (type = "") => {
+  const map = {
+    attendance: { color: "#6366f1", bg: "#6366f115" },
+    exam:       { color: "#0ea5e9", bg: "#0ea5e915" },
+    result:     { color: "#10b981", bg: "#10b98115" },
+    academic:   { color: "#f59e0b", bg: "#f59e0b15" },
+    behaviour:  { color: "#ec4899", bg: "#ec489915" },
+  };
+  const key = type.toLowerCase();
+  return map[key] || { color: "#8b5cf6", bg: "#8b5cf615" };
+};
+
+/* ── Stat card ───────────────────────────────────────────────────── */
+const Stat = ({ icon: Icon, label, value, color, loading }) => (
+  <div style={statCard({ color, bg: "var(--surface)", accentBar: color })}>
+    <div>
+      <div style={statLabel(color)}>{label}</div>
+      <div style={statValue(color)}>{loading ? "…" : (value ?? 0)}</div>
+    </div>
+    <div style={{
+      width: 44, height: 44, borderRadius: 12,
+      background: `${color}18`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <Icon size={20} color={color} strokeWidth={1.8} />
+    </div>
+  </div>
+);
+
+/* ── Main page ───────────────────────────────────────────────────── */
 const TeacherReports = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth || {});
-  const { summary = [], loading: summaryLoading, error: summaryError } = useSelector(
-    (state) => state.dashboard || {}
-  );
-  const { items = [], loading: reportsLoading, error: reportsError } = useSelector(
-    (state) => state.reports || {}
-  );
+  const { user }  = useSelector((s) => s.auth     || {});
+  const { summary = [], loading: summaryLoading, error: summaryError } =
+    useSelector((s) => s.dashboard || {});
+  const { items = [], loading: reportsLoading, error: reportsError } =
+    useSelector((s) => s.reports  || {});
 
-  const [searchText, setSearchText] = useState("");
+  const [searchText,   setSearchText]   = useState("");
   const [selectedType, setSelectedType] = useState("all");
 
   const { role, teacherId, schoolId, teacherName } = useMemo(
-    () => normalizeUserContext(user),
-    [user]
+    () => normalizeUserContext(user), [user]
   );
 
   const refreshAll = () => {
-    if (role) {
-      dispatch(fetchDashboardSummary({ role, schoolId }));
-    }
+    if (role) dispatch(fetchDashboardSummary({ role, schoolId }));
     dispatch(fetchReports({ sort: "-createdAt", school: schoolId, generatedBy: teacherId }));
   };
 
-  useEffect(() => {
-    refreshAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, schoolId]);
+  useEffect(() => { refreshAll(); }, [role, schoolId]); // eslint-disable-line
 
+  /* ── Filtered reports ── */
   const filteredReports = useMemo(() => {
-    const bySearch = String(searchText || "").trim().toLowerCase();
-
-    return items.filter((report) => {
-      const matchesType = selectedType === "all" || report?.type === selectedType;
-      if (!matchesType) return false;
-
-      if (!bySearch) return true;
-      const searchableText = [
-        report?.title,
-        report?.type,
-        report?.generatedBy?.name,
-        report?.school?.name,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return searchableText.includes(bySearch);
+    const kw = searchText.trim().toLowerCase();
+    return items.filter((r) => {
+      const matchType = selectedType === "all" || r?.type === selectedType;
+      if (!matchType) return false;
+      if (!kw) return true;
+      return [r?.title, r?.type, r?.generatedBy?.name, r?.school?.name]
+        .filter(Boolean).join(" ").toLowerCase().includes(kw);
     });
   }, [items, searchText, selectedType]);
 
+  /* ── Type dropdown options ── */
   const reportTypeOptions = useMemo(() => {
-    const types = new Set(items.map((item) => item?.type).filter(Boolean));
+    const types = new Set(items.map((i) => i?.type).filter(Boolean));
     return [
-      { label: "All types", value: "all" },
-      ...[...types].map((type) => ({
-        label: type.charAt(0).toUpperCase() + type.slice(1),
-        value: type,
+      { label: "All Types", value: "all" },
+      ...[...types].map((t) => ({
+        label: t.charAt(0).toUpperCase() + t.slice(1),
+        value: t,
       })),
     ];
   }, [items]);
 
-  const tableColumns = [
+  /* ── Summary stat values ── */
+  const studentCount    = summary.find((i) => i.title === "Students")?.value          || 0;
+  const attendanceCount = summary.find((i) => i.title === "Attendance Marked")?.value || 0;
+
+  /* ── Table columns ── */
+  const columns = [
     {
       title: "Report Title",
       dataIndex: "title",
-      key: "title",
-      render: (value) => value || "Untitled report",
-    },
-    {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      width: 130,
-      render: (value) => (
-        <Tag color="blue" style={{ textTransform: "capitalize" }}>
-          {value || "unknown"}
-        </Tag>
+      render: (v) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+            background: "#6366f115",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <FileText size={14} color="#6366f1" strokeWidth={1.8} />
+          </div>
+          <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>
+            {v || "Untitled Report"}
+          </span>
+        </div>
       ),
     },
     {
-      title: "Created By",
-      dataIndex: ["generatedBy", "name"],
-      key: "generatedBy",
-      render: (value) => value || "-",
+      title: "Type", dataIndex: "type", width: 130,
+      render: (v) => {
+        const c = typeColor(v || "");
+        return <span style={pill(c.color, c.bg)}>{(v || "unknown").toUpperCase()}</span>;
+      },
     },
     {
-      title: "Created On",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 140,
-      render: (value) => (value ? dayjs(value).format("DD MMM YYYY") : "-"),
-    },
-  ];
-
-  const cards = [
-    {
-      title: "Linked Students",
-      value: summary.find((item) => item.title === "Students")?.value || 0,
+      title: "Created By", dataIndex: ["generatedBy", "name"], width: 160,
+      render: (v) => (
+        <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{v || "—"}</span>
+      ),
     },
     {
-      title: "Attendance Marked",
-      value: summary.find((item) => item.title === "Attendance Marked")?.value || 0,
-    },
-    {
-      title: "Reports Available",
-      value: items.length,
+      title: "Created On", dataIndex: "createdAt", width: 140,
+      render: (v) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Clock size={12} color="var(--text-muted)" />
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {v ? dayjs(v).format("DD MMM YYYY") : "—"}
+          </span>
+        </div>
+      ),
     },
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f5f7fb" }}>
-      <Content style={{ padding: 16 }}>
-        <Space
-          style={{ width: "100%", justifyContent: "space-between", marginBottom: 12 }}
-          align="start"
-          wrap
-        >
-          <div>
-            <Title level={3} style={{ marginBottom: 4 }}>
-              {teacherName} - Reports Dashboard
-            </Title>
-            <Text type="secondary">
-              This page is now fully dynamic and loads reports + summary in real-time.
-            </Text>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("reports-table")}</style>
+
+      <PageHeader
+        title={`${teacherName} — Reports`}
+        subtitle="View and track all your generated reports"
+        icon={<BarChart3 size={20} />}
+        extra={
+          <Tooltip title="Refresh">
+            <Button icon={<ReloadOutlined />} onClick={refreshAll} />
+          </Tooltip>
+        }
+      />
+
+      {/* ── Error alerts ── */}
+      {summaryError && (
+        <Alert type="error" showIcon message={summaryError} style={{ marginTop: 16, borderRadius: 10 }} />
+      )}
+      {reportsError && (
+        <Alert type="error" showIcon message={reportsError} style={{ marginTop: 8, borderRadius: 10 }} />
+      )}
+
+      {/* ── Stat cards ── */}
+      <div style={{ ...statGrid(150), marginTop: 20 }}>
+        <Stat icon={Users}         label="Linked Students"    value={studentCount}    color="#6366f1" loading={summaryLoading} />
+        <Stat icon={CalendarCheck} label="Attendance Marked"  value={attendanceCount} color="#0ea5e9" loading={summaryLoading} />
+        <Stat icon={FolderOpen}    label="Reports Available"  value={items.length}    color="#10b981" loading={reportsLoading} />
+      </div>
+
+      {/* ── Reports table ── */}
+      <div style={sectionPanel}>
+        {/* Toolbar */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          flexWrap: "wrap", marginBottom: 16,
+          justifyContent: "space-between",
+        }}>
+          <div style={{
+            fontSize: 13, fontWeight: 700, color: "var(--text-primary)",
+          }}>
+            {filteredReports.length} report{filteredReports.length !== 1 ? "s" : ""}
+            {selectedType !== "all" || searchText ? " (filtered)" : ""}
           </div>
-
-          <Button icon={<ReloadOutlined />} onClick={refreshAll}>
-            Refresh
-          </Button>
-        </Space>
-
-        {summaryError && <Alert type="error" showIcon message={summaryError} style={{ marginBottom: 12 }} />}
-        {reportsError && <Alert type="error" showIcon message={reportsError} style={{ marginBottom: 12 }} />}
-
-        <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-          {cards.map((card) => (
-            <Col xs={24} md={8} key={card.title}>
-              <Card bordered={false}>
-                <Statistic title={card.title} value={card.value} loading={summaryLoading} />
-              </Card>
-            </Col>
-          ))}
-        </Row>
-
-        <Card bordered={false}>
-          <Space wrap style={{ marginBottom: 16 }}>
-            <Input.Search
-              placeholder="Search by title, type, creator"
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Input
               allowClear
-              style={{ width: 280 }}
               value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search title, type, creator…"
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              style={{ width: 240, borderRadius: 9 }}
             />
             <Select
-              style={{ width: 180 }}
+              style={{ width: 160 }}
               options={reportTypeOptions}
               value={selectedType}
               onChange={setSelectedType}
+              placeholder="Filter by type"
             />
-          </Space>
+          </div>
+        </div>
 
-          {reportsLoading ? (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <Spin size="large" />
+        {/* Table or states */}
+        {reportsLoading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}>
+            <Spin size="large" />
+          </div>
+        ) : filteredReports.length === 0 ? (
+          <div style={emptyState}>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>📊</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+              No Reports Found
             </div>
-          ) : filteredReports.length === 0 ? (
-            <Empty description="No reports matched your filters" />
-          ) : (
-            <Table
-              rowKey={(record) => record._id}
-              columns={tableColumns}
-              dataSource={filteredReports}
-              pagination={{ pageSize: 8 }}
-            />
-          )}
-        </Card>
-      </Content>
-    </Layout>
+            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              {items.length === 0
+                ? "No reports have been generated yet."
+                : "No reports match your current filter."}
+            </div>
+          </div>
+        ) : (
+          <Table
+            className="reports-table"
+            rowKey={(r) => r._id}
+            columns={columns}
+            dataSource={filteredReports}
+            pagination={{ pageSize: 8, showSizeChanger: false, size: "small" }}
+            size="small"
+            scroll={{ x: 600 }}
+          />
+        )}
+      </div>
+    </div>
   );
 };
 

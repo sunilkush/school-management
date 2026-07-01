@@ -42,6 +42,14 @@ const userSchema = new Schema(
       index: true,
     },
 
+    // Additional roles assigned alongside the primary role (e.g. teacher who is also exam coordinator)
+    additionalRoles: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Role",
+      },
+    ],
+
 
 
     avatar: {

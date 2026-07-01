@@ -83,6 +83,10 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   const roleName   = user?.role?.name ?? "";
   const accent     = getRoleAccent(roleName);
+  const additionalRoleNames = (user?.additionalRoles || [])
+    .map((r) => (typeof r === "string" ? r : r?.name))
+    .filter(Boolean)
+    .map((n) => n.toLowerCase());
   const t          = tk(isDark, accent);
 
   const rolePathMap = {
@@ -91,6 +95,10 @@ const Sidebar = ({ collapsed, onToggle }) => {
     "subject coordinator": "subjectcoordinator", "hostel warden": "hostelwarden",
     "transport manager": "transportmanager", "it support": "itsupport",
     "support staff": "staff",
+    "sports teacher": "sportsteacher",
+    "lab technician": "labtechnician",
+    "medical officer": "medicalofficer",
+    "class teacher": "classteacher",
   };
   const rolePath = rolePathMap[roleName?.toLowerCase()] ?? roleName?.toLowerCase()?.replace(/\s+/g, "");
 
@@ -277,6 +285,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           <Suspense fallback={<MenuSkeleton isDark={isDark} collapsed={collapsed} />}>
             <SidebarMenu
               role={roleName?.toLowerCase()}
+              additionalRoles={additionalRoleNames}
               collapsed={collapsed}
               accentColor={accent}
               accentBg={t.accentBg}

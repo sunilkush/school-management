@@ -46,9 +46,17 @@ import {
 import RupeeIcon from "../components/icons/RupeeIcon";
 
 const commonSelfService = (basePath) => [
- 
   { title: "Profile", path: `${basePath}/profile`, icon: User },
 ];
+
+/* Attendance + leave items for every employee role */
+const employeeAttendance = (basePath, opts = {}) => {
+  const items = [];
+  if (!opts.skipGps)  items.push({ title: "GPS Check-In/Out", path: `${basePath}/attendance/self`, icon: MapPinned });
+  if (!opts.skipMy)   items.push({ title: "My Attendance",    path: `${basePath}/attendance/my`,   icon: Clock });
+  if (!opts.skipLeave) items.push({ title: "Leave Requests",  path: `${basePath}/leave`,           icon: CalendarClock });
+  return items;
+};
 
 const communicationMenu = (basePath) => {
   if (basePath === "schooladmin") {
@@ -192,7 +200,6 @@ export const sidebarMenu = {
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },
-       /*  { title: "Employee Details", path: "schooladmin/users/employee-details" }, */
       ],
     },
     {
@@ -200,6 +207,7 @@ export const sidebarMenu = {
       icon: BookOpen,
       subMenu: [
         { title: "Classes", path: "schooladmin/classes" },
+        { title: "Class Teacher Assignments", path: "schooladmin/class-teacher-assignments", icon: GraduationCap },
         { title: "Subjects", path: "schooladmin/subjects" },
         { title: "Timetable Planner", path: "schooladmin/timetable" },
         { title: "Time Slots", path: "schooladmin/timetable/time-slots" },
@@ -409,9 +417,11 @@ export const sidebarMenu = {
         { title: "My Payroll",        path: "accountant/payroll" },
       ],
     },
-    { title: "Attendance",        path: "accountant/attendance",         icon: UserCheck },
+    { title: "My Attendance",      path: "accountant/attendance",         icon: UserCheck     },
+    { title: "GPS Check-In/Out",  path: "accountant/attendance/self",    icon: MapPinned     },
     { title: "Attendance Reports",path: "accountant/attendance/monthly", icon: FileBarChart2 },
-    { title: "My Tasks",          path: "accountant/tasks",              icon: ListChecks },
+    { title: "Leave Requests",    path: "accountant/leave",              icon: CalendarClock },
+    { title: "My Tasks",          path: "accountant/tasks",              icon: ListChecks    },
     communicationMenu("accountant"),
     ...commonSelfService("accountant"),
   ],
@@ -429,8 +439,9 @@ export const sidebarMenu = {
     { title: "Exams", path: "principal/exams", icon: GraduationCap },
     { title: "Library", path: "principal/library", icon: Book },
     { title: "Transport", path: "principal/transport", icon: Bus },
-    { title: "My Tasks", path: "principal/tasks", icon: ListChecks },
-    { title: "My Payroll", path: "principal/payroll", icon: IndianRupee },
+    { title: "My Tasks",         path: "principal/tasks",   icon: ListChecks   },
+    { title: "My Payroll",       path: "principal/payroll", icon: IndianRupee  },
+    ...employeeAttendance("principal"),
     ...commonSelfService("principal"),
   ],
 
@@ -444,8 +455,9 @@ export const sidebarMenu = {
     { title: "Teacher Attendance", path: "viceprincipal/attendance/staff", icon: UserCheck },
     { title: "Attendance Table", path: "viceprincipal/attendance/table", icon: ClipboardCheck },
     { title: "Reports",          path: "viceprincipal/reports",          icon: FileBarChart2  },
-    { title: "My Tasks",         path: "viceprincipal/tasks",            icon: ListChecks     },
+    { title: "My Tasks",   path: "viceprincipal/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "viceprincipal/payroll", icon: IndianRupee },
+    ...employeeAttendance("viceprincipal"),
     roleWorkspaceItem,
     ...commonSelfService("viceprincipal"),
   ],
@@ -470,8 +482,9 @@ export const sidebarMenu = {
       ],
     },
     communicationMenu("examcoordinator"),
-    { title: "My Tasks", path: "examcoordinator/tasks", icon: ListChecks },
+    { title: "My Tasks",   path: "examcoordinator/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "examcoordinator/payroll", icon: IndianRupee },
+    ...employeeAttendance("examcoordinator"),
     ...commonSelfService("examcoordinator"),
   ],
 
@@ -483,9 +496,10 @@ export const sidebarMenu = {
     { title: "Class Assignment", path: "subjectcoordinator/classes", icon: Book },
     { title: "Assessments", path: "subjectcoordinator/assessments", icon: ClipboardSignature },
     { title: "Reports", path: "subjectcoordinator/reports", icon: FileBarChart2 },
-    { title: "My Tasks", path: "subjectcoordinator/tasks", icon: ListChecks },
-    roleWorkspaceItem,
+    { title: "My Tasks",   path: "subjectcoordinator/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "subjectcoordinator/payroll", icon: IndianRupee },
+    ...employeeAttendance("subjectcoordinator"),
+    roleWorkspaceItem,
     ...commonSelfService("subjectcoordinator"),
   ],
 
@@ -498,8 +512,9 @@ export const sidebarMenu = {
     { title: "Fine Management", path: "librarian/fines", icon: RupeeIcon },
     { title: "Reports", path: "librarian/reports", icon: FileBarChart2 },
     { title: "Library Settings", path: "librarian/settings", icon: Settings },
-    { title: "My Tasks", path: "librarian/tasks", icon: ListChecks },
+    { title: "My Tasks",   path: "librarian/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "librarian/payroll", icon: IndianRupee },
+    ...employeeAttendance("librarian"),
     roleWorkspaceItem,
     ...commonSelfService("librarian"),
   ],
@@ -514,8 +529,9 @@ export const sidebarMenu = {
     { title: "Complaints",        path: "hostelwarden/complaints",         icon: MessageCircle },
     { title: "Attendance",        path: "hostelwarden/hostel-attendance",  icon: UserCheck },
     { title: "Reports",           path: "hostelwarden/hostel-reports",     icon: FileBarChart2 },
-    { title: "My Tasks",          path: "hostelwarden/tasks",             icon: ListChecks    },
-    { title: "My Payroll",        path: "hostelwarden/payroll",            icon: IndianRupee },
+    { title: "My Tasks",   path: "hostelwarden/tasks",   icon: ListChecks  },
+    { title: "My Payroll", path: "hostelwarden/payroll", icon: IndianRupee },
+    ...employeeAttendance("hostelwarden"),
     ...commonSelfService("hostelwarden"),
   ],
 
@@ -527,8 +543,9 @@ export const sidebarMenu = {
     { title: "Drivers", path: "transportmanager/drivers", icon: Users },
     { title: "Assignments", path: "transportmanager/assignments", icon: ClipboardCheck },
     { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
-    { title: "My Tasks", path: "transportmanager/tasks", icon: ListChecks },
+    { title: "My Tasks",   path: "transportmanager/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "transportmanager/payroll", icon: IndianRupee },
+    ...employeeAttendance("transportmanager"),
     roleWorkspaceItem,
     ...commonSelfService("transportmanager"),
   ],
@@ -540,8 +557,9 @@ export const sidebarMenu = {
     { title: "Enquiries", path: "receptionist/enquiries", icon: MessageSquare },
     { title: "Phone Calls Log", path: "receptionist/calls", icon: Phone },
     { title: "Broadcasts", path: "receptionist/broadcasts", icon: Bell },
-    { title: "My Tasks", path: "receptionist/tasks", icon: ListChecks },
+    { title: "My Tasks",   path: "receptionist/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "receptionist/payroll", icon: IndianRupee },
+    ...employeeAttendance("receptionist"),
     roleWorkspaceItem,
     ...commonSelfService("receptionist"),
   ],
@@ -553,10 +571,11 @@ export const sidebarMenu = {
     { title: "User Support Tickets", path: "itsupport/tickets", icon: HelpCircle },
     { title: "Network Status",       path: "itsupport/network", icon: Wifi       },
     { title: "System Logs", path: "itsupport/logs", icon: FileBarChart2 },
-    { title: "My Tasks", path: "itsupport/tasks", icon: ListChecks },
-    { title: "Profile", path: "itsupport/profile", icon: User },
+    { title: "My Tasks",   path: "itsupport/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "itsupport/payroll", icon: IndianRupee },
+    ...employeeAttendance("itsupport"),
     roleWorkspaceItem,
+    { title: "Profile", path: "itsupport/profile", icon: User },
   ],
 
   /* ================= COUNSELOR ================= */
@@ -566,8 +585,9 @@ export const sidebarMenu = {
     { title: "Counseling Sessions", path: "counselor/sessions", icon: CalendarClock },
     { title: "Appointments", path: "counselor/appointments", icon: CalendarCheck },
     { title: "Reports", path: "counselor/reports", icon: FileBarChart2 },
-    { title: "My Tasks", path: "counselor/tasks", icon: ListChecks },
+    { title: "My Tasks",   path: "counselor/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "counselor/payroll", icon: IndianRupee },
+    ...employeeAttendance("counselor"),
     roleWorkspaceItem,
     ...commonSelfService("counselor"),
   ],
@@ -579,28 +599,84 @@ export const sidebarMenu = {
     { title: "Gate Logs", path: "security/gate-logs", icon: ClipboardList },
     { title: "Shift Attendance", path: "security/shift-attendance", icon: Clock },
     { title: "Emergency Alerts", path: "security/alerts", icon: ShieldAlert },
-    { title: "My Tasks",         path: "security/tasks",  icon: ListChecks  },
+    { title: "My Tasks",   path: "security/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "security/payroll", icon: IndianRupee },
+    ...employeeAttendance("security", { skipMy: true }),
     roleWorkspaceItem,
     ...commonSelfService("security"),
   ],
 
   /* ================= STAFF / SUPPORT STAFF ================= */
   staff: [
-    { title: "Overview", path: "staff", icon: LayoutDashboard },
-    { title: "Tasks & Schedule", path: "staff/tasks", icon: CalendarClock },
-    { title: "My Attendance", path: "staff/attendance", icon: Clock },
-    { title: "GPS Check-In/Out", path: "staff/attendance/self", icon: MapPinned },
+    { title: "Overview",         path: "staff",                icon: LayoutDashboard },
+    { title: "Tasks & Schedule", path: "staff/tasks",          icon: CalendarClock   },
+    { title: "My Attendance",    path: "staff/attendance",     icon: Clock           },
+    { title: "GPS Check-In/Out", path: "staff/attendance/self",icon: MapPinned       },
+    { title: "Leave Requests",   path: "staff/leave",          icon: CalendarClock   },
     communicationMenu("staff"),
     ...commonSelfService("staff"),
   ],
   "support staff": [
-    { title: "Overview", path: "staff", icon: LayoutDashboard },
-    { title: "Tasks & Schedule", path: "staff/tasks", icon: CalendarClock },
-    { title: "My Attendance", path: "staff/attendance", icon: Clock },
+    { title: "Overview",         path: "staff",                icon: LayoutDashboard },
+    { title: "Tasks & Schedule", path: "staff/tasks",          icon: CalendarClock   },
+    { title: "My Attendance",    path: "staff/attendance",     icon: Clock           },
+    { title: "GPS Check-In/Out", path: "staff/attendance/self",icon: MapPinned       },
+    { title: "Leave Requests",   path: "staff/leave",          icon: CalendarClock   },
     communicationMenu("staff"),
     roleWorkspaceItem,
     ...commonSelfService("staff"),
+  ],
+
+  /* ================= SPORTS TEACHER ================= */
+  "sports teacher": [
+    { title: "Dashboard",        path: "sportsteacher",                  icon: LayoutDashboard },
+    { title: "My Classes",       path: "sportsteacher/classes",          icon: BookOpen        },
+    { title: "My Students",      path: "sportsteacher/students",         icon: Users           },
+    { title: "Mark Attendance",  path: "sportsteacher/attendance/students", icon: ClipboardCheck },
+    { title: "Assignments",      path: "sportsteacher/assignments",      icon: ClipboardList   },
+    { title: "My Payroll",       path: "sportsteacher/payroll",          icon: IndianRupee     },
+    { title: "My Tasks",         path: "sportsteacher/tasks",            icon: ListChecks      },
+    ...employeeAttendance("sportsteacher"),
+    communicationMenu("sportsteacher"),
+    ...commonSelfService("sportsteacher"),
+  ],
+
+  /* ================= LAB TECHNICIAN ================= */
+  "lab technician": [
+    { title: "Dashboard",        path: "labtechnician",                  icon: LayoutDashboard },
+    { title: "Lab Students",     path: "labtechnician/students",         icon: Users           },
+    { title: "Lab Schedule",     path: "labtechnician/timetable",        icon: CalendarCheck   },
+    { title: "My Payroll",       path: "labtechnician/payroll",          icon: IndianRupee     },
+    { title: "My Tasks",         path: "labtechnician/tasks",            icon: ListChecks      },
+    ...employeeAttendance("labtechnician"),
+    communicationMenu("labtechnician"),
+    ...commonSelfService("labtechnician"),
+  ],
+
+  /* ================= MEDICAL OFFICER ================= */
+  "medical officer": [
+    { title: "Dashboard",        path: "medicalofficer",                 icon: LayoutDashboard },
+    { title: "Students",         path: "medicalofficer/students",        icon: Users           },
+    { title: "My Payroll",       path: "medicalofficer/payroll",         icon: IndianRupee     },
+    { title: "My Tasks",         path: "medicalofficer/tasks",           icon: ListChecks      },
+    ...employeeAttendance("medicalofficer"),
+    communicationMenu("medicalofficer"),
+    ...commonSelfService("medicalofficer"),
+  ],
+
+  /* ================= CLASS TEACHER ================= */
+  "class teacher": [
+    { title: "Dashboard",        path: "classteacher",                   icon: LayoutDashboard },
+    { title: "My Class",         path: "classteacher/my-class",          icon: BookOpen        },
+    { title: "My Students",      path: "classteacher/students",          icon: Users           },
+    { title: "Mark Attendance",  path: "classteacher/attendance/students", icon: ClipboardCheck },
+    { title: "Assignments",      path: "classteacher/assignments",       icon: ClipboardList   },
+    { title: "Timetable",        path: "classteacher/timetable",         icon: CalendarCheck   },
+    { title: "My Payroll",       path: "classteacher/payroll",           icon: IndianRupee     },
+    { title: "My Tasks",         path: "classteacher/tasks",             icon: ListChecks      },
+    ...employeeAttendance("classteacher"),
+    communicationMenu("classteacher"),
+    ...commonSelfService("classteacher"),
   ],
 
   /* ================= LEGACY / ALIASES ================= */
@@ -610,6 +686,30 @@ export const sidebarMenu = {
     { title: "Vehicles", path: "transportmanager/vehicles", icon: BusFront },
     { title: "Assignments", path: "schooladmin/transport/assignments", icon: Bus },
   ],
+};
+
+/**
+ * Items shown ONLY when a role is used as an ADDITIONAL (secondary) role.
+ * Keep this list to features genuinely unique to that role — no duplicates of
+ * common items (Payroll, Tasks, Profile, Module Hub, Leave, etc.).
+ */
+export const additionalRoleMenus = {
+  "class teacher": [
+    { title: "My Class",         path: "classteacher/my-class",             icon: BookOpen       },
+    { title: "Class Students",   path: "classteacher/students",             icon: Users          },
+    { title: "Class Attendance", path: "classteacher/attendance/students",  icon: ClipboardCheck },
+  ],
+  "exam coordinator": [
+    { title: "Exam Coord. Hub",  path: "examcoordinator",                   icon: GraduationCap  },
+  ],
+  "subject coordinator": [
+    { title: "Subject Coord.",   path: "subjectcoordinator",                icon: BookOpen       },
+  ],
+  "sports teacher": [],
+  "lab technician": [],
+  "medical officer": [],
+  "principal": [],
+  "vice principal": [],
 };
 
 Object.keys(sidebarMenu).forEach((roleKey) => {
