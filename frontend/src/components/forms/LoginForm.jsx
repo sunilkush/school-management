@@ -152,10 +152,6 @@ const LoginForm = () => {
               <div className="lf-brand-logo-wrap">
                 <img src={logo} alt="" className="lf-brand-logo" />
               </div>
-              <div>
-                <div className="lf-brand-name">EduManage</div>
-                <div className="lf-brand-sub">School Management Platform</div>
-              </div>
             </div>
 
             {/* Hero */}
@@ -534,16 +530,14 @@ const CSS = `
   .lf-left-inner { position: relative; z-index: 1; max-width: 480px; display: flex; flex-direction: column; gap: 22px; }
 
   /* brand */
-  .lf-brand { display: flex; align-items: center; gap: 13px; }
+  .lf-brand { display: flex; align-items: center; }
   .lf-brand-logo-wrap {
-    width: 52px; height: 52px; border-radius: 14px;
+    width: 110px; height: 110px; border-radius: 20px;
     background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; flex-shrink: 0;
   }
-  .lf-brand-logo { height: 38px; width: 38px; object-fit: contain; filter: brightness(0) invert(1); }
-  .lf-brand-name { font-size: 19px; font-weight: 800; color: #F1F5F9; letter-spacing: -0.4px; }
-  .lf-brand-sub  { font-size: 11px; color: #475569; margin-top: 2px; letter-spacing: 0.02em; }
+  .lf-brand-logo { height: 100px; width: 100px; object-fit: contain; filter: brightness(0) invert(1); }
 
   /* platform badge above headline */
   .lf-platform-badge {
