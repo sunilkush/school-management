@@ -1,13 +1,224 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Row, Col, Select, Statistic, Table, Typography, Tag, Empty } from "antd";
+import { Select, Skeleton, Empty, Tag } from "antd";
+import {
+  Users, GraduationCap, BookOpen, UserCheck,
+  FileBarChart2, TrendingUp, ChevronDown, BarChart3,
+} from "lucide-react";
 import { fetchAllAcademicYears, fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import { fetchSchoolReports } from "../../features/reportSlice";
+import { useTheme } from "../../context/ThemeContext";
+import PageHeader from "../../components/layout/PageHeader";
 
-const { Title, Text } = Typography;
+/* ── Tokens ─────────────────────────────────────────────────── */
+const tk = (isDark) => ({
+  card:       isDark ? "#141C2E" : "#FFFFFF",
+  cardBorder: isDark ? "#1E2A3B" : "#E2E8F0",
+  sectionBg:  isDark ? "#1A2438" : "#F8FAFF",
+  textPri:    isDark ? "#E8EDF7" : "#0F172A",
+  textSec:    isDark ? "#64748B" : "#64748B",
+  shadow:     isDark ? "0 2px 12px rgba(0,0,0,0.4)" : "0 2px 8px rgba(37,99,235,0.07)",
+  divider:    isDark ? "#1E2A3B" : "#E2E8F0",
+  rowHover:   isDark ? "#1E2A3B" : "#F4F7FF",
+  barBg:      isDark ? "#1E2A3B" : "#EEF2FF",
+});
 
+/* ── KPI Card ───────────────────────────────────────────────── */
+const KpiCard = ({ icon: Icon, label, value, color, bg, isDark }) => {
+  const t = tk(isDark);
+  return (
+    <div style={{
+      background: t.card,
+      border: `1px solid ${t.cardBorder}`,
+      borderLeft: `4px solid ${color}`,
+      borderRadius: 14,
+      padding: "18px 20px",
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      boxShadow: t.shadow,
+      flex: 1,
+      minWidth: 0,
+    }}>
+      <div style={{
+        width: 44, height: 44, borderRadius: 12,
+        background: bg, display: "flex",
+        alignItems: "center", justifyContent: "center", flexShrink: 0,
+      }}>
+        <Icon size={20} color={color} />
+      </div>
+      <div>
+        <div style={{ fontSize: 26, fontWeight: 700, color: t.textPri, lineHeight: 1.2 }}>
+          {value ?? "—"}
+        </div>
+        <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>{label}</div>
+      </div>
+    </div>
+  );
+};
+
+/* ── Horizontal bar chart ───────────────────────────────────── */
+const BarList = ({ title, rows, colorFn, isDark }) => {
+  const t = tk(isDark);
+  const maxVal = Math.max(...rows.map((r) => r.count || 0), 1);
+  return (
+    <div style={{
+      background: t.card,
+      border: `1px solid ${t.cardBorder}`,
+      borderRadius: 14,
+      padding: "20px",
+      boxShadow: t.shadow,
+      height: "100%",
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: t.textPri, marginBottom: 16 }}>
+        {title}
+      </div>
+      {rows.length === 0 ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No data" />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {rows.map((row, i) => {
+            const pct = Math.round((row.count / maxVal) * 100);
+            const color = colorFn(i);
+            return (
+              <div key={row._id || i}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: t.textPri, fontWeight: 500 }}>{row._id || "Unknown"}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color }}>{row.count}</span>
+                </div>
+                <div style={{ height: 6, borderRadius: 99, background: t.barBg, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%", width: `${pct}%`,
+                    borderRadius: 99,
+                    background: `linear-gradient(90deg, ${color}88, ${color})`,
+                    transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── Gender donut-style card ────────────────────────────────── */
+const GenderCard = ({ genderStats, isDark }) => {
+  const t = tk(isDark);
+  const male   = genderStats?.male   || 0;
+  const female = genderStats?.female || 0;
+  const other  = genderStats?.other  || 0;
+  const total  = male + female + other || 1;
+
+  const slices = [
+    { label: "Male",   value: male,   color: "#6366F1" },
+    { label: "Female", value: female, color: "#EC4899" },
+    { label: "Other",  value: other,  color: "#F59E0B" },
+  ].filter((s) => s.value > 0);
+
+  return (
+    <div style={{
+      background: t.card,
+      border: `1px solid ${t.cardBorder}`,
+      borderRadius: 14,
+      padding: 20,
+      boxShadow: t.shadow,
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: t.textPri, marginBottom: 16 }}>
+        Gender Distribution
+      </div>
+      {/* Progress-bar style */}
+      <div style={{ height: 12, borderRadius: 99, overflow: "hidden", display: "flex", marginBottom: 16 }}>
+        {slices.map((s) => (
+          <div key={s.label} style={{
+            width: `${(s.value / total) * 100}%`,
+            background: s.color,
+            transition: "width 0.8s ease",
+          }} />
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        {slices.map((s) => (
+          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color }} />
+            <span style={{ fontSize: 12, color: t.textSec }}>{s.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: t.textPri }}>
+              {s.value} ({Math.round((s.value / total) * 100)}%)
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ── Section table ──────────────────────────────────────────── */
+const SectionTable = ({ rows, isDark }) => {
+  const t = tk(isDark);
+  if (!rows?.length) return (
+    <div style={{
+      background: t.card, border: `1px solid ${t.cardBorder}`,
+      borderRadius: 14, padding: 20, boxShadow: t.shadow,
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: t.textPri, marginBottom: 16 }}>Section Breakdown</div>
+      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No section data" />
+    </div>
+  );
+
+  return (
+    <div style={{
+      background: t.card, border: `1px solid ${t.cardBorder}`,
+      borderRadius: 14, padding: 20, boxShadow: t.shadow,
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: t.textPri, marginBottom: 16 }}>Section Breakdown</div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["Section", "Students"].map((h) => (
+                <th key={h} style={{
+                  fontSize: 11, fontWeight: 600, color: t.textSec,
+                  textTransform: "uppercase", letterSpacing: "0.05em",
+                  padding: "8px 12px", borderBottom: `1px solid ${t.divider}`,
+                  textAlign: "left",
+                }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={row._id || i} style={{ transition: "background 0.15s" }}
+                onMouseEnter={(e) => e.currentTarget.style.background = t.rowHover}
+                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+              >
+                <td style={{ padding: "10px 12px", fontSize: 13, color: t.textPri, borderBottom: `1px solid ${t.divider}` }}>
+                  {row._id || "—"}
+                </td>
+                <td style={{ padding: "10px 12px", borderBottom: `1px solid ${t.divider}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ height: 4, width: Math.min((row.count / 40) * 80, 80), borderRadius: 99, background: "#6366F1" }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: t.textPri }}>{row.count}</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+/* ── Role colors ────────────────────────────────────────────── */
+const ROLE_COLORS = ["#6366F1", "#14B8A6", "#F59E0B", "#EF4444", "#22C55E", "#EC4899", "#8B5CF6"];
+const CLASS_COLORS = ["#2563EB", "#0891B2", "#059669", "#D97706", "#DC2626", "#7C3AED", "#DB2777"];
+
+/* ── Main ───────────────────────────────────────────────────── */
 const VicePrincipalReports = () => {
-  const dispatch = useDispatch();
+  const dispatch  = useDispatch();
+  const { isDark } = useTheme();
+
   const { user } = useSelector((state) => state.auth || {});
   const { schoolReports, loading } = useSelector((state) => state.reports || {});
   const { academicYears = [], activeYear } = useSelector((state) => state.academicYear || {});
@@ -22,9 +233,8 @@ const VicePrincipalReports = () => {
   }, [dispatch, schoolId]);
 
   useEffect(() => {
-    if (activeYear?._id && !selectedAcademicYearId) {
+    if (activeYear?._id && !selectedAcademicYearId)
       setSelectedAcademicYearId(activeYear._id);
-    }
   }, [activeYear, selectedAcademicYearId]);
 
   useEffect(() => {
@@ -32,88 +242,106 @@ const VicePrincipalReports = () => {
     dispatch(fetchSchoolReports({ schoolId, academicYearId: selectedAcademicYearId }));
   }, [dispatch, schoolId, selectedAcademicYearId]);
 
-  const roleWiseRows = useMemo(
-    () =>
-      (schoolReports?.roleWise || []).map((row, index) => ({
-        key: row._id || index,
-        role: row._id || "Unknown",
-        count: row.count || 0,
-      })),
-    [schoolReports]
-  );
+  const summary    = schoolReports?.summary || {};
+  const roleWise   = schoolReports?.roleWise || [];
+  const classWise  = schoolReports?.classWise || [];
+  const sectionWise= schoolReports?.sectionWise || [];
+  const genderStats= schoolReports?.genderStats || {};
 
-  const classWiseRows = useMemo(
-    () =>
-      (schoolReports?.classWise || []).map((row, index) => ({
-        key: row._id || index,
-        className: row._id || "Unknown",
-        count: row.count || 0,
-      })),
-    [schoolReports]
-  );
+  const kpis = [
+    { icon: Users,       label: "Total Students",  value: summary.studentCount, color: "#6366F1", bg: "rgba(99,102,241,0.12)" },
+    { icon: GraduationCap, label: "Teachers",      value: summary.teacherCount, color: "#14B8A6", bg: "rgba(20,184,166,0.12)" },
+    { icon: UserCheck,   label: "Parents",          value: summary.parentCount,  color: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
+    { icon: BookOpen,    label: "Admin Staff",      value: summary.adminCount,   color: "#22C55E", bg: "rgba(34,197,94,0.12)" },
+  ];
 
-  const summary = schoolReports?.summary || {};
+  const selectedYear = academicYears.find((y) => y._id === selectedAcademicYearId);
 
   return (
-    <Card loading={loading}>
-      <Row justify="space-between" align="middle" gutter={[12, 12]}>
-        <Col>
-          <Title level={4} style={{ marginBottom: 0 }}>Vice Principal Reports</Title>
-          <Text type="secondary">Academic and operational snapshot by year.</Text>
-        </Col>
-        <Col>
-          <Select
-            style={{ minWidth: 220 }}
-            placeholder="Select Academic Year"
-            value={selectedAcademicYearId}
-            onChange={setSelectedAcademicYearId}
-            options={academicYears.map((year) => ({
-              value: year._id,
-              label: `${year.name}${activeYear?._id === year._id ? " (Active)" : ""}`,
-            }))}
-          />
-        </Col>
-      </Row>
+    <>
+      <PageHeader
+        title="VP Reports"
+        subtitle="Academic and operational snapshot for the selected year"
+        icon={<FileBarChart2 size={18} />}
+        extra={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {selectedYear && (
+              <Tag color="purple" style={{ borderRadius: 99, padding: "3px 10px", fontSize: 11 }}>
+                {selectedYear.name}
+              </Tag>
+            )}
+            <Select
+              style={{ width: 220 }}
+              placeholder="Select Academic Year"
+              value={selectedAcademicYearId}
+              onChange={setSelectedAcademicYearId}
+              suffixIcon={<ChevronDown size={13} />}
+              options={academicYears.map((y) => ({
+                value: y._id,
+                label: `${y.name}${activeYear?._id === y._id ? " ★" : ""}`,
+              }))}
+            />
+          </div>
+        }
+      />
 
-      {!schoolReports?.academicYear ? (
-        <Empty description="No report data found for selected academic year" style={{ marginTop: 32 }} />
-      ) : (
-        <>
-          <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-            <Col xs={24} md={8}><Card><Statistic title="Total Users" value={summary.totalUsers || 0} /></Card></Col>
-            <Col xs={24} md={8}><Card><Statistic title="Students" value={summary.totalStudents || 0} /></Card></Col>
-            <Col xs={24} md={8}><Card><Statistic title="Teachers" value={summary.totalTeachers || 0} /></Card></Col>
-          </Row>
+      <div style={{ padding: "clamp(12px,3vw,24px)", display: "flex", flexDirection: "column", gap: 16 }}>
 
-          <Card style={{ marginTop: 16 }} title={<span>Report Year <Tag color="blue">{schoolReports.academicYear}</Tag></span>}>
-            <Row gutter={[16, 16]}>
-              <Col xs={24} lg={12}>
-                <Table
-                  size="small"
-                  pagination={false}
-                  dataSource={roleWiseRows}
-                  columns={[
-                    { title: "Role", dataIndex: "role", key: "role" },
-                    { title: "Count", dataIndex: "count", key: "count" },
-                  ]}
-                />
-              </Col>
-              <Col xs={24} lg={12}>
-                <Table
-                  size="small"
-                  pagination={false}
-                  dataSource={classWiseRows}
-                  columns={[
-                    { title: "Class", dataIndex: "className", key: "className" },
-                    { title: "Count", dataIndex: "count", key: "count" },
-                  ]}
-                />
-              </Col>
-            </Row>
-          </Card>
-        </>
-      )}
-    </Card>
+        {loading ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", gap: 12 }}>
+              {[1,2,3,4].map((i) => <Skeleton.Button key={i} active style={{ flex: 1, height: 80, borderRadius: 14 }} />)}
+            </div>
+            <Skeleton active paragraph={{ rows: 6 }} />
+          </div>
+        ) : !schoolReports?.academicYear ? (
+          <div style={{
+            background: tk(isDark).card,
+            border: `1px solid ${tk(isDark).cardBorder}`,
+            borderRadius: 14,
+            padding: 40,
+          }}>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <span style={{ color: tk(isDark).textSec }}>
+                  No report data available for the selected academic year
+                </span>
+              }
+            />
+          </div>
+        ) : (
+          <>
+            {/* ── KPI row ── */}
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {kpis.map((k) => <KpiCard key={k.label} {...k} isDark={isDark} />)}
+            </div>
+
+            {/* ── Gender ── */}
+            <GenderCard genderStats={genderStats} isDark={isDark} />
+
+            {/* ── Role-wise + Class-wise ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+              <BarList
+                title="Users by Role"
+                rows={roleWise}
+                colorFn={(i) => ROLE_COLORS[i % ROLE_COLORS.length]}
+                isDark={isDark}
+              />
+              <BarList
+                title="Students by Class"
+                rows={classWise}
+                colorFn={(i) => CLASS_COLORS[i % CLASS_COLORS.length]}
+                isDark={isDark}
+              />
+            </div>
+
+            {/* ── Section breakdown ── */}
+            <SectionTable rows={sectionWise} isDark={isDark} />
+          </>
+        )}
+      </div>
+    </>
   );
 };
 

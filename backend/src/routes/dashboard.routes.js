@@ -11,7 +11,7 @@ import { Router } from "express";
 const router = Router();
 
 const ADMIN_TEACHER   = ["Super Admin", "School Admin", "Teacher", "Accountant"];
-const SCHOOL_ADMIN_ONLY = ["School Admin"];
+const SCHOOL_ADMIN_ONLY = ["School Admin", "Principal", "Vice Principal"];
 const FINANCE_ROLES   = ["School Admin", "Accountant"];
 const HOSTEL_ROLES    = ["Super Admin", "School Admin", "Hostel Warden"];
 

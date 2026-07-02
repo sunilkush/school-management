@@ -476,6 +476,10 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
+                  "Class Teacher",
                 ]}
               >
                 <SupportTicketsPage />
@@ -1053,7 +1057,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <ITSupportDashboard /> },
               { path: "maintenance", element: <SystemMaintenance /> },
-              { path: "tickets", element: <UserSupportTickets /> },
+              { path: "tickets", element: <SupportTicketsPage /> },
               { path: "network", element: <NetworkStatus /> },
               { path: "logs",             element: <SystemLogs /> },
               { path: "payroll",          element: <PayrollSelfServicePage /> },
