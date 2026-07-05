@@ -381,7 +381,7 @@ const STATUS_COLOR = {
 const Schools = () => {
   const dispatch = useDispatch();
   const { schools, loading, error } = useSelector((state) => state.school);
-  const { plans = [] } = useSelector((state) => state.subscriptionPlan);
+  const { plans = [] } = useSelector((state) => state.subscriptionPlans);
   const { schoolSubscription, actionLoading, successMessage, error: billingError } =
     useSelector((state) => state.superAdminBilling);
 

@@ -1174,9 +1174,21 @@ if (import.meta.hot) {
 }
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .catch((error) => console.error('Service worker registration failed:', error));
-  });
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .catch((error) => console.error('Service worker registration failed:', error));
+    });
+  } else {
+    // Dev mode: the SW's cache-first strategy for .js/.css caches Vite's
+    // unbundled ESM modules, so edits never reach the browser. Unregister
+    // and clear any leftover SW/caches from a previous production build.
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => reg.unregister());
+    });
+    if (window.caches) {
+      caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+    }
+  }
 }
