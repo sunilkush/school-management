@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
   Select,
   Table,
   Button,
@@ -14,7 +13,10 @@ import {
   Tooltip,
   Empty,
 } from "antd";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  PlusOutlined, EditOutlined, DeleteOutlined, TagsOutlined,
+  SyncOutlined, ThunderboltOutlined, WarningOutlined,
+} from "@ant-design/icons";
 import apiClient from "../../../api/httpClient";
 
 import { fetchSchools } from "../../../features/schoolSlice.js";
@@ -22,6 +24,11 @@ import {
   fetchFeeHeads,
   createFeeHead,
 } from "../../../features/headSlice.js";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, modalTitle,
+} from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -41,6 +48,23 @@ const FEE_HEAD_TYPES = [
   "Fine",
   "Late Fee Fine",
 ];
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
+
+const TYPE_LABEL = { recurring: "Recurring", "one-time": "One Time", penalty: "Penalty" };
+const TYPE_COLOR = {
+  recurring: ["#2563EB", "rgba(219,234,254,0.4)"],
+  "one-time": ["#14B8A6", "rgba(20,184,166,0.15)"],
+  penalty: ["#DC2626", "rgba(254,226,226,0.5)"],
+};
 
 const FeeCategories = () => {
   const dispatch = useDispatch();
@@ -151,13 +175,34 @@ const FeeCategories = () => {
     }
   };
 
+  const stats = useMemo(() => {
+    const total = feeHeads.length;
+    const recurring = feeHeads.filter((f) => f.type === "recurring").length;
+    const oneTime = feeHeads.filter((f) => f.type === "one-time").length;
+    const penalty = feeHeads.filter((f) => f.type === "penalty").length;
+    return { total, recurring, oneTime, penalty };
+  }, [feeHeads]);
+
   /* ================= TABLE ================= */
   const columns = [
-    { title: "Fee Head", dataIndex: "name" },
-    { title: "Type", dataIndex: "type" },
+    {
+      title: "Fee Head",
+      dataIndex: "name",
+      render: (name) => <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{name}</span>,
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      render: (type) => {
+        const [color, bg] = TYPE_COLOR[type] || ["var(--text-muted)", "var(--surface-soft)"];
+        return <span style={pill(color, bg)}>{TYPE_LABEL[type] || type}</span>;
+      },
+    },
     {
       title: "Editable",
-      render: (_, r) => (r.isEditable ? "Yes" : "No"),
+      render: (_, r) => r.isEditable
+        ? <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Yes</span>
+        : <span style={pill("#64748B", "rgba(241,245,249,0.6)")}>No</span>,
     },
     {
       title: "Actions",
@@ -165,22 +210,7 @@ const FeeCategories = () => {
       render: (_, record) => (
         <Space size={8}>
           <Tooltip title="Edit fee head">
-            <Button
-              size="small"
-              icon={<Pencil size={13} />}
-              onClick={() => handleOpenEdit(record)}
-              style={{
-                borderRadius: 7,
-                fontWeight: 600,
-                fontSize: 12,
-                background: "rgba(219,234,254,0.15)",
-                borderColor: "rgba(219,234,254,0.4)",
-                color: "#2563EB",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
+            <Button size="small" icon={<EditOutlined />} onClick={() => handleOpenEdit(record)}>
               Edit
             </Button>
           </Tooltip>
@@ -194,20 +224,7 @@ const FeeCategories = () => {
             placement="topRight"
           >
             <Tooltip title="Delete fee head">
-              <Button
-                size="small"
-                danger
-                loading={deletingId === record._id}
-                icon={<Trash2 size={13} />}
-                style={{
-                  borderRadius: 7,
-                  fontWeight: 600,
-                  fontSize: 12,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
+              <Button size="small" danger loading={deletingId === record._id} icon={<DeleteOutlined />}>
                 Delete
               </Button>
             </Tooltip>
@@ -219,59 +236,73 @@ const FeeCategories = () => {
 
   /* ================= UI ================= */
   return (
-    <div className="p-6 space-y-5 bg-gray-50">
-      {/* ================= HEADER ================= */}
-      <Card>
-        <div className="flex gap-4 items-center">
-          <Select
-            placeholder="Select School"
-            value={schoolId}
-            onChange={setSchoolId}
-            style={{ width: 260 }}
-          >
-            {schools?.map((s) => (
-              <Option key={s._id} value={s._id}>
-                {s.name}
-              </Option>
-            ))}
-          </Select>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Fee Categories"
+        subtitle="Define fee heads schools can use when building fee structures"
+        icon={<TagsOutlined />}
+        extra={
+          <Space wrap>
+            <Select
+              placeholder="Select School"
+              value={schoolId}
+              onChange={setSchoolId}
+              style={{ width: 240 }}
+              showSearch
+              optionFilterProp="children"
+            >
+              {schools?.map((s) => (
+                <Option key={s._id} value={s._id}>{s.name}</Option>
+              ))}
+            </Select>
+            <Button type="primary" icon={<PlusOutlined />} disabled={!schoolId} onClick={() => setOpenModal(true)}>
+              Add Fee Head
+            </Button>
+          </Space>
+        }
+      />
 
-          <Button
-            type="primary"
-            icon={<Plus size={18} />}
-            disabled={!schoolId}
-            onClick={() => setOpenModal(true)}
-          >
-            Add Fee Head
-          </Button>
+      <div style={{ ...statGrid(170), marginTop: 20 }}>
+        <StatCard icon={<TagsOutlined />} label="Total Fee Heads" value={stats.total} color="#2563EB" />
+        <StatCard icon={<SyncOutlined />} label="Recurring" value={stats.recurring} color="#14B8A6" />
+        <StatCard icon={<ThunderboltOutlined />} label="One Time" value={stats.oneTime} color="#F59E0B" />
+        <StatCard icon={<WarningOutlined />} label="Penalty" value={stats.penalty} color="#DC2626" />
+      </div>
+
+      <style>{tableHeadCss("fee-categories-tbl")}</style>
+
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <TagsOutlined style={{ color: "var(--primary)" }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Fee Heads</span>
+          <span style={pill("var(--primary)")}>{feeHeads.length}</span>
         </div>
-      </Card>
 
-      {/* ================= TABLE ================= */}
-      <Card title="Fee Heads">
-        <Table
-          rowKey="_id"
-          columns={columns}
-          dataSource={feeHeads}
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          locale={{
-            emptyText: (
-              <Empty
-                description={
-                  schoolId
-                    ? "No fee heads found for this school"
-                    : "Select a school to view fee heads"
-                }
-              />
-            ),
-          }}
-        />
-      </Card>
+        <div className="fee-categories-tbl" style={tableContainer}>
+          <Table
+            rowKey="_id"
+            columns={columns}
+            dataSource={feeHeads}
+            loading={loading}
+            pagination={{ pageSize: 10 }}
+            locale={{
+              emptyText: (
+                <Empty
+                  description={
+                    schoolId
+                      ? "No fee heads found for this school"
+                      : "Select a school to view fee heads"
+                  }
+                />
+              ),
+            }}
+          />
+        </div>
+      </div>
 
       {/* ================= CREATE MODAL ================= */}
       <Modal
-        title="Create Fee Head"
+        title={modalTitle(<PlusOutlined />, "Create Fee Head")}
         open={openModal}
         onCancel={() => {
           setOpenModal(false);
@@ -294,9 +325,7 @@ const FeeCategories = () => {
           >
             <Select placeholder="Select Fee Head">
               {FEE_HEAD_TYPES.map((t) => (
-                <Option key={t} value={t}>
-                  {t}
-                </Option>
+                <Option key={t} value={t}>{t}</Option>
               ))}
             </Select>
           </Form.Item>
@@ -313,11 +342,7 @@ const FeeCategories = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="isEditable"
-            label="Is Editable?"
-            valuePropName="checked"
-          >
+          <Form.Item name="isEditable" label="Is Editable?" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
@@ -325,7 +350,7 @@ const FeeCategories = () => {
 
       {/* ================= EDIT MODAL ================= */}
       <Modal
-        title="Edit Fee Head"
+        title={modalTitle(<EditOutlined />, "Edit Fee Head")}
         open={editModalOpen}
         onCancel={() => {
           setEditModalOpen(false);
@@ -349,9 +374,7 @@ const FeeCategories = () => {
           >
             <Select placeholder="Select Fee Head">
               {FEE_HEAD_TYPES.map((t) => (
-                <Option key={t} value={t}>
-                  {t}
-                </Option>
+                <Option key={t} value={t}>{t}</Option>
               ))}
             </Select>
           </Form.Item>
@@ -368,11 +391,7 @@ const FeeCategories = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="isEditable"
-            label="Is Editable?"
-            valuePropName="checked"
-          >
+          <Form.Item name="isEditable" label="Is Editable?" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

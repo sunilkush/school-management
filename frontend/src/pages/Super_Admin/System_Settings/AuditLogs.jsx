@@ -7,21 +7,23 @@ import {
   Select,
   Space,
   Table,
-  Tag,
-  Typography,
   message,
 } from "antd";
 import { Clock, Download, RefreshCcw, Search } from "lucide-react";
 import dayjs from "dayjs";
 import httpClient from "../../../api/httpClient";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, pill,
+  toolbarRow, tableContainer, tableHeadCss,
+} from "../../../styles/pageStyles";
 
-const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
-const STATUS_COLORS = {
-  SUCCESS: "green",
-  FAILED: "red",
-  WARNING: "orange",
+const STATUS_PILL = {
+  SUCCESS: ["#15803D", "rgba(220,252,231,0.5)"],
+  FAILED: ["#DC2626", "rgba(254,226,226,0.5)"],
+  WARNING: ["#B45309", "rgba(254,243,199,0.5)"],
 };
 
 const AuditLogs = () => {
@@ -158,8 +160,8 @@ const AuditLogs = () => {
         key: "actorName",
         render: (_, record) => (
           <div>
-            <div className="font-medium text-gray-800">{record.actorName || "Unknown User"}</div>
-            <div className="text-xs text-gray-500">{record.actorEmail || "-"}</div>
+            <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{record.actorName || "Unknown User"}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{record.actorEmail || "-"}</div>
           </div>
         ),
       },
@@ -172,13 +174,16 @@ const AuditLogs = () => {
         title: "Module",
         dataIndex: "module",
         key: "module",
-        render: (value) => <Tag color="blue">{value || "N/A"}</Tag>,
+        render: (value) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{value || "N/A"}</span>,
       },
       {
         title: "Status",
         dataIndex: "status",
         key: "status",
-        render: (value) => <Tag color={STATUS_COLORS[value] || "default"}>{value || "UNKNOWN"}</Tag>,
+        render: (value) => {
+          const [color, bg] = STATUS_PILL[value] || ["var(--text-muted)", "var(--surface-soft)"];
+          return <span style={pill(color, bg)}>{value || "UNKNOWN"}</span>;
+        },
       },
       {
         title: "Timestamp",
@@ -192,29 +197,29 @@ const AuditLogs = () => {
   );
 
   return (
-    <div className="min-h-screen space-y-4 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-          <Clock className="text-purple-600" />
-          Audit Logs
-        </h1>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Audit Logs"
+        subtitle="System-wide activity trail for every action across the platform"
+        icon={<Clock size={18} />}
+        extra={
+          <Space wrap>
+            <Button icon={<RefreshCcw size={14} />} onClick={resetFilters}>
+              Reset Filters
+            </Button>
+            <Button type="primary" icon={<Download size={14} />} loading={exporting} onClick={handleExport}>
+              Export CSV
+            </Button>
+          </Space>
+        }
+      />
 
-        <Space>
-          <Button icon={<RefreshCcw size={14} />} onClick={resetFilters}>
-            Reset Filters
-          </Button>
-          <Button type="primary" icon={<Download size={14} />} loading={exporting} onClick={handleExport}>
-            Export CSV
-          </Button>
-        </Space>
-      </div>
-
-      <div className="bg-white p-4 rounded-lg shadow space-y-4">
-        <Space wrap>
+      <div style={{ ...sectionPanel, marginTop: 20 }}>
+        <div style={toolbarRow}>
           <Input
             allowClear
             placeholder="Search by actor/action/entity"
-            prefix={<Search size={14} className="text-gray-400" />}
+            prefix={<Search size={14} style={{ color: "var(--text-muted)" }} />}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             style={{ width: 260 }}
@@ -252,35 +257,37 @@ const AuditLogs = () => {
             }}
             format="DD-MM-YYYY"
           />
-        </Space>
+        </div>
 
-        {error ? <Text type="danger">{error}</Text> : null}
+        {error ? <div style={{ color: "#DC2626", marginBottom: 12 }}>{error}</div> : null}
 
-        <Table
-          rowKey="_id"
-          columns={columns}
-          dataSource={logs}
-          loading={loading}
-          onRow={(record) => ({
-            onClick: () => setSelectedLog(record),
-            className: "cursor-pointer",
-          })}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-          }}
-          onChange={(nextPagination) => {
-            setPagination((prev) => ({
-              ...prev,
-              current: nextPagination.current,
-              pageSize: nextPagination.pageSize,
-            }));
-          }}
-          bordered
-          locale={{ emptyText: "No audit logs found" }}
-        />
+        <style>{tableHeadCss("audit-logs-tbl")}</style>
+        <div className="audit-logs-tbl" style={tableContainer}>
+          <Table
+            rowKey="_id"
+            columns={columns}
+            dataSource={logs}
+            loading={loading}
+            onRow={(record) => ({
+              onClick: () => setSelectedLog(record),
+              style: { cursor: "pointer" },
+            })}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              showSizeChanger: true,
+            }}
+            onChange={(nextPagination) => {
+              setPagination((prev) => ({
+                ...prev,
+                current: nextPagination.current,
+                pageSize: nextPagination.pageSize,
+              }));
+            }}
+            locale={{ emptyText: "No audit logs found" }}
+          />
+        </div>
       </div>
 
       <Drawer
@@ -291,20 +298,36 @@ const AuditLogs = () => {
         open={Boolean(selectedLog)}
       >
         {selectedLog ? (
-          <Space direction="vertical" size="middle" className="w-full">
-            <div><Text strong>Actor:</Text> {selectedLog.actorName || "-"}</div>
-            <div><Text strong>Email:</Text> {selectedLog.actorEmail || "-"}</div>
-            <div><Text strong>Action:</Text> {selectedLog.action || "-"}</div>
-            <div><Text strong>Module:</Text> {selectedLog.module || "-"}</div>
-            <div><Text strong>Status:</Text> <Tag color={STATUS_COLORS[selectedLog.status] || "default"}>{selectedLog.status || "UNKNOWN"}</Tag></div>
-            <div><Text strong>Entity Type:</Text> {selectedLog.entityType || "-"}</div>
-            <div><Text strong>Entity ID:</Text> {selectedLog.entityId || "-"}</div>
-            <div><Text strong>IP Address:</Text> {selectedLog.ipAddress || "-"}</div>
-            <div><Text strong>User Agent:</Text> {selectedLog.userAgent || "-"}</div>
-            <div><Text strong>Timestamp:</Text> {selectedLog.createdAt ? dayjs(selectedLog.createdAt).format("DD MMM YYYY, hh:mm:ss A") : "-"}</div>
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <div><span style={{ fontWeight: 700 }}>Actor:</span> {selectedLog.actorName || "-"}</div>
+            <div><span style={{ fontWeight: 700 }}>Email:</span> {selectedLog.actorEmail || "-"}</div>
+            <div><span style={{ fontWeight: 700 }}>Action:</span> {selectedLog.action || "-"}</div>
+            <div><span style={{ fontWeight: 700 }}>Module:</span> {selectedLog.module || "-"}</div>
             <div>
-              <Text strong>Metadata:</Text>
-              <pre className="bg-gray-50 p-3 mt-2 rounded border text-xs overflow-auto">
+              <span style={{ fontWeight: 700 }}>Status:</span>{" "}
+              <span style={pill(...(STATUS_PILL[selectedLog.status] || ["var(--text-muted)", "var(--surface-soft)"]))}>
+                {selectedLog.status || "UNKNOWN"}
+              </span>
+            </div>
+            <div><span style={{ fontWeight: 700 }}>Entity Type:</span> {selectedLog.entityType || "-"}</div>
+            <div><span style={{ fontWeight: 700 }}>Entity ID:</span> {selectedLog.entityId || "-"}</div>
+            <div><span style={{ fontWeight: 700 }}>IP Address:</span> {selectedLog.ipAddress || "-"}</div>
+            <div><span style={{ fontWeight: 700 }}>User Agent:</span> {selectedLog.userAgent || "-"}</div>
+            <div><span style={{ fontWeight: 700 }}>Timestamp:</span> {selectedLog.createdAt ? dayjs(selectedLog.createdAt).format("DD MMM YYYY, hh:mm:ss A") : "-"}</div>
+            <div>
+              <span style={{ fontWeight: 700 }}>Metadata:</span>
+              <pre
+                style={{
+                  background: "var(--surface-soft)",
+                  border: "1px solid var(--border-muted)",
+                  padding: 12,
+                  marginTop: 8,
+                  borderRadius: 10,
+                  fontSize: 12,
+                  overflow: "auto",
+                  color: "var(--text-primary)",
+                }}
+              >
                 {selectedLog.metadata ? JSON.stringify(selectedLog.metadata, null, 2) : "No metadata available"}
               </pre>
             </div>
