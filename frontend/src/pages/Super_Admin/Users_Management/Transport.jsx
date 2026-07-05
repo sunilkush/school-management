@@ -1,142 +1,122 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
+import { Table, Button, Tabs, Space, message } from "antd";
+import { ReloadOutlined, PlusOutlined, CheckCircleOutlined, StopOutlined, CarOutlined } from "@ant-design/icons";
+import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
+import PageHeader from "../../../components/layout/PageHeader";
 import {
-  Card,
-  Typography,
-  Tabs,
-  Button,
-  Tag,
-  Space,
-  Flex,
-  message,
-} from "antd";
-import { ReloadOutlined, PlusOutlined } from "@ant-design/icons";
-import { FaUserCircle } from "react-icons/fa";
-import {
-  fetchAllUser,
-  deleteUser,
-  activeUser,
-} from "../../../features/authSlice";
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, avatarStyle,
+} from "../../../styles/pageStyles";
 
-const { Title, Text } = Typography;
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
+
+const StatusBadge = ({ isActive }) => (
+  <span style={pill(isActive ? "#15803D" : "#DC2626", isActive ? "rgba(220,252,231,0.5)" : "rgba(254,226,226,0.5)")}>
+    {isActive ? "Active" : "Inactive"}
+  </span>
+);
 
 const Transport = () => {
   const dispatch = useDispatch();
-  const { users = [], loading, user: currentUser } = useSelector(
-    (state) => state.auth
-  );
+  const { users = [], loading, user: currentUser } = useSelector((state) => state.auth || {});
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     dispatch(fetchAllUser());
-  }, [dispatch]);
+  }, [dispatch, refreshTick]);
 
-  // ✅ Filter Drivers & Transporters
-  const drivers = useMemo(
-    () => users.filter((u) => u?.role?.name === "Driver"),
-    [users]
-  );
+  const drivers = useMemo(() => users.filter((u) => u?.role?.name === "Driver"), [users]);
+  const transporters = useMemo(() => users.filter((u) => u?.role?.name === "Transporter"), [users]);
 
-  const transporters = useMemo(
-    () => users.filter((u) => u?.role?.name === "Transporter"),
-    [users]
-  );
-
-  // ✅ Activate / Deactivate
-  const handleToggleStatus = (user) => {
-    if (user._id === currentUser?._id) {
+  const handleToggleStatus = (targetUser) => {
+    if (targetUser._id === currentUser?._id) {
       message.warning("You cannot change your own status");
       return;
     }
-
-    dispatch(
-      user.isActive
-        ? deleteUser({ id: user._id, isActive: false })
-        : activeUser({ id: user._id, isActive: true })
-    ).then(() => dispatch(fetchAllUser()));
+    dispatch(targetUser.isActive ? deleteUser(targetUser._id) : activeUser(targetUser._id)).then(() => {
+      message.success("Status updated successfully");
+      setRefreshTick((t) => t + 1);
+    });
   };
 
-  // ✅ Common Columns
   const columns = [
     {
-      name: "#",
-      selector: (_, index) => index + 1,
-      width: "60px",
-    },
-    {
-      name: "Avatar",
-      cell: (row) =>
-        row.avatar ? (
-          <img
-            src={row.avatar}
-            alt="avatar"
-            style={{ width: 36, height: 36, borderRadius: "50%" }}
-          />
-        ) : (
-          <FaUserCircle size={28} color="#9CA3AF" />
-        ),
-      width: "80px",
-    },
-    { name: "Name", selector: (row) => row.name, sortable: true },
-    { name: "Email", selector: (row) => row.email, sortable: true },
-    {
-      name: "School",
-      selector: (row) => row.school?.name || "—",
-    },
-    {
-      name: "Status",
-      cell: (row) => (
-        <Tag color={row.isActive ? "green" : "red"}>
-          {row.isActive ? "Active" : "Inactive"}
-        </Tag>
+      title: "Name",
+      key: "user",
+      render: (_, record) => (
+        <Space>
+          <div style={avatarStyle(record.name, 34)}>
+            {record.avatar ? <img src={record.avatar} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} /> : null}
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{record.name}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{record.email}</div>
+          </div>
+        </Space>
       ),
     },
     {
-      name: "Action",
-      cell: (row) => (
+      title: "School",
+      dataIndex: ["school", "name"],
+      render: (school) => school
+        ? <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{school}</span>
+        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
+    },
+    {
+      title: "Status",
+      dataIndex: "isActive",
+      render: (isActive) => <StatusBadge isActive={isActive} />,
+    },
+    {
+      title: "Action",
+      align: "right",
+      render: (_, record) => (
         <Button
-          size="small"
-          type="primary"
-          danger={row.isActive}
-          onClick={() => handleToggleStatus(row)}
+          size="middle"
+          danger={record.isActive}
+          type={record.isActive ? "default" : "primary"}
+          icon={record.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+          onClick={() => handleToggleStatus(record)}
         >
-          {row.isActive ? "Deactivate" : "Activate"}
+          {record.isActive ? "Deactivate" : "Activate"}
         </Button>
       ),
-      width: "140px",
     },
   ];
 
   return (
-    <div style={{ padding: 16 }}>
-      {/* 🚍 Header */}
-      <Card bordered={false} style={{ marginBottom: 16 }}>
-        <Flex justify="space-between" align="center" wrap="wrap">
-          <div>
-            <Title level={4} style={{ marginBottom: 0 }}>
-              Transport Management
-            </Title>
-            <Text type="secondary">
-              Manage drivers and transporters across schools
-            </Text>
-          </div>
-
-          <Space>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => dispatch(fetchAllUser())}
-            >
-              Refresh
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />}>
-              Add Transport User
-            </Button>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Transport Management"
+        subtitle="Manage drivers and transporters across schools"
+        icon={<CarOutlined />}
+        extra={
+          <Space wrap>
+            <Button icon={<ReloadOutlined />} onClick={() => setRefreshTick((t) => t + 1)}>Refresh</Button>
+            <Button type="primary" icon={<PlusOutlined />}>Add Transport User</Button>
           </Space>
-        </Flex>
-      </Card>
+        }
+      />
 
-      {/* 🚚 Tabs */}
-      <Card bordered={false}>
+      <div style={{ ...statGrid(170), marginTop: 20 }}>
+        <StatCard icon={<CarOutlined />} label="Drivers" value={drivers.length} color="#2563EB" />
+        <StatCard icon={<CarOutlined />} label="Transporters" value={transporters.length} color="#7C3AED" />
+        <StatCard icon={<CheckCircleOutlined />} label="Active" value={[...drivers, ...transporters].filter((u) => u.isActive).length} color="#22C55E" />
+        <StatCard icon={<StopOutlined />} label="Inactive" value={[...drivers, ...transporters].filter((u) => !u.isActive).length} color="#EF4444" />
+      </div>
+
+      <style>{tableHeadCss("transport-tbl")}</style>
+
+      <div style={sectionPanel}>
         <Tabs
           defaultActiveKey="drivers"
           items={[
@@ -144,37 +124,23 @@ const Transport = () => {
               key: "drivers",
               label: `Drivers (${drivers.length})`,
               children: (
-                <DataTable
-                  columns={columns}
-                  data={drivers}
-                  progressPending={loading}
-                  pagination
-                  highlightOnHover
-                  striped
-                  responsive
-                  noDataComponent="No drivers found"
-                />
+                <div className="transport-tbl" style={tableContainer}>
+                  <Table rowKey="_id" columns={columns} dataSource={drivers} loading={loading} pagination={{ pageSize: 8 }} />
+                </div>
               ),
             },
             {
               key: "transporters",
               label: `Transporters (${transporters.length})`,
               children: (
-                <DataTable
-                  columns={columns}
-                  data={transporters}
-                  progressPending={loading}
-                  pagination
-                  highlightOnHover
-                  striped
-                  responsive
-                  noDataComponent="No transporters found"
-                />
+                <div className="transport-tbl" style={tableContainer}>
+                  <Table rowKey="_id" columns={columns} dataSource={transporters} loading={loading} pagination={{ pageSize: 8 }} />
+                </div>
               ),
             },
           ]}
         />
-      </Card>
+      </div>
     </div>
   );
 };

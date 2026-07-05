@@ -3,20 +3,15 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Alert,
   Button,
-  Card,
-  Col,
   Empty,
   Form,
   Input,
   InputNumber,
   Modal,
-  Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
-  Typography,
   message,
   Tooltip,
 } from "antd";
@@ -38,22 +33,25 @@ import {
   fetchBillingInvoices,
   fetchBillingPayments,
 } from "../../../features/superAdminBillingSlice";
-
-const { Title, Text } = Typography;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, modalTitle,
+} from "../../../styles/pageStyles";
 
 const formatCurrency = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 const statusConfig = {
-  paid: { label: "Paid", color: "success" },
-  success: { label: "Success", color: "success" },
-  unpaid: { label: "Unpaid", color: "warning" },
-  overdue: { label: "Overdue", color: "error" },
-  pending: { label: "Pending", color: "warning" },
-  failed: { label: "Failed", color: "error" },
-  refunded: { label: "Refunded", color: "purple" },
-  cancelled: { label: "Cancelled", color: "default" },
-  draft: { label: "Draft", color: "default" },
+  paid: { label: "Paid", color: "#15803D", bg: "rgba(220,252,231,0.5)" },
+  success: { label: "Success", color: "#15803D", bg: "rgba(220,252,231,0.5)" },
+  unpaid: { label: "Unpaid", color: "#B45309", bg: "rgba(254,243,199,0.5)" },
+  overdue: { label: "Overdue", color: "#DC2626", bg: "rgba(254,226,226,0.5)" },
+  pending: { label: "Pending", color: "#B45309", bg: "rgba(254,243,199,0.5)" },
+  failed: { label: "Failed", color: "#DC2626", bg: "rgba(254,226,226,0.5)" },
+  refunded: { label: "Refunded", color: "#6D28D9", bg: "rgba(237,233,254,0.5)" },
+  cancelled: { label: "Cancelled", color: "#64748B", bg: "rgba(241,245,249,0.6)" },
+  draft: { label: "Draft", color: "#64748B", bg: "rgba(241,245,249,0.6)" },
 };
 
 const paymentModeOptions = [
@@ -65,62 +63,17 @@ const paymentModeOptions = [
   { label: "Gateway", value: "gateway" },
 ];
 
-const MetricCard = ({ title, value, icon, bg, color, sub }) => (
-  <Card
-    bordered={false}
-    style={{
-      borderRadius: 22,
-      height: "100%",
-      boxShadow: "0 10px 30px rgba(37,99,235,0.08)",
-      overflow: "hidden",
-      position: "relative",
-    }}
-    bodyStyle={{ padding: 20 }}
-  >
-    <div
-      style={{
-        position: "absolute",
-        right: -30,
-        top: -30,
-        width: 110,
-        height: 110,
-        borderRadius: "50%",
-        background: bg,
-      }}
-    />
-
-    <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
-      <div>
-        <Text style={{ color: "#64748B", fontWeight: 600 }}>{title}</Text>
-        <Statistic
-          value={value}
-          valueStyle={{
-            marginTop: 4,
-            color: "#0F172A",
-            fontWeight: 800,
-            fontSize: 26,
-          }}
-        />
-        {sub ? <Text style={{ color: "#94A3B8", fontSize: 12 }}>{sub}</Text> : null}
+const MetricCard = ({ title, value, icon, color, sub }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+        {title}
       </div>
-
-      <div
-        style={{
-          width: 46,
-          height: 46,
-          borderRadius: 16,
-          background: bg,
-          color,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 22,
-        }}
-      >
-        {icon}
-      </div>
-    </Space>
-  </Card>
+      <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{sub}</div>}
+    </div>
+    <div style={iconWell(color, 44)}>{icon}</div>
+  </div>
 );
 
 export default function PaymentsPage() {
@@ -257,384 +210,216 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: 24,
-        background:
-          "#F8FAFC",
-      }}
-    >
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid rgba(219,234,254,0.3)",
-          borderRadius: 20,
-          padding: 22,
-          marginBottom: 18,
-          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
-        }}
-      >
-        <Row gutter={[16, 16]} justify="space-between" align="middle">
-          <Col xs={24} lg={12}>
-            <Space align="center">
-              <div
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 18,
-                  background: "rgba(220,252,231,0.25)",
-                  color: "#22C55E",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                }}
-              >
-                <WalletOutlined />
-              </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Subscription Payments"
+        subtitle="Super Admin billing, invoices aur manual payment tracking"
+        icon={<WalletOutlined />}
+        extra={
+          <Space wrap>
+            <Button icon={<ReloadOutlined />} onClick={refreshData}>Refresh</Button>
+            <Button icon={<AppstoreOutlined />} onClick={() => navigate("/dashboard/superadmin/subscriptions")}>Subscriptions</Button>
+            <Button type="primary" icon={<RupeeIcon />} onClick={() => navigate("/dashboard/superadmin/revenue")}>Revenue</Button>
+          </Space>
+        }
+      />
 
-              <div>
-                <Title level={3} style={{ margin: 0, color: "#0F172A" }}>
-                  Subscription Payments
-                </Title>
-                <Text style={{ color: "#64748B" }}>
-                  Super Admin billing, invoices aur manual payment tracking.
-                </Text>
-              </div>
-            </Space>
-          </Col>
+      <div style={{ marginTop: 20 }}>
+        {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 16, borderRadius: 14 }} /> : null}
 
-          <Col xs={24} lg={12}>
-            <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
-              <Button icon={<ReloadOutlined />} onClick={refreshData}>
-                Refresh
-              </Button>
-              <Button
-                icon={<AppstoreOutlined />}
-                onClick={() => navigate("/dashboard/superadmin/subscriptions")}
-              >
-                Subscriptions
-              </Button>
-              <Button
-                type="primary"
-                icon={<RupeeIcon />}
-                onClick={() => navigate("/dashboard/superadmin/revenue")}
-              >
-                Revenue
-              </Button>
-            </Space>
-          </Col>
-        </Row>
+        <div style={{ ...statGrid(200), marginBottom: 20 }}>
+          <MetricCard title="Total Invoiced" value={formatCurrency(stats.totalInvoiced)} icon={<FileTextOutlined />} color="#2563EB" sub="All generated invoices" />
+          <MetricCard title="Total Collected" value={formatCurrency(stats.totalCollected)} icon={<CheckCircleOutlined />} color="#22C55E" sub="Successful payments" />
+          <MetricCard title="Pending Invoices" value={stats.pendingInvoices} icon={<ClockCircleOutlined />} color="#F59E0B" sub="Unpaid + overdue" />
+          <MetricCard title="Payment Records" value={stats.totalPayments} icon={<CreditCardOutlined />} color="#14B8A6" sub="Total payment entries" />
+        </div>
+
+        <style>{tableHeadCss("payments-invoices-tbl")}</style>
+        <style>{tableHeadCss("payments-history-tbl")}</style>
+
+        <div style={sectionPanel}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+            <FileTextOutlined style={{ color: "var(--primary)" }} />
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Invoices</span>
+            <span style={pill("var(--primary)")}>{filteredInvoices.length}</span>
+
+            <Input
+              allowClear
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder="Search invoice or school"
+              value={invoiceSearch}
+              onChange={(e) => setInvoiceSearch(e.target.value)}
+              style={{ width: 260, marginLeft: "auto" }}
+            />
+            <Select
+              allowClear
+              placeholder="Filter status"
+              value={invoiceStatus || undefined}
+              onChange={(value) => setInvoiceStatus(value || "")}
+              style={{ width: 170 }}
+              options={["draft", "unpaid", "paid", "overdue", "cancelled"].map((value) => ({
+                label: statusConfig[value]?.label || value,
+                value,
+              }))}
+            />
+          </div>
+
+          <div className="payments-invoices-tbl" style={tableContainer}>
+            <Table
+              loading={loading}
+              dataSource={filteredInvoices}
+              rowKey="key"
+              scroll={{ x: 850 }}
+              locale={{ emptyText: <Empty description="No invoices found" /> }}
+              columns={[
+                {
+                  title: "Invoice",
+                  dataIndex: "invoiceNumber",
+                  render: (value) => (
+                    <Space>
+                      <div style={iconWell("#2563EB", 34)}><FileTextOutlined /></div>
+                      <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>
+                    </Space>
+                  ),
+                },
+                {
+                  title: "School",
+                  dataIndex: "schoolName",
+                  render: (value) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{value}</span>,
+                },
+                {
+                  title: "Amount",
+                  dataIndex: "totalAmount",
+                  render: (amount) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(amount)}</span>,
+                },
+                {
+                  title: "Due Date",
+                  dataIndex: "dueDate",
+                  render: (date) =>
+                    date ? (
+                      <span style={{ color: "var(--text-muted)" }}>
+                        {new Date(date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                      </span>
+                    ) : (
+                      "-"
+                    ),
+                },
+                {
+                  title: "Status",
+                  dataIndex: "status",
+                  render: (status) => (
+                    <span style={pill(statusConfig[status]?.color || "#64748B", statusConfig[status]?.bg)}>
+                      {statusConfig[status]?.label || status}
+                    </span>
+                  ),
+                },
+                {
+                  title: "Action",
+                  align: "right",
+                  render: (_, row) => (
+                    <Space>
+                      <Button
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => {
+                          setSelectedInvoice(row);
+                          setDetailsOpen(true);
+                        }}
+                      >
+                        View
+                      </Button>
+
+                      <Tooltip title={row.status === "paid" ? "Already paid" : "Record payment"}>
+                        <Button
+                          size="small"
+                          type="primary"
+                          icon={<WalletOutlined />}
+                          disabled={row.status === "paid"}
+                          onClick={() => {
+                            setSelectedInvoice(row);
+                            paymentForm.setFieldsValue({
+                              amount: row.totalAmount,
+                              status: "success",
+                              paymentMode: "bank_transfer",
+                            });
+                            setPaymentOpen(true);
+                          }}
+                        >
+                          Add Payment
+                        </Button>
+                      </Tooltip>
+                    </Space>
+                  ),
+                },
+              ]}
+              pagination={{ pageSize: 8, showSizeChanger: true, pageSizeOptions: [8, 16, 32] }}
+            />
+          </div>
+        </div>
+
+        <div style={{ ...sectionPanel, marginTop: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+            <CreditCardOutlined style={{ color: "#14B8A6" }} />
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Payment History</span>
+            <span style={pill("#14B8A6")}>{filteredPayments.length}</span>
+
+            <Input
+              allowClear
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder="Search invoice, school or transaction ID"
+              value={paymentSearch}
+              onChange={(e) => setPaymentSearch(e.target.value)}
+              style={{ width: 320, marginLeft: "auto" }}
+            />
+          </div>
+
+          <div className="payments-history-tbl" style={tableContainer}>
+            <Table
+              loading={loading}
+              dataSource={filteredPayments}
+              rowKey="key"
+              scroll={{ x: 850 }}
+              locale={{ emptyText: <Empty description="No payments found" /> }}
+              columns={[
+                { title: "Invoice", dataIndex: "invoiceNumber" },
+                {
+                  title: "School",
+                  dataIndex: "schoolName",
+                  render: (value) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{value}</span>,
+                },
+                {
+                  title: "Mode",
+                  dataIndex: "paymentMode",
+                  render: (value) => <Tag color="blue">{value || "-"}</Tag>,
+                },
+                {
+                  title: "Amount",
+                  dataIndex: "amount",
+                  render: (amount) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(amount)}</span>,
+                },
+                {
+                  title: "Transaction ID",
+                  dataIndex: "transactionId",
+                  render: (value) => value || "-",
+                },
+                {
+                  title: "Status",
+                  dataIndex: "status",
+                  render: (status) => (
+                    <span style={pill(statusConfig[status]?.color || "#64748B", statusConfig[status]?.bg)}>
+                      {statusConfig[status]?.label || status}
+                    </span>
+                  ),
+                },
+              ]}
+              pagination={{ pageSize: 8, showSizeChanger: true, pageSizeOptions: [8, 16, 32] }}
+            />
+          </div>
+        </div>
       </div>
 
-      {error ? (
-        <Alert
-          type="error"
-          showIcon
-          message={error}
-          style={{ marginBottom: 16, borderRadius: 14 }}
-        />
-      ) : null}
-
-      <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Total Invoiced"
-            value={formatCurrency(stats.totalInvoiced)}
-            icon={<FileTextOutlined />}
-            bg="rgba(219,234,254,0.2)"
-            color="#2563EB"
-            sub="All generated invoices"
-          />
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Total Collected"
-            value={formatCurrency(stats.totalCollected)}
-            icon={<CheckCircleOutlined />}
-            bg="rgba(220,252,231,0.2)"
-            color="#22C55E"
-            sub="Successful payments"
-          />
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Pending Invoices"
-            value={stats.pendingInvoices}
-            icon={<ClockCircleOutlined />}
-            bg="rgba(254,243,199,0.25)"
-            color="#F59E0B"
-            sub="Unpaid + overdue"
-          />
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Payment Records"
-            value={stats.totalPayments}
-            icon={<CreditCardOutlined />}
-            bg="rgba(20,184,166,0.2)"
-            color="#14B8A6"
-            sub="Total payment entries"
-          />
-        </Col>
-      </Row>
-
-      <Card
-        bordered={false}
-        style={{
-          borderRadius: 24,
-          marginBottom: 18,
-          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
-        }}
-        bodyStyle={{ padding: 18 }}
-        title={
-          <Space>
-            <FileTextOutlined style={{ color: "#2563EB" }} />
-            <span>Invoices</span>
-            <Tag color="blue">{filteredInvoices.length}</Tag>
-          </Space>
-        }
-      >
-        <Row gutter={[12, 12]} justify="space-between" style={{ marginBottom: 14 }}>
-          <Col xs={24} md={14}>
-            <Space wrap>
-              <Input
-                allowClear
-                prefix={<SearchOutlined style={{ color: "#94A3B8" }} />}
-                placeholder="Search invoice or school"
-                value={invoiceSearch}
-                onChange={(e) => setInvoiceSearch(e.target.value)}
-                style={{ width: 280, borderRadius: 12 }}
-              />
-
-              <Select
-                allowClear
-                placeholder="Filter status"
-                value={invoiceStatus || undefined}
-                onChange={(value) => setInvoiceStatus(value || "")}
-                style={{ width: 170 }}
-                options={["draft", "unpaid", "paid", "overdue", "cancelled"].map(
-                  (value) => ({
-                    label: statusConfig[value]?.label || value,
-                    value,
-                  })
-                )}
-              />
-            </Space>
-          </Col>
-        </Row>
-
-        <Table
-          loading={loading}
-          dataSource={filteredInvoices}
-          rowKey="key"
-          scroll={{ x: 850 }}
-          locale={{ emptyText: <Empty description="No invoices found" /> }}
-          columns={[
-            {
-              title: "Invoice",
-              dataIndex: "invoiceNumber",
-              render: (value) => (
-                <Space>
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 12,
-                      background: "#e0f2fe",
-                      color: "#0369a1",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <FileTextOutlined />
-                  </div>
-                  <Text strong>{value}</Text>
-                </Space>
-              ),
-            },
-            {
-              title: "School",
-              dataIndex: "schoolName",
-              render: (value) => (
-                <Text style={{ fontWeight: 600, color: "#334155" }}>{value}</Text>
-              ),
-            },
-            {
-              title: "Amount",
-              dataIndex: "totalAmount",
-              render: (amount) => (
-                <Text strong style={{ color: "#166534" }}>
-                  {formatCurrency(amount)}
-                </Text>
-              ),
-            },
-            {
-              title: "Due Date",
-              dataIndex: "dueDate",
-              render: (date) =>
-                date ? (
-                  <Text style={{ color: "#64748B" }}>
-                    {new Date(date).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </Text>
-                ) : (
-                  "-"
-                ),
-            },
-            {
-              title: "Status",
-              dataIndex: "status",
-              render: (status) => (
-                <Tag
-                  color={statusConfig[status]?.color || "default"}
-                  style={{ borderRadius: 999, padding: "2px 10px" }}
-                >
-                  {statusConfig[status]?.label || status}
-                </Tag>
-              ),
-            },
-            {
-              title: "Action",
-              align: "right",
-              render: (_, row) => (
-                <Space>
-                  <Button
-                    size="small"
-                    icon={<EyeOutlined />}
-                    onClick={() => {
-                      setSelectedInvoice(row);
-                      setDetailsOpen(true);
-                    }}
-                  >
-                    View
-                  </Button>
-
-                  <Tooltip title={row.status === "paid" ? "Already paid" : "Record payment"}>
-                    <Button
-                      size="small"
-                      type="primary"
-                      icon={<WalletOutlined />}
-                      disabled={row.status === "paid"}
-                      onClick={() => {
-                        setSelectedInvoice(row);
-                        paymentForm.setFieldsValue({
-                          amount: row.totalAmount,
-                          status: "success",
-                          paymentMode: "bank_transfer",
-                        });
-                        setPaymentOpen(true);
-                      }}
-                    >
-                      Add Payment
-                    </Button>
-                  </Tooltip>
-                </Space>
-              ),
-            },
-          ]}
-          pagination={{
-            pageSize: 8,
-            showSizeChanger: true,
-            pageSizeOptions: [8, 16, 32],
-          }}
-        />
-      </Card>
-
-      <Card
-        bordered={false}
-        style={{
-          borderRadius: 24,
-          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
-        }}
-        bodyStyle={{ padding: 18 }}
-        title={
-          <Space>
-            <CreditCardOutlined style={{ color: "#14B8A6" }} />
-            <span>Payment History</span>
-            <Tag color="purple">{filteredPayments.length}</Tag>
-          </Space>
-        }
-      >
-        <Input
-          allowClear
-          prefix={<SearchOutlined style={{ color: "#94A3B8" }} />}
-          placeholder="Search invoice, school or transaction ID"
-          value={paymentSearch}
-          onChange={(e) => setPaymentSearch(e.target.value)}
-          style={{ width: 320, borderRadius: 12, marginBottom: 14 }}
-        />
-
-        <Table
-          loading={loading}
-          dataSource={filteredPayments}
-          rowKey="key"
-          scroll={{ x: 850 }}
-          locale={{ emptyText: <Empty description="No payments found" /> }}
-          columns={[
-            { title: "Invoice", dataIndex: "invoiceNumber" },
-            {
-              title: "School",
-              dataIndex: "schoolName",
-              render: (value) => (
-                <Text style={{ fontWeight: 600, color: "#334155" }}>{value}</Text>
-              ),
-            },
-            {
-              title: "Mode",
-              dataIndex: "paymentMode",
-              render: (value) => <Tag color="blue">{value || "-"}</Tag>,
-            },
-            {
-              title: "Amount",
-              dataIndex: "amount",
-              render: (amount) => (
-                <Text strong style={{ color: "#166534" }}>
-                  {formatCurrency(amount)}
-                </Text>
-              ),
-            },
-            {
-              title: "Transaction ID",
-              dataIndex: "transactionId",
-              render: (value) => value || "-",
-            },
-            {
-              title: "Status",
-              dataIndex: "status",
-              render: (status) => (
-                <Tag
-                  color={statusConfig[status]?.color || "default"}
-                  style={{ borderRadius: 999, padding: "2px 10px" }}
-                >
-                  {statusConfig[status]?.label || status}
-                </Tag>
-              ),
-            },
-          ]}
-          pagination={{
-            pageSize: 8,
-            showSizeChanger: true,
-            pageSizeOptions: [8, 16, 32],
-          }}
-        />
-      </Card>
-
       <Modal
-        title={
-          <Space>
-            <EyeOutlined style={{ color: "#2563EB" }} />
-            <span>Invoice Details</span>
-          </Space>
-        }
+        title={modalTitle(<EyeOutlined />, "Invoice Details")}
         open={detailsOpen}
         onCancel={() => setDetailsOpen(false)}
         footer={null}
@@ -642,43 +427,34 @@ export default function PaymentsPage() {
         destroyOnClose
       >
         {selectedInvoice ? (
-          <div
-            style={{
-              background: "#f8fafc",
-              border: "1px solid #e2e8f0",
-              borderRadius: 18,
-              padding: 16,
-            }}
-          >
+          <div style={{ ...sectionPanel, marginBottom: 0, background: "var(--surface-soft)" }}>
             <Space direction="vertical" size={10} style={{ width: "100%" }}>
-              <Row justify="space-between">
-                <Text type="secondary">Invoice</Text>
-                <Text strong>{selectedInvoice.invoiceNumber}</Text>
-              </Row>
-              <Row justify="space-between">
-                <Text type="secondary">School</Text>
-                <Text strong>{selectedInvoice.schoolName}</Text>
-              </Row>
-              <Row justify="space-between">
-                <Text type="secondary">Plan Price</Text>
-                <Text>{formatCurrency(selectedInvoice.planPrice)}</Text>
-              </Row>
-              <Row justify="space-between">
-                <Text type="secondary">Discount</Text>
-                <Text>{formatCurrency(selectedInvoice.discount)}</Text>
-              </Row>
-              <Row justify="space-between">
-                <Text type="secondary">Tax/GST</Text>
-                <Text>{formatCurrency(selectedInvoice.taxGst)}</Text>
-              </Row>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-muted)" }}>Invoice</span>
+                <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.invoiceNumber}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-muted)" }}>School</span>
+                <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-muted)" }}>Plan Price</span>
+                <span style={{ color: "var(--text-primary)" }}>{formatCurrency(selectedInvoice.planPrice)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-muted)" }}>Discount</span>
+                <span style={{ color: "var(--text-primary)" }}>{formatCurrency(selectedInvoice.discount)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-muted)" }}>Tax/GST</span>
+                <span style={{ color: "var(--text-primary)" }}>{formatCurrency(selectedInvoice.taxGst)}</span>
+              </div>
 
-              <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: 10 }}>
-                <Row justify="space-between">
-                  <Text strong>Total Amount</Text>
-                  <Text strong style={{ color: "#166534", fontSize: 18 }}>
-                    {formatCurrency(selectedInvoice.totalAmount)}
-                  </Text>
-                </Row>
+              <div style={{ borderTop: "1px dashed var(--border-muted)", paddingTop: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Total Amount</span>
+                  <span style={{ fontWeight: 700, color: "#15803D", fontSize: 18 }}>{formatCurrency(selectedInvoice.totalAmount)}</span>
+                </div>
               </div>
             </Space>
           </div>
@@ -686,12 +462,7 @@ export default function PaymentsPage() {
       </Modal>
 
       <Modal
-        title={
-          <Space>
-            <WalletOutlined style={{ color: "#22C55E" }} />
-            <span>Manual Payment Entry</span>
-          </Space>
-        }
+        title={modalTitle(<WalletOutlined />, "Manual Payment Entry")}
         open={paymentOpen}
         onCancel={() => {
           setPaymentOpen(false);
@@ -704,22 +475,14 @@ export default function PaymentsPage() {
         destroyOnClose
       >
         {selectedInvoice ? (
-          <div
-            style={{
-              background: "#f8fafc",
-              border: "1px solid #e2e8f0",
-              borderRadius: 16,
-              padding: 12,
-              marginBottom: 16,
-            }}
-          >
-            <Text type="secondary">Selected Invoice</Text>
+          <div style={{ ...sectionPanel, padding: 12, background: "var(--surface-soft)" }}>
+            <span style={{ color: "var(--text-muted)" }}>Selected Invoice</span>
             <div style={{ marginTop: 4 }}>
-              <Text strong>{selectedInvoice.schoolName}</Text>{" "}
+              <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>{" "}
               <Tag color="blue">{selectedInvoice.invoiceNumber}</Tag>
-              <Tag color={statusConfig[selectedInvoice.status]?.color || "default"}>
+              <span style={pill(statusConfig[selectedInvoice.status]?.color || "#64748B", statusConfig[selectedInvoice.status]?.bg)}>
                 {statusConfig[selectedInvoice.status]?.label || selectedInvoice.status}
-              </Tag>
+              </span>
             </div>
           </div>
         ) : null}
@@ -728,20 +491,13 @@ export default function PaymentsPage() {
           form={paymentForm}
           layout="vertical"
           initialValues={{ status: "success", paymentMode: "bank_transfer" }}
+          style={{ marginTop: 16 }}
         >
-          <Form.Item
-            name="amount"
-            label="Amount"
-            rules={[{ required: true, message: "Please enter amount" }]}
-          >
+          <Form.Item name="amount" label="Amount" rules={[{ required: true, message: "Please enter amount" }]}>
             <InputNumber min={1} prefix="₹" style={{ width: "100%" }} />
           </Form.Item>
 
-          <Form.Item
-            name="paymentMode"
-            label="Payment Mode"
-            rules={[{ required: true, message: "Please select payment mode" }]}
-          >
+          <Form.Item name="paymentMode" label="Payment Mode" rules={[{ required: true, message: "Please select payment mode" }]}>
             <Select options={paymentModeOptions} />
           </Form.Item>
 
@@ -753,11 +509,7 @@ export default function PaymentsPage() {
             <Input placeholder="https://..." />
           </Form.Item>
 
-          <Form.Item
-            name="status"
-            label="Status"
-            rules={[{ required: true, message: "Please select status" }]}
-          >
+          <Form.Item name="status" label="Status" rules={[{ required: true, message: "Please select status" }]}>
             <Select
               options={["pending", "success", "failed", "refunded"].map((value) => ({
                 label: statusConfig[value]?.label || value,
