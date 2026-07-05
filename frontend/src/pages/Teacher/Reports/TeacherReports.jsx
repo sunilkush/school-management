@@ -2,29 +2,24 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
-  Card,
-  Col,
   Empty,
   Input,
-  Layout,
-  Row,
   Select,
-  Space,
   Spin,
   Statistic,
   Table,
   Tag,
-  Typography,
 } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined, FileTextOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import { fetchDashboardSummary } from "../../../features/dashboardSlice";
 import { fetchReports } from "../../../features/reportSlice";
-
-
-const { Content } = Layout;
-const { Title, Text } = Typography;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid,
+  tableContainer, tableHeadCss, toolbarRow,
+} from "../../../styles/pageStyles";
 
 const normalizeUserContext = (rawUser) => {
   const roleName =
@@ -107,7 +102,7 @@ const TeacherReports = () => {
       title: "Report Title",
       dataIndex: "title",
       key: "title",
-      render: (value) => value || "Untitled report",
+      render: (value) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{value || "Untitled report"}</span>,
     },
     {
       title: "Type",
@@ -151,42 +146,33 @@ const TeacherReports = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh", background: "#f5f7fb" }}>
-      <Content style={{ padding: 16 }}>
-        <Space
-          style={{ width: "100%", justifyContent: "space-between", marginBottom: 12 }}
-          align="start"
-          wrap
-        >
-          <div>
-            <Title level={3} style={{ marginBottom: 4 }}>
-              {teacherName} - Reports Dashboard
-            </Title>
-            <Text type="secondary">
-              This page is now fully dynamic and loads reports + summary in real-time.
-            </Text>
-          </div>
-
+    <>
+      <PageHeader
+        title={`${teacherName} - Reports Dashboard`}
+        subtitle="This page is now fully dynamic and loads reports + summary in real-time"
+        icon={<FileTextOutlined />}
+        extra={
           <Button icon={<ReloadOutlined />} onClick={refreshAll}>
             Refresh
           </Button>
-        </Space>
+        }
+      />
+      <div style={pageWrapper}>
+        {summaryError && <Alert type="error" showIcon message={summaryError} style={{ marginBottom: 16 }} />}
+        {reportsError && <Alert type="error" showIcon message={reportsError} style={{ marginBottom: 16 }} />}
 
-        {summaryError && <Alert type="error" showIcon message={summaryError} style={{ marginBottom: 12 }} />}
-        {reportsError && <Alert type="error" showIcon message={reportsError} style={{ marginBottom: 12 }} />}
-
-        <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+        <div style={statGrid(200)}>
           {cards.map((card) => (
-            <Col xs={24} md={8} key={card.title}>
-              <Card bordered={false}>
-                <Statistic title={card.title} value={card.value} loading={summaryLoading} />
-              </Card>
-            </Col>
+            <div key={card.title} style={{ ...sectionPanel, marginBottom: 0 }}>
+              <Statistic title={card.title} value={card.value} loading={summaryLoading} />
+            </div>
           ))}
-        </Row>
+        </div>
 
-        <Card bordered={false}>
-          <Space wrap style={{ marginBottom: 16 }}>
+        <style>{tableHeadCss("teacher-reports-tbl")}</style>
+
+        <div style={sectionPanel}>
+          <div style={toolbarRow}>
             <Input.Search
               placeholder="Search by title, type, creator"
               allowClear
@@ -200,7 +186,7 @@ const TeacherReports = () => {
               value={selectedType}
               onChange={setSelectedType}
             />
-          </Space>
+          </div>
 
           {reportsLoading ? (
             <div style={{ textAlign: "center", padding: "40px 0" }}>
@@ -209,16 +195,18 @@ const TeacherReports = () => {
           ) : filteredReports.length === 0 ? (
             <Empty description="No reports matched your filters" />
           ) : (
-            <Table
-              rowKey={(record) => record._id}
-              columns={tableColumns}
-              dataSource={filteredReports}
-              pagination={{ pageSize: 8 }}
-            />
+            <div className="teacher-reports-tbl" style={tableContainer}>
+              <Table
+                rowKey={(record) => record._id}
+                columns={tableColumns}
+                dataSource={filteredReports}
+                pagination={{ pageSize: 8 }}
+              />
+            </div>
           )}
-        </Card>
-      </Content>
-    </Layout>
+        </div>
+      </div>
+    </>
   );
 };
 

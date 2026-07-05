@@ -14,23 +14,22 @@ import {
   ReloadOutlined,
   SearchOutlined,
   DownloadOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchActivityLogs } from "../../../features/activitySlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  sectionPanel,
+  statGrid,
+  toolbarRow,
+  tableContainer,
+  tableHeadCss,
+} from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 const { Option } = Select;
-
-// ── Design tokens ───────────────────────────────────────────────────────────
-const TOKEN = {
-  bg: "#F5F4F1",
-  surface: "#FFFFFF",
-  border: "#E4E2DC",
-  borderLight: "#F1EFE8",
-  text: "#1A1A18",
-  textMuted: "#888780",
-  textFaint: "#B4B2A9",
-};
 
 const AVATAR_PALETTES = [
   { bg: "#EEEDFE", color: "#534AB7" },
@@ -71,22 +70,14 @@ function isToday(d) {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 const StatCard = ({ label, value, sub }) => (
-  <div
-    style={{
-      background: TOKEN.surface,
-      border: `0.5px solid ${TOKEN.border}`,
-      borderRadius: 10,
-      padding: "14px 18px",
-      flex: "1 1 130px",
-    }}
-  >
+  <div style={{ ...sectionPanel, padding: "14px 18px", marginBottom: 0 }}>
     <div
       style={{
         fontSize: 11,
-        fontWeight: 500,
+        fontWeight: 700,
         textTransform: "uppercase",
         letterSpacing: "0.08em",
-        color: TOKEN.textFaint,
+        color: "var(--text-muted)",
         marginBottom: 6,
       }}
     >
@@ -95,8 +86,8 @@ const StatCard = ({ label, value, sub }) => (
     <div
       style={{
         fontSize: 22,
-        fontWeight: 600,
-        color: TOKEN.text,
+        fontWeight: 800,
+        color: "var(--text-primary)",
         letterSpacing: "-0.02em",
         fontVariantNumeric: "tabular-nums",
       }}
@@ -104,7 +95,7 @@ const StatCard = ({ label, value, sub }) => (
       {value}
     </div>
     {sub && (
-      <div style={{ fontSize: 12, color: TOKEN.textMuted, marginTop: 2 }}>{sub}</div>
+      <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{sub}</div>
     )}
   </div>
 );
@@ -208,7 +199,7 @@ const normalizedLogs = useMemo(() => {
       key: "index",
       width: 52,
       render: (_, __, i) => (
-        <span style={{ fontFamily: "monospace", fontSize: 12, color: TOKEN.textFaint }}>
+        <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--text-muted)" }}>
           {String(i + 1).padStart(2, "0")}
         </span>
       ),
@@ -226,7 +217,7 @@ const normalizedLogs = useMemo(() => {
             <Avatar size={26} style={{ background: bg, color, fontSize: 10, fontWeight: 600 }}>
               {getInitials(name)}
             </Avatar>
-            <span style={{ fontWeight: 500, color: TOKEN.text, fontSize: 13 }}>{name}</span>
+            <span style={{ fontWeight: 500, color: "var(--text-primary)", fontSize: 13 }}>{name}</span>
           </Space>
         );
       },
@@ -237,7 +228,7 @@ const normalizedLogs = useMemo(() => {
       key: "role",
       render: (role) => {
         const name = typeof role === "string" ? role : role?.name || "—";
-        const style = ROLE_STYLES[name] || { bg: TOKEN.borderLight, color: TOKEN.textMuted };
+        const style = ROLE_STYLES[name] || { bg: "var(--surface-soft)", color: "var(--text-muted)" };
         return (
           <Tag
             style={{
@@ -292,7 +283,7 @@ const normalizedLogs = useMemo(() => {
       dataIndex: "school",
       key: "school",
       render: (school) => (
-        <span style={{ color: "#5F5E5A", fontSize: 13 }}>{school?.name || "—"}</span>
+        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{school?.name || "—"}</span>
       ),
     },
     {
@@ -302,98 +293,56 @@ const normalizedLogs = useMemo(() => {
       sorter: (a, b) => new Date(a.eventDate) - new Date(b.eventDate),
       defaultSortOrder: "descend",
       render: (date) => (
-        <span style={{ fontFamily: "monospace", fontSize: 12, color: TOKEN.textMuted }}>
+        <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--text-muted)" }}>
           {formatDate(date)}
         </span>
       ),
     },
   ];
 
-  // ── Shared input style ────────────────────────────────────────────────────
-  const inputStyle = {
-    borderRadius: 7,
-    fontSize: 13,
-    height: 34,
-    border: `0.5px solid ${TOKEN.border}`,
-    background: "#FAFAF8",
-  };
-
   return (
-    <div style={{ padding: "28px 24px", background: TOKEN.bg, minHeight: "100vh" }}>
-
-      {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 24 }}>
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: TOKEN.textFaint,
-            marginBottom: 4,
-          }}
-        >
-          System Overview
-        </div>
-        <div
-          style={{
-            fontSize: 22,
-            fontWeight: 600,
-            color: TOKEN.text,
-            letterSpacing: "-0.02em",
-            marginBottom: 2,
-          }}
-        >
-          Activity Logs
-        </div>
-        <div style={{ fontSize: 13, color: TOKEN.textMuted }}>
-          Track user and system activities across schools
-        </div>
-      </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Activity Logs"
+        subtitle="Track user and system activities across schools"
+        icon={<HistoryOutlined />}
+      />
 
       {/* ── Stats bar ────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+      <div style={{ ...statGrid(150), marginTop: 20 }}>
         <StatCard label="Total Events" value={stats.total} sub="all time" />
         <StatCard label="Today"        value={stats.today} sub="last 24 hrs" />
         <StatCard label="Unique Users" value={stats.users} sub="active" />
         <StatCard label="Schools"      value={stats.schools} sub="monitored" />
       </div>
 
+      <style>{tableHeadCss("logs-tbl")}</style>
+
       {/* ── Table card ───────────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: TOKEN.surface,
-          border: `0.5px solid ${TOKEN.border}`,
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
+      <div style={{ ...sectionPanel, padding: 0 }}>
         {/* Toolbar */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
+            ...toolbarRow,
             justifyContent: "space-between",
             padding: "14px 20px",
-            borderBottom: `0.5px solid ${TOKEN.border}`,
-            flexWrap: "wrap",
-            gap: 10,
+            borderBottom: "1px solid var(--border-muted)",
+            marginBottom: 0,
           }}
         >
           <Space wrap size={8}>
             <Input
               placeholder="Search user or action…"
-              prefix={<SearchOutlined style={{ color: TOKEN.textFaint, fontSize: 13 }} />}
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 13 }} />}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ ...inputStyle, width: 210 }}
+              style={{ width: 210 }}
               allowClear
             />
             <Select
               value={selectedSchool}
               onChange={setSelectedSchool}
               style={{ width: 180, fontSize: 13 }}
-              dropdownStyle={{ fontSize: 13, borderRadius: 8 }}
             >
               {schoolOptions.map((name) => (
                 <Option key={name} value={name}>{name}</Option>
@@ -403,7 +352,6 @@ const normalizedLogs = useMemo(() => {
               value={selectedRole}
               onChange={setSelectedRole}
               style={{ width: 140, fontSize: 13 }}
-              dropdownStyle={{ fontSize: 13, borderRadius: 8 }}
             >
              {roleOptions.map((r) => (
                 <Option key={r} value={r}>{r === "All" ? "All roles" : r}</Option>
@@ -415,28 +363,13 @@ const normalizedLogs = useMemo(() => {
             <Button
               icon={<ReloadOutlined />}
               onClick={() => dispatch(fetchActivityLogs())}
-              style={{
-                borderRadius: 7,
-                fontSize: 13,
-                height: 34,
-                border: `0.5px solid ${TOKEN.border}`,
-                background: "#FAFAF8",
-                color: "#444441",
-              }}
             >
               Refresh
             </Button>
             <Button
               icon={<DownloadOutlined />}
               type="primary"
-                onClick={handleExport}
-              style={{
-                borderRadius: 7,
-                fontSize: 13,
-                height: 34,
-                background: TOKEN.text,
-                border: "none",
-              }}
+              onClick={handleExport}
             >
               Export
             </Button>
@@ -444,30 +377,20 @@ const normalizedLogs = useMemo(() => {
         </div>
 
         {/* Table */}
-        <Table
-          columns={columns}
-          dataSource={filteredLogs}
-          loading={loading}
-          rowKey={(record) => record._id}
-          pagination={{
-            pageSize: 8,
-            showSizeChanger: false,
-            style: { padding: "12px 20px", margin: 0 },
-          }}
-          scroll={{ x: "max-content" }}
-          style={{ fontFamily: "'DM Sans', sans-serif" }}
-          rowClassName={() => "log-row"}
-          onHeaderRow={() => ({
-            style: {
-              background: TOKEN.surface,
-              fontSize: 11,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              color: TOKEN.textFaint,
-            },
-          })}
-        />
+        <div className="logs-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+          <Table
+            columns={columns}
+            dataSource={filteredLogs}
+            loading={loading}
+            rowKey={(record) => record._id}
+            pagination={{
+              pageSize: 8,
+              showSizeChanger: false,
+              style: { padding: "12px 20px", margin: 0 },
+            }}
+            scroll={{ x: "max-content" }}
+          />
+        </div>
 
         {error && (
           <div style={{ padding: "12px 20px" }}>
@@ -475,16 +398,6 @@ const normalizedLogs = useMemo(() => {
           </div>
         )}
       </div>
-
-      {/* Row hover style */}
-      <style>{`
-        .log-row td { border-bottom: 0.5px solid #F1EFE8 !important; }
-        .log-row:hover td { background: #FAFAF8 !important; }
-        .ant-table-thead > tr > th {
-          background: #fff !important;
-          border-bottom: 0.5px solid #E4E2DC !important;
-        }
-      `}</style>
     </div>
   );
 };

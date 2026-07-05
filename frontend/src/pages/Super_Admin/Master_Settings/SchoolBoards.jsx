@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Layout,
-  Card,
   Table,
   Button,
   Modal,
@@ -12,8 +10,6 @@ import {
   message,
   Select,
   Typography,
-  ConfigProvider,
-  Tag,
 } from "antd";
 import {
   PlusOutlined,
@@ -38,9 +34,18 @@ import {
 } from "../../../features/boardSlice.js";
 import { fetchSchools } from "../../../features/schoolSlice.js";
 import { currentUser } from "../../../features/authSlice.js";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  sectionPanel,
+  statGrid,
+  iconWell,
+  toolbarRow,
+  tableContainer,
+  tableHeadCss,
+  modalTitle,
+} from "../../../styles/pageStyles";
 
-
-const { Content } = Layout;
 const { Text } = Typography;
 const { Option } = Select;
 
@@ -66,48 +71,20 @@ function StatusBadge({ isActive }) {
 
 /* ─── Stat Card ─── */
 function StatCard({ label, value, icon, accentColor }) {
-  const [hovered, setHovered] = useState(false);
   return (
-    <Card
-      bordered={false}
-      style={{
-        borderRadius: 16,
-        borderTop: `3px solid ${accentColor}`,
-        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.12)" : "0 2px 12px rgba(0,0,0,0.06)",
-        transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        transition: "all 0.2s ease",
-        cursor: "default",
-        flex: 1,
-      }}
-      bodyStyle={{ padding: "18px 20px" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <div>
-          <div style={{ fontSize: 12, color: "#8c8c8c", fontWeight: 500, marginBottom: 4 }}>{label}</div>
-          <div style={{
-            fontSize: 26, fontWeight: 700,
-            fontFamily: "'DM Mono', monospace",
-            color: "#141414", letterSpacing: -0.5,
-          }}>{value}</div>
-        </div>
-        <div style={{
-          width: 40, height: 40, borderRadius: 12,
-          background: `${accentColor}18`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 18, color: accentColor,
-        }}>
-          {icon}
-        </div>
+    <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+      <div style={iconWell(accentColor, 42)}>{icon}</div>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
       </div>
-    </Card>
+    </div>
   );
 }
 
 /* ─── Board Code Chip ─── */
 function CodeChip({ code }) {
-  if (!code) return <span style={{ color: "#bfbfbf", fontSize: 12 }}>—</span>;
+  if (!code) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
   return (
     <span style={{
       background: "rgba(20,184,166,0.2)", color: "#14B8A6",
@@ -248,7 +225,7 @@ const SchoolBoards = () => {
           }}>
             <BookOutlined style={{ color: "#14B8A6", fontSize: 14 }} />
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#141414" }}>{name}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{name}</span>
         </div>
       ),
     },
@@ -262,11 +239,11 @@ const SchoolBoards = () => {
       dataIndex: "description",
       render: (desc) =>
         desc ? (
-          <span style={{ fontSize: 12, color: "#595959", maxWidth: 240, display: "inline-block" }}>
+          <span style={{ fontSize: 12, color: "var(--text-muted)", maxWidth: 240, display: "inline-block" }}>
             {desc}
           </span>
         ) : (
-          <span style={{ color: "#bfbfbf", fontSize: 12 }}>—</span>
+          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
         ),
     },
     {
@@ -316,291 +293,200 @@ const SchoolBoards = () => {
   ];
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: "#14B8A6",
-          borderRadius: 12,
-          fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-        },
-      }}
-    >
-      <Layout style={{ background: "#F8FAFC", minHeight: "100vh" }}>
-
-        {/* ── Page Header ── */}
-        <div style={{
-          background: "#ffffff",
-          borderBottom: "1px solid rgba(219,234,254,0.3)",
-          padding: "20px 32px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div>
-            <div style={{ color: "#0F172A", fontSize: 18, fontWeight: 700 }}>School Exam Boards</div>
-            <div style={{ color: "#94A3B8", fontSize: 12, marginTop: 2 }}>
-              Manage boards and assign them to schools
-            </div>
-          </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="School Exam Boards"
+        subtitle="Manage boards and assign them to schools"
+        icon={<ApartmentOutlined />}
+        extra={
           <Space>
-            <Button
-              icon={<LinkOutlined />}
-              onClick={handleOpenAssignModal}
-              style={{
-                borderRadius: 10, fontWeight: 600, height: 38,
-                background: "rgba(219,234,254,0.15)",
-                borderColor: "rgba(219,234,254,0.4)",
-                color: "#2563EB",
-              }}
-            >
+            <Button icon={<LinkOutlined />} onClick={handleOpenAssignModal}>
               Assign School Boards
             </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleAddBoard}
-              style={{
-                background: "linear-gradient(135deg, #2563EB, #14B8A6)", borderColor: "transparent",
-                borderRadius: 10, fontWeight: 600, height: 38,
-              }}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddBoard}>
               Add Board
             </Button>
           </Space>
+        }
+      />
+
+      {/* ── Stats ── */}
+      <div style={{ ...statGrid(180), marginTop: 20 }}>
+        <StatCard label="Total Boards"    value={totalBoards}   icon={<ApartmentOutlined />}    accentColor="#14B8A6" />
+        <StatCard label="Active Boards"   value={activeBoards}  icon={<CheckCircleOutlined />}  accentColor="#22C55E" />
+        <StatCard label="Inactive Boards" value={inactiveBoards} icon={<StopOutlined />}        accentColor="#EF4444" />
+        <StatCard label="Schools Covered" value={schools.length} icon={<BookOutlined />}        accentColor="#2563EB" />
+      </div>
+
+      <style>{tableHeadCss("boards-tbl")}</style>
+
+      {/* ── Table Card ── */}
+      <div style={{ ...sectionPanel, padding: 0 }}>
+        {/* Filter Bar */}
+        <div style={{
+          ...toolbarRow,
+          justifyContent: "space-between",
+          padding: "16px 20px",
+          borderBottom: "1px solid var(--border-muted)",
+          marginBottom: 0,
+        }}>
+          <Space wrap>
+            <Input
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder="Search board name, code..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: 240 }}
+              allowClear
+            />
+            <Select
+              placeholder="All Status"
+              allowClear
+              value={statusFilter || undefined}
+              onChange={(v) => setStatusFilter(v ?? "")}
+              style={{ width: 140 }}
+              suffixIcon={<FilterOutlined style={{ fontSize: 11 }} />}
+            >
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
+            </Select>
+          </Space>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            Showing <strong>{filteredBoards.length}</strong> of <strong>{totalBoards}</strong> boards
+          </Text>
         </div>
 
-        <Content style={{ padding: "24px 32px" }}>
+        {/* Table */}
+        <div className="boards-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+          <Table
+            rowKey="_id"
+            dataSource={filteredBoards}
+            columns={columns}
+            loading={loading}
+            pagination={{
+              pageSize: 8,
+              size: "small",
+              showSizeChanger: false,
+              style: { padding: "12px 20px" },
+            }}
+          />
+        </div>
+      </div>
 
-          {/* ── Stats ── */}
-          <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-            <StatCard label="Total Boards"    value={totalBoards}   icon={<ApartmentOutlined />}    accentColor="#14B8A6" />
-            <StatCard label="Active Boards"   value={activeBoards}  icon={<CheckCircleOutlined />}  accentColor="#22C55E" />
-            <StatCard label="Inactive Boards" value={inactiveBoards} icon={<StopOutlined />}        accentColor="#EF4444" />
-            <StatCard label="Schools Covered" value={schools.length} icon={<BookOutlined />}        accentColor="#2563EB" />
-          </div>
+      {/* ── Add / Edit Modal ── */}
+      <Modal
+        title={modalTitle(
+          editingBoard ? <EditOutlined /> : <PlusOutlined />,
+          editingBoard ? "Edit Board" : "Add New Board",
+          editingBoard ? "Update board details" : "Fill in the board information"
+        )}
+        open={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onOk={() => form.submit()}
+        okText={editingBoard ? "Update Board" : "Create Board"}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 16 }}>
+          <Form.Item name="createdByRole" hidden>
+            <Input />
+          </Form.Item>
 
-          {/* ── Table Card ── */}
-          <Card
-            bordered={false}
-            style={{ borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
-            bodyStyle={{ padding: 0 }}
+          <Form.Item
+            label="Board Name"
+            name="name"
+            rules={[{ required: true, message: "Board name is required" }]}
           >
-            {/* Filter Bar */}
-            <div style={{
-              display: "flex", alignItems: "center",
-              justifyContent: "space-between", flexWrap: "wrap",
-              gap: 10, padding: "16px 20px",
-              borderBottom: "1px solid #f5f5f5",
-            }}>
-              <Space wrap>
-                <Input
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-                  placeholder="Search board name, code..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  style={{ width: 240, borderRadius: 10 }}
-                  allowClear
-                />
-                <Select
-                  placeholder="All Status"
-                  allowClear
-                  value={statusFilter || undefined}
-                  onChange={(v) => setStatusFilter(v ?? "")}
-                  style={{ width: 140, borderRadius: 10 }}
-                  suffixIcon={<FilterOutlined style={{ fontSize: 11 }} />}
-                >
-                  <Option value="active">Active</Option>
-                  <Option value="inactive">Inactive</Option>
-                </Select>
-              </Space>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Showing <strong>{filteredBoards.length}</strong> of <strong>{totalBoards}</strong> boards
-              </Text>
-            </div>
+            <Input placeholder="e.g. Central Board of Secondary Education" />
+          </Form.Item>
 
-            {/* Table */}
-            <Table
-              rowKey="_id"
-              dataSource={filteredBoards}
-              columns={columns}
-              loading={loading}
-              pagination={{
-                pageSize: 8,
-                size: "small",
-                showSizeChanger: false,
-                style: { padding: "12px 20px" },
-              }}
-              onRow={(_, index) => ({
-                style: { background: index % 2 === 0 ? "#fff" : "#fafafa" },
-                onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(20,184,166,0.2)22"),
-                onMouseLeave: (e) => (e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"),
-              })}
-              style={{ borderRadius: 0 }}
+          <Form.Item
+            label="Code"
+            name="code"
+          >
+            <Input
+              placeholder="e.g. CBSE"
+              style={{ fontFamily: "monospace", letterSpacing: 1 }}
             />
-          </Card>
-        </Content>
+          </Form.Item>
 
-        {/* ── Add / Edit Modal ── */}
-        <Modal
-          title={
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: "rgba(20,184,166,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                {editingBoard
-                  ? <EditOutlined style={{ color: "#14B8A6", fontSize: 15 }} />
-                  : <PlusOutlined style={{ color: "#14B8A6", fontSize: 15 }} />
-                }
-              </div>
+          <Form.Item
+            label="Description"
+            name="description"
+          >
+            <Input.TextArea
+              placeholder="Brief description of this board..."
+              rows={3}
+            />
+          </Form.Item>
+
+          <Form.Item name="isActive" valuePropName="checked">
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              background: "rgba(220,252,231,0.2)", border: "1px solid rgba(220,252,231,0.5)",
+              borderRadius: 10, padding: "10px 14px",
+            }}>
+              <Checkbox />
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>
-                  {editingBoard ? "Edit Board" : "Add New Board"}
-                </div>
-                <div style={{ fontSize: 12, color: "#8c8c8c", fontWeight: 400 }}>
-                  {editingBoard ? "Update board details" : "Fill in the board information"}
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#22C55E" }}>Mark as Active</div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Active boards are visible to schools</div>
               </div>
             </div>
-          }
-          open={modalVisible}
-          onCancel={() => setModalVisible(false)}
-          onOk={() => form.submit()}
-          okText={editingBoard ? "Update Board" : "Create Board"}
-          okButtonProps={{
-            style: { background: "#14B8A6", borderColor: "#14B8A6", borderRadius: 10, fontWeight: 600 },
-          }}
-          cancelButtonProps={{ style: { borderRadius: 10 } }}
-          destroyOnClose
-          styles={{ header: { borderBottom: "1px solid #f5f5f5", paddingBottom: 16 } }}
-        >
-          <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 16 }}>
-            <Form.Item name="createdByRole" hidden>
-              <Input />
-            </Form.Item>
+          </Form.Item>
+        </Form>
+      </Modal>
 
-            <Form.Item
-              label={<span style={{ fontWeight: 600, fontSize: 13 }}>Board Name</span>}
-              name="name"
-              rules={[{ required: true, message: "Board name is required" }]}
+      {/* ── Assign Modal ── */}
+      <Modal
+        title={modalTitle(<LinkOutlined />, "Assign School Boards", "Link boards to a school")}
+        open={assignModalVisible}
+        onCancel={() => setAssignModalVisible(false)}
+        onOk={() => assignForm.submit()}
+        okText="Assign Boards"
+        destroyOnClose
+      >
+        <Form form={assignForm} layout="vertical" onFinish={handleAssignSubmit} style={{ marginTop: 16 }}>
+          <Form.Item
+            label="Select School"
+            name="schoolId"
+            rules={[{ required: true, message: "Please select a school" }]}
+          >
+            <Select
+              placeholder="Choose a school..."
+              showSearch
+              optionFilterProp="children"
             >
-              <Input
-                placeholder="e.g. Central Board of Secondary Education"
-                style={{ borderRadius: 10, height: 38 }}
-              />
-            </Form.Item>
+              {schools.map((school) => (
+                <Option key={school._id} value={school._id}>
+                  {school.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
 
-            <Form.Item
-              label={<span style={{ fontWeight: 600, fontSize: 13 }}>Code</span>}
-              name="code"
+          <Form.Item
+            label="Select Boards"
+            name="boardIds"
+            rules={[{ required: true, message: "Please select at least one board" }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Choose boards to assign..."
+              showSearch
+              optionFilterProp="children"
             >
-              <Input
-                placeholder="e.g. CBSE"
-                style={{ borderRadius: 10, height: 38, fontFamily: "monospace", letterSpacing: 1 }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label={<span style={{ fontWeight: 600, fontSize: 13 }}>Description</span>}
-              name="description"
-            >
-              <Input.TextArea
-                placeholder="Brief description of this board..."
-                rows={3}
-                style={{ borderRadius: 10 }}
-              />
-            </Form.Item>
-
-            <Form.Item name="isActive" valuePropName="checked">
-              <div style={{
-                display: "flex", alignItems: "center", gap: 10,
-                background: "rgba(220,252,231,0.2)", border: "1px solid rgba(220,252,231,0.5)",
-                borderRadius: 10, padding: "10px 14px",
-              }}>
-                <Checkbox />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#22C55E" }}>Mark as Active</div>
-                  <div style={{ fontSize: 11, color: "#8c8c8c" }}>Active boards are visible to schools</div>
-                </div>
-              </div>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* ── Assign Modal ── */}
-        <Modal
-          title={
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: "#e3f2fd",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <LinkOutlined style={{ color: "#2563EB", fontSize: 15 }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Assign School Boards</div>
-                <div style={{ fontSize: 12, color: "#8c8c8c", fontWeight: 400 }}>Link boards to a school</div>
-              </div>
-            </div>
-          }
-          open={assignModalVisible}
-          onCancel={() => setAssignModalVisible(false)}
-          onOk={() => assignForm.submit()}
-          okText="Assign Boards"
-          okButtonProps={{
-            style: { background: "#2563EB", borderColor: "#2563EB", borderRadius: 10, fontWeight: 600 },
-          }}
-          cancelButtonProps={{ style: { borderRadius: 10 } }}
-          destroyOnClose
-          styles={{ header: { borderBottom: "1px solid #f5f5f5", paddingBottom: 16 } }}
-        >
-          <Form form={assignForm} layout="vertical" onFinish={handleAssignSubmit} style={{ marginTop: 16 }}>
-            <Form.Item
-              label={<span style={{ fontWeight: 600, fontSize: 13 }}>Select School</span>}
-              name="schoolId"
-              rules={[{ required: true, message: "Please select a school" }]}
-            >
-              <Select
-                placeholder="Choose a school..."
-                showSearch
-                optionFilterProp="children"
-                style={{ borderRadius: 10 }}
-              >
-                {schools.map((school) => (
-                  <Option key={school._id} value={school._id}>
-                    {school.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              label={<span style={{ fontWeight: 600, fontSize: 13 }}>Select Boards</span>}
-              name="boardIds"
-              rules={[{ required: true, message: "Please select at least one board" }]}
-            >
-              <Select
-                mode="multiple"
-                placeholder="Choose boards to assign..."
-                showSearch
-                optionFilterProp="children"
-                style={{ borderRadius: 10 }}
-              >
-                {boardArray.map((board) => (
-                  <Option key={board._id} value={board._id}>
-                    <span style={{ fontWeight: 500 }}>{board.name}</span>
-                    {board.code && (
-                      <span style={{ color: "#8c8c8c", fontSize: 11, marginLeft: 6 }}>({board.code})</span>
-                    )}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-      </Layout>
-    </ConfigProvider>
+              {boardArray.map((board) => (
+                <Option key={board._id} value={board._id}>
+                  <span style={{ fontWeight: 500 }}>{board.name}</span>
+                  {board.code && (
+                    <span style={{ color: "var(--text-muted)", fontSize: 11, marginLeft: 6 }}>({board.code})</span>
+                  )}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
   );
 };
 

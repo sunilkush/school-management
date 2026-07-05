@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Layout,
-  Breadcrumb,
   Table,
   Form,
   Select,
@@ -42,10 +40,14 @@ import {
 } from "../../../features/timetableSlice";
 
 import { fetchAllUser } from "../../../features/authSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell,
+  tableContainer, tableHeadCss, modalTitle,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
 const { Option } = Select;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -55,6 +57,16 @@ const getId = (value) => {
   if (typeof value === "string") return value;
   return value?._id || "";
 };
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const ClassTimetable = () => {
   const dispatch = useDispatch();
@@ -371,104 +383,38 @@ const ClassTimetable = () => {
   );
 
   return (
-    <Layout
-      style={{
-       
-        minHeight: "100vh",
-        background: "transparent",
-      }}
-    >
-      {!isMobile && (
-        <Breadcrumb
-          style={{ marginBottom: 16 }}
-          items={[
-            { title: "Dashboard" },
-            { title: "Academics" },
-            { title: "Class Timetable" },
-          ]}
-        />
-      )}
-
-      <Content>
+    <>
+      <PageHeader
+        title="Class Timetable"
+        subtitle="Create and manage class-wise weekly timetable from live data"
+        icon={<CalendarOutlined />}
+        extra={
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            block={isMobile}
+            onClick={() => {
+              setEditingRecord(null);
+              form.resetFields();
+              setModalVisible(true);
+            }}
+            disabled={!activeAcademicYearId}
+          >
+            Add Class Schedule
+          </Button>
+        }
+      />
+      <div style={pageWrapper}>
         <Spin spinning={!!loading}>
-          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-            <Col xs={24} sm={12} lg={8}>
-              <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
-                <Space>
-                  <CalendarOutlined style={{ color: "#1677ff", fontSize: 22 }} />
-                  <div>
-                    <Text type="secondary">Total Slots</Text>
-                    <Title level={4} style={{ margin: 0 }}>
-                      {stats.totalSlots}
-                    </Title>
-                  </div>
-                </Space>
-              </Card>
-            </Col>
+          <div style={statGrid(200)}>
+            <StatCard icon={<CalendarOutlined />} label="Total Slots" value={stats.totalSlots} color="#2563EB" />
+            <StatCard icon={<TeamOutlined />} label="Teachers Assigned" value={stats.totalTeachers} color="#22C55E" />
+            <StatCard icon={<BookOutlined />} label="Subjects Planned" value={stats.totalSubjects} color="#722ED1" />
+          </div>
 
-            <Col xs={24} sm={12} lg={8}>
-              <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
-                <Space>
-                  <TeamOutlined style={{ color: "#22C55E", fontSize: 22 }} />
-                  <div>
-                    <Text type="secondary">Teachers Assigned</Text>
-                    <Title level={4} style={{ margin: 0 }}>
-                      {stats.totalTeachers}
-                    </Title>
-                  </div>
-                </Space>
-              </Card>
-            </Col>
+          <style>{tableHeadCss("class-timetable-tbl")}</style>
 
-            <Col xs={24} sm={24} lg={8}>
-              <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
-                <Space>
-                  <BookOutlined style={{ color: "#722ed1", fontSize: 22 }} />
-                  <div>
-                    <Text type="secondary">Subjects Planned</Text>
-                    <Title level={4} style={{ margin: 0 }}>
-                      {stats.totalSubjects}
-                    </Title>
-                  </div>
-                </Space>
-              </Card>
-            </Col>
-          </Row>
-
-          <Card style={{ borderRadius: 18 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
-                marginBottom: 16,
-              }}
-            >
-              <div style={{ minWidth: 0 }}>
-                <Title level={isMobile ? 5 : 4} style={{ marginBottom: 4 }}>
-                  Class Timetable Planner
-                </Title>
-                <Text type="secondary">
-                  Create and manage class-wise weekly timetable from live data.
-                </Text>
-              </div>
-
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                block={isMobile}
-                onClick={() => {
-                  setEditingRecord(null);
-                  form.resetFields();
-                  setModalVisible(true);
-                }}
-                disabled={!activeAcademicYearId}
-              >
-                Add Class Schedule
-              </Button>
-            </div>
-
+          <div style={sectionPanel}>
             <Space
               direction={isMobile ? "vertical" : "horizontal"}
               size={12}
@@ -531,21 +477,23 @@ const ClassTimetable = () => {
                   <TimetableMobileCard key={item._id} item={item} />
                 ))
               ) : (
-                <Table
-                  columns={columns}
-                  dataSource={filteredData}
-                  pagination={{ pageSize: 6, responsive: true }}
-                  rowKey={(record) => record._id}
-                  scroll={{ x: 900 }}
-                />
+                <div className="class-timetable-tbl" style={tableContainer}>
+                  <Table
+                    columns={columns}
+                    dataSource={filteredData}
+                    pagination={{ pageSize: 6, responsive: true }}
+                    rowKey={(record) => record._id}
+                    scroll={{ x: 900 }}
+                  />
+                </div>
               )
             ) : (
               <Empty description="No classes scheduled for selected filters" />
             )}
-          </Card>
+          </div>
 
           <Modal
-            title={editingRecord ? "Edit Class Schedule" : "Add Class Schedule"}
+            title={modalTitle(<CalendarOutlined />, editingRecord ? "Edit Class Schedule" : "Add Class Schedule")}
             open={modalVisible}
             onCancel={resetModalState}
             footer={null}
@@ -679,8 +627,8 @@ const ClassTimetable = () => {
             </Form>
           </Modal>
         </Spin>
-      </Content>
-    </Layout>
+      </div>
+    </>
   );
 };
 

@@ -6,11 +6,6 @@ import {
   Modal,
   Select,
   Switch,
-  Tag,
-  Typography,
-  Card,
-  Row,
-  Col,
   Space,
   Empty,
   Tooltip,
@@ -37,8 +32,11 @@ import {
   updateClass,
   deleteClass,
 } from "../../../features/classSlice";
-
-const { Title, Text } = Typography;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  toolbarRow, tableContainer, tableHeadCss, modalTitle, avatarStyle,
+} from "../../../styles/pageStyles";
 
 const INIT = {
   name: "",
@@ -49,86 +47,15 @@ const INIT = {
   isGlobal: false,
 };
 
-const css = `
-.class-page {
-  min-height: 100vh;
-  padding: 24px;
-  background: #F8FAFC;
-}
-
-.class-hero {
-  background: #ffffff;
-  border: 1px solid rgba(219,234,254,0.3);
-  border-radius: 20px;
-  padding: 22px;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.08);
-}
-
-.class-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 18px;
-  background: rgba(219,234,254,0.2);
-  color: #2563EB;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 23px;
-}
-
-.metric-card {
-  border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.08);
-}
-
-.metric-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-
-.table-card {
-  border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.08);
-}
-
-.class-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 13px;
-  background: rgba(219,234,254,0.2);
-  color: #2563EB;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-}
-
-.code-pill {
-  font-family: monospace;
-  background: rgba(219,234,254,0.1);
-  border: 1px solid rgba(219,234,254,0.3);
-  padding: 4px 10px;
-  border-radius: 999px;
-  color: #2563EB;
-}
-
-.class-modal .ant-modal-content {
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-@media (max-width: 768px) {
-  .class-page {
-    padding: 14px;
-  }
-}
-`;
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 export default function ClassPage() {
   const dispatch = useDispatch();
@@ -244,24 +171,14 @@ export default function ClassPage() {
 
   const columns = [
     {
-      title: "#",
-      width: 70,
-      render: (_, __, i) => (
-        <Text type="secondary">{String(i + 1).padStart(2, "0")}</Text>
-      ),
-    },
-    {
       title: "Class",
       dataIndex: "name",
       render: (name, row) => (
         <Space>
-          <div className="class-avatar">{name?.[0]?.toUpperCase() || "C"}</div>
+          <div style={avatarStyle(name, 36)}>{name?.[0]?.toUpperCase() || "C"}</div>
           <div>
-            <Text strong>{name || "-"}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {row.description || "No description"}
-            </Text>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{name || "-"}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{row.description || "No description"}</div>
           </div>
         </Space>
       ),
@@ -270,7 +187,11 @@ export default function ClassPage() {
       title: "Code",
       dataIndex: "code",
       render: (code) => (
-        <span className="code-pill">
+        <span style={{
+          fontFamily: "monospace", background: "var(--surface-soft)",
+          border: "1px solid var(--border-muted)", padding: "4px 10px",
+          borderRadius: 999, color: "var(--primary)", fontSize: 12,
+        }}>
           <CodeOutlined /> {code || "N/A"}
         </span>
       ),
@@ -278,30 +199,16 @@ export default function ClassPage() {
     {
       title: "Status",
       dataIndex: "status",
-      render: (value) =>
-        value === "active" ? (
-          <Tag color="success" style={{ borderRadius: 999 }}>
-            Active
-          </Tag>
-        ) : (
-          <Tag color="error" style={{ borderRadius: 999 }}>
-            Inactive
-          </Tag>
-        ),
+      render: (value) => value === "active"
+        ? <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Active</span>
+        : <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Inactive</span>,
     },
     {
       title: "Scope",
       dataIndex: "isGlobal",
-      render: (value) =>
-        value ? (
-          <Tag icon={<GlobalOutlined />} color="blue" style={{ borderRadius: 999 }}>
-            Global
-          </Tag>
-        ) : (
-          <Tag icon={<HomeOutlined />} style={{ borderRadius: 999 }}>
-            Local
-          </Tag>
-        ),
+      render: (value) => value
+        ? <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}><GlobalOutlined /> Global</span>
+        : <span style={pill("var(--text-muted)")}><HomeOutlined /> Local</span>,
     },
     {
       title: "Actions",
@@ -309,19 +216,7 @@ export default function ClassPage() {
       render: (_, record) => (
         <Space size={8}>
           <Tooltip title="Edit class">
-            <Button
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => handleOpenEdit(record)}
-              style={{
-                borderRadius: 8,
-                fontWeight: 600,
-                fontSize: 12,
-                background: "#e0e7ff",
-                borderColor: "#c7d2fe",
-                color: "#4f46e5",
-              }}
-            >
+            <Button icon={<EditOutlined />} size="small" onClick={() => handleOpenEdit(record)}>
               Edit
             </Button>
           </Tooltip>
@@ -335,18 +230,7 @@ export default function ClassPage() {
             placement="topRight"
           >
             <Tooltip title="Delete class">
-              <Button
-                icon={<DeleteOutlined />}
-                size="small"
-                danger
-                style={{
-                  borderRadius: 8,
-                  fontWeight: 600,
-                  fontSize: 12,
-                }}
-              >
-                Delete
-              </Button>
+              <Button icon={<DeleteOutlined />} size="small" danger>Delete</Button>
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -355,137 +239,58 @@ export default function ClassPage() {
   ];
 
   return (
-    <>
-      <style>{css}</style>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Class Management"
+        subtitle="Academic classes ko create, search aur manage karein"
+        icon={<BookOutlined />}
+        extra={
+          <Space wrap>
+            <Button icon={<ReloadOutlined />} onClick={() => dispatch(fetchAllClasses())}>Refresh</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Add Class</Button>
+          </Space>
+        }
+      />
 
-      <div className="class-page">
-        <div className="class-hero">
-          <Row gutter={[16, 16]} justify="space-between" align="middle">
-            <Col xs={24} md={12}>
-              <Space align="center">
-                <div className="class-icon">
-                  <BookOutlined />
-                </div>
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>
-                    Class Management
-                  </Title>
-                  <Text type="secondary">
-                    Academic classes ko create, search aur manage karein.
-                  </Text>
-                </div>
-              </Space>
-            </Col>
+      <div style={{ ...statGrid(170), marginTop: 20 }}>
+        <StatCard icon={<BookOutlined />} label="Total Classes" value={stats.total} color="#2563EB" />
+        <StatCard icon={<CheckCircleOutlined />} label="Active Classes" value={stats.active} color="#22C55E" />
+        <StatCard icon={<CloseCircleOutlined />} label="Inactive Classes" value={stats.inactive} color="#EF4444" />
+        <StatCard icon={<GlobalOutlined />} label="Global Classes" value={stats.global} color="#14B8A6" />
+      </div>
 
-            <Col xs={24} md={12}>
-              <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
-                <Button icon={<ReloadOutlined />} onClick={() => dispatch(fetchAllClasses())}>
-                  Refresh
-                </Button>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
-                  Add Class
-                </Button>
-              </Space>
-            </Col>
-          </Row>
+      <style>{tableHeadCss("class-page-tbl")}</style>
+
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+          <BookOutlined style={{ color: "var(--primary)" }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Class List</span>
+          <span style={pill("var(--primary)")}>{filteredClasses.length}</span>
         </div>
 
-        <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="metric-card">
-              <Space>
-                <div className="metric-icon" style={{ background: "rgba(219,234,254,0.2)", color: "#2563EB" }}>
-                  <BookOutlined />
-                </div>
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>{stats.total}</Title>
-                  <Text type="secondary">Total Classes</Text>
-                </div>
-              </Space>
-            </Card>
-          </Col>
+        <div style={{ ...toolbarRow, marginBottom: 16 }}>
+          <Input
+            allowClear
+            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            placeholder="Search by class name or code"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: 280 }}
+          />
+          <Select
+            allowClear
+            placeholder="Filter status"
+            value={status || undefined}
+            onChange={(v) => setStatus(v || "")}
+            style={{ width: 160 }}
+            options={[
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ]}
+          />
+        </div>
 
-          <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="metric-card">
-              <Space>
-                <div className="metric-icon" style={{ background: "rgba(220,252,231,0.2)", color: "#22C55E" }}>
-                  <CheckCircleOutlined />
-                </div>
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>{stats.active}</Title>
-                  <Text type="secondary">Active Classes</Text>
-                </div>
-              </Space>
-            </Card>
-          </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="metric-card">
-              <Space>
-                <div className="metric-icon" style={{ background: "rgba(254,226,226,0.2)", color: "#EF4444" }}>
-                  <CloseCircleOutlined />
-                </div>
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>{stats.inactive}</Title>
-                  <Text type="secondary">Inactive Classes</Text>
-                </div>
-              </Space>
-            </Card>
-          </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="metric-card">
-              <Space>
-                <div className="metric-icon" style={{ background: "rgba(20,184,166,0.2)", color: "#14B8A6" }}>
-                  <GlobalOutlined />
-                </div>
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>{stats.global}</Title>
-                  <Text type="secondary">Global Classes</Text>
-                </div>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
-
-        <Card
-          bordered={false}
-          className="table-card"
-          title={
-            <Space>
-              <BookOutlined style={{ color: "#4f46e5" }} />
-              <span>Class List</span>
-              <Tag color="blue">{filteredClasses.length}</Tag>
-            </Space>
-          }
-        >
-          <Row gutter={[12, 12]} justify="space-between" style={{ marginBottom: 16 }}>
-            <Col xs={24} md={14}>
-              <Space wrap>
-                <Input
-                  allowClear
-                  prefix={<SearchOutlined />}
-                  placeholder="Search by class name or code"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  style={{ width: 280 }}
-                />
-
-                <Select
-                  allowClear
-                  placeholder="Filter status"
-                  value={status || undefined}
-                  onChange={(v) => setStatus(v || "")}
-                  style={{ width: 160 }}
-                  options={[
-                    { label: "Active", value: "active" },
-                    { label: "Inactive", value: "inactive" },
-                  ]}
-                />
-              </Space>
-            </Col>
-          </Row>
-
+        <div className="class-page-tbl" style={tableContainer}>
           <Table
             columns={columns}
             dataSource={filteredClasses}
@@ -493,33 +298,23 @@ export default function ClassPage() {
             rowKey="_id"
             scroll={{ x: 850 }}
             locale={{ emptyText: <Empty description="No classes found" /> }}
-            pagination={{
-              pageSize: 8,
-              showSizeChanger: true,
-              pageSizeOptions: [8, 16, 32],
-            }}
+            pagination={{ pageSize: 8, showSizeChanger: true, pageSizeOptions: [8, 16, 32] }}
           />
-        </Card>
+        </div>
       </div>
 
       {/* ── Create Modal ── */}
       <Modal
-        title={
-          <Space>
-            <BookOutlined style={{ color: "#4f46e5" }} />
-            <span>Create New Class</span>
-          </Space>
-        }
+        title={modalTitle(<BookOutlined />, "Create New Class")}
         open={open}
         footer={null}
         onCancel={() => setOpen(false)}
-        className="class-modal"
         width={620}
         destroyOnClose
       >
-        <Row gutter={[14, 10]} style={{ marginTop: 16 }}>
-          <Col xs={24} md={12}>
-            <Text strong>Class Name</Text>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 14px", marginTop: 16 }}>
+          <div style={{ gridColumn: "span 1" }}>
+            <span style={{ fontWeight: 600 }}>Class Name</span>
             <Input
               size="large"
               placeholder="e.g. Class 10"
@@ -527,10 +322,10 @@ export default function ClassPage() {
               onChange={(e) => handleChange("name", e.target.value)}
               style={{ marginTop: 6 }}
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={12}>
-            <Text strong>Class Code</Text>
+          <div>
+            <span style={{ fontWeight: 600 }}>Class Code</span>
             <Input
               size="large"
               placeholder="e.g. CLS-10"
@@ -538,10 +333,10 @@ export default function ClassPage() {
               onChange={(e) => handleChange("code", e.target.value)}
               style={{ marginTop: 6 }}
             />
-          </Col>
+          </div>
 
-          <Col xs={24}>
-            <Text strong>Description</Text>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <span style={{ fontWeight: 600 }}>Description</span>
             <Input.TextArea
               placeholder="Short description about this class..."
               value={formData.description}
@@ -549,10 +344,10 @@ export default function ClassPage() {
               rows={3}
               style={{ marginTop: 6 }}
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={12}>
-            <Text strong>Status</Text>
+          <div>
+            <span style={{ fontWeight: 600 }}>Status</span>
             <Select
               size="large"
               style={{ width: "100%", marginTop: 6 }}
@@ -563,73 +358,40 @@ export default function ClassPage() {
                 { label: "Inactive", value: "inactive" },
               ]}
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={12}>
-            <Text strong>Scope</Text>
-            <div
-              style={{
-                marginTop: 6,
-                height: 40,
-                border: "1px solid #e2e8f0",
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0 12px",
-                background: "#f8fafc",
-              }}
-            >
-              <Text type="secondary">Make global</Text>
-              <Switch
-                checked={formData.isGlobal}
-                onChange={(v) => handleChange("isGlobal", v)}
-              />
+          <div>
+            <span style={{ fontWeight: 600 }}>Scope</span>
+            <div style={{
+              marginTop: 6, height: 40, border: "1px solid var(--border-muted)", borderRadius: 10,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "0 12px", background: "var(--surface-soft)",
+            }}>
+              <span style={{ color: "var(--text-muted)" }}>Make global</span>
+              <Switch checked={formData.isGlobal} onChange={(v) => handleChange("isGlobal", v)} />
             </div>
-          </Col>
-        </Row>
+          </div>
+        </div>
 
         <Space style={{ width: "100%", justifyContent: "flex-end", marginTop: 22 }}>
-          <Button
-            onClick={() => {
-              resetForm();
-              setOpen(false);
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button icon={<ReloadOutlined />} onClick={resetForm}>
-            Reset
-          </Button>
-
-          <Button type="primary" loading={saving} onClick={handleSave}>
-            Save Class
-          </Button>
+          <Button onClick={() => { resetForm(); setOpen(false); }}>Cancel</Button>
+          <Button icon={<ReloadOutlined />} onClick={resetForm}>Reset</Button>
+          <Button type="primary" loading={saving} onClick={handleSave}>Save Class</Button>
         </Space>
       </Modal>
 
       {/* ── Edit Modal ── */}
       <Modal
-        title={
-          <Space>
-            <EditOutlined style={{ color: "#4f46e5" }} />
-            <span>Edit Class</span>
-          </Space>
-        }
+        title={modalTitle(<EditOutlined />, "Edit Class")}
         open={editOpen}
         footer={null}
-        onCancel={() => {
-          setEditOpen(false);
-          setEditingId(null);
-        }}
-        className="class-modal"
+        onCancel={() => { setEditOpen(false); setEditingId(null); }}
         width={620}
         destroyOnClose
       >
-        <Row gutter={[14, 10]} style={{ marginTop: 16 }}>
-          <Col xs={24} md={12}>
-            <Text strong>Class Name</Text>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 14px", marginTop: 16 }}>
+          <div>
+            <span style={{ fontWeight: 600 }}>Class Name</span>
             <Input
               size="large"
               placeholder="e.g. Class 10"
@@ -637,10 +399,10 @@ export default function ClassPage() {
               onChange={(e) => handleEditChange("name", e.target.value)}
               style={{ marginTop: 6 }}
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={12}>
-            <Text strong>Class Code</Text>
+          <div>
+            <span style={{ fontWeight: 600 }}>Class Code</span>
             <Input
               size="large"
               placeholder="e.g. CLS-10"
@@ -648,10 +410,10 @@ export default function ClassPage() {
               onChange={(e) => handleEditChange("code", e.target.value)}
               style={{ marginTop: 6 }}
             />
-          </Col>
+          </div>
 
-          <Col xs={24}>
-            <Text strong>Description</Text>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <span style={{ fontWeight: 600 }}>Description</span>
             <Input.TextArea
               placeholder="Short description about this class..."
               value={editData.description}
@@ -659,10 +421,10 @@ export default function ClassPage() {
               rows={3}
               style={{ marginTop: 6 }}
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={12}>
-            <Text strong>Status</Text>
+          <div>
+            <span style={{ fontWeight: 600 }}>Status</span>
             <Select
               size="large"
               style={{ width: "100%", marginTop: 6 }}
@@ -673,47 +435,26 @@ export default function ClassPage() {
                 { label: "Inactive", value: "inactive" },
               ]}
             />
-          </Col>
+          </div>
 
-          <Col xs={24} md={12}>
-            <Text strong>Scope</Text>
-            <div
-              style={{
-                marginTop: 6,
-                height: 40,
-                border: "1px solid #e2e8f0",
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0 12px",
-                background: "#f8fafc",
-              }}
-            >
-              <Text type="secondary">Make global</Text>
-              <Switch
-                checked={editData.isGlobal}
-                onChange={(v) => handleEditChange("isGlobal", v)}
-              />
+          <div>
+            <span style={{ fontWeight: 600 }}>Scope</span>
+            <div style={{
+              marginTop: 6, height: 40, border: "1px solid var(--border-muted)", borderRadius: 10,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "0 12px", background: "var(--surface-soft)",
+            }}>
+              <span style={{ color: "var(--text-muted)" }}>Make global</span>
+              <Switch checked={editData.isGlobal} onChange={(v) => handleEditChange("isGlobal", v)} />
             </div>
-          </Col>
-        </Row>
+          </div>
+        </div>
 
         <Space style={{ width: "100%", justifyContent: "flex-end", marginTop: 22 }}>
-          <Button
-            onClick={() => {
-              setEditOpen(false);
-              setEditingId(null);
-            }}
-          >
-            Cancel
-          </Button>
-
-          <Button type="primary" loading={editSaving} onClick={handleEditSave}>
-            Update Class
-          </Button>
+          <Button onClick={() => { setEditOpen(false); setEditingId(null); }}>Cancel</Button>
+          <Button type="primary" loading={editSaving} onClick={handleEditSave}>Update Class</Button>
         </Space>
       </Modal>
-    </>
+    </div>
   );
 }
