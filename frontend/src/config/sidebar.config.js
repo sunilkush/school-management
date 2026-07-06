@@ -73,7 +73,14 @@ const communicationMenu = (basePath) => {
   };
 };
 
-const supportCenterItem = { title: "Support Center", path: "support/tickets", icon: HelpCircle };
+const supportCenterItem = {
+  title: "Support Center",
+  icon: HelpCircle,
+  subMenu: [
+    { title: "Support Tickets", path: "support/tickets", icon: HelpCircle },
+    { title: "Documentation",   path: "support/documentation", icon: FileText },
+  ],
+};
 
 const roleWorkspaceItem = { title: "Role Workspace", path: "workspace", icon: ClipboardList };
 
@@ -716,7 +723,7 @@ Object.keys(sidebarMenu).forEach((roleKey) => {
    //const rolePath = roleKey.replace(/\s+/g, "");
   //const hasMessage = items.some((item) => item?.path === `${rolePath}/message` || item?.path?.endsWith("/message"));
   //if (!hasMessage) items.push({ title: "Messages", path: `${rolePath}/message`, icon: MessageSquare });
-  if (!items.some((item) => item?.path === supportCenterItem.path)) {
+  if (!items.some((item) => item?.title === "Support Center")) {
     items.push(supportCenterItem);
   }
 });
