@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
@@ -190,5 +191,21 @@ const Parents = () => {
     </>
   );
 };
+=======
+import React from "react";
+import { UsergroupAddOutlined } from "@ant-design/icons";
+import UserRoleList from "./UserRoleList";
+
+const Parents = () => (
+  <UserRoleList
+    roleNames={["Parent"]}
+    title="Parent Management"
+    subtitle="Manage parents across all schools"
+    icon={<UsergroupAddOutlined />}
+    nounSingular="parent"
+    nounPlural="parents"
+  />
+);
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 
 export default Parents;

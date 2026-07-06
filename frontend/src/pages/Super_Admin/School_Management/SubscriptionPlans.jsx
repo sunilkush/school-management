@@ -11,13 +11,11 @@ import {
 
 import {
   Table,
-  Card,
   Button,
   Tag,
   Space,
   Popconfirm,
   Modal,
-  Typography,
   Tooltip,
   Empty,
   Badge,
@@ -41,41 +39,18 @@ import { fetchSchools } from "../../../features/schoolSlice";
 
 import PlanForm from "../../../components/forms/PlanForm.jsx";
 import PlanLogs from "./PlanLogs.jsx";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, modalTitle, emptyState,
+} from "../../../styles/pageStyles";
 
-const { Text, Title } = Typography;
-
-// ─── Color tokens (pastel system) ────────────────────────────
-const C = {
-  primary: "#2563EB",
-  primaryLight: "#DBEAFE",
-  primaryMid: "#2563EB",
-  primaryBorder: "#DBEAFE",
-  surface: "#ffffff",
-  bg: "#F8FAFC",
-  border: "rgba(219,234,254,0.35)",
-  text: "#0F172A",
-  textSec: "#64748B",
-  textMuted: "#94A3B8",
-  blue: "#2563EB",
-  blueLight: "#DBEAFE",
-  blueBorder: "rgba(219,234,254,0.5)",
-  purple: "#14B8A6",
-  purpleLight: "rgba(20,184,166,0.2)",
-  purpleBorder: "rgba(20,184,166,0.5)",
-  gold: "#F59E0B",
-  goldLight: "rgba(254,243,199,0.25)",
-  goldBorder: "rgba(254,243,199,0.5)",
-  danger: "#EF4444",
-  dangerLight: "rgba(254,226,226,0.2)",
-  dangerBorder: "rgba(254,226,226,0.5)",
-};
-
-// ─── Plan tier colors by index ────────────────────────────────
+// ─── Plan tier accent colors (by index) ───────────────────────
 const TIER_COLORS = [
-  { bg: C.primaryLight, color: C.primary, border: C.primaryBorder },
-  { bg: C.blueLight, color: C.blue, border: C.blueBorder },
-  { bg: C.purpleLight, color: C.purple, border: C.purpleBorder },
-  { bg: C.goldLight, color: C.gold, border: C.goldBorder },
+  { bg: "rgba(219,234,254,0.4)", color: "#2563EB", border: "rgba(219,234,254,0.7)" },
+  { bg: "rgba(219,234,254,0.4)", color: "#2563EB", border: "rgba(219,234,254,0.7)" },
+  { bg: "rgba(20,184,166,0.15)", color: "#14B8A6", border: "rgba(20,184,166,0.4)" },
+  { bg: "rgba(254,243,199,0.4)", color: "#F59E0B", border: "rgba(254,243,199,0.7)" },
 ];
 
 // ─── Plan Card (Mobile) ───────────────────────────────────────
@@ -86,57 +61,18 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
   const extra = modules.length - 3;
 
   return (
-    <Card
-      style={{
-        borderRadius: 14,
-        border: `1px solid ${C.border}`,
-        background: C.surface,
-        marginBottom: 10,
-        overflow: "hidden",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-      }}
-      styles={{ body: { padding: 0 } }}
-    >
-      {/* Accent bar */}
+    <div style={{ ...sectionPanel, marginBottom: 10, padding: 0, overflow: "hidden" }}>
       <div style={{ height: 3, background: `linear-gradient(90deg, ${tier.color}, ${tier.border})` }} />
 
       <div style={{ padding: "14px 16px" }}>
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
           <Space size={8} align="center">
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: tier.bg,
-                border: `1px solid ${tier.border}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: tier.color,
-                fontSize: 15,
-              }}
-            >
-              <CrownOutlined />
-            </div>
-            <Text strong style={{ fontSize: 15, color: C.text, letterSpacing: "-0.2px" }}>
-              {plan.name}
-            </Text>
+            <div style={iconWell(tier.color, 32)}><CrownOutlined /></div>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{plan.name}</span>
           </Space>
           <Space size={5}>
             <Tooltip title="Edit plan">
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => onEdit(plan)}
-                style={{
-                  borderRadius: 7,
-                  borderColor: C.border,
-                  color: C.primary,
-                  fontSize: 12,
-                }}
-              />
+              <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(plan)} style={{ borderRadius: 7 }} />
             </Tooltip>
             <Popconfirm
               title="Delete this plan?"
@@ -147,104 +83,29 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
               onConfirm={() => onDelete(plan._id)}
             >
               <Tooltip title="Delete plan">
-                <Button
-                  size="small"
-                  icon={<DeleteOutlined />}
-                  style={{
-                    borderRadius: 7,
-                    borderColor: C.dangerBorder,
-                    color: C.danger,
-                    background: C.dangerLight,
-                  }}
-                />
+                <Button size="small" danger icon={<DeleteOutlined />} style={{ borderRadius: 7 }} />
               </Tooltip>
             </Popconfirm>
           </Space>
         </div>
 
-        {/* Price + Duration */}
         <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-          <Tag
-            icon={<span style={{ marginRight: 3, fontWeight: 700 }}>₹</span>}
-            style={{
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 600,
-              background: C.goldLight,
-              color: C.gold,
-              border: `1px solid ${C.goldBorder}`,
-              padding: "2px 10px",
-              margin: 0,
-            }}
-          >
-            {plan.price}
-          </Tag>
-          <Tag
-            icon={<ClockCircleOutlined style={{ fontSize: 10 }} />}
-            style={{
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 500,
-              background: C.blueLight,
-              color: C.blue,
-              border: `1px solid ${C.blueBorder}`,
-              padding: "2px 10px",
-              margin: 0,
-            }}
-          >
-            {plan.durationInDays} days
-          </Tag>
+          <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>₹{plan.price}</span>
+          <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{plan.durationInDays} days</span>
         </div>
 
-        {/* Features */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
           {displayModules.map((mod) => (
-            <Tag
-              key={mod}
-              icon={<CheckOutlined style={{ fontSize: 9 }} />}
-              style={{
-                borderRadius: 6,
-                fontSize: 11,
-                fontWeight: 500,
-                background: C.primaryLight,
-                color: C.primary,
-                border: `1px solid ${C.primaryBorder}`,
-                padding: "1px 8px",
-                margin: 0,
-              }}
-            >
-              {mod}
-            </Tag>
+            <span key={mod} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{mod}</span>
           ))}
-          {extra > 0 && (
-            <Tag
-              style={{
-                borderRadius: 6,
-                fontSize: 11,
-                background: C.purpleLight,
-                color: C.purple,
-                border: `1px solid ${C.purpleBorder}`,
-                padding: "1px 8px",
-                margin: 0,
-              }}
-            >
-              +{extra} more
-            </Tag>
-          )}
+          {extra > 0 && <span style={pill("#14B8A6", "rgba(20,184,166,0.15)")}>+{extra} more</span>}
         </div>
 
-        {/* Logs button */}
-        <Button
-          type="text"
-          size="small"
-          icon={<HistoryOutlined />}
-          onClick={() => onViewLogs(plan._id)}
-          style={{ color: C.textSec, fontSize: 12, padding: "0 4px" }}
-        >
+        <Button type="text" size="small" icon={<HistoryOutlined />} onClick={() => onViewLogs(plan._id)} style={{ color: "var(--text-muted)", fontSize: 12, padding: "0 4px" }}>
           View logs
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -318,186 +179,64 @@ const SubscriptionPlans = () => {
 
   const columns = [
     {
-      title: (
-        <Text style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-          Plan Name
-        </Text>
-      ),
+      title: "Plan Name",
       dataIndex: "name",
       render: (name, _, index) => {
         const tier = TIER_COLORS[index % TIER_COLORS.length];
         return (
           <Space size={9} align="center">
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 7,
-                background: tier.bg,
-                border: `1px solid ${tier.border}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: tier.color,
-                fontSize: 13,
-              }}
-            >
-              <CrownOutlined />
-            </div>
-            <Text strong style={{ fontSize: 13, color: C.text, letterSpacing: "-0.1px" }}>
-              {name}
-            </Text>
+            <div style={iconWell(tier.color, 30)}><CrownOutlined /></div>
+            <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{name}</span>
           </Space>
         );
       },
     },
     {
-      title: (
-        <Text style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-          Price
-        </Text>
-      ),
+      title: "Price",
       dataIndex: "price",
       align: "center",
-      render: (p) => (
-        <Tag
-          style={{
-            borderRadius: 6,
-            fontSize: 12,
-            fontWeight: 600,
-            background: C.goldLight,
-            color: C.gold,
-            border: `1px solid ${C.goldBorder}`,
-            padding: "2px 10px",
-            margin: 0,
-          }}
-        >
-          ₹{p}
-        </Tag>
-      ),
+      render: (p) => <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>₹{p}</span>,
     },
     {
-      title: (
-        <Text style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-          Duration
-        </Text>
-      ),
+      title: "Duration",
       dataIndex: "durationInDays",
       align: "center",
-      render: (d) => (
-        <Tag
-          icon={<ClockCircleOutlined style={{ fontSize: 10 }} />}
-          style={{
-            borderRadius: 6,
-            fontSize: 12,
-            fontWeight: 500,
-            background: C.blueLight,
-            color: C.blue,
-            border: `1px solid ${C.blueBorder}`,
-            padding: "2px 10px",
-            margin: 0,
-          }}
-        >
-          {d} days
-        </Tag>
-      ),
+      render: (d) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{d} days</span>,
     },
     {
-      title: (
-        <Text style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-          Features
-        </Text>
-      ),
+      title: "Features",
       dataIndex: "features",
       render: (features) => {
-        if (!features?.length) return <Text style={{ color: C.textMuted, fontSize: 12 }}>—</Text>;
+        if (!features?.length) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
         const modules = features.map((f) => f.module || "").filter(Boolean);
         const first = modules.slice(0, 2);
         const extra = modules.length - 2;
         return (
           <Space size={5} wrap>
-            {first.map((mod) => (
-              <Tag
-                key={mod}
-                style={{
-                  borderRadius: 6,
-                  fontSize: 11,
-                  fontWeight: 500,
-                  background: C.primaryLight,
-                  color: C.primary,
-                  border: `1px solid ${C.primaryBorder}`,
-                  padding: "1px 8px",
-                  margin: 0,
-                }}
-              >
-                {mod}
-              </Tag>
-            ))}
-            {extra > 0 && (
-              <Tag
-                style={{
-                  borderRadius: 6,
-                  fontSize: 11,
-                  background: C.purpleLight,
-                  color: C.purple,
-                  border: `1px solid ${C.purpleBorder}`,
-                  padding: "1px 8px",
-                  margin: 0,
-                }}
-              >
-                +{extra} more
-              </Tag>
-            )}
+            {first.map((mod) => <span key={mod} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{mod}</span>)}
+            {extra > 0 && <span style={pill("#14B8A6", "rgba(20,184,166,0.15)")}>+{extra} more</span>}
           </Space>
         );
       },
     },
     {
-      title: (
-        <Text style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-          Logs
-        </Text>
-      ),
+      title: "Logs",
       align: "center",
       render: (_, row) => (
         <Tooltip title="View change history">
-          <Button
-            type="text"
-            size="small"
-            icon={<HistoryOutlined />}
-            onClick={() => openLogsPopup(row._id)}
-            style={{ color: C.textSec, borderRadius: 7, fontSize: 12 }}
-          >
+          <Button type="text" size="small" icon={<HistoryOutlined />} onClick={() => openLogsPopup(row._id)} style={{ color: "var(--text-muted)" }}>
             View logs
           </Button>
         </Tooltip>
       ),
     },
     {
-      title: (
-        <Text style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-          Actions
-        </Text>
-      ),
+      title: "Actions",
       align: "center",
       render: (_, row) => (
         <Space size={6}>
           <Tooltip title="Edit plan">
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEditModal(row)}
-              style={{
-                borderRadius: 7,
-                borderColor: C.primaryBorder,
-                color: C.primary,
-                background: C.primaryLight,
-                fontWeight: 500,
-                fontSize: 12,
-              }}
-            >
-              Edit
-            </Button>
+            <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(row)}>Edit</Button>
           </Tooltip>
           <Popconfirm
             title="Delete this plan?"
@@ -509,16 +248,7 @@ const SubscriptionPlans = () => {
             placement="topRight"
           >
             <Tooltip title="Delete plan">
-              <Button
-                size="small"
-                icon={<DeleteOutlined />}
-                style={{
-                  borderRadius: 7,
-                  borderColor: C.dangerBorder,
-                  color: C.danger,
-                  background: C.dangerLight,
-                }}
-              />
+              <Button size="small" danger icon={<DeleteOutlined />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -527,147 +257,52 @@ const SubscriptionPlans = () => {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, padding: "28px 24px" }}>
-
-      {/* ══ PAGE HEADER ══ */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          marginBottom: 24,
-          gap: 16,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <Space align="center" size={10} style={{ marginBottom: 4 }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: C.primaryLight,
-                border: `1px solid ${C.primaryBorder}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <AppstoreOutlined style={{ color: C.primary, fontSize: 16 }} />
-            </div>
-            <Title level={3} style={{ margin: 0, color: C.text, fontWeight: 700, letterSpacing: "-0.5px" }}>
-              Subscription Plans
-            </Title>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Subscription Plans"
+        subtitle="Manage pricing tiers and feature access for schools"
+        icon={<AppstoreOutlined />}
+        extra={
+          <Space wrap>
+            <Button icon={<WalletOutlined />} onClick={() => navigate("/dashboard/superadmin/payments")}>Payments</Button>
+            <Button icon={<BarChartOutlined />} onClick={() => navigate("/dashboard/superadmin/revenue")}>Revenue</Button>
+            <Button onClick={() => setAssignOpen(true)}>Assign Plan</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>Add Plan</Button>
           </Space>
-          <Text style={{ color: C.textSec, fontSize: 13 }}>
-            Manage pricing tiers and feature access for schools
-          </Text>
-        </div>
+        }
+      />
 
-        <Space wrap>
-          <Button icon={<WalletOutlined />} onClick={() => navigate("/dashboard/superadmin/payments")}>
-            Payments
-          </Button>
-          <Button icon={<BarChartOutlined />} onClick={() => navigate("/dashboard/superadmin/revenue")}>
-            Revenue
-          </Button>
-          <Button onClick={() => setAssignOpen(true)}>Assign Plan</Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openAddModal}
-            size="large"
-            style={{
-              background: C.primary,
-              borderColor: C.primary,
-              borderRadius: 10,
-              fontWeight: 600,
-              height: 40,
-              paddingInline: 20,
-              boxShadow: "0 2px 8px rgba(15,110,86,0.25)",
-            }}
-          >
-            Add Plan
-          </Button>
-        </Space>
-      </div>
-
-      {/* ══ STATS STRIP ══ */}
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          marginBottom: 20,
-          flexWrap: "wrap",
-        }}
-      >
+      <div style={{ ...statGrid(160), marginTop: 20 }}>
         {[
-          { label: "Total Plans", value: plans?.length ?? 0, color: C.primary, bg: C.primaryLight, border: C.primaryBorder, icon: <AppstoreOutlined /> },
-          { label: "Avg. Price", value: plans?.length ? `₹${Math.round(plans.reduce((s, p) => s + (p.price || 0), 0) / plans.length)}` : "—", color: C.gold, bg: C.goldLight, border: C.goldBorder, icon: <CrownOutlined /> },
-          { label: "Avg. Duration", value: plans?.length ? `${Math.round(plans.reduce((s, p) => s + (p.durationInDays || 0), 0) / plans.length)}d` : "—", color: C.blue, bg: C.blueLight, border: C.blueBorder, icon: <ClockCircleOutlined /> },
+          { label: "Total Plans", value: plans?.length ?? 0, color: "#2563EB", icon: <AppstoreOutlined /> },
+          { label: "Avg. Price", value: plans?.length ? `₹${Math.round(plans.reduce((s, p) => s + (p.price || 0), 0) / plans.length)}` : "—", color: "#F59E0B", icon: <CrownOutlined /> },
+          { label: "Avg. Duration", value: plans?.length ? `${Math.round(plans.reduce((s, p) => s + (p.durationInDays || 0), 0) / plans.length)}d` : "—", color: "#14B8A6", icon: <ClockCircleOutlined /> },
         ].map((stat) => (
-          <div
-            key={stat.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: stat.bg,
-              border: `1px solid ${stat.border}`,
-              borderRadius: 12,
-              padding: "12px 16px",
-              flex: "1 1 140px",
-            }}
-          >
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                background: C.surface,
-                border: `1px solid ${stat.border}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: stat.color,
-                fontSize: 15,
-                flexShrink: 0,
-              }}
-            >
-              {stat.icon}
-            </div>
+          <div key={stat.label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, marginBottom: 0 }}>
+            <div style={iconWell(stat.color, 38)}>{stat.icon}</div>
             <div>
-              <Text style={{ display: "block", fontSize: 10, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600, lineHeight: 1.4 }}>
-                {stat.label}
-              </Text>
-              <Text strong style={{ fontSize: 20, color: C.text, letterSpacing: "-0.5px", lineHeight: 1 }}>
-                {stat.value}
-              </Text>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{stat.value}</div>
             </div>
           </div>
         ))}
       </div>
 
+      <style>{`
+        ${tableHeadCss("plans-tbl")}
+        @media (max-width: 640px) {
+          .hidden-mobile { display: none !important; }
+          .visible-mobile { display: block !important; }
+        }
+      `}</style>
+
       {/* ══ DESKTOP TABLE ══ */}
-      <div style={{ display: "block" }} className="hidden-mobile">
-        <Card
-          style={{
-            borderRadius: 16,
-            border: `1px solid ${C.border}`,
-            background: C.surface,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-            overflow: "hidden",
-          }}
-          styles={{ body: { padding: 0 } }}
-        >
-          <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 13, fontWeight: 600, color: C.text }}>All Plans</Text>
-            <Badge
-              count={plans?.length ?? 0}
-              style={{ background: C.primaryLight, color: C.primary, border: `1px solid ${C.primaryBorder}`, boxShadow: "none", fontWeight: 600 }}
-            />
-          </div>
+      <div className="hidden-mobile" style={{ ...sectionPanel, padding: 0 }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>All Plans</span>
+          <Badge count={plans?.length ?? 0} color="var(--primary)" />
+        </div>
+        <div className="plans-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
           <Table
             columns={columns}
             dataSource={plans}
@@ -678,25 +313,15 @@ const SubscriptionPlans = () => {
               emptyText: (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={<Text style={{ color: C.textMuted, fontSize: 13 }}>No subscription plans yet</Text>}
+                  description={<span style={{ color: "var(--text-muted)", fontSize: 13 }}>No subscription plans yet</span>}
                   style={{ padding: "32px 0" }}
                 >
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={openAddModal}
-                    style={{ background: C.primary, borderColor: C.primary, borderRadius: 8 }}
-                  >
-                    Add first plan
-                  </Button>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>Add first plan</Button>
                 </Empty>
               ),
             }}
-            onRow={() => ({
-              style: { fontSize: 13 },
-            })}
           />
-        </Card>
+        </div>
       </div>
 
       {/* ══ MOBILE CARDS ══ */}
@@ -712,65 +337,25 @@ const SubscriptionPlans = () => {
           />
         ))}
         {!plans?.length && !loading && (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={<Text style={{ color: C.textMuted }}>No plans found</Text>}
-          >
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={openAddModal}
-              style={{ background: C.primary, borderColor: C.primary, borderRadius: 8 }}
+          <div style={emptyState}>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={<span style={{ color: "var(--text-muted)" }}>No plans found</span>}
             >
-              Add first plan
-            </Button>
-          </Empty>
+              <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>Add first plan</Button>
+            </Empty>
+          </div>
         )}
       </div>
 
       {/* ══ ADD / EDIT MODAL ══ */}
       <Modal
-        title={
-          <Space align="center" size={10}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 7,
-                background: C.primaryLight,
-                border: `1px solid ${C.primaryBorder}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {editingPlan ? (
-                <EditOutlined style={{ color: C.primary, fontSize: 13 }} />
-              ) : (
-                <PlusOutlined style={{ color: C.primary, fontSize: 13 }} />
-              )}
-            </div>
-            <Title level={4} style={{ margin: 0, color: C.primary, fontSize: 16 }}>
-              {editingPlan ? "Edit Subscription Plan" : "Add New Plan"}
-            </Title>
-          </Space>
-        }
+        title={modalTitle(editingPlan ? <EditOutlined /> : <PlusOutlined />, editingPlan ? "Edit Subscription Plan" : "Add New Plan")}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         destroyOnClose
         centered
-        styles={{
-          content: { borderRadius: 16, padding: 0, overflow: "hidden" },
-          header: {
-            background: C.primaryLight,
-            borderBottom: `1px solid ${C.primaryBorder}`,
-            borderRadius: "16px 16px 0 0",
-            padding: "14px 20px",
-            margin: 0,
-          },
-          body: { padding: 20 },
-        }}
       >
         <PlanForm
           initialValues={editingPlan}
@@ -814,65 +399,15 @@ const SubscriptionPlans = () => {
 
       {/* ══ LOGS MODAL ══ */}
       <Modal
-        title={
-          <Space align="center" size={10}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 7,
-                background: C.blueLight,
-                border: `1px solid ${C.blueBorder}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <HistoryOutlined style={{ color: C.blue, fontSize: 13 }} />
-            </div>
-            <Title level={4} style={{ margin: 0, color: C.blue, fontSize: 16 }}>
-              Plan Update Logs
-            </Title>
-          </Space>
-        }
+        title={modalTitle(<HistoryOutlined />, "Plan Update Logs")}
         width={850}
         open={isLogsOpen}
         onCancel={() => setIsLogsOpen(false)}
         footer={null}
         centered
-        styles={{
-          content: { borderRadius: 16, padding: 0, overflow: "hidden" },
-          header: {
-            background: C.blueLight,
-            borderBottom: `1px solid ${C.blueBorder}`,
-            borderRadius: "16px 16px 0 0",
-            padding: "14px 20px",
-            margin: 0,
-          },
-          body: { padding: 20 },
-        }}
       >
         {selectedPlanId && <PlanLogs planId={selectedPlanId} />}
       </Modal>
-
-      <style>{`
-        .ant-table-thead > tr > th {
-          background: #F9FAFB !important;
-          border-bottom: 1px solid ${C.border} !important;
-          padding: 12px 16px !important;
-        }
-        .ant-table-tbody > tr > td {
-          padding: 13px 16px !important;
-          border-bottom: 1px solid ${C.border} !important;
-        }
-        .ant-table-tbody > tr:hover > td {
-          background: ${C.primaryLight} !important;
-        }
-        @media (max-width: 640px) {
-          .hidden-mobile { display: none !important; }
-          .visible-mobile { display: block !important; }
-        }
-      `}</style>
     </div>
   );
 };

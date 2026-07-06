@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
@@ -196,5 +197,21 @@ const Teachers = () => {
     </>
   );
 };
+=======
+import React from "react";
+import { BookOutlined } from "@ant-design/icons";
+import UserRoleList from "./UserRoleList";
+
+const Teachers = () => (
+  <UserRoleList
+    roleNames={["Teacher"]}
+    title="Teacher Management"
+    subtitle="Super Admin can manage teachers across all schools"
+    icon={<BookOutlined />}
+    nounSingular="teacher"
+    nounPlural="teachers"
+  />
+);
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 
 export default Teachers;

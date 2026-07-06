@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
@@ -190,5 +191,21 @@ const Staff = () => {
     </>
   );
 };
+=======
+import React from "react";
+import { SolutionOutlined } from "@ant-design/icons";
+import UserRoleList from "./UserRoleList";
+
+const Staff = () => (
+  <UserRoleList
+    roleNames={["Staff"]}
+    title="Staff Management"
+    subtitle="Manage all staff members across schools"
+    icon={<SolutionOutlined />}
+    nounSingular="staff member"
+    nounPlural="staff members"
+  />
+);
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 
 export default Staff;

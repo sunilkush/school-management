@@ -74,7 +74,7 @@ export const getAttendanceSummary = asyncHandler(async (req, res) => {
           attendanceBreakdown: 1,
         },
       },
-      { $limit: 10 },
+      { $limit: 200 },
     ]),
   ]);
 
@@ -163,7 +163,7 @@ export const getFinanceSummary = asyncHandler(async (req, res) => {
           as: "school",
         },
       },
-      { $unwind: { path: "$school", preserveNullAndEmpty: true } },
+      { $unwind: { path: "$school", preserveNullAndEmptyArrays: true } },
       {
         $project: {
           schoolName: "$school.name",
@@ -172,7 +172,7 @@ export const getFinanceSummary = asyncHandler(async (req, res) => {
         },
       },
       { $sort: { totalCollected: -1 } },
-      { $limit: 10 },
+      { $limit: 200 },
     ]),
     School.countDocuments({ isActive: true }),
   ]);

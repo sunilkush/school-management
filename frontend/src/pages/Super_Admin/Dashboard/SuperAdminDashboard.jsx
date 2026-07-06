@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Layout,
-  Card,
   Row,
   Col,
-  Statistic,
   Table,
   Tag,
   Badge,
@@ -54,8 +51,16 @@ import {
 } from "../../../services/schoolDashboardApi";
 import { fetchActivityLogs } from "../../../features/activitySlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
+import {
+  pageWrapper,
+  sectionPanel,
+  statGrid,
+  iconWell,
+  pill,
+  tableContainer,
+  tableHeadCss,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
 const { Text } = Typography;
 
 // ---------------------------------------------------------------------------
@@ -81,16 +86,16 @@ const formatMoney = (value = 0) =>
 const getActivityMeta = (action = "") => {
   const a = action.toLowerCase();
   if (a.includes("school") || a.includes("register"))
-    return { icon: <BankOutlined />, color: "var(--success, #22C55E)" };
+    return { icon: <BankOutlined />, color: "var(--success)" };
   if (a.includes("subscri") || a.includes("payment") || a.includes("fee"))
-    return { icon: <RupeeIcon />, color: "var(--primary, #1677ff)" };
+    return { icon: <RupeeIcon />, color: "var(--primary)" };
   if (a.includes("user") || a.includes("admin") || a.includes("teacher"))
-    return { icon: <UserOutlined />, color: "var(--purple, #722ed1)" };
+    return { icon: <UserOutlined />, color: "var(--purple)" };
   if (a.includes("backup") || a.includes("system"))
-    return { icon: <ThunderboltFilled />, color: "var(--cyan, #13c2c2)" };
+    return { icon: <ThunderboltFilled />, color: "var(--cyan)" };
   if (a.includes("warn") || a.includes("expir") || a.includes("suspend"))
-    return { icon: <WarningOutlined />, color: "var(--warning, #fa8c16)" };
-  return { icon: <ThunderboltFilled />, color: "var(--textMuted, #94a3b8)" };
+    return { icon: <WarningOutlined />, color: "var(--warning)" };
+  return { icon: <ThunderboltFilled />, color: "var(--text-muted)" };
 };
 
 const timeAgo = (dateStr) => {
@@ -103,81 +108,40 @@ const timeAgo = (dateStr) => {
 };
 
 // ---------------------------------------------------------------------------
-// PastelStatCard — pastel left-accent KPI card design
+// StatCard — KPI card built on the shared sectionPanel/iconWell tokens
 // ---------------------------------------------------------------------------
-const StatCard = ({ title, value, icon, color, iconBg, cardAccent, delta, deltaType, suffix }) => (
-  <Card
-    bordered={false}
-    style={{
-      borderRadius: 16,
-      boxShadow: "0 2px 8px rgba(37,99,235,0.07), 0 4px 20px rgba(37,99,235,0.05)",
-      height: "100%",
-      position: "relative",
-      overflow: "hidden",
-      borderLeft: `4px solid ${cardAccent || color}`,
-      background: "#ffffff",
-    }}
-    bodyStyle={{ padding: "20px 22px" }}
-  >
-    {/* Background glow */}
-    <div
-      style={{
-        position: "absolute",
-        top: -30, right: -30,
-        width: 100, height: 100,
-        borderRadius: "50%",
-        background: cardAccent || color,
-        opacity: 0.05,
-        pointerEvents: "none",
-      }}
-    />
-    <Space direction="vertical" size={4} style={{ width: "100%" }}>
-      <Space align="center" style={{ justifyContent: "space-between", width: "100%" }}>
-        <Text style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, letterSpacing: "0.02em", textTransform: "uppercase" }}>
-          {title}
-        </Text>
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 11,
-            background: iconBg || `${color}18`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: color,
-            fontSize: 18,
-          }}
-        >
-          {icon}
-        </div>
-      </Space>
+const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
+  <div style={{ ...sectionPanel, marginBottom: 0, height: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        {title}
+      </span>
+      <div style={iconWell(color, 36)}>{icon}</div>
+    </div>
+    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.15 }}>
+      {value}
+      {suffix}
+    </div>
+    {delta && (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: deltaType === "up" ? "var(--success)" : "var(--danger)" }}>
+        {deltaType === "up" ? <ArrowUpOutlined style={{ fontSize: 10 }} /> : <ArrowDownOutlined style={{ fontSize: 10 }} />}
+        {delta}
+      </span>
+    )}
+  </div>
+);
 
-      <Statistic
-        value={value}
-        suffix={suffix}
-        valueStyle={{
-          fontSize: 26,
-          fontWeight: 700,
-          color: "var(--text)",
-          lineHeight: 1.25,
-        }}
-      />
-
-      {delta && (
-        <Space size={4}>
-          {deltaType === "up" ? (
-            <ArrowUpOutlined style={{ color: "var(--success)", fontSize: 11 }} />
-          ) : (
-            <ArrowDownOutlined style={{ color: "var(--danger)", fontSize: 11 }} />
-          )}
-          <Text style={{ fontSize: 11, color: deltaType === "up" ? "var(--success)" : "var(--danger)" }}>
-            {delta}
-          </Text>
-        </Space>
-      )}
+// ---------------------------------------------------------------------------
+// PanelHeader — consistent section-panel header (icon + title + extra)
+// ---------------------------------------------------------------------------
+const PanelHeader = ({ icon, color, title, extra }) => (
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+    <Space size={8}>
+      <span style={{ color }}>{icon}</span>
+      <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{title}</span>
     </Space>
-  </Card>
+    {extra}
+  </div>
 );
 
 // ---------------------------------------------------------------------------
@@ -188,42 +152,36 @@ const QUICK_ACTIONS = [
     label: "Add New School",
     icon: <BankOutlined />,
     color: "#2563EB",
-    iconBg: "rgba(219,234,254,0.22)",
     route: "/dashboard/superadmin/schools",
   },
   {
     label: "Manage Subscriptions",
     icon: <SafetyCertificateOutlined />,
     color: "#14B8A6",
-    iconBg: "rgba(20,184,166,0.22)",
     route: "/dashboard/superadmin/subscriptions",
   },
   {
     label: "View All Users",
     icon: <TeamOutlined />,
     color: "#22C55E",
-    iconBg: "rgba(220,252,231,0.22)",
     route: "/dashboard/superadmin/users",
   },
   {
     label: "Financial Reports",
     icon: <RupeeIcon />,
     color: "#22C55E",
-    iconBg: "rgba(220,252,231,0.22)",
     route: "/dashboard/superadmin/reports/revenue",
   },
   {
     label: "System Logs",
     icon: <ThunderboltFilled />,
     color: "#F59E0B",
-    iconBg: "rgba(254,243,199,0.30)",
     route: "/dashboard/superadmin/settings/audit",
   },
   {
     label: "Send Notification",
     icon: <BellOutlined />,
     color: "#EF4444",
-    iconBg: "rgba(254,226,226,0.25)",
     route: "/dashboard/superadmin/notifications",
   },
 ];
@@ -404,7 +362,7 @@ const SuperAdminDashboard = () => {
             <Text strong style={{ fontSize: 13 }}>
               {name}
             </Text>
-            <Text style={{ fontSize: 12, color: "var(--textMuted)" }}>
+            <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
               {row.city}
             </Text>
           </Space>
@@ -443,7 +401,7 @@ const SuperAdminDashboard = () => {
           >
             {sub}
           </Tag>
-          <Text style={{ fontSize: 11, color: "var(--textMuted)" }}>
+          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
             Exp: {row.subExpiry}
           </Text>
         </Space>
@@ -500,7 +458,7 @@ const SuperAdminDashboard = () => {
         <Text
           strong
           style={{
-            color: Number(v) === 0 ? "var(--textMuted)" : "var(--success)",
+            color: Number(v) === 0 ? "var(--text-muted)" : "var(--success)",
           }}
         >
           {formatMoney(v)}
@@ -574,370 +532,308 @@ const SuperAdminDashboard = () => {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <Layout
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        fontFamily: "'DM Sans', sans-serif",
-      }}
-    >
-      <Layout style={{ background: "var(--bg)" }}>
-        <PageHeader
-          title="Super Admin Dashboard"
-          subtitle="Platform-wide overview — schools, subscriptions and revenue"
-          icon={<DashboardOutlined />}
-          extra={
-            isFetching ? (
-              <Spin size="small" />
-            ) : (
-              <Button
-                size="small"
-                icon={<ReloadOutlined />}
-                onClick={handleRefresh}
-              >
-                Refresh
+    <>
+      <PageHeader
+        title="Super Admin Dashboard"
+        subtitle="Platform-wide overview — schools, subscriptions and revenue"
+        icon={<DashboardOutlined />}
+        extra={
+          isFetching ? (
+            <Spin size="small" />
+          ) : (
+            <Button
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={handleRefresh}
+            >
+              Refresh
+            </Button>
+          )
+        }
+      />
+      <div style={pageWrapper}>
+        {hasError && (
+          <Alert
+            type="error"
+            showIcon
+            message="Some dashboard data failed to load."
+            description="Statistics may be incomplete. Try refreshing."
+            action={
+              <Button size="small" icon={<ReloadOutlined />} onClick={handleRefresh}>
+                Retry
               </Button>
-            )
-          }
-        />
-        <Content style={{ padding: "24px 28px", overflow: "auto", background: "var(--bg)" }}>
-          {hasError && (
-            <Alert
-              type="error"
-              showIcon
-              message="Some dashboard data failed to load."
-              description="Statistics may be incomplete. Try refreshing."
-              action={
-                <Button size="small" icon={<ReloadOutlined />} onClick={handleRefresh}>
-                  Retry
-                </Button>
-              }
-              style={{ marginBottom: 16, borderRadius: 10 }}
-            />
-          )}
+            }
+            style={{ marginBottom: 16, borderRadius: 10 }}
+          />
+        )}
 
-          {/* KPI cards */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-            <Col xs={12} sm={12} lg={4}>
-              <StatCard
-                title="Total Schools"
-                value={metrics.totalSchools}
-                icon={<BankOutlined />}
-                color="#2563EB"
-                iconBg="rgba(219,234,254,0.22)"
-                cardAccent="#DBEAFE"
-                delta="Live"
-                deltaType="up"
-              />
-            </Col>
-            <Col xs={12} sm={12} lg={4}>
-              <StatCard
-                title="Active Schools"
-                value={metrics.activeSchools}
-                icon={<CheckCircleFilled />}
-                color="#22C55E"
-                iconBg="rgba(220,252,231,0.25)"
-                cardAccent="#DCFCE7"
-                delta={`${Math.round((metrics.activeSchools / Math.max(metrics.totalSchools, 1)) * 100)}% active`}
-                deltaType="up"
-              />
-            </Col>
-            <Col xs={12} sm={12} lg={4}>
-              <StatCard
-                title="Total Students"
-                value={metrics.totalStudents}
-                icon={<TeamOutlined />}
-                color="#14B8A6"
-                iconBg="rgba(20,184,166,0.25)"
-                cardAccent="rgba(20,184,166,0.15)"
-                delta="Live count"
-                deltaType="up"
-              />
-            </Col>
-            <Col xs={12} sm={12} lg={4}>
-              <StatCard
-                title="Revenue (YTD)"
-                value={formatMoney(metrics.totalRevenue)}
-                icon={<RupeeIcon />}
-                color="#22C55E"
-                iconBg="rgba(220,252,231,0.25)"
-                cardAccent="#DCFCE7"
-                delta="Collected"
-                deltaType="up"
-              />
-            </Col>
-            <Col xs={12} sm={12} lg={4}>
-              <StatCard
-                title="Expiring Soon"
-                value={Math.max(metrics.expiringSoon, 0)}
-                icon={<WarningOutlined />}
-                color="#F59E0B"
-                iconBg="rgba(254,243,199,0.35)"
-                cardAccent="#FEF3C7"
-                delta="Needs follow-up"
-                deltaType="down"
-              />
-            </Col>
-            <Col xs={12} sm={12} lg={4}>
-              <StatCard
-                title="System Health"
-                value={metrics.avgHealth}
-                suffix="%"
+        {/* KPI cards */}
+        <div className="stat-grid" style={statGrid(170)}>
+          <StatCard
+            title="Total Schools"
+            value={metrics.totalSchools}
+            icon={<BankOutlined />}
+            color="#2563EB"
+            delta="Live"
+            deltaType="up"
+          />
+          <StatCard
+            title="Active Schools"
+            value={metrics.activeSchools}
+            icon={<CheckCircleFilled />}
+            color="#22C55E"
+            delta={`${Math.round((metrics.activeSchools / Math.max(metrics.totalSchools, 1)) * 100)}% active`}
+            deltaType="up"
+          />
+          <StatCard
+            title="Total Students"
+            value={metrics.totalStudents}
+            icon={<TeamOutlined />}
+            color="#14B8A6"
+            delta="Live count"
+            deltaType="up"
+          />
+          <StatCard
+            title="Revenue (YTD)"
+            value={formatMoney(metrics.totalRevenue)}
+            icon={<RupeeIcon />}
+            color="#22C55E"
+            delta="Collected"
+            deltaType="up"
+          />
+          <StatCard
+            title="Expiring Soon"
+            value={Math.max(metrics.expiringSoon, 0)}
+            icon={<WarningOutlined />}
+            color="#F59E0B"
+            delta="Needs follow-up"
+            deltaType="down"
+          />
+          <StatCard
+            title="System Health"
+            value={metrics.avgHealth}
+            suffix="%"
+            icon={<ThunderboltFilled />}
+            color="#2563EB"
+            delta="Live average"
+            deltaType="up"
+          />
+        </div>
+
+        {/* System Health / Subscription / Top Schools row */}
+        <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+          <Col xs={24} md={8}>
+            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
+              <PanelHeader
                 icon={<ThunderboltFilled />}
-                color="#2563EB"
-                iconBg="rgba(219,234,254,0.22)"
-                cardAccent="#DBEAFE"
-                delta="Live average"
-                deltaType="up"
-              />
-            </Col>
-          </Row>
-
-          {/* System Health / Subscription / Top Schools row */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-            <Col xs={24} md={8}>
-              <Card
-                title={
-                  <Space>
-                    <ThunderboltFilled style={{ color: "var(--cyan)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
-                      System Health
-                    </span>
-                  </Space>
-                }
-                bordered={false}
-                style={{
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  height: "100%",
-                }}
+                color="var(--cyan)"
+                title="System Health"
                 extra={<Tag color="orange">Static Preview</Tag>}
-              >
-                <Space direction="vertical" style={{ width: "100%" }} size={16}>
-                  {[
-                    { label: "API Server", val: 99, color: "var(--success)" },
-                    { label: "Database", val: 97, color: "var(--success)" },
-                    { label: "File Storage", val: 92, color: "var(--success)" },
-                    { label: "Email Service", val: 85, color: "var(--warning)" },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <Space
-                        style={{
-                          justifyContent: "space-between",
-                          width: "100%",
-                          marginBottom: 4,
-                        }}
-                      >
-                        <Text style={{ fontSize: 13, color: "var(--text-primary)" }}>
-                          {item.label}
-                        </Text>
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            color: item.color,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {item.val}%
-                        </Text>
-                      </Space>
-                      <Progress
-                        percent={item.val}
-                        showInfo={false}
-                        size="small"
-                        strokeColor={item.color}
-                      />
-                    </div>
-                  ))}
-                </Space>
-              </Card>
-            </Col>
-
-            <Col xs={24} md={8}>
-              <Card
-                title={
-                  <Space>
-                    <SafetyCertificateOutlined
-                      style={{ color: "var(--primary)" }}
-                    />
-                    <span style={{ color: "var(--text-primary)" }}>
-                      Subscription Status
-                    </span>
-                  </Space>
-                }
-                bordered={false}
-                style={{
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  height: "100%",
-                }}
-              >
-                <Space direction="vertical" style={{ width: "100%" }} size={10}>
-                  {subscriptionCounts.map((item) => (
-                    <div
-                      key={item.label}
+              />
+              <Space direction="vertical" style={{ width: "100%" }} size={16}>
+                {[
+                  { label: "API Server", val: 99, color: "var(--success)" },
+                  { label: "Database", val: 97, color: "var(--success)" },
+                  { label: "File Storage", val: 92, color: "var(--success)" },
+                  { label: "Email Service", val: 85, color: "var(--warning)" },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <Space
                       style={{
-                        display: "flex",
-                        alignItems: "center",
                         justifyContent: "space-between",
-                        padding: "10px 14px",
-                        background: item.bg,
-                        border: `1px solid ${item.border}`,
-                        borderRadius: 10,
-                        transition: "transform 0.15s",
+                        width: "100%",
+                        marginBottom: 4,
                       }}
                     >
-                      <Text style={{ fontSize: 13, color: "var(--text)", fontWeight: 500 }}>{item.label}</Text>
-                      <span
+                      <Text style={{ fontSize: 13, color: "var(--text-primary)" }}>
+                        {item.label}
+                      </Text>
+                      <Text
                         style={{
-                          fontWeight: 700,
-                          fontSize: 14,
-                          color: item.textColor,
-                          background: "#ffffff",
-                          padding: "2px 10px",
-                          borderRadius: 99,
-                          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                          fontSize: 12,
+                          color: item.color,
+                          fontWeight: 600,
                         }}
                       >
-                        {item.count}
-                      </span>
-                    </div>
-                  ))}
-                </Space>
-              </Card>
-            </Col>
+                        {item.val}%
+                      </Text>
+                    </Space>
+                    <Progress
+                      percent={item.val}
+                      showInfo={false}
+                      size="small"
+                      strokeColor={item.color}
+                    />
+                  </div>
+                ))}
+              </Space>
+            </div>
+          </Col>
 
-            <Col xs={24} md={8}>
-              <Card
-                title={
-                  <Space>
-                    <RiseOutlined style={{ color: "var(--purple)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
-                      Top Schools by Students
+          <Col xs={24} md={8}>
+            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
+              <PanelHeader
+                icon={<SafetyCertificateOutlined />}
+                color="var(--primary)"
+                title="Subscription Status"
+              />
+              <Space direction="vertical" style={{ width: "100%" }} size={10}>
+                {subscriptionCounts.map((item) => (
+                  <div
+                    key={item.label}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      background: item.bg,
+                      border: `1px solid ${item.border}`,
+                      borderRadius: 10,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{item.label}</Text>
+                    <span
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 14,
+                        color: item.textColor,
+                        background: "var(--surface)",
+                        padding: "2px 10px",
+                        borderRadius: 99,
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                      }}
+                    >
+                      {item.count}
                     </span>
-                  </Space>
-                }
-                bordered={false}
-                style={{
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  height: "100%",
-                }}
-              >
-                <Space direction="vertical" style={{ width: "100%" }} size={14}>
-                  {topSchools.map((school, i) => (
-                    <div key={school.key}>
-                      <Space
-                        style={{
-                          justifyContent: "space-between",
-                          width: "100%",
-                          marginBottom: 5,
-                        }}
-                      >
-                        <Space>
+                  </div>
+                ))}
+              </Space>
+            </div>
+          </Col>
+
+          <Col xs={24} md={8}>
+            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
+              <PanelHeader
+                icon={<RiseOutlined />}
+                color="var(--purple)"
+                title="Top Schools by Students"
+              />
+              <Space direction="vertical" style={{ width: "100%" }} size={14}>
+                {topSchools.map((school, i) => (
+                  <div key={school.key}>
+                    <Space
+                      style={{
+                        justifyContent: "space-between",
+                        width: "100%",
+                        marginBottom: 5,
+                      }}
+                    >
+                      <Space>
+                        <Text
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: "50%",
+                            background: school.color,
+                            color: "#fff",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {i + 1}
+                        </Text>
+                        <div>
                           <Text
                             style={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: "50%",
-                              background: school.color,
-                              color: "#fff",
-                              fontSize: 11,
-                              fontWeight: 700,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              fontSize: 13,
+                              fontWeight: 500,
+                              display: "block",
+                              color: "var(--text-primary)",
                             }}
                           >
-                            {i + 1}
+                            {school.name}
                           </Text>
-                          <div>
-                            <Text
-                              style={{
-                                fontSize: 13,
-                                fontWeight: 500,
-                                display: "block",
-                                color: "var(--text-primary)",
-                              }}
-                            >
-                              {school.name}
-                            </Text>
-                            <Text
-                              style={{
-                                fontSize: 11,
-                                color: "var(--textMuted)",
-                              }}
-                            >
-                              {school.city}
-                            </Text>
-                          </div>
-                        </Space>
-                        <Text style={{ fontWeight: 700 }}>
-                          {school.students.toLocaleString("en-IN")}
-                        </Text>
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              color: "var(--text-muted)",
+                            }}
+                          >
+                            {school.city}
+                          </Text>
+                        </div>
                       </Space>
-                      <Progress
-                        percent={Math.round((school.students / maxStudents) * 100)}
-                        showInfo={false}
-                        size="small"
-                        strokeColor={school.color}
-                      />
-                    </div>
-                  ))}
-                </Space>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Schools table + Activity log */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-            <Col xs={24} xl={16}>
-              <Card
-                title={
-                  <Space>
-                    <BankOutlined style={{ color: "var(--primary)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
-                      All Schools
-                    </span>
-                    <Tag color="blue">{filteredSchools.length} shown</Tag>
-                  </Space>
-                }
-                extra={
-                  <Space>
-                    <Segmented
-                      value={statusFilter}
-                      onChange={setStatusFilter}
-                      options={[
-                        { label: "All", value: "all" },
-                        { label: "Active", value: "active" },
-                        { label: "Pending", value: "pending" },
-                        { label: "Suspended", value: "suspended" },
-                      ]}
+                      <Text style={{ fontWeight: 700 }}>
+                        {school.students.toLocaleString("en-IN")}
+                      </Text>
+                    </Space>
+                    <Progress
+                      percent={Math.round((school.students / maxStudents) * 100)}
+                      showInfo={false}
+                      size="small"
+                      strokeColor={school.color}
                     />
-                    <Button
-                      size="small"
-                      icon={<ReloadOutlined />}
-                      onClick={handleRefresh}
-                    >
-                      Refresh
-                    </Button>
-                    <Button
-                      size="small"
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={() => navigate("/dashboard/superadmin/schools")}
-                    >
-                      Add School
-                    </Button>
-                  </Space>
-                }
-                bordered={false}
+                  </div>
+                ))}
+              </Space>
+            </div>
+          </Col>
+        </Row>
+
+        <style>{tableHeadCss("sa-dash-tbl")}</style>
+
+        {/* Schools table + Activity log */}
+        <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+          <Col xs={24} xl={16}>
+            <div style={{ ...sectionPanel, padding: 0, marginBottom: 0 }}>
+              <div
                 style={{
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                  padding: "16px 20px",
+                  borderBottom: "1px solid var(--border-muted)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 10,
                 }}
-                bodyStyle={{ padding: 0 }}
               >
+                <Space size={8}>
+                  <BankOutlined style={{ color: "var(--primary)" }} />
+                  <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Schools</span>
+                  <span style={pill("#2563EB")}>{filteredSchools.length} shown</span>
+                </Space>
+                <Space wrap>
+                  <Segmented
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    options={[
+                      { label: "All", value: "all" },
+                      { label: "Active", value: "active" },
+                      { label: "Pending", value: "pending" },
+                      { label: "Suspended", value: "suspended" },
+                    ]}
+                  />
+                  <Button
+                    size="small"
+                    icon={<ReloadOutlined />}
+                    onClick={handleRefresh}
+                  >
+                    Refresh
+                  </Button>
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => navigate("/dashboard/superadmin/schools")}
+                  >
+                    Add School
+                  </Button>
+                </Space>
+              </div>
+              <div className="sa-dash-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
                 <Table
                   columns={columns}
                   dataSource={filteredSchools}
@@ -946,251 +842,208 @@ const SuperAdminDashboard = () => {
                   size="small"
                   scroll={{ x: 900 }}
                 />
-              </Card>
-            </Col>
+              </div>
+            </div>
+          </Col>
 
-            <Col xs={24} xl={8}>
-              <Card
-                title={
-                  <Space>
-                    <ClockCircleFilled style={{ color: "var(--orange)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
-                      Recent Activity
-                    </span>
-                  </Space>
-                }
+          <Col xs={24} xl={8}>
+            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
+              <PanelHeader
+                icon={<ClockCircleFilled />}
+                color="var(--orange)"
+                title="Recent Activity"
                 extra={
-                  <Space size={6}>
-                    {activityLoading ? (
-                      <Spin size="small" />
-                    ) : (
-                      <Button
-                        type="link"
-                        size="small"
-                        onClick={() =>
-                          navigate("/dashboard/superadmin/reports/activity")
-                        }
-                      >
-                        View All
-                      </Button>
-                    )}
-                  </Space>
+                  activityLoading ? (
+                    <Spin size="small" />
+                  ) : (
+                    <Button
+                      type="link"
+                      size="small"
+                      onClick={() =>
+                        navigate("/dashboard/superadmin/reports/activity")
+                      }
+                    >
+                      View All
+                    </Button>
+                  )
                 }
-                bordered={false}
-                style={{
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  height: "100%",
-                }}
-              >
-                {activityLoading ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      padding: "40px 0",
-                    }}
-                  >
-                    <Spin tip="Loading activity..." />
-                  </div>
-                ) : activityLogs.length === 0 ? (
-                  <Empty
-                    description="No recent activity"
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  />
-                ) : (
-                  <Timeline
-                    items={activityLogs.slice(0, 8).map((item) => {
-                      const meta = getActivityMeta(item.action || item.type || "");
-                      return {
-                        dot: (
-                          <div
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: "50%",
-                              background: `${meta.color}18`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: meta.color,
-                              fontSize: 13,
-                            }}
-                          >
-                            {meta.icon}
-                          </div>
-                        ),
-                        children: (
-                          <div style={{ paddingBottom: 6 }}>
-                            <Text
-                              style={{
-                                fontSize: 13,
-                                fontWeight: 500,
-                                display: "block",
-                                color: "var(--text-primary)",
-                              }}
-                            >
-                              {item.action || item.type || "Activity"}
-                            </Text>
-                            <Space size={8}>
-                              <Text
-                                style={{
-                                  fontSize: 12,
-                                  color: "var(--textMuted)",
-                                }}
-                              >
-                                {item.message || item.description || ""}
-                              </Text>
-                              {(item.createdAt || item.timestamp) && (
-                                <>
-                                  <Divider type="vertical" style={{ margin: 0 }} />
-                                  <Text
-                                    style={{
-                                      fontSize: 11,
-                                      color: "var(--textMuted)",
-                                    }}
-                                  >
-                                    {timeAgo(item.createdAt || item.timestamp)}
-                                  </Text>
-                                </>
-                              )}
-                            </Space>
-                          </div>
-                        ),
-                      };
-                    })}
-                  />
-                )}
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Revenue by School + Quick Actions */}
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}>
-              <Card
-                title={
-                  <Space>
-                    <RupeeIcon style={{ color: "var(--success)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
-                      Revenue by School
-                    </span>
-                  </Space>
-                }
-                bordered={false}
-                style={{
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                }}
-              >
-                <List
-                  dataSource={schoolsData
-                    .filter((s) => s.revenue > 0)
-                    .sort((a, b) => b.revenue - a.revenue)}
-                  locale={{ emptyText: "No revenue data" }}
-                  renderItem={(school) => (
-                    <List.Item style={{ padding: "10px 0", border: "none" }}>
-                      <Space
-                        style={{
-                          width: "100%",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Space>
-                          <Avatar
-                            size={32}
-                            style={{
-                              background: `hsl(${(school.name.charCodeAt(0) * 7) % 360}, 55%, 55%)`,
-                              fontSize: 12,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {school.name[0]}
-                          </Avatar>
-                          <div>
-                            <Text
-                              style={{
-                                fontSize: 13,
-                                fontWeight: 500,
-                                display: "block",
-                                color: "var(--text-primary)",
-                              }}
-                            >
-                              {school.name}
-                            </Text>
-                            <Text
-                              style={{
-                                fontSize: 11,
-                                color: "var(--textMuted)",
-                              }}
-                            >
-                              {school.city}
-                            </Text>
-                          </div>
-                        </Space>
-                        <Text
-                          strong
-                          style={{ color: "var(--success)", fontSize: 14 }}
-                        >
-                          {formatMoney(school.revenue)}
-                        </Text>
-                      </Space>
-                    </List.Item>
-                  )}
+              />
+              {activityLoading ? (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    padding: "40px 0",
+                  }}
+                >
+                  <Spin tip="Loading activity..." />
+                </div>
+              ) : activityLogs.length === 0 ? (
+                <Empty
+                  description="No recent activity"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
-              </Card>
-            </Col>
+              ) : (
+                <Timeline
+                  items={activityLogs.slice(0, 8).map((item) => {
+                    const meta = getActivityMeta(item.action || item.type || "");
+                    return {
+                      dot: (
+                        <div style={iconWell(meta.color, 28)}>
+                          {meta.icon}
+                        </div>
+                      ),
+                      children: (
+                        <div style={{ paddingBottom: 6 }}>
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 500,
+                              display: "block",
+                              color: "var(--text-primary)",
+                            }}
+                          >
+                            {item.action || item.type || "Activity"}
+                          </Text>
+                          <Space size={8}>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: "var(--text-muted)",
+                              }}
+                            >
+                              {item.message || item.description || ""}
+                            </Text>
+                            {(item.createdAt || item.timestamp) && (
+                              <>
+                                <Divider type="vertical" style={{ margin: 0 }} />
+                                <Text
+                                  style={{
+                                    fontSize: 11,
+                                    color: "var(--text-muted)",
+                                  }}
+                                >
+                                  {timeAgo(item.createdAt || item.timestamp)}
+                                </Text>
+                              </>
+                            )}
+                          </Space>
+                        </div>
+                      ),
+                    };
+                  })}
+                />
+              )}
+            </div>
+          </Col>
+        </Row>
 
-            <Col xs={24} md={12}>
-              <Card
-                title={
-                  <Space>
-                    <LinkOutlined style={{ color: "var(--success)" }} />
-                    <span style={{ color: "var(--text-primary)" }}>
-                      Quick Actions
-                    </span>
-                  </Space>
-                }
-                bordered={false}
-                style={{
-                  borderRadius: 16,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                  color: "var(--text-primary)",
-                }}
-              >
-                <Row gutter={[10, 10]}>
-                  {QUICK_ACTIONS.map((action) => (
-                    <Col span={12} key={action.label}>
-                      <Button
-                        block
-                        icon={
-                          <span style={{ color: action.color, fontSize: 16 }}>
-                            {action.icon}
-                          </span>
-                        }
-                        style={{
-                          height: 52,
-                          borderRadius: 10,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          textAlign: "left",
-                          fontSize: 13,
-                          border: "1px solid var(--border)",
-                        }}
-                        onClick={() => navigate(action.route)}
+        {/* Revenue by School + Quick Actions */}
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12}>
+            <div style={{ ...sectionPanel, marginBottom: 0 }}>
+              <PanelHeader
+                icon={<RupeeIcon />}
+                color="var(--success)"
+                title="Revenue by School"
+              />
+              <List
+                dataSource={schoolsData
+                  .filter((s) => s.revenue > 0)
+                  .sort((a, b) => b.revenue - a.revenue)}
+                locale={{ emptyText: "No revenue data" }}
+                renderItem={(school) => (
+                  <List.Item style={{ padding: "10px 0", border: "none" }}>
+                    <Space
+                      style={{
+                        width: "100%",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Space>
+                        <Avatar
+                          size={32}
+                          style={{
+                            background: `hsl(${(school.name.charCodeAt(0) * 7) % 360}, 55%, 55%)`,
+                            fontSize: 12,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {school.name[0]}
+                        </Avatar>
+                        <div>
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 500,
+                              display: "block",
+                              color: "var(--text-primary)",
+                            }}
+                          >
+                            {school.name}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 11,
+                              color: "var(--text-muted)",
+                            }}
+                          >
+                            {school.city}
+                          </Text>
+                        </div>
+                      </Space>
+                      <Text
+                        strong
+                        style={{ color: "var(--success)", fontSize: 14 }}
                       >
-                        {action.label}
-                      </Button>
-                    </Col>
-                  ))}
-                </Row>
-              </Card>
-            </Col>
-          </Row>
-        </Content>
-      </Layout>
-    </Layout>
+                        {formatMoney(school.revenue)}
+                      </Text>
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </div>
+          </Col>
+
+          <Col xs={24} md={12}>
+            <div style={{ ...sectionPanel, marginBottom: 0 }}>
+              <PanelHeader
+                icon={<LinkOutlined />}
+                color="var(--success)"
+                title="Quick Actions"
+              />
+              <Row gutter={[10, 10]}>
+                {QUICK_ACTIONS.map((action) => (
+                  <Col span={12} key={action.label}>
+                    <Button
+                      block
+                      icon={
+                        <span style={{ color: action.color, fontSize: 16 }}>
+                          {action.icon}
+                        </span>
+                      }
+                      style={{
+                        height: 52,
+                        borderRadius: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        textAlign: "left",
+                        fontSize: 13,
+                        border: "1px solid var(--border)",
+                      }}
+                      onClick={() => navigate(action.route)}
+                    >
+                      {action.label}
+                    </Button>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+          </Col>
+        </Row>
+      </div>
+    </>
   );
 };
 

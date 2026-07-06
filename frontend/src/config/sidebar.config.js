@@ -111,7 +111,6 @@ export const sidebarMenu = {
         { title: "Accountants", path: "superadmin/users/accountant" },
         { title: "Librarians", path: "superadmin/users/librarian" },
         { title: "Transport Users", path: "superadmin/users/transport" },
-        { title: "Create User", path: "superadmin/user-create" },
       ],
     },
     {
@@ -150,7 +149,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "Master configurations",
+      title: "Master Configurations",
       icon: Settings,
       subMenu: [
         { title: "Fee Categories", path: "superadmin/fees/categories" },
@@ -160,7 +159,7 @@ export const sidebarMenu = {
       ],
     },
     {
-      title: "System Control ",
+      title: "System Control",
       icon: Cog,
       subMenu: [
         { title: "Roles", path: "superadmin/settings/roles" },
@@ -246,7 +245,6 @@ export const sidebarMenu = {
         { title: "Attendance Table",   path: "schooladmin/attendance/table"      },
         { title: "Monthly Attendance", path: "schooladmin/attendance/monthly"    },
         { title: "Geofence Settings",  path: "schooladmin/attendance/geofence"   },
-        { title: "Live Dashboard",     path: "schooladmin/attendance/live"       },
       ],
     },
     {
@@ -448,7 +446,6 @@ export const sidebarMenu = {
   /* ================= VICE PRINCIPAL ================= */
   "vice principal": [
     { title: "Overview", path: "viceprincipal", icon: LayoutDashboard },
-    { title: "Academics", path: "viceprincipal/academics", icon: BookOpen },
     { title: "Timetable", path: "viceprincipal/timetable", icon: CalendarClock },
     { title: "Exams & Grades", path: "viceprincipal/exams", icon: GraduationCap },
     { title: "Student Attendance", path: "viceprincipal/attendance/students", icon: UserCheck },
@@ -492,8 +489,8 @@ export const sidebarMenu = {
   "subject coordinator": [
     { title: "Overview", path: "subjectcoordinator", icon: LayoutDashboard },
     { title: "Subjects Overview", path: "subjectcoordinator/subjects", icon: BookOpen },
-    { title: "Teacher Assignment", path: "subjectcoordinator/teachers", icon: Users },
-    { title: "Class Assignment", path: "subjectcoordinator/classes", icon: Book },
+    { title: "Teachers", path: "subjectcoordinator/teachers", icon: Users },
+    { title: "Classes", path: "subjectcoordinator/classes", icon: Book },
     { title: "Assessments", path: "subjectcoordinator/assessments", icon: ClipboardSignature },
     { title: "Reports", path: "subjectcoordinator/reports", icon: FileBarChart2 },
     { title: "My Tasks",   path: "subjectcoordinator/tasks",   icon: ListChecks  },

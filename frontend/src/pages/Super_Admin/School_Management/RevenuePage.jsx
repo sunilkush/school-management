@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Button,
-  Card,
   Col,
   DatePicker,
   Form,
@@ -14,9 +13,7 @@ import {
   Space,
   Table,
   Tag,
-  Typography,
   message,
-  Statistic,
   Tooltip,
 } from "antd";
 import {
@@ -39,18 +36,21 @@ import {
   generateSchoolInvoice,
 } from "../../../features/superAdminBillingSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
-
-const { Title, Text } = Typography;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, toolbarRow, modalTitle,
+} from "../../../styles/pageStyles";
 
 const formatCurrency = (n) =>
   `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const statusMap = {
-  draft: { color: "default", bg: "#f8fafc", label: "Draft" },
-  unpaid: { color: "warning", bg: "#fff7ed", label: "Unpaid" },
-  paid: { color: "success", bg: "#f0fdf4", label: "Paid" },
-  overdue: { color: "error", bg: "#fef2f2", label: "Overdue" },
-  cancelled: { color: "default", bg: "#f1f5f9", label: "Cancelled" },
+  draft: { color: "#64748B", bg: "rgba(241,245,249,0.6)", label: "Draft" },
+  unpaid: { color: "#B45309", bg: "rgba(254,243,199,0.5)", label: "Unpaid" },
+  paid: { color: "#15803D", bg: "rgba(220,252,231,0.5)", label: "Paid" },
+  overdue: { color: "#DC2626", bg: "rgba(254,226,226,0.5)", label: "Overdue" },
+  cancelled: { color: "#64748B", bg: "rgba(241,245,249,0.6)", label: "Cancelled" },
 };
 
 const paymentModes = [
@@ -68,67 +68,17 @@ const invoiceStatuses = ["draft", "unpaid", "paid", "overdue", "cancelled"].map(
   })
 );
 
-const MetricCard = ({ title, value, icon, color, bg, sub }) => (
-  <Card
-    bordered={false}
-    style={{
-      borderRadius: 22,
-      background: "#fff",
-      boxShadow: "0 10px 30px rgba(37,99,235,0.08)",
-      height: "100%",
-      overflow: "hidden",
-      position: "relative",
-    }}
-    bodyStyle={{ padding: 20 }}
-  >
-    <div
-      style={{
-        position: "absolute",
-        right: -28,
-        top: -28,
-        width: 100,
-        height: 100,
-        borderRadius: "50%",
-        background: bg,
-      }}
-    />
-
-    <Space align="start" style={{ justifyContent: "space-between", width: "100%" }}>
-      <div>
-        <Text style={{ color: "#64748B", fontWeight: 600 }}>{title}</Text>
-        <Statistic
-          value={value}
-          valueStyle={{
-            marginTop: 6,
-            fontSize: 26,
-            fontWeight: 800,
-            color: "#0F172A",
-          }}
-        />
-        {sub && (
-          <Text style={{ color: "#94A3B8", fontSize: 12 }}>
-            {sub}
-          </Text>
-        )}
+const MetricCard = ({ title, value, icon, color, sub }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+        {title}
       </div>
-
-      <div
-        style={{
-          width: 46,
-          height: 46,
-          borderRadius: 16,
-          background: bg,
-          color,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 21,
-        }}
-      >
-        {icon}
-      </div>
-    </Space>
-  </Card>
+      <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{sub}</div>}
+    </div>
+    <div style={iconWell(color, 44)}>{icon}</div>
+  </div>
 );
 
 export default function RevenuePage() {
@@ -263,56 +213,33 @@ export default function RevenuePage() {
       dataIndex: "invoiceNumber",
       render: (value) => (
         <Space>
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 12,
-              background: "#e0f2fe",
-              color: "#0369a1",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <FileTextOutlined />
-          </div>
-          <Text strong>{value}</Text>
+          <div style={iconWell("#2563EB", 34)}><FileTextOutlined /></div>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>
         </Space>
       ),
     },
     {
       title: "School",
       dataIndex: "schoolName",
-      render: (value) => (
-        <Text style={{ color: "#334155", fontWeight: 600 }}>{value}</Text>
-      ),
+      render: (value) => <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{value}</span>,
     },
     {
       title: "Amount",
       dataIndex: "amount",
-      render: (amount) => (
-        <Text strong style={{ color: "#166534" }}>
-          {formatCurrency(amount)}
-        </Text>
-      ),
+      render: (amount) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(amount)}</span>,
       sorter: (a, b) => a.amount - b.amount,
     },
     {
       title: "Due Date",
       dataIndex: "dueDate",
-      render: (value) => <Text style={{ color: "#64748B" }}>{value}</Text>,
+      render: (value) => <span style={{ color: "var(--text-muted)" }}>{value}</span>,
     },
     {
       title: "Status",
       dataIndex: "status",
       render: (value) => {
         const cfg = statusMap[value] || statusMap.draft;
-        return (
-          <Tag color={cfg.color} style={{ borderRadius: 999, padding: "2px 10px" }}>
-            {cfg.label}
-          </Tag>
-        );
+        return <span style={pill(cfg.color, cfg.bg)}>{cfg.label}</span>;
       },
     },
     {
@@ -342,192 +269,65 @@ export default function RevenuePage() {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background:
-          "#F8FAFC",
-        padding: 24,
-      }}
-    >
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid rgba(219,234,254,0.3)",
-          borderRadius: 20,
-          padding: 22,
-          marginBottom: 18,
-          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
-        }}
-      >
-        <Row gutter={[16, 16]} align="middle" justify="space-between">
-          <Col xs={24} lg={12}>
-            <Space align="center">
-              <div
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 18,
-                  background: "rgba(220,252,231,0.25)",
-                  color: "#22C55E",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                }}
-              >
-                <RupeeIcon />
-              </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Revenue Dashboard"
+        subtitle="Super Admin billing, invoices, payments aur revenue tracking"
+        icon={<RupeeIcon />}
+        extra={
+          <Space wrap>
+            <Button icon={<ReloadOutlined />} onClick={handleRefresh}>Refresh</Button>
+            <Button icon={<AppstoreOutlined />} onClick={() => navigate("/dashboard/superadmin/subscriptions")}>Subscriptions</Button>
+            <Button icon={<WalletOutlined />} onClick={() => navigate("/dashboard/superadmin/payments")}>Payments</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setInvoiceOpen(true)}>Create Invoice</Button>
+          </Space>
+        }
+      />
 
-              <div>
-                <Title level={3} style={{ margin: 0, color: "#0F172A" }}>
-                  Revenue Dashboard
-                </Title>
-                <Text style={{ color: "#64748B" }}>
-                  Super Admin billing, invoices, payments aur revenue tracking.
-                </Text>
-              </div>
-            </Space>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
-              <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
-                Refresh
-              </Button>
-              <Button
-                icon={<AppstoreOutlined />}
-                onClick={() => navigate("/dashboard/superadmin/subscriptions")}
-              >
-                Subscriptions
-              </Button>
-              <Button
-                icon={<WalletOutlined />}
-                onClick={() => navigate("/dashboard/superadmin/payments")}
-              >
-                Payments
-              </Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setInvoiceOpen(true)}
-              >
-                Create Invoice
-              </Button>
-            </Space>
-          </Col>
-        </Row>
+      <div style={{ ...statGrid(200), marginTop: 20 }}>
+        <MetricCard title="Total Invoiced" value={formatCurrency(revenueSummary.totalInvoiced)} icon={<FileTextOutlined />} color="#2563EB" sub="All generated invoices" />
+        <MetricCard title="Total Paid" value={formatCurrency(revenueSummary.totalPaid)} icon={<CheckCircleOutlined />} color="#22C55E" sub="Received payments" />
+        <MetricCard title="Outstanding" value={formatCurrency(revenueSummary.totalOutstanding)} icon={<ClockCircleOutlined />} color="#F59E0B" sub="Pending collection" />
+        <MetricCard title="Overdue" value={formatCurrency(revenueSummary.overdue)} icon={<WarningOutlined />} color="#EF4444" sub="Needs follow-up" />
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Total Invoiced"
-            value={formatCurrency(revenueSummary.totalInvoiced)}
-            icon={<FileTextOutlined />}
-            color="#2563EB"
-            bg="rgba(219,234,254,0.2)"
-            sub="All generated invoices"
+      <style>{tableHeadCss("revenue-page-tbl")}</style>
+
+      <div style={sectionPanel}>
+        <div style={toolbarRow}>
+          <Input
+            allowClear
+            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            placeholder="Search by school or invoice no."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: 280 }}
           />
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Total Paid"
-            value={formatCurrency(revenueSummary.totalPaid)}
-            icon={<CheckCircleOutlined />}
-            color="#22C55E"
-            bg="rgba(220,252,231,0.2)"
-            sub="Received payments"
+          <Select
+            allowClear
+            placeholder="Filter status"
+            value={status || undefined}
+            onChange={(value) => setStatus(value || "")}
+            style={{ width: 170 }}
+            options={invoiceStatuses}
           />
-        </Col>
+          <span style={{ ...pill("var(--primary)"), marginLeft: "auto" }}>{filtered.length} invoices</span>
+        </div>
 
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Outstanding"
-            value={formatCurrency(revenueSummary.totalOutstanding)}
-            icon={<ClockCircleOutlined />}
-            color="#F59E0B"
-            bg="rgba(254,243,199,0.25)"
-            sub="Pending collection"
-          />
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <MetricCard
-            title="Overdue"
-            value={formatCurrency(revenueSummary.overdue)}
-            icon={<WarningOutlined />}
-            color="#EF4444"
-            bg="rgba(254,226,226,0.2)"
-            sub="Needs follow-up"
-          />
-        </Col>
-      </Row>
-
-      <Card
-        bordered={false}
-        style={{
-          borderRadius: 24,
-          boxShadow: "0 12px 36px rgba(37,99,235,0.08)",
-        }}
-        bodyStyle={{ padding: 18 }}
-      >
-        <Row gutter={[12, 12]} align="middle" justify="space-between">
-          <Col xs={24} md={14}>
-            <Space wrap>
-              <Input
-                allowClear
-                prefix={<SearchOutlined style={{ color: "#94A3B8" }} />}
-                placeholder="Search by school or invoice no."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ width: 280, borderRadius: 12 }}
-              />
-
-              <Select
-                allowClear
-                placeholder="Filter status"
-                value={status || undefined}
-                onChange={(value) => setStatus(value || "")}
-                style={{ width: 170 }}
-                options={invoiceStatuses}
-              />
-            </Space>
-          </Col>
-
-          <Col xs={24} md={10}>
-            <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-              <Tag color="blue" style={{ borderRadius: 999, padding: "4px 10px" }}>
-                {filtered.length} invoices
-              </Tag>
-            </Space>
-          </Col>
-        </Row>
-
-        <div style={{ marginTop: 16 }}>
+        <div className="revenue-page-tbl" style={tableContainer}>
           <Table
             loading={loading}
             columns={columns}
             dataSource={filtered}
             rowKey="key"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              pageSizeOptions: [10, 20, 50],
-            }}
+            pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: [10, 20, 50] }}
             scroll={{ x: 850 }}
           />
         </div>
-      </Card>
+      </div>
 
       <Modal
-        title={
-          <Space>
-            <FileTextOutlined style={{ color: "#2563EB" }} />
-            <span>Create Invoice</span>
-          </Space>
-        }
+        title={modalTitle(<FileTextOutlined />, "Create Invoice")}
         open={invoiceOpen}
         onCancel={() => {
           setInvoiceOpen(false);
@@ -558,23 +358,13 @@ export default function RevenuePage() {
           <Row gutter={12}>
             <Col xs={24} md={12}>
               <Form.Item label="Discount" name="discount">
-                <InputNumber
-                  min={0}
-                  prefix="₹"
-                  style={{ width: "100%" }}
-                  placeholder="0"
-                />
+                <InputNumber min={0} prefix="₹" style={{ width: "100%" }} placeholder="0" />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
               <Form.Item label="Tax / GST" name="taxGst">
-                <InputNumber
-                  min={0}
-                  prefix="₹"
-                  style={{ width: "100%" }}
-                  placeholder="0"
-                />
+                <InputNumber min={0} prefix="₹" style={{ width: "100%" }} placeholder="0" />
               </Form.Item>
             </Col>
           </Row>
@@ -596,17 +386,7 @@ export default function RevenuePage() {
       </Modal>
 
       <Modal
-        title={
-          <Space>
-            <WalletOutlined style={{ color: "#22C55E" }} />
-            <span>
-              Add Payment
-              {selectedInvoice?.invoiceNumber
-                ? ` - ${selectedInvoice.invoiceNumber}`
-                : ""}
-            </span>
-          </Space>
-        }
+        title={modalTitle(<WalletOutlined />, `Add Payment${selectedInvoice?.invoiceNumber ? ` - ${selectedInvoice.invoiceNumber}` : ""}`)}
         open={paymentOpen}
         onCancel={() => {
           setPaymentOpen(false);
@@ -619,40 +399,24 @@ export default function RevenuePage() {
         destroyOnClose
       >
         {selectedInvoice && (
-          <div
-            style={{
-              background: "#f8fafc",
-              border: "1px solid #e2e8f0",
-              borderRadius: 16,
-              padding: 12,
-              marginBottom: 16,
-            }}
-          >
-            <Text type="secondary">Selected Invoice</Text>
+          <div style={{ ...sectionPanel, padding: 12, background: "var(--surface-soft)" }}>
+            <span style={{ color: "var(--text-muted)" }}>Selected Invoice</span>
             <div style={{ marginTop: 4 }}>
-              <Text strong>{selectedInvoice.schoolName}</Text>{" "}
+              <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>{" "}
               <Tag color="blue">{selectedInvoice.invoiceNumber}</Tag>
-              <Tag color={statusMap[selectedInvoice.status]?.color}>
+              <span style={pill(statusMap[selectedInvoice.status]?.color, statusMap[selectedInvoice.status]?.bg)}>
                 {statusMap[selectedInvoice.status]?.label}
-              </Tag>
+              </span>
             </div>
           </div>
         )}
 
-        <Form form={paymentForm} layout="vertical">
-          <Form.Item
-            label="Amount"
-            name="amount"
-            rules={[{ required: true, message: "Please enter amount" }]}
-          >
+        <Form form={paymentForm} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item label="Amount" name="amount" rules={[{ required: true, message: "Please enter amount" }]}>
             <InputNumber min={1} prefix="₹" style={{ width: "100%" }} />
           </Form.Item>
 
-          <Form.Item
-            label="Payment Mode"
-            name="paymentMode"
-            rules={[{ required: true, message: "Please select payment mode" }]}
-          >
+          <Form.Item label="Payment Mode" name="paymentMode" rules={[{ required: true, message: "Please select payment mode" }]}>
             <Select placeholder="Select payment mode" options={paymentModes} />
           </Form.Item>
 

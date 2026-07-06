@@ -13,26 +13,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { generateAdmitCards, getAdmitCards, getExams } from "../../../features/examSlice";
 import { getAccessToken } from "../../../api/authToken";
 import dayjs from "dayjs";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, modalTitle,
+} from "../../../styles/pageStyles";
 
-/* ── Design tokens ───────────────────────────────────────────────── */
+/* ── Accent colours (semantic, kept as hex per design system rules) ── */
 const C = {
-  primary:   "#2563EB",
-  primaryBg: "#EFF6FF",
-  primaryBd: "#BFDBFE",
-  accent:    "#14B8A6",
-  accentBg:  "#F0FDFA",
-  success:   "#22C55E",
-  successBg: "#F0FDF4",
-  warning:   "#F59E0B",
-  warningBg: "#FFFBEB",
-  danger:    "#EF4444",
-  dangerBg:  "#FEF2F2",
-  text:      "#0F172A",
-  textSub:   "#64748B",
-  textMuted: "#94A3B8",
-  border:    "#E2E8F0",
-  surface:   "#FFFFFF",
-  bg:        "#F8FAFC",
+  primary: "#2563EB",
+  accent:  "#14B8A6",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  danger:  "#EF4444",
 };
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
@@ -133,19 +126,12 @@ const buildPrintHtml = (card) => `
 </html>`;
 
 /* ── Stat chip ───────────────────────────────────────────────────── */
-const StatChip = ({ icon, label, value, color, bg }) => (
-  <div style={{
-    display: "flex", alignItems: "center", gap: 10,
-    background: bg, border: `1px solid ${color}25`,
-    borderRadius: 12, padding: "10px 18px", flex: "1 1 130px",
-  }}>
-    <span style={{
-      width: 34, height: 34, borderRadius: 8, background: `${color}15`,
-      color, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
-    }}>{icon}</span>
+const StatChip = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", marginBottom: 0 }}>
+    <div style={iconWell(color, 38)}>{icon}</div>
     <div>
-      <div style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>{value}</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
     </div>
   </div>
 );
@@ -243,22 +229,17 @@ const AdmitCardPage = () => {
       dataIndex: "studentName",
       render: (v) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: C.primaryBg, color: C.primary,
-            fontWeight: 800, fontSize: 13,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <div style={iconWell(C.primary, 32, { borderRadius: "50%", fontSize: 13, fontWeight: 800 })}>
             {(v || "?")[0].toUpperCase()}
           </div>
-          <span style={{ fontWeight: 600, color: C.text }}>{v || "—"}</span>
+          <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v || "—"}</span>
         </div>
       ),
     },
     {
       title: "Roll No",
       dataIndex: "rollNumber",
-      render: (v) => <Tag style={{ borderRadius: 6, fontWeight: 600, background: C.primaryBg, color: C.primary, border: `1px solid ${C.primaryBd}` }}>{v || "—"}</Tag>,
+      render: (v) => <span style={pill(C.primary)}>{v || "—"}</span>,
     },
     {
       title: "Seat No",
@@ -269,12 +250,12 @@ const AdmitCardPage = () => {
       title: "Exam",
       dataIndex: "examTitle",
       ellipsis: true,
-      render: (v) => <span style={{ fontSize: 13, color: C.textSub }}>{v || "—"}</span>,
+      render: (v) => <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{v || "—"}</span>,
     },
     {
       title: "Date",
       dataIndex: "examDate",
-      render: (v) => <span style={{ fontSize: 12, color: C.textMuted }}>{fmtDate(v)}</span>,
+      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmtDate(v)}</span>,
     },
     {
       title: "Actions",
@@ -308,48 +289,25 @@ const AdmitCardPage = () => {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, padding: "clamp(14px,3vw,28px)" }}>
-
-      {/* ── Page Header ── */}
-      <div style={{
-        background: C.surface, border: `1px solid ${C.border}`,
-        borderRadius: 16, padding: "20px 24px", marginBottom: 20,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        flexWrap: "wrap", gap: 14,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{
-            width: 46, height: 46, borderRadius: 12,
-            background: C.primaryBg, color: C.primary,
-            fontSize: 22, display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <IdcardOutlined />
-          </div>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>
-              Admit Cards
-            </div>
-            <div style={{ fontSize: 13, color: C.textSub, marginTop: 1 }}>
-              Generate, view and download student admit cards
-            </div>
-          </div>
-        </div>
-
-        {isGenerated && (
-          <Tag icon={<CheckCircleFilled />} color="success" style={{ borderRadius: 8, padding: "4px 12px", fontSize: 13 }}>
-            Generated
-          </Tag>
-        )}
-      </div>
+    <div>
+      <PageHeader
+        title="Admit Cards"
+        subtitle="Generate, view and download student admit cards"
+        icon={<IdcardOutlined />}
+        extra={
+          isGenerated && (
+            <Tag icon={<CheckCircleFilled />} color="success" style={{ borderRadius: 8, padding: "4px 12px", fontSize: 13 }}>
+              Generated
+            </Tag>
+          )
+        }
+      />
+      <div style={pageWrapper}>
 
       {/* ── Exam Selector + Generate ── */}
-      <div style={{
-        background: C.surface, border: `1px solid ${C.border}`,
-        borderRadius: 16, padding: "20px 24px", marginBottom: 16,
-        display: "flex", alignItems: "flex-end", gap: 12, flexWrap: "wrap",
-      }}>
+      <div style={{ ...sectionPanel, display: "flex", alignItems: "flex-end", gap: 12, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 280px" }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: C.textSub, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Select Exam
           </div>
           <Select
@@ -372,10 +330,7 @@ const AdmitCardPage = () => {
           onClick={handleGenerate}
           loading={generating}
           disabled={!examId || isGenerated}
-          style={{
-            borderRadius: 10, background: C.primary, borderColor: C.primary,
-            fontWeight: 600, minWidth: 160,
-          }}
+          style={{ borderRadius: 10, fontWeight: 600, minWidth: 160 }}
         >
           {isGenerated ? "Already Generated" : "Generate Cards"}
         </Button>
@@ -383,31 +338,25 @@ const AdmitCardPage = () => {
 
       {/* ── Stats ── */}
       {examId && (
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
-          <StatChip icon={<TeamOutlined />}        label="Total Cards"   value={rows.length}                                       color={C.primary} bg={C.primaryBg} />
-          <StatChip icon={<BookOutlined />}         label="Exam"          value={selectedExam?.title || "—"}                        color={C.accent}  bg={C.accentBg}  />
-          <StatChip icon={<ClockCircleOutlined />}  label="Status"        value={isGenerated ? "Generated" : "Pending"}             color={isGenerated ? C.success : C.warning} bg={isGenerated ? C.successBg : C.warningBg} />
-          <StatChip icon={<UserOutlined />}         label="Date"          value={selectedExam?.examDate ? fmtDate(selectedExam.examDate) : "—"} color={C.textSub} bg={C.bg} />
+        <div style={statGrid(160)}>
+          <StatChip icon={<TeamOutlined />}        label="Total Cards"   value={rows.length}                                       color={C.primary} />
+          <StatChip icon={<BookOutlined />}         label="Exam"          value={selectedExam?.title || "—"}                        color={C.accent}  />
+          <StatChip icon={<ClockCircleOutlined />}  label="Status"        value={isGenerated ? "Generated" : "Pending"}             color={isGenerated ? C.success : C.warning} />
+          <StatChip icon={<UserOutlined />}         label="Date"          value={selectedExam?.examDate ? fmtDate(selectedExam.examDate) : "—"} color={C.primary} />
         </div>
       )}
 
       {/* ── Table ── */}
-      <div style={{
-        background: C.surface, border: `1px solid ${C.border}`,
-        borderRadius: 16, overflow: "hidden",
-      }}>
+      <style>{tableHeadCss("admit-cards-tbl")}</style>
+      <div style={{ ...sectionPanel, padding: 0 }}>
         <div style={{
-          padding: "16px 24px", borderBottom: `1px solid ${C.border}`,
+          padding: "16px 24px", borderBottom: "1px solid var(--border-muted)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: C.text }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
             Student List
             {rows.length > 0 && (
-              <span style={{
-                marginLeft: 8, background: C.primaryBg, color: C.primary,
-                borderRadius: 99, fontSize: 11, fontWeight: 700,
-                padding: "2px 8px", border: `1px solid ${C.primaryBd}`,
-              }}>{rows.length}</span>
+              <span style={{ marginLeft: 8, ...pill(C.primary) }}>{rows.length}</span>
             )}
           </div>
           {rows.length > 0 && (
@@ -431,45 +380,37 @@ const AdmitCardPage = () => {
           )}
         </div>
 
-        <Table
-          rowKey={(r) => r._id || `${r.studentId}-${r.seatNumber}`}
-          dataSource={rows}
-          loading={loading || generating}
-          columns={columns}
-          pagination={{ pageSize: 10, showSizeChanger: false }}
-          scroll={{ x: "max-content" }}
-          locale={{
-            emptyText: (
-              <div style={{ padding: "48px 0", textAlign: "center" }}>
-                <IdcardOutlined style={{ fontSize: 40, color: C.textMuted, marginBottom: 12 }} />
-                <div style={{ fontSize: 14, color: C.textSub, fontWeight: 600 }}>No admit cards yet</div>
-                <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>
-                  Select an exam and click "Generate Cards"
+        <div className="admit-cards-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+          <Table
+            rowKey={(r) => r._id || `${r.studentId}-${r.seatNumber}`}
+            dataSource={rows}
+            loading={loading || generating}
+            columns={columns}
+            pagination={{ pageSize: 10, showSizeChanger: false }}
+            scroll={{ x: "max-content" }}
+            locale={{
+              emptyText: (
+                <div style={{ padding: "48px 0", textAlign: "center" }}>
+                  <IdcardOutlined style={{ fontSize: 40, color: "var(--text-muted)", marginBottom: 12 }} />
+                  <div style={{ fontSize: 14, color: "var(--text-secondary)", fontWeight: 600 }}>No admit cards yet</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                    Select an exam and click "Generate Cards"
+                  </div>
                 </div>
-              </div>
-            ),
-          }}
-          onRow={() => ({
-            onMouseEnter: (e) => (e.currentTarget.style.background = C.bg),
-            onMouseLeave: (e) => (e.currentTarget.style.background = "transparent"),
-          })}
-        />
+              ),
+            }}
+          />
+        </div>
       </div>
 
       {/* ── Preview Modal ── */}
       <Modal
         open={Boolean(selectedCard)}
         onCancel={() => setSelectedCard(null)}
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <IdcardOutlined style={{ color: C.primary, fontSize: 18 }} />
-            <span style={{ fontWeight: 700, color: C.text }}>Admit Card Preview</span>
-          </div>
-        }
+        title={modalTitle(<IdcardOutlined />, "Admit Card Preview")}
         footer={[
           <Button
             key="close" onClick={() => setSelectedCard(null)}
-            style={{ borderRadius: 8, borderColor: C.border, color: C.textSub }}
           >
             Close
           </Button>,
@@ -484,7 +425,7 @@ const AdmitCardPage = () => {
           <Button
             key="print" type="primary" icon={<PrinterOutlined />}
             onClick={() => handlePrint(selectedCard)}
-            style={{ borderRadius: 8, background: C.primary, borderColor: C.primary, fontWeight: 600 }}
+            style={{ borderRadius: 8, fontWeight: 600 }}
           >
             Print
           </Button>,
@@ -534,11 +475,11 @@ const AdmitCardPage = () => {
                 { label: "End Time",       value: fmt(selectedCard.endTime) },
               ].map(({ label, value }) => (
                 <div key={label} style={{
-                  background: C.bg, border: `1px solid ${C.border}`,
+                  background: "var(--surface-soft)", border: "1px solid var(--border-muted)",
                   borderRadius: 10, padding: "10px 14px",
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{value}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{value}</div>
                 </div>
               ))}
             </div>
@@ -546,7 +487,7 @@ const AdmitCardPage = () => {
             {/* Instructions */}
             {selectedCard.instructions?.length > 0 && (
               <div style={{
-                background: C.warningBg, border: `1px solid ${C.warning}30`,
+                background: `${C.warning}15`, border: `1px solid ${C.warning}30`,
                 borderRadius: 10, padding: "14px 16px",
               }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#B45309", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
@@ -554,7 +495,7 @@ const AdmitCardPage = () => {
                 </div>
                 <ul style={{ paddingLeft: 18, margin: 0 }}>
                   {selectedCard.instructions.map((ins, i) => (
-                    <li key={i} style={{ fontSize: 13, color: C.textSub, marginBottom: 4, lineHeight: 1.5 }}>{ins}</li>
+                    <li key={i} style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 4, lineHeight: 1.5 }}>{ins}</li>
                   ))}
                 </ul>
               </div>
@@ -564,18 +505,19 @@ const AdmitCardPage = () => {
             <div style={{
               display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
               gap: 12, marginTop: 20, paddingTop: 16,
-              borderTop: `1px dashed ${C.border}`,
+              borderTop: "1px dashed var(--border-muted)",
             }}>
               {["Student Signature", "Invigilator", "Principal"].map((lbl) => (
                 <div key={lbl} style={{ textAlign: "center" }}>
-                  <div style={{ height: 36, borderBottom: `1px solid ${C.border}`, marginBottom: 6 }} />
-                  <div style={{ fontSize: 10, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{lbl}</div>
+                  <div style={{ height: 36, borderBottom: "1px solid var(--border-muted)", marginBottom: 6 }} />
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{lbl}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
       </Modal>
+      </div>
     </div>
   );
 };

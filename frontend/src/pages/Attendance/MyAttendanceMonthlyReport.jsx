@@ -167,19 +167,26 @@ const MyAttendanceMonthlyReport = () => {
         <div
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
-            marginTop: 2, cursor: "pointer",
+            gap: 2, marginTop: 2, cursor: "pointer",
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{
-            width: 22, height: 22, borderRadius: "50%",
-            background: cfg.color || C.textMuted,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 10, color: "#fff",
-            boxShadow: isToday ? `0 0 0 2px ${C.primary}` : "none",
+            display: "inline-flex", alignItems: "center", gap: 3,
+            padding: "1px 7px", borderRadius: 20,
+            background: cfg.bg, color: cfg.color,
+            border: `1px solid ${cfg.border || C.border}`,
+            fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
+            boxShadow: isToday ? `0 0 0 2px ${C.primary}30` : "none",
           }}>
-            {cfg.icon}
+            {cfg.icon} {cfg.label}
           </div>
+          {(record.checkInAt || record.checkOutAt) && (
+            <div style={{ fontSize: 9, color: C.textSub, lineHeight: 1.4, textAlign: "center" }}>
+              {record.checkInAt && <div>In&nbsp;{dayjs(record.checkInAt).format("hh:mm A")}</div>}
+              {record.checkOutAt && <div>Out&nbsp;{dayjs(record.checkOutAt).format("hh:mm A")}</div>}
+            </div>
+          )}
         </div>
       </Popover>
     );

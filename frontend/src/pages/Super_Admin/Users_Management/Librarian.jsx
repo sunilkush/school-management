@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
@@ -190,5 +191,22 @@ const Librarian = () => {
     </>
   );
 };
+=======
+import React from "react";
+import { BookOutlined } from "@ant-design/icons";
+import UserRoleList from "./UserRoleList";
+
+const Librarian = () => (
+  <UserRoleList
+    roleNames={["Librarian"]}
+    title="Librarian Management"
+    subtitle="Super Admin can manage librarians across all schools"
+    icon={<BookOutlined />}
+    nounSingular="librarian"
+    nounPlural="librarians"
+    enableBulkActions={false}
+  />
+);
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 
 export default Librarian;

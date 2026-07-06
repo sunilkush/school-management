@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Layout,
   Table,
   Button,
   Input,
   Popconfirm,
   message,
   Select,
-  Card,
   Typography,
   Space,
-  ConfigProvider,
-  Tag,
-  Modal,
 } from "antd";
 import {
   PlusOutlined,
@@ -25,7 +20,6 @@ import {
   GlobalOutlined,
   BankOutlined,
   CheckCircleOutlined,
-  StopOutlined,
   ReadOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
@@ -33,9 +27,17 @@ import SubjectForm from "../../../components/forms/SubjectForm.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
 import * as XLSX from "xlsx";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  sectionPanel,
+  statGrid,
+  iconWell,
+  toolbarRow,
+  tableContainer,
+  tableHeadCss,
+} from "../../../styles/pageStyles";
 
-
-const { Content } = Layout;
 const { Text } = Typography;
 const { Option } = Select;
 
@@ -44,9 +46,9 @@ function StatusBadge({ isActive }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
-      background: isActive ? "#f6ffed" : "rgba(254,226,226,0.2)",
+      background: isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)",
       color: isActive ? "#22C55E" : "#EF4444",
-      border: `1px solid ${isActive ? "#b7eb8f" : "rgba(254,226,226,0.5)"}`,
+      border: `1px solid ${isActive ? "rgba(220,252,231,0.5)" : "rgba(254,226,226,0.5)"}`,
       borderRadius: 20, padding: "3px 11px", fontSize: 12, fontWeight: 500,
     }}>
       <span style={{
@@ -61,42 +63,14 @@ function StatusBadge({ isActive }) {
 
 /* ─── Stat Card ─── */
 function StatCard({ label, value, icon, accentColor }) {
-  const [hovered, setHovered] = useState(false);
   return (
-    <Card
-      bordered={false}
-      style={{
-        borderRadius: 16,
-        borderTop: `3px solid ${accentColor}`,
-        boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.12)" : "0 2px 12px rgba(0,0,0,0.06)",
-        transform: hovered ? "translateY(-3px)" : "translateY(0)",
-        transition: "all 0.2s ease",
-        cursor: "default",
-        flex: 1,
-      }}
-      bodyStyle={{ padding: "18px 20px" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <div>
-          <div style={{ fontSize: 12, color: "#8c8c8c", fontWeight: 500, marginBottom: 4 }}>{label}</div>
-          <div style={{
-            fontSize: 26, fontWeight: 700,
-            fontFamily: "'DM Mono', monospace",
-            color: "#141414", letterSpacing: -0.5,
-          }}>{value}</div>
-        </div>
-        <div style={{
-          width: 40, height: 40, borderRadius: 12,
-          background: `${accentColor}18`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 18, color: accentColor,
-        }}>
-          {icon}
-        </div>
+    <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+      <div style={iconWell(accentColor, 42)}>{icon}</div>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -112,20 +86,20 @@ function SubjectCell({ name }) {
       }}>
         <BookOutlined style={{ color: "#14B8A6", fontSize: 13 }} />
       </div>
-      <span style={{ fontSize: 13, fontWeight: 600, color: "#141414" }}>{name}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{name}</span>
     </div>
   );
 }
 
 /* ─── Type Chip ─── */
 function TypeChip({ type }) {
-  if (!type) return <span style={{ color: "#bfbfbf", fontSize: 12 }}>—</span>;
+  if (!type) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
   const map = {
     theory:    { bg: "#e3f2fd", color: "#0984e3", border: "#9ed4f5" },
     practical: { bg: "#fff8e1", color: "#e65100", border: "#fdd7a0" },
     both:      { bg: "#f3e5f5", color: "#6a1b9a", border: "#ce93d8" },
   };
-  const s = map[type?.toLowerCase()] || { bg: "#f5f5f5", color: "#595959", border: "#d9d9d9" };
+  const s = map[type?.toLowerCase()] || { bg: "var(--surface-soft)", color: "var(--text-muted)", border: "var(--border-muted)" };
   return (
     <span style={{
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
@@ -139,7 +113,7 @@ function TypeChip({ type }) {
 
 /* ─── Category Chip ─── */
 function CategoryChip({ category }) {
-  if (!category) return <span style={{ color: "#bfbfbf", fontSize: 12 }}>—</span>;
+  if (!category) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
   return (
     <span style={{
       background: "#e8f5e9", color: "#00897b",
@@ -153,11 +127,11 @@ function CategoryChip({ category }) {
 
 /* ─── Marks Cell ─── */
 function MarksCell({ max, pass }) {
-  if (max == null && pass == null) return <span style={{ color: "#bfbfbf", fontSize: 12 }}>—</span>;
+  if (max == null && pass == null) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
   return (
     <div>
-      <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: "#141414" }}>{max ?? "—"}</span>
-      <span style={{ color: "#bfbfbf", fontSize: 11, margin: "0 4px" }}>/</span>
+      <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{max ?? "—"}</span>
+      <span style={{ color: "var(--text-muted)", fontSize: 11, margin: "0 4px" }}>/</span>
       <span style={{ fontFamily: "monospace", fontSize: 12, color: "#22C55E", fontWeight: 600 }}>{pass ?? "—"}</span>
     </div>
   );
@@ -180,8 +154,8 @@ function ScopeBadge({ isGlobal, schoolName }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
-      background: "#f5f5f5", color: "#595959",
-      border: "1px solid #d9d9d9",
+      background: "var(--surface-soft)", color: "var(--text-muted)",
+      border: "1px solid var(--border-muted)",
       borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 500,
     }}>
       <BankOutlined style={{ fontSize: 10 }} />
@@ -203,7 +177,7 @@ const SubjectsAdmin = () => {
   const { subjects = [], loading } = useSelector((state) => state.subject);
   const { schools = [] } = useSelector((state) => state.school);
   const { user } = useSelector((state) => state.auth);
- 
+
   const schoolId = user?.school?._id || "";
   const role = user?.role?.name || "";
   const isSuperAdmin = role === "Super Admin";
@@ -311,7 +285,7 @@ const SubjectsAdmin = () => {
       width: 150,
       render: (name) =>
         name ? (
-          <span style={{ fontSize: 13, color: "#141414", fontWeight: 500 }}>{name}</span>
+          <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{name}</span>
         ) : (
           <span style={{
             fontSize: 11, color: "#fa8c16",
@@ -375,172 +349,125 @@ const SubjectsAdmin = () => {
   ];
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: "#14B8A6",
-          borderRadius: 12,
-          fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-        },
-      }}
-    >
-      <Layout style={{ background: "#F8FAFC", minHeight: "100vh" }}>
-
-        {/* ── Page Header ── */}
-        <div style={{
-          background: "#ffffff",
-          borderBottom: "1px solid rgba(219,234,254,0.3)",
-          padding: "20px 32px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          flexWrap: "wrap", gap: 12,
-        }}>
-          <div>
-            <div style={{ color: "#0F172A", fontSize: 18, fontWeight: 700 }}>Subjects Management</div>
-            <div style={{ color: "#94A3B8", fontSize: 12, marginTop: 2 }}>
-              Manage subjects for your school or global context
-            </div>
-          </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Subjects Management"
+        subtitle="Manage subjects for your school or global context"
+        icon={<ReadOutlined />}
+        extra={
           <Space>
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={handleExport}
-              style={{
-                borderRadius: 10, fontWeight: 600, height: 38,
-                background: "rgba(219,234,254,0.15)",
-                borderColor: "rgba(219,234,254,0.4)",
-                color: "#2563EB",
-              }}
-            >
+            <Button icon={<DownloadOutlined />} onClick={handleExport}>
               Export Excel
             </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setIsModalOpen(true)}
-              style={{
-                background: "linear-gradient(135deg, #2563EB, #14B8A6)", borderColor: "transparent",
-                borderRadius: 10, fontWeight: 600, height: 38, paddingInline: 20,
-              }}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
               Add New Subject
             </Button>
           </Space>
+        }
+      />
+
+      {/* ── Stats ── */}
+      <div style={{ ...statGrid(180), marginTop: 20 }}>
+        <StatCard label="Total Subjects"    value={total}         icon={<ReadOutlined />}         accentColor="#14B8A6" />
+        <StatCard label="Active Subjects"   value={activeCount}   icon={<CheckCircleOutlined />}  accentColor="#00b894" />
+        <StatCard label="Global Subjects"   value={globalCount}   icon={<GlobalOutlined />}       accentColor="#0984e3" />
+        <StatCard label="Teacher Assigned"  value={assignedCount} icon={<TeamOutlined />}         accentColor="#e17055" />
+      </div>
+
+      <style>{tableHeadCss("subjects-tbl")}</style>
+
+      {/* ── Table Card ── */}
+      <div style={{ ...sectionPanel, padding: 0 }}>
+        {/* Filter Bar */}
+        <div style={{
+          ...toolbarRow,
+          justifyContent: "space-between",
+          padding: "16px 20px",
+          borderBottom: "1px solid var(--border-muted)",
+          marginBottom: 0,
+        }}>
+          <Space wrap>
+            <Input
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              placeholder="Search subject..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: 220 }}
+              allowClear
+            />
+            {isSuperAdmin && (
+              <Select
+                placeholder="Filter by School"
+                allowClear
+                value={selectedSchool || undefined}
+                onChange={(v) => setSelectedSchool(v || "")}
+                style={{ width: 180 }}
+                showSearch
+                optionFilterProp="children"
+                suffixIcon={<BankOutlined style={{ fontSize: 11 }} />}
+              >
+                {schools.map((s) => (
+                  <Option key={s._id} value={s._id}>{s.name}</Option>
+                ))}
+              </Select>
+            )}
+            <Select
+              placeholder="All Types"
+              allowClear
+              value={typeFilter || undefined}
+              onChange={(v) => setTypeFilter(v ?? "")}
+              style={{ width: 140 }}
+              suffixIcon={<FilterOutlined style={{ fontSize: 11 }} />}
+            >
+              <Option value="theory">Theory</Option>
+              <Option value="practical">Practical</Option>
+              <Option value="both">Both</Option>
+            </Select>
+            <Select
+              placeholder="All Status"
+              allowClear
+              value={statusFilter || undefined}
+              onChange={(v) => setStatusFilter(v ?? "")}
+              style={{ width: 140 }}
+              suffixIcon={<FilterOutlined style={{ fontSize: 11 }} />}
+            >
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
+            </Select>
+          </Space>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            Showing <strong>{filtered.length}</strong> of <strong>{total}</strong> subjects
+          </Text>
         </div>
 
-        <Content style={{ padding: "20px 24px" }}>
+        {/* Table */}
+        <div className="subjects-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0, overflowX: "auto" }}>
+          <Table
+            rowKey="_id"
+            columns={columns}
+            dataSource={filtered}
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              size: "small",
+              showSizeChanger: false,
+              style: { padding: "12px 20px" },
+            }}
+            scroll={{ x: 1100 }}
+          />
+        </div>
+      </div>
 
-          {/* ── Stats ── */}
-          <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-            <StatCard label="Total Subjects"    value={total}         icon={<ReadOutlined />}         accentColor="#14B8A6" />
-            <StatCard label="Active Subjects"   value={activeCount}   icon={<CheckCircleOutlined />}  accentColor="#00b894" />
-            <StatCard label="Global Subjects"   value={globalCount}   icon={<GlobalOutlined />}       accentColor="#0984e3" />
-            <StatCard label="Teacher Assigned"  value={assignedCount} icon={<TeamOutlined />}         accentColor="#e17055" />
-          </div>
-
-          {/* ── Table Card ── */}
-          <Card
-            bordered={false}
-            style={{ borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
-            bodyStyle={{ padding: 0 }}
-          >
-            {/* Filter Bar */}
-            <div style={{
-              display: "flex", alignItems: "center",
-              justifyContent: "space-between", flexWrap: "wrap",
-              gap: 10, padding: "16px 20px",
-              borderBottom: "1px solid #f5f5f5",
-            }}>
-              <Space wrap>
-                <Input
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-                  placeholder="Search subject..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ width: 220, borderRadius: 10 }}
-                  allowClear
-                />
-                {isSuperAdmin && (
-                  <Select
-                    placeholder="Filter by School"
-                    allowClear
-                    value={selectedSchool || undefined}
-                    onChange={(v) => setSelectedSchool(v || "")}
-                    style={{ width: 180, borderRadius: 10 }}
-                    showSearch
-                    optionFilterProp="children"
-                    suffixIcon={<BankOutlined style={{ fontSize: 11 }} />}
-                  >
-                    {schools.map((s) => (
-                      <Option key={s._id} value={s._id}>{s.name}</Option>
-                    ))}
-                  </Select>
-                )}
-                <Select
-                  placeholder="All Types"
-                  allowClear
-                  value={typeFilter || undefined}
-                  onChange={(v) => setTypeFilter(v ?? "")}
-                  style={{ width: 140, borderRadius: 10 }}
-                  suffixIcon={<FilterOutlined style={{ fontSize: 11 }} />}
-                >
-                  <Option value="theory">Theory</Option>
-                  <Option value="practical">Practical</Option>
-                  <Option value="both">Both</Option>
-                </Select>
-                <Select
-                  placeholder="All Status"
-                  allowClear
-                  value={statusFilter || undefined}
-                  onChange={(v) => setStatusFilter(v ?? "")}
-                  style={{ width: 140, borderRadius: 10 }}
-                  suffixIcon={<FilterOutlined style={{ fontSize: 11 }} />}
-                >
-                  <Option value="active">Active</Option>
-                  <Option value="inactive">Inactive</Option>
-                </Select>
-              </Space>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Showing <strong>{filtered.length}</strong> of <strong>{total}</strong> subjects
-              </Text>
-            </div>
-
-            {/* Table */}
-            <div style={{ overflowX: "auto" }}>
-              <Table
-                rowKey="_id"
-                columns={columns}
-                dataSource={filtered}
-                loading={loading}
-                pagination={{
-                  pageSize: 10,
-                  size: "small",
-                  showSizeChanger: false,
-                  style: { padding: "12px 20px" },
-                }}
-                onRow={(_, index) => ({
-                  style: { background: index % 2 === 0 ? "#fff" : "#fafafa" },
-                  onMouseEnter: (e) => (e.currentTarget.style.background = "rgba(20,184,166,0.2)22"),
-                  onMouseLeave: (e) => (e.currentTarget.style.background = index % 2 === 0 ? "#fff" : "#fafafa"),
-                })}
-                style={{ borderRadius: 0 }}
-                scroll={{ x: 1100 }}
-              />
-            </div>
-          </Card>
-        </Content>
-
-        {/* ── Subject Form Modal ── */}
-        <SubjectForm
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedSubject(null);
-          }}
-          editData={selectedSubject}
-        />
-
-      </Layout>
-    </ConfigProvider>
+      {/* ── Subject Form Modal ── */}
+      <SubjectForm
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedSubject(null);
+        }}
+        editData={selectedSubject}
+      />
+    </div>
   );
 };
 

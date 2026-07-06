@@ -1,15 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
-  Row,
-  Col,
   Table,
   Tag,
   Select,
-  Typography,
   Space,
-  Avatar,
   Badge,
 } from "antd";
 import {
@@ -34,8 +29,11 @@ import {
   Legend,
 } from "recharts";
 import { fetchSchools } from "../../../features/schoolSlice";
-
-const { Text, Title } = Typography;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, avatarStyle,
+} from "../../../styles/pageStyles";
 
 const formatCurrency = (amount = 0) => `₹${Number(amount || 0).toLocaleString("en-IN")}`;
 
@@ -67,64 +65,41 @@ const CustomTooltip = ({ active, payload, label }) => {
     return (
       <div
         style={{
-          background: "#fff",
-          border: "1px solid #f0f0f0",
+          background: "var(--surface)",
+          border: "1px solid var(--border-muted)",
           borderRadius: 10,
           padding: "10px 16px",
-          boxShadow: "0 4px 20px #0001",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
-        <Text style={{ fontSize: 12, color: "#888" }}>{label}</Text>
-        <br />
-        <Text strong style={{ fontSize: 15, color: "#1a1a2e" }}>
+        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{label}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
           {formatCurrency(payload[0].value)}
-        </Text>
+        </div>
       </div>
     );
   }
   return null;
 };
 
-const KpiCard = ({ icon, label, value, sub, accent }) => (
-  <Card
-    bordered={false}
-    style={{
-      borderRadius: 16,
-      boxShadow: "0 2px 16px #0001",
-      overflow: "hidden",
-      position: "relative",
-    }}
-    bodyStyle={{ padding: "20px 24px" }}
-  >
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 4,
-        background: accent,
-        borderRadius: "16px 16px 0 0",
-      }}
-    />
-    <Space style={{ width: "100%", justifyContent: "space-between" }}>
-      <div>
-        <Text type="secondary" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1 }}>
-          {label}
-        </Text>
-        <Title level={3} style={{ margin: "4px 0 2px", color: "#1a1a2e", fontWeight: 800 }}>
-          {value}
-        </Title>
-        {sub && (
-          <Space size={4}>
-            <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
-            <Text style={{ color: "#22C55E", fontSize: 12 }}>{sub}</Text>
-          </Space>
-        )}
+const KpiCard = ({ icon, label, value, sub, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+        {label}
       </div>
-      <Avatar size={48} icon={icon} style={{ background: `${accent}18`, color: accent, flexShrink: 0 }} />
-    </Space>
-  </Card>
+      <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>
+        {value}
+      </div>
+      {sub && (
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+          <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
+          <span style={{ color: "#22C55E", fontSize: 12 }}>{sub}</span>
+        </div>
+      )}
+    </div>
+    <div style={iconWell(color, 44)}>{icon}</div>
+  </div>
 );
 
 const RevenueAnalytics = () => {
@@ -215,8 +190,8 @@ const RevenueAnalytics = () => {
       dataIndex: "school",
       render: (name) => (
         <Space>
-          <Avatar size={30} icon={<BankOutlined />} style={{ background: "#e8f4ff", color: "#1677ff" }} />
-          <Text strong style={{ fontSize: 13 }}>{name}</Text>
+          <div style={avatarStyle(name, 30)}><BankOutlined style={{ fontSize: 13 }} /></div>
+          <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{name}</span>
         </Space>
       ),
     },
@@ -234,9 +209,9 @@ const RevenueAnalytics = () => {
       dataIndex: "revenue",
       sorter: (a, b) => a.revenue - b.revenue,
       render: (v) => (
-        <Text strong style={{ color: "#1a1a2e", fontSize: 14 }}>
+        <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>
           {formatCurrency(v)}
-        </Text>
+        </span>
       ),
     },
     {
@@ -245,7 +220,7 @@ const RevenueAnalytics = () => {
       render: (g) => (
         <Space size={4}>
           <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
-          <Text style={{ color: "#22C55E", fontWeight: 600 }}>{g}</Text>
+          <span style={{ color: "#22C55E", fontWeight: 600 }}>{g}</span>
         </Space>
       ),
     },
@@ -257,146 +232,104 @@ const RevenueAnalytics = () => {
       render: (status) => (
         <Badge
           status={status === "Paid" ? "success" : "warning"}
-          text={
-            <Tag color={status === "Paid" ? "green" : "orange"} style={{ borderRadius: 20, fontWeight: 600, padding: "0 12px" }}>
-              {status}
-            </Tag>
-          }
+          text={<span style={pill(status === "Paid" ? "#15803D" : "#B45309", status === "Paid" ? "rgba(220,252,231,0.5)" : "rgba(254,243,199,0.5)")}>{status}</span>}
         />
       ),
     },
   ];
 
   return (
-    <div style={{ padding: "24px 28px", background: "#F8FAFC", minHeight: "100vh" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginBottom: 28,
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <Title level={3} style={{ margin: 0, color: "#1a1a2e", fontWeight: 800, letterSpacing: -0.5 }}>
-            <RupeeIcon style={{ marginRight: 10, color: "#1677ff" }} />
-            Revenue Analytics
-          </Title>
-          <Text type="secondary" style={{ fontSize: 14 }}>
-            Dynamic data from school subscriptions.
-          </Text>
-        </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Revenue Analytics"
+        subtitle="Dynamic data from school subscriptions"
+        icon={<RupeeIcon />}
+        extra={
+          <Select
+            value={filter}
+            onChange={setFilter}
+            style={{ width: 140 }}
+            options={[
+              { label: "Monthly", value: "monthly" },
+              { label: "Quarterly", value: "quarterly" },
+              { label: "Yearly", value: "yearly" },
+            ]}
+          />
+        }
+      />
 
-        <Select
-          value={filter}
-          onChange={setFilter}
-          style={{ width: 140, borderRadius: 8 }}
-          options={[
-            { label: "Monthly", value: "monthly" },
-            { label: "Quarterly", value: "quarterly" },
-            { label: "Yearly", value: "yearly" },
-          ]}
-        />
+      <div style={{ ...statGrid(220), marginTop: 20 }}>
+        <KpiCard icon={<RupeeIcon />} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub="from all schools" color="#2563EB" />
+        <KpiCard icon={<FundOutlined />} label={periodLabel} value={formatCurrency(stats.currentPeriodRevenue)} sub="latest period" color="#7C3AED" />
+        <KpiCard icon={<RiseOutlined />} label="Growth Rate" value={`${stats.growth.toFixed(1)}%`} sub="period-over-period" color="#22C55E" />
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={8}>
-          <KpiCard icon={<RupeeIcon />} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub="from all schools" accent="#1677ff" />
-        </Col>
-        <Col xs={24} sm={8}>
-          <KpiCard icon={<FundOutlined />} label={periodLabel} value={formatCurrency(stats.currentPeriodRevenue)} sub="latest period" accent="#722ed1" />
-        </Col>
-        <Col xs={24} sm={8}>
-          <KpiCard icon={<RiseOutlined />} label="Growth Rate" value={`${stats.growth.toFixed(1)}%`} sub="period-over-period" accent="#22C55E" />
-        </Col>
-      </Row>
+      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginBottom: 20 }} className="revenue-charts-grid">
+        <div style={sectionPanel}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Revenue Trend</span>
+            <span style={pill("#2563EB")}>vs Target</span>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradTarget" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2.5} fill="url(#gradRevenue)" name="Revenue" dot={{ r: 4, fill: "#2563EB" }} />
+              <Area type="monotone" dataKey="target" stroke="#7C3AED" strokeWidth={2} strokeDasharray="5 4" fill="url(#gradTarget)" name="Target" dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} lg={14}>
-          <Card
-            bordered={false}
-            style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
-            loading={loading}
-            title={
-              <Space>
-                <span style={{ fontWeight: 700, color: "#1a1a2e" }}>Revenue Trend</span>
-                <Tag color="blue" style={{ borderRadius: 20, fontWeight: 500 }}>vs Target</Tag>
-              </Space>
-            }
-          >
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1677ff" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gradTarget" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#722ed1" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#722ed1" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#999" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "#bbb" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="revenue" stroke="#1677ff" strokeWidth={2.5} fill="url(#gradRevenue)" name="Revenue" dot={{ r: 4, fill: "#1677ff" }} />
-                <Area type="monotone" dataKey="target" stroke="#722ed1" strokeWidth={2} strokeDasharray="5 4" fill="url(#gradTarget)" name="Target" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+        <div style={sectionPanel}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 16 }}>Period Breakdown</div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={chartData} barSize={28} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="revenue" fill="#2563EB" radius={[6, 6, 0, 0]} name="Revenue" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
-        <Col xs={24} lg={10}>
-          <Card
-            bordered={false}
-            style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
-            loading={loading}
-            title={<span style={{ fontWeight: 700, color: "#1a1a2e" }}>Period Breakdown</span>}
-          >
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData} barSize={28} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#999" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "#bbb" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="revenue" fill="#1677ff" radius={[6, 6, 0, 0]} name="Revenue" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-      </Row>
-
-      <Card
-        bordered={false}
-        style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
-        loading={loading}
-        title={
-          <Space>
-            <BankOutlined style={{ color: "#1677ff" }} />
-            <span style={{ fontWeight: 700, color: "#1a1a2e" }}>School Revenue Breakdown</span>
-            <Tag style={{ borderRadius: 20 }}>{schoolRevenue.length} schools</Tag>
-          </Space>
+      <style>{`
+        @media (max-width: 900px) {
+          .revenue-charts-grid { grid-template-columns: 1fr !important; }
         }
-        bodyStyle={{ padding: 0 }}
-      >
-        <Table
-          columns={columns}
-          dataSource={schoolRevenue}
-          loading={loading}
-          pagination={{ pageSize: 5, style: { padding: "12px 20px" } }}
-          style={{ borderRadius: "0 0 16px 16px", overflow: "hidden" }}
-          rowClassName={() => "revenue-row"}
-          onRow={() => ({
-            style: { transition: "background 0.15s" },
-            onMouseEnter: (e) => (e.currentTarget.style.background = "#f8faff"),
-            onMouseLeave: (e) => (e.currentTarget.style.background = ""),
-          })}
-        />
-      </Card>
+        ${tableHeadCss("revenue-tbl")}
+      `}</style>
+
+      <div style={{ ...sectionPanel, padding: 0 }}>
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 10 }}>
+          <BankOutlined style={{ color: "var(--primary)" }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>School Revenue Breakdown</span>
+          <span style={pill("var(--text-muted)")}>{schoolRevenue.length} schools</span>
+        </div>
+        <div className="revenue-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+          <Table
+            columns={columns}
+            dataSource={schoolRevenue}
+            loading={loading}
+            rowKey="key"
+            pagination={{ pageSize: 5 }}
+          />
+        </div>
+      </div>
     </div>
   );
 };

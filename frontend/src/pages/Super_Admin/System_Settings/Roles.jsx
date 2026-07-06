@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
-  Card,
   Col,
   DatePicker,
   Empty,
@@ -14,10 +13,7 @@ import {
   Select,
   Space,
   Spin,
-  Statistic,
   Table,
-  Tag,
-  Typography,
   message,
 } from "antd";
 import {
@@ -35,8 +31,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchRoles } from "../../../features/roleSlice";
 import apiClient from "../../../api/httpClient";
 import AddRoleForm from "../../../components/forms/AddRoleForm";
-
-const { Title, Text } = Typography;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, modalTitle,
+} from "../../../styles/pageStyles";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -68,98 +67,34 @@ const templateMeta = {
   small: {
     title: "Small School",
     color: "#2563EB",
-    bg: "rgba(219,234,254,0.2)",
     desc: "Basic school operations ke liye recommended roles.",
   },
   medium: {
     title: "Medium School",
     color: "#14B8A6",
-    bg: "rgba(20,184,166,0.2)",
     desc: "Growing school ke liye admin + operation roles.",
   },
   enterprise: {
     title: "Enterprise School",
     color: "#22C55E",
-    bg: "rgba(220,252,231,0.2)",
     desc: "Large schools ke liye complete governance roles.",
   },
 };
 
-const statusConfig = {
-  Active: "success",
-  Expired: "default",
-};
+const statusPill = (status) =>
+  status === "Active"
+    ? pill("#15803D", "rgba(220,252,231,0.5)")
+    : pill("var(--text-muted)", "var(--surface-soft)");
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-const css = `
-.roles-page {
-  min-height: 100vh;
-  padding: 24px;
-  background: #F8FAFC;
-}
-
-.roles-hero {
-  background: #ffffff;
-  border: 1px solid rgba(219,234,254,0.3);
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.08);
-}
-
-.roles-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 20px;
-  background: rgba(20,184,166,0.2);
-  color: #14B8A6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-.roles-card {
-  border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.08);
-}
-
-.template-card {
-  cursor: pointer;
-  border-radius: 16px !important;
-  transition: 0.2s ease;
-  border: 1px solid rgba(219,234,254,0.3) !important;
-}
-
-.template-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(37,99,235,0.12);
-}
-
-.template-card.active {
-  border-color: #14B8A6 !important;
-  box-shadow: 0 0 0 4px rgba(20,184,166,0.2);
-}
-
-.role-chip {
-  border-radius: 999px !important;
-  padding: 4px 10px !important;
-  font-weight: 600;
-}
-
-.access-modal .ant-modal-content {
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-@media (max-width: 768px) {
-  .roles-page {
-    padding: 14px;
-  }
-}
-`;
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 // ---------------------------------------------------------------------------
 // Component
@@ -277,29 +212,25 @@ const Roles = () => {
     {
       title: "User",
       dataIndex: "userId",
-      render: (user) => <Text strong>{user?.name || user?.email || "—"}</Text>,
+      render: (user) => <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{user?.name || user?.email || "—"}</span>,
     },
     {
       title: "Role",
       dataIndex: "roleId",
-      render: (role) => (
-        <Tag color="blue" className="role-chip">
-          {role?.name || "—"}
-        </Tag>
-      ),
+      render: (role) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{role?.name || "—"}</span>,
     },
     {
       title: "Scope",
       dataIndex: "scope",
-      render: (value) => <Text type="secondary">{value}</Text>,
+      render: (value) => <span style={{ color: "var(--text-muted)" }}>{value}</span>,
     },
     {
       title: "Valid Till",
       dataIndex: "validTill",
       render: (value) => (
-        <Tag icon={<ClockCircleOutlined />} color="warning">
-          {value ? new Date(value).toLocaleDateString() : "—"}
-        </Tag>
+        <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>
+          <ClockCircleOutlined /> {value ? new Date(value).toLocaleDateString() : "—"}
+        </span>
       ),
     },
     {
@@ -310,11 +241,7 @@ const Roles = () => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) => (
-        <Tag color={statusConfig[status] || "default"} className="role-chip">
-          {status}
-        </Tag>
-      ),
+      render: (status) => <span style={statusPill(status)}>{status}</span>,
     },
     {
       title: "Action",
@@ -360,209 +287,133 @@ const Roles = () => {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <>
-      <style>{css}</style>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Role Governance"
+        subtitle="Role templates, custom roles aur time-bound access manage karein"
+        icon={<SafetyCertificateOutlined />}
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenModal}>
+            Grant Temporary Access
+          </Button>
+        }
+      />
 
-      <div className="roles-page">
-        {/* Hero header */}
-        <div className="roles-hero">
-          <Row gutter={[16, 16]} align="middle" justify="space-between">
-            <Col xs={24} lg={14}>
-              <Space align="center">
-                <div className="roles-icon">
-                  <SafetyCertificateOutlined />
-                </div>
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>
-                    Role Governance
-                  </Title>
-                  <Text style={{ color: "var(--textMuted, #64748b)" }}>
-                    Role templates, custom roles aur time-bound access manage
-                    karein.
-                  </Text>
-                </div>
-              </Space>
-            </Col>
+      <Alert
+        type="info"
+        showIcon
+        style={{ borderRadius: 14, margin: "20px 0" }}
+        message="Role Governance Hardening"
+        description="Role templates + time-bound access yahan manage hoga. Permission diff aur high-risk approvals Permissions module me handle honge."
+      />
 
-            <Col xs={24} lg={10}>
-              <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={handleOpenModal}
-                >
-                  Grant Temporary Access
-                </Button>
-              </Space>
-            </Col>
-          </Row>
+      <div style={statGrid(170)}>
+        <StatCard icon={<CrownOutlined />} label="Selected Template Roles" value={templateRoles.length} color="#14B8A6" />
+        <StatCard icon={<UserSwitchOutlined />} label="Temporary Grants" value={temporaryAccess.length} color="#2563EB" />
+        <StatCard icon={<LockOutlined />} label="Security Mode" value="RBAC" color="#22C55E" />
+      </div>
+
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <TeamOutlined style={{ color: "var(--primary)" }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Role Templates by School Size</span>
         </div>
 
-        {/* Info alert */}
-        <Alert
-          type="info"
-          showIcon
-          style={{ borderRadius: 16, marginBottom: 18 }}
-          message="Role Governance Hardening"
-          description="Role templates + time-bound access yahan manage hoga. Permission diff aur high-risk approvals Permissions module me handle honge."
-        />
+        <Row gutter={[16, 16]}>
+          {Object.keys(ROLE_TEMPLATES).map((key) => {
+            const meta = templateMeta[key];
+            const active = selectedTemplate === key;
 
+            return (
+              <Col xs={24} md={8} key={key}>
+                <div
+                  onClick={() => setSelectedTemplate(key)}
+                  style={{
+                    cursor: "pointer",
+                    borderRadius: 14,
+                    padding: 16,
+                    border: active ? `1px solid ${meta.color}` : "1px solid var(--border-muted)",
+                    boxShadow: active ? `0 0 0 3px ${meta.color}22` : "none",
+                    background: "var(--surface)",
+                    transition: "0.15s ease",
+                  }}
+                >
+                  <Space align="start">
+                    <div style={iconWell(meta.color, 44)}>
+                      <CrownOutlined />
+                    </div>
 
-        {/* Stat cards */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
-          <Col xs={24} md={8}>
-            <Card bordered={false} className="roles-card">
-              <Statistic
-                title="Selected Template Roles"
-                value={templateRoles.length}
-                prefix={<CrownOutlined style={{ color: "var(--secondary, #14B8A6)" }} />}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <Card bordered={false} className="roles-card">
-              <Statistic
-                title="Temporary Grants"
-                value={temporaryAccess.length}
-                prefix={<UserSwitchOutlined style={{ color: "var(--primary, #2563EB)" }} />}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <Card bordered={false} className="roles-card">
-              <Statistic
-                title="Security Mode"
-                value="RBAC"
-                prefix={<LockOutlined style={{ color: "var(--success, #22C55E)" }} />}
-              />
-            </Card>
-          </Col>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                        {meta.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        {meta.desc}
+                      </div>
+                      <div style={{ marginTop: 10 }}>
+                        <span style={pill("#6D28D9", "rgba(237,233,254,0.5)")}>
+                          {ROLE_TEMPLATES[key].length} roles
+                        </span>
+                      </div>
+                    </div>
+                  </Space>
+                </div>
+              </Col>
+            );
+          })}
         </Row>
 
-        {/* Role Templates */}
-        <Card
-          bordered={false}
-          className="roles-card"
-          style={{ marginBottom: 18 }}
-          title={
-            <Space>
-              <TeamOutlined style={{ color: "var(--secondary, #14B8A6)" }} />
-              <span>Role Templates by School Size</span>
+        <div style={{ marginTop: 18 }}>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Included Roles</span>
+          <div style={{ marginTop: 10 }}>
+            <Space wrap>
+              {templateRoles.map((role) => (
+                <span key={role} style={pill("#6D28D9", "rgba(237,233,254,0.5)")}>
+                  {role}
+                </span>
+              ))}
             </Space>
-          }
-        >
-          <Row gutter={[16, 16]}>
-            {Object.keys(ROLE_TEMPLATES).map((key) => {
-              const meta = templateMeta[key];
-              const active = selectedTemplate === key;
+          </div>
+        </div>
+      </div>
 
-              return (
-                <Col xs={24} md={8} key={key}>
-                  <Card
-                    bordered
-                    className={`template-card ${active ? "active" : ""}`}
-                    onClick={() => setSelectedTemplate(key)}
-                    bodyStyle={{ padding: 18 }}
-                  >
-                    <Space align="start">
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 16,
-                          background: meta.bg,
-                          color: meta.color,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 20,
-                        }}
-                      >
-                        <CrownOutlined />
-                      </div>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} xl={10}>
+          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <PlusOutlined style={{ color: "var(--primary)" }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Create / Manage Roles</span>
+            </div>
 
-                      <div>
-                        <Text strong style={{ fontSize: 15 }}>
-                          {meta.title}
-                        </Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {meta.desc}
-                        </Text>
-                        <div style={{ marginTop: 10 }}>
-                          <Tag color="purple" className="role-chip">
-                            {ROLE_TEMPLATES[key].length} roles
-                          </Tag>
-                        </div>
-                      </div>
-                    </Space>
-                  </Card>
-                </Col>
-              );
-            })}
-          </Row>
+            <span style={{ color: "var(--text-muted)" }}>
+              Role definitions aur permissions ke liye existing role form use karein.
+            </span>
 
-          <div style={{ marginTop: 18 }}>
-            <Text strong>Included Roles</Text>
-            <div style={{ marginTop: 10 }}>
-              <Space wrap>
-                {templateRoles.map((role) => (
-                  <Tag key={role} color="purple" className="role-chip">
-                    {role}
-                  </Tag>
-                ))}
-              </Space>
+            <div style={{ marginTop: 16 }}>
+              <AddRoleForm />
             </div>
           </div>
-        </Card>
+        </Col>
 
-        {/* Role Management + Temp Access Table */}
-        <Row gutter={[16, 16]}>
-          <Col xs={24} xl={10}>
-            <Card
-              bordered={false}
-              className="roles-card"
-              title={
-                <Space>
-                  <PlusOutlined style={{ color: "var(--primary, #2563EB)" }} />
-                  <span>Create / Manage Roles</span>
-                </Space>
-              }
-            >
-              <Text type="secondary">
-                Role definitions aur permissions ke liye existing role form use
-                karein.
-              </Text>
+        <Col xs={24} xl={14}>
+          <div style={{ ...sectionPanel, marginBottom: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              <ClockCircleOutlined style={{ color: "#F59E0B" }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Time-bound Temporary Access</span>
+              <span style={pill("var(--primary)")}>{temporaryAccess.length}</span>
+              <Button
+                type="primary"
+                size="small"
+                icon={<PlusOutlined />}
+                style={{ marginLeft: "auto" }}
+                onClick={handleOpenModal}
+              >
+                Grant Access
+              </Button>
+            </div>
 
-              <div style={{ marginTop: 16 }}>
-                <AddRoleForm />
-              </div>
-            </Card>
-          </Col>
-
-          <Col xs={24} xl={14}>
-            <Card
-              bordered={false}
-              className="roles-card"
-              title={
-                <Space>
-                  <ClockCircleOutlined style={{ color: "#F59E0B" }} />
-                  <span>Time-bound Temporary Access</span>
-                  <Tag color="blue">{temporaryAccess.length}</Tag>
-                </Space>
-              }
-              extra={
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={handleOpenModal}
-                >
-                  Grant Access
-                </Button>
-              }
-            >
+            <style>{tableHeadCss("roles-temp-access-tbl")}</style>
+            <div className="roles-temp-access-tbl" style={tableContainer}>
               <Table
                 rowKey="_id"
                 columns={columns}
@@ -576,109 +427,103 @@ const Roles = () => {
                   ),
                 }}
               />
-            </Card>
-          </Col>
-        </Row>
+            </div>
+          </div>
+        </Col>
+      </Row>
 
-        {/* Grant Temporary Access Modal */}
-        <Modal
-          open={tempAccessOpen}
-          title={
-            <Space>
-              <UserSwitchOutlined style={{ color: "#14B8A6" }} />
-              <span>Grant Temporary Access</span>
-            </Space>
-          }
-          onCancel={() => {
-            setTempAccessOpen(false);
-            form.resetFields();
-          }}
-          onOk={createTemporaryAccess}
-          okText="Grant Access"
-          confirmLoading={submitting}
-          width={620}
-          destroyOnClose
-          className="access-modal"
-        >
-          <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-            <Row gutter={12}>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="userId"
-                  label="User"
-                  rules={[{ required: true, message: "User is required" }]}
-                >
-                  <Select
-                    showSearch
-                    placeholder="Select user"
-                    optionFilterProp="label"
-                    options={allUsers.map((u) => ({
-                      label: `${u.name || u.email} (${u.email})`,
-                      value: u._id,
-                    }))}
-                    notFoundContent={allUsers.length === 0 ? <Spin size="small" /> : "No users"}
-                  />
-                </Form.Item>
-              </Col>
+      {/* Grant Temporary Access Modal */}
+      <Modal
+        open={tempAccessOpen}
+        title={modalTitle(<UserSwitchOutlined />, "Grant Temporary Access")}
+        onCancel={() => {
+          setTempAccessOpen(false);
+          form.resetFields();
+        }}
+        onOk={createTemporaryAccess}
+        okText="Grant Access"
+        confirmLoading={submitting}
+        width={620}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+          <Row gutter={12}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="userId"
+                label="User"
+                rules={[{ required: true, message: "User is required" }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select user"
+                  optionFilterProp="label"
+                  options={allUsers.map((u) => ({
+                    label: `${u.name || u.email} (${u.email})`,
+                    value: u._id,
+                  }))}
+                  notFoundContent={allUsers.length === 0 ? <Spin size="small" /> : "No users"}
+                />
+              </Form.Item>
+            </Col>
 
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="roleId"
-                  label="Role"
-                  rules={[{ required: true, message: "Role is required" }]}
-                >
-                  <Select
-                    showSearch
-                    placeholder="Select role"
-                    optionFilterProp="label"
-                    options={roles.map((r) => ({ label: r.name, value: r._id }))}
-                    notFoundContent={roles.length === 0 ? <Spin size="small" /> : "No roles"}
-                  />
-                </Form.Item>
-              </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="roleId"
+                label="Role"
+                rules={[{ required: true, message: "Role is required" }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select role"
+                  optionFilterProp="label"
+                  options={roles.map((r) => ({ label: r.name, value: r._id }))}
+                  notFoundContent={roles.length === 0 ? <Spin size="small" /> : "No roles"}
+                />
+              </Form.Item>
+            </Col>
 
-              <Col xs={24} md={12}>
-                <Form.Item name="scope" label="Scope (optional)">
-                  <Select
-                    placeholder="Select scope"
-                    allowClear
-                    options={[
-                      { label: "Global", value: "global" },
-                      { label: "School Level", value: "school" },
-                      { label: "Exam Week", value: "exam-week" },
-                      { label: "Event Only", value: "event" },
-                    ]}
-                  />
-                </Form.Item>
-              </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="scope" label="Scope (optional)">
+                <Select
+                  placeholder="Select scope"
+                  allowClear
+                  options={[
+                    { label: "Global", value: "global" },
+                    { label: "School Level", value: "school" },
+                    { label: "Exam Week", value: "exam-week" },
+                    { label: "Event Only", value: "event" },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
 
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="validTill"
-                  label="Valid Till"
-                  rules={[{ required: true, message: "Date is required" }]}
-                >
-                  <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
-                </Form.Item>
-              </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="validTill"
+                label="Valid Till"
+                rules={[{ required: true, message: "Date is required" }]}
+              >
+                <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+              </Form.Item>
+            </Col>
 
-              <Col xs={24}>
-                <Form.Item
-                  name="reason"
-                  label="Reason"
-                  rules={[{ required: true, message: "Reason is required" }]}
-                >
-                  <Input.TextArea
-                    rows={3}
-                    placeholder="Why is temporary access needed?"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-        </Modal>
-      </div>
-    </>
+            <Col xs={24}>
+              <Form.Item
+                name="reason"
+                label="Reason"
+                rules={[{ required: true, message: "Reason is required" }]}
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder="Why is temporary access needed?"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+    </div>
   );
 };
 

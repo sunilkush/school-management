@@ -2,12 +2,27 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Input, Select, Spin, Table, Tooltip } from "antd";
 import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import {
+<<<<<<< HEAD
   FileText, Users, CalendarCheck, BarChart3, Clock, FolderOpen,
 } from "lucide-react";
+=======
+  Alert,
+  Button,
+  Empty,
+  Input,
+  Select,
+  Spin,
+  Statistic,
+  Table,
+  Tag,
+} from "antd";
+import { ReloadOutlined, FileTextOutlined } from "@ant-design/icons";
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import { fetchDashboardSummary } from "../../../features/dashboardSlice";
 import { fetchReports } from "../../../features/reportSlice";
+<<<<<<< HEAD
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 import {
   pageWrapper, sectionPanel, statGrid, statCard, statLabel, statValue,
@@ -15,6 +30,14 @@ import {
 } from "../../../styles/pageStyles.js";
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
+=======
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid,
+  tableContainer, tableHeadCss, toolbarRow,
+} from "../../../styles/pageStyles";
+
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 const normalizeUserContext = (rawUser) => {
   const roleName =
     (typeof rawUser?.role === "string" ? rawUser?.role : rawUser?.role?.name) || "";
@@ -111,6 +134,7 @@ const TeacherReports = () => {
     {
       title: "Report Title",
       dataIndex: "title",
+<<<<<<< HEAD
       render: (v) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
@@ -124,6 +148,20 @@ const TeacherReports = () => {
             {v || "Untitled Report"}
           </span>
         </div>
+=======
+      key: "title",
+      render: (value) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{value || "Untitled report"}</span>,
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      width: 130,
+      render: (value) => (
+        <Tag color="blue" style={{ textTransform: "capitalize" }}>
+          {value || "unknown"}
+        </Tag>
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
       ),
     },
     {
@@ -153,6 +191,7 @@ const TeacherReports = () => {
   ];
 
   return (
+<<<<<<< HEAD
     <div style={pageWrapper}>
       <style>{tableHeadCss("reports-table")}</style>
 
@@ -198,6 +237,37 @@ const TeacherReports = () => {
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <Input
+=======
+    <>
+      <PageHeader
+        title={`${teacherName} - Reports Dashboard`}
+        subtitle="This page is now fully dynamic and loads reports + summary in real-time"
+        icon={<FileTextOutlined />}
+        extra={
+          <Button icon={<ReloadOutlined />} onClick={refreshAll}>
+            Refresh
+          </Button>
+        }
+      />
+      <div style={pageWrapper}>
+        {summaryError && <Alert type="error" showIcon message={summaryError} style={{ marginBottom: 16 }} />}
+        {reportsError && <Alert type="error" showIcon message={reportsError} style={{ marginBottom: 16 }} />}
+
+        <div style={statGrid(200)}>
+          {cards.map((card) => (
+            <div key={card.title} style={{ ...sectionPanel, marginBottom: 0 }}>
+              <Statistic title={card.title} value={card.value} loading={summaryLoading} />
+            </div>
+          ))}
+        </div>
+
+        <style>{tableHeadCss("teacher-reports-tbl")}</style>
+
+        <div style={sectionPanel}>
+          <div style={toolbarRow}>
+            <Input.Search
+              placeholder="Search by title, type, creator"
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -213,7 +283,10 @@ const TeacherReports = () => {
               placeholder="Filter by type"
             />
           </div>
+<<<<<<< HEAD
         </div>
+=======
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 
         {/* Table or states */}
         {reportsLoading ? (
@@ -226,6 +299,7 @@ const TeacherReports = () => {
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
               No Reports Found
             </div>
+<<<<<<< HEAD
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
               {items.length === 0
                 ? "No reports have been generated yet."
@@ -245,6 +319,23 @@ const TeacherReports = () => {
         )}
       </div>
     </div>
+=======
+          ) : filteredReports.length === 0 ? (
+            <Empty description="No reports matched your filters" />
+          ) : (
+            <div className="teacher-reports-tbl" style={tableContainer}>
+              <Table
+                rowKey={(record) => record._id}
+                columns={tableColumns}
+                dataSource={filteredReports}
+                pagination={{ pageSize: 8 }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
   );
 };
 

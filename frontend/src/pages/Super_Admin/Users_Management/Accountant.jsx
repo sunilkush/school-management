@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
@@ -190,5 +191,21 @@ const Accountant = () => {
     </>
   );
 };
+=======
+import React from "react";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
+import UserRoleList from "./UserRoleList";
+
+const Accountant = () => (
+  <UserRoleList
+    roleNames={["Accountant"]}
+    title="Accountant Management"
+    subtitle="Super Admin can manage accountants across all schools"
+    icon={<RupeeIcon />}
+    nounSingular="accountant"
+    nounPlural="accountants"
+  />
+);
+>>>>>>> ecf8317b99aadd9e9c71cfaacb55ec35874e9a8d
 
 export default Accountant;

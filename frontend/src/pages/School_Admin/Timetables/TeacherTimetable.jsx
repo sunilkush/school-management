@@ -2,11 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Card,
-  Col,
   Empty,
   Grid,
-  Layout,
-  Row,
   Segmented,
   Select,
   Space,
@@ -26,9 +23,13 @@ import {
   fetchTeacherTimetable,
   fetchTimetableMasterData,
 } from "../../../features/timetableSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell,
+  tableContainer, tableHeadCss,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { useBreakpoint } = Grid;
 
 const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -38,6 +39,17 @@ const getTeacherOption = (teacher = {}) => {
   const name = user?.name || teacher?.name || teacher?.fullName || "";
   return { id, name };
 };
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
+
 const TeacherTimetable = () => {
   const dispatch = useDispatch();
   const screens = useBreakpoint();
@@ -174,69 +186,23 @@ const TeacherTimetable = () => {
   );
 
   return (
-    <Layout
-      style={{
-        padding: isMobile ? 0 : 0,
-        minHeight: "100vh",
-        background: "transparent",
-      }}
-    >
-      <Content>
-        <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-          <Col xs={24} sm={12} lg={8}>
-            <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
-              <Space>
-                <ClockCircleOutlined style={{ color: "#1677ff", fontSize: 22 }} />
-                <div>
-                  <Text type="secondary">Daily Periods</Text>
-                  <Title level={4} style={{ margin: 0 }}>
-                    {stats.periods}
-                  </Title>
-                </div>
-              </Space>
-            </Card>
-          </Col>
+    <>
+      <PageHeader
+        title="Teacher Timetable"
+        subtitle="Live teacher-wise daily schedule from backend data"
+        icon={<ClockCircleOutlined />}
+      />
+      <div style={pageWrapper}>
+        <div style={statGrid(200)}>
+          <StatCard icon={<ClockCircleOutlined />} label="Daily Periods" value={stats.periods} color="#2563EB" />
+          <StatCard icon={<TeamOutlined />} label="Classes Handled" value={stats.classes} color="#22C55E" />
+          <StatCard icon={<BookOutlined />} label="Subjects" value={stats.subjects} color="#722ED1" />
+        </div>
 
-          <Col xs={24} sm={12} lg={8}>
-            <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
-              <Space>
-                <TeamOutlined style={{ color: "#22C55E", fontSize: 22 }} />
-                <div>
-                  <Text type="secondary">Classes Handled</Text>
-                  <Title level={4} style={{ margin: 0 }}>
-                    {stats.classes}
-                  </Title>
-                </div>
-              </Space>
-            </Card>
-          </Col>
+        <style>{tableHeadCss("teacher-timetable-tbl")}</style>
 
-          <Col xs={24} sm={24} lg={8}>
-            <Card size={isMobile ? "small" : "default"} style={{ borderRadius: 16 }}>
-              <Space>
-                <BookOutlined style={{ color: "#722ed1", fontSize: 22 }} />
-                <div>
-                  <Text type="secondary">Subjects</Text>
-                  <Title level={4} style={{ margin: 0 }}>
-                    {stats.subjects}
-                  </Title>
-                </div>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
-
-        <Card style={{ borderRadius: 18 }}>
+        <div style={sectionPanel}>
           <Space direction="vertical" size={12} style={{ width: "100%" }}>
-            <div>
-              <Title level={isMobile ? 5 : 4} style={{ marginBottom: 4 }}>
-                Teacher Timetable
-              </Title>
-              <Text type="secondary">
-                Live teacher-wise daily schedule from backend data.
-              </Text>
-            </div>
-
             <Alert
               type="info"
               showIcon
@@ -285,22 +251,24 @@ const TeacherTimetable = () => {
                     <TimetableCard key={item._id || index} item={item} index={index} />
                   ))
                 ) : (
-                  <Table
-                    rowKey={(record) => record._id}
-                    columns={columns}
-                    dataSource={timetable}
-                    pagination={false}
-                    scroll={{ x: 760 }}
-                  />
+                  <div className="teacher-timetable-tbl" style={tableContainer}>
+                    <Table
+                      rowKey={(record) => record._id}
+                      columns={columns}
+                      dataSource={timetable}
+                      pagination={false}
+                      scroll={{ x: 760 }}
+                    />
+                  </div>
                 )
               ) : (
                 <Empty description="No periods scheduled for selected teacher/day" />
               )}
             </Spin>
           </Space>
-        </Card>
-      </Content>
-    </Layout>
+        </div>
+      </div>
+    </>
   );
 };
 

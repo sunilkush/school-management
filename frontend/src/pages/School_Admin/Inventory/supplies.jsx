@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Layout,
-  Breadcrumb,
   Table,
   Button,
   Space,
@@ -12,24 +10,32 @@ import {
   InputNumber,
   Select,
   message,
-  Card,
-  Row,
-  Col,
-  Typography,
-  Tag,
   Alert,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined, InboxOutlined, WarningOutlined, AppstoreOutlined } from "@ant-design/icons";
 import {
   createInventoryItem,
   deleteInventoryItem,
   fetchInventoryItems,
   updateInventoryItem,
 } from "../../../features/inventorySlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, toolbarRow, modalTitle,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
 const { Option } = Select;
-const { Title, Text } = Typography;
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const Supplies = () => {
   const dispatch = useDispatch();
@@ -119,7 +125,7 @@ const Supplies = () => {
   );
 
   const columns = [
-    { title: "Supply Name", dataIndex: "name", key: "name" },
+    { title: "Supply Name", dataIndex: "name", key: "name", render: (v) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v}</span> },
     { title: "Category", dataIndex: "category", key: "category" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
     { title: "Allocated", dataIndex: "allocated", key: "allocated" },
@@ -134,7 +140,9 @@ const Supplies = () => {
       key: "status",
       render: (_, record) => {
         const isLow = record.lowStock ?? Number(record.quantity || 0) <= Number(record.minThreshold || 10);
-        return <Tag color={isLow ? "red" : "green"}>{isLow ? "Low Stock" : "Healthy"}</Tag>;
+        return isLow
+          ? <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Low Stock</span>
+          : <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Healthy</span>;
       },
     },
     {
@@ -142,10 +150,10 @@ const Supplies = () => {
       key: "actions",
       render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => openModal(record)}>
+          <Button size="small" icon={<EditOutlined />} onClick={() => openModal(record)}>
             Edit
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
+          <Button size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
             Delete
           </Button>
         </Space>
@@ -154,58 +162,62 @@ const Supplies = () => {
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 16 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Inventory</Breadcrumb.Item>
-        <Breadcrumb.Item>Supplies</Breadcrumb.Item>
-      </Breadcrumb>
-
-      <Content>
-        <Title level={4} style={{ marginBottom: 4 }}>Supplies Management</Title>
-        <Text type="secondary">Track stock levels and keep essentials available for staff and students.</Text>
-
-        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={error} /> : null}
-
-        <Row gutter={16} style={{ marginTop: 20, marginBottom: 20 }}>
-          <Col xs={24} sm={8}><Card title="Total Supplies">{totalSupplies}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Low Stock">{lowStock}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Available Units">{totalAvailable} / {totalQuantity}</Card></Col>
-        </Row>
-
-        <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <Input.Search
-            placeholder="Search by name, category or unit"
-            allowClear
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ maxWidth: 320 }}
-          />
+    <>
+      <PageHeader
+        title="Supplies Management"
+        subtitle="Track stock levels and keep essentials available for staff and students"
+        icon={<InboxOutlined />}
+        extra={
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()} loading={actionLoading}>
             Add Supply
           </Button>
+        }
+      />
+      <div style={pageWrapper}>
+        {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
+
+        <div style={{ ...statGrid(180), marginTop: 0 }}>
+          <StatCard icon={<AppstoreOutlined />} label="Total Supplies" value={totalSupplies} color="#2563EB" />
+          <StatCard icon={<WarningOutlined />} label="Low Stock" value={lowStock} color="#DC2626" />
+          <StatCard icon={<InboxOutlined />} label="Available Units" value={`${totalAvailable} / ${totalQuantity}`} color="#15803D" />
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={filteredSupplies}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 8 }}
-          locale={{ emptyText: "No supplies found. Add your first supply item." }}
-        />
+        <style>{tableHeadCss("supplies-tbl")}</style>
+
+        <div style={sectionPanel}>
+          <div style={toolbarRow}>
+            <Input.Search
+              placeholder="Search by name, category or unit"
+              allowClear
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ maxWidth: 320 }}
+            />
+          </div>
+
+          <div className="supplies-tbl" style={tableContainer}>
+            <Table
+              columns={columns}
+              dataSource={filteredSupplies}
+              rowKey="_id"
+              loading={loading}
+              pagination={{ pageSize: 8 }}
+              locale={{ emptyText: "No supplies found. Add your first supply item." }}
+            />
+          </div>
+        </div>
 
         <Modal
-          title={editingSupply ? "Edit Supply" : "Add Supply"}
+          title={modalTitle(<InboxOutlined />, editingSupply ? "Edit Supply" : "Add Supply")}
           open={modalOpen}
           onCancel={closeModal}
           footer={null}
           destroyOnClose
         >
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
-            <Form.Item label="Supply Name" name="name" rules={[{ required: true, message: "Enter supply name" }]}> 
+            <Form.Item label="Supply Name" name="name" rules={[{ required: true, message: "Enter supply name" }]}>
               <Input placeholder="e.g., Notebook" />
             </Form.Item>
-            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}> 
+            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}>
               <Select placeholder="Select category">
                 <Option value="Stationery">Stationery</Option>
                 <Option value="Hygiene">Hygiene</Option>
@@ -213,7 +225,7 @@ const Supplies = () => {
                 <Option value="Furniture">Furniture</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}> 
+            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}>
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item label="Allocated" name="allocated" initialValue={0} dependencies={["quantity"]}
@@ -226,7 +238,7 @@ const Supplies = () => {
             >
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}> 
+            <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}>
               <Input placeholder="pcs / box / bottle" />
             </Form.Item>
             <Form.Item label="Low Stock Alert" name="minThreshold" initialValue={10}>
@@ -242,8 +254,8 @@ const Supplies = () => {
             </Form.Item>
           </Form>
         </Modal>
-      </Content>
-    </Layout>
+      </div>
+    </>
   );
 };
 
