@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Table, Modal, Input, Select, Button, Space, Tooltip, Popconfirm, Tag,
+  Table, Modal, Input, Select, Button, Space, Tooltip, Popconfirm, Tag, message,
 } from "antd";
 import {
-  PlusOutlined, ReloadOutlined, SearchOutlined, TeamOutlined,
+  PlusOutlined, ReloadOutlined, TeamOutlined,
   CheckCircleOutlined, TagOutlined, EyeOutlined, EditOutlined,
-  DeleteOutlined,
+  DeleteOutlined, KeyOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUser, deleteUser, currentUser } from "../../../features/authSlice";
+import { fetchAllUser, deleteUser, currentUser, assignAdditionalRoles } from "../../../features/authSlice";
+import { fetchRoles } from "../../../features/roleSlice";
 import RegisterForm from "../../../components/forms/RegisterForm";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../../components/layout/PageHeader";
@@ -46,10 +47,15 @@ const TeacherList = () => {
   const myRole    = (loggedIn?.role?.name || "").toLowerCase();
   const isAdmin   = ["super admin", "school admin"].includes(myRole);
 
-  const [searchText,    setSearchText]    = useState("");
-  const [selectedRole,  setSelectedRole]  = useState("all");
-  const [isModalOpen,   setIsModalOpen]   = useState(false);
-  const [deletingId,    setDeletingId]    = useState(null);
+  const [searchText,      setSearchText]      = useState("");
+  const [selectedRole,    setSelectedRole]    = useState("all");
+  const [isModalOpen,     setIsModalOpen]     = useState(false);
+  const [deletingId,      setDeletingId]      = useState(null);
+  const [roleModal,       setRoleModal]       = useState({ open: false, user: null });
+  const [selectedExtraRoles, setSelectedExtraRoles] = useState([]);
+  const [savingRoles,     setSavingRoles]     = useState(false);
+
+  const { roles: allRoles = [] } = useSelector((s) => s.role || {});
 
   const schoolId   = loggedIn?.school?._id || loggedIn?.schoolId;
   const hiddenRoles = ["student", "parent"];
@@ -59,6 +65,32 @@ const TeacherList = () => {
     if (!schoolId) return;
     dispatch(fetchAllUser({ isActive: true }));
   }, [dispatch, schoolId]);
+  useEffect(() => { dispatch(fetchRoles()); }, [dispatch]);
+
+  const openRoleModal = (record) => {
+    const existing = (record.additionalRoles || []).map((r) =>
+      typeof r === "string" ? r : r?._id
+    ).filter(Boolean);
+    setSelectedExtraRoles(existing);
+    setRoleModal({ open: true, user: record });
+  };
+
+  const handleSaveRoles = async () => {
+    setSavingRoles(true);
+    try {
+      await dispatch(assignAdditionalRoles({
+        userId: roleModal.user._id,
+        additionalRoleIds: selectedExtraRoles,
+      })).unwrap();
+      message.success("Additional roles saved");
+      dispatch(fetchAllUser({ isActive: true }));
+      setRoleModal({ open: false, user: null });
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Failed to save roles");
+    } finally {
+      setSavingRoles(false);
+    }
+  };
 
   const filteredUsers = useMemo(() =>
     users.filter((u) => {
@@ -168,6 +200,13 @@ const TeacherList = () => {
               onClick={() => navigate(`/dashboard/schooladmin/users/employee-form?id=${r._id}`)}
             />
           </Tooltip>
+          <Tooltip title="Assign Additional Roles">
+            <Button
+              type="text" size="small" icon={<KeyOutlined />}
+              style={{ color: "#8b5cf6" }}
+              onClick={() => openRoleModal(r)}
+            />
+          </Tooltip>
           <Tooltip title="Delete">
             <Popconfirm
               title="Delete this staff member?"
@@ -233,6 +272,55 @@ const TeacherList = () => {
           }
         >
           <RegisterForm onClose={() => setIsModalOpen(false)} />
+        </Modal>
+
+        {/* ── Assign Additional Roles Modal ── */}
+        <Modal
+          open={roleModal.open}
+          title={
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                Assign Additional Roles
+              </div>
+              {roleModal.user && (
+                <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400, marginTop: 2 }}>
+                  {roleModal.user.name} · Primary: {roleModal.user.role?.name}
+                </div>
+              )}
+            </div>
+          }
+          onOk={handleSaveRoles}
+          onCancel={() => setRoleModal({ open: false, user: null })}
+          okText="Save Roles"
+          confirmLoading={savingRoles}
+          width={480}
+        >
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>
+              Select one or more additional roles. These allow the user to access extra sidebar sections and pages.
+            </div>
+            <Select
+              mode="multiple"
+              style={{ width: "100%" }}
+              placeholder="Select additional roles…"
+              value={selectedExtraRoles}
+              onChange={setSelectedExtraRoles}
+              optionFilterProp="label"
+              options={allRoles
+                .filter((r) => r._id !== roleModal.user?.role?._id && r._id !== roleModal.user?.roleId)
+                .map((r) => ({ value: r._id, label: r.name }))}
+            />
+            {selectedExtraRoles.length > 0 && (
+              <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {selectedExtraRoles.map((id) => {
+                  const r = allRoles.find((x) => x._id === id);
+                  return r ? (
+                    <Tag key={id} color="purple" style={{ borderRadius: 8 }}>{r.name}</Tag>
+                  ) : null;
+                })}
+              </div>
+            )}
+          </div>
         </Modal>
 
         <div style={pageCard}>

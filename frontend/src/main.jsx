@@ -154,6 +154,7 @@ const TicketPage = lazy(() => import("./pages/Super_Admin/Support/TicketPage.jsx
 const Faqs = lazy(() => import("./pages/Super_Admin/Support/Faqs.jsx"));
 const ContactSupport = lazy(() => import("./pages/Super_Admin/Support/ContactSupport.jsx"));
 const Documentation = lazy(() => import("./pages/Super_Admin/Support/Documentation.jsx"));
+const RoleDocumentation = lazy(() => import("./pages/Documentation/RoleDocumentation.jsx"));
 // School Admin
 const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
 const AddStudent = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AddStudent.jsx"));
@@ -165,6 +166,8 @@ const RollNumberManagement = lazy(() => import("./pages/School_Admin/Teachers_&_
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
+const ClassTeacherAssignmentPage = lazy(() => import("./pages/School_Admin/Academic_Management/ClassTeacherAssignmentPage.jsx"));
+const MyClassPage = lazy(() => import("./pages/Teacher/ClassTeacher/MyClassPage.jsx"));
 
 const ExamSchedule = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamSchedule.jsx"));
 const EnterGrades = lazy(() => import("./pages/School_Admin/Exams_and_Grades/EnterGrades.jsx"));
@@ -261,6 +264,7 @@ const Assignments = lazy(() => import("./pages/Teacher/Assignments/Assignments.j
 const MyStudents = lazy(() => import("./pages/Teacher/My_Students/MyStudents.jsx"));
 const StudentAttendance = lazy(() => import("./pages/Teacher/Attendance/StudentAttendance.jsx"));
 const EmployeeDetailes = lazy(() => import("./pages/Teacher/Profile/EmployeeDetailes.jsx"));
+const AdminUserProfile = lazy(() => import("./pages/School_Admin/User_Management/AdminUserProfile.jsx"));
 const MonthlyAttendanceReport = lazy(() => import("./pages/Teacher/Attendance/MonthlyAttendanceReport.jsx"));
 const MyAttendancePage = lazy(() => import("./pages/Attendance/MyAttendancePage.jsx"));
 const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports.jsx"));
@@ -470,9 +474,47 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
+                  "Class Teacher",
                 ]}
               >
                 <SupportTicketsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "support/documentation",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
+                  "Class Teacher",
+                ]}
+              >
+                <RoleDocumentation />
               </ProtectedRoute>
             ),
           },
@@ -585,6 +627,7 @@ const router = createBrowserRouter([
               { path: "teacher", element: <TeacherList /> },
               { path: "user-create", element: <UserRegister /> },
               { path: "classes", element: <Classes /> },
+              { path: "class-teacher-assignments", element: <ClassTeacherAssignmentPage /> },
               { path: "subjects", element: <Subjects /> },
               { path: "attendance/students",  element: <AllStudentsAttendance /> },
               { path: "attendance/staff",     element: <StaffAttendance /> },
@@ -644,10 +687,10 @@ const router = createBrowserRouter([
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "exams/reports", element: <ExamReports /> },
             
-              { path: "users/employee-details", element: <EmployeeDetailes /> },
-              // Backward-compatible routes (legacy typos)
-             
-              { path: "users/employee-detailes", element: <EmployeeDetailes /> },
+              { path: "users/employee-details", element: <AdminUserProfile /> },
+              { path: "users/employee-form",    element: <AdminUserProfile /> },
+              // Legacy alias
+              { path: "users/employee-detailes", element: <AdminUserProfile /> },
               { path: "calendar", element: <CalendarPage /> },
               { path: "events", element: <Events /> },
               { path: "inventory/supplies", element: <Supplies /> },
@@ -669,6 +712,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <TeacherDashboard /> },
+              { path: "my-class", element: <MyClassPage /> },
               { path: "classes", element: <AssignedClasses /> },
               { path: "classes/:classId", element: <ClassDetails /> },
               { path: "students", element: <MyStudents /> },
@@ -790,12 +834,14 @@ const router = createBrowserRouter([
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
               { path: "payroll", element: <PayrollSelfServicePage /> },
-              { path: "attendance", element: <MyAttendancePage /> },
-              { path: "attendance/table", element: <AttendanceTablePage /> },
-              { path: "attendance/monthly", element: <MonthlyReportPage /> },
+              { path: "attendance",          element: <MyAttendancePage /> },
+              { path: "attendance/self",     element: <EmployeeSelfAttendance /> },
+              { path: "attendance/table",    element: <AttendanceTablePage /> },
+              { path: "attendance/monthly",  element: <MonthlyReportPage /> },
+              { path: "leave",              element: <TeacherLeave /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
-              { path: "tasks", element: <MyTasks /> },
+              { path: "tasks",              element: <MyTasks /> },
             ],
           },
 
@@ -824,14 +870,17 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
-              { path: "library", element: <LibraryCard /> },
-              { path: "transport", element: <RoutesPage /> },
-              { path: "timetable", element: <PrincipalTimetableOverview /> },
-              { path: "message", element: <Message /> },
-              { path: "profile", element: <Profile /> },
-              { path: "notification", element: <Notification /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
-              { path: "tasks", element: <MyTasks /> },
+              { path: "library",         element: <LibraryCard /> },
+              { path: "transport",       element: <RoutesPage /> },
+              { path: "timetable",       element: <PrincipalTimetableOverview /> },
+              { path: "message",         element: <Message /> },
+              { path: "profile",         element: <Profile /> },
+              { path: "notification",    element: <Notification /> },
+              { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "tasks",           element: <MyTasks /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",   element: <MyAttendancePage /> },
+              { path: "leave",           element: <TeacherLeave /> },
             ],
           },
           {
@@ -857,13 +906,16 @@ const router = createBrowserRouter([
               { path: "exams/admit-card",         element: <AdmitCardPage /> },
               { path: "exams/seat-plan",          element: <SeatPlanPage /> },
               { path: "exams/analytics",          element: <ExamAnalyticsPage /> },
-              { path: "attendance/students",      element: <AllStudentsAttendance /> },
-              { path: "attendance/staff",         element: <StaffAttendance /> },
-              { path: "attendance/table",         element: <AttendanceTablePage /> },
-              { path: "profile",                  element: <Profile /> },
-              { path: "message",                  element: <Message /> },
-              { path: "notification",             element: <Notification /> },
-              { path: "*",                        element: <RoleDynamicPortal /> },
+              { path: "attendance/students",  element: <AllStudentsAttendance /> },
+              { path: "attendance/staff",     element: <StaffAttendance /> },
+              { path: "attendance/table",     element: <AttendanceTablePage /> },
+              { path: "attendance/self",      element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",        element: <MyAttendancePage /> },
+              { path: "leave",               element: <TeacherLeave /> },
+              { path: "profile",             element: <Profile /> },
+              { path: "message",             element: <Message /> },
+              { path: "notification",        element: <Notification /> },
+              { path: "*",                   element: <RoleDynamicPortal /> },
             ],
           },
           {
@@ -884,6 +936,9 @@ const router = createBrowserRouter([
               { path: "reports",         element: <ExamReports /> },
               { path: "tasks",           element: <MyTasks /> },
               { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",   element: <MyAttendancePage /> },
+              { path: "leave",           element: <TeacherLeave /> },
               { path: "profile",         element: <Profile /> },
               { path: "message",         element: <Message /> },
               { path: "notification",    element: <Notification /> },
@@ -906,6 +961,9 @@ const router = createBrowserRouter([
               { path: "fines",            element: <FineManagement /> },
               { path: "settings",         element: <LibrarySettings /> },
               { path: "payroll",          element: <PayrollSelfServicePage /> },
+              { path: "attendance/self",  element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",    element: <MyAttendancePage /> },
+              { path: "leave",            element: <TeacherLeave /> },
               { path: "profile",          element: <Profile /> },
               { path: "message",          element: <Message /> },
               { path: "notification",     element: <Notification /> },
@@ -927,13 +985,16 @@ const router = createBrowserRouter([
               { path: "leaves",                 element: <LeaveManagement /> },
               { path: "visitors",               element: <VisitorLog /> },
               { path: "complaints",             element: <ComplaintManagement /> },
-              { path: "hostel-attendance",      element: <HostelAttendance /> },
-              { path: "hostel-reports",         element: <HostelReports /> },
-              { path: "payroll",                element: <PayrollSelfServicePage /> },
-              { path: "profile",                element: <Profile /> },
-              { path: "message",                element: <Message /> },
-              { path: "notification",           element: <Notification /> },
-              { path: "tasks",                  element: <MyTasks /> },
+              { path: "hostel-attendance",  element: <HostelAttendance /> },
+              { path: "hostel-reports",     element: <HostelReports /> },
+              { path: "payroll",            element: <PayrollSelfServicePage /> },
+              { path: "attendance/self",    element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",      element: <MyAttendancePage /> },
+              { path: "leave",              element: <TeacherLeave /> },
+              { path: "profile",            element: <Profile /> },
+              { path: "message",            element: <Message /> },
+              { path: "notification",       element: <Notification /> },
+              { path: "tasks",              element: <MyTasks /> },
             ],
           },
           {
@@ -952,6 +1013,9 @@ const router = createBrowserRouter([
               { path: "maintenance",     element: <VehicleMaintenance /> },
               { path: "tasks",           element: <MyTasks /> },
               { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",   element: <MyAttendancePage /> },
+              { path: "leave",           element: <TeacherLeave /> },
               { path: "profile",         element: <Profile /> },
               { path: "message",         element: <Message /> },
               { path: "notification",    element: <Notification /> },
@@ -978,14 +1042,17 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
-              { path: "reports", element: <ExamReports /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
-              { path: "profile", element: <Profile /> },
-              { path: "message", element: <Message /> },
-              { path: "notification", element: <Notification /> },
+              { path: "reports",          element: <ExamReports /> },
+              { path: "payroll",          element: <PayrollSelfServicePage /> },
+              { path: "attendance/self",  element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",    element: <MyAttendancePage /> },
+              { path: "leave",            element: <TeacherLeave /> },
+              { path: "profile",          element: <Profile /> },
+              { path: "message",          element: <Message /> },
+              { path: "notification",     element: <Notification /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
-              { path: "tasks", element: <MyTasks /> },
+              { path: "tasks",            element: <MyTasks /> },
             ],
           },
           {
@@ -1000,13 +1067,16 @@ const router = createBrowserRouter([
               { path: "visitors",     element: <VisitorManagement /> },
               { path: "enquiries",    element: <Enquiries /> },
               { path: "calls",        element: <CallLog /> },
-              { path: "broadcasts",   element: <Broadcasts /> },
-              { path: "tasks",        element: <MyTasks /> },
-              { path: "payroll",      element: <PayrollSelfServicePage /> },
-              { path: "profile",      element: <Profile /> },
-              { path: "message",      element: <Message /> },
-              { path: "notification", element: <Notification /> },
-              { path: "*",            element: <RoleDynamicPortal /> },
+              { path: "broadcasts",      element: <Broadcasts /> },
+              { path: "tasks",           element: <MyTasks /> },
+              { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",   element: <MyAttendancePage /> },
+              { path: "leave",           element: <TeacherLeave /> },
+              { path: "profile",         element: <Profile /> },
+              { path: "message",         element: <Message /> },
+              { path: "notification",    element: <Notification /> },
+              { path: "*",              element: <RoleDynamicPortal /> },
             ],
           },
           {
@@ -1019,16 +1089,19 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <ITSupportDashboard /> },
               { path: "maintenance", element: <SystemMaintenance /> },
-              { path: "tickets", element: <UserSupportTickets /> },
+              { path: "tickets", element: <SupportTicketsPage /> },
               { path: "network", element: <NetworkStatus /> },
-              { path: "logs", element: <SystemLogs /> },
-              { path: "profile", element: <Profile /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
-              { path: "message", element: <Message /> },
-              { path: "notification", element: <Notification /> },
+              { path: "logs",             element: <SystemLogs /> },
+              { path: "payroll",          element: <PayrollSelfServicePage /> },
+              { path: "attendance/self",  element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",    element: <MyAttendancePage /> },
+              { path: "leave",            element: <TeacherLeave /> },
+              { path: "profile",          element: <Profile /> },
+              { path: "message",          element: <Message /> },
+              { path: "notification",     element: <Notification /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
-              { path: "tasks", element: <MyTasks /> },
+              { path: "tasks",            element: <MyTasks /> },
             ],
           },
           {
@@ -1044,11 +1117,14 @@ const router = createBrowserRouter([
               { path: "sessions",       element: <CounselingSessions /> },
               { path: "appointments",   element: <Appointments /> },
               { path: "reports",        element: <CounselorReports /> },
-              { path: "tasks",          element: <MyTasks /> },
-              { path: "payroll",        element: <PayrollSelfServicePage /> },
-              { path: "profile",        element: <Profile /> },
-              { path: "message",        element: <Message /> },
-              { path: "notification",   element: <Notification /> },
+              { path: "tasks",           element: <MyTasks /> },
+              { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",   element: <MyAttendancePage /> },
+              { path: "leave",           element: <TeacherLeave /> },
+              { path: "profile",         element: <Profile /> },
+              { path: "message",         element: <Message /> },
+              { path: "notification",    element: <Notification /> },
               { path: "*",              element: <RoleDynamicPortal /> },
             ],
           },
@@ -1067,10 +1143,115 @@ const router = createBrowserRouter([
               { path: "alerts",            element: <EmergencyAlerts /> },
               { path: "tasks",             element: <MyTasks /> },
               { path: "payroll",           element: <PayrollSelfServicePage /> },
+              { path: "attendance/self",   element: <EmployeeSelfAttendance /> },
+              { path: "leave",             element: <TeacherLeave /> },
               { path: "profile",           element: <Profile /> },
               { path: "message",           element: <Message /> },
               { path: "notification",      element: <Notification /> },
               { path: "*",                 element: <RoleDynamicPortal /> },
+            ],
+          },
+          {
+            path: "sportsteacher",
+            element: (
+              <ProtectedRoute allowedRoles={["Sports Teacher"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,                        element: <TeacherDashboard /> },
+              { path: "classes",                    element: <AssignedClasses /> },
+              { path: "classes/:classId",           element: <ClassDetails /> },
+              { path: "students",                   element: <MyStudents /> },
+              { path: "assignments",                element: <Assignments /> },
+              { path: "attendance/students",        element: <StudentAttendance /> },
+              { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",              element: <MyAttendancePage /> },
+              { path: "leave",                      element: <TeacherLeave /> },
+              { path: "payroll",                    element: <PayrollSelfServicePage /> },
+              { path: "tasks",                      element: <MyTasks /> },
+              { path: "message",                    element: <Message /> },
+              { path: "notification",               element: <Notification /> },
+              { path: "communication/send",         element: <SendNotification /> },
+              { path: "communication/history",      element: <SmsEmailHistory /> },
+              { path: "profile",                    element: <Profile /> },
+              { path: "profile/change-password",    element: <ChangePassword /> },
+            ],
+          },
+          {
+            path: "labtechnician",
+            element: (
+              <ProtectedRoute allowedRoles={["Lab Technician"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,                        element: <TeacherDashboard /> },
+              { path: "students",                   element: <MyStudents /> },
+              { path: "timetable",                  element: <TeacherTimetablePage /> },
+              { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",              element: <MyAttendancePage /> },
+              { path: "leave",                      element: <TeacherLeave /> },
+              { path: "payroll",                    element: <PayrollSelfServicePage /> },
+              { path: "tasks",                      element: <MyTasks /> },
+              { path: "message",                    element: <Message /> },
+              { path: "notification",               element: <Notification /> },
+              { path: "communication/send",         element: <SendNotification /> },
+              { path: "communication/history",      element: <SmsEmailHistory /> },
+              { path: "profile",                    element: <Profile /> },
+              { path: "profile/change-password",    element: <ChangePassword /> },
+            ],
+          },
+          {
+            path: "medicalofficer",
+            element: (
+              <ProtectedRoute allowedRoles={["Medical Officer"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,                        element: <TeacherDashboard /> },
+              { path: "students",                   element: <MyStudents /> },
+              { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",              element: <MyAttendancePage /> },
+              { path: "leave",                      element: <TeacherLeave /> },
+              { path: "payroll",                    element: <PayrollSelfServicePage /> },
+              { path: "tasks",                      element: <MyTasks /> },
+              { path: "message",                    element: <Message /> },
+              { path: "notification",               element: <Notification /> },
+              { path: "communication/send",         element: <SendNotification /> },
+              { path: "communication/history",      element: <SmsEmailHistory /> },
+              { path: "profile",                    element: <Profile /> },
+              { path: "profile/change-password",    element: <ChangePassword /> },
+            ],
+          },
+          {
+            path: "classteacher",
+            element: (
+              <ProtectedRoute allowedRoles={["Class Teacher"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,                        element: <TeacherDashboard /> },
+              { path: "my-class",                   element: <MyClassPage /> },
+              { path: "classes",                    element: <AssignedClasses /> },
+              { path: "classes/:classId",           element: <ClassDetails /> },
+              { path: "students",                   element: <MyStudents /> },
+              { path: "assignments",                element: <Assignments /> },
+              { path: "attendance/students",        element: <StudentAttendance /> },
+              { path: "timetable",                  element: <TeacherTimetablePage /> },
+              { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",              element: <MyAttendancePage /> },
+              { path: "leave",                      element: <TeacherLeave /> },
+              { path: "payroll",                    element: <PayrollSelfServicePage /> },
+              { path: "tasks",                      element: <MyTasks /> },
+              { path: "message",                    element: <Message /> },
+              { path: "notification",               element: <Notification /> },
+              { path: "communication/send",         element: <SendNotification /> },
+              { path: "communication/history",      element: <SmsEmailHistory /> },
+              { path: "profile",                    element: <Profile /> },
+              { path: "profile/change-password",    element: <ChangePassword /> },
             ],
           },
           {
@@ -1090,6 +1271,10 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
+                  "Class Teacher",
                 ]}
               >
                 <RoleWorkspace />
@@ -1105,13 +1290,14 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <StaffDashboard /> },
-              { path: "tasks", element: <MyTasks /> },
-              { path: "attendance", element: <MyAttendancePage /> },
+              { path: "tasks",           element: <MyTasks /> },
+              { path: "attendance",      element: <MyAttendancePage /> },
               { path: "attendance/self", element: <EmployeeSelfAttendance /> },
-              { path: "payroll", element: <PayrollSelfServicePage /> },
-              { path: "message", element: <Message /> },
-              { path: "profile", element: <Profile /> },
-              { path: "notification", element: <Notification /> },
+              { path: "leave",           element: <TeacherLeave /> },
+              { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "message",         element: <Message /> },
+              { path: "profile",         element: <Profile /> },
+              { path: "notification",    element: <Notification /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
             ],

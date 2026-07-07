@@ -283,6 +283,15 @@ const loginUser = asyncHandler(async (req, res) => {
 
     {
       $lookup: {
+        from: "roles",
+        localField: "additionalRoles",
+        foreignField: "_id",
+        as: "additionalRolesData",
+      },
+    },
+
+    {
+      $lookup: {
         from: "schools",
         localField: "schoolId",
         foreignField: "_id",
@@ -314,6 +323,14 @@ const loginUser = asyncHandler(async (req, res) => {
           _id: "$role._id",
           name: "$role.name",
           permissions: "$role.permissions",
+        },
+
+        additionalRoles: {
+          $map: {
+            input: "$additionalRolesData",
+            as: "ar",
+            in: { _id: "$$ar._id", name: "$$ar.name" },
+          },
         },
 
         school: {
@@ -590,8 +607,32 @@ const getCurrentUser = asyncHandler(async (req, res) => {
           title: "$designation.title",
           level: "$designation.level",
         },
+
+        additionalRoles: 1,
       },
     },
+
+    // Populate additionalRoles with name
+    {
+      $lookup: {
+        from: "roles",
+        localField: "additionalRoles",
+        foreignField: "_id",
+        as: "additionalRolesData",
+      },
+    },
+    {
+      $addFields: {
+        additionalRoles: {
+          $map: {
+            input: "$additionalRolesData",
+            as: "ar",
+            in: { _id: "$$ar._id", name: "$$ar.name" },
+          },
+        },
+      },
+    },
+    { $unset: "additionalRolesData" },
   ]);
 
   // ✅ User existence check
@@ -884,6 +925,62 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 
 /**
+ * @desc Admin update any user's profile in their school
+ * @route PATCH /api/v1/user/admin-update/:id
+ */
+const adminUpdateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Valid User ID is required");
+  }
+
+  const adminSchoolId = req.user?.schoolId;
+  const match = {
+    _id: new mongoose.Types.ObjectId(id),
+    isActive: true,
+    isDeleted: { $ne: true },
+  };
+  if (adminSchoolId && mongoose.Types.ObjectId.isValid(adminSchoolId)) {
+    match.schoolId = new mongoose.Types.ObjectId(adminSchoolId);
+  }
+
+  const user = await User.findOne(match);
+  if (!user) throw new ApiError(404, "User not found in your school");
+
+  const {
+    name, email, phone,
+    gender, dateOfBirth, address, joiningDate, qualification,
+    emergencyContactName, emergencyContactPhone,
+    departmentId, designationId,
+  } = req.body;
+
+  if (name  !== undefined) user.name  = name;
+  if (email !== undefined) user.email = email;
+  if (phone !== undefined) user.phone = phone;
+  if (gender             !== undefined) user.gender               = gender;
+  if (dateOfBirth        !== undefined) user.dateOfBirth          = dateOfBirth  || null;
+  if (address            !== undefined) user.address              = address;
+  if (joiningDate        !== undefined) user.joiningDate          = joiningDate  || null;
+  if (qualification      !== undefined) user.qualification        = qualification;
+  if (emergencyContactName  !== undefined) user.emergencyContactName  = emergencyContactName;
+  if (emergencyContactPhone !== undefined) user.emergencyContactPhone = emergencyContactPhone;
+  if (departmentId       !== undefined) user.departmentId         = departmentId  || null;
+  if (designationId      !== undefined) user.designationId        = designationId || null;
+
+  await user.save();
+
+  const updated = await User.findById(user._id)
+    .select("-password -refreshToken")
+    .populate("roleId",        "name")
+    .populate("schoolId",      "name")
+    .populate("departmentId",  "name code")
+    .populate("designationId", "title level")
+    .lean();
+
+  return res.status(200).json(new ApiResponse(200, updated, "User profile updated successfully"));
+});
+
+/**
  * @desc Activate user
  * @route PATCH /api/users/:id/activate
  */
@@ -974,15 +1071,47 @@ const getUserById = asyncHandler(async (req, res) => {
     },
     { $unwind: { path: "$academicYear", preserveNullAndEmptyArrays: true } },
 
+    // Join Department
+    {
+      $lookup: {
+        from: "departments",
+        localField: "departmentId",
+        foreignField: "_id",
+        as: "department",
+      },
+    },
+    { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } },
+
+    // Join Designation
+    {
+      $lookup: {
+        from: "designations",
+        localField: "designationId",
+        foreignField: "_id",
+        as: "designation",
+      },
+    },
+    { $unwind: { path: "$designation", preserveNullAndEmptyArrays: true } },
+
     // Projection
     {
       $project: {
         _id: 1,
         name: 1,
         email: 1,
+        phone: 1,
         avatar: 1,
         isActive: 1,
         regId: 1,
+        gender: 1,
+        dateOfBirth: 1,
+        address: 1,
+        joiningDate: 1,
+        qualification: 1,
+        emergencyContactName: 1,
+        emergencyContactPhone: 1,
+        createdAt: 1,
+        additionalRoles: 1,
 
         role: {
           _id: "$role._id",
@@ -999,6 +1128,16 @@ const getUserById = asyncHandler(async (req, res) => {
           startDate: "$academicYear.startDate",
           endDate: "$academicYear.endDate",
           isActive: "$academicYear.isActive",
+        },
+        department: {
+          _id: "$department._id",
+          name: "$department.name",
+          code: "$department.code",
+        },
+        designation: {
+          _id: "$designation._id",
+          title: "$designation.title",
+          level: "$designation.level",
         },
       },
     },
@@ -1146,6 +1285,54 @@ const getMyPermissions = asyncHandler(async (req, res) => {
   );
 });
 
+/**
+ * @desc  Assign or update additional roles for a user (admin only)
+ * @route PATCH /api/users/assign-additional-roles/:id
+ * @body  { additionalRoleIds: string[] }
+ */
+const assignAdditionalRoles = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { additionalRoleIds = [] } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid user ID");
+  }
+
+  const user = await User.findOne({ _id: id, isActive: true, isDeleted: { $ne: true } });
+  if (!user) throw new ApiError(404, "User not found");
+
+  // Validate every supplied role ID actually exists
+  if (additionalRoleIds.length > 0) {
+    const validRoles = await Role.find({ _id: { $in: additionalRoleIds } }).select("_id name").lean();
+    if (validRoles.length !== additionalRoleIds.length) {
+      throw new ApiError(400, "One or more role IDs are invalid");
+    }
+    // Prevent assigning primary role as additional role
+    const primaryId = user.roleId.toString();
+    if (additionalRoleIds.map(String).includes(primaryId)) {
+      throw new ApiError(400, "Cannot assign primary role as an additional role");
+    }
+  }
+
+  user.additionalRoles = additionalRoleIds;
+  await user.save();
+
+  const updated = await User.findById(user._id)
+    .select("-password -refreshToken")
+    .populate("roleId", "name")
+    .populate("additionalRoles", "name")
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      _id: updated._id,
+      name: updated.name,
+      role: updated.roleId,
+      additionalRoles: updated.additionalRoles,
+    }, "Additional roles updated successfully")
+  );
+});
+
 export {
   registerUser,
   loginUser,
@@ -1162,5 +1349,7 @@ export {
   resetPassword,
   verifyEmail,
   resendVerificationEmail,
-  getMyPermissions
+  getMyPermissions,
+  assignAdditionalRoles,
+  adminUpdateUser,
 }

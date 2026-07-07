@@ -79,6 +79,7 @@ import vendorReducer from "../features/vendorSlice";
 import purchaseOrderReducer from "../features/purchaseOrderSlice";
 import stockIssueReducer from "../features/stockIssueSlice";
 import amcReducer from "../features/amcSlice";
+import classTeacherReducer from "../features/classTeacherSlice";
 const authPersistConfig = {
   key: "auth",
   storage,
@@ -153,6 +154,7 @@ const rootReducer = combineReducers({
   purchaseOrder: purchaseOrderReducer,
   stockIssue: stockIssueReducer,
   amc: amcReducer,
+  classTeacher: classTeacherReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

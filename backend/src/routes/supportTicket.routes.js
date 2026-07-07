@@ -31,6 +31,10 @@ const SUPPORT_ROLES = [
   "IT Support",
   "Counselor",
   "Security",
+  "Sports Teacher",
+  "Lab Technician",
+  "Medical Officer",
+  "Class Teacher",
 ];
 
 router.post("/", auth, requireRoles(SUPPORT_ROLES), createSupportTicket);

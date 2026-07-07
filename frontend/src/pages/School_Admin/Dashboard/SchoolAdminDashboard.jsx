@@ -165,7 +165,10 @@ const SchoolAdminDashboard = () => {
   const { isDark } = useTheme();
   const t = tokens(isDark);
   const schoolId = useSelector(
-    (state) => state?.auth?.user?.schoolId?._id || state?.auth?.user?.schoolId
+    (state) =>
+      state?.auth?.user?.school?._id ||
+      state?.auth?.user?.schoolId?._id ||
+      state?.auth?.user?.schoolId
   );
   const {
     data: analytics,
@@ -173,7 +176,7 @@ const SchoolAdminDashboard = () => {
     isError,
     error,
     refetch,
-  } = useGetSchoolAdminDashboardAnalyticsQuery(schoolId);
+  } = useGetSchoolAdminDashboardAnalyticsQuery(schoolId, { skip: !schoolId });
 
   return (
     <>

@@ -31,9 +31,9 @@ const StatCard = ({ icon, label, value, color }) => (
 const SchoolClassSectionFilter = () => {
   const dispatch = useDispatch();
 
-  const { schools, loading: schoolLoading } = useSelector((state) => state.school);
+  const { schools = [], loading: schoolLoading } = useSelector((state) => state.school);
   const { classList = [], loading: classLoading } = useSelector((state) => state.class || {});
-  const { sections, loading: sectionLoading } = useSelector((state) => state.section);
+  const { sections = [], loading: sectionLoading } = useSelector((state) => state.section);
   const { activeYear, loading: yearLoading } = useSelector((state) => state.academicYear || {});
 
   const [selectedSchool, setSelectedSchool] = useState(null);
@@ -43,6 +43,7 @@ const SchoolClassSectionFilter = () => {
   // Load all schools on mount
   useEffect(() => {
     dispatch(fetchSchools());
+    dispatch(fetchAllClasses());
   }, [dispatch]);
 
   // When school changes, fetch its classes & active academic year
@@ -50,7 +51,7 @@ const SchoolClassSectionFilter = () => {
     if (selectedSchool) {
       dispatch(fetchAllClasses({ schoolId: selectedSchool }));
       dispatch(fetchActiveAcademicYear(selectedSchool));
-      setSelectedClass(null); // reset selected class
+      setSelectedClass(null);
     }
   }, [selectedSchool, dispatch]);
 
@@ -89,6 +90,14 @@ const SchoolClassSectionFilter = () => {
   }, [filteredSections]);
 
   const columns = [
+    {
+      title: "#",
+      key: "idx",
+      width: 50,
+      render: (_, __, i) => (
+        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{i + 1}</span>
+      ),
+    },
     {
       title: "Class",
       dataIndex: ["schoolClassId", "name"],
@@ -211,7 +220,8 @@ const SchoolClassSectionFilter = () => {
               <Spin size="small" />
             ) : activeYearForSchool ? (
               <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
-                <CalendarOutlined /> Active Year: {activeYearForSchool.name || activeYearForSchool.code}
+                <CalendarOutlined style={{ marginRight: 5 }} />
+                Active Year: {activeYearForSchool.name || activeYearForSchool.code}
               </span>
             ) : (
               <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>No active academic year set for this school</span>
@@ -233,7 +243,7 @@ const SchoolClassSectionFilter = () => {
                     description={
                       !selectedSchool
                         ? "Select a school to view its classes & sections"
-                        : selectedSchool && !activeYearForSchool
+                        : !activeYearForSchool
                         ? "This school has no active academic year — set one to view its sections"
                         : "No sections found"
                     }

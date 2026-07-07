@@ -211,6 +211,30 @@ export const getUserById = createAsyncThunk("user/getUserById", async (id, { rej
   }
 });
 
+export const adminUpdateUser = createAsyncThunk(
+  "user/adminUpdateUser",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.patch(`/user/admin-update/${id}`, data);
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to update user");
+    }
+  }
+);
+
+export const assignAdditionalRoles = createAsyncThunk(
+  "user/assignAdditionalRoles",
+  async ({ userId, additionalRoleIds }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.patch(`/user/assign-additional-roles/${userId}`, { additionalRoleIds });
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to assign roles");
+    }
+  }
+);
+
 const initialState = {
   user: null,
   accessToken: null,

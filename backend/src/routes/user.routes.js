@@ -5,7 +5,7 @@ import {
             updateUser,
             changeCurrentPassword,
             getCurrentUser,
-            logoutUser, 
+            logoutUser,
             getAllUsers,
             deleteUser,
             activeUser,
@@ -15,7 +15,9 @@ import {
             resetPassword,
             verifyEmail,
             resendVerificationEmail,
-            getMyPermissions
+            getMyPermissions,
+            assignAdditionalRoles,
+            adminUpdateUser,
 } from "../controllers/user.controllers.js";
 import { allowPublic,auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
@@ -29,6 +31,7 @@ const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant", 
 const ALL_USERS = [
   "Super Admin", "School Admin", "Principal", "Vice Principal",
   "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
   "Student", "Parent",
   "Accountant", "Staff", "Support Staff",
   "Librarian", "Hostel Warden", "Transport Manager",
@@ -63,7 +66,8 @@ router.post("/logout", auth, roleMiddleware(ALL_USERS), logoutUser);
 router.get("/all", auth, roleMiddleware(ADMIN_AND_ACCOUNTANT_ROLE), getAllUsers);
 router.patch("/delete/:id", auth, roleMiddleware(ADMIN_ROLE), deleteUser);
 router.patch("/active/:id",auth,roleMiddleware(ADMIN_ROLE),activeUser);
-router.get("/single/:id", auth, roleMiddleware(ALL_USERS),getUserById)
-
+router.get("/single/:id", auth, roleMiddleware(ALL_USERS), getUserById);
+router.patch("/assign-additional-roles/:id", auth, roleMiddleware(ADMIN_ROLE), assignAdditionalRoles);
+router.patch("/admin-update/:id", auth, roleMiddleware(ADMIN_ROLE), adminUpdateUser);
 
 export default router;

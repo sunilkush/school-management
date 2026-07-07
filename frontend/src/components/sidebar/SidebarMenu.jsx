@@ -114,7 +114,7 @@ const EmptyMenuState = ({ isDark }) => {
 /* ─────────────────────────────────────────
    Main SidebarMenu
 ───────────────────────────────────────── */
-const SidebarMenu = ({ role, collapsed = false }) => {
+const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isDark: isDarkMode } = useTheme();
@@ -123,22 +123,47 @@ const SidebarMenu = ({ role, collapsed = false }) => {
   const [sidebarConfig, setSidebarConfig] = useState(null);
   const [openKeys, setOpenKeys] = useState([]);
 
+  const [additionalMenus, setAdditionalMenus] = useState(null);
+
   /* Lazy-load sidebar config */
   useEffect(() => {
     let cancelled = false;
     const loadMenu = async () => {
       const module = await import("../../utils/sidebar");
-      if (!cancelled) setSidebarConfig(module.sidebarMenu);
+      if (!cancelled) {
+        setSidebarConfig(module.sidebarMenu);
+        setAdditionalMenus(module.additionalRoleMenus || {});
+      }
     };
     loadMenu();
     return () => { cancelled = true; };
   }, []);
 
-  /* Derive flat menu items for this role */
+  /* Derive flat menu items: primary role + additional roles (unique extras only) */
   const menuItems = useMemo(() => {
-    if (!sidebarConfig) return [];
-    return Array.isArray(sidebarConfig?.[role]) ? sidebarConfig[role] : [];
-  }, [role, sidebarConfig]);
+    if (!sidebarConfig || !additionalMenus) return [];
+    const primary = Array.isArray(sidebarConfig?.[role]) ? sidebarConfig[role] : [];
+
+    // Collect ALL existing paths from primary (deep, including subMenu) to avoid duplicates
+    const seenPaths = new Set();
+    const scan = (items) => {
+      for (const item of items) {
+        if (item.path) seenPaths.add(item.path);
+        if (Array.isArray(item.subMenu)) scan(item.subMenu);
+      }
+    };
+    scan(primary);
+
+    // For additional roles, ONLY use the explicit "extra" config (not the full sidebar).
+    // This prevents common items (Payroll, Profile, Module Hub…) from being duplicated.
+    const extra = additionalRoles.flatMap((r) => {
+      const key = typeof r === "string" ? r.toLowerCase() : "";
+      const extras = additionalMenus[key];
+      return Array.isArray(extras) ? extras.filter((i) => !seenPaths.has(i.path)) : [];
+    });
+
+    return [...primary, ...extra];
+  }, [role, additionalRoles, sidebarConfig, additionalMenus]);
 
   /* Auto-open parent when a child route is active */
   useEffect(() => {

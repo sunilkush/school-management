@@ -40,7 +40,8 @@ export const auth = asyncHandler(async (req, _res, next) => {
 
   const user = await User.findById(decodedToken?._id)
     .select("-password -refreshToken")
-    .populate("roleId", "name permissions");
+    .populate("roleId", "name permissions")
+    .populate("additionalRoles", "name permissions");
 
   if (!user || user.isDeleted || !user.isActive) {
     throw new ApiError(401, "Unauthorized. User is invalid or inactive.");
@@ -48,6 +49,7 @@ export const auth = asyncHandler(async (req, _res, next) => {
 
   req.user = user;
   req.userRole = user.roleId;
+  req.userAdditionalRoles = user.additionalRoles || [];
   next();
 });
 
@@ -83,7 +85,14 @@ export const requireRoles = (allowedRoles = []) =>
     const role = req.userRole?.name ? req.userRole : await fetchRole(req.user);
 
     const normalizedAllowed = allowedRoles.map((r) => r.toLowerCase().trim());
-    if (!normalizedAllowed.includes((role.name || "").toLowerCase().trim())) {
+
+    // Collect all role names: primary + additional
+    const allRoleNames = [
+      (role.name || "").toLowerCase().trim(),
+      ...(req.userAdditionalRoles || []).map((r) => (r.name || "").toLowerCase().trim()),
+    ];
+
+    if (!normalizedAllowed.some((allowed) => allRoleNames.includes(allowed))) {
       throw new ApiError(403, "Forbidden. Insufficient role access.");
     }
 

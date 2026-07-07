@@ -1,374 +1,441 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Badge,
-  Button,
-  Card,
-  Col,
-  Empty,
-  Input,
-  InputNumber,
-  message,
-  Progress,
-  Row,
-  Segmented,
-  Select,
-  Space,
-  Statistic,
-  Table,
-  Tag,
-  Tooltip,
-  Typography,
-  Upload,
+  Button, Input, InputNumber, Select, Table, Tag,
+  Tooltip, Upload, message, Segmented, Progress, Spin,
 } from "antd";
-import { SearchOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined, UploadOutlined, SaveOutlined,
+  CheckCircleOutlined, ReloadOutlined,
+} from "@ant-design/icons";
+import {
+  GraduationCap, BookOpen, Users, TrendingUp, Trophy, AlertCircle,
+} from "lucide-react";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
+import PageHeader from "../../../components/layout/PageHeader.jsx";
+import {
+  pageWrapper, sectionPanel, statGrid, statCard, statLabel, statValue,
+  pill, tableHeadCss, emptyState,
+} from "../../../styles/pageStyles.js";
 
-const { Title, Text } = Typography;
+/* ── Status helpers ───────────────────────────────────────────────── */
+const examStatus = (examDate) => {
+  if (!examDate) return { label: "No Date", color: "#64748b", bg: "#f1f5f9" };
+  const d = dayjs(examDate);
+  if (d.isBefore(dayjs(), "day")) return { label: "Completed", color: "#10b981", bg: "#10b98115" };
+  if (d.isSame(dayjs(), "day"))   return { label: "Today",     color: "#3b82f6", bg: "#3b82f615" };
+  return                                 { label: "Upcoming",  color: "#f59e0b", bg: "#f59e0b15" };
+};
 
+/* ── Mini stat box ────────────────────────────────────────────────── */
+const Stat = ({ icon: Icon, label, value, color }) => (
+  <div style={statCard({ color, bg: "var(--surface)", accentBar: color })}>
+    <div>
+      <div style={statLabel(color)}>{label}</div>
+      <div style={statValue(color)}>{value ?? "—"}</div>
+    </div>
+    <div style={{
+      width: 44, height: 44, borderRadius: 12,
+      background: `${color}18`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <Icon size={20} color={color} strokeWidth={1.8} />
+    </div>
+  </div>
+);
+
+/* ── Main page ────────────────────────────────────────────────────── */
 const TeacherExamsPage = () => {
   const dispatch = useDispatch();
-  const { exams = [], loading } = useSelector((state) => state.exams || {});
-   const { schoolStudents = [] } = useSelector(
-      (state) => state.students || {}
-    );
-  
-  const { user = {} } = useSelector((state) => state.auth || {});
-  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
-  
+  const { exams = [], loading }  = useSelector((s) => s.exams  || {});
+  const { schoolStudents = [] }  = useSelector((s) => s.students || {});
+  const { user = {} }            = useSelector((s) => s.auth    || {});
+  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+
   const [selectedExamId, setSelectedExamId] = useState(null);
-  const [rows, setRows] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [examFilter, setExamFilter] = useState("all");
+  const [rows,           setRows]           = useState([]);
+  const [searchText,     setSearchText]     = useState("");
+  const [examFilter,     setExamFilter]     = useState("all");
+  const [saving,         setSaving]         = useState(false);
+  const [submitting,     setSubmitting]     = useState(false);
 
-  const selectedExam = useMemo(() => exams.find((exam) => exam._id === selectedExamId), [exams, selectedExamId]);
-  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+  const selectedExam = useMemo(
+    () => exams.find((e) => e._id === selectedExamId),
+    [exams, selectedExamId]
+  );
+  const schoolId      = user?.schoolId?._id || user?.schoolId || user?.school?._id;
   const academicYearId = selectedAcademicYear?._id;
+  const status        = examStatus(selectedExam?.examDate);
 
+  /* ── Fetch exams on mount ── */
   useEffect(() => {
     dispatch(getExams({ sortBy: "examDate", sortOrder: "desc" }));
   }, [dispatch]);
 
+  /* ── Auto-select first exam ── */
   useEffect(() => {
-    if (!selectedExamId && exams.length) {
-      setSelectedExamId(exams[0]._id);
-    }
+    if (!selectedExamId && exams.length) setSelectedExamId(exams[0]._id);
   }, [exams, selectedExamId]);
 
+  /* ── Fetch students when exam changes ── */
   useEffect(() => {
-    const schoolClassId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
-    if (!selectedExamId || !schoolClassId || !schoolId || !academicYearId) {
-      setRows([]);
-      return;
-    }
-
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId }));
+    const classId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
+    if (!selectedExamId || !classId || !schoolId || !academicYearId) { setRows([]); return; }
+    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: classId }));
   }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
 
+  /* ── Build rows when students load ── */
   useEffect(() => {
     if (!selectedExamId) return;
-
-    const selectedClassId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
-    if (!schoolStudents.length || !selectedClassId) {
-      setRows([]);
-      return;
-    }
-
-    const classMatchedStudents = schoolStudents.filter((student) => {
-      const studentClassId =
-        student?.schoolClassId?._id ||
-        student?.schoolClass?._id ||
-        student?.schoolClassId ||
-        student?.studentInfo?.schoolClassId ||
-        student?.enrollment?.schoolClassId;
-
-      return `${studentClassId || ""}` === `${selectedClassId}`;
+    const classId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
+    if (!schoolStudents.length || !classId) { setRows([]); return; }
+    const matched = schoolStudents.filter((s) => {
+      const cid = s?.schoolClassId?._id || s?.schoolClass?._id ||
+        s?.schoolClassId || s?.studentInfo?.schoolClassId || s?.enrollment?.schoolClassId;
+      return `${cid || ""}` === `${classId}`;
     });
-
-    setRows(
-      classMatchedStudents.map((student, index) => ({
-        studentId:
-          student?.student?._id ||
-          student?.studentInfo?._id ||
-          student?.studentId ||
-          student?._id,
-        studentName:
-          student?.user?.name ||
-          student?.userDetails?.name ||
-          student?.studentName ||
-          `Student ${index + 1}`,
-        sectionId: student?.section?._id || student?.sectionDetails?._id,
-        obtainedMarks: 0,
-        totalMarks: selectedExam?.totalMarks || 100,
-        passingMarks: selectedExam?.passingMarks || 33,
-      }))
-    );
+    setRows(matched.map((s, i) => ({
+      studentId:    s?.student?._id || s?.studentInfo?._id || s?.studentId || s?._id,
+      studentName:  s?.user?.name   || s?.userDetails?.name || s?.studentName || `Student ${i + 1}`,
+      sectionId:    s?.section?._id || s?.sectionDetails?._id,
+      obtainedMarks: 0,
+      totalMarks:   selectedExam?.totalMarks   || 100,
+      passingMarks: selectedExam?.passingMarks || 33,
+    })));
   }, [selectedExamId, selectedExam, schoolStudents]);
 
-  const onMarkChange = (studentId, value) => {
-    setRows((prev) =>
-      prev.map((item) => (item.studentId === studentId ? { ...item, obtainedMarks: value ?? 0 } : item))
-    );
-  };
+  const onMarkChange = (studentId, value) =>
+    setRows((prev) => prev.map((r) => r.studentId === studentId ? { ...r, obtainedMarks: value ?? 0 } : r));
 
+  /* ── Save bulk ── */
   const saveBulk = async () => {
-    if (!selectedExamId) {
-      message.error("Select exam first");
-      return false;
-    }
-
-    const payloadRows = rows
-      .filter((row) => row.studentId)
-      .map((row) => ({
-        ...row,
-        schoolClassId: selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId,
-        sectionId: row.sectionId || selectedExam?.sectionId?._id || selectedExam?.sectionId,
-      }));
-
-    if (!payloadRows.length) {
-      message.warning("No valid students found for this class");
-      return false;
-    }
-
+    if (!selectedExamId) { message.error("Select an exam first"); return false; }
+    const payload = rows.filter((r) => r.studentId).map((r) => ({
+      ...r,
+      schoolClassId: selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId,
+      sectionId:     r.sectionId || selectedExam?.sectionId?._id || selectedExam?.sectionId,
+    }));
+    if (!payload.length) { message.warning("No students found for this class"); return false; }
+    setSaving(true);
     try {
-      await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payloadRows })).unwrap();
-      message.success("Marks saved");
+      await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payload })).unwrap();
+      message.success("Marks saved successfully");
       return true;
-    } catch (error) {
-      message.error(error || "Failed to save marks");
-      return false;
-    }
+    } catch (err) {
+      message.error(err || "Failed to save marks"); return false;
+    } finally { setSaving(false); }
   };
 
-  const saveAndSubmitFinal = async () => {
-    if (!selectedExamId) {
-      message.error("Select exam first");
-      return;
-    }
-
-    const saved = await saveBulk();
-    if (!saved) return;
-    await submitFinal();
-  };
-
+  /* ── Submit final ── */
   const submitFinal = async () => {
     if (!selectedExam) return false;
+    setSubmitting(true);
     try {
-      await dispatch(
-        submitFinalMarks({
-          examId: selectedExam._id,
-          schoolClassId: selectedExam.schoolClassId?._id || selectedExam.schoolClassId,
-          sectionId: selectedExam.sectionId?._id || selectedExam.sectionId,
-        })
-      ).unwrap();
+      await dispatch(submitFinalMarks({
+        examId:       selectedExam._id,
+        schoolClassId: selectedExam.schoolClassId?._id || selectedExam.schoolClassId,
+        sectionId:    selectedExam.sectionId?._id     || selectedExam.sectionId,
+      })).unwrap();
       message.success("Final marks submitted");
       return true;
-    } catch (error) {
-      message.error(error || "Failed to submit final marks");
-      return false;
-    }
+    } catch (err) {
+      message.error(err || "Failed to submit"); return false;
+    } finally { setSubmitting(false); }
   };
 
-  const columns = [
-    { title: "Student", dataIndex: "studentName" },
-    { title: "Student ID", dataIndex: "studentId" },
-    { title: "Total", dataIndex: "totalMarks", width: 90 },
-    { title: "Passing", dataIndex: "passingMarks", width: 90 },
-    {
-      title: "Obtained",
-      width: 170,
-      render: (_, record) => (
-        <InputNumber
-          min={0}
-          max={record.totalMarks}
-          value={record.obtainedMarks}
-          onChange={(value) => onMarkChange(record.studentId, value)}
-        />
-      ),
-    },
-    {
-      title: "Status",
-      width: 120,
-      render: (_, record) => (
-        <Tag color={record.obtainedMarks >= record.passingMarks ? "green" : "red"}>
-          {record.obtainedMarks >= record.passingMarks ? "PASS" : "FAIL"}
-        </Tag>
-      ),
-    },
-  ];
+  const saveAndSubmit = async () => {
+    const saved = await saveBulk();
+    if (saved) await submitFinal();
+  };
 
-  const visibleRows = useMemo(() => {
-    const normalizedSearch = searchText.trim().toLowerCase();
-    return rows.filter((row) => {
-      const status = row.obtainedMarks >= row.passingMarks ? "pass" : "fail";
-      const matchesFilter = examFilter === "all" ? true : status === examFilter;
-      const matchesSearch = normalizedSearch
-        ? `${row.studentName || ""} ${row.studentId || ""}`.toLowerCase().includes(normalizedSearch)
-        : true;
-      return matchesFilter && matchesSearch;
-    });
-  }, [rows, searchText, examFilter]);
-
+  /* ── Upload JSON ── */
   const uploadProps = {
     accept: ".json",
     showUploadList: false,
     beforeUpload: async (file) => {
-      const text = await file.text();
       try {
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed)) {
-          setRows(parsed);
-          message.success("Bulk marks loaded from JSON");
-        } else {
-          message.error("Invalid JSON format. Expected array.");
-        }
-      } catch {
-        message.error("Unable to parse JSON file");
-      }
+        const parsed = JSON.parse(await file.text());
+        if (Array.isArray(parsed)) { setRows(parsed); message.success("Bulk marks loaded"); }
+        else message.error("Expected JSON array");
+      } catch { message.error("Invalid JSON file"); }
       return false;
     },
   };
 
+  /* ── Stats ── */
   const summary = useMemo(() => {
     if (!rows.length) return null;
-    const averageMarks = Math.round(
-      rows.reduce((acc, row) => acc + Number(row.obtainedMarks || 0), 0) / rows.length
-    );
-    const passCount = rows.filter((row) => row.obtainedMarks >= row.passingMarks).length;
-    const failCount = rows.length - passCount;
-    const passPercentage = rows.length ? Math.round((passCount / rows.length) * 100) : 0;
-    return {
-      averageMarks,
-      passCount,
-      failCount,
-      passPercentage,
-      total: rows.length,
-    };
+    const passCount = rows.filter((r) => r.obtainedMarks >= r.passingMarks).length;
+    const avg       = Math.round(rows.reduce((s, r) => s + Number(r.obtainedMarks || 0), 0) / rows.length);
+    return { total: rows.length, passCount, failCount: rows.length - passCount,
+      avg, passPercent: rows.length ? Math.round((passCount / rows.length) * 100) : 0 };
   }, [rows]);
 
-  const examOptions = useMemo(
-    () =>
-      exams.map((exam) => {
-        const examDate = exam?.examDate ? dayjs(exam.examDate).format("DD MMM YYYY") : "No date";
-        return {
-          label: `${exam?.title || "Untitled Exam"} • ${exam?.schoolClassId?.name || "Class"} • ${examDate}`,
-          value: exam?._id,
-        };
-      }),
-    [exams]
-  );
+  /* ── Filtered rows ── */
+  const visibleRows = useMemo(() => {
+    const kw = searchText.trim().toLowerCase();
+    return rows.filter((r) => {
+      const matchSearch = !kw || `${r.studentName} ${r.studentId}`.toLowerCase().includes(kw);
+      const matchFilter = examFilter === "all" || (r.obtainedMarks >= r.passingMarks ? "pass" : "fail") === examFilter;
+      return matchSearch && matchFilter;
+    });
+  }, [rows, searchText, examFilter]);
 
-  const selectedExamStatus = useMemo(() => {
-    if (!selectedExam?.examDate) return { color: "default", text: "Date N/A" };
-    const examDay = dayjs(selectedExam.examDate);
-    if (examDay.isBefore(dayjs(), "day")) return { color: "green", text: "Completed" };
-    if (examDay.isSame(dayjs(), "day")) return { color: "blue", text: "Today" };
-    return { color: "gold", text: "Upcoming" };
-  }, [selectedExam]);
+  /* ── Exam dropdown options ── */
+  const examOptions = useMemo(() =>
+    exams.map((e) => ({
+      value: e._id,
+      label: `${e?.title || "Untitled"} · ${e?.schoolClassId?.name || "Class"} · ${e?.examDate ? dayjs(e.examDate).format("DD MMM YYYY") : "No date"}`,
+    })), [exams]);
+
+  /* ── Table columns ── */
+  const columns = [
+    {
+      title: "Student",
+      dataIndex: "studentName",
+      render: (name) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            background: "#6366f118", color: "#6366f1",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: 700, fontSize: 13, flexShrink: 0,
+          }}>{(name || "S")[0].toUpperCase()}</div>
+          <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{name}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Total", dataIndex: "totalMarks", width: 80,
+      render: (v) => <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</span>,
+    },
+    {
+      title: "Passing", dataIndex: "passingMarks", width: 90,
+      render: (v) => <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</span>,
+    },
+    {
+      title: "Obtained", width: 150,
+      render: (_, r) => (
+        <InputNumber
+          min={0} max={r.totalMarks} value={r.obtainedMarks}
+          onChange={(v) => onMarkChange(r.studentId, v)}
+          style={{ width: 110, borderRadius: 8 }}
+        />
+      ),
+    },
+    {
+      title: "Status", width: 100, align: "center",
+      render: (_, r) => {
+        const pass = r.obtainedMarks >= r.passingMarks;
+        return (
+          <span style={pill(pass ? "#10b981" : "#ef4444", pass ? "#10b98118" : "#ef444418")}>
+            {pass ? "PASS" : "FAIL"}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Progress", width: 120,
+      render: (_, r) => {
+        const pct = Math.min(100, Math.round((r.obtainedMarks / (r.totalMarks || 1)) * 100));
+        const color = pct >= 60 ? "#10b981" : pct >= 33 ? "#f59e0b" : "#ef4444";
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ flex: 1, height: 6, background: "var(--border-muted)", borderRadius: 99, overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.3s" }} />
+            </div>
+            <span style={{ fontSize: 11, color: "var(--text-muted)", width: 30 }}>{pct}%</span>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="middle" onLoad={loading}>
-      <Card style={{ borderRadius: 16 }}>
-        <Row gutter={[16, 16]} align="middle" justify="space-between">
-          <Col>
-            <Title level={4} style={{ marginBottom: 2 }}>Teacher Exam & Marks Entry</Title>
-            <Text type="secondary">Dynamic exam selector, searchable marks table, and quick pass/fail analytics.</Text>
-          </Col>
-          <Col>
-            <Badge status="processing" text={selectedAcademicYear?.name || "Academic year not selected"} />
-          </Col>
-        </Row>
-      </Card>
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("exam-table")}</style>
 
-      <Card style={{ borderRadius: 16 }}>
-        <Row gutter={[12, 12]}>
-          <Col xs={24} md={16}>
-            <Text strong>Select Exam</Text>
-            <Select
-              style={{ width: "100%", marginTop: 8 }}
-              placeholder="Choose an exam"
-              options={examOptions}
-              value={selectedExamId}
-              onChange={setSelectedExamId}
-              showSearch
-              optionFilterProp="label"
-            />
-          </Col>
-          <Col xs={24} md={8}>
-            {selectedExam ? (
-              <Card size="small" style={{ borderRadius: 12, background: "#fafafa" }}>
-                <Space direction="vertical" size={2}>
-                  <Text strong>{selectedExam?.subjectId?.name || "Subject not assigned"}</Text>
-                  <Text type="secondary">{selectedExam?.examType || "Exam type N/A"}</Text>
-                  <Tag color={selectedExamStatus.color}>{selectedExamStatus.text}</Tag>
-                </Space>
-              </Card>
-            ) : (
-              <Empty description="No assigned exams found" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            )}
-          </Col>
-        </Row>
-      </Card>
+      <PageHeader
+        title="Exam & Marks Entry"
+        subtitle={selectedAcademicYear?.name ? `Academic Year: ${selectedAcademicYear.name}` : "Select an academic year"}
+        icon={<GraduationCap size={20} />}
+        extra={
+          <Tooltip title="Refresh">
+            <Button icon={<ReloadOutlined />} onClick={() => dispatch(getExams({ sortBy: "examDate", sortOrder: "desc" }))} />
+          </Tooltip>
+        }
+      />
 
-      {selectedExamId && (
-        <Card
-        
-          title="Marks Entry Table"
-          style={{ borderRadius: 16 }}
-          extra={
-            <Segmented
-              value={examFilter}
-              onChange={setExamFilter}
-              options={[
-                { label: "All", value: "all" },
-                { label: "Pass", value: "pass" },
-                { label: "Fail", value: "fail" },
-              ]}
-            />
-          }
-        >
-          <Space wrap style={{ marginBottom: 12, width: "100%", justifyContent: "space-between" }}>
-            <Upload {...uploadProps}>
-              <Button icon={<UploadOutlined />}>Bulk Upload (JSON)</Button>
-            </Upload>
-            <Button type="primary" onClick={saveBulk}>Save Marks</Button>
-            <Button onClick={submitFinal}>Submit Final Marks</Button>
-            <Button type="dashed" onClick={saveAndSubmitFinal}>
-              Save & Final Submit
-            </Button>
-          </Space>
+      {/* ── Exam Selector ── */}
+      <div style={{ ...sectionPanel, marginTop: 20 }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+          textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10,
+        }}>
+          Select Exam
+        </div>
 
-          <Input
-            allowClear
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search student by name or ID"
-            prefix={<SearchOutlined />}
-            style={{ maxWidth: 360, marginBottom: 16 }}
-          />
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-start" }}>
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <Spin spinning={loading} size="small">
+              <Select
+                showSearch
+                optionFilterProp="label"
+                style={{ width: "100%" }}
+                placeholder="Choose an exam to enter marks…"
+                options={examOptions}
+                value={selectedExamId}
+                onChange={setSelectedExamId}
+                size="large"
+              />
+            </Spin>
+          </div>
 
-          <Space wrap size="large" style={{ marginBottom: 12 }}>
-            <Statistic title="Total Students" value={summary?.total || 0} />
-            <Statistic title="Class Avg Marks" value={summary?.averageMarks || 0} suffix={`/${selectedExam?.totalMarks || 100}`} />
-            <Statistic title="Pass" value={summary?.passCount || 0} valueStyle={{ color: "#3f8600" }} />
-            <Statistic title="Fail" value={summary?.failCount || 0} valueStyle={{ color: "#cf1322" }} />
-            <Tooltip title={`${summary?.passPercentage || 0}% students passed`}>
-              <Progress type="circle" size={64} percent={summary?.passPercentage || 0} />
-            </Tooltip>
-          </Space>
+          {/* Selected exam detail pill */}
+          {selectedExam && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+              background: "var(--surface-soft)", border: "1px solid var(--border-muted)",
+              borderRadius: 12, padding: "10px 16px",
+            }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                  {selectedExam?.subjectId?.name || "Subject N/A"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                  {selectedExam?.examType || "Exam"} ·{" "}
+                  {selectedExam?.examDate ? dayjs(selectedExam.examDate).format("DD MMM YYYY") : "No date"}
+                </div>
+              </div>
+              <span style={pill(status.color, status.bg)}>{status.label}</span>
+              <span style={pill("#6366f1", "#6366f115")}>
+                Total: {selectedExam?.totalMarks || 100} · Pass: {selectedExam?.passingMarks || 33}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
 
-          <Table
-            rowKey={(row, i) => `${row.studentId || "row"}-${i}`}
-            dataSource={visibleRows}
-            columns={columns}
-            pagination={false}
-            locale={{ emptyText: "No students found for selected exam class" }}
-          />
-        </Card>
+      {/* ── Stats (only when rows loaded) ── */}
+      {summary && (
+        <div style={statGrid(150)}>
+          <Stat icon={Users}       label="Total Students" value={summary.total}       color="#6366f1" />
+          <Stat icon={TrendingUp}  label="Class Average"  value={`${summary.avg}/${selectedExam?.totalMarks || 100}`} color="#0ea5e9" />
+          <Stat icon={Trophy}      label="Passed"         value={summary.passCount}   color="#10b981" />
+          <Stat icon={AlertCircle} label="Failed"         value={summary.failCount}   color="#ef4444" />
+        </div>
       )}
-    </Space>
+
+      {/* ── Marks Table ── */}
+      {selectedExamId && (
+        <div style={sectionPanel}>
+          {/* Toolbar */}
+          <div style={{
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+            marginBottom: 16,
+          }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <Input
+                allowClear
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search student…"
+                prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+                style={{ width: 220, borderRadius: 9 }}
+              />
+              <Segmented
+                value={examFilter}
+                onChange={setExamFilter}
+                options={[
+                  { label: "All",  value: "all"  },
+                  { label: "Pass", value: "pass" },
+                  { label: "Fail", value: "fail" },
+                ]}
+              />
+              {summary && (
+                <Tooltip title={`${summary.passPercent}% passed`}>
+                  <Progress type="circle" size={40} percent={summary.passPercent}
+                    strokeColor="#10b981"
+                    format={(p) => <span style={{ fontSize: 10, fontWeight: 700 }}>{p}%</span>}
+                  />
+                </Tooltip>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <Upload {...uploadProps}>
+                <Button icon={<UploadOutlined />} size="small">Bulk JSON</Button>
+              </Upload>
+              <Button
+                size="small"
+                icon={<SaveOutlined />}
+                loading={saving}
+                onClick={saveBulk}
+                style={{ background: "#6366f1", borderColor: "#6366f1", color: "#fff" }}
+              >
+                Save Marks
+              </Button>
+              <Button
+                size="small"
+                loading={submitting}
+                onClick={submitFinal}
+              >
+                Submit Final
+              </Button>
+              <Button
+                size="small"
+                type="dashed"
+                loading={saving || submitting}
+                onClick={saveAndSubmit}
+                icon={<CheckCircleOutlined />}
+              >
+                Save & Submit
+              </Button>
+            </div>
+          </div>
+
+          {/* Table */}
+          {rows.length === 0 ? (
+            <div style={emptyState}>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>📋</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+                No Students Found
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                Select an exam with an assigned class to see students.
+              </div>
+            </div>
+          ) : (
+            <Table
+              className="exam-table"
+              rowKey={(r, i) => `${r.studentId || "r"}-${i}`}
+              dataSource={visibleRows}
+              columns={columns}
+              pagination={{ pageSize: 20, showSizeChanger: false, size: "small" }}
+              size="small"
+              scroll={{ x: 700 }}
+              locale={{ emptyText: "No students match the current filter" }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── No exam selected empty state ── */}
+      {!selectedExamId && !loading && (
+        <div style={emptyState}>
+          <div style={{ fontSize: 38, marginBottom: 12 }}>📝</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
+            No Exams Found
+          </div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            No exams have been assigned to you yet. Contact your school admin.
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
