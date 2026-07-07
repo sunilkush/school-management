@@ -215,7 +215,6 @@ export const fetchTimetableMasterData = createAsyncThunk(
       const {
         schoolId,
         academicYearId,
-        parentId,
         includeRooms = false,
         includeClasses = true,
         includeSections = true,
@@ -224,15 +223,20 @@ export const fetchTimetableMasterData = createAsyncThunk(
         includeChildren = false,
       } = params;
 
-      const requests = [
-        [
+      const requests = [];
+
+      // /timetable/time-slots requires academicYearId server-side (400s
+      // without it) — only request it once we actually have one, so an
+      // unrelated fetch (e.g. children) sharing this batch isn't dragged
+      // down by a guaranteed-to-fail request.
+      if (academicYearId)
+        requests.push([
           "timeSlots",
           apiClient.get(
             "/timetable/time-slots",
             query({ schoolId, academicYearId }),
           ),
-        ],
-      ];
+        ]);
 
       if (includeRooms)
         requests.push([
@@ -274,13 +278,17 @@ export const fetchTimetableMasterData = createAsyncThunk(
           apiClient.get("/student/my-children"),
         ]);
 
-      const responses = await Promise.all(
+      // allSettled: one endpoint failing (e.g. no active academic year yet)
+      // shouldn't wipe out data that other, unrelated requests in this same
+      // batch (e.g. a parent's children list) successfully fetched.
+      const results = await Promise.allSettled(
         requests.map(([, request]) => request),
       );
 
       return requests.reduce(
         (acc, [key], index) => {
-          acc[key] = data(responses[index]);
+          const result = results[index];
+          acc[key] = result.status === "fulfilled" ? data(result.value) : [];
           return acc;
         },
         { academicYears: [], activeAcademicYearId: academicYearId || "" },

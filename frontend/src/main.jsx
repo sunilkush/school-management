@@ -1,6 +1,3 @@
-import { PrimeReactProvider } from 'primereact/api';
-import Tailwind from 'primereact/passthrough/tailwind';
-import { twMerge } from 'tailwind-merge';
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -1144,21 +1141,9 @@ const renderApp = () => {
       <PersistGate loading={<Loader />} persistor={persistor}>
         <ThemeProvider>
           <ThemedAntWrapper>
-            <PrimeReactProvider
-              value={{
-                unstyled: true, // ✅ Must be true to apply Tailwind styles
-                pt: Tailwind, // ✅ Add Tailwind preset
-                ptOptions: {
-                  mergeSections: true,
-                  mergeProps: true,
-                  classNameMergeFunction: twMerge,
-                },
-              }}
-            >
-              <Suspense fallback={<Loader />}>
-                <RouterProvider router={router} />
-              </Suspense>
-            </PrimeReactProvider>
+            <Suspense fallback={<Loader />}>
+              <RouterProvider router={router} />
+            </Suspense>
           </ThemedAntWrapper>
         </ThemeProvider>
       </PersistGate>

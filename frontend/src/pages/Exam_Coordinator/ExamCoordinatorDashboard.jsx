@@ -82,10 +82,10 @@ const ExamCoordinatorDashboard = () => {
           </Col>
           <Col>
             <Space>
-              <Button icon={<PlusOutlined />} type="primary" onClick={() => navigate("exams/create")}>
+              <Button icon={<PlusOutlined />} type="primary" onClick={() => navigate("/dashboard/examcoordinator/exams/create")}>
                 Create Exam
               </Button>
-              <Button icon={<BarChartOutlined />} onClick={() => navigate("exams/analytics")}>
+              <Button icon={<BarChartOutlined />} onClick={() => navigate("/dashboard/examcoordinator/exams/analytics")}>
                 Analytics
               </Button>
             </Space>
@@ -117,7 +117,7 @@ const ExamCoordinatorDashboard = () => {
           <Card
             title="Upcoming Exams"
             extra={
-              <Button size="small" onClick={() => navigate("exams")}>View All</Button>
+              <Button size="small" onClick={() => navigate("/dashboard/examcoordinator/exams")}>View All</Button>
             }
           >
             <Table
@@ -135,22 +135,22 @@ const ExamCoordinatorDashboard = () => {
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <Card title="Quick Actions">
               <Space direction="vertical" style={{ width: "100%" }}>
-                <Button block onClick={() => navigate("exams/question-bank")}>
+                <Button block onClick={() => navigate("/dashboard/examcoordinator/exams/question-bank")}>
                   <QuestionCircleOutlined /> Question Bank
                 </Button>
-                <Button block onClick={() => navigate("exams/schedule")}>
+                <Button block onClick={() => navigate("/dashboard/examcoordinator/exams/schedule")}>
                   <ScheduleOutlined /> Exam Schedule
                 </Button>
-                <Button block onClick={() => navigate("exams/grades")}>
+                <Button block onClick={() => navigate("/dashboard/examcoordinator/exams/grades")}>
                   <FileTextOutlined /> Grade Entry
                 </Button>
-                <Button block onClick={() => navigate("exams/admit-card")}>
+                <Button block onClick={() => navigate("/dashboard/examcoordinator/exams/admit-card")}>
                   <FileTextOutlined /> Admit Cards
                 </Button>
-                <Button block onClick={() => navigate("exams/seat-plan")}>
+                <Button block onClick={() => navigate("/dashboard/examcoordinator/exams/seat-plan")}>
                   <FileTextOutlined /> Seat Planning
                 </Button>
-                <Button block onClick={() => navigate("reports")}>
+                <Button block onClick={() => navigate("/dashboard/examcoordinator/reports")}>
                   <BarChartOutlined /> Exam Reports
                 </Button>
               </Space>

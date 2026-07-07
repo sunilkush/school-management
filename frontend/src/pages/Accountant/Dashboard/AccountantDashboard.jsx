@@ -336,13 +336,13 @@ const AccountantDashboard = () => {
         <KpiCard
           label="Fee Collected" value={money(kpis.totalFeeCollected)}
           icon={<WalletOutlined />} color="#2563EB"
-          onClick={() => navigate("accountant/fees/collect")}
+          onClick={() => navigate("/dashboard/accountant/fees/collect")}
         />
         <KpiCard
           label="Pending Fees" value={money(kpis.pendingFees)}
           icon={<AlertOutlined />} color="#F59E0B"
           sub={`${kpis.pendingFeeCount || 0} students pending`}
-          onClick={() => navigate("accountant/fees/reports")}
+          onClick={() => navigate("/dashboard/accountant/fees/reports")}
         />
       </div>
 
@@ -363,12 +363,12 @@ const AccountantDashboard = () => {
           </Text>
         </div>
         <div style={{ width: 1, height: 24, background: "var(--border-muted)", flexShrink: 0 }} />
-        <ActionPill icon={<WalletOutlined />}    label="Collect Fee"   path="accountant/fees/collect"  color="#2563EB" navigate={navigate} />
-        <ActionPill icon={<ArrowUpOutlined />}   label="Add Income"    path="accountant/income"        color="#16A34A" navigate={navigate} />
-        <ActionPill icon={<FileTextOutlined />}  label="Add Expense"   path="accountant/expenses"      color="#DC2626" navigate={navigate} />
-        <ActionPill icon={<BarChartOutlined />}  label="Reports"       path="accountant/reports"       color="#14B8A6" navigate={navigate} />
-        <ActionPill icon={<AlertOutlined />}     label="Fee Reports"   path="accountant/fees/reports"  color="#F59E0B" navigate={navigate} />
-        <ActionPill icon={<TeamOutlined />}      label="Payroll"       path="accountant/salary"        color="#7C3AED" navigate={navigate} />
+        <ActionPill icon={<WalletOutlined />}    label="Collect Fee"   path="/dashboard/accountant/fees/collect"  color="#2563EB" navigate={navigate} />
+        <ActionPill icon={<ArrowUpOutlined />}   label="Add Income"    path="/dashboard/accountant/income"        color="#16A34A" navigate={navigate} />
+        <ActionPill icon={<FileTextOutlined />}  label="Add Expense"   path="/dashboard/accountant/expenses"      color="#DC2626" navigate={navigate} />
+        <ActionPill icon={<BarChartOutlined />}  label="Reports"       path="/dashboard/accountant/reports"       color="#14B8A6" navigate={navigate} />
+        <ActionPill icon={<AlertOutlined />}     label="Fee Reports"   path="/dashboard/accountant/fees/reports"  color="#F59E0B" navigate={navigate} />
+        <ActionPill icon={<TeamOutlined />}      label="Payroll"       path="/dashboard/accountant/salary"        color="#7C3AED" navigate={navigate} />
       </div>
 
       {/* ── Charts ───────────────────────────────────────────────── */}

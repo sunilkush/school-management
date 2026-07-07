@@ -80,15 +80,15 @@ const HostelDashboard = () => {
 
       {/* ── KPI Grid ─────────────────────────────────────────── */}
       <div style={statGrid(160)}>
-        <KpiCard icon={<HomeOutlined />}         label="Total Rooms"       value={kpis.totalRooms}               color="#14B8A6" onClick={() => navigate("hostelwarden/rooms")} />
+        <KpiCard icon={<HomeOutlined />}         label="Total Rooms"       value={kpis.totalRooms}               color="#14B8A6" onClick={() => navigate("/dashboard/hostelwarden/rooms")} />
         <KpiCard icon={<TeamOutlined />}          label="Total Capacity"    value={kpis.totalCapacity}            color="#2563EB" />
         <KpiCard icon={<CheckCircleOutlined />}   label="Occupied Beds"     value={kpis.totalOccupied}            color="#22C55E" />
         <KpiCard icon={<ClockCircleOutlined />}   label="Vacant Beds"       value={kpis.vacantBeds}               color="#94A3B8" />
-        <KpiCard icon={<UserOutlined />}          label="Students"          value={kpis.totalStudents}            color="#14B8A6" onClick={() => navigate("hostelwarden/allocations")} />
-        <KpiCard icon={<ClockCircleOutlined />}   label="Pending Leaves"    value={kpis.pendingLeaves}            color="#F59E0B" sub="Awaiting approval" onClick={() => navigate("hostelwarden/leaves")} />
+        <KpiCard icon={<UserOutlined />}          label="Students"          value={kpis.totalStudents}            color="#14B8A6" onClick={() => navigate("/dashboard/hostelwarden/allocations")} />
+        <KpiCard icon={<ClockCircleOutlined />}   label="Pending Leaves"    value={kpis.pendingLeaves}            color="#F59E0B" sub="Awaiting approval" onClick={() => navigate("/dashboard/hostelwarden/leaves")} />
         <KpiCard icon={<AlertOutlined />}         label="On Leave Today"    value={kpis.leavesToday}              color="#F59E0B" />
-        <KpiCard icon={<UserOutlined />}          label="Visitors Today"    value={kpis.visitorsToday}            color="#2563EB" onClick={() => navigate("hostelwarden/visitors")} />
-        <KpiCard icon={<WarningOutlined />}       label="Open Complaints"   value={kpis.openComplaints}           color="#EF4444" onClick={() => navigate("hostelwarden/complaints")} sub={kpis.urgentComplaints > 0 ? `${kpis.urgentComplaints} urgent` : undefined} />
+        <KpiCard icon={<UserOutlined />}          label="Visitors Today"    value={kpis.visitorsToday}            color="#2563EB" onClick={() => navigate("/dashboard/hostelwarden/visitors")} />
+        <KpiCard icon={<WarningOutlined />}       label="Open Complaints"   value={kpis.openComplaints}           color="#EF4444" onClick={() => navigate("/dashboard/hostelwarden/complaints")} sub={kpis.urgentComplaints > 0 ? `${kpis.urgentComplaints} urgent` : undefined} />
         <KpiCard icon={<CheckCircleOutlined />}   label="New Admissions"    value={kpis.newAdmissionsThisMonth}   color="#22C55E" sub="This month" />
       </div>
 
@@ -118,12 +118,12 @@ const HostelDashboard = () => {
       <div style={{ ...sectionPanel, padding: 20, marginBottom: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>Quick Actions</div>
         <div style={statGrid(120)}>
-          <ActionTile icon={<ClockCircleOutlined />} label="Leave Requests" path="hostelwarden/leaves"      color="#F59E0B" navigate={navigate} />
-          <ActionTile icon={<UserOutlined />}         label="Log Visitor"   path="hostelwarden/visitors"    color="#2563EB" navigate={navigate} />
-          <ActionTile icon={<WarningOutlined />}      label="Complaints"    path="hostelwarden/complaints"  color="#EF4444" navigate={navigate} />
-          <ActionTile icon={<CheckCircleOutlined />}  label="Attendance"    path="hostelwarden/hostel-attendance" color="#22C55E" navigate={navigate} />
-          <ActionTile icon={<HomeOutlined />}         label="Rooms"         path="hostelwarden/rooms"       color="#14B8A6" navigate={navigate} />
-          <ActionTile icon={<TeamOutlined />}         label="Allocations"   path="hostelwarden/allocations" color="#14B8A6" navigate={navigate} />
+          <ActionTile icon={<ClockCircleOutlined />} label="Leave Requests" path="/dashboard/hostelwarden/leaves"      color="#F59E0B" navigate={navigate} />
+          <ActionTile icon={<UserOutlined />}         label="Log Visitor"   path="/dashboard/hostelwarden/visitors"    color="#2563EB" navigate={navigate} />
+          <ActionTile icon={<WarningOutlined />}      label="Complaints"    path="/dashboard/hostelwarden/complaints"  color="#EF4444" navigate={navigate} />
+          <ActionTile icon={<CheckCircleOutlined />}  label="Attendance"    path="/dashboard/hostelwarden/hostel-attendance" color="#22C55E" navigate={navigate} />
+          <ActionTile icon={<HomeOutlined />}         label="Rooms"         path="/dashboard/hostelwarden/rooms"       color="#14B8A6" navigate={navigate} />
+          <ActionTile icon={<TeamOutlined />}         label="Allocations"   path="/dashboard/hostelwarden/allocations" color="#14B8A6" navigate={navigate} />
         </div>
       </div>
 

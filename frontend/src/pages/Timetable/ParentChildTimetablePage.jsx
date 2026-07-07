@@ -38,9 +38,13 @@ export default function ParentChildTimetablePage() {
   const schoolId      = schoolIdFromUser(user);
   const academicYearId = selectedAcademicYear?._id;
 
-  /* ── Fetch children + master data on mount ── */
+  /* ── Fetch children + master data on mount ──
+     Only schoolId is required here: the children list doesn't depend on
+     an academic year existing, so it must not be blocked by a school
+     that hasn't had one activated yet (timeSlots alone needs it, and is
+     fetched conditionally inside fetchTimetableMasterData). */
   useEffect(() => {
-    if (!schoolId || !academicYearId) return;
+    if (!schoolId) return;
     dispatch(
       fetchTimetableMasterData({
         schoolId,
@@ -116,7 +120,7 @@ export default function ParentChildTimetablePage() {
               style={{ minWidth: 220 }}
               options={children.map((c) => ({
                 value: c._id,
-                label: getName(c.userId) || getName(c),
+                label: c.name || getName(c.userId, "Student"),
               }))}
             />
             <Button
