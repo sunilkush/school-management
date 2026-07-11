@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { List } from 'react-native-paper';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { screenForModule, SELF_HEADERED_KEYS } from '../navigation/screenForModule';
-import { useHeaderScreenOptions } from '../navigation/headerOptions';
+import { useAppHeaderOptions } from '../navigation/headerOptions';
 
 function MoreMenuList({ route, navigation }) {
   const items = route.params?.items ?? [];
@@ -29,7 +29,7 @@ const Stack = createNativeStackNavigator();
  * the real module screen, same nested-stack shape as Profile/Students (see SELF_HEADERED_KEYS). */
 export function MoreMenuScreen({ route }) {
   const items = route.params?.items ?? [];
-  const headerOptions = useHeaderScreenOptions();
+  const headerOptions = useAppHeaderOptions();
 
   return (
     <Stack.Navigator screenOptions={{ ...headerOptions, headerShown: true }}>

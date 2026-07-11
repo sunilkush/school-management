@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { AdminStudentListView } from './students/AdminStudentListView';
 import { MyChildrenView } from './students/MyChildrenView';
 import { StudentDetailsScreen } from './students/StudentDetailsScreen';
-import { useHeaderScreenOptions } from '../navigation/headerOptions';
+import { useAppHeaderOptions } from '../navigation/headerOptions';
 
 // GET /student/all's role middleware only allows Super Admin/School Admin/Teacher/Accountant/
 // Principal/Vice Principal — Receptionist has a "Students: read" permission entry but isn't in
@@ -39,7 +39,7 @@ const Stack = createNativeStackNavigator();
 // SELF_HEADERED_KEYS in screenForModule.js, which tells the outer Tab/Drawer to not also render a
 // header for this item, so only this stack's own header shows.
 export function StudentListScreen() {
-  const headerOptions = useHeaderScreenOptions();
+  const headerOptions = useAppHeaderOptions();
 
   return (
     <Stack.Navigator screenOptions={{ ...headerOptions, headerShown: true }}>

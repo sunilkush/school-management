@@ -6,7 +6,7 @@ import { TeacherHomeworkView } from './homework/TeacherHomeworkView';
 import { StudentHomeworkView } from './homework/StudentHomeworkView';
 import { HomeworkSubmissionsView } from './homework/HomeworkSubmissionsView';
 import { useAuth } from '../hooks/useAuth';
-import { useHeaderScreenOptions } from '../navigation/headerOptions';
+import { useAppHeaderOptions } from '../navigation/headerOptions';
 
 function HomeworkMain({ navigation }) {
   const { role } = useAuth();
@@ -26,7 +26,7 @@ const Stack = createNativeStackNavigator();
 // Nested stack (Homework list → Submissions, Teacher only) — see SELF_HEADERED_KEYS in
 // screenForModule.js.
 export function AssignmentsScreen() {
-  const headerOptions = useHeaderScreenOptions();
+  const headerOptions = useAppHeaderOptions();
 
   return (
     <Stack.Navigator screenOptions={{ ...headerOptions, headerShown: true }}>

@@ -4,7 +4,7 @@ import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { MessagesInbox } from './messages/MessagesInbox';
 import { MessageThreadScreen } from './messages/MessageThreadScreen';
 import { ComposeMessageScreen } from './messages/ComposeMessageScreen';
-import { useHeaderScreenOptions } from '../navigation/headerOptions';
+import { useAppHeaderOptions } from '../navigation/headerOptions';
 
 function MessagesInboxScreen({ navigation }) {
   return (
@@ -18,7 +18,7 @@ const Stack = createNativeStackNavigator();
 
 // Nested stack (Inbox → Thread / Compose) — see SELF_HEADERED_KEYS in screenForModule.js.
 export function MessagesScreen() {
-  const headerOptions = useHeaderScreenOptions();
+  const headerOptions = useAppHeaderOptions();
 
   return (
     <Stack.Navigator screenOptions={{ ...headerOptions, headerShown: true }}>

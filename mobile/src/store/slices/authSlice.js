@@ -37,6 +37,15 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }, 
   }
 });
 
+export const updateProfile = createAsyncThunk('auth/updateProfile', async (payload, { rejectWithValue }) => {
+  try {
+    const response = await authApi.updateProfile(payload);
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error?.response?.data?.message || 'Failed to update profile');
+  }
+});
+
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     await authApi.logout();
@@ -88,6 +97,11 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.status = 'unauthenticated';
         state.error = action.payload;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.role = action.payload.role ?? state.role;
+        state.permissions = action.payload.role?.permissions ?? state.permissions;
       })
       .addCase(logout.fulfilled, (state) => {
         state.status = 'unauthenticated';

@@ -6,7 +6,7 @@ import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { screenForModule, SELF_HEADERED_KEYS } from './screenForModule';
 import { MoreMenuScreen } from '../screens/MoreMenuScreen';
-import { useHeaderScreenOptions } from './headerOptions';
+import { useAppHeaderOptions } from './headerOptions';
 import { useAppTheme } from '../theme/ThemeProvider';
 
 const Tab = createBottomTabNavigator();
@@ -56,7 +56,7 @@ function TabLabel({ label, color, focused }) {
 export function TabShell({ quickItems, moreItems = [] }) {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const headerOptions = useHeaderScreenOptions();
+  const headerOptions = useAppHeaderOptions();
 
   return (
     <Tab.Navigator

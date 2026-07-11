@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -146,6 +146,17 @@ export const apiSlice = createApi({
     // Settings
     changePassword: builder.mutation({
       query: (payload) => ({ url: '/user/change-password', method: 'put', data: payload }),
+    }),
+
+    // Student's own extended profile (gender/DOB/blood group/address/guardian info) — separate
+    // from the auth user record, which only carries name/email/phone/role/school.
+    getStudentProfile: builder.query({
+      query: () => ({ url: '/student-portal/me/profile' }),
+      providesTags: ['StudentProfile'],
+    }),
+    updateStudentProfile: builder.mutation({
+      query: (payload) => ({ url: '/student-portal/me/profile', method: 'put', data: payload }),
+      invalidatesTags: ['StudentProfile'],
     }),
 
     // Fees — Student's own Student._id/academicYearId aren't in the login/me payload at all, so
@@ -542,6 +553,8 @@ export const {
   useMarkNotificationReadMutation,
   useMarkAllNotificationsReadMutation,
   useChangePasswordMutation,
+  useGetStudentProfileQuery,
+  useUpdateStudentProfileMutation,
   useGetMyEnrollmentQuery,
   useGetMyFeesSummaryQuery,
   useGetFeeInstallmentsQuery,
