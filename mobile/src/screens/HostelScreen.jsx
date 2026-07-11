@@ -10,8 +10,16 @@ import { DonutChart } from '../components/charts/DonutChart';
 import { VerticalBarChart } from '../components/charts/VerticalBarChart';
 import { STAT_COLORS } from '../theme/patterns';
 import { formatDate } from '../utils/format';
+import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useGetHostelWardenDashboardQuery } from '../store/api/apiSlice';
+import { MyHostelView } from './student/MyHostelView';
+import { ParentHostelView } from './parent/ParentHostelView';
+
+// This screen unconditionally called the Hostel Warden's admin dashboard endpoint until this fix —
+// a real bug, since Student and Parent both list 'Hostel' in their own nav config and that
+// endpoint's roleMiddleware doesn't include either, so both got a 403 tapping this tab.
+const ADMIN_ROLES = new Set(['Super Admin', 'School Admin', 'Hostel Warden']);
 
 function ChartTitle({ title }) {
   const { colors, typography, spacing } = useAppTheme();
@@ -22,7 +30,7 @@ function ChartTitle({ title }) {
  * landing page; here it's the content of the "Hostel" tab (mobile has a separate generic Dashboard
  * tab already). Leaves/Visitors/Complaints full management (5 sub-features on web) are out of
  * scope — this is the read-only KPI+chart overview only. */
-export function HostelScreen() {
+function HostelWardenDashboard() {
   const { colors, typography, spacing } = useAppTheme();
   const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelWardenDashboardQuery();
   const kpis = data?.kpis;
@@ -103,6 +111,30 @@ export function HostelScreen() {
           </Panel>
         )}
       </QueryState>
+    </ScreenContainer>
+  );
+}
+
+export function HostelScreen() {
+  const { colors, typography, spacing } = useAppTheme();
+  const { role } = useAuth();
+
+  if (ADMIN_ROLES.has(role?.name)) return <HostelWardenDashboard />;
+
+  return (
+    <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="home-city-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Hostel</Text>
+        </View>
+      </View>
+
+      {role?.name === 'Student' && <MyHostelView />}
+      {role?.name === 'Parent' && <ParentHostelView />}
+      {!['Student', 'Parent'].includes(role?.name) && (
+        <QueryState isLoading={false} isError={false} isEmpty emptyIcon="home-city-outline" emptyLabel="Hostel view isn't available for this role yet" />
+      )}
     </ScreenContainer>
   );
 }

@@ -5,6 +5,7 @@ import { QueryState } from '../components/ui/QueryState';
 import { TeacherHomeworkView } from './homework/TeacherHomeworkView';
 import { StudentHomeworkView } from './homework/StudentHomeworkView';
 import { HomeworkSubmissionsView } from './homework/HomeworkSubmissionsView';
+import { ParentHomeworkView } from './parent/ParentHomeworkView';
 import { useAuth } from '../hooks/useAuth';
 import { useAppHeaderOptions } from '../navigation/headerOptions';
 
@@ -13,6 +14,7 @@ function HomeworkMain({ navigation }) {
 
   if (role?.name === 'Teacher') return <TeacherHomeworkView navigation={navigation} />;
   if (role?.name === 'Student') return <StudentHomeworkView />;
+  if (role?.name === 'Parent') return <ParentHomeworkView />;
 
   return (
     <ScreenContainer>

@@ -18,6 +18,7 @@ export function BooksScreen() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetBooksQuery();
   const [deleteBook, deleteState] = useDeleteBookMutation();
@@ -110,19 +111,23 @@ export function BooksScreen() {
             ]}
             expandable
             actions={
-              <IconButton
-                icon="trash-can-outline"
-                iconColor={colors.danger}
-                size={18}
-                disabled={deleteState.isLoading}
-                onPress={() => deleteBook(b._id)}
-              />
+              <>
+                <IconButton icon="pencil-outline" size={18} onPress={() => setEditingBook(b)} />
+                <IconButton
+                  icon="trash-can-outline"
+                  iconColor={colors.danger}
+                  size={18}
+                  disabled={deleteState.isLoading}
+                  onPress={() => deleteBook(b._id)}
+                />
+              </>
             }
           />
         ))}
       </QueryState>
 
       <CreateBookSheet visible={creating} onDismiss={() => setCreating(false)} onCreated={() => setCreating(false)} />
+      <CreateBookSheet visible={!!editingBook} book={editingBook} onDismiss={() => setEditingBook(null)} onCreated={() => setEditingBook(null)} />
     </ScreenContainer>
   );
 }

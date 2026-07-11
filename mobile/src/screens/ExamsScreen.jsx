@@ -7,14 +7,15 @@ import { IconWell } from '../components/ui/IconWell';
 import { TeacherExamsView } from './exams/TeacherExamsView';
 import { StudentExamsView } from './exams/StudentExamsView';
 import { ParentExamsView } from './exams/ParentExamsView';
+import { ExamManagementView } from './schoolAdmin/ExamManagementView';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 
 const HANDLED_ROLES = new Set(['Teacher', 'Student', 'Parent']);
+// These 3 roles are all in the backend's EXAM_MANAGE_ROLES (exam.routes.js) — same full
+// create/schedule capability as School Admin, not a read-only view.
+const MANAGE_ROLES = new Set(['School Admin', 'Principal', 'Vice Principal']);
 
-/** Read-only exam list + published results across the 3 roles the mobile nav gives an Exams tab
- * to. School Admin/Principal exam management (create/schedule/paper-builder/admit-cards/seat-
- * plan) is a separate, much larger feature deferred entirely — see apiSlice.js's getExams. */
 export function ExamsScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { role } = useAuth();
@@ -31,7 +32,8 @@ export function ExamsScreen() {
       {role?.name === 'Teacher' && <TeacherExamsView />}
       {role?.name === 'Student' && <StudentExamsView />}
       {role?.name === 'Parent' && <ParentExamsView />}
-      {!HANDLED_ROLES.has(role?.name) && (
+      {MANAGE_ROLES.has(role?.name) && <ExamManagementView />}
+      {!HANDLED_ROLES.has(role?.name) && !MANAGE_ROLES.has(role?.name) && (
         <QueryState isLoading={false} isError={false} isEmpty emptyIcon="pencil-off-outline" emptyLabel="Exams view isn't available for this role yet" />
       )}
     </ScreenContainer>

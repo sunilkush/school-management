@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -149,6 +149,15 @@ export const apiSlice = createApi({
       query: () => ({ url: '/notifications/read-all', method: 'patch' }),
       invalidatesTags: ['Notifications'],
     }),
+    // Admin broadcast — same list the personal inbox reads from (createNotification's own targeting
+    // decides who each notification is actually visible to), plus analytics and the create form.
+    getNotificationAnalytics: builder.query({
+      query: () => ({ url: '/notifications/analytics' }),
+    }),
+    createNotification: builder.mutation({
+      query: (payload) => ({ url: '/notifications', method: 'post', data: payload }),
+      invalidatesTags: ['Notifications'],
+    }),
 
     // Settings
     changePassword: builder.mutation({
@@ -179,6 +188,49 @@ export const apiSlice = createApi({
       query: ({ studentId, academicYearId }) => ({ url: '/fee-installments', params: { studentId, academicYearId } }),
       providesTags: ['Fees'],
     }),
+
+    // Student's own currently-borrowed library books (Issued/Overdue only), with server-computed
+    // fineAmount — deliberately NOT the admin-wide getIssuedBooks (Student isn't allowed to call
+    // it) nor the other /issued-books/student route (a less complete legacy path the web app
+    // itself doesn't use for this page).
+    getMyLibraryBooks: builder.query({
+      query: () => ({ url: '/student-portal/me/library-books' }),
+      providesTags: ['IssuedBook'],
+    }),
+
+    // Student's own transport assignment — Student has no access to the admin-wide
+    // /transport/assignments endpoint, so this is its own student-portal route.
+    getMyTransport: builder.query({
+      query: () => ({ url: '/student-portal/me/transport' }),
+      providesTags: ['TransportAssignment'],
+    }),
+
+    // Student's own hostel allocation (distinct from the Hostel Warden's admin dashboard, which
+    // Student/Parent aren't allowed to call).
+    getMyHostel: builder.query({
+      query: () => ({ url: '/student-portal/me/hostel' }),
+      providesTags: ['HostelRoom'],
+    }),
+
+    // Parent — child-scoped equivalents of the Student-self endpoints above. All take the child's
+    // User._id (child.userId from useGetMyChildrenQuery), NOT the Student._id, and are
+    // server-verified against the parent-child link regardless of what the client passes.
+    getChildLibraryBooks: builder.query({
+      query: (childUserId) => ({ url: `/student-portal/child/${childUserId}/library` }),
+      providesTags: ['IssuedBook'],
+    }),
+    getChildTransport: builder.query({
+      query: (childUserId) => ({ url: `/student-portal/child/${childUserId}/transport` }),
+      providesTags: ['TransportAssignment'],
+    }),
+    getChildHostel: builder.query({
+      query: (childUserId) => ({ url: `/student-portal/child/${childUserId}/hostel` }),
+      providesTags: ['HostelRoom'],
+    }),
+    getChildHomework: builder.query({
+      query: (childUserId) => ({ url: `/student-portal/child/${childUserId}/homework` }),
+      providesTags: ['Homework'],
+    }),
     generateFeeInstallments: builder.mutation({
       query: (payload) => ({ url: '/fee-installments/generate', method: 'post', data: payload }),
       invalidatesTags: ['Fees'],
@@ -186,6 +238,32 @@ export const apiSlice = createApi({
     payInstallment: builder.mutation({
       query: (payload) => ({ url: '/payments', method: 'post', data: payload }),
       invalidatesTags: ['Fees'],
+    }),
+
+    // Fee Collection (Accountant) — search/list students school-wide, then pay against one of
+    // their StudentFee records (the simpler ledger the web app's own Collect Fees page actually
+    // uses, not the FeeInstallment/Razorpay system).
+    getStudentsBySchool: builder.query({
+      query: (params) => ({ url: '/student/school', params }),
+    }),
+    payStudentFee: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/student-fees/pay/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Fees'],
+    }),
+
+    // Fee Reports (Accountant) — status-wise collected/due totals, plus the payments ledger + its
+    // own summary; all 3 combined client-side, same as the web app's FeeReports.jsx does.
+    getStudentFeeSummary: builder.query({
+      query: () => ({ url: '/student-fees/summary' }),
+      providesTags: ['Fees'],
+    }),
+    getPayments: builder.query({
+      query: (params) => ({ url: '/payments', params }),
+      providesTags: ['Fees'],
+    }),
+    getPaymentSummary: builder.query({
+      query: () => ({ url: '/payments/summary' }),
+      providesTags: ['Fees'],
     }),
 
     // Staff/Parent directories, and the Super Admin Users hub — GET /user/all returns the FULL
@@ -309,6 +387,24 @@ export const apiSlice = createApi({
       query: ({ id, myStatus }) => ({ url: `/tasks/${id}`, method: 'patch', data: { myStatus } }),
       invalidatesTags: ['Task'],
     }),
+    // School Admin task management — listTasks (above, reused) already returns every task in the
+    // school for this role (no assignedTo scoping), so only create/update/delete/assignable-users
+    // are new here.
+    getAssignableUsers: builder.query({
+      query: () => ({ url: '/tasks/assignable-users' }),
+    }),
+    createTask: builder.mutation({
+      query: (payload) => ({ url: '/tasks', method: 'post', data: payload }),
+      invalidatesTags: ['Task'],
+    }),
+    updateTask: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/tasks/${id}`, method: 'patch', data: payload }),
+      invalidatesTags: ['Task'],
+    }),
+    deleteTask: builder.mutation({
+      query: (id) => ({ url: `/tasks/${id}`, method: 'delete' }),
+      invalidatesTags: ['Task'],
+    }),
 
     // Self-attendance (GPS check-in/out) — checkIn/checkOut both require { lat, lng }; the backend
     // computes distance-from-school and rejects outside the geofence radius (403) itself.
@@ -389,6 +485,28 @@ export const apiSlice = createApi({
       invalidatesTags: ['FeeHead'],
     }),
 
+    // Fee Structures — links a Fee Head to a class + academic year with an amount/frequency; 409
+    // if one already exists for that exact combo.
+    getFeeStructures: builder.query({
+      query: (params) => ({ url: '/fee-structures', params }),
+      providesTags: ['FeeStructure'],
+    }),
+    createFeeStructure: builder.mutation({
+      query: (payload) => ({ url: '/fee-structures', method: 'post', data: payload }),
+      invalidatesTags: ['FeeStructure'],
+    }),
+    deleteFeeStructure: builder.mutation({
+      query: (id) => ({ url: `/fee-structures/${id}`, method: 'delete' }),
+      invalidatesTags: ['FeeStructure'],
+    }),
+
+    // Assign Fees — bulk (studentIds) or single (studentId) assignment of a fee structure; server
+    // silently skips students who already have it rather than erroring, unless ALL are duplicates.
+    assignFeesToStudents: builder.mutation({
+      query: (payload) => ({ url: '/student-fees/assign', method: 'post', data: payload }),
+      invalidatesTags: ['StudentFee', 'Fees'],
+    }),
+
     // Admin-wide attendance records (any role/class/section/date) — the same endpoint backs
     // several nav destinations (Dashboard/Table/Student/Teacher/Staff Attendance), which all
     // resolve to one filterable screen rather than 5 near-identical ones.
@@ -419,9 +537,35 @@ export const apiSlice = createApi({
       query: (payload) => ({ url: '/book', method: 'post', data: payload }),
       invalidatesTags: ['Book'],
     }),
+    updateBook: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/book/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Book'],
+    }),
     deleteBook: builder.mutation({
       query: (id) => ({ url: `/book/${id}`, method: 'delete' }),
       invalidatesTags: ['Book'],
+    }),
+
+    // Fine Management — a separate feature from IssuedBooksScreen's return flow (which only
+    // auto-computes and displays a fine; it never calls a collection endpoint).
+    getFineSummary: builder.query({
+      query: () => ({ url: '/issued-books/fines' }),
+      providesTags: ['IssuedBook'],
+    }),
+    collectFine: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/issued-books/${id}/fine`, method: 'patch', data: payload }),
+      invalidatesTags: ['IssuedBook'],
+    }),
+
+    // Library Settings — one config doc per school (loan limits, fine rates, etc.); GET
+    // auto-creates a default doc if none exists yet.
+    getLibrarySettings: builder.query({
+      query: () => ({ url: '/library-settings' }),
+      providesTags: ['LibrarySetting'],
+    }),
+    updateLibrarySettings: builder.mutation({
+      query: (payload) => ({ url: '/library-settings', method: 'put', data: payload }),
+      invalidatesTags: ['LibrarySetting'],
     }),
 
     // Transport — Routes and Vehicles.
@@ -448,6 +592,25 @@ export const apiSlice = createApi({
     deleteVehicle: builder.mutation({
       query: (id) => ({ url: `/transport/vehicles/${id}`, method: 'delete' }),
       invalidatesTags: ['Vehicle'],
+    }),
+
+    // Transport Assignments — assigns a student (by StudentEnrollment id, NOT Student/User id) to
+    // a route + vehicle. POST is an upsert keyed on {schoolId, activeAcademicYearId,
+    // studentEnrollmentId} — calling it again for the same student just updates route/vehicle/stops.
+    getAssignableTransportStudents: builder.query({
+      query: () => ({ url: '/transport/students' }),
+    }),
+    getTransportAssignments: builder.query({
+      query: () => ({ url: '/transport/assignments' }),
+      providesTags: ['TransportAssignment'],
+    }),
+    saveTransportAssignment: builder.mutation({
+      query: (payload) => ({ url: '/transport/assignments', method: 'post', data: payload }),
+      invalidatesTags: ['TransportAssignment'],
+    }),
+    deleteTransportAssignment: builder.mutation({
+      query: (id) => ({ url: `/transport/assignments/${id}`, method: 'delete' }),
+      invalidatesTags: ['TransportAssignment'],
     }),
 
     // Hostel rooms — `students` is an embedded subdocument array of {_id, name}, not a real
@@ -528,14 +691,22 @@ export const apiSlice = createApi({
     // online exam-taking (Student, a full timed-quiz engine) are all deferred as disproportionate
     // for a first mobile pass. Note: ExamResult.studentId refs User, not Student — unlike most of
     // this app's other student-scoped data — verified directly against the model before building.
+    // Fixed a pre-existing URL bug here: exam.routes.js is mounted at '/exams' (plural,
+    // registerRoutes.js), but these 3 endpoints were hitting singular '/exam' — a 404 in
+    // production for every role using this screen. Verified against the actual route file before
+    // fixing, not guessed.
     getExams: builder.query({
-      query: ({ academicYearId, studentId } = {}) => ({ url: '/exam', params: { academicYearId, studentId, limit: 50 } }),
+      query: ({ academicYearId, studentId, schoolClassId, status, search } = {}) => ({
+        url: '/exams',
+        params: { academicYearId, studentId, schoolClassId, status, search, limit: 50 },
+      }),
+      providesTags: ['Exam'],
     }),
     getMyExamResults: builder.query({
-      query: () => ({ url: '/exam/results/student' }),
+      query: () => ({ url: '/exams/results/student' }),
     }),
     getChildExamResults: builder.query({
-      query: (studentUserId) => ({ url: `/exam/results/parent/${studentUserId}` }),
+      query: (studentUserId) => ({ url: `/exams/results/parent/${studentUserId}` }),
     }),
 
     // Messages — a real, working mailbox feature (unlike "Chat", which is dead mockup code on the
@@ -604,6 +775,113 @@ export const apiSlice = createApi({
     // much larger stateful workflow deferred entirely (School Admin only on web).
     getMyPayrollSummary: builder.query({
       query: () => ({ url: '/payroll/self/summary' }),
+    }),
+
+    // Support Tickets — every role can see this (list auto-scopes to createdBy for non-privileged
+    // roles; School Admin/Principal/VP see the whole school's tickets).
+    getSupportTickets: builder.query({
+      query: (params) => ({ url: '/support-tickets', params }),
+      providesTags: ['SupportTicket'],
+    }),
+    createSupportTicket: builder.mutation({
+      query: (payload) => ({ url: '/support-tickets', method: 'post', data: payload }),
+      invalidatesTags: ['SupportTicket'],
+    }),
+    updateSupportTicketStatus: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/support-tickets/${id}/status`, method: 'patch', data: payload }),
+      invalidatesTags: ['SupportTicket'],
+    }),
+
+    // Admission Inquiries — pre-admission lead tracking, distinct from actual student enrollment.
+    getAdmissionInquiries: builder.query({
+      query: (params) => ({ url: '/admission-inquiries', params }),
+      providesTags: ['AdmissionInquiry'],
+    }),
+    getAdmissionInquiryStats: builder.query({
+      query: () => ({ url: '/admission-inquiries/stats' }),
+      providesTags: ['AdmissionInquiry'],
+    }),
+    createAdmissionInquiry: builder.mutation({
+      query: (payload) => ({ url: '/admission-inquiries', method: 'post', data: payload }),
+      invalidatesTags: ['AdmissionInquiry'],
+    }),
+    updateAdmissionInquiry: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/admission-inquiries/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['AdmissionInquiry'],
+    }),
+    deleteAdmissionInquiry: builder.mutation({
+      query: (id) => ({ url: `/admission-inquiries/${id}`, method: 'delete' }),
+      invalidatesTags: ['AdmissionInquiry'],
+    }),
+
+    // Student Admission — always creates a brand-new Student User; father/mother are looked up by
+    // email (reused if an active account already exists) or created fresh otherwise.
+    createStudentAdmission: builder.mutation({
+      query: (payload) => ({ url: '/student/register', method: 'post', data: payload }),
+      invalidatesTags: ['StudentProfile'],
+    }),
+
+    // Academic Years — needed for Student Promotion's From/To year pickers (promotion moves
+    // students into a DIFFERENT academic year, so the single "active" year on the user's own
+    // profile isn't enough here).
+    getAcademicYearsBySchool: builder.query({
+      query: (schoolId) => ({ url: `/academicYear/school/${schoolId}` }),
+    }),
+
+    // Student Promotion — bulk-moves enrollments from one academic year/class to the next; skips
+    // any student already enrolled in the target year.
+    getPromotionCandidates: builder.query({
+      query: (params) => ({ url: '/student/promotion/candidates', params }),
+    }),
+    promoteStudents: builder.mutation({
+      query: (payload) => ({ url: '/student/promotion/promote', method: 'post', data: payload }),
+      invalidatesTags: ['StudentProfile'],
+    }),
+
+    // Create User — the web app's "Add Staff" flow is 2 separate calls: register the bare User
+    // (with a role), then create its Employee profile. No role-specific sub-document is created by
+    // the first call alone.
+    getRolesBySchool: builder.query({
+      query: (schoolId) => ({ url: '/role/by-school', params: { schoolId } }),
+      providesTags: ['Role'],
+    }),
+    registerUser: builder.mutation({
+      query: (payload) => ({ url: '/user/register', method: 'post', data: payload }),
+      invalidatesTags: ['User'],
+    }),
+    registerEmployee: builder.mutation({
+      query: (payload) => ({ url: '/employee', method: 'post', data: payload }),
+      invalidatesTags: ['User'],
+    }),
+
+    // Exam creation/management — same Exam model the read-only getExams (above) lists; School
+    // Admin/Teacher/Principal/VP/Exam+Subject Coordinator can all create.
+    createExam: builder.mutation({
+      query: (payload) => ({ url: '/exams', method: 'post', data: payload }),
+      invalidatesTags: ['Exam'],
+    }),
+
+    // Admit Cards — generation is idempotent (returns the existing set if already generated).
+    getExamAdmitCards: builder.query({
+      query: (examId) => ({ url: `/exams/${examId}/admit-cards` }),
+      providesTags: ['AdmitCard'],
+    }),
+    generateExamAdmitCards: builder.mutation({
+      query: (examId) => ({ url: `/exams/${examId}/admit-cards/generate`, method: 'post' }),
+      invalidatesTags: ['AdmitCard'],
+    }),
+
+    // Exam Analytics — distinct from the online-attempt performance summary (getExamPerformanceSummary)
+    // and the offline class-result summary; this is attempts + evaluation + risk-level insight.
+    getExamAnalytics: builder.query({
+      query: (examId) => ({ url: `/exams/${examId}/analytics` }),
+    }),
+
+    // Seat Plan — computed on the fly (not persisted), simple round-robin room/seat assignment
+    // over the exam's enrolled roster; found to have real backend support after all (initially
+    // assumed deferred alongside Paper Builder).
+    getExamSeatPlan: builder.query({
+      query: ({ examId, roomCapacity }) => ({ url: `/exams/${examId}/seat-plan`, params: { roomCapacity } }),
     }),
 
     // Events — School Admin gets full CRUD (matching web's events.jsx); Student/Parent get a
@@ -705,8 +983,20 @@ export const {
   useGetMyEnrollmentQuery,
   useGetMyFeesSummaryQuery,
   useGetFeeInstallmentsQuery,
+  useGetMyLibraryBooksQuery,
+  useGetMyTransportQuery,
+  useGetMyHostelQuery,
+  useGetChildLibraryBooksQuery,
+  useGetChildTransportQuery,
+  useGetChildHostelQuery,
+  useGetChildHomeworkQuery,
   useGenerateFeeInstallmentsMutation,
   usePayInstallmentMutation,
+  useGetStudentsBySchoolQuery,
+  usePayStudentFeeMutation,
+  useGetStudentFeeSummaryQuery,
+  useGetPaymentsQuery,
+  useGetPaymentSummaryQuery,
   useGetAllUsersQuery,
   useGetClassDetailsQuery,
   useGetSchoolClassesQuery,
@@ -728,7 +1018,12 @@ export const {
   useDeleteExpenseRecordMutation,
   useGetBooksQuery,
   useCreateBookMutation,
+  useUpdateBookMutation,
   useDeleteBookMutation,
+  useGetFineSummaryQuery,
+  useCollectFineMutation,
+  useGetLibrarySettingsQuery,
+  useUpdateLibrarySettingsMutation,
   useGetTransportRoutesQuery,
   useCreateTransportRouteMutation,
   useDeleteTransportRouteMutation,
@@ -788,6 +1083,10 @@ export const {
   useCreateStudyMaterialMutation,
   useGetMyTasksQuery,
   useUpdateMyTaskStatusMutation,
+  useGetAssignableUsersQuery,
+  useCreateTaskMutation,
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
   useGetSelfAttendanceStatusQuery,
   useCheckInSelfAttendanceMutation,
   useCheckOutSelfAttendanceMutation,
@@ -804,4 +1103,34 @@ export const {
   useCreateFeeHeadMutation,
   useGetAttendanceRecordsQuery,
   useAssignClassTeacherMutation,
+  useGetFeeStructuresQuery,
+  useCreateFeeStructureMutation,
+  useDeleteFeeStructureMutation,
+  useAssignFeesToStudentsMutation,
+  useGetAssignableTransportStudentsQuery,
+  useGetTransportAssignmentsQuery,
+  useSaveTransportAssignmentMutation,
+  useDeleteTransportAssignmentMutation,
+  useGetNotificationAnalyticsQuery,
+  useCreateNotificationMutation,
+  useGetSupportTicketsQuery,
+  useCreateSupportTicketMutation,
+  useUpdateSupportTicketStatusMutation,
+  useGetAdmissionInquiriesQuery,
+  useGetAdmissionInquiryStatsQuery,
+  useCreateAdmissionInquiryMutation,
+  useUpdateAdmissionInquiryMutation,
+  useDeleteAdmissionInquiryMutation,
+  useCreateStudentAdmissionMutation,
+  useGetAcademicYearsBySchoolQuery,
+  useGetPromotionCandidatesQuery,
+  usePromoteStudentsMutation,
+  useGetRolesBySchoolQuery,
+  useRegisterUserMutation,
+  useRegisterEmployeeMutation,
+  useCreateExamMutation,
+  useGetExamAdmitCardsQuery,
+  useGenerateExamAdmitCardsMutation,
+  useGetExamAnalyticsQuery,
+  useGetExamSeatPlanQuery,
 } = apiSlice;

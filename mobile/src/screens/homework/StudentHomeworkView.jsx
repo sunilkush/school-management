@@ -13,7 +13,9 @@ import { useGetMyHomeworkQuery } from '../../store/api/apiSlice';
 export function StudentHomeworkView() {
   const [submitting, setSubmitting] = useState(null);
   const { data, isLoading, isFetching, isError, error, refetch } = useGetMyHomeworkQuery();
-  const homework = data ?? [];
+  // getMyHomework's backend response is wrapped ({ enrollmentId, homework: [...] }), not a plain
+  // array — a real pre-existing bug here (this .map would have thrown once data ever loaded).
+  const homework = data?.homework ?? [];
 
   return (
     <ScreenContainer scrollable>
