@@ -1,5 +1,5 @@
 import { HostelLeave } from "../models/HostelLeave.model.js";
-import { Hostel } from "../models/Hostel.model.js";
+import { HostelRoom } from "../models/HostelRoom.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -39,7 +39,7 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
   // Try to get roomNumber from existing hostel allocation if not provided
   let room = roomNumber;
   if (!room) {
-    const hostelAlloc = await Hostel.findOne({ schoolId, studentId }).select("roomNumber");
+    const hostelAlloc = await HostelRoom.findOne({ schoolId, "students.studentId": studentId }).select("roomNumber");
     room = hostelAlloc?.roomNumber || "";
   }
 

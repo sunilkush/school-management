@@ -2,10 +2,32 @@ import mongoose from "mongoose";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
 import { FeeStructure } from "../models/feeStructure.model.js";
+import { Student } from "../models/student.model.js";
 
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+
+// 🔒 Student/Parent may only ever read or generate installments for their own (or their linked
+// child's) records — filtering by {studentId, schoolId} alone (as both handlers below used to)
+// lets any authenticated Student/Parent/Accountant pass an arbitrary studentId and read or
+// generate installments for a completely unrelated student. Mirrors the ownership check already
+// used correctly elsewhere in this codebase (studentFee.controllers.js getMyFees/payStudentFee).
+const assertOwnsStudentRecord = async ({ roleName, userId, studentId, schoolId }) => {
+  const role = roleName?.toLowerCase();
+  if (role === "student") {
+    const owns = await Student.exists({ _id: studentId, userId, schoolId });
+    if (!owns) throw new ApiError(403, "Access denied: this student record does not belong to you");
+  } else if (role === "parent") {
+    const owns = await Student.exists({
+      _id: studentId,
+      schoolId,
+      $or: [{ fatherId: userId }, { motherId: userId }, { guardianId: userId }],
+    });
+    if (!owns) throw new ApiError(403, "This student is not linked with this parent");
+  }
+  // Accountant / School Admin / Super Admin: no further restriction beyond the schoolId already in the query filter.
+};
 
 /* =====================================================
    ✅ GENERATE INSTALLMENTS (Monthly | Quarterly | Yearly)
@@ -25,6 +47,8 @@ export const generateInstallments = asyncHandler(async (req, res) => {
   if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
     throw new ApiError(400, "Invalid academicYearId");
   }
+
+  await assertOwnsStudentRecord({ roleName: req.userRole?.name, userId: req.user._id, studentId, schoolId });
 
   const feeFilter = { studentId, schoolId };
   if (academicYearId) feeFilter.academicYearId = academicYearId;
@@ -120,6 +144,8 @@ export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
   if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
     throw new ApiError(400, "Invalid academicYearId");
   }
+
+  await assertOwnsStudentRecord({ roleName: req.userRole?.name, userId: req.user._id, studentId, schoolId });
 
   const filter = { studentId, schoolId };
   if (academicYearId) filter.academicYearId = academicYearId;

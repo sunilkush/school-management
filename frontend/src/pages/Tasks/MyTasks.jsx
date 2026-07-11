@@ -140,7 +140,7 @@ const TaskCard = ({ task, colColor, currentUserId, isDark, onDragStart, onDragEn
 const KanbanColumn = ({ col, tasks, currentUserId, isDark, dragState, onDragStart, onDragEnd, onDrop }) => {
   const [over, setOver] = useState(false);
   return (
-    <div style={{ flex: "1 1 240px", minWidth: 240, maxWidth: 340, display: "flex", flexDirection: "column" }}>
+    <div style={{ flex: "1 1 240px", minWidth: 240, maxWidth: 340, display: "flex", flexDirection: "column", gap: 0, boxShadow: isDark ? "none" : "0 1px 4px rgba(0,0,0,0.04)" }}>
       {/* Header */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -341,7 +341,7 @@ const MyTasks = () => {
         }
       />
 
-      <div style={{ padding: isMobile ? "0 12px 24px" : "0 20px 28px", background: pageBg, minHeight: "calc(100vh - 118px)" }}>
+      <div style={{ padding: isMobile ? "10px 12px 24px" : "20px 20px 28px", background: pageBg, minHeight: "calc(100vh - 118px)" }}>
 
         {/* Stats */}
         <div className="mt-stats" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>

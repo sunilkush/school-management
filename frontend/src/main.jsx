@@ -213,6 +213,7 @@ const FeeCollection = lazy(() => import("./pages/School_Admin/Fees_Management/Fe
 const AdmissionInquiryPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AdmissionInquiry.jsx"));
 
 const HostelManagement = lazy(() => import("./pages/School_Admin/Hostel/HostelManagement.jsx"));
+const HostelAllocations = lazy(() => import("./pages/School_Admin/Hostel/HostelAllocations.jsx"));
 const RoomAllocation = lazy(() => import("./pages/School_Admin/Hostel/RoomAllocation.jsx"));
 const HostelDashboard      = lazy(() => import("./pages/HostelWarden/HostelDashboard.jsx"));
 const LeaveManagement      = lazy(() => import("./pages/HostelWarden/LeaveManagement.jsx"));
@@ -981,7 +982,7 @@ const router = createBrowserRouter([
             children: [
               { index: true,                    element: <HostelDashboard /> },
               { path: "rooms",                  element: <HostelManagement /> },
-              { path: "allocations",            element: <HostelManagement /> },
+              { path: "allocations",            element: <HostelAllocations /> },
               { path: "leaves",                 element: <LeaveManagement /> },
               { path: "visitors",               element: <VisitorLog /> },
               { path: "complaints",             element: <ComplaintManagement /> },

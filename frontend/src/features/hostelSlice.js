@@ -44,9 +44,9 @@ export const deleteHostelRoom = createAsyncThunk("hostel/deleteRoom", async (id,
 
 export const assignHostelStudent = createAsyncThunk(
   "hostel/assignStudent",
-  async ({ id, studentName }, { rejectWithValue }) => {
+  async ({ id, studentId, studentName }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(`/hostel/rooms/${id}/assign`, { studentName });
+      const res = await apiClient.post(`/hostel/rooms/${id}/assign`, { studentId, studentName });
       return res?.data?.data;
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to assign student"));

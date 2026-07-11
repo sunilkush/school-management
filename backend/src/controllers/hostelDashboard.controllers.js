@@ -1,4 +1,3 @@
-import { Hostel } from "../models/Hostel.model.js";
 import { HostelRoom } from "../models/HostelRoom.model.js";
 import { HostelLeave } from "../models/HostelLeave.model.js";
 import { HostelVisitor } from "../models/HostelVisitor.model.js";
@@ -21,14 +20,13 @@ export const getHostelWardenDashboard = asyncHandler(async (req, res) => {
   const [
     totalRooms,
     occupiedRoomsData,
-    totalStudents,
+    monthlyAdmissionsData,
     pendingLeaves,
     leavesToday,
     visitorsToday,
     openComplaints,
     urgentComplaints,
     lastAttendance,
-    monthlyAdmissions,
   ] = await Promise.all([
     HostelRoom.countDocuments({ schoolId }),
 
@@ -43,7 +41,12 @@ export const getHostelWardenDashboard = asyncHandler(async (req, res) => {
       },
     ]),
 
-    Hostel.countDocuments({ schoolId, status: "occupied" }),
+    HostelRoom.aggregate([
+      { $match: { schoolId } },
+      { $unwind: "$students" },
+      { $match: { "students.createdAt": { $gte: monthStart } } },
+      { $count: "count" },
+    ]),
 
     HostelLeave.countDocuments({ schoolId, status: "pending" }),
 
@@ -61,11 +64,11 @@ export const getHostelWardenDashboard = asyncHandler(async (req, res) => {
     HostelAttendance.findOne({ schoolId })
       .sort({ date: -1 })
       .select("date session totalPresent totalAbsent totalOnLeave"),
-
-    Hostel.countDocuments({ schoolId, status: "occupied", createdAt: { $gte: monthStart } }),
   ]);
 
   const roomStats = occupiedRoomsData[0] || { totalCapacity: 0, totalOccupied: 0 };
+  const totalStudents = roomStats.totalOccupied;
+  const monthlyAdmissions = monthlyAdmissionsData[0]?.count || 0;
   const vacantRooms = totalRooms - (roomStats.totalOccupied > 0 ? Math.ceil(roomStats.totalOccupied / Math.max(roomStats.totalCapacity / totalRooms, 1)) : 0);
 
   // Monthly leave trend (last 6 months)

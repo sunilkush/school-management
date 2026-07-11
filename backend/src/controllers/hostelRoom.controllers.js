@@ -65,7 +65,7 @@ export const deleteHostelRoom = asyncHandler(async (req, res) => {
 
 export const assignStudentToRoom = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { studentName } = req.body;
+  const { studentName, studentId } = req.body;
   const schoolId = resolveSchoolId(req);
 
   if (!schoolId) throw new ApiError(400, "schoolId is required");
@@ -78,12 +78,14 @@ export const assignStudentToRoom = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Room is full");
   }
 
-  const existingStudent = room.students.find(
-    (student) => student.name?.trim().toLowerCase() === studentName.trim().toLowerCase()
+  const existingStudent = room.students.find((student) =>
+    studentId
+      ? student.studentId?.toString() === studentId
+      : student.name?.trim().toLowerCase() === studentName.trim().toLowerCase()
   );
   if (existingStudent) throw new ApiError(400, "Student is already assigned to this room");
 
-  room.students.push({ name: studentName.trim() });
+  room.students.push({ name: studentName.trim(), studentId: studentId || undefined });
   await room.save();
 
   return res.status(200).json(new ApiResponse(200, room, "Student assigned successfully"));

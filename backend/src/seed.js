@@ -45,8 +45,8 @@ import { Teacher }             from "./models/teacherAssignment.model.js";
 import { LeaveRequest }        from "./models/LeaveRequest.model.js";
 import { Transport }           from "./models/Transport.model.js";
 import { TransportRoute }      from "./models/TransportRoute.model.js";
-import { Hostel }              from "./models/Hostel.model.js";
 import { HostelRoom }          from "./models/HostelRoom.model.js";
+import { HostelAttendance }    from "./models/HostelAttendance.model.js";
 import { Inventory }           from "./models/Inventory.model.js";
 import { AdmissionInquiry }    from "./models/AdmissionInquiry.model.js";
 import { Complaint }           from "./models/Complaint.model.js";
@@ -995,16 +995,54 @@ async function seed() {
   }
   ok(`Hostel rooms: ${roomCount}`);
 
-  // Assign first 6 students to hostel rooms
+  // Assign first 6 students to hostel rooms (HostelRoom.students is the actual allocation
+  // record every hostel feature — attendance, leave, dashboard — reads from)
   let hostelCount = 0;
   const hostelRoomNumbers = hostelRoomDefs.map((r) => r.roomNumber);
   for (let i = 0; i < Math.min(studentObjects.length, 6); i++) {
     const { stuUser } = studentObjects[i];
     const roomNumber  = hostelRoomNumbers[Math.floor(i / 2)];
-    const exists = await Hostel.findOne({ schoolId, studentId: stuUser._id, academicYearId: ayId });
-    if (!exists) { await Hostel.create({ schoolId, academicYearId: ayId, studentId: stuUser._id, roomNumber, status: "occupied" }); hostelCount++; }
+    const room = await HostelRoom.findOne({ schoolId, roomNumber });
+    if (!room) continue;
+    const alreadyAssigned = room.students.some((s) => s.studentId?.toString() === stuUser._id.toString());
+    if (!alreadyAssigned) {
+      room.students.push({ studentId: stuUser._id, name: stuUser.name });
+      await room.save();
+      hostelCount++;
+    }
   }
   ok(`Hostel assignments: ${hostelCount}`);
+
+  // Attendance history — last 5 days (morning session), so the History tab and dashboard
+  // "last attendance" widget have something to show instead of appearing empty
+  const hostelAssignedStudents = [];
+  for (const roomNumber of hostelRoomNumbers) {
+    const room = await HostelRoom.findOne({ schoolId, roomNumber });
+    if (!room) continue;
+    room.students.forEach((s) => {
+      if (s.studentId) hostelAssignedStudents.push({ studentId: s.studentId, name: s.name, roomNumber: room.roomNumber });
+    });
+  }
+  const hostelWardenUser = staffMap["Hostel Warden"];
+  let attendanceCount = 0;
+  if (hostelWardenUser && hostelAssignedStudents.length > 0) {
+    for (let d = 1; d <= 5; d++) {
+      const date = new Date();
+      date.setDate(date.getDate() - d);
+      date.setHours(0, 0, 0, 0);
+      const exists = await HostelAttendance.findOne({ schoolId, date, session: "morning" });
+      if (exists) continue;
+      const records = hostelAssignedStudents.map((s, idx) => ({
+        studentId: s.studentId,
+        studentName: s.name,
+        roomNumber: s.roomNumber,
+        status: idx === 0 && d === 2 ? "absent" : idx === 1 && d === 3 ? "leave" : "present",
+      }));
+      await HostelAttendance.create({ schoolId, academicYearId: ayId, date, session: "morning", records, markedBy: hostelWardenUser._id });
+      attendanceCount++;
+    }
+  }
+  ok(`Hostel attendance history: ${attendanceCount}`);
 
   // ── 28. Inventory ────────────────────────────────────────────────────────────
   const inventoryDefs = [

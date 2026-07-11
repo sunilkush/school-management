@@ -298,7 +298,7 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
   );
 });
 export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
-  const { schoolClassId, page = 1, limit = 10 } = req.query;
+  const { schoolClassId, sectionId, page = 1, limit = 10 } = req.query;
   const academicYearId = req.academicYearId;
 
   if (!academicYearId || !mongoose.Types.ObjectId.isValid(academicYearId)) {
@@ -315,6 +315,10 @@ export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
 
   if (schoolClassId && mongoose.Types.ObjectId.isValid(schoolClassId)) {
     match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
+  }
+
+  if (sectionId && mongoose.Types.ObjectId.isValid(sectionId)) {
+    match.sectionId = new mongoose.Types.ObjectId(sectionId);
   }
 
   const result = await StudentEnrollment.aggregate([
@@ -359,16 +363,38 @@ export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
     { $unwind: { path: "$classDetails", preserveNullAndEmptyArrays: true } },
 
     {
+      $lookup: {
+        from: "sections",
+        localField: "sectionId",
+        foreignField: "_id",
+        as: "sectionDetails",
+      },
+    },
+    { $unwind: { path: "$sectionDetails", preserveNullAndEmptyArrays: true } },
+
+    {
       $project: {
         registrationNumber: 1,
         admissionDate: 1,
+        createdAt: 1,
+        status: 1,
+        // Student._id (distinct from this row's own StudentEnrollment._id, which is what `_id`
+        // is here) — needed by any client that wants to drill into GET /student/getStudent/:id
+        // for one row; without it the list has no usable id for that lookup at all.
+        studentId: "$studentInfo._id",
         studentName: "$userDetails.name",
         className: "$classDetails.name",
+        sectionName: "$sectionDetails.name",
         mobile: "$userDetails.mobile",
       },
     },
 
-    { $sort: { createdAt: -1 } },
+    // _id tiebreaker: bulk class-promotion inserts (insertMany) share an identical createdAt, so
+    // sorting on createdAt alone is not a stable order — without a unique tiebreaker, the same row
+    // can land in both page N and page N+1's window (or get skipped entirely) across separate
+    // aggregate() calls, which is exactly what produced a duplicate _id (and a React key warning)
+    // in the mobile student list.
+    { $sort: { createdAt: -1, _id: -1 } },
     { $skip: skip },
     { $limit: limitNumber },
   ]);
@@ -397,14 +423,37 @@ const getStudentById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid student ID");
   }
 
-  // ✅ Student can access ONLY his own profile
- const student = await Student.findOne({
-    userId: req.user._id,
-  }).populate({ path: "userId", select: "-password -refreshToken", match: { isActive: true, isDeleted: { $ne: true } } })
+  // :id used to be accepted but never actually queried on — every caller silently got back
+  // whatever Student document matched their own userId, regardless of which id was requested.
+  // That happened to be safe for the Student role (own profile only) but meant Teacher/Admin/
+  // Principal/Vice Principal could never actually look up a specific student (their own userId
+  // never matches a Student doc, so they always got a 403), and Parent wasn't even route-gated in.
+  // Restoring the parameter's actual purpose: Student still only ever gets their own profile
+  // (ignore :id entirely, same as before — no regression); every other allowed role looks up the
+  // requested student by id, scoped to their school (or to their own linked child, for Parent).
+  const roleName = req.userRole?.name;
+  const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+
+  let query;
+  if (roleName === "Student") {
+    query = { userId: req.user._id };
+  } else if (roleName === "Parent") {
+    query = {
+      _id: id,
+      schoolId,
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    };
+  } else {
+    // Super Admin / School Admin / Teacher / Principal / Vice Principal
+    query = { _id: id };
+    if (roleName !== "Super Admin") query.schoolId = schoolId;
+  }
+
+  const student = await Student.findOne(query)
+    .populate({ path: "userId", select: "-password -refreshToken", match: { isActive: true, isDeleted: { $ne: true } } })
     .populate({ path: "fatherId", select: "name email", match: { isActive: true, isDeleted: { $ne: true } } })
     .populate({ path: "motherId", select: "name email", match: { isActive: true, isDeleted: { $ne: true } } });
 
-  
   if (!student) {
     throw new ApiError(403, "You are not authorized to view this student");
   }

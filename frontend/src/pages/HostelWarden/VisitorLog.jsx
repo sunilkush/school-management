@@ -25,7 +25,7 @@ const VisitorLog = () => {
   const { visitors, visitorsTotal, visitorsToday, visitorsLoading, actionLoading } = useSelector((s) => s.hostelWarden || {});
   const { students = [] } = useSelector((s) => s.library || {});
   const { user } = useSelector((s) => s.auth);
-  const schoolId = user?.schoolId?._id || user?.schoolId;
+  const schoolId = user?.school?._id || user?.schoolId?._id || user?.schoolId;
 
   const [form] = Form.useForm();
   const [addModal, setAddModal] = useState(false);
@@ -207,7 +207,11 @@ const VisitorLog = () => {
             <Col xs={24} sm={12}>
               <Form.Item name="studentId" label="Visiting Student" rules={[{ required: true }]}>
                 <Select showSearch optionFilterProp="children" placeholder="Select student">
-                  {students.map((s) => <Option key={s._id} value={s._id}>{s.name}</Option>)}
+                  {students.map((s) => (
+                    <Option key={s._id} value={s?.user?._id || s._id}>
+                      {s?.user?.name || s?.userDetails?.name || s?.studentName || s?.name || "Unnamed Student"}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>

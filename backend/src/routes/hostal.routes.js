@@ -5,9 +5,9 @@ import { auth, roleMiddleware } from "../middlewares/auth.js";
 const router = express.Router();
 
 // Define allowed roles
-const ADMIN_ROLES = ["admin", "superadmin"];
-const STUDENT_ROLE = ["student"];
-const ALL_ROLES = ["admin", "superadmin", "student"];
+const ADMIN_ROLES = ["School Admin", "Super Admin"];
+const STUDENT_ROLE = ["Student"];
+const ALL_ROLES = ["Admin", "Super Admin", "Student"];
 
 // Assign Student to Hostel (Only Admins Can Assign)
 router.post("/createHostals", auth, roleMiddleware(ADMIN_ROLES), createHostel);

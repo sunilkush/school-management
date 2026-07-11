@@ -3,7 +3,7 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Assignment } from "../models/AssignmentsAndHomework.model.js";
 import { AssignmentSubmission } from "../models/AssignmentSubmission.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
-import { Hostel } from "../models/Hostel.model.js";
+import { HostelRoom } from "../models/HostelRoom.model.js";
 import { IssuedBook } from "../models/IssuedBooks.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
@@ -591,10 +591,14 @@ export const getMyLibraryBooks = asyncHandler(async (req, res) => {
 
 /* ── GET MY HOSTEL ALLOCATION ────────────────────────────────────────────── */
 export const getMyHostel = asyncHandler(async (req, res) => {
-  const hostel = await Hostel.findOne({
-    studentId: req.user._id,
+  const room = await HostelRoom.findOne({
     schoolId: req.user.schoolId,
+    "students.studentId": req.user._id,
   }).lean();
+
+  const hostel = room
+    ? { roomNumber: room.roomNumber, capacity: room.capacity, status: "occupied" }
+    : null;
 
   return res.status(200).json(
     new ApiResponse(200, hostel, "Hostel details fetched successfully")
@@ -785,10 +789,14 @@ export const getChildHostel = asyncHandler(async (req, res) => {
   const { childId } = req.params;
   await verifyParentChild(req.user._id, childId);
 
-  const hostel = await Hostel.findOne({
-    studentId: childId,
+  const room = await HostelRoom.findOne({
     schoolId: req.user.schoolId,
+    "students.studentId": childId,
   }).lean();
+
+  const hostel = room
+    ? { roomNumber: room.roomNumber, capacity: room.capacity, status: "occupied" }
+    : null;
 
   return res.status(200).json(
     new ApiResponse(200, hostel, "Child hostel details fetched")

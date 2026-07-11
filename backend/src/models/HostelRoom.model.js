@@ -24,6 +24,10 @@ const HostelRoomSchema = new Schema(
     },
     students: [
       {
+        studentId: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
         name: {
           type: String,
           required: true,
@@ -34,6 +38,8 @@ const HostelRoomSchema = new Schema(
   },
   { timestamps: true }
 );
+
+HostelRoomSchema.path("students").schema.set("timestamps", true);
 
 HostelRoomSchema.index({ schoolId: 1, roomNumber: 1 }, { unique: true });
 

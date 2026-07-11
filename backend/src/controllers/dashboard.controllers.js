@@ -124,6 +124,34 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
       students: studentsCount,
       attendanceMarked: attendance[0]?.totalMarked || 0,
     };
+  } else if (roleName === "Accountant") {
+    // Accountant was already allowed through this route's role middleware but had no branch here,
+    // so it silently fell into the generic "not available" case below — this closes that gap with
+    // the same figures /dashboard/role-overview computes for the accountant role.
+    if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
+      throw new ApiError(400, "Valid schoolId is required for Accountant dashboard");
+    }
+
+    const schoolObjectId = new ObjectId(schoolId);
+    const { startDate, endDate } = getCurrentMonthRange();
+
+    const [monthCollection, pendingDues, successfulTransactions] = await Promise.all([
+      Payment.aggregate([
+        { $match: { schoolId: schoolObjectId, paymentDate: { $gte: startDate, $lt: endDate }, status: "success" } },
+        { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+      ]),
+      StudentFee.aggregate([
+        { $match: { schoolId: schoolObjectId } },
+        { $group: { _id: null, totalPending: { $sum: "$dueAmount" } } },
+      ]),
+      Payment.countDocuments({ schoolId: schoolObjectId, status: "success" }),
+    ]);
+
+    response = {
+      monthCollection: monthCollection[0]?.total || 0,
+      pendingDues: pendingDues[0]?.totalPending || 0,
+      successfulTransactions: successfulTransactions || 0,
+    };
   } else {
     response = { message: "Dashboard not available for this role" };
   }

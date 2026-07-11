@@ -731,9 +731,16 @@ const getAllUsers = asyncHandler(async (req, res) => {
     matchStage.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   }
 
- // ✅ Active filter: by default only active, non-deleted users are fetched
-  matchStage.isDeleted = { $ne: true };
-  matchStage.isActive = true;
+ // ✅ Active filter: defaults to active-only, but callers that explicitly pass isActive=false
+  // (e.g. a "show deactivated users" toggle) need that honored — otherwise a deactivated user
+  // vanishes from every list with no way to find and reactivate them. deleteUser() sets both
+  // isActive:false and isDeleted:true together (they're not independent here), so isDeleted must
+  // relax in lockstep or the isActive=false request would still match nothing.
+  const wantsInactive = isActive === "false" || isActive === false;
+  matchStage.isActive = wantsInactive ? false : true;
+  if (!wantsInactive) {
+    matchStage.isDeleted = { $ne: true };
+  }
 
   // ✅ Search filter
   if (search) {
@@ -826,6 +833,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
         _id: 1,
         name: 1,
         email: 1,
+        phone: 1,
         avatar: 1,
         isActive: 1,
         regId: 1,

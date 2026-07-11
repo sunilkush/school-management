@@ -223,6 +223,27 @@ export const payStudentFee = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Fee record not found");
   }
 
+  // 🔒 Ownership check — Student/Parent may only pay their own (or their linked child's) fee
+  // record. Without this, any authenticated Student/Parent in the school could pay — or mark
+  // fully paid via cash, no gateway involved — any other family's fee record just by guessing its
+  // _id. Mirrors the same check getMyFees already does correctly above.
+  const role = req.user?.roleId?.name?.toLowerCase();
+  if (role === "student") {
+    const owns = await Student.exists({
+      _id: feeRecord.studentId,
+      userId: req.user._id,
+      schoolId: req.user.schoolId,
+    });
+    if (!owns) throw new ApiError(403, "Access denied: this fee record does not belong to you");
+  } else if (role === "parent") {
+    const owns = await Student.exists({
+      _id: feeRecord.studentId,
+      schoolId: req.user.schoolId,
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    });
+    if (!owns) throw new ApiError(403, "This student is not linked with this parent");
+  }
+
   if (feeRecord.status === "paid" || Number(feeRecord.dueAmount) <= 0) {
     throw new ApiError(400, "Fee already paid");
   }

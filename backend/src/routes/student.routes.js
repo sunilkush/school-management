@@ -25,7 +25,7 @@ const router = Router();
 // ✅ Role constants
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
 const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher", "Accountant", "Librarian"];
-const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];
+const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Student", "Parent"];
 
 /* =========================================================
    STUDENT ROUTES
@@ -65,11 +65,14 @@ router.get(
   getLastRegisteredStudent
 );
 
-// ✅ Get students by schoolId (Admin only)
+// ✅ Get students by schoolId — also used by the Hostel Warden's Rooms/Allocations page
+// (HostelManagement.jsx calls this to list students for room assignment), so it needs "Hostel
+// Warden" here specifically rather than widening TEACHER_ROLE (which also gates /by-role, an
+// unrelated attendance-marking flow this role has no business calling).
 router.get(
   "/school",
   auth,
-  roleMiddleware(TEACHER_ROLE),
+  roleMiddleware([...TEACHER_ROLE, "Hostel Warden"]),
   getStudentsBySchoolId
 );
 
