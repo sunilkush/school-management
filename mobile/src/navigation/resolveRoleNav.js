@@ -22,6 +22,35 @@ function metaFor(moduleKey) {
   return MODULE_META[moduleKey] ?? { label: moduleKey, icon: 'shape-outline' };
 }
 
+function isVisible(key, permissions, unrestricted, alwaysVisible) {
+  return unrestricted || alwaysVisible.has(key) || grantedActionsFor(permissions, key).length > 0;
+}
+
+function buildLeaf(key, permissions) {
+  return { key, module: key, actions: grantedActionsFor(permissions, key), ...metaFor(key) };
+}
+
+// A plain string entry is a leaf destination; `{ group, icon, items }` is a submenu — rendered as
+// its own nested "folder" screen (GroupMenuScreen.jsx) so a role like Super Admin, whose web
+// sidebar buries dozens of destinations behind ~10 group headers, gets the same grouped browsing
+// experience on mobile instead of one very long flat list.
+function buildItems(rawItems, permissions, unrestricted, alwaysVisible) {
+  const built = [];
+  for (const entry of rawItems) {
+    if (typeof entry === 'string') {
+      if (isVisible(entry, permissions, unrestricted, alwaysVisible)) built.push(buildLeaf(entry, permissions));
+      continue;
+    }
+    const children = entry.items
+      .filter((key) => isVisible(key, permissions, unrestricted, alwaysVisible))
+      .map((key) => buildLeaf(key, permissions));
+    if (children.length > 0) {
+      built.push({ key: `group:${entry.group}`, isGroup: true, title: entry.group, icon: entry.icon, children });
+    }
+  }
+  return built;
+}
+
 function splitQuickAndOverflow(items) {
   if (items.length <= MAX_TABS_WITHOUT_OVERFLOW) {
     return { quickItems: items, moreItems: [] };
@@ -47,9 +76,7 @@ export function resolveRoleNav(roleName, permissions = []) {
 
   if (config) {
     const alwaysVisible = new Set([...ALWAYS_VISIBLE, ...(config.alwaysVisibleExtra ?? [])]);
-    const items = config.items
-      .filter((key) => config.unrestricted || alwaysVisible.has(key) || grantedActionsFor(permissions, key).length > 0)
-      .map((key) => ({ key, module: key, actions: grantedActionsFor(permissions, key), ...metaFor(key) }));
+    const items = buildItems(config.items, permissions, config.unrestricted, alwaysVisible);
 
     return { items, ...splitQuickAndOverflow(items) };
   }

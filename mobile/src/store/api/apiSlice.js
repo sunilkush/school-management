@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -54,6 +54,13 @@ export const apiSlice = createApi({
     }),
     getMyTeacherTimetable: builder.query({
       query: (academicYearId) => ({ url: '/timetable/teacher/my', params: academicYearId ? { academicYearId } : {} }),
+    }),
+    // School Admin viewing an arbitrary teacher's schedule — same GET /timetable list endpoint the
+    // admin's own class-timetable builder uses, just filtered by an explicit teacherId instead of
+    // a class/section.
+    getTeacherTimetableFor: builder.query({
+      query: ({ teacherId, academicYearId }) => ({ url: '/timetable/teacher', params: { teacherId, academicYearId } }),
+      providesTags: ['TimetableEntry'],
     }),
     getChildTimetable: builder.query({
       query: ({ studentId, academicYearId }) => ({
@@ -210,6 +217,17 @@ export const apiSlice = createApi({
       }),
     }),
 
+    // Classes + sections with each section's CURRENT class teacher (unlike class-detailes above,
+    // which only carries subject-teacher assignments) — used by the Class Teacher Assignments
+    // picker so the admin can see who's already assigned before reassigning.
+    getSchoolClasses: builder.query({
+      query: ({ schoolId, academicYearId }) => ({
+        url: '/school-class',
+        params: { schoolId, academicYearId },
+      }),
+      providesTags: ['Class'],
+    }),
+
     // Subjects — Subject.find({}) has no schoolId scoping at all server-side (some subjects are
     // global, some school-specific per `isGlobal`); default page size is 10, so a high limit is
     // requested to get the full catalog in one shot rather than building pagination for what's
@@ -255,6 +273,134 @@ export const apiSlice = createApi({
         data: { grade, feedback },
       }),
       invalidatesTags: ['Homework'],
+    }),
+
+    // Lesson Plans — teacherId is auto-scoped server-side for the Teacher role (see
+    // lessonPlan.controllers.js), so no teacherId param is ever sent from here.
+    getLessonPlans: builder.query({
+      query: (params) => ({ url: '/lesson-plans', params }),
+      providesTags: ['LessonPlan'],
+    }),
+    createLessonPlan: builder.mutation({
+      query: (payload) => ({ url: '/lesson-plans', method: 'post', data: payload }),
+      invalidatesTags: ['LessonPlan'],
+    }),
+
+    // Study Materials — `externalLink` is a plain URL field, an alternative to uploading a file
+    // (createStudyMaterial only calls Cloudinary if `req.file` is present) — no document-picker
+    // dependency needed for the mobile create flow.
+    getStudyMaterials: builder.query({
+      query: (params) => ({ url: '/study-materials', params }),
+      providesTags: ['StudyMaterial'],
+    }),
+    createStudyMaterial: builder.mutation({
+      query: (payload) => ({ url: '/study-materials', method: 'post', data: payload }),
+      invalidatesTags: ['StudyMaterial'],
+    }),
+
+    // Tasks — listTasks auto-scopes to `assignedTo: currentUser` for every role except School
+    // Admin, so this always returns "my tasks" here. Non-admins can only PATCH their own
+    // assigneeStatus via `myStatus` (updateTask's non-admin branch), not any other task field.
+    getMyTasks: builder.query({
+      query: (params) => ({ url: '/tasks', params }),
+      providesTags: ['Task'],
+    }),
+    updateMyTaskStatus: builder.mutation({
+      query: ({ id, myStatus }) => ({ url: `/tasks/${id}`, method: 'patch', data: { myStatus } }),
+      invalidatesTags: ['Task'],
+    }),
+
+    // Self-attendance (GPS check-in/out) — checkIn/checkOut both require { lat, lng }; the backend
+    // computes distance-from-school and rejects outside the geofence radius (403) itself.
+    getSelfAttendanceStatus: builder.query({
+      query: () => ({ url: '/attendance/self/status' }),
+      providesTags: ['SelfAttendance'],
+    }),
+    checkInSelfAttendance: builder.mutation({
+      query: (payload) => ({ url: '/attendance/self/check-in', method: 'post', data: payload }),
+      invalidatesTags: ['SelfAttendance'],
+    }),
+    checkOutSelfAttendance: builder.mutation({
+      query: (payload) => ({ url: '/attendance/self/check-out', method: 'post', data: payload }),
+      invalidatesTags: ['SelfAttendance'],
+    }),
+    getSelfAttendanceHistory: builder.query({
+      query: (params) => ({ url: '/attendance/self/history', params }),
+      providesTags: ['SelfAttendance'],
+    }),
+
+    // Question Bank — read-only browse (create needs a full MCQ options/correct-answers editor,
+    // a separate, larger feature not built here).
+    getQuestions: builder.query({
+      query: (params) => ({ url: '/questions/getQuestions', params }),
+      providesTags: ['Question'],
+    }),
+
+    // Evaluation (marks entry) — enterMarksBulk upserts one Marks doc per {examId, studentId,
+    // subjectId}; totalMarks/passingMarks come from the exam itself, so only obtainedMarks is
+    // actually collected per student here.
+    enterExamMarksBulk: builder.mutation({
+      query: (payload) => ({ url: '/exams/marks/bulk', method: 'post', data: payload }),
+      invalidatesTags: ['Marks'],
+    }),
+
+    // Exam Reports — performance summary over ExamAttempt records (the online exam-attempt
+    // track), not the offline Marks-entry track above; an exam with no online attempts taken
+    // returns 404, surfaced here as an empty state rather than an error.
+    getExamPerformanceSummary: builder.query({
+      query: (examId) => ({ url: `/exam-report/exam/${examId}/summary` }),
+      providesTags: ['Marks'],
+    }),
+
+    // Student Monthly Report — per-student attendance % for a class/section in a given month.
+    getMonthlyAttendanceReport: builder.query({
+      query: (params) => ({ url: '/attendance/report/monthly', params }),
+      providesTags: ['Attendance'],
+    }),
+
+    // Geofence settings (School Admin) — same School.location doc the self-attendance check-in/out
+    // flow validates against server-side.
+    getGeofenceSettings: builder.query({
+      query: () => ({ url: '/attendance/self/geofence' }),
+      providesTags: ['SelfAttendance'],
+    }),
+    updateGeofenceSettings: builder.mutation({
+      query: (payload) => ({ url: '/attendance/self/geofence', method: 'put', data: payload }),
+      invalidatesTags: ['SelfAttendance'],
+    }),
+
+    // Inventory (supplies/assets)
+    getInventoryItems: builder.query({
+      query: (params) => ({ url: '/inventory', params }),
+      providesTags: ['Inventory'],
+    }),
+    createInventoryItem: builder.mutation({
+      query: (payload) => ({ url: '/inventory', method: 'post', data: payload }),
+      invalidatesTags: ['Inventory'],
+    }),
+
+    // Fee Categories (Fee Heads) — `name` is a fixed enum server-side, not free text.
+    getFeeHeadsBySchool: builder.query({
+      query: (params) => ({ url: '/fee-heads/by-school', params }),
+      providesTags: ['FeeHead'],
+    }),
+    createFeeHead: builder.mutation({
+      query: (payload) => ({ url: '/fee-heads', method: 'post', data: payload }),
+      invalidatesTags: ['FeeHead'],
+    }),
+
+    // Admin-wide attendance records (any role/class/section/date) — the same endpoint backs
+    // several nav destinations (Dashboard/Table/Student/Teacher/Staff Attendance), which all
+    // resolve to one filterable screen rather than 5 near-identical ones.
+    getAttendanceRecords: builder.query({
+      query: (params) => ({ url: '/attendance', params }),
+      providesTags: ['Attendance'],
+    }),
+
+    // Assign a class teacher to a section.
+    assignClassTeacher: builder.mutation({
+      query: (payload) => ({ url: '/sections/assign-teacher', method: 'post', data: payload }),
+      invalidatesTags: ['Class'],
     }),
 
     // Finance — Income and Expense ledgers (Accountant/School Admin write; Principal/VP read-only,
@@ -539,6 +685,7 @@ export const {
   useGetSchoolAdminAnalyticsQuery,
   useGetMyStudentTimetableQuery,
   useGetMyTeacherTimetableQuery,
+  useGetTeacherTimetableForQuery,
   useGetChildTimetableQuery,
   useGetMyChildrenQuery,
   useGetMyAttendanceQuery,
@@ -562,6 +709,7 @@ export const {
   usePayInstallmentMutation,
   useGetAllUsersQuery,
   useGetClassDetailsQuery,
+  useGetSchoolClassesQuery,
   useGetSubjectsQuery,
   useGetSchoolReportQuery,
   useGetMyHomeworkQuery,
@@ -634,4 +782,26 @@ export const {
   useGetTimetableRoomsQuery,
   useCreateTimetableRoomMutation,
   useDeleteTimetableRoomMutation,
+  useGetLessonPlansQuery,
+  useCreateLessonPlanMutation,
+  useGetStudyMaterialsQuery,
+  useCreateStudyMaterialMutation,
+  useGetMyTasksQuery,
+  useUpdateMyTaskStatusMutation,
+  useGetSelfAttendanceStatusQuery,
+  useCheckInSelfAttendanceMutation,
+  useCheckOutSelfAttendanceMutation,
+  useGetSelfAttendanceHistoryQuery,
+  useGetQuestionsQuery,
+  useEnterExamMarksBulkMutation,
+  useGetExamPerformanceSummaryQuery,
+  useGetMonthlyAttendanceReportQuery,
+  useGetGeofenceSettingsQuery,
+  useUpdateGeofenceSettingsMutation,
+  useGetInventoryItemsQuery,
+  useCreateInventoryItemMutation,
+  useGetFeeHeadsBySchoolQuery,
+  useCreateFeeHeadMutation,
+  useGetAttendanceRecordsQuery,
+  useAssignClassTeacherMutation,
 } = apiSlice;

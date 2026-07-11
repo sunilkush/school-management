@@ -27,6 +27,24 @@ import { LeaveScreen } from '../screens/LeaveScreen';
 import { PayrollScreen } from '../screens/PayrollScreen';
 import { EventsScreen } from '../screens/EventsScreen';
 import { ModulePlaceholderScreen } from '../screens/ModulePlaceholderScreen';
+import { GroupMenuScreen } from '../screens/GroupMenuScreen';
+import { AssignedClassesView } from '../screens/teacher/AssignedClassesView';
+import { LessonPlansView } from '../screens/teacher/LessonPlansView';
+import { StudyMaterialsView } from '../screens/teacher/StudyMaterialsView';
+import { MyTasksView } from '../screens/teacher/MyTasksView';
+import { SelfAttendanceView } from '../screens/teacher/SelfAttendanceView';
+import { SelfAttendanceHistoryView } from '../screens/teacher/SelfAttendanceHistoryView';
+import { QuestionBankView } from '../screens/teacher/QuestionBankView';
+import { EvaluationView } from '../screens/teacher/EvaluationView';
+import { ExamReportsView } from '../screens/teacher/ExamReportsView';
+import { StudentMonthlyReportView } from '../screens/teacher/StudentMonthlyReportView';
+import { GeofenceSettingsView } from '../screens/schoolAdmin/GeofenceSettingsView';
+import { InventoryView } from '../screens/schoolAdmin/InventoryView';
+import { FeeCategoriesView } from '../screens/schoolAdmin/FeeCategoriesView';
+import { AdminAttendanceTableView } from '../screens/schoolAdmin/AdminAttendanceTableView';
+import { AdminMonthlyReportView } from '../screens/schoolAdmin/AdminMonthlyReportView';
+import { ClassTeacherAssignmentsView } from '../screens/schoolAdmin/ClassTeacherAssignmentsView';
+import { TeacherTimetableView } from '../screens/schoolAdmin/TeacherTimetableView';
 
 // Real screens built so far, keyed by nav item key (== permission module, or 'Dashboard'/'Profile').
 // Anything not listed here still renders ModulePlaceholderScreen until a later Phase 4 batch.
@@ -68,6 +86,39 @@ const SCREEN_MAP = {
   Leave: LeaveScreen,
   Payroll: PayrollScreen,
   Events: EventsScreen,
+  // Teacher — built this batch (see constants/roles.js NAV_CONFIG.Teacher for the full item list).
+  AssignedClasses: AssignedClassesView,
+  LessonPlans: LessonPlansView,
+  SubjectResources: StudyMaterialsView,
+  MyTasks: MyTasksView,
+  // "My Daily Attendance" and "GPS Check-In/Out" are the same status+check-in/out screen — the
+  // web sidebar lists them as two destinations, but there's only one real feature here.
+  MyDailyAttendance: SelfAttendanceView,
+  GpsCheckInOut: SelfAttendanceView,
+  MyMonthlyReport: SelfAttendanceHistoryView,
+  QuestionBank: QuestionBankView,
+  Evaluation: EvaluationView,
+  ExamReports: ExamReportsView,
+  StudentMonthlyReport: StudentMonthlyReportView,
+  // School Admin — first batch of a much larger remaining set (see conversation summary for the
+  // full deferred list: Payroll sub-system, Paper Builder, Seat Plan, Fee Collection, Admissions).
+  GeofenceSettings: GeofenceSettingsView,
+  Inventory: InventoryView,
+  FeeCategories: FeeCategoriesView,
+  // One admin-wide attendance browser (role filter chips) behind 5 separate web sidebar entries —
+  // see AdminAttendanceTableView's own header comment for why these are really the same screen.
+  AttendanceDashboard: AdminAttendanceTableView,
+  AttendanceTable: AdminAttendanceTableView,
+  StudentAttendance: AdminAttendanceTableView,
+  TeacherAttendance: AdminAttendanceTableView,
+  StaffAttendance: AdminAttendanceTableView,
+  // One monthly per-student attendance % report behind 3 separate web sidebar entries — all three
+  // are the same GET /attendance/report/monthly aggregate, just different labels on the web side.
+  AttendanceReports: AdminMonthlyReportView,
+  AttendanceAnalytics: AdminMonthlyReportView,
+  MonthlyReport: AdminMonthlyReportView,
+  ClassTeacherAssignments: ClassTeacherAssignmentsView,
+  TeacherTimetable: TeacherTimetableView,
 };
 
 // Screens that are themselves a nested navigator (e.g. a list that pushes to a detail screen, or
@@ -75,6 +126,14 @@ const SCREEN_MAP = {
 // also show one for that item, or the user sees two stacked header bars.
 export const SELF_HEADERED_KEYS = new Set(['Students', 'Profile', 'Assignments', 'Messages']);
 
+// True for anything that renders its own nested Stack.Navigator (and so its own header) — the
+// named self-headered screens above, plus every submenu group (GroupMenuScreen), regardless of
+// whether that group ends up as a quick tab or tucked inside "More".
+export function isSelfHeadered(item) {
+  return item.isGroup || SELF_HEADERED_KEYS.has(item.key);
+}
+
 export function screenForModule(item) {
+  if (item.isGroup) return GroupMenuScreen;
   return SCREEN_MAP[item.key] ?? ModulePlaceholderScreen;
 }

@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { screenForModule, SELF_HEADERED_KEYS } from './screenForModule';
+import { screenForModule, isSelfHeadered } from './screenForModule';
 import { MoreMenuScreen } from '../screens/MoreMenuScreen';
 import { useAppHeaderOptions } from './headerOptions';
 import { useAppTheme } from '../theme/ThemeProvider';
@@ -75,20 +75,23 @@ export function TabShell({ quickItems, moreItems = [] }) {
         tabBarItemStyle: { paddingHorizontal: 2 },
       }}
     >
-      {quickItems.map((item) => (
-        <Tab.Screen
-          key={item.key}
-          name={item.key}
-          component={screenForModule(item)}
-          initialParams={{ label: item.label, icon: item.icon, actions: item.actions }}
-          options={{
-            title: item.label,
-            headerShown: !SELF_HEADERED_KEYS.has(item.key),
-            tabBarIcon: ({ focused, color, size }) => <TabIcon icon={item.icon} focused={focused} color={color} size={size} />,
-            tabBarLabel: ({ focused, color }) => <TabLabel label={item.label} color={color} focused={focused} />,
-          }}
-        />
-      ))}
+      {quickItems.map((item) => {
+        const label = item.isGroup ? item.title : item.label;
+        return (
+          <Tab.Screen
+            key={item.key}
+            name={item.key}
+            component={screenForModule(item)}
+            initialParams={item.isGroup ? { items: item.children, title: item.title } : { label: item.label, icon: item.icon, actions: item.actions }}
+            options={{
+              title: label,
+              headerShown: !isSelfHeadered(item),
+              tabBarIcon: ({ focused, color, size }) => <TabIcon icon={item.icon} focused={focused} color={color} size={size} />,
+              tabBarLabel: ({ focused, color }) => <TabLabel label={label} color={color} focused={focused} />,
+            }}
+          />
+        );
+      })}
 
       {moreItems.length > 0 && (
         <Tab.Screen

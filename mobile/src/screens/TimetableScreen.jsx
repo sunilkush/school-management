@@ -15,7 +15,7 @@ import {
   useGetMyTeacherTimetableQuery,
 } from '../store/api/apiSlice';
 
-function TimetableList({ rows }) {
+export function TimetableList({ rows }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const days = groupTimetableByDay(rows);
 
