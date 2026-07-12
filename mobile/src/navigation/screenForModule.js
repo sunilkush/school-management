@@ -19,6 +19,41 @@ import { FeeReportsScreen } from '../screens/FeeReportsScreen';
 import { MembersScreen } from '../screens/MembersScreen';
 import { FineManagementScreen } from '../screens/FineManagementScreen';
 import { LibrarySettingsScreen } from '../screens/LibrarySettingsScreen';
+import { AllocationsScreen } from '../screens/AllocationsScreen';
+import { VisitorLogScreen } from '../screens/VisitorLogScreen';
+import { ComplaintsScreen } from '../screens/ComplaintsScreen';
+import { FuelMaintenanceScreen } from '../screens/FuelMaintenanceScreen';
+import { VisitorManagementScreen } from '../screens/VisitorManagementScreen';
+import { PhoneCallsLogScreen } from '../screens/PhoneCallsLogScreen';
+import { AcademicReportsScreen } from '../screens/AcademicReportsScreen';
+import { MarkAttendanceScreen } from '../screens/MarkAttendanceScreen';
+import { PlatformAcademicSummaryScreen } from '../screens/PlatformAcademicSummaryScreen';
+import { FinanceSummaryScreen } from '../screens/FinanceSummaryScreen';
+import { SchoolReportsScreen } from '../screens/SchoolReportsScreen';
+import { SchoolAdminsScreen } from '../screens/SchoolAdminsScreen';
+import { AccountantsScreen } from '../screens/AccountantsScreen';
+import { LibrariansScreen } from '../screens/LibrariansScreen';
+import { TransportUsersScreen } from '../screens/TransportUsersScreen';
+import { DepartmentsScreen } from '../screens/DepartmentsScreen';
+import { DesignationsScreen } from '../screens/DesignationsScreen';
+import { FaqsScreen } from '../screens/FaqsScreen';
+import { RevenueAnalyticsScreen } from '../screens/RevenueAnalyticsScreen';
+import { PlatformUsageScreen } from '../screens/PlatformUsageScreen';
+import { ActivityLogsScreen } from '../screens/ActivityLogsScreen';
+import { ClassSectionsScreen } from '../screens/ClassSectionsScreen';
+import { BoardsScreen } from '../screens/BoardsScreen';
+import { BoardClassesScreen } from '../screens/BoardClassesScreen';
+import { SubscriptionPlansScreen } from '../screens/SubscriptionPlansScreen';
+import { PaymentHistoryScreen } from '../screens/PaymentHistoryScreen';
+import { RevenueScreen } from '../screens/RevenueScreen';
+import { AcademicYearsScreen } from '../screens/AcademicYearsScreen';
+import { ChaptersTopicsScreen } from '../screens/ChaptersTopicsScreen';
+import { SchoolWiseReportsScreen } from '../screens/SchoolWiseReportsScreen';
+import { GlobalConfigScreen } from '../screens/GlobalConfigScreen';
+import { RolesScreen } from '../screens/RolesScreen';
+import { PermissionsScreen } from '../screens/PermissionsScreen';
+import { BackupsScreen } from '../screens/BackupsScreen';
+import { AuditLogsScreen } from '../screens/AuditLogsScreen';
 import { BooksScreen } from '../screens/BooksScreen';
 import { RoutesScreen } from '../screens/RoutesScreen';
 import { VehiclesScreen } from '../screens/VehiclesScreen';
@@ -92,6 +127,46 @@ const SCREEN_MAP = {
   // "assign additional roles" (web-only, admin-gated actions) are a separate CRUD feature not
   // built here.
   Teachers: TeachersScreen,
+  // Principal — same "Staff Directory" component, different sidebar label/key.
+  StaffUsers: TeachersScreen,
+  AcademicReports: AcademicReportsScreen,
+  MarkAttendance: MarkAttendanceScreen,
+  // Super Admin — platform-wide, distinct from Principal's AcademicReports (see MODULE_META
+  // comment in constants/roles.js for the naming-collision story).
+  PlatformAcademicSummary: PlatformAcademicSummaryScreen,
+  FinanceSummary: FinanceSummaryScreen,
+  SchoolReports: SchoolReportsScreen,
+  SchoolAdmins: SchoolAdminsScreen,
+  Accountants: AccountantsScreen,
+  Librarians: LibrariansScreen,
+  TransportUsers: TransportUsersScreen,
+  Departments: DepartmentsScreen,
+  Designations: DesignationsScreen,
+  Faqs: FaqsScreen,
+  // Reuses the same generic app-settings screen every other role gets — web has no distinct
+  // Super Admin Settings page either (shared <Settings/> component for all roles).
+  Settings: SettingsScreen,
+  RevenueAnalytics: RevenueAnalyticsScreen,
+  PlatformUsage: PlatformUsageScreen,
+  ActivityLogs: ActivityLogsScreen,
+  ClassSections: ClassSectionsScreen,
+  Boards: BoardsScreen,
+  BoardClasses: BoardClassesScreen,
+  SubscriptionPlans: SubscriptionPlansScreen,
+  PaymentHistory: PaymentHistoryScreen,
+  Revenue: RevenueScreen,
+  AcademicYears: AcademicYearsScreen,
+  ChaptersTopics: ChaptersTopicsScreen,
+  SchoolWiseReports: SchoolWiseReportsScreen,
+  GlobalConfig: GlobalConfigScreen,
+  Roles: RolesScreen,
+  Permissions: PermissionsScreen,
+  SystemBackup: BackupsScreen,
+  AuditLogs: AuditLogsScreen,
+  // Web's own ContactSupport page is a non-functional local-only mock (its "Submit a Ticket" form
+  // never calls an API) — reusing the real, already-working ticket flow instead of building a fake
+  // form that would silently do nothing.
+  ContactSupport: SupportTicketsView,
   Parents: ParentsScreen,
   Classes: ClassesScreen,
   Subjects: SubjectsScreen,
@@ -107,7 +182,13 @@ const SCREEN_MAP = {
   Books: BooksScreen,
   Routes: RoutesScreen,
   Vehicles: VehiclesScreen,
+  FuelMaintenance: FuelMaintenanceScreen,
+  VisitorManagement: VisitorManagementScreen,
+  PhoneCallsLog: PhoneCallsLogScreen,
   Rooms: RoomsScreen,
+  Allocations: AllocationsScreen,
+  VisitorLog: VisitorLogScreen,
+  Complaints: ComplaintsScreen,
   Users: UsersScreen,
   Schools: SchoolsScreen,
   IssuedBooks: IssuedBooksScreen,
@@ -162,6 +243,9 @@ const SCREEN_MAP = {
   TeacherTimetable: TeacherTimetableView,
   TaskManagement: TaskManagementView,
   Communication: CommunicationView,
+  // Receptionist — same Notification broadcast feature, relabeled "Broadcasts" on web; Receptionist
+  // is already in the backend's CREATE_ALLOWED_ROLES for notifications.
+  Broadcasts: CommunicationView,
   // Role-generic — also completes Super Admin's own 'SupportTickets' item for free.
   SupportTickets: SupportTicketsView,
   // Role-generic — also completes Transport Manager's own 'TransportAssignments' item for free
@@ -174,6 +258,10 @@ const SCREEN_MAP = {
   SchoolSettings: SettingsScreen,
   StudentAdmission: StudentAdmissionView,
   AdmissionInquiries: AdmissionInquiriesView,
+  // Receptionist — same AdmissionInquiry model/CRUD, just relabeled "Admission Enquiries" on web;
+  // Receptionist has full CRUD but isn't in the narrower /stats role list, so the 3 stat cards
+  // silently show 0 for this role (non-fatal, same graceful behavior School Admin would get).
+  Enquiries: AdmissionInquiriesView,
   StudentPromotion: StudentPromotionView,
   CreateUser: CreateUserView,
   // CreateExam/ExamSchedule are the same underlying feature on the web app too (confirmed:

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
-import { List, Text } from 'react-native-paper';
+import { ScrollView, View } from 'react-native';
+import { Chip, List, Text } from 'react-native-paper';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { QueryState } from '../components/ui/QueryState';
 import { ChildPicker } from '../components/ui/ChildPicker';
@@ -10,6 +10,8 @@ import { useAppTheme } from '../theme/ThemeProvider';
 import { groupTimetableByDay, timetableRowSubtitle, timetableRowTitle } from '../utils/timetable';
 import {
   useGetChildTimetableQuery,
+  useGetClassDetailsQuery,
+  useGetClassSectionTimetableQuery,
   useGetMyChildrenQuery,
   useGetMyStudentTimetableQuery,
   useGetMyTeacherTimetableQuery,
@@ -110,7 +112,78 @@ function ParentTimetableView() {
   );
 }
 
-const HANDLED_ROLES = new Set(['Student', 'Teacher', 'Parent', 'School Admin']);
+// Read-only class/section timetable browser — Principal's web PrincipalTimetableOverview.jsx is a
+// read-only "view everything" page; School Admin's own SchoolAdminTimetableView is the full
+// create/edit/delete builder, deliberately not reused here even though Principal's role IS
+// permitted server-side (TIMETABLE_MANAGE), to preserve that read-only/builder UX distinction.
+function PrincipalTimetableView() {
+  const { colors, typography, spacing } = useAppTheme();
+  const { user } = useAuth();
+  const schoolId = user?.school?._id;
+  const academicYearId = user?.academicYear?._id;
+  const [classId, setClassId] = useState(null);
+  const [sectionId, setSectionId] = useState(null);
+
+  const classesQuery = useGetClassDetailsQuery({ schoolId, academicYearId }, { skip: !schoolId || !academicYearId });
+  const classes = classesQuery.data ?? [];
+  const selectedClass = classes.find((c) => c._id === classId);
+  const sections = selectedClass?.sections ?? [];
+
+  const timetableQuery = useGetClassSectionTimetableQuery(
+    { schoolClassId: classId, sectionId, academicYearId },
+    { skip: !classId || !sectionId || !academicYearId }
+  );
+
+  return (
+    <QueryState
+      isLoading={classesQuery.isLoading}
+      isError={classesQuery.isError}
+      error={classesQuery.error}
+      onRetry={classesQuery.refetch}
+      isEmpty={classes.length === 0}
+      emptyIcon="google-classroom"
+      emptyLabel="No classes found"
+    >
+      <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+        {classes.map((c) => (
+          <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); }}>
+            {c.name}
+          </Chip>
+        ))}
+      </ScrollView>
+
+      {sections.length > 0 && (
+        <>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SECTION</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+            {sections.map((s) => (
+              <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id)}>
+                {s.name}
+              </Chip>
+            ))}
+          </ScrollView>
+        </>
+      )}
+
+      {sectionId && (
+        <QueryState
+          isLoading={timetableQuery.isLoading || timetableQuery.isFetching}
+          isError={timetableQuery.isError}
+          error={timetableQuery.error}
+          onRetry={timetableQuery.refetch}
+          isEmpty={false}
+        >
+          <TimetableList rows={timetableQuery.data ?? []} />
+        </QueryState>
+      )}
+    </QueryState>
+  );
+}
+
+// Vice Principal's web "timetable" route points at the exact same <PrincipalTimetableOverview />
+// component as Principal's — confirmed via frontend/src/main.jsx, both roles share it verbatim.
+const HANDLED_ROLES = new Set(['Student', 'Teacher', 'Parent', 'School Admin', 'Principal', 'Vice Principal']);
 
 export function TimetableScreen() {
   const { role } = useAuth();
@@ -121,6 +194,7 @@ export function TimetableScreen() {
       {role?.name === 'Teacher' && <TeacherTimetableView />}
       {role?.name === 'Parent' && <ParentTimetableView />}
       {role?.name === 'School Admin' && <SchoolAdminTimetableView />}
+      {(role?.name === 'Principal' || role?.name === 'Vice Principal') && <PrincipalTimetableView />}
       {!HANDLED_ROLES.has(role?.name) && (
         <QueryState isLoading={false} isError={false} isEmpty emptyIcon="calendar-remove-outline" emptyLabel="Timetable view isn't available for this role yet" />
       )}

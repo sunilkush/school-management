@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -320,6 +320,98 @@ export const apiSlice = createApi({
       query: ({ schoolId, academicYearId }) => ({ url: `/report/school/${schoolId}/academic-year/${academicYearId}` }),
     }),
 
+    // Report Builder (Super Admin) — a generic "save a titled JSON/text blob with school/session/
+    // type metadata" CRUD, NOT a real computation/analytics engine — confirmed nothing runs
+    // server-side, `data` is stored verbatim exactly as the client sends it. Distinct from the
+    // school-overview report above (a different, real, computed report).
+    // System Backup (Super Admin only) — manual backup creation is synchronous (runs and
+    // completes within the request, no queue/worker), so no polling needed, just refetch after
+    // create resolves. Download is skipped (streams an authenticated file — same reasoning as
+    // every other deferred download/receipt in this app; no new native file-handling dependency).
+    getBackupSummary: builder.query({
+      query: () => ({ url: '/system-backups/summary' }),
+    }),
+    getSystemBackups: builder.query({
+      query: (params) => ({ url: '/system-backups', params }),
+      providesTags: ['SystemBackup'],
+    }),
+    createManualBackup: builder.mutation({
+      query: (payload) => ({ url: '/system-backups/manual', method: 'post', data: payload }),
+      invalidatesTags: ['SystemBackup'],
+    }),
+    deleteSystemBackup: builder.mutation({
+      query: (id) => ({ url: `/system-backups/${id}`, method: 'delete' }),
+      invalidatesTags: ['SystemBackup'],
+    }),
+    getBackupAuditLogs: builder.query({
+      query: (params) => ({ url: '/system-backups/audit-logs', params }),
+      providesTags: ['BackupAuditLog'],
+    }),
+
+    // Backup Schedules — metadata-only CRUD; there is no real cron engine executing these
+    // server-side, confirmed nothing ever writes nextRunAt/lastRunAt except the client itself.
+    getBackupSchedules: builder.query({
+      query: () => ({ url: '/backup-schedules' }),
+      providesTags: ['BackupSchedule'],
+    }),
+    createBackupSchedule: builder.mutation({
+      query: (payload) => ({ url: '/backup-schedules', method: 'post', data: payload }),
+      invalidatesTags: ['BackupSchedule'],
+    }),
+    updateBackupSchedule: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/backup-schedules/${id}`, method: 'patch', data: payload }),
+      invalidatesTags: ['BackupSchedule'],
+    }),
+    deleteBackupSchedule: builder.mutation({
+      query: (id) => ({ url: `/backup-schedules/${id}`, method: 'delete' }),
+      invalidatesTags: ['BackupSchedule'],
+    }),
+
+    // Restore Jobs — request → approve (a masked ≥6-char confirmation field; confirmed NOT real
+    // MFA server-side, just a length check with no OTP/TOTP dispatch or comparison — mirrored
+    // faithfully as-is, matching the real web app's own weak implementation, not upgraded) → run.
+    // No reject/deny action exists in the backend.
+    getRestoreJobs: builder.query({
+      query: () => ({ url: '/restore-jobs' }),
+      providesTags: ['RestoreJob'],
+    }),
+    requestRestoreJob: builder.mutation({
+      query: (payload) => ({ url: '/restore-jobs/request', method: 'post', data: payload }),
+      invalidatesTags: ['RestoreJob'],
+    }),
+    approveRestoreJob: builder.mutation({
+      query: ({ id, mfaToken }) => ({ url: `/restore-jobs/${id}/approve`, method: 'patch', data: { mfaToken } }),
+      invalidatesTags: ['RestoreJob'],
+    }),
+    runRestoreJob: builder.mutation({
+      query: (id) => ({ url: `/restore-jobs/${id}/run`, method: 'post' }),
+      invalidatesTags: ['RestoreJob', 'SystemBackup'],
+    }),
+
+    getReports: builder.query({
+      query: (params) => ({ url: '/report/getReport', params }),
+      providesTags: ['Report'],
+    }),
+    createReport: builder.mutation({
+      query: (payload) => ({ url: '/report/create', method: 'post', data: payload }),
+      invalidatesTags: ['Report'],
+    }),
+    deleteReport: builder.mutation({
+      query: (id) => ({ url: `/report/delete/${id}`, method: 'delete' }),
+      invalidatesTags: ['Report'],
+    }),
+
+    // Platform-wide analytics (Super Admin) — schoolId omitted means platform-wide; passed means
+    // a single-school drill-down. Distinct from Principal's own 'AcademicReports' (ExamAttempt
+    // per-student report) — a real naming collision on the web app itself between two completely
+    // different components sharing the same display name.
+    getAcademicSummary: builder.query({
+      query: (schoolId) => ({ url: '/analytics/academic', params: { schoolId } }),
+    }),
+    getFinanceSummary: builder.query({
+      query: ({ schoolId, year } = {}) => ({ url: '/analytics/finance', params: { schoolId, year } }),
+    }),
+
     // Homework/Assignments — file attachments are deferred (needs expo-document-picker, a new
     // native dependency); submission works with remarks text only, which the backend accepts
     // (multer's attachments field has no minCount, so a text-only submit is a real, complete
@@ -445,6 +537,14 @@ export const apiSlice = createApi({
     // returns 404, surfaced here as an empty state rather than an error.
     getExamPerformanceSummary: builder.query({
       query: (examId) => ({ url: `/exam-report/exam/${examId}/summary` }),
+      providesTags: ['Marks'],
+    }),
+
+    // Academic Reports (Principal/VP) — per-attempt row list (student/exam/score/status), a
+    // different presentation from the single-exam aggregate above; both read the same ExamAttempt
+    // data.
+    getExamReports: builder.query({
+      query: (params) => ({ url: '/exam-report', params }),
       providesTags: ['Marks'],
     }),
 
@@ -594,6 +694,61 @@ export const apiSlice = createApi({
       invalidatesTags: ['Vehicle'],
     }),
 
+    // Vehicle Maintenance (Fuel & Maintenance) — a separate mount from /transport, its own model.
+    getMaintenanceRecords: builder.query({
+      query: (params) => ({ url: '/vehicle-maintenance', params }),
+      providesTags: ['VehicleMaintenance'],
+    }),
+    getMaintenanceStats: builder.query({
+      query: () => ({ url: '/vehicle-maintenance/stats' }),
+      providesTags: ['VehicleMaintenance'],
+    }),
+    createMaintenanceRecord: builder.mutation({
+      query: (payload) => ({ url: '/vehicle-maintenance', method: 'post', data: payload }),
+      invalidatesTags: ['VehicleMaintenance'],
+    }),
+    updateMaintenanceRecord: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/vehicle-maintenance/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['VehicleMaintenance'],
+    }),
+
+    // Gate Entry (Receptionist's front-desk Visitor Management) — a separate model from Hostel
+    // Warden's own HostelVisitor system.
+    getGateEntries: builder.query({
+      query: (params) => ({ url: '/gate-entries', params }),
+      providesTags: ['GateEntry'],
+    }),
+    getGateEntryStats: builder.query({
+      query: () => ({ url: '/gate-entries/stats' }),
+      providesTags: ['GateEntry'],
+    }),
+    createGateEntry: builder.mutation({
+      query: (payload) => ({ url: '/gate-entries', method: 'post', data: payload }),
+      invalidatesTags: ['GateEntry'],
+    }),
+    markGateExit: builder.mutation({
+      query: (id) => ({ url: `/gate-entries/${id}/exit`, method: 'patch' }),
+      invalidatesTags: ['GateEntry'],
+    }),
+    deleteGateEntry: builder.mutation({
+      query: (id) => ({ url: `/gate-entries/${id}`, method: 'delete' }),
+      invalidatesTags: ['GateEntry'],
+    }),
+
+    // Call Log (Receptionist)
+    getCallLogs: builder.query({
+      query: (params) => ({ url: '/call-logs', params }),
+      providesTags: ['CallLog'],
+    }),
+    createCallLog: builder.mutation({
+      query: (payload) => ({ url: '/call-logs', method: 'post', data: payload }),
+      invalidatesTags: ['CallLog'],
+    }),
+    deleteCallLog: builder.mutation({
+      query: (id) => ({ url: `/call-logs/${id}`, method: 'delete' }),
+      invalidatesTags: ['CallLog'],
+    }),
+
     // Transport Assignments — assigns a student (by StudentEnrollment id, NOT Student/User id) to
     // a route + vehicle. POST is an upsert keyed on {schoolId, activeAcademicYearId,
     // studentEnrollmentId} — calling it again for the same student just updates route/vehicle/stops.
@@ -629,12 +784,69 @@ export const apiSlice = createApi({
       invalidatesTags: ['HostelRoom'],
     }),
     assignStudentToRoom: builder.mutation({
-      query: ({ roomId, studentName }) => ({ url: `/hostel/rooms/${roomId}/assign`, method: 'post', data: { studentName } }),
+      query: ({ roomId, studentName, studentId }) => ({ url: `/hostel/rooms/${roomId}/assign`, method: 'post', data: { studentName, studentId } }),
       invalidatesTags: ['HostelRoom'],
     }),
     removeStudentFromRoom: builder.mutation({
       query: ({ roomId, studentId }) => ({ url: `/hostel/rooms/${roomId}/students/${studentId}`, method: 'delete' }),
       invalidatesTags: ['HostelRoom'],
+    }),
+
+    // Hostel Visitor Log — distinct from Receptionist's gate-entry visitor system (a separate
+    // model entirely), this is hostel-specific.
+    getHostelVisitors: builder.query({
+      query: (params) => ({ url: '/hostel/visitors', params }),
+      providesTags: ['HostelVisitor'],
+    }),
+    createVisitorEntry: builder.mutation({
+      query: (payload) => ({ url: '/hostel/visitors', method: 'post', data: payload }),
+      invalidatesTags: ['HostelVisitor'],
+    }),
+    markVisitorExit: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/hostel/visitors/${id}/exit`, method: 'put', data: payload }),
+      invalidatesTags: ['HostelVisitor'],
+    }),
+    deleteVisitorEntry: builder.mutation({
+      query: (id) => ({ url: `/hostel/visitors/${id}`, method: 'delete' }),
+      invalidatesTags: ['HostelVisitor'],
+    }),
+
+    // Hostel Complaints — full status workflow (open→in_progress→resolved/closed, or rejected)
+    // with a built-in actionHistory audit trail server-side.
+    getHostelComplaints: builder.query({
+      query: (params) => ({ url: '/hostel/complaints', params }),
+      providesTags: ['HostelComplaint'],
+    }),
+    createHostelComplaint: builder.mutation({
+      query: (payload) => ({ url: '/hostel/complaints', method: 'post', data: payload }),
+      invalidatesTags: ['HostelComplaint'],
+    }),
+    updateHostelComplaint: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/hostel/complaints/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['HostelComplaint'],
+    }),
+    deleteHostelComplaint: builder.mutation({
+      query: (id) => ({ url: `/hostel/complaints/${id}`, method: 'delete' }),
+      invalidatesTags: ['HostelComplaint'],
+    }),
+
+    // Hostel Attendance (resident roll-call) — distinct from the dashboard's read-only
+    // "lastAttendance" summary panel; this is the actual mark/history/summary CRUD surface.
+    getTodayHostelAttendanceSheet: builder.query({
+      query: (params) => ({ url: '/hostel/attendance/today', params }),
+      providesTags: ['HostelAttendance'],
+    }),
+    markHostelAttendance: builder.mutation({
+      query: (payload) => ({ url: '/hostel/attendance', method: 'post', data: payload }),
+      invalidatesTags: ['HostelAttendance'],
+    }),
+    getHostelAttendance: builder.query({
+      query: (params) => ({ url: '/hostel/attendance', params }),
+      providesTags: ['HostelAttendance'],
+    }),
+    getHostelAttendanceSummary: builder.query({
+      query: (params) => ({ url: '/hostel/attendance/summary', params }),
+      providesTags: ['HostelAttendance'],
     }),
 
     // Schools (Super Admin) — registering a new school needs multipart logo upload and is a
@@ -656,6 +868,82 @@ export const apiSlice = createApi({
     deleteSchoolAccount: builder.mutation({
       query: (id) => ({ url: `/school/delete/${id}`, method: 'delete' }),
       invalidatesTags: ['School'],
+    }),
+    // No logo upload here (would need a new native image-picker dependency, same reasoning as the
+    // deferred Profile photo upload) — plain JSON body, multer skips non-multipart requests so
+    // the backend's upload.fields() middleware doesn't interfere.
+    registerSchool: builder.mutation({
+      query: (payload) => ({ url: '/school/register', method: 'post', data: payload }),
+      invalidatesTags: ['School'],
+    }),
+
+    // Subscription & Billing (Super Admin) — per-school subscription lifecycle.
+    getSchoolSubscription: builder.query({
+      query: (schoolId) => ({ url: `/super-admin/billing/schools/${schoolId}/subscription` }),
+      providesTags: ['SchoolSubscription'],
+    }),
+    renewSchoolSubscription: builder.mutation({
+      query: (schoolId) => ({ url: `/super-admin/billing/schools/${schoolId}/renew`, method: 'post' }),
+      invalidatesTags: ['SchoolSubscription'],
+    }),
+    cancelSchoolSubscription: builder.mutation({
+      query: (schoolId) => ({ url: `/super-admin/billing/schools/${schoolId}/cancel`, method: 'post' }),
+      invalidatesTags: ['SchoolSubscription'],
+    }),
+    suspendSchoolSubscription: builder.mutation({
+      query: (schoolId) => ({ url: `/super-admin/billing/schools/${schoolId}/suspend`, method: 'post' }),
+      invalidatesTags: ['SchoolSubscription'],
+    }),
+    reactivateSchoolSubscription: builder.mutation({
+      query: (schoolId) => ({ url: `/super-admin/billing/schools/${schoolId}/reactivate`, method: 'post' }),
+      invalidatesTags: ['SchoolSubscription'],
+    }),
+    changeSchoolPlan: builder.mutation({
+      query: ({ schoolId, ...payload }) => ({ url: `/super-admin/billing/schools/${schoolId}/change-plan`, method: 'post', data: payload }),
+      invalidatesTags: ['SchoolSubscription'],
+    }),
+
+    // Subscription Plans — list via the older, broadly-readable /subscription/allplan; create/
+    // update/deactivate via the newer superAdminBilling "V2" endpoints, which is what the actual
+    // web SubscriptionPlans page uses (confirmed against the real page, not guessed).
+    getSubscriptionPlans: builder.query({
+      query: () => ({ url: '/subscription/allplan' }),
+      providesTags: ['SubscriptionPlan'],
+    }),
+    createSubscriptionPlan: builder.mutation({
+      query: (payload) => ({ url: '/super-admin/billing/plans', method: 'post', data: payload }),
+      invalidatesTags: ['SubscriptionPlan'],
+    }),
+    updateSubscriptionPlan: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/super-admin/billing/plans/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['SubscriptionPlan'],
+    }),
+    deactivateSubscriptionPlan: builder.mutation({
+      query: (id) => ({ url: `/super-admin/billing/plans/${id}`, method: 'delete' }),
+      invalidatesTags: ['SubscriptionPlan'],
+    }),
+
+    // Payment History / Revenue (Super Admin) — platform billing, distinct from the school-level
+    // fee Payment model Accountant already uses.
+    getAllInvoices: builder.query({
+      query: () => ({ url: '/super-admin/billing/invoices' }),
+      providesTags: ['SubscriptionInvoice'],
+    }),
+    getAllSubscriptionPayments: builder.query({
+      query: () => ({ url: '/super-admin/billing/payments' }),
+      providesTags: ['SubscriptionPayment'],
+    }),
+    getRevenueSummary: builder.query({
+      query: () => ({ url: '/super-admin/billing/revenue/summary' }),
+      providesTags: ['SubscriptionInvoice'],
+    }),
+    generateSchoolInvoice: builder.mutation({
+      query: ({ schoolId, ...payload }) => ({ url: `/super-admin/billing/schools/${schoolId}/invoices`, method: 'post', data: payload }),
+      invalidatesTags: ['SubscriptionInvoice'],
+    }),
+    addManualPayment: builder.mutation({
+      query: ({ invoiceId, ...payload }) => ({ url: `/super-admin/billing/invoices/${invoiceId}/payments/manual`, method: 'post', data: payload }),
+      invalidatesTags: ['SubscriptionInvoice', 'SubscriptionPayment'],
     }),
 
     // Issued Books — issuing to staff (issuedToUserId, memberType 'Teacher') is deferred; this
@@ -827,6 +1115,183 @@ export const apiSlice = createApi({
     getAcademicYearsBySchool: builder.query({
       query: (schoolId) => ({ url: `/academicYear/school/${schoolId}` }),
     }),
+    getActiveAcademicYear: builder.query({
+      query: (schoolId) => ({ url: `/academicYear/active/${schoolId}` }),
+    }),
+    createAcademicYear: builder.mutation({
+      query: (payload) => ({ url: '/academicYear/create', method: 'post', data: payload }),
+      invalidatesTags: ['AcademicYear'],
+    }),
+    updateAcademicYear: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/academicYear/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['AcademicYear'],
+    }),
+    deleteAcademicYear: builder.mutation({
+      query: (id) => ({ url: `/academicYear/${id}`, method: 'delete' }),
+      invalidatesTags: ['AcademicYear'],
+    }),
+    activateAcademicYear: builder.mutation({
+      query: (id) => ({ url: `/academicYear/activate/${id}`, method: 'post' }),
+      invalidatesTags: ['AcademicYear'],
+    }),
+    archiveAcademicYear: builder.mutation({
+      query: (id) => ({ url: `/academicYear/archive/${id}`, method: 'post' }),
+      invalidatesTags: ['AcademicYear'],
+    }),
+
+    // Chapters & Topics (Academics, Super Admin) — keyed by boardClassId (a BoardClass entity,
+    // not a raw board+class pair) + subjectId. Unpaginated getAllChapters, not the paginated
+    // /chapters/visible (that one's meant for Student/Parent browsing).
+    getChapters: builder.query({
+      query: (params) => ({ url: '/chapters', params }),
+      providesTags: ['Chapter'],
+    }),
+    createChapter: builder.mutation({
+      query: (payload) => ({ url: '/chapters', method: 'post', data: payload }),
+      invalidatesTags: ['Chapter'],
+    }),
+    updateChapter: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/chapters/${id}`, method: 'patch', data: payload }),
+      invalidatesTags: ['Chapter'],
+    }),
+    deleteChapter: builder.mutation({
+      query: (id) => ({ url: `/chapters/${id}`, method: 'delete' }),
+      invalidatesTags: ['Chapter'],
+    }),
+
+    // Attendance analytics (Super Admin, no schoolId = platform-wide) — already includes a
+    // per-school breakdown server-side (schoolStats), reused for SchoolWiseReports alongside
+    // getFinanceSummary's own per-school topSchools breakdown.
+    getAttendanceSummary: builder.query({
+      query: (params) => ({ url: '/analytics/attendance', params }),
+    }),
+
+    // Global Config (System Control) — single platform-wide settings doc; no logo upload here
+    // (plain JSON, same reasoning as Schools/Profile — multer skips non-multipart requests).
+    getGlobalConfig: builder.query({
+      query: () => ({ url: '/global-config' }),
+      providesTags: ['GlobalConfig'],
+    }),
+    updateGlobalConfig: builder.mutation({
+      query: (payload) => ({ url: '/global-config', method: 'put', data: payload }),
+      invalidatesTags: ['GlobalConfig'],
+    }),
+
+    // Master Configurations (Super Admin) — Departments/Designations feed the Employee-creation
+    // dropdowns built earlier for School Admin's CreateUserView.
+    getDepartments: builder.query({
+      query: () => ({ url: '/departments' }),
+      providesTags: ['Department'],
+    }),
+    createDepartment: builder.mutation({
+      query: (payload) => ({ url: '/departments', method: 'post', data: payload }),
+      invalidatesTags: ['Department'],
+    }),
+    updateDepartment: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/departments/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Department'],
+    }),
+    deleteDepartment: builder.mutation({
+      query: (id) => ({ url: `/departments/${id}`, method: 'delete' }),
+      invalidatesTags: ['Department'],
+    }),
+    getDesignations: builder.query({
+      query: () => ({ url: '/designations' }),
+      providesTags: ['Designation'],
+    }),
+    createDesignation: builder.mutation({
+      query: (payload) => ({ url: '/designations', method: 'post', data: payload }),
+      invalidatesTags: ['Designation'],
+    }),
+    updateDesignation: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/designations/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Designation'],
+    }),
+    deleteDesignation: builder.mutation({
+      query: (id) => ({ url: `/designations/${id}`, method: 'delete' }),
+      invalidatesTags: ['Designation'],
+    }),
+
+    // Activity Logs (Reports & Analytics) — distinct from System Control's own AuditLogs (a
+    // separate model/route, not built yet).
+    getActivityLogs: builder.query({
+      query: (params) => ({ url: '/activity-logs', params }),
+      providesTags: ['ActivityLog'],
+    }),
+    deleteActivityLog: builder.mutation({
+      query: (id) => ({ url: `/activity-logs/${id}`, method: 'delete' }),
+      invalidatesTags: ['ActivityLog'],
+    }),
+
+    // Audit Logs (System Control, Super Admin) — a separate, richer-filtered system-wide trail,
+    // distinct from ActivityLog above. CSV export is skipped (same reasoning as every other
+    // deferred file download in this app — needs a new native file-system/sharing dependency).
+    getAuditLogs: builder.query({
+      query: (params) => ({ url: '/audit-logs', params }),
+      providesTags: ['AuditLog'],
+    }),
+    getAuditLogFilters: builder.query({
+      query: () => ({ url: '/audit-logs/filters' }),
+    }),
+
+    // Class Sections (Academics, Super Admin) — a read-only student-of-Classes explorer, distinct
+    // from the Classes screen's own subject-teacher view.
+    getSections: builder.query({
+      query: (params) => ({ url: '/section', params }),
+      providesTags: ['Class'],
+    }),
+
+    // Boards / Board Classes (Academics, Super Admin) — global curriculum boards (CBSE/ICSE/etc.)
+    // and their per-board class list, distinct from a school's own SchoolClass records.
+    getBoards: builder.query({
+      query: (params) => ({ url: '/boards', params }),
+      providesTags: ['Board'],
+    }),
+    createBoard: builder.mutation({
+      query: (payload) => ({ url: '/boards', method: 'post', data: payload }),
+      invalidatesTags: ['Board'],
+    }),
+    updateBoard: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/boards/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Board'],
+    }),
+    deleteBoard: builder.mutation({
+      query: (id) => ({ url: `/boards/${id}`, method: 'delete' }),
+      invalidatesTags: ['Board'],
+    }),
+    getGlobalClasses: builder.query({
+      query: (params) => ({ url: '/class', params }),
+    }),
+    getBoardClasses: builder.query({
+      query: (boardId) => ({ url: '/board-classes', params: { boardId } }),
+      providesTags: ['BoardClass'],
+    }),
+    createBoardClass: builder.mutation({
+      query: (payload) => ({ url: '/board-classes', method: 'post', data: payload }),
+      invalidatesTags: ['BoardClass'],
+    }),
+    deleteBoardClass: builder.mutation({
+      query: (id) => ({ url: `/board-classes/${id}`, method: 'delete' }),
+      invalidatesTags: ['BoardClass'],
+    }),
+
+    // FAQs (Support Center) — read is open to any authenticated role, write is Super Admin only.
+    getFaqs: builder.query({
+      query: () => ({ url: '/faqs' }),
+      providesTags: ['Faq'],
+    }),
+    createFaq: builder.mutation({
+      query: (payload) => ({ url: '/faqs', method: 'post', data: payload }),
+      invalidatesTags: ['Faq'],
+    }),
+    updateFaq: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/faqs/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Faq'],
+    }),
+    deleteFaq: builder.mutation({
+      query: (id) => ({ url: `/faqs/${id}`, method: 'delete' }),
+      invalidatesTags: ['Faq'],
+    }),
 
     // Student Promotion — bulk-moves enrollments from one academic year/class to the next; skips
     // any student already enrolled in the target year.
@@ -844,6 +1309,39 @@ export const apiSlice = createApi({
     getRolesBySchool: builder.query({
       query: (schoolId) => ({ url: '/role/by-school', params: { schoolId } }),
       providesTags: ['Role'],
+    }),
+    // getAllRoles (unlike by-school) also includes global/system roles (schoolId: null) — needed
+    // for the full Roles/Permissions screens, not just a per-school picker.
+    getAllRoles: builder.query({
+      query: () => ({ url: '/role/getAllRoles' }),
+      providesTags: ['Role'],
+    }),
+    createRole: builder.mutation({
+      query: (payload) => ({ url: '/role/createRole', method: 'post', data: payload }),
+      invalidatesTags: ['Role'],
+    }),
+    deleteRole: builder.mutation({
+      query: (id) => ({ url: `/role/deleteRole/${id}`, method: 'delete' }),
+      invalidatesTags: ['Role'],
+    }),
+
+    // Temporary Access (Super Admin only) — time-boxed role grants, separate from the Role model
+    // itself.
+    getTempAccessGrants: builder.query({
+      query: () => ({ url: '/role/temp-access' }),
+      providesTags: ['TempAccess'],
+    }),
+    createTempAccessGrant: builder.mutation({
+      query: (payload) => ({ url: '/role/temp-access', method: 'post', data: payload }),
+      invalidatesTags: ['TempAccess'],
+    }),
+    revokeTempAccessGrant: builder.mutation({
+      query: (id) => ({ url: `/role/temp-access/${id}/revoke`, method: 'patch' }),
+      invalidatesTags: ['TempAccess'],
+    }),
+    deleteTempAccessGrant: builder.mutation({
+      query: (id) => ({ url: `/role/temp-access/${id}`, method: 'delete' }),
+      invalidatesTags: ['TempAccess'],
     }),
     registerUser: builder.mutation({
       query: (payload) => ({ url: '/user/register', method: 'post', data: payload }),
@@ -1002,6 +1500,11 @@ export const {
   useGetSchoolClassesQuery,
   useGetSubjectsQuery,
   useGetSchoolReportQuery,
+  useGetReportsQuery,
+  useCreateReportMutation,
+  useDeleteReportMutation,
+  useGetAcademicSummaryQuery,
+  useGetFinanceSummaryQuery,
   useGetMyHomeworkQuery,
   useSubmitHomeworkMutation,
   useGetTeacherHomeworkQuery,
@@ -1030,17 +1533,57 @@ export const {
   useGetVehiclesQuery,
   useCreateVehicleMutation,
   useDeleteVehicleMutation,
+  useGetMaintenanceRecordsQuery,
+  useGetMaintenanceStatsQuery,
+  useCreateMaintenanceRecordMutation,
+  useUpdateMaintenanceRecordMutation,
+  useGetGateEntriesQuery,
+  useGetGateEntryStatsQuery,
+  useCreateGateEntryMutation,
+  useMarkGateExitMutation,
+  useDeleteGateEntryMutation,
+  useGetCallLogsQuery,
+  useCreateCallLogMutation,
+  useDeleteCallLogMutation,
   useGetHostelRoomsQuery,
   useCreateHostelRoomMutation,
   useDeleteHostelRoomMutation,
   useAssignStudentToRoomMutation,
   useRemoveStudentFromRoomMutation,
+  useGetHostelVisitorsQuery,
+  useCreateVisitorEntryMutation,
+  useMarkVisitorExitMutation,
+  useDeleteVisitorEntryMutation,
+  useGetHostelComplaintsQuery,
+  useCreateHostelComplaintMutation,
+  useUpdateHostelComplaintMutation,
+  useDeleteHostelComplaintMutation,
+  useGetTodayHostelAttendanceSheetQuery,
+  useMarkHostelAttendanceMutation,
+  useGetHostelAttendanceQuery,
+  useGetHostelAttendanceSummaryQuery,
   useActivateUserAccountMutation,
   useDeactivateUserAccountMutation,
   useGetAllSchoolsQuery,
   useActivateSchoolAccountMutation,
   useDeactivateSchoolAccountMutation,
   useDeleteSchoolAccountMutation,
+  useRegisterSchoolMutation,
+  useGetSchoolSubscriptionQuery,
+  useRenewSchoolSubscriptionMutation,
+  useCancelSchoolSubscriptionMutation,
+  useSuspendSchoolSubscriptionMutation,
+  useReactivateSchoolSubscriptionMutation,
+  useChangeSchoolPlanMutation,
+  useGetSubscriptionPlansQuery,
+  useCreateSubscriptionPlanMutation,
+  useUpdateSubscriptionPlanMutation,
+  useDeactivateSubscriptionPlanMutation,
+  useGetAllInvoicesQuery,
+  useGetAllSubscriptionPaymentsQuery,
+  useGetRevenueSummaryQuery,
+  useGenerateSchoolInvoiceMutation,
+  useAddManualPaymentMutation,
   useGetIssuedBooksQuery,
   useIssueBookToStudentMutation,
   useReturnIssuedBookMutation,
@@ -1094,6 +1637,7 @@ export const {
   useGetQuestionsQuery,
   useEnterExamMarksBulkMutation,
   useGetExamPerformanceSummaryQuery,
+  useGetExamReportsQuery,
   useGetMonthlyAttendanceReportQuery,
   useGetGeofenceSettingsQuery,
   useUpdateGeofenceSettingsMutation,
@@ -1123,9 +1667,52 @@ export const {
   useDeleteAdmissionInquiryMutation,
   useCreateStudentAdmissionMutation,
   useGetAcademicYearsBySchoolQuery,
+  useGetActiveAcademicYearQuery,
+  useCreateAcademicYearMutation,
+  useUpdateAcademicYearMutation,
+  useDeleteAcademicYearMutation,
+  useActivateAcademicYearMutation,
+  useArchiveAcademicYearMutation,
+  useGetChaptersQuery,
+  useCreateChapterMutation,
+  useUpdateChapterMutation,
+  useDeleteChapterMutation,
+  useGetAttendanceSummaryQuery,
+  useGetGlobalConfigQuery,
+  useUpdateGlobalConfigMutation,
+  useGetDepartmentsQuery,
+  useCreateDepartmentMutation,
+  useUpdateDepartmentMutation,
+  useDeleteDepartmentMutation,
+  useGetDesignationsQuery,
+  useCreateDesignationMutation,
+  useUpdateDesignationMutation,
+  useDeleteDesignationMutation,
+  useGetFaqsQuery,
+  useCreateFaqMutation,
+  useUpdateFaqMutation,
+  useDeleteFaqMutation,
+  useGetActivityLogsQuery,
+  useDeleteActivityLogMutation,
+  useGetSectionsQuery,
+  useGetBoardsQuery,
+  useCreateBoardMutation,
+  useUpdateBoardMutation,
+  useDeleteBoardMutation,
+  useGetGlobalClassesQuery,
+  useGetBoardClassesQuery,
+  useCreateBoardClassMutation,
+  useDeleteBoardClassMutation,
   useGetPromotionCandidatesQuery,
   usePromoteStudentsMutation,
   useGetRolesBySchoolQuery,
+  useGetAllRolesQuery,
+  useCreateRoleMutation,
+  useDeleteRoleMutation,
+  useGetTempAccessGrantsQuery,
+  useCreateTempAccessGrantMutation,
+  useRevokeTempAccessGrantMutation,
+  useDeleteTempAccessGrantMutation,
   useRegisterUserMutation,
   useRegisterEmployeeMutation,
   useCreateExamMutation,
@@ -1133,4 +1720,19 @@ export const {
   useGenerateExamAdmitCardsMutation,
   useGetExamAnalyticsQuery,
   useGetExamSeatPlanQuery,
+  useGetBackupSummaryQuery,
+  useGetSystemBackupsQuery,
+  useCreateManualBackupMutation,
+  useDeleteSystemBackupMutation,
+  useGetBackupAuditLogsQuery,
+  useGetBackupSchedulesQuery,
+  useCreateBackupScheduleMutation,
+  useUpdateBackupScheduleMutation,
+  useDeleteBackupScheduleMutation,
+  useGetRestoreJobsQuery,
+  useRequestRestoreJobMutation,
+  useApproveRestoreJobMutation,
+  useRunRestoreJobMutation,
+  useGetAuditLogsQuery,
+  useGetAuditLogFiltersQuery,
 } = apiSlice;

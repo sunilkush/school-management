@@ -10,6 +10,7 @@ import { DonutChart } from '../components/charts/DonutChart';
 import { VerticalBarChart } from '../components/charts/VerticalBarChart';
 import { STAT_COLORS } from '../theme/patterns';
 import { roleColor } from '../utils/roleColors';
+import { SuperAdminReportsView } from './superAdmin/SuperAdminReportsView';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useGetSchoolReportQuery } from '../store/api/apiSlice';
@@ -20,6 +21,24 @@ const GENDER_COLORS = { male: '#2563EB', female: '#EC4899', other: '#F59E0B' };
 // its own CRUD/export surface, frontend/src/pages/Super_Admin/Reports_&_Analytics/Reports.jsx) —
 // not this school-overview report, which School Admin/Principal/Vice Principal share verbatim.
 const OVERVIEW_REPORT_ROLES = new Set(['School Admin', 'Principal', 'Vice Principal']);
+
+function SuperAdminReports() {
+  const { colors, typography, spacing } = useAppTheme();
+  return (
+    <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="chart-box-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Reports</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Saved report builder
+          </Text>
+        </View>
+      </View>
+      <SuperAdminReportsView />
+    </ScreenContainer>
+  );
+}
 
 function ChartTitle({ title }) {
   const { colors, typography, spacing } = useAppTheme();
@@ -118,6 +137,9 @@ export function ReportsScreen() {
 
   if (OVERVIEW_REPORT_ROLES.has(role?.name)) {
     return <SchoolOverviewReport />;
+  }
+  if (role?.name === 'Super Admin') {
+    return <SuperAdminReports />;
   }
 
   return (

@@ -30,6 +30,15 @@ export function formatDateOnly(date) {
   return `${y}-${m}-${d}`;
 }
 
+export function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exponent = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const scaled = value / 1024 ** exponent;
+  return `${exponent === 0 ? scaled : scaled.toFixed(1)} ${units[exponent]}`;
+}
+
 export function titleCase(value) {
   if (!value) return '';
   return value.charAt(0).toUpperCase() + value.slice(1);

@@ -8,13 +8,24 @@ import { AccentListCard } from '../components/ui/AccentListCard';
 import { IconWell } from '../components/ui/IconWell';
 import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { CreateBookSheet } from './library/CreateBookSheet';
+import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteBookMutation, useGetBooksQuery } from '../store/api/apiSlice';
+
+// backend/src/routes/book.routes.js LIBRARY_STAFF — create/update allows School Admin/Teacher/
+// Librarian; delete only School Admin/Librarian. Principal (via the Library nav key reusing this
+// screen) gets neither, so it's a genuinely read-only browse for that role instead of buttons that
+// would 403.
+const CAN_CREATE_ROLES = new Set(['School Admin', 'Teacher', 'Librarian']);
+const CAN_DELETE_ROLES = new Set(['School Admin', 'Librarian']);
 
 /** Mirrors frontend/src/pages/School_Admin/Library/Books.jsx. Editing an existing book is
  * deferred (create + delete covers the core catalog workflow). */
 export function BooksScreen() {
   const { colors, typography, spacing } = useAppTheme();
+  const { role } = useAuth();
+  const canCreate = CAN_CREATE_ROLES.has(role?.name);
+  const canDelete = CAN_DELETE_ROLES.has(role?.name);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -53,11 +64,13 @@ export function BooksScreen() {
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
-        <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
-          Add Book
-        </Button>
-      </View>
+      {canCreate && (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
+          <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
+            Add Book
+          </Button>
+        </View>
+      )}
 
       <View style={{ marginBottom: spacing.lg }}>
         <StatGrid>
@@ -111,16 +124,20 @@ export function BooksScreen() {
             ]}
             expandable
             actions={
-              <>
-                <IconButton icon="pencil-outline" size={18} onPress={() => setEditingBook(b)} />
-                <IconButton
-                  icon="trash-can-outline"
-                  iconColor={colors.danger}
-                  size={18}
-                  disabled={deleteState.isLoading}
-                  onPress={() => deleteBook(b._id)}
-                />
-              </>
+              !canCreate && !canDelete ? undefined : (
+                <>
+                  {canCreate && <IconButton icon="pencil-outline" size={18} onPress={() => setEditingBook(b)} />}
+                  {canDelete && (
+                    <IconButton
+                      icon="trash-can-outline"
+                      iconColor={colors.danger}
+                      size={18}
+                      disabled={deleteState.isLoading}
+                      onPress={() => deleteBook(b._id)}
+                    />
+                  )}
+                </>
+              )
             }
           />
         ))}

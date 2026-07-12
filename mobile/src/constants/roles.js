@@ -78,6 +78,11 @@ export const MODULE_META = {
   SchoolWiseReports: { label: 'School Wise Reports', icon: 'domain' },
   FinanceSummary: { label: 'Finance Summary', icon: 'finance' },
   AcademicReports: { label: 'Academic Reports', icon: 'school-outline' },
+  // Distinct key from Principal's 'AcademicReports' (a per-student exam-attempt report) — Super
+  // Admin's own "Academic Reports" web page is a totally different component (platform-wide
+  // student/teacher/subject/exam/school counts), a naming collision on the web app itself that
+  // would have silently shown the wrong screen if both roles shared one mobile key.
+  PlatformAcademicSummary: { label: 'Academic Reports', icon: 'school-outline' },
   PlatformUsage: { label: 'Platform Usage', icon: 'chart-bar' },
   ActivityLogs: { label: 'Activity Logs', icon: 'history' },
   FeeCategories: { label: 'Fee Categories', icon: 'tag-outline' },
@@ -199,7 +204,7 @@ export const NAV_CONFIG = {
       { group: 'Users', icon: 'account-group-outline', items: ['SchoolAdmins', 'Teachers', 'StaffUsers', 'Students', 'Parents', 'Accountants', 'Librarians', 'TransportUsers'] },
       { group: 'Academics', icon: 'book-open-variant', items: ['Classes', 'ClassSections', 'Subjects', 'AcademicYears', 'Boards', 'BoardClasses', 'ChaptersTopics'] },
       { group: 'Attendance', icon: 'clipboard-check-outline', items: ['AttendanceDashboard', 'MarkAttendance', 'AttendanceTable', 'MonthlyReport'] },
-      { group: 'Reports & Analytics', icon: 'chart-box-outline', items: ['Reports', 'SchoolWiseReports', 'FinanceSummary', 'AcademicReports', 'PlatformUsage', 'ActivityLogs'] },
+      { group: 'Reports & Analytics', icon: 'chart-box-outline', items: ['Reports', 'SchoolWiseReports', 'FinanceSummary', 'PlatformAcademicSummary', 'PlatformUsage', 'ActivityLogs'] },
       { group: 'Master Configurations', icon: 'cog-outline', items: ['FeeCategories', 'Departments', 'Designations', 'GlobalConfig'] },
       { group: 'System Control', icon: 'cog-outline', items: ['Roles', 'Permissions', 'PlatformModules', 'SystemBackup', 'AuditLogs', 'Settings'] },
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation', 'ContactSupport', 'Faqs'] },

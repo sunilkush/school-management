@@ -6,14 +6,20 @@ import { QueryState } from '../components/ui/QueryState';
 import { IconWell } from '../components/ui/IconWell';
 import { LibraryView } from './student/LibraryView';
 import { ParentLibraryView } from './parent/ParentLibraryView';
+import { BooksScreen } from './BooksScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 
-const HANDLED_ROLES = new Set(['Student', 'Parent']);
+const HANDLED_ROLES = new Set(['Student', 'Parent', 'Principal']);
 
 export function LibraryScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { role } = useAuth();
+
+  // BooksScreen renders its own full header/ScreenContainer (a real catalog browse, gated
+  // read-only for Principal) — returned directly rather than nested inside this screen's own
+  // wrapper below, to avoid a doubled header.
+  if (role?.name === 'Principal') return <BooksScreen />;
 
   return (
     <ScreenContainer scrollable>

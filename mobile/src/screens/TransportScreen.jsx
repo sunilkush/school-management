@@ -6,14 +6,20 @@ import { QueryState } from '../components/ui/QueryState';
 import { IconWell } from '../components/ui/IconWell';
 import { MyTransportView } from './student/MyTransportView';
 import { ParentTransportView } from './parent/ParentTransportView';
+import { RoutesScreen } from './RoutesScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 
-const HANDLED_ROLES = new Set(['Student', 'Parent']);
+const HANDLED_ROLES = new Set(['Student', 'Parent', 'Principal']);
 
 export function TransportScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { role } = useAuth();
+
+  // RoutesScreen renders its own full header/ScreenContainer (a real routes browse, gated
+  // read-only for Principal) — returned directly rather than nested inside this screen's own
+  // wrapper below, to avoid a doubled header.
+  if (role?.name === 'Principal') return <RoutesScreen />;
 
   return (
     <ScreenContainer scrollable>

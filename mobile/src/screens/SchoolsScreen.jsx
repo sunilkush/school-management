@@ -1,23 +1,25 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { Chip, Text } from 'react-native-paper';
+import { Button, Chip, Text } from 'react-native-paper';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { QueryState } from '../components/ui/QueryState';
 import { SearchField } from '../components/ui/SearchField';
 import { IconWell } from '../components/ui/IconWell';
 import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { SchoolAccountRow } from './schools/SchoolAccountRow';
+import { CreateSchoolSheet } from './schools/CreateSchoolSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useGetAllSchoolsQuery } from '../store/api/apiSlice';
 
-/** Mirrors frontend/src/pages/Super_Admin/School_Management/Schools.jsx. Registering a school
- * (multipart logo upload) and the subscription-management drawer (renew/suspend/change-plan) are
- * a separate, larger feature not built here — this covers the base directory: list, activate,
- * deactivate, delete. */
+/** Mirrors frontend/src/pages/Super_Admin/School_Management/Schools.jsx. No logo upload on
+ * registration (would need a new native image-picker dependency) — otherwise full directory +
+ * registration + subscription management (renew/suspend/reactivate/cancel/change-plan, in
+ * SchoolAccountRow's own "Subscription" action). */
 export function SchoolsScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetAllSchoolsQuery({ search: search.trim() || undefined });
   const schools = data?.schools ?? [];
@@ -46,6 +48,12 @@ export function SchoolsScreen() {
             Every school on the platform
           </Text>
         </View>
+      </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
+        <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
+          Add School
+        </Button>
       </View>
 
       <View style={{ marginBottom: spacing.lg }}>
@@ -83,6 +91,8 @@ export function SchoolsScreen() {
           <SchoolAccountRow key={s._id} school={s} />
         ))}
       </QueryState>
+
+      <CreateSchoolSheet visible={creating} onDismiss={() => setCreating(false)} onCreated={() => setCreating(false)} />
     </ScreenContainer>
   );
 }

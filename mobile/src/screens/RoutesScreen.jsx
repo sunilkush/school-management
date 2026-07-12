@@ -7,13 +7,20 @@ import { AccentListCard } from '../components/ui/AccentListCard';
 import { IconWell } from '../components/ui/IconWell';
 import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { CreateRouteSheet } from './transport/CreateRouteSheet';
+import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteTransportRouteMutation, useGetTransportRoutesQuery } from '../store/api/apiSlice';
+
+// backend/src/routes/transport.routes.js TRANSPORT_MANAGE — Principal/VP/Accountant are
+// TRANSPORT_READ only (view routes, no create/delete), so this screen is read-only for them.
+const CAN_MANAGE_ROLES = new Set(['Super Admin', 'School Admin', 'Transport Manager']);
 
 /** Mirrors frontend/src/pages/School_Admin/Transport/RoutesPage.jsx. Editing a route is deferred
  * (create + delete covers the core workflow). */
 export function RoutesScreen() {
   const { colors, typography, spacing } = useAppTheme();
+  const { role } = useAuth();
+  const canManage = CAN_MANAGE_ROLES.has(role?.name);
   const [creating, setCreating] = useState(false);
   const { data, isLoading, isFetching, isError, error, refetch } = useGetTransportRoutesQuery();
   const [deleteRoute, deleteState] = useDeleteTransportRouteMutation();
@@ -36,11 +43,13 @@ export function RoutesScreen() {
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
-        <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
-          Add Route
-        </Button>
-      </View>
+      {canManage && (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
+          <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
+            Add Route
+          </Button>
+        </View>
+      )}
 
       <View style={{ marginBottom: spacing.lg }}>
         <StatGrid>
@@ -69,19 +78,23 @@ export function RoutesScreen() {
             meta={[{ label: 'Stops', value: (r.stops ?? []).join(', ') || '—' }]}
             expandable
             actions={
-              <IconButton
-                icon="trash-can-outline"
-                iconColor={colors.danger}
-                size={18}
-                disabled={deleteState.isLoading}
-                onPress={() => deleteRoute(r._id)}
-              />
+              canManage ? (
+                <IconButton
+                  icon="trash-can-outline"
+                  iconColor={colors.danger}
+                  size={18}
+                  disabled={deleteState.isLoading}
+                  onPress={() => deleteRoute(r._id)}
+                />
+              ) : undefined
             }
           />
         ))}
       </QueryState>
 
-      <CreateRouteSheet visible={creating} onDismiss={() => setCreating(false)} onCreated={() => setCreating(false)} />
+      {canManage && (
+        <CreateRouteSheet visible={creating} onDismiss={() => setCreating(false)} onCreated={() => setCreating(false)} />
+      )}
     </ScreenContainer>
   );
 }
