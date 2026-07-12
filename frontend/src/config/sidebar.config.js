@@ -213,7 +213,6 @@ export const sidebarMenu = {
       icon: BookOpen,
       subMenu: [
         { title: "Classes", path: "schooladmin/classes" },
-        { title: "Class Teacher Assignments", path: "schooladmin/class-teacher-assignments", icon: GraduationCap },
         { title: "Subjects", path: "schooladmin/subjects" },
         { title: "Timetable Planner", path: "schooladmin/timetable" },
         { title: "Time Slots", path: "schooladmin/timetable/time-slots" },

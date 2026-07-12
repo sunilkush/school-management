@@ -54,6 +54,8 @@ import { RolesScreen } from '../screens/RolesScreen';
 import { PermissionsScreen } from '../screens/PermissionsScreen';
 import { BackupsScreen } from '../screens/BackupsScreen';
 import { AuditLogsScreen } from '../screens/AuditLogsScreen';
+import { SystemMaintenanceScreen } from '../screens/SystemMaintenanceScreen';
+import { NetworkStatusScreen } from '../screens/NetworkStatusScreen';
 import { BooksScreen } from '../screens/BooksScreen';
 import { RoutesScreen } from '../screens/RoutesScreen';
 import { VehiclesScreen } from '../screens/VehiclesScreen';
@@ -163,6 +165,13 @@ const SCREEN_MAP = {
   Permissions: PermissionsScreen,
   SystemBackup: BackupsScreen,
   AuditLogs: AuditLogsScreen,
+  SystemMaintenance: SystemMaintenanceScreen,
+  NetworkStatus: NetworkStatusScreen,
+  // IT Support — web calls this "System Logs", but it's the same ActivityLog model/screen every
+  // other role with activity-log access already gets (backend gates GET /activity-logs to
+  // ["Super Admin","School Admin","IT Support","Principal"], and ActivityLogsScreen is already
+  // role-agnostic — its only role check is the Super-Admin-only delete button).
+  SystemLogs: ActivityLogsScreen,
   // Web's own ContactSupport page is a non-functional local-only mock (its "Submit a Ticket" form
   // never calls an API) — reusing the real, already-working ticket flow instead of building a fake
   // form that would silently do nothing.
@@ -200,6 +209,10 @@ const SCREEN_MAP = {
   LibrarySettings: LibrarySettingsScreen,
   Hostel: HostelScreen,
   Exams: ExamsScreen,
+  // Subject Coordinator — web sidebar labels this "Assessments", same ExamPage.jsx/EXAM_MANAGE_ROLES
+  // contract as School Admin's own Exams tab (ExamsScreen already branches Subject Coordinator into
+  // ExamManagementView via MANAGE_ROLES).
+  Assessments: ExamsScreen,
   Messages: MessagesScreen,
   Leave: LeaveScreen,
   Payroll: PayrollScreen,

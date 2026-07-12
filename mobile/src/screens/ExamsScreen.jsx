@@ -12,9 +12,11 @@ import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 
 const HANDLED_ROLES = new Set(['Teacher', 'Student', 'Parent']);
-// These 3 roles are all in the backend's EXAM_MANAGE_ROLES (exam.routes.js) — same full
-// create/schedule capability as School Admin, not a read-only view.
-const MANAGE_ROLES = new Set(['School Admin', 'Principal', 'Vice Principal']);
+// These roles are all in the backend's EXAM_MANAGE_ROLES (exam.routes.js) — same full
+// create/schedule capability as School Admin, not a read-only view. Subject Coordinator's web
+// sidebar labels this destination "Assessments" rather than "Exams", but it's the exact same
+// ExamPage.jsx component and backend contract — reused verbatim via the 'Assessments' nav key.
+const MANAGE_ROLES = new Set(['School Admin', 'Principal', 'Vice Principal', 'Subject Coordinator']);
 
 export function ExamsScreen() {
   const { colors, typography, spacing } = useAppTheme();

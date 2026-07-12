@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Table, Modal, Select, Button, Space, Tooltip, Popconfirm, Tag, message, Spin,
+  Table, Modal, Select, Button, Space, Tooltip, Popconfirm, message, Spin, Input, Empty,
 } from "antd";
 import {
-  PlusOutlined, ReloadOutlined, DeleteOutlined, TeamOutlined,
+  PlusOutlined, ReloadOutlined, DeleteOutlined, SearchOutlined,
 } from "@ant-design/icons";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Users, BookOpen, Layers } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchClassTeacherAssignments,
@@ -15,8 +15,41 @@ import {
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchSections } from "../../../features/sectionSlice";
 import { fetchAllUser } from "../../../features/authSlice";
+import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill, toolbarRow,
+  tableContainer, tableHeadCss, avatarStyle, modalTitle,
+} from "../../../styles/pageStyles";
+
+// Class names are plain strings like "Class 10", "Nursery", "UKG" — a plain alphabetical sort
+// would put "Class 10" before "Class 2". Pre-primary names get a fixed rank ahead of any numbered
+// class (matching real school progression); numbered classes sort on the number they contain;
+// anything unrecognized falls back to alphabetical, after the numbered classes.
+const PRE_PRIMARY_RANK = { "pre-nursery": 0, "playgroup": 1, "nursery": 2, "lkg": 3, "kg": 3, "ukg": 4 };
+
+const classSortKey = (name) => {
+  const n = (name || "").trim().toLowerCase();
+  if (n in PRE_PRIMARY_RANK) return PRE_PRIMARY_RANK[n];
+  const match = n.match(/(\d+)/);
+  if (match) return 100 + Number(match[1]);
+  return 9999;
+};
+
+const compareClassNames = (a, b) => {
+  const diff = classSortKey(a) - classSortKey(b);
+  return diff !== 0 ? diff : (a || "").localeCompare(b || "");
+};
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const ClassTeacherAssignmentPage = () => {
   const dispatch = useDispatch();
@@ -24,18 +57,44 @@ const ClassTeacherAssignmentPage = () => {
   const { schoolClasses = [] }           = useSelector((s) => s.schoolClass);
   const { sections = [] }                = useSelector((s) => s.sections);
   const { users = [], user: me }         = useSelector((s) => s.auth);
+  const { selectedAcademicYear, activeYear } = useSelector((s) => s.academicYear || {});
+
   const schoolId = me?.school?._id;
+  const academicYearId = selectedAcademicYear?._id;
 
   const [modal, setModal] = useState({ open: false });
   const [form,  setForm]  = useState({ teacherId: null, schoolClassId: null, sectionId: null });
+  const [searchText, setSearchText] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
 
+  useEffect(() => { setPage(1); }, [searchText]);
+
+  // selectedAcademicYear is normally populated as a side effect of <AcademicYearSwitcher> mounting
+  // in the Topbar — but that component is skipped entirely on mobile widths (and could in theory
+  // mount after this page), so relying on it alone left academicYearId null and every class/section
+  // list here unscoped. Fetching it directly makes this page correct on its own; the shared reducer
+  // (academicYearSlice.js) is idempotent about this — repeating the fetch is harmless.
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(fetchClassTeacherAssignments());
-    dispatch(fetchSchoolClasses({ schoolId }));
-    dispatch(fetchSections({ schoolId }));
+    if (!activeYear) dispatch(fetchActiveAcademicYear(schoolId));
+  }, [dispatch, schoolId, activeYear]);
+
+  // Class/Section lists are fetched scoped to the active academic year — both endpoints already
+  // accept academicYearId server-side, this was previously just not being sent. Only gated on
+  // schoolId, not academicYearId: when selectedAcademicYear hasn't loaded into redux yet,
+  // academicYearId is simply omitted and every endpoint here already falls back to the school's
+  // active year on its own — gating the whole effect on it caused the entire page (including the
+  // teacher list, unrelated to academic year at all) to silently fetch nothing. Once
+  // fetchActiveAcademicYear above resolves, academicYearId changes and this effect re-runs to
+  // narrow everything down to the active session.
+  useEffect(() => {
+    if (!schoolId) return;
+    dispatch(fetchClassTeacherAssignments(academicYearId ? { academicYearId } : {}));
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+    dispatch(fetchSections({ schoolId, academicYearId }));
     dispatch(fetchAllUser({ isActive: true }));
-  }, [dispatch, schoolId]);
+  }, [dispatch, schoolId, academicYearId]);
 
   // Only teachers / class teachers for the dropdown
   const teacherOptions = useMemo(() =>
@@ -52,16 +111,54 @@ const ClassTeacherAssignmentPage = () => {
   );
 
   const classOptions = useMemo(() =>
-    schoolClasses.map((c) => ({ value: c._id, label: c.name || c.grade })),
+    [...schoolClasses]
+      .sort((a, b) => compareClassNames(a.name || a.grade, b.name || b.grade))
+      .map((c) => ({ value: c._id, label: c.name || c.grade })),
     [schoolClasses]
   );
 
   const sectionOptions = useMemo(() =>
     sections
       .filter((s) => !form.schoolClassId || s.schoolClassId === form.schoolClassId)
+      .slice()
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
       .map((s) => ({ value: s._id, label: s.name })),
     [sections, form.schoolClassId]
   );
+
+  const stats = useMemo(() => {
+    const wholeClass = assignments.filter((a) => !a.sectionId).length;
+    const sectionLevel = assignments.length - wholeClass;
+    return {
+      total: assignments.length,
+      classesThisSession: schoolClasses.length,
+      wholeClass,
+      sectionLevel,
+    };
+  }, [assignments, schoolClasses]);
+
+  const filteredAssignments = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    const base = q
+      ? assignments.filter((a) => {
+          const teacher = (a.teacherId?.name || "").toLowerCase();
+          const cls = (a.schoolClassId?.name || a.schoolClassId?.grade || "").toLowerCase();
+          const sec = (a.sectionId?.name || "").toLowerCase();
+          return teacher.includes(q) || cls.includes(q) || sec.includes(q);
+        })
+      : assignments;
+
+    // The backend returns these in raw insertion order — sort by class (Nursery → Class 12), then
+    // by section within a class, so the table reads in the same order a school admin thinks in.
+    return [...base].sort((a, b) => {
+      const classDiff = compareClassNames(
+        a.schoolClassId?.name || a.schoolClassId?.grade,
+        b.schoolClassId?.name || b.schoolClassId?.grade
+      );
+      if (classDiff !== 0) return classDiff;
+      return (a.sectionId?.name || "").localeCompare(b.sectionId?.name || "");
+    });
+  }, [assignments, searchText]);
 
   const openModal = () => {
     setForm({ teacherId: null, schoolClassId: null, sectionId: null });
@@ -73,10 +170,10 @@ const ClassTeacherAssignmentPage = () => {
       return message.warning("Teacher and Class are required");
     }
     try {
-      await dispatch(assignClassTeacher(form)).unwrap();
+      await dispatch(assignClassTeacher({ ...form, academicYearId })).unwrap();
       message.success("Class teacher assigned");
       setModal({ open: false });
-      dispatch(fetchClassTeacherAssignments());
+      dispatch(fetchClassTeacherAssignments({ academicYearId }));
     } catch (e) {
       message.error(typeof e === "string" ? e : "Failed to assign");
     }
@@ -93,14 +190,19 @@ const ClassTeacherAssignmentPage = () => {
 
   const columns = [
     {
+      title: "#",
+      width: 48,
+      render: (_, __, index) => (
+        <span style={{ color: "var(--text-muted)", fontVariantNumeric: "tabular-nums" }}>
+          {(page - 1) * PAGE_SIZE + index + 1}
+        </span>
+      ),
+    },
+    {
       title: "Teacher",
       render: (_, r) => (
         <Space>
-          <div style={{
-            width: 34, height: 34, borderRadius: "50%", background: "#7c3aed22",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 700, color: "#7c3aed", fontSize: 14,
-          }}>
+          <div style={avatarStyle(r.teacherId?.name, 34)}>
             {(r.teacherId?.name || "?")[0].toUpperCase()}
           </div>
           <div>
@@ -117,17 +219,19 @@ const ClassTeacherAssignmentPage = () => {
     {
       title: "Class",
       render: (_, r) => (
-        <Tag color="blue">{r.schoolClassId?.name || r.schoolClassId?.grade || "—"}</Tag>
+        <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
+          {r.schoolClassId?.name || r.schoolClassId?.grade || "—"}
+        </span>
       ),
     },
     {
       title: "Section",
       render: (_, r) => r.sectionId?.name
-        ? <Tag color="cyan">{r.sectionId.name}</Tag>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>All sections</span>,
+        ? <span style={pill("#0D9488", "rgba(204,251,241,0.5)")}>{r.sectionId.name}</span>
+        : <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Whole class</span>,
     },
     {
-      title: "Academic Year",
+      title: "Session",
       render: (_, r) => (
         <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
           {r.academicYearId?.name || "—"}
@@ -157,14 +261,18 @@ const ClassTeacherAssignmentPage = () => {
     <div style={pageWrapper}>
       <PageHeader
         title="Class Teacher Assignments"
-        subtitle="Assign a teacher as class in-charge for each class/section"
+        subtitle={
+          selectedAcademicYear?.name
+            ? `Active session: ${selectedAcademicYear.name} — classes below are scoped to this session`
+            : "Assign a teacher as class in-charge for each class/section"
+        }
         icon={<GraduationCap size={20} />}
         extra={
-          <Space>
+          <Space wrap>
             <Tooltip title="Refresh">
               <Button
                 icon={<ReloadOutlined />}
-                onClick={() => dispatch(fetchClassTeacherAssignments())}
+                onClick={() => dispatch(fetchClassTeacherAssignments(academicYearId ? { academicYearId } : {}))}
               />
             </Tooltip>
             <Button type="primary" icon={<PlusOutlined />} onClick={openModal}>
@@ -174,33 +282,56 @@ const ClassTeacherAssignmentPage = () => {
         }
       />
 
+      <div style={{ ...statGrid(170), marginTop: 20 }}>
+        <StatCard icon={<Users size={18} />}        label="Assignments"        value={stats.total}            color="#7C3AED" />
+        <StatCard icon={<BookOpen size={18} />}      label="Classes This Session" value={stats.classesThisSession} color="#2563EB" />
+        <StatCard icon={<GraduationCap size={18} />} label="Whole-Class"         value={stats.wholeClass}       color="#15803D" />
+        <StatCard icon={<Layers size={18} />}        label="Section-Level"       value={stats.sectionLevel}     color="#0D9488" />
+      </div>
+
       <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <Spin spinning={loading}>
-          <Table
-            rowKey="_id"
-            columns={columns}
-            dataSource={assignments}
-            pagination={{ pageSize: 15, showSizeChanger: false }}
-            scroll={{ x: 700 }}
-            locale={{
-              emptyText: (
-                <div style={{ padding: "32px 0", color: "var(--text-muted)" }}>
-                  No class teacher assignments yet. Click "Assign Class Teacher" to begin.
-                </div>
-              ),
-            }}
+        <div style={toolbarRow}>
+          <Input
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search by teacher, class or section"
+            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            style={{ width: 280 }}
           />
-        </Spin>
+        </div>
+
+        <style>{tableHeadCss("cta-tbl")}</style>
+        <div className="cta-tbl" style={tableContainer}>
+          <Spin spinning={loading}>
+            <Table
+              rowKey="_id"
+              columns={columns}
+              dataSource={filteredAssignments}
+              pagination={{ current: page, pageSize: PAGE_SIZE, showSizeChanger: false, onChange: setPage }}
+              scroll={{ x: 700 }}
+              locale={{
+                emptyText: (
+                  <div style={{ padding: "32px 0" }}>
+                    <Empty
+                      description={
+                        searchText
+                          ? "No assignments match your search"
+                          : 'No class teacher assignments yet this session. Click "Assign Class Teacher" to begin.'
+                      }
+                    />
+                  </div>
+                ),
+              }}
+            />
+          </Spin>
+        </div>
       </div>
 
       {/* ── Assign Modal ── */}
       <Modal
         open={modal.open}
-        title={
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>
-            Assign Class Teacher
-          </span>
-        }
+        title={modalTitle(<GraduationCap size={18} />, "Assign Class Teacher", selectedAcademicYear?.name)}
         onOk={handleAssign}
         onCancel={() => setModal({ open: false })}
         okText="Assign"
@@ -233,6 +364,7 @@ const ClassTeacherAssignmentPage = () => {
               value={form.schoolClassId}
               onChange={(v) => setForm((f) => ({ ...f, schoolClassId: v, sectionId: null }))}
               options={classOptions}
+              notFoundContent="No classes in the active session"
             />
           </div>
 

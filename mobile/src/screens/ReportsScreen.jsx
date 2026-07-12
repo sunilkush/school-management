@@ -11,6 +11,7 @@ import { VerticalBarChart } from '../components/charts/VerticalBarChart';
 import { STAT_COLORS } from '../theme/patterns';
 import { roleColor } from '../utils/roleColors';
 import { SuperAdminReportsView } from './superAdmin/SuperAdminReportsView';
+import { AcademicReportsScreen } from './AcademicReportsScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useGetSchoolReportQuery } from '../store/api/apiSlice';
@@ -140,6 +141,11 @@ export function ReportsScreen() {
   }
   if (role?.name === 'Super Admin') {
     return <SuperAdminReports />;
+  }
+  // Subject Coordinator's web "Reports" page (ExamReport.jsx) is the same per-attempt exam-report
+  // row-list Principal's "Academic Reports" already covers — not the school-overview report above.
+  if (role?.name === 'Subject Coordinator') {
+    return <AcademicReportsScreen />;
   }
 
   return (

@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -1452,6 +1452,28 @@ export const apiSlice = createApi({
       query: (id) => ({ url: `/timetable/rooms/${id}`, method: 'delete' }),
       invalidatesTags: ['TimetableRoom'],
     }),
+
+    // IT Support — System Maintenance (real CRUD, /maintenance-tasks) and Network Status (a
+    // single unauthenticated /health ping, polled client-side; no create/update/delete).
+    getMaintenanceTasks: builder.query({
+      query: () => ({ url: '/maintenance-tasks' }),
+      providesTags: ['MaintenanceTask'],
+    }),
+    createMaintenanceTask: builder.mutation({
+      query: (payload) => ({ url: '/maintenance-tasks', method: 'post', data: payload }),
+      invalidatesTags: ['MaintenanceTask'],
+    }),
+    updateMaintenanceTask: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/maintenance-tasks/${id}`, method: 'patch', data: payload }),
+      invalidatesTags: ['MaintenanceTask'],
+    }),
+    deleteMaintenanceTask: builder.mutation({
+      query: (id) => ({ url: `/maintenance-tasks/${id}`, method: 'delete' }),
+      invalidatesTags: ['MaintenanceTask'],
+    }),
+    getHealthStatus: builder.query({
+      query: () => ({ url: '/health' }),
+    }),
   }),
 });
 
@@ -1735,4 +1757,9 @@ export const {
   useRunRestoreJobMutation,
   useGetAuditLogsQuery,
   useGetAuditLogFiltersQuery,
+  useGetMaintenanceTasksQuery,
+  useCreateMaintenanceTaskMutation,
+  useUpdateMaintenanceTaskMutation,
+  useDeleteMaintenanceTaskMutation,
+  useGetHealthStatusQuery,
 } = apiSlice;

@@ -1,17 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Select, Button, Input, message, Switch, Skeleton } from "antd";
+import { Select, Button, Input, message, Switch, Skeleton, Popconfirm, Tooltip } from "antd";
 import {
   AppstoreOutlined,
   PlusOutlined,
+  DeleteOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { getSchoolBoards } from "../../../features/boardSlice";
 import { getBoardClass } from "../../../features/boardClassSlice";
 import {
   createSchoolClass,
+  deleteSchoolClass,
   fetchSchoolClasses,
 } from "../../../features/schoolClassSlice";
-import { createSection } from "../../../features/sectionSlice";
+import { createSection, deleteSection, fetchSections } from "../../../features/sectionSlice";
 import { useTheme } from "../../../context/ThemeContext";
 
 const tokens = (isDark) => ({
@@ -64,6 +67,7 @@ const SchoolClass = ({ next }) => {
   const boardState = useSelector((s) => s.boards || {});
   const schoolClassState = useSelector((s) => s.schoolClass || {});
   const academicYearState = useSelector((s) => s.academicYear || {});
+  const sectionState = useSelector((s) => s.sections || {});
   const user = useSelector((s) => s.auth?.user || {});
 
   const boardClass = useMemo(
@@ -78,6 +82,17 @@ const SchoolClass = ({ next }) => {
     () => safeArray(schoolClassState.schoolClasses),
     [schoolClassState.schoolClasses]
   );
+  // Full section docs (student enrollments included) — the class list response only carries a
+  // trimmed { _id, name, teacher, subjects } shape per section, not enough to know if it's safe
+  // to delete, so this is fetched separately just for that check.
+  const fullSections = useMemo(
+    () => safeArray(sectionState.sections),
+    [sectionState.sections]
+  );
+  const sectionStudentCount = (sectionId) => {
+    const full = fullSections.find((s) => s?._id === sectionId);
+    return full?.studentEnrollmentIds?.length || full?.StudentEnrollmentId?.length || 0;
+  };
 
   const loading = Boolean(
     boardClassState.loading ||
@@ -101,6 +116,7 @@ const SchoolClass = ({ next }) => {
 
     if (academicYearId) {
       dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+      dispatch(fetchSections({ schoolId, academicYearId }));
     }
   }, [dispatch, schoolId, academicYearId]);
 
@@ -194,6 +210,52 @@ const SchoolClass = ({ next }) => {
       message.error(safeMessage(err, "Failed to create sections"));
     } finally {
       setSaving((p) => ({ ...p, [`sec_${boardClassId}`]: false }));
+    }
+  };
+
+  // The backend hard-deletes with no guard of its own: deleting a class that still has sections
+  // would orphan those Section docs (nothing left cleans up their schoolClassId reference), and
+  // deleting a section that still has enrolled students would orphan those enrollments. Both are
+  // blocked here since nothing downstream checks for either case.
+  const handleDeleteClass = async (record) => {
+    const cls = getClass(record);
+    if (!cls?._id) return;
+
+    const sections = getSections(record);
+    if (sections.length > 0) {
+      return message.warning("Remove all sections from this class first");
+    }
+
+    setSaving((p) => ({ ...p, [record._id]: true }));
+    try {
+      await dispatch(deleteSchoolClass(cls._id)).unwrap();
+      message.success("Class removed");
+      dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+    } catch (err) {
+      message.error(safeMessage(err, "Failed to remove class"));
+    } finally {
+      setSaving((p) => ({ ...p, [record._id]: false }));
+    }
+  };
+
+  const handleDeleteSection = async (section) => {
+    const studentCount = sectionStudentCount(section._id);
+    if (studentCount > 0) {
+      return message.warning(
+        `This section has ${studentCount} student${studentCount > 1 ? "s" : ""} enrolled — move or remove them first`
+      );
+    }
+
+    setSaving((p) => ({ ...p, [`del_sec_${section._id}`]: true }));
+    try {
+      await dispatch(deleteSection(section._id)).unwrap();
+      message.success("Section removed");
+      dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+      dispatch(fetchSections({ schoolId, academicYearId }));
+    } catch (err) {
+      message.error(safeMessage(err, "Failed to remove section"));
+    } finally {
+      setSaving((p) => ({ ...p, [`del_sec_${section._id}`]: false }));
     }
   };
 
@@ -337,12 +399,35 @@ const SchoolClass = ({ next }) => {
                         </td>
 
                         <td style={{ textAlign: "center" }}>
-                          <Switch
-                            checked={assigned}
-                            loading={saving[record._id]}
-                            onChange={() => handleToggle(record)}
-                            size="small"
-                          />
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                            <Switch
+                              checked={assigned}
+                              loading={saving[record._id]}
+                              onChange={() => handleToggle(record)}
+                              size="small"
+                            />
+                            {assigned && (
+                              <Tooltip title={sections.length ? "Remove all sections first" : "Remove this class"}>
+                                <Popconfirm
+                                  title="Remove this class?"
+                                  disabled={sections.length > 0}
+                                  okText="Yes, Remove"
+                                  cancelText="Cancel"
+                                  okButtonProps={{ danger: true }}
+                                  onConfirm={() => handleDeleteClass(record)}
+                                >
+                                  <Button
+                                    type="text"
+                                    size="small"
+                                    danger
+                                    disabled={sections.length > 0}
+                                    icon={<DeleteOutlined style={{ fontSize: 12 }} />}
+                                    style={{ height: 20, padding: "0 4px" }}
+                                  />
+                                </Popconfirm>
+                              </Tooltip>
+                            )}
+                          </div>
                         </td>
 
                         <td style={{ padding: "14px 16px" }}>
@@ -374,20 +459,44 @@ const SchoolClass = ({ next }) => {
                                 }}
                               >
                                 {sections.length ? (
-                                  sections.map((sec) => (
-                                    <span
-                                      key={sec?._id}
-                                      style={{
-                                        fontSize: 11,
-                                        color: t.accent,
-                                        background: t.accentBg,
-                                        padding: "2px 8px",
-                                        borderRadius: 99,
-                                      }}
-                                    >
-                                      {safeText(sec?.name)}
-                                    </span>
-                                  ))
+                                  sections.map((sec) => {
+                                    const studentCount = sectionStudentCount(sec._id);
+                                    return (
+                                      <span
+                                        key={sec?._id}
+                                        style={{
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: 4,
+                                          fontSize: 11,
+                                          color: t.accent,
+                                          background: t.accentBg,
+                                          padding: "2px 4px 2px 8px",
+                                          borderRadius: 99,
+                                        }}
+                                      >
+                                        {safeText(sec?.name)}
+                                        <Tooltip title={studentCount ? `${studentCount} student(s) enrolled — move them first` : "Remove section"}>
+                                          <Popconfirm
+                                            title="Remove this section?"
+                                            disabled={studentCount > 0}
+                                            okText="Yes, Remove"
+                                            cancelText="Cancel"
+                                            okButtonProps={{ danger: true }}
+                                            onConfirm={() => handleDeleteSection(sec)}
+                                          >
+                                            <CloseOutlined
+                                              style={{
+                                                fontSize: 9,
+                                                cursor: studentCount ? "not-allowed" : "pointer",
+                                                opacity: studentCount ? 0.4 : 0.75,
+                                              }}
+                                            />
+                                          </Popconfirm>
+                                        </Tooltip>
+                                      </span>
+                                    );
+                                  })
                                 ) : (
                                   <span
                                     style={{ fontSize: 11, color: t.textSec }}
@@ -474,12 +583,32 @@ const SchoolClass = ({ next }) => {
                       {safeText(record?.classId?.name)}
                     </span>
 
-                    <Switch
-                      checked={assigned}
-                      loading={saving[record._id]}
-                      size="small"
-                      onChange={() => handleToggle(record)}
-                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {assigned && (
+                        <Popconfirm
+                          title="Remove this class?"
+                          disabled={sections.length > 0}
+                          okText="Yes, Remove"
+                          cancelText="Cancel"
+                          okButtonProps={{ danger: true }}
+                          onConfirm={() => handleDeleteClass(record)}
+                        >
+                          <Button
+                            type="text"
+                            size="small"
+                            danger
+                            disabled={sections.length > 0}
+                            icon={<DeleteOutlined style={{ fontSize: 12 }} />}
+                          />
+                        </Popconfirm>
+                      )}
+                      <Switch
+                        checked={assigned}
+                        loading={saving[record._id]}
+                        size="small"
+                        onChange={() => handleToggle(record)}
+                      />
+                    </div>
                   </div>
 
                   {!assigned ? (
@@ -490,20 +619,42 @@ const SchoolClass = ({ next }) => {
                     <>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                         {sections.length ? (
-                          sections.map((sec) => (
-                            <span
-                              key={sec?._id}
-                              style={{
-                                fontSize: 11,
-                                background: t.accentBg,
-                                color: t.accent,
-                                padding: "2px 8px",
-                                borderRadius: 99,
-                              }}
-                            >
-                              {safeText(sec?.name)}
-                            </span>
-                          ))
+                          sections.map((sec) => {
+                            const studentCount = sectionStudentCount(sec._id);
+                            return (
+                              <span
+                                key={sec?._id}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  fontSize: 11,
+                                  background: t.accentBg,
+                                  color: t.accent,
+                                  padding: "2px 4px 2px 8px",
+                                  borderRadius: 99,
+                                }}
+                              >
+                                {safeText(sec?.name)}
+                                <Popconfirm
+                                  title="Remove this section?"
+                                  disabled={studentCount > 0}
+                                  okText="Yes, Remove"
+                                  cancelText="Cancel"
+                                  okButtonProps={{ danger: true }}
+                                  onConfirm={() => handleDeleteSection(sec)}
+                                >
+                                  <CloseOutlined
+                                    style={{
+                                      fontSize: 9,
+                                      cursor: studentCount ? "not-allowed" : "pointer",
+                                      opacity: studentCount ? 0.4 : 0.75,
+                                    }}
+                                  />
+                                </Popconfirm>
+                              </span>
+                            );
+                          })
                         ) : (
                           <span style={{ fontSize: 11 }}>No sections</span>
                         )}

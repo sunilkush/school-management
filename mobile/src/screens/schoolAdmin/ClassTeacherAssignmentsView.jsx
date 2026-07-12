@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Button, Chip, Snackbar, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
@@ -12,6 +12,26 @@ import {
   useGetAllUsersQuery,
   useAssignClassTeacherMutation,
 } from '../../store/api/apiSlice';
+
+// Class names are plain strings like "Class 10", "Nursery", "UKG" — a plain alphabetical sort
+// would put "Class 10" before "Class 2". Pre-primary names get a fixed rank ahead of any numbered
+// class (matching real school progression); numbered classes sort on the number they contain;
+// anything unrecognized falls back to alphabetical, after the numbered classes. Mirrors the same
+// comparator added to the web app's class-teacher screens.
+const PRE_PRIMARY_RANK = { 'pre-nursery': 0, playgroup: 1, nursery: 2, lkg: 3, kg: 3, ukg: 4 };
+
+function classSortKey(name) {
+  const n = (name || '').trim().toLowerCase();
+  if (n in PRE_PRIMARY_RANK) return PRE_PRIMARY_RANK[n];
+  const match = n.match(/(\d+)/);
+  if (match) return 100 + Number(match[1]);
+  return 9999;
+}
+
+function compareClassNames(a, b) {
+  const diff = classSortKey(a) - classSortKey(b);
+  return diff !== 0 ? diff : (a || '').localeCompare(b || '');
+}
 
 /** Assign (or reassign) a section's class teacher — covers the web sidebar's "Class Teacher
  * Assignments" item via POST /sections/assign-teacher. Pick a class, then a section, then a
@@ -27,9 +47,17 @@ export function ClassTeacherAssignmentsView() {
   const [snackbar, setSnackbar] = useState('');
 
   const classesQuery = useGetSchoolClassesQuery({ schoolId, academicYearId }, { skip: !schoolId });
-  const classes = classesQuery.data ?? [];
+  const classesRaw = classesQuery.data ?? [];
+  const classes = useMemo(
+    () => [...classesRaw].sort((a, b) => compareClassNames(a.name, b.name)),
+    [classesRaw]
+  );
   const selectedClass = classes.find((c) => c._id === classId);
-  const sections = selectedClass?.sections ?? [];
+  const sectionsRaw = selectedClass?.sections ?? [];
+  const sections = useMemo(
+    () => [...sectionsRaw].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [sectionsRaw]
+  );
   const selectedSection = sections.find((s) => s._id === sectionId);
 
   const teachersQuery = useGetAllUsersQuery({ schoolId, academicYearId, roleName: 'Teacher' }, { skip: !schoolId });
@@ -43,6 +71,15 @@ export function ClassTeacherAssignmentsView() {
       setSnackbar('Class teacher assigned');
     } catch (err) {
       setSnackbar(err?.data?.message || 'Failed to assign class teacher');
+    }
+  };
+
+  const handleUnassign = async () => {
+    try {
+      await assignClassTeacher({ sectionId, teacherId: null }).unwrap();
+      setSnackbar('Class teacher removed');
+    } catch (err) {
+      setSnackbar(err?.data?.message || 'Failed to remove class teacher');
     }
   };
 
@@ -80,11 +117,21 @@ export function ClassTeacherAssignmentsView() {
         )}
 
         {selectedSection && (
-          <View style={{ marginBottom: spacing.md, padding: spacing.md, borderRadius: 12, backgroundColor: colors.surfaceSoft }}>
-            <Text style={[typography.caption, { color: colors.textMuted }]}>CURRENT CLASS TEACHER</Text>
-            <Text style={[typography.bodyStrong, { color: colors.text, marginTop: 2 }]}>
-              {selectedSection.teacher?.name ?? 'Unassigned'}
-            </Text>
+          <View style={{
+            marginBottom: spacing.md, padding: spacing.md, borderRadius: 12, backgroundColor: colors.surfaceSoft,
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm,
+          }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[typography.caption, { color: colors.textMuted }]}>CURRENT CLASS TEACHER</Text>
+              <Text style={[typography.bodyStrong, { color: colors.text, marginTop: 2 }]}>
+                {selectedSection.teacher?.name ?? 'Unassigned'}
+              </Text>
+            </View>
+            {selectedSection.teacher && (
+              <Button mode="text" compact textColor={colors.danger} disabled={isAssigning} onPress={handleUnassign}>
+                Unassign
+              </Button>
+            )}
           </View>
         )}
 

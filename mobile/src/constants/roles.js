@@ -13,6 +13,9 @@ export const ROLE_NAMES = {
   HOSTEL_WARDEN: 'Hostel Warden',
   TRANSPORT_MANAGER: 'Transport Manager',
   RECEPTIONIST: 'Receptionist',
+  EXAM_COORDINATOR: 'Exam Coordinator',
+  SUBJECT_COORDINATOR: 'Subject Coordinator',
+  IT_SUPPORT: 'IT Support',
 };
 
 // Label + icon (MaterialCommunityIcons) for every nav destination used below. Beyond the handful
@@ -32,6 +35,10 @@ export const MODULE_META = {
   Subjects: { label: 'Subjects', icon: 'book-open-variant' },
   Timetable: { label: 'Timetable', icon: 'calendar-clock-outline' },
   Exams: { label: 'Exams', icon: 'pencil-box-outline' },
+  Assessments: { label: 'Assessments', icon: 'clipboard-text-outline' },
+  SystemMaintenance: { label: 'System Maintenance', icon: 'wrench-outline' },
+  NetworkStatus: { label: 'Network Status', icon: 'wifi' },
+  SystemLogs: { label: 'System Logs', icon: 'console-line' },
   Assignments: { label: 'Homework', icon: 'clipboard-text-outline' },
   Attendance: { label: 'Attendance', icon: 'clipboard-check-outline' },
   Fees: { label: 'Fees', icon: 'cash-multiple' },
@@ -329,6 +336,45 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'VisitorManagement', 'Enquiries', 'PhoneCallsLog', 'Broadcasts',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.EXAM_COORDINATOR]: {
+    unrestricted: true,
+    items: [
+      'Dashboard',
+      // 'PaperBuilder' deliberately omitted — confirmed the Exam model has no paperBlueprint
+      // field, so the "paper" a user builds silently vanishes on save under Mongoose's strict
+      // mode (real network calls, no persisted content). Same reason it's still a dangling,
+      // unmapped key for School Admin. Not worth wiring to a screen that would just replicate
+      // that backend bug.
+      { group: 'Exam Operations', icon: 'pencil-box-outline', items: ['Exams', 'CreateExam', 'ExamSchedule', 'QuestionBank', 'AdmitCard', 'SeatPlan', 'GradeEntry', 'ExamAnalytics', 'ExamReports'] },
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.SUBJECT_COORDINATOR]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'Subjects', 'Teachers', 'Classes', 'Assessments', 'Reports',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.IT_SUPPORT]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'SystemMaintenance',
+      // Web's sidebar gives this role BOTH a dedicated "User Support Tickets" item AND an
+      // auto-appended generic "Support Center" group pointing at the exact same ticket page —
+      // that's a literal duplicate destination on web, not two different features. Kept once
+      // here as 'SupportTickets', with 'Documentation' (the other half of that auto-appended
+      // group) listed alongside it rather than re-referencing the same key twice.
+      'SupportTickets', 'NetworkStatus', 'SystemLogs', 'Documentation',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       'Profile',
     ],
   },
