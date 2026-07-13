@@ -12,6 +12,7 @@ import { STAT_COLORS } from '../theme/patterns';
 import { roleColor } from '../utils/roleColors';
 import { SuperAdminReportsView } from './superAdmin/SuperAdminReportsView';
 import { AcademicReportsScreen } from './AcademicReportsScreen';
+import { CounselorReportsView } from './counselor/CounselorReportsView';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useGetSchoolReportQuery } from '../store/api/apiSlice';
@@ -37,6 +38,24 @@ function SuperAdminReports() {
         </View>
       </View>
       <SuperAdminReportsView />
+    </ScreenContainer>
+  );
+}
+
+function CounselorReports() {
+  const { colors, typography, spacing } = useAppTheme();
+  return (
+    <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="chart-box-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Reports</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Counseling activity overview
+          </Text>
+        </View>
+      </View>
+      <CounselorReportsView />
     </ScreenContainer>
   );
 }
@@ -146,6 +165,9 @@ export function ReportsScreen() {
   // row-list Principal's "Academic Reports" already covers — not the school-overview report above.
   if (role?.name === 'Subject Coordinator') {
     return <AcademicReportsScreen />;
+  }
+  if (role?.name === 'Counselor') {
+    return <CounselorReports />;
   }
 
   return (

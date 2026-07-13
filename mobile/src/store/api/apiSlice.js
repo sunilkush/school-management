@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -1474,6 +1474,57 @@ export const apiSlice = createApi({
     getHealthStatus: builder.query({
       query: () => ({ url: '/health' }),
     }),
+
+    // Counselor — Counseling Sessions and Appointments are the SAME CounselingSession model/
+    // endpoints, just filtered by `type` ("Session" vs "Appointment"); Student Profiles has no
+    // dedicated backend of its own either — the web page derives a synthetic per-student list by
+    // grouping these same session records client-side, and Reports reads the /stats aggregation.
+    getCounselingSessions: builder.query({
+      query: (params) => ({ url: '/counseling-sessions', params }),
+      providesTags: ['CounselingSession'],
+    }),
+    getCounselingSessionStats: builder.query({
+      query: () => ({ url: '/counseling-sessions/stats' }),
+      providesTags: ['CounselingSession'],
+    }),
+    createCounselingSession: builder.mutation({
+      query: (payload) => ({ url: '/counseling-sessions', method: 'post', data: payload }),
+      invalidatesTags: ['CounselingSession'],
+    }),
+    updateCounselingSession: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/counseling-sessions/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['CounselingSession'],
+    }),
+    deleteCounselingSession: builder.mutation({
+      query: (id) => ({ url: `/counseling-sessions/${id}`, method: 'delete' }),
+      invalidatesTags: ['CounselingSession'],
+    }),
+
+    // Security — Emergency Alerts (real CRUD, /emergency-alerts, distinct from GateEntry's
+    // Entry Register/Gate Logs above which already reuse VisitorManagementScreen).
+    getEmergencyAlerts: builder.query({
+      query: (params) => ({ url: '/emergency-alerts', params }),
+      providesTags: ['EmergencyAlert'],
+    }),
+    raiseEmergencyAlert: builder.mutation({
+      query: (payload) => ({ url: '/emergency-alerts', method: 'post', data: payload }),
+      invalidatesTags: ['EmergencyAlert'],
+    }),
+    resolveEmergencyAlert: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/emergency-alerts/${id}/resolve`, method: 'patch', data: payload }),
+      invalidatesTags: ['EmergencyAlert'],
+    }),
+    deleteEmergencyAlert: builder.mutation({
+      query: (id) => ({ url: `/emergency-alerts/${id}`, method: 'delete' }),
+      invalidatesTags: ['EmergencyAlert'],
+    }),
+
+    // Class Teacher — "My Class" reads the ClassTeacherAssignment collection directly (a
+    // different, richer model than Section.classTeacherId used by AssignedClasses/MyStudents),
+    // via the same /class-teacher-assignments API the web ClassTeacherAssignmentPage.jsx uses.
+    getMyClassTeacherAssignment: builder.query({
+      query: () => ({ url: '/class-teacher-assignments/my' }),
+    }),
   }),
 });
 
@@ -1762,4 +1813,14 @@ export const {
   useUpdateMaintenanceTaskMutation,
   useDeleteMaintenanceTaskMutation,
   useGetHealthStatusQuery,
+  useGetCounselingSessionsQuery,
+  useGetCounselingSessionStatsQuery,
+  useCreateCounselingSessionMutation,
+  useUpdateCounselingSessionMutation,
+  useDeleteCounselingSessionMutation,
+  useGetEmergencyAlertsQuery,
+  useRaiseEmergencyAlertMutation,
+  useResolveEmergencyAlertMutation,
+  useDeleteEmergencyAlertMutation,
+  useGetMyClassTeacherAssignmentQuery,
 } = apiSlice;

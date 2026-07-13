@@ -16,6 +16,14 @@ export const ROLE_NAMES = {
   EXAM_COORDINATOR: 'Exam Coordinator',
   SUBJECT_COORDINATOR: 'Subject Coordinator',
   IT_SUPPORT: 'IT Support',
+  COUNSELOR: 'Counselor',
+  SECURITY: 'Security',
+  STAFF: 'Staff',
+  SUPPORT_STAFF: 'Support Staff',
+  SPORTS_TEACHER: 'Sports Teacher',
+  LAB_TECHNICIAN: 'Lab Technician',
+  MEDICAL_OFFICER: 'Medical Officer',
+  CLASS_TEACHER: 'Class Teacher',
 };
 
 // Label + icon (MaterialCommunityIcons) for every nav destination used below. Beyond the handful
@@ -36,9 +44,18 @@ export const MODULE_META = {
   Timetable: { label: 'Timetable', icon: 'calendar-clock-outline' },
   Exams: { label: 'Exams', icon: 'pencil-box-outline' },
   Assessments: { label: 'Assessments', icon: 'clipboard-text-outline' },
+  MyStudents: { label: 'My Students', icon: 'account-group-outline' },
+  MyClass: { label: 'My Class', icon: 'book-open-variant' },
   SystemMaintenance: { label: 'System Maintenance', icon: 'wrench-outline' },
   NetworkStatus: { label: 'Network Status', icon: 'wifi' },
   SystemLogs: { label: 'System Logs', icon: 'console-line' },
+  StudentProfiles: { label: 'Student Profiles', icon: 'account-heart-outline' },
+  CounselingSessions: { label: 'Counseling Sessions', icon: 'calendar-clock-outline' },
+  Appointments: { label: 'Appointments', icon: 'calendar-check-outline' },
+  EntryRegister: { label: 'Entry Register', icon: 'clipboard-text-outline' },
+  GateLogs: { label: 'Gate Logs', icon: 'clipboard-list-outline' },
+  ShiftAttendance: { label: 'Shift Attendance', icon: 'clock-outline' },
+  EmergencyAlerts: { label: 'Emergency Alerts', icon: 'shield-alert-outline' },
   Assignments: { label: 'Homework', icon: 'clipboard-text-outline' },
   Attendance: { label: 'Attendance', icon: 'clipboard-check-outline' },
   Fees: { label: 'Fees', icon: 'cash-multiple' },
@@ -375,6 +392,96 @@ export const NAV_CONFIG = {
       // group) listed alongside it rather than re-referencing the same key twice.
       'SupportTickets', 'NetworkStatus', 'SystemLogs', 'Documentation',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.COUNSELOR]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'StudentProfiles', 'CounselingSessions', 'Appointments', 'Reports',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.SECURITY]: {
+    unrestricted: true,
+    items: [
+      'Dashboard',
+      // Entry Register and Gate Logs are the same GateEntry model shown two ways on web (one
+      // write-capable, one read-only+stats) — mobile's VisitorManagementScreen already covers
+      // the union of both, reused once under each label rather than rebuilt as two screens.
+      'EntryRegister', 'GateLogs', 'ShiftAttendance', 'EmergencyAlerts',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'Leave',
+      { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
+      'Profile',
+    ],
+  },
+  // Staff and Support Staff have identical resolved web sidebars (Support Staff's only extra is
+  // the confirmed-dead Role Workspace item, skipped here same as every other role that has it) —
+  // both fully covered by screens every other role already exercises, no new work needed.
+  [ROLE_NAMES.STAFF]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'MyTasks', 'MyAttendance', 'GpsCheckInOut', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.SUPPORT_STAFF]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'MyTasks', 'MyAttendance', 'GpsCheckInOut', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.SPORTS_TEACHER]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'AssignedClasses', 'MyStudents', 'Attendance', 'Assignments',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
+      'Profile',
+    ],
+  },
+  [ROLE_NAMES.LAB_TECHNICIAN]: {
+    unrestricted: true,
+    items: [
+      // "Lab Students" reuses the same class-teacher-only MyClassStudentsView as Sports Teacher —
+      // confirmed Lab Technician is never assignable as a section's class/subject teacher
+      // anywhere in this app, so this will correctly always show the "not assigned" empty state
+      // rather than real data, matching the real web app's own behavior for this role.
+      'Dashboard', 'MyStudents', 'Timetable',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
+      'Profile',
+    ],
+  },
+  // Confirmed via frontend/src/main.jsx: medicalofficer/students routes to the exact same
+  // <MyStudents /> component as Sports Teacher/Lab Technician — same class-teacher-only reuse,
+  // and Medical Officer is equally absent from every teacher-assignment-eligible role list found
+  // during that research, so it stays out of the backend's ASSIGNMENT_SCOPED_ROLES set too.
+  [ROLE_NAMES.MEDICAL_OFFICER]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'MyStudents',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
+      'Profile',
+    ],
+  },
+  // The last of the roles sharing the "My Students" gap — but unlike Sports Teacher/Lab
+  // Technician/Medical Officer, "class teacher" was already in the backend's
+  // ASSIGNMENT_SCOPED_ROLES set (added during the Sports Teacher batch, evidence-backed by
+  // ClassTeacherAssignmentPage.jsx's own teacherOptions filter), so this role's MyStudents
+  // screen will show real data whenever an admin has actually assigned them to a section.
+  [ROLE_NAMES.CLASS_TEACHER]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'MyClass', 'MyStudents', 'Attendance', 'Assignments', 'Timetable',
+      'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },

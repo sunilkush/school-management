@@ -56,6 +56,10 @@ import { BackupsScreen } from '../screens/BackupsScreen';
 import { AuditLogsScreen } from '../screens/AuditLogsScreen';
 import { SystemMaintenanceScreen } from '../screens/SystemMaintenanceScreen';
 import { NetworkStatusScreen } from '../screens/NetworkStatusScreen';
+import { CounselorStudentsView } from '../screens/counselor/CounselorStudentsView';
+import { CounselingSessionsScreen } from '../screens/CounselingSessionsScreen';
+import { AppointmentsScreen } from '../screens/AppointmentsScreen';
+import { EmergencyAlertsScreen } from '../screens/EmergencyAlertsScreen';
 import { BooksScreen } from '../screens/BooksScreen';
 import { RoutesScreen } from '../screens/RoutesScreen';
 import { VehiclesScreen } from '../screens/VehiclesScreen';
@@ -73,6 +77,8 @@ import { ModulePlaceholderScreen } from '../screens/ModulePlaceholderScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { GroupMenuScreen } from '../screens/GroupMenuScreen';
 import { AssignedClassesView } from '../screens/teacher/AssignedClassesView';
+import { MyClassStudentsView } from '../screens/teacher/MyClassStudentsView';
+import { MyClassView } from '../screens/teacher/MyClassView';
 import { LessonPlansView } from '../screens/teacher/LessonPlansView';
 import { StudyMaterialsView } from '../screens/teacher/StudyMaterialsView';
 import { MyTasksView } from '../screens/teacher/MyTasksView';
@@ -172,6 +178,11 @@ const SCREEN_MAP = {
   // ["Super Admin","School Admin","IT Support","Principal"], and ActivityLogsScreen is already
   // role-agnostic — its only role check is the Super-Admin-only delete button).
   SystemLogs: ActivityLogsScreen,
+  // Counselor — no dedicated backend for Student Profiles; derived client-side from
+  // CounselingSession records (see CounselorStudentsView's own header comment).
+  StudentProfiles: CounselorStudentsView,
+  CounselingSessions: CounselingSessionsScreen,
+  Appointments: AppointmentsScreen,
   // Web's own ContactSupport page is a non-functional local-only mock (its "Submit a Ticket" form
   // never calls an API) — reusing the real, already-working ticket flow instead of building a fake
   // form that would silently do nothing.
@@ -193,6 +204,10 @@ const SCREEN_MAP = {
   Vehicles: VehiclesScreen,
   FuelMaintenance: FuelMaintenanceScreen,
   VisitorManagement: VisitorManagementScreen,
+  // Security — same GateEntry model/screen as Receptionist's Visitor Management, just under two
+  // different sidebar labels (see NAV_CONFIG's own comment on this for why one screen, not two).
+  EntryRegister: VisitorManagementScreen,
+  GateLogs: VisitorManagementScreen,
   PhoneCallsLog: PhoneCallsLogScreen,
   Rooms: RoomsScreen,
   Allocations: AllocationsScreen,
@@ -219,6 +234,8 @@ const SCREEN_MAP = {
   Events: EventsScreen,
   // Teacher — built this batch (see constants/roles.js NAV_CONFIG.Teacher for the full item list).
   AssignedClasses: AssignedClassesView,
+  MyStudents: MyClassStudentsView,
+  MyClass: MyClassView,
   LessonPlans: LessonPlansView,
   SubjectResources: StudyMaterialsView,
   MyTasks: MyTasksView,
@@ -231,6 +248,10 @@ const SCREEN_MAP = {
   // (Accountant, Principal, VP, Librarian, Hostel Warden, Transport Manager, Receptionist), all of
   // which had this exact key dangling with no SCREEN_MAP entry until now.
   MyAttendance: SelfAttendanceHistoryView,
+  // Security — "Shift Attendance" is web's own relabeling of the identical MyAttendancePage
+  // component every other role calls "My Attendance"; no shift-roster/scheduling logic exists.
+  ShiftAttendance: SelfAttendanceHistoryView,
+  EmergencyAlerts: EmergencyAlertsScreen,
   QuestionBank: QuestionBankView,
   Evaluation: EvaluationView,
   ExamReports: ExamReportsView,

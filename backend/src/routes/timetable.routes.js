@@ -51,7 +51,7 @@ router.put("/rooms/:id",    roleMiddleware(TIMETABLE_MANAGE), updateRoom);
 router.delete("/rooms/:id", roleMiddleware(TIMETABLE_MANAGE), deleteRoom);
 
 // Self-service views
-router.get("/teacher/my",                              roleMiddleware(["Teacher", "Subject Coordinator", "Exam Coordinator"]), myTeacherTimetable);
+router.get("/teacher/my",                              roleMiddleware(["Teacher", "Subject Coordinator", "Exam Coordinator", "Lab Technician", "Class Teacher"]), myTeacherTimetable);
 router.get("/student/my",                              roleMiddleware(["Student"]),                                            myStudentTimetable);
 router.get("/parent/child/:studentId",                 roleMiddleware(["Parent"]),                                             childTimetable);
 router.get("/class-section/:schoolClassId/:sectionId", roleMiddleware(TIMETABLE_READ),                                        classSectionTimetable);

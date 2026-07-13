@@ -13,7 +13,7 @@ const router = Router();
 
 const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
-const READ_ROLES = ["Super Admin", "School Admin", "Teacher", "Exam Coordinator", "Subject Coordinator", "Principal", "Vice Principal"];
+const READ_ROLES = ["Super Admin", "School Admin", "Teacher", "Exam Coordinator", "Subject Coordinator", "Principal", "Vice Principal", "Sports Teacher", "Class Teacher"];
 
 router.post("/", auth,requireRoles(ADMIN_ONLY), createClass);
 router.get("/", auth,requireRoles(READ_ROLES), getAllClasses);

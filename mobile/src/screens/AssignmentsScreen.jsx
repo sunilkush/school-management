@@ -12,7 +12,10 @@ import { useAppHeaderOptions } from '../navigation/headerOptions';
 function HomeworkMain({ navigation }) {
   const { role } = useAuth();
 
-  if (role?.name === 'Teacher') return <TeacherHomeworkView navigation={navigation} />;
+  // Sports Teacher/Class Teacher's web "Assignments" reuses the identical Teacher Assignments.jsx
+  // component (full create/edit/delete/grade CRUD, not a read-only view) — now backend-permitted
+  // for both roles too (studentPortal.routes.js's ADMIN_AND_TEACHER, class.routes.js's READ_ROLES).
+  if (['Teacher', 'Sports Teacher', 'Class Teacher'].includes(role?.name)) return <TeacherHomeworkView navigation={navigation} />;
   if (role?.name === 'Student') return <StudentHomeworkView />;
   if (role?.name === 'Parent') return <ParentHomeworkView />;
 

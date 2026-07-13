@@ -183,7 +183,12 @@ function PrincipalTimetableView() {
 
 // Vice Principal's web "timetable" route points at the exact same <PrincipalTimetableOverview />
 // component as Principal's — confirmed via frontend/src/main.jsx, both roles share it verbatim.
-const HANDLED_ROLES = new Set(['Student', 'Teacher', 'Parent', 'School Admin', 'Principal', 'Vice Principal']);
+// Lab Technician's "Lab Schedule" and Class Teacher's "Timetable" are not distinct features at
+// all — both are the identical TeacherTimetablePage.jsx/GET /timetable/teacher/my feature Teacher
+// uses, just relabeled; backend's allow-list on that route didn't include either role until this
+// session's batches.
+const HANDLED_ROLES = new Set(['Student', 'Teacher', 'Parent', 'School Admin', 'Principal', 'Vice Principal', 'Lab Technician', 'Class Teacher']);
+const TEACHER_TIMETABLE_ROLES = new Set(['Teacher', 'Lab Technician', 'Class Teacher']);
 
 export function TimetableScreen() {
   const { role } = useAuth();
@@ -191,7 +196,7 @@ export function TimetableScreen() {
   return (
     <ScreenContainer scrollable>
       {role?.name === 'Student' && <StudentTimetableView />}
-      {role?.name === 'Teacher' && <TeacherTimetableView />}
+      {TEACHER_TIMETABLE_ROLES.has(role?.name) && <TeacherTimetableView />}
       {role?.name === 'Parent' && <ParentTimetableView />}
       {role?.name === 'School Admin' && <SchoolAdminTimetableView />}
       {(role?.name === 'Principal' || role?.name === 'Vice Principal') && <PrincipalTimetableView />}
