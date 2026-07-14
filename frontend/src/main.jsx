@@ -424,6 +424,9 @@ const router = createBrowserRouter([
                   "Counselor",
                   "Security",
                   "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
                 ]}
               >
                 <ModuleOverview />
@@ -455,6 +458,9 @@ const router = createBrowserRouter([
                   "Counselor",
                   "Security",
                   "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
                 ]}
               >
                 <ModuleDetail />
@@ -486,6 +492,9 @@ const router = createBrowserRouter([
                   "Counselor",
                   "Security",
                   "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
                 ]}
               >
                 <SupportTicketsPage />
@@ -1107,6 +1116,9 @@ const router = createBrowserRouter([
                   "Counselor",
                   "Security",
                   "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
                 ]}
               >
                 <RoleWorkspace />
@@ -1117,6 +1129,57 @@ const router = createBrowserRouter([
             path: "classteacher",
             element: (
               <ProtectedRoute allowedRoles={["Class Teacher"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
+          },
+          {
+            path: "sportsteacher",
+            element: (
+              <ProtectedRoute allowedRoles={["Sports Teacher"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
+          },
+          {
+            path: "labtechnician",
+            element: (
+              <ProtectedRoute allowedRoles={["Lab Technician"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
+          },
+          {
+            path: "medicalofficer",
+            element: (
+              <ProtectedRoute allowedRoles={["Medical Officer"]}>
                 <Outlet />
               </ProtectedRoute>
             ),

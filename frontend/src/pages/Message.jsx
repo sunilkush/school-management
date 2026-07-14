@@ -53,7 +53,8 @@ const { useBreakpoint } = Grid;
 
 const MESSAGE_ROLES = [
   "Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher",
-  "Class Teacher", "Student", "Parent", "Accountant", "Receptionist", "Librarian", "Staff",
+  "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
+  "Student", "Parent", "Accountant", "Receptionist", "Librarian", "Staff",
   "Support Staff", "Subject Coordinator", "Hostel Warden", "Transport Manager",
   "Exam Coordinator", "IT Support", "Counselor", "Security",
 ];

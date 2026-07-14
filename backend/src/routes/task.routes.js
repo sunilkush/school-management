@@ -19,7 +19,8 @@ const TASK_MANAGE = [
 // All staff can view tasks assigned to them
 const TASK_READ = [
   "Super Admin", "School Admin", "Principal", "Vice Principal",
-  "Teacher", "Class Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
+  "Subject Coordinator", "Exam Coordinator",
   "Accountant", "Librarian", "Hostel Warden", "Transport Manager",
   "Receptionist", "IT Support", "Counselor", "Staff", "Support Staff", "Security",
 ];

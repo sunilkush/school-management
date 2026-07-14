@@ -590,6 +590,30 @@ export const sidebarMenu = {
     ...commonSelfService("classteacher"),
   ],
 
+  /* ================= SPORTS TEACHER ================= */
+  "sports teacher": [
+    { title: "Overview", path: "sportsteacher", icon: LayoutDashboard },
+    { title: "My Tasks", path: "sportsteacher/tasks", icon: ListChecks },
+    { title: "My Payroll", path: "sportsteacher/payroll", icon: IndianRupee },
+    ...commonSelfService("sportsteacher"),
+  ],
+
+  /* ================= LAB TECHNICIAN ================= */
+  "lab technician": [
+    { title: "Overview", path: "labtechnician", icon: LayoutDashboard },
+    { title: "My Tasks", path: "labtechnician/tasks", icon: ListChecks },
+    { title: "My Payroll", path: "labtechnician/payroll", icon: IndianRupee },
+    ...commonSelfService("labtechnician"),
+  ],
+
+  /* ================= MEDICAL OFFICER ================= */
+  "medical officer": [
+    { title: "Overview", path: "medicalofficer", icon: LayoutDashboard },
+    { title: "My Tasks", path: "medicalofficer/tasks", icon: ListChecks },
+    { title: "My Payroll", path: "medicalofficer/payroll", icon: IndianRupee },
+    ...commonSelfService("medicalofficer"),
+  ],
+
   /* ================= STAFF / SUPPORT STAFF ================= */
   staff: [
     { title: "Overview", path: "staff", icon: LayoutDashboard },
