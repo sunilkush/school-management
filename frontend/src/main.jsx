@@ -46,7 +46,17 @@ export const ThemedAntWrapper = ({ children }) => {
           boxShadow: isDark
             ? "0 12px 36px rgba(2, 6, 23, 0.55)"
             : "0 10px 30px rgba(15, 23, 42, 0.10)",
-          fontFamily: '"Noto Sans", sans-serif',
+          fontFamily: '"Inter", "Poppins", sans-serif',
+          fontSize: 13,
+          fontSizeSM: 12,
+          fontSizeLG: 14,
+          fontSizeXL: 16,
+          fontSizeHeading1: 28,
+          fontSizeHeading2: 22,
+          fontSizeHeading3: 18,
+          fontSizeHeading4: 16,
+          fontSizeHeading5: 14,
+          fontWeightStrong: 500,
         },
         components: {
           Layout: {
