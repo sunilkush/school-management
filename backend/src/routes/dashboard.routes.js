@@ -11,7 +11,10 @@ import { Router } from "express";
 const router = Router();
 
 const ADMIN_TEACHER   = ["Super Admin", "School Admin", "Teacher", "Accountant"];
-const SCHOOL_ADMIN_ONLY = ["School Admin"];
+// Principal and Vice Principal both render the School Admin dashboard UI on the
+// frontend (src/main.jsx reuses <SchoolAdminDashboard/> for those roles), so they
+// need access to the same analytics endpoint it fetches from.
+const SCHOOL_LEADERSHIP = ["School Admin", "Principal", "Vice Principal"];
 const FINANCE_ROLES   = ["School Admin", "Accountant"];
 const HOSTEL_ROLES    = ["Super Admin", "School Admin", "Hostel Warden"];
 
@@ -20,7 +23,7 @@ router.get("/role-overview", auth, getRoleDashboardOverview);
 router.get(
   "/school-admin/analytics",
   auth,
-  roleMiddleware(SCHOOL_ADMIN_ONLY),
+  roleMiddleware(SCHOOL_LEADERSHIP),
   getSchoolAdminDashboardAnalytics
 );
 router.get(

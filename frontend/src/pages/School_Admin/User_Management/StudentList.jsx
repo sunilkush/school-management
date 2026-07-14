@@ -48,12 +48,12 @@ const StudentList = () => {
 
   const schoolId       = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id || activeYear?._id;
-  const isSchoolAdmin  = user?.role?.name === "School Admin";
+  const canViewStudents = ["School Admin", "Principal", "Vice Principal"].includes(user?.role?.name);
 
   useEffect(() => {
-    if (!isSchoolAdmin || !schoolId) return;
+    if (!canViewStudents || !schoolId) return;
     dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
-  }, [dispatch, isSchoolAdmin, schoolId, academicYearId, isModalOpen]);
+  }, [dispatch, canViewStudents, schoolId, academicYearId, isModalOpen]);
 
   const studentsArray = useMemo(() => {
     if (Array.isArray(schoolStudents)) return schoolStudents;
@@ -195,7 +195,7 @@ const StudentList = () => {
     },
   ];
 
-  if (!isSchoolAdmin) {
+  if (!canViewStudents) {
     return (
       <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{
@@ -228,9 +228,11 @@ const StudentList = () => {
               />
             </Tooltip>
             <Button icon={<ExportOutlined />}>Export</Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-              Add Student
-            </Button>
+            {user?.role?.name === "School Admin" && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+                Add Student
+              </Button>
+            )}
           </Space>
         }
       />

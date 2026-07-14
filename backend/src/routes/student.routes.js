@@ -24,7 +24,7 @@ const router = Router();
 
 // ✅ Role constants
 const ADMIN_ROLE = ["Super Admin", "School Admin"];
-const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher", "Accountant", "Librarian"];
+const TEACHER_ROLE = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher", "Accountant", "Librarian"];
 const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];
 
 /* =========================================================
