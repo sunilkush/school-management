@@ -11,6 +11,7 @@ const ALL_MESSAGE_ROLES = [
   "Principal",
   "Vice Principal",
   "Teacher",
+  "Class Teacher",
   "Student",
   "Parent",
   "Accountant",

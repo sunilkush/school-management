@@ -4,6 +4,7 @@ export const ROLE_PATH_MAP = {
   Principal: "principal",
   "Vice Principal": "viceprincipal",
   Teacher: "teacher",
+  "Class Teacher": "classteacher",
   "Subject Coordinator": "subjectcoordinator",
   Student: "student",
   Parent: "parent",

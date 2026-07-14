@@ -582,6 +582,14 @@ export const sidebarMenu = {
     ...commonSelfService("security"),
   ],
 
+  /* ================= CLASS TEACHER ================= */
+  "class teacher": [
+    { title: "Overview", path: "classteacher", icon: LayoutDashboard },
+    { title: "My Tasks", path: "classteacher/tasks", icon: ListChecks },
+    { title: "My Payroll", path: "classteacher/payroll", icon: IndianRupee },
+    ...commonSelfService("classteacher"),
+  ],
+
   /* ================= STAFF / SUPPORT STAFF ================= */
   staff: [
     { title: "Overview", path: "staff", icon: LayoutDashboard },

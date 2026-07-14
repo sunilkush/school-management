@@ -17,6 +17,7 @@ const SUPPORT_ROLES = [
   "Principal",
   "Vice Principal",
   "Teacher",
+  "Class Teacher",
   "Subject Coordinator",
   "Student",
   "Parent",

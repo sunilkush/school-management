@@ -29,7 +29,7 @@ const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant", 
 
 const ALL_USERS = [
   "Super Admin", "School Admin", "Principal", "Vice Principal",
-  "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Teacher", "Class Teacher", "Subject Coordinator", "Exam Coordinator",
   "Student", "Parent",
   "Accountant", "Staff", "Support Staff",
   "Librarian", "Hostel Warden", "Transport Manager",

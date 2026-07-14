@@ -423,6 +423,7 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Class Teacher",
                 ]}
               >
                 <ModuleOverview />
@@ -453,6 +454,7 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Class Teacher",
                 ]}
               >
                 <ModuleDetail />
@@ -483,6 +485,7 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Class Teacher",
                 ]}
               >
                 <SupportTicketsPage />
@@ -1103,11 +1106,29 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Class Teacher",
                 ]}
               >
                 <RoleWorkspace />
               </ProtectedRoute>
             ),
+          },
+          {
+            path: "classteacher",
+            element: (
+              <ProtectedRoute allowedRoles={["Class Teacher"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
           },
           {
             path: "staff",
