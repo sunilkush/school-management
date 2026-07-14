@@ -493,17 +493,10 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
-<<<<<<< HEAD
-                  "Sports Teacher",
-                  "Lab Technician",
-                  "Medical Officer",
-                  "Class Teacher",
-=======
                   "Class Teacher",
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
->>>>>>> 25f649612820593646436c4bbf49f790346031e0
                 ]}
               >
                 <SupportTicketsPage />
@@ -1297,17 +1290,10 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
-<<<<<<< HEAD
-                  "Sports Teacher",
-                  "Lab Technician",
-                  "Medical Officer",
-                  "Class Teacher",
-=======
                   "Class Teacher",
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
->>>>>>> 25f649612820593646436c4bbf49f790346031e0
                 ]}
               >
                 <RoleWorkspace />

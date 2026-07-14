@@ -31,13 +31,8 @@ const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant", 
 
 const ALL_USERS = [
   "Super Admin", "School Admin", "Principal", "Vice Principal",
-<<<<<<< HEAD
-  "Teacher", "Subject Coordinator", "Exam Coordinator",
-  "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
-=======
   "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
   "Subject Coordinator", "Exam Coordinator",
->>>>>>> 25f649612820593646436c4bbf49f790346031e0
   "Student", "Parent",
   "Accountant", "Staff", "Support Staff",
   "Librarian", "Hostel Warden", "Transport Manager",
