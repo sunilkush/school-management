@@ -20,6 +20,7 @@ import {
 import { allowPublic,auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
 import { validateBody } from "../middlewares/validate.middleware.js";
+import { authRateLimiter } from "../middlewares/security.middleware.js";
 const router = Router();
 
 // Role-Based Access Control
@@ -38,12 +39,12 @@ const ALL_USERS = [
 
 // ✅ Public Routes
 
-router.post("/login",allowPublic,validateBody(['email', 'password']), loginUser);
-router.post("/refresh-token", allowPublic, refreshAccessToken);
-router.post("/forgot-password", allowPublic, forgotPassword);
-router.post("/reset-password/:token", allowPublic, resetPassword);
+router.post("/login", allowPublic, authRateLimiter, validateBody(['email', 'password']), loginUser);
+router.post("/refresh-token", allowPublic, authRateLimiter, refreshAccessToken);
+router.post("/forgot-password", allowPublic, authRateLimiter, forgotPassword);
+router.post("/reset-password/:token", allowPublic, authRateLimiter, resetPassword);
 router.get("/verify-email/:token", allowPublic, verifyEmail);
-router.post("/resend-verification", allowPublic, resendVerificationEmail);
+router.post("/resend-verification", allowPublic, authRateLimiter, resendVerificationEmail);
 
 // ✅ Protected Routes
 

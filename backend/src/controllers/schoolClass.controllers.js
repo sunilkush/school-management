@@ -2,6 +2,7 @@ import { SchoolClass } from "../models/schoolClass.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Section } from "../models/section.model.js";
 import mongoose from "mongoose";
+import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 // 🔹 CREATE
 export const createSchoolClass = async (req, res) => {
   try {
@@ -156,7 +157,7 @@ export const getSchoolClassById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const data = await SchoolClass.findById(id)
+    const data = await SchoolClass.findOne(buildSchoolAccessFilter(req, { _id: id }))
       .populate("boardClassId", "name")
       .populate("sections.sectionId", "name")
       .populate("sections.teacherId", "name");
@@ -185,8 +186,8 @@ export const updateSchoolClass = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const updated = await SchoolClass.findByIdAndUpdate(
-      id,
+    const updated = await SchoolClass.findOneAndUpdate(
+      buildSchoolAccessFilter(req, { _id: id }),
       {
         ...req.body,
         updatedBy: req.user?._id,
@@ -221,7 +222,7 @@ export const deleteSchoolClass = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await SchoolClass.findByIdAndDelete(id);
+    const deleted = await SchoolClass.findOneAndDelete(buildSchoolAccessFilter(req, { _id: id }));
 
     if (!deleted) {
       return res.status(404).json({

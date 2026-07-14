@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 
 // ==============================
 // 🔹 CREATE SECTION
@@ -94,7 +95,7 @@ export const getSectionById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid ID");
   }
 
-  const section = await Section.findById(id)
+  const section = await Section.findOne(buildSchoolAccessFilter(req, { _id: id }))
     .populate("classTeacherId", "name email")
     .populate("StudentEnrollmentId", "name email");
 
@@ -114,8 +115,8 @@ export const getSectionById = asyncHandler(async (req, res) => {
 export const updateSection = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const updated = await Section.findByIdAndUpdate(
-    id,
+  const updated = await Section.findOneAndUpdate(
+    buildSchoolAccessFilter(req, { _id: id }),
     {
       ...req.body,
       updatedBy: req.user?._id,
@@ -139,7 +140,7 @@ export const updateSection = asyncHandler(async (req, res) => {
 export const deleteSection = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const section = await Section.findById(id);
+  const section = await Section.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!section) {
     throw new ApiError(404, "Section not found");
   }

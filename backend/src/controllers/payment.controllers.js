@@ -45,6 +45,28 @@ const requireSchoolId = (user) => {
   if (!schoolId) throw new ApiError(400, "School not found for this user");
   return schoolId;
 };
+
+// Atomically creates the Payment record and updates the installment so a
+// crash between the two can never leave a payment without its installment update (or vice versa).
+const recordPayment = async ({ installment, paymentData }) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const [payment] = await Payment.create([paymentData], { session });
+
+    installment.paidAmount += paymentData.amountPaid;
+    installment.status = installment.paidAmount >= installment.amount ? "PAID" : "PARTIAL";
+    await installment.save({ session });
+
+    await session.commitTransaction();
+    return payment;
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
+};
 export const createPayment = asyncHandler(async (req, res) => {
   const { studentId, installmentId, amount, paymentMethod, paymentMode, transactionId, razorpay } = req.body;
   const schoolId = requireSchoolId(req.user);
@@ -65,20 +87,19 @@ export const createPayment = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Payment verification failed");
       }
 
-      const payment = await Payment.create({
-        schoolId,
-        studentId: installment.studentId,
-        installmentId,
-        amountPaid: dueAmount,
-        paymentMode: "razorpay",
-        status: "success",
-        razorpay,
-        receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      const payment = await recordPayment({
+        installment,
+        paymentData: {
+          schoolId,
+          studentId: installment.studentId,
+          installmentId,
+          amountPaid: dueAmount,
+          paymentMode: "razorpay",
+          status: "success",
+          razorpay,
+          receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        },
       });
-
-      installment.paidAmount += dueAmount;
-      installment.status = "PAID";
-      await installment.save();
 
       return sendSuccess(res, {
         statusCode: 201,
@@ -119,20 +140,19 @@ export const createPayment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Amount exceeds remaining due");
   }
 
-  const payment = await Payment.create({
-    schoolId,
-    studentId: studentId || installment.studentId,
-    installmentId,
-    amountPaid: numericAmount,
-    paymentMode: mode,
-    status: "success",
-    transactionId: transactionId || null,
-    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+  const payment = await recordPayment({
+    installment,
+    paymentData: {
+      schoolId,
+      studentId: studentId || installment.studentId,
+      installmentId,
+      amountPaid: numericAmount,
+      paymentMode: mode,
+      status: "success",
+      transactionId: transactionId || null,
+      receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    },
   });
-
-  installment.paidAmount += numericAmount;
-  installment.status = installment.paidAmount >= installment.amount ? "PAID" : "PARTIAL";
-  await installment.save();
 
   return sendSuccess(res, {
     statusCode: 201,
@@ -183,20 +203,19 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   if (amount <= 0) throw new ApiError(400, "Installment already paid");
 
-  const payment = await Payment.create({
-    schoolId,
-    studentId: installment.studentId,
-    installmentId,
-    amountPaid: amount,
-    paymentMode: "razorpay",
-    status: "success",
-    razorpay: { razorpay_order_id, razorpay_payment_id },
-    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+  const payment = await recordPayment({
+    installment,
+    paymentData: {
+      schoolId,
+      studentId: installment.studentId,
+      installmentId,
+      amountPaid: amount,
+      paymentMode: "razorpay",
+      status: "success",
+      razorpay: { razorpay_order_id, razorpay_payment_id },
+      receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+    },
   });
-
-  installment.paidAmount += amount;
-  installment.status = "PAID";
-  await installment.save();
 
   return sendSuccess(res, { message: "Payment verified and captured", data: payment });
 });

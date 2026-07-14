@@ -6,6 +6,15 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
+const isSuperAdmin = (req) => (req.userRole?.name || req.user?.role?.name) === "Super Admin";
+
+const assertSameSchool = (req, material) => {
+  if (isSuperAdmin(req)) return;
+  if (`${material.schoolId}` !== `${getSchoolId(req)}`) {
+    throw new ApiError(403, "Forbidden access outside your school");
+  }
+};
+
 export const createStudyMaterial = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
   const { academicYearId, schoolClassId, sectionId, subjectId, title, description, type, externalLink } = req.body;
@@ -77,6 +86,7 @@ export const getStudyMaterialById = asyncHandler(async (req, res) => {
     .populate("uploadedBy", "name email");
 
   if (!material || !material.isActive) throw new ApiError(404, "Study material not found");
+  assertSameSchool(req, material);
   return res.json(new ApiResponse(200, material, "Study material fetched"));
 });
 
@@ -84,6 +94,7 @@ export const updateStudyMaterial = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const material = await StudyMaterial.findById(id);
   if (!material || !material.isActive) throw new ApiError(404, "Study material not found");
+  assertSameSchool(req, material);
 
   if (String(material.uploadedBy) !== String(req.user._id)) {
     const userRole = req.userRole?.name || req.user?.role?.name;
@@ -115,6 +126,7 @@ export const deleteStudyMaterial = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const material = await StudyMaterial.findById(id);
   if (!material || !material.isActive) throw new ApiError(404, "Study material not found");
+  assertSameSchool(req, material);
 
   if (String(material.uploadedBy) !== String(req.user._id)) {
     const userRole = req.userRole?.name || req.user?.role?.name;

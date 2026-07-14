@@ -2,10 +2,14 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Book } from "../models/Books.model.js";
+import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 
-// helper
+const isSuperAdmin = (req) =>
+  (req.userRole?.name || "").toLowerCase().replace(/\s+/g, "_") === "super_admin";
+
+// Only Super Admin may target another school; everyone else is pinned to their own.
 const resolveSchoolId = (req) =>
-  req.user?.schoolId || req.body?.schoolId || req.query?.schoolId;
+  isSuperAdmin(req) ? req.body?.schoolId || req.query?.schoolId || req.user?.schoolId : req.user?.schoolId;
 
 // ✅ CREATE
 export const createBook = asyncHandler(async (req, res) => {
@@ -59,9 +63,7 @@ export const createBook = asyncHandler(async (req, res) => {
 
 // ✅ GET ALL
 export const getAllBooks = asyncHandler(async (req, res) => {
-  const schoolId = resolveSchoolId(req);
-
-  const filter = schoolId ? { schoolId } : {};
+  const filter = buildSchoolAccessFilter(req);
 
   const books = await Book.find(filter)
     .populate("schoolId", "name")
@@ -76,7 +78,10 @@ export const getAllBooks = asyncHandler(async (req, res) => {
 export const getBookById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const book = await Book.findById(id).populate("schoolId", "name");
+  const book = await Book.findOne(buildSchoolAccessFilter(req, { _id: id })).populate(
+    "schoolId",
+    "name"
+  );
 
   if (!book) throw new ApiError(404, "Book not found");
 
@@ -118,10 +123,11 @@ export const updateBook = asyncHandler(async (req, res) => {
     if (exists) throw new ApiError(400, "ISBN already exists");
   }
 
-  const updatedBook = await Book.findByIdAndUpdate(id, updates, {
-    new: true,
-    runValidators: true,
-  });
+  const updatedBook = await Book.findOneAndUpdate(
+    buildSchoolAccessFilter(req, { _id: id }),
+    updates,
+    { new: true, runValidators: true }
+  );
 
   if (!updatedBook) throw new ApiError(404, "Book not found");
 
@@ -134,7 +140,7 @@ export const updateBook = asyncHandler(async (req, res) => {
 export const deleteBook = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const deletedBook = await Book.findByIdAndDelete(id);
+  const deletedBook = await Book.findOneAndDelete(buildSchoolAccessFilter(req, { _id: id }));
 
   if (!deletedBook) throw new ApiError(404, "Book not found");
 

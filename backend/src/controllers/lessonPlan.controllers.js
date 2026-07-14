@@ -5,6 +5,15 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
+const isSuperAdmin = (req) => (req.userRole?.name || req.user?.role?.name) === "Super Admin";
+
+const assertSameSchool = (req, plan) => {
+  if (isSuperAdmin(req)) return;
+  if (`${plan.schoolId}` !== `${getSchoolId(req)}`) {
+    throw new ApiError(403, "Forbidden access outside your school");
+  }
+};
+
 export const createLessonPlan = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
   const { academicYearId, schoolClassId, sectionId, subjectId, title, objectives, content, teachingMethods, resources, assessment, plannedDate, duration } = req.body;
@@ -71,6 +80,7 @@ export const getLessonPlanById = asyncHandler(async (req, res) => {
     .populate("teacherId", "name email");
 
   if (!plan || !plan.isActive) throw new ApiError(404, "Lesson plan not found");
+  assertSameSchool(req, plan);
   return res.json(new ApiResponse(200, plan, "Lesson plan fetched"));
 });
 
@@ -78,6 +88,7 @@ export const updateLessonPlan = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const plan = await LessonPlan.findById(id);
   if (!plan || !plan.isActive) throw new ApiError(404, "Lesson plan not found");
+  assertSameSchool(req, plan);
 
   const userRole = req.userRole?.name || req.user?.role?.name;
   if (userRole === "Teacher" && String(plan.teacherId) !== String(req.user._id)) {
@@ -97,6 +108,7 @@ export const deleteLessonPlan = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const plan = await LessonPlan.findById(id);
   if (!plan || !plan.isActive) throw new ApiError(404, "Lesson plan not found");
+  assertSameSchool(req, plan);
 
   const userRole = req.userRole?.name || req.user?.role?.name;
   if (userRole === "Teacher" && String(plan.teacherId) !== String(req.user._id)) {

@@ -280,6 +280,11 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
    const attempt = await ExamAttempt.findById(attemptId);
   if (!attempt) throw new ApiError(404, "Attempt not found");
 
+  const evaluatorRole = req.userRole?.name || req.user?.roleId?.name;
+  if (evaluatorRole !== "Super Admin" && `${attempt.schoolId}` !== `${req.user.schoolId}`) {
+    throw new ApiError(403, "Forbidden access outside your school");
+  }
+
   attempt.answers = attempt.answers.map((ans) => {
     const questionId = ans.questionId?.toString?.() || ans.questionRef?.toString?.();
     const evalData = evaluations.find((e) => {

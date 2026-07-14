@@ -92,6 +92,11 @@ export const getLoginLogsBySchool = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
 
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  if (!isSuperAdmin && `${req.user.schoolId}` !== `${schoolId}`) {
+    return res.status(403).json({ success: false, message: "Access denied" });
+  }
+
   const [logs, total] = await Promise.all([
     LoginLog.find({ schoolId })
       .populate("userId", "name email")
@@ -113,13 +118,17 @@ export const getLoginLogsByAcademicYear = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
 
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const query = { academicYearId };
+  if (!isSuperAdmin) query.schoolId = req.user.schoolId;
+
   const [logs, total] = await Promise.all([
-    LoginLog.find({ academicYearId })
+    LoginLog.find(query)
       .populate("userId", "name email")
       .sort({ loginTime: -1 })
       .skip(skip)
       .limit(Number(limit)),
-    LoginLog.countDocuments({ academicYearId }),
+    LoginLog.countDocuments(query),
   ]);
 
   res.status(200).json(new ApiResponse(200, {
@@ -170,7 +179,12 @@ export const getLoginLogs = asyncHandler(async (req, res) => {
 /* ── API: Set logout time ───────────────────────────────────────────────── */
 export const setLogoutTime = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const log = await LoginLog.findByIdAndUpdate(id, { logoutTime: new Date() }, { new: true });
+
+  const isAdmin = ["Super Admin", "School Admin"].includes(req.userRole?.name);
+  const query = isAdmin ? { _id: id, schoolId: req.user.schoolId } : { _id: id, userId: req.user._id };
+  if (req.userRole?.name === "Super Admin") delete query.schoolId;
+
+  const log = await LoginLog.findOneAndUpdate(query, { logoutTime: new Date() }, { new: true });
   if (!log) return res.status(404).json({ success: false, message: "Log not found" });
   res.status(200).json(new ApiResponse(200, log, "Logout time recorded"));
 });

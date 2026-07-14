@@ -8,6 +8,25 @@ const chapterPopulate = [
   { path: "subjectId", select: "name shortName" },
 ];
 
+const isSuperAdmin = (req) => (req.userRole?.name || req.user?.role?.name) === "Super Admin";
+
+const assertChapterReadAccess = (req, chapter) => {
+  if (isSuperAdmin(req) || chapter.isGlobal) return;
+  const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  if (`${chapter.schoolId}` !== `${schoolId}`) {
+    throw new ApiError(403, "Forbidden access outside your school");
+  }
+};
+
+const assertChapterWriteAccess = (req, chapter) => {
+  if (isSuperAdmin(req)) return;
+  if (chapter.isGlobal) throw new ApiError(403, "Only Super Admin can modify global chapters");
+  const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  if (`${chapter.schoolId}` !== `${schoolId}`) {
+    throw new ApiError(403, "Forbidden access outside your school");
+  }
+};
+
 const formatChapter = (chapterDoc) => {
   const chapter = chapterDoc?.toObject ? chapterDoc.toObject() : chapterDoc;
   const boardClass = chapter?.boardClassId;
@@ -100,6 +119,7 @@ const getChapterById = asyncHandler(async (req, res) => {
 
    const chapter = await Chapter.findById(id).populate(chapterPopulate);
   if (!chapter) throw new ApiError(404, "Chapter not found");
+  assertChapterReadAccess(req, chapter);
 
   return res.status(200).json(new ApiResponse(200, formatChapter(chapter), "Chapter fetched"));
 });
@@ -107,6 +127,10 @@ const getChapterById = asyncHandler(async (req, res) => {
 const updateChapter = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid chapter id");
+
+  const existing = await Chapter.findById(id);
+  if (!existing) throw new ApiError(404, "Chapter not found");
+  assertChapterWriteAccess(req, existing);
 
   const chapter = await Chapter.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }).populate(chapterPopulate);
   if (!chapter) throw new ApiError(404, "Chapter not found");
@@ -117,6 +141,10 @@ const updateChapter = asyncHandler(async (req, res) => {
 const deleteChapter = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid chapter id");
+
+  const existing = await Chapter.findById(id);
+  if (!existing) throw new ApiError(404, "Chapter not found");
+  assertChapterWriteAccess(req, existing);
 
   const chapter = await Chapter.findByIdAndUpdate(id, { isActive: false, status: "Inactive", updatedBy: req.user._id }, { new: true });
   if (!chapter) throw new ApiError(404, "Chapter not found");

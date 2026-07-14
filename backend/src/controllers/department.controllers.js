@@ -2,6 +2,7 @@ import { Department } from "../models/Department.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 
 /* ── CREATE ──────────────────────────────────────────────────────────────── */
 export const createDepartment = asyncHandler(async (req, res) => {
@@ -30,10 +31,9 @@ export const createDepartment = asyncHandler(async (req, res) => {
 
 /* ── GET ALL ─────────────────────────────────────────────────────────────── */
 export const getDepartments = asyncHandler(async (req, res) => {
-  const { schoolId, status, page = 1, limit = 20, search } = req.query;
+  const { status, page = 1, limit = 20, search } = req.query;
 
-  const filter = {};
-  if (schoolId) filter.schoolId = schoolId;
+  const filter = buildSchoolAccessFilter(req);
   if (status) filter.status = status;
   if (search) filter.name = { $regex: search, $options: "i" };
 
@@ -54,7 +54,9 @@ export const getDepartments = asyncHandler(async (req, res) => {
 
 /* ── GET BY ID ───────────────────────────────────────────────────────────── */
 export const getDepartmentById = asyncHandler(async (req, res) => {
-  const dept = await Department.findById(req.params.id).populate("schoolId", "name");
+  const dept = await Department.findOne(
+    buildSchoolAccessFilter(req, { _id: req.params.id })
+  ).populate("schoolId", "name");
   if (!dept) throw new ApiError(404, "Department not found");
   res.status(200).json(new ApiResponse(200, dept, "Department fetched"));
 });
