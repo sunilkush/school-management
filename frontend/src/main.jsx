@@ -43,7 +43,17 @@ export const ThemedAntWrapper = ({ children }) => {
           boxShadow: isDark
             ? "0 12px 36px rgba(2, 6, 23, 0.55)"
             : "0 10px 30px rgba(15, 23, 42, 0.10)",
-          fontFamily: '"Noto Sans", sans-serif',
+          fontFamily: '"Inter", "Poppins", sans-serif',
+          fontSize: 13,
+          fontSizeSM: 12,
+          fontSizeLG: 14,
+          fontSizeXL: 16,
+          fontSizeHeading1: 28,
+          fontSizeHeading2: 22,
+          fontSizeHeading3: 18,
+          fontSizeHeading4: 16,
+          fontSizeHeading5: 14,
+          fontWeightStrong: 500,
         },
         components: {
           Layout: {
@@ -415,6 +425,10 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
                 ]}
               >
                 <ModuleOverview />
@@ -445,6 +459,10 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
                 ]}
               >
                 <ModuleDetail />
@@ -475,10 +493,17 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+<<<<<<< HEAD
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
                   "Class Teacher",
+=======
+                  "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
+>>>>>>> 25f649612820593646436c4bbf49f790346031e0
                 ]}
               >
                 <SupportTicketsPage />
@@ -1272,15 +1297,90 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+<<<<<<< HEAD
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
                   "Class Teacher",
+=======
+                  "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
+>>>>>>> 25f649612820593646436c4bbf49f790346031e0
                 ]}
               >
                 <RoleWorkspace />
               </ProtectedRoute>
             ),
+          },
+          {
+            path: "classteacher",
+            element: (
+              <ProtectedRoute allowedRoles={["Class Teacher"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
+          },
+          {
+            path: "sportsteacher",
+            element: (
+              <ProtectedRoute allowedRoles={["Sports Teacher"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
+          },
+          {
+            path: "labtechnician",
+            element: (
+              <ProtectedRoute allowedRoles={["Lab Technician"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
+          },
+          {
+            path: "medicalofficer",
+            element: (
+              <ProtectedRoute allowedRoles={["Medical Officer"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,          element: <RoleWorkspace /> },
+              { path: "tasks",        element: <MyTasks /> },
+              { path: "payroll",      element: <PayrollSelfServicePage /> },
+              { path: "profile",      element: <Profile /> },
+              { path: "message",      element: <Message /> },
+              { path: "notification", element: <Notification /> },
+              { path: "*",            element: <RoleDynamicPortal /> },
+            ],
           },
           {
             path: "staff",

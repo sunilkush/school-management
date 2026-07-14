@@ -1,51 +1,31 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Select, Button, Popconfirm, message, Skeleton } from "antd";
+import { Select, Button, Popconfirm, message, Skeleton, Typography } from "antd";
 import {
   ApartmentOutlined,
   PlusOutlined,
   CheckCircleFilled,
   MinusCircleOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  getBoards,
-  assignSchoolBoards,
-  getSchoolBoards,
-   removeSchoolBoard,
+  getBoards, assignSchoolBoards, getSchoolBoards, removeSchoolBoard,
 } from "../../../features/boardSlice";
-import { useTheme } from "../../../context/ThemeContext";
 
 const { Option } = Select;
+const { Text } = Typography;
 
-const tokens = (isDark) => ({
-  cardBg: isDark ? "#141414" : "#ffffff",
-  innerBg: isDark ? "#0f0f0f" : "#f8faff",
-  border: isDark ? "#1f1f1f" : "#f0f0f0",
-  rowHover: isDark ? "#1a1a1a" : "#f8faff",
-  textPri: isDark ? "#e8e8e8" : "#111827",
-  textSec: isDark ? "#6b7280" : "#9ca3af",
-  accent: "#1677ff",
-  accentBg: isDark ? "rgba(22,119,255,0.08)" : "rgba(22,119,255,0.06)",
-  success: "#0ea472",
-  successBg: isDark ? "rgba(14,164,114,0.08)" : "rgba(14,164,114,0.06)",
-  warning: "#ea580c",
-  warnBg: isDark ? "rgba(234,88,12,0.08)" : "rgba(234,88,12,0.06)",
-  thBg: isDark ? "#0f0f0f" : "#f9fafb",
-  thBorder: isDark ? "#1f1f1f" : "#f0f0f0",
-});
+const C = { primary: "#7c3aed", success: "#10b981", warning: "#f59e0b", danger: "#ef4444" };
 
+/* ─── helpers ────────────────────────────────────────────────── */
 const normalizeToArray = (value) => {
   if (Array.isArray(value)) return value;
-
   if (value && typeof value === "object") {
     if (Array.isArray(value.data)) return value.data;
     if (Array.isArray(value?.data?.boards)) return value.data.boards;
     if (Array.isArray(value?.data?.schoolBoards)) return value.data.schoolBoards;
-
-    // success:false + data:null
     if ("success" in value) return [];
   }
-
   return [];
 };
 
@@ -62,45 +42,36 @@ const safeErrorMessage = (err, fallback = "Something went wrong") => {
   return fallback;
 };
 
+/* ════════════════════════════════════════════════════════════════
+   SchoolBoard
+════════════════════════════════════════════════════════════════ */
 const SchoolBoard = ({ next }) => {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
-  const t = tokens(isDark);
 
   const boardState = useSelector((state) => state.boards || {});
-  const user = useSelector((state) => state.auth?.user || {});
+  const user       = useSelector((state) => state.auth?.user || {});
 
-  const boardsRaw = boardState?.boards;
-  const schoolBoardsRaw = boardState?.schoolBoards;
+  const boards       = useMemo(() => normalizeToArray(boardState?.boards),       [boardState?.boards]);
+  const schoolBoards = useMemo(() => normalizeToArray(boardState?.schoolBoards), [boardState?.schoolBoards]);
 
-  const boards = useMemo(() => normalizeToArray(boardsRaw), [boardsRaw]);
-  const schoolBoards = useMemo(() => normalizeToArray(schoolBoardsRaw), [schoolBoardsRaw]);
-
-  const loading = Boolean(boardState?.loading);
-  const schoolId = user?.school?._id || user?.schoolId || null;
+  const loading   = Boolean(boardState?.loading);
+  const schoolId  = user?.school?._id || user?.schoolId || null;
 
   const [selectedBoard, setSelectedBoard] = useState(undefined);
-  const [hovered, setHovered] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [hovered,       setHovered]       = useState(null);
+  const [saving,        setSaving]        = useState(false);
 
   useEffect(() => {
     dispatch(getBoards());
-    if (schoolId) {
-      dispatch(getSchoolBoards(schoolId));
-    }
+    if (schoolId) dispatch(getSchoolBoards(schoolId));
   }, [dispatch, schoolId]);
 
   const handleSave = async () => {
-     if (schoolBoards.length > 0) {
+    if (schoolBoards.length > 0) {
       message.warning("A school can have only one board");
       return;
     }
-
-    if (!selectedBoard) {
-      message.warning("Select a board first");
-      return;
-    }
-
+    if (!selectedBoard) { message.warning("Select a board first"); return; }
     try {
       setSaving(true);
       await dispatch(assignSchoolBoards({ schoolId, boardId: selectedBoard })).unwrap();
@@ -109,13 +80,11 @@ const SchoolBoard = ({ next }) => {
       dispatch(getSchoolBoards(schoolId));
     } catch (err) {
       message.error(safeErrorMessage(err, "Failed to assign board"));
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
+
   const handleUnassign = async (boardId) => {
     if (!schoolId || !boardId) return;
-
     try {
       setSaving(true);
       await dispatch(removeSchoolBoard({ schoolId, boardId })).unwrap();
@@ -124,56 +93,39 @@ const SchoolBoard = ({ next }) => {
       dispatch(getBoards());
     } catch (err) {
       message.error(safeErrorMessage(err, "Failed to unassign board"));
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const assignedIds = new Set(
-    schoolBoards
-      .map((item) => item?.boardId?._id || item?.boardId)
-      .filter(Boolean)
+    schoolBoards.map((item) => item?.boardId?._id || item?.boardId).filter(Boolean)
   );
 
- const hasAssignedBoard = schoolBoards.length > 0;
-  const availableBoards = hasAssignedBoard
+  const hasAssignedBoard = schoolBoards.length > 0;
+  const availableBoards  = hasAssignedBoard
     ? []
     : boards.filter((board) => !assignedIds.has(board?._id));
 
-  const emptyMessage = "No boards assigned yet.";
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div
-        style={{
-          background: t.innerBg,
-          border: `1px solid ${t.border}`,
-          borderRadius: 12,
-          padding: 20,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 7,
-              background: t.accentBg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <ApartmentOutlined style={{ fontSize: 12, color: t.accent }} />
-          </div>
 
+      {/* ── Assign form ─────────────────────────────────────────── */}
+      <div style={{
+        background: "var(--surface)", border: "1px solid var(--border)",
+        borderRadius: 12, padding: 20,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 7,
+            background: "rgba(6,182,212,0.1)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <ApartmentOutlined style={{ fontSize: 12, color: "#06b6d4" }} />
+          </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: t.textPri }}>
+            <Text style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", display: "block" }}>
               Assign Examination Board
-            </div>
-            <div style={{ fontSize: 11.5, color: t.textSec }}>
-              Choose a board to link with this school
-            </div>
+            </Text>
+            <Text type="secondary" style={{ fontSize: 11.5 }}>Choose a board to link with this school</Text>
           </div>
         </div>
 
@@ -183,22 +135,13 @@ const SchoolBoard = ({ next }) => {
             style={{ flex: 1, borderRadius: 8 }}
             value={selectedBoard}
             onChange={setSelectedBoard}
-            allowClear
-            showSearch
+            allowClear showSearch
             loading={loading}
             optionFilterProp="children"
             notFoundContent={
-              <span
-                style={{
-                  fontSize: 12,
-                  color: t.textSec,
-                  padding: 8,
-                  display: "block",
-                }}
-              >
+              <span style={{ fontSize: 12, color: "var(--text-muted)", padding: 8, display: "block" }}>
                 {availableBoards.length === 0 ? "All boards already assigned" : "No board found"}
               </span>
-              
             }
             disabled={hasAssignedBoard}
           >
@@ -220,74 +163,53 @@ const SchoolBoard = ({ next }) => {
             Assign
           </Button>
         </div>
-          {hasAssignedBoard && (
-          <div style={{ marginTop: 10, fontSize: 12, color: t.warning }}>
+
+        {hasAssignedBoard && (
+          <div style={{
+            marginTop: 10, fontSize: 12, color: C.warning,
+            background: "rgba(245,158,11,0.08)", padding: "8px 12px", borderRadius: 8,
+          }}>
             This school already has a board assigned. Only one board is allowed.
           </div>
         )}
       </div>
 
-      <div
-        style={{
-          background: t.cardBg,
-          border: `1px solid ${t.border}`,
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "12px 16px",
-            borderBottom: `1px solid ${t.thBorder}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ fontSize: 13, fontWeight: 600, color: t.textPri }}>
-            Assigned Boards
-          </div>
-
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: t.accent,
-              background: t.accentBg,
-              padding: "2px 8px",
-              borderRadius: 99,
-            }}
-          >
+      {/* ── Assigned boards list ─────────────────────────────────── */}
+      <div style={{
+        background: "var(--surface)", border: "1px solid var(--border)",
+        borderRadius: 12, overflow: "hidden",
+      }}>
+        <div style={{
+          padding: "12px 20px", borderBottom: "1px solid var(--border)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <Text style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Assigned Boards</Text>
+          <span style={{
+            fontSize: 11, fontWeight: 700, color: C.primary,
+            background: "rgba(124,58,237,0.1)", padding: "2px 10px", borderRadius: 99,
+          }}>
             {schoolBoards.length}
           </span>
         </div>
 
-        <div className="board-table-desktop">
+        {/* Desktop table */}
+        <div className="board-dt">
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
               <thead>
-                <tr style={{ background: t.thBg }}>
+                <tr style={{ background: "var(--surface-soft)" }}>
                   {["Board", "Primary", "Status", "Action"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: "9px 16px",
-                        textAlign: "left",
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: t.textSec,
-                        letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                        borderBottom: `1px solid ${t.thBorder}`,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                    <th key={h} style={{
+                      padding: "9px 16px", textAlign: "left",
+                      fontSize: 11, fontWeight: 600, color: "var(--text-muted)",
+                      letterSpacing: "0.06em", textTransform: "uppercase",
+                      borderBottom: "1px solid var(--border)", whiteSpace: "nowrap",
+                    }}>
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-
               <tbody>
                 {loading && schoolBoards.length === 0 ? (
                   [1, 2].map((i) => (
@@ -299,139 +221,95 @@ const SchoolBoard = ({ next }) => {
                   ))
                 ) : schoolBoards.length === 0 ? (
                   <tr>
-                   <td colSpan={4} style={{ padding: 32, textAlign: "center" }}>
-                      <span style={{ color: t.textSec, fontSize: 13 }}>{emptyMessage}</span>
+                    <td colSpan={4} style={{ padding: 40, textAlign: "center" }}>
+                      <ApartmentOutlined style={{ fontSize: 28, color: "var(--text-muted)", display: "block", margin: "0 auto 8px" }} />
+                      <Text type="secondary" style={{ fontSize: 13 }}>No boards assigned yet.</Text>
                     </td>
                   </tr>
                 ) : (
-                  schoolBoards.map((item, i) => {
-                    const isHov = hovered === i;
-
-                    return (
-                      <tr
-                        key={item?._id || i}
-                        onMouseEnter={() => setHovered(i)}
-                        onMouseLeave={() => setHovered(null)}
-                        style={{
-                          background: isHov ? t.rowHover : "transparent",
-                          borderBottom: `1px solid ${t.thBorder}`,
-                        }}
-                      >
-                        <td style={{ padding: "12px 16px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div
-                              style={{
-                                width: 30,
-                                height: 30,
-                                borderRadius: 8,
-                                background: t.accentBg,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <ApartmentOutlined style={{ fontSize: 13, color: t.accent }} />
-                            </div>
-                            <span style={{ fontWeight: 600, color: t.textPri }}>
-                              {safeText(item?.boardId?.name || item?.name)}
-                            </span>
+                  schoolBoards.map((item, i) => (
+                    <tr
+                      key={item?._id || i}
+                      onMouseEnter={() => setHovered(i)}
+                      onMouseLeave={() => setHovered(null)}
+                      style={{
+                        background: hovered === i ? "rgba(124,58,237,0.03)" : "transparent",
+                        borderBottom: "1px solid var(--border)",
+                        transition: "background 0.15s ease",
+                      }}
+                    >
+                      <td style={{ padding: "12px 16px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8,
+                            background: "rgba(6,182,212,0.1)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>
+                            <ApartmentOutlined style={{ fontSize: 14, color: "#06b6d4" }} />
                           </div>
-                        </td>
+                          <Text style={{ fontWeight: 600, color: "var(--text)" }}>
+                            {safeText(item?.boardId?.name || item?.name)}
+                          </Text>
+                        </div>
+                      </td>
 
-                        <td style={{ padding: "12px 16px" }}>
-                          {item?.isPrimary ? (
-                            <span
-                              style={{
-                                fontSize: 11,
-                                fontWeight: 600,
-                                color: t.accent,
-                                background: t.accentBg,
-                                padding: "2px 8px",
-                                borderRadius: 99,
-                              }}
-                            >
-                              Primary
-                            </span>
-                          ) : (
-                            <span style={{ color: t.textSec }}>—</span>
-                          )}
-                        </td>
+                      <td style={{ padding: "12px 16px" }}>
+                        {item?.isPrimary ? (
+                          <span style={{
+                            fontSize: 11, fontWeight: 600, color: C.primary,
+                            background: "rgba(124,58,237,0.1)", padding: "2px 8px", borderRadius: 99,
+                          }}>Primary</span>
+                        ) : (
+                          <span style={{ color: "var(--text-muted)" }}>—</span>
+                        )}
+                      </td>
 
-                        <td style={{ padding: "12px 16px" }}>
-                          {item?.isActive ? (
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 5,
-                                fontSize: 11,
-                                fontWeight: 600,
-                                color: t.success,
-                                background: t.successBg,
-                                padding: "2px 8px",
-                                borderRadius: 99,
-                              }}
-                            >
-                              <CheckCircleFilled style={{ fontSize: 9 }} />
-                              Active
-                            </span>
-                          ) : (
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 5,
-                                fontSize: 11,
-                                color: t.warning,
-                                background: t.warnBg,
-                                padding: "2px 8px",
-                                borderRadius: 99,
-                              }}
-                            >
-                              <MinusCircleOutlined style={{ fontSize: 9 }} />
-                              Inactive
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <Popconfirm
-                            title="Unassign this board?"
-                            description="This board will be removed from this school."
-                            okText="Unassign"
-                            cancelText="Cancel"
-                            onConfirm={() =>
-                              handleUnassign(item?.boardId?._id || item?.boardId)
-                            }
+                      <td style={{ padding: "12px 16px" }}>
+                        {item?.isActive ? (
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", gap: 5,
+                            fontSize: 11, fontWeight: 600, color: C.success,
+                            background: "rgba(16,185,129,0.1)", padding: "2px 8px", borderRadius: 99,
+                          }}>
+                            <CheckCircleFilled style={{ fontSize: 9 }} /> Active
+                          </span>
+                        ) : (
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", gap: 5,
+                            fontSize: 11, color: C.warning,
+                            background: "rgba(245,158,11,0.1)", padding: "2px 8px", borderRadius: 99,
+                          }}>
+                            <MinusCircleOutlined style={{ fontSize: 9 }} /> Inactive
+                          </span>
+                        )}
+                      </td>
+
+                      <td style={{ padding: "12px 16px" }}>
+                        <Popconfirm
+                          title="Unassign this board?"
+                          description="This board will be removed from this school."
+                          okText="Unassign" cancelText="Cancel"
+                          onConfirm={() => handleUnassign(item?.boardId?._id || item?.boardId)}
+                        >
+                          <Button
+                            danger size="small" loading={saving}
+                            icon={<DeleteOutlined />}
+                            style={{ borderRadius: 6, fontSize: 12, fontWeight: 500 }}
                           >
-                            <Button
-                              danger
-                              size="small"
-                              loading={saving}
-                               style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 5,
-                                fontSize: 11,
-                                color: t.warning,
-                                background: t.warnBg,
-                                padding: "2px 8px",
-                                borderRadius: 99,
-                              }}
-                            >
-                              Remove
-                            </Button>
-                          </Popconfirm>
-                        </td>
-                      </tr>
-                    );
-                  })
+                            Remove
+                          </Button>
+                        </Popconfirm>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        <div className="board-table-mobile">
+        {/* Mobile cards */}
+        <div className="board-mb">
           {loading && schoolBoards.length === 0 ? (
             [1, 2].map((i) => (
               <div key={i} style={{ padding: 14 }}>
@@ -440,82 +318,46 @@ const SchoolBoard = ({ next }) => {
             ))
           ) : schoolBoards.length === 0 ? (
             <div style={{ padding: 24, textAlign: "center" }}>
-              <span style={{ color: t.textSec }}>{emptyMessage}</span>
+              <Text type="secondary">No boards assigned yet.</Text>
             </div>
           ) : (
             schoolBoards.map((item, i) => (
-              <div
-                key={item?._id || i}
-                style={{
-                  padding: 14,
-                  borderBottom: `1px solid ${t.border}`,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                }}
-              >
+              <div key={item?._id || i} style={{
+                padding: 14, borderBottom: "1px solid var(--border)",
+                display: "flex", flexDirection: "column", gap: 8,
+              }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 6,
-                      background: t.accentBg,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <ApartmentOutlined style={{ fontSize: 12, color: t.accent }} />
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: "rgba(6,182,212,0.1)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <ApartmentOutlined style={{ fontSize: 13, color: "#06b6d4" }} />
                   </div>
-                  <span style={{ fontWeight: 600, color: t.textPri }}>
+                  <Text style={{ fontWeight: 600, color: "var(--text)" }}>
                     {safeText(item?.boardId?.name || item?.name)}
-                  </span>
+                  </Text>
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  {item?.isPrimary ? (
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: t.accent,
-                        background: t.accentBg,
-                        padding: "2px 8px",
-                        borderRadius: 99,
-                      }}
-                    >
-                      Primary
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {item?.isPrimary && (
+                      <span style={{ fontSize: 11, color: C.primary, background: "rgba(124,58,237,0.1)", padding: "2px 8px", borderRadius: 99 }}>
+                        Primary
+                      </span>
+                    )}
+                    <span style={{ fontSize: 11, color: item?.isActive ? C.success : C.warning }}>
+                      {item?.isActive ? "Active" : "Inactive"}
                     </span>
-                  ) : (
-                    <span style={{ fontSize: 11, color: t.textSec }}>—</span>
-                  )}
+                  </div>
 
-                  {item?.isActive ? (
-                    <span style={{ fontSize: 11, color: t.success }}>Active</span>
-                  ) : (
-                    <span style={{ fontSize: 11, color: t.warning }}>Inactive</span>
-                  )}
-                </div>
-                <div>
                   <Popconfirm
                     title="Unassign this board?"
                     description="This board will be removed from this school."
-                    okText="Unassign"
-                    cancelText="Cancel"
+                    okText="Unassign" cancelText="Cancel"
                     onConfirm={() => handleUnassign(item?.boardId?._id || item?.boardId)}
                   >
-                    <Button
-                      danger
-                      size="small"
-                      loading={saving}
-                      style={{ borderRadius: 8, fontWeight: 600 }}
-                    >
+                    <Button danger size="small" loading={saving} style={{ borderRadius: 8, fontWeight: 600 }}>
                       Unassign
                     </Button>
                   </Popconfirm>
@@ -524,32 +366,30 @@ const SchoolBoard = ({ next }) => {
             ))
           )}
         </div>
-
-        <style>{`
-          .board-table-mobile { display: none; }
-          @media (max-width: 768px) {
-            .board-table-desktop { display: none; }
-            .board-table-mobile { display: block; }
-          }
-          @media (min-width: 769px) {
-            .board-table-desktop { display: block; }
-            .board-table-mobile { display: none; }
-          }
-        `}</style>
       </div>
 
+      {/* ── Next step button ────────────────────────────────────── */}
       {next && (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            type="primary"
+          <button
+            className="class-gradient-btn"
             onClick={next}
             disabled={!schoolBoards.length}
-            style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
+            style={{ opacity: !schoolBoards.length ? 0.45 : 1 }}
           >
             Next: Classes →
-          </Button>
+          </button>
         </div>
       )}
+
+      <style>{`
+        .board-mb { display: none; }
+        .board-dt { display: block; }
+        @media (max-width: 768px) {
+          .board-dt { display: none; }
+          .board-mb { display: block; }
+        }
+      `}</style>
     </div>
   );
 };

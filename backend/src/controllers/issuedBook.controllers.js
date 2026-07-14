@@ -5,6 +5,7 @@ import { IssuedBook } from "../models/IssuedBooks.model.js";
 import { Book } from "../models/Books.model.js";
 import { LibrarySetting } from "../models/LibrarySetting.model.js";
 import { Student } from "../models/student.model.js";
+import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -136,7 +137,7 @@ export const returnBook = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status: newStatus } = req.body; // "Returned" | "Lost" | "Damaged"
 
-  const issuedBook = await IssuedBook.findById(id);
+  const issuedBook = await IssuedBook.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!issuedBook) throw new ApiError(404, "Issued book record not found");
   if (issuedBook.status === "Returned") throw new ApiError(400, "Book already returned");
 
@@ -179,7 +180,7 @@ export const collectFine = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { action = "paid", note } = req.body; // "paid" | "waived"
 
-  const issuedBook = await IssuedBook.findById(id);
+  const issuedBook = await IssuedBook.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!issuedBook) throw new ApiError(404, "Record not found");
   if (issuedBook.fineStatus === "Paid") throw new ApiError(400, "Fine already collected");
 
@@ -193,7 +194,7 @@ export const collectFine = asyncHandler(async (req, res) => {
 // ── Delete issued record ──────────────────────────────────────────────────────
 export const deleteIssuedBook = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const record = await IssuedBook.findById(id);
+  const record = await IssuedBook.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!record) throw new ApiError(404, "Record not found");
 
   // If still issued, restore copy count

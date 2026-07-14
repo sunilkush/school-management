@@ -24,9 +24,13 @@ import {
   toolbarRow,
 } from "../../../styles/pageStyles";
 
+const TRANSPORT_MANAGE_ROLES = ["Super Admin", "School Admin", "Transport Manager"];
+
 const RoutesPage = () => {
   const dispatch = useDispatch();
   const { routes, loading } = useSelector((state) => state.transport);
+  const { user } = useSelector((state) => state.auth);
+  const canManageRoutes = TRANSPORT_MANAGE_ROLES.includes(user?.role?.name);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRoute, setEditingRoute] = useState(null);
@@ -114,20 +118,22 @@ const RoutesPage = () => {
     { title: "Bus Assigned", dataIndex: "bus", key: "bus" },
     { title: "Stops", dataIndex: "stops", key: "stops", render: (stops) => stops.join(", ") },
     { title: "Students", dataIndex: "students", key: "students" },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button icon={<EditOutlined />} onClick={() => handleEditRoute(record)}>
-            Edit
-          </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteRoute(record)}>
-            Delete
-          </Button>
-        </Space>
-      ),
-    },
+    ...(canManageRoutes
+      ? [{
+          title: "Actions",
+          key: "actions",
+          render: (_, record) => (
+            <Space>
+              <Button icon={<EditOutlined />} onClick={() => handleEditRoute(record)}>
+                Edit
+              </Button>
+              <Button danger icon={<DeleteOutlined />} onClick={() => handleDeleteRoute(record)}>
+                Delete
+              </Button>
+            </Space>
+          ),
+        }]
+      : []),
   ];
 
   return (
@@ -163,9 +169,11 @@ const RoutesPage = () => {
 
         <div className="page-toolbar" style={toolbarRow}>
           <div style={{ flex: 1, fontWeight: 700, fontSize: 16, color: "var(--text-primary)" }}>Bus Routes</div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-            Add Route
-          </Button>
+          {canManageRoutes && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
+              Add Route
+            </Button>
+          )}
         </div>
 
         <div style={pageCard}>

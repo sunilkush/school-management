@@ -168,7 +168,7 @@ const AcademicYearPage = () => {
 
       if (editId) {
         await dispatch(
-          updateAcademicYear({ id: editId, schoolId: selectedSchoolId, name, startDate, endDate })
+          updateAcademicYear({ id: editId, data: { schoolId: selectedSchoolId, name, startDate, endDate } })
         ).unwrap();
         message.success("Academic year updated successfully");
       } else {

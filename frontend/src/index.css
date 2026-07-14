@@ -141,11 +141,16 @@ body,
 
 body {
   @apply antialiased;
+  font-size: 13px;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 * {
   font-family: "Inter", "Poppins", sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
 }
 
 /* =========================

@@ -22,6 +22,7 @@ import {
 import { allowPublic,auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
 import { validateBody } from "../middlewares/validate.middleware.js";
+import { authRateLimiter } from "../middlewares/security.middleware.js";
 const router = Router();
 
 // Role-Based Access Control
@@ -30,8 +31,13 @@ const ADMIN_AND_ACCOUNTANT_ROLE = ["Super Admin", "School Admin", "Accountant", 
 
 const ALL_USERS = [
   "Super Admin", "School Admin", "Principal", "Vice Principal",
+<<<<<<< HEAD
   "Teacher", "Subject Coordinator", "Exam Coordinator",
   "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
+=======
+  "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
+  "Subject Coordinator", "Exam Coordinator",
+>>>>>>> 25f649612820593646436c4bbf49f790346031e0
   "Student", "Parent",
   "Accountant", "Staff", "Support Staff",
   "Librarian", "Hostel Warden", "Transport Manager",
@@ -41,12 +47,12 @@ const ALL_USERS = [
 
 // ✅ Public Routes
 
-router.post("/login",allowPublic,validateBody(['email', 'password']), loginUser);
-router.post("/refresh-token", allowPublic, refreshAccessToken);
-router.post("/forgot-password", allowPublic, forgotPassword);
-router.post("/reset-password/:token", allowPublic, resetPassword);
+router.post("/login", allowPublic, authRateLimiter, validateBody(['email', 'password']), loginUser);
+router.post("/refresh-token", allowPublic, authRateLimiter, refreshAccessToken);
+router.post("/forgot-password", allowPublic, authRateLimiter, forgotPassword);
+router.post("/reset-password/:token", allowPublic, authRateLimiter, resetPassword);
 router.get("/verify-email/:token", allowPublic, verifyEmail);
-router.post("/resend-verification", allowPublic, resendVerificationEmail);
+router.post("/resend-verification", allowPublic, authRateLimiter, resendVerificationEmail);
 
 // ✅ Protected Routes
 

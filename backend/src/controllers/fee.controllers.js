@@ -67,10 +67,14 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
 });
 
 export const getFeeStructures = asyncHandler(async (req, res) => {
+  const userRoleName = req.user?.roleId?.name || req.user?.role?.name || "";
   const filter = {};
 
-  if (req.query.schoolId) {
-    filter.schoolId = req.query.schoolId;
+  if (userRoleName === "Super Admin") {
+    if (req.query.schoolId) filter.schoolId = req.query.schoolId;
+  } else {
+    if (!req.user.schoolId) throw new ApiError(400, "School not found for this user");
+    filter.schoolId = req.user.schoolId;
   }
 
   if (req.query.academicYearId) {
@@ -103,8 +107,8 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
 
   const updaterRoleName = req.user?.roleId?.name || req.user?.role?.name || "";
   if (
-    updaterRoleName === "School Admin" &&
-    fee.schoolId.toString() !== req.user.schoolId.toString()
+    updaterRoleName !== "Super Admin" &&
+    fee.schoolId.toString() !== req.user.schoolId?.toString()
   ) {
     throw new ApiError(403, "You cannot update this fee structure");
   }
@@ -127,8 +131,8 @@ export const deleteFeeStructure = asyncHandler(async (req, res) => {
 
   const deleterRoleName = req.user?.roleId?.name || req.user?.role?.name || "";
   if (
-    deleterRoleName === "School Admin" &&
-    fee.schoolId.toString() !== req.user.schoolId.toString()
+    deleterRoleName !== "Super Admin" &&
+    fee.schoolId.toString() !== req.user.schoolId?.toString()
   ) {
     throw new ApiError(403, "You cannot delete this fee structure");
   }

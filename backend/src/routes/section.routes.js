@@ -19,6 +19,8 @@ const router = express.Router();
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
 const ADMIN_READ = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Teacher"];
 const ADMIN_AND_COORDINATOR = ["Super Admin", "School Admin", "Subject Coordinator", "Exam Coordinator"];
+// Read-only: school leadership also needs to view sections (e.g. timetable overview)
+const READ_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal"];
 
 
 // ==============================
@@ -38,7 +40,11 @@ router.post(
 router.get(
   "/",
   auth,
+<<<<<<< HEAD
   roleMiddleware(ADMIN_READ),
+=======
+  roleMiddleware(READ_ROLES),
+>>>>>>> 25f649612820593646436c4bbf49f790346031e0
   getAllSections
 );
 
@@ -49,7 +55,11 @@ router.get(
 router.get(
   "/:id",
   auth,
+<<<<<<< HEAD
   roleMiddleware(ADMIN_READ),
+=======
+  roleMiddleware(READ_ROLES),
+>>>>>>> 25f649612820593646436c4bbf49f790346031e0
   getSectionById
 );
 

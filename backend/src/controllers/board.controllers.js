@@ -4,6 +4,12 @@ import { ApiError } from "../utils/ApiError.js";
 import Board from "../models/Board.model.js";
 import mongoose from "mongoose";
 import{SchoolBoard} from "../models/School_board.model.js";
+
+const isSuperAdmin = (req) => (req.userRole?.name || req.user?.role?.name) === "Super Admin";
+
+// Only Super Admin may target another school; School Admin is pinned to their own.
+const resolveSchoolId = (req, candidate) =>
+  isSuperAdmin(req) ? candidate : req.user?.schoolId?._id || req.user?.schoolId;
 /* =====================================================
    CREATE BOARD
 ===================================================== */
@@ -154,8 +160,8 @@ export const deleteBoard = asyncHandler(async (req, res) => {
 
 
 export const assignSchoolBoards = asyncHandler(async (req, res) => {
-  const { schoolId, boardId } = req.body;
-  console.log(req.body)
+  const schoolId = resolveSchoolId(req, req.body?.schoolId);
+  const { boardId } = req.body;
   if (!schoolId || !boardId) {
     throw new ApiError(400, "School ID and Board ID are required");
   }
@@ -188,7 +194,7 @@ export const assignSchoolBoards = asyncHandler(async (req, res) => {
 });
 
 export const getSchoolBoards = asyncHandler(async (req, res) => {
-  const { schoolId } = req.params;
+  const schoolId = resolveSchoolId(req, req.params.schoolId);
 
   if (!mongoose.Types.ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "Invalid school id");
@@ -215,7 +221,7 @@ export const getSchoolBoards = asyncHandler(async (req, res) => {
 });
 
 export const removeSchoolBoard = asyncHandler(async (req, res) => {
- const schoolId = req.body?.schoolId || req.params?.schoolId;
+ const schoolId = resolveSchoolId(req, req.body?.schoolId || req.params?.schoolId);
   const boardId = req.body?.boardId || req.params?.boardId;
 
   if (!mongoose.Types.ObjectId.isValid(schoolId)) {

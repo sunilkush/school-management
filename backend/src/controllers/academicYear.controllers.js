@@ -2,6 +2,7 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
+import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 // ✅ Helper to parse dd/mm/yyyy to Date
 function parseDateString(dateStr) {
   const [day, month, year] = dateStr.split("/");
@@ -77,7 +78,7 @@ export const getAcademicYearsBySchool = asyncHandler(async (req, res) => {
 export const getSingleAcademicYear = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const academicYear = await AcademicYear.findById(id);
+  const academicYear = await AcademicYear.findOne(buildSchoolAccessFilter(req, { _id: id }));
 
   if (!academicYear) {
     throw new ApiError(404, "Academic year not found");
@@ -93,7 +94,7 @@ export const getSingleAcademicYear = asyncHandler(async (req, res) => {
 export const updateAcademicYear = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const existingYear = await AcademicYear.findById(id);
+  const existingYear = await AcademicYear.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!existingYear) throw new ApiError(404, "Academic year not found");
 
   if (existingYear.status === "archived") {
@@ -116,7 +117,7 @@ export const updateAcademicYear = asyncHandler(async (req, res) => {
 export const deleteAcademicYear = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const academicYear = await AcademicYear.findByIdAndDelete(id);
+  const academicYear = await AcademicYear.findOneAndDelete(buildSchoolAccessFilter(req, { _id: id }));
 
   if (!academicYear) {
     throw new ApiError(404, "Academic year not found");
@@ -132,7 +133,7 @@ export const deleteAcademicYear = asyncHandler(async (req, res) => {
 export const setActiveAcademicYear = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const academicYear = await AcademicYear.findById(id);
+  const academicYear = await AcademicYear.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!academicYear) throw new ApiError(404, "Academic year not found");
 
   // Deactivate others
@@ -157,7 +158,7 @@ export const setActiveAcademicYear = asyncHandler(async (req, res) => {
 export const archiveAcademicYear = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const academicYear = await AcademicYear.findById(id);
+  const academicYear = await AcademicYear.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!academicYear) throw new ApiError(404, "Academic year not found");
 
   academicYear.status = "archived";

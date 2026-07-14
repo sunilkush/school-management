@@ -497,6 +497,11 @@ const updateStudent = asyncHandler(async (req, res) => {
       throw new ApiError(404, "Student not found!");
     }
 
+    const updaterRoleName = req.userRole?.name || req.user?.roleId?.name || req.user?.role?.name;
+    if (updaterRoleName !== "Super Admin" && `${student.schoolId}` !== `${req.user.schoolId}`) {
+      throw new ApiError(403, "Forbidden access outside your school");
+    }
+
     /* ===========================
        📚 ENROLLMENT FIND
     ============================ */
@@ -621,6 +626,16 @@ const updateStudent = asyncHandler(async (req, res) => {
 const deleteStudent = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+
+    const existing = await Student.findById(id);
+    if (!existing) {
+      throw new ApiError(404, "Student not found!");
+    }
+
+    const deleterRoleName = req.userRole?.name || req.user?.roleId?.name || req.user?.role?.name;
+    if (deleterRoleName !== "Super Admin" && `${existing.schoolId}` !== `${req.user.schoolId}`) {
+      throw new ApiError(403, "Forbidden access outside your school");
+    }
 
     const student = await Student.findByIdAndDelete(id);
     if (!student) {
