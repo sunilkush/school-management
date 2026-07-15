@@ -36,3 +36,15 @@ export const upload = multer({
     files: 5,                    // max 5 files per request
   },
 });
+
+// Admission documents specifically: capped much smaller (50 KB) so scanned
+// certificates/IDs stay cheap to store — separate instance so it doesn't
+// shrink the 5 MB limit other upload flows (homework, study material, etc.) rely on.
+export const uploadAdmissionDocs = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 50 * 1024,  // 50 KB per file
+    files: 5,
+  },
+});

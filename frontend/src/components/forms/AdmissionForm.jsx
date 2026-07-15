@@ -1,30 +1,48 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Select, DatePicker, InputNumber, message, Modal } from "antd";
+import { Form, Input, Select, DatePicker, InputNumber, message, Modal, Upload, Table, Button } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLastRegisteredStudent, createStudent, fetchClassRollNumbers } from "../../features/studentSlice";
 import { getClassData } from "../../features/schoolClassSlice";
 import {
   UserOutlined, ProfileOutlined, ManOutlined, WomanOutlined,
   CheckOutlined, LeftOutlined, RightOutlined, InfoCircleOutlined,
+  UploadOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined,
 } from "@ant-design/icons";
+
+const DOCUMENT_ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx";
+const MAX_DOCUMENTS = 5;
+const MAX_DOCUMENT_SIZE_KB = 50;
+const MAX_DOCUMENT_SIZE = MAX_DOCUMENT_SIZE_KB * 1024;
+
+// Each row gets its own independent upload control (not one shared multi-file dropzone).
+const DEFAULT_DOCUMENT_ROWS = ["Birth Certificate", "Student Photo", "ID Proof (Aadhar/Passport)", "Previous School TC"];
+const makeDocumentRow = (label = "", i = Date.now()) => ({
+  uid: `doc-${i}-${Math.random().toString(36).slice(2)}`,
+  label,
+  file: null,
+  name: null,
+  size: null,
+});
 
 const { TextArea } = Input;
 
 const TABS = [
-  { key: "student", label: "Student",  icon: <UserOutlined />,    step: 1 },
-  { key: "other",   label: "Details",  icon: <ProfileOutlined />, step: 2 },
-  { key: "father",  label: "Father",   icon: <ManOutlined />,     step: 3 },
-  { key: "mother",  label: "Mother",   icon: <WomanOutlined />,   step: 4 },
+  { key: "student",   label: "Student",   icon: <UserOutlined />,     step: 1 },
+  { key: "other",     label: "Details",   icon: <ProfileOutlined />,  step: 2 },
+  { key: "father",    label: "Father",    icon: <ManOutlined />,      step: 3 },
+  { key: "mother",    label: "Mother",    icon: <WomanOutlined />,    step: 4 },
+  { key: "documents", label: "Documents", icon: <FileTextOutlined />, step: 5 },
 ];
 
 const TAB_KEYS = TABS.map(t => t.key);
 
 // Fields to validate before leaving each step
 const STEP_RULES = {
-  student: ["studentName", "email", "mobileNumber", "schoolClassId", "sectionId", "admissionDate"],
-  other:   ["dateOfBirth", "gender"],
-  father:  ["fatherName", "fatherMobile"],
-  mother:  [],
+  student:   ["studentName", "email", "mobileNumber", "schoolClassId", "sectionId", "admissionDate"],
+  other:     ["dateOfBirth", "gender"],
+  father:    ["fatherName", "fatherMobile"],
+  mother:    [],
+  documents: [],
 };
 
 const CredentialBlock = ({ label, creds }) => {
@@ -81,6 +99,7 @@ const AdmissionForm = ({ onClose }) => {
   const [submitting, setSubmitting]       = useState(false);
   const [nextRollNumber, setNextRollNumber]     = useState(null);
   const [rollPreviewLoading, setRollPreviewLoading] = useState(false);
+  const [documentList, setDocumentList]   = useState(() => DEFAULT_DOCUMENT_ROWS.map((label, i) => makeDocumentRow(label, i)));
 
   const currentIndex = TAB_KEYS.indexOf(activeTab);
 
@@ -126,6 +145,29 @@ const AdmissionForm = ({ onClose }) => {
     }
   };
 
+  // Each row's Upload control fires this independently — files are picked one row at a time,
+  // never bulk-selected into a shared list.
+  const handleDocumentFileSelect = (uid, file) => {
+    if (file.size > MAX_DOCUMENT_SIZE) {
+      message.error(`"${file.name}" is ${(file.size / 1024).toFixed(0)}KB — max allowed is ${MAX_DOCUMENT_SIZE_KB}KB.`);
+      return Upload.LIST_IGNORE;
+    }
+    setDocumentList(prev => prev.map(d => (d.uid === uid ? { ...d, file, name: file.name, size: file.size } : d)));
+    return false; // prevent antd's built-in auto-upload
+  };
+
+  const handleDocumentLabelChange = (uid, label) => {
+    setDocumentList(prev => prev.map(d => (d.uid === uid ? { ...d, label } : d)));
+  };
+
+  const handleDocumentRowAdd = () => {
+    setDocumentList(prev => (prev.length >= MAX_DOCUMENTS ? prev : [...prev, makeDocumentRow("", prev.length)]));
+  };
+
+  const handleDocumentRowRemove = (uid) => {
+    setDocumentList(prev => prev.filter(d => d.uid !== uid));
+  };
+
   const goNext = async () => {
     const fieldsToValidate = STEP_RULES[activeTab] || [];
     if (fieldsToValidate.length) {
@@ -162,7 +204,16 @@ const AdmissionForm = ({ onClose }) => {
         sectionId:     values.sectionId,
       };
 
-      const res = await dispatch(createStudent(payload));
+      const filledDocuments = documentList.filter(d => d.file);
+      let requestBody = payload;
+      if (filledDocuments.length) {
+        payload.documentLabels = filledDocuments.map(d => d.label || d.name);
+        requestBody = new FormData();
+        requestBody.append("payload", JSON.stringify(payload));
+        filledDocuments.forEach(d => requestBody.append("documents", d.file));
+      }
+
+      const res = await dispatch(createStudent(requestBody));
 
       if (res?.meta?.requestStatus === "fulfilled") {
         message.success("Student admitted successfully!");
@@ -207,6 +258,7 @@ const AdmissionForm = ({ onClose }) => {
         setActiveTab("student");
         setSections([]);
         setNextRollNumber(null);
+        setDocumentList(DEFAULT_DOCUMENT_ROWS.map((label, i) => makeDocumentRow(label, i)));
         dispatch(fetchLastRegisteredStudent({ schoolId, academicYearId }));
       } else {
         message.error(res?.payload || "Admission failed. Please try again.");
@@ -652,6 +704,81 @@ const AdmissionForm = ({ onClose }) => {
                 </Form.Item>
               </div>
               <InfoHint>Mother's login credentials will be auto-generated after successful admission.</InfoHint>
+            </>
+          )}
+
+          {/* STEP 5 — Documents */}
+          {activeTab === "documents" && (
+            <>
+              <SectionHeading>Upload Documents</SectionHeading>
+              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 12 }}>
+                Each document is uploaded separately below · JPG, PNG, PDF, DOC, XLS · max {MAX_DOCUMENT_SIZE_KB}KB each
+              </div>
+
+              <Table
+                size="small"
+                pagination={false}
+                rowKey="uid"
+                dataSource={documentList}
+                columns={[
+                  {
+                    title: "Document Label",
+                    dataIndex: "label",
+                    render: (label, row) => (
+                      <Input
+                        size="small"
+                        value={label}
+                        placeholder="e.g. Birth Certificate"
+                        onChange={(e) => handleDocumentLabelChange(row.uid, e.target.value)}
+                      />
+                    ),
+                  },
+                  {
+                    title: "File",
+                    dataIndex: "name",
+                    render: (name, row) => (
+                      <Upload
+                        showUploadList={false}
+                        accept={DOCUMENT_ACCEPT}
+                        beforeUpload={(file) => handleDocumentFileSelect(row.uid, file)}
+                      >
+                        {name ? (
+                          <span style={{ fontSize: 12, color: "#374151" }}>
+                            {name}{" "}
+                            <span style={{ color: "#9ca3af" }}>({(row.size / 1024).toFixed(1)} KB)</span>{" "}
+                            <span style={{ color: "#7c3aed", cursor: "pointer", fontWeight: 600 }}>Change</span>
+                          </span>
+                        ) : (
+                          <Button size="small" icon={<UploadOutlined />}>Choose File</Button>
+                        )}
+                      </Upload>
+                    ),
+                  },
+                  {
+                    title: "",
+                    dataIndex: "uid",
+                    width: 40,
+                    render: (uid) => (
+                      <DeleteOutlined
+                        style={{ color: "#ef4444", cursor: "pointer" }}
+                        onClick={() => handleDocumentRowRemove(uid)}
+                      />
+                    ),
+                  },
+                ]}
+              />
+
+              {documentList.length < MAX_DOCUMENTS && (
+                <Button
+                  type="dashed"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={handleDocumentRowAdd}
+                  style={{ marginTop: 12 }}
+                >
+                  Add Document
+                </Button>
+              )}
             </>
           )}
         </Form>

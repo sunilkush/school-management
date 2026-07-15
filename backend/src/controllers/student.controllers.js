@@ -9,6 +9,7 @@ import { generateNextRegNumber } from "../utils/generateRegNumber.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Section } from "../models/section.model.js";
 import { SchoolClass } from "../models/schoolClass.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import mongoose from "mongoose";
 import crypto from "crypto";
 /* ================= ROLE FETCH ================= */
@@ -26,6 +27,15 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
+    // Multipart requests (web, when admission documents are attached) can't carry nested
+    // objects as plain form fields, so the frontend sends the whole payload JSON-stringified
+    // under "payload" instead; plain JSON requests (mobile app, or web with no documents) keep
+    // using req.body directly.
+    const body =
+      typeof req.body?.payload === "string"
+        ? JSON.parse(req.body.payload)
+        : req.body;
+
     const {
       studentData,
       fatherData,
@@ -34,7 +44,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       academicYearId,
       schoolClassId,
       sectionId,
-    } = req.body;
+    } = body;
     /* 🔐 VALIDATION */
     if (!studentData?.name || !studentData?.email) {
       throw new ApiError(400, "Student name & email required");
@@ -138,6 +148,39 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
       }
     }
 
+    /* 📎 ADMISSION DOCUMENTS */
+    const documentFiles = Array.isArray(req.files?.documents)
+      ? req.files.documents
+      : [];
+
+    // documentLabels is a parallel array (same order as the "documents" file field) carrying
+    // the admin-entered label per document, e.g. "Birth Certificate" — falls back to the
+    // filename when a label wasn't provided.
+    const documentLabels = Array.isArray(body.documentLabels)
+      ? body.documentLabels
+      : [];
+
+    const documents = [];
+    for (let i = 0; i < documentFiles.length; i++) {
+      const file = documentFiles[i];
+      const uploaded = await uploadOnCloudinary(file.path);
+
+      if (!uploaded?.secure_url && !uploaded?.url) {
+        throw new ApiError(500, "Failed to upload one or more documents");
+      }
+
+      documents.push({
+        name:
+          documentLabels[i]?.trim() ||
+          file.originalname ||
+          uploaded.original_filename ||
+          "document",
+        url: uploaded.secure_url || uploaded.url,
+        mimeType: file.mimetype || "",
+        publicId: uploaded.public_id || "",
+      });
+    }
+
     /* 🎓 STUDENT PROFILE */
     const student = (
       await Student.create(
@@ -153,6 +196,7 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
             bloodGroup: studentData.bloodGroup,
             fatherInfo: fatherData,
             motherInfo: motherData,
+            documents,
           },
         ],
         { session }

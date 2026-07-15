@@ -19,6 +19,7 @@ import {
 import { getMyProfile, updateMyProfile } from "../controllers/studentPortal.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { checkActiveAcademicYear } from "../middlewares/checActiveYear.middleware.js";
+import { uploadAdmissionDocs } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
@@ -32,10 +33,14 @@ const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Principal", "Vi
 ========================================================= */
 
 // ✅ Register Student (Super Admin & School Admin)
+// upload.fields no-ops on plain JSON requests (e.g. the mobile app, which never attaches
+// documents), so this stays backward compatible — see school.routes.js's /register for the
+// same dual-mode pattern.
 router.post(
   "/register",
   auth,
   roleMiddleware(ADMIN_ROLE),
+  uploadAdmissionDocs.fields([{ name: "documents", maxCount: 5 }]),
   createStudentAdmission
 );
 

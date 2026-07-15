@@ -26,6 +26,22 @@ const studentSchema = new mongoose.Schema(
       default: null,
     },
 
+    /* ===========================
+       📎 ADMISSION DOCUMENTS
+    ============================ */
+    documents: {
+      type: [
+        {
+          name: { type: String, trim: true },
+          url: { type: String, required: true },
+          mimeType: { type: String, trim: true },
+          publicId: { type: String, trim: true },
+          uploadedAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+
     dateOfBirth: {
       type: Date,
       index: true,
