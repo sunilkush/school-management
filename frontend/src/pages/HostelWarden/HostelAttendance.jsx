@@ -39,7 +39,7 @@ const HostelAttendance = () => {
 
   const sheetStudents = useMemo(() => {
     if (!attendanceSheet) return [];
-    return attendanceSheet.students || [];
+    return attendanceSheet.sheet || attendanceSheet.students || [];
   }, [attendanceSheet]);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ const HostelAttendance = () => {
   const handleSubmit = async () => {
     const records = sheetStudents.map((s) => ({
       studentId: s.studentId,
-      studentName: s.studentName,
+      studentName: s.name || s.studentName,
       roomNumber: s.roomNumber,
       status: markedStatus[s.studentId] || "present",
     }));
@@ -71,7 +71,7 @@ const HostelAttendance = () => {
 
   const handleExport = () => {
     const headers = ["Student", "Room", "Status"];
-    const rows = sheetStudents.map((s) => [s.studentName, s.roomNumber || "—", markedStatus[s.studentId] || "present"]);
+    const rows = sheetStudents.map((s) => [s.name || s.studentName, s.roomNumber || "—", markedStatus[s.studentId] || "present"]);
     const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
@@ -92,7 +92,7 @@ const HostelAttendance = () => {
       title: "Student",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600 }}>{r.studentName}</div>
+          <div style={{ fontWeight: 600 }}>{r.name || r.studentName}</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.admissionNo || "—"}</div>
         </div>
       ),

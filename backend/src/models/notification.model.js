@@ -35,6 +35,7 @@ const NotificationSchema = new Schema(
       email: { type: Boolean, default: false },
       sms: { type: Boolean, default: false },
       whatsapp: { type: Boolean, default: false },
+      push: { type: Boolean, default: false },
     },
     deliveryStats: {
       sent: { type: Number, default: 0 },

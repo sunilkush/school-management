@@ -31,7 +31,7 @@ const LeaveManagement = () => {
   const { leaves, leavesTotal, leavesSummary, leavesLoading, actionLoading } = useSelector((s) => s.hostelWarden || {});
   const { students = [] } = useSelector((s) => s.library || {});
   const { user } = useSelector((s) => s.auth);
-  const schoolId = user?.schoolId?._id || user?.schoolId;
+  const schoolId = user?.school?._id || user?.schoolId?._id || user?.schoolId;
 
   const [form] = Form.useForm();
   const [addModal, setAddModal] = useState(false);
@@ -215,7 +215,11 @@ const LeaveManagement = () => {
             <Col xs={24} sm={12}>
               <Form.Item name="studentId" label="Student" rules={[{ required: true }]}>
                 <Select placeholder="Select student" showSearch optionFilterProp="children">
-                  {students.map((s) => <Option key={s._id} value={s._id}>{s.name} ({s.admissionNo || "—"})</Option>)}
+                  {students.map((s) => (
+                    <Option key={s._id} value={s?.user?._id || s._id}>
+                      {s?.user?.name || s?.userDetails?.name || s?.studentName || s?.name || "Unnamed Student"} ({s.admissionNo || "—"})
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>

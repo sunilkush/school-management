@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { Payment } from "../models/payment.model.js";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { School } from "../models/school.model.js";
+import { Student } from "../models/student.model.js";
 
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -29,10 +30,26 @@ const getRazorpayInstance = async (schoolId) => {
   };
 };
 
-const ensureInstallmentAccess = async ({ installmentId, schoolId }) => {
+const ensureInstallmentAccess = async ({ installmentId, schoolId, user }) => {
   const installment = await FeeInstallment.findById(installmentId);
   if (!installment) throw new ApiError(404, "Installment not found");
   if (installment.schoolId.toString() !== schoolId.toString()) throw new ApiError(403, "Unauthorized access");
+
+  // Student/Parent may only ever act on their own (or their linked child's) installment —
+  // route middleware only checks role name, not record ownership, so it has to happen here.
+  const roleName = user?.roleId?.name?.toLowerCase();
+  if (roleName === "student") {
+    const owns = await Student.exists({ _id: installment.studentId, userId: user._id, schoolId });
+    if (!owns) throw new ApiError(403, "Access denied: this installment does not belong to you");
+  } else if (roleName === "parent") {
+    const owns = await Student.exists({
+      _id: installment.studentId,
+      schoolId,
+      $or: [{ fatherId: user._id }, { motherId: user._id }, { guardianId: user._id }],
+    });
+    if (!owns) throw new ApiError(403, "This student is not linked with this parent");
+  }
+
   return installment;
 };
 
@@ -71,7 +88,7 @@ export const createPayment = asyncHandler(async (req, res) => {
   const { studentId, installmentId, amount, paymentMethod, paymentMode, transactionId, razorpay } = req.body;
   const schoolId = requireSchoolId(req.user);
 
-  const installment = await ensureInstallmentAccess({ installmentId, schoolId });
+  const installment = await ensureInstallmentAccess({ installmentId, schoolId, user: req.user });
   const mode = String(paymentMethod || paymentMode || "cash").toLowerCase();
 
   if (mode === "razorpay") {
@@ -165,7 +182,7 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
   const { installmentId } = req.body;
    const schoolId = requireSchoolId(req.user);
 
-  const installment = await ensureInstallmentAccess({ installmentId, schoolId });
+  const installment = await ensureInstallmentAccess({ installmentId, schoolId, user: req.user });
   const payableAmount = installment.amount - installment.paidAmount;
 
   if (payableAmount <= 0) throw new ApiError(400, "Installment already paid");
@@ -198,7 +215,7 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   if (expectedSignature !== razorpay_signature) throw new ApiError(400, "Payment verification failed");
 
-  const installment = await ensureInstallmentAccess({ installmentId, schoolId });
+  const installment = await ensureInstallmentAccess({ installmentId, schoolId, user: req.user });
   const amount = installment.amount - installment.paidAmount;
 
   if (amount <= 0) throw new ApiError(400, "Installment already paid");
@@ -227,8 +244,20 @@ export const getPayments = asyncHandler(async (req, res) => {
 
   const filter = { schoolId };
   if (id) filter._id = id;
-  if (["Student", "Parent"].includes(req.userRole?.name)) {
-    filter.studentId = req.user._id;
+
+  // Payment.studentId refs the Student model, not User — req.user._id can never match it directly,
+  // so Student/Parent callers need their actual Student._id(s) resolved first (see also
+  // ensureInstallmentAccess above, which had the same User-vs-Student id mismatch).
+  const roleName = req.userRole?.name;
+  if (roleName === "Student") {
+    const student = await Student.findOne({ userId: req.user._id, schoolId }).select("_id");
+    filter.studentId = student?._id ?? null; // null → deliberately matches nothing rather than every payment
+  } else if (roleName === "Parent") {
+    const children = await Student.find({
+      schoolId,
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    }).select("_id");
+    filter.studentId = { $in: children.map((c) => c._id) };
   }
   if (paymentMode) filter.paymentMode = paymentMode;
   if (startDate || endDate) {

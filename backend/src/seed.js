@@ -45,8 +45,8 @@ import { Teacher }             from "./models/teacherAssignment.model.js";
 import { LeaveRequest }        from "./models/LeaveRequest.model.js";
 import { Transport }           from "./models/Transport.model.js";
 import { TransportRoute }      from "./models/TransportRoute.model.js";
-import { Hostel }              from "./models/Hostel.model.js";
 import { HostelRoom }          from "./models/HostelRoom.model.js";
+import { HostelAttendance }    from "./models/HostelAttendance.model.js";
 import { Inventory }           from "./models/Inventory.model.js";
 import { AdmissionInquiry }    from "./models/AdmissionInquiry.model.js";
 import { Complaint }           from "./models/Complaint.model.js";
@@ -56,6 +56,7 @@ import { Employee }           from "./models/Employee.model.js";
 import { PayrollStructure }   from "./models/payrollStructure.model.js";
 import { PayrollCycle }       from "./models/payrollCycle.model.js";
 import { PayrollEntry }       from "./models/payrollEntry.model.js";
+import { ClassTeacherAssignment } from "./models/ClassTeacherAssignment.model.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const ok   = (msg) => console.log(`  ✓ ${msg}`);
@@ -103,6 +104,29 @@ async function seed() {
   const roleMap = {};
   roles.forEach((r) => { roleMap[r.name] = r._id; });
   ok(`Roles loaded: ${roles.length}`);
+
+  // ── 2b. Create new roles if missing (Sports Teacher, Lab Tech, Medical Officer, Class Teacher) ──
+  const newRoleDefs = [
+    { name: "Sports Teacher",  code: "SPTS", level: 3 },
+    { name: "Lab Technician",  code: "LABT", level: 4 },
+    { name: "Medical Officer", code: "MEDO", level: 4 },
+    { name: "Class Teacher",   code: "CLST", level: 3 },
+  ];
+  for (const rd of newRoleDefs) {
+    if (!roleMap[rd.name]) {
+      let r = await Role.findOne({ name: rd.name });
+      if (!r) {
+        r = await Role.create({
+          name: rd.name, code: rd.code, level: rd.level,
+          isActive: true, permissions: [], type: "system",
+        });
+        ok(`Role created: ${rd.name}`);
+      } else {
+        skip(`Role already exists: ${rd.name}`);
+      }
+      roleMap[rd.name] = r._id;
+    }
+  }
 
   // ── 3. Admin user (School Admin) ────────────────────────────────────────────
   const admin = await User.findOne({ schoolId, roleId: roleMap["School Admin"] });
@@ -186,6 +210,9 @@ async function seed() {
     { title: "Security Guard",        level: "Junior", deptCode: "ADMIN" },
     { title: "Hostel Warden",         level: "Mid",    deptCode: "TRANS" },
     { title: "Transport Manager",     level: "Mid",    deptCode: "TRANS" },
+    { title: "Sports Coach",          level: "Mid",    deptCode: "TEACH" },
+    { title: "Lab Technician",        level: "Mid",    deptCode: "IT"    },
+    { title: "Medical Officer",       level: "Senior", deptCode: "ADMIN" },
   ];
   const desgMap = {};
   for (const d of desgDefs) {
@@ -352,6 +379,34 @@ async function seed() {
       ecName: "Anil Dixit",      ecPhone: "9811002112",
       dept: "TEACH", desg: "Subject Coordinator",
     },
+    {
+      name: "Arjun Khanna",   email: "sportsteacher@dps.demo",  role: "Sports Teacher",   regId: "STF013",
+      phone: "9811002013",    gender: "Male",   dob: "1991-08-14", qual: "B.P.Ed, M.P.Ed",   join: "2020-06-01",
+      addr: "R-33, Rajouri Garden, New Delhi – 110027",
+      ecName: "Sunita Khanna",   ecPhone: "9811002113",
+      dept: "TEACH", desg: "Sports Coach",
+    },
+    {
+      name: "Rekha Soni",     email: "labtechnician@dps.demo",  role: "Lab Technician",   regId: "STF014",
+      phone: "9811002014",    gender: "Female", dob: "1987-03-22", qual: "B.Sc Chemistry, Dip Lab Tech", join: "2018-09-01",
+      addr: "S-17, Lajpat Nagar III, New Delhi – 110024",
+      ecName: "Vijay Soni",      ecPhone: "9811002114",
+      dept: "IT",   desg: "Lab Technician",
+    },
+    {
+      name: "Dr. Suresh Jain", email: "medicalofficer@dps.demo", role: "Medical Officer",  regId: "STF015",
+      phone: "9811002015",    gender: "Male",   dob: "1980-11-05", qual: "MBBS, MD (General Medicine)", join: "2017-04-01",
+      addr: "T-9, Safdarjung Enclave, New Delhi – 110029",
+      ecName: "Alka Jain",       ecPhone: "9811002115",
+      dept: "ADMIN", desg: "Medical Officer",
+    },
+    {
+      name: "Nandini Bajaj",  email: "classteacher@dps.demo",   role: "Class Teacher",    regId: "STF016",
+      phone: "9811002016",    gender: "Female", dob: "1989-06-30", qual: "M.A. English, B.Ed",           join: "2019-08-01",
+      addr: "U-51, Mayur Vihar Phase-2, Delhi – 110091",
+      ecName: "Rajeev Bajaj",    ecPhone: "9811002116",
+      dept: "TEACH", desg: "Teacher",
+    },
   ];
 
   const staffMap = {};
@@ -368,6 +423,55 @@ async function seed() {
     staffMap[s.role] = u;
   }
   ok(`Staff users: ${Object.keys(staffMap).length}`);
+
+  // ── 10a. Additional Roles demo (assign Class Teacher as secondary role to teacher1) ──
+  if (roleMap["Class Teacher"] && teachers[0]) {
+    await User.updateOne(
+      { _id: teachers[0]._id },
+      { $addToSet: { additionalRoles: roleMap["Class Teacher"] } }
+    );
+    ok(`Additional role "Class Teacher" → ${teachers[0].name}`);
+  }
+  if (roleMap["Exam Coordinator"] && teachers[1]) {
+    const examCoordRole = await Role.findOne({ name: "Exam Coordinator" });
+    if (examCoordRole) {
+      await User.updateOne(
+        { _id: teachers[1]._id },
+        { $addToSet: { additionalRoles: examCoordRole._id } }
+      );
+      ok(`Additional role "Exam Coordinator" → ${teachers[1].name}`);
+    }
+  }
+
+  // ── 10b. Class Teacher Assignments ──────────────────────────────────────────
+  const ctaDefs = [
+    { teacher: teachers[0], classIdx: 0, sec: "A" },
+    { teacher: teachers[1], classIdx: 1, sec: "A" },
+    { teacher: teachers[2], classIdx: 2, sec: "B" },
+  ];
+  let ctaCount = 0;
+  for (const { teacher, classIdx, sec } of ctaDefs) {
+    const cls = targetClasses[classIdx];
+    if (!cls || !teacher) continue;
+    const secs = sectionMap[String(cls._id)] || [];
+    const section = secs.find((s) => s.name === sec) || secs[0];
+    const existing = await ClassTeacherAssignment.findOne({
+      teacherId: teacher._id, schoolId, academicYearId: ayId, isActive: true,
+    });
+    if (!existing) {
+      await ClassTeacherAssignment.create({
+        teacherId:     teacher._id,
+        schoolClassId: cls._id,
+        sectionId:     section?._id || null,
+        academicYearId: ayId,
+        schoolId,
+        isActive:      true,
+        assignedBy:    adminId,
+      });
+      ctaCount++;
+    }
+  }
+  ok(`Class Teacher Assignments: ${ctaCount} new`);
 
   // ── 9. Students + Parents ───────────────────────────────────────────────────
   const studentDefs = [
@@ -891,16 +995,54 @@ async function seed() {
   }
   ok(`Hostel rooms: ${roomCount}`);
 
-  // Assign first 6 students to hostel rooms
+  // Assign first 6 students to hostel rooms (HostelRoom.students is the actual allocation
+  // record every hostel feature — attendance, leave, dashboard — reads from)
   let hostelCount = 0;
   const hostelRoomNumbers = hostelRoomDefs.map((r) => r.roomNumber);
   for (let i = 0; i < Math.min(studentObjects.length, 6); i++) {
     const { stuUser } = studentObjects[i];
     const roomNumber  = hostelRoomNumbers[Math.floor(i / 2)];
-    const exists = await Hostel.findOne({ schoolId, studentId: stuUser._id, academicYearId: ayId });
-    if (!exists) { await Hostel.create({ schoolId, academicYearId: ayId, studentId: stuUser._id, roomNumber, status: "occupied" }); hostelCount++; }
+    const room = await HostelRoom.findOne({ schoolId, roomNumber });
+    if (!room) continue;
+    const alreadyAssigned = room.students.some((s) => s.studentId?.toString() === stuUser._id.toString());
+    if (!alreadyAssigned) {
+      room.students.push({ studentId: stuUser._id, name: stuUser.name });
+      await room.save();
+      hostelCount++;
+    }
   }
   ok(`Hostel assignments: ${hostelCount}`);
+
+  // Attendance history — last 5 days (morning session), so the History tab and dashboard
+  // "last attendance" widget have something to show instead of appearing empty
+  const hostelAssignedStudents = [];
+  for (const roomNumber of hostelRoomNumbers) {
+    const room = await HostelRoom.findOne({ schoolId, roomNumber });
+    if (!room) continue;
+    room.students.forEach((s) => {
+      if (s.studentId) hostelAssignedStudents.push({ studentId: s.studentId, name: s.name, roomNumber: room.roomNumber });
+    });
+  }
+  const hostelWardenUser = staffMap["Hostel Warden"];
+  let attendanceCount = 0;
+  if (hostelWardenUser && hostelAssignedStudents.length > 0) {
+    for (let d = 1; d <= 5; d++) {
+      const date = new Date();
+      date.setDate(date.getDate() - d);
+      date.setHours(0, 0, 0, 0);
+      const exists = await HostelAttendance.findOne({ schoolId, date, session: "morning" });
+      if (exists) continue;
+      const records = hostelAssignedStudents.map((s, idx) => ({
+        studentId: s.studentId,
+        studentName: s.name,
+        roomNumber: s.roomNumber,
+        status: idx === 0 && d === 2 ? "absent" : idx === 1 && d === 3 ? "leave" : "present",
+      }));
+      await HostelAttendance.create({ schoolId, academicYearId: ayId, date, session: "morning", records, markedBy: hostelWardenUser._id });
+      attendanceCount++;
+    }
+  }
+  ok(`Hostel attendance history: ${attendanceCount}`);
 
   // ── 28. Inventory ────────────────────────────────────────────────────────────
   const inventoryDefs = [
@@ -1273,6 +1415,16 @@ SUPPORT STAFF:
   hostelwarden@dps.demo       (Hostel Warden)
   transport@dps.demo          (Transport Manager)
 
+NEW ROLES (added today):
+  sportsteacher@dps.demo      (Sports Teacher)
+  labtechnician@dps.demo      (Lab Technician)
+  medicalofficer@dps.demo     (Medical Officer)
+  classteacher@dps.demo       (Class Teacher)
+
+MULTI-ROLE DEMO:
+  rajesh.kumar@dps.demo       (Teacher + Class Teacher additional role → Class 1A)
+  priya.sharma@dps.demo       (Teacher + Exam Coordinator additional role → Class 2A)
+
 STUDENTS (sample):
   aarav.s@dps.demo            (Class 1 – Sec A)
   diya.p@dps.demo             (Class 1 – Sec A)
@@ -1282,7 +1434,10 @@ PARENTS (sample):
   parent.aarav.s@dps.demo     → Aarav Sharma's parent
 
 MODULES SEEDED:
-  ✓ Departments (6) & Designations (16)
+  ✓ Departments (6) & Designations (19)
+  ✓ New Roles (Sports Teacher, Lab Technician, Medical Officer, Class Teacher)
+  ✓ Multi-role demo (additional roles assigned to Rajesh Kumar & Priya Sharma)
+  ✓ Class Teacher Assignments (Rajesh → Cls 1A, Priya → Cls 2A, Amit → Cls 3B)
   ✓ Teacher Assignments
   ✓ Timetable (TimeSlots + Periods)
   ✓ Assignments + Submissions

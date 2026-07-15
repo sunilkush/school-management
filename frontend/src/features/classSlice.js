@@ -19,12 +19,9 @@ export const createClass = createAsyncThunk(
 // ================= FETCH =================
 export const fetchAllClasses = createAsyncThunk(
   "class/fetchAllClasses",
-  async (_, { rejectWithValue}) => {
+  async (params, { rejectWithValue}) => {
     try {
-     
-
-      const res = await apiClient.get(`/class`);
-
+      const res = await apiClient.get(`/class`, { params });
       return res.data; // ✅ full response
     } catch (error) {
       return rejectWithValue(

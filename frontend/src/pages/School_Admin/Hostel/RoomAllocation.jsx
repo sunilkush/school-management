@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import {
-  Layout,
-  Breadcrumb,
   Table,
   Button,
   Space,
   Modal,
   Form,
   Input,
-  Select,
   message,
   Tag,
-  Card,
-  Row,
-  Col,
 } from "antd";
 import {
   PlusOutlined,
@@ -21,10 +15,23 @@ import {
   DeleteOutlined,
   UserAddOutlined,
   UserDeleteOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell,
+  tableContainer, tableHeadCss, modalTitle,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
-const { Option } = Select;
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const RoomAllocation = () => {
   const [rooms, setRooms] = useState([
@@ -93,7 +100,7 @@ const RoomAllocation = () => {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Space>
+        <Space wrap>
           <Button icon={<UserAddOutlined />} onClick={() => { setSelectedRoom(record); setAssignModalVisible(true); }}>
             Assign Student
           </Button>
@@ -113,37 +120,31 @@ const RoomAllocation = () => {
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 24 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Hostel</Breadcrumb.Item>
-        <Breadcrumb.Item>Room Allocation</Breadcrumb.Item>
-      </Breadcrumb>
+    <div>
+      <PageHeader
+        title="Room Allocation"
+        subtitle="Assign and manage hostel room occupancy"
+        icon={<HomeOutlined />}
+      />
+      <div style={pageWrapper}>
 
-      <Content>
-        {/* Summary Cards */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}>
-            <Card title="Total Rooms">{totalRooms}</Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="Total Occupied">{totalOccupied}</Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card title="Total Available">{totalAvailable}</Card>
-          </Col>
-        </Row>
-
-        <div style={{ marginBottom: 16 }}>
-          <h2>Room Allocation</h2>
+        <div style={statGrid(160)}>
+          <StatCard icon={<HomeOutlined />} label="Total Rooms" value={totalRooms} color="#2563EB" />
+          <StatCard icon={<UserAddOutlined />} label="Total Occupied" value={totalOccupied} color="#F59E0B" />
+          <StatCard icon={<UserDeleteOutlined />} label="Total Available" value={totalAvailable} color="#22C55E" />
         </div>
 
-        <Table columns={columns} dataSource={rooms} pagination={{ pageSize: 5 }} rowKey="key" />
+        <style>{tableHeadCss("room-allocation-tbl")}</style>
+        <div style={{ ...sectionPanel, padding: 0 }}>
+          <div className="room-allocation-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+            <Table columns={columns} dataSource={rooms} pagination={{ pageSize: 5 }} rowKey="key" />
+          </div>
+        </div>
 
         {/* Assign Student Modal */}
         <Modal
-          title={`Assign Student to Room ${selectedRoom?.roomNumber}`}
-          visible={assignModalVisible}
+          title={modalTitle(<UserAddOutlined />, `Assign Student to Room ${selectedRoom?.roomNumber || ""}`)}
+          open={assignModalVisible}
           onCancel={() => { setAssignModalVisible(false); assignForm.resetFields(); setSelectedRoom(null); }}
           footer={null}
         >
@@ -162,16 +163,17 @@ const RoomAllocation = () => {
 
         {/* Unassign Student Modal */}
         <Modal
-          title={`Unassign Student ${selectedStudent} from Room ${selectedRoom?.roomNumber}`}
-          visible={unassignModalVisible}
+          title={modalTitle(<UserDeleteOutlined />, `Unassign Student ${selectedStudent || ""} from Room ${selectedRoom?.roomNumber || ""}`)}
+          open={unassignModalVisible}
           onCancel={() => { setUnassignModalVisible(false); setSelectedRoom(null); setSelectedStudent(null); }}
           okText="Unassign"
+          okButtonProps={{ danger: true }}
           onOk={handleUnassignStudent}
         >
           <p>Are you sure you want to unassign {selectedStudent} from Room {selectedRoom?.roomNumber}?</p>
         </Modal>
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 };
 

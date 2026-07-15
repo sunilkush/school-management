@@ -184,25 +184,25 @@ const LibraryDashboard = () => {
 
       {/* ── KPI Row ─────────────────────────────────────────────── */}
       <div style={statGrid(170)}>
-        <KpiCard icon={<BookOutlined />}         label="Total Books"      value={stats?.totalBooks ?? books.length}                                           color="#14B8A6" onClick={() => navigate("librarian/book-catalog")} />
+        <KpiCard icon={<BookOutlined />}         label="Total Books"      value={stats?.totalBooks ?? books.length}                                           color="#14B8A6" onClick={() => navigate("/dashboard/librarian/book-catalog")} />
         <KpiCard icon={<CheckCircleOutlined />}  label="Available Copies" value={stats?.availableCopies}                                                      color="#22C55E" />
-        <KpiCard icon={<FileTextOutlined />}     label="Currently Issued" value={stats?.issuedCount}                                                          color="#2563EB" onClick={() => navigate("librarian/issue-return")} />
-        <KpiCard icon={<AlertOutlined />}        label="Overdue"          value={stats?.overdueCount}                color="#EF4444" sub={stats?.overdueCount > 0 ? "Needs attention" : undefined} onClick={() => navigate("librarian/overdue")} />
-        <KpiCard icon={<RupeeIcon />}       label="Pending Fines"    value={stats?.pendingFinesAmount != null ? `₹${stats.pendingFinesAmount}` : "₹0"}  color="#F59E0B" onClick={() => navigate("librarian/fines")} />
-        <KpiCard icon={<TeamOutlined />}         label="Members"          value={stats?.totalMembers ?? "—"}                                                  color="#14B8A6" onClick={() => navigate("librarian/members")} />
+        <KpiCard icon={<FileTextOutlined />}     label="Currently Issued" value={stats?.issuedCount}                                                          color="#2563EB" onClick={() => navigate("/dashboard/librarian/issue-return")} />
+        <KpiCard icon={<AlertOutlined />}        label="Overdue"          value={stats?.overdueCount}                color="#EF4444" sub={stats?.overdueCount > 0 ? "Needs attention" : undefined} onClick={() => navigate("/dashboard/librarian/issue-return")} />
+        <KpiCard icon={<RupeeIcon />}       label="Pending Fines"    value={stats?.pendingFinesAmount != null ? `₹${stats.pendingFinesAmount}` : "₹0"}  color="#F59E0B" onClick={() => navigate("/dashboard/librarian/fines")} />
+        <KpiCard icon={<TeamOutlined />}         label="Members"          value={stats?.totalMembers ?? "—"}                                                  color="#14B8A6" onClick={() => navigate("/dashboard/librarian/members")} />
       </div>
 
       {/* ── Quick Actions ──────────────────────────────────────── */}
       <div style={{ ...sectionPanel, padding: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quick Actions</div>
         <div style={statGrid(120)}>
-          <ActionTile icon={<BookOutlined />}        label="Add Book"       path="librarian/book-catalog" color="#14B8A6" navigate={navigate} />
-          <ActionTile icon={<FileTextOutlined />}     label="Issue Book"     path="librarian/issue-return" color="#2563EB" navigate={navigate} />
-          <ActionTile icon={<AlertOutlined />}        label="Overdue Books"  path="librarian/overdue"      color="#EF4444" navigate={navigate} />
-          <ActionTile icon={<RupeeIcon />}       label="Fine Management" path="librarian/fines"      color="#F59E0B" navigate={navigate} />
-          <ActionTile icon={<TeamOutlined />}         label="Members"        path="librarian/members"      color="#22C55E" navigate={navigate} />
-          <ActionTile icon={<ClockCircleOutlined />}  label="Reports"        path="librarian/reports"      color="#14B8A6" navigate={navigate} />
-          <ActionTile icon={<SettingOutlined />}      label="Settings"       path="librarian/settings"     color="#94A3B8" navigate={navigate} />
+          <ActionTile icon={<BookOutlined />}        label="Add Book"       path="/dashboard/librarian/book-catalog" color="#14B8A6" navigate={navigate} />
+          <ActionTile icon={<FileTextOutlined />}     label="Issue Book"     path="/dashboard/librarian/issue-return" color="#2563EB" navigate={navigate} />
+          <ActionTile icon={<AlertOutlined />}        label="Overdue Books"  path="/dashboard/librarian/issue-return" color="#EF4444" navigate={navigate} />
+          <ActionTile icon={<RupeeIcon />}       label="Fine Management" path="/dashboard/librarian/fines"      color="#F59E0B" navigate={navigate} />
+          <ActionTile icon={<TeamOutlined />}         label="Members"        path="/dashboard/librarian/members"      color="#22C55E" navigate={navigate} />
+          <ActionTile icon={<ClockCircleOutlined />}  label="Reports"        path="/dashboard/librarian/reports"      color="#14B8A6" navigate={navigate} />
+          <ActionTile icon={<SettingOutlined />}      label="Settings"       path="/dashboard/librarian/settings"     color="#94A3B8" navigate={navigate} />
         </div>
       </div>
 

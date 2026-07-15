@@ -16,17 +16,21 @@ import {
   LoadingOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  sectionPanel,
+  statGrid,
+  iconWell,
+  tableContainer,
+  tableHeadCss,
+  modalTitle,
+} from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
-/* ─── Design Tokens ───────────────────────────────────────────── */
+/* ─── Accent palette (category color-coding, kept as brand accents) ───── */
 const t = {
-  bg:           "#F8FAFC",
-  surface:      "#ffffff",
-  surfaceAlt:   "#f0f2f8",
-  border:       "1px solid #e4e7ef",
-  borderColor:  "#e4e7ef",
-
   purple:       "#14B8A6",
   purpleLight:  "rgba(20,184,166,0.2)",
   purpleMid:    "rgba(20,184,166,0.5)",
@@ -42,63 +46,19 @@ const t = {
 
   amber:        "#F59E0B",
   amberLight:   "rgba(254,243,199,0.25)",
-
-  textPrimary:   "#0F172A",
-  textSecondary: "#64748B",
-  textMuted:     "#94A3B8",
-
-  radius:   "14px",
-  radiusSm: "8px",
-  shadow:   "0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)",
-  shadowMd: "0 4px 12px rgba(0,0,0,0.08)",
 };
 
 /* ─── Stat Card ───────────────────────────────────────────────── */
 const StatCard = ({ icon, label, value, color, lightColor }) => (
-  <div
-    style={{
-      background: t.surface,
-      border: t.border,
-      borderTop: `3px solid ${color}`,
-      borderRadius: t.radius,
-      padding: "20px 22px",
-      display: "flex",
-      alignItems: "center",
-      gap: 16,
-      boxShadow: t.shadow,
-      transition: "box-shadow 0.2s, transform 0.2s",
-      cursor: "default",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.boxShadow = t.shadowMd;
-      e.currentTarget.style.transform = "translateY(-2px)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.boxShadow = t.shadow;
-      e.currentTarget.style.transform = "translateY(0)";
-    }}
-  >
-    <div
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 12,
-        background: lightColor,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 20,
-        color,
-        flexShrink: 0,
-      }}
-    >
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 16, padding: "20px 22px", marginBottom: 0 }}>
+    <div style={{ ...iconWell(color, 48), background: lightColor }}>
       {icon}
     </div>
     <div>
-      <div style={{ fontSize: 12, color: t.textSecondary, marginBottom: 4, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
         {label}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: t.textPrimary, lineHeight: 1 }}>
+      <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1 }}>
         {(value ?? 0).toLocaleString()}
       </div>
     </div>
@@ -241,62 +201,22 @@ const SchoolReports = () => {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: t.bg,
-        padding: "32px 28px",
-        fontFamily: "'Inter', 'Segoe UI', sans-serif",
-      }}
-    >
-      {/* ── Header ── */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 10,
-              background: t.purpleLight,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: t.purple,
-              fontSize: 18,
-              flexShrink: 0,
-            }}
-          >
-            <BarChartOutlined />
-          </div>
-          <div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: t.textPrimary, letterSpacing: "-0.3px" }}>
-              School Reports
-            </h2>
-            <p style={{ margin: 0, color: t.textSecondary, fontSize: 13 }}>
-              Select a school to view academic year statistics
-            </p>
-          </div>
-        </div>
-      </div>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="School Reports"
+        subtitle="Select a school to view academic year statistics"
+        icon={<BarChartOutlined />}
+      />
 
       {/* ── School Selector ── */}
-      <div
-        style={{
-          background: t.surface,
-          border: t.border,
-          borderRadius: t.radius,
-          padding: "20px 22px",
-          marginBottom: 20,
-          boxShadow: t.shadow,
-        }}
-      >
+      <div style={{ ...sectionPanel, marginTop: 20 }}>
         <label
           style={{
             display: "flex",
             alignItems: "center",
             gap: 7,
             fontSize: 11,
-            color: t.textSecondary,
+            color: "var(--text-muted)",
             marginBottom: 10,
             fontWeight: 600,
             textTransform: "uppercase",
@@ -331,7 +251,7 @@ const SchoolReports = () => {
           style={{
             background: t.amberLight,
             border: `1px solid ${t.amber}55`,
-            borderRadius: t.radiusSm,
+            borderRadius: 8,
             padding: "11px 16px",
             color: t.amber,
             fontSize: 13,
@@ -345,14 +265,7 @@ const SchoolReports = () => {
 
       {/* ── Stat Cards ── */}
       {summary && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
-            gap: 14,
-            marginBottom: 20,
-          }}
-        >
+        <div style={{ ...statGrid(190), marginBottom: 20 }}>
           <StatCard icon={<UserOutlined />}     label="Admins"   value={summary.adminCount}   color={t.purple} lightColor={t.purpleLight} />
           <StatCard icon={<SolutionOutlined />} label="Teachers" value={summary.teacherCount} color={t.blue}   lightColor={t.blueLight}   />
           <StatCard icon={<BookOutlined />}     label="Students" value={summary.studentCount} color={t.green}  lightColor={t.greenLight}  />
@@ -360,84 +273,57 @@ const SchoolReports = () => {
         </div>
       )}
 
+      <style>{tableHeadCss("school-reports-tbl")}</style>
+
       {/* ── Table ── */}
-      <div
-        style={{
-          background: t.surface,
-          border: t.border,
-          borderRadius: t.radius,
-          overflow: "hidden",
-          boxShadow: t.shadow,
-        }}
-      >
+      <div style={{ ...sectionPanel, padding: 0 }}>
         {selectedSchoolName && (
           <div
             style={{
               padding: "14px 22px",
-              borderBottom: t.border,
+              borderBottom: "1px solid var(--border-muted)",
               display: "flex",
               alignItems: "center",
               gap: 8,
-              background: t.surfaceAlt,
+              background: "var(--surface-soft)",
             }}
           >
             <BankOutlined style={{ color: t.purple, fontSize: 14 }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: t.textPrimary }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
               {selectedSchoolName}
             </span>
           </div>
         )}
 
-        <Table
-          loading={{
-            spinning: loading,
-            indicator: <LoadingOutlined style={{ fontSize: 24, color: t.purple }} spin />,
-          }}
-          columns={columns}
-          dataSource={tableData}
-          rowKey={(r) => r.academicYearId}
-          pagination={false}
-          locale={{
-            emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={
-                  <span style={{ color: t.textMuted }}>
-                    Select a school to load report instantly
-                  </span>
-                }
-              />
-            ),
-          }}
-          style={{ background: "transparent" }}
-        />
+        <div className="school-reports-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+          <Table
+            loading={{
+              spinning: loading,
+              indicator: <LoadingOutlined style={{ fontSize: 24, color: t.purple }} spin />,
+            }}
+            columns={columns}
+            dataSource={tableData}
+            rowKey={(r) => r.academicYearId}
+            pagination={false}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <span style={{ color: "var(--text-muted)" }}>
+                      Select a school to load report instantly
+                    </span>
+                  }
+                />
+              ),
+            }}
+          />
+        </div>
       </div>
 
       {/* ── Detail Drawer ── */}
       <Drawer
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: t.purpleLight,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: t.purple,
-                fontSize: 16,
-                flexShrink: 0,
-              }}
-            >
-              <BarChartOutlined />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: 15, color: t.textPrimary }}>
-              School Report Details
-            </span>
-          </div>
-        }
+        title={modalTitle(<BarChartOutlined />, "School Report Details")}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={440}
@@ -473,8 +359,8 @@ const SchoolReports = () => {
               size="small"
               bordered
               style={{ marginBottom: 20 }}
-              labelStyle={{ fontWeight: 600, color: t.textSecondary, width: 140 }}
-              contentStyle={{ color: t.textPrimary }}
+              labelStyle={{ fontWeight: 600, color: "var(--text-muted)", width: 140 }}
+              contentStyle={{ color: "var(--text-primary)" }}
             >
               <Descriptions.Item label={<span><CalendarOutlined style={{ marginRight: 6 }} />Academic Year</span>}>
                 <Tag color="purple" style={{ borderRadius: 6, fontWeight: 600 }}>
@@ -498,7 +384,7 @@ const SchoolReports = () => {
                 <div style={{ fontSize: 24, fontWeight: 700, color: t.purple, lineHeight: 1 }}>
                   {(drawerRecord.summary?.adminCount ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Admins
                 </div>
               </div>
@@ -516,7 +402,7 @@ const SchoolReports = () => {
                 <div style={{ fontSize: 24, fontWeight: 700, color: t.blue, lineHeight: 1 }}>
                   {(drawerRecord.summary?.teacherCount ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Teachers
                 </div>
               </div>
@@ -534,7 +420,7 @@ const SchoolReports = () => {
                 <div style={{ fontSize: 24, fontWeight: 700, color: t.green, lineHeight: 1 }}>
                   {(drawerRecord.summary?.studentCount ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Students
                 </div>
               </div>
@@ -552,7 +438,7 @@ const SchoolReports = () => {
                 <div style={{ fontSize: 24, fontWeight: 700, color: t.pink, lineHeight: 1 }}>
                   {(drawerRecord.summary?.parentCount ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Parents
                 </div>
               </div>

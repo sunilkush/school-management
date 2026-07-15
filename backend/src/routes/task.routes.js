@@ -23,6 +23,7 @@ const TASK_READ = [
   "Subject Coordinator", "Exam Coordinator",
   "Accountant", "Librarian", "Hostel Warden", "Transport Manager",
   "Receptionist", "IT Support", "Counselor", "Staff", "Support Staff", "Security",
+  "Sports Teacher", "Lab Technician", "Medical Officer", "Class Teacher",
 ];
 
 router.use(auth);

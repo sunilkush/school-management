@@ -1,1 +1,1 @@
-export { sidebarMenu } from "../config/sidebar.config";
+export { sidebarMenu, additionalRoleMenus } from "../config/sidebar.config";

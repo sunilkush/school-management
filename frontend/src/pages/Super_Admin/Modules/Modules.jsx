@@ -3,101 +3,28 @@ import { useSelector } from "react-redux";
 import { sidebarMenu } from "../../../utils/sidebar";
 import { Link } from "react-router-dom";
 import { LayoutDashboard, Lock, Search, ShieldCheck } from "lucide-react";
-import {
-  Row,
-  Col,
-  Card,
-  Tag,
-  Typography,
-  Empty,
-  Tooltip,
-  Input,
-  Space,
-  Statistic,
-} from "antd";
-
-const { Title, Text } = Typography;
+import { Row, Col, Empty, Tooltip, Input } from "antd";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, sectionPanel, statGrid, iconWell, pill } from "../../../styles/pageStyles";
 
 const PALETTES = [
-  { bg: "rgba(219,234,254,0.2)", text: "#2563EB", ring: "rgba(219,234,254,0.5)" },
-  { bg: "rgba(220,252,231,0.2)", text: "#22C55E", ring: "rgba(220,252,231,0.5)" },
-  { bg: "rgba(20,184,166,0.2)", text: "#14B8A6", ring: "rgba(20,184,166,0.5)" },
-  { bg: "rgba(219,234,254,0.15)", text: "#2563EB", ring: "rgba(219,234,254,0.4)" },
-  { bg: "rgba(254,243,199,0.25)", text: "#F59E0B", ring: "rgba(254,243,199,0.5)" },
-  { bg: "rgba(254,226,226,0.2)", text: "#EF4444", ring: "rgba(254,226,226,0.5)" },
+  { bg: "rgba(219,234,254,0.2)", text: "#2563EB" },
+  { bg: "rgba(220,252,231,0.2)", text: "#22C55E" },
+  { bg: "rgba(20,184,166,0.2)", text: "#14B8A6" },
+  { bg: "rgba(219,234,254,0.15)", text: "#2563EB" },
+  { bg: "rgba(254,243,199,0.25)", text: "#F59E0B" },
+  { bg: "rgba(254,226,226,0.2)", text: "#EF4444" },
 ];
 
-const css = `
-.modules-page {
-  min-height: 100vh;
-  padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #fdf2f8 100%);
-}
-
-.modules-hero {
-  background: #ffffffcc;
-  backdrop-filter: blur(14px);
-  border: 1px solid #e2e8f0;
-  border-radius: 28px;
-  padding: 24px;
-  margin-bottom: 18px;
-  box-shadow: 0 12px 36px rgba(15,23,42,0.07);
-}
-
-.modules-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 20px;
-  background: #e0e7ff;
-  color: #4f46e5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modules-stat {
-  border-radius: 22px !important;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
-}
-
-.module-card {
-  height: 100%;
-  border-radius: 22px !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 10px 26px rgba(15,23,42,0.05);
-  transition: 0.2s ease;
-  overflow: hidden;
-}
-
-.module-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 16px 34px rgba(15,23,42,0.1);
-}
-
-.module-card.locked {
-  opacity: 0.62;
-  filter: grayscale(0.2);
-}
-
-.module-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.module-link {
-  text-decoration: none;
-}
-
-@media (max-width: 768px) {
-  .modules-page {
-    padding: 14px;
-  }
-}
-`;
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const getLucideIcon = (icon) => {
   if (!icon) return LayoutDashboard;
@@ -132,51 +59,44 @@ const detectModuleLabel = (title = "", parent = "") => {
 
 const ModuleCard = ({ title, parent, path, Icon, hasAccess, palette }) => {
   const content = (
-    <Card
-      hoverable={hasAccess}
-      bordered={false}
-      className={`module-card ${!hasAccess ? "locked" : ""}`}
-      bodyStyle={{ padding: 18 }}
+    <div
+      style={{
+        ...sectionPanel,
+        height: "100%",
+        marginBottom: 0,
+        cursor: hasAccess ? "pointer" : "default",
+        opacity: hasAccess ? 1 : 0.6,
+        transition: "0.15s ease",
+      }}
     >
-      <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
-        <div
-          className="module-icon"
-          style={{
-            background: palette.bg,
-            color: palette.text,
-            boxShadow: `0 0 0 6px ${palette.ring}55`,
-          }}
-        >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div style={iconWell(palette.text, 46)}>
           {Icon ? <Icon size={22} /> : <LayoutDashboard size={22} />}
         </div>
 
         {hasAccess ? (
-          <Tag color="success" style={{ borderRadius: 999 }}>
-            Access
-          </Tag>
+          <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Access</span>
         ) : (
-          <Tag color="error" icon={<Lock size={12} />} style={{ borderRadius: 999 }}>
-            Locked
-          </Tag>
+          <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}><Lock size={11} /> Locked</span>
         )}
-      </Space>
+      </div>
 
       <div style={{ marginTop: 18 }}>
-        <Text strong style={{ fontSize: 15, color: "#0f172a" }}>
+        <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
           {title}
-        </Text>
+        </div>
 
         <div style={{ marginTop: 4 }}>
-          <Text style={{ fontSize: 12, color: "#64748b" }}>
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
             {parent || "Dashboard Module"}
-          </Text>
+          </span>
         </div>
       </div>
-    </Card>
+    </div>
   );
 
   return hasAccess ? (
-    <Link className="module-link" to={`/dashboard/${path}`}>
+    <Link style={{ textDecoration: "none" }} to={`/dashboard/${path}`}>
       {content}
     </Link>
   ) : (
@@ -266,93 +186,50 @@ const AllModules = () => {
   const lockedCount = enhancedModules.length - accessCount;
 
   return (
-    <>
-      <style>{css}</style>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="All Modules"
+        subtitle={`Role based module launcher for ${normalizedRole}`}
+        icon={<LayoutDashboard size={18} />}
+        extra={
+          <Input
+            allowClear
+            prefix={<Search size={15} style={{ color: "var(--text-muted)" }} />}
+            placeholder="Search modules..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: 240 }}
+          />
+        }
+      />
 
-      <div className="modules-page">
-        <div className="modules-hero">
-          <Row gutter={[16, 16]} align="middle" justify="space-between">
-            <Col xs={24} lg={12}>
-              <Space align="center">
-                <div className="modules-icon">
-                  <LayoutDashboard size={26} />
-                </div>
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>
-                    All Modules
-                  </Title>
-                  <Text style={{ color: "#64748b" }}>
-                    Role based module launcher for{" "}
-                    <b style={{ textTransform: "capitalize" }}>{normalizedRole}</b>
-                  </Text>
-                </div>
-              </Space>
-            </Col>
-
-            <Col xs={24} lg={8}>
-              <Input
-                allowClear
-                size="large"
-                prefix={<Search size={17} color="#94a3b8" />}
-                placeholder="Search modules..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ borderRadius: 14 }}
-              />
-            </Col>
-          </Row>
-        </div>
-
-        <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
-          <Col xs={24} sm={8}>
-            <Card bordered={false} className="modules-stat">
-              <Statistic title="Total Modules" value={enhancedModules.length} />
-            </Card>
-          </Col>
-
-          <Col xs={24} sm={8}>
-            <Card bordered={false} className="modules-stat">
-              <Statistic
-                title="Access Granted"
-                value={accessCount}
-                prefix={<ShieldCheck size={18} color="#22C55E" />}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} sm={8}>
-            <Card bordered={false} className="modules-stat">
-              <Statistic
-                title="Locked Modules"
-                value={lockedCount}
-                prefix={<Lock size={18} color="#EF4444" />}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {filteredModules.length === 0 ? (
-          <Card bordered={false} style={{ borderRadius: 24 }}>
-            <Empty description="No modules available" />
-          </Card>
-        ) : (
-          <Row gutter={[16, 16]}>
-            {filteredModules.map((mod, index) => (
-              <Col xs={24} sm={12} md={8} lg={6} xl={6} key={`${mod.title}-${index}`}>
-                <ModuleCard
-                  title={mod.title}
-                  parent={mod.parent}
-                  path={mod.path}
-                  Icon={mod.icon}
-                  hasAccess={mod.hasAccess}
-                  palette={PALETTES[index % PALETTES.length]}
-                />
-              </Col>
-            ))}
-          </Row>
-        )}
+      <div style={{ ...statGrid(170), marginTop: 20 }}>
+        <StatCard icon={<LayoutDashboard size={20} />} label="Total Modules" value={enhancedModules.length} color="#2563EB" />
+        <StatCard icon={<ShieldCheck size={20} />} label="Access Granted" value={accessCount} color="#22C55E" />
+        <StatCard icon={<Lock size={20} />} label="Locked Modules" value={lockedCount} color="#EF4444" />
       </div>
-    </>
+
+      {filteredModules.length === 0 ? (
+        <div style={sectionPanel}>
+          <Empty description="No modules available" />
+        </div>
+      ) : (
+        <Row gutter={[16, 16]}>
+          {filteredModules.map((mod, index) => (
+            <Col xs={24} sm={12} md={8} lg={6} xl={6} key={`${mod.title}-${index}`}>
+              <ModuleCard
+                title={mod.title}
+                parent={mod.parent}
+                path={mod.path}
+                Icon={mod.icon}
+                hasAccess={mod.hasAccess}
+                palette={PALETTES[index % PALETTES.length]}
+              />
+            </Col>
+          ))}
+        </Row>
+      )}
+    </div>
   );
 };
 

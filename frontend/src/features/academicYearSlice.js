@@ -237,7 +237,7 @@ const academicYearSlice = createSlice({
       /* ================= PENDING ================= */
 
       .addMatcher(
-        (action) => action.type.endsWith("/pending"),
+        (action) => action.type.startsWith("academicYear/") && action.type.endsWith("/pending"),
         (state) => {
           state.loading = true;
           state.error = null;
@@ -247,7 +247,7 @@ const academicYearSlice = createSlice({
       /* ================= REJECTED ================= */
 
       .addMatcher(
-        (action) => action.type.endsWith("/rejected"),
+        (action) => action.type.startsWith("academicYear/") && action.type.endsWith("/rejected"),
         (state, action) => {
           state.loading = false;
           state.error = action.payload || "Something went wrong";

@@ -120,7 +120,14 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
   const schoolId = req.user.schoolId;
   const academicYearId = req.query.academicYearId;
   const roleName = (req.userRole?.name || "").toLowerCase();
-  const isTeacher = roleName === "teacher";
+  // A section's classTeacherId/subjects.teacherId can be assigned to any of these roles (see
+  // ClassTeacherAssignmentPage.jsx's own teacherOptions filter and SchoolClassSectionTeacher.jsx's
+  // assignClassTeacher flow on the frontend) — each should only see the sections they're
+  // personally assigned to, unlike Exam Coordinator/Subject Coordinator who legitimately see
+  // every section. The previous `roleName === "teacher"` check excluded every other assignable
+  // role, including the literal "Class Teacher" role itself, from ever seeing their own sections.
+  const ASSIGNMENT_SCOPED_ROLES = new Set(["teacher", "sports teacher", "class teacher"]);
+  const isTeacher = ASSIGNMENT_SCOPED_ROLES.has(roleName);
 
   if (!academicYearId) {
     throw new ApiError(400, "Academic year ID is required");

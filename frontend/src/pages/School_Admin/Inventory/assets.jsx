@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Layout,
-  Breadcrumb,
   Table,
   Button,
   Space,
@@ -12,24 +10,33 @@ import {
   InputNumber,
   Select,
   message,
-  Card,
-  Row,
-  Col,
-  Typography,
   Tag,
   Alert,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined, DatabaseOutlined, AppstoreOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import {
   createInventoryItem,
   deleteInventoryItem,
   fetchInventoryItems,
   updateInventoryItem,
 } from "../../../features/inventorySlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow,
+  tableContainer, tableHeadCss, modalTitle,
+} from "../../../styles/pageStyles";
 
-const { Content } = Layout;
 const { Option } = Select;
-const { Title, Text } = Typography;
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const Assets = () => {
   const dispatch = useDispatch();
@@ -120,7 +127,7 @@ const Assets = () => {
   );
 
   const columns = [
-    { title: "Asset Name", dataIndex: "name", key: "name" },
+    { title: "Asset Name", dataIndex: "name", key: "name", render: (v) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v}</span> },
     { title: "Category", dataIndex: "category", key: "category" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
     { title: "Allocated", dataIndex: "allocated", key: "allocated" },
@@ -155,59 +162,69 @@ const Assets = () => {
   ];
 
   return (
-    <Layout style={{ padding: "24px", minHeight: "100vh", background: "#fff" }}>
-      <Breadcrumb style={{ marginBottom: 16 }}>
-        <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-        <Breadcrumb.Item>Inventory</Breadcrumb.Item>
-        <Breadcrumb.Item>Assets</Breadcrumb.Item>
-      </Breadcrumb>
-
-      <Content>
-        <Title level={4} style={{ marginBottom: 4 }}>Assets Management</Title>
-        <Text type="secondary">Manage high-value assets and keep allocation transparent.</Text>
-
-        {error ? <Alert style={{ marginTop: 16 }} type="error" showIcon message={error} /> : null}
-
-        <Row gutter={16} style={{ marginTop: 20, marginBottom: 20 }}>
-          <Col xs={24} sm={8}><Card title="Total Assets">{totalAssets}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Total Available">{totalAvailable}</Card></Col>
-          <Col xs={24} sm={8}><Card title="Total Allocated">{totalAllocated} / {totalQuantity}</Card></Col>
-        </Row>
-
-        <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <Input.Search
-            placeholder="Search by asset, category or location"
-            allowClear
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ maxWidth: 320 }}
-          />
+    <div>
+      <PageHeader
+        title="Assets Management"
+        subtitle="Manage high-value assets and keep allocation transparent"
+        icon={<DatabaseOutlined />}
+        extra={
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()} loading={actionLoading}>
             Add Asset
           </Button>
+        }
+      />
+      <div style={pageWrapper}>
+
+        {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
+
+        <div style={statGrid(160)}>
+          <StatCard icon={<AppstoreOutlined />} label="Total Assets" value={totalAssets} color="#2563EB" />
+          <StatCard icon={<CheckCircleOutlined />} label="Total Available" value={totalAvailable} color="#22C55E" />
+          <StatCard icon={<DatabaseOutlined />} label="Total Allocated" value={`${totalAllocated} / ${totalQuantity}`} color="#F59E0B" />
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={filteredAssets}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 8 }}
-          locale={{ emptyText: "No assets found. Add your first asset." }}
-        />
+        <div style={sectionPanel}>
+          <div style={toolbarRow}>
+            <Input.Search
+              placeholder="Search by asset, category or location"
+              allowClear
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ maxWidth: 320 }}
+            />
+          </div>
 
-        <Modal title={editingAsset ? "Edit Asset" : "Add Asset"} open={modalOpen} onCancel={closeModal} footer={null} destroyOnClose>
+          <style>{tableHeadCss("assets-tbl")}</style>
+          <div className="assets-tbl" style={tableContainer}>
+            <Table
+              columns={columns}
+              dataSource={filteredAssets}
+              rowKey="_id"
+              loading={loading}
+              pagination={{ pageSize: 8 }}
+              locale={{ emptyText: "No assets found. Add your first asset." }}
+            />
+          </div>
+        </div>
+
+        <Modal
+          title={modalTitle(editingAsset ? <EditOutlined /> : <PlusOutlined />, editingAsset ? "Edit Asset" : "Add Asset")}
+          open={modalOpen}
+          onCancel={closeModal}
+          footer={null}
+          destroyOnClose
+        >
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
-            <Form.Item label="Asset Name" name="name" rules={[{ required: true, message: "Enter asset name" }]}> 
+            <Form.Item label="Asset Name" name="name" rules={[{ required: true, message: "Enter asset name" }]}>
               <Input placeholder="e.g., Projector" />
             </Form.Item>
-            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}> 
+            <Form.Item label="Category" name="category" rules={[{ required: true, message: "Select category" }]}>
               <Select placeholder="Select category">
                 <Option value="Electronics">Electronics</Option>
                 <Option value="Furniture">Furniture</Option>
                 <Option value="Stationery">Stationery</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}> 
+            <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}>
               <InputNumber min={1} style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item
@@ -228,10 +245,10 @@ const Assets = () => {
             >
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item label="Location" name="location" rules={[{ required: true, message: "Enter location" }]}> 
+            <Form.Item label="Location" name="location" rules={[{ required: true, message: "Enter location" }]}>
               <Input placeholder="e.g., Physics Lab" />
             </Form.Item>
-            <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}> 
+            <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}>
               <Input placeholder="pcs / set" />
             </Form.Item>
             <Form.Item style={{ textAlign: "right", marginBottom: 0 }}>
@@ -244,8 +261,8 @@ const Assets = () => {
             </Form.Item>
           </Form>
         </Modal>
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 };
 

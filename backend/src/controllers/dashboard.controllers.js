@@ -11,6 +11,7 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { PayrollEntry } from "../models/payrollEntry.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
 import { ExamClass } from "../models/ExamClass.model.js";
+import { Task } from "../models/Task.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -122,6 +123,34 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
     response = {
       students: studentsCount,
       attendanceMarked: attendance[0]?.totalMarked || 0,
+    };
+  } else if (roleName === "Accountant") {
+    // Accountant was already allowed through this route's role middleware but had no branch here,
+    // so it silently fell into the generic "not available" case below — this closes that gap with
+    // the same figures /dashboard/role-overview computes for the accountant role.
+    if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
+      throw new ApiError(400, "Valid schoolId is required for Accountant dashboard");
+    }
+
+    const schoolObjectId = new ObjectId(schoolId);
+    const { startDate, endDate } = getCurrentMonthRange();
+
+    const [monthCollection, pendingDues, successfulTransactions] = await Promise.all([
+      Payment.aggregate([
+        { $match: { schoolId: schoolObjectId, paymentDate: { $gte: startDate, $lt: endDate }, status: "success" } },
+        { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+      ]),
+      StudentFee.aggregate([
+        { $match: { schoolId: schoolObjectId } },
+        { $group: { _id: null, totalPending: { $sum: "$dueAmount" } } },
+      ]),
+      Payment.countDocuments({ schoolId: schoolObjectId, status: "success" }),
+    ]);
+
+    response = {
+      monthCollection: monthCollection[0]?.total || 0,
+      pendingDues: pendingDues[0]?.totalPending || 0,
+      successfulTransactions: successfulTransactions || 0,
     };
   } else {
     response = { message: "Dashboard not available for this role" };
@@ -605,6 +634,55 @@ export const getRoleDashboardOverview = asyncHandler(async (req, res) => {
           lists: {},
         },
         "Accountant dashboard overview fetched successfully"
+      )
+    );
+  }
+
+  if (normalizedRole === "staff") {
+    const [attendance, taskCounts] = await Promise.all([
+      Attendance.aggregate([
+        {
+          $match: {
+            userId,
+            role: "staff",
+            date: { $gte: startDate, $lt: endDate },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            present: { $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] } },
+          },
+        },
+      ]),
+      Task.aggregate([
+        { $match: { assignedTo: userId, ...(schoolId ? { schoolId } : {}) } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const attendanceStat = attendance[0] || { total: 0, present: 0 };
+    const attendancePercent = attendanceStat.total
+      ? Math.round((attendanceStat.present / attendanceStat.total) * 100)
+      : 0;
+
+    const countByStatus = Object.fromEntries(taskCounts.map((t) => [t._id, t.count]));
+    const pendingTasks = (countByStatus.todo || 0) + (countByStatus.in_progress || 0);
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          ...baseContext,
+          metrics: [
+            { key: "attendance", label: "My Attendance (Month)", value: attendancePercent, suffix: "%" },
+            { key: "pending_tasks", label: "Pending Tasks", value: pendingTasks },
+            { key: "completed_tasks", label: "Completed Tasks", value: countByStatus.done || 0 },
+          ],
+          lists: {},
+        },
+        "Staff dashboard overview fetched successfully"
       )
     );
   }

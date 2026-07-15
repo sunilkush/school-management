@@ -1,5 +1,5 @@
 import { HostelAttendance } from "../models/HostelAttendance.model.js";
-import { Hostel } from "../models/Hostel.model.js";
+import { HostelRoom } from "../models/HostelRoom.model.js";
 import { HostelLeave } from "../models/HostelLeave.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -83,13 +83,27 @@ export const getTodayAttendanceSheet = asyncHandler(async (req, res) => {
   const end = new Date();
   end.setHours(23, 59, 59, 999);
 
-  // Get all hostel students
-  const hostelFilter = { schoolId, status: "occupied" };
-  if (academicYearId) hostelFilter.academicYearId = academicYearId;
+  // Get all hostel students — sourced from HostelRoom, the room the Rooms/Allocations
+  // pages actually assign students to (the older Hostel model has no working create path).
+  const roomFilter = { schoolId };
+  if (academicYearId) roomFilter.academicYearId = academicYearId;
 
-  const hostelStudents = await Hostel.find(hostelFilter)
-    .populate("studentId", "name admissionNo phone")
-    .select("studentId roomNumber");
+  const rooms = await HostelRoom.find(roomFilter).populate("students.studentId", "name phone");
+
+  const hostelStudents = [];
+  rooms.forEach((room) => {
+    room.students.forEach((s) => {
+      // Assignments made before the studentId link existed only have a name snapshot —
+      // they can't be attendance-tracked until re-assigned with a real student.
+      if (!s.studentId) return;
+      hostelStudents.push({
+        studentId: s.studentId._id,
+        name: s.studentId.name || s.name,
+        phone: s.studentId.phone,
+        roomNumber: room.roomNumber,
+      });
+    });
+  });
 
   // Get approved leaves today
   const leavesToday = await HostelLeave.find({
@@ -111,12 +125,11 @@ export const getTodayAttendanceSheet = asyncHandler(async (req, res) => {
   }
 
   const sheet = hostelStudents.map((h) => {
-    const sid = h.studentId?._id?.toString();
+    const sid = h.studentId?.toString();
     return {
-      studentId: h.studentId?._id,
-      name: h.studentId?.name,
-      admissionNo: h.studentId?.admissionNo,
-      phone: h.studentId?.phone,
+      studentId: h.studentId,
+      name: h.name,
+      phone: h.phone,
       roomNumber: h.roomNumber,
       isOnLeave: onLeaveIds.has(sid),
       status: markedMap[sid]?.status || (onLeaveIds.has(sid) ? "leave" : "present"),

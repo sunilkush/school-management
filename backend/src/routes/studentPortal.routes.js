@@ -32,7 +32,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 const router = Router();
 
 const STUDENT_ONLY = ["Student"];
-const ADMIN_AND_TEACHER = ["Super Admin", "School Admin", "Teacher"];
+const ADMIN_AND_TEACHER = ["Super Admin", "School Admin", "Teacher", "Sports Teacher", "Class Teacher"];
 
 router.get("/me/grades", auth, roleMiddleware(STUDENT_ONLY), getMyGrades);
 router.get("/me/profile", auth, roleMiddleware(STUDENT_ONLY), getMyProfile);

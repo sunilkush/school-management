@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
 import { Notification } from "../models/notification.model.js";
+import { User } from "../models/user.model.js";
+import { Role } from "../models/Roles.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
+import { sendPushToUsers } from "../utils/pushService.js";
 
 const CREATE_ALLOWED_ROLES = [
   "Super Admin",
@@ -150,6 +153,44 @@ const buildQueryFilter = (req) => {
   return filter;
 };
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Turns a Notification's targeting (level/targetRoles/targetUserObjectIds) into a concrete list of
+ * User._ids to push to. This is necessarily a best-effort broadcast list, not the precise per-user
+ * gate `isVisibleToUser` applies at read time — e.g. "user-level" here falls back to matching by
+ * role alone, without re-checking the finer-grained level tokens. GET /notification (in-app) stays
+ * the source of truth for who a notice is actually addressed to; push is just the nudge to open it.
+ */
+const resolveTargetUserIds = async (notification) => {
+  const { level, targetRoles, targetUserObjectIds, schoolId } = notification;
+  const scopeFilter = schoolId
+    ? { schoolId, isActive: true, isDeleted: { $ne: true } }
+    : { isActive: true, isDeleted: { $ne: true } };
+
+  if (level === "user") {
+    return (targetUserObjectIds || []).map((id) => new mongoose.Types.ObjectId(id));
+  }
+
+  if (level === "all") {
+    const users = await User.find(scopeFilter).select("_id");
+    return users.map((u) => u._id);
+  }
+
+  // "role" and "user-level"
+  if (targetRoles?.length) {
+    const roles = await Role.find({
+      name: { $in: targetRoles.map((r) => new RegExp(`^${escapeRegex(r)}$`, "i")) },
+    }).select("_id");
+    if (!roles.length) return [];
+
+    const users = await User.find({ ...scopeFilter, roleId: { $in: roles.map((r) => r._id) } }).select("_id");
+    return users.map((u) => u._id);
+  }
+
+  return [];
+};
+
 export const listNotifications = asyncHandler(async (req, res) => {
   const rows = await Notification.find(buildQueryFilter(req)).sort({ createdAt: -1 }).lean();
   const visibleRows = rows.filter((row) => isVisibleToUser(row, req.user));
@@ -203,6 +244,7 @@ export const createNotification = asyncHandler(async (req, res) => {
     email: Boolean(channels?.email),
     sms: Boolean(channels?.sms),
     whatsapp: Boolean(channels?.whatsapp),
+    push: Boolean(channels?.push),
   };
 
   if (!Object.values(normalizedChannels).some(Boolean)) {
@@ -237,10 +279,25 @@ export const createNotification = asyncHandler(async (req, res) => {
     schoolId: req.user?.schoolId?._id || req.user?.schoolId || null,
   });
 
+  let result = created;
+
+  if (normalizedChannels.push && finalStatus === "sent") {
+    const targetUserIds = await resolveTargetUserIds(created);
+    const pushResult = await sendPushToUsers(targetUserIds, { title: created.title, body: created.message, data: { notificationId: String(created._id) } });
+
+    if (!pushResult.skipped) {
+      result = await Notification.findByIdAndUpdate(
+        created._id,
+        { $inc: { "deliveryStats.sent": pushResult.sent, "deliveryStats.failed": pushResult.failed } },
+        { new: true }
+      );
+    }
+  }
+
   return sendSuccess(res, {
     statusCode: 201,
     message: "Notification created successfully",
-    data: created,
+    data: result,
   });
 });
 

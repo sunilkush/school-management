@@ -44,7 +44,9 @@ router.get("/:id", auth, roleMiddleware(STUDENT_ROLE), getSchoolById);
 router.get("/getRoleBySchool:id", auth,roleMiddleware("Super Admin"), getSchoolById);
 
 // ✅ Activate School (Super Admin & Admin)
-router.put("/activate/:id", auth, roleMiddleware(ADMIN_ROLE), activateSchool);
+// Route param must be named `schoolId` — activateSchool reads req.params.schoolId, so a mismatched
+// `:id` here silently made every activate request 404 ("School not found").
+router.put("/activate/:schoolId", auth, roleMiddleware(ADMIN_ROLE), activateSchool);
 
 // ✅ Deactivate School (Super Admin only)
 router.put("/deactivate/:schoolId", auth, roleMiddleware(["Super Admin"]), deactivateSchool);

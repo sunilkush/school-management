@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat package.json)",
+      "Bash(cat app.json)",
+      "Bash(cat .env)",
+      "Bash(find . -maxdepth 4 -not -path \"./node_modules*\")",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)",
+      "Bash(grep -iE \"^react-native-screens|^react-native-safe-area-context|^react-native-gesture-handler|^react-native-reanimated|^react-native-vector-icons|^expo-image$|^expo-font$|^expo-constants$|^expo-splash-screen$|^expo-status-bar$|^expo-linear-gradient$\")",
+      "Bash(node -e ' *)",
+      "Bash(npm install *)",
+      "Bash(timeout 90 npx expo export --platform android --output-dir /tmp/expo-export-check2)",
+      "Bash(rm -rf \"C:/Users/sunil/AppData/Local/Temp/expo-export-check2\")",
+      "Bash(timeout 90 npx expo export --platform android --output-dir /tmp/expo-export-check4)",
+      "Skill(dataviz)",
+      "Skill(dataviz:*)",
+      "Bash(npx expo-doctor *)",
+      "Bash(npx expo *)",
+      "Bash(npx jest *)",
+      "Bash(npm test *)",
+      "Bash(node -e \"const p=require\\('d:/GitHub/school-management/backend/package.json'\\); console.log\\(JSON.stringify\\({scripts:p.scripts, engines:p.engines},null,2\\)\\)\")",
+      "Bash(netsh advfirewall *)",
+      "Bash(powershell -Command \"Get-NetConnectionProfile | Select-Object -Property Name,NetworkCategory\")",
+      "Bash(timeout 60 npx expo export --platform android --output-dir /tmp/expo-export-drawerfix)",
+      "Bash(timeout 90 npx expo export --platform android --output-dir /tmp/expo-export-finalcheck)",
+      "Bash(node -e \"console.log\\(require\\('d:/GitHub/school-management/mobile/node_modules/@react-navigation/native/package.json'\\).version\\)\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\sunil\\AppData\\Local\\Temp\\expo-export-check2",
+      "\\tmp"
+    ]
+  }
+}

@@ -127,6 +127,32 @@ const allActions = [
       { module: "Transport", actions: ["read"] },
       { module: "Notifications", actions: ["read"] },
     ],
+    "Sports Teacher": [
+      { module: "Students",    actions: ["read"] },
+      { module: "Attendance",  actions: ["create", "read"] },
+      { module: "Assignments", actions: ["create", "read", "update", "delete"] },
+      { module: "Timetable",   actions: ["read"] },
+      { module: "Notifications", actions: ["read"] },
+    ],
+    "Lab Technician": [
+      { module: "Students",      actions: ["read"] },
+      { module: "Inventory",     actions: ["read", "update"] },
+      { module: "Attendance",    actions: ["create", "read"] },
+      { module: "Notifications", actions: ["read"] },
+    ],
+    "Medical Officer": [
+      { module: "Students",      actions: ["read", "update"] },
+      { module: "Attendance",    actions: ["read"] },
+      { module: "Notifications", actions: ["read"] },
+      { module: "Reports",       actions: ["read"] },
+    ],
+    "Class Teacher": [
+      { module: "Students",    actions: ["read"] },
+      { module: "Assignments", actions: ["create", "read", "update", "delete"] },
+      { module: "Attendance",  actions: ["create", "read"] },
+      { module: "Timetable",   actions: ["read"] },
+      { module: "Notifications", actions: ["read"] },
+    ],
   };
   const ROLE_LEVEL_MAP = {
     "Super Admin": 1,
@@ -148,6 +174,10 @@ const allActions = [
     "IT Support": 4,
     "Counselor": 4,
     "Security": 4,
+    "Sports Teacher": 3,
+    "Lab Technician": 4,
+    "Medical Officer": 4,
+    "Class Teacher": 3,
   };
   // ✅ Helper to validate permissions
   const validatePermissions = (permissions) => {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
-  Card,
   Table,
   Button,
   Modal,
@@ -41,9 +40,20 @@ import {
   updateChapterThunk,
   deleteChapterThunk,
 } from "../../../features/chapterSlice.js";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  sectionPanel,
+  statGrid,
+  iconWell,
+  toolbarRow,
+  tableContainer,
+  tableHeadCss,
+  modalTitle,
+} from "../../../styles/pageStyles";
 
 const { Search } = Input;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 // ─── Color palette per tree depth ───────────────────────────────────────────
 const DEPTH_COLORS = {
@@ -57,6 +67,16 @@ const rowStyle = (type) => {
   const c = DEPTH_COLORS[type] || DEPTH_COLORS.chapter;
   return { background: c.bg };
 };
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const ChaptersTopics = () => {
   const dispatch = useDispatch();
@@ -387,73 +407,45 @@ const ChaptersTopics = () => {
   const boardCount = treeData.length;
 
   return (
-    <div style={{ padding: "24px 28px", background: "#F8FAFC", minHeight: "100vh" }}>
-      {/* ── Header ── */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, color: "#1a1a2e", fontWeight: 700, letterSpacing: -0.5 }}>
-          <BookOutlined style={{ marginRight: 10, color: "#1677ff" }} />
-          Chapters & Topics
-        </Title>
-        <Text type="secondary" style={{ fontSize: 14 }}>
-          Manage your curriculum structure — boards, classes, subjects, and chapters.
-        </Text>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Chapters & Topics"
+        subtitle="Manage your curriculum structure — boards, classes, subjects, and chapters."
+        icon={<BookOutlined />}
+      />
+
+      {/* ── Stat cards ── */}
+      <div style={{ ...statGrid(160), marginTop: 20 }}>
+        <StatCard icon={<AppstoreOutlined />} label="Boards" value={boardCount} color="#0958d9" />
+        <StatCard icon={<BookOutlined />} label="Chapters" value={totalChapters} color="#389e0d" />
+        <StatCard icon={<GlobalOutlined />} label="Global" value={globalCount} color="#d46b08" />
       </div>
 
-      {/* ── Stat pills ── */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-        {[
-          { label: "Boards", value: boardCount, color: "#0958d9", bg: "#e8f4ff" },
-          { label: "Chapters", value: totalChapters, color: "#389e0d", bg: "#f6ffed" },
-          { label: "Global", value: globalCount, color: "#d46b08", bg: "#fff7e6" },
-        ].map((s) => (
-          <div
-            key={s.label}
-            style={{
-              background: s.bg,
-              border: `1px solid ${s.color}30`,
-              borderRadius: 10,
-              padding: "8px 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <Text style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</Text>
-            <Text style={{ color: s.color, fontSize: 13, opacity: 0.85 }}>{s.label}</Text>
-          </div>
-        ))}
-      </div>
+      <style>{tableHeadCss("chapters-tbl")}</style>
 
-      {/* ── Main card ── */}
-      <Card
-        bordered={false}
-        style={{ borderRadius: 14, boxShadow: "0 2px 16px #0001" }}
-        bodyStyle={{ padding: 0 }}
-      >
+      {/* ── Main panel ── */}
+      <div style={{ ...sectionPanel, padding: 0 }}>
         {/* toolbar */}
         <div
           style={{
-            display: "flex",
+            ...toolbarRow,
             justifyContent: "space-between",
-            alignItems: "center",
             padding: "16px 20px",
-            borderBottom: "1px solid #f0f0f0",
-            flexWrap: "wrap",
-            gap: 12,
+            borderBottom: "1px solid var(--border-muted)",
+            marginBottom: 0,
           }}
         >
           <Search
             placeholder="Search chapters…"
-            prefix={<SearchOutlined style={{ color: "#bbb" }} />}
+            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
             allowClear
-            style={{ width: 280, borderRadius: 8 }}
+            style={{ width: 280 }}
             onChange={(e) => handleSearch(e.target.value)}
           />
           <Button
             type="primary"
             icon={<PlusOutlined />}
             size="middle"
-            style={{ borderRadius: 8, fontWeight: 600, paddingInline: 20 }}
             onClick={handleAddChapter}
           >
             Add Chapter
@@ -461,53 +453,46 @@ const ChaptersTopics = () => {
         </div>
 
         {/* table */}
-        <Spin spinning={chapterLoading}>
-          <Table
-            columns={columns}
-            dataSource={treeData}
-            rowKey="key"
-            expandable={{ childrenColumnName: "children", defaultExpandAllRows: true }}
-            rowClassName={(r) => `chapter-row-${r._type || "chapter"}`}
-            onRow={(r) => ({ style: rowStyle(r._type || "chapter") })}
-            style={{ borderRadius: "0 0 14px 14px", overflow: "hidden" }}
-            pagination={{
-              current: page,
-              pageSize: limit,
-              total: meta?.total || chapters?.length || 0,
-              showSizeChanger: true,
-              pageSizeOptions: ["10", "20", "50", "100","200","500"],
-              onChange: (nextPage, nextLimit) => {
-                setPage(nextPage);
-                setLimit(nextLimit);
-              },
-            }}
-            locale={{
-              emptyText: (
-                <div style={{ padding: "48px 0", textAlign: "center" }}>
-                  <BookOutlined style={{ fontSize: 40, color: "#d9d9d9", marginBottom: 12 }} />
-                  <br />
-                  <Text type="secondary">No chapters yet. Click "Add Chapter" to get started.</Text>
-                </div>
-              ),
-            }}
-          />
-        </Spin>
-      </Card>
+        <div className="chapters-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+          <Spin spinning={chapterLoading}>
+            <Table
+              columns={columns}
+              dataSource={treeData}
+              rowKey="key"
+              expandable={{ childrenColumnName: "children", defaultExpandAllRows: true }}
+              rowClassName={(r) => `chapter-row-${r._type || "chapter"}`}
+              onRow={(r) => ({ style: rowStyle(r._type || "chapter") })}
+              pagination={{
+                current: page,
+                pageSize: limit,
+                total: meta?.total || chapters?.length || 0,
+                showSizeChanger: true,
+                pageSizeOptions: ["10", "20", "50", "100","200","500"],
+                onChange: (nextPage, nextLimit) => {
+                  setPage(nextPage);
+                  setLimit(nextLimit);
+                },
+              }}
+              locale={{
+                emptyText: (
+                  <div style={{ padding: "48px 0", textAlign: "center" }}>
+                    <BookOutlined style={{ fontSize: 40, color: "var(--text-muted)", marginBottom: 12 }} />
+                    <br />
+                    <Text type="secondary">No chapters yet. Click "Add Chapter" to get started.</Text>
+                  </div>
+                ),
+              }}
+            />
+          </Spin>
+        </div>
+      </div>
 
       {/* ══ Add / Edit Modal ══ */}
       <Modal
-        title={
-          <Space>
-            <Avatar
-              size={32}
-              icon={editingChapter ? <EditOutlined /> : <PlusOutlined />}
-              style={{ background: editingChapter ? "#fff7e6" : "#e8f4ff", color: editingChapter ? "#d46b08" : "#1677ff" }}
-            />
-            <span style={{ fontWeight: 700, fontSize: 16 }}>
-              {editingChapter ? "Edit Chapter" : "Add New Chapter"}
-            </span>
-          </Space>
-        }
+        title={modalTitle(
+          editingChapter ? <EditOutlined /> : <PlusOutlined />,
+          editingChapter ? "Edit Chapter" : "Add New Chapter"
+        )}
         open={chapterModalVisible}
         onCancel={() => {
           setChapterModalVisible(false);
@@ -516,8 +501,6 @@ const ChaptersTopics = () => {
         }}
         onOk={() => form.submit()}
         okText={editingChapter ? "Save Changes" : "Create Chapter"}
-        okButtonProps={{ style: { borderRadius: 8, fontWeight: 600 } }}
-        cancelButtonProps={{ style: { borderRadius: 8 } }}
         width={520}
         destroyOnClose
         styles={{ body: { paddingTop: 8 } }}
@@ -533,7 +516,6 @@ const ChaptersTopics = () => {
             <Select
               placeholder="Choose board"
               loading={boardLoading}
-              style={{ borderRadius: 8 }}
               onChange={(v) => {
                 setSelectedBoard(v);
                 setSelectedClass(null);
@@ -614,17 +596,11 @@ const ChaptersTopics = () => {
       {/* ══ Delete confirmation modal ══ */}
       <Modal
         open={!!deleteConfirmId}
-        title={
-          <Space>
-            <Avatar size={32} icon={<DeleteOutlined />} style={{ background: "#fff1f0", color: "#cf1322" }} />
-            <span style={{ fontWeight: 700 }}>Delete Chapter?</span>
-          </Space>
-        }
+        title={modalTitle(<DeleteOutlined />, "Delete Chapter?")}
         onCancel={() => setDeleteConfirmId(null)}
         onOk={() => handleDelete(deleteConfirmId)}
         okText="Yes, Delete"
-        okButtonProps={{ danger: true, style: { borderRadius: 8 } }}
-        cancelButtonProps={{ style: { borderRadius: 8 } }}
+        okButtonProps={{ danger: true }}
         width={400}
       >
         <Text type="secondary">

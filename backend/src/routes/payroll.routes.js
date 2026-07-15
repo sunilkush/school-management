@@ -28,7 +28,7 @@ const router = Router();
 
 const FULL_ACCESS_ROLES = ["Super Admin", "School Admin", "Accountant"];
 const REVIEW_ROLES = ["Super Admin", "School Admin", "Accountant", "Principal", "Admin"];
-const PAYSLIP_SELF_ROLES = ["Super Admin", "School Admin", "Accountant", "Principal", "Admin", "Teacher", "Employee", "Staff", "Support Staff"];
+const PAYSLIP_SELF_ROLES = ["Super Admin", "School Admin", "Accountant", "Principal", "Admin", "Teacher", "Employee", "Staff", "Support Staff", "Sports Teacher", "Lab Technician", "Medical Officer", "Class Teacher"];
 const EMPLOYEE_SELF_ROLES = ["Principal", "School Admin","Accountant", "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer", "Employee", "Staff", "Support Staff", "Vice Principal", "Librarian", "Hostel Warden", "Transport Manager", "Exam Coordinator", "Receptionist", "IT Support", "Counselor", "Security"];
 
 router.post("/structure",auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(payrollStructureCreateSchema), createPayrollStructure);

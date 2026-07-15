@@ -1,0 +1,10 @@
+.expo/
+.expo-shared/
+ios/
+android/
+*.jks
+*.p12
+*.key
+*.mobileprovision
+web-build/
+*.test.js

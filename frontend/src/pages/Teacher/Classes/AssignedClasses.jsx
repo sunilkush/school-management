@@ -98,9 +98,9 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
 
       {/* Students */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-primary)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <TeamOutlined style={{ color: "var(--text-muted)" }} />
-          <span style={{ fontWeight: 700, fontSize: 13 }}>{cls?.studentCount ?? 0} Students</span>
+          <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{cls?.studentCount ?? 0} Students</span>
         </div>
         <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Active</span>
       </div>
@@ -152,6 +152,7 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
   );
 };
 
+/* ── Main page ──────────────────────────────────────────────────────── */
 const AssignedClasses = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -219,9 +220,10 @@ const AssignedClasses = () => {
         <StatCard icon={<AppstoreOutlined />} label="Classes"  value={stats.totalClasses}  color="#2563EB" />
         <StatCard icon={<TeamOutlined />}      label="Students" value={stats.totalStudents} color="#14B8A6" />
         <StatCard icon={<BookOutlined />}      label="Sections" value={stats.totalSections} color="#F59E0B" />
-        <StatCard icon={<ReadOutlined />}       label="Subjects" value={stats.totalSubjects} color="#8B5CF6" />
+        <StatCard icon={<ReadOutlined />}      label="Subjects" value={stats.totalSubjects} color="#8B5CF6" />
       </div>
 
+      {/* ── Cards ── */}
       <Spin spinning={loading}>
         {!loading && filteredClasses.length === 0 ? (
           <div style={emptyState}>

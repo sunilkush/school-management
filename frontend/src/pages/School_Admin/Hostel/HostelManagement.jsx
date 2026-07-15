@@ -159,7 +159,7 @@ const HostelManagement = () => {
 
   const handleAssignStudent = async (values) => {
     if (!selectedRoom?._id) return;
-    const student = schoolStudents.find((s) => s._id === values.studentId);
+    const student = schoolStudents.find((s) => (s?.user?._id || s._id) === values.studentId);
     try {
       await dispatch(assignHostelStudent({
         id: selectedRoom._id,
@@ -207,7 +207,7 @@ const HostelManagement = () => {
 
   const studentOptions = useMemo(
     () => (schoolStudents || []).map((s) => ({
-      value: s._id,
+      value: s?.user?._id || s._id,
       label: s?.name || s?.fullName || s?.user?.name || "Unnamed Student",
     })),
     [schoolStudents],

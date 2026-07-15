@@ -24,6 +24,7 @@ import {
   Typography,
   message,
 } from "antd";
+import { useTheme } from "../../context/ThemeContext";
 import {
   CameraOutlined,
   CheckCircleOutlined,
@@ -35,6 +36,7 @@ import {
   UserOutlined,
   WarningOutlined,
   WifiOutlined,
+  ToolOutlined
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { currentUser, updateUser, changePassword as changePasswordAction } from "../../features/authSlice";
@@ -65,6 +67,7 @@ const TASK_STATUS_COLOR = { pending: "orange", in_progress: "blue", done: "green
 /* ─────────────────────────────────────────────────────── */
 export const ITSupportDashboard = () => {
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const { tickets, loading } = useSelector((s) => s.supportTickets || { tickets: [], loading: false });
 
   useEffect(() => { dispatch(fetchTickets()); }, [dispatch]);
@@ -72,52 +75,89 @@ export const ITSupportDashboard = () => {
   const open     = tickets.filter((t) => t.status === "Open").length;
   const resolved = tickets.filter((t) => t.status === "Resolved").length;
   const inProg   = tickets.filter((t) => t.status === "In Progress").length;
+  const closed   = tickets.filter((t) => t.status === "Closed").length;
 
-  const metrics = [
-    { title: "Open Tickets",     value: open,     prefix: <WarningOutlined />,      color: "#F59E0B" },
-    { title: "In Progress",      value: inProg,   prefix: <ClockCircleOutlined />,  color: "#3B82F6" },
-    { title: "Resolved Today",   value: resolved, prefix: <CheckCircleOutlined />,  color: "#10B981" },
+  const card       = isDark ? "#141C2E" : "#FFFFFF";
+  const cardBorder = isDark ? "#1E2A3B" : "#E2E8F0";
+  const textPri    = isDark ? "#E8EDF7" : "#0F172A";
+  const textSec    = isDark ? "#64748B" : "#64748B";
+  const shadow     = isDark ? "0 2px 12px rgba(0,0,0,0.4)" : "0 2px 8px rgba(37,99,235,0.07)";
+  const divider    = isDark ? "#1E2A3B" : "#E2E8F0";
+  const rowHover   = isDark ? "#1E2A3B" : "#F4F7FF";
+
+  const kpis = [
+    { label: "Open Tickets",  value: open,            color: "#F59E0B", bg: "rgba(245,158,11,0.12)",  icon: <WarningOutlined />     },
+    { label: "In Progress",   value: inProg,          color: "#3B82F6", bg: "rgba(59,130,246,0.12)",  icon: <ClockCircleOutlined /> },
+    { label: "Resolved",      value: resolved,        color: "#10B981", bg: "rgba(16,185,129,0.12)",  icon: <CheckCircleOutlined /> },
+    { label: "Total Tickets", value: tickets.length,  color: "#6366F1", bg: "rgba(99,102,241,0.12)",  icon: <ToolOutlined />        },
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
-      <Card>
-        <Title level={3} style={{ marginBottom: 4 }}>IT Support Dashboard</Title>
-        <Text type="secondary">System health, tickets, maintenance, and logs in one place.</Text>
-      </Card>
+    <>
+      <PageHeader
+        title="IT Support Dashboard"
+        subtitle="System health, tickets, maintenance, and logs in one place"
+        icon={<ToolOutlined />}
+      />
+      <div style={{ padding: "clamp(12px,3vw,24px)", display: "flex", flexDirection: "column", gap: 16 }}>
 
-      <Row gutter={[16, 16]}>
-        {metrics.map((m) => (
-          <Col xs={24} md={8} key={m.title}>
-            <Card loading={loading}>
-              <Statistic
-                title={m.title}
-                value={m.value}
-                prefix={m.prefix}
-                valueStyle={{ color: m.color }}
-              />
-            </Card>
-          </Col>
-        ))}
-      </Row>
+        {/* KPI row */}
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          {kpis.map((k) => (
+            <div key={k.label} style={{
+              background: card, border: `1px solid ${cardBorder}`, borderLeft: `4px solid ${k.color}`,
+              borderRadius: 14, padding: "18px 20px", display: "flex", alignItems: "center",
+              gap: 14, boxShadow: shadow, flex: 1, minWidth: 140,
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, background: k.bg,
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: k.color,
+              }}>
+                {k.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: textPri, lineHeight: 1.2 }}>
+                  {loading ? "—" : k.value}
+                </div>
+                <div style={{ fontSize: 12, color: textSec, marginTop: 2 }}>{k.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-      <Card title="Recent Tickets">
-        <Table
-          size="small"
-          loading={loading}
-          rowKey="_id"
-          pagination={{ pageSize: 5 }}
-          dataSource={[...tickets].slice(0, 10)}
-          columns={[
-            { title: "Subject",  dataIndex: "subject",  key: "subject", ellipsis: true },
-            { title: "Priority", dataIndex: "priority", key: "priority",
-              render: (v) => <Tag color={PRIORITY_COLOR[v?.toLowerCase()] || "default"}>{v}</Tag> },
-            { title: "Status",   dataIndex: "status",   key: "status",
-              render: (v) => <Tag color={STATUS_COLOR[v] || "default"}>{v}</Tag> },
-          ]}
-        />
-      </Card>
-    </Space>
+        {/* Recent Tickets */}
+        <div style={{ background: card, border: `1px solid ${cardBorder}`, borderRadius: 14, padding: 20, boxShadow: shadow }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: textPri, marginBottom: 16 }}>Recent Tickets</div>
+          <Table
+            size="small"
+            loading={loading}
+            rowKey="_id"
+            pagination={{ pageSize: 6 }}
+            dataSource={[...tickets].slice(0, 10)}
+            columns={[
+              {
+                title: "Title", dataIndex: "title", key: "title", ellipsis: true,
+                render: (v) => <span style={{ fontSize: 13, color: textPri }}>{v || "—"}</span>,
+              },
+              {
+                title: "Priority", dataIndex: "priority", key: "priority", width: 100,
+                render: (v) => <Tag color={PRIORITY_COLOR[v?.toLowerCase()] || "default"}>{v}</Tag>,
+              },
+              {
+                title: "Status", dataIndex: "status", key: "status", width: 120,
+                render: (v) => <Tag color={STATUS_COLOR[v] || "default"}>{v}</Tag>,
+              },
+            ]}
+            onRow={(r) => ({
+              onMouseEnter: (e) => { e.currentTarget.style.background = rowHover; },
+              onMouseLeave: (e) => { e.currentTarget.style.background = "transparent"; },
+            })}
+            style={{ background: "transparent" }}
+          />
+        </div>
+
+      </div>
+    </>
   );
 };
 
@@ -295,7 +335,7 @@ export const UserSupportTickets = () => {
   }, [tickets, filter]);
 
   const handleCreate = async (values) => {
-    await dispatch(createTicket({ subject: values.subject, priority: values.priority, description: values.description || "" }));
+    await dispatch(createTicket({ title: values.title, priority: values.priority, description: values.description || "" }));
     form.resetFields();
     message.success("Ticket submitted");
   };
@@ -313,7 +353,7 @@ export const UserSupportTickets = () => {
   };
 
   const columns = [
-    { title: "Subject",  dataIndex: "subject",  key: "subject",  ellipsis: true },
+    { title: "Title",    dataIndex: "title",    key: "title",    ellipsis: true },
     { title: "Priority", dataIndex: "priority", key: "priority",
       render: (v) => <Tag color={PRIORITY_COLOR[v?.toLowerCase()] || "default"}>{v}</Tag> },
     { title: "Status",   dataIndex: "status",   key: "status",
@@ -343,8 +383,8 @@ export const UserSupportTickets = () => {
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Row gutter={16}>
             <Col xs={24} md={10}>
-              <Form.Item name="subject" label="Subject" rules={[{ required: true }]}>
-                <Input placeholder="Describe the issue" />
+              <Form.Item name="title" label="Title" rules={[{ required: true }]}>
+                <Input placeholder="Brief summary of the issue" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
@@ -402,7 +442,7 @@ export const UserSupportTickets = () => {
         onOk={handleResolve}
         okText="Mark Resolved"
       >
-        <Text>Subject: <strong>{resolveModal?.subject}</strong></Text>
+        <Text>Title: <strong>{resolveModal?.title}</strong></Text>
         <Input.TextArea
           rows={3}
           placeholder="Resolution note (optional)"

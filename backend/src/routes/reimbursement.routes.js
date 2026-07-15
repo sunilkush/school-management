@@ -17,6 +17,7 @@ const ALL_STAFF      = [
   "Super Admin", "School Admin", "Accountant", "Principal",
   "Teacher", "Employee", "Staff", "Support Staff",
   "Vice Principal", "Librarian", "Hostel Warden",
+  "Sports Teacher", "Lab Technician", "Medical Officer", "Class Teacher",
 ];
 
 router.post("/",                    auth, roleMiddleware(ALL_STAFF),    createReimbursement);

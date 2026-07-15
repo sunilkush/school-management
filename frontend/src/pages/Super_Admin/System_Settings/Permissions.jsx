@@ -2,11 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Button,
-  Card,
   Select,
   Table,
-  Typography,
-  Tag,
   Tooltip,
   Spin,
   Empty,
@@ -15,8 +12,6 @@ import {
   Space,
   List,
   message,
-  Statistic,
-  Alert,
 } from "antd";
 import {
   CheckCircleOutlined,
@@ -30,9 +25,11 @@ import {
 } from "@ant-design/icons";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchRoles, fetchRoleBySchool } from "../../../features/roleSlice";
-
-const { Title, Text } = Typography;
-const { Option } = Select;
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper, sectionPanel, statGrid, iconWell, pill,
+  tableContainer, tableHeadCss, toolbarRow,
+} from "../../../styles/pageStyles";
 
 const HIGH_RISK_ACTIONS = [
   "delete",
@@ -43,66 +40,15 @@ const HIGH_RISK_ACTIONS = [
   "manage-users",
 ];
 
-const css = `
-.permissions-page {
-  min-height: 100vh;
-  padding: 24px;
-  background: #F8FAFC;
-}
-
-.permissions-hero {
-  background: #ffffff;
-  border: 1px solid rgba(219,234,254,0.3);
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.08);
-}
-
-.permissions-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 20px;
-  background: rgba(20,184,166,0.2);
-  color: #14B8A6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-.gov-card {
-  border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.08);
-}
-
-.metric-card {
-  border-radius: 18px !important;
-  box-shadow: 0 4px 16px rgba(37,99,235,0.06);
-}
-
-.metric-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-
-.permission-tag {
-  border-radius: 999px !important;
-  padding: 3px 10px !important;
-  font-weight: 600;
-}
-
-@media (max-width: 768px) {
-  .permissions-page {
-    padding: 14px;
-  }
-}
-`;
+const StatCard = ({ icon, label, value, color }) => (
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div style={iconWell(color, 42)}>{icon}</div>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+    </div>
+  </div>
+);
 
 const Permissions = () => {
   const dispatch = useDispatch();
@@ -162,21 +108,10 @@ const Permissions = () => {
       width: 230,
       render: (text) => (
         <Space>
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 12,
-              background: "rgba(219,234,254,0.2)",
-              color: "#2563EB",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <div style={iconWell("#2563EB", 34)}>
             <LockOutlined />
           </div>
-          <Text strong>{text}</Text>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{text}</span>
         </Space>
       ),
     },
@@ -189,23 +124,15 @@ const Permissions = () => {
       render: (value) =>
         value ? (
           <Tooltip title="Permission Granted">
-            <Tag
-              color="success"
-              icon={<CheckCircleOutlined />}
-              className="permission-tag"
-            >
-              Yes
-            </Tag>
+            <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>
+              <CheckCircleOutlined /> Yes
+            </span>
           </Tooltip>
         ) : (
           <Tooltip title="No Permission">
-            <Tag
-              color="error"
-              icon={<CloseCircleOutlined />}
-              className="permission-tag"
-            >
-              No
-            </Tag>
+            <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>
+              <CloseCircleOutlined /> No
+            </span>
           </Tooltip>
         ),
     })),
@@ -309,7 +236,7 @@ const Permissions = () => {
       title: "Module",
       dataIndex: "module",
       key: "module",
-      render: (value) => <Text strong>{value}</Text>,
+      render: (value) => <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>,
     },
     {
       title: "Added Actions",
@@ -317,13 +244,13 @@ const Permissions = () => {
       key: "added",
       render: (items) =>
         items.length ? (
-          items.map((item) => (
-            <Tag key={item} color="success" className="permission-tag">
-              + {item}
-            </Tag>
-          ))
+          <Space size={4} wrap>
+            {items.map((item) => (
+              <span key={item} style={pill("#15803D", "rgba(220,252,231,0.5)")}>+ {item}</span>
+            ))}
+          </Space>
         ) : (
-          <Text type="secondary">None</Text>
+          <span style={{ color: "var(--text-muted)" }}>None</span>
         ),
     },
     {
@@ -332,13 +259,13 @@ const Permissions = () => {
       key: "removed",
       render: (items) =>
         items.length ? (
-          items.map((item) => (
-            <Tag key={item} color="error" className="permission-tag">
-              - {item}
-            </Tag>
-          ))
+          <Space size={4} wrap>
+            {items.map((item) => (
+              <span key={item} style={pill("#DC2626", "rgba(254,226,226,0.5)")}>- {item}</span>
+            ))}
+          </Space>
         ) : (
-          <Text type="secondary">None</Text>
+          <span style={{ color: "var(--text-muted)" }}>None</span>
         ),
     },
     {
@@ -349,12 +276,10 @@ const Permissions = () => {
         <Space wrap>
           {items.length ? (
             items.map((item) => (
-              <Tag key={item} color="volcano" className="permission-tag">
-                {item}
-              </Tag>
+              <span key={item} style={pill("#B45309", "rgba(254,243,199,0.5)")}>{item}</span>
             ))
           ) : (
-            <Tag className="permission-tag">None</Tag>
+            <span style={pill("var(--text-muted)")}>None</span>
           )}
 
           {items.length > 0 && (
@@ -368,263 +293,173 @@ const Permissions = () => {
   ];
 
   return (
-    <>
-      <style>{css}</style>
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Permissions Matrix"
+        subtitle="Role-wise module permissions, diff viewer aur high-risk approval governance"
+        icon={<SafetyCertificateOutlined />}
+        extra={
+          <Select
+            allowClear
+            placeholder="Global Roles"
+            style={{ width: 240 }}
+            value={selectedSchoolId}
+            onChange={setSelectedSchoolId}
+            options={schools.map((school) => ({ label: school.name, value: school._id }))}
+          />
+        }
+      />
 
-      <div className="permissions-page">
-        <div className="permissions-hero">
-          <Row gutter={[16, 16]} justify="space-between" align="middle">
-            <Col xs={24} lg={14}>
-              <Space align="center">
-                <div className="permissions-icon">
-                  <SafetyCertificateOutlined />
-                </div>
+      <div style={statGrid(170)}>
+        <StatCard icon={<SafetyCertificateOutlined />} label="Roles" value={roles.length} color="#14B8A6" />
+        <StatCard icon={<ApartmentOutlined />} label="Permission Modules" value={modules.length} color="#2563EB" />
+        <StatCard
+          icon={<WarningOutlined />}
+          label="Pending Approvals"
+          value={approvalQueue.filter((item) => item.status !== "Approved").length}
+          color="#F59E0B"
+        />
+      </div>
 
-                <div>
-                  <Title level={3} style={{ margin: 0 }}>
-                    Permissions Matrix
-                  </Title>
-                  <Text style={{ color: "#64748b" }}>
-                    Role-wise module permissions, diff viewer aur high-risk
-                    approval governance.
-                  </Text>
-                </div>
-              </Space>
-            </Col>
+      <style>{tableHeadCss("permissions-matrix-tbl")}</style>
 
-            <Col xs={24} lg={8}>
-              <Select
-                allowClear
-                size="large"
-                placeholder="Global Roles"
-                style={{ width: "100%" }}
-                value={selectedSchoolId}
-                onChange={setSelectedSchoolId}
-              >
-                {schools.map((school) => (
-                  <Option key={school._id} value={school._id}>
-                    {school.name}
-                  </Option>
-                ))}
-              </Select>
-            </Col>
-          </Row>
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+          <SafetyCertificateOutlined style={{ color: "var(--primary)" }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Role Permission Matrix</span>
+          <span style={pill("var(--primary)")}>{dataSource.length} modules</span>
         </div>
 
-        <Alert
-          type="info"
-          showIcon
-          style={{ borderRadius: 16, marginBottom: 18 }}
-          message={
-            selectedSchoolId
-              ? "School Specific Permissions"
-              : "Global Permission View"
-          }
-          description="Permissions yahan role-wise compare aur audit ki ja sakti hain. High-risk changes ke liye approval queue use karein."
-        />
-
-        <Row gutter={[16, 16]} style={{ marginBottom: 18 }}>
-          <Col xs={24} md={8}>
-            <Card bordered={false} className="metric-card">
-              <Statistic
-                title="Roles"
-                value={roles.length}
-                prefix={<SafetyCertificateOutlined style={{ color: "#14B8A6" }} />}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <Card bordered={false} className="metric-card">
-              <Statistic
-                title="Permission Modules"
-                value={modules.length}
-                prefix={<ApartmentOutlined style={{ color: "#2563EB" }} />}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <Card bordered={false} className="metric-card">
-              <Statistic
-                title="Pending Approvals"
-                value={
-                  approvalQueue.filter((item) => item.status !== "Approved")
-                    .length
-                }
-                prefix={<WarningOutlined style={{ color: "#F59E0B" }} />}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        <Card
-          bordered={false}
-          className="gov-card"
-          style={{ marginBottom: 18 }}
-          title={
-            <Space>
-              <SafetyCertificateOutlined style={{ color: "#14B8A6" }} />
-              <span>Role Permission Matrix</span>
-              <Tag color="blue">{dataSource.length} modules</Tag>
-            </Space>
-          }
-        >
-          {loading ? (
-            <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
-              <Spin size="large" />
-            </div>
-          ) : dataSource.length === 0 ? (
-            <Empty description="No permissions found" />
-          ) : (
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+            <Spin size="large" />
+          </div>
+        ) : dataSource.length === 0 ? (
+          <Empty description="No permissions found" />
+        ) : (
+          <div className="permissions-matrix-tbl" style={tableContainer}>
             <Table
               columns={columns}
               dataSource={dataSource}
-              bordered={false}
               scroll={{ x: "max-content" }}
               pagination={{ pageSize: 10 }}
               size="middle"
             />
-          )}
-        </Card>
-
-        <Card
-          bordered={false}
-          className="gov-card"
-          style={{ marginBottom: 18 }}
-          title={
-            <Space>
-              <DiffOutlined style={{ color: "#2563EB" }} />
-              <span>Permission Diff Viewer</span>
-            </Space>
-          }
-        >
-          <Text type="secondary">
-            Do roles compare karke added/removed actions aur high-risk changes
-            dekhein.
-          </Text>
-
-          <Row gutter={[12, 12]} style={{ marginTop: 14, marginBottom: 14 }}>
-            <Col xs={24} md={8}>
-              <Select
-                placeholder="Base role"
-                options={roleOptions}
-                value={baseRoleId}
-                onChange={setBaseRoleId}
-                style={{ width: "100%" }}
-              />
-            </Col>
-
-            <Col xs={24} md={8}>
-              <Select
-                placeholder="Compare role"
-                options={roleOptions}
-                value={compareRoleId}
-                onChange={setCompareRoleId}
-                style={{ width: "100%" }}
-              />
-            </Col>
-          </Row>
-
-          <Table
-            rowKey="key"
-            columns={diffColumns}
-            dataSource={diffRows}
-            scroll={{ x: 850 }}
-            pagination={{ pageSize: 6 }}
-            locale={{ emptyText: "Select roles to compare" }}
-          />
-        </Card>
-
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={12}>
-            <Card
-              bordered={false}
-              className="gov-card"
-              title={
-                <Space>
-                  <WarningOutlined style={{ color: "#F59E0B" }} />
-                  <span>High-Risk Approval Queue</span>
-                  <Tag color="orange">{approvalQueue.length}</Tag>
-                </Space>
-              }
-            >
-              <List
-                dataSource={approvalQueue}
-                locale={{ emptyText: "No approval requests" }}
-                renderItem={(item) => (
-                  <List.Item
-                    actions={[
-                      item.status !== "Approved" ? (
-                        <Button
-                          key="approve"
-                          size="small"
-                          type="primary"
-                          onClick={() => approveRequest(item.id)}
-                        >
-                          Approve
-                        </Button>
-                      ) : (
-                        <Tag key="approved" color="success">
-                          Approved
-                        </Tag>
-                      ),
-                    ]}
-                  >
-                    <List.Item.Meta
-                      title={
-                        <Space>
-                          <Text strong>{item.module}</Text>
-                          <Tag
-                            color={
-                              item.status === "Approved" ? "success" : "warning"
-                            }
-                          >
-                            {item.status}
-                          </Tag>
-                        </Space>
-                      }
-                      description={`Risk actions: ${
-                        item.riskActions.join(", ") || "None"
-                      } | Requested: ${new Date(
-                        item.requestedAt
-                      ).toLocaleString()}`}
-                    />
-                  </List.Item>
-                )}
-              />
-            </Card>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Card
-              bordered={false}
-              className="gov-card"
-              title={
-                <Space>
-                  <AuditOutlined style={{ color: "#22C55E" }} />
-                  <span>Audit Trail</span>
-                  <Tag color="green">{auditTrail.length}</Tag>
-                </Space>
-              }
-            >
-              <List
-                dataSource={auditTrail}
-                locale={{ emptyText: "No audit entries" }}
-                renderItem={(item) => (
-                  <List.Item>
-                    <List.Item.Meta
-                      title={<Text strong>{item.message}</Text>}
-                      description={new Date(item.timestamp).toLocaleString()}
-                    />
-                  </List.Item>
-                )}
-              />
-            </Card>
-          </Col>
-        </Row>
+          </div>
+        )}
       </div>
-    </>
+
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          <DiffOutlined style={{ color: "var(--primary)" }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Permission Diff Viewer</span>
+        </div>
+
+        <span style={{ color: "var(--text-muted)" }}>
+          Do roles compare karke added/removed actions aur high-risk changes dekhein.
+        </span>
+
+        <div style={{ ...toolbarRow, marginTop: 14 }}>
+          <Select
+            placeholder="Base role"
+            options={roleOptions}
+            value={baseRoleId}
+            onChange={setBaseRoleId}
+            style={{ width: 220 }}
+          />
+          <Select
+            placeholder="Compare role"
+            options={roleOptions}
+            value={compareRoleId}
+            onChange={setCompareRoleId}
+            style={{ width: 220 }}
+          />
+        </div>
+
+        <Table
+          rowKey="key"
+          columns={diffColumns}
+          dataSource={diffRows}
+          scroll={{ x: 850 }}
+          pagination={{ pageSize: 6 }}
+          locale={{ emptyText: "Select roles to compare" }}
+        />
+      </div>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
+          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+              <WarningOutlined style={{ color: "#F59E0B" }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>High-Risk Approval Queue</span>
+              <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>{approvalQueue.length}</span>
+            </div>
+
+            <List
+              dataSource={approvalQueue}
+              locale={{ emptyText: "No approval requests" }}
+              renderItem={(item) => (
+                <List.Item
+                  actions={[
+                    item.status !== "Approved" ? (
+                      <Button
+                        key="approve"
+                        size="small"
+                        type="primary"
+                        onClick={() => approveRequest(item.id)}
+                      >
+                        Approve
+                      </Button>
+                    ) : (
+                      <span key="approved" style={pill("#15803D", "rgba(220,252,231,0.5)")}>Approved</span>
+                    ),
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={
+                      <Space>
+                        <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{item.module}</span>
+                        <span style={item.status === "Approved" ? pill("#15803D", "rgba(220,252,231,0.5)") : pill("#B45309", "rgba(254,243,199,0.5)")}>
+                          {item.status}
+                        </span>
+                      </Space>
+                    }
+                    description={`Risk actions: ${
+                      item.riskActions.join(", ") || "None"
+                    } | Requested: ${new Date(
+                      item.requestedAt
+                    ).toLocaleString()}`}
+                  />
+                </List.Item>
+              )}
+            />
+          </div>
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+              <AuditOutlined style={{ color: "#22C55E" }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Audit Trail</span>
+              <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>{auditTrail.length}</span>
+            </div>
+
+            <List
+              dataSource={auditTrail}
+              locale={{ emptyText: "No audit entries" }}
+              renderItem={(item) => (
+                <List.Item>
+                  <List.Item.Meta
+                    title={<span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{item.message}</span>}
+                    description={new Date(item.timestamp).toLocaleString()}
+                  />
+                </List.Item>
+              )}
+            />
+          </div>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

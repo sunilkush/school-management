@@ -79,7 +79,7 @@ const AcademicYearSwitcher = () => {
      ❌ ERROR
   ============================ */
   if (error) {
-    return <Text type="danger">{error}</Text>;
+    return <Text type="danger">{typeof error === "string" ? error : "Failed to load academic year"}</Text>;
   }
 
   return (

@@ -183,7 +183,7 @@ export const fetchLibraryStudents = createAsyncThunk(
     try {
       if (!schoolId) return [];
       const res = await apiClient.get("/student/school", { params: { schoolId, limit } });
-      return res?.data?.data?.students || [];
+      return res?.data?.data?.students || res?.data?.data || [];
     } catch (err) {
       return rejectWithValue(getError(err, "Failed to fetch students"));
     }

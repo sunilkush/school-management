@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Card,
-  Row,
-  Col,
   Table,
   Tag,
   Progress,
@@ -43,24 +40,33 @@ import {
 } from "recharts";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchAllUser } from "../../../features/authSlice";
+import PageHeader from "../../../components/layout/PageHeader";
+import {
+  pageWrapper,
+  sectionPanel,
+  statGrid,
+  iconWell,
+  tableContainer,
+  tableHeadCss,
+} from "../../../styles/pageStyles";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
     return (
       <div
         style={{
-          background: "#fff",
-          border: "1px solid #f0f0f0",
+          background: "var(--surface)",
+          border: "1px solid var(--border-muted)",
           borderRadius: 10,
           padding: "10px 16px",
-          boxShadow: "0 4px 20px #0001",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
-        <Text style={{ fontSize: 12, color: "#aaa" }}>{label}</Text>
+        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>{label}</Text>
         <br />
-        <Text strong style={{ fontSize: 15, color: "#1a1a2e" }}>
+        <Text strong style={{ fontSize: 15, color: "var(--text-primary)" }}>
           {payload[0]?.value?.toLocaleString?.() || 0} users
         </Text>
       </div>
@@ -70,55 +76,23 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const KpiCard = ({ icon, label, value, accent, change }) => (
-  <Card
-    bordered={false}
-    style={{
-      borderRadius: 16,
-      boxShadow: "0 2px 16px #0001",
-      overflow: "hidden",
-      position: "relative",
-    }}
-    bodyStyle={{ padding: "20px 24px" }}
-  >
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 4,
-        background: accent,
-        borderRadius: "16px 16px 0 0",
-      }}
-    />
-    <Space style={{ width: "100%", justifyContent: "space-between" }}>
-      <div>
-        <Text
-          type="secondary"
-          style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}
-        >
-          {label}
-        </Text>
-        <Title
-          level={3}
-          style={{ margin: "4px 0 4px", color: "#1a1a2e", fontWeight: 800 }}
-        >
-          {value}
-        </Title>
-        {change && (
-          <Space size={4}>
-            <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
-            <Text style={{ color: "#22C55E", fontSize: 12 }}>{change}</Text>
-          </Space>
-        )}
+  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+        {label}
       </div>
-      <Avatar
-        size={46}
-        icon={icon}
-        style={{ background: `${accent}18`, color: accent, flexShrink: 0 }}
-      />
-    </Space>
-  </Card>
+      <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>
+        {value}
+      </div>
+      {change && (
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+          <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
+          <span style={{ color: "#22C55E", fontSize: 12 }}>{change}</span>
+        </div>
+      )}
+    </div>
+    <div style={iconWell(accent, 46)}>{icon}</div>
+  </div>
 );
 
 const PlatformUsage = () => {
@@ -273,7 +247,7 @@ const PlatformUsage = () => {
           <Avatar
             size={28}
             icon={<BankOutlined />}
-            style={{ background: "#e8f4ff", color: "#2563EB" }}
+            style={{ background: "rgba(37,99,235,0.15)", color: "#2563EB" }}
           />
           <Text strong style={{ fontSize: 13 }}>
             {name}
@@ -286,7 +260,7 @@ const PlatformUsage = () => {
       dataIndex: "users",
       sorter: (a, b) => a.users - b.users,
       render: (v) => (
-        <Text style={{ fontWeight: 600, color: "#1a1a2e" }}>
+        <Text style={{ fontWeight: 600, color: "var(--text-primary)" }}>
           {Number(v || 0).toLocaleString()}
         </Text>
       ),
@@ -318,7 +292,7 @@ const PlatformUsage = () => {
             }
             showInfo={false}
           />
-          <Text style={{ fontSize: 11, color: "#aaa" }}>{val}% utilized</Text>
+          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{val}% utilized</Text>
         </Space>
       ),
     },
@@ -358,133 +332,82 @@ const PlatformUsage = () => {
   ];
 
   return (
-    <div
-      style={{
-        padding: "24px 28px",
-        background: "#F8FAFC",
-        minHeight: "100vh",
-      }}
-    >
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Super Admin Analytics"
+        subtitle="Platform-wide overview — schools, users, usage, and revenue."
+        icon={<RocketOutlined />}
+        extra={
+          <Space wrap>
+            <Select
+              value={filter}
+              onChange={setFilter}
+              style={{ width: 140 }}
+              options={[
+                { label: "Daily", value: "daily" },
+                { label: "Monthly", value: "monthly" },
+                { label: "Yearly", value: "yearly" },
+              ]}
+            />
+            <Button
+              onClick={() =>
+                navigate("/dashboard/superadmin/reports/revenue")
+              }
+            >
+              Go to Revenue Analytics
+            </Button>
+          </Space>
+        }
+      />
+
       {errorMessage ? (
         <Alert
           type="warning"
           showIcon
           message="Some analytics data could not be loaded"
           description={errorMessage}
-          style={{ marginBottom: 16 }}
+          style={{ marginTop: 20 }}
         />
       ) : null}
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginBottom: 28,
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <Title
-            level={3}
-            style={{
-              margin: 0,
-              color: "#1a1a2e",
-              fontWeight: 800,
-              letterSpacing: -0.5,
-            }}
-          >
-            <RocketOutlined style={{ marginRight: 10, color: "#2563EB" }} />
-            Super Admin Analytics
-          </Title>
-          <Text type="secondary" style={{ fontSize: 14 }}>
-            Platform-wide overview — schools, users, usage, and revenue.
-          </Text>
+      <Spin spinning={loading}>
+        <div style={{ ...statGrid(220), marginTop: 20 }}>
+          <KpiCard
+            icon={<DatabaseOutlined />}
+            label="Total Schools"
+            value={stats.schools}
+            change="+8 this month"
+            accent="#2563EB"
+          />
+          <KpiCard
+            icon={<TeamOutlined />}
+            label="Total Users"
+            value={stats.users.toLocaleString()}
+            change="+320 this week"
+            accent="#722ed1"
+          />
+          <KpiCard
+            icon={<UserOutlined />}
+            label="Active Users"
+            value={stats.active.toLocaleString()}
+            change="59% of total"
+            accent="#22C55E"
+          />
+          <KpiCard
+            icon={<RupeeIcon />}
+            label="Revenue"
+            value={`₹${stats.revenue.toLocaleString()}`}
+            change="+18% growth"
+            accent="#fa8c16"
+          />
         </div>
 
-        <Space wrap>
-          <Select
-            value={filter}
-            onChange={setFilter}
-            style={{ width: 140 }}
-            options={[
-              { label: "Daily", value: "daily" },
-              { label: "Monthly", value: "monthly" },
-              { label: "Yearly", value: "yearly" },
-            ]}
-          />
-          <Button
-            onClick={() =>
-              navigate("/dashboard/superadmin/reports/revenue")
-            }
-          >
-            Go to Revenue Analytics
-          </Button>
-        </Space>
-      </div>
-
-      <Spin spinning={loading}>
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={12} lg={6}>
-            <KpiCard
-              icon={<DatabaseOutlined />}
-              label="Total Schools"
-              value={stats.schools}
-              change="+8 this month"
-              accent="#2563EB"
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <KpiCard
-              icon={<TeamOutlined />}
-              label="Total Users"
-              value={stats.users.toLocaleString()}
-              change="+320 this week"
-              accent="#722ed1"
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <KpiCard
-              icon={<UserOutlined />}
-              label="Active Users"
-              value={stats.active.toLocaleString()}
-              change="59% of total"
-              accent="#22C55E"
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <KpiCard
-              icon={<RupeeIcon />}
-              label="Revenue"
-              value={`₹${stats.revenue.toLocaleString()}`}
-              change="+18% growth"
-              accent="#fa8c16"
-            />
-          </Col>
-        </Row>
-
-        <Card
-          bordered={false}
-          style={{
-            borderRadius: 16,
-            boxShadow: "0 2px 16px #0001",
-            marginBottom: 24,
-          }}
-          title={
-            <Space>
-              <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
-                User Growth
-              </span>
-              <Tag color="blue" style={{ borderRadius: 20 }}>
-                Total
-              </Tag>
-              <Tag color="green" style={{ borderRadius: 20 }}>
-                Active
-              </Tag>
-            </Space>
-          }
-        >
+        <div style={sectionPanel}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>User Growth</span>
+            <Tag color="blue" style={{ borderRadius: 20 }}>Total</Tag>
+            <Tag color="green" style={{ borderRadius: 20 }}>Active</Tag>
+          </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart
               data={chartData}
@@ -501,15 +424,15 @@ const PlatformUsage = () => {
                 </linearGradient>
               </defs>
 
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 12, fill: "#999" }}
+                tick={{ fontSize: 12, fill: "var(--text-muted)" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "#bbb" }}
+                tick={{ fontSize: 11, fill: "var(--text-muted)" }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -534,109 +457,82 @@ const PlatformUsage = () => {
               />
             </AreaChart>
           </ResponsiveContainer>
-        </Card>
+        </div>
 
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={16}>
-            <Card
-              bordered={false}
-              style={{ borderRadius: 16, boxShadow: "0 2px 16px #0001" }}
-              title={
-                <Space>
-                  <BankOutlined style={{ color: "#2563EB" }} />
-                  <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
-                    School Usage
-                  </span>
-                  <Tag style={{ borderRadius: 20 }}>
-                    {tableData.length} schools
-                  </Tag>
-                </Space>
-              }
-              bodyStyle={{ padding: 0 }}
-            >
+        <style>{`
+          @media (max-width: 900px) {
+            .platform-usage-grid { grid-template-columns: 1fr !important; }
+          }
+          ${tableHeadCss("platform-usage-tbl")}
+        `}</style>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20 }} className="platform-usage-grid">
+          <div style={{ ...sectionPanel, padding: 0 }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 10 }}>
+              <BankOutlined style={{ color: "var(--primary)" }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>School Usage</span>
+              <Tag style={{ borderRadius: 20 }}>{tableData.length} schools</Tag>
+            </div>
+            <div className="platform-usage-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
               <Table
                 columns={columns}
                 dataSource={tableData}
                 pagination={{ pageSize: 5, style: { padding: "12px 20px" } }}
-                style={{
-                  borderRadius: "0 0 16px 16px",
-                  overflow: "hidden",
-                }}
                 locale={{ emptyText: "No school data available" }}
-                onRow={() => ({
-                  style: { transition: "background 0.15s" },
-                  onMouseEnter: (e) =>
-                    (e.currentTarget.style.background = "#f8faff"),
-                  onMouseLeave: (e) =>
-                    (e.currentTarget.style.background = ""),
-                })}
               />
-            </Card>
-          </Col>
+            </div>
+          </div>
 
-          <Col xs={24} lg={8}>
-            <Card
-              bordered={false}
-              style={{
-                borderRadius: 16,
-                boxShadow: "0 2px 16px #0001",
-                height: "100%",
-              }}
-              title={
-                <Space>
-                  <BellOutlined style={{ color: "#fa8c16" }} />
-                  <span style={{ fontWeight: 700, color: "#1a1a2e" }}>
-                    Recent Activity
-                  </span>
-                </Space>
-              }
-            >
-              <Timeline
-                items={(activity.length
-                  ? activity
-                  : [
-                      {
-                        title: "No recent activity",
-                        desc: "No school onboarding activity found yet.",
-                        icon: <BellOutlined />,
-                        color: "#bbb",
-                        time: "—",
-                      },
-                    ]
-                ).map((item) => ({
-                  dot: (
-                    <Avatar
-                      size={28}
-                      icon={item.icon}
-                      style={{
-                        background: `${item.color}18`,
-                        color: item.color,
-                      }}
-                    />
-                  ),
-                  children: (
-                    <div style={{ paddingBottom: 4 }}>
-                      <Text
-                        strong
-                        style={{ fontSize: 13, color: "#1a1a2e" }}
-                      >
-                        {item.title}
-                      </Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {item.desc}
-                      </Text>
-                      <br />
-                      <Text style={{ fontSize: 11, color: "#bbb" }}>
-                        {item.time}
-                      </Text>
-                    </div>
-                  ),
-                }))}
-              />
-            </Card>
-          </Col>
-        </Row>
+          <div style={sectionPanel}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <BellOutlined style={{ color: "#fa8c16" }} />
+              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Recent Activity</span>
+            </div>
+            <Timeline
+              items={(activity.length
+                ? activity
+                : [
+                    {
+                      title: "No recent activity",
+                      desc: "No school onboarding activity found yet.",
+                      icon: <BellOutlined />,
+                      color: "#94A3B8",
+                      time: "—",
+                    },
+                  ]
+              ).map((item) => ({
+                dot: (
+                  <Avatar
+                    size={28}
+                    icon={item.icon}
+                    style={{
+                      background: `${item.color}18`,
+                      color: item.color,
+                    }}
+                  />
+                ),
+                children: (
+                  <div style={{ paddingBottom: 4 }}>
+                    <Text
+                      strong
+                      style={{ fontSize: 13, color: "var(--text-primary)" }}
+                    >
+                      {item.title}
+                    </Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {item.desc}
+                    </Text>
+                    <br />
+                    <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      {item.time}
+                    </Text>
+                  </div>
+                ),
+              }))}
+            />
+          </div>
+        </div>
       </Spin>
     </div>
   );

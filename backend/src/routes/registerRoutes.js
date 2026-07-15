@@ -40,6 +40,7 @@ import studentPortalRoutes from "./studentPortal.routes.js";
 import supportTicketRoutes from "./supportTicket.routes.js";
 import timetableRoutes from "./timetable.routes.js";
 import notificationRoutes from "./notification.routes.js";
+import deviceTokenRoutes from "./deviceToken.routes.js";
 import messageRoutes from "./message.routes.js";
 import superAdminBillingRoutes from "./superAdminBilling.routes.js";
 import systemBackupRoutes from "./systemBackup.routes.js";
@@ -78,6 +79,7 @@ import vendorRoutes from "./vendor.routes.js";
 import purchaseOrderRoutes from "./purchaseOrder.routes.js";
 import stockIssueRoutes from "./stockIssue.routes.js";
 import amcTrackingRoutes from "./amcTracking.routes.js";
+import classTeacherAssignmentRoutes from "./classTeacherAssignment.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -127,6 +129,7 @@ export const apiV1Routes = [
   ["/timetable", timetableRoutes],
   /* ["/timetables", timetableRoutes], */
   ["/notifications", notificationRoutes],
+  ["/device-tokens", deviceTokenRoutes],
   ["/messages", messageRoutes],
   ["/super-admin/billing", superAdminBillingRoutes],
   ["/system-backups", systemBackupRoutes],
@@ -160,6 +163,7 @@ export const apiV1Routes = [
   ["/2fa", twoFactorRoutes],
   ["/ip-restrictions", ipRestrictionRoutes],
   ["/login-logs", loginLogRoutes],
+  ["/class-teacher-assignments", classTeacherAssignmentRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

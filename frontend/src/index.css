@@ -228,18 +228,91 @@ h1, h2, h3, h4, h5, h6 {
   background: transparent !important;
 }
 
-/* Remove focus outline on mouse click — keep keyboard :focus-visible intact */
+/* ── Remove focus outline/glow on mouse click — everywhere ───────────────
+   :focus-visible stays intact so keyboard users still get an outline.
+   This covers native elements, Ant Design components, and custom inputs.
+─────────────────────────────────────────────────────────────────────── */
+
+/* Universal: any element focused by mouse loses the browser default ring */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Input */
 .ant-input:focus,
 .ant-input-affix-wrapper:focus,
 .ant-input-affix-wrapper-focused,
+textarea.ant-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — InputNumber */
 .ant-input-number:focus,
 .ant-input-number-focused,
-.ant-picker:focus,
-.ant-picker-focused,
+.ant-input-number-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Select */
 .ant-select-focused .ant-select-selector,
 .ant-select-selector:focus,
+.ant-select:focus,
+.ant-select-open .ant-select-selector {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — DatePicker / TimePicker */
+.ant-picker:focus,
+.ant-picker-focused,
+.ant-picker-input > input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Button */
 .ant-btn:focus:not(:focus-visible),
-textarea.ant-input:focus {
+.ant-btn-primary:focus:not(:focus-visible),
+.ant-btn-default:focus:not(:focus-visible),
+.ant-btn-text:focus:not(:focus-visible),
+.ant-btn-link:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Checkbox / Radio */
+.ant-checkbox-input:focus + .ant-checkbox-inner,
+.ant-radio-input:focus + .ant-radio-inner {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Switch */
+.ant-switch:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Segmented */
+.ant-segmented-item:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* Ant Design — Pagination / Table */
+.ant-pagination-item:focus:not(:focus-visible),
+.ant-pagination-prev:focus:not(:focus-visible),
+.ant-pagination-next:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* Native HTML elements */
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
   outline: none !important;
   box-shadow: none !important;
 }
