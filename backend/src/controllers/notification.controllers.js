@@ -7,6 +7,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 import { sendPushToUsers } from "../utils/pushService.js";
 import { sendWhatsAppToUsers } from "../utils/whatsappServices.js";
+import { sendSmsToUsers } from "../utils/smsServices.js";
+import { sendEmailToUsers } from "../utils/mailServices.js";
 
 const CREATE_ALLOWED_ROLES = [
   "Super Admin",
@@ -282,7 +284,10 @@ export const createNotification = asyncHandler(async (req, res) => {
 
   let result = created;
 
-  if ((normalizedChannels.push || normalizedChannels.whatsapp) && finalStatus === "sent") {
+  const anyExternalChannel =
+    normalizedChannels.push || normalizedChannels.whatsapp || normalizedChannels.email || normalizedChannels.sms;
+
+  if (anyExternalChannel && finalStatus === "sent") {
     const targetUserIds = await resolveTargetUserIds(created);
 
     if (normalizedChannels.push) {
@@ -304,6 +309,30 @@ export const createNotification = asyncHandler(async (req, res) => {
         result = await Notification.findByIdAndUpdate(
           created._id,
           { $inc: { "deliveryStats.sent": whatsappResult.sent, "deliveryStats.failed": whatsappResult.failed } },
+          { new: true }
+        );
+      }
+    }
+
+    if (normalizedChannels.email) {
+      const emailResult = await sendEmailToUsers(targetUserIds, { title: created.title, body: created.message });
+
+      if (!emailResult.skipped) {
+        result = await Notification.findByIdAndUpdate(
+          created._id,
+          { $inc: { "deliveryStats.sent": emailResult.sent, "deliveryStats.failed": emailResult.failed } },
+          { new: true }
+        );
+      }
+    }
+
+    if (normalizedChannels.sms) {
+      const smsResult = await sendSmsToUsers(targetUserIds, { title: created.title, body: created.message });
+
+      if (!smsResult.skipped) {
+        result = await Notification.findByIdAndUpdate(
+          created._id,
+          { $inc: { "deliveryStats.sent": smsResult.sent, "deliveryStats.failed": smsResult.failed } },
           { new: true }
         );
       }
