@@ -207,6 +207,7 @@ export const sidebarMenu = {
         { title: "Certificates", path: "schooladmin/students/certificates" },
         { title: "ID Cards", path: "schooladmin/students/id-cards" },
         { title: "Health Records", path: "schooladmin/health-records" },
+        { title: "Discipline", path: "schooladmin/students/discipline" },
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },
@@ -456,6 +457,7 @@ export const sidebarMenu = {
   /* ================= VICE PRINCIPAL ================= */
   "vice principal": [
     { title: "Overview", path: "viceprincipal", icon: LayoutDashboard },
+    { title: "Discipline", path: "viceprincipal/discipline", icon: ShieldAlert },
     { title: "Timetable", path: "viceprincipal/timetable", icon: CalendarClock },
     { title: "Exams & Grades", path: "viceprincipal/exams", icon: GraduationCap },
     { title: "Student Attendance", path: "viceprincipal/attendance/students", icon: UserCheck },
@@ -709,6 +711,7 @@ export const sidebarMenu = {
     { title: "Dashboard",        path: "classteacher",                   icon: LayoutDashboard },
     { title: "My Class",         path: "classteacher/my-class",          icon: BookOpen        },
     { title: "My Students",      path: "classteacher/students",          icon: Users           },
+    { title: "Discipline",       path: "classteacher/discipline",        icon: ShieldAlert     },
     { title: "Mark Attendance",  path: "classteacher/attendance/students", icon: ClipboardCheck },
     { title: "Assignments",      path: "classteacher/assignments",       icon: ClipboardList   },
     { title: "Timetable",        path: "classteacher/timetable",         icon: CalendarCheck   },

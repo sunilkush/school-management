@@ -176,6 +176,7 @@ const RollNumberManagement = lazy(() => import("./pages/School_Admin/Teachers_&_
 const CertificatesPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/CertificatesPage.jsx"));
 const IDCardsPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/IDCardsPage.jsx"));
 const HealthRecordsPage = lazy(() => import("./pages/MedicalOfficer/HealthRecordsPage.jsx"));
+const DisciplinePage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/DisciplinePage.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -701,6 +702,7 @@ const router = createBrowserRouter([
               { path: "students/certificates", element: <CertificatesPage /> },
               { path: "students/id-cards", element: <IDCardsPage /> },
               { path: "health-records", element: <HealthRecordsPage /> },
+              { path: "students/discipline", element: <DisciplinePage /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/exams-list", element: <ExamsPage /> },
@@ -917,6 +919,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,                      element: <SchoolAdminDashboard /> },
+              { path: "discipline",               element: <DisciplinePage /> },
               { path: "reports",                  element: <VicePrincipalReports /> },
               { path: "academics",                element: <ExamsPage /> },
               { path: "tasks",                    element: <MyTasks /> },
@@ -1264,6 +1267,7 @@ const router = createBrowserRouter([
               { path: "classes",                    element: <AssignedClasses /> },
               { path: "classes/:classId",           element: <ClassDetails /> },
               { path: "students",                   element: <MyStudents /> },
+              { path: "discipline",                 element: <DisciplinePage /> },
               { path: "assignments",                element: <Assignments /> },
               { path: "attendance/students",        element: <StudentAttendance /> },
               { path: "timetable",                  element: <TeacherTimetablePage /> },
