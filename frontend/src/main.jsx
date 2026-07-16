@@ -181,6 +181,7 @@ const AlumniPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/A
 const CanteenPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/CanteenPage.jsx"));
 const PTMSessionsPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/PTMSessionsPage.jsx"));
 const PTMBooking = lazy(() => import("./pages/Parent/PTM/PTMBooking.jsx"));
+const SportsPage = lazy(() => import("./pages/SportsTeacher/SportsPage.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -710,6 +711,7 @@ const router = createBrowserRouter([
               { path: "students/alumni", element: <AlumniPage /> },
               { path: "students/canteen", element: <CanteenPage /> },
               { path: "students/ptm", element: <PTMSessionsPage /> },
+              { path: "students/sports", element: <SportsPage /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/exams-list", element: <ExamsPage /> },
@@ -1197,6 +1199,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,                        element: <TeacherDashboard /> },
+              { path: "sports",                     element: <SportsPage /> },
               { path: "classes",                    element: <AssignedClasses /> },
               { path: "classes/:classId",           element: <ClassDetails /> },
               { path: "students",                   element: <MyStudents /> },

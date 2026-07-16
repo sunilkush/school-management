@@ -43,6 +43,7 @@ import {
   ShieldAlert,
   ListChecks,
   Stethoscope,
+  Trophy,
 } from "lucide-react";
 import RupeeIcon from "../components/icons/RupeeIcon";
 
@@ -211,6 +212,7 @@ export const sidebarMenu = {
         { title: "Alumni", path: "schooladmin/students/alumni" },
         { title: "Canteen", path: "schooladmin/students/canteen" },
         { title: "PTM", path: "schooladmin/students/ptm" },
+        { title: "Sports", path: "schooladmin/students/sports" },
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },
@@ -676,6 +678,7 @@ export const sidebarMenu = {
   /* ================= SPORTS TEACHER ================= */
   "sports teacher": [
     { title: "Dashboard",        path: "sportsteacher",                  icon: LayoutDashboard },
+    { title: "Sports",           path: "sportsteacher/sports",           icon: Trophy          },
     { title: "My Classes",       path: "sportsteacher/classes",          icon: BookOpen        },
     { title: "My Students",      path: "sportsteacher/students",         icon: Users           },
     { title: "Mark Attendance",  path: "sportsteacher/attendance/students", icon: ClipboardCheck },
