@@ -565,3 +565,157 @@ export const exportCertificatePdf = async (certificate, school) =>
 
     doc.end();
   });
+
+/* ── Avatar initials palette (mirrors frontend styles/pageStyles.js) ── */
+const AVATAR_PALETTE = [
+  { bg: "#DBEAFE", color: "#1D4ED8" },
+  { bg: "#CCFBF1", color: "#0D9488" },
+  { bg: "#DCFCE7", color: "#15803D" },
+  { bg: "#FEE2E2", color: "#DC2626" },
+  { bg: "#FEF3C7", color: "#B45309" },
+  { bg: "#EDE9FE", color: "#6D28D9" },
+];
+const avatarPalette = (name = "") => AVATAR_PALETTE[(name.charCodeAt(0) || 65) % AVATAR_PALETTE.length];
+
+const fetchImageBuffer = async (url) => {
+  if (!url) return null;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const arrayBuffer = await res.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * ID Cards — print-ready CR80-size cards (student or staff), 8 per A4 sheet
+ * (2 columns x 4 rows), for batch printing and cutting.
+ */
+export const exportIdCardsPdf = async (cards, school) => {
+  const photoBuffers = new Map(
+    await Promise.all(
+      cards.map(async (card) => [`${card._id}`, await fetchImageBuffer(card.photoUrl)])
+    )
+  );
+
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 30, size: "A4", layout: "portrait" });
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+
+    const PW = doc.page.width;
+    const PH = doc.page.height;
+    const MX = 30;
+    const MY = 30;
+
+    const CARD_W = 243;
+    const CARD_H = 153;
+    const GAP_X = 20;
+    const GAP_Y = 20;
+    const COLS = 2;
+    const ROWS = 4;
+    const PER_PAGE = COLS * ROWS;
+
+    const gridW = COLS * CARD_W + (COLS - 1) * GAP_X;
+    const startX = MX + ((PW - MX * 2) - gridW) / 2;
+    const startY = MY + 24; // room for a thin page title line
+
+    const fmtDate = (v) => {
+      if (!v) return "—";
+      try { return new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); } catch { return "—"; }
+    };
+
+    const drawCard = (card, x, y) => {
+      // Cut-guide border
+      doc.rect(x, y, CARD_W, CARD_H).lineWidth(0.75).stroke("#94A3B8");
+
+      // Header band
+      const HDR_H = 26;
+      doc.rect(x, y, CARD_W, HDR_H).fill("#1E3A8A");
+      doc.fillColor("#ffffff").fontSize(9).font("Helvetica-Bold")
+        .text(school?.name || "School", x + 8, y + 5, { width: CARD_W - 70 });
+      doc.fontSize(6.5).font("Helvetica")
+        .text(card.holderType === "Student" ? "STUDENT ID" : "STAFF ID", x + CARD_W - 62, y + 8, { width: 54, align: "right" });
+
+      // Photo box
+      const PHOTO_X = x + 10;
+      const PHOTO_Y = y + HDR_H + 10;
+      const PHOTO_W = 62;
+      const PHOTO_H = 74;
+
+      const buffer = photoBuffers.get(`${card._id}`);
+      if (buffer) {
+        try {
+          doc.rect(PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H).lineWidth(0.5).stroke("#CBD5E1");
+          doc.image(buffer, PHOTO_X, PHOTO_Y, { fit: [PHOTO_W, PHOTO_H], align: "center", valign: "center" });
+        } catch {
+          drawInitialsAvatar(card, PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H);
+        }
+      } else {
+        drawInitialsAvatar(card, PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H);
+      }
+
+      // Text block
+      const TX = PHOTO_X + PHOTO_W + 10;
+      const TW = x + CARD_W - TX - 8;
+      let ty = PHOTO_Y + 2;
+
+      doc.fillColor("#0F172A").fontSize(9.5).font("Helvetica-Bold")
+        .text(card.fullName || "—", TX, ty, { width: TW });
+      ty += 16;
+
+      const roleLine = card.holderType === "Student"
+        ? [card.className, card.sectionName].filter(Boolean).join(" - ")
+        : (card.designation || card.department || "Staff");
+      doc.fillColor("#475569").fontSize(7.5).font("Helvetica")
+        .text(roleLine || "—", TX, ty, { width: TW });
+      ty += 13;
+
+      const idLabel = card.holderType === "Student" ? "Roll No" : "Emp Code";
+      const idValue = card.holderType === "Student" ? (card.rollNumber || "—") : (card.employeeCode || "—");
+      doc.fillColor("#64748B").fontSize(7).font("Helvetica")
+        .text(`${idLabel}: ${idValue}`, TX, ty, { width: TW });
+      ty += 11;
+
+      if (card.bloodGroup) {
+        doc.fillColor("#DC2626").fontSize(7).font("Helvetica-Bold")
+          .text(`Blood Group: ${card.bloodGroup}`, TX, ty, { width: TW });
+      }
+
+      // Footer strip
+      const FOOT_Y = y + CARD_H - 16;
+      doc.moveTo(x + 6, FOOT_Y).lineTo(x + CARD_W - 6, FOOT_Y).lineWidth(0.5).stroke("#E2E8F0");
+      doc.fillColor("#94A3B8").fontSize(6).font("Helvetica")
+        .text(card.cardNumber || "", x + 8, FOOT_Y + 3, { width: CARD_W / 2 - 10 });
+      doc.text(`Valid Until: ${fmtDate(card.validUntil)}`, x + CARD_W / 2, FOOT_Y + 3, { width: CARD_W / 2 - 10, align: "right" });
+    };
+
+    const drawInitialsAvatar = (card, x, y, w, h) => {
+      const { bg, color } = avatarPalette(card.fullName);
+      doc.rect(x, y, w, h).fill(bg);
+      doc.fillColor(color).fontSize(22).font("Helvetica-Bold")
+        .text((card.fullName || "?")[0].toUpperCase(), x, y + h / 2 - 12, { width: w, align: "center" });
+    };
+
+    cards.forEach((card, i) => {
+      const posInPage = i % PER_PAGE;
+      if (i > 0 && posInPage === 0) doc.addPage();
+      if (posInPage === 0) {
+        doc.fillColor("#0F172A").fontSize(10).font("Helvetica-Bold")
+          .text(`ID Cards — ${school?.name || ""}`, MX, MY, { width: PW - MX * 2 });
+      }
+
+      const col = posInPage % COLS;
+      const row = Math.floor(posInPage / COLS);
+      const x = startX + col * (CARD_W + GAP_X);
+      const y = startY + row * (CARD_H + GAP_Y);
+      drawCard(card, x, y);
+    });
+
+    doc.end();
+  });
+};

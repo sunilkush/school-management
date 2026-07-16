@@ -204,6 +204,7 @@ export const sidebarMenu = {
         { title: "Students", path: "schooladmin/studentList" },
         { title: "Student Promotion", path: "schooladmin/students/promotion" },
         { title: "Certificates", path: "schooladmin/students/certificates" },
+        { title: "ID Cards", path: "schooladmin/students/id-cards" },
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },

@@ -22,6 +22,7 @@ import examReportReducer from "../features/examReportSlice.js";
 import dashboardReducer from "../features/dashboardSlice";
 import examReducer from "../features/examSlice";
 import certificateReducer from "../features/certificateSlice";
+import idCardReducer from "../features/idCardSlice";
 import questionReducer from "../features/questionSlice";
 import attemptReducer from "../features/attemptSlice";
 import sectionReducer from "../features/sectionSlice";
@@ -100,6 +101,7 @@ const rootReducer = combineReducers({
   dashboard: dashboardReducer,
   exams: examReducer,
   certificates: certificateReducer,
+  idCards: idCardReducer,
   questions: questionReducer,
   attempts: attemptReducer,
   section: sectionReducer,
