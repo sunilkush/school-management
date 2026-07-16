@@ -175,6 +175,7 @@ const StudentPromotion = lazy(() => import("./pages/School_Admin/Teachers_&_Stud
 const RollNumberManagement = lazy(() => import("./pages/School_Admin/Teachers_&_Students/RollNumberManagement.jsx"));
 const CertificatesPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/CertificatesPage.jsx"));
 const IDCardsPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/IDCardsPage.jsx"));
+const HealthRecordsPage = lazy(() => import("./pages/MedicalOfficer/HealthRecordsPage.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -699,6 +700,7 @@ const router = createBrowserRouter([
               { path: "students/roll-numbers", element: <RollNumberManagement /> },
               { path: "students/certificates", element: <CertificatesPage /> },
               { path: "students/id-cards", element: <IDCardsPage /> },
+              { path: "health-records", element: <HealthRecordsPage /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/exams-list", element: <ExamsPage /> },
@@ -1235,6 +1237,7 @@ const router = createBrowserRouter([
             children: [
               { index: true,                        element: <TeacherDashboard /> },
               { path: "students",                   element: <MyStudents /> },
+              { path: "health-records",              element: <HealthRecordsPage /> },
               { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
               { path: "attendance/my",              element: <MyAttendancePage /> },
               { path: "leave",                      element: <TeacherLeave /> },

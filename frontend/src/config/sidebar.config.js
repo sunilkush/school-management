@@ -42,6 +42,7 @@ import {
   CalendarCheck,
   ShieldAlert,
   ListChecks,
+  Stethoscope,
 } from "lucide-react";
 import RupeeIcon from "../components/icons/RupeeIcon";
 
@@ -205,6 +206,7 @@ export const sidebarMenu = {
         { title: "Student Promotion", path: "schooladmin/students/promotion" },
         { title: "Certificates", path: "schooladmin/students/certificates" },
         { title: "ID Cards", path: "schooladmin/students/id-cards" },
+        { title: "Health Records", path: "schooladmin/health-records" },
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },
@@ -694,6 +696,7 @@ export const sidebarMenu = {
   "medical officer": [
     { title: "Dashboard",        path: "medicalofficer",                 icon: LayoutDashboard },
     { title: "Students",         path: "medicalofficer/students",        icon: Users           },
+    { title: "Health Records",   path: "medicalofficer/health-records",  icon: Stethoscope     },
     { title: "My Payroll",       path: "medicalofficer/payroll",         icon: IndianRupee     },
     { title: "My Tasks",         path: "medicalofficer/tasks",           icon: ListChecks      },
     ...employeeAttendance("medicalofficer"),

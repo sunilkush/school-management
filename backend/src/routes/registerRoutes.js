@@ -17,6 +17,7 @@ import questionRoutes from "./question.routes.js";
 import examRoutes from "./exam.routes.js";
 import certificateRoutes from "./certificate.routes.js";
 import idCardRoutes from "./idCard.routes.js";
+import healthRecordRoutes from "./healthRecord.routes.js";
 import attemptRoutes from "./attempt.routes.js";
 import subscriptionPlans from "./subscriptionPlan.routes.js";
 import feeRoutes from "./fee.routes.js";
@@ -103,6 +104,7 @@ export const apiV1Routes = [
   ["/exams", examRoutes],
   ["/certificates", certificateRoutes],
   ["/id-cards", idCardRoutes],
+  ["/health-records", healthRecordRoutes],
   ["/attempt", attemptRoutes],
   ["/subscription", subscriptionPlans],
   ["/fees", feeRoutes],
