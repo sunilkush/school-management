@@ -203,6 +203,7 @@ export const sidebarMenu = {
         { title: "Admission Inquiries", path: "schooladmin/admission/inquiry" },
         { title: "Students", path: "schooladmin/studentList" },
         { title: "Student Promotion", path: "schooladmin/students/promotion" },
+        { title: "Certificates", path: "schooladmin/students/certificates" },
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },

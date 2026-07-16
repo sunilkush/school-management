@@ -15,6 +15,7 @@ import reportsRoutes from "./report.routes.js";
 import dashboardRoutes from "./dashboard.routes.js";
 import questionRoutes from "./question.routes.js";
 import examRoutes from "./exam.routes.js";
+import certificateRoutes from "./certificate.routes.js";
 import attemptRoutes from "./attempt.routes.js";
 import subscriptionPlans from "./subscriptionPlan.routes.js";
 import feeRoutes from "./fee.routes.js";
@@ -99,6 +100,7 @@ export const apiV1Routes = [
   ["/dashboard", dashboardRoutes],
   ["/questions", questionRoutes],
   ["/exams", examRoutes],
+  ["/certificates", certificateRoutes],
   ["/attempt", attemptRoutes],
   ["/subscription", subscriptionPlans],
   ["/fees", feeRoutes],

@@ -414,3 +414,154 @@ export const exportAdmitCardsPdf = async (cards, exam) =>
 
     doc.end();
   });
+
+/**
+ * Certificate — formal single-page A4 portrait document
+ * (Transfer / Bonafide / Character / Study Certificate)
+ */
+export const exportCertificatePdf = async (certificate, school) =>
+  new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50, size: "A4", layout: "portrait" });
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+
+    const PW = doc.page.width;
+    const PH = doc.page.height;
+
+    const fmtDate = (v) => {
+      if (!v) return "—";
+      try {
+        return new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+      } catch {
+        return "—";
+      }
+    };
+
+    // ── Outer border ──────────────────────────────────────────────
+    doc.rect(20, 20, PW - 40, PH - 40).lineWidth(1.5).stroke("#1E3A8A");
+
+    // ── Header banner ────────────────────────────────────────────
+    const HDR_H = 70;
+    doc.rect(20, 20, PW - 40, HDR_H).fill("#1E3A8A");
+    doc.fillColor("#ffffff").fontSize(18).font("Helvetica-Bold")
+      .text(school?.name || "School", 30, 34, { width: PW - 60, align: "center" });
+    doc.fontSize(9).font("Helvetica")
+      .text(
+        [school?.address, school?.phone, school?.email].filter(Boolean).join("  |  "),
+        30, 58, { width: PW - 60, align: "center" }
+      );
+
+    // ── Title block ──────────────────────────────────────────────
+    let y = 20 + HDR_H + 24;
+    doc.fillColor("#0F172A").fontSize(16).font("Helvetica-Bold")
+      .text((certificate.certificateType || "CERTIFICATE").toUpperCase(), 30, y, { width: PW - 60, align: "center", underline: true });
+    y += 30;
+
+    doc.fontSize(9).font("Helvetica").fillColor("#475569")
+      .text(`Certificate No: ${certificate.certificateNumber}`, 40, y, { width: (PW - 80) / 2, align: "left" });
+    doc.text(`Date: ${fmtDate(certificate.issueDate)}`, PW / 2, y, { width: (PW - 80) / 2, align: "right" });
+    y += 26;
+
+    // ── Revoked watermark ────────────────────────────────────────
+    if (certificate.status === "Revoked") {
+      doc.save();
+      doc.rotate(-35, { origin: [PW / 2, PH / 2] });
+      doc.fillColor("#EF4444", 0.18).fontSize(70).font("Helvetica-Bold")
+        .text("REVOKED", 0, PH / 2 - 40, { width: PW, align: "center" });
+      doc.restore();
+    }
+
+    // ── Field grid ───────────────────────────────────────────────
+    const field = (label, value, x, fy, maxW) => {
+      doc.fillColor("#94A3B8").fontSize(7.5).font("Helvetica")
+        .text(label.toUpperCase(), x, fy, { width: maxW });
+      doc.fillColor("#0F172A").fontSize(10.5).font("Helvetica-Bold")
+        .text(value || "—", x, fy + 11, { width: maxW });
+    };
+
+    const colW = (PW - 80 - 20) / 2;
+    const col1X = 40;
+    const col2X = 40 + colW + 20;
+    const rowH = 34;
+
+    const classSection = [certificate.className, certificate.sectionName].filter(Boolean).join(" - ") || "—";
+
+    const rows = [
+      ["Student Name", certificate.studentName],
+      ["Father's Name", certificate.fatherName],
+      ["Mother's Name", certificate.motherName],
+      ["Date of Birth", fmtDate(certificate.dateOfBirth)],
+      ["Class / Section", classSection],
+      ["Roll Number", certificate.rollNumber],
+      ["Registration No.", certificate.registrationNumber],
+      ["Admission Date", fmtDate(certificate.admissionDate)],
+    ];
+
+    if (certificate.certificateType === "Transfer Certificate") {
+      rows.push(["Date of Leaving", fmtDate(certificate.dateOfLeaving)]);
+      rows.push(["Reason for Leaving", certificate.reasonForLeaving]);
+      rows.push(["Conduct", certificate.conduct]);
+    } else if (certificate.certificateType === "Character Certificate") {
+      rows.push(["Conduct", certificate.conduct]);
+    } else {
+      rows.push(["Purpose", certificate.purpose]);
+    }
+    rows.push(["Address", certificate.address]);
+
+    rows.forEach((r, i) => {
+      const x = i % 2 === 0 ? col1X : col2X;
+      const rowY = y + Math.floor(i / 2) * rowH;
+      field(r[0], r[1], x, rowY, colW);
+    });
+
+    y += Math.ceil(rows.length / 2) * rowH + 16;
+
+    // ── Narrative paragraph ─────────────────────────────────────
+    let narrative = "";
+    if (certificate.certificateType === "Transfer Certificate") {
+      narrative = `This is to certify that ${certificate.studentName}, son/daughter of ${certificate.fatherName || "—"}, was a bona fide student of ${school?.name || "this institution"}, studying in class ${classSection}. He/she was admitted on ${fmtDate(certificate.admissionDate)} and left the institution on ${fmtDate(certificate.dateOfLeaving)}. His/her conduct during the period of study was ${certificate.conduct || "satisfactory"}. Reason for leaving: ${certificate.reasonForLeaving || "not specified"}.`;
+    } else if (certificate.certificateType === "Character Certificate") {
+      narrative = `This is to certify that ${certificate.studentName}, son/daughter of ${certificate.fatherName || "—"}, is/was a student of ${school?.name || "this institution"}, studying in class ${classSection}. His/her conduct and character during the period of study at this institution have been found to be ${certificate.conduct || "satisfactory"}.`;
+    } else {
+      narrative = `This is to certify that ${certificate.studentName}, son/daughter of ${certificate.fatherName || "—"}, is a bona fide student of ${school?.name || "this institution"}, presently studying in class ${classSection}. This certificate is issued for the purpose of ${certificate.purpose || "official use"}.`;
+    }
+
+    doc.fillColor("#1E293B").fontSize(10.5).font("Helvetica")
+      .text(narrative, 40, y, { width: PW - 80, align: "justify", lineGap: 4 });
+
+    y = doc.y + 20;
+
+    if (certificate.remarks) {
+      doc.fillColor("#475569").fontSize(9).font("Helvetica-Oblique")
+        .text(`Remarks: ${certificate.remarks}`, 40, y, { width: PW - 80 });
+      y = doc.y + 20;
+    }
+
+    // ── Signature block ──────────────────────────────────────────
+    const sigY = Math.max(y + 40, PH - 130);
+    const sigW = (PW - 80 - 40) / 2;
+
+    doc.moveTo(40, sigY).lineTo(40 + sigW, sigY).lineWidth(0.8).stroke("#CBD5E1");
+    doc.fillColor("#64748B").fontSize(8).font("Helvetica")
+      .text("Date & Place", 40, sigY + 5, { width: sigW, align: "center" });
+
+    const sig2X = PW - 40 - sigW;
+    doc.moveTo(sig2X, sigY).lineTo(sig2X + sigW, sigY).lineWidth(0.8).stroke("#CBD5E1");
+    if (certificate.signatoryName) {
+      doc.fillColor("#0F172A").fontSize(9).font("Helvetica-Bold")
+        .text(certificate.signatoryName, sig2X, sigY - 16, { width: sigW, align: "center" });
+    }
+    doc.fillColor("#64748B").fontSize(8).font("Helvetica")
+      .text(certificate.signatoryDesignation || "Principal", sig2X, sigY + 5, { width: sigW, align: "center" });
+
+    // ── Footer ───────────────────────────────────────────────────
+    doc.fillColor("#94A3B8").fontSize(7.5).font("Helvetica")
+      .text(
+        `This is a computer-generated certificate. | Certificate No: ${certificate.certificateNumber} | Generated: ${new Date().toLocaleString("en-IN")}`,
+        40, PH - 40, { width: PW - 80, align: "center" }
+      );
+
+    doc.end();
+  });
