@@ -5,6 +5,7 @@ import { DisciplineIncident, DISCIPLINE_CATEGORIES } from "../models/DisciplineI
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { School } from "../models/school.model.js";
+import { notifyUser } from "../utils/notifyService.js";
 
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
@@ -76,6 +77,33 @@ export const createIncident = asyncHandler(async (req, res) => {
     followUpDate: followUpDate || null,
     reportedBy: req.user._id,
   });
+
+  // Auto-notify parents for anything beyond a Minor incident — a staff member shouldn't have to
+  // remember to separately message home for the cases that actually matter.
+  if (incident.severity === "Moderate" || incident.severity === "Major") {
+    const parentIds = [student.fatherId, student.motherId, student.guardianId].filter(Boolean);
+    if (parentIds.length) {
+      const title = `Discipline notice: ${incident.studentName}`;
+      const message = `A ${incident.severity.toLowerCase()} ${incident.category.toLowerCase()} incident has been recorded for ${incident.studentName}: ${incident.description}`;
+
+      await Promise.all(
+        parentIds.map((parentId) =>
+          notifyUser({
+            schoolId,
+            userId: parentId,
+            title,
+            message,
+            channels: { inApp: true, email: true, sms: true, whatsapp: true },
+            createdById: req.user._id,
+          })
+        )
+      );
+
+      incident.parentNotified = true;
+      incident.parentNotifiedAt = new Date();
+      await incident.save();
+    }
+  }
 
   return res.status(201).json(new ApiResponse(201, incident, "Discipline incident recorded successfully"));
 });

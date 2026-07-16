@@ -41,6 +41,18 @@ export const getIdCards = createAsyncThunk(
   }
 );
 
+export const fetchMyIdCards = createAsyncThunk(
+  "idCards/fetchMyIdCards",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/id-cards/my");
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 export const deactivateIdCard = createAsyncThunk(
   "idCards/deactivateIdCard",
   async ({ id, reason }, { rejectWithValue }) => {
@@ -56,6 +68,8 @@ export const deactivateIdCard = createAsyncThunk(
 const initialState = {
   cards: [],
   pagination: null,
+  myCards: [],
+  myLoading: false,
   loading: false,
   error: null,
 };
@@ -107,6 +121,19 @@ const idCardSlice = createSlice({
       })
       .addCase(getIdCards.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(fetchMyIdCards.pending, (state) => {
+        state.myLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyIdCards.fulfilled, (state, action) => {
+        state.myLoading = false;
+        state.myCards = action.payload || [];
+      })
+      .addCase(fetchMyIdCards.rejected, (state, action) => {
+        state.myLoading = false;
         state.error = action.payload;
       })
 

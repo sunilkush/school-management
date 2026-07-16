@@ -79,9 +79,11 @@ const NotificationSchema = new Schema(
       trim: true,
     },
     createdById: {
+      // Optional: system-triggered notifications (e.g. the PTM reminder cron job) have no acting
+      // user to attribute the notification to.
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
     schoolId: {
       type: Schema.Types.ObjectId,

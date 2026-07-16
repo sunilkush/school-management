@@ -19,6 +19,24 @@ const ensureAccess = (doc, user, notFoundMessage) => {
   }
 };
 
+// Resolves the calling Student/Parent to the set of Student._id's they're allowed to see —
+// their own record for a Student, or their linked children for a Parent. Used only by the /my
+// self-service endpoint; admin endpoints above scope by schoolId, not by holder identity.
+const resolveMyStudentIds = async (req) => {
+  const roleName = req.user.roleId?.name;
+  if (roleName === "Student") {
+    const student = await Student.findOne({ userId: req.user._id }).select("_id").lean();
+    return student ? [student._id] : [];
+  }
+  if (roleName === "Parent") {
+    const children = await Student.find({
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    }).select("_id").lean();
+    return children.map((c) => c._id);
+  }
+  return [];
+};
+
 /* ══════════════════════════ Teams ══════════════════════════ */
 
 export const createTeam = asyncHandler(async (req, res) => {
@@ -235,4 +253,19 @@ export const deleteAchievement = asyncHandler(async (req, res) => {
   await Achievement.findByIdAndDelete(req.params.id);
 
   return res.status(200).json(new ApiResponse(200, { _id: req.params.id }, "Achievement deleted successfully"));
+});
+
+/* ══════════════════════ Student/Parent self-service ══════════════════════ */
+
+export const getMyAchievements = asyncHandler(async (req, res) => {
+  const studentIds = await resolveMyStudentIds(req);
+  if (!studentIds.length) {
+    return res.status(200).json(new ApiResponse(200, [], "No achievements found"));
+  }
+
+  const achievements = await Achievement.find({ holderType: "Student", studentId: { $in: studentIds } })
+    .sort({ achievementDate: -1 })
+    .lean();
+
+  return res.status(200).json(new ApiResponse(200, achievements, "Achievements fetched successfully"));
 });

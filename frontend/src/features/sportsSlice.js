@@ -117,10 +117,21 @@ export const deleteAchievement = createAsyncThunk("sports/deleteAchievement", as
   }
 });
 
+export const fetchMyAchievements = createAsyncThunk("sports/fetchMyAchievements", async (_, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.get("/sports/achievements/my");
+    return res.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message);
+  }
+});
+
 const initialState = {
   teams: [],
   events: [],
   achievements: [],
+  myAchievements: [],
+  myLoading: false,
   loading: false,
   error: null,
 };
@@ -169,7 +180,10 @@ const sportsSlice = createSlice({
       .addCase(createAchievement.fulfilled, (state, action) => { state.achievements.unshift(action.payload); })
       .addCase(deleteAchievement.fulfilled, (state, action) => {
         state.achievements = state.achievements.filter((a) => a._id !== action.payload);
-      });
+      })
+      .addCase(fetchMyAchievements.pending, (state) => { state.myLoading = true; state.error = null; })
+      .addCase(fetchMyAchievements.fulfilled, (state, action) => { state.myLoading = false; state.myAchievements = action.payload || []; })
+      .addCase(fetchMyAchievements.rejected, (state, action) => { state.myLoading = false; state.error = action.payload; });
   },
 });
 

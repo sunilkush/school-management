@@ -21,6 +21,24 @@ const ensureCertificateAccess = (doc, user) => {
   }
 };
 
+// Resolves the calling Student/Parent to the set of Student._id's they're allowed to see —
+// their own record for a Student, or their linked children for a Parent. Used only by the /my
+// self-service endpoints; admin endpoints above scope by schoolId, not by holder identity.
+const resolveMyStudentIds = async (req) => {
+  const roleName = req.user.roleId?.name;
+  if (roleName === "Student") {
+    const student = await Student.findOne({ userId: req.user._id }).select("_id").lean();
+    return student ? [student._id] : [];
+  }
+  if (roleName === "Parent") {
+    const children = await Student.find({
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    }).select("_id").lean();
+    return children.map((c) => c._id);
+  }
+  return [];
+};
+
 const buildCertificateNumber = async (schoolId, certificateType) => {
   const prefix = getCertificatePrefix(certificateType);
   const year = new Date().getFullYear();
@@ -214,4 +232,70 @@ export const downloadCertificatePdf = asyncHandler(async (req, res) => {
   res.setHeader("Content-Disposition", `attachment; filename="${safeName}.pdf"`);
   res.setHeader("Content-Length", pdfBuffer.length);
   return res.end(pdfBuffer);
+});
+
+/* ══════════════════════ Student/Parent self-service ══════════════════════ */
+
+export const getMyCertificates = asyncHandler(async (req, res) => {
+  const studentIds = await resolveMyStudentIds(req);
+  if (!studentIds.length) {
+    return res.status(200).json(new ApiResponse(200, [], "No certificates found"));
+  }
+
+  const certificates = await Certificate.find({ studentId: { $in: studentIds } })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return res.status(200).json(new ApiResponse(200, certificates, "Certificates fetched successfully"));
+});
+
+export const downloadMyCertificatePdf = asyncHandler(async (req, res) => {
+  const studentIds = await resolveMyStudentIds(req);
+  const certificate = await Certificate.findOne({
+    _id: req.params.id,
+    studentId: { $in: studentIds },
+  }).lean();
+
+  if (!certificate) throw new ApiError(404, "Certificate not found");
+
+  const school = await School.findById(certificate.schoolId)
+    .select("name address email phone logo")
+    .lean();
+
+  const pdfBuffer = await exportCertificatePdf(certificate, school);
+  const safeName = certificate.certificateNumber.replace(/[^a-zA-Z0-9-_]/g, "-");
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${safeName}.pdf"`);
+  res.setHeader("Content-Length", pdfBuffer.length);
+  return res.end(pdfBuffer);
+});
+
+/* ══════════════════════ Public verification (no auth) ══════════════════════ */
+// Deliberately minimal payload — this route is intentionally exempt from the auth wall
+// (see PUBLIC_API_ROUTE_PATTERNS in auth.middleware.js), so it must never return the address/
+// DOB/parent-contact fields the authenticated endpoints above do.
+
+export const verifyCertificate = asyncHandler(async (req, res) => {
+  const certificate = await Certificate.findOne({
+    certificateNumber: req.params.certificateNumber.toUpperCase(),
+  }).lean();
+
+  if (!certificate) {
+    return res.status(200).json(new ApiResponse(200, { valid: false }, "Certificate not found"));
+  }
+
+  const school = await School.findById(certificate.schoolId).select("name").lean();
+
+  return res.status(200).json(new ApiResponse(200, {
+    valid: certificate.status === "Issued",
+    certificateType: certificate.certificateType,
+    certificateNumber: certificate.certificateNumber,
+    studentName: certificate.studentName,
+    className: certificate.className,
+    sectionName: certificate.sectionName,
+    issueDate: certificate.issueDate,
+    status: certificate.status,
+    schoolName: school?.name || "",
+  }, "Certificate verification result"));
 });

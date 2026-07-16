@@ -182,6 +182,14 @@ const CanteenPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/
 const PTMSessionsPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/PTMSessionsPage.jsx"));
 const PTMBooking = lazy(() => import("./pages/Parent/PTM/PTMBooking.jsx"));
 const SportsPage = lazy(() => import("./pages/SportsTeacher/SportsPage.jsx"));
+const MyCertificates = lazy(() => import("./pages/Student/Certificates/MyCertificates.jsx"));
+const MyIdCard = lazy(() => import("./pages/Student/IDCards/MyIdCard.jsx"));
+const MyAchievements = lazy(() => import("./pages/Student/Sports/MyAchievements.jsx"));
+const ChildCertificates = lazy(() => import("./pages/Parent/Certificates/ChildCertificates.jsx"));
+const ChildIdCard = lazy(() => import("./pages/Parent/IDCards/ChildIdCard.jsx"));
+const ChildAchievements = lazy(() => import("./pages/Parent/Sports/ChildAchievements.jsx"));
+const VerifyCertificate = lazy(() => import("./pages/Verify/VerifyCertificate.jsx"));
+const VerifyIdCard = lazy(() => import("./pages/Verify/VerifyIdCard.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -397,6 +405,8 @@ const router = createBrowserRouter([
       { path: "/", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
       { path: "/login", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
       { path: "/style-guide", element: <StyleGuide /> },
+      { path: "/verify/certificate/:certificateNumber", element: <VerifyCertificate /> },
+      { path: "/verify/id-card/:cardNumber", element: <VerifyIdCard /> },
       { path: "/forgot-password", element: <PublicOnlyRoute><ForgetPasswordPage /></PublicOnlyRoute> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
@@ -807,6 +817,9 @@ const router = createBrowserRouter([
               { path: "exams/attempt-review", element: <AttemptReview /> },
               { path: "exams/exam-live", element: <ExamLive /> },
               { path: "exams", element: <StudentExamsPage /> },
+              { path: "certificates", element: <MyCertificates /> },
+              { path: "id-card", element: <MyIdCard /> },
+              { path: "sports/achievements", element: <MyAchievements /> },
               { path: "message", element: <Message /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
@@ -825,6 +838,9 @@ const router = createBrowserRouter([
               { index: true, element: <ParentDashboard /> },
               { path: "children",   element: <MyChildren /> },
               { path: "ptm",        element: <PTMBooking /> },
+              { path: "certificates", element: <ChildCertificates /> },
+              { path: "id-card",      element: <ChildIdCard /> },
+              { path: "sports/achievements", element: <ChildAchievements /> },
               { path: "attendance", element: <ChildAttendancePage /> },
               { path: "grades",     element: <ChildGrades /> },
               { path: "homework",   element: <ChildHomework /> },

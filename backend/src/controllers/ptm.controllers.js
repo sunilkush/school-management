@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { PTMSession } from "../models/PTMSession.model.js";
 import { PTMSlot } from "../models/PTMSlot.model.js";
 import { Student } from "../models/student.model.js";
+import { notifyUser } from "../utils/notifyService.js";
 
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
@@ -196,6 +197,17 @@ export const bookSlot = asyncHandler(async (req, res) => {
   );
 
   if (!slot) throw new ApiError(400, "This slot is no longer available");
+
+  const session = await PTMSession.findById(slot.ptmSessionId).select("title location").lean();
+  const timeRange = `${new Date(slot.startTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}`;
+  await notifyUser({
+    schoolId: slot.schoolId,
+    userId: parentId,
+    title: "PTM slot confirmed",
+    message: `Your PTM slot for ${student.userId?.name || "your child"} (${session?.title || "PTM"}) is confirmed for ${timeRange}${session?.location ? ` at ${session.location}` : ""}.`,
+    channels: { inApp: true, email: true },
+    createdById: req.user._id,
+  });
 
   return res.status(200).json(new ApiResponse(200, slot, "Slot booked successfully"));
 });

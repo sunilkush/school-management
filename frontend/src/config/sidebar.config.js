@@ -44,6 +44,8 @@ import {
   ListChecks,
   Stethoscope,
   Trophy,
+  FileBadge,
+  IdCard,
 } from "lucide-react";
 import RupeeIcon from "../components/icons/RupeeIcon";
 
@@ -383,6 +385,9 @@ export const sidebarMenu = {
     { title: "Fees", path: "student/fees", icon: RupeeIcon },
     { title: "Leave Requests", path: "student/leave", icon: CalendarClock },
     { title: "Exams", path: "student/exams", icon: GraduationCap },
+    { title: "Certificates", path: "student/certificates", icon: FileBadge },
+    { title: "ID Card", path: "student/id-card", icon: IdCard },
+    { title: "Achievements", path: "student/sports/achievements", icon: Trophy },
     { title: "Academic Calendar", path: "student/calendar", icon: CalendarClock },
     communicationMenu("student"),
     ...commonSelfService("student"),
@@ -393,6 +398,9 @@ export const sidebarMenu = {
     { title: "Overview",          path: "parent",              icon: LayoutDashboard },
     { title: "My Children",       path: "parent/children",     icon: Users },
     { title: "PTM Booking",       path: "parent/ptm",          icon: CalendarClock },
+    { title: "Certificates",      path: "parent/certificates", icon: FileBadge },
+    { title: "ID Card",           path: "parent/id-card",      icon: IdCard },
+    { title: "Achievements",      path: "parent/sports/achievements", icon: Trophy },
     { title: "Attendance",        path: "parent/attendance",   icon: UserCheck },
     { title: "Grades",            path: "parent/grades",       icon: FileCheck },
     { title: "Homework",          path: "parent/homework",     icon: ClipboardCheck },
@@ -620,38 +628,6 @@ export const sidebarMenu = {
     ...employeeAttendance("security", { skipMy: true }),
     roleWorkspaceItem,
     ...commonSelfService("security"),
-  ],
-
-  /* ================= CLASS TEACHER ================= */
-  "class teacher": [
-    { title: "Overview", path: "classteacher", icon: LayoutDashboard },
-    { title: "My Tasks", path: "classteacher/tasks", icon: ListChecks },
-    { title: "My Payroll", path: "classteacher/payroll", icon: IndianRupee },
-    ...commonSelfService("classteacher"),
-  ],
-
-  /* ================= SPORTS TEACHER ================= */
-  "sports teacher": [
-    { title: "Overview", path: "sportsteacher", icon: LayoutDashboard },
-    { title: "My Tasks", path: "sportsteacher/tasks", icon: ListChecks },
-    { title: "My Payroll", path: "sportsteacher/payroll", icon: IndianRupee },
-    ...commonSelfService("sportsteacher"),
-  ],
-
-  /* ================= LAB TECHNICIAN ================= */
-  "lab technician": [
-    { title: "Overview", path: "labtechnician", icon: LayoutDashboard },
-    { title: "My Tasks", path: "labtechnician/tasks", icon: ListChecks },
-    { title: "My Payroll", path: "labtechnician/payroll", icon: IndianRupee },
-    ...commonSelfService("labtechnician"),
-  ],
-
-  /* ================= MEDICAL OFFICER ================= */
-  "medical officer": [
-    { title: "Overview", path: "medicalofficer", icon: LayoutDashboard },
-    { title: "My Tasks", path: "medicalofficer/tasks", icon: ListChecks },
-    { title: "My Payroll", path: "medicalofficer/payroll", icon: IndianRupee },
-    ...commonSelfService("medicalofficer"),
   ],
 
   /* ================= STAFF / SUPPORT STAFF ================= */

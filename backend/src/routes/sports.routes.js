@@ -2,7 +2,7 @@ import express from "express";
 import {
   createTeam, getTeams, getTeamById, updateTeam, deleteTeam, addTeamMember, removeTeamMember,
   createEvent, getEvents, updateEvent,
-  createAchievement, getAchievements, deleteAchievement,
+  createAchievement, getAchievements, deleteAchievement, getMyAchievements,
 } from "../controllers/sports.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
@@ -11,6 +11,7 @@ const router = express.Router();
 
 const SPORTS_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Sports Teacher"];
 const gate = [auth, roleMiddleware(SPORTS_ROLES)];
+const myGate = [auth, roleMiddleware(["Student", "Parent"])];
 
 // ── Teams ──
 router.post("/teams", ...gate, validate({ body: { name: { required: true, type: "string" } } }), createTeam);
@@ -45,5 +46,8 @@ router.post(
 );
 router.get("/achievements", ...gate, getAchievements);
 router.delete("/achievements/:id", ...gate, validate({ params: { id: { required: true, type: "objectId" } } }), deleteAchievement);
+
+// ── Student/Parent self-service ──
+router.get("/achievements/my", ...myGate, getMyAchievements);
 
 export default router;

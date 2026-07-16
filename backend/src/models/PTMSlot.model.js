@@ -17,6 +17,10 @@ const ptmSlotSchema = new Schema(
     attended: { type: Boolean, default: false },
     notes: { type: String, trim: true, default: "" },
     cancelReason: { type: String, trim: true, default: "" },
+
+    // Set once the day-before reminder job has notified this slot's parent — prevents re-sending
+    // on every daily cron run while the slot remains Booked.
+    reminderSentAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -25,6 +29,7 @@ ptmSlotSchema.index({ schoolId: 1, ptmSessionId: 1 });
 ptmSlotSchema.index({ schoolId: 1, status: 1 });
 ptmSlotSchema.index({ studentId: 1 });
 ptmSlotSchema.index({ parentId: 1 });
+ptmSlotSchema.index({ status: 1, reminderSentAt: 1, startTime: 1 });
 
 export const PTMSlot =
   mongoose.models.PTMSlot || mongoose.model("PTMSlot", ptmSlotSchema);

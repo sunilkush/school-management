@@ -1,5 +1,8 @@
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
+import { generateQrBuffer } from "./qrService.js";
+
+const buildVerifyUrl = (path) => `${process.env.FRONTEND_URL || "http://localhost:5173"}${path}`;
 
 export const exportToExcel = async (attempts) => {
   const workbook = new ExcelJS.Workbook();
@@ -419,8 +422,13 @@ export const exportAdmitCardsPdf = async (cards, exam) =>
  * Certificate — formal single-page A4 portrait document
  * (Transfer / Bonafide / Character / Study Certificate)
  */
-export const exportCertificatePdf = async (certificate, school) =>
-  new Promise((resolve, reject) => {
+export const exportCertificatePdf = async (certificate, school) => {
+  const qrBuffer = await generateQrBuffer(
+    buildVerifyUrl(`/verify/certificate/${certificate.certificateNumber}`),
+    140
+  ).catch(() => null);
+
+  return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: "A4", layout: "portrait" });
     const chunks = [];
     doc.on("data", (chunk) => chunks.push(chunk));
@@ -452,6 +460,15 @@ export const exportCertificatePdf = async (certificate, school) =>
         [school?.address, school?.phone, school?.email].filter(Boolean).join("  |  "),
         30, 58, { width: PW - 60, align: "center" }
       );
+
+    // ── QR verification code (top-right corner of the header) ─────
+    if (qrBuffer) {
+      const qrSize = 44;
+      const qrX = PW - 20 - 8 - qrSize;
+      const qrY = 20 + (HDR_H - qrSize) / 2;
+      doc.rect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 6).fill("#ffffff");
+      doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+    }
 
     // ── Title block ──────────────────────────────────────────────
     let y = 20 + HDR_H + 24;
@@ -567,6 +584,7 @@ export const exportCertificatePdf = async (certificate, school) =>
 
     doc.end();
   });
+};
 
 /* ── Avatar initials palette (mirrors frontend styles/pageStyles.js) ── */
 const AVATAR_PALETTE = [
@@ -599,6 +617,14 @@ export const exportIdCardsPdf = async (cards, school) => {
   const photoBuffers = new Map(
     await Promise.all(
       cards.map(async (card) => [`${card._id}`, await fetchImageBuffer(card.photoUrl)])
+    )
+  );
+  const qrBuffers = new Map(
+    await Promise.all(
+      cards.map(async (card) => [
+        `${card._id}`,
+        await generateQrBuffer(buildVerifyUrl(`/verify/id-card/${card.cardNumber}`), 90).catch(() => null),
+      ])
     )
   );
 
@@ -690,10 +716,19 @@ export const exportIdCardsPdf = async (cards, school) => {
 
       // Footer strip
       const FOOT_Y = y + CARD_H - 16;
+      const QR_SIZE = 14;
       doc.moveTo(x + 6, FOOT_Y).lineTo(x + CARD_W - 6, FOOT_Y).lineWidth(0.5).stroke("#E2E8F0");
       doc.fillColor("#94A3B8").fontSize(6).font("Helvetica")
-        .text(card.cardNumber || "", x + 8, FOOT_Y + 3, { width: CARD_W / 2 - 10 });
-      doc.text(`Valid Until: ${fmtDate(card.validUntil)}`, x + CARD_W / 2, FOOT_Y + 3, { width: CARD_W / 2 - 10, align: "right" });
+        .text(card.cardNumber || "", x + 8, FOOT_Y + 4, { width: CARD_W / 2 - 10 });
+      doc.text(
+        `Valid Until: ${fmtDate(card.validUntil)}`,
+        x + CARD_W / 2, FOOT_Y + 4,
+        { width: CARD_W / 2 - 10 - QR_SIZE - 6, align: "right" }
+      );
+      const qrBuffer = qrBuffers.get(`${card._id}`);
+      if (qrBuffer) {
+        doc.image(qrBuffer, x + CARD_W - 6 - QR_SIZE, FOOT_Y + 1, { width: QR_SIZE, height: QR_SIZE });
+      }
     };
 
     const drawInitialsAvatar = (card, x, y, w, h) => {

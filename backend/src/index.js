@@ -1,6 +1,7 @@
 import dbConnection from "./db/index.js";
 import { app } from "./app.js";
 import { startSubscriptionExpiryJob } from "./jobs/subscriptionExpiry.job.js";
+import { startPtmReminderJob } from "./jobs/ptmReminder.job.js";
 
 const PORT = process.env.PORT || 9000;
 
@@ -17,6 +18,7 @@ process.on("unhandledRejection", (reason) => {
 dbConnection()
   .then(() => {
     startSubscriptionExpiryJob();
+    startPtmReminderJob();
 
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);

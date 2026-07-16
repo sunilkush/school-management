@@ -29,6 +29,18 @@ export const getCertificates = createAsyncThunk(
   }
 );
 
+export const fetchMyCertificates = createAsyncThunk(
+  "certificates/fetchMyCertificates",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/certificates/my");
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 export const getCertificateById = createAsyncThunk(
   "certificates/getCertificateById",
   async (id, { rejectWithValue }) => {
@@ -57,6 +69,8 @@ const initialState = {
   certificates: [],
   pagination: null,
   currentCertificate: null,
+  myCertificates: [],
+  myLoading: false,
   loading: false,
   error: null,
 };
@@ -84,6 +98,19 @@ const certificateSlice = createSlice({
       })
       .addCase(generateCertificate.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(fetchMyCertificates.pending, (state) => {
+        state.myLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyCertificates.fulfilled, (state, action) => {
+        state.myLoading = false;
+        state.myCertificates = action.payload || [];
+      })
+      .addCase(fetchMyCertificates.rejected, (state, action) => {
+        state.myLoading = false;
         state.error = action.payload;
       })
 

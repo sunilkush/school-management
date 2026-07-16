@@ -65,6 +65,24 @@ const buildEmployeeSnapshot = (employee) => ({
   employeeCode: employee.employeeCode || "",
 });
 
+// Resolves the calling Student/Parent to the set of Student._id's they're allowed to see —
+// their own record for a Student, or their linked children for a Parent. Used only by the /my
+// self-service endpoints; admin endpoints scope by schoolId, not by holder identity.
+const resolveMyStudentIds = async (req) => {
+  const roleName = req.user.roleId?.name;
+  if (roleName === "Student") {
+    const student = await Student.findOne({ userId: req.user._id }).select("_id").lean();
+    return student ? [student._id] : [];
+  }
+  if (roleName === "Parent") {
+    const children = await Student.find({
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    }).select("_id").lean();
+    return children.map((c) => c._id);
+  }
+  return [];
+};
+
 const buildCardNumber = async (schoolId, holderType) => {
   const prefix = getCardPrefix(holderType);
   const year = new Date().getFullYear();
@@ -307,4 +325,70 @@ export const downloadIdCardsPdf = asyncHandler(async (req, res) => {
   res.setHeader("Content-Disposition", `attachment; filename="id-cards-${Date.now()}.pdf"`);
   res.setHeader("Content-Length", pdfBuffer.length);
   return res.end(pdfBuffer);
+});
+
+/* ══════════════════════ Student/Parent self-service ══════════════════════ */
+
+export const getMyIdCards = asyncHandler(async (req, res) => {
+  const studentIds = await resolveMyStudentIds(req);
+  if (!studentIds.length) {
+    return res.status(200).json(new ApiResponse(200, [], "No ID cards found"));
+  }
+
+  const cards = await IDCard.find({ holderType: "Student", holderId: { $in: studentIds } })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return res.status(200).json(new ApiResponse(200, cards, "ID cards fetched successfully"));
+});
+
+export const downloadMyIdCardPdf = asyncHandler(async (req, res) => {
+  const studentIds = await resolveMyStudentIds(req);
+  const card = await IDCard.findOne({
+    _id: req.params.id,
+    holderType: "Student",
+    holderId: { $in: studentIds },
+  }).lean();
+
+  if (!card) throw new ApiError(404, "ID card not found");
+
+  const school = await School.findById(card.schoolId).select("name logo").lean();
+  const pdfBuffer = await exportIdCardsPdf([card], school);
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${card.cardNumber.replace(/[^a-zA-Z0-9-_]/g, "-")}.pdf"`);
+  res.setHeader("Content-Length", pdfBuffer.length);
+  return res.end(pdfBuffer);
+});
+
+/* ══════════════════════ Public verification (no auth) ══════════════════════ */
+// Deliberately minimal payload — this route is intentionally exempt from the auth wall
+// (see PUBLIC_API_ROUTE_PATTERNS in auth.middleware.js), so it must never return contact/address
+// fields the authenticated endpoints above do.
+
+export const verifyIdCard = asyncHandler(async (req, res) => {
+  const card = await IDCard.findOne({
+    cardNumber: req.params.cardNumber.toUpperCase(),
+  }).lean();
+
+  if (!card) {
+    return res.status(200).json(new ApiResponse(200, { valid: false }, "ID card not found"));
+  }
+
+  const school = await School.findById(card.schoolId).select("name").lean();
+  const roleLine = card.holderType === "Student"
+    ? [card.className, card.sectionName].filter(Boolean).join(" - ")
+    : (card.designation || card.department || "");
+
+  return res.status(200).json(new ApiResponse(200, {
+    valid: card.status === "Active",
+    holderType: card.holderType,
+    fullName: card.fullName,
+    photoUrl: card.photoUrl,
+    cardNumber: card.cardNumber,
+    roleLine,
+    validUntil: card.validUntil,
+    status: card.status,
+    schoolName: school?.name || "",
+  }, "ID card verification result"));
 });

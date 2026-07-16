@@ -5,6 +5,9 @@ import {
   getCertificateById,
   revokeCertificate,
   downloadCertificatePdf,
+  getMyCertificates,
+  downloadMyCertificatePdf,
+  verifyCertificate,
 } from "../controllers/certificate.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
@@ -13,6 +16,7 @@ import { CERTIFICATE_TYPES } from "../models/Certificate.model.js";
 const router = express.Router();
 
 const CERTIFICATE_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal"];
+const MY_CERTIFICATE_ROLES = ["Student", "Parent"];
 
 router.post(
   "/generate",
@@ -33,6 +37,19 @@ router.post(
 );
 
 router.get("/", auth, roleMiddleware(CERTIFICATE_ROLES), getCertificates);
+
+// ── Student/Parent self-service (must stay above the generic "/:id" route below) ──
+router.get("/my", auth, roleMiddleware(MY_CERTIFICATE_ROLES), getMyCertificates);
+router.get(
+  "/my/:id/pdf",
+  auth,
+  roleMiddleware(MY_CERTIFICATE_ROLES),
+  validate({ params: { id: { required: true, type: "objectId" } } }),
+  downloadMyCertificatePdf
+);
+
+// ── Public verification (no auth — exempted via PUBLIC_API_ROUTE_PATTERNS in auth.middleware.js) ──
+router.get("/verify/:certificateNumber", verifyCertificate);
 
 router.get(
   "/:id/pdf",
