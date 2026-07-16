@@ -208,6 +208,8 @@ export const sidebarMenu = {
         { title: "ID Cards", path: "schooladmin/students/id-cards" },
         { title: "Health Records", path: "schooladmin/health-records" },
         { title: "Discipline", path: "schooladmin/students/discipline" },
+        { title: "Alumni", path: "schooladmin/students/alumni" },
+        { title: "Canteen", path: "schooladmin/students/canteen" },
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },

@@ -25,6 +25,8 @@ import certificateReducer from "../features/certificateSlice";
 import idCardReducer from "../features/idCardSlice";
 import healthRecordReducer from "../features/healthRecordSlice";
 import disciplineReducer from "../features/disciplineSlice";
+import alumniReducer from "../features/alumniSlice";
+import canteenReducer from "../features/canteenSlice";
 import questionReducer from "../features/questionSlice";
 import attemptReducer from "../features/attemptSlice";
 import sectionReducer from "../features/sectionSlice";
@@ -106,6 +108,8 @@ const rootReducer = combineReducers({
   idCards: idCardReducer,
   healthRecords: healthRecordReducer,
   discipline: disciplineReducer,
+  alumni: alumniReducer,
+  canteen: canteenReducer,
   questions: questionReducer,
   attempts: attemptReducer,
   section: sectionReducer,
