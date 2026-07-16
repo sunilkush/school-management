@@ -210,6 +210,7 @@ export const sidebarMenu = {
         { title: "Discipline", path: "schooladmin/students/discipline" },
         { title: "Alumni", path: "schooladmin/students/alumni" },
         { title: "Canteen", path: "schooladmin/students/canteen" },
+        { title: "PTM", path: "schooladmin/students/ptm" },
         { title: "Parents", path: "schooladmin/parents-register" },
         { title: "Teachers & Staff", path: "schooladmin/teacher" },
         { title: "Create User", path: "schooladmin/user-create" },
@@ -389,6 +390,7 @@ export const sidebarMenu = {
   parent: [
     { title: "Overview",          path: "parent",              icon: LayoutDashboard },
     { title: "My Children",       path: "parent/children",     icon: Users },
+    { title: "PTM Booking",       path: "parent/ptm",          icon: CalendarClock },
     { title: "Attendance",        path: "parent/attendance",   icon: UserCheck },
     { title: "Grades",            path: "parent/grades",       icon: FileCheck },
     { title: "Homework",          path: "parent/homework",     icon: ClipboardCheck },
@@ -460,6 +462,7 @@ export const sidebarMenu = {
   "vice principal": [
     { title: "Overview", path: "viceprincipal", icon: LayoutDashboard },
     { title: "Discipline", path: "viceprincipal/discipline", icon: ShieldAlert },
+    { title: "PTM", path: "viceprincipal/ptm", icon: CalendarClock },
     { title: "Timetable", path: "viceprincipal/timetable", icon: CalendarClock },
     { title: "Exams & Grades", path: "viceprincipal/exams", icon: GraduationCap },
     { title: "Student Attendance", path: "viceprincipal/attendance/students", icon: UserCheck },
@@ -714,6 +717,7 @@ export const sidebarMenu = {
     { title: "My Class",         path: "classteacher/my-class",          icon: BookOpen        },
     { title: "My Students",      path: "classteacher/students",          icon: Users           },
     { title: "Discipline",       path: "classteacher/discipline",        icon: ShieldAlert     },
+    { title: "PTM",              path: "classteacher/ptm",               icon: CalendarClock   },
     { title: "Mark Attendance",  path: "classteacher/attendance/students", icon: ClipboardCheck },
     { title: "Assignments",      path: "classteacher/assignments",       icon: ClipboardList   },
     { title: "Timetable",        path: "classteacher/timetable",         icon: CalendarCheck   },

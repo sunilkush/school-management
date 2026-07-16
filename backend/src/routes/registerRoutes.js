@@ -21,6 +21,7 @@ import healthRecordRoutes from "./healthRecord.routes.js";
 import disciplineIncidentRoutes from "./disciplineIncident.routes.js";
 import alumniProfileRoutes from "./alumniProfile.routes.js";
 import canteenRoutes from "./canteen.routes.js";
+import ptmRoutes from "./ptm.routes.js";
 import attemptRoutes from "./attempt.routes.js";
 import subscriptionPlans from "./subscriptionPlan.routes.js";
 import feeRoutes from "./fee.routes.js";
@@ -111,6 +112,7 @@ export const apiV1Routes = [
   ["/discipline-incidents", disciplineIncidentRoutes],
   ["/alumni", alumniProfileRoutes],
   ["/canteen", canteenRoutes],
+  ["/ptm", ptmRoutes],
   ["/attempt", attemptRoutes],
   ["/subscription", subscriptionPlans],
   ["/fees", feeRoutes],

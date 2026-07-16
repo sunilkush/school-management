@@ -27,6 +27,7 @@ import healthRecordReducer from "../features/healthRecordSlice";
 import disciplineReducer from "../features/disciplineSlice";
 import alumniReducer from "../features/alumniSlice";
 import canteenReducer from "../features/canteenSlice";
+import ptmReducer from "../features/ptmSlice";
 import questionReducer from "../features/questionSlice";
 import attemptReducer from "../features/attemptSlice";
 import sectionReducer from "../features/sectionSlice";
@@ -110,6 +111,7 @@ const rootReducer = combineReducers({
   discipline: disciplineReducer,
   alumni: alumniReducer,
   canteen: canteenReducer,
+  ptm: ptmReducer,
   questions: questionReducer,
   attempts: attemptReducer,
   section: sectionReducer,

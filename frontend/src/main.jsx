@@ -179,6 +179,8 @@ const HealthRecordsPage = lazy(() => import("./pages/MedicalOfficer/HealthRecord
 const DisciplinePage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/DisciplinePage.jsx"));
 const AlumniPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AlumniPage.jsx"));
 const CanteenPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/CanteenPage.jsx"));
+const PTMSessionsPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/PTMSessionsPage.jsx"));
+const PTMBooking = lazy(() => import("./pages/Parent/PTM/PTMBooking.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -707,6 +709,7 @@ const router = createBrowserRouter([
               { path: "students/discipline", element: <DisciplinePage /> },
               { path: "students/alumni", element: <AlumniPage /> },
               { path: "students/canteen", element: <CanteenPage /> },
+              { path: "students/ptm", element: <PTMSessionsPage /> },
               { path: "exams/exams-create", element: <ExamCreate /> },
               { path: "exams/edit/:id", element: <ExamCreate /> },
               { path: "exams/exams-list", element: <ExamsPage /> },
@@ -819,6 +822,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <ParentDashboard /> },
               { path: "children",   element: <MyChildren /> },
+              { path: "ptm",        element: <PTMBooking /> },
               { path: "attendance", element: <ChildAttendancePage /> },
               { path: "grades",     element: <ChildGrades /> },
               { path: "homework",   element: <ChildHomework /> },
@@ -924,6 +928,7 @@ const router = createBrowserRouter([
             children: [
               { index: true,                      element: <SchoolAdminDashboard /> },
               { path: "discipline",               element: <DisciplinePage /> },
+              { path: "ptm",                       element: <PTMSessionsPage /> },
               { path: "reports",                  element: <VicePrincipalReports /> },
               { path: "academics",                element: <ExamsPage /> },
               { path: "tasks",                    element: <MyTasks /> },
@@ -1272,6 +1277,7 @@ const router = createBrowserRouter([
               { path: "classes/:classId",           element: <ClassDetails /> },
               { path: "students",                   element: <MyStudents /> },
               { path: "discipline",                 element: <DisciplinePage /> },
+              { path: "ptm",                         element: <PTMSessionsPage /> },
               { path: "assignments",                element: <Assignments /> },
               { path: "attendance/students",        element: <StudentAttendance /> },
               { path: "timetable",                  element: <TeacherTimetablePage /> },
