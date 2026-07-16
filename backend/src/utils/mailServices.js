@@ -4,6 +4,9 @@ import { User } from "../models/user.model.js";
 
 dotenv.config();
 
+// Explicit timeouts matter here: nodemailer's own defaults can leave a hung/unreachable SMTP
+// server blocking the request for minutes. A bad or slow SMTP config should fail fast, not stall
+// the whole "create notification" request that email dispatch now runs inside of.
 const transporter = nodemailer.createTransport({
   service: process.env.SMTP_SERVICE || "gmail",
   host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -13,6 +16,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 10_000,
 });
 
 export const sendEmail = async (to, subject, text) => {
@@ -44,18 +50,24 @@ export async function sendEmailToUsers(userIds, { title, body }) {
   const users = await User.find({ _id: { $in: userIds }, email: { $exists: true, $ne: "" } }).select("email");
   if (!users.length) return { sent: 0, failed: 0, skipped: false };
 
+  // Parallel, not sequential — a sequential loop means N recipients each waiting out the full
+  // per-connection timeout (see transporter config above) compounds into minutes for a slow/dead
+  // SMTP server, stalling the whole "create notification" request. Promise.allSettled bounds the
+  // total wait to roughly one timeout period regardless of recipient count.
+  const results = await Promise.allSettled(
+    users.map((user) => sendEmail(user.email, title || "Notification", body || ""))
+  );
+
   let sent = 0;
   let failed = 0;
-  for (const user of users) {
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      await sendEmail(user.email, title || "Notification", body || "");
+  results.forEach((result, i) => {
+    if (result.status === "fulfilled") {
       sent += 1;
-    } catch (error) {
-      console.error(`[mailServices] Failed to send email to ${user.email}:`, error.message);
+    } else {
+      console.error(`[mailServices] Failed to send email to ${users[i].email}:`, result.reason?.message);
       failed += 1;
     }
-  }
+  });
 
   return { sent, failed, skipped: false };
 }

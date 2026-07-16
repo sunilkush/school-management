@@ -557,10 +557,12 @@ export const exportCertificatePdf = async (certificate, school) =>
       .text(certificate.signatoryDesignation || "Principal", sig2X, sigY + 5, { width: sigW, align: "center" });
 
     // ── Footer ───────────────────────────────────────────────────
+    // Must stay within the 50pt bottom margin set on the PDFDocument above — a y position past
+    // (PH - margin) makes pdfkit treat this text as overflow and silently push it onto a new page.
     doc.fillColor("#94A3B8").fontSize(7.5).font("Helvetica")
       .text(
         `This is a computer-generated certificate. | Certificate No: ${certificate.certificateNumber} | Generated: ${new Date().toLocaleString("en-IN")}`,
-        40, PH - 40, { width: PW - 80, align: "center" }
+        40, PH - 65, { width: PW - 80, align: "center" }
       );
 
     doc.end();

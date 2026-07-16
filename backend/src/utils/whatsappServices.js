@@ -67,13 +67,13 @@ export async function sendWhatsAppToUsers(userIds, { title, body }) {
 
   const message = title ? `${title}\n\n${body || ""}` : body || "";
 
+  // Parallel, not sequential — see the comment in mailServices.js's sendEmailToUsers for why a
+  // per-recipient for-loop is a latent hang risk once recipient counts grow.
+  const results = await Promise.all(users.map((user) => sendWhatsApp(user.phone, message)));
+
   let sent = 0;
   let failed = 0;
-  for (const user of users) {
-    // eslint-disable-next-line no-await-in-loop
-    const ok = await sendWhatsApp(user.phone, message);
-    if (ok) sent += 1; else failed += 1;
-  }
+  results.forEach((ok) => { if (ok) sent += 1; else failed += 1; });
 
   return { sent, failed, skipped: false };
 }
