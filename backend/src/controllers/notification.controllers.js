@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 import { sendPushToUsers } from "../utils/pushService.js";
+import { sendWhatsAppToUsers } from "../utils/whatsappServices.js";
 
 const CREATE_ALLOWED_ROLES = [
   "Super Admin",
@@ -281,16 +282,31 @@ export const createNotification = asyncHandler(async (req, res) => {
 
   let result = created;
 
-  if (normalizedChannels.push && finalStatus === "sent") {
+  if ((normalizedChannels.push || normalizedChannels.whatsapp) && finalStatus === "sent") {
     const targetUserIds = await resolveTargetUserIds(created);
-    const pushResult = await sendPushToUsers(targetUserIds, { title: created.title, body: created.message, data: { notificationId: String(created._id) } });
 
-    if (!pushResult.skipped) {
-      result = await Notification.findByIdAndUpdate(
-        created._id,
-        { $inc: { "deliveryStats.sent": pushResult.sent, "deliveryStats.failed": pushResult.failed } },
-        { new: true }
-      );
+    if (normalizedChannels.push) {
+      const pushResult = await sendPushToUsers(targetUserIds, { title: created.title, body: created.message, data: { notificationId: String(created._id) } });
+
+      if (!pushResult.skipped) {
+        result = await Notification.findByIdAndUpdate(
+          created._id,
+          { $inc: { "deliveryStats.sent": pushResult.sent, "deliveryStats.failed": pushResult.failed } },
+          { new: true }
+        );
+      }
+    }
+
+    if (normalizedChannels.whatsapp) {
+      const whatsappResult = await sendWhatsAppToUsers(targetUserIds, { title: created.title, body: created.message });
+
+      if (!whatsappResult.skipped) {
+        result = await Notification.findByIdAndUpdate(
+          created._id,
+          { $inc: { "deliveryStats.sent": whatsappResult.sent, "deliveryStats.failed": whatsappResult.failed } },
+          { new: true }
+        );
+      }
     }
   }
 
