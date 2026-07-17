@@ -580,6 +580,10 @@ const router = createBrowserRouter([
                   "IT Support",
                   "Counselor",
                   "Security",
+                  "Class Teacher",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
                 ]}
               >
                 <SecuritySettings />

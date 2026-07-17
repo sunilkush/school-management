@@ -1,15 +1,25 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import TwoFactorAuth from "./TwoFactorAuth";
 import DeviceHistory from "./DeviceHistory";
 import IpRestrictions from "./IpRestrictions";
 
-const TABS = [
+const ALL_TABS = [
   { key: "2fa", label: "Two-Factor Auth", icon: "🔐" },
   { key: "devices", label: "Login History", icon: "📱" },
-  { key: "ip", label: "IP Restrictions", icon: "🌐" },
+  { key: "ip", label: "IP Restrictions", icon: "🌐", adminOnly: true },
 ];
 
+const resolveRoleName = (user) =>
+  typeof user?.role === "string" ? user.role : user?.role?.name;
+
 export default function SecuritySettings() {
+  const user = useSelector((s) => s.auth.user);
+  const isAdmin = ["Super Admin", "School Admin"].includes(resolveRoleName(user));
+  const TABS = useMemo(
+    () => ALL_TABS.filter((tab) => !tab.adminOnly || isAdmin),
+    [isAdmin]
+  );
   const [activeTab, setActiveTab] = useState("2fa");
 
   return (

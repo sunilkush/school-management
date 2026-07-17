@@ -41,6 +41,7 @@ import {
   History,
   CalendarCheck,
   ShieldAlert,
+  ShieldCheck,
   ListChecks,
   Stethoscope,
   Trophy,
@@ -51,6 +52,7 @@ import RupeeIcon from "../components/icons/RupeeIcon";
 
 const commonSelfService = (basePath) => [
   { title: "Profile", path: `${basePath}/profile`, icon: User },
+  { title: "Security Settings", path: "security-settings", icon: ShieldCheck },
 ];
 
 /* Attendance + leave items for every employee role */
