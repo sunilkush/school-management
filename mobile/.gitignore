@@ -8,3 +8,4 @@ android/
 *.mobileprovision
 web-build/
 *.test.js
+.env

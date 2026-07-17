@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -1236,8 +1236,10 @@ export const apiSlice = createApi({
 
     // Class Sections (Academics, Super Admin) — a read-only student-of-Classes explorer, distinct
     // from the Classes screen's own subject-teacher view.
+    // Fixed: was '/section' (singular) — the real mount is '/sections' (plural, see
+    // registerRoutes.js). Unused elsewhere before this fix, so risk-free to correct.
     getSections: builder.query({
-      query: (params) => ({ url: '/section', params }),
+      query: (params) => ({ url: '/sections', params }),
       providesTags: ['Class'],
     }),
 
@@ -1799,6 +1801,44 @@ export const apiSlice = createApi({
       query: (id) => ({ url: `/canteen/orders/${id}/cancel`, method: 'patch' }),
       invalidatesTags: ['CanteenOrder', 'CanteenWallet'],
     }),
+
+    // ── School Setup wizard (School Admin) — board assignment, school-class/section CRUD, and
+    // subject mapping. Academic year, global board catalog, board-class catalog, school classes,
+    // class-teacher assignment, subjects, and users already have working endpoints above and are
+    // reused directly; these are the pieces that were missing.
+    assignSchoolBoard: builder.mutation({
+      query: ({ schoolId, boardId }) => ({ url: '/boards/assignSchool-boards', method: 'put', data: { schoolId, boardId } }),
+      invalidatesTags: ['SchoolBoard'],
+    }),
+    getSchoolBoards: builder.query({
+      query: (schoolId) => ({ url: `/boards/school-boards/${schoolId}` }),
+      providesTags: ['SchoolBoard'],
+    }),
+    removeSchoolBoard: builder.mutation({
+      query: ({ schoolId, boardId }) => ({ url: '/boards/removeAssignSchool-boards', method: 'put', data: { schoolId, boardId } }),
+      invalidatesTags: ['SchoolBoard'],
+    }),
+    createSchoolClass: builder.mutation({
+      query: (payload) => ({ url: '/school-class', method: 'post', data: payload }),
+      invalidatesTags: ['Class'],
+    }),
+    deleteSchoolClass: builder.mutation({
+      query: (id) => ({ url: `/school-class/${id}`, method: 'delete' }),
+      invalidatesTags: ['Class'],
+    }),
+    createSection: builder.mutation({
+      query: (payload) => ({ url: '/sections', method: 'post', data: payload }),
+      invalidatesTags: ['Class'],
+    }),
+    deleteSection: builder.mutation({
+      query: (id) => ({ url: `/sections/${id}`, method: 'delete' }),
+      invalidatesTags: ['Class'],
+    }),
+    // Replaces the section's subjects array wholesale — not a merge (matches backend behavior).
+    addSubjectToSection: builder.mutation({
+      query: (payload) => ({ url: '/sections/add-subjects', method: 'post', data: payload }),
+      invalidatesTags: ['Class'],
+    }),
   }),
 });
 
@@ -2156,4 +2196,12 @@ export const {
   useCreateCanteenOrderMutation,
   useGetCanteenOrdersQuery,
   useCancelCanteenOrderMutation,
+  useAssignSchoolBoardMutation,
+  useGetSchoolBoardsQuery,
+  useRemoveSchoolBoardMutation,
+  useCreateSchoolClassMutation,
+  useDeleteSchoolClassMutation,
+  useCreateSectionMutation,
+  useDeleteSectionMutation,
+  useAddSubjectToSectionMutation,
 } = apiSlice;

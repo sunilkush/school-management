@@ -9,6 +9,7 @@ import {
   useGetClassRollNumbersQuery,
   useGetSportsTeamsQuery,
   useCreateAchievementMutation,
+  useGetActiveAcademicYearQuery,
 } from '../../store/api/apiSlice';
 
 const LEVELS = ['School', 'District', 'State', 'National', 'International'];
@@ -21,7 +22,10 @@ export function CreateAchievementSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id ?? user?.schoolId;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear from login is always empty (User has no academicYearId field server-side —
+  // see StudentPicker.jsx's own comment on this). Fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [holderType, setHolderType] = useState('Student');
   const [schoolClassId, setSchoolClassId] = useState(null);

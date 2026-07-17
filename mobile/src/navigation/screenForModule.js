@@ -128,6 +128,7 @@ import { SportsView } from '../screens/sportsTeacher/SportsView';
 import { MyAchievementsView } from '../screens/student/MyAchievementsView';
 import { AlumniView } from '../screens/schoolAdmin/AlumniView';
 import { CanteenView } from '../screens/schoolAdmin/CanteenView';
+import { SchoolSetupView } from '../screens/schoolAdmin/SchoolSetupView';
 
 // Real screens built so far, keyed by nav item key (== permission module, or 'Dashboard'/'Profile').
 // Anything not listed here still renders ModulePlaceholderScreen until a later Phase 4 batch.
@@ -363,6 +364,9 @@ const SCREEN_MAP = {
   // Super Admin/School Admin/Principal/Vice Principal only, same CANTEEN_ROLES gate as web's
   // canteen.routes.js.
   Canteen: CanteenView,
+  // School Admin's 5-step onboarding wizard — Academic Year, Boards, Classes & Sections,
+  // Subjects, Class Teachers.
+  SchoolSetup: SchoolSetupView,
 };
 
 // Screens that are themselves a nested navigator (e.g. a list that pushes to a detail screen, or

@@ -4,7 +4,7 @@ import { Button, Chip, Text } from 'react-native-paper';
 import { QueryState } from './QueryState';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetSchoolClassDetailsQuery, useGetClassRollNumbersQuery } from '../../store/api/apiSlice';
+import { useGetSchoolClassDetailsQuery, useGetClassRollNumbersQuery, useGetActiveAcademicYearQuery } from '../../store/api/apiSlice';
 
 /**
  * Shared class → section → student chip picker, extracted after the same inline pattern was
@@ -21,7 +21,13 @@ export function StudentPicker({ enabled = true, selectedId, selectedName, onSele
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id ?? user?.schoolId;
-  const academicYearId = user?.academicYear?._id;
+  // The login response's user.academicYear is always empty — User has no academicYearId field in
+  // its schema, so the backend's own aggregation lookup for it never resolves (a pre-existing
+  // backend bug, not something introduced here). The real source of truth is School.
+  // activeAcademicYearId, reachable via GET /academicYear/active/:schoolId — same fetch web's own
+  // academicYearSlice.js uses (fetchActiveAcademicYear).
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [schoolClassId, setSchoolClassId] = useState(null);
   const [sectionId, setSectionId] = useState(null);

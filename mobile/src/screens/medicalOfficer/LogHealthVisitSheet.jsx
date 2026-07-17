@@ -8,6 +8,7 @@ import {
   useGetSchoolClassDetailsQuery,
   useGetClassRollNumbersQuery,
   useCreateHealthVisitMutation,
+  useGetActiveAcademicYearQuery,
 } from '../../store/api/apiSlice';
 
 const SEVERITIES = ['Minor', 'Moderate', 'Severe'];
@@ -23,7 +24,10 @@ export function LogHealthVisitSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id ?? user?.schoolId;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear from login is always empty (User has no academicYearId field server-side —
+  // see StudentPicker.jsx's own comment on this). Fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [schoolClassId, setSchoolClassId] = useState(null);
   const [sectionId, setSectionId] = useState(null);

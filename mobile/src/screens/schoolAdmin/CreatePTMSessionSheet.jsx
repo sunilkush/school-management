@@ -7,6 +7,7 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import {
   useGetSchoolClassDetailsQuery,
   useCreatePTMSessionMutation,
+  useGetActiveAcademicYearQuery,
 } from '../../store/api/apiSlice';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -20,7 +21,10 @@ export function CreatePTMSessionSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id ?? user?.schoolId;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear from login is always empty (User has no academicYearId field server-side —
+  // see StudentPicker.jsx's own comment on this). Fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [schoolClassId, setSchoolClassId] = useState(null);
   const [sectionId, setSectionId] = useState(null);
