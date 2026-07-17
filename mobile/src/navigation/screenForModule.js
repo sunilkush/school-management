@@ -116,6 +116,18 @@ import { TransportScreen } from '../screens/TransportScreen';
 import { StudyMaterialsBrowseView } from '../screens/student/StudyMaterialsBrowseView';
 import { MyChildrenScreen } from '../screens/MyChildrenScreen';
 import { ProgressReportScreen } from '../screens/ProgressReportScreen';
+import { HealthRecordsView } from '../screens/medicalOfficer/HealthRecordsView';
+import { CertificatesView } from '../screens/schoolAdmin/CertificatesView';
+import { IdCardsView } from '../screens/schoolAdmin/IdCardsView';
+import { MyCertificatesView } from '../screens/student/MyCertificatesView';
+import { MyIdCardView } from '../screens/student/MyIdCardView';
+import { DisciplineView } from '../screens/schoolAdmin/DisciplineView';
+import { PTMSessionsView } from '../screens/schoolAdmin/PTMSessionsView';
+import { ParentPTMView } from '../screens/parent/ParentPTMView';
+import { SportsView } from '../screens/sportsTeacher/SportsView';
+import { MyAchievementsView } from '../screens/student/MyAchievementsView';
+import { AlumniView } from '../screens/schoolAdmin/AlumniView';
+import { CanteenView } from '../screens/schoolAdmin/CanteenView';
 
 // Real screens built so far, keyed by nav item key (== permission module, or 'Dashboard'/'Profile').
 // Anything not listed here still renders ModulePlaceholderScreen until a later Phase 4 batch.
@@ -325,6 +337,32 @@ const SCREEN_MAP = {
   // the missing wiring, not a new feature.
   MyChildren: MyChildrenScreen,
   ProgressReport: ProgressReportScreen,
+  // Medical Officer's core function; also School Admin/Principal/Vice Principal read+write, same
+  // HEALTH_ROLES gate as web's healthRecord.routes.js.
+  HealthRecords: HealthRecordsView,
+  // Certificates/ID Cards — manage (School Admin/Principal/Vice Principal) vs self-service
+  // (Student/Parent, same screen reused for both keys — see MyCertificatesView's own comment).
+  Certificates: CertificatesView,
+  IDCards: IdCardsView,
+  MyCertificates: MyCertificatesView,
+  MyIdCard: MyIdCardView,
+  // School Admin/Principal/Vice Principal/Teacher/Class Teacher — same DISCIPLINE_ROLES gate as
+  // web's disciplineIncident.routes.js, one shared screen.
+  Discipline: DisciplineView,
+  // PTM — staff (session management) vs Parent (slot booking) are genuinely different screens,
+  // so they get distinct nav keys ('PTM' vs 'PTMBooking') rather than sharing one SCREEN_MAP slot.
+  PTM: PTMSessionsView,
+  PTMBooking: ParentPTMView,
+  // Sports Teacher/School Admin/Principal/Vice Principal manage; Student/Parent self-service via
+  // the parameterless /achievements/my, same SPORTS_ROLES gate as web's sports.routes.js.
+  Sports: SportsView,
+  MyAchievements: MyAchievementsView,
+  // Super Admin/School Admin/Principal/Vice Principal only, same ALUMNI_ROLES gate as web's
+  // alumniProfile.routes.js.
+  Alumni: AlumniView,
+  // Super Admin/School Admin/Principal/Vice Principal only, same CANTEEN_ROLES gate as web's
+  // canteen.routes.js.
+  Canteen: CanteenView,
 };
 
 // Screens that are themselves a nested navigator (e.g. a list that pushes to a detail screen, or

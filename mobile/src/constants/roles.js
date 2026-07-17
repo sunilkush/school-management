@@ -46,6 +46,7 @@ export const MODULE_META = {
   Assessments: { label: 'Assessments', icon: 'clipboard-text-outline' },
   MyStudents: { label: 'My Students', icon: 'account-group-outline' },
   MyClass: { label: 'My Class', icon: 'book-open-variant' },
+  HealthRecords: { label: 'Health Records', icon: 'medical-bag' },
   SystemMaintenance: { label: 'System Maintenance', icon: 'wrench-outline' },
   NetworkStatus: { label: 'Network Status', icon: 'wifi' },
   SystemLogs: { label: 'System Logs', icon: 'console-line' },
@@ -116,6 +117,17 @@ export const MODULE_META = {
   Roles: { label: 'Roles', icon: 'shield-account-outline' },
   Permissions: { label: 'Permissions', icon: 'lock-outline' },
   PlatformModules: { label: 'Modules', icon: 'view-module' },
+  Discipline: { label: 'Discipline', icon: 'shield-alert-outline' },
+  PTM: { label: 'PTM', icon: 'calendar-clock-outline' },
+  PTMBooking: { label: 'PTM', icon: 'calendar-clock-outline' },
+  Sports: { label: 'Sports', icon: 'trophy-outline' },
+  Alumni: { label: 'Alumni', icon: 'school-outline' },
+  Canteen: { label: 'Canteen', icon: 'food-outline' },
+  MyAchievements: { label: 'Achievements', icon: 'medal-outline' },
+  Certificates: { label: 'Certificates', icon: 'certificate-outline' },
+  IDCards: { label: 'ID Cards', icon: 'card-account-details-outline' },
+  MyCertificates: { label: 'Certificates', icon: 'certificate-outline' },
+  MyIdCard: { label: 'ID Card', icon: 'card-account-details-outline' },
   SystemBackup: { label: 'System Backup', icon: 'backup-restore' },
   AuditLogs: { label: 'Audit Logs', icon: 'file-search-outline' },
   SupportTickets: { label: 'Support Tickets', icon: 'help-circle-outline' },
@@ -240,13 +252,13 @@ export const NAV_CONFIG = {
     unrestricted: true,
     items: [
       'Dashboard', 'SchoolSetup',
-      { group: 'Users', icon: 'account-group-outline', items: ['StudentAdmission', 'AdmissionInquiries', 'Students', 'StudentPromotion', 'Parents', 'Teachers', 'CreateUser'] },
+      { group: 'Users', icon: 'account-group-outline', items: ['StudentAdmission', 'AdmissionInquiries', 'Students', 'StudentPromotion', 'Parents', 'Teachers', 'CreateUser', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'Sports', 'Alumni', 'Canteen'] },
       // Timetable's own tabs already cover Time Slots and Rooms (see SchoolAdminTimetableView.jsx),
       // so those two web sidebar entries aren't repeated here as separate destinations — and
       // 'Rooms' specifically must NOT be reused, since that key already resolves to the unrelated
       // Hostel rooms screen elsewhere in this same app. 'Calendar' is dropped too — EventsScreen's
       // SchoolAdminEventsView already covers it, so 'Events' alone is enough.
-      { group: 'Academics', icon: 'book-open-variant', items: ['Classes', 'ClassTeacherAssignments', 'Subjects', 'Timetable', 'TeacherTimetable', 'Events'] },
+      { group: 'Academics', icon: 'book-open-variant', items: ['Classes', 'ClassTeacherAssignments', 'Subjects', 'Timetable', 'TeacherTimetable', 'Events', 'PTM'] },
       { group: 'Examinations', icon: 'pencil-box-outline', items: ['Exams', 'CreateExam', 'ExamSchedule', 'PaperBuilder', 'AdmitCard', 'SeatPlan', 'GradeEntry', 'ExamAnalytics', 'ExamReports'] },
       // 'Leave' reused directly (LeaveScreen already renders LeaveApprovalView for School Admin)
       // instead of a separate 'LeaveManagement' destination pointing at the same thing.
@@ -268,7 +280,7 @@ export const NAV_CONFIG = {
     unrestricted: true,
     items: [
       'Dashboard', 'StaffUsers', 'Students', 'AcademicReports', 'Timetable',
-      'AttendanceReports', 'MarkAttendance', 'AttendanceTable', 'Exams', 'Library', 'Transport',
+      'AttendanceReports', 'MarkAttendance', 'AttendanceTable', 'Exams', 'Library', 'Transport', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       'Profile',
     ],
@@ -276,7 +288,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.VICE_PRINCIPAL]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'Timetable', 'Exams', 'StudentAttendance', 'TeacherAttendance', 'AttendanceTable', 'Reports',
+      'Dashboard', 'Timetable', 'Exams', 'StudentAttendance', 'TeacherAttendance', 'AttendanceTable', 'Reports', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
       'Profile',
     ],
@@ -285,7 +297,7 @@ export const NAV_CONFIG = {
     unrestricted: true,
     items: [
       'Dashboard',
-      { group: 'Classroom', icon: 'book-open-variant', items: ['AssignedClasses', 'Assignments', 'SubjectResources', 'LessonPlans', 'Timetable'] },
+      { group: 'Classroom', icon: 'book-open-variant', items: ['AssignedClasses', 'Assignments', 'SubjectResources', 'LessonPlans', 'Timetable', 'Discipline', 'PTM'] },
       { group: 'Attendance', icon: 'clipboard-check-outline', items: ['Attendance', 'StudentMonthlyReport', 'MyDailyAttendance', 'MyMonthlyReport', 'GpsCheckInOut'] },
       { group: 'Exams & Questions', icon: 'pencil-box-outline', items: ['Exams', 'QuestionBank', 'Evaluation', 'ExamReports'] },
       'Reports', 'Leave', 'MyTasks', 'Payroll',
@@ -297,7 +309,7 @@ export const NAV_CONFIG = {
     unrestricted: true,
     items: [
       'Dashboard', 'Assignments', 'Attendance', 'Grades', 'Timetable', 'Library', 'StudyMaterials',
-      'Hostel', 'Transport', 'Fees', 'Leave', 'Exams', 'AcademicCalendar',
+      'Hostel', 'Transport', 'Fees', 'Leave', 'Exams', 'AcademicCalendar', 'MyCertificates', 'MyIdCard', 'MyAchievements',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
@@ -308,7 +320,7 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'MyChildren', 'Attendance', 'Grades', 'Assignments', 'Fees', 'Timetable', 'Exams',
       // 'Events' reused for "Calendar" — EventsScreen already renders AgendaEventsView for Parent.
-      'Leave', 'Transport', 'Hostel', 'Library', 'Events', 'ProgressReport',
+      'Leave', 'Transport', 'Hostel', 'Library', 'Events', 'ProgressReport', 'MyCertificates', 'MyIdCard', 'PTMBooking', 'MyAchievements',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
@@ -439,7 +451,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.SPORTS_TEACHER]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'AssignedClasses', 'MyStudents', 'Attendance', 'Assignments',
+      'Dashboard', 'AssignedClasses', 'MyStudents', 'Attendance', 'Assignments', 'Sports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
@@ -465,7 +477,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.MEDICAL_OFFICER]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'MyStudents',
+      'Dashboard', 'MyStudents', 'HealthRecords',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
@@ -479,7 +491,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.CLASS_TEACHER]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'MyClass', 'MyStudents', 'Attendance', 'Assignments', 'Timetable',
+      'Dashboard', 'MyClass', 'MyStudents', 'Attendance', 'Assignments', 'Timetable', 'Discipline', 'PTM',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',

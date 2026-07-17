@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -1525,6 +1525,280 @@ export const apiSlice = createApi({
     getMyClassTeacherAssignment: builder.query({
       query: () => ({ url: '/class-teacher-assignments/my' }),
     }),
+
+    // ── Shared "pick a class → section → student" building blocks (School Admin/Principal/Vice
+    // Principal/Teacher — same READ_ROLES the web app's own class/section pickers use). NOT
+    // available to Medical Officer (see HealthRecords section below for why that matters) — this
+    // mirrors a real, pre-existing gap in the web app's own backend role gates, not something
+    // introduced here. Reused across Health Records, Certificates, ID Cards, Discipline, Alumni,
+    // and PTM session creation's student/class pickers instead of one-off duplicates per screen.
+    getSchoolClassDetails: builder.query({
+      query: (params) => ({ url: '/school-class/class-detailes', params }),
+      providesTags: ['Class'],
+    }),
+    getClassRollNumbers: builder.query({
+      query: (params) => ({ url: '/student/roll-numbers', params }),
+    }),
+
+    // ── Health Records (Medical Officer's core function; also School Admin/Principal/Vice
+    // Principal read+write per the same HEALTH_ROLES gate as web's healthRecord.routes.js).
+    // getHealthVisits with no studentId returns ALL visits for the school (denormalized
+    // studentName/className/sectionName already on each visit) — this is the one Health Records
+    // capability Medical Officer CAN reach without the class/section picker above, so it's the
+    // screen's primary view, not a secondary filter.
+    getHealthProfile: builder.query({
+      query: (studentId) => ({ url: `/health-records/profile/${studentId}` }),
+      providesTags: (result, error, studentId) => [{ type: 'HealthRecord', id: studentId }],
+    }),
+    upsertHealthProfile: builder.mutation({
+      query: ({ studentId, ...payload }) => ({ url: `/health-records/profile/${studentId}`, method: 'put', data: payload }),
+      invalidatesTags: (result, error, { studentId }) => [{ type: 'HealthRecord', id: studentId }],
+    }),
+    getHealthVisits: builder.query({
+      query: (params) => ({ url: '/health-records/visits', params }),
+      providesTags: ['HealthVisit'],
+    }),
+    createHealthVisit: builder.mutation({
+      query: (payload) => ({ url: '/health-records/visits', method: 'post', data: payload }),
+      invalidatesTags: ['HealthVisit'],
+    }),
+    getHealthVisitById: builder.query({
+      query: (id) => ({ url: `/health-records/visits/${id}` }),
+    }),
+    updateHealthVisit: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/health-records/visits/${id}`, method: 'patch', data: payload }),
+      invalidatesTags: ['HealthVisit'],
+    }),
+
+    // ── Certificates (manage: Super Admin/School Admin/Principal/Vice Principal; self-service:
+    // Student/Parent via /my, parameterless — resolves across all of a Parent's linked children
+    // server-side, see certificate.controllers.js's resolveMyStudentIds). PDF download is
+    // deliberately not wired here, matching AdmitCardView.jsx's own documented precedent (needs a
+    // native file-system/sharing dependency this app doesn't have yet) — these screens cover
+    // generate/list/revoke/view, the same scope that screen settled on.
+    generateCertificate: builder.mutation({
+      query: (payload) => ({ url: '/certificates/generate', method: 'post', data: payload }),
+      invalidatesTags: ['Certificate'],
+    }),
+    getCertificates: builder.query({
+      query: (params) => ({ url: '/certificates', params }),
+      providesTags: ['Certificate'],
+    }),
+    getCertificateById: builder.query({
+      query: (id) => ({ url: `/certificates/${id}` }),
+    }),
+    revokeCertificate: builder.mutation({
+      query: ({ id, revokeReason }) => ({ url: `/certificates/${id}/revoke`, method: 'patch', data: { revokeReason } }),
+      invalidatesTags: ['Certificate'],
+    }),
+    getMyCertificates: builder.query({
+      query: () => ({ url: '/certificates/my' }),
+      providesTags: ['Certificate'],
+    }),
+
+    // ── ID Cards (same role split as Certificates). Employee ID cards (holderType: "Employee")
+    // are out of scope for now — the generate sheet only covers Student, the primary gap-report
+    // driver; the backend already supports Employee holders if this gets extended later.
+    generateIdCard: builder.mutation({
+      query: (payload) => ({ url: '/id-cards/generate', method: 'post', data: payload }),
+      invalidatesTags: ['IDCard'],
+    }),
+    getIdCards: builder.query({
+      query: (params) => ({ url: '/id-cards', params }),
+      providesTags: ['IDCard'],
+    }),
+    getIdCardById: builder.query({
+      query: (id) => ({ url: `/id-cards/${id}` }),
+    }),
+    deactivateIdCard: builder.mutation({
+      query: (id) => ({ url: `/id-cards/${id}/deactivate`, method: 'patch' }),
+      invalidatesTags: ['IDCard'],
+    }),
+    getMyIdCards: builder.query({
+      query: () => ({ url: '/id-cards/my' }),
+      providesTags: ['IDCard'],
+    }),
+
+    // ── Discipline Tracking (Super Admin/School Admin/Principal/Vice Principal/Teacher/Class
+    // Teacher — same DISCIPLINE_ROLES gate as web's disciplineIncident.routes.js). No Parent/
+    // Student endpoint exists on the backend, so no self-service screen for this module.
+    createIncident: builder.mutation({
+      query: (payload) => ({ url: '/discipline-incidents', method: 'post', data: payload }),
+      invalidatesTags: ['DisciplineIncident'],
+    }),
+    getIncidents: builder.query({
+      query: (params) => ({ url: '/discipline-incidents', params }),
+      providesTags: ['DisciplineIncident'],
+    }),
+    getIncidentById: builder.query({
+      query: (id) => ({ url: `/discipline-incidents/${id}` }),
+    }),
+    updateIncident: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/discipline-incidents/${id}`, method: 'patch', data: payload }),
+      invalidatesTags: ['DisciplineIncident'],
+    }),
+    getStudentDisciplineSummary: builder.query({
+      query: (studentId) => ({ url: `/discipline-incidents/student/${studentId}/summary` }),
+    }),
+
+    // ── PTM (Parent-Teacher Meetings). Staff (Super Admin/School Admin/Principal/Vice Principal/
+    // Teacher/Class Teacher) manage sessions; Parent (+ Super Admin/School Admin) books slots —
+    // same PTM_STAFF_ROLES/PTM_PARENT_ROLES split as web's ptm.routes.js.
+    createPTMSession: builder.mutation({
+      query: (payload) => ({ url: '/ptm/sessions', method: 'post', data: payload }),
+      invalidatesTags: ['PTMSession'],
+    }),
+    getPTMSessions: builder.query({
+      query: (params) => ({ url: '/ptm/sessions', params }),
+      providesTags: ['PTMSession'],
+    }),
+    getPTMSessionSlots: builder.query({
+      query: (id) => ({ url: `/ptm/sessions/${id}/slots` }),
+      providesTags: ['PTMSession'],
+    }),
+    cancelPTMSession: builder.mutation({
+      query: (id) => ({ url: `/ptm/sessions/${id}/cancel`, method: 'patch' }),
+      invalidatesTags: ['PTMSession'],
+    }),
+    markPTMAttendance: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/ptm/slots/${id}/attendance`, method: 'patch', data: payload }),
+      invalidatesTags: ['PTMSession'],
+    }),
+    getAvailablePTMSlots: builder.query({
+      query: (params) => ({ url: '/ptm/slots/available', params }),
+      providesTags: ['PTMSession'],
+    }),
+    getMyPTMBookings: builder.query({
+      query: () => ({ url: '/ptm/slots/my-bookings' }),
+      providesTags: ['PTMSession'],
+    }),
+    bookPTMSlot: builder.mutation({
+      query: ({ id, studentId }) => ({ url: `/ptm/slots/${id}/book`, method: 'post', data: { studentId } }),
+      invalidatesTags: ['PTMSession'],
+    }),
+    cancelPTMBooking: builder.mutation({
+      query: (id) => ({ url: `/ptm/slots/${id}/cancel-booking`, method: 'patch' }),
+      invalidatesTags: ['PTMSession'],
+    }),
+
+    // ── Sports / Co-curricular. Manage: Super Admin/School Admin/Principal/Vice Principal/Sports
+    // Teacher, same SPORTS_ROLES gate as web's sports.routes.js. Self-service: Student/Parent via
+    // /achievements/my, same parameterless pre-aggregated pattern as Certificates/ID Cards.
+    createSportsTeam: builder.mutation({
+      query: (payload) => ({ url: '/sports/teams', method: 'post', data: payload }),
+      invalidatesTags: ['SportsTeam'],
+    }),
+    getSportsTeams: builder.query({
+      query: (params) => ({ url: '/sports/teams', params }),
+      providesTags: ['SportsTeam'],
+    }),
+    updateSportsTeam: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/sports/teams/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['SportsTeam'],
+    }),
+    deleteSportsTeam: builder.mutation({
+      query: (id) => ({ url: `/sports/teams/${id}`, method: 'delete' }),
+      invalidatesTags: ['SportsTeam'],
+    }),
+    addSportsTeamMember: builder.mutation({
+      query: ({ id, studentId, position }) => ({ url: `/sports/teams/${id}/members`, method: 'post', data: { studentId, position } }),
+      invalidatesTags: ['SportsTeam'],
+    }),
+    removeSportsTeamMember: builder.mutation({
+      query: ({ id, studentId }) => ({ url: `/sports/teams/${id}/members/${studentId}`, method: 'delete' }),
+      invalidatesTags: ['SportsTeam'],
+    }),
+    createSportsEvent: builder.mutation({
+      query: (payload) => ({ url: '/sports/events', method: 'post', data: payload }),
+      invalidatesTags: ['SportsEvent'],
+    }),
+    getSportsEvents: builder.query({
+      query: (params) => ({ url: '/sports/events', params }),
+      providesTags: ['SportsEvent'],
+    }),
+    updateSportsEvent: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/sports/events/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['SportsEvent'],
+    }),
+    createAchievement: builder.mutation({
+      query: (payload) => ({ url: '/sports/achievements', method: 'post', data: payload }),
+      invalidatesTags: ['Achievement'],
+    }),
+    getAchievements: builder.query({
+      query: (params) => ({ url: '/sports/achievements', params }),
+      providesTags: ['Achievement'],
+    }),
+    deleteAchievement: builder.mutation({
+      query: (id) => ({ url: `/sports/achievements/${id}`, method: 'delete' }),
+      invalidatesTags: ['Achievement'],
+    }),
+    getMyAchievements: builder.query({
+      query: () => ({ url: '/sports/achievements/my' }),
+      providesTags: ['Achievement'],
+    }),
+
+    // ── Alumni (Super Admin/School Admin/Principal/Vice Principal only — no self-service, per
+    // web's alumniProfile.routes.js and the user's own scope decision for this batch).
+    markAsAlumni: builder.mutation({
+      query: (payload) => ({ url: '/alumni/mark', method: 'post', data: payload }),
+      invalidatesTags: ['Alumni'],
+    }),
+    getAlumni: builder.query({
+      query: (params) => ({ url: '/alumni', params }),
+      providesTags: ['Alumni'],
+    }),
+    getAlumniById: builder.query({
+      query: (id) => ({ url: `/alumni/${id}` }),
+    }),
+    updateAlumniProfile: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/alumni/${id}`, method: 'patch', data: payload }),
+      invalidatesTags: ['Alumni'],
+    }),
+
+    // ── Canteen (Super Admin/School Admin/Principal/Vice Principal only — a counter/POS
+    // operation, same CANTEEN_ROLES gate as web's canteen.routes.js). Wallet top-up is Cash only —
+    // Razorpay checkout is deliberately not ported, same reasoning already established in this
+    // app's own PayInstallmentSheet.jsx (needs react-native-razorpay, a new native dependency
+    // requiring a dev-client rebuild — not wired up rather than shipping a fake button).
+    createCanteenItem: builder.mutation({
+      query: (payload) => ({ url: '/canteen/items', method: 'post', data: payload }),
+      invalidatesTags: ['CanteenItem'],
+    }),
+    getCanteenItems: builder.query({
+      query: (params) => ({ url: '/canteen/items', params }),
+      providesTags: ['CanteenItem'],
+    }),
+    updateCanteenItem: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/canteen/items/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['CanteenItem'],
+    }),
+    deleteCanteenItem: builder.mutation({
+      query: (id) => ({ url: `/canteen/items/${id}`, method: 'delete' }),
+      invalidatesTags: ['CanteenItem'],
+    }),
+    getCanteenWallet: builder.query({
+      query: (studentId) => ({ url: `/canteen/wallet/${studentId}` }),
+      providesTags: ['CanteenWallet'],
+    }),
+    topUpCanteenCash: builder.mutation({
+      query: ({ studentId, amount }) => ({ url: `/canteen/wallet/${studentId}/topup`, method: 'post', data: { amount } }),
+      invalidatesTags: ['CanteenWallet'],
+    }),
+    getCanteenTransactions: builder.query({
+      query: (studentId) => ({ url: `/canteen/wallet/${studentId}/transactions` }),
+    }),
+    createCanteenOrder: builder.mutation({
+      query: (payload) => ({ url: '/canteen/orders', method: 'post', data: payload }),
+      invalidatesTags: ['CanteenOrder', 'CanteenWallet'],
+    }),
+    getCanteenOrders: builder.query({
+      query: (params) => ({ url: '/canteen/orders', params }),
+      providesTags: ['CanteenOrder'],
+    }),
+    cancelCanteenOrder: builder.mutation({
+      query: (id) => ({ url: `/canteen/orders/${id}/cancel`, method: 'patch' }),
+      invalidatesTags: ['CanteenOrder', 'CanteenWallet'],
+    }),
   }),
 });
 
@@ -1823,4 +2097,63 @@ export const {
   useResolveEmergencyAlertMutation,
   useDeleteEmergencyAlertMutation,
   useGetMyClassTeacherAssignmentQuery,
+  useGetSchoolClassDetailsQuery,
+  useGetClassRollNumbersQuery,
+  useGetHealthProfileQuery,
+  useUpsertHealthProfileMutation,
+  useGetHealthVisitsQuery,
+  useCreateHealthVisitMutation,
+  useGetHealthVisitByIdQuery,
+  useUpdateHealthVisitMutation,
+  useGenerateCertificateMutation,
+  useGetCertificatesQuery,
+  useGetCertificateByIdQuery,
+  useRevokeCertificateMutation,
+  useGetMyCertificatesQuery,
+  useGenerateIdCardMutation,
+  useGetIdCardsQuery,
+  useGetIdCardByIdQuery,
+  useDeactivateIdCardMutation,
+  useGetMyIdCardsQuery,
+  useCreateIncidentMutation,
+  useGetIncidentsQuery,
+  useGetIncidentByIdQuery,
+  useUpdateIncidentMutation,
+  useGetStudentDisciplineSummaryQuery,
+  useCreatePTMSessionMutation,
+  useGetPTMSessionsQuery,
+  useGetPTMSessionSlotsQuery,
+  useCancelPTMSessionMutation,
+  useMarkPTMAttendanceMutation,
+  useGetAvailablePTMSlotsQuery,
+  useGetMyPTMBookingsQuery,
+  useBookPTMSlotMutation,
+  useCancelPTMBookingMutation,
+  useCreateSportsTeamMutation,
+  useGetSportsTeamsQuery,
+  useUpdateSportsTeamMutation,
+  useDeleteSportsTeamMutation,
+  useAddSportsTeamMemberMutation,
+  useRemoveSportsTeamMemberMutation,
+  useCreateSportsEventMutation,
+  useGetSportsEventsQuery,
+  useUpdateSportsEventMutation,
+  useCreateAchievementMutation,
+  useGetAchievementsQuery,
+  useDeleteAchievementMutation,
+  useGetMyAchievementsQuery,
+  useMarkAsAlumniMutation,
+  useGetAlumniQuery,
+  useGetAlumniByIdQuery,
+  useUpdateAlumniProfileMutation,
+  useCreateCanteenItemMutation,
+  useGetCanteenItemsQuery,
+  useUpdateCanteenItemMutation,
+  useDeleteCanteenItemMutation,
+  useGetCanteenWalletQuery,
+  useTopUpCanteenCashMutation,
+  useGetCanteenTransactionsQuery,
+  useCreateCanteenOrderMutation,
+  useGetCanteenOrdersQuery,
+  useCancelCanteenOrderMutation,
 } = apiSlice;
