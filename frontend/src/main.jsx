@@ -262,6 +262,7 @@ const CreateEmployee = lazy(()=>import('./pages/School_Admin/Payroll/CreateEmplo
 const SalaryAdvance = lazy(() => import("./pages/School_Admin/Payroll/SalaryAdvance.jsx"));
 const BonusIncentivePage = lazy(() => import("./pages/School_Admin/Payroll/BonusIncentivePage.jsx"));
 const ReimbursementsPage = lazy(() => import("./pages/School_Admin/Payroll/ReimbursementsPage.jsx"));
+const PayrollSettingsPage = lazy(() => import("./pages/School_Admin/Payroll/PayrollSettingsPage.jsx"));
 const EmployeeSelfAttendance = lazy(() => import("./pages/Attendance/EmployeeSelfAttendance.jsx"));
 const GeofenceSettings = lazy(() => import("./pages/School_Admin/Attendance/GeofenceSettings.jsx"));
 
@@ -706,6 +707,7 @@ const router = createBrowserRouter([
               { path: "payroll/advance", element: <SalaryAdvance /> },
               { path: "payroll/bonus", element: <BonusIncentivePage /> },
               { path: "payroll/reimbursements", element: <ReimbursementsPage /> },
+              { path: "payroll/settings", element: <PayrollSettingsPage /> },
               { path: "communication", element: <CommunicationHub /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },

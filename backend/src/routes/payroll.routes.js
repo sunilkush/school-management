@@ -10,17 +10,26 @@ import {
   getMyPayrollSummary,
   getPayrollCycle,
   getPayslip,
+  downloadPayslipPdf,
   lockPayrollCycle,
   payPayrollCycle,
   updatePayrollStructure,
+  createPayrollSettings,
+  getPayrollSettings,
+  updateEmployeeStatutory,
+  getPfReport,
+  getEsiReport,
 } from "../controllers/payroll.controllers.js";
 import {
   payrollCycleActionSchema,
   payrollCycleGenerateSchema,
   payrollCycleQuerySchema,
   payrollReportQuerySchema,
+  payrollStatutoryReportQuerySchema,
   payrollStructureCreateSchema,
   payrollStructureUpdateSchema,
+  payrollSettingsCreateSchema,
+  employeeStatutoryUpdateSchema,
   payslipQuerySchema,
 } from "../validators/payroll.validator.js";
 
@@ -45,6 +54,17 @@ router.post("/cycle/:id/lock", auth, roleMiddleware(REVIEW_ROLES), validateReque
 router.post("/cycle/:id/pay", auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(payrollCycleActionSchema), payPayrollCycle);
 
 router.get("/payslip/:employeeId/:month/:year", auth, roleMiddleware(PAYSLIP_SELF_ROLES), validateRequest(payslipQuerySchema), getPayslip);
+router.get("/payslip/:employeeId/:month/:year/download", auth, roleMiddleware(PAYSLIP_SELF_ROLES), validateRequest(payslipQuerySchema), downloadPayslipPdf);
 
+// ── Payroll Settings (versioned PF/ESI/PT/rounding config) ──────────────────────
+router.post("/settings", auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(payrollSettingsCreateSchema), createPayrollSettings);
+router.get("/settings", auth, roleMiddleware(REVIEW_ROLES), getPayrollSettings);
+
+// ── Employee PF/ESI statutory details ────────────────────────────────────────────
+router.patch("/employee/:employeeId/statutory", auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(employeeStatutoryUpdateSchema), updateEmployeeStatutory);
+
+// ── PF / ESI statutory reports ───────────────────────────────────────────────────
+router.get("/reports/pf", auth, roleMiddleware(REVIEW_ROLES), validateRequest(payrollStatutoryReportQuerySchema), getPfReport);
+router.get("/reports/esi", auth, roleMiddleware(REVIEW_ROLES), validateRequest(payrollStatutoryReportQuerySchema), getEsiReport);
 
 export default router;

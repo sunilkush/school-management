@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import {
   Tabs, Form, Input, Select, DatePicker, Button, Spin, message,
 } from "antd";
 import {
   UserOutlined, CalendarOutlined, BankOutlined, TeamOutlined,
-  IdcardOutlined, PhoneOutlined, BookOutlined,
+  IdcardOutlined, PhoneOutlined, BookOutlined, SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -15,6 +15,7 @@ import { createEmployee, updateEmployee } from "../../features/employeeSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import { getAllSubjects } from "../../features/subjectSlice";
 import { fetchAllUser } from "../../features/authSlice";
+import { updateEmployeeStatutory } from "../../features/payrollSlice";
 
 const AttendanceCalendar = lazy(() => import("../../pages/AttendanceCalendar"));
 
@@ -61,6 +62,8 @@ const fi = { marginBottom: 12 };
 
 const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
   const [form] = Form.useForm();
+  const [statutoryForm] = Form.useForm();
+  const [savingStatutory, setSavingStatutory] = useState(false);
   const dispatch = useDispatch();
 
   const selectedUserId = Form.useWatch("userId", form);
@@ -147,6 +150,43 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
       form.resetFields();
     }
   }, [editingEmployee, form]);
+
+  // Pre-fill the PF/ESI statutory tab when editing
+  useEffect(() => {
+    const statutory = editingEmployee?.statutoryCompliance;
+    if (statutory) {
+      statutoryForm.setFieldsValue({
+        uan: statutory.uan,
+        pfJoiningDate: statutory.pfJoiningDate ? dayjs(statutory.pfJoiningDate) : null,
+        pfExitDate: statutory.pfExitDate ? dayjs(statutory.pfExitDate) : null,
+        pfCategory: statutory.pfCategory,
+        esicNumber: statutory.esicNumber,
+        esiJoiningDate: statutory.esiJoiningDate ? dayjs(statutory.esiJoiningDate) : null,
+        esiCategory: statutory.esiCategory,
+      });
+    } else {
+      statutoryForm.resetFields();
+    }
+  }, [editingEmployee, statutoryForm]);
+
+  const handleStatutorySubmit = async (values) => {
+    if (!editingEmployee?._id) return;
+    setSavingStatutory(true);
+    try {
+      const payload = {
+        ...values,
+        pfJoiningDate: values.pfJoiningDate ? values.pfJoiningDate.toISOString() : null,
+        pfExitDate: values.pfExitDate ? values.pfExitDate.toISOString() : null,
+        esiJoiningDate: values.esiJoiningDate ? values.esiJoiningDate.toISOString() : null,
+      };
+      await dispatch(updateEmployeeStatutory({ employeeId: editingEmployee._id, payload })).unwrap();
+      message.success("PF/ESI details updated");
+    } catch (e) {
+      message.error(e?.message || "PF/ESI details save failed");
+    } finally {
+      setSavingStatutory(false);
+    }
+  };
 
   const userOptions = useMemo(() => {
     const list = Array.isArray(users) ? users : [];
@@ -376,6 +416,94 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
     </Suspense>
   );
 
+  const statutoryTab = editingEmployee?._id ? (
+    <Form form={statutoryForm} layout="vertical" onFinish={handleStatutorySubmit} style={{ paddingBottom: 8 }}>
+      <SectionHeader icon={<SafetyCertificateOutlined />} title="EPF (Provident Fund)" />
+      <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 10 }}>
+        Identity/reference details only — whether PF/ESI actually applies to this employee is
+        the "PF Enabled" / "ESI Enabled" toggle on their salary structure.
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
+        <Form.Item
+          name="uan"
+          label="UAN (Universal Account Number)"
+          rules={[{ pattern: /^\d{12}$/, message: "UAN must be exactly 12 digits" }]}
+          style={fi}
+        >
+          <Input placeholder="12-digit UAN" maxLength={12} />
+        </Form.Item>
+        <Form.Item name="pfJoiningDate" label="PF Joining Date" style={fi}>
+          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+        </Form.Item>
+        <Form.Item name="pfExitDate" label="PF Exit Date" style={fi}>
+          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+        </Form.Item>
+        <Form.Item name="pfCategory" label="PF Category" style={fi}>
+          <Select
+            options={[
+              { value: "general", label: "General" },
+              { value: "international_worker", label: "International Worker" },
+              { value: "excluded", label: "Excluded Employee" },
+            ]}
+          />
+        </Form.Item>
+      </div>
+
+      <SectionHeader icon={<SafetyCertificateOutlined />} title="ESI (State Insurance)" />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
+        <Form.Item
+          name="esicNumber"
+          label="ESIC Number"
+          rules={[{ pattern: /^\d{10,17}$/, message: "ESIC number must be 10-17 digits" }]}
+          style={fi}
+        >
+          <Input placeholder="ESIC insurance number" />
+        </Form.Item>
+        <Form.Item name="esiJoiningDate" label="ESI Joining Date" style={fi}>
+          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+        </Form.Item>
+        <Form.Item name="esiCategory" label="ESI Category" style={fi}>
+          <Select
+            options={[
+              { value: "general", label: "General" },
+              { value: "disability", label: "Person with Disability" },
+              { value: "excluded", label: "Excluded Employee" },
+            ]}
+          />
+        </Form.Item>
+      </div>
+
+      <div style={{
+        display: "flex", justifyContent: "flex-end", gap: 10,
+        marginTop: 8, paddingTop: 14, borderTop: "1px solid " + C.border,
+      }}>
+        <Button
+          htmlType="submit"
+          loading={savingStatutory}
+          style={{
+            background: C.primary, borderColor: C.primary,
+            color: "#fff", borderRadius: 9, fontWeight: 700,
+            padding: "0 32px", height: 40,
+          }}
+        >
+          Save PF/ESI Details
+        </Button>
+      </div>
+    </Form>
+  ) : (
+    <div style={{
+      textAlign: "center", padding: "56px 24px",
+      background: C.surfaceSoft, borderRadius: 12,
+      border: "1.5px dashed " + C.border,
+    }}>
+      <SafetyCertificateOutlined style={{ fontSize: 36, color: C.textMuted, marginBottom: 10 }} />
+      <div style={{ fontWeight: 600, fontSize: 14, color: C.textSub }}>Save the Profile Tab First</div>
+      <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>
+        PF/ESI details can be added once the employee record exists
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ fontFamily: "'Inter', 'Poppins', sans-serif" }}>
       <Tabs
@@ -385,6 +513,11 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
             key: "profile",
             label: <span style={{ display: "flex", alignItems: "center", gap: 6 }}><UserOutlined /> Profile</span>,
             children: profileTab,
+          },
+          {
+            key: "statutory",
+            label: <span style={{ display: "flex", alignItems: "center", gap: 6 }}><SafetyCertificateOutlined /> PF/ESI</span>,
+            children: statutoryTab,
           },
           {
             key: "attendance",

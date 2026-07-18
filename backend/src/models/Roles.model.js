@@ -78,7 +78,12 @@ const roleSchema = new mongoose.Schema(
 // ✅ Ensure unique role name + school
 roleSchema.index({ name: 1, schoolId: 1 }, { unique: true });
 
-// ✅ Ensure unique role code + school
-roleSchema.index({ code: 1, schoolId: 1 }, { unique: true });
+// ✅ Ensure unique role code + school — scoped to roles that actually have a code, since code
+// is optional and a plain (non-partial) unique index enforces uniqueness on missing/null code
+// too, which previously meant a school could never have a second role left without one.
+roleSchema.index(
+  { code: 1, schoolId: 1 },
+  { unique: true, partialFilterExpression: { code: { $exists: true, $type: "string" } } }
+);
 
 export const Role = mongoose.model("Role", roleSchema);

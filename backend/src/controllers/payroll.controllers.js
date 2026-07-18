@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
+import PDFDocument from "pdfkit";
 import ActivityLog from "../models/ActivityLog.model.js";
 import { Attendance } from "../models/attendance.model.js";
 import { Employee } from "../models/Employee.model.js";
+import { School } from "../models/school.model.js";
 import { PayrollCycle } from "../models/payrollCycle.model.js";
 import { PayrollEntry } from "../models/payrollEntry.model.js";
 import { PayrollPolicy } from "../models/payrollPolicy.model.js";
@@ -27,6 +29,24 @@ const monthRangeUTC = ({ month, year }) => {
   const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
   const end = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
   return { start, end };
+};
+
+// Resolves the PayrollPolicy version in effect for a given payroll-cycle date — the latest
+// version whose effectiveFrom is on or before that date. This is how government rate changes
+// (PF %, ESI ceiling, etc.) are handled without touching code: insert a new policy version
+// with the new effectiveFrom, and every cycle before that date keeps using the old rates.
+// Bootstraps a default (statutory-default) version for schools that have never configured one.
+const resolvePayrollPolicy = async ({ schoolId, asOfDate }) => {
+  let policy = await PayrollPolicy.findOne({
+    schoolId,
+    effectiveFrom: { $lte: asOfDate },
+  }).sort({ effectiveFrom: -1 });
+
+  if (!policy) {
+    policy = await PayrollPolicy.create({ schoolId, effectiveFrom: new Date("2000-01-01") });
+  }
+
+  return policy;
 };
 
 const getAttendanceSummary = async ({ schoolId, employeeUserId, month, year }) => {
@@ -213,16 +233,13 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   const employees = await Employee.find({
     schoolId,
     isActive: true,
-  }).select("_id userId").lean();
+  }).select("_id userId statutoryCompliance").lean();
   if (!employees.length) {
     throw new ApiError(400, "No active employees found for this school");
   }
 
-  const policy = await PayrollPolicy.findOneAndUpdate(
-    { schoolId },
-    { $setOnInsert: { schoolId } },
-    { upsert: true, new: true }
-  );
+  const { end: policyAsOfDate } = monthRangeUTC({ month, year });
+  const policy = await resolvePayrollPolicy({ schoolId, asOfDate: policyAsOfDate });
   const cycleType = req.body.cycleType || "monthly";
   const cycleStartDate = req.body.cycleStartDate ? new Date(req.body.cycleStartDate) : null;
   const cycleEndDate = req.body.cycleEndDate ? new Date(req.body.cycleEndDate) : null;
@@ -280,6 +297,7 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     structure,
     attendance,
     policy,
+    employeeStatutory: employee.statutoryCompliance,
   });
 
   const warnings = [];
@@ -301,6 +319,11 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
 
     earningsBreakdown: calculated.earningsBreakdown,
     deductionsBreakdown: calculated.deductionsBreakdown,
+    employerContributions: calculated.employerContributions,
+    statutorySnapshot: {
+      uan: employee.statutoryCompliance?.uan || null,
+      esicNumber: employee.statutoryCompliance?.esicNumber || null,
+    },
     grossEarnings: calculated.grossEarnings,
     totalDeductions: calculated.totalDeductions,
     netPay: calculated.netPay,
@@ -434,8 +457,9 @@ export const payPayrollCycle = asyncHandler(async (req, res) => {
   return sendSuccess(res, { message: "Payroll cycle paid", data: { cycle, paidEntries: entries.length } });
 });
 
-export const getPayslip = asyncHandler(async (req, res) => {
-  const { employeeId, month, year } = req.params;
+// Shared by getPayslip (JSON) and downloadPayslipPdf (PDF) — one fetch-and-authorize path so
+// the "can this user see this payslip" rule only lives in one place.
+const fetchAuthorizedPayslip = async ({ req, employeeId, month, year }) => {
   const schoolId = getSchoolId(req);
   assertSchoolId(schoolId);
 
@@ -453,7 +477,110 @@ export const getPayslip = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You can only view your own payslip");
   }
 
+  return { cycle, entry, schoolId };
+};
+
+export const getPayslip = asyncHandler(async (req, res) => {
+  const { employeeId, month, year } = req.params;
+  const { cycle, entry } = await fetchAuthorizedPayslip({ req, employeeId, month, year });
   return sendSuccess(res, { message: "Payslip fetched", data: { cycle, entry } });
+});
+
+const MONTH_NAMES = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const money = (n) => `Rs. ${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export const downloadPayslipPdf = asyncHandler(async (req, res) => {
+  const { employeeId, month, year } = req.params;
+  const { entry, schoolId } = await fetchAuthorizedPayslip({ req, employeeId, month, year });
+  const school = await School.findById(schoolId).select("name address").lean();
+
+  const employeeName = entry.employeeId?.userId?.name || "Employee";
+  const monthLabel = `${MONTH_NAMES[Number(month)]} ${year}`;
+  const fileSafeName = employeeName.replace(/[^a-z0-9]+/gi, "_");
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename=Payslip_${fileSafeName}_${monthLabel.replace(" ", "_")}.pdf`);
+
+  const doc = new PDFDocument({ margin: 40, size: "A4" });
+  doc.pipe(res);
+
+  doc.fontSize(16).font("Helvetica-Bold").text(school?.name || "School", { align: "center" });
+  if (school?.address) doc.fontSize(9).font("Helvetica").fillColor("#555").text(school.address, { align: "center" });
+  doc.moveDown(0.5);
+  doc.fontSize(13).font("Helvetica-Bold").fillColor("#000").text(`Payslip — ${monthLabel}`, { align: "center" });
+  doc.moveDown();
+  doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor("#ccc").stroke();
+  doc.moveDown();
+
+  doc.fontSize(10).font("Helvetica");
+  doc.text(`Employee: ${employeeName}`);
+  doc.text(`Designation: ${entry.employeeId?.designation || "—"}   Department: ${entry.employeeId?.department || "—"}`);
+  if (entry.statutorySnapshot?.uan) doc.text(`UAN: ${entry.statutorySnapshot.uan}`);
+  if (entry.statutorySnapshot?.esicNumber) doc.text(`ESIC Number: ${entry.statutorySnapshot.esicNumber}`);
+  doc.text(`Working Days: ${entry.workingDays}   Present Days: ${entry.presentDays}   LOP Days: ${entry.lopDays}`);
+  doc.moveDown();
+
+  const twoCol = (label, value, y) => {
+    doc.font("Helvetica").text(label, 40, y);
+    doc.font("Helvetica-Bold").text(value, 300, y, { width: 215, align: "right" });
+  };
+
+  doc.fontSize(11).font("Helvetica-Bold").text("Earnings", 40, doc.y);
+  doc.moveDown(0.3);
+  const earnings = entry.earningsBreakdown || {};
+  let y = doc.y;
+  [
+    ["Basic", earnings.basic], ["HRA", earnings.hra], ["DA", earnings.da],
+    ["Special Allowance", earnings.specialAllowance], ["Overtime", earnings.overtimePay],
+    ["Reimbursements", earnings.reimbursements],
+  ].forEach(([label, value]) => { twoCol(label, money(value), y); y += 16; });
+  doc.y = y + 4;
+
+  doc.fontSize(11).font("Helvetica-Bold").text("Deductions", 40, doc.y);
+  doc.moveDown(0.3);
+  const deductions = entry.deductionsBreakdown || {};
+  y = doc.y;
+  twoCol("LOP Deduction", money(deductions.lopDeduction), y); y += 16;
+  twoCol("PF (Employee)", money(deductions.statutoryPf), y); y += 16;
+  if (deductions.vpf > 0) { twoCol("VPF (Voluntary)", money(deductions.vpf), y); y += 16; }
+  twoCol("ESI (Employee)", deductions.esiEligible ? money(deductions.esi) : "Not applicable", y); y += 16;
+  twoCol("Professional Tax", money(deductions.professionalTax), y); y += 16;
+  twoCol("TDS", money(deductions.tds), y); y += 16;
+  if (deductions.lateFine > 0) { twoCol("Late Fine", money(deductions.lateFine), y); y += 16; }
+  if (deductions.otherDeductions > 0) { twoCol("Other Deductions", money(deductions.otherDeductions), y); y += 16; }
+  doc.y = y + 4;
+
+  doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor("#ccc").stroke();
+  doc.moveDown(0.5);
+  y = doc.y;
+  doc.fontSize(11);
+  twoCol("Gross Earnings", money(entry.grossEarnings), y); y += 18;
+  twoCol("Total Deductions", money(entry.totalDeductions), y); y += 18;
+  doc.fontSize(13);
+  twoCol("Net Pay", money(entry.netPay), y); y += 24;
+  doc.y = y;
+
+  const employer = entry.employerContributions || {};
+  if ((employer.pfTotal || 0) > 0 || (employer.esi || 0) > 0) {
+    doc.moveDown();
+    doc.fontSize(10).font("Helvetica-Oblique").fillColor("#555")
+      .text("Employer contributions (not deducted from pay, shown for reference):");
+    doc.moveDown(0.3);
+    y = doc.y;
+    doc.fontSize(9).font("Helvetica");
+    twoCol("Employer EPS", money(employer.eps), y); y += 14;
+    twoCol("Employer EPF", money(employer.epf), y); y += 14;
+    twoCol("EPF Admin Charges", money(employer.epfAdminCharges), y); y += 14;
+    twoCol("EDLI", money(employer.edli), y); y += 14;
+    twoCol("Employer ESI", money(employer.esi), y); y += 14;
+    doc.y = y;
+  }
+
+  doc.moveDown(2);
+  doc.fontSize(8).fillColor("#999").font("Helvetica")
+    .text("This is a system-generated payslip and does not require a signature.", { align: "center" });
+
+  doc.end();
 });
 export const getMyPayrollSummary = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
@@ -499,6 +626,8 @@ export const getMyPayrollSummary = asyncHandler(async (req, res) => {
       transactionRef: entry.transactionRef,
       earningsBreakdown: entry.earningsBreakdown,
       deductionsBreakdown: entry.deductionsBreakdown,
+      employerContributions: entry.employerContributions,
+      statutorySnapshot: entry.statutorySnapshot,
       warnings: entry.warnings || [],
     }));
 
@@ -546,5 +675,186 @@ export const getMonthlyPayrollReport = asyncHandler(async (req, res) => {
         unpaidCount: 0,
       },
     },
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Payroll Settings (versioned PayrollPolicy) — PF/ESI/PT/rounding/etc. configuration
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Creates a new settings *version* rather than editing one in place, so historical
+// payroll cycles keep calculating with the rates that were actually in force at the time.
+export const createPayrollSettings = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+
+  const duplicate = await PayrollPolicy.findOne({
+    schoolId,
+    effectiveFrom: new Date(req.body.effectiveFrom),
+  });
+  if (duplicate) {
+    throw new ApiError(409, "A settings version already exists with this effective date");
+  }
+
+  const settings = await PayrollPolicy.create({
+    ...req.body,
+    schoolId,
+    createdBy: req.user._id,
+  });
+
+  await writeAuditLog(req, "PAYROLL_SETTINGS_CREATED", "Payroll settings version created", {
+    payrollPolicyId: settings._id,
+    effectiveFrom: settings.effectiveFrom,
+  });
+
+  return sendSuccess(res, { statusCode: 201, message: "Payroll settings version created", data: settings });
+});
+
+// Lists all versions (newest first) plus which one is currently effective, so the settings
+// screen can show history and let an admin see exactly what will apply to a new cycle today.
+export const getPayrollSettings = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+
+  // resolvePayrollPolicy() auto-bootstraps a default version on a school's first-ever call if
+  // none exists — must run before the versions list is queried, or that very first response
+  // shows a "current" version that's nowhere in "versions" (only fixes itself on the next
+  // request, once the bootstrap doc has actually been persisted).
+  const current = await resolvePayrollPolicy({ schoolId, asOfDate: new Date() });
+  const versions = await PayrollPolicy.find({ schoolId }).sort({ effectiveFrom: -1 }).lean();
+
+  return sendSuccess(res, {
+    message: "Payroll settings fetched",
+    data: { versions, current },
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Employee statutory (PF/ESI) details
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const updateEmployeeStatutory = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+  const { employeeId } = req.params;
+
+  const employee = await Employee.findOne({ _id: employeeId, schoolId });
+  if (!employee) throw new ApiError(404, "Employee not found for this school");
+
+  // Duplicate UAN/ESIC across employees would corrupt PF/ESI filings — reject early.
+  if (req.body.uan) {
+    const uanTaken = await Employee.exists({
+      schoolId,
+      _id: { $ne: employeeId },
+      "statutoryCompliance.uan": req.body.uan,
+    });
+    if (uanTaken) throw new ApiError(409, "This UAN is already assigned to another employee");
+  }
+  if (req.body.esicNumber) {
+    const esicTaken = await Employee.exists({
+      schoolId,
+      _id: { $ne: employeeId },
+      "statutoryCompliance.esicNumber": req.body.esicNumber,
+    });
+    if (esicTaken) throw new ApiError(409, "This ESIC number is already assigned to another employee");
+  }
+
+  employee.statutoryCompliance = {
+    ...employee.statutoryCompliance?.toObject?.() ?? employee.statutoryCompliance ?? {},
+    ...req.body,
+  };
+  await employee.save();
+
+  await writeAuditLog(req, "EMPLOYEE_STATUTORY_UPDATED", "Employee PF/ESI details updated", {
+    employeeId,
+    fields: Object.keys(req.body),
+  });
+
+  return sendSuccess(res, { message: "Employee statutory details updated", data: employee.statutoryCompliance });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PF / ESI statutory reports
+// ══════════════════════════════════════════════════════════════════════════════
+
+const escapeCsvCell = (value) => `"${`${value ?? ""}`.replace(/"/g, '""')}"`;
+const toCsv = (headers, rows) => [headers, ...rows].map((row) => row.map(escapeCsvCell).join(",")).join("\n");
+
+const sendCsvOrJson = (res, { isExport, fileName, headers, rows, message, data }) => {
+  if (isExport) {
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    return res.status(200).send(toCsv(headers, rows));
+  }
+  return sendSuccess(res, { message, data });
+};
+
+// Monthly PF report — one row per employee with PF-enabled pay, employee + employer
+// contribution split (EPS/EPF/admin charges/EDLI), for EPFO ECR filing reference.
+export const getPfReport = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+  const { month, year } = req.query;
+  const isExport = req.query.export === "csv";
+
+  const cycle = await PayrollCycle.findOne({ schoolId, month: Number(month), year: Number(year) }).lean();
+  if (!cycle) throw new ApiError(404, "Payroll cycle not found");
+
+  const entries = await PayrollEntry.find({ payrollCycleId: cycle._id, "deductionsBreakdown.pf": { $gt: 0 } })
+    .populate({ path: "employeeId", select: "userId", populate: { path: "userId", select: "name" } })
+    .lean();
+
+  const rows = entries.map((entry) => ({
+    employeeName: entry.employeeId?.userId?.name || "—",
+    uan: entry.statutorySnapshot?.uan || "—",
+    pfWage: entry.deductionsBreakdown?.pfWage || 0,
+    employeePf: entry.deductionsBreakdown?.statutoryPf || 0,
+    vpf: entry.deductionsBreakdown?.vpf || 0,
+    employerEps: entry.employerContributions?.eps || 0,
+    employerEpf: entry.employerContributions?.epf || 0,
+    epfAdminCharges: entry.employerContributions?.epfAdminCharges || 0,
+    edli: entry.employerContributions?.edli || 0,
+  }));
+
+  return sendCsvOrJson(res, {
+    isExport,
+    fileName: `pf-report-${year}-${String(month).padStart(2, "0")}.csv`,
+    headers: ["Employee", "UAN", "PF Wage", "Employee PF", "VPF", "Employer EPS", "Employer EPF", "EPF Admin Charges", "EDLI"],
+    rows: rows.map((r) => [r.employeeName, r.uan, r.pfWage, r.employeePf, r.vpf, r.employerEps, r.employerEpf, r.epfAdminCharges, r.edli]),
+    message: "PF report fetched",
+    data: { cycle, rows },
+  });
+});
+
+// Monthly ESI report — one row per ESI-eligible employee with employee + employer share,
+// for ESIC return filing reference.
+export const getEsiReport = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+  const { month, year } = req.query;
+  const isExport = req.query.export === "csv";
+
+  const cycle = await PayrollCycle.findOne({ schoolId, month: Number(month), year: Number(year) }).lean();
+  if (!cycle) throw new ApiError(404, "Payroll cycle not found");
+
+  const entries = await PayrollEntry.find({ payrollCycleId: cycle._id, "deductionsBreakdown.esiEligible": true })
+    .populate({ path: "employeeId", select: "userId", populate: { path: "userId", select: "name" } })
+    .lean();
+
+  const rows = entries.map((entry) => ({
+    employeeName: entry.employeeId?.userId?.name || "—",
+    esicNumber: entry.statutorySnapshot?.esicNumber || "—",
+    esiWage: entry.deductionsBreakdown?.esiWage || 0,
+    employeeEsi: entry.deductionsBreakdown?.esi || 0,
+    employerEsi: entry.employerContributions?.esi || 0,
+  }));
+
+  return sendCsvOrJson(res, {
+    isExport,
+    fileName: `esi-report-${year}-${String(month).padStart(2, "0")}.csv`,
+    headers: ["Employee", "ESIC Number", "ESI Wage", "Employee ESI", "Employer ESI"],
+    rows: rows.map((r) => [r.employeeName, r.esicNumber, r.esiWage, r.employeeEsi, r.employerEsi]),
+    message: "ESI report fetched",
+    data: { cycle, rows },
   });
 });

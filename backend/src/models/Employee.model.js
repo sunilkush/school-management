@@ -139,6 +139,40 @@ const employeeSchema = new Schema(
       pfNumber: String,
       esiNumber: String,
     },
+    // Statutory compliance (EPF/ESI) — identity/reference fields only. Whether PF/ESI actually
+    // applies is a single on/off toggle on the salary structure (payrollStructure.model.js);
+    // it used to be duplicated here too as an "override", but that just meant PF/ESI could be
+    // configured from two different screens with no clear precedence between them.
+    statutoryCompliance: {
+      uan: {
+        type: String,
+        trim: true,
+        match: [/^\d{12}$/, "UAN must be exactly 12 digits"],
+        default: null,
+      },
+      pfJoiningDate: { type: Date, default: null },
+      pfExitDate: { type: Date, default: null },
+      // VPF % lives only on PayrollStructure (payrollStructure.model.js) — it's tied to a
+      // specific salary-structure revision, not a permanent employee attribute, and having it
+      // here too meant the calculation engine silently ignored whatever was set on this copy.
+      pfCategory: {
+        type: String,
+        enum: ["general", "international_worker", "excluded"],
+        default: "general",
+      },
+      esicNumber: {
+        type: String,
+        trim: true,
+        match: [/^\d{10,17}$/, "ESIC number must be 10-17 digits"],
+        default: null,
+      },
+      esiJoiningDate: { type: Date, default: null },
+      esiCategory: {
+        type: String,
+        enum: ["general", "disability", "excluded"],
+        default: "general",
+      },
+    },
     documents: [
       {
         type: { type: String, trim: true, required: true },
@@ -166,6 +200,14 @@ const employeeSchema = new Schema(
   { timestamps: true }
 );
 
-employeeSchema.index({ schoolId: 1, employeeCode: 1 }, { unique: true, sparse: true });
+// A `sparse` compound index only skips a document if *every* indexed field is missing — since
+// schoolId is always present, "sparse" here never actually excluded an employee with no
+// employeeCode, so a second employee added without one collided as a duplicate (schoolId, null)
+// pair. A partial index scoped to "employeeCode actually set" is what "optional but unique
+// when present" requires for a compound index.
+employeeSchema.index(
+  { schoolId: 1, employeeCode: 1 },
+  { unique: true, partialFilterExpression: { employeeCode: { $exists: true, $type: "string" } }, name: "schoolId_1_employeeCode_1_partial" }
+);
 
 export const Employee = mongoose.model("Employee", employeeSchema);

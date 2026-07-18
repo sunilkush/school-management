@@ -51,7 +51,6 @@ import { Inventory }           from "./models/Inventory.model.js";
 import { AdmissionInquiry }    from "./models/AdmissionInquiry.model.js";
 import { Complaint }           from "./models/Complaint.model.js";
 import { StudyMaterial }       from "./models/StudyMaterial.model.js";
-import { Payroll }             from "./models/Payroll.model.js";
 import { Employee }           from "./models/Employee.model.js";
 import { PayrollStructure }   from "./models/payrollStructure.model.js";
 import { PayrollCycle }       from "./models/payrollCycle.model.js";
@@ -1141,7 +1140,8 @@ async function seed() {
       basic, hra, da, conveyance, medical, specialAllowance,
       deductions: { pf, esi: 0, professionalTax, tds: 0, lateFine: 0 },
       grossMonthly: gross,
-      pfEnabled: true, esiEnabled: false,
+      // PF/ESI on/off is a school-wide switch on PayrollPolicy (Payroll Settings) now, not a
+      // per-structure field — nothing to set here.
       professionalTaxEnabled: gross > 10000,
       effectiveFrom: new Date("2025-04-01"),
       status: "active", approvalStatus: "approved",
@@ -1257,28 +1257,6 @@ async function seed() {
     }
   }
   ok(`PayrollCycles: ${cycleCount}, PayrollEntries: ${entryCount}`);
-
-  /* ── 31d. Legacy Payroll records (backward compat) ── */
-  let payrollCount = 0;
-  const payMonths = [
-    { name: "April 2025", date: new Date("2025-04-30") },
-    { name: "May 2025",   date: new Date("2025-05-31") },
-    { name: "June 2025",  date: new Date("2025-06-30") },
-  ];
-  for (const emp of allEmployeeUsers) {
-    const roleName = roles.find((r) => String(r._id) === String(emp.roleId))?.name || "Teacher";
-    const salary   = salaryByRole[roleName] || 35000;
-    for (const month of payMonths) {
-      const exists = await Payroll.findOne({ schoolId, employeeId: emp._id, paymentDate: month.date });
-      if (!exists) {
-        try {
-          await Payroll.create({ schoolId, academicYearId: ayId, employeeId: emp._id, salaryAmount: salary, paymentDate: month.date, status: "paid" });
-          payrollCount++;
-        } catch (e) { if (e.code !== 11000) throw e; }
-      }
-    }
-  }
-  ok(`Legacy Payroll records: ${payrollCount}`);
 
   // ── 32. Support Tickets ───────────────────────────────────────────────────────
   const reporter  = teachers[0] || admin;
@@ -1456,7 +1434,6 @@ MODULES SEEDED:
   ✓ Employee profiles (17 staff + teachers)
   ✓ PayrollStructures (salary components per employee)
   ✓ PayrollCycles (Apr/May/Jun 2025) + PayrollEntries
-  ✓ Legacy Payroll records (backward compat)
   ✓ Support Tickets
   ✓ School Events
   ✓ Notifications

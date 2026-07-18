@@ -7,7 +7,7 @@ import {
   PercentageOutlined, CheckCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { formatCurrencyINR } from "../../utils/payroll";
+import { DEFAULT_PAYROLL_SETTINGS, estimatePayrollDeductions, formatCurrencyINR } from "../../utils/payroll";
 
 const C = {
   primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
@@ -15,6 +15,7 @@ const C = {
   success: "#22C55E", successLight: "#DCFCE7",
   danger: "#EF4444", dangerLight: "#FEE2E2",
   warning: "#F59E0B", warningLight: "#FEF3C7",
+  purple: "#7C3AED", purpleLight: "#F5F3FF",
   border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
   surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
 };
@@ -45,27 +46,37 @@ const AmountRow = ({ label, value, color = C.text, bold = false, separator = fal
   </div>
 );
 
-const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId }) => {
+// PF and ESI are configured *only* in Payroll Settings now — rates, wage-base methodology, and
+// whether they're switched on at all for this school. This form has no PF/ESI on/off toggle any
+// more; the one thing that stays here is VPF, since "voluntary" inherently means each employee
+// elects their own extra amount, which can't be a single school-wide setting.
+const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId, settings }) => {
   const basic            = Form.useWatch("basic",            form) || 0;
   const hra              = Form.useWatch("hra",              form) || 0;
   const da               = Form.useWatch("da",               form) || 0;
   const specialAllowance = Form.useWatch("specialAllowance", form) || 0;
-  const pfEnabled        = Form.useWatch("pfEnabled",        form);
-  const esiEnabled       = Form.useWatch("esiEnabled",       form);
   const professionalTaxEnabled = Form.useWatch("professionalTaxEnabled", form);
   const effectiveFrom    = Form.useWatch("effectiveFrom",    form);
+
+  const effectiveSettings = settings || DEFAULT_PAYROLL_SETTINGS;
+  const usingRealSettings = Boolean(settings);
 
   const gross = useMemo(
     () => Number(basic) + Number(hra) + Number(da) + Number(specialAllowance),
     [basic, hra, da, specialAllowance],
   );
-  const deductions = useMemo(() => {
-    let d = 0;
-    if (pfEnabled)            d += gross * 0.12;
-    if (esiEnabled)           d += gross * 0.0075;
-    if (professionalTaxEnabled) d += 200;
-    return d;
-  }, [gross, pfEnabled, esiEnabled, professionalTaxEnabled]);
+  // Estimate only — this school's *actual* configured Payroll Settings (falls back to
+  // statutory defaults only until Settings load), run through the same formula shape the
+  // real engine (payrollCalculator.service.js) uses. Can't account for attendance/LOP,
+  // which only the real cycle run knows, so this stays labeled an estimate.
+  const deductionsDetail = useMemo(
+    () => estimatePayrollDeductions(
+      { basic, da, hra, specialAllowance, grossMonthly: gross, professionalTaxEnabled },
+      effectiveSettings,
+    ),
+    [basic, da, hra, specialAllowance, gross, professionalTaxEnabled, effectiveSettings],
+  );
+  const deductions = deductionsDetail.total;
 
   const employeeOptions = useMemo(
     () => employees.map((e) => ({
@@ -86,7 +97,7 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId 
         {editingId ? "✏️ Edit Salary Structure" : "➕ Create Salary Structure"}
       </div>
 
-      <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={{ status: "active", pfEnabled: true }}>
+      <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={{ status: "active" }}>
 
         {/* Employee */}
         <SectionLabel icon={<UserOutlined />} title="Employee" />
@@ -141,21 +152,33 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId 
         </Form.Item>
 
         {/* Deductions */}
-        <SectionLabel icon={<PercentageOutlined />} title="Statutory Deductions" />
-        <div style={{ display: "flex", gap: 20, marginBottom: 14 }}>
-          {[
-            { name: "pfEnabled",              label: "PF (12%)",     color: C.primary },
-            { name: "esiEnabled",             label: "ESI (0.75%)",  color: C.accent  },
-            { name: "professionalTaxEnabled", label: "Prof. Tax ₹200", color: C.purple },
-          ].map(({ name, label, color }) => (
-            <Form.Item key={name} name={name} valuePropName="checked" style={{ marginBottom: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Switch size="small" style={{ background: C.border }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub }}>{label}</span>
-              </div>
-            </Form.Item>
-          ))}
+        <SectionLabel icon={<PercentageOutlined />} title="Deductions" />
+        <div style={{ fontSize: 10.5, color: C.textMuted, marginBottom: 10, marginTop: -6 }}>
+          PF ({effectiveSettings.pfEnabled ? "on" : "off"}) and ESI ({effectiveSettings.esiEnabled ? "on" : "off"}) for
+          this school are controlled entirely from{" "}
+          <a href="/schooladmin/payroll/settings">Payroll Settings</a> — there's nothing to
+          configure for them here.
         </div>
+        <div style={{ display: "flex", gap: 20, marginBottom: 14 }}>
+          <Form.Item name="professionalTaxEnabled" valuePropName="checked" style={{ marginBottom: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Switch size="small" style={{ background: C.border }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub }}>Professional Tax Enabled</span>
+            </div>
+          </Form.Item>
+        </div>
+
+        {effectiveSettings.pfEnabled && (
+          <Form.Item
+            label="VPF % (Voluntary, optional)"
+            name="vpfPercent"
+            initialValue={0}
+            tooltip="Extra employee-elected PF contribution, on top of the statutory rate — unlike the statutory rate, this genuinely varies per employee, so it stays here rather than in Payroll Settings"
+            style={fi}
+          >
+            <InputNumber min={0} max={100} style={{ width: "100%" }} />
+          </Form.Item>
+        )}
 
         {/* Dates & Status */}
         <SectionLabel icon={<CalendarOutlined />} title="Validity" />
@@ -191,8 +214,13 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId 
             <AmountRow label="Gross Earnings"    value={gross}             color={C.success} bold />
             {deductions > 0 && (
               <>
-                <AmountRow label="Total Deductions" value={deductions} color={C.danger} bold separator />
-                <AmountRow label="Net Take-Home"     value={gross - deductions} color={C.primary} bold />
+                <AmountRow label="Total Deductions (est.)" value={deductions} color={C.danger} bold separator />
+                <AmountRow label="Net Take-Home (est.)"     value={gross - deductions} color={C.primary} bold />
+                <div style={{ fontSize: 10.5, color: C.textMuted, marginTop: 6 }}>
+                  {usingRealSettings
+                    ? "Estimated using this school's configured Payroll Settings. The real payroll run also factors in attendance/LOP."
+                    : "Estimated using statutory defaults (Payroll Settings still loading)."}
+                </div>
               </>
             )}
           </div>

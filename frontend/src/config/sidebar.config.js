@@ -315,6 +315,7 @@ export const sidebarMenu = {
         { title: "Salary Advance", path: "schooladmin/payroll/advance" },
         { title: "Bonus & Incentives", path: "schooladmin/payroll/bonus" },
         { title: "Reimbursements", path: "schooladmin/payroll/reimbursements" },
+        { title: "Payroll Settings (PF/ESI)", path: "schooladmin/payroll/settings" },
       ],
     },
     {

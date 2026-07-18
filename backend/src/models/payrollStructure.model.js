@@ -31,8 +31,13 @@ const payrollStructureSchema = new Schema(
     },
     componentRules: { type: [Schema.Types.Mixed], default: [] },
     grossMonthly: { type: Number, required: true, min: 0 },
-    pfEnabled: { type: Boolean, default: true },
-    esiEnabled: { type: Boolean, default: false },
+    // PF/ESI on/off is *not* configured here any more — it's a single school-wide toggle on
+    // PayrollPolicy (Payroll Settings), with per-employee exclusion via
+    // Employee.statutoryCompliance.pfCategory/esiCategory === "excluded". This used to be a
+    // second, per-structure toggle that duplicated the same on/off decision.
+    // Voluntary PF stays here, not on PayrollPolicy — "voluntary" means each employee elects
+    // their own extra %, so unlike the on/off switch this genuinely can't be school-wide.
+    vpfPercent: { type: Number, default: 0, min: 0, max: 100 },
     professionalTaxEnabled: { type: Boolean, default: false },
     effectiveFrom: { type: Date, required: true, index: true },
     effectiveTo: { type: Date, default: null },

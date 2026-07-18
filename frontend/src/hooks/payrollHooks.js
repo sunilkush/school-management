@@ -126,31 +126,10 @@ export const useLatestPayrollCycle = () => {
   return latestMonth;
 };
 
-export const usePayrollStructures = () => {
-  const [loading, setLoading] = useState(false);
-  const [structures, setStructures] = useState([]);
-
-  const refreshStructures = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await httpClient.get("/payroll/structure");
-      setStructures(toArray(response?.data?.data));
-    } catch (error) {
-      if (error?.response?.status !== 404) {
-        message.warning("Structure listing endpoint unavailable, form workflow still works.");
-      }
-      setStructures([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshStructures().catch(() => {});
-  }, [refreshStructures]);
-
-  return { loading, structures, refreshStructures };
-};
+// Note: salary-structure fetching lives in features/payrollSlice.js (fetchPayrollStructures)
+// as a Redux thunk, not here — SalaryStructures.jsx is the only consumer and already uses
+// that. A duplicate local-state version of the same GET /payroll/structure call used to live
+// here; removed since nothing imported it.
 
 export const usePayslip = ({ month, year, employeeId }) => {
   const [loading, setLoading] = useState(false);

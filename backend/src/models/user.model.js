@@ -178,7 +178,15 @@ const userSchema = new Schema(
 
 // 🔥 Composite Unique Index (VERY IMPORTANT)
 userSchema.index({ email: 1, schoolId: 1 }, { unique: true });
-userSchema.index({ regId: 1, schoolId: 1 }, { unique: true, sparse: true });
+// `sparse` on a compound index only skips a document when *every* indexed field is missing —
+// schoolId is always present, so this never actually excluded users with no regId (most
+// non-student roles never get one — see generateRegId, only called for student registration).
+// Two such users in the same school hit a duplicate-key error on (schoolId, null). A partial
+// index scoped to "regId actually set" is what "optional but unique when present" needs here.
+userSchema.index(
+  { regId: 1, schoolId: 1 },
+  { unique: true, partialFilterExpression: { regId: { $exists: true, $type: "string" } }, name: "regId_1_schoolId_1_partial" }
+);
 
 
 // 🔹 Password Hash Middleware

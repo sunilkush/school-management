@@ -8,6 +8,8 @@ import { Student } from '../../src/models/student.model.js';
 import { StudentFee } from '../../src/models/studentFee.model.js';
 import { AcademicYear } from '../../src/models/AcademicYear.model.js';
 import { StudentEnrollment } from '../../src/models/StudentEnrollment.model.js';
+import { Employee } from '../../src/models/Employee.model.js';
+import { Attendance } from '../../src/models/attendance.model.js';
 
 const PLAIN_PASSWORD = 'Password123!';
 
@@ -81,6 +83,30 @@ export async function createStudentFee({ schoolId, studentId, totalAmount, paidA
     paidAmount,
     dueAmount: totalAmount - paidAmount,
   });
+}
+
+export async function createEmployee({ userId, schoolId, ...overrides }) {
+  return Employee.create({
+    userId,
+    schoolId,
+    phoneNo: overrides.phoneNo ?? '9876543210',
+    gender: overrides.gender ?? 'Male',
+    joinDate: overrides.joinDate ?? new Date('2024-01-01'),
+    ...overrides,
+  });
+}
+
+/** Marks `count` weekdays-worth of "present" attendance ending on `asOf` (default: today) for
+ * an employee, in the shape payroll.controllers.js's getAttendanceSummary() actually queries
+ * (role must be "teacher" or "staff" — that's the $in filter it applies). */
+export async function markPresent({ schoolId, userId, markedBy, count = 20, asOf = new Date(), role = 'staff' }) {
+  const rows = [];
+  for (let i = 0; i < count; i += 1) {
+    const date = new Date(asOf);
+    date.setDate(date.getDate() - i);
+    rows.push({ schoolId, userId, role, date, status: 'present', markedBy: markedBy ?? userId, checkInAt: date, checkOutAt: date });
+  }
+  return Attendance.insertMany(rows);
 }
 
 /** Logs in via the real endpoint (exercising bcrypt.compare + JWT signing for real) and returns the access token. */

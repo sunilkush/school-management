@@ -9,7 +9,7 @@ import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import SalaryStructureForm from "../../../components/payroll/SalaryStructureForm";
 import SalaryStructureTable from "../../../components/payroll/SalaryStructureTable";
-import { fetchPayrollEmployees, fetchPayrollStructures, savePayrollStructure } from "../../../features/payrollSlice";
+import { fetchPayrollEmployees, fetchPayrollSettings, fetchPayrollStructures, savePayrollStructure } from "../../../features/payrollSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 import { formatCurrencyINR } from "../../../utils/payroll";
@@ -27,7 +27,7 @@ const SalaryStructures = () => {
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
 
-  const { employees, structures, loadingStructures, savingStructure } = useSelector((s) => s.payroll);
+  const { employees, structures, loadingStructures, savingStructure, currentSettings } = useSelector((s) => s.payroll);
   const safeEmployees  = useMemo(() => (Array.isArray(employees)  ? employees  : []), [employees]);
   const safeStructures = useMemo(() => (Array.isArray(structures) ? structures : []), [structures]);
 
@@ -41,6 +41,13 @@ const SalaryStructures = () => {
     dispatch(fetchPayrollStructures()).unwrap().catch((e) => {
       if (e?.status !== 404) message.warning(e?.message || "Structure listing unavailable — form workflow still works.");
     });
+  }, [dispatch]);
+
+  // Real configured PF/ESI/PT rates — without this, the form preview and the deductions
+  // column below would silently fall back to statutory defaults, which can look wrong for
+  // any school that has actually customized its Payroll Settings.
+  useEffect(() => {
+    dispatch(fetchPayrollSettings()).unwrap().catch(() => {});
   }, [dispatch]);
 
   useEffect(() => {
@@ -171,6 +178,7 @@ const SalaryStructures = () => {
             onSubmit={handleSubmit}
             submitting={savingStructure}
             editingId={editingId}
+            settings={currentSettings}
           />
           {editingId && (
             <button
@@ -221,6 +229,7 @@ const SalaryStructures = () => {
               data={filteredStructures}
               loading={loadingStructures}
               onEdit={onEdit}
+              settings={currentSettings}
             />
           </div>
         </div>

@@ -41,6 +41,39 @@ export const savePayrollStructure = createAsyncThunk(
   }
 );
 
+export const fetchPayrollSettings = createAsyncThunk("payroll/fetchSettings", async (_, { rejectWithValue }) => {
+  try {
+    const response = await httpClient.get("/payroll/settings");
+    return response?.data?.data || { versions: [], current: null };
+  } catch (error) {
+    return rejectWithValue(getErrorPayload(error, "Payroll settings load failed"));
+  }
+});
+
+export const savePayrollSettings = createAsyncThunk(
+  "payroll/saveSettings",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await httpClient.post("/payroll/settings", payload);
+      return response?.data?.data;
+    } catch (error) {
+      return rejectWithValue(getErrorPayload(error, "Payroll settings save failed"));
+    }
+  }
+);
+
+export const updateEmployeeStatutory = createAsyncThunk(
+  "payroll/updateEmployeeStatutory",
+  async ({ employeeId, payload }, { rejectWithValue }) => {
+    try {
+      const response = await httpClient.patch(`/payroll/employee/${employeeId}/statutory`, payload);
+      return response?.data?.data;
+    } catch (error) {
+      return rejectWithValue(getErrorPayload(error, "Employee PF/ESI details save failed"));
+    }
+  }
+);
+
 const payrollSlice = createSlice({
   name: "payroll",
   initialState: {
@@ -49,11 +82,39 @@ const payrollSlice = createSlice({
     savingStructure: false,
     structures: [],
     employees: [],
+    loadingSettings: false,
+    savingSettings: false,
+    settingsVersions: [],
+    currentSettings: null,
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchPayrollSettings.pending, (state) => {
+        state.loadingSettings = true;
+        state.error = null;
+      })
+      .addCase(fetchPayrollSettings.fulfilled, (state, action) => {
+        state.loadingSettings = false;
+        state.settingsVersions = action.payload.versions || [];
+        state.currentSettings = action.payload.current || null;
+      })
+      .addCase(fetchPayrollSettings.rejected, (state, action) => {
+        state.loadingSettings = false;
+        state.error = action.payload?.message || "Payroll settings load failed";
+      })
+      .addCase(savePayrollSettings.pending, (state) => {
+        state.savingSettings = true;
+        state.error = null;
+      })
+      .addCase(savePayrollSettings.fulfilled, (state) => {
+        state.savingSettings = false;
+      })
+      .addCase(savePayrollSettings.rejected, (state, action) => {
+        state.savingSettings = false;
+        state.error = action.payload?.message || "Payroll settings save failed";
+      })
       .addCase(fetchPayrollStructures.pending, (state) => {
         state.loadingStructures = true;
         state.error = null;

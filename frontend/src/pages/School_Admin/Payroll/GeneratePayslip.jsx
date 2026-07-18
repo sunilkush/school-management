@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Empty, Table, Tag, Typography, message } from "antd";
 import {
-  CheckOutlined, EyeOutlined, FileTextOutlined, PrinterOutlined,
+  CheckOutlined, DownloadOutlined, EyeOutlined, FileTextOutlined, PrinterOutlined,
   ReloadOutlined, UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -38,6 +38,7 @@ const GeneratePayslip = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
+  const [downloading, setDownloading] = useState(false);
 
   const month = selectedMonth.month() + 1;
   const year  = selectedMonth.year();
@@ -70,6 +71,29 @@ const GeneratePayslip = () => {
     const id = record.employeeId?._id;
     setSelectedEmployeeId(id);
     fetchPayslip(id);
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!selectedEmployeeId) return;
+    setDownloading(true);
+    try {
+      const response = await httpClient.get(
+        `/payroll/payslip/${selectedEmployeeId}/${month}/${year}/download`,
+        { responseType: "blob" }
+      );
+      const blobUrl = URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Payslip_${selectedMonth.format("MMMM_YYYY")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Payslip download failed");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   /* ── Table columns ─────────────────────────────────────────────── */
@@ -261,6 +285,17 @@ const GeneratePayslip = () => {
                 {selectedEmployeeId ? selectedMonth.format("MMMM YYYY") : "Select an employee to preview"}
               </Text>
             </div>
+            {payslip?.entry && (
+              <Button
+                icon={<DownloadOutlined />}
+                size="small"
+                loading={downloading}
+                onClick={handleDownloadPdf}
+                style={{ marginLeft: "auto", borderRadius: 8, fontWeight: 600 }}
+              >
+                Download PDF
+              </Button>
+            )}
           </div>
 
           <div style={{ padding: "20px 24px" }}>

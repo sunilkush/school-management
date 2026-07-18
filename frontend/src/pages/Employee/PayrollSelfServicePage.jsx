@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Empty, Spin, Table, Typography } from "antd";
+import { Alert, Button, Empty, Spin, Table, Typography, message } from "antd";
 import dayjs from "dayjs";
 import {
   DollarSign, FileText, BarChart3, CalendarDays,
   TrendingUp, TrendingDown, Wallet, Clock,
   CreditCard, CalendarCheck, CalendarX, AlertTriangle,
-  BadgeCheck,
+  BadgeCheck, Download,
 } from "lucide-react";
 import httpClient from "../../api/httpClient";
 import { formatCurrencyINR } from "../../utils/payroll";
@@ -173,6 +173,7 @@ export default function PayrollSelfServicePage() {
   const [loading,    setLoading]    = useState(false);
   const [summary,    setSummary]    = useState(null);
   const [activeTab,  setActiveTab]  = useState("payslips");
+  const [downloadingKey, setDownloadingKey] = useState(null);
 
   const payslips      = useMemo(() => (Array.isArray(summary?.payslips) ? summary.payslips : []), [summary]);
   const latestPayslip = payslips[0] ?? null;
@@ -185,6 +186,30 @@ export default function PayrollSelfServicePage() {
       .catch(() => setSummary(null))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDownloadPayslip = async (row) => {
+    const employeeId = summary?.employee?._id;
+    if (!employeeId) return;
+    setDownloadingKey(row._id);
+    try {
+      const response = await httpClient.get(
+        `/payroll/payslip/${employeeId}/${row.month}/${row.year}/download`,
+        { responseType: "blob" }
+      );
+      const blobUrl = URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Payslip_${fmtMonth(row.month, row.year).replace(" ", "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Payslip download failed");
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
 
   /* ── Stat card values ── */
   const grossMonthly   = summary?.structure?.grossMonthly ?? 0;
@@ -263,6 +288,21 @@ export default function PayrollSelfServicePage() {
         </span>
       ),
     },
+    {
+      title: "",
+      key: "download",
+      render: (_, row) => (
+        <Button
+          size="small"
+          icon={<Download size={13} />}
+          loading={downloadingKey === row._id}
+          onClick={() => handleDownloadPayslip(row)}
+          style={{ borderRadius: 8, fontSize: 12 }}
+        >
+          PDF
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -275,6 +315,13 @@ export default function PayrollSelfServicePage() {
         subtitle="View your salary, payslips, and monthly attendance summary."
         icon={<DollarSign size={20} />}
       />
+
+      {(summary?.employee?.statutoryCompliance?.uan || summary?.employee?.statutoryCompliance?.esicNumber) && (
+        <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 12, color: "var(--text-muted)" }}>
+          {summary.employee.statutoryCompliance.uan && <span>UAN: {summary.employee.statutoryCompliance.uan}</span>}
+          {summary.employee.statutoryCompliance.esicNumber && <span>ESIC No: {summary.employee.statutoryCompliance.esicNumber}</span>}
+        </div>
+      )}
 
       <div style={{ marginTop: 20 }}>
         <Spin spinning={loading}>

@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Space, Table } from "antd";
 import { EditOutlined, CheckCircleOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { formatCurrencyINR } from "../../utils/payroll";
+import { DEFAULT_PAYROLL_SETTINGS, estimatePayrollDeductions, formatCurrencyINR } from "../../utils/payroll";
 
 const C = {
   primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
@@ -39,7 +39,7 @@ const AmountCell = ({ value, accent = false }) => (
   </span>
 );
 
-const SalaryStructureTable = ({ data, loading, onEdit }) => {
+const SalaryStructureTable = ({ data, loading, onEdit, settings }) => {
   const columns = [
     {
       title: "Employee",
@@ -74,17 +74,15 @@ const SalaryStructureTable = ({ data, loading, onEdit }) => {
     {
       title: "Deductions",
       render: (_, r) => {
-        const pf  = r.pfEnabled             ? (r.grossMonthly || 0) * 0.12    : 0;
-        const esi = r.esiEnabled            ? (r.grossMonthly || 0) * 0.0075  : 0;
-        const pt  = r.professionalTaxEnabled ? 200 : 0;
-        const total = pf + esi + pt;
+        const effectiveSettings = settings || DEFAULT_PAYROLL_SETTINGS;
+        const { total } = estimatePayrollDeductions(r, effectiveSettings);
         return (
           <div>
             <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "#EF4444" }}>
               {formatCurrencyINR(total)}
             </div>
             <div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>
-              {[r.pfEnabled && "PF", r.esiEnabled && "ESI", r.professionalTaxEnabled && "PT"].filter(Boolean).join(" · ") || "None"}
+              {[effectiveSettings.pfEnabled && "PF", effectiveSettings.esiEnabled && "ESI", r.professionalTaxEnabled && "PT"].filter(Boolean).join(" · ") || "None"}
             </div>
           </div>
         );
