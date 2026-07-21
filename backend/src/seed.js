@@ -6,6 +6,7 @@
 
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { DB_NAME } from "./constants.js";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -91,7 +92,9 @@ function lastWeekdays(n) {
 async function seed() {
   const uri = process.env.MONGOOSE_URI;
   if (!uri) throw new Error("MONGOOSE_URI missing in .env");
-  await mongoose.connect(`${uri}/school_management`);
+  // dbName option, not string concatenation — MONGOOSE_URI already ends in "/?retryWrites=...",
+  // so appending a path segment there is malformed and mongoose silently ignores it.
+  await mongoose.connect(uri, { dbName: DB_NAME });
   console.log("\n🌱 MongoDB connected — starting ADDITIVE seed...\n");
 
   // ── 1. Find school ──────────────────────────────────────────────────────────

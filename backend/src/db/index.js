@@ -63,8 +63,12 @@ const repairStaleIndexes = async () => {
 
 const dbConnection = async()=>{
     try {
-        const connectInstance = await mongoose.connect(`${process.env.MONGOOSE_URI}/${DB_NAME}`);
-            console.log(`mongoDB database connect : ${connectInstance.connection.host}`)
+        // MONGOOSE_URI already ends in `/?retryWrites=...`, so appending "/DB_NAME" as a string
+        // (the old approach) produced a malformed URI that mongoose silently ignored, falling
+        // back to its default database. The `dbName` option is the correct way to select the
+        // database regardless of what the URI's path/query already looks like.
+        const connectInstance = await mongoose.connect(process.env.MONGOOSE_URI, { dbName: DB_NAME });
+            console.log(`mongoDB database connect : ${connectInstance.connection.host} / ${connectInstance.connection.name}`)
             await repairStaleIndexes();
     } catch (error) {
         console.log(`Database Doesn't Connect`)

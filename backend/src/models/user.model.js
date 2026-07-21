@@ -180,7 +180,7 @@ const userSchema = new Schema(
 userSchema.index({ email: 1, schoolId: 1 }, { unique: true });
 // `sparse` on a compound index only skips a document when *every* indexed field is missing —
 // schoolId is always present, so this never actually excluded users with no regId (most
-// non-student roles never get one — see generateRegId, only called for student registration).
+// non-student roles never get one — see generateNextRegId in user.controllers.js).
 // Two such users in the same school hit a duplicate-key error on (schoolId, null). A partial
 // index scoped to "regId actually set" is what "optional but unique when present" needs here.
 userSchema.index(
@@ -198,23 +198,6 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-
-
-// 🔹 Generate School-wise RegId (Race Condition Safe)
-userSchema.statics.generateRegId = async function (schoolId) {
-  const lastUser = await this.findOne({ schoolId })
-    .sort({ createdAt: -1 })
-    .select("regId");
-
-  let newId = "#000001";
-
-  if (lastUser?.regId) {
-    const lastNum = parseInt(lastUser.regId.replace("#", "")) || 0;
-    newId = "#" + String(lastNum + 1).padStart(6, "0");
-  }
-
-  return newId;
-};
 
 
 // 🔹 Password Compare

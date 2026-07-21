@@ -69,18 +69,22 @@ const getRequesterRoleName = async (req) => {
 };
 
 // 🔹 Generate next regId school-wise
+// Not every user in a school has a "#NNNNNN"-style regId — seeded employees get human-readable
+// codes like "TCH001"/"STF001" instead. Picking whichever user was created *last* (regardless
+// of its regId's format) meant that whenever that happened to be one of those, parseInt() on it
+// produced NaN -> 0, silently resetting the counter back to "#000001" and colliding with an
+// already-used id. Scanning for the true max among "#NNNNNN"-format regIds fixes that.
 export const generateNextRegId = async (schoolId) => {
-  const lastUser = await User.findOne({ schoolId })
-    .sort({ createdAt: -1 })
-    .select("regId");
+  const users = await User.find({ schoolId, regId: { $regex: /^#\d{6}$/ } })
+    .select("regId")
+    .lean();
 
-  let newId = "#000001"; // default for first user
-  if (lastUser && lastUser.regId) {
-    const lastNum = parseInt(lastUser.regId.replace("#", "")) || 0;
-    newId = "#" + String(lastNum + 1).padStart(6, "0");
-  }
+  const maxNum = users.reduce((max, u) => {
+    const n = parseInt(u.regId.slice(1), 10);
+    return n > max ? n : max;
+  }, 0);
 
-  return newId;
+  return "#" + String(maxNum + 1).padStart(6, "0");
 };
 /**
  * @desc Register a new user
