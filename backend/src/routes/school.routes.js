@@ -28,8 +28,11 @@ router.post(
 );
 
 // ✅ Update School Details (Super Admin & Admin)
+// Route param must be named `schoolId` — updateSchool reads req.params.schoolId, so a mismatched
+// `:id` here silently 404'd every update request ("School not found"), same class of bug as
+// activate/deactivate below.
 router.post(
-    "/update/:id",
+    "/update/:schoolId",
     auth,
     roleMiddleware(ADMIN_ROLE),
     upload.fields([{ name: "logo", maxCount: 1 }]),
@@ -40,8 +43,9 @@ router.post(
 router.get("/getAllSchool", auth, roleMiddleware(ADMIN_ROLE), getAllSchools);
 
 // ✅ Get School by ID (Super Admin, Admin, Teacher, Student)
-router.get("/:id", auth, roleMiddleware(STUDENT_ROLE), getSchoolById);
-router.get("/getRoleBySchool:id", auth,roleMiddleware("Super Admin"), getSchoolById);
+// Same `:schoolId` param requirement as above — getSchoolById also reads req.params.schoolId.
+router.get("/:schoolId", auth, roleMiddleware(STUDENT_ROLE), getSchoolById);
+router.get("/getRoleBySchool:schoolId", auth,roleMiddleware("Super Admin"), getSchoolById);
 
 // ✅ Activate School (Super Admin & Admin)
 // Route param must be named `schoolId` — activateSchool reads req.params.schoolId, so a mismatched

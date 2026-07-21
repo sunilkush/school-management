@@ -80,9 +80,7 @@ export default function BoardClassPage() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (selectedBoard) {
-      dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
-    }
+    dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
   }, [selectedBoard, dispatch]);
 
   const filtered = useMemo(() => {

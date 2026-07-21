@@ -275,6 +275,10 @@ export const sidebarMenu = {
         { title: "Fee Collection", path: "schooladmin/fees/collect" },
         { title: "Fee Structures", path: "schooladmin/fees/feestructure" },
         { title: "Assign Fees", path: "schooladmin/fees/assign" },
+        { title: "Fee Reports", path: "schooladmin/fees/reports" },
+        { title: "Income", path: "schooladmin/income" },
+        { title: "Expenses", path: "schooladmin/expenses" },
+        { title: "Financial Reports", path: "schooladmin/finance/reports" },
       ],
     },
     {
@@ -300,7 +304,7 @@ export const sidebarMenu = {
       icon: Building2,
       subMenu: [
         { title: "Hostel Rooms", path: "schooladmin/hostel" },
-       /*  { title: "Room Allocation", path: "schooladmin/hostel/allocation" }, */
+        { title: "Room Allocation", path: "schooladmin/hostel/allocations" },
       ],
     },
     {
@@ -316,6 +320,7 @@ export const sidebarMenu = {
         { title: "Bonus & Incentives", path: "schooladmin/payroll/bonus" },
         { title: "Reimbursements", path: "schooladmin/payroll/reimbursements" },
         { title: "Payroll Settings (PF/ESI)", path: "schooladmin/payroll/settings" },
+        { title: "PF/ESI Reports", path: "schooladmin/payroll/reports/pf-esi" },
       ],
     },
     {
@@ -440,6 +445,8 @@ export const sidebarMenu = {
         { title: "Salary Advance",    path: "accountant/salary/advance" },
         { title: "Bonus & Incentives",path: "accountant/salary/bonus" },
         { title: "Reimbursements",    path: "accountant/salary/reimbursements" },
+        { title: "Payroll Settings (PF/ESI)", path: "accountant/payroll/settings" },
+        { title: "PF/ESI Reports", path: "accountant/payroll/reports/pf-esi" },
         { title: "My Payroll",        path: "accountant/payroll" },
       ],
     },
@@ -465,6 +472,8 @@ export const sidebarMenu = {
     { title: "Exams", path: "principal/exams", icon: GraduationCap },
     { title: "Library", path: "principal/library", icon: Book },
     { title: "Transport", path: "principal/transport", icon: Bus },
+    { title: "Financial Reports", path: "principal/finance/reports", icon: FileText },
+    { title: "Fee Reports", path: "principal/fees/reports", icon: FileBarChart2 },
     { title: "My Tasks",         path: "principal/tasks",   icon: ListChecks   },
     { title: "My Payroll",       path: "principal/payroll", icon: IndianRupee  },
     ...employeeAttendance("principal"),
@@ -482,6 +491,8 @@ export const sidebarMenu = {
     { title: "Teacher Attendance", path: "viceprincipal/attendance/staff", icon: UserCheck },
     { title: "Attendance Table", path: "viceprincipal/attendance/table", icon: ClipboardCheck },
     { title: "Reports",          path: "viceprincipal/reports",          icon: FileBarChart2  },
+    { title: "Financial Reports", path: "viceprincipal/finance/reports", icon: FileText },
+    { title: "Fee Reports", path: "viceprincipal/fees/reports", icon: FileBarChart2 },
     { title: "My Tasks",   path: "viceprincipal/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "viceprincipal/payroll", icon: IndianRupee },
     ...employeeAttendance("viceprincipal"),

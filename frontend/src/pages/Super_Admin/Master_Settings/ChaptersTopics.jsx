@@ -86,7 +86,7 @@ const ChaptersTopics = () => {
   const searchTimeout = useRef(null);
 
   const { user } = useSelector((state) => state.auth || {});
-  const { chapters = [], loading: chapterLoading, meta = {} } = useSelector((state) => state.chapter || {});
+  const { chapters = [], loading: chapterLoading, pagination: meta = {} } = useSelector((state) => state.chapter || {});
 
   const boards = useSelector((state) => state.boards?.boards || []);
   const boardLoading = useSelector((state) => state.boards?.loading);
@@ -136,7 +136,7 @@ const ChaptersTopics = () => {
   useEffect(() => {
     if (!user || hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    fetchChapters({ page: 1, limit: 10, search: "" });
+    fetchChapters({ page: 1, search: "" });
   }, [user, fetchChapters]);
 
   useEffect(() => {

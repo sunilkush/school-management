@@ -71,7 +71,12 @@ const topicSchema = new Schema(
     academicYearId: {
       type: Schema.Types.ObjectId,
       ref: "AcademicYear",
-      required: true
+      // Same conditional pattern as schoolId above — global topics (like
+      // global chapters) are evergreen curriculum content, not scoped to
+      // any one school's academic year.
+      required: function () {
+        return !this.isGlobal;
+      }
     }
   },
   { timestamps: true }

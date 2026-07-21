@@ -167,6 +167,40 @@ export const usePayslip = ({ month, year, employeeId }) => {
   return { loading, payslip, notFound, fetchPayslip, clearPayslip };
 };
 
+// type: "pf" | "esi" — both hit GET /payroll/reports/:type?month&year, same 404-on-missing-cycle
+// contract as useMonthlyPayrollReport, returning { cycle, rows } on success.
+export const useStatutoryReport = (type, month, year) => {
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState(null);
+  const [isEmpty, setIsEmpty] = useState(false);
+
+  const refreshReport = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await httpClient.get(`/payroll/reports/${type}`, { params: { month, year } });
+      setReport(response?.data?.data || null);
+      setIsEmpty(false);
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        setIsEmpty(true);
+        setReport(null);
+        return;
+      }
+      setReport(null);
+      setIsEmpty(false);
+      message.error(normalizeApiError(error, "Statutory report fetch failed"));
+    } finally {
+      setLoading(false);
+    }
+  }, [type, month, year]);
+
+  useEffect(() => {
+    refreshReport().catch(() => {});
+  }, [refreshReport]);
+
+  return { loading, report, isEmpty, refreshReport };
+};
+
 export const useMonthlyPayrollReport = (month, year) => {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState(null);

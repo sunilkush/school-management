@@ -132,6 +132,21 @@ const examSchema = new Schema(
       maxAttempts: { type: Number, default: 1 }
     },
 
+    // Paper Builder's section-wise blueprint (question type + count + marks per section). Without
+    // a declared schema path, Mongoose's default strict mode silently drops this on save — it was
+    // being assigned via updateExam() but never persisted. See PaperBuilder.jsx for the exact shape.
+    paperBlueprint: [
+      {
+        key: { type: String },
+        section: { type: String },
+        questionType: { type: String },
+        questions: { type: Number, default: 0 },
+        marksEach: { type: Number, default: 0 },
+        color: { type: String },
+        bg: { type: String }
+      }
+    ],
+
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",

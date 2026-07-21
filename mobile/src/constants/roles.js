@@ -123,6 +123,7 @@ export const MODULE_META = {
   Sports: { label: 'Sports', icon: 'trophy-outline' },
   Alumni: { label: 'Alumni', icon: 'school-outline' },
   Canteen: { label: 'Canteen', icon: 'food-outline' },
+  PayrollSettings: { label: 'Payroll Settings', icon: 'cog-outline' },
   MyAchievements: { label: 'Achievements', icon: 'medal-outline' },
   Certificates: { label: 'Certificates', icon: 'certificate-outline' },
   IDCards: { label: 'ID Cards', icon: 'card-account-details-outline' },
@@ -330,7 +331,7 @@ export const NAV_CONFIG = {
     unrestricted: true,
     items: [
       'Dashboard', 'FeeCollection', 'FeeReports', 'Income', 'Expenses', 'Finance',
-      { group: 'Payroll', icon: 'cash-multiple', items: ['SalaryRun', 'SalaryStructures', 'CreateEmployee', 'PayslipCenter', 'PayrollMonthlyReports', 'SalaryAdvance', 'BonusIncentives', 'Reimbursements', 'Payroll'] },
+      { group: 'Payroll', icon: 'cash-multiple', items: ['SalaryRun', 'SalaryStructures', 'CreateEmployee', 'PayslipCenter', 'PayrollMonthlyReports', 'SalaryAdvance', 'BonusIncentives', 'Reimbursements', 'Payroll', 'PayrollSettings'] },
       'MyAttendance', 'GpsCheckInOut', 'AttendanceReports', 'Leave', 'MyTasks',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',

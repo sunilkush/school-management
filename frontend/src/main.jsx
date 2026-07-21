@@ -241,7 +241,6 @@ const AdmissionInquiryPage = lazy(() => import("./pages/School_Admin/Teachers_&_
 
 const HostelManagement = lazy(() => import("./pages/School_Admin/Hostel/HostelManagement.jsx"));
 const HostelAllocations = lazy(() => import("./pages/School_Admin/Hostel/HostelAllocations.jsx"));
-const RoomAllocation = lazy(() => import("./pages/School_Admin/Hostel/RoomAllocation.jsx"));
 const HostelDashboard      = lazy(() => import("./pages/HostelWarden/HostelDashboard.jsx"));
 const LeaveManagement      = lazy(() => import("./pages/HostelWarden/LeaveManagement.jsx"));
 const VisitorLog           = lazy(() => import("./pages/HostelWarden/VisitorLog.jsx"));
@@ -263,6 +262,7 @@ const SalaryAdvance = lazy(() => import("./pages/School_Admin/Payroll/SalaryAdva
 const BonusIncentivePage = lazy(() => import("./pages/School_Admin/Payroll/BonusIncentivePage.jsx"));
 const ReimbursementsPage = lazy(() => import("./pages/School_Admin/Payroll/ReimbursementsPage.jsx"));
 const PayrollSettingsPage = lazy(() => import("./pages/School_Admin/Payroll/PayrollSettingsPage.jsx"));
+const PfEsiReports = lazy(() => import("./pages/School_Admin/Payroll/PfEsiReports.jsx"));
 const EmployeeSelfAttendance = lazy(() => import("./pages/Attendance/EmployeeSelfAttendance.jsx"));
 const GeofenceSettings = lazy(() => import("./pages/School_Admin/Attendance/GeofenceSettings.jsx"));
 
@@ -696,6 +696,7 @@ const router = createBrowserRouter([
               { path: "fees/collect", element: <FeeCollection /> },
               { path: "admission/inquiry", element: <AdmissionInquiryPage /> },
               { path: "hostel", element: <HostelManagement /> },
+              { path: "hostel/allocations", element: <HostelAllocations /> },
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
               { path: "transport/assignments", element: <TransportAssignments /> },
@@ -708,6 +709,7 @@ const router = createBrowserRouter([
               { path: "payroll/bonus", element: <BonusIncentivePage /> },
               { path: "payroll/reimbursements", element: <ReimbursementsPage /> },
               { path: "payroll/settings", element: <PayrollSettingsPage /> },
+              { path: "payroll/reports/pf-esi", element: <PfEsiReports /> },
               { path: "communication", element: <CommunicationHub /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
@@ -750,6 +752,10 @@ const router = createBrowserRouter([
               { path: "inventory", element: <InventoryStore /> },
               { path: "fees/feestructure", element: <FeeStructure /> },
               { path: "fees/assign", element: <StudentAssignFees /> },
+              { path: "fees/reports", element: <FeeReports /> },
+              { path: "income", element: <IncomeManagement /> },
+              { path: "expenses", element: <ExpenseManagement /> },
+              { path: "finance/reports", element: <FinancialReports /> },
               { path: "school-setup", element: <SchoolSetup /> },
               { path: "tasks", element: <TaskManagement /> },
 
@@ -885,6 +891,8 @@ const router = createBrowserRouter([
               { path: "salary/advance", element: <SalaryAdvance /> },
               { path: "salary/bonus", element: <BonusIncentivePage /> },
               { path: "salary/reimbursements", element: <ReimbursementsPage /> },
+              { path: "payroll/settings", element: <PayrollSettingsPage /> },
+              { path: "payroll/reports/pf-esi", element: <PfEsiReports /> },
               { path: "income",           element: <IncomeManagement /> },
               { path: "expenses",         element: <ExpenseManagement /> },
               { path: "reports",          element: <FinancialReports /> },
@@ -940,6 +948,8 @@ const router = createBrowserRouter([
               { path: "attendance/self", element: <EmployeeSelfAttendance /> },
               { path: "attendance/my",   element: <MyAttendancePage /> },
               { path: "leave",           element: <TeacherLeave /> },
+              { path: "finance/reports", element: <FinancialReports /> },
+              { path: "fees/reports",    element: <FeeReports /> },
             ],
           },
           {
@@ -976,6 +986,8 @@ const router = createBrowserRouter([
               { path: "profile",             element: <Profile /> },
               { path: "message",             element: <Message /> },
               { path: "notification",        element: <Notification /> },
+              { path: "finance/reports",     element: <FinancialReports /> },
+              { path: "fees/reports",        element: <FeeReports /> },
               { path: "*",                   element: <RoleDynamicPortal /> },
             ],
           },

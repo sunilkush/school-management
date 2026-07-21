@@ -177,7 +177,12 @@ const PaperBuilder = () => {
 
   const handleExamChange = (id) => {
     setSelectedExamId(id);
-    setSections(DEFAULT_SECTIONS.map((s) => ({ ...s, questions: 0 })));
+    const exam = exams.find((e) => e._id === id);
+    setSections(
+      exam?.paperBlueprint?.length
+        ? exam.paperBlueprint
+        : DEFAULT_SECTIONS.map((s) => ({ ...s, questions: 0 }))
+    );
   };
 
   const handleSectionChange = useCallback((idx, updated) => {

@@ -35,6 +35,7 @@ import feeReportRoutes from "./feeReport.routes.js";
 import activityLogRoutes from "./activity.routes.js";
 import boardRoutes from "./boards.routes.js";
 import chapterRoutes from "./chapters.routes.js";
+import topicRoutes from "./topics.routes.js";
 import boardClassRoutes from "./boardsClass.routes.js";
 import examReportRoutes from "./exam.report.routes.js";
 import schoolClassRoutes from "./schoolClass.routes.js";
@@ -127,6 +128,7 @@ export const apiV1Routes = [
   ["/activity-logs", activityLogRoutes],
   ["/boards", boardRoutes],
   ["/chapters", chapterRoutes],
+  ["/topics", topicRoutes],
   ["/board-classes", boardClassRoutes],
   ["/exam-report", examReportRoutes],
   ["/school-class", schoolClassRoutes],

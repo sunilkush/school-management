@@ -5,7 +5,7 @@ import { fetchSubscriptionPlans } from "../../../features/subscriptionPlanSlice"
 import {
   fetchSchoolSubscription, renewSchoolSubscription,
   cancelSchoolSubscription, suspendSchoolSubscription,
-  reactivateSchoolSubscription, changeSchoolPlan,
+  reactivateSchoolSubscription, changeSchoolPlan, assignSchoolPlan,
   clearBillingMessages,
 } from "../../../features/superAdminBillingSlice";
 import AddSchoolForm from "../../../components/forms/AddSchoolForm";
@@ -32,6 +32,8 @@ import {
   Drawer,
   Alert,
   Descriptions,
+  Upload,
+  Switch,
 } from "antd";
 import {
   PlusOutlined,
@@ -53,6 +55,7 @@ import {
   SwapOutlined,
   SettingOutlined,
   ExclamationCircleOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
@@ -257,12 +260,16 @@ const Schools = () => {
   const [editingSchool, setEditingSchool] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editForm] = Form.useForm();
+  const [editLogoFile, setEditLogoFile] = useState(null);
+  const [editLogoPreview, setEditLogoPreview] = useState(null);
 
   // Subscription drawer state
   const [subDrawerOpen, setSubDrawerOpen] = useState(false);
   const [subSchool, setSubSchool] = useState(null);
   const [changePlanId, setChangePlanId] = useState(null);
   const [changePlanAction, setChangePlanAction] = useState("upgrade");
+  const [assignPlanId, setAssignPlanId] = useState(null);
+  const [assignAsTrial, setAssignAsTrial] = useState(false);
 
   useEffect(() => {
     dispatch(fetchSchools());
@@ -291,6 +298,8 @@ const Schools = () => {
     setSubDrawerOpen(false);
     setSubSchool(null);
     setChangePlanId(null);
+    setAssignPlanId(null);
+    setAssignAsTrial(false);
   }, []);
 
   const handleRenew = useCallback(async () => {
@@ -323,6 +332,15 @@ const Schools = () => {
     dispatch(fetchSchools());
   }, [subSchool, changePlanId, changePlanAction, dispatch]);
 
+  const handleAssignPlan = useCallback(async () => {
+    if (!subSchool?._id || !assignPlanId) return;
+    await dispatch(assignSchoolPlan({ schoolId: subSchool._id, payload: { planId: assignPlanId, isTrial: assignAsTrial } }));
+    dispatch(fetchSchoolSubscription(subSchool._id));
+    dispatch(fetchSchools());
+    setAssignPlanId(null);
+    setAssignAsTrial(false);
+  }, [subSchool, assignPlanId, assignAsTrial, dispatch]);
+
   const handleDeleteSchool = useCallback(
     async (id) => {
       try {
@@ -346,24 +364,45 @@ const Schools = () => {
       website: school.website || "",
       isActive: school.isActive ? "active" : "inactive",
     });
+    setEditLogoFile(null);
+    setEditLogoPreview(school.logo || null);
     setEditModalOpen(true);
   }, [editForm]);
 
   const handleCloseEdit = useCallback(() => {
     setEditModalOpen(false);
     setEditingSchool(null);
+    setEditLogoFile(null);
+    setEditLogoPreview(null);
     editForm.resetFields();
   }, [editForm]);
+
+  const handleEditLogoChange = useCallback(({ file }) => {
+    if (!file) return;
+
+    if (file.size > 50 * 1024) {
+      message.error("Logo size must be less than or equal to 50KB");
+      return;
+    }
+
+    setEditLogoFile(file);
+    setEditLogoPreview(URL.createObjectURL(file));
+  }, []);
 
   const handleEditSubmit = useCallback(async (values) => {
     if (!editingSchool?._id) return;
     try {
       setEditSaving(true);
-      const payload = {
-        ...values,
-        isActive: values.isActive === "active",
-      };
-      await apiClient.post(`/school/update/${editingSchool._id}`, payload);
+      const formData = new FormData();
+      formData.append("name", values.name || "");
+      formData.append("address", values.address || "");
+      formData.append("email", values.email || "");
+      formData.append("phone", values.phone || "");
+      formData.append("website", values.website || "");
+      formData.append("isActive", values.isActive === "active" ? "true" : "false");
+      if (editLogoFile) formData.append("logo", editLogoFile);
+
+      await apiClient.post(`/school/update/${editingSchool._id}`, formData);
       message.success("School updated successfully");
       dispatch(fetchSchools());
       handleCloseEdit();
@@ -372,7 +411,7 @@ const Schools = () => {
     } finally {
       setEditSaving(false);
     }
-  }, [editingSchool, dispatch, handleCloseEdit]);
+  }, [editingSchool, editLogoFile, dispatch, handleCloseEdit]);
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);
@@ -629,6 +668,36 @@ const Schools = () => {
                   </Select>
                 </Form.Item>
               </Col>
+
+              <Col xs={24}>
+                <Form.Item label="School Logo (Max 50 KB)">
+                  <Upload
+                    accept="image/*"
+                    showUploadList={false}
+                    beforeUpload={() => false}
+                    onChange={handleEditLogoChange}
+                  >
+                    <Button icon={<UploadOutlined />}>
+                      {editLogoPreview ? "Change Logo" : "Upload Logo"}
+                    </Button>
+                  </Upload>
+
+                  {editLogoPreview && (
+                    <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                      <img
+                        src={editLogoPreview}
+                        alt="Logo Preview"
+                        width={56}
+                        height={56}
+                        style={{ borderRadius: 8, border: "1px solid var(--border-muted)", objectFit: "cover" }}
+                      />
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {editLogoFile ? "New logo (unsaved)" : "Current logo"}
+                      </Text>
+                    </div>
+                  )}
+                </Form.Item>
+              </Col>
             </Row>
           </Form>
         </Modal>
@@ -644,12 +713,51 @@ const Schools = () => {
           {actionLoading && !schoolSubscription ? (
             <div style={{ textAlign: "center", padding: 48 }}><Spin size="large" /></div>
           ) : !schoolSubscription ? (
-            <Alert
-              type="warning"
-              showIcon
-              message="No subscription found"
-              description="This school has no subscription assigned. Go to Subscription Plans to assign one."
-            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <Alert
+                type="warning"
+                showIcon
+                message="No subscription assigned"
+                description="Pick a plan below to activate a subscription for this school."
+              />
+
+              <div style={{ ...sectionPanel, marginBottom: 0, background: "var(--surface-soft)" }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <CrownOutlined style={{ color: "var(--primary)" }} />
+                  Assign Plan
+                </div>
+                <Select
+                  placeholder="Select a plan"
+                  style={{ width: "100%", marginBottom: 10 }}
+                  value={assignPlanId}
+                  onChange={setAssignPlanId}
+                  options={plans.filter(p => p.isActive !== false).map(p => ({
+                    value: p._id,
+                    label: `${p.name} — ₹${p.price} / ${p.durationInDays}d`,
+                  }))}
+                />
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <Switch size="small" checked={assignAsTrial} onChange={setAssignAsTrial} />
+                  <Text style={{ fontSize: 12, color: "var(--text-secondary)" }}>Start as trial</Text>
+                </div>
+                <Popconfirm
+                  title="Assign this plan?"
+                  description="Activates a new subscription for this school starting today."
+                  onConfirm={handleAssignPlan}
+                  disabled={!assignPlanId}
+                  okText="Assign"
+                >
+                  <Button
+                    block type="primary" icon={<CrownOutlined />}
+                    disabled={!assignPlanId}
+                    loading={actionLoading}
+                    style={{ borderRadius: 8, height: 38, fontWeight: 600 }}
+                  >
+                    Assign Plan
+                  </Button>
+                </Popconfirm>
+              </div>
+            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 

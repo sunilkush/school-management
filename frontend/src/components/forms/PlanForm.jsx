@@ -39,7 +39,6 @@ const PlanForm = ({ initialValues, onClose }) => {
     "Payroll",
     "Reports",
     "AI Features",
-    "Mobile App",
   ];
 
   // 🔹 Prefill for edit
