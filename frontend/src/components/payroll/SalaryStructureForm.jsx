@@ -159,13 +159,11 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId,
           <a href="/schooladmin/payroll/settings">Payroll Settings</a> — there's nothing to
           configure for them here.
         </div>
-        <div style={{ display: "flex", gap: 20, marginBottom: 14 }}>
-          <Form.Item name="professionalTaxEnabled" valuePropName="checked" style={{ marginBottom: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Switch size="small" style={{ background: C.border }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub }}>Professional Tax Enabled</span>
-            </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <Form.Item name="professionalTaxEnabled" valuePropName="checked" noStyle>
+            <Switch size="small" style={{ background: C.border }} />
           </Form.Item>
+          <span style={{ fontSize: 12, fontWeight: 600, color: C.textSub }}>Professional Tax Enabled</span>
         </div>
 
         {effectiveSettings.pfEnabled && (

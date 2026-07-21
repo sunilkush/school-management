@@ -7,15 +7,6 @@ import {
   markBulkAttendance,
   updateAttendance,
 } from "../controllers/attendance.controllers.js";
-import {
-  getSelfStatus,
-  checkIn,
-  checkOut,
-  getSelfHistory,
-  getGeofenceSettings,
-  updateGeofenceSettings,
-  getLiveDashboard,
-} from "../controllers/selfAttendance.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { validateRequest } from "../middlewares/validate.middleware.js";
 import {
@@ -136,16 +127,10 @@ router.get(
   getMyAttendance
 );
 
-/* ── GPS Self-Attendance routes — must be before /:id to avoid route capture ── */
-const GEOFENCE_ADMIN_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Admin"];
-
-router.get("/self/status",         auth, roleMiddleware(SELF_ATTENDANCE_ROLES), getSelfStatus);
-router.post("/self/check-in",      auth, roleMiddleware(SELF_ATTENDANCE_ROLES), checkIn);
-router.post("/self/check-out",     auth, roleMiddleware(SELF_ATTENDANCE_ROLES), checkOut);
-router.get("/self/history",        auth, roleMiddleware(SELF_ATTENDANCE_ROLES), getSelfHistory);
-router.get("/self/geofence",       auth, roleMiddleware(SELF_ATTENDANCE_ROLES), getGeofenceSettings);
-router.put("/self/geofence",       auth, roleMiddleware(GEOFENCE_ADMIN_ROLES),  updateGeofenceSettings);
-router.get("/self/live-dashboard", auth, roleMiddleware(GEOFENCE_ADMIN_ROLES),  getLiveDashboard);
+// GPS self-attendance (/attendance/self/*) lives in selfAttendance.routes.js, mounted at
+// "/attendance/self" ahead of this router in registerRoutes.js — a duplicate copy of those
+// routes used to live here too, but it was dead code (this router is mounted second, so it
+// never actually received those requests).
 
 router.put(
   "/:id",

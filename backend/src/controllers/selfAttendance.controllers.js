@@ -48,6 +48,20 @@ function todayUTC() {
   return d;
 }
 
+// "HH:mm" for right now, in the timezone school hours are configured in (Asia/Kolkata) —
+// the server's own local time zone may not match, so this can't just use Date#getHours().
+function nowInIst() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const hh = parts.find((p) => p.type === "hour").value;
+  const mm = parts.find((p) => p.type === "minute").value;
+  return `${hh}:${mm}`;
+}
+
 /* ═══════════════════════════════════════════
    GET  /self/status  — today's record for me
 ═══════════════════════════════════════════ */
@@ -74,8 +88,14 @@ export const checkIn = asyncHandler(async (req, res) => {
 
   if (lat == null || lng == null) throw new ApiError(400, "GPS coordinates required");
 
-  const school = await School.findById(schoolId).select("location").lean();
+  const school = await School.findById(schoolId).select("location attendanceHours").lean();
   if (!school) throw new ApiError(404, "School not found");
+
+  const { startTime = "08:00", endTime = "15:00" } = school.attendanceHours || {};
+  const nowHm = nowInIst();
+  if (nowHm < startTime || nowHm > endTime) {
+    throw new ApiError(403, `Check-in is only allowed during school hours (${startTime}–${endTime}).`);
+  }
 
   let gpsVerified = false;
   let distanceFromSchool = null;
@@ -202,26 +222,32 @@ export const getSelfHistory = asyncHandler(async (req, res) => {
 });
 
 /* ═══════════════════════════════════════════
-   GET  /self/geofence  — school GPS settings
+   GET  /self/geofence  — school GPS + attendance-hours settings
 ═══════════════════════════════════════════ */
 export const getGeofenceSettings = asyncHandler(async (req, res) => {
   const { schoolId } = req.user;
-  const school = await School.findById(schoolId).select("name location").lean();
+  const school = await School.findById(schoolId).select("name location attendanceHours").lean();
   if (!school) throw new ApiError(404, "School not found");
   sendSuccess(res, school, "Geofence settings fetched");
 });
 
+const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/; // "HH:mm", 24-hour
+
 /* ═══════════════════════════════════════════
-   PUT  /self/geofence  — admin update GPS
-   body: { lat, lng, geofenceRadius, address? }
+   PUT  /self/geofence  — admin update GPS + attendance hours
+   body: { lat, lng, geofenceRadius, address?, startTime?, endTime?, autoCheckoutEnabled? }
 ═══════════════════════════════════════════ */
 export const updateGeofenceSettings = asyncHandler(async (req, res) => {
   const { schoolId } = req.user;
-  const { lat, lng, geofenceRadius, address } = req.body;
+  const { lat, lng, geofenceRadius, address, startTime, endTime, autoCheckoutEnabled } = req.body;
 
   if (lat == null || lng == null) throw new ApiError(400, "lat and lng are required");
   if (geofenceRadius != null && geofenceRadius < 50)
     throw new ApiError(400, "Geofence radius must be at least 50 metres");
+  if (startTime != null && !TIME_RE.test(startTime)) throw new ApiError(400, "startTime must be in HH:mm format");
+  if (endTime != null && !TIME_RE.test(endTime)) throw new ApiError(400, "endTime must be in HH:mm format");
+  if (startTime != null && endTime != null && endTime <= startTime)
+    throw new ApiError(400, "endTime must be after startTime");
 
   const update = {
     "location.lat": lat,
@@ -229,11 +255,14 @@ export const updateGeofenceSettings = asyncHandler(async (req, res) => {
   };
   if (geofenceRadius != null) update["location.geofenceRadius"] = geofenceRadius;
   if (address != null) update["location.address"] = address;
+  if (startTime != null) update["attendanceHours.startTime"] = startTime;
+  if (endTime != null) update["attendanceHours.endTime"] = endTime;
+  if (autoCheckoutEnabled != null) update["attendanceHours.autoCheckoutEnabled"] = autoCheckoutEnabled;
 
   const school = await School.findByIdAndUpdate(
     schoolId,
     { $set: update },
-    { new: true, select: "name location" }
+    { new: true, select: "name location attendanceHours" }
   ).lean();
 
   if (!school) throw new ApiError(404, "School not found");

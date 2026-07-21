@@ -124,14 +124,14 @@ const PayrollSettingsPage = () => {
               title="EPF (Provident Fund)"
               subtitle="Employees' Provident Funds & Miscellaneous Provisions Act, 1952"
             />
-            <Form.Item name="pfEnabled" valuePropName="checked" style={fi}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ ...fi, display: "flex", alignItems: "center", gap: 8 }}>
+              <Form.Item name="pfEnabled" valuePropName="checked" noStyle>
                 <Switch size="small" />
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
-                  Enable PF for this school (single switch — applies to every employee, unless individually excluded via Employee statutory details)
-                </span>
-              </div>
-            </Form.Item>
+              </Form.Item>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
+                Enable PF for this school (single switch — applies to every employee, unless individually excluded via Employee statutory details)
+              </span>
+            </div>
             <div style={grid2}>
               <Form.Item label="Employee PF %" name="pfPercent" rules={[{ required: true }]} style={fi}>
                 <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
@@ -152,14 +152,14 @@ const PayrollSettingsPage = () => {
                 <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
               </Form.Item>
             </div>
-            <Form.Item name="pfAppliedOnCeiling" valuePropName="checked" style={fi}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ ...fi, display: "flex", alignItems: "center", gap: 8 }}>
+              <Form.Item name="pfAppliedOnCeiling" valuePropName="checked" noStyle>
                 <Switch size="small" />
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
-                  Cap PF wage at the ceiling above (uncheck to apply PF on full Basic+DA)
-                </span>
-              </div>
-            </Form.Item>
+              </Form.Item>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
+                Cap PF wage at the ceiling above (uncheck to apply PF on full Basic+DA)
+              </span>
+            </div>
 
             <Form.Item
               label="PF Wage Applicable On"
@@ -196,14 +196,14 @@ const PayrollSettingsPage = () => {
               title="ESI (State Insurance)"
               subtitle="Employees' State Insurance Act, 1948 — rates per the 2019 revision"
             />
-            <Form.Item name="esiEnabled" valuePropName="checked" style={fi}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ ...fi, display: "flex", alignItems: "center", gap: 8 }}>
+              <Form.Item name="esiEnabled" valuePropName="checked" noStyle>
                 <Switch size="small" />
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
-                  Enable ESI for this school (single switch — applies to every employee, unless individually excluded via Employee statutory details)
-                </span>
-              </div>
-            </Form.Item>
+              </Form.Item>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
+                Enable ESI for this school (single switch — applies to every employee, unless individually excluded via Employee statutory details)
+              </span>
+            </div>
             <div style={grid2}>
               <Form.Item label="Employee ESI %" name="esiPercent" rules={[{ required: true }]} style={fi}>
                 <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />

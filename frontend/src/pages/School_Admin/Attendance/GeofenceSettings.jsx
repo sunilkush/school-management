@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  Alert, Button, Form, InputNumber, Input, Spin, message, Divider, Tag,
+  Alert, Button, Form, InputNumber, Input, Spin, message, Divider, Tag, TimePicker, Switch,
 } from "antd";
 import {
   AimOutlined, CheckCircleOutlined, EnvironmentOutlined,
-  ReloadOutlined, SaveOutlined, TeamOutlined,
+  ReloadOutlined, SaveOutlined, TeamOutlined, ClockCircleOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchGeofenceSettings, updateGeofenceSettings, fetchLiveDashboard,
@@ -62,6 +63,14 @@ const GeofenceSettings = () => {
         address: geofenceSettings.location.address || "",
       });
     }
+    const hours = geofenceSettings?.attendanceHours;
+    if (hours) {
+      form.setFieldsValue({
+        startTime: hours.startTime ? dayjs(hours.startTime, "HH:mm") : undefined,
+        endTime: hours.endTime ? dayjs(hours.endTime, "HH:mm") : undefined,
+        autoCheckoutEnabled: hours.autoCheckoutEnabled !== false,
+      });
+    }
   }, [geofenceSettings, form]);
 
   const handleAutoDetect = () => {
@@ -90,7 +99,12 @@ const GeofenceSettings = () => {
   const handleSave = async (values) => {
     setSaving(true);
     try {
-      await dispatch(updateGeofenceSettings(values)).unwrap();
+      const payload = {
+        ...values,
+        startTime: values.startTime ? values.startTime.format("HH:mm") : undefined,
+        endTime: values.endTime ? values.endTime.format("HH:mm") : undefined,
+      };
+      await dispatch(updateGeofenceSettings(payload)).unwrap();
       message.success("Geofence settings saved successfully");
     } catch (e) {
       message.error(e || "Failed to save");
@@ -247,6 +261,35 @@ const GeofenceSettings = () => {
           <Form.Item label="Location Address (optional)" name="address">
             <Input placeholder="e.g. 123 School Road, New Delhi" style={{ borderRadius: 8 }} />
           </Form.Item>
+
+          <Divider style={{ margin: "8px 0 20px" }} />
+
+          <div style={{ fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+            <ClockCircleOutlined style={{ color: C.primary }} /> Attendance Hours
+          </div>
+          <div style={{ fontSize: 13, color: C.textSub, marginBottom: 16 }}>
+            Students and staff can check in/out themselves any time within school hours. Anyone
+            still checked in when school hours end gets automatically checked out.
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Form.Item label="School Starts" name="startTime">
+              <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="08:00" />
+            </Form.Item>
+            <Form.Item label="School Ends" name="endTime">
+              <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="15:00" />
+            </Form.Item>
+          </div>
+
+          <div style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+            <Form.Item name="autoCheckoutEnabled" valuePropName="checked" initialValue={true} noStyle>
+              <Switch size="small" />
+            </Form.Item>
+            <span style={{ fontSize: 13, fontWeight: 600, color: C.textSub }}>Auto-checkout at end of school hours</span>
+          </div>
+          <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
+            When on, anyone who checked in but forgot to check out is auto-checked-out once School Ends passes.
+          </div>
 
           <Button
             htmlType="submit"

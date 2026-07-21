@@ -98,6 +98,10 @@ const attendanceSchema = new Schema(
     },
     gpsVerified: { type: Boolean, default: false },
     distanceFromSchool: { type: Number, default: null },
+    // Set by the daily auto-checkout job (jobs/autoCheckout.job.js) when it force-closes a
+    // check-in that never got a real check-out — distinguishes a system-forced checkout from
+    // one the user actually performed.
+    autoCheckedOut: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

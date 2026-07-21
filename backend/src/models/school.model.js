@@ -125,6 +125,17 @@ const schoolSchema = new Schema(
       address: { type: String, trim: true, default: "" },
     },
 
+    /* ================= ATTENDANCE HOURS ================= */
+    // Drives the daily auto-checkout job (see jobs/autoCheckout.job.js) — anyone still
+    // checked in (checkInAt set, checkOutAt null) once "now" (Asia/Kolkata) passes endTime
+    // gets automatically checked out. startTime is informational for now (e.g. for a future
+    // "late" cutoff); only endTime is currently consumed.
+    attendanceHours: {
+      startTime: { type: String, trim: true, default: "08:00" }, // "HH:mm", 24-hour
+      endTime: { type: String, trim: true, default: "15:00" },   // "HH:mm", 24-hour
+      autoCheckoutEnabled: { type: Boolean, default: true },
+    },
+
     /* ================= META ================= */
 
     createdBy: {
