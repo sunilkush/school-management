@@ -14,6 +14,9 @@ import {
   BankOutlined,
   TrophyOutlined,
   ThunderboltOutlined,
+  FileTextOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import {
@@ -29,6 +32,7 @@ import {
   Legend,
 } from "recharts";
 import { fetchSchools } from "../../../features/schoolSlice";
+import { fetchRevenueSummary, fetchBillingInvoices } from "../../../features/superAdminBillingSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, sectionPanel, statGrid, iconWell, pill,
@@ -45,7 +49,6 @@ const getPeriodKey = (date, mode) => {
   }
 
   const monthShort = d.toLocaleString("en-IN", { month: "short" });
-  const monthLong = d.toLocaleString("en-IN", { month: "long" });
   const year = d.getFullYear();
 
   if (mode === "yearly") {
@@ -57,7 +60,14 @@ const getPeriodKey = (date, mode) => {
     return { key: `${year}-Q${quarter}`, name: `Q${quarter} ${year}` };
   }
 
-  return { key: `${year}-${d.getMonth() + 1}`, name: `${monthShort} ${year}`, longName: `${monthLong} ${year}` };
+  return { key: `${year}-${String(d.getMonth() + 1).padStart(2, "0")}`, name: `${monthShort} ${year}` };
+};
+
+const statusStyles = {
+  Paid: { badge: "success", color: "#15803D", bg: "rgba(220,252,231,0.5)" },
+  Partial: { badge: "warning", color: "#B45309", bg: "rgba(254,243,199,0.5)" },
+  Pending: { badge: "error", color: "#DC2626", bg: "rgba(254,226,226,0.5)" },
+  "No Invoices": { badge: "default", color: "#64748B", bg: "rgba(241,245,249,0.6)" },
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -72,10 +82,12 @@ const CustomTooltip = ({ active, payload, label }) => {
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
-        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{label}</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
-          {formatCurrency(payload[0].value)}
-        </div>
+        <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>{label}</div>
+        {payload.map((entry) => (
+          <div key={entry.dataKey} style={{ fontSize: 13, fontWeight: 700, color: entry.color }}>
+            {entry.name}: {formatCurrency(entry.value)}
+          </div>
+        ))}
       </div>
     );
   }
@@ -104,75 +116,103 @@ const KpiCard = ({ icon, label, value, sub, color }) => (
 
 const RevenueAnalytics = () => {
   const dispatch = useDispatch();
-  const { schools = [], loading } = useSelector((state) => state.school);
+  const { schools = [] } = useSelector((state) => state.school);
+  const {
+    invoices = [],
+    revenueSummary = {},
+    loading = false,
+  } = useSelector((state) => state.superAdminBilling || {});
   const [filter, setFilter] = useState("monthly");
 
   useEffect(() => {
     dispatch(fetchSchools());
+    dispatch(fetchRevenueSummary());
+    dispatch(fetchBillingInvoices());
   }, [dispatch]);
 
-  const schoolRevenue = useMemo(() => {
-    return (schools || []).map((school, index) => {
-      const plan = school.subscriptionPlan || {};
-      const amount = Number(plan.price || 0);
-
-      return {
-        key: school._id || index,
-        school: school.name || "Unknown School",
-        plan: plan.name || "Unassigned",
-        revenue: amount,
-        status: school.isActive ? "Paid" : "Pending",
-        growth: "+0%",
-        createdAt: school.createdAt,
-      };
+  const planBySchoolId = useMemo(() => {
+    const map = {};
+    (schools || []).forEach((school) => {
+      map[school._id] = school.subscriptionPlan?.name || "Unassigned";
     });
+    return map;
   }, [schools]);
 
+  // Real period buckets built from actual invoices (createdAt + totalAmount + status),
+  // not a client-side guess — "paid" is realized revenue, "invoiced" is total billed.
   const chartData = useMemo(() => {
-    const grouped = schoolRevenue.reduce((acc, row) => {
-      const period = getPeriodKey(row.createdAt, filter);
-
-      if (!period) {
-        return acc;
-      }
+    const grouped = invoices.reduce((acc, invoice) => {
+      const period = getPeriodKey(invoice.createdAt, filter);
+      if (!period) return acc;
 
       if (!acc[period.key]) {
-        acc[period.key] = {
-          key: period.key,
-          name: period.name,
-          revenue: 0,
-        };
+        acc[period.key] = { key: period.key, name: period.name, invoiced: 0, paid: 0 };
       }
 
-      acc[period.key].revenue += row.revenue;
+      const amount = Number(invoice.totalAmount || 0);
+      acc[period.key].invoiced += amount;
+      if (invoice.status === "paid") {
+        acc[period.key].paid += amount;
+      }
       return acc;
     }, {});
 
     const sorted = Object.values(grouped).sort((a, b) => a.key.localeCompare(b.key));
 
     return sorted.map((item, index) => {
-      const prevRevenue = sorted[index - 1]?.revenue || item.revenue;
-      const growth = prevRevenue > 0 ? ((item.revenue - prevRevenue) / prevRevenue) * 100 : 0;
+      const prevPaid = sorted[index - 1]?.paid || 0;
+      const growth = prevPaid > 0
+        ? ((item.paid - prevPaid) / prevPaid) * 100
+        : (item.paid > 0 ? 100 : 0);
 
-      return {
-        ...item,
-        target: Math.round(item.revenue * 1.1),
-        growth,
-      };
+      return { ...item, growth };
     });
-  }, [schoolRevenue, filter]);
+  }, [invoices, filter]);
 
   const stats = useMemo(() => {
-    const totalRevenue = schoolRevenue.reduce((sum, row) => sum + row.revenue, 0);
-    const currentPeriodRevenue = chartData[chartData.length - 1]?.revenue || 0;
+    const currentPeriodRevenue = chartData[chartData.length - 1]?.paid || 0;
     const growth = chartData[chartData.length - 1]?.growth || 0;
+    return { currentPeriodRevenue, growth };
+  }, [chartData]);
 
-    return {
-      totalRevenue,
-      currentPeriodRevenue,
-      growth,
-    };
-  }, [schoolRevenue, chartData]);
+  // Per-school rollup from real invoices — replaces the old static subscriptionPlan.price sum.
+  const schoolRevenue = useMemo(() => {
+    const bySchool = {};
+
+    invoices.forEach((invoice) => {
+      const schoolRef = invoice.schoolId;
+      const id = schoolRef?._id || schoolRef || "unknown";
+
+      if (!bySchool[id]) {
+        bySchool[id] = {
+          key: id,
+          school: schoolRef?.name || "Unknown School",
+          plan: planBySchoolId[id] || "Unassigned",
+          totalInvoiced: 0,
+          totalPaid: 0,
+          invoiceCount: 0,
+        };
+      }
+
+      const amount = Number(invoice.totalAmount || 0);
+      bySchool[id].totalInvoiced += amount;
+      bySchool[id].invoiceCount += 1;
+      if (invoice.status === "paid") {
+        bySchool[id].totalPaid += amount;
+      }
+    });
+
+    return Object.values(bySchool).map((row) => {
+      const outstanding = Math.max(0, row.totalInvoiced - row.totalPaid);
+      const status = row.totalPaid >= row.totalInvoiced && row.totalInvoiced > 0
+        ? "Paid"
+        : row.totalPaid > 0
+          ? "Partial"
+          : "Pending";
+
+      return { ...row, outstanding, status };
+    });
+  }, [invoices, planBySchoolId]);
 
   const periodLabel = filter === "yearly" ? "This Year" : filter === "quarterly" ? "This Quarter" : "This Month";
 
@@ -205,9 +245,9 @@ const RevenueAnalytics = () => {
       ),
     },
     {
-      title: "Revenue",
-      dataIndex: "revenue",
-      sorter: (a, b) => a.revenue - b.revenue,
+      title: "Total Invoiced",
+      dataIndex: "totalInvoiced",
+      sorter: (a, b) => a.totalInvoiced - b.totalInvoiced,
       render: (v) => (
         <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>
           {formatCurrency(v)}
@@ -215,26 +255,33 @@ const RevenueAnalytics = () => {
       ),
     },
     {
-      title: "Growth",
-      dataIndex: "growth",
-      render: (g) => (
-        <Space size={4}>
-          <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
-          <span style={{ color: "#22C55E", fontWeight: 600 }}>{g}</span>
-        </Space>
-      ),
+      title: "Total Paid",
+      dataIndex: "totalPaid",
+      render: (v) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(v)}</span>,
+    },
+    {
+      title: "Outstanding",
+      dataIndex: "outstanding",
+      render: (v) => <span style={{ fontWeight: 600, color: v > 0 ? "#DC2626" : "var(--text-muted)" }}>{formatCurrency(v)}</span>,
+    },
+    {
+      title: "Invoices",
+      dataIndex: "invoiceCount",
+      render: (v) => <Tag>{v}</Tag>,
     },
     {
       title: "Status",
       dataIndex: "status",
-      filters: [{ text: "Paid", value: "Paid" }, { text: "Pending", value: "Pending" }],
+      filters: [
+        { text: "Paid", value: "Paid" },
+        { text: "Partial", value: "Partial" },
+        { text: "Pending", value: "Pending" },
+      ],
       onFilter: (v, r) => r.status === v,
-      render: (status) => (
-        <Badge
-          status={status === "Paid" ? "success" : "warning"}
-          text={<span style={pill(status === "Paid" ? "#15803D" : "#B45309", status === "Paid" ? "rgba(220,252,231,0.5)" : "rgba(254,243,199,0.5)")}>{status}</span>}
-        />
-      ),
+      render: (status) => {
+        const cfg = statusStyles[status] || statusStyles.Pending;
+        return <Badge status={cfg.badge} text={<span style={pill(cfg.color, cfg.bg)}>{status}</span>} />;
+      },
     },
   ];
 
@@ -242,7 +289,7 @@ const RevenueAnalytics = () => {
     <div style={pageWrapper}>
       <PageHeader
         title="Revenue Analytics"
-        subtitle="Dynamic data from school subscriptions"
+        subtitle="Live data from billing invoices and payments"
         icon={<RupeeIcon />}
         extra={
           <Select
@@ -258,26 +305,27 @@ const RevenueAnalytics = () => {
         }
       />
 
-      <div style={{ ...statGrid(220), marginTop: 20 }}>
-        <KpiCard icon={<RupeeIcon />} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub="from all schools" color="#2563EB" />
-        <KpiCard icon={<FundOutlined />} label={periodLabel} value={formatCurrency(stats.currentPeriodRevenue)} sub="latest period" color="#7C3AED" />
-        <KpiCard icon={<RiseOutlined />} label="Growth Rate" value={`${stats.growth.toFixed(1)}%`} sub="period-over-period" color="#22C55E" />
+      <div style={{ ...statGrid(200), marginTop: 20 }}>
+        <KpiCard icon={<FileTextOutlined />} label="Total Invoiced" value={formatCurrency(revenueSummary.totalInvoiced)} sub="all generated invoices" color="#2563EB" />
+        <KpiCard icon={<CheckCircleOutlined />} label="Total Paid" value={formatCurrency(revenueSummary.totalPaid)} sub="received payments" color="#22C55E" />
+        <KpiCard icon={<ClockCircleOutlined />} label="Outstanding" value={formatCurrency(revenueSummary.totalOutstanding)} sub="pending collection" color="#F59E0B" />
+        <KpiCard icon={<FundOutlined />} label={`${periodLabel} Paid`} value={formatCurrency(stats.currentPeriodRevenue)} sub={`${stats.growth >= 0 ? "+" : ""}${stats.growth.toFixed(1)}% vs prior period`} color="#7C3AED" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginBottom: 20 }} className="revenue-charts-grid">
         <div style={sectionPanel}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Revenue Trend</span>
-            <span style={pill("#2563EB")}>vs Target</span>
+            <span style={pill("#2563EB")}>Invoiced vs Paid</span>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="gradPaid" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
                   <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="gradTarget" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="gradInvoiced" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.1} />
                   <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
                 </linearGradient>
@@ -287,8 +335,8 @@ const RevenueAnalytics = () => {
               <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2.5} fill="url(#gradRevenue)" name="Revenue" dot={{ r: 4, fill: "#2563EB" }} />
-              <Area type="monotone" dataKey="target" stroke="#7C3AED" strokeWidth={2} strokeDasharray="5 4" fill="url(#gradTarget)" name="Target" dot={false} />
+              <Area type="monotone" dataKey="paid" stroke="#2563EB" strokeWidth={2.5} fill="url(#gradPaid)" name="Paid" dot={{ r: 4, fill: "#2563EB" }} />
+              <Area type="monotone" dataKey="invoiced" stroke="#7C3AED" strokeWidth={2} strokeDasharray="5 4" fill="url(#gradInvoiced)" name="Invoiced" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -301,7 +349,7 @@ const RevenueAnalytics = () => {
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="revenue" fill="#2563EB" radius={[6, 6, 0, 0]} name="Revenue" />
+              <Bar dataKey="paid" fill="#2563EB" radius={[6, 6, 0, 0]} name="Paid" />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -129,6 +129,7 @@ import { MyAchievementsView } from '../screens/student/MyAchievementsView';
 import { AlumniView } from '../screens/schoolAdmin/AlumniView';
 import { CanteenView } from '../screens/schoolAdmin/CanteenView';
 import { SchoolSetupView } from '../screens/schoolAdmin/SchoolSetupView';
+import { PayrollSettingsView } from '../screens/schoolAdmin/PayrollSettingsView';
 
 // Real screens built so far, keyed by nav item key (== permission module, or 'Dashboard'/'Profile').
 // Anything not listed here still renders ModulePlaceholderScreen until a later Phase 4 batch.
@@ -367,6 +368,8 @@ const SCREEN_MAP = {
   // School Admin's 5-step onboarding wizard — Academic Year, Boards, Classes & Sections,
   // Subjects, Class Teachers.
   SchoolSetup: SchoolSetupView,
+  // Accountant (+ Super Admin/School Admin if wired for them later) — PF/ESI statutory rules.
+  PayrollSettings: PayrollSettingsView,
 };
 
 // Screens that are themselves a nested navigator (e.g. a list that pushes to a detail screen, or

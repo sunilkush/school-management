@@ -11,28 +11,45 @@ import {
   message,
   Collapse,
 } from "antd";
+import { useDispatch } from "react-redux";
 
 import {
   MailOutlined,
   PhoneOutlined,
   MessageOutlined,
 } from "@ant-design/icons";
+import { createTicket } from "../../../features/supportTicketSlice";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Panel } = Collapse;
 
+// Matches SupportTicket.model.js's enums exactly (Title Case) — the same options
+// Support/SupportTicketsPage.jsx's own create form already uses successfully.
+const CATEGORIES = ["General", "Technical", "Academic", "Finance", "Transport", "Hostel", "Library", "Other"];
+const PRIORITIES = ["Low", "Medium", "High", "Urgent"];
+
 const ContactSupport = () => {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
-
-    // 👉 Replace with API
-    setTimeout(() => {
-      message.success("Support request submitted!");
+    try {
+      await dispatch(createTicket({
+        title: values.subject,
+        description: values.message,
+        category: values.category,
+        priority: values.priority,
+      })).unwrap();
+      message.success("Support ticket submitted!");
+      form.resetFields();
+    } catch (err) {
+      message.error(err || "Failed to submit support ticket");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -46,8 +63,8 @@ const ContactSupport = () => {
         {/* LEFT - FORM */}
         <Col xs={24} md={14}>
           <Card title="Submit a Ticket">
-            <Form layout="vertical" onFinish={onFinish}>
-              
+            <Form form={form} layout="vertical" onFinish={onFinish}>
+
               <Form.Item
                 label="Subject"
                 name="subject"
@@ -62,9 +79,7 @@ const ContactSupport = () => {
                 rules={[{ required: true }]}
               >
                 <Select placeholder="Select category">
-                  <Option value="technical">Technical</Option>
-                  <Option value="billing">Billing</Option>
-                  <Option value="general">General</Option>
+                  {CATEGORIES.map((c) => <Option key={c} value={c}>{c}</Option>)}
                 </Select>
               </Form.Item>
 
@@ -74,9 +89,7 @@ const ContactSupport = () => {
                 rules={[{ required: true }]}
               >
                 <Select placeholder="Select priority">
-                  <Option value="low">Low</Option>
-                  <Option value="medium">Medium</Option>
-                  <Option value="high">High</Option>
+                  {PRIORITIES.map((p) => <Option key={p} value={p}>{p}</Option>)}
                 </Select>
               </Form.Item>
 
