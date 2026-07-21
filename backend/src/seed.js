@@ -52,9 +52,11 @@ import { AdmissionInquiry }    from "./models/AdmissionInquiry.model.js";
 import { Complaint }           from "./models/Complaint.model.js";
 import { StudyMaterial }       from "./models/StudyMaterial.model.js";
 import { Employee }           from "./models/Employee.model.js";
+import { PayrollPolicy }      from "./models/payrollPolicy.model.js";
 import { PayrollStructure }   from "./models/payrollStructure.model.js";
 import { PayrollCycle }       from "./models/payrollCycle.model.js";
 import { PayrollEntry }       from "./models/payrollEntry.model.js";
+import { calculatePayrollEntry } from "./services/payrollCalculator.service.js";
 import { ClassTeacherAssignment } from "./models/ClassTeacherAssignment.model.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1134,11 +1136,10 @@ async function seed() {
     const conveyance       = 1600;
     const medical          = 1250;
     const specialAllowance = Math.max(0, gross - basic - hra - da - conveyance - medical);
-    const pf               = Math.round(basic * 0.12);
     const professionalTax  = gross > 10000 ? 200 : 0;
     return {
       basic, hra, da, conveyance, medical, specialAllowance,
-      deductions: { pf, esi: 0, professionalTax, tds: 0, lateFine: 0 },
+      deductions: { professionalTax, tds: 0, lateFine: 0 },
       grossMonthly: gross,
       // PF/ESI on/off is a school-wide switch on PayrollPolicy (Payroll Settings) now, not a
       // per-structure field — nothing to set here.
@@ -1178,6 +1179,20 @@ async function seed() {
   }
   ok(`Employee profiles: ${empCount} new`);
 
+  /* ── 31a2. PayrollPolicy (Payroll Settings) — statutory-default single policy ── */
+  let policy = await PayrollPolicy.findOne({ schoolId });
+  if (!policy) {
+    policy = await PayrollPolicy.create({
+      schoolId,
+      effectiveFrom: new Date("2025-04-01"),
+      notes: "Statutory defaults per India EPF/ESI rules",
+      createdBy: adminId,
+    });
+    ok("PayrollPolicy: 1 new (statutory defaults)");
+  } else {
+    ok("PayrollPolicy: already exists");
+  }
+
   /* ── 31b. PayrollStructure per employee ── */
   let psCount = 0;
   for (const [userIdStr, emp] of Object.entries(employeeMap)) {
@@ -1192,12 +1207,21 @@ async function seed() {
   }
   ok(`PayrollStructures: ${psCount}`);
 
-  /* ── 31c. PayrollCycles + Entries (3 months) ── */
+  /* ── 31c. PayrollCycles + Entries — last 4 months relative to today, ending at the
+     current month, so the payroll UI (which defaults to viewing the current month) always
+     has something to show regardless of when this seed is run. ── */
   const WORKING_DAYS = 26;
+  const monthsBack = (n) => {
+    const d = new Date();
+    d.setDate(1); // avoid month-length rollover (e.g. Jan 31 - 1 month != Dec)
+    d.setMonth(d.getMonth() - n);
+    return { month: d.getMonth() + 1, year: d.getFullYear() };
+  };
   const payrollMonths = [
-    { month: 4, year: 2025, status: "paid"   },
-    { month: 5, year: 2025, status: "paid"   },
-    { month: 6, year: 2025, status: "locked" },
+    { ...monthsBack(3), status: "paid"   },
+    { ...monthsBack(2), status: "paid"   },
+    { ...monthsBack(1), status: "locked" },
+    { ...monthsBack(0), status: "draft"  },
   ];
 
   let cycleCount = 0, entryCount = 0;
@@ -1218,32 +1242,43 @@ async function seed() {
       const u        = allEmployeeUsers.find((u) => String(u._id) === userIdStr);
       const roleName = roles.find((r) => String(r._id) === String(u?.roleId))?.name || "Teacher";
       const gross    = salaryByRole[roleName] || 35000;
-      const s        = buildStructure(gross);
+      // Use the employee's actual persisted structure (falling back to a fresh build only if
+      // it's somehow missing), the same way a real payroll cycle generation would.
+      const structureDoc = await PayrollStructure.findOne({ schoolId, employeeId: emp._id, status: "active" });
+      const s = structureDoc || buildStructure(gross);
 
       const exists = await PayrollEntry.findOne({ payrollCycleId: cycle._id, employeeId: emp._id });
       if (!exists) {
         const presentDays = Math.floor(Math.random() * 3) + 23; // 23–25
-        const paidLeaves  = Math.floor(Math.random() * 2);       // 0–1
-        const lopDays     = Math.max(0, WORKING_DAYS - presentDays - paidLeaves);
-        const lopDeduct   = lopDays > 0 ? Math.round((gross / WORKING_DAYS) * lopDays) : 0;
-        const grossEarnings   = Math.max(0, gross - lopDeduct);
-        const pf              = s.deductions.pf;
-        const pt              = s.deductions.professionalTax;
-        const totalDeductions = pf + pt;
-        const netPay          = grossEarnings - totalDeductions;
+        const leaveDays   = Math.floor(Math.random() * 2);       // 0–1
+
+        // Run the actual calculation engine — the same one every real payroll cycle uses —
+        // so seeded entries never drift from what the app itself would compute.
+        const calculated = calculatePayrollEntry({
+          structure: s,
+          attendance: { workingDays: WORKING_DAYS, presentDays, leaveDays },
+          policy,
+          employeeStatutory: emp.statutoryCompliance,
+        });
 
         try {
           await PayrollEntry.create({
             payrollCycleId: cycle._id, schoolId, employeeId: emp._id,
-            workingDays: WORKING_DAYS, presentDays, paidLeaves, lopDays,
-            earningsBreakdown: {
-              basic: s.basic, hra: s.hra, da: s.da,
-              conveyance: s.conveyance, medical: s.medical,
-              specialAllowance: s.specialAllowance,
+            workingDays: calculated.attendance.workingDays,
+            presentDays: calculated.attendance.presentDays,
+            paidLeaves: calculated.attendance.paidLeaves,
+            lopDays: calculated.attendance.lopDays,
+            earningsBreakdown: calculated.earningsBreakdown,
+            deductionsBreakdown: calculated.deductionsBreakdown,
+            employerContributions: calculated.employerContributions,
+            statutorySnapshot: {
+              uan: emp.statutoryCompliance?.uan || null,
+              esicNumber: emp.statutoryCompliance?.esicNumber || null,
             },
-            deductionsBreakdown: { pf, professionalTax: pt },
-            grossEarnings, totalDeductions, netPay,
-            warnings:      lopDays > 2 ? ["High LOP days — verify attendance"] : [],
+            grossEarnings: calculated.grossEarnings,
+            totalDeductions: calculated.totalDeductions,
+            netPay: calculated.netPay,
+            warnings:      calculated.attendance.lopDays > 2 ? ["High LOP days — verify attendance"] : [],
             paymentStatus: pm.status === "paid" ? "paid"  : "pending",
             paymentMode:   pm.status === "paid" ? "bank"  : null,
             paidAt:        pm.status === "paid" ? daysAgo(3) : null,
