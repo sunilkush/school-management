@@ -7,9 +7,17 @@ import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 import { AnimatedBackground } from '@/components/hero/AnimatedBackground'
 import { DashboardMockup } from '@/components/hero/DashboardMockup'
 import { FloatingCard } from '@/components/hero/FloatingCard'
+import { LOGO_GRADIENT_COLORS } from '@/config/brandColors'
 import { fadeUp, staggerContainer } from '@/lib/motion'
 import { DEMO_BOOKING_URL, FREE_TRIAL_URL } from '@/config/links'
 import { HERO_STATS } from '@/data/stats'
+
+const gradientTextStyle = {
+  backgroundImage: `linear-gradient(90deg, ${LOGO_GRADIENT_COLORS.join(', ')})`,
+  backgroundClip: 'text',
+  WebkitBackgroundClip: 'text',
+  color: 'transparent',
+} as const
 
 export function Hero() {
   return (
@@ -31,7 +39,8 @@ export function Hero() {
             className="font-display text-dark text-4xl leading-[1.1] font-bold text-balance sm:text-5xl lg:text-[3.4rem]"
             variants={fadeUp}
           >
-            Run your entire institution from one beautifully simple platform
+            Run your entire institution from one{' '}
+            <span style={gradientTextStyle}>beautifully simple</span> platform
           </motion.h1>
 
           <motion.p className="text-gray max-w-xl text-lg leading-relaxed" variants={fadeUp}>

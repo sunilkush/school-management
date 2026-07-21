@@ -5,6 +5,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { ModuleCard } from '@/components/modules/ModuleCard'
 import { ModuleFilter } from '@/components/modules/ModuleFilter'
 import { defaultViewport, staggerContainer } from '@/lib/motion'
+import { brandColorForCategory } from '@/config/brandColors'
 import { MODULE_CATEGORIES, MODULES } from '@/data/modules'
 import type { ModuleCategory } from '@/types/content'
 
@@ -36,7 +37,11 @@ export function ModulesSection() {
           variants={staggerContainer(0.03)}
         >
           {filteredModules.map((module) => (
-            <ModuleCard key={module.id} module={module} />
+            <ModuleCard
+              key={module.id}
+              module={module}
+              color={brandColorForCategory(module.category, MODULE_CATEGORIES)}
+            />
           ))}
         </motion.div>
       </Container>

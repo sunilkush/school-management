@@ -1,6 +1,7 @@
 import { HiOutlineEnvelope, HiOutlinePhone } from 'react-icons/hi2'
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter, FaYoutube } from 'react-icons/fa6'
 import { Container } from '@/components/ui/Container'
+import { Logo } from '@/components/ui/Logo'
 import { SmartNavLink } from './SmartNavLink'
 import { FOOTER_LINKS } from '@/data/navigation'
 import { CONTACT_EMAIL, CONTACT_PHONE, SOCIAL_LINKS } from '@/config/links'
@@ -18,11 +19,8 @@ export function Footer() {
     <footer className="bg-dark text-white/70">
       <Container className="grid grid-cols-2 gap-10 py-16 sm:grid-cols-3 lg:grid-cols-6">
         <div className="col-span-2 flex flex-col gap-4 sm:col-span-3 lg:col-span-1">
-          <a href="/" className="flex items-center gap-2.5">
-            <span className="bg-primary flex h-9 w-9 items-center justify-center rounded-lg">
-              <span className="font-display text-secondary-300 text-lg font-bold">C</span>
-            </span>
-            <span className="font-display text-lg font-bold text-white">CodeVariant</span>
+          <a href="/" className="flex items-center">
+            <Logo/>
           </a>
           <p className="max-w-xs text-sm leading-relaxed">
             The all-in-one school ERP for schools, colleges, coaching institutes, and universities.

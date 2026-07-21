@@ -4,6 +4,7 @@ import { Container } from '@/components/ui/Container'
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter'
 import { Marquee } from '@/components/ui/Marquee'
 import { defaultViewport, fadeUp, staggerContainer } from '@/lib/motion'
+import { brandIconColor } from '@/config/brandColors'
 import { TRUST_STATS } from '@/data/stats'
 import { SAMPLE_INSTITUTIONS } from '@/data/logos'
 
@@ -47,12 +48,13 @@ export function TrustSection() {
           viewport={defaultViewport}
           variants={staggerContainer(0.1)}
         >
-          {TRUST_STATS.map((stat) => (
+          {TRUST_STATS.map((stat, index) => (
             <motion.div key={stat.id} className="text-center" variants={fadeUp}>
               <AnimatedCounter
                 value={stat.value}
                 suffix={stat.suffix}
-                className="text-primary text-3xl font-bold sm:text-4xl"
+                className="text-3xl font-bold sm:text-4xl"
+                style={{ color: brandIconColor(index) }}
               />
               <p className="text-gray mt-1.5 text-sm">{stat.label}</p>
             </motion.div>
@@ -60,9 +62,9 @@ export function TrustSection() {
         </motion.div>
 
         <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-          {TRUST_BADGES.map((badge) => (
+          {TRUST_BADGES.map((badge, index) => (
             <div key={badge.id} className="text-gray flex items-center gap-2 text-sm font-medium">
-              <badge.icon className="text-primary h-4.5 w-4.5" aria-hidden="true" />
+              <badge.icon className="h-4.5 w-4.5" style={{ color: brandIconColor(index + 3) }} aria-hidden="true" />
               {badge.label}
             </div>
           ))}

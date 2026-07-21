@@ -3,6 +3,7 @@ import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { IconBadge } from '@/components/ui/IconBadge'
 import { defaultViewport, fadeUp, staggerContainer } from '@/lib/motion'
+import { brandIconColor } from '@/config/brandColors'
 import { AI_FEATURES } from '@/data/aiFeatures'
 
 export function AIFeaturesSection() {
@@ -28,13 +29,13 @@ export function AIFeaturesSection() {
           viewport={defaultViewport}
           variants={staggerContainer(0.07)}
         >
-          {AI_FEATURES.map((feature) => (
+          {AI_FEATURES.map((feature, index) => (
             <motion.div
               key={feature.id}
               variants={fadeUp}
               className="shadow-soft flex flex-col gap-4 rounded-2xl border border-black/5 bg-white p-6 transition-transform duration-300 hover:-translate-y-1.5"
             >
-              <IconBadge icon={feature.icon} color="var(--color-secondary-600)" size="md" />
+              <IconBadge icon={feature.icon} color={brandIconColor(index)} size="md" />
               <div>
                 <h3 className="font-heading text-dark mb-1.5 text-base font-bold">{feature.title}</h3>
                 <p className="text-gray text-sm leading-relaxed">{feature.description}</p>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { HiXMark } from 'react-icons/hi2'
 import { Button } from '@/components/ui/Button'
+import { Logo } from '@/components/ui/Logo'
 import { SmartNavLink } from './SmartNavLink'
 import { HEADER_NAV } from '@/data/navigation'
 import { APP_LOGIN_URL, DEMO_BOOKING_URL, FREE_TRIAL_URL } from '@/config/links'
@@ -87,7 +88,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="flex items-center justify-between">
-              <span className="font-display text-dark text-lg font-bold">CodeVariant</span>
+              <Logo className="h-8 w-auto" />
               <button
                 type="button"
                 aria-label="Close menu"

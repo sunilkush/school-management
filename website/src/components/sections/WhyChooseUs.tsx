@@ -4,6 +4,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card } from '@/components/ui/Card'
 import { IconBadge } from '@/components/ui/IconBadge'
 import { defaultViewport, fadeUp, staggerContainer } from '@/lib/motion'
+import { brandIconColor } from '@/config/brandColors'
 import { BENEFITS } from '@/data/benefits'
 
 export function WhyChooseUs() {
@@ -23,10 +24,10 @@ export function WhyChooseUs() {
           viewport={defaultViewport}
           variants={staggerContainer(0.08)}
         >
-          {BENEFITS.map((benefit) => (
+          {BENEFITS.map((benefit, index) => (
             <motion.div key={benefit.id} variants={fadeUp}>
               <Card hoverLift className="flex h-full flex-col gap-4">
-                <IconBadge icon={benefit.icon} size="lg" />
+                <IconBadge icon={benefit.icon} size="lg" color={brandIconColor(index)} />
                 <div>
                   <h3 className="font-heading text-dark mb-2 text-lg font-bold">{benefit.title}</h3>
                   <p className="text-gray text-sm leading-relaxed">{benefit.description}</p>

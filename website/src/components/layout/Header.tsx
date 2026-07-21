@@ -3,6 +3,7 @@ import { motion, useMotionValueEvent, useScroll } from 'framer-motion'
 import { HiBars3 } from 'react-icons/hi2'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
+import { Logo } from '@/components/ui/Logo'
 import { SmartNavLink } from './SmartNavLink'
 import { MobileMenu } from './MobileMenu'
 import { HEADER_NAV } from '@/data/navigation'
@@ -29,11 +30,8 @@ export function Header() {
         }}
       >
         <Container className="flex h-18 items-center justify-between">
-          <a href="/" className="flex items-center gap-2.5">
-            <span className="bg-primary flex h-9 w-9 items-center justify-center rounded-lg">
-              <span className="font-display text-secondary-300 text-lg font-bold">C</span>
-            </span>
-            <span className="font-display text-dark text-lg font-bold">CodeVariant</span>
+          <a href="/" className="flex items-center">
+            <Logo className="h-9 w-auto" />
           </a>
 
           <nav className="hidden items-center gap-8 lg:flex" aria-label="Primary">

@@ -33,7 +33,7 @@ export function PricingSection({ showCompareTable = false }: PricingSectionProps
         </motion.div>
 
         {showCompareTable && (
-          <div className="flex flex-col gap-8">
+          <div className="flex min-w-0 flex-col gap-8">
             <SectionHeading title="Compare plans in detail" />
             <CompareTable />
           </div>

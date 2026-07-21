@@ -14,15 +14,21 @@
 
 @theme {
   /* ── Brand tokens ─────────────────────────────────────────── */
-  --color-primary: #1c5c4b;
-  --color-primary-50: #edf6f3;
-  --color-primary-100: #d3e9e2;
-  --color-primary-200: #a7d3c5;
-  --color-primary-400: #3d7c68;
-  --color-primary-600: #164a3d;
-  --color-primary-700: #113a30;
-  --color-primary-900: #0a251e;
+  /* Primary is the logo's purple diamond — replaces the original teal brief
+     per explicit request, so every button/link/accent now ties directly
+     back to the real logo instead of an unrelated color. 4.72:1 against
+     white, passes WCAG AA for both button text and body-text links. */
+  --color-primary: #7b5ce0;
+  --color-primary-50: #f7f5fd;
+  --color-primary-100: #e7e2f9;
+  --color-primary-200: #cabef3;
+  --color-primary-400: #694ebe;
+  --color-primary-600: #5942a1;
+  --color-primary-700: #473582;
+  --color-primary-900: #2f2355;
 
+  /* Secondary stays gold — it already closely matches the logo's leftmost
+     (yellow) diamond, so no change needed there. */
   --color-secondary: #e1c563;
   --color-secondary-100: #faf3dc;
   --color-secondary-300: #ecd68e;
@@ -45,7 +51,7 @@
   /* ── Shadows ──────────────────────────────────────────────── */
   --shadow-soft: 0 2px 8px rgb(2 2 2 / 0.06), 0 8px 24px rgb(2 2 2 / 0.04);
   --shadow-soft-lg: 0 8px 24px rgb(2 2 2 / 0.08), 0 24px 48px rgb(2 2 2 / 0.06);
-  --shadow-glow: 0 0 0 1px rgb(28 92 75 / 0.08), 0 12px 32px rgb(28 92 75 / 0.12);
+  --shadow-glow: 0 0 0 1px rgb(123 92 224 / 0.08), 0 12px 32px rgb(123 92 224 / 0.12);
 }
 
 @layer base {
@@ -55,6 +61,7 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -71,8 +78,14 @@
     }
   }
 
+  /* overflow-x: hidden is belt-and-suspenders against any stray wide element
+     (decorative blobs, negative-offset floating cards) forcing a
+     page-level horizontal scrollbar — components with their own internal
+     horizontal scroll (CompareTable) still work fine within this. */
   body {
     margin: 0;
+    overflow-x: hidden;
+    max-width: 100vw;
     font-family: var(--font-sans);
     color: var(--color-dark);
     background: var(--color-bg);

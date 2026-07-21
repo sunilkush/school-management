@@ -17,21 +17,21 @@ import { NotificationStack } from '@/components/charts/NotificationStack'
 import { defaultViewport, scaleIn } from '@/lib/motion'
 
 const STAT_CARDS = [
-  { id: 'students', icon: HiOutlineUserGroup, label: 'Total Students', value: '1,284', color: '#1C5C4B' },
+  { id: 'students', icon: HiOutlineUserGroup, label: 'Total Students', value: '1,284', color: 'var(--color-primary)' },
   { id: 'fees', icon: HiOutlineBanknotes, label: 'Fees Collected Today', value: '₹2.4L', color: '#22C55E' },
   { id: 'attendance', icon: HiOutlineCheckCircle, label: 'Attendance Today', value: '94%', color: '#2563EB' },
   { id: 'admissions', icon: HiOutlineUserPlus, label: 'Pending Admissions', value: '18', color: '#F59E0B' },
 ]
 
 const ACTIVITY_ITEMS = [
-  { id: '1', icon: HiOutlineUserPlus, text: 'New admission: Aditi Rao — Class 6', time: '5 minutes ago', color: '#1C5C4B' },
+  { id: '1', icon: HiOutlineUserPlus, text: 'New admission: Aditi Rao — Class 6', time: '5 minutes ago', color: 'var(--color-primary)' },
   { id: '2', icon: HiOutlineBanknotes, text: 'Fee payment received from Rohan Mehta', time: '18 minutes ago', color: '#22C55E' },
   { id: '3', icon: HiOutlineCalendarDays, text: 'PTM scheduled for Class 8-B, Friday', time: '1 hour ago', color: '#2563EB' },
   { id: '4', icon: HiOutlineExclamationTriangle, text: 'Low attendance flagged for Class 10-A', time: '2 hours ago', color: '#F59E0B' },
 ]
 
 const NOTIFICATION_ITEMS = [
-  { id: '1', icon: HiOutlineAcademicCap, title: 'Exam results published', subtitle: 'Class 9 — Mid-term results are live', color: '#1C5C4B' },
+  { id: '1', icon: HiOutlineAcademicCap, title: 'Exam results published', subtitle: 'Class 9 — Mid-term results are live', color: 'var(--color-primary)' },
   { id: '2', icon: HiOutlineBanknotes, title: 'Fee reminder sent', subtitle: '42 parents notified automatically', color: '#22C55E' },
 ]
 

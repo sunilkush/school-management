@@ -6,6 +6,7 @@ import { IconBadge } from '@/components/ui/IconBadge'
 import { IllustrativeMockup } from '@/components/features/IllustrativeMockup'
 import { defaultViewport, fadeUp, slideInLeft, slideInRight } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import { brandIconColor } from '@/config/brandColors'
 import { FLAGSHIP_FEATURES } from '@/data/flagshipFeatures'
 
 export function FeaturesSection() {
@@ -35,7 +36,7 @@ export function FeaturesSection() {
                 viewport={defaultViewport}
                 variants={isReversed ? slideInRight : slideInLeft}
               >
-                <IconBadge icon={feature.icon} size="lg" />
+                <IconBadge icon={feature.icon} size="lg" color={brandIconColor(index)} />
                 <h3 className="font-display text-dark text-2xl font-bold sm:text-3xl">{feature.title}</h3>
                 <p className="text-gray text-base leading-relaxed">{feature.description}</p>
                 <ul className="flex flex-col gap-3">
